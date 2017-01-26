@@ -27,7 +27,7 @@ import java.io.StringWriter;
 import java.net.URL;
 import java.util.Collections;
 
-import org.apache.asterix.common.utils.ServletUtil.Servlets;
+import org.apache.asterix.common.utils.LetUtil.Lets;
 import org.apache.asterix.test.aql.TestExecutor;
 import org.apache.asterix.test.base.TestMethodTracer;
 import org.apache.asterix.test.common.TestHelper;
@@ -89,7 +89,7 @@ public class SampleLocalClusterIT {
     public void test1_sanityQuery() throws Exception {
         TestExecutor testExecutor = new TestExecutor();
         InputStream resultStream = testExecutor.executeQuery("1+1", OutputFormat.ADM,
-                "http://127.0.0.1:19002" + Servlets.AQL_QUERY.getPath(), Collections.emptyList());
+                "http://127.0.0.1:19002" + Lets.AQL_QUERY.getPath(), Collections.emptyList());
         StringWriter sw = new StringWriter();
         IOUtils.copy(resultStream, sw);
         Assert.assertEquals("2", sw.toString().trim());

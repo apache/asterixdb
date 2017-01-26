@@ -21,7 +21,6 @@ package org.apache.asterix.hyracks.bootstrap;
 import static org.apache.asterix.api.http.servlet.ServletConstants.ASTERIX_BUILD_PROP_ATTR;
 import static org.apache.asterix.api.http.servlet.ServletConstants.HYRACKS_CONNECTION_ATTR;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -29,24 +28,24 @@ import java.util.logging.Logger;
 import javax.servlet.Servlet;
 
 import org.apache.asterix.active.ActiveLifecycleListener;
-import org.apache.asterix.api.http.servlet.APIServlet;
-import org.apache.asterix.api.http.servlet.ClusterAPIServlet;
-import org.apache.asterix.api.http.servlet.ClusterCCDetailsAPIServlet;
-import org.apache.asterix.api.http.servlet.ClusterNodeDetailsAPIServlet;
-import org.apache.asterix.api.http.servlet.ConnectorAPIServlet;
-import org.apache.asterix.api.http.servlet.DDLAPIServlet;
-import org.apache.asterix.api.http.servlet.DiagnosticsAPIServlet;
-import org.apache.asterix.api.http.servlet.FeedServlet;
-import org.apache.asterix.api.http.servlet.FullAPIServlet;
-import org.apache.asterix.api.http.servlet.QueryAPIServlet;
-import org.apache.asterix.api.http.servlet.QueryResultAPIServlet;
-import org.apache.asterix.api.http.servlet.QueryServiceServlet;
-import org.apache.asterix.api.http.servlet.QueryStatusAPIServlet;
-import org.apache.asterix.api.http.servlet.QueryWebInterfaceServlet;
+import org.apache.asterix.api.http.server.ApiServlet;
+import org.apache.asterix.api.http.server.FullApiServlet;
+import org.apache.asterix.api.http.server.ClusterApiServlet;
+import org.apache.asterix.api.http.server.ClusterControllerDetailsApiServlet;
+import org.apache.asterix.api.http.server.ConnectorApiServlet;
+import org.apache.asterix.api.http.server.DdlApiServlet;
+import org.apache.asterix.api.http.server.DiagnosticsApiServlet;
+import org.apache.asterix.api.http.server.FeedServlet;
+import org.apache.asterix.api.http.server.NodeControllerDetailsApiServlet;
+import org.apache.asterix.api.http.server.QueryApiServlet;
+import org.apache.asterix.api.http.server.QueryResultApiServlet;
+import org.apache.asterix.api.http.server.QueryServiceServlet;
+import org.apache.asterix.api.http.server.QueryStatusApiServlet;
+import org.apache.asterix.api.http.server.QueryWebInterfaceServlet;
+import org.apache.asterix.api.http.server.ShutdownApiServlet;
+import org.apache.asterix.api.http.server.UpdateApiServlet;
+import org.apache.asterix.api.http.server.VersionApiServlet;
 import org.apache.asterix.api.http.servlet.ServletConstants;
-import org.apache.asterix.api.http.servlet.ShutdownAPIServlet;
-import org.apache.asterix.api.http.servlet.UpdateAPIServlet;
-import org.apache.asterix.api.http.servlet.VersionAPIServlet;
 import org.apache.asterix.app.cc.CompilerExtensionManager;
 import org.apache.asterix.app.cc.ResourceIdManager;
 import org.apache.asterix.app.external.ExternalLibraryUtils;
@@ -55,7 +54,7 @@ import org.apache.asterix.common.config.AsterixExtension;
 import org.apache.asterix.common.config.ExternalProperties;
 import org.apache.asterix.common.config.MetadataProperties;
 import org.apache.asterix.common.library.ILibraryManager;
-import org.apache.asterix.common.utils.ServletUtil.Servlets;
+import org.apache.asterix.common.utils.LetUtil.Lets;
 import org.apache.asterix.external.library.ExternalLibraryManager;
 import org.apache.asterix.messaging.CCMessageBroker;
 import org.apache.asterix.metadata.MetadataManager;
@@ -73,7 +72,8 @@ import org.apache.hyracks.api.lifecycle.LifeCycleComponentManager;
 import org.apache.hyracks.api.messages.IMessageBroker;
 import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.common.controllers.CCConfig;
-import org.eclipse.jetty.server.Server;
+import org.apache.hyracks.http.server.HttpServer;
+import org.apache.hyracks.http.server.IServlet;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.servlet.ServletMapping;
@@ -81,13 +81,11 @@ import org.eclipse.jetty.servlet.ServletMapping;
 public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
 
     private static final Logger LOGGER = Logger.getLogger(CCApplicationEntryPoint.class.getName());
-
-    private List<Server> servers;
-
     private static IAsterixStateProxy proxy;
     protected ICCApplicationContext appCtx;
     protected CompilerExtensionManager ccExtensionManager;
     private IJobCapacityController jobCapacityController;
+    protected WebManager webManager;
 
     @Override
     public void start(ICCApplicationContext ccAppCtx, String[] args) throws Exception {
@@ -124,14 +122,11 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
         AppContextInfo.INSTANCE.getCCApplicationContext()
                 .addJobLifecycleListener(ActiveLifecycleListener.INSTANCE);
 
-        servers = configureServers();
-
-        for (Server server : servers) {
-            server.start();
-        }
-
+        // create event loop groups
+        webManager = new WebManager();
+        configureServers();
+        webManager.start();
         ClusterManagerProvider.getClusterManager().registerSubscriber(GlobalRecoveryManager.instance());
-
         ccAppCtx.addClusterLifecycleListener(ClusterLifecycleListener.INSTANCE);
         ccAppCtx.setMessageBroker(messageBroker);
 
@@ -142,15 +137,11 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
         return AppContextInfo.INSTANCE.getExtensionProperties().getExtensions();
     }
 
-    protected List<Server> configureServers() throws Exception {
-        ExternalProperties externalProperties = AppContextInfo.INSTANCE.getExternalProperties();
-
-        List<Server> serverList = new ArrayList<>();
-        serverList.add(setupWebServer(externalProperties));
-        serverList.add(setupJSONAPIServer(externalProperties));
-        serverList.add(setupFeedServer(externalProperties));
-        serverList.add(setupQueryWebServer(externalProperties));
-        return serverList;
+    protected void configureServers() throws Exception {
+        webManager.add(setupWebServer(AppContextInfo.INSTANCE.getExternalProperties()));
+        webManager.add(setupJSONAPIServer(AppContextInfo.INSTANCE.getExternalProperties()));
+        webManager.add(setupFeedServer(AppContextInfo.INSTANCE.getExternalProperties()));
+        webManager.add(setupQueryWebServer(AppContextInfo.INSTANCE.getExternalProperties()));
     }
 
     @Override
@@ -160,14 +151,7 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
             LOGGER.info("Stopping Asterix cluster controller");
         }
         AsterixStateProxy.unregisterRemoteObject();
-        // Stop servers
-        for (Server server : servers) {
-            server.stop();
-        }
-        // Make sure servers are stopped before proceeding
-        for (Server server : servers) {
-            server.join();
-        }
+        webManager.stop();
     }
 
     protected IHyracksClientConnection getNewHyracksClientConnection() throws Exception {
@@ -176,77 +160,62 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
         return new HyracksConnection(strIP, port);
     }
 
-    protected Server setupWebServer(ExternalProperties externalProperties) throws Exception {
-
-        Server webServer = new Server(externalProperties.getWebInterfacePort());
-
-        ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
-        context.setContextPath("/");
-
+    protected HttpServer setupWebServer(ExternalProperties externalProperties) throws Exception {
+        HttpServer webServer = new HttpServer(webManager.getBosses(), webManager.getWorkers(), externalProperties
+                .getWebInterfacePort());
         IHyracksClientConnection hcc = getNewHyracksClientConnection();
-        context.setAttribute(HYRACKS_CONNECTION_ATTR, hcc);
-
-        webServer.setHandler(context);
-        context.addServlet(new ServletHolder(new APIServlet(ccExtensionManager.getAqlCompilationProvider(),
-                ccExtensionManager.getSqlppCompilationProvider(), ccExtensionManager.getQueryTranslatorFactory())),
-                "/*");
-
+        webServer.setAttribute(HYRACKS_CONNECTION_ATTR, hcc);
+        webServer.addLet(new ApiServlet(webServer.ctx(), new String[] { "/*" }, ccExtensionManager
+                .getAqlCompilationProvider(), ccExtensionManager.getSqlppCompilationProvider(), ccExtensionManager
+                        .getQueryTranslatorFactory()));
         return webServer;
     }
 
-    protected Server setupJSONAPIServer(ExternalProperties externalProperties) throws Exception {
-        Server jsonAPIServer = new Server(externalProperties.getAPIServerPort());
-
-        ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
-        context.setContextPath("/");
-
+    protected HttpServer setupJSONAPIServer(ExternalProperties externalProperties) throws Exception {
+        HttpServer jsonAPIServer = new HttpServer(webManager.getBosses(), webManager.getWorkers(), externalProperties
+                .getAPIServerPort());
         IHyracksClientConnection hcc = getNewHyracksClientConnection();
-        context.setAttribute(HYRACKS_CONNECTION_ATTR, hcc);
-        context.setAttribute(ASTERIX_BUILD_PROP_ATTR, AppContextInfo.INSTANCE);
-        context.setAttribute(ServletConstants.EXECUTOR_SERVICE,
+        jsonAPIServer.setAttribute(HYRACKS_CONNECTION_ATTR, hcc);
+        jsonAPIServer.setAttribute(ASTERIX_BUILD_PROP_ATTR, AppContextInfo.INSTANCE);
+        jsonAPIServer.setAttribute(ServletConstants.EXECUTOR_SERVICE,
                 ((ClusterControllerService) appCtx.getControllerService()).getExecutor());
 
-        jsonAPIServer.setHandler(context);
-
         // AQL rest APIs.
-        addServlet(context, Servlets.AQL_QUERY);
-        addServlet(context, Servlets.AQL_UPDATE);
-        addServlet(context, Servlets.AQL_DDL);
-        addServlet(context, Servlets.AQL);
+        addLet(jsonAPIServer, Lets.AQL_QUERY);
+        addLet(jsonAPIServer, Lets.AQL_UPDATE);
+        addLet(jsonAPIServer, Lets.AQL_DDL);
+        addLet(jsonAPIServer, Lets.AQL);
 
         // SQL+x+ rest APIs.
-        addServlet(context, Servlets.SQLPP_QUERY);
-        addServlet(context, Servlets.SQLPP_UPDATE);
-        addServlet(context, Servlets.SQLPP_DDL);
-        addServlet(context, Servlets.SQLPP);
+        addLet(jsonAPIServer, Lets.SQLPP_QUERY);
+        addLet(jsonAPIServer, Lets.SQLPP_UPDATE);
+        addLet(jsonAPIServer, Lets.SQLPP_DDL);
+        addLet(jsonAPIServer, Lets.SQLPP);
 
         // Other APIs.
-        addServlet(context, Servlets.QUERY_STATUS);
-        addServlet(context, Servlets.QUERY_RESULT);
-        addServlet(context, Servlets.QUERY_SERVICE);
-        addServlet(context, Servlets.CONNECTOR);
-        addServlet(context, Servlets.SHUTDOWN);
-        addServlet(context, Servlets.VERSION);
-        addServlet(context, Servlets.CLUSTER_STATE);
-        addServlet(context, Servlets.CLUSTER_STATE_NODE_DETAIL); // this must not precede add of CLUSTER_STATE
-        addServlet(context, Servlets.CLUSTER_STATE_CC_DETAIL); // this must not precede add of CLUSTER_STATE
-        addServlet(context, Servlets.DIAGNOSTICS);
-
+        addLet(jsonAPIServer, Lets.QUERY_STATUS);
+        addLet(jsonAPIServer, Lets.QUERY_RESULT);
+        addLet(jsonAPIServer, Lets.QUERY_SERVICE);
+        addLet(jsonAPIServer, Lets.CONNECTOR);
+        addLet(jsonAPIServer, Lets.SHUTDOWN);
+        addLet(jsonAPIServer, Lets.VERSION);
+        addLet(jsonAPIServer, Lets.CLUSTER_STATE);
+        addLet(jsonAPIServer, Lets.CLUSTER_STATE_NODE_DETAIL); // this must not precede add of CLUSTER_STATE
+        addLet(jsonAPIServer, Lets.CLUSTER_STATE_CC_DETAIL); // this must not precede add of CLUSTER_STATE
+        addLet(jsonAPIServer, Lets.DIAGNOSTICS);
         return jsonAPIServer;
     }
 
-    protected Server setupQueryWebServer(ExternalProperties externalProperties) throws Exception {
+    protected void addLet(HttpServer server, Lets let) {
+        server.addLet(createServLet(server, let, let.getPath()));
+    }
 
-        Server queryWebServer = new Server(externalProperties.getQueryWebInterfacePort());
-
-        ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
-        context.setContextPath("/");
-
+    protected HttpServer setupQueryWebServer(ExternalProperties externalProperties) throws Exception {
+        HttpServer queryWebServer = new HttpServer(webManager.getBosses(), webManager.getWorkers(), externalProperties
+                .getQueryWebInterfacePort());
         IHyracksClientConnection hcc = getNewHyracksClientConnection();
-        context.setAttribute(HYRACKS_CONNECTION_ATTR, hcc);
-
-        queryWebServer.setHandler(context);
-        context.addServlet(new ServletHolder(new QueryWebInterfaceServlet()), "/*");
+        queryWebServer.setAttribute(HYRACKS_CONNECTION_ATTR, hcc);
+        queryWebServer.addLet(new QueryWebInterfaceServlet(queryWebServer.ctx(), new String[] { "/*" }));
         return queryWebServer;
     }
 
@@ -259,75 +228,64 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
         context.getServletHandler().addServletMapping(mapping);
     }
 
-    protected void addServlet(ServletContextHandler context, Servlets key) {
-        addServlet(context, createServlet(key), key.getPath());
+    protected HttpServer setupFeedServer(ExternalProperties externalProperties) throws Exception {
+        HttpServer feedServer = new HttpServer(webManager.getBosses(), webManager.getWorkers(), externalProperties
+                .getFeedServerPort());
+        feedServer.setAttribute(HYRACKS_CONNECTION_ATTR, getNewHyracksClientConnection());
+        feedServer.addLet(new FeedServlet(feedServer.ctx(), new String[] { "/" }));
+        return feedServer;
     }
 
-    protected Servlet createServlet(Servlets key) {
+    protected IServlet createServLet(HttpServer server, Lets key, String... paths) {
         switch (key) {
             case AQL:
-                return new FullAPIServlet(ccExtensionManager.getAqlCompilationProvider(),
+                return new FullApiServlet(server.ctx(), paths, ccExtensionManager.getAqlCompilationProvider(),
                         ccExtensionManager.getQueryTranslatorFactory());
             case AQL_QUERY:
-                return new QueryAPIServlet(ccExtensionManager.getAqlCompilationProvider(),
+                return new QueryApiServlet(server.ctx(), paths, ccExtensionManager.getAqlCompilationProvider(),
                         ccExtensionManager.getQueryTranslatorFactory());
             case AQL_UPDATE:
-                return new UpdateAPIServlet(ccExtensionManager.getAqlCompilationProvider(),
+                return new UpdateApiServlet(server.ctx(), paths, ccExtensionManager.getAqlCompilationProvider(),
                         ccExtensionManager.getQueryTranslatorFactory());
             case AQL_DDL:
-                return new DDLAPIServlet(ccExtensionManager.getAqlCompilationProvider(),
+                return new DdlApiServlet(server.ctx(), paths, ccExtensionManager.getAqlCompilationProvider(),
                         ccExtensionManager.getQueryTranslatorFactory());
             case SQLPP:
-                return new FullAPIServlet(ccExtensionManager.getSqlppCompilationProvider(),
+                return new FullApiServlet(server.ctx(), paths, ccExtensionManager.getSqlppCompilationProvider(),
                         ccExtensionManager.getQueryTranslatorFactory());
             case SQLPP_QUERY:
-                return new QueryAPIServlet(ccExtensionManager.getSqlppCompilationProvider(),
+                return new QueryApiServlet(server.ctx(), paths, ccExtensionManager.getSqlppCompilationProvider(),
                         ccExtensionManager.getQueryTranslatorFactory());
             case SQLPP_UPDATE:
-                return new UpdateAPIServlet(ccExtensionManager.getSqlppCompilationProvider(),
+                return new UpdateApiServlet(server.ctx(), paths, ccExtensionManager.getSqlppCompilationProvider(),
                         ccExtensionManager.getQueryTranslatorFactory());
             case SQLPP_DDL:
-                return new DDLAPIServlet(ccExtensionManager.getSqlppCompilationProvider(),
+                return new DdlApiServlet(server.ctx(), paths, ccExtensionManager.getSqlppCompilationProvider(),
                         ccExtensionManager.getQueryTranslatorFactory());
             case QUERY_STATUS:
-                return new QueryStatusAPIServlet();
+                return new QueryStatusApiServlet(server.ctx(), paths);
             case QUERY_RESULT:
-                return new QueryResultAPIServlet();
+                return new QueryResultApiServlet(server.ctx(), paths);
             case QUERY_SERVICE:
-                return new QueryServiceServlet(ccExtensionManager.getSqlppCompilationProvider(),
-                        ccExtensionManager.getQueryTranslatorFactory());
+                return new QueryServiceServlet(server.ctx(), paths, ccExtensionManager
+                        .getSqlppCompilationProvider(), ccExtensionManager.getQueryTranslatorFactory());
             case CONNECTOR:
-                return new ConnectorAPIServlet();
+                return new ConnectorApiServlet(server.ctx(), paths);
             case SHUTDOWN:
-                return new ShutdownAPIServlet();
+                return new ShutdownApiServlet(server.ctx(), paths);
             case VERSION:
-                return new VersionAPIServlet();
+                return new VersionApiServlet(server.ctx(), paths);
             case CLUSTER_STATE:
-                return new ClusterAPIServlet();
+                return new ClusterApiServlet(server.ctx(), paths);
             case CLUSTER_STATE_NODE_DETAIL:
-                return new ClusterNodeDetailsAPIServlet();
+                return new NodeControllerDetailsApiServlet(server.ctx(), paths);
             case CLUSTER_STATE_CC_DETAIL:
-                return new ClusterCCDetailsAPIServlet();
+                return new ClusterControllerDetailsApiServlet(server.ctx(), paths);
             case DIAGNOSTICS:
-                return new DiagnosticsAPIServlet();
+                return new DiagnosticsApiServlet(server.ctx(), paths);
             default:
                 throw new IllegalStateException(String.valueOf(key));
         }
-    }
-
-    protected Server setupFeedServer(ExternalProperties externalProperties) throws Exception {
-        Server feedServer = new Server(externalProperties.getFeedServerPort());
-
-        ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
-        context.setContextPath("/");
-
-        IHyracksClientConnection hcc = getNewHyracksClientConnection();
-        context.setAttribute(HYRACKS_CONNECTION_ATTR, hcc);
-
-        feedServer.setHandler(context);
-        context.addServlet(new ServletHolder(new FeedServlet()), "/");
-
-        return feedServer;
     }
 
     @Override

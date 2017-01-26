@@ -33,8 +33,6 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.asterix.api.http.servlet.APIServlet;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.translator.IStatementExecutor.Stats;
 import org.apache.asterix.translator.SessionConfig;
@@ -43,8 +41,9 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.AlgebricksAppendable;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.log4j.Logger;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class ResultUtil {
@@ -244,7 +243,7 @@ public class ResultUtil {
         String errorTemplate = defaultTemplate;
         try {
             String resourcePath = "/webui/errortemplate_message.html";
-            InputStream is = APIServlet.class.getResourceAsStream(resourcePath);
+            InputStream is = ResultUtil.class.getResourceAsStream(resourcePath);
             InputStreamReader isr = new InputStreamReader(is);
             StringBuilder sb = new StringBuilder();
             BufferedReader br = new BufferedReader(isr);

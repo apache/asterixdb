@@ -88,7 +88,7 @@ public class FeedWorkCollection {
                     DataverseDecl dataverseDecl = new DataverseDecl(
                             new Identifier(request.getReceivingFeedId().getDataverse()));
                     SubscribeFeedStatement subscribeStmt = new SubscribeFeedStatement(locations, request);
-                    List<Statement> statements = new ArrayList<Statement>();
+                    List<Statement> statements = new ArrayList<>();
                     statements.add(dataverseDecl);
                     statements.add(subscribeStmt);
                     IStatementExecutor translator = qtFactory.create(statements, pc, compilationProvider);

@@ -48,7 +48,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.asterix.common.config.GlobalConfig;
-import org.apache.asterix.common.utils.ServletUtil.Servlets;
+import org.apache.asterix.common.utils.LetUtil.Lets;
 import org.apache.asterix.test.base.ComparisonException;
 import org.apache.asterix.test.server.ITestServer;
 import org.apache.asterix.test.server.TestServerProvider;
@@ -603,7 +603,7 @@ public class TestExecutor {
     }
 
     private InputStream getHandleResult(String handle, OutputFormat fmt) throws Exception {
-        final String url = getEndpoint(Servlets.QUERY_RESULT);
+        final String url = getEndpoint(Lets.QUERY_RESULT);
 
         // Create a method instance.
         HttpUriRequest request = RequestBuilder.get(url).addParameter("handle", handle)
@@ -744,9 +744,9 @@ public class TestExecutor {
         switch (ctx.getType()) {
             case "ddl":
                 if (ctx.getFile().getName().endsWith("aql")) {
-                    executeDDL(statement, getEndpoint(Servlets.AQL_DDL));
+                    executeDDL(statement, getEndpoint(Lets.AQL_DDL));
                 } else {
-                    InputStream resultStream = executeQueryService(statement, getEndpoint(Servlets.QUERY_SERVICE));
+                    InputStream resultStream = executeQueryService(statement, getEndpoint(Lets.QUERY_SERVICE));
                     ResultExtractor.extract(resultStream);
                 }
                 break;
@@ -756,9 +756,9 @@ public class TestExecutor {
                     statement = statement.replaceAll("nc1://", "127.0.0.1://../../../../../../asterix-app/");
                 }
                 if (ctx.getFile().getName().endsWith("aql")) {
-                    executeUpdate(statement, getEndpoint(Servlets.AQL_UPDATE));
+                    executeUpdate(statement, getEndpoint(Lets.AQL_UPDATE));
                 } else {
-                    InputStream resultStream = executeQueryService(statement, getEndpoint(Servlets.QUERY_SERVICE));
+                    InputStream resultStream = executeQueryService(statement, getEndpoint(Lets.QUERY_SERVICE));
                     ResultExtractor.extract(resultStream);
                 }
                 break;
@@ -812,16 +812,16 @@ public class TestExecutor {
                 OutputFormat fmt = OutputFormat.forCompilationUnit(cUnit);
                 if (ctx.getFile().getName().endsWith("aql")) {
                     if (ctx.getType().equalsIgnoreCase("query")) {
-                        resultStream = executeQuery(statement, fmt, getEndpoint(Servlets.AQL_QUERY),
+                        resultStream = executeQuery(statement, fmt, getEndpoint(Lets.AQL_QUERY),
                                 cUnit.getParameter());
                     } else if (ctx.getType().equalsIgnoreCase("async")) {
-                        resultStream = executeAnyAQLAsync(statement, false, fmt, getEndpoint(Servlets.AQL));
+                        resultStream = executeAnyAQLAsync(statement, false, fmt, getEndpoint(Lets.AQL));
                     } else if (ctx.getType().equalsIgnoreCase("asyncdefer")) {
-                        resultStream = executeAnyAQLAsync(statement, true, fmt, getEndpoint(Servlets.AQL));
+                        resultStream = executeAnyAQLAsync(statement, true, fmt, getEndpoint(Lets.AQL));
                     }
                 } else {
                     final String reqType = ctx.getType();
-                    final String url = getEndpoint(Servlets.QUERY_SERVICE);
+                    final String url = getEndpoint(Lets.QUERY_SERVICE);
                     final List<CompilationUnit.Parameter> params = cUnit.getParameter();
                     if (reqType.equalsIgnoreCase("query")) {
                         resultStream = executeQueryService(statement, fmt, url, params, true);
@@ -854,13 +854,13 @@ public class TestExecutor {
                 break;
             case "txnqbc": // qbc represents query before crash
                 resultStream = executeQuery(statement, OutputFormat.forCompilationUnit(cUnit),
-                        getEndpoint(Servlets.AQL_QUERY), cUnit.getParameter());
+                        getEndpoint(Lets.AQL_QUERY), cUnit.getParameter());
                 qbcFile = getTestCaseQueryBeforeCrashFile(actualPath, testCaseCtx, cUnit);
                 writeOutputToFile(qbcFile, resultStream);
                 break;
             case "txnqar": // qar represents query after recovery
                 resultStream = executeQuery(statement, OutputFormat.forCompilationUnit(cUnit),
-                        getEndpoint(Servlets.AQL_QUERY), cUnit.getParameter());
+                        getEndpoint(Lets.AQL_QUERY), cUnit.getParameter());
                 File qarFile = new File(actualPath + File.separator
                         + testCaseCtx.getTestCase().getFilePath().replace(File.separator, "_") + "_" + cUnit.getName()
                         + "_qar.adm");
@@ -870,7 +870,7 @@ public class TestExecutor {
                 break;
             case "txneu": // eu represents erroneous update
                 try {
-                    executeUpdate(statement, getEndpoint(Servlets.AQL_UPDATE));
+                    executeUpdate(statement, getEndpoint(Lets.AQL_UPDATE));
                 } catch (Exception e) {
                     // An exception is expected.
                     failed = true;
@@ -898,7 +898,7 @@ public class TestExecutor {
                 break;
             case "errddl": // a ddlquery that expects error
                 try {
-                    executeDDL(statement, getEndpoint(Servlets.AQL_DDL));
+                    executeDDL(statement, getEndpoint(Lets.AQL_DDL));
                 } catch (Exception e) {
                     // expected error happens
                     failed = true;
@@ -1136,11 +1136,11 @@ public class TestExecutor {
                         + cUnit.getName() + "_qbc.adm");
     }
 
-    protected String getPath(Servlets servlet) {
+    protected String getPath(Lets servlet) {
         return servlet.getPath();
     }
 
-    protected String getEndpoint(Servlets servlet) {
+    protected String getEndpoint(Lets servlet) {
         return "http://" + host + ":" + port + getPath(servlet).replaceAll("/\\*$", "");
     }
 
@@ -1152,7 +1152,7 @@ public class TestExecutor {
         try {
             ArrayList<String> toBeDropped = new ArrayList<>();
             InputStream resultStream = executeQueryService("select dv.DataverseName from Metadata.`Dataverse` as dv;",
-                    getEndpoint(Servlets.QUERY_SERVICE));
+                    getEndpoint(Lets.QUERY_SERVICE));
             String out = IOUtils.toString(resultStream);
             ObjectMapper om = new ObjectMapper();
             om.setConfig(om.getDeserializationConfig().with(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT));
@@ -1181,7 +1181,7 @@ public class TestExecutor {
                     dropStatement.append(dv);
                     dropStatement.append(";\n");
                 }
-                resultStream = executeQueryService(dropStatement.toString(), getEndpoint(Servlets.QUERY_SERVICE));
+                resultStream = executeQueryService(dropStatement.toString(), getEndpoint(Lets.QUERY_SERVICE));
                 ResultExtractor.extract(resultStream);
             }
         } catch (Throwable th) {

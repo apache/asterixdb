@@ -32,12 +32,10 @@
       <comments>A business-friendly OSS license</comments>
     </license>
   </licenses>
-
   <properties>
     <appendedResourcesDirectory>${basedir}/src/main/appended-resources</appendedResourcesDirectory>
     <sonar.sources>pom.xml,src/main/java,src/main/resources</sonar.sources>
   </properties>
-
   <build>
     <plugins>
       <plugin>
@@ -62,7 +60,6 @@
             </goals>
           </execution>
         </executions>
-
         <configuration>
           <!--
               If you'd like to tell the plugin where your .git directory is,
@@ -80,7 +77,6 @@
                at source assembly time) is used in this case -->
           <failOnNoGitDirectory>false</failOnNoGitDirectory>
         </configuration>
-
       </plugin>
       <plugin>
         <artifactId>maven-resources-plugin</artifactId>
@@ -165,43 +161,39 @@
       </plugin>
     </plugins>
     <pluginManagement>
-        <plugins>
+      <plugins>
             <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
-            <plugin>
-                <groupId>org.eclipse.m2e</groupId>
-                <artifactId>lifecycle-mapping</artifactId>
-                <version>1.0.0</version>
-                <configuration>
-                    <lifecycleMappingMetadata>
-                        <pluginExecutions>
-                            <pluginExecution>
-                                <pluginExecutionFilter>
-                                    <groupId>org.apache.asterix</groupId>
-                                    <artifactId>asterix-test-datagenerator-maven-plugin</artifactId>
-                                    <versionRange>[0.8.9-SNAPSHOT,)</versionRange>
-                                    <goals>
-                                        <goal>generate-testdata</goal>
-                                    </goals>
-                                </pluginExecutionFilter>
-                                <action>
-                                    <ignore />
-                                </action>
-                            </pluginExecution>
-                        </pluginExecutions>
-                    </lifecycleMappingMetadata>
-                </configuration>
-            </plugin>
-        </plugins>
+        <plugin>
+          <groupId>org.eclipse.m2e</groupId>
+          <artifactId>lifecycle-mapping</artifactId>
+          <version>1.0.0</version>
+          <configuration>
+            <lifecycleMappingMetadata>
+              <pluginExecutions>
+                <pluginExecution>
+                  <pluginExecutionFilter>
+                    <groupId>org.apache.asterix</groupId>
+                    <artifactId>asterix-test-datagenerator-maven-plugin</artifactId>
+                    <versionRange>[0.8.9-SNAPSHOT,)</versionRange>
+                    <goals>
+                      <goal>generate-testdata</goal>
+                    </goals>
+                  </pluginExecutionFilter>
+                  <action>
+                    <ignore />
+                  </action>
+                </pluginExecution>
+              </pluginExecutions>
+            </lifecycleMappingMetadata>
+          </configuration>
+        </plugin>
+      </plugins>
     </pluginManagement>
   </build>
   <dependencies>
     <dependency>
       <groupId>javax.servlet</groupId>
       <artifactId>javax.servlet-api</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.eclipse.jetty</groupId>
-      <artifactId>jetty-server</artifactId>
     </dependency>
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
@@ -226,6 +218,10 @@
     <dependency>
       <groupId>org.apache.hyracks</groupId>
       <artifactId>hyracks-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hyracks</groupId>
+      <artifactId>hyracks-http</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.asterix</groupId>
@@ -483,6 +479,11 @@
       <artifactId>hadoop-common</artifactId>
       <classifier>tests</classifier>
       <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-all</artifactId>
+      <version>4.1.6.Final</version>
     </dependency>
   </dependencies>
 </project>
