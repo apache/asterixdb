@@ -52,6 +52,23 @@
       <fileMode>0755</fileMode>
     </fileSet>
     <fileSet>
+      <directory>src/main/aws</directory>
+      <outputDirectory>aws</outputDirectory>
+      <excludes>
+        <exclude>**/*.sh</exclude>
+      </excludes>
+      <filtered>true</filtered>
+    </fileSet>
+    <fileSet>
+      <directory>src/main/aws</directory>
+      <outputDirectory>aws</outputDirectory>
+      <includes>
+        <include>**/*.sh</include>
+      </includes>
+      <filtered>true</filtered>
+      <fileMode>0755</fileMode>
+    </fileSet>
+    <fileSet>
       <directory>target/appassembler/repo</directory>
       <outputDirectory>repo</outputDirectory>
     </fileSet>

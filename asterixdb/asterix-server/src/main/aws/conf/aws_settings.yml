@@ -1,0 +1,46 @@
+# ------------------------------------------------------------
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+# ------------------------------------------------------------
+
+# The OS image id for ec2 instances.
+image: ami-76fa4116
+
+# The data center region for ec2 instances.
+region: us-west-2
+
+# The tag for each ec2 machine.
+tag: scale_test
+
+# The name of a security group that appears in your AWS console.
+group: default
+
+# The name of a key pair that appears in your AWS console.
+keypair: <to be filled>
+
+# The AWS access key id for your IAM user.
+access_key_id: <to be filled>
+
+# The AWS secrety key for your IAM user.
+secret_access_key: <to be filled>
+
+# The AWS instance type. A full list of available types are listed at:
+# https://aws.amazon.com/ec2/instance-types/
+instance_type: t2.micro
+
+# The number of ec2 instances that construct a cluster.
+count: 2

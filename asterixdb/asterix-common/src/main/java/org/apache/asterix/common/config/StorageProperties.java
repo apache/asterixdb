@@ -18,10 +18,10 @@
  */
 package org.apache.asterix.common.config;
 
+import static org.apache.hyracks.util.StorageUtil.StorageUnit.KILOBYTE;
+
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.util.StorageUtil;
-
-import static org.apache.hyracks.util.StorageUtil.StorageUnit.KILOBYTE;
 
 public class StorageProperties extends AbstractProperties {
 
@@ -40,7 +40,6 @@ public class StorageProperties extends AbstractProperties {
 
     private static final String STORAGE_METADATA_MEMORYCOMPONENT_NUMPAGES_KEY =
             "storage.metadata.memorycomponent.numpages";
-    private static final int STORAGE_METADATA_MEMORYCOMPONENT_NUMPAGES_DEFAULT = 256; // ... so 32MB components
 
     private static final String STORAGE_MEMORYCOMPONENT_NUMCOMPONENTS_KEY = "storage.memorycomponent.numcomponents";
     private static final int STORAGE_MEMORYCOMPONENT_NUMCOMPONENTS_DEFAULT = 2; // 2 components
@@ -53,6 +52,7 @@ public class StorageProperties extends AbstractProperties {
 
     private final long storageBufferCacheSizeDefault;
     private final int storageMemoryComponentNumPages;
+    private final int storageMetadataMemoryComponentNumPages;
     private final long storageMemorycomponentGlobalbudgetDefault;
 
     public StorageProperties(PropertiesAccessor accessor) {
@@ -68,6 +68,10 @@ public class StorageProperties extends AbstractProperties {
         // for a dataset, including data and indexes.
         storageMemoryComponentNumPages = (int) (storageMemorycomponentGlobalbudgetDefault
                 / (16 * getMemoryComponentPageSize()));
+        // By default, uses the min of 1/64 of the storageMemorycomponentGlobalbudgetDefault and 256 pages
+        // for the write buffer budget for a metadata dataset, including data and indexes.
+        storageMetadataMemoryComponentNumPages = Math
+                .min((int) (storageMemorycomponentGlobalbudgetDefault / (64 * getMemoryComponentPageSize())), 256);
     }
 
     @PropertyKey(STORAGE_BUFFERCACHE_PAGESIZE_KEY)
@@ -107,8 +111,7 @@ public class StorageProperties extends AbstractProperties {
     @PropertyKey(STORAGE_METADATA_MEMORYCOMPONENT_NUMPAGES_KEY)
     public int getMetadataMemoryComponentNumPages() {
         return accessor.getProperty(STORAGE_METADATA_MEMORYCOMPONENT_NUMPAGES_KEY,
-                        STORAGE_METADATA_MEMORYCOMPONENT_NUMPAGES_DEFAULT,
-                        PropertyInterpreters.getIntegerPropertyInterpreter());
+                storageMetadataMemoryComponentNumPages, PropertyInterpreters.getIntegerPropertyInterpreter());
     }
 
     @PropertyKey(STORAGE_MEMORYCOMPONENT_NUMCOMPONENTS_KEY)

@@ -104,7 +104,7 @@
     "storage.memorycomponent.numcomponents" : 2,
     "storage.memorycomponent.numpages" : 8,
     "storage.memorycomponent.pagesize" : 131072,
-    "storage.metadata.memorycomponent.numpages" : 256,
+    "storage.metadata.memorycomponent.numpages" : 85,
     "transaction.log.dirs" : {
       "asterix_nc1" : "target/txnLogDir/asterix_nc1",
       "asterix_nc2" : "target/txnLogDir/asterix_nc2"
