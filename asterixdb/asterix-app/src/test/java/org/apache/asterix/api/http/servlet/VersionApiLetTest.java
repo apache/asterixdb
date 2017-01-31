@@ -35,8 +35,8 @@ import org.apache.asterix.common.config.BuildProperties;
 import org.apache.asterix.runtime.util.AppContextInfo;
 import org.apache.asterix.test.runtime.SqlppExecutionTest;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
-import org.apache.hyracks.http.server.IServletRequest;
-import org.apache.hyracks.http.server.IServletResponse;
+import org.apache.hyracks.http.api.IServletRequest;
+import org.apache.hyracks.http.api.IServletResponse;
 import org.junit.Assert;
 import org.junit.Test;
 

@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.http.server;
+package org.apache.hyracks.http.api;
 
 import java.util.concurrent.ConcurrentMap;
 

@@ -20,6 +20,9 @@ package org.apache.hyracks.http.server;
 
 import java.util.concurrent.ConcurrentMap;
 
+import org.apache.hyracks.http.api.IServlet;
+import org.apache.hyracks.http.api.IServletRequest;
+
 public abstract class AbstractServlet implements IServlet {
     protected final String[] paths;
     protected final ConcurrentMap<String, Object> ctx;

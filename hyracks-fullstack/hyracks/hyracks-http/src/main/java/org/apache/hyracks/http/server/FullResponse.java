@@ -23,6 +23,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 
+import org.apache.hyracks.http.api.IServletResponse;
+
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
@@ -80,7 +82,7 @@ public class FullResponse implements IServletResponse {
     }
 
     @Override
-    public ChannelFuture future() throws IOException {
+    public ChannelFuture lastContentFuture() throws IOException {
         return future;
     }
 
@@ -92,5 +94,11 @@ public class FullResponse implements IServletResponse {
     @Override
     public void setStatus(HttpResponseStatus status) {
         response.setStatus(status);
+    }
+
+    @Override
+    public void notifyChannelWritable() {
+        // Do nothing.
+        // This response is sent as a single piece
     }
 }

@@ -16,10 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.http.server;
-
-import java.util.List;
-import java.util.Map;
+package org.apache.hyracks.http.api;
 
 import io.netty.handler.codec.http.FullHttpRequest;
 
@@ -34,6 +31,7 @@ public interface IServletRequest {
 
     /**
      * Get a request parameter
+     *
      * @param name
      * @return the parameter or null if not found
      */
@@ -41,23 +39,21 @@ public interface IServletRequest {
 
     /**
      * Get a request header
+     *
      * @param name
      * @return the header or null if not found
      */
     String getHeader(CharSequence name);
 
-    static String getParameter(Map<String, List<String>> parameters, CharSequence name) {
-        List<String> parameter = parameters.get(name);
-        if (parameter == null) {
-            return null;
-        } else if (parameter.size() == 1) {
-            return parameter.get(0);
-        } else {
-            StringBuilder aString = new StringBuilder(parameter.get(0));
-            for (int i = 1; i < parameter.size(); i++) {
-                aString.append(",").append(parameter.get(i));
-            }
-            return aString.toString();
-        }
+    /**
+     * Get a request header if found, return the default value, otherwise
+     *
+     * @param name
+     * @param defaultValue
+     * @return the header or defaultValue if not found
+     */
+    default String getHeader(CharSequence name, String defaultValue) {
+        String value = getHeader(name);
+        return value == null ? defaultValue : value;
     }
 }

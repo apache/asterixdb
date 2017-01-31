@@ -21,6 +21,9 @@ package org.apache.hyracks.http.server;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.hyracks.http.api.IServletRequest;
+import org.apache.hyracks.http.server.util.ServletUtils;
+
 import io.netty.handler.codec.http.FullHttpRequest;
 
 public class PostRequest implements IServletRequest {
@@ -49,7 +52,7 @@ public class PostRequest implements IServletRequest {
                 return values.get(i);
             }
         }
-        return IServletRequest.getParameter(parameters, name);
+        return ServletUtils.getParameter(parameters, name);
     }
 
     @Override

@@ -37,9 +37,10 @@ import java.util.logging.Logger;
 import org.apache.asterix.api.http.servlet.ServletConstants;
 import org.apache.asterix.runtime.util.AppContextInfo;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
-import org.apache.hyracks.http.server.IServlet;
-import org.apache.hyracks.http.server.IServletRequest;
-import org.apache.hyracks.http.server.IServletResponse;
+import org.apache.hyracks.http.api.IServlet;
+import org.apache.hyracks.http.api.IServletRequest;
+import org.apache.hyracks.http.api.IServletResponse;
+import org.apache.hyracks.http.server.util.ServletUtils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -56,7 +57,7 @@ public class DiagnosticsApiServlet extends NodeControllerDetailsApiServlet {
 
     @Override
     protected void getUnsafe(IServletRequest request, IServletResponse response) throws IOException {
-        IServletResponse.setContentType(response, IServlet.ContentType.APPLICATION_JSON, IServlet.Encoding.UTF8);
+        ServletUtils.setContentType(response, IServlet.ContentType.APPLICATION_JSON, IServlet.Encoding.UTF8);
         PrintWriter responseWriter = response.writer();
         ObjectNode json;
         ObjectMapper om = new ObjectMapper();
@@ -95,7 +96,8 @@ public class DiagnosticsApiServlet extends NodeControllerDetailsApiServlet {
         Map<String, Map<String, Future<ObjectNode>>> ncDataMap = new HashMap<>();
         for (String nc : AppContextInfo.INSTANCE.getMetadataProperties().getNodeNames()) {
             Map<String, Future<ObjectNode>> ncData = new HashMap<>();
-            ncData.put("threaddump", executor.submit(() -> fixupKeys((ObjectNode) om.readTree(hcc.getThreadDump(nc)))));
+            ncData.put("threaddump",
+                    executor.submit(() -> fixupKeys((ObjectNode) om.readTree(hcc.getThreadDump(nc)))));
             ncData.put("config", executor
                     .submit(() -> fixupKeys((ObjectNode) om.readTree(hcc.getNodeDetailsJSON(nc, false, true)))));
             ncData.put("stats", executor.submit(() -> fixupKeys(processNodeStats(hcc, nc))));

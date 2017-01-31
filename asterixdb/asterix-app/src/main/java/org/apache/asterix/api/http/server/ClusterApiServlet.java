@@ -32,10 +32,11 @@ import org.apache.asterix.common.config.AbstractProperties;
 import org.apache.asterix.common.config.ReplicationProperties;
 import org.apache.asterix.common.utils.JSONUtil;
 import org.apache.asterix.runtime.util.ClusterStateManager;
+import org.apache.hyracks.http.api.IServlet;
+import org.apache.hyracks.http.api.IServletRequest;
+import org.apache.hyracks.http.api.IServletResponse;
 import org.apache.hyracks.http.server.AbstractServlet;
-import org.apache.hyracks.http.server.IServlet;
-import org.apache.hyracks.http.server.IServletRequest;
-import org.apache.hyracks.http.server.IServletResponse;
+import org.apache.hyracks.http.server.util.ServletUtils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -66,7 +67,7 @@ public class ClusterApiServlet extends AbstractServlet {
     }
 
     protected void getUnsafe(IServletRequest request, IServletResponse response) throws IOException {
-        IServletResponse.setContentType(response, IServlet.ContentType.APPLICATION_JSON, IServlet.Encoding.UTF8);
+        ServletUtils.setContentType(response, IServlet.ContentType.APPLICATION_JSON, IServlet.Encoding.UTF8);
         PrintWriter responseWriter = response.writer();
         try {
             ObjectNode json;

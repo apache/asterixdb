@@ -23,7 +23,7 @@ import java.util.concurrent.ConcurrentMap;
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.translator.IStatementExecutorFactory;
-import org.apache.hyracks.http.server.IServletRequest;
+import org.apache.hyracks.http.api.IServletRequest;
 
 public class DdlApiServlet extends RestApiServlet {
     private static final byte ALLOWED_CATEGORIES =

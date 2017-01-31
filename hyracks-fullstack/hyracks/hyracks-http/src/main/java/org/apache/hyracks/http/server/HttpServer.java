@@ -23,12 +23,19 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.hyracks.http.api.IServlet;
+
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
+import io.netty.channel.WriteBufferWaterMark;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.logging.LogLevel;
@@ -36,6 +43,8 @@ import io.netty.handler.logging.LoggingHandler;
 
 public class HttpServer {
     // Constants
+    private static final int LOW_WRITE_BUFFER_WATER_MARK = 8 * 1024;
+    private static final int HIGH_WRITE_BUFFER_WATER_MARK = 32 * 1024;
     private static final Logger LOGGER = Logger.getLogger(HttpServer.class.getName());
     private static final int FAILED = -1;
     private static final int STOPPED = 0;
@@ -44,23 +53,26 @@ public class HttpServer {
     private static final int STOPPING = 3;
     // Final members
     private final Object lock = new Object();
+    private final AtomicInteger threadId = new AtomicInteger();
     private final ConcurrentMap<String, Object> ctx;
     private final List<IServlet> lets;
     private final EventLoopGroup bossGroup;
     private final EventLoopGroup workerGroup;
     private final int port;
+    private final ExecutorService executor;
     // Mutable members
     private volatile int state = STOPPED;
     private Channel channel;
     private Throwable cause;
 
-    public HttpServer(EventLoopGroup bossGroup, EventLoopGroup workerGroup,
-            int port) {
+    public HttpServer(EventLoopGroup bossGroup, EventLoopGroup workerGroup, int port) {
         this.bossGroup = bossGroup;
         this.workerGroup = workerGroup;
         this.port = port;
         ctx = new ConcurrentHashMap<>();
         lets = new ArrayList<>();
+        executor = Executors.newFixedThreadPool(16,
+                runnable -> new Thread(runnable, "HttpExecutor(port:" + port + ")-" + threadId.getAndIncrement()));
     }
 
     public final void start() throws Exception { // NOSONAR
@@ -158,7 +170,6 @@ public class HttpServer {
         lets.add(let);
     }
 
-
     protected void doStart() throws InterruptedException {
         /*
          * This is a hacky way to ensure that ILets with more specific paths are checked first.
@@ -172,13 +183,12 @@ public class HttpServer {
          */
         Collections.sort(lets, (l1, l2) -> l2.getPaths()[0].length() - l1.getPaths()[0].length());
         ServerBootstrap b = new ServerBootstrap();
-        b.group(bossGroup, workerGroup)
-                .channel(NioServerSocketChannel.class)
-                .handler(new LoggingHandler(LogLevel.INFO))
-                .childHandler(new HttpServerInitializer(this));
+        b.group(bossGroup, workerGroup).channel(NioServerSocketChannel.class)
+                .childOption(ChannelOption.WRITE_BUFFER_WATER_MARK,
+                        new WriteBufferWaterMark(LOW_WRITE_BUFFER_WATER_MARK, HIGH_WRITE_BUFFER_WATER_MARK))
+                .handler(new LoggingHandler(LogLevel.INFO)).childHandler(new HttpServerInitializer(this));
         channel = b.bind(port).sync().channel();
     }
-
 
     protected void doStop() throws InterruptedException {
         channel.close();
@@ -212,14 +222,18 @@ public class HttpServer {
                 return true;
             }
         } else if (c == '*') {
-            return path.regionMatches(path.length() - pathSpec.length() + 1,
-                    pathSpec, 1, pathSpec.length() - 1);
+            return path.regionMatches(path.length() - pathSpec.length() + 1, pathSpec, 1, pathSpec.length() - 1);
         }
         return false;
     }
+
     private static boolean isPathWildcardMatch(String pathSpec, String path) {
         int cpl = pathSpec.length() - 2;
         return (pathSpec.endsWith("/*") && path.regionMatches(0, pathSpec, 0, cpl))
                 && (path.length() == cpl || '/' == path.charAt(cpl));
+    }
+
+    public ExecutorService getExecutor() {
+        return executor;
     }
 }

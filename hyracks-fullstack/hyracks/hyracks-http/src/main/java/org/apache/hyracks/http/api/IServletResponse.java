@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.http.server;
+package org.apache.hyracks.http.api;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -24,54 +24,62 @@ import java.io.OutputStream;
 import java.io.PrintWriter;
 
 import io.netty.channel.ChannelFuture;
-import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpResponseStatus;
 
 /**
- * A response to an instance of IServLetRequest
+ * A response to an instance of IServletRequest
  */
 public interface IServletResponse extends Closeable {
 
     /**
      * Set a response header
+     *
      * @param name
+     *            the name of the header
      * @param value
+     *            the value of the header
      * @return
-     * @throws Exception
+     *         the servlet response with the header set
+     * @throws IOException
      */
     IServletResponse setHeader(CharSequence name, Object value) throws IOException;
 
     /**
-     * Get the output writer for the response
-     * @return
-     * @throws Exception
-     */
-    PrintWriter writer();
-
-    /**
-     * Send the last http response if any and return the future
-     * @return
-     * @throws Exception
-     */
-    ChannelFuture future() throws IOException;
-
-    /**
      * Set the status of the http response
+     *
      * @param status
      */
     void setStatus(HttpResponseStatus status);
 
     /**
+     * Get the output writer for the response which writes to the response output stream
+     *
+     * @return the response writer
+     */
+    PrintWriter writer();
+
+    /**
      * Get the output stream for the response
-     * @return
+     *
+     * @return the response output stream
      */
     OutputStream outputStream();
 
-    public static void setContentType(IServletResponse response, String type, String charset) throws IOException {
-        response.setHeader(HttpHeaderNames.CONTENT_TYPE, type + "; charset=" + charset);
-    }
+    /**
+     * Get last content future
+     * Must only be called after the servlet response has been closed
+     * Used to listen to events about the last content sent through the network
+     * For example, to close the connection after the event has been completed
+     * lastContentFuture().addListener(ChannelFutureListener.CLOSE);
+     *
+     * @return
+     * @throws IOException
+     */
+    ChannelFuture lastContentFuture() throws IOException;
 
-    public static void setContentType(IServletResponse response, String type) throws IOException {
-        response.setHeader(HttpHeaderNames.CONTENT_TYPE, type);
-    }
+    /**
+     * Notifies the response that the channel has become writable
+     * became writable or unwritable. Used for flow control
+     */
+    void notifyChannelWritable();
 }

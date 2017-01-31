@@ -27,9 +27,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.hyracks.api.client.IHyracksClientConnection;
-import org.apache.hyracks.http.server.IServlet;
-import org.apache.hyracks.http.server.IServletRequest;
-import org.apache.hyracks.http.server.IServletResponse;
+import org.apache.hyracks.http.api.IServlet;
+import org.apache.hyracks.http.api.IServletRequest;
+import org.apache.hyracks.http.api.IServletResponse;
+import org.apache.hyracks.http.server.util.ServletUtils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -57,7 +58,7 @@ public class ClusterControllerDetailsApiServlet extends ClusterApiServlet {
             } else {
                 json = processNode(request, hcc);
             }
-            IServletResponse.setContentType(response, IServlet.ContentType.APPLICATION_JSON, IServlet.Encoding.UTF8);
+            ServletUtils.setContentType(response, IServlet.ContentType.APPLICATION_JSON, IServlet.Encoding.UTF8);
             responseWriter.write(new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(json));
         } catch (IllegalArgumentException e) { // NOSONAR - exception not logged or rethrown
             response.setStatus(HttpResponseStatus.NOT_FOUND);
@@ -69,8 +70,7 @@ public class ClusterControllerDetailsApiServlet extends ClusterApiServlet {
         responseWriter.flush();
     }
 
-    private ObjectNode processNode(IServletRequest request, IHyracksClientConnection hcc)
-            throws Exception {
+    private ObjectNode processNode(IServletRequest request, IHyracksClientConnection hcc) throws Exception {
         String pathInfo = path(request);
         if (pathInfo.endsWith("/")) {
             throw new IllegalArgumentException();

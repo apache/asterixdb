@@ -53,10 +53,11 @@ import org.apache.hyracks.algebricks.core.algebra.prettyprint.AlgebricksAppendab
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.dataset.IHyracksDataset;
 import org.apache.hyracks.client.dataset.HyracksDataset;
+import org.apache.hyracks.http.api.IServlet;
+import org.apache.hyracks.http.api.IServletRequest;
+import org.apache.hyracks.http.api.IServletResponse;
 import org.apache.hyracks.http.server.AbstractServlet;
-import org.apache.hyracks.http.server.IServlet;
-import org.apache.hyracks.http.server.IServletRequest;
-import org.apache.hyracks.http.server.IServletResponse;
+import org.apache.hyracks.http.server.util.ServletUtils;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -74,8 +75,7 @@ public class QueryServiceServlet extends AbstractServlet {
     private final IStatementExecutorFactory statementExecutorFactory;
 
     public QueryServiceServlet(ConcurrentMap<String, Object> ctx, String[] paths,
-            ILangCompilationProvider compilationProvider,
-            IStatementExecutorFactory statementExecutorFactory) {
+            ILangCompilationProvider compilationProvider, IStatementExecutorFactory statementExecutorFactory) {
         super(ctx, paths);
         this.compilationProvider = compilationProvider;
         this.statementExecutorFactory = statementExecutorFactory;
@@ -325,8 +325,8 @@ public class QueryServiceServlet extends AbstractServlet {
         SessionConfig.ResultDecorator handlePostfix = (AlgebricksAppendable app) -> app.append(",\n");
 
         SessionConfig.OutputFormat format = getFormat(param.format);
-        SessionConfig sessionConfig = new SessionConfig(resultWriter, format, resultPrefix, resultPostfix,
-                handlePrefix, handlePostfix);
+        SessionConfig sessionConfig =
+                new SessionConfig(resultWriter, format, resultPrefix, resultPostfix, handlePrefix, handlePostfix);
         sessionConfig.set(SessionConfig.FORMAT_WRAPPER_ARRAY, true);
         sessionConfig.set(SessionConfig.FORMAT_INDENT_JSON, param.pretty);
         sessionConfig.set(SessionConfig.FORMAT_QUOTE_RECORD,
@@ -482,7 +482,7 @@ public class QueryServiceServlet extends AbstractServlet {
         QueryTranslator.ResultDelivery delivery = parseResultDelivery(param.mode);
 
         SessionConfig sessionConfig = createSessionConfig(param, resultWriter);
-        IServletResponse.setContentType(response, IServlet.ContentType.APPLICATION_JSON, IServlet.Encoding.UTF8);
+        ServletUtils.setContentType(response, IServlet.ContentType.APPLICATION_JSON, IServlet.Encoding.UTF8);
 
         HttpResponseStatus status = HttpResponseStatus.OK;
         Stats stats = new Stats();
@@ -517,8 +517,8 @@ public class QueryServiceServlet extends AbstractServlet {
             IParser parser = compilationProvider.getParserFactory().createParser(param.statement);
             List<Statement> statements = parser.parse();
             MetadataManager.INSTANCE.init();
-            IStatementExecutor translator = statementExecutorFactory.create(statements, sessionConfig,
-                    compilationProvider);
+            IStatementExecutor translator =
+                    statementExecutorFactory.create(statements, sessionConfig, compilationProvider);
             execStart = System.nanoTime();
             translator.compileAndExecute(hcc, hds, delivery, stats);
             execEnd = System.nanoTime();

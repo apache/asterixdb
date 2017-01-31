@@ -31,10 +31,11 @@ import java.util.logging.Logger;
 
 import javax.imageio.ImageIO;
 
+import org.apache.hyracks.http.api.IServlet;
+import org.apache.hyracks.http.api.IServletRequest;
+import org.apache.hyracks.http.api.IServletResponse;
 import org.apache.hyracks.http.server.AbstractServlet;
-import org.apache.hyracks.http.server.IServlet;
-import org.apache.hyracks.http.server.IServletRequest;
-import org.apache.hyracks.http.server.IServletResponse;
+import org.apache.hyracks.http.server.util.ServletUtils;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
 
@@ -53,7 +54,7 @@ public class FeedServlet extends AbstractServlet {
             String requestURI = request.getHttpRequest().uri();
 
             if ("/".equals(requestURI)) {
-                IServletResponse.setContentType(response, IServlet.ContentType.TEXT_HTML);
+                ServletUtils.setContentType(response, IServlet.ContentType.TEXT_HTML);
                 resourcePath = "/feed/home.html";
             } else {
                 resourcePath = requestURI;
@@ -71,12 +72,12 @@ public class FeedServlet extends AbstractServlet {
                 BufferedImage img = ImageIO.read(is);
                 OutputStream outputStream = response.outputStream();
                 String formatName = "png";
-                IServletResponse.setContentType(response, IServlet.ContentType.IMG_PNG);
+                ServletUtils.setContentType(response, IServlet.ContentType.IMG_PNG);
                 ImageIO.write(img, formatName, outputStream);
                 return;
             }
 
-            IServletResponse.setContentType(response, IServlet.ContentType.TEXT_HTML, IServlet.Encoding.UTF8);
+            ServletUtils.setContentType(response, IServlet.ContentType.TEXT_HTML, IServlet.Encoding.UTF8);
             InputStreamReader isr = new InputStreamReader(is);
             StringBuilder sb = new StringBuilder();
             BufferedReader br = new BufferedReader(isr);

@@ -52,10 +52,11 @@ import org.apache.asterix.translator.SessionConfig.OutputFormat;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.dataset.IHyracksDataset;
 import org.apache.hyracks.client.dataset.HyracksDataset;
+import org.apache.hyracks.http.api.IServlet;
+import org.apache.hyracks.http.api.IServletRequest;
+import org.apache.hyracks.http.api.IServletResponse;
 import org.apache.hyracks.http.server.AbstractServlet;
-import org.apache.hyracks.http.server.IServlet;
-import org.apache.hyracks.http.server.IServletRequest;
-import org.apache.hyracks.http.server.IServletResponse;
+import org.apache.hyracks.http.server.util.ServletUtils;
 
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpResponseStatus;
@@ -107,7 +108,7 @@ public class ApiServlet extends AbstractServlet {
         String printJob = request.getParameter("print-job");
         String executeQuery = request.getParameter("execute-query");
         try {
-            IServletResponse.setContentType(response, IServlet.ContentType.TEXT_HTML, IServlet.Encoding.UTF8);
+            ServletUtils.setContentType(response, IServlet.ContentType.TEXT_HTML, IServlet.Encoding.UTF8);
         } catch (IOException e) {
             LOGGER.log(Level.WARNING, "Failure setting content type", e);
             response.setStatus(HttpResponseStatus.INTERNAL_SERVER_ERROR);
@@ -158,7 +159,7 @@ public class ApiServlet extends AbstractServlet {
 
         if ("/".equals(requestURI)) {
             try {
-                IServletResponse.setContentType(response, IServlet.ContentType.TEXT_HTML, IServlet.Encoding.UTF8);
+                ServletUtils.setContentType(response, IServlet.ContentType.TEXT_HTML, IServlet.Encoding.UTF8);
             } catch (IOException e) {
                 LOGGER.log(Level.WARNING, "Failure setting content type", e);
                 response.setStatus(HttpResponseStatus.INTERNAL_SERVER_ERROR);
@@ -177,7 +178,7 @@ public class ApiServlet extends AbstractServlet {
             // Special handler for font files and .png resources
             if (resourcePath.endsWith(".png")) {
                 BufferedImage img = ImageIO.read(is);
-                IServletResponse.setContentType(response, IServlet.ContentType.IMG_PNG);
+                ServletUtils.setContentType(response, IServlet.ContentType.IMG_PNG);
                 OutputStream outputStream = response.outputStream();
                 String formatName = "png";
                 ImageIO.write(img, formatName, outputStream);
@@ -185,7 +186,7 @@ public class ApiServlet extends AbstractServlet {
                 return;
             }
             String type = IServlet.ContentType.mime(QueryWebInterfaceServlet.extension(resourcePath));
-            IServletResponse.setContentType(response, "".equals(type) ? IServlet.ContentType.TEXT_PLAIN : type,
+            ServletUtils.setContentType(response, "".equals(type) ? IServlet.ContentType.TEXT_PLAIN : type,
                     IServlet.Encoding.UTF8);
             writeOutput(response, is, resourcePath);
         } catch (IOException e) {

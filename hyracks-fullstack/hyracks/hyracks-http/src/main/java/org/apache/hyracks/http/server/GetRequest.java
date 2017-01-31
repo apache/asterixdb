@@ -21,6 +21,9 @@ package org.apache.hyracks.http.server;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.hyracks.http.api.IServletRequest;
+import org.apache.hyracks.http.server.util.ServletUtils;
+
 import io.netty.handler.codec.http.FullHttpRequest;
 
 public class GetRequest implements IServletRequest {
@@ -39,12 +42,11 @@ public class GetRequest implements IServletRequest {
 
     @Override
     public String getParameter(CharSequence name) {
-        return IServletRequest.getParameter(parameters, name);
+        return ServletUtils.getParameter(parameters, name);
     }
 
     @Override
     public String getHeader(CharSequence name) {
         return request.headers().get(name);
     }
-
 }
