@@ -27,29 +27,24 @@ import java.util.Map;
 public class ExecutionTimeProfiler {
 
     public static final boolean PROFILE_MODE = false;
-    public static final String INIT = "init";
     private FileOutputStream fos;
     private String filePath;
     private StringBuilder sb;
-    private int printInterval;
-    private int addCount;
     private Object lock1 = new Object();
 
 
     // [Key: Job, Value: [Key: Operator, Value: Duration of each operators]]
     private HashMap<String, LinkedHashMap<String, String>> spentTimePerJobMap;
 
-    public ExecutionTimeProfiler(String filePath, int printInterval) {
+    public ExecutionTimeProfiler(String filePath) {
         this.filePath = new String(filePath);
         this.sb = new StringBuilder();
-        this.printInterval = printInterval;
         this.spentTimePerJobMap = new HashMap<String, LinkedHashMap<String, String>>();
     }
 
     public void begin() {
         try {
             fos = ExperimentProfilerUtils.openOutputFile(filePath);
-            addCount = 0;
         } catch (IOException e) {
             e.printStackTrace();
             throw new IllegalStateException(e);

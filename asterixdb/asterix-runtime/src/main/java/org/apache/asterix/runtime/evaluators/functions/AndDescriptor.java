@@ -87,7 +87,6 @@ public class AndDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                     public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                         resultStorage.reset();
                         int n = args.length;
-                        boolean res = true;
                         boolean metNull = false;
                         boolean metMissing = false;
                         for (int i = 0; i < n; i++) {
@@ -112,13 +111,12 @@ public class AndDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                                         ATypeTag.SERIALIZED_BOOLEAN_TYPE_TAG);
                             }
                             boolean argResult = ABooleanSerializerDeserializer.getBoolean(bytes, offset + 1);
-                            if (argResult == false) {
+                            if (! argResult) {
                                 // anything AND FALSE = FALSE
                                 booleanSerde.serialize(ABoolean.FALSE, out);
                                 result.set(resultStorage);
                                 return;
                             }
-                            res &= argResult;
                         }
                         if (metMissing) {
                             // MISSING AND NULL = MISSING
@@ -128,8 +126,7 @@ public class AndDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                             // NULL AND TRUE = NULL
                             nullSerde.serialize(ANull.NULL, out);
                         } else {
-                            ABoolean aResult = res ? ABoolean.TRUE : ABoolean.FALSE;
-                            booleanSerde.serialize(aResult, out);
+                            booleanSerde.serialize(ABoolean.TRUE, out);
                         }
                         result.set(resultStorage);
                     }
