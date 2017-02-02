@@ -30,8 +30,8 @@ import java.util.Random;
 import org.apache.hyracks.util.MathUtil;
 
 public class DocumentStringFieldValueGenerator implements IFieldValueGenerator<String> {
-    private final String FIRST_NAMES_FILE = "dist.all.first.cleaned";
-    private final String LAST_NAMES_FILE = "dist.all.last.cleaned";
+    private static final String FIRST_NAMES_FILE = "dist.all.first.cleaned";
+    private static final String LAST_NAMES_FILE = "dist.all.last.cleaned";
 
     private final int docMinWords;
     private final int docMaxWords;
@@ -39,7 +39,7 @@ public class DocumentStringFieldValueGenerator implements IFieldValueGenerator<S
     private final Random rnd;
     private int[] cumulIntRanges;
 
-    private List<String> tokenDict = new ArrayList<String>();
+    private List<String> tokenDict = new ArrayList<>();
 
     public DocumentStringFieldValueGenerator(int docMinWords, int docMaxWords, int maxDictionarySize, Random rnd)
             throws IOException {
@@ -58,26 +58,24 @@ public class DocumentStringFieldValueGenerator implements IFieldValueGenerator<S
 
         // Read first names from data file.
         InputStream firstNamesIn = this.getClass().getClassLoader().getResourceAsStream(FIRST_NAMES_FILE);
-        BufferedReader firstNamesReader = new BufferedReader(new InputStreamReader(firstNamesIn));
-        try {
+        try (BufferedReader firstNamesReader = new BufferedReader(new InputStreamReader(firstNamesIn))) {
             while (count < maxDictionarySize && (line = firstNamesReader.readLine()) != null) {
-                tokenDict.add(line.trim());
-                count++;
+                if (!line.startsWith(";")) {
+                    tokenDict.add(line.trim());
+                    count++;
+                }
             }
-        } finally {
-            firstNamesReader.close();
         }
 
         // Read last names from data file.
         InputStream lastNamesIn = this.getClass().getClassLoader().getResourceAsStream(LAST_NAMES_FILE);
-        BufferedReader lastNamesReader = new BufferedReader(new InputStreamReader(lastNamesIn));
-        try {
+        try (BufferedReader lastNamesReader = new BufferedReader(new InputStreamReader(lastNamesIn))) {
             while (count < maxDictionarySize && (line = lastNamesReader.readLine()) != null) {
-                tokenDict.add(line.trim());
-                count++;
+                if (!line.startsWith(";")) {
+                    tokenDict.add(line.trim());
+                    count++;
+                }
             }
-        } finally {
-            lastNamesReader.close();
         }
     }
 

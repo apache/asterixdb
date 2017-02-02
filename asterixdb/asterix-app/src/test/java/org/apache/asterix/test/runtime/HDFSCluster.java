@@ -40,6 +40,7 @@ import org.apache.log4j.Logger;
 public class HDFSCluster {
 
     private static final String PATH_TO_HADOOP_CONF = "src/test/resources/hadoop/conf";
+    private static final String MINIDFS_BASEDIR = "target" + File.separatorChar + "hdfs";
     private static final int nameNodePort = 31888;
     private static final String DATA_PATH = "data/hdfs";
     private static final String HDFS_PATH = "/asterix";
@@ -73,6 +74,7 @@ public class HDFSCluster {
         conf.addResource(new Path(basePath + PATH_TO_HADOOP_CONF + "/hdfs-site.xml"));
         cleanupLocal();
         setLoggingLevel(Level.WARN);
+        conf.set(MiniDFSCluster.HDFS_MINIDFS_BASEDIR, MINIDFS_BASEDIR);
         MiniDFSCluster.Builder build = new MiniDFSCluster.Builder(conf);
         build.nameNodePort(nameNodePort);
         build.numDataNodes(numDataNodes);

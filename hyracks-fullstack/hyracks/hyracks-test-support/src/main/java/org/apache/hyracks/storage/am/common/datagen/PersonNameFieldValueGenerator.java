@@ -30,15 +30,15 @@ import java.util.Random;
 import org.apache.hyracks.util.MathUtil;
 
 public class PersonNameFieldValueGenerator implements IFieldValueGenerator<String> {
-    private final String FIRST_NAMES_FILE = "dist.all.first.cleaned";
-    private final String LAST_NAMES_FILE = "dist.all.last.cleaned";
+    private static final String FIRST_NAMES_FILE = "dist.all.first.cleaned";
+    private static final String LAST_NAMES_FILE = "dist.all.last.cleaned";
+    private static final String LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
     private final Random rnd;
     private final double middleInitialProb;
-    private final String letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-    private List<String> firstNames = new ArrayList<String>();
-    private List<String> lastNames = new ArrayList<String>();
+    private List<String> firstNames = new ArrayList<>();
+    private List<String> lastNames = new ArrayList<>();
 
     public PersonNameFieldValueGenerator(Random rnd, double middleInitialProb)
             throws IOException {
@@ -52,24 +52,22 @@ public class PersonNameFieldValueGenerator implements IFieldValueGenerator<Strin
 
         // Read first names from data file.
         InputStream firstNamesIn = this.getClass().getClassLoader().getResourceAsStream(FIRST_NAMES_FILE);
-        BufferedReader firstNamesReader = new BufferedReader(new InputStreamReader(firstNamesIn));
-        try {
+        try (BufferedReader firstNamesReader = new BufferedReader(new InputStreamReader(firstNamesIn))) {
             while ((line = firstNamesReader.readLine()) != null) {
-                firstNames.add(line.trim());
+                if (!line.startsWith(";")) {
+                    firstNames.add(line.trim());
+                }
             }
-        } finally {
-            firstNamesReader.close();
         }
 
         // Read last names from data file.
         InputStream lastNamesIn = this.getClass().getClassLoader().getResourceAsStream(LAST_NAMES_FILE);
-        BufferedReader lastNamesReader = new BufferedReader(new InputStreamReader(lastNamesIn));
-        try {
+        try (BufferedReader lastNamesReader = new BufferedReader(new InputStreamReader(lastNamesIn))) {
             while ((line = lastNamesReader.readLine()) != null) {
-                lastNames.add(line.trim());
+                if (!line.startsWith(";")) {
+                    lastNames.add(line.trim());
+                }
             }
-        } finally {
-            lastNamesReader.close();
         }
     }
 
@@ -85,8 +83,8 @@ public class PersonNameFieldValueGenerator implements IFieldValueGenerator<Strin
         // Optional middle initial.
         double d = Math.abs(rnd.nextDouble());
         if (d <= middleInitialProb) {
-            int mix = MathUtil.stripSignBit(rnd.nextInt()) % letters.length();
-            strBuilder.append(letters.charAt(mix));
+            int mix = MathUtil.stripSignBit(rnd.nextInt()) % LETTERS.length();
+            strBuilder.append(LETTERS.charAt(mix));
             strBuilder.append(". ");
         }
 

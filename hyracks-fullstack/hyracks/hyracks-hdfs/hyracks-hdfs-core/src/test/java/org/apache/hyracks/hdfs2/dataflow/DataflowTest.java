@@ -19,18 +19,10 @@
 
 package org.apache.hyracks.hdfs2.dataflow;
 
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.List;
 
 import junit.framework.Assert;
-import junit.framework.TestCase;
-
-import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.mapreduce.InputFormat;
@@ -40,7 +32,6 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.util.ReflectionUtils;
-
 import org.apache.hyracks.api.client.HyracksConnection;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.constraints.PartitionConstraintHelper;
@@ -48,6 +39,7 @@ import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
@@ -61,73 +53,32 @@ import org.apache.hyracks.hdfs.lib.RawBinaryHashFunctionFactory;
 import org.apache.hyracks.hdfs.lib.TextKeyValueParserFactory;
 import org.apache.hyracks.hdfs.lib.TextTupleWriterFactory;
 import org.apache.hyracks.hdfs.utils.HyracksUtils;
-import org.apache.hyracks.hdfs.utils.TestUtils;
 import org.apache.hyracks.hdfs2.scheduler.Scheduler;
 
 /**
  * Test the org.apache.hyracks.hdfs2.dataflow package,
  * the operators for the Hadoop new API.
  */
-public class DataflowTest extends TestCase {
+public class DataflowTest extends org.apache.hyracks.hdfs.dataflow.DataflowTest {
 
-    private static final String ACTUAL_RESULT_DIR = "actual";
-    private static final String EXPECTED_RESULT_PATH = "src/test/resources/expected";
-    private static final String PATH_TO_HADOOP_CONF = "src/test/resources/hadoop/conf";
-
-    private static final String DATA_PATH = "src/test/resources/data/customer.tbl";
-    private static final String HDFS_INPUT_PATH = "/customer/";
-    private static final String HDFS_OUTPUT_PATH = "/customer_result/";
-
-    private static final String HADOOP_CONF_PATH = ACTUAL_RESULT_DIR + File.separator + "conf.xml";
-    private MiniDFSCluster dfsCluster;
     private MiniDFSClusterFactory dfsClusterFactory = new MiniDFSClusterFactory();
 
     private Job conf;
-    private int numberOfNC = 2;
 
     @Override
     public void setUp() throws Exception {
         conf = new Job();
-        cleanupStores();
-        HyracksUtils.init();
-        FileUtils.forceMkdir(new File(ACTUAL_RESULT_DIR));
-        FileUtils.cleanDirectory(new File(ACTUAL_RESULT_DIR));
-        startHDFS();
+        super.setUp();
     }
 
-    private void cleanupStores() throws IOException {
-        FileUtils.forceMkdir(new File("teststore"));
-        FileUtils.forceMkdir(new File("build"));
-        FileUtils.cleanDirectory(new File("teststore"));
-        FileUtils.cleanDirectory(new File("build"));
+    @Override
+    protected Configuration getConfiguration() {
+        return conf.getConfiguration();
     }
 
-    /**
-     * Start the HDFS cluster and setup the data files
-     *
-     * @throws IOException
-     */
-    private void startHDFS() throws IOException {
-        conf.getConfiguration().addResource(new Path(PATH_TO_HADOOP_CONF + "/core-site.xml"));
-        conf.getConfiguration().addResource(new Path(PATH_TO_HADOOP_CONF + "/mapred-site.xml"));
-        conf.getConfiguration().addResource(new Path(PATH_TO_HADOOP_CONF + "/hdfs-site.xml"));
-
-        FileSystem lfs = FileSystem.getLocal(new Configuration());
-        lfs.delete(new Path("build"), true);
-        System.setProperty("hadoop.log.dir", "logs");
-        dfsCluster = dfsClusterFactory.getMiniDFSCluster(conf.getConfiguration(), numberOfNC);
-        FileSystem dfs = FileSystem.get(conf.getConfiguration());
-        Path src = new Path(DATA_PATH);
-        Path dest = new Path(HDFS_INPUT_PATH);
-        Path result = new Path(HDFS_OUTPUT_PATH);
-        dfs.mkdirs(dest);
-        dfs.mkdirs(result);
-        dfs.copyFromLocalFile(src, dest);
-
-        DataOutputStream confOutput = new DataOutputStream(new FileOutputStream(new File(HADOOP_CONF_PATH)));
-        conf.getConfiguration().writeXml(confOutput);
-        confOutput.flush();
-        confOutput.close();
+    @Override
+    protected MiniDFSCluster getMiniDFSCluster(Configuration conf, int numberOfNC) throws HyracksDataException {
+        return dfsClusterFactory.getMiniDFSCluster(conf, numberOfNC);
     }
 
     /**
@@ -142,7 +93,7 @@ public class DataflowTest extends TestCase {
         conf.setInputFormatClass(TextInputFormat.class);
 
         Scheduler scheduler = new Scheduler(HyracksUtils.CC_HOST, HyracksUtils.TEST_HYRACKS_CC_CLIENT_PORT);
-        InputFormat inputFormat = ReflectionUtils.newInstance(conf.getInputFormatClass(), conf.getConfiguration());
+        InputFormat inputFormat = ReflectionUtils.newInstance(conf.getInputFormatClass(), getConfiguration());
         List<InputSplit> splits = inputFormat.getSplits(conf);
 
         String[] readSchedule = scheduler.getLocationConstraints(splits);
@@ -178,35 +129,4 @@ public class DataflowTest extends TestCase {
 
         Assert.assertEquals(true, checkResults());
     }
-
-    /**
-     * Check if the results are correct
-     *
-     * @return true if correct
-     * @throws Exception
-     */
-    private boolean checkResults() throws Exception {
-        FileSystem dfs = FileSystem.get(conf.getConfiguration());
-        Path result = new Path(HDFS_OUTPUT_PATH);
-        Path actual = new Path(ACTUAL_RESULT_DIR);
-        dfs.copyToLocalFile(result, actual);
-
-        TestUtils.compareWithResult(new File(EXPECTED_RESULT_PATH + File.separator + "part-0"), new File(
-                ACTUAL_RESULT_DIR + File.separator + "customer_result" + File.separator + "part-0"));
-        return true;
-    }
-
-    /**
-     * cleanup hdfs cluster
-     */
-    private void cleanupHDFS() throws Exception {
-        dfsCluster.shutdown();
-    }
-
-    @Override
-    public void tearDown() throws Exception {
-        HyracksUtils.deinit();
-        cleanupHDFS();
-    }
-
 }

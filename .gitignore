@@ -5,14 +5,11 @@ target
 .settings
 .project
 ClusterControllerService
-asterix_logs
-build
 asterixdb/asterix-opt
 asterixdb/asterix-app/src/test/resources/externallib
 asterixdb/asterix-app/library
 asterixdb/asterix-app/data/csv/beer.csv
 asterixdb/asterix-installer/src/test/resources/clusterts/asterix-installer-*-SNAPSHOT-binary-assembly
-asterixdb/asterix-installer/ittest/
 *-coredump
 *.pyc
 *.iml
@@ -20,11 +17,7 @@ asterixdb/asterix-installer/ittest/
 *.ipr
 *.iws
 git.properties
-actual
 exception
-expected
-teststore1
-teststore2
 dev1
 dev2
 dev3
@@ -32,7 +25,6 @@ dev4
 derby.log
 hadoop-conf-tmp
 metastore_db
-teststore
 output
 tmp
 dist

@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executors;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hyracks.api.application.INCApplicationContext;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.ActivityId;
@@ -52,5 +53,9 @@ public class TestUtils {
         List<IODeviceHandle> devices = new ArrayList<>();
         devices.add(new IODeviceHandle(new File(System.getProperty("java.io.tmpdir")), "."));
         return new IOManager(devices, Executors.newCachedThreadPool());
+    }
+
+    public static String joinPath(String... pathElements) {
+        return StringUtils.join(pathElements, File.separatorChar);
     }
 }

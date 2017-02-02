@@ -150,6 +150,11 @@
         <artifactId>commons-lang3</artifactId>
         <version>3.5</version>
       </dependency>
+      <dependency>
+        <groupId>org.apache.rat</groupId>
+        <artifactId>apache-rat-plugin</artifactId>
+        <version>0.12</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
@@ -190,7 +195,6 @@
       <plugin>
         <groupId>org.apache.rat</groupId>
         <artifactId>apache-rat-plugin</artifactId>
-        <version>0.11</version>
         <executions>
           <execution>
             <phase>validate</phase>
@@ -200,89 +204,15 @@
           </execution>
         </executions>
         <configuration>
+          <addDefaultLicenseMatchers>false</addDefaultLicenseMatchers>
+          <consoleOutput>true</consoleOutput>
           <licenses>
-            <license implementation="org.apache.rat.analysis.license.SimplePatternBasedLicense">
-              <licenseFamilyCategory>MIT</licenseFamilyCategory>
-              <licenseFamilyName>The MIT License</licenseFamilyName>
-              <notes>For JQuery MIT/GPL2 Dual License</notes>
-              <patterns>
-                <pattern>Dual licensed under the MIT or GPL Version 2 licenses.</pattern>
-                <pattern>Dual licensed under the MIT and GPL2 licenses.</pattern>
-                <pattern>http://jquery.org/license</pattern>
-                <pattern>Dual licensed under the MIT</pattern>
-                <pattern>Released under the MIT license by IOLA, December 2007.</pattern>
-              </patterns>
-            </license>
+            <license implementation="org.apache.rat.analysis.license.ApacheSoftwareLicense20"/>
           </licenses>
           <licenseFamilies>
-            <licenseFamily implementation="org.apache.rat.license.SimpleLicenseFamily">
-              <familyName>The MIT License</familyName>
-            </licenseFamily>
-            <licenseFamily implementation="org.apache.rat.license.SimpleLicenseFamily">
-              <familyName>Apache License Version 2.0</familyName>
-            </licenseFamily>
+            <licenseFamily implementation="org.apache.rat.license.Apache20LicenseFamily"/>
           </licenseFamilies>
-          <excludeSubProjects>false</excludeSubProjects>
-          <excludes>
-            <exclude>**/*.conf</exclude>
-            <exclude>**/*.iml</exclude>
-            <exclude>**/*.job</exclude>
-            <exclude>**/*.prefs</exclude>
-            <exclude>**/.classpath</exclude>
-            <exclude>**/.project</exclude>
-            <exclude>**/.settings/**</exclude>
-            <exclude>**/actual/conf.xml</exclude>
-            <exclude>**/actual/customer_result/part-*</exclude>
-            <exclude>**/algebricks-tests/src/test/resources/results/**</exclude>
-            <exclude>**/ClusterControllerService/**</exclude>
-            <exclude>**/data/**/*.ddl</exclude>
-            <exclude>**/data/**/*.tbl</exclude>
-            <exclude>**/data/**/*.tsv</exclude>
-            <exclude>**/data/**/*.txt</exclude>
-            <exclude>**/data/*.txt</exclude>
-            <exclude>**/data/dfs/**</exclude>
-            <exclude>**/hyracks-dist/src/main/resources/conf/**</exclude>
-            <exclude>**/invIndex*/**</exclude>
-            <exclude>**/javascript/adminconsole/*.js</exclude>
-            <exclude>**/javascript/flot/*.js</exclude>
-            <exclude>**/javascript/jquery/*.js</exclude>
-            <exclude>**/javascript/jsplumb/*.js</exclude>
-            <exclude>**/output/**</exclude>
-            <exclude>**/src/main/resources/*.cleaned</exclude>
-            <exclude>**/src/main/resources/conf/*</exclude>
-            <exclude>**/src/test/resources/data/**</exclude>
-            <exclude>**/src/test/resources/expected/**</exclude>
-            <exclude>**/src/test/resources/results/**</exclude>
-            <exclude>**/stylesheet/jquery-ui/**</exclude>
-            <exclude>**/target/**</exclude>
-            <exclude>**/testcases/*.piglet</exclude>
-            <exclude>algebricks/algebricks-examples/piglet-example/testcases/*.piglet</exclude>
-            <exclude>algebricks/algebricks-tests/ClusterControllerService/logs/jobs/*.log</exclude>
-            <exclude>algebricks/algebricks-tests/data/simple/*.tbl</exclude>
-            <exclude>algebricks/algebricks-tests/data/tpch0.001/*.tbl</exclude>
-            <exclude>algebricks/algebricks-tests/data/tpch0.001/tpch.ddl</exclude>
-            <exclude>algebricks/algebricks-tests/src/test/resources/results/scanMicroSortWrite.out</exclude>
-            <exclude>ClusterControllerService/logs/jobs/*.log</exclude>
-            <exclude>hyracks/hyracks-client/ClusterControllerService/logs/jobs/*.log</exclude>
-            <exclude>hyracks/hyracks-control/hyracks-control-cc/src/main/resources/static/javascript/flot/*.js</exclude>
-            <exclude>hyracks/hyracks-control/hyracks-control-cc/src/main/resources/static/javascript/jsplumb/jquery.jsPlumb-1.3.5-all-min.js</exclude>
-            <exclude>hyracks/hyracks-control/hyracks-control-cc/src/main/resources/static/stylesheet/json.human.css</exclude>
-            <exclude>hyracks/hyracks-dist/src/main/resources/conf/master</exclude>
-            <exclude>hyracks/hyracks-dist/src/main/resources/conf/slaves</exclude>
-            <exclude>hyracks/hyracks-examples/hyracks-integration-tests/data/*.txt</exclude>
-            <exclude>hyracks/hyracks-examples/hyracks-integration-tests/data/tpch0.001/*.tbl</exclude>
-            <exclude>hyracks/hyracks-examples/hyracks-integration-tests/data/tpch0.001/tpch.ddl</exclude>
-            <exclude>hyracks/hyracks-examples/hyracks-integration-tests/data/wordcount.tsv</exclude>
-            <exclude>hyracks/hyracks-examples/text-example/textserver/data/*.txt</exclude>
-            <exclude>hyracks/hyracks-hdfs/hyracks-hdfs-core/actual/conf.xml</exclude>
-            <exclude>hyracks/hyracks-hdfs/hyracks-hdfs-core/actual/customer_result/part-0</exclude>
-            <exclude>hyracks/hyracks-hdfs/hyracks-hdfs-core/build/test/data/dfs/**</exclude>
-            <exclude>hyracks/hyracks-hdfs/hyracks-hdfs-core/ClusterControllerService/logs/jobs/*.log</exclude>
-            <exclude>hyracks/hyracks-hdfs/hyracks-hdfs-core/src/test/resources/data/customer.tbl</exclude>
-            <exclude>hyracks/hyracks-hdfs/hyracks-hdfs-core/src/test/resources/expected/part-0</exclude>
-            <exclude>hyracks/hyracks-storage-am-common/src/main/resources/dist.all.first.cleaned</exclude>
-            <exclude>hyracks/hyracks-storage-am-common/src/main/resources/dist.all.last.cleaned</exclude>
-          </excludes>
+          <excludeSubProjects>true</excludeSubProjects>
         </configuration>
       </plugin>
       <plugin>
@@ -409,6 +339,11 @@
     </plugins>
     <pluginManagement>
       <plugins>
+        <plugin>
+          <groupId>org.apache.rat</groupId>
+          <artifactId>apache-rat-plugin</artifactId>
+          <version>0.12</version>
+        </plugin>
         <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
         <plugin>
           <groupId>org.eclipse.m2e</groupId>
