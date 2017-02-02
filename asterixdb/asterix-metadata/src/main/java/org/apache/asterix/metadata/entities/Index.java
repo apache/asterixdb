@@ -22,13 +22,16 @@ package org.apache.asterix.metadata.entities;
 import java.util.List;
 
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.transactions.IRecoveryManager.ResourceType;
 import org.apache.asterix.metadata.MetadataCache;
 import org.apache.asterix.metadata.api.IMetadataEntity;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.IAType;
-import org.apache.asterix.om.util.NonTaggedFormatUtil;
+import org.apache.asterix.om.utils.NonTaggedFormatUtil;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 
 /**
@@ -131,7 +134,7 @@ public class Index implements IMetadataEntity<Index>, Comparable<Index> {
         return !isPrimaryIndex();
     }
 
-    public static Pair<IAType, Boolean> getNonNullableType(IAType keyType) throws AsterixException {
+    public static Pair<IAType, Boolean> getNonNullableType(IAType keyType) {
         boolean nullable = false;
         IAType actualKeyType = keyType;
         if (NonTaggedFormatUtil.isOptional(keyType)) {
@@ -142,7 +145,7 @@ public class Index implements IMetadataEntity<Index>, Comparable<Index> {
     }
 
     public static Pair<IAType, Boolean> getNonNullableOpenFieldType(IAType fieldType, List<String> fieldName,
-            ARecordType recType) throws AsterixException {
+            ARecordType recType) throws AlgebricksException {
         Pair<IAType, Boolean> keyPairType = null;
         IAType subType = recType;
         for (int i = 0; i < fieldName.size(); i++) {
@@ -159,12 +162,12 @@ public class Index implements IMetadataEntity<Index>, Comparable<Index> {
     }
 
     public static Pair<IAType, Boolean> getNonNullableKeyFieldType(List<String> expr, ARecordType recType)
-            throws AsterixException {
+            throws AlgebricksException {
         IAType keyType = Index.keyFieldType(expr, recType);
         return getNonNullableType(keyType);
     }
 
-    private static IAType keyFieldType(List<String> expr, ARecordType recType) throws AsterixException {
+    private static IAType keyFieldType(List<String> expr, ARecordType recType) throws AlgebricksException {
         IAType fieldType = recType;
         fieldType = recType.getSubFieldType(expr);
         return fieldType;
@@ -250,5 +253,21 @@ public class Index implements IMetadataEntity<Index>, Comparable<Index> {
             }
         }
         return false;
+    }
+
+    public byte resourceType() throws CompilationException {
+        switch (indexType) {
+            case BTREE:
+                return ResourceType.LSM_BTREE;
+            case RTREE:
+                return ResourceType.LSM_RTREE;
+            case LENGTH_PARTITIONED_NGRAM_INVIX:
+            case LENGTH_PARTITIONED_WORD_INVIX:
+            case SINGLE_PARTITION_NGRAM_INVIX:
+            case SINGLE_PARTITION_WORD_INVIX:
+                return ResourceType.LSM_INVERTED_INDEX;
+            default:
+                throw new CompilationException(ErrorCode.COMPILATION_UNKNOWN_INDEX_TYPE, indexType);
+        }
     }
 }

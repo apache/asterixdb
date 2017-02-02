@@ -29,7 +29,7 @@ import org.apache.asterix.metadata.MetadataException;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.entities.Dataset;
-import org.apache.asterix.runtime.util.ClusterStateManager;
+import org.apache.asterix.runtime.utils.ClusterStateManager;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
@@ -41,7 +41,7 @@ public class SplitsAndConstraintsUtil {
     private SplitsAndConstraintsUtil() {
     }
 
-    private static FileSplit[] splitsForDataverse(String dataverseName) {
+    private static FileSplit[] getDataverseSplits(String dataverseName) {
         File relPathFile = new File(dataverseName);
         List<FileSplit> splits = new ArrayList<>();
         // get all partitions
@@ -55,7 +55,7 @@ public class SplitsAndConstraintsUtil {
         return splits.toArray(new FileSplit[] {});
     }
 
-    public static FileSplit[] splitsForDataset(MetadataTransactionContext mdTxnCtx, String dataverseName,
+    public static FileSplit[] getDatasetSplits(MetadataTransactionContext mdTxnCtx, String dataverseName,
             String datasetName, String targetIdxName, boolean temp) throws AlgebricksException {
         try {
             File relPathFile =
@@ -92,7 +92,7 @@ public class SplitsAndConstraintsUtil {
         }
     }
 
-    private static FileSplit[] splitsForFilesIndex(MetadataTransactionContext mdTxnCtx, String dataverseName,
+    private static FileSplit[] getFilesIndexSplits(MetadataTransactionContext mdTxnCtx, String dataverseName,
             String datasetName, String targetIdxName, boolean create) throws AlgebricksException {
         try {
             File relPathFile =
@@ -131,16 +131,16 @@ public class SplitsAndConstraintsUtil {
         }
     }
 
-    public static Pair<IFileSplitProvider, AlgebricksPartitionConstraint>
-            splitProviderAndPartitionConstraintsForDataverse(String dataverse) {
-        FileSplit[] splits = splitsForDataverse(dataverse);
+    public static Pair<IFileSplitProvider, AlgebricksPartitionConstraint> getDataverseSplitProviderAndConstraints(
+            String dataverse) {
+        FileSplit[] splits = getDataverseSplits(dataverse);
         return StoragePathUtil.splitProviderAndPartitionConstraints(splits);
     }
 
-    public static Pair<IFileSplitProvider, AlgebricksPartitionConstraint>
-            splitProviderAndPartitionConstraintsForFilesIndex(MetadataTransactionContext mdTxnCtx, String dataverseName,
-                    String datasetName, String targetIdxName, boolean create) throws AlgebricksException {
-        FileSplit[] splits = splitsForFilesIndex(mdTxnCtx, dataverseName, datasetName, targetIdxName, create);
+    public static Pair<IFileSplitProvider, AlgebricksPartitionConstraint> getFilesIndexSplitProviderAndConstraints(
+            MetadataTransactionContext mdTxnCtx, String dataverseName, String datasetName, String targetIdxName,
+            boolean create) throws AlgebricksException {
+        FileSplit[] splits = getFilesIndexSplits(mdTxnCtx, dataverseName, datasetName, targetIdxName, create);
         return StoragePathUtil.splitProviderAndPartitionConstraints(splits);
     }
 

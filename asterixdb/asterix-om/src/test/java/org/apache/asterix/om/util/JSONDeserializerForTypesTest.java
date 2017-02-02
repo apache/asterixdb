@@ -28,6 +28,7 @@ import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.AUnorderedListType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.om.utils.JSONDeserializerForTypes;
 import org.junit.Assert;
 import org.junit.Test;
 

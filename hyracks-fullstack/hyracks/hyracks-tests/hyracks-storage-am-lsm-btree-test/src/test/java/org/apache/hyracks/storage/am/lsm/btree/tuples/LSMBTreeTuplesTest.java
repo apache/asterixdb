@@ -34,8 +34,8 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import org.apache.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
-import org.apache.hyracks.dataflow.common.util.SerdeUtils;
-import org.apache.hyracks.dataflow.common.util.TupleUtils;
+import org.apache.hyracks.dataflow.common.utils.SerdeUtils;
+import org.apache.hyracks.dataflow.common.utils.TupleUtils;
 import org.apache.hyracks.storage.am.common.datagen.DataGenUtils;
 import org.apache.hyracks.storage.am.common.datagen.IFieldValueGenerator;
 

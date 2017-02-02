@@ -30,7 +30,7 @@ import java.util.Set;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.external.api.INodeResolver;
-import org.apache.asterix.runtime.util.RuntimeUtils;
+import org.apache.asterix.runtime.utils.RuntimeUtils;
 
 /**
  * Resolves a value (DNS/IP Address) or a (Node Controller Id) to the id of a Node Controller running at the location.

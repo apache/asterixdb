@@ -34,12 +34,12 @@ import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
 import org.apache.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
 import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
 import org.apache.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
-import org.apache.hyracks.storage.am.common.api.IMetadataPageManagerFactory;
+import org.apache.hyracks.storage.am.common.api.IPageManagerFactory;
 import org.apache.hyracks.storage.am.common.api.ISearchOperationCallbackFactory;
 import org.apache.hyracks.storage.am.common.dataflow.AbstractTreeIndexOperatorDescriptor;
+import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.lsm.btree.dataflow.ExternalBTreeDataflowHelper;
-import org.apache.hyracks.storage.am.lsm.btree.dataflow.ExternalBTreeDataflowHelperFactory;
-import org.apache.hyracks.storage.common.IStorageManagerInterface;
+import org.apache.hyracks.storage.common.IStorageManager;
 
 /*
  * This operator is intended for using record ids to access data in external sources
@@ -49,17 +49,17 @@ public class ExternalLookupOperatorDescriptor extends AbstractTreeIndexOperatorD
     private final LookupAdapterFactory<?> adapterFactory;
 
     public ExternalLookupOperatorDescriptor(IOperatorDescriptorRegistry spec, LookupAdapterFactory<?> adapterFactory,
-            RecordDescriptor outRecDesc, ExternalBTreeDataflowHelperFactory externalFilesIndexDataFlowHelperFactory,
+            RecordDescriptor outRecDesc, IIndexDataflowHelperFactory externalFilesIndexDataFlowHelperFactory,
             boolean propagateInput, IIndexLifecycleManagerProvider lcManagerProvider,
-            IStorageManagerInterface storageManager, IFileSplitProvider fileSplitProvider, int datasetId,
-            double bloomFilterFalsePositiveRate, ISearchOperationCallbackFactory searchOpCallbackFactory,
+            IStorageManager storageManager, IFileSplitProvider fileSplitProvider,
+            ISearchOperationCallbackFactory searchOpCallbackFactory,
             boolean retainMissing, IMissingWriterFactory missingWriterFactory,
-            IMetadataPageManagerFactory metadataPageManagerFactory) {
+            IPageManagerFactory pageManagerFactory) {
         super(spec, 1, 1, outRecDesc, storageManager, lcManagerProvider, fileSplitProvider,
                 new FilesIndexDescription().EXTERNAL_FILE_INDEX_TYPE_TRAITS,
-                new FilesIndexDescription().FILES_INDEX_COMP_FACTORIES, FilesIndexDescription.BLOOM_FILTER_FIELDS,
+                FilesIndexDescription.FILES_INDEX_COMP_FACTORIES, FilesIndexDescription.BLOOM_FILTER_FIELDS,
                 externalFilesIndexDataFlowHelperFactory, null, propagateInput, retainMissing, missingWriterFactory,
-                null, searchOpCallbackFactory, null, metadataPageManagerFactory);
+                null, searchOpCallbackFactory, null, pageManagerFactory);
         this.adapterFactory = adapterFactory;
     }
 

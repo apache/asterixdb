@@ -32,9 +32,6 @@ import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
 import org.apache.hyracks.dataflow.std.base.AbstractOperatorNodePushable;
 import org.apache.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
-import org.apache.hyracks.storage.am.lsm.btree.dataflow.ExternalBTreeDataflowHelperFactory;
-import org.apache.hyracks.storage.am.lsm.btree.dataflow.ExternalBTreeWithBuddyDataflowHelperFactory;
-import org.apache.hyracks.storage.am.lsm.rtree.dataflow.ExternalRTreeDataflowHelperFactory;
 
 // This is an operator that takes a single file index and an array of secondary indexes
 // it is intended to be used for
@@ -45,27 +42,20 @@ public abstract class AbstractExternalDatasetIndexesOperatorDescriptor
         extends AbstractSingleActivityOperatorDescriptor {
 
     private static final long serialVersionUID = 1L;
-    private ExternalBTreeDataflowHelperFactory filesIndexDataflowHelperFactory;
+    private IIndexDataflowHelperFactory filesIndexDataflowHelperFactory;
     private IndexInfoOperatorDescriptor fileIndexInfo;
-    private List<ExternalBTreeWithBuddyDataflowHelperFactory> bTreeIndexesDataflowHelperFactories;
-    private List<IndexInfoOperatorDescriptor> bTreeIndexesInfos;
-    private List<ExternalRTreeDataflowHelperFactory> rTreeIndexesDataflowHelperFactories;
-    private List<IndexInfoOperatorDescriptor> rTreeIndexesInfos;
+    private List<IIndexDataflowHelperFactory> treeIndexesDataflowHelperFactories;
+    private List<IndexInfoOperatorDescriptor> treeIndexesInfos;
 
     public AbstractExternalDatasetIndexesOperatorDescriptor(IOperatorDescriptorRegistry spec,
-            ExternalBTreeDataflowHelperFactory filesIndexDataflowHelperFactory,
-            IndexInfoOperatorDescriptor fileIndexesInfo,
-            List<ExternalBTreeWithBuddyDataflowHelperFactory> bTreeIndexesDataflowHelperFactories,
-            List<IndexInfoOperatorDescriptor> bTreeIndexesInfos,
-            List<ExternalRTreeDataflowHelperFactory> rTreeIndexesDataflowHelperFactories,
-            List<IndexInfoOperatorDescriptor> rTreeIndexesInfos) {
+            IIndexDataflowHelperFactory filesIndexDataflowHelperFactory, IndexInfoOperatorDescriptor fileIndexesInfo,
+            List<IIndexDataflowHelperFactory> treeIndexesDataflowHelperFactories,
+            List<IndexInfoOperatorDescriptor> indexesInfos) {
         super(spec, 0, 0);
         this.filesIndexDataflowHelperFactory = filesIndexDataflowHelperFactory;
         this.fileIndexInfo = fileIndexesInfo;
-        this.bTreeIndexesDataflowHelperFactories = bTreeIndexesDataflowHelperFactories;
-        this.bTreeIndexesInfos = bTreeIndexesInfos;
-        this.rTreeIndexesDataflowHelperFactories = rTreeIndexesDataflowHelperFactories;
-        this.rTreeIndexesInfos = rTreeIndexesInfos;
+        this.treeIndexesDataflowHelperFactories = treeIndexesDataflowHelperFactories;
+        this.treeIndexesInfos = indexesInfos;
     }
 
     // opening and closing the index is done inside these methods since we don't always need open indexes
@@ -87,13 +77,8 @@ public abstract class AbstractExternalDatasetIndexesOperatorDescriptor
                         performOpOnIndex(filesIndexDataflowHelperFactory, ctx, fileIndexInfo, partition);
                     }
                     // perform operation on btrees
-                    for (int i = 0; i < bTreeIndexesDataflowHelperFactories.size(); i++) {
-                        performOpOnIndex(bTreeIndexesDataflowHelperFactories.get(i), ctx, bTreeIndexesInfos.get(i),
-                                partition);
-                    }
-                    // perform operation on rtrees
-                    for (int i = 0; i < rTreeIndexesDataflowHelperFactories.size(); i++) {
-                        performOpOnIndex(rTreeIndexesDataflowHelperFactories.get(i), ctx, rTreeIndexesInfos.get(i),
+                    for (int i = 0; i < treeIndexesDataflowHelperFactories.size(); i++) {
+                        performOpOnIndex(treeIndexesDataflowHelperFactories.get(i), ctx, treeIndexesInfos.get(i),
                                 partition);
                     }
                 } catch (Exception e) {

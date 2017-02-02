@@ -24,7 +24,10 @@ import org.apache.asterix.common.transactions.Resource;
 import org.apache.asterix.common.transactions.ResourceFactory;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
+import org.apache.hyracks.storage.am.common.api.IMetadataPageManagerFactory;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
 import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizerFactory;
 
 public class LSMInvertedIndexLocalResourceMetadataFactory extends ResourceFactory {
@@ -48,8 +51,12 @@ public class LSMInvertedIndexLocalResourceMetadataFactory extends ResourceFactor
             boolean isPartitioned, int datasetID, ILSMMergePolicyFactory mergePolicyFactory,
             Map<String, String> mergePolicyProperties, ITypeTraits[] filterTypeTraits,
             IBinaryComparatorFactory[] filterCmpFactories, int[] invertedIndexFields, int[] filterFields,
-            int[] filterFieldsForNonBulkLoadOps, int[] invertedIndexFieldsForNonBulkLoadOps) {
-        super(datasetID, filterTypeTraits, filterCmpFactories, filterFields);
+            int[] filterFieldsForNonBulkLoadOps, int[] invertedIndexFieldsForNonBulkLoadOps,
+            ILSMOperationTrackerFactory opTrackerProvider,
+            ILSMIOOperationCallbackFactory ioOpCallbackFactory,
+            IMetadataPageManagerFactory metadataPageManagerFactory) {
+        super(datasetID, filterTypeTraits, filterCmpFactories, filterFields, opTrackerProvider, ioOpCallbackFactory,
+                metadataPageManagerFactory);
         this.invListTypeTraits = invListTypeTraits;
         this.invListCmpFactories = invListCmpFactories;
         this.tokenTypeTraits = tokenTypeTraits;
@@ -68,7 +75,8 @@ public class LSMInvertedIndexLocalResourceMetadataFactory extends ResourceFactor
         return new LSMInvertedIndexLocalResourceMetadata(invListTypeTraits, invListCmpFactories, tokenTypeTraits,
                 tokenCmpFactories, tokenizerFactory, isPartitioned, datasetId, partition, mergePolicyFactory,
                 mergePolicyProperties, filterTypeTraits, filterCmpFactories, invertedIndexFields,
-                filterFields, filterFieldsForNonBulkLoadOps, invertedIndexFieldsForNonBulkLoadOps);
+                filterFields, filterFieldsForNonBulkLoadOps, invertedIndexFieldsForNonBulkLoadOps, opTrackerProvider,
+                ioOpCallbackFactory, metadataPageManagerFactory);
     }
 
 }

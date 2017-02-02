@@ -20,6 +20,10 @@ package org.apache.hyracks.algebricks.data;
 
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 
+/**
+ * Provides {@link org.apache.hyracks.api.dataflow.value.ITypeTraits} for different data types
+ */
+@FunctionalInterface
 public interface ITypeTraitProvider {
-    public ITypeTraits getTypeTrait(Object type);
+    ITypeTraits getTypeTrait(Object type);
 }

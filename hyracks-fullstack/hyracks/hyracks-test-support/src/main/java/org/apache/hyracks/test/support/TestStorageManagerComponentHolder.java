@@ -58,7 +58,7 @@ public class TestStorageManagerComponentHolder {
     private static IResourceLifecycleManager<IIndex> lcManager;
     private static ResourceIdFactory resourceIdFactory;
     private static IMetadataPageManagerFactory metadataPageManagerFactory =
-            new AppendOnlyLinkedMetadataPageManagerFactory();
+            AppendOnlyLinkedMetadataPageManagerFactory.INSTANCE;
     private static int pageSize;
     private static int numPages;
     private static int maxOpenFiles;

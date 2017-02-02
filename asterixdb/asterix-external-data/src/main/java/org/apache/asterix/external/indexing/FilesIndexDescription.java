@@ -37,12 +37,13 @@ import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleReference;
 
 @SuppressWarnings("rawtypes")
 public class FilesIndexDescription {
-    public final static int FILE_INDEX_TUPLE_SIZE = 2;
-    public final static int FILE_KEY_INDEX = 0;
-    public final static int FILE_KEY_SIZE = 1;
-    public final static int FILE_PAYLOAD_INDEX = 1;
-    public final static String[] payloadFieldNames = { "FileName", "FileSize", "FileModDate" };
-    public final static IAType[] payloadFieldTypes = { BuiltinType.ASTRING, BuiltinType.AINT64, BuiltinType.ADATETIME };
+    public static final int FILE_INDEX_TUPLE_SIZE = 2;
+    public static final int FILE_KEY_INDEX = 0;
+    public static final int FILE_KEY_SIZE = 1;
+    public static final int FILE_PAYLOAD_INDEX = 1;
+    private static final String[] payloadFieldNames = { "FileName", "FileSize", "FileModDate" };
+    private static final IAType[] payloadFieldTypes = { BuiltinType.ASTRING, BuiltinType.AINT64,
+            BuiltinType.ADATETIME };
 
     public static final int[] BLOOM_FILTER_FIELDS = { 0 };
     public static final int EXTERNAL_FILE_NAME_FIELD_INDEX = 0;
@@ -58,7 +59,7 @@ public class FilesIndexDescription {
     public final RecordDescriptor FILE_BUDDY_BTREE_RECORD_DESCRIPTOR;
     public final ISerializerDeserializer[] EXTERNAL_FILE_BUDDY_BTREE_FIELDS = new ISerializerDeserializer[1];
     public final ISerializerDeserializer[] EXTERNAL_FILE_TUPLE_FIELDS = new ISerializerDeserializer[FILE_INDEX_TUPLE_SIZE];
-    public final IBinaryComparatorFactory[] FILES_INDEX_COMP_FACTORIES = new IBinaryComparatorFactory[] {
+    public static final IBinaryComparatorFactory[] FILES_INDEX_COMP_FACTORIES = new IBinaryComparatorFactory[] {
             BinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(BuiltinType.AINT32, true) };
 
     public FilesIndexDescription() {

@@ -32,7 +32,7 @@ import org.apache.hyracks.storage.am.common.api.ITreeIndex;
 import org.apache.hyracks.storage.am.common.api.TreeIndexException;
 import org.apache.hyracks.storage.am.common.datagen.ProbabilityHelper;
 import org.apache.hyracks.storage.am.lsm.btree.util.LSMBTreeTestHarness;
-import org.apache.hyracks.storage.am.lsm.btree.util.LSMBTreeUtils;
+import org.apache.hyracks.storage.am.lsm.btree.utils.LSMBTreeUtil;
 
 public class LSMBTreeMultiThreadTest extends OrderedIndexMultiThreadTest {
 
@@ -53,7 +53,7 @@ public class LSMBTreeMultiThreadTest extends OrderedIndexMultiThreadTest {
     @Override
     protected ITreeIndex createIndex(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories,
             int[] bloomFilterKeyFields) throws TreeIndexException, HyracksDataException {
-        return LSMBTreeUtils.createLSMTree(harness.getIOManager(), harness.getVirtualBufferCaches(), harness
+        return LSMBTreeUtil.createLSMTree(harness.getIOManager(), harness.getVirtualBufferCaches(), harness
                 .getFileReference(), harness.getDiskBufferCache(), harness.getDiskFileMapProvider(), typeTraits,
                 cmpFactories, bloomFilterKeyFields, harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(),
                 harness.getOperationTracker(), harness.getIOScheduler(), harness.getIOOperationCallback(), true, null,

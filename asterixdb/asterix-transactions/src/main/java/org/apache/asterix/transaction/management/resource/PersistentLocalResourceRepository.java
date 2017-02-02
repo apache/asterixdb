@@ -43,8 +43,8 @@ import java.util.logging.Logger;
 import org.apache.asterix.common.cluster.ClusterPartition;
 import org.apache.asterix.common.config.MetadataProperties;
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.common.replication.ReplicationJob;
 import org.apache.asterix.common.replication.IReplicationManager;
+import org.apache.asterix.common.replication.ReplicationJob;
 import org.apache.asterix.common.utils.StorageConstants;
 import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.commons.io.FileUtils;
@@ -72,8 +72,8 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
     private static final String STORAGE_METADATA_FILE_NAME_PREFIX = "." + StorageConstants.METADATA_ROOT;
     private static final long STORAGE_LOCAL_RESOURCE_ID = -4321;
     private static final int MAX_CACHED_RESOURCES = 1000;
-    private static final FilenameFilter METADATA_FILES_FILTER = (File dir, String name) -> name
-            .equalsIgnoreCase(METADATA_FILE_NAME);
+    private static final FilenameFilter METADATA_FILES_FILTER =
+            (File dir, String name) -> name.equalsIgnoreCase(METADATA_FILE_NAME);
     // Finals
     private final IIOManager ioManager;
     private final String[] mountPoints;
@@ -164,8 +164,7 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
             }
 
             LocalResource rootLocalResource = new LocalResource(STORAGE_LOCAL_RESOURCE_ID,
-                    storageMetadataFile.getRelativePath(), 0, ITreeIndexFrame.Constants.VERSION,
-                    storageRootDirPath);
+                    storageMetadataFile.getRelativePath(), 0, ITreeIndexFrame.Constants.VERSION, storageRootDirPath);
             insert(rootLocalResource);
             LOGGER.log(Level.INFO, "created the root-metadata-file: " + storageMetadataFile.getAbsolutePath());
         }

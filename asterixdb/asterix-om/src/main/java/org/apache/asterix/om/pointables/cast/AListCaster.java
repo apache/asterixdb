@@ -35,7 +35,7 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AbstractCollectionType;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.IAType;
-import org.apache.asterix.om.util.ResettableByteArrayOutputStream;
+import org.apache.asterix.om.utils.ResettableByteArrayOutputStream;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 
 /**

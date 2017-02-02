@@ -20,6 +20,7 @@ package org.apache.asterix.translator;
 
 import java.util.List;
 
+import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.asterix.lang.common.base.Statement;
 
@@ -38,8 +39,11 @@ public interface IStatementExecutorFactory {
      * @param conf
      *            request configuration
      * @param compilationProvider
-     * @return an implementation of {@code IStatementExecutor} that is used to execute the passed list of statements
+     *            provides query language related components
+     * @param storageComponentProvider
+     *            provides storage related components
+     * @return an implementation of {@code IStatementExecutor} thaxt is used to execute the passed list of statements
      */
     IStatementExecutor create(List<Statement> statements, SessionConfig conf,
-            ILangCompilationProvider compilationProvider);
+            ILangCompilationProvider compilationProvider, IStorageComponentProvider storageComponentProvider);
 }

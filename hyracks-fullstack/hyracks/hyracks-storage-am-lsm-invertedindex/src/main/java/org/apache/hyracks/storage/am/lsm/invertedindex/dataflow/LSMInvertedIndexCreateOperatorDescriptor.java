@@ -34,7 +34,7 @@ import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory
 import org.apache.hyracks.storage.am.common.dataflow.IndexCreateOperatorNodePushable;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizerFactory;
-import org.apache.hyracks.storage.common.IStorageManagerInterface;
+import org.apache.hyracks.storage.common.IStorageManager;
 import org.apache.hyracks.storage.common.file.ILocalResourceFactoryProvider;
 
 public class LSMInvertedIndexCreateOperatorDescriptor extends AbstractLSMInvertedIndexOperatorDescriptor {
@@ -42,7 +42,7 @@ public class LSMInvertedIndexCreateOperatorDescriptor extends AbstractLSMInverte
     private static final long serialVersionUID = 1L;
 
     public LSMInvertedIndexCreateOperatorDescriptor(IOperatorDescriptorRegistry spec,
-            IStorageManagerInterface storageManager, IFileSplitProvider fileSplitProvider,
+            IStorageManager storageManager, IFileSplitProvider fileSplitProvider,
             IIndexLifecycleManagerProvider lifecycleManagerProvider, ITypeTraits[] tokenTypeTraits,
             IBinaryComparatorFactory[] tokenComparatorFactories, ITypeTraits[] invListsTypeTraits,
             IBinaryComparatorFactory[] invListComparatorFactories, IBinaryTokenizerFactory tokenizerFactory,

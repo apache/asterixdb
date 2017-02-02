@@ -27,7 +27,7 @@ import org.apache.asterix.dataflow.data.nontagged.serde.AOrderedListSerializerDe
 import org.apache.asterix.dataflow.data.nontagged.serde.AUnorderedListSerializerDeserializer;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.EnumDeserializer;
-import org.apache.asterix.om.util.NonTaggedFormatUtil;
+import org.apache.asterix.om.utils.NonTaggedFormatUtil;
 import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 

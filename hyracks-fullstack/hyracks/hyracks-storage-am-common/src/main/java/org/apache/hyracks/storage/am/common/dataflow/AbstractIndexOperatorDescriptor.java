@@ -29,7 +29,7 @@ import org.apache.hyracks.storage.am.common.api.IModificationOperationCallbackFa
 import org.apache.hyracks.storage.am.common.api.IPageManagerFactory;
 import org.apache.hyracks.storage.am.common.api.ISearchOperationCallbackFactory;
 import org.apache.hyracks.storage.am.common.api.ITupleFilterFactory;
-import org.apache.hyracks.storage.common.IStorageManagerInterface;
+import org.apache.hyracks.storage.common.IStorageManager;
 import org.apache.hyracks.storage.common.file.ILocalResourceFactoryProvider;
 
 public abstract class AbstractIndexOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor implements
@@ -38,7 +38,7 @@ public abstract class AbstractIndexOperatorDescriptor extends AbstractSingleActi
     private static final long serialVersionUID = 1L;
 
     protected final IFileSplitProvider fileSplitProvider;
-    protected final IStorageManagerInterface storageManager;
+    protected final IStorageManager storageManager;
     protected final IIndexLifecycleManagerProvider lifecycleManagerProvider;
     protected final IIndexDataflowHelperFactory dataflowHelperFactory;
     protected final ITupleFilterFactory tupleFilterFactory;
@@ -51,7 +51,7 @@ public abstract class AbstractIndexOperatorDescriptor extends AbstractSingleActi
     protected final ILocalResourceFactoryProvider localResourceFactoryProvider;
 
     public AbstractIndexOperatorDescriptor(IOperatorDescriptorRegistry spec, int inputArity, int outputArity,
-            RecordDescriptor recDesc, IStorageManagerInterface storageManager,
+            RecordDescriptor recDesc, IStorageManager storageManager,
             IIndexLifecycleManagerProvider lifecycleManagerProvider, IFileSplitProvider fileSplitProvider,
             IIndexDataflowHelperFactory dataflowHelperFactory, ITupleFilterFactory tupleFilterFactory,
             boolean retainInput, boolean retainNull, IMissingWriterFactory nullWriterFactory,
@@ -83,7 +83,7 @@ public abstract class AbstractIndexOperatorDescriptor extends AbstractSingleActi
     }
 
     @Override
-    public IStorageManagerInterface getStorageManager() {
+    public IStorageManager getStorageManager() {
         return storageManager;
     }
 

@@ -20,6 +20,7 @@ package org.apache.asterix.api.http.server;
 
 import java.util.concurrent.ConcurrentMap;
 
+import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.translator.IStatementExecutorFactory;
@@ -29,8 +30,9 @@ public class UpdateApiServlet extends RestApiServlet {
     private static final byte ALLOWED_CATEGORIES = Statement.Category.QUERY | Statement.Category.UPDATE;
 
     public UpdateApiServlet(ConcurrentMap<String, Object> ctx, String[] paths,
-            ILangCompilationProvider compilationProvider, IStatementExecutorFactory statementExecutorFactory) {
-        super(ctx, paths, compilationProvider, statementExecutorFactory);
+            ILangCompilationProvider compilationProvider, IStatementExecutorFactory statementExecutorFactory,
+            IStorageComponentProvider componentProvider) {
+        super(ctx, paths, compilationProvider, statementExecutorFactory, componentProvider);
     }
 
     @Override

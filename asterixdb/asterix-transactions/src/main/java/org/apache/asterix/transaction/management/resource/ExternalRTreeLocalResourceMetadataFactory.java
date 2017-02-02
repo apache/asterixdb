@@ -24,8 +24,11 @@ import org.apache.asterix.common.transactions.Resource;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ILinearizeComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
+import org.apache.hyracks.storage.am.common.api.IMetadataPageManagerFactory;
 import org.apache.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
 import org.apache.hyracks.storage.am.rtree.frames.RTreePolicyType;
 
 public class ExternalRTreeLocalResourceMetadataFactory extends LSMRTreeLocalResourceMetadataFactory {
@@ -37,17 +40,20 @@ public class ExternalRTreeLocalResourceMetadataFactory extends LSMRTreeLocalReso
             IBinaryComparatorFactory[] btreeCmpFactories, IPrimitiveValueProviderFactory[] valueProviderFactories,
             RTreePolicyType rtreePolicyType, ILinearizeComparatorFactory linearizeCmpFactory, int datasetID,
             ILSMMergePolicyFactory mergePolicyFactory, Map<String, String> mergePolicyProperties,
-            int[] btreeFields, boolean isPointMBR) {
+            int[] btreeFields, boolean isPointMBR, ILSMOperationTrackerFactory opTrackerProvider,
+            ILSMIOOperationCallbackFactory ioOpCallbackFactory,
+            IMetadataPageManagerFactory metadataPageManagerFactory) {
         super(typeTraits, rtreeCmpFactories, btreeCmpFactories, valueProviderFactories, rtreePolicyType,
                 linearizeCmpFactory, datasetID, mergePolicyFactory, mergePolicyProperties, null, null, null,
-                btreeFields, null, isPointMBR);
+                btreeFields, null, isPointMBR, opTrackerProvider, ioOpCallbackFactory, metadataPageManagerFactory);
     }
 
     @Override
     public Resource resource(int partition) {
         return new ExternalRTreeLocalResourceMetadata(filterTypeTraits, rtreeCmpFactories, btreeCmpFactories,
                 valueProviderFactories, rtreePolicyType, linearizeCmpFactory, datasetId, partition, mergePolicyFactory,
-                mergePolicyProperties, btreeFields, isPointMBR);
+                mergePolicyProperties, btreeFields, isPointMBR, opTrackerProvider, ioOpCallbackFactory,
+                metadataPageManagerFactory);
     }
 
 }

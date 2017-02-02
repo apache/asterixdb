@@ -28,7 +28,7 @@ import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.ExternalDatasetDetails;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails;
-import org.apache.asterix.metadata.utils.KeyFieldTypeUtils;
+import org.apache.asterix.metadata.utils.KeyFieldTypeUtil;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.formats.NonTaggedDataFormat;
@@ -73,7 +73,7 @@ public class DatasetDataSource extends DataSource {
         ARecordType recordType = (ARecordType) itemType;
         ARecordType metaRecordType = (ARecordType) metaItemType;
         List<IAType> partitioningKeyTypes =
-                KeyFieldTypeUtils.getPartitioningKeyTypes(internalDatasetDetails, recordType, metaRecordType);
+                KeyFieldTypeUtil.getPartitioningKeyTypes(internalDatasetDetails, recordType, metaRecordType);
         int n = partitioningKeyTypes.size();
         schemaTypes = metaItemType == null ? new IAType[n + 1] : new IAType[n + 2];
         for (int keyIndex = 0; keyIndex < n; ++keyIndex) {
@@ -106,7 +106,7 @@ public class DatasetDataSource extends DataSource {
 
                 ExternalDatasetDetails edd = (ExternalDatasetDetails) externalDataset.getDatasetDetails();
                 IAdapterFactory adapterFactory = metadataProvider.getConfiguredAdapterFactory(externalDataset,
-                        edd.getAdapter(), edd.getProperties(), (ARecordType) itemType, false, null, null);
+                        edd.getAdapter(), edd.getProperties(), (ARecordType) itemType, null);
                 return metadataProvider.buildExternalDatasetDataScannerRuntime(jobSpec, itemType, adapterFactory,
                         NonTaggedDataFormat.INSTANCE);
             case INTERNAL:
@@ -118,9 +118,9 @@ public class DatasetDataSource extends DataSource {
 
                 int[] minFilterFieldIndexes = createFilterIndexes(minFilterVars, opSchema);
                 int[] maxFilterFieldIndexes = createFilterIndexes(maxFilterVars, opSchema);
-                return metadataProvider.buildBtreeRuntime(jobSpec, scanVariables, opSchema, typeEnv, context, true,
+                return metadataProvider.buildBtreeRuntime(jobSpec, opSchema, typeEnv, context, true,
                         false, ((DatasetDataSource) dataSource).getDataset(), primaryIndex.getIndexName(), null, null,
-                        true, true, implConfig, minFilterFieldIndexes, maxFilterFieldIndexes);
+                        true, true, minFilterFieldIndexes, maxFilterFieldIndexes);
             default:
                 throw new AlgebricksException("Unknown datasource type");
         }

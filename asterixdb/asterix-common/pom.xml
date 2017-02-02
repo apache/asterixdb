@@ -24,7 +24,6 @@
     <version>0.9.1-SNAPSHOT</version>
   </parent>
   <artifactId>asterix-common</artifactId>
-
   <licenses>
     <license>
       <name>Apache License, Version 2.0</name>
@@ -33,11 +32,9 @@
       <comments>A business-friendly OSS license</comments>
     </license>
   </licenses>
-
   <properties>
     <appendedResourcesDirectory>${basedir}/../src/main/appended-resources</appendedResourcesDirectory>
   </properties>
-
   <build>
     <plugins>
       <plugin>
@@ -173,7 +170,6 @@
       </plugin>
     </plugins>
   </build>
-
   <dependencies>
     <dependency>
       <groupId>commons-io</groupId>
@@ -198,6 +194,10 @@
     <dependency>
       <groupId>org.apache.hyracks</groupId>
       <artifactId>algebricks-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hyracks</groupId>
+      <artifactId>algebricks-data</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.hyracks</groupId>
@@ -316,5 +316,4 @@
       <artifactId>jackson-annotations</artifactId>
     </dependency>
   </dependencies>
-
 </project>

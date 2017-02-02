@@ -18,7 +18,6 @@
  */
 package org.apache.asterix.algebra.operators.physical;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.asterix.metadata.declared.DataSource;
@@ -27,7 +26,6 @@ import org.apache.asterix.metadata.declared.DataSourceId;
 import org.apache.asterix.metadata.declared.DatasetDataSource;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
-import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
@@ -47,7 +45,6 @@ import org.apache.hyracks.algebricks.core.algebra.metadata.IDataSourceProperties
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractScanOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.AbstractScanPOperator;
 import org.apache.hyracks.algebricks.core.algebra.properties.BroadcastPartitioningProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.IPartitioningRequirementsCoordinator;
@@ -63,22 +60,19 @@ public class ExternalDataLookupPOperator extends AbstractScanPOperator {
     private DataSourceId datasetId;
     private Dataset dataset;
     private ARecordType recordType;
-    private Index secondaryIndex;
     private boolean requiresBroadcast;
     private boolean retainInput;
-    private boolean retainNull;
+    private boolean retainMissing;
 
     public ExternalDataLookupPOperator(DataSourceId datasetId, Dataset dataset, ARecordType recordType,
-            Index secondaryIndex, List<LogicalVariable> ridVarList, boolean requiresBroadcast, boolean retainInput,
-            boolean retainNull) {
+            List<LogicalVariable> ridVarList, boolean requiresBroadcast, boolean retainInput, boolean retainMissing) {
         this.datasetId = datasetId;
         this.dataset = dataset;
         this.recordType = recordType;
-        this.secondaryIndex = secondaryIndex;
         this.ridVarList = ridVarList;
         this.requiresBroadcast = requiresBroadcast;
         this.retainInput = retainInput;
-        this.retainNull = retainNull;
+        this.retainMissing = retainMissing;
     }
 
     public Dataset getDataset() {
@@ -137,17 +131,10 @@ public class ExternalDataLookupPOperator extends AbstractScanPOperator {
         }
         int[] ridIndexes = getKeyIndexes(ridVarList, inputSchemas);
         IVariableTypeEnvironment typeEnv = context.getTypeEnvironment(op);
-        List<LogicalVariable> outputVars = new ArrayList<LogicalVariable>();
-        if (retainInput) {
-            VariableUtilities.getLiveVariables(unnestMap, outputVars);
-        } else {
-            VariableUtilities.getProducedVariables(unnestMap, outputVars);
-        }
-
         MetadataProvider metadataProvider = (MetadataProvider) context.getMetadataProvider();
-        Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> externalLoopup = metadataProvider
-                .buildExternalDataLookupRuntime(builder.getJobSpec(), dataset, secondaryIndex, ridIndexes, retainInput,
-                        typeEnv, outputVars, opSchema, context, metadataProvider, retainNull);
+        Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> externalLoopup =
+                metadataProvider.buildExternalDataLookupRuntime(builder.getJobSpec(), dataset, ridIndexes, retainInput,
+                        typeEnv, opSchema, context, metadataProvider, retainMissing);
         builder.contributeHyracksOperator(unnestMap, externalLoopup.first);
         builder.contributeAlgebricksPartitionConstraint(externalLoopup.first, externalLoopup.second);
         ILogicalOperator srcExchange = unnestMap.getInputs().get(0).getValue();

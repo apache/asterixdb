@@ -29,26 +29,26 @@ import java.util.logging.Logger;
 
 import org.apache.asterix.active.ActiveManager;
 import org.apache.asterix.api.common.AppRuntimeContextProviderForRecovery;
-import org.apache.asterix.common.api.ThreadExecutor;
 import org.apache.asterix.common.api.IAppRuntimeContext;
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
+import org.apache.asterix.common.api.ThreadExecutor;
 import org.apache.asterix.common.cluster.ClusterPartition;
-import org.apache.asterix.common.config.BuildProperties;
-import org.apache.asterix.common.config.CompilerProperties;
 import org.apache.asterix.common.config.AsterixExtension;
+import org.apache.asterix.common.config.BuildProperties;
+import org.apache.asterix.common.config.ClusterProperties;
+import org.apache.asterix.common.config.CompilerProperties;
 import org.apache.asterix.common.config.ExtensionProperties;
 import org.apache.asterix.common.config.ExternalProperties;
 import org.apache.asterix.common.config.FeedProperties;
+import org.apache.asterix.common.config.MessagingProperties;
 import org.apache.asterix.common.config.MetadataProperties;
 import org.apache.asterix.common.config.PropertiesAccessor;
 import org.apache.asterix.common.config.ReplicationProperties;
 import org.apache.asterix.common.config.StorageProperties;
 import org.apache.asterix.common.config.TransactionProperties;
-import org.apache.asterix.common.config.ClusterProperties;
-import org.apache.asterix.common.config.IPropertiesProvider;
-import org.apache.asterix.common.config.MessagingProperties;
-import org.apache.asterix.common.context.FileMapManager;
 import org.apache.asterix.common.context.DatasetLifecycleManager;
+import org.apache.asterix.common.context.FileMapManager;
+import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.library.ILibraryManager;
@@ -62,6 +62,7 @@ import org.apache.asterix.common.transactions.IRecoveryManager;
 import org.apache.asterix.common.transactions.IRecoveryManager.SystemState;
 import org.apache.asterix.common.transactions.ITransactionSubsystem;
 import org.apache.asterix.external.library.ExternalLibraryManager;
+import org.apache.asterix.file.StorageComponentProvider;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataNode;
 import org.apache.asterix.metadata.api.IAsterixStateProxy;
@@ -74,7 +75,6 @@ import org.apache.asterix.replication.storage.ReplicaResourcesManager;
 import org.apache.asterix.runtime.transaction.GlobalResourceIdFactoryProvider;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepository;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepositoryFactory;
-import org.apache.asterix.transaction.management.service.transaction.TransactionSubsystem;
 import org.apache.hyracks.api.application.INCApplicationContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.IIOManager;
@@ -99,13 +99,12 @@ import org.apache.hyracks.storage.common.file.ILocalResourceRepository;
 import org.apache.hyracks.storage.common.file.ILocalResourceRepositoryFactory;
 import org.apache.hyracks.storage.common.file.IResourceIdFactory;
 
-public class NCAppRuntimeContext implements IAppRuntimeContext, IPropertiesProvider {
+public class NCAppRuntimeContext implements IAppRuntimeContext {
     private static final Logger LOGGER = Logger.getLogger(NCAppRuntimeContext.class.getName());
 
     private ILSMMergePolicyFactory metadataMergePolicyFactory;
     private final INCApplicationContext ncApplicationContext;
     private final IResourceIdFactory resourceIdFactory;
-
     private CompilerProperties compilerProperties;
     private ExternalProperties externalProperties;
     private MetadataProperties metadataProperties;
@@ -115,7 +114,6 @@ public class NCAppRuntimeContext implements IAppRuntimeContext, IPropertiesProvi
     private BuildProperties buildProperties;
     private ReplicationProperties replicationProperties;
     private MessagingProperties messagingProperties;
-
     private ThreadExecutor threadExecutor;
     private IDatasetLifecycleManager datasetLifecycleManager;
     private IFileMapManager fileMapManager;
@@ -136,14 +134,14 @@ public class NCAppRuntimeContext implements IAppRuntimeContext, IPropertiesProvi
 
     private final ILibraryManager libraryManager;
     private final NCExtensionManager ncExtensionManager;
+    private final IStorageComponentProvider componentProvider;
 
     public NCAppRuntimeContext(INCApplicationContext ncApplicationContext, List<AsterixExtension> extensions)
-            throws AsterixException, InstantiationException, IllegalAccessException,
-            ClassNotFoundException, IOException {
+            throws AsterixException, InstantiationException, IllegalAccessException, ClassNotFoundException,
+            IOException {
         List<AsterixExtension> allExtensions = new ArrayList<>();
         this.ncApplicationContext = ncApplicationContext;
-        PropertiesAccessor propertiesAccessor =
-                PropertiesAccessor.getInstance(ncApplicationContext.getAppConfig());
+        PropertiesAccessor propertiesAccessor = PropertiesAccessor.getInstance(ncApplicationContext.getAppConfig());
         compilerProperties = new CompilerProperties(propertiesAccessor);
         externalProperties = new ExternalProperties(propertiesAccessor);
         metadataProperties = new MetadataProperties(propertiesAccessor);
@@ -159,6 +157,7 @@ public class NCAppRuntimeContext implements IAppRuntimeContext, IPropertiesProvi
         }
         allExtensions.addAll(new ExtensionProperties(propertiesAccessor).getExtensions());
         ncExtensionManager = new NCExtensionManager(allExtensions);
+        componentProvider = new StorageComponentProvider();
         resourceIdFactory = new GlobalResourceIdFactoryProvider(ncApplicationContext).createResourceIdFactory();
     }
 
@@ -181,16 +180,15 @@ public class NCAppRuntimeContext implements IAppRuntimeContext, IPropertiesProvi
         metadataMergePolicyFactory = new PrefixMergePolicyFactory();
 
         ILocalResourceRepositoryFactory persistentLocalResourceRepositoryFactory =
-                new PersistentLocalResourceRepositoryFactory(
-                        ioManager, ncApplicationContext.getNodeId(), metadataProperties);
+                new PersistentLocalResourceRepositoryFactory(ioManager, ncApplicationContext.getNodeId(),
+                        metadataProperties);
 
-        localResourceRepository = (PersistentLocalResourceRepository) persistentLocalResourceRepositoryFactory
-                .createRepository();
+        localResourceRepository =
+                (PersistentLocalResourceRepository) persistentLocalResourceRepositoryFactory.createRepository();
 
-        IAppRuntimeContextProvider asterixAppRuntimeContextProvider =
-                new AppRuntimeContextProviderForRecovery(this);
-        txnSubsystem = new TransactionSubsystem(ncApplicationContext.getNodeId(), asterixAppRuntimeContextProvider,
-                txnProperties);
+        IAppRuntimeContextProvider asterixAppRuntimeContextProvider = new AppRuntimeContextProviderForRecovery(this);
+        txnSubsystem = new TransactionSubsystem(ncApplicationContext, ncApplicationContext.getNodeId(),
+                asterixAppRuntimeContextProvider, txnProperties);
 
         IRecoveryManager recoveryMgr = txnSubsystem.getRecoveryManager();
         SystemState systemState = recoveryMgr.getSystemState();
@@ -448,9 +446,9 @@ public class NCAppRuntimeContext implements IAppRuntimeContext, IPropertiesProvi
         // This way we can delay the registration of the metadataNode until
         // it is completely initialized.
         MetadataManager.initialize(proxy, MetadataNode.INSTANCE);
-        MetadataBootstrap.startUniverse(this, ncApplicationContext, newUniverse);
+        MetadataBootstrap.startUniverse(ncApplicationContext, newUniverse);
         MetadataBootstrap.startDDLRecovery();
-        ncExtensionManager.initializeMetadata();
+        ncExtensionManager.initializeMetadata(ncApplicationContext);
 
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Metadata node bound");
@@ -471,6 +469,11 @@ public class NCAppRuntimeContext implements IAppRuntimeContext, IPropertiesProvi
 
     public NCExtensionManager getNcExtensionManager() {
         return ncExtensionManager;
+    }
+
+    @Override
+    public IStorageComponentProvider getStorageComponentProvider() {
+        return componentProvider;
     }
 
 }

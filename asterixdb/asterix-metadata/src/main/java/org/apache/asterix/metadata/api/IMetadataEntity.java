@@ -23,12 +23,8 @@ import java.io.Serializable;
 import org.apache.asterix.metadata.MetadataCache;
 
 public interface IMetadataEntity<T> extends Serializable {
-    public static final int PENDING_NO_OP = 0;
-    public static final int PENDING_ADD_OP = 1;
-    public static final int PENDING_DROP_OP = 2;
 
     public T addToCache(MetadataCache cache);
 
     public T dropFromCache(MetadataCache cache);
-
 }

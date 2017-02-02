@@ -25,6 +25,11 @@ import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 
 public class AppendOnlyLinkedMetadataPageManagerFactory implements IMetadataPageManagerFactory {
     private static final long serialVersionUID = 1L;
+    public static final AppendOnlyLinkedMetadataPageManagerFactory INSTANCE =
+            new AppendOnlyLinkedMetadataPageManagerFactory();
+
+    private AppendOnlyLinkedMetadataPageManagerFactory() {
+    }
 
     @Override
     public IMetadataPageManager createPageManager(IBufferCache bufferCache) {

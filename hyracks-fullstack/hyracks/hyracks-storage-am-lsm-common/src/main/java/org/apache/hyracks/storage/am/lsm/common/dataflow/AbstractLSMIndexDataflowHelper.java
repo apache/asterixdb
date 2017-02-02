@@ -30,7 +30,7 @@ import org.apache.hyracks.storage.am.common.dataflow.IndexDataflowHelper;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerProvider;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 
 public abstract class AbstractLSMIndexDataflowHelper extends IndexDataflowHelper {
@@ -42,7 +42,7 @@ public abstract class AbstractLSMIndexDataflowHelper extends IndexDataflowHelper
     protected final List<IVirtualBufferCache> virtualBufferCaches;
     protected final ILSMMergePolicy mergePolicy;
     protected final ILSMIOOperationScheduler ioScheduler;
-    protected final ILSMOperationTrackerProvider opTrackerFactory;
+    protected final ILSMOperationTrackerFactory opTrackerFactory;
     protected final ILSMIOOperationCallbackFactory ioOpCallbackFactory;
     protected final ITypeTraits[] filterTypeTraits;
     protected final IBinaryComparatorFactory[] filterCmpFactories;
@@ -50,7 +50,7 @@ public abstract class AbstractLSMIndexDataflowHelper extends IndexDataflowHelper
 
     public AbstractLSMIndexDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx, int partition,
             List<IVirtualBufferCache> virtualBufferCaches, ILSMMergePolicy mergePolicy,
-            ILSMOperationTrackerProvider opTrackerFactory, ILSMIOOperationScheduler ioScheduler,
+            ILSMOperationTrackerFactory opTrackerFactory, ILSMIOOperationScheduler ioScheduler,
             ILSMIOOperationCallbackFactory ioOpCallbackFactory, ITypeTraits[] filterTypeTraits,
             IBinaryComparatorFactory[] filterCmpFactories, int[] filterFields, boolean durable)
             throws HyracksDataException {
@@ -61,7 +61,7 @@ public abstract class AbstractLSMIndexDataflowHelper extends IndexDataflowHelper
 
     public AbstractLSMIndexDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx, int partition,
             List<IVirtualBufferCache> virtualBufferCaches, double bloomFilterFalsePositiveRate,
-            ILSMMergePolicy mergePolicy, ILSMOperationTrackerProvider opTrackerFactory,
+            ILSMMergePolicy mergePolicy, ILSMOperationTrackerFactory opTrackerFactory,
             ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallbackFactory ioOpCallbackFactory,
             ITypeTraits[] filterTypeTraits, IBinaryComparatorFactory[] filterCmpFactories, int[] filterFields,
             boolean durable) throws HyracksDataException {

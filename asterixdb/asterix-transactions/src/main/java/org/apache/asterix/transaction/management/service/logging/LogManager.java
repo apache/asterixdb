@@ -45,18 +45,18 @@ import org.apache.asterix.common.transactions.ILogReader;
 import org.apache.asterix.common.transactions.ILogRecord;
 import org.apache.asterix.common.transactions.ITransactionContext;
 import org.apache.asterix.common.transactions.ITransactionManager;
+import org.apache.asterix.common.transactions.ITransactionSubsystem;
 import org.apache.asterix.common.transactions.LogManagerProperties;
 import org.apache.asterix.common.transactions.LogType;
 import org.apache.asterix.common.transactions.MutableLong;
 import org.apache.asterix.common.transactions.TxnLogFile;
-import org.apache.asterix.transaction.management.service.transaction.TransactionSubsystem;
 import org.apache.hyracks.api.lifecycle.ILifeCycleComponent;
 
 public class LogManager implements ILogManager, ILifeCycleComponent {
 
     public static final boolean IS_DEBUG_MODE = false;// true
     private static final Logger LOGGER = Logger.getLogger(LogManager.class.getName());
-    private final TransactionSubsystem txnSubsystem;
+    private final ITransactionSubsystem txnSubsystem;
 
     private final LogManagerProperties logManagerProperties;
     protected final long logFileSize;
@@ -80,7 +80,7 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
     private final FlushLogsLogger flushLogsLogger;
     private final HashMap<Long, Integer> txnLogFileId2ReaderCount = new HashMap<>();
 
-    public LogManager(TransactionSubsystem txnSubsystem) {
+    public LogManager(ITransactionSubsystem txnSubsystem) {
         this.txnSubsystem = txnSubsystem;
         logManagerProperties = new LogManagerProperties(this.txnSubsystem.getTransactionProperties(),
                 this.txnSubsystem.getId());
@@ -251,7 +251,7 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
         return logManagerProperties;
     }
 
-    public TransactionSubsystem getTransactionSubsystem() {
+    public ITransactionSubsystem getTransactionSubsystem() {
         return txnSubsystem;
     }
 

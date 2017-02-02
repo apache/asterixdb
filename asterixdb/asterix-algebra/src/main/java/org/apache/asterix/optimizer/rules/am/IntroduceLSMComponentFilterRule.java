@@ -29,13 +29,13 @@ import org.apache.asterix.metadata.declared.DatasetDataSource;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
-import org.apache.asterix.metadata.utils.DatasetUtils;
-import org.apache.asterix.metadata.utils.KeyFieldTypeUtils;
+import org.apache.asterix.metadata.utils.DatasetUtil;
+import org.apache.asterix.metadata.utils.KeyFieldTypeUtil;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
-import org.apache.asterix.om.util.ConstantExpressionUtil;
+import org.apache.asterix.om.utils.ConstantExpressionUtil;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -91,7 +91,7 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
         List<String> filterFieldName = null;
         ARecordType recType = null;
         if (dataset != null && dataset.getDatasetType() == DatasetType.INTERNAL) {
-            filterFieldName = DatasetUtils.getFilterField(dataset);
+            filterFieldName = DatasetUtil.getFilterField(dataset);
             IAType itemType = ((MetadataProvider) context.getMetadataProvider())
                     .findType(dataset.getItemTypeDataverseName(), dataset.getItemTypeName());
             if (itemType.getTypeTag() == ATypeTag.RECORD) {
@@ -335,7 +335,7 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
                         continue;
                     }
                     // The variable value is one of the partitioning fields.
-                    List<String> fieldName = DatasetUtils.getPartitioningKeys(dataset).get(varIndex);
+                    List<String> fieldName = DatasetUtil.getPartitioningKeys(dataset).get(varIndex);
                     if (fieldName == null) {
                         return false;
                     }
@@ -375,10 +375,10 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
                     IAType metaItemType = ((MetadataProvider) context.getMetadataProvider())
                             .findType(dataset.getMetaItemTypeDataverseName(), dataset.getMetaItemTypeName());
                     ARecordType metaRecType = (ARecordType) metaItemType;
-                    int numSecondaryKeys = KeyFieldTypeUtils.getNumSecondaryKeys(index, recType, metaRecType);
+                    int numSecondaryKeys = KeyFieldTypeUtil.getNumSecondaryKeys(index, recType, metaRecType);
                     List<String> fieldName;
                     if (varIndex >= numSecondaryKeys) {
-                        fieldName = DatasetUtils.getPartitioningKeys(dataset).get(varIndex - numSecondaryKeys);
+                        fieldName = DatasetUtil.getPartitioningKeys(dataset).get(varIndex - numSecondaryKeys);
                     } else {
                         fieldName = index.getKeyFieldNames().get(varIndex);
                     }

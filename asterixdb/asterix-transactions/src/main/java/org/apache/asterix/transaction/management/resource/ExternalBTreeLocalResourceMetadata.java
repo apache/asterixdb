@@ -20,19 +20,19 @@ package org.apache.asterix.transaction.management.resource;
 
 import java.util.Map;
 
-import org.apache.asterix.common.context.BaseOperationTracker;
-import org.apache.asterix.common.dataflow.LSMIndexUtil;
-import org.apache.asterix.common.ioopcallbacks.LSMBTreeIOOperationCallbackFactory;
-import org.apache.asterix.common.transactions.IAppRuntimeContextProvider;
+import org.apache.asterix.common.api.IAppRuntimeContext;
+import org.apache.hyracks.api.application.INCApplicationContext;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
-import org.apache.hyracks.storage.am.lsm.btree.impls.LSMBTree;
-import org.apache.hyracks.storage.am.lsm.btree.util.LSMBTreeUtils;
+import org.apache.hyracks.storage.am.common.api.IMetadataPageManagerFactory;
+import org.apache.hyracks.storage.am.lsm.btree.utils.LSMBTreeUtil;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
 import org.apache.hyracks.storage.common.file.LocalResource;
 
 public class ExternalBTreeLocalResourceMetadata extends LSMBTreeLocalResourceMetadata {
@@ -42,26 +42,28 @@ public class ExternalBTreeLocalResourceMetadata extends LSMBTreeLocalResourceMet
     public ExternalBTreeLocalResourceMetadata(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories,
             int[] bloomFilterKeyFields, boolean isPrimary, int datasetID, int partition,
             ILSMMergePolicyFactory mergePolicyFactory,
-            Map<String, String> mergePolicyProperties) {
+            Map<String, String> mergePolicyProperties, ILSMOperationTrackerFactory opTrackerProvider,
+            ILSMIOOperationCallbackFactory ioOpCallbackFactory,
+            IMetadataPageManagerFactory metadataPageManagerFactory) {
         super(typeTraits, cmpFactories, bloomFilterKeyFields, isPrimary, datasetID, partition, mergePolicyFactory,
-                mergePolicyProperties, null, null, null, null);
+                mergePolicyProperties, null, null, null, null, opTrackerProvider, ioOpCallbackFactory,
+                metadataPageManagerFactory);
     }
 
     @Override
-    public ILSMIndex createIndexInstance(IAppRuntimeContextProvider runtimeContextProvider,
+    public ILSMIndex createIndexInstance(INCApplicationContext appCtx,
             LocalResource resource) throws HyracksDataException {
+        IAppRuntimeContext runtimeContextProvider = (IAppRuntimeContext) appCtx.getApplicationObject();
         IIOManager ioManager = runtimeContextProvider.getIOManager();
         FileReference file = ioManager.resolve(resource.getPath());
-        LSMBTree lsmBTree = LSMBTreeUtils.createExternalBTree(ioManager, file, runtimeContextProvider.getBufferCache(),
+        return LSMBTreeUtil.createExternalBTree(ioManager, file, runtimeContextProvider.getBufferCache(),
                 runtimeContextProvider.getFileMapManager(), typeTraits, cmpFactories, bloomFilterKeyFields,
                 runtimeContextProvider.getBloomFilterFalsePositiveRate(),
                 mergePolicyFactory.createMergePolicy(mergePolicyProperties,
                         runtimeContextProvider.getDatasetLifecycleManager()),
-                new BaseOperationTracker(datasetId(),
-                        runtimeContextProvider.getDatasetLifecycleManager().getDatasetInfo(datasetId())),
+                opTrackerProvider.getOperationTracker(appCtx),
                 runtimeContextProvider.getLSMIOScheduler(),
-                LSMBTreeIOOperationCallbackFactory.INSTANCE.createIOOperationCallback(), -1, true,
-                LSMIndexUtil.getMetadataPageManagerFactory());
-        return lsmBTree;
+                ioOpCallbackFactory.createIOOperationCallback(), -1, true,
+                metadataPageManagerFactory);
     }
 }

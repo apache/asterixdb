@@ -34,11 +34,11 @@ import org.apache.asterix.metadata.entities.Dataset;
  * @author alamouda
  */
 public class ExternalDatasetsRegistry {
-    public static ExternalDatasetsRegistry INSTANCE = new ExternalDatasetsRegistry();
-    private ConcurrentHashMap<String, ExternalDatasetAccessManager> globalRegister;
+    public static final ExternalDatasetsRegistry INSTANCE = new ExternalDatasetsRegistry();
+    private final ConcurrentHashMap<String, ExternalDatasetAccessManager> globalRegister;
 
     private ExternalDatasetsRegistry() {
-        globalRegister = new ConcurrentHashMap<String, ExternalDatasetAccessManager>();
+        globalRegister = new ConcurrentHashMap<>();
     }
 
     /**
@@ -59,12 +59,12 @@ public class ExternalDatasetsRegistry {
 
     public int getAndLockDatasetVersion(Dataset dataset, MetadataProvider metadataProvider) {
 
-        Map<String, Integer> locks = null;
+        Map<String, Integer> locks;
         String lockKey = dataset.getDataverseName() + "." + dataset.getDatasetName();
         // check first if the lock was aquired already
         locks = metadataProvider.getLocks();
         if (locks == null) {
-            locks = new HashMap<String, Integer>();
+            locks = new HashMap<>();
             metadataProvider.setLocks(locks);
         } else {
             // if dataset was accessed already by this job, return the registered version
@@ -130,7 +130,10 @@ public class ExternalDatasetsRegistry {
             // if dataset was accessed already by this job, return the registered version
             Set<Entry<String, Integer>> aquiredLocks = locks.entrySet();
             for (Entry<String, Integer> entry : aquiredLocks) {
-                globalRegister.get(entry.getKey()).queryEnd(entry.getValue());
+                ExternalDatasetAccessManager accessManager = globalRegister.get(entry.getKey());
+                if (accessManager != null) {
+                    accessManager.queryEnd(entry.getValue());
+                }
             }
             locks.clear();
         }

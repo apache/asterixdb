@@ -19,6 +19,7 @@
 package org.apache.asterix.om.types;
 
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.om.utils.RecordUtil;
 
 public class TypeTagUtil {
 
@@ -81,7 +82,7 @@ public class TypeTagUtil {
             case UUID:
                 return BuiltinType.AUUID;
             case RECORD:
-                return ARecordType.FULLY_OPEN_RECORD_TYPE;
+                return RecordUtil.FULLY_OPEN_RECORD_TYPE;
             case UNORDEREDLIST:
                 return AUnorderedListType.FULLY_OPEN_UNORDEREDLIST_TYPE;
             case ORDEREDLIST:

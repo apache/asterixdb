@@ -28,13 +28,13 @@ import org.apache.hyracks.storage.am.common.api.IModificationOperationCallbackFa
 import org.apache.hyracks.storage.am.common.api.IPageManagerFactory;
 import org.apache.hyracks.storage.am.common.api.ISearchOperationCallbackFactory;
 import org.apache.hyracks.storage.am.common.api.ITupleFilterFactory;
-import org.apache.hyracks.storage.common.IStorageManagerInterface;
+import org.apache.hyracks.storage.common.IStorageManager;
 import org.apache.hyracks.storage.common.file.ILocalResourceFactoryProvider;
 
 public interface IIndexOperatorDescriptor extends IActivity {
     IFileSplitProvider getFileSplitProvider();
 
-    IStorageManagerInterface getStorageManager();
+    IStorageManager getStorageManager();
 
     IIndexLifecycleManagerProvider getLifecycleManagerProvider();
 

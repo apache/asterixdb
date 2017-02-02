@@ -24,6 +24,10 @@ import java.io.Serializable;
 import org.apache.asterix.common.transactions.ITransactionSubsystem;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 
+/**
+ * Provides the system's implementation of {@link ITransactionSubsystem}
+ */
+@FunctionalInterface
 public interface ITransactionSubsystemProvider extends Serializable {
-    public ITransactionSubsystem getTransactionSubsystem(IHyracksTaskContext ctx);
+    ITransactionSubsystem getTransactionSubsystem(IHyracksTaskContext ctx);
 }

@@ -21,13 +21,14 @@ package org.apache.asterix.om.base;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.types.ARecordType;
+import org.apache.asterix.om.utils.RecordUtil;
 import org.apache.asterix.om.visitors.IOMVisitor;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class ARecord implements IAObject {
-    public static final ARecord EMPTY_OPEN_RECORD = new ARecord(ARecordType.FULLY_OPEN_RECORD_TYPE, new IAObject[] {});
+    public static final ARecord EMPTY_OPEN_RECORD = new ARecord(RecordUtil.FULLY_OPEN_RECORD_TYPE, new IAObject[] {});
 
     protected ARecordType type;
     protected IAObject[] fields;

@@ -84,7 +84,7 @@ public class LSMInvertedIndexTestHarness {
     protected String invIndexFileName = "inv_index";
     protected FileReference invIndexFileRef;
     protected IMetadataPageManagerFactory metadataPageManagerFactory =
-            new AppendOnlyLinkedMetadataPageManagerFactory();
+            AppendOnlyLinkedMetadataPageManagerFactory.INSTANCE;
 
     public LSMInvertedIndexTestHarness() {
         this.diskPageSize = AccessMethodTestsConfig.LSM_INVINDEX_DISK_PAGE_SIZE;

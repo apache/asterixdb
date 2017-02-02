@@ -35,6 +35,7 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceE
  * and from a list of function arguments, typically of an unnest-map.
  */
 public class AccessMethodJobGenParams {
+    private static final int NUM_PARAMS = 6;
     protected String indexName;
     protected IndexType indexType;
     protected String dataverseName;
@@ -43,9 +44,8 @@ public class AccessMethodJobGenParams {
     protected boolean requiresBroadcast;
     protected boolean isPrimaryIndex;
 
-    private final int NUM_PARAMS = 6;
-
     public AccessMethodJobGenParams() {
+        // Enable creation of an empty object and fill members using setters
     }
 
     public AccessMethodJobGenParams(String indexName, IndexType indexType, String dataverseName, String datasetName,
@@ -60,12 +60,12 @@ public class AccessMethodJobGenParams {
     }
 
     public void writeToFuncArgs(List<Mutable<ILogicalExpression>> funcArgs) {
-        funcArgs.add(new MutableObject<ILogicalExpression>(AccessMethodUtils.createStringConstant(indexName)));
-        funcArgs.add(new MutableObject<ILogicalExpression>(AccessMethodUtils.createInt32Constant(indexType.ordinal())));
-        funcArgs.add(new MutableObject<ILogicalExpression>(AccessMethodUtils.createStringConstant(dataverseName)));
-        funcArgs.add(new MutableObject<ILogicalExpression>(AccessMethodUtils.createStringConstant(datasetName)));
-        funcArgs.add(new MutableObject<ILogicalExpression>(AccessMethodUtils.createBooleanConstant(retainInput)));
-        funcArgs.add(new MutableObject<ILogicalExpression>(AccessMethodUtils.createBooleanConstant(requiresBroadcast)));
+        funcArgs.add(new MutableObject<>(AccessMethodUtils.createStringConstant(indexName)));
+        funcArgs.add(new MutableObject<>(AccessMethodUtils.createInt32Constant(indexType.ordinal())));
+        funcArgs.add(new MutableObject<>(AccessMethodUtils.createStringConstant(dataverseName)));
+        funcArgs.add(new MutableObject<>(AccessMethodUtils.createStringConstant(datasetName)));
+        funcArgs.add(new MutableObject<>(AccessMethodUtils.createBooleanConstant(retainInput)));
+        funcArgs.add(new MutableObject<>(AccessMethodUtils.createBooleanConstant(requiresBroadcast)));
     }
 
     public void readFromFuncArgs(List<Mutable<ILogicalExpression>> funcArgs) {
@@ -103,12 +103,11 @@ public class AccessMethodJobGenParams {
     }
 
     protected void writeVarList(List<LogicalVariable> varList, List<Mutable<ILogicalExpression>> funcArgs) {
-        Mutable<ILogicalExpression> numKeysRef = new MutableObject<ILogicalExpression>(
-                new ConstantExpression(new AsterixConstantValue(new AInt32(varList.size()))));
+        Mutable<ILogicalExpression> numKeysRef =
+                new MutableObject<>(new ConstantExpression(new AsterixConstantValue(new AInt32(varList.size()))));
         funcArgs.add(numKeysRef);
         for (LogicalVariable keyVar : varList) {
-            Mutable<ILogicalExpression> keyVarRef = new MutableObject<ILogicalExpression>(
-                    new VariableReferenceExpression(keyVar));
+            Mutable<ILogicalExpression> keyVarRef = new MutableObject<>(new VariableReferenceExpression(keyVar));
             funcArgs.add(keyVarRef);
         }
     }
@@ -117,8 +116,8 @@ public class AccessMethodJobGenParams {
         int numLowKeys = AccessMethodUtils.getInt32Constant(funcArgs.get(index));
         if (numLowKeys > 0) {
             for (int i = 0; i < numLowKeys; i++) {
-                LogicalVariable var = ((VariableReferenceExpression) funcArgs.get(index + 1 + i).getValue())
-                        .getVariableReference();
+                LogicalVariable var =
+                        ((VariableReferenceExpression) funcArgs.get(index + 1 + i).getValue()).getVariableReference();
                 varList.add(var);
             }
         }

@@ -39,7 +39,8 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
-import org.apache.asterix.om.util.NonTaggedFormatUtil;
+import org.apache.asterix.om.utils.NonTaggedFormatUtil;
+import org.apache.asterix.om.utils.RecordUtil;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.IBinaryHashFunction;
@@ -196,7 +197,7 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
         ISerializerDeserializer<AString> stringSerde = SerializerDeserializerProvider.INSTANCE
                 .getSerializerDeserializer(BuiltinType.ASTRING);
         RecordBuilder confRecordBuilder = new RecordBuilder();
-        confRecordBuilder.reset(ARecordType.FULLY_OPEN_RECORD_TYPE);
+        confRecordBuilder.reset(RecordUtil.FULLY_OPEN_RECORD_TYPE);
         ArrayBackedValueStorage fieldNameBytes = new ArrayBackedValueStorage();
         ArrayBackedValueStorage fieldValueBytes = new ArrayBackedValueStorage();
         for (int i = 0; i < record.getType().getFieldNames().length; i++) {
@@ -218,7 +219,7 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
         ISerializerDeserializer<AString> stringSerde = SerializerDeserializerProvider.INSTANCE
                 .getSerializerDeserializer(BuiltinType.ASTRING);
         RecordBuilder confRecordBuilder = new RecordBuilder();
-        confRecordBuilder.reset(ARecordType.FULLY_OPEN_RECORD_TYPE);
+        confRecordBuilder.reset(RecordUtil.FULLY_OPEN_RECORD_TYPE);
         ArrayBackedValueStorage fieldNameBytes = new ArrayBackedValueStorage();
         ArrayBackedValueStorage fieldValueBytes = new ArrayBackedValueStorage();
         for (int i = 0; i < record.size(); i++) {

@@ -43,7 +43,7 @@ import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
 import org.apache.hyracks.dataflow.std.misc.NullSinkOperatorDescriptor;
 import org.apache.hyracks.examples.btree.helper.DataGenOperatorDescriptor;
 import org.apache.hyracks.examples.btree.helper.IndexLifecycleManagerProvider;
-import org.apache.hyracks.examples.btree.helper.StorageManagerInterface;
+import org.apache.hyracks.examples.btree.helper.BTreeHelperStorageManager;
 import org.apache.hyracks.storage.am.btree.dataflow.BTreeDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
@@ -51,7 +51,7 @@ import org.apache.hyracks.storage.am.common.dataflow.TreeIndexInsertUpdateDelete
 import org.apache.hyracks.storage.am.common.freepage.LinkedMetadataPageManagerFactory;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallbackFactory;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
-import org.apache.hyracks.storage.common.IStorageManagerInterface;
+import org.apache.hyracks.storage.common.IStorageManager;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
@@ -128,7 +128,7 @@ public class InsertPipelineExample {
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, dataGen, splitNCs[0]);
 
         IIndexLifecycleManagerProvider lcManagerProvider = IndexLifecycleManagerProvider.INSTANCE;
-        IStorageManagerInterface storageManager = StorageManagerInterface.INSTANCE;
+        IStorageManager storageManager = BTreeHelperStorageManager.INSTANCE;
 
         // prepare insertion into primary index
         // tuples to be put into B-Tree shall have 4 fields

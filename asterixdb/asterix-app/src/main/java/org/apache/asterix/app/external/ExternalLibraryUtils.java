@@ -43,11 +43,11 @@ import org.apache.asterix.external.library.LibraryAdapter;
 import org.apache.asterix.external.library.LibraryFunction;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
-import org.apache.asterix.metadata.api.IMetadataEntity;
 import org.apache.asterix.metadata.entities.DatasourceAdapter;
 import org.apache.asterix.metadata.entities.Dataverse;
 import org.apache.asterix.metadata.entities.Function;
 import org.apache.asterix.metadata.entities.Library;
+import org.apache.asterix.metadata.utils.MetadataUtil;
 import org.apache.asterix.runtime.formats.NonTaggedDataFormat;
 
 public class ExternalLibraryUtils {
@@ -81,7 +81,7 @@ public class ExternalLibraryUtils {
                         // get library file
                         File libraryDir = new File(installLibDir.getAbsolutePath() + File.separator + dataverse
                                 + File.separator + library);
-                        // install if needed (i,e, add the functions, adapters, datasources, parsers to the metadata) <Not required for use>
+                        // install if needed (i,e, add the functions, adapters, datasources, parsers to the metadata)
                         installLibraryIfNeeded(dataverse, libraryDir, uninstalledLibs);
                     }
                 }
@@ -96,7 +96,7 @@ public class ExternalLibraryUtils {
      * @throws Exception
      */
     private static Map<String, List<String>> uninstallLibraries() throws Exception {
-        Map<String, List<String>> uninstalledLibs = new HashMap<String, List<String>>();
+        Map<String, List<String>> uninstalledLibs = new HashMap<>();
         // get the directory of the un-install libraries
         File uninstallLibDir = getLibraryUninstallDir();
         String[] uninstallLibNames;
@@ -116,7 +116,7 @@ public class ExternalLibraryUtils {
                 // add the library to the list of uninstalled libraries
                 List<String> uinstalledLibsInDv = uninstalledLibs.get(dataverse);
                 if (uinstalledLibsInDv == null) {
-                    uinstalledLibsInDv = new ArrayList<String>();
+                    uinstalledLibsInDv = new ArrayList<>();
                     uninstalledLibs.put(dataverse, uinstalledLibsInDv);
                 }
                 uinstalledLibsInDv.add(libName);
@@ -172,7 +172,8 @@ public class ExternalLibraryUtils {
                 // belong to the library?
                 if (adapter.getAdapterIdentifier().getName().startsWith(libraryName + "#")) {
                     // remove adapter <! we didn't check if there are feeds which use this adapter>
-                    MetadataManager.INSTANCE.dropAdapter(mdTxnCtx, dataverse, adapter.getAdapterIdentifier().getName());
+                    MetadataManager.INSTANCE.dropAdapter(mdTxnCtx, dataverse,
+                            adapter.getAdapterIdentifier().getName());
                 }
             }
             // drop the library itself
@@ -203,7 +204,8 @@ public class ExternalLibraryUtils {
             Library libraryInMetadata = MetadataManager.INSTANCE.getLibrary(mdTxnCtx, dataverse, libraryName);
             if (libraryInMetadata != null && !wasUninstalled) {
                 // exists in metadata and was not un-installed, we return.
-                // Another place which shows that our metadata transactions are broken (we didn't call commit before!!!)
+                // Another place which shows that our metadata transactions are broken
+                // (we didn't call commit before!!!)
                 MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
                 return;
             }
@@ -235,13 +237,13 @@ public class ExternalLibraryUtils {
             Dataverse dv = MetadataManager.INSTANCE.getDataverse(mdTxnCtx, dataverse);
             if (dv == null) {
                 MetadataManager.INSTANCE.addDataverse(mdTxnCtx, new Dataverse(dataverse,
-                        NonTaggedDataFormat.NON_TAGGED_DATA_FORMAT, IMetadataEntity.PENDING_NO_OP));
+                        NonTaggedDataFormat.NON_TAGGED_DATA_FORMAT, MetadataUtil.PENDING_NO_OP));
             }
             // Add functions
             if (library.getLibraryFunctions() != null) {
                 for (LibraryFunction function : library.getLibraryFunctions().getLibraryFunction()) {
                     String[] fargs = function.getArguments().trim().split(",");
-                    List<String> args = new ArrayList<String>();
+                    List<String> args = new ArrayList<>();
                     for (String arg : fargs) {
                         args.add(arg);
                     }

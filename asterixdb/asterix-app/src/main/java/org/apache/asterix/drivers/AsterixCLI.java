@@ -29,6 +29,7 @@ import org.apache.asterix.app.translator.DefaultStatementExecutorFactory;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.compiler.provider.AqlCompilationProvider;
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
+import org.apache.asterix.file.StorageComponentProvider;
 import org.apache.commons.io.FileUtils;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.CmdLineParser;
@@ -58,7 +59,7 @@ public class AsterixCLI {
             for (String queryFile : options.args) {
                 Reader in = new FileReader(queryFile);
                 AsterixJavaClient ajc = new AsterixJavaClient(integrationUtil.getHyracksClientConnection(), in,
-                        compilationProvider, new DefaultStatementExecutorFactory());
+                        compilationProvider, new DefaultStatementExecutorFactory(), new StorageComponentProvider());
                 try {
                     ajc.compile(true, false, false, false, false, true, false);
                 } finally {

@@ -30,6 +30,10 @@ import org.apache.hyracks.api.context.IHyracksTaskContext;
  */
 public class TransactionSubsystemProvider implements ITransactionSubsystemProvider {
     private static final long serialVersionUID = 1L;
+    public static final TransactionSubsystemProvider INSTANCE = new TransactionSubsystemProvider();
+
+    private TransactionSubsystemProvider() {
+    }
 
     @Override
     public ITransactionSubsystem getTransactionSubsystem(IHyracksTaskContext ctx) {

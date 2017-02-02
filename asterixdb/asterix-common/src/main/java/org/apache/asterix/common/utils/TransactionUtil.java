@@ -29,6 +29,11 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 
 public class TransactionUtil {
 
+    public static final boolean PROFILE_MODE = false;
+
+    private TransactionUtil() {
+    }
+
     public static void formJobTerminateLogRecord(ITransactionContext txnCtx, LogRecord logRecord, boolean isCommit) {
         logRecord.setTxnCtx(txnCtx);
         TransactionUtil.formJobTerminateLogRecord(logRecord, txnCtx.getJobId().getId(), isCommit);

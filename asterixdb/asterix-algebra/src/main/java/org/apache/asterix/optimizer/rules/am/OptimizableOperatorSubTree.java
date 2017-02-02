@@ -24,7 +24,7 @@ import java.util.List;
 import org.apache.asterix.metadata.declared.DataSource;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
-import org.apache.asterix.metadata.utils.DatasetUtils;
+import org.apache.asterix.metadata.utils.DatasetUtil;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
@@ -371,7 +371,7 @@ public class OptimizableOperatorSubTree {
         switch (getDataSourceType()) {
             case DATASOURCE_SCAN:
                 DataSourceScanOperator dataSourceScan = (DataSourceScanOperator) getDataSourceRef().getValue();
-                int numPrimaryKeys = DatasetUtils.getPartitioningKeys(getDataset()).size();
+                int numPrimaryKeys = DatasetUtil.getPartitioningKeys(getDataset()).size();
                 for (int i = 0; i < numPrimaryKeys; i++) {
                     target.add(dataSourceScan.getVariables().get(i));
                 }

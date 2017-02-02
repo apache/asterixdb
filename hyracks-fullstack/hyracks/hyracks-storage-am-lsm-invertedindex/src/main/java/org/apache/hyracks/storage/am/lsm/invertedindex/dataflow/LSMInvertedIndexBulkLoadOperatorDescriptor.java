@@ -34,7 +34,7 @@ import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory
 import org.apache.hyracks.storage.am.common.dataflow.IndexBulkLoadOperatorNodePushable;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizerFactory;
-import org.apache.hyracks.storage.common.IStorageManagerInterface;
+import org.apache.hyracks.storage.common.IStorageManager;
 import org.apache.hyracks.storage.common.file.NoOpLocalResourceFactoryProvider;
 
 public class LSMInvertedIndexBulkLoadOperatorDescriptor extends AbstractLSMInvertedIndexOperatorDescriptor {
@@ -48,7 +48,7 @@ public class LSMInvertedIndexBulkLoadOperatorDescriptor extends AbstractLSMInver
 
     public LSMInvertedIndexBulkLoadOperatorDescriptor(IOperatorDescriptorRegistry spec, RecordDescriptor recDesc,
             int[] fieldPermutation, boolean verifyInput, long numElementsHint, boolean checkIfEmptyIndex,
-            IStorageManagerInterface storageManager, IFileSplitProvider fileSplitProvider,
+            IStorageManager storageManager, IFileSplitProvider fileSplitProvider,
             IIndexLifecycleManagerProvider lifecycleManagerProvider, ITypeTraits[] tokenTypeTraits,
             IBinaryComparatorFactory[] tokenComparatorFactories, ITypeTraits[] invListsTypeTraits,
             IBinaryComparatorFactory[] invListComparatorFactories, IBinaryTokenizerFactory tokenizerFactory,

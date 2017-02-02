@@ -20,8 +20,12 @@ package org.apache.hyracks.storage.am.common.api;
 
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 
+/**
+ * A factory class for {@link org.apache.hyracks.storage.am.common.api.IMetadataPageManager}
+ */
 @FunctionalInterface
 public interface IMetadataPageManagerFactory extends IPageManagerFactory {
+
     @Override
     IMetadataPageManager createPageManager(IBufferCache bufferCache);
 }

@@ -36,8 +36,8 @@ import org.apache.asterix.metadata.declared.DataSourceId;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.ExternalDatasetDetails;
 import org.apache.asterix.metadata.entities.Index;
-import org.apache.asterix.metadata.utils.DatasetUtils;
-import org.apache.asterix.metadata.utils.KeyFieldTypeUtils;
+import org.apache.asterix.metadata.utils.DatasetUtil;
+import org.apache.asterix.metadata.utils.KeyFieldTypeUtil;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.base.AString;
@@ -50,7 +50,7 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
-import org.apache.asterix.om.util.ConstantExpressionUtil;
+import org.apache.asterix.om.utils.ConstantExpressionUtil;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -76,7 +76,6 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractUnne
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterUnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator.IOrder;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
@@ -93,7 +92,7 @@ public class AccessMethodUtils {
             List<Object> target) throws AlgebricksException {
         ARecordType recordType = (ARecordType) itemType;
         ARecordType metaRecordType = (ARecordType) metaItemType;
-        target.addAll(KeyFieldTypeUtils.getPartitoningKeyTypes(dataset, recordType, metaRecordType));
+        target.addAll(KeyFieldTypeUtil.getPartitoningKeyTypes(dataset, recordType, metaRecordType));
         // Adds data record type.
         target.add(itemType);
         // Adds meta record type if any.
@@ -281,10 +280,10 @@ public class AccessMethodUtils {
         if (!primaryKeysOnly) {
             switch (index.getIndexType()) {
                 case BTREE:
-                    dest.addAll(KeyFieldTypeUtils.getBTreeIndexKeyTypes(index, recordType, metaRecordType));
+                    dest.addAll(KeyFieldTypeUtil.getBTreeIndexKeyTypes(index, recordType, metaRecordType));
                     break;
                 case RTREE:
-                    dest.addAll(KeyFieldTypeUtils.getRTreeIndexKeyTypes(index, recordType, metaRecordType));
+                    dest.addAll(KeyFieldTypeUtil.getRTreeIndexKeyTypes(index, recordType, metaRecordType));
                     break;
                 case SINGLE_PARTITION_WORD_INVIX:
                 case SINGLE_PARTITION_NGRAM_INVIX:
@@ -303,7 +302,7 @@ public class AccessMethodUtils {
                 throw new AlgebricksException(e);
             }
         } else {
-            dest.addAll(KeyFieldTypeUtils.getPartitoningKeyTypes(dataset, recordType, metaRecordType));
+            dest.addAll(KeyFieldTypeUtil.getPartitoningKeyTypes(dataset, recordType, metaRecordType));
         }
     }
 
@@ -315,9 +314,9 @@ public class AccessMethodUtils {
             numPrimaryKeys = IndexingConstants
                     .getRIDSize(((ExternalDatasetDetails) dataset.getDatasetDetails()).getProperties());
         } else {
-            numPrimaryKeys = DatasetUtils.getPartitioningKeys(dataset).size();
+            numPrimaryKeys = DatasetUtil.getPartitioningKeys(dataset).size();
         }
-        int numSecondaryKeys = KeyFieldTypeUtils.getNumSecondaryKeys(index, recordType, metaRecordType);
+        int numSecondaryKeys = KeyFieldTypeUtil.getNumSecondaryKeys(index, recordType, metaRecordType);
         int numVars = (primaryKeysOnly) ? numPrimaryKeys : numPrimaryKeys + numSecondaryKeys;
         for (int i = 0; i < numVars; i++) {
             dest.add(context.newVar());
@@ -331,9 +330,9 @@ public class AccessMethodUtils {
             numPrimaryKeys = IndexingConstants
                     .getRIDSize(((ExternalDatasetDetails) dataset.getDatasetDetails()).getProperties());
         } else {
-            numPrimaryKeys = DatasetUtils.getPartitioningKeys(dataset).size();
+            numPrimaryKeys = DatasetUtil.getPartitioningKeys(dataset).size();
         }
-        List<LogicalVariable> primaryKeyVars = new ArrayList<LogicalVariable>();
+        List<LogicalVariable> primaryKeyVars = new ArrayList<>();
         List<LogicalVariable> sourceVars = null;
 
         sourceVars = ((AbstractUnnestMapOperator) unnestMapOp).getVariables();
@@ -349,8 +348,8 @@ public class AccessMethodUtils {
 
     public static List<LogicalVariable> getPrimaryKeyVarsFromPrimaryUnnestMap(Dataset dataset,
             ILogicalOperator unnestMapOp) {
-        int numPrimaryKeys = DatasetUtils.getPartitioningKeys(dataset).size();
-        List<LogicalVariable> primaryKeyVars = new ArrayList<LogicalVariable>();
+        int numPrimaryKeys = DatasetUtil.getPartitioningKeys(dataset).size();
+        List<LogicalVariable> primaryKeyVars = new ArrayList<>();
         List<LogicalVariable> sourceVars = null;
 
         // For a left outer join case, LEFT_OUTER_UNNEST_MAP operator is placed
@@ -467,11 +466,11 @@ public class AccessMethodUtils {
             IOptimizationContext context, boolean outputPrimaryKeysOnly, boolean retainInput, boolean retainNull)
             throws AlgebricksException {
         // The job gen parameters are transferred to the actual job gen via the UnnestMapOperator's function arguments.
-        ArrayList<Mutable<ILogicalExpression>> secondaryIndexFuncArgs = new ArrayList<Mutable<ILogicalExpression>>();
+        ArrayList<Mutable<ILogicalExpression>> secondaryIndexFuncArgs = new ArrayList<>();
         jobGenParams.writeToFuncArgs(secondaryIndexFuncArgs);
         // Variables and types coming out of the secondary-index search.
-        List<LogicalVariable> secondaryIndexUnnestVars = new ArrayList<LogicalVariable>();
-        List<Object> secondaryIndexOutputTypes = new ArrayList<Object>();
+        List<LogicalVariable> secondaryIndexUnnestVars = new ArrayList<>();
+        List<Object> secondaryIndexOutputTypes = new ArrayList<>();
         // Append output variables/types generated by the secondary-index search (not forwarded from input).
         appendSecondaryIndexOutputVars(dataset, recordType, metaRecordType, index, outputPrimaryKeysOnly, context,
                 secondaryIndexUnnestVars);
@@ -492,7 +491,7 @@ public class AccessMethodUtils {
                 LeftOuterUnnestMapOperator secondaryIndexLeftOuterUnnestOp = new LeftOuterUnnestMapOperator(
                         secondaryIndexUnnestVars, new MutableObject<ILogicalExpression>(secondaryIndexSearchFunc),
                         secondaryIndexOutputTypes, true);
-                secondaryIndexLeftOuterUnnestOp.getInputs().add(new MutableObject<ILogicalOperator>(inputOp));
+                secondaryIndexLeftOuterUnnestOp.getInputs().add(new MutableObject<>(inputOp));
                 context.computeAndSetTypeEnvironmentForOperator(secondaryIndexLeftOuterUnnestOp);
                 secondaryIndexLeftOuterUnnestOp.setExecutionMode(ExecutionMode.PARTITIONED);
                 return secondaryIndexLeftOuterUnnestOp;
@@ -505,7 +504,7 @@ public class AccessMethodUtils {
             UnnestMapOperator secondaryIndexUnnestOp = new UnnestMapOperator(secondaryIndexUnnestVars,
                     new MutableObject<ILogicalExpression>(secondaryIndexSearchFunc), secondaryIndexOutputTypes,
                     retainInput);
-            secondaryIndexUnnestOp.getInputs().add(new MutableObject<ILogicalOperator>(inputOp));
+            secondaryIndexUnnestOp.getInputs().add(new MutableObject<>(inputOp));
             context.computeAndSetTypeEnvironmentForOperator(secondaryIndexUnnestOp);
             secondaryIndexUnnestOp.setExecutionMode(ExecutionMode.PARTITIONED);
             return secondaryIndexUnnestOp;
@@ -523,18 +522,18 @@ public class AccessMethodUtils {
         if (sortPrimaryKeys) {
             order = new OrderOperator();
             for (LogicalVariable pkVar : primaryKeyVars) {
-                Mutable<ILogicalExpression> vRef = new MutableObject<ILogicalExpression>(
+                Mutable<ILogicalExpression> vRef = new MutableObject<>(
                         new VariableReferenceExpression(pkVar));
                 order.getOrderExpressions()
-                        .add(new Pair<IOrder, Mutable<ILogicalExpression>>(OrderOperator.ASC_ORDER, vRef));
+                        .add(new Pair<>(OrderOperator.ASC_ORDER, vRef));
             }
             // The secondary-index search feeds into the sort.
-            order.getInputs().add(new MutableObject<ILogicalOperator>(inputOp));
+            order.getInputs().add(new MutableObject<>(inputOp));
             order.setExecutionMode(ExecutionMode.LOCAL);
             context.computeAndSetTypeEnvironmentForOperator(order);
         }
         // The job gen parameters are transferred to the actual job gen via the UnnestMapOperator's function arguments.
-        List<Mutable<ILogicalExpression>> primaryIndexFuncArgs = new ArrayList<Mutable<ILogicalExpression>>();
+        List<Mutable<ILogicalExpression>> primaryIndexFuncArgs = new ArrayList<>();
         BTreeJobGenParams jobGenParams = new BTreeJobGenParams(dataset.getDatasetName(), IndexType.BTREE,
                 dataset.getDataverseName(), dataset.getDatasetName(), retainInput, requiresBroadcast);
         // Set low/high inclusive to true for a point lookup.
@@ -545,8 +544,8 @@ public class AccessMethodUtils {
         jobGenParams.setIsEqCondition(true);
         jobGenParams.writeToFuncArgs(primaryIndexFuncArgs);
         // Variables and types coming out of the primary-index search.
-        List<LogicalVariable> primaryIndexUnnestVars = new ArrayList<LogicalVariable>();
-        List<Object> primaryIndexOutputTypes = new ArrayList<Object>();
+        List<LogicalVariable> primaryIndexUnnestVars = new ArrayList<>();
+        List<Object> primaryIndexOutputTypes = new ArrayList<>();
         // Append output variables/types generated by the primary-index search (not forwarded from input).
         primaryIndexUnnestVars.addAll(dataSourceOp.getVariables());
         appendPrimaryIndexTypes(dataset, recordType, metaRecordType, primaryIndexOutputTypes);
@@ -575,7 +574,7 @@ public class AccessMethodUtils {
         if (sortPrimaryKeys) {
             primaryIndexUnnestOp.getInputs().add(new MutableObject<ILogicalOperator>(order));
         } else {
-            primaryIndexUnnestOp.getInputs().add(new MutableObject<ILogicalOperator>(inputOp));
+            primaryIndexUnnestOp.getInputs().add(new MutableObject<>(inputOp));
         }
         context.computeAndSetTypeEnvironmentForOperator(primaryIndexUnnestOp);
         primaryIndexUnnestOp.setExecutionMode(ExecutionMode.PARTITIONED);
@@ -653,41 +652,41 @@ public class AccessMethodUtils {
     }
 
     private static void writeVarList(List<LogicalVariable> varList, List<Mutable<ILogicalExpression>> funcArgs) {
-        Mutable<ILogicalExpression> numKeysRef = new MutableObject<ILogicalExpression>(
+        Mutable<ILogicalExpression> numKeysRef = new MutableObject<>(
                 new ConstantExpression(new AsterixConstantValue(new AInt32(varList.size()))));
         funcArgs.add(numKeysRef);
         for (LogicalVariable keyVar : varList) {
-            Mutable<ILogicalExpression> keyVarRef = new MutableObject<ILogicalExpression>(
+            Mutable<ILogicalExpression> keyVarRef = new MutableObject<>(
                     new VariableReferenceExpression(keyVar));
             funcArgs.add(keyVarRef);
         }
     }
 
     private static void addStringArg(String argument, List<Mutable<ILogicalExpression>> funcArgs) {
-        Mutable<ILogicalExpression> stringRef = new MutableObject<ILogicalExpression>(
+        Mutable<ILogicalExpression> stringRef = new MutableObject<>(
                 new ConstantExpression(new AsterixConstantValue(new AString(argument))));
         funcArgs.add(stringRef);
     }
 
     public static UnnestMapOperator createExternalDataLookupUnnestMap(AbstractDataSourceOperator dataSourceOp,
             Dataset dataset, ARecordType recordType, ILogicalOperator inputOp, IOptimizationContext context,
-            Index secondaryIndex, boolean retainInput, boolean retainNull) throws AlgebricksException {
+            boolean retainInput, boolean retainNull) throws AlgebricksException {
         List<LogicalVariable> primaryKeyVars = AccessMethodUtils.getPrimaryKeyVarsFromSecondaryUnnestMap(dataset,
                 inputOp);
 
         // add a sort on the RID fields before fetching external data.
         OrderOperator order = new OrderOperator();
         for (LogicalVariable pkVar : primaryKeyVars) {
-            Mutable<ILogicalExpression> vRef = new MutableObject<ILogicalExpression>(
+            Mutable<ILogicalExpression> vRef = new MutableObject<>(
                     new VariableReferenceExpression(pkVar));
             order.getOrderExpressions()
-                    .add(new Pair<IOrder, Mutable<ILogicalExpression>>(OrderOperator.ASC_ORDER, vRef));
+                    .add(new Pair<>(OrderOperator.ASC_ORDER, vRef));
         }
         // The secondary-index search feeds into the sort.
-        order.getInputs().add(new MutableObject<ILogicalOperator>(inputOp));
+        order.getInputs().add(new MutableObject<>(inputOp));
         order.setExecutionMode(ExecutionMode.LOCAL);
         context.computeAndSetTypeEnvironmentForOperator(order);
-        List<Mutable<ILogicalExpression>> externalLookupArgs = new ArrayList<Mutable<ILogicalExpression>>();
+        List<Mutable<ILogicalExpression>> externalLookupArgs = new ArrayList<>();
         //Add dataverse to the arguments
         AccessMethodUtils.addStringArg(dataset.getDataverseName(), externalLookupArgs);
         //Add dataset to the arguments
@@ -696,8 +695,8 @@ public class AccessMethodUtils {
         AccessMethodUtils.writeVarList(primaryKeyVars, externalLookupArgs);
 
         // Variables and types coming out of the external access.
-        List<LogicalVariable> externalUnnestVars = new ArrayList<LogicalVariable>();
-        List<Object> outputTypes = new ArrayList<Object>();
+        List<LogicalVariable> externalUnnestVars = new ArrayList<>();
+        List<Object> outputTypes = new ArrayList<>();
         // Append output variables/types generated by the data scan (not forwarded from input).
         externalUnnestVars.addAll(dataSourceOp.getVariables());
         appendExternalRecTypes(dataset, recordType, outputTypes);
@@ -715,7 +714,7 @@ public class AccessMethodUtils {
 
         //set the physical operator
         DataSourceId dataSourceId = new DataSourceId(dataset.getDataverseName(), dataset.getDatasetName());
-        unnestOp.setPhysicalOperator(new ExternalDataLookupPOperator(dataSourceId, dataset, recordType, secondaryIndex,
+        unnestOp.setPhysicalOperator(new ExternalDataLookupPOperator(dataSourceId, dataset, recordType,
                 primaryKeyVars, false, retainInput, retainNull));
         return unnestOp;
     }
@@ -723,7 +722,7 @@ public class AccessMethodUtils {
     //If the expression is constant at runtime, return the type
     public static IAType constantRuntimeResultType(ILogicalExpression expr, IOptimizationContext context,
             IVariableTypeEnvironment typeEnvironment) throws AlgebricksException {
-        Set<LogicalVariable> usedVariables = new HashSet<LogicalVariable>();
+        Set<LogicalVariable> usedVariables = new HashSet<>();
         expr.getUsedVariables(usedVariables);
         if (usedVariables.size() > 0) {
             return null;

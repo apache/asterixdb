@@ -29,14 +29,14 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
 import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
 import org.apache.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
-import org.apache.hyracks.storage.am.common.api.IMetadataPageManagerFactory;
 import org.apache.hyracks.storage.am.common.api.IModificationOperationCallbackFactory;
+import org.apache.hyracks.storage.am.common.api.IPageManagerFactory;
 import org.apache.hyracks.storage.am.common.api.ISearchOperationCallbackFactory;
 import org.apache.hyracks.storage.am.common.api.ITupleFilterFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.am.lsm.common.dataflow.LSMTreeIndexInsertUpdateDeleteOperatorDescriptor;
-import org.apache.hyracks.storage.common.IStorageManagerInterface;
+import org.apache.hyracks.storage.common.IStorageManager;
 
 public class LSMTreeInsertDeleteOperatorDescriptor extends LSMTreeIndexInsertUpdateDeleteOperatorDescriptor {
 
@@ -48,19 +48,18 @@ public class LSMTreeInsertDeleteOperatorDescriptor extends LSMTreeIndexInsertUpd
     private final String indexName;
 
     public LSMTreeInsertDeleteOperatorDescriptor(IOperatorDescriptorRegistry spec, RecordDescriptor recDesc,
-            IStorageManagerInterface storageManager, IIndexLifecycleManagerProvider lifecycleManagerProvider,
+            IStorageManager storageManager, IIndexLifecycleManagerProvider lifecycleManagerProvider,
             IFileSplitProvider fileSplitProvider, ITypeTraits[] typeTraits,
             IBinaryComparatorFactory[] comparatorFactories, int[] bloomFilterKeyFields, int[] fieldPermutation,
             IndexOperation op, IIndexDataflowHelperFactory dataflowHelperFactory,
             ITupleFilterFactory tupleFilterFactory, boolean isPrimary, String indexName,
             IMissingWriterFactory nullWriterFactory,
             IModificationOperationCallbackFactory modificationOpCallbackProvider,
-            ISearchOperationCallbackFactory searchOpCallbackProvider,
-            IMetadataPageManagerFactory metadataPageManagerFactory) {
+            ISearchOperationCallbackFactory searchOpCallbackProvider, IPageManagerFactory pageManagerFactory) {
         super(spec, recDesc, storageManager, lifecycleManagerProvider, fileSplitProvider, typeTraits,
                 comparatorFactories, bloomFilterKeyFields, fieldPermutation, op, dataflowHelperFactory,
                 tupleFilterFactory, nullWriterFactory, modificationOpCallbackProvider, searchOpCallbackProvider,
-                metadataPageManagerFactory);
+                pageManagerFactory);
         this.isPrimary = isPrimary;
         this.indexName = indexName;
     }
@@ -68,8 +67,8 @@ public class LSMTreeInsertDeleteOperatorDescriptor extends LSMTreeIndexInsertUpd
     @Override
     public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) throws HyracksDataException {
-        return new LSMInsertDeleteOperatorNodePushable(this, ctx, partition, fieldPermutation,
-                recordDescProvider, op, isPrimary);
+        return new LSMInsertDeleteOperatorNodePushable(this, ctx, partition, fieldPermutation, recordDescProvider, op,
+                isPrimary);
     }
 
     public boolean isPrimary() {

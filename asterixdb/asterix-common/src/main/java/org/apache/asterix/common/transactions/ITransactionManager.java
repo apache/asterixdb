@@ -122,7 +122,7 @@ public interface ITransactionManager {
      * @see ITransactionSubsystem
      * @return TransactionProvider
      */
-    public ITransactionSubsystem getTransactionProvider();
+    public ITransactionSubsystem getTransactionSubsystem();
 
     /**
      * @return The current max job id.

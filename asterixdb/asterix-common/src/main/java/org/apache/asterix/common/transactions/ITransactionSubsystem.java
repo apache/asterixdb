@@ -18,19 +18,29 @@
  */
 package org.apache.asterix.common.transactions;
 
+import org.apache.asterix.common.config.TransactionProperties;
+
+/**
+ * A transaction subsystem is responsible of maintaining Atomicity, Consistency, Isolation, and Durability
+ * on a record level.
+ */
 public interface ITransactionSubsystem {
 
-    public ILogManager getLogManager();
+    ILogManager getLogManager();
 
-    public ILockManager getLockManager();
+    ILockManager getLockManager();
 
-    public ITransactionManager getTransactionManager();
+    ITransactionManager getTransactionManager();
 
-    public IRecoveryManager getRecoveryManager();
+    IRecoveryManager getRecoveryManager();
 
-    public IAppRuntimeContextProvider getAsterixAppRuntimeContextProvider();
+    IAppRuntimeContextProvider getAsterixAppRuntimeContextProvider();
 
-    public String getId();
+    String getId();
 
-    public ICheckpointManager getCheckpointManager();
+    ICheckpointManager getCheckpointManager();
+
+    TransactionProperties getTransactionProperties();
+
+    void incrementEntityCommitCount();
 }

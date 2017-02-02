@@ -20,6 +20,7 @@ package org.apache.hyracks.storage.am.lsm.common.api;
 
 import java.io.Serializable;
 
+@FunctionalInterface
 public interface ILSMIOOperationCallbackFactory extends Serializable {
-    public ILSMIOOperationCallback createIOOperationCallback();
+    ILSMIOOperationCallback createIOOperationCallback();
 }

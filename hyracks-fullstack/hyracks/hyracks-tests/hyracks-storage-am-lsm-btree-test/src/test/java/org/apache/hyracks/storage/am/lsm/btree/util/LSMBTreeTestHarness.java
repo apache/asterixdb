@@ -100,7 +100,7 @@ public class LSMBTreeTestHarness {
         this.opTracker = new ThreadCountingTracker();
         this.ioOpCallback = NoOpIOOperationCallback.INSTANCE;
         this.numMutableComponents = AccessMethodTestsConfig.LSM_BTREE_NUM_MUTABLE_COMPONENTS;
-        this.metadataPageManagerFactory = new AppendOnlyLinkedMetadataPageManagerFactory();
+        this.metadataPageManagerFactory = AppendOnlyLinkedMetadataPageManagerFactory.INSTANCE;
     }
 
     public void setUp() throws HyracksDataException {

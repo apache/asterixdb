@@ -36,14 +36,14 @@ import org.apache.asterix.metadata.entities.Feed;
 import org.apache.asterix.metadata.entities.FeedPolicyEntity;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails;
 import org.apache.asterix.metadata.feeds.BuiltinFeedPolicies;
-import org.apache.asterix.metadata.utils.DatasetUtils;
+import org.apache.asterix.metadata.utils.DatasetUtil;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
-import org.apache.asterix.om.util.ConstantExpressionUtil;
+import org.apache.asterix.om.utils.ConstantExpressionUtil;
 import org.apache.asterix.optimizer.rules.util.EquivalenceClassUtils;
 import org.apache.asterix.translator.util.PlanTranslationUtil;
 import org.apache.commons.lang3.mutable.Mutable;
@@ -123,7 +123,7 @@ public class UnnestToDataScanRule implements IAlgebraicRewriteRule {
             DataSourceId asid = new DataSourceId(dataverseName, datasetName);
             List<LogicalVariable> variables = new ArrayList<>();
             if (dataset.getDatasetType() == DatasetType.INTERNAL) {
-                int numPrimaryKeys = DatasetUtils.getPartitioningKeys(dataset).size();
+                int numPrimaryKeys = DatasetUtil.getPartitioningKeys(dataset).size();
                 for (int i = 0; i < numPrimaryKeys; i++) {
                     variables.add(context.newVar());
                 }

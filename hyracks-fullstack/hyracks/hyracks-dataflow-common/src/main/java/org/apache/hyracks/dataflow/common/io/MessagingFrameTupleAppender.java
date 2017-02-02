@@ -28,7 +28,7 @@ import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.util.HyracksConstants;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
-import org.apache.hyracks.dataflow.common.util.TaskUtils;
+import org.apache.hyracks.dataflow.common.utils.TaskUtil;
 import org.apache.hyracks.util.IntSerDeUtils;
 
 /**
@@ -112,7 +112,7 @@ public class MessagingFrameTupleAppender extends FrameTupleAppender {
     @Override
     public void write(IFrameWriter outWriter, boolean clearFrame) throws HyracksDataException {
         if (!initialized) {
-            message = TaskUtils.<VSizeFrame> get(HyracksConstants.KEY_MESSAGE, ctx);
+            message = TaskUtil.<VSizeFrame> get(HyracksConstants.KEY_MESSAGE, ctx);
             initialized = true;
         }
         // If message fits, we append it, otherwise, we append a null message, then send a message only

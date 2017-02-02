@@ -106,7 +106,7 @@ import org.apache.asterix.metadata.declared.FileSplitDataSink;
 import org.apache.asterix.metadata.declared.FileSplitSinkId;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
-import org.apache.asterix.metadata.utils.DatasetUtils;
+import org.apache.asterix.metadata.utils.DatasetUtil;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.BuiltinFunctions;
@@ -271,7 +271,7 @@ public class AqlPlusExpressionToPlanTranslator extends AbstractLangTranslator
             }
             ARecordType itemType =
                     (ARecordType) metadata.findType(dataset.getItemTypeDataverseName(), dataset.getItemTypeName());
-            List<List<String>> partitioningKeys = DatasetUtils.getPartitioningKeys(dataset);
+            List<List<String>> partitioningKeys = DatasetUtil.getPartitioningKeys(dataset);
             ArrayList<LogicalVariable> vars = new ArrayList<LogicalVariable>();
             ArrayList<Mutable<ILogicalExpression>> exprs = new ArrayList<Mutable<ILogicalExpression>>();
             List<Mutable<ILogicalExpression>> varRefsForLoading = new ArrayList<Mutable<ILogicalExpression>>();

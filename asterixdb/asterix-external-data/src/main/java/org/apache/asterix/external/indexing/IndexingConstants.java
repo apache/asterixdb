@@ -20,6 +20,7 @@ package org.apache.asterix.external.indexing;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -81,7 +82,7 @@ public class IndexingConstants {
     public static final int RECORD_OFFSET_FIELD_INDEX = 1;
     public static final int ROW_NUMBER_FIELD_INDEX = 2;
 
-    public static final ArrayList<List<String>> RecordIDFields = new ArrayList<List<String>>();
+    public static final List<List<String>> RECORD_ID_FIELDS;
 
     static {
 
@@ -101,25 +102,32 @@ public class IndexingConstants {
         rowNumberEvalFactory = new TupleFieldEvaluatorFactory(3);
 
         // Add field names
-        RecordIDFields.add(new ArrayList<String>(Arrays.asList("FileNumber")));
-        RecordIDFields.add(new ArrayList<String>(Arrays.asList("RecordOffset")));
-        RecordIDFields.add(new ArrayList<String>(Arrays.asList("RowNumber")));
+        List<List<String>> ridFields = new ArrayList<>();
+        ridFields.add(new ArrayList<>(Arrays.asList("FileNumber")));
+        ridFields.add(new ArrayList<>(Arrays.asList("RecordOffset")));
+        ridFields.add(new ArrayList<>(Arrays.asList("RowNumber")));
+        RECORD_ID_FIELDS = Collections.unmodifiableList(ridFields);
+    }
+
+    private IndexingConstants() {
     }
 
     // This function returns the size of the RID for the passed file input format
     public static int getRIDSize(String fileInputFormat) {
-        if (fileInputFormat.equals(INPUT_FORMAT_RC) || fileInputFormat.equals(INPUT_FORMAT_RC_FULLY_QUALIFIED))
+        if (fileInputFormat.equals(INPUT_FORMAT_RC) || fileInputFormat.equals(INPUT_FORMAT_RC_FULLY_QUALIFIED)) {
             return 3;
-        else
+        } else {
             return 2;
+        }
     }
 
     // This function returns the size of the RID for the passed file input format
     public static IBinaryComparatorFactory[] getComparatorFactories(String fileInputFormat) {
-        if (fileInputFormat.equals(INPUT_FORMAT_RC) || fileInputFormat.equals(INPUT_FORMAT_RC_FULLY_QUALIFIED))
+        if (fileInputFormat.equals(INPUT_FORMAT_RC) || fileInputFormat.equals(INPUT_FORMAT_RC_FULLY_QUALIFIED)) {
             return rCFileRIDComparatorFactories;
-        else
+        } else {
             return txtSeqFileRIDComparatorFactories;
+        }
     }
 
     public static IAType getFieldType(int fieldNumber) throws AsterixException {
@@ -197,9 +205,14 @@ public class IndexingConstants {
 
     public static List<List<String>> getRIDKeys(Map<String, String> properties) {
         String fileInputFormat = properties.get(KEY_INPUT_FORMAT);
-        if (fileInputFormat.equals(INPUT_FORMAT_RC) || fileInputFormat.equals(INPUT_FORMAT_RC_FULLY_QUALIFIED))
-            return RecordIDFields;
-        else
-            return RecordIDFields.subList(0, ROW_NUMBER_FIELD_INDEX);
+        if (fileInputFormat.equals(INPUT_FORMAT_RC) || fileInputFormat.equals(INPUT_FORMAT_RC_FULLY_QUALIFIED)) {
+            return RECORD_ID_FIELDS;
+        } else {
+            return RECORD_ID_FIELDS.subList(0, ROW_NUMBER_FIELD_INDEX);
+        }
+    }
+
+    public static String getFilesIndexName(String datasetName) {
+        return datasetName.concat(IndexingConstants.EXTERNAL_FILE_INDEX_NAME_SUFFIX);
     }
 }

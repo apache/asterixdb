@@ -29,7 +29,8 @@ import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.runtime.RuntimeRecordTypeInfo;
-import org.apache.asterix.om.util.NonTaggedFormatUtil;
+import org.apache.asterix.om.utils.NonTaggedFormatUtil;
+import org.apache.asterix.om.utils.RecordUtil;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -96,7 +97,7 @@ public class GetRecordFieldValueEvalFactory implements IScalarEvaluatorFactory {
                     // Look at closed fields first.
                     int subFieldIndex = recTypeInfo.getFieldIndex(serFldName, serFldNameOffset + 1, serFldNameLen - 1);
                     if (subFieldIndex >= 0) {
-                        int nullBitmapSize = ARecordType.computeNullBitmapSize(recordType);
+                        int nullBitmapSize = RecordUtil.computeNullBitmapSize(recordType);
                         subFieldOffset = ARecordSerializerDeserializer.getFieldOffsetById(serRecord, serRecordOffset,
                                 subFieldIndex, nullBitmapSize, recordType.isOpen());
                         if (subFieldOffset == 0) {

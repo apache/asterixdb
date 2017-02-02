@@ -26,13 +26,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.asterix.common.annotations.IRecordTypeAnnotation;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.base.IAObject;
-import org.apache.asterix.om.util.NonTaggedFormatUtil;
 import org.apache.asterix.om.visitors.IOMVisitor;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -43,9 +43,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
  * from ARecordType and has to be one-per-partition.
  */
 public class ARecordType extends AbstractComplexType {
-
-    public static final ARecordType FULLY_OPEN_RECORD_TYPE = new ARecordType("OpenRecord", new String[0], new IAType[0],
-            true);
 
     private static final long serialVersionUID = 1L;
     private final String[] fieldNames;
@@ -209,7 +206,7 @@ public class ARecordType extends AbstractComplexType {
      * @return the type of the child
      * @throws AsterixException
      */
-    public IAType getSubFieldType(List<String> subFieldName) throws AsterixException {
+    public IAType getSubFieldType(List<String> subFieldName) throws AlgebricksException {
         IAType subRecordType = getFieldType(subFieldName.get(0));
         for (int i = 1; i < subFieldName.size(); i++) {
             if (subRecordType == null) {
@@ -327,7 +324,7 @@ public class ARecordType extends AbstractComplexType {
     }
 
     @Override
-    public ObjectNode toJSON()  {
+    public ObjectNode toJSON() {
         ObjectMapper om = new ObjectMapper();
         ObjectNode type = om.createObjectNode();
         type.put("type", ARecordType.class.getName());
@@ -349,10 +346,6 @@ public class ARecordType extends AbstractComplexType {
         return type;
     }
 
-    public static int computeNullBitmapSize(ARecordType rt) {
-        return NonTaggedFormatUtil.hasOptionalField(rt) ? (int) Math.ceil(rt.getFieldNames().length / 4.0) : 0;
-    }
-
     public List<IAType> getFieldTypes(List<List<String>> fields) throws AlgebricksException {
         List<IAType> typeList = new ArrayList<>();
         for (List<String> field : fields) {
@@ -369,15 +362,5 @@ public class ARecordType extends AbstractComplexType {
             }
         }
         return false;
-    }
-
-    /**
-     * Create a fully open record type with the passed name
-     *
-     * @param name
-     * @return
-     */
-    public static ARecordType createOpenRecordType(String name) {
-        return new ARecordType(name, new String[0], new IAType[0], true);
     }
 }

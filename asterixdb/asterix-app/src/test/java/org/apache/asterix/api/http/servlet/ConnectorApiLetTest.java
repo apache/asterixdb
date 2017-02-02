@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.asterix.api.http.server.ConnectorApiServlet;
+import org.apache.asterix.file.StorageComponentProvider;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.declared.MetadataProvider;
@@ -36,7 +37,7 @@ import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
-import org.apache.asterix.om.util.JSONDeserializerForTypes;
+import org.apache.asterix.om.utils.JSONDeserializerForTypes;
 import org.apache.asterix.test.runtime.SqlppExecutionTest;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.client.NodeControllerInfo;
@@ -103,8 +104,7 @@ public class ConnectorApiLetTest {
         Assert.assertFalse(temp);
         String primaryKey = actualResponse.get("keys").asText();
         Assert.assertEquals("DataverseName,DatasetName", primaryKey);
-        ARecordType recordType = (ARecordType) JSONDeserializerForTypes
-                .convertFromJSON(actualResponse.get("type"));
+        ARecordType recordType = (ARecordType) JSONDeserializerForTypes.convertFromJSON(actualResponse.get("type"));
         Assert.assertEquals(getMetadataRecordType("Metadata", "Dataset"), recordType);
 
         // Checks the correctness of results.
@@ -140,9 +140,11 @@ public class ConnectorApiLetTest {
         // Calls ConnectorAPIServlet.formResponseObject.
         nodeMap.put("asterix_nc1", mockInfo1);
         nodeMap.put("asterix_nc2", mockInfo2);
-        PA.invokeMethod(let, "formResponseObject(" + ObjectNode.class.getName() + ", " + FileSplit.class.getName()
-                + "[], " + ARecordType.class.getName() + ", " + String.class.getName() + ", boolean, " + Map.class
-                        .getName() + ")", actualResponse, splits, recordType, primaryKey, true, nodeMap);
+        PA.invokeMethod(let,
+                "formResponseObject(" + ObjectNode.class.getName() + ", " + FileSplit.class.getName() + "[], "
+                        + ARecordType.class.getName() + ", " + String.class.getName() + ", boolean, "
+                        + Map.class.getName() + ")",
+                actualResponse, splits, recordType, primaryKey, true, nodeMap);
         // Constructs expected response.
         ObjectNode expectedResponse = om.createObjectNode();
         expectedResponse.put("temp", true);
@@ -166,11 +168,11 @@ public class ConnectorApiLetTest {
     private ARecordType getMetadataRecordType(String dataverseName, String datasetName) throws Exception {
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         // Retrieves file splits of the dataset.
-        MetadataProvider metadataProvider = new MetadataProvider(null);
+        MetadataProvider metadataProvider = new MetadataProvider(null, new StorageComponentProvider());
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
         Dataset dataset = metadataProvider.findDataset(dataverseName, datasetName);
-        ARecordType recordType = (ARecordType) metadataProvider.findType(dataset.getItemTypeDataverseName(),
-                dataset.getItemTypeName());
+        ARecordType recordType =
+                (ARecordType) metadataProvider.findType(dataset.getItemTypeDataverseName(), dataset.getItemTypeName());
         // Metadata transaction commits.
         MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
         return recordType;

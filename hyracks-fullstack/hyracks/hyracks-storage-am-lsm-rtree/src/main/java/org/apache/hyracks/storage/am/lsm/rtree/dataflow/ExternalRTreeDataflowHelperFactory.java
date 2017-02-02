@@ -30,7 +30,7 @@ import org.apache.hyracks.storage.am.common.dataflow.IndexDataflowHelper;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationSchedulerProvider;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerProvider;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
 import org.apache.hyracks.storage.am.rtree.frames.RTreePolicyType;
 
 public class ExternalRTreeDataflowHelperFactory extends LSMRTreeDataflowHelperFactory {
@@ -41,7 +41,7 @@ public class ExternalRTreeDataflowHelperFactory extends LSMRTreeDataflowHelperFa
     public ExternalRTreeDataflowHelperFactory(IPrimitiveValueProviderFactory[] valueProviderFactories,
             RTreePolicyType rtreePolicyType, IBinaryComparatorFactory[] btreeComparatorFactories,
             ILSMMergePolicyFactory mergePolicyFactory, Map<String, String> mergePolicyProperties,
-            ILSMOperationTrackerProvider opTrackerFactory, ILSMIOOperationSchedulerProvider ioSchedulerProvider,
+            ILSMOperationTrackerFactory opTrackerFactory, ILSMIOOperationSchedulerProvider ioSchedulerProvider,
             ILSMIOOperationCallbackFactory ioOpCallbackFactory, ILinearizeComparatorFactory linearizeCmpFactory,
             double bloomFilterFalsePositiveRate, int[] btreeFields, int version, boolean durable, boolean isPointMBR) {
         super(valueProviderFactories, rtreePolicyType, btreeComparatorFactories, null, mergePolicyFactory,

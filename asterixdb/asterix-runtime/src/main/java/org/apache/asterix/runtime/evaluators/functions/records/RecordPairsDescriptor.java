@@ -35,6 +35,7 @@ import org.apache.asterix.om.pointables.base.IVisitablePointable;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.utils.RecordUtil;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
@@ -79,7 +80,7 @@ public class RecordPairsDescriptor extends AbstractScalarFunctionDynamicDescript
                 final ArrayBackedValueStorage itemStorage = new ArrayBackedValueStorage();
                 final DataOutput itemOutput = itemStorage.getDataOutput();
                 final RecordBuilder recBuilder = new RecordBuilder();
-                recBuilder.reset(ARecordType.FULLY_OPEN_RECORD_TYPE);
+                recBuilder.reset(RecordUtil.FULLY_OPEN_RECORD_TYPE);
 
                 // For writing the resulting list of records.
                 final OrderedListBuilder listBuilder = new OrderedListBuilder();

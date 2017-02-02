@@ -29,14 +29,15 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.apache.asterix.app.translator.DefaultStatementExecutorFactory;
-import org.apache.asterix.common.config.ExternalProperties;
 import org.apache.asterix.common.config.ClusterProperties;
+import org.apache.asterix.common.config.ExternalProperties;
 import org.apache.asterix.compiler.provider.AqlCompilationProvider;
 import org.apache.asterix.event.schema.cluster.Cluster;
 import org.apache.asterix.event.schema.cluster.MasterNode;
+import org.apache.asterix.file.StorageComponentProvider;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.statement.RunStatement;
-import org.apache.asterix.runtime.util.AppContextInfo;
+import org.apache.asterix.runtime.utils.AppContextInfo;
 import org.apache.asterix.translator.IStatementExecutor;
 import org.apache.asterix.translator.SessionConfig;
 import org.junit.Assert;
@@ -49,7 +50,7 @@ public class QueryTranslatorTest {
 
     @Test
     public void test() throws Exception {
-        List<Statement> statements = new ArrayList<Statement>();
+        List<Statement> statements = new ArrayList<>();
         SessionConfig mockSessionConfig = mock(SessionConfig.class);
         RunStatement mockRunStatement = mock(RunStatement.class);
 
@@ -70,8 +71,8 @@ public class QueryTranslatorTest {
         when(mockMasterNode.getClientIp()).thenReturn("127.0.0.1");
 
         IStatementExecutor aqlTranslator = new DefaultStatementExecutorFactory().create(statements, mockSessionConfig,
-                new AqlCompilationProvider());
-        List<String> parameters = new ArrayList<String>();
+                new AqlCompilationProvider(), new StorageComponentProvider());
+        List<String> parameters = new ArrayList<>();
         parameters.add("examples/pregelix-example-jar-with-dependencies.jar");
         parameters.add("org.apache.pregelix.example.PageRankVertex");
         parameters.add("-ip 10.0.2.15 -port 3199");

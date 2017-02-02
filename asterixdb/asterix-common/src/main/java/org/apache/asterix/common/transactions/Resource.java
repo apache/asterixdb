@@ -21,15 +21,20 @@ package org.apache.asterix.common.transactions;
 import java.io.Serializable;
 import java.util.List;
 
+import org.apache.hyracks.api.application.INCApplicationContext;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.io.IODeviceHandle;
+import org.apache.hyracks.storage.am.common.api.IMetadataPageManagerFactory;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
 import org.apache.hyracks.storage.common.file.LocalResource;
 
 /**
+ * TODO(amoudi): Change this class and its subclasses to use json serialization instead of Java serialization
  * The base resource that will be written to disk. it will go in the serializable resource
  * member in {@link LocalResource}
  */
@@ -41,14 +46,22 @@ public abstract class Resource implements Serializable {
     protected final ITypeTraits[] filterTypeTraits;
     protected final IBinaryComparatorFactory[] filterCmpFactories;
     protected final int[] filterFields;
+    protected final ILSMOperationTrackerFactory opTrackerProvider;
+    protected final ILSMIOOperationCallbackFactory ioOpCallbackFactory;
+    protected final IMetadataPageManagerFactory metadataPageManagerFactory;
 
     public Resource(int datasetId, int partition, ITypeTraits[] filterTypeTraits,
-            IBinaryComparatorFactory[] filterCmpFactories, int[] filterFields) {
+            IBinaryComparatorFactory[] filterCmpFactories, int[] filterFields,
+            ILSMOperationTrackerFactory opTrackerProvider, ILSMIOOperationCallbackFactory ioOpCallbackFactory,
+            IMetadataPageManagerFactory metadataPageManagerFactory) {
         this.datasetId = datasetId;
         this.partition = partition;
         this.filterTypeTraits = filterTypeTraits;
         this.filterCmpFactories = filterCmpFactories;
         this.filterFields = filterFields;
+        this.opTrackerProvider = opTrackerProvider;
+        this.ioOpCallbackFactory = ioOpCallbackFactory;
+        this.metadataPageManagerFactory = metadataPageManagerFactory;
     }
 
     public int partition() {
@@ -59,8 +72,8 @@ public abstract class Resource implements Serializable {
         return datasetId;
     }
 
-    public abstract ILSMIndex createIndexInstance(IAppRuntimeContextProvider runtimeContextProvider,
-            LocalResource resource) throws HyracksDataException;
+    public abstract ILSMIndex createIndexInstance(INCApplicationContext appCtx, LocalResource resource)
+            throws HyracksDataException;
 
     public static int getIoDeviceNum(IIOManager ioManager, IODeviceHandle deviceHandle) {
         List<IODeviceHandle> ioDevices = ioManager.getIODevices();

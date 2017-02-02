@@ -21,6 +21,13 @@ package org.apache.hyracks.storage.am.common.api;
 
 import java.io.Serializable;
 
+/**
+ * Provides {@link org.apache.hyracks.storage.am.common.api.IPrimitiveValueProvider} for R-Tree operations
+ */
+@FunctionalInterface
 public interface IPrimitiveValueProviderFactory extends Serializable {
-    public IPrimitiveValueProvider createPrimitiveValueProvider();
+    /**
+     * @return {@link org.apache.hyracks.storage.am.common.api.IPrimitiveValueProvider} instance
+     */
+    IPrimitiveValueProvider createPrimitiveValueProvider();
 }

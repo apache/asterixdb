@@ -23,7 +23,10 @@ import java.util.Map;
 import org.apache.asterix.common.transactions.Resource;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
+import org.apache.hyracks.storage.am.common.api.IMetadataPageManagerFactory;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
 
 public class ExternalBTreeLocalResourceMetadataFactory extends LSMBTreeLocalResourceMetadataFactory {
 
@@ -32,14 +35,18 @@ public class ExternalBTreeLocalResourceMetadataFactory extends LSMBTreeLocalReso
     public ExternalBTreeLocalResourceMetadataFactory(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories,
             int[] bloomFilterKeyFields, boolean isPrimary, int datasetID,
             ILSMMergePolicyFactory mergePolicyFactory,
-            Map<String, String> mergePolicyProperties) {
+            Map<String, String> mergePolicyProperties, ILSMOperationTrackerFactory opTrackerProvider,
+            ILSMIOOperationCallbackFactory ioOpCallbackFactory,
+            IMetadataPageManagerFactory metadataPageManagerFactory) {
         super(typeTraits, cmpFactories, bloomFilterKeyFields, isPrimary, datasetID, mergePolicyFactory,
-                mergePolicyProperties, null, null, null, null);
+                mergePolicyProperties, null, null, null, null, opTrackerProvider, ioOpCallbackFactory,
+                metadataPageManagerFactory);
     }
 
     @Override
     public Resource resource(int partition) {
         return new ExternalBTreeLocalResourceMetadata(filterTypeTraits, filterCmpFactories, bloomFilterKeyFields,
-                isPrimary, datasetId, partition, mergePolicyFactory, mergePolicyProperties);
+                isPrimary, datasetId, partition, mergePolicyFactory, mergePolicyProperties, opTrackerProvider,
+                ioOpCallbackFactory, metadataPageManagerFactory);
     }
 }

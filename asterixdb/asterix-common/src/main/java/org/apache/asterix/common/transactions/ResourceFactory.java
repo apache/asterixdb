@@ -20,6 +20,9 @@ package org.apache.asterix.common.transactions;
 
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
+import org.apache.hyracks.storage.am.common.api.IMetadataPageManagerFactory;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
 
 public abstract class ResourceFactory implements IResourceFactory {
 
@@ -28,12 +31,20 @@ public abstract class ResourceFactory implements IResourceFactory {
     protected final ITypeTraits[] filterTypeTraits;
     protected final IBinaryComparatorFactory[] filterCmpFactories;
     protected final int[] filterFields;
+    protected final ILSMOperationTrackerFactory opTrackerProvider;
+    protected final ILSMIOOperationCallbackFactory ioOpCallbackFactory;
+    protected final IMetadataPageManagerFactory metadataPageManagerFactory;
 
     public ResourceFactory(int datasetId, ITypeTraits[] filterTypeTraits,
-            IBinaryComparatorFactory[] filterCmpFactories, int[] filterFields) {
+            IBinaryComparatorFactory[] filterCmpFactories, int[] filterFields,
+            ILSMOperationTrackerFactory opTrackerProvider, ILSMIOOperationCallbackFactory ioOpCallbackFactory,
+            IMetadataPageManagerFactory metadataPageManagerFactory) {
         this.datasetId = datasetId;
         this.filterTypeTraits = filterTypeTraits;
         this.filterCmpFactories = filterCmpFactories;
         this.filterFields = filterFields;
+        this.opTrackerProvider = opTrackerProvider;
+        this.ioOpCallbackFactory = ioOpCallbackFactory;
+        this.metadataPageManagerFactory = metadataPageManagerFactory;
     }
 }

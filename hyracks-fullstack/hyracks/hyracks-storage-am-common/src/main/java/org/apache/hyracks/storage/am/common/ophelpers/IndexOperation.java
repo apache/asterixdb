@@ -20,6 +20,7 @@
 package org.apache.hyracks.storage.am.common.ophelpers;
 
 public enum IndexOperation {
+    CREATE,
     INSERT,
     DELETE,
     UPDATE,

@@ -28,13 +28,14 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.asterix.file.StorageComponentProvider;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
-import org.apache.asterix.metadata.utils.DatasetUtils;
+import org.apache.asterix.metadata.utils.DatasetUtil;
 import org.apache.asterix.om.types.ARecordType;
-import org.apache.asterix.util.FlushDatasetUtils;
+import org.apache.asterix.utils.FlushDatasetUtil;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.client.NodeControllerInfo;
 import org.apache.hyracks.api.io.FileSplit;
@@ -97,7 +98,7 @@ public class ConnectorApiServlet extends AbstractServlet {
             MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
 
             // Retrieves file splits of the dataset.
-            MetadataProvider metadataProvider = new MetadataProvider(null);
+            MetadataProvider metadataProvider = new MetadataProvider(null, new StorageComponentProvider());
             metadataProvider.setMetadataTxnContext(mdTxnCtx);
             Dataset dataset = metadataProvider.findDataset(dataverseName, datasetName);
             if (dataset == null) {
@@ -112,7 +113,7 @@ public class ConnectorApiServlet extends AbstractServlet {
                     metadataProvider.splitsForDataset(mdTxnCtx, dataverseName, datasetName, datasetName, temp);
             ARecordType recordType = (ARecordType) metadataProvider.findType(dataset.getItemTypeDataverseName(),
                     dataset.getItemTypeName());
-            List<List<String>> primaryKeys = DatasetUtils.getPartitioningKeys(dataset);
+            List<List<String>> primaryKeys = DatasetUtil.getPartitioningKeys(dataset);
             StringBuilder pkStrBuf = new StringBuilder();
             for (List<String> keys : primaryKeys) {
                 for (String key : keys) {
@@ -126,7 +127,7 @@ public class ConnectorApiServlet extends AbstractServlet {
                     hcc.getNodeControllerInfos());
 
             // Flush the cached contents of the dataset to file system.
-            FlushDatasetUtils.flushDataset(hcc, metadataProvider, mdTxnCtx, dataverseName, datasetName, datasetName);
+            FlushDatasetUtil.flushDataset(hcc, metadataProvider, dataverseName, datasetName, datasetName);
 
             // Metadata transaction commits.
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);

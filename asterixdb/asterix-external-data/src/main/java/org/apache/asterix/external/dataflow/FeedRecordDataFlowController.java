@@ -39,7 +39,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.util.HyracksConstants;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.io.MessagingFrameTupleAppender;
-import org.apache.hyracks.dataflow.common.util.TaskUtils;
+import org.apache.hyracks.dataflow.common.utils.TaskUtil;
 import org.apache.log4j.Logger;
 
 public class FeedRecordDataFlowController<T> extends AbstractFeedDataFlowController {
@@ -144,7 +144,7 @@ public class FeedRecordDataFlowController<T> extends AbstractFeedDataFlowControl
         ExecutorService executorService = sendMarker ? Executors.newSingleThreadExecutor() : null;
         if (sendMarker && dataflowMarker == null) {
             dataflowMarker = new DataflowMarker(recordReader.getProgressReporter(),
-                    TaskUtils.<VSizeFrame> get(HyracksConstants.KEY_MESSAGE, ctx));
+                    TaskUtil.<VSizeFrame> get(HyracksConstants.KEY_MESSAGE, ctx));
             dataflowMarkerResult = executorService.submit(dataflowMarker);
         }
     }

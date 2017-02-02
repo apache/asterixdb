@@ -32,6 +32,7 @@ import org.apache.asterix.app.result.ResultReader;
 import org.apache.asterix.app.result.ResultUtil;
 import org.apache.asterix.app.translator.QueryTranslator;
 import org.apache.asterix.common.config.GlobalConfig;
+import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.asterix.lang.aql.parser.TokenMgrError;
@@ -66,13 +67,16 @@ public abstract class RestApiServlet extends AbstractServlet {
     private final ILangCompilationProvider compilationProvider;
     private final IParserFactory parserFactory;
     private final IStatementExecutorFactory statementExecutorFactory;
+    private final IStorageComponentProvider componentProvider;
 
     public RestApiServlet(ConcurrentMap<String, Object> ctx, String[] paths,
-            ILangCompilationProvider compilationProvider, IStatementExecutorFactory statementExecutorFactory) {
+            ILangCompilationProvider compilationProvider, IStatementExecutorFactory statementExecutorFactory,
+            IStorageComponentProvider componentProvider) {
         super(ctx, paths);
         this.compilationProvider = compilationProvider;
         this.parserFactory = compilationProvider.getParserFactory();
         this.statementExecutorFactory = statementExecutorFactory;
+        this.componentProvider = componentProvider;
     }
 
     /**
@@ -189,8 +193,8 @@ public abstract class RestApiServlet extends AbstractServlet {
             List<Statement> aqlStatements = parser.parse();
             validate(aqlStatements);
             MetadataManager.INSTANCE.init();
-            IStatementExecutor translator =
-                    statementExecutorFactory.create(aqlStatements, sessionConfig, compilationProvider);
+            IStatementExecutor translator = statementExecutorFactory.create(aqlStatements, sessionConfig,
+                    compilationProvider, componentProvider);
             translator.compileAndExecute(hcc, hds, resultDelivery);
         } catch (AsterixException | TokenMgrError | org.apache.asterix.aqlplus.parser.TokenMgrError pe) {
             response.setStatus(HttpResponseStatus.INTERNAL_SERVER_ERROR);

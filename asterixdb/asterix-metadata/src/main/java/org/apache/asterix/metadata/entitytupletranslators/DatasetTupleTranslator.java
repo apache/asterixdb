@@ -37,7 +37,7 @@ import org.apache.asterix.builders.OrderedListBuilder;
 import org.apache.asterix.builders.RecordBuilder;
 import org.apache.asterix.builders.UnorderedListBuilder;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
-import org.apache.asterix.common.config.DatasetConfig.ExternalDatasetTransactionState;
+import org.apache.asterix.common.config.DatasetConfig.TransactionState;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.metadata.IDatasetDetails;
 import org.apache.asterix.metadata.MetadataException;
@@ -48,7 +48,7 @@ import org.apache.asterix.metadata.entities.ExternalDatasetDetails;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails.FileStructure;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails.PartitioningStrategy;
-import org.apache.asterix.metadata.utils.DatasetUtils;
+import org.apache.asterix.metadata.utils.DatasetUtil;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.ADateTime;
 import org.apache.asterix.om.base.AInt32;
@@ -233,7 +233,7 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
                         .getValueByPos(MetadataRecordTypes.EXTERNAL_DETAILS_ARECORD_LAST_REFRESH_TIME_FIELD_INDEX)))
                                 .getChrononTime());
                 // State
-                ExternalDatasetTransactionState state = ExternalDatasetTransactionState
+                TransactionState state = TransactionState
                         .values()[((AInt32) datasetDetailsRecord.getValueByPos(
                                 MetadataRecordTypes.EXTERNAL_DETAILS_ARECORD_TRANSACTION_STATE_FIELD_INDEX))
                                         .getIntegerValue()];
@@ -326,7 +326,7 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
                 String name = property.getKey();
                 String value = property.getValue();
                 itemValue.reset();
-                DatasetUtils.writePropertyTypeRecord(name, value, itemValue.getDataOutput(),
+                DatasetUtil.writePropertyTypeRecord(name, value, itemValue.getDataOutput(),
                         MetadataRecordTypes.COMPACTION_POLICY_PROPERTIES_RECORDTYPE);
                 listBuilder.addItem(itemValue);
             }

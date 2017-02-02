@@ -30,6 +30,7 @@ import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.transactions.DatasetId;
 import org.apache.asterix.common.transactions.ITransactionContext;
 import org.apache.asterix.common.transactions.ITransactionManager;
+import org.apache.asterix.common.transactions.ITransactionSubsystem;
 import org.apache.asterix.common.transactions.JobId;
 import org.apache.asterix.common.transactions.LogRecord;
 import org.apache.asterix.common.utils.TransactionUtil;
@@ -43,11 +44,11 @@ public class TransactionManager implements ITransactionManager, ILifeCycleCompon
 
     public static final boolean IS_DEBUG_MODE = false;//true
     private static final Logger LOGGER = Logger.getLogger(TransactionManager.class.getName());
-    private final TransactionSubsystem txnSubsystem;
-    private Map<JobId, ITransactionContext> transactionContextRepository = new ConcurrentHashMap<JobId, ITransactionContext>();
+    private final ITransactionSubsystem txnSubsystem;
+    private Map<JobId, ITransactionContext> transactionContextRepository = new ConcurrentHashMap<>();
     private AtomicInteger maxJobId = new AtomicInteger(0);
 
-    public TransactionManager(TransactionSubsystem provider) {
+    public TransactionManager(ITransactionSubsystem provider) {
         this.txnSubsystem = provider;
     }
 
@@ -91,7 +92,7 @@ public class TransactionManager implements ITransactionManager, ILifeCycleCompon
                 synchronized (this) {
                     txnCtx = transactionContextRepository.get(jobId);
                     if (txnCtx == null) {
-                        txnCtx = new TransactionContext(jobId, txnSubsystem);
+                        txnCtx = new TransactionContext(jobId);
                         transactionContextRepository.put(jobId, txnCtx);
                     }
                 }
@@ -103,7 +104,8 @@ public class TransactionManager implements ITransactionManager, ILifeCycleCompon
     }
 
     @Override
-    public void commitTransaction(ITransactionContext txnCtx, DatasetId datasetId, int PKHashVal) throws ACIDException {
+    public void commitTransaction(ITransactionContext txnCtx, DatasetId datasetId, int PKHashVal)
+            throws ACIDException {
         //Only job-level commits call this method.
         try {
             if (txnCtx.isWriteTxn()) {
@@ -134,7 +136,7 @@ public class TransactionManager implements ITransactionManager, ILifeCycleCompon
     }
 
     @Override
-    public TransactionSubsystem getTransactionProvider() {
+    public ITransactionSubsystem getTransactionSubsystem() {
         return txnSubsystem;
     }
 

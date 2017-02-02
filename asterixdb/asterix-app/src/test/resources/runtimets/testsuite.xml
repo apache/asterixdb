@@ -3317,7 +3317,7 @@
     <test-case FilePath="misc">
       <compilation-unit name="partition-by-nonexistent-field"> <!-- Seriously?? 3 expected errors -->
         <output-dir compare="Text">partition-by-nonexistent-field</output-dir>
-        <expected-error>Type not found for partitioning key [id]</expected-error>
+        <expected-error>Field "id" is not found</expected-error>
         <expected-error>Cannot find dataset</expected-error>
         <expected-error>Could not find dataset</expected-error>
       </compilation-unit>

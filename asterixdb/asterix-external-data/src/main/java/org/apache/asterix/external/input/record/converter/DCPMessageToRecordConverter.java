@@ -30,9 +30,9 @@ import org.apache.asterix.external.api.IRawRecord;
 import org.apache.asterix.external.input.record.CharArrayRecord;
 import org.apache.asterix.external.input.record.RecordWithMetadataAndPK;
 import org.apache.asterix.external.util.ExternalDataConstants;
-import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.om.utils.RecordUtil;
 
 import com.couchbase.client.core.message.dcp.DCPRequest;
 import com.couchbase.client.core.message.dcp.MutationMessage;
@@ -57,7 +57,7 @@ public class DCPMessageToRecordConverter implements IRecordToRecordWithMetadataA
     public DCPMessageToRecordConverter() {
         this.value = new CharArrayRecord();
         this.recordWithMetadata = new RecordWithMetadataAndPK<>(value, CB_META_TYPES,
-                ARecordType.FULLY_OPEN_RECORD_TYPE, PK_INDICATOR, PK_INDEXES, PK_TYPES);
+                RecordUtil.FULLY_OPEN_RECORD_TYPE, PK_INDICATOR, PK_INDEXES, PK_TYPES);
     }
 
     @Override

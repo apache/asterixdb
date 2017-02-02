@@ -26,7 +26,6 @@ import org.apache.asterix.common.transactions.JobId;
 import org.apache.asterix.external.dataset.adapter.AdapterIdentifier;
 import org.apache.asterix.external.feed.api.IFeed;
 import org.apache.asterix.external.feed.api.IFeed.FeedType;
-import org.apache.asterix.metadata.api.IMetadataEntity;
 import org.apache.asterix.metadata.entities.CompactionPolicy;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.DatasourceAdapter;
@@ -38,6 +37,7 @@ import org.apache.asterix.metadata.entities.Function;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.entities.Library;
 import org.apache.asterix.metadata.entities.NodeGroup;
+import org.apache.asterix.metadata.utils.MetadataUtil;
 
 /**
  * Used to implement serializable transactions against the MetadataCache.
@@ -68,7 +68,7 @@ public class MetadataTransactionContext extends MetadataCache {
     // The APIs in this class make sure that these two caches are kept in sync.
     protected MetadataCache droppedCache = new MetadataCache();
 
-    protected ArrayList<MetadataLogicalOperation> opLog = new ArrayList<MetadataLogicalOperation>();
+    protected ArrayList<MetadataLogicalOperation> opLog = new ArrayList<>();
     private final JobId jobId;
 
     public MetadataTransactionContext(JobId jobId) {
@@ -122,20 +122,20 @@ public class MetadataTransactionContext extends MetadataCache {
 
     public void dropDataset(String dataverseName, String datasetName) {
         Dataset dataset = new Dataset(dataverseName, datasetName, null, null, null, null, null, null, null, null, -1,
-                IMetadataEntity.PENDING_NO_OP);
+                MetadataUtil.PENDING_NO_OP);
         droppedCache.addDatasetIfNotExists(dataset);
         logAndApply(new MetadataLogicalOperation(dataset, false));
     }
 
     public void dropIndex(String dataverseName, String datasetName, String indexName) {
         Index index = new Index(dataverseName, datasetName, indexName, null, null, null, null, false, false,
-                IMetadataEntity.PENDING_NO_OP);
+                MetadataUtil.PENDING_NO_OP);
         droppedCache.addIndexIfNotExists(index);
         logAndApply(new MetadataLogicalOperation(index, false));
     }
 
     public void dropDataverse(String dataverseName) {
-        Dataverse dataverse = new Dataverse(dataverseName, null, IMetadataEntity.PENDING_NO_OP);
+        Dataverse dataverse = new Dataverse(dataverseName, null, MetadataUtil.PENDING_NO_OP);
         droppedCache.addDataverseIfNotExists(dataverse);
         logAndApply(new MetadataLogicalOperation(dataverse, false));
     }
@@ -236,8 +236,8 @@ public class MetadataTransactionContext extends MetadataCache {
 
     public void dropFeed(String dataverseName, String feedName, IFeed.FeedType feedType) {
         Feed feed = null;
-        feed = new Feed(dataverseName, feedName, null, feedType, (feedType == FeedType.PRIMARY) ? feedName : null, null,
-                null);
+        feed = new Feed(dataverseName, feedName, null, feedType, (feedType == FeedType.PRIMARY) ? feedName : null,
+                null, null);
         droppedCache.addFeedIfNotExists(feed);
         logAndApply(new MetadataLogicalOperation(feed, false));
     }

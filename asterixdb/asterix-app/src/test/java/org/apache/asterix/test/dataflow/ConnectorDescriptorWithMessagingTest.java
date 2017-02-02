@@ -45,7 +45,7 @@ import org.apache.hyracks.dataflow.common.data.marshalling.DoubleSerializerDeser
 import org.apache.hyracks.dataflow.common.data.marshalling.Integer64SerializerDeserializer;
 import org.apache.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import org.apache.hyracks.dataflow.common.io.MessagingFrameTupleAppender;
-import org.apache.hyracks.dataflow.common.util.TaskUtils;
+import org.apache.hyracks.dataflow.common.utils.TaskUtil;
 import org.apache.hyracks.dataflow.std.connectors.MToNPartitioningWithMessageConnectorDescriptor;
 import org.apache.hyracks.dataflow.std.connectors.PartitionWithMessageDataWriter;
 import org.apache.hyracks.test.support.TestUtils;
@@ -72,7 +72,7 @@ public class ConnectorDescriptorWithMessagingTest {
             IHyracksTaskContext ctx = TestUtils.create(DEFAULT_FRAME_SIZE);
             VSizeFrame message = new VSizeFrame(ctx);
             VSizeFrame tempBuffer = new VSizeFrame(ctx);
-            TaskUtils.putInSharedMap(HyracksConstants.KEY_MESSAGE, message, ctx);
+            TaskUtil.putInSharedMap(HyracksConstants.KEY_MESSAGE, message, ctx);
             message.getBuffer().clear();
             message.getBuffer().put(MessagingFrameTupleAppender.NULL_FEED_MESSAGE);
             message.getBuffer().flip();
@@ -81,8 +81,8 @@ public class ConnectorDescriptorWithMessagingTest {
                     BooleanSerializerDeserializer.INSTANCE, new UTF8StringSerializerDeserializer() };
             RecordDescriptor rDesc = new RecordDescriptor(serdes);
             TestPartitionWriterFactory partitionWriterFactory = new TestPartitionWriterFactory();
-            IFrameWriter partitioner = connector.createPartitioner(ctx, rDesc, partitionWriterFactory, CURRENT_PRODUCER,
-                    NUMBER_OF_CONSUMERS, NUMBER_OF_CONSUMERS);
+            IFrameWriter partitioner = connector.createPartitioner(ctx, rDesc, partitionWriterFactory,
+                    CURRENT_PRODUCER, NUMBER_OF_CONSUMERS, NUMBER_OF_CONSUMERS);
             partitioner.open();
             FrameTupleAccessor fta = new FrameTupleAccessor(rDesc);
             List<TestFrameWriter> recipients = new ArrayList<>();
@@ -146,15 +146,15 @@ public class ConnectorDescriptorWithMessagingTest {
             IHyracksTaskContext ctx = TestUtils.create(DEFAULT_FRAME_SIZE);
             VSizeFrame message = new VSizeFrame(ctx);
             VSizeFrame tempBuffer = new VSizeFrame(ctx);
-            TaskUtils.putInSharedMap(HyracksConstants.KEY_MESSAGE, message, ctx);
+            TaskUtil.putInSharedMap(HyracksConstants.KEY_MESSAGE, message, ctx);
             writeRandomMessage(message, MessagingFrameTupleAppender.MARKER_MESSAGE, DEFAULT_FRAME_SIZE + 1);
             ISerializerDeserializer<?>[] serdes = new ISerializerDeserializer<?>[] {
                     Integer64SerializerDeserializer.INSTANCE, DoubleSerializerDeserializer.INSTANCE,
                     BooleanSerializerDeserializer.INSTANCE, new UTF8StringSerializerDeserializer() };
             RecordDescriptor rDesc = new RecordDescriptor(serdes);
             TestPartitionWriterFactory partitionWriterFactory = new TestPartitionWriterFactory();
-            IFrameWriter partitioner = connector.createPartitioner(ctx, rDesc, partitionWriterFactory, CURRENT_PRODUCER,
-                    NUMBER_OF_CONSUMERS, NUMBER_OF_CONSUMERS);
+            IFrameWriter partitioner = connector.createPartitioner(ctx, rDesc, partitionWriterFactory,
+                    CURRENT_PRODUCER, NUMBER_OF_CONSUMERS, NUMBER_OF_CONSUMERS);
             partitioner.open();
             FrameTupleAccessor fta = new FrameTupleAccessor(rDesc);
             List<TestFrameWriter> recipients = new ArrayList<>();
@@ -230,7 +230,7 @@ public class ConnectorDescriptorWithMessagingTest {
             IHyracksTaskContext ctx = TestUtils.create(DEFAULT_FRAME_SIZE);
             VSizeFrame message = new VSizeFrame(ctx);
             VSizeFrame tempBuffer = new VSizeFrame(ctx);
-            TaskUtils.putInSharedMap(HyracksConstants.KEY_MESSAGE, message, ctx);
+            TaskUtil.putInSharedMap(HyracksConstants.KEY_MESSAGE, message, ctx);
             message.getBuffer().clear();
             writeRandomMessage(message, MessagingFrameTupleAppender.MARKER_MESSAGE, DEFAULT_FRAME_SIZE);
             ISerializerDeserializer<?>[] serdes = new ISerializerDeserializer<?>[] {
@@ -288,7 +288,7 @@ public class ConnectorDescriptorWithMessagingTest {
             IHyracksTaskContext ctx = TestUtils.create(DEFAULT_FRAME_SIZE);
             VSizeFrame message = new VSizeFrame(ctx);
             VSizeFrame tempBuffer = new VSizeFrame(ctx);
-            TaskUtils.putInSharedMap(HyracksConstants.KEY_MESSAGE, message, ctx);
+            TaskUtil.putInSharedMap(HyracksConstants.KEY_MESSAGE, message, ctx);
             message.getBuffer().clear();
             message.getBuffer().put(MessagingFrameTupleAppender.ACK_REQ_FEED_MESSAGE);
             message.getBuffer().flip();

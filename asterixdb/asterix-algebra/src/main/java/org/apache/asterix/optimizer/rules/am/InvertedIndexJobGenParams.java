@@ -118,7 +118,7 @@ public class InvertedIndexJobGenParams extends AccessMethodJobGenParams {
         // Read full-text search information.
         isFullTextSearchQuery = AccessMethodUtils.getBooleanConstant(funcArgs.get(index + IS_FULLTEXT_SEARCH_INDEX));
         // Read key var list.
-        keyVarList = new ArrayList<LogicalVariable>();
+        keyVarList = new ArrayList<>();
         readVarList(funcArgs, index + KEY_VAR_INDEX, keyVarList);
         // TODO: We could possibly simplify things if we did read the non-key var list here.
         // We don't need to read the non-key var list.

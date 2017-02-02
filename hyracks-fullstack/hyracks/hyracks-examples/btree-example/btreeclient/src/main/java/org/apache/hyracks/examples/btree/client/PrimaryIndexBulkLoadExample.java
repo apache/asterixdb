@@ -43,13 +43,13 @@ import org.apache.hyracks.dataflow.std.misc.NullSinkOperatorDescriptor;
 import org.apache.hyracks.dataflow.std.sort.ExternalSortOperatorDescriptor;
 import org.apache.hyracks.examples.btree.helper.DataGenOperatorDescriptor;
 import org.apache.hyracks.examples.btree.helper.IndexLifecycleManagerProvider;
-import org.apache.hyracks.examples.btree.helper.StorageManagerInterface;
+import org.apache.hyracks.examples.btree.helper.BTreeHelperStorageManager;
 import org.apache.hyracks.storage.am.btree.dataflow.BTreeDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.dataflow.TreeIndexBulkLoadOperatorDescriptor;
 import org.apache.hyracks.storage.am.common.freepage.LinkedMetadataPageManagerFactory;
-import org.apache.hyracks.storage.common.IStorageManagerInterface;
+import org.apache.hyracks.storage.common.IStorageManager;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
@@ -145,7 +145,7 @@ public class PrimaryIndexBulkLoadExample {
 
         // create providers for B-Tree
         IIndexLifecycleManagerProvider lcManagerProvider = IndexLifecycleManagerProvider.INSTANCE;
-        IStorageManagerInterface storageManager = StorageManagerInterface.INSTANCE;
+        IStorageManager storageManager = BTreeHelperStorageManager.INSTANCE;
 
         // the B-Tree expects its keyfields to be at the front of its input
         // tuple

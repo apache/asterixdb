@@ -25,6 +25,7 @@ import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.AUnorderedListType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.om.utils.RecordUtil;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
@@ -197,7 +198,7 @@ public class TypeComputeUtils {
                     return null;
                 }
             case ANY:
-                return ARecordType.FULLY_OPEN_RECORD_TYPE;
+                return RecordUtil.FULLY_OPEN_RECORD_TYPE;
             default:
                 return null;
         }

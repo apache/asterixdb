@@ -29,39 +29,32 @@ import org.apache.hyracks.storage.am.common.api.IIndexDataflowHelper;
 import org.apache.hyracks.storage.am.common.api.IndexException;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.util.IndexFileNameUtil;
-import org.apache.hyracks.storage.am.lsm.btree.dataflow.ExternalBTreeDataflowHelperFactory;
-import org.apache.hyracks.storage.am.lsm.btree.dataflow.ExternalBTreeWithBuddyDataflowHelperFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ITwoPCIndex;
-import org.apache.hyracks.storage.am.lsm.rtree.dataflow.ExternalRTreeDataflowHelperFactory;
 import org.apache.log4j.Logger;
 
 public class ExternalDatasetIndexesCommitOperatorDescriptor extends AbstractExternalDatasetIndexesOperatorDescriptor {
-    private static final Logger LOGGER = Logger
-            .getLogger(ExternalDatasetIndexesCommitOperatorDescriptor.class.getName());
+    private static final long serialVersionUID = 1L;
+    private static final Logger LOGGER =
+            Logger.getLogger(ExternalDatasetIndexesCommitOperatorDescriptor.class.getName());
 
     public ExternalDatasetIndexesCommitOperatorDescriptor(IOperatorDescriptorRegistry spec,
-            ExternalBTreeDataflowHelperFactory filesIndexDataflowHelperFactory,
-            IndexInfoOperatorDescriptor fileIndexesInfo,
-            List<ExternalBTreeWithBuddyDataflowHelperFactory> bTreeIndexesDataflowHelperFactories,
-            List<IndexInfoOperatorDescriptor> bTreeIndexesInfos,
-            List<ExternalRTreeDataflowHelperFactory> rTreeIndexesDataflowHelperFactories,
-            List<IndexInfoOperatorDescriptor> rTreeIndexesInfos) {
-        super(spec, filesIndexDataflowHelperFactory, fileIndexesInfo, bTreeIndexesDataflowHelperFactories,
-                bTreeIndexesInfos, rTreeIndexesDataflowHelperFactories, rTreeIndexesInfos);
+            IIndexDataflowHelperFactory filesIndexDataflowHelperFactory, IndexInfoOperatorDescriptor fileIndexesInfo,
+            List<IIndexDataflowHelperFactory> indexesDataflowHelperFactories,
+            List<IndexInfoOperatorDescriptor> indexesInfos) {
+        super(spec, filesIndexDataflowHelperFactory, fileIndexesInfo, indexesDataflowHelperFactories,
+                indexesInfos);
     }
-
-    private static final long serialVersionUID = 1L;
 
     @Override
     protected void performOpOnIndex(IIndexDataflowHelperFactory indexDataflowHelperFactory, IHyracksTaskContext ctx,
             IndexInfoOperatorDescriptor fileIndexInfo, int partition) {
         try {
-            FileReference resourecePath = IndexFileNameUtil.getIndexAbsoluteFileRef(fileIndexInfo, partition,
-                    ctx.getIOManager());
+            FileReference resourecePath =
+                    IndexFileNameUtil.getIndexAbsoluteFileRef(fileIndexInfo, partition, ctx.getIOManager());
             LOGGER.warn("performing the operation on " + resourecePath.getFile().getAbsolutePath());
             // Get DataflowHelper
-            IIndexDataflowHelper indexHelper = indexDataflowHelperFactory.createIndexDataflowHelper(fileIndexInfo, ctx,
-                    partition);
+            IIndexDataflowHelper indexHelper =
+                    indexDataflowHelperFactory.createIndexDataflowHelper(fileIndexInfo, ctx, partition);
             // Get index
             IIndex index = indexHelper.getIndexInstance();
             // commit transaction

@@ -32,12 +32,14 @@ import org.apache.asterix.api.common.AsterixHyracksIntegrationUtil;
 import org.apache.asterix.api.java.AsterixJavaClient;
 import org.apache.asterix.app.translator.DefaultStatementExecutorFactory;
 import org.apache.asterix.common.config.GlobalConfig;
+import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.compiler.provider.AqlCompilationProvider;
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.asterix.compiler.provider.SqlppCompilationProvider;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.IdentitiyResolverFactory;
+import org.apache.asterix.file.StorageComponentProvider;
 import org.apache.asterix.test.base.AsterixTestHelper;
 import org.apache.asterix.test.common.TestHelper;
 import org.apache.asterix.test.runtime.HDFSCluster;
@@ -76,6 +78,7 @@ public class OptimizerTest {
     private static final ILangCompilationProvider sqlppCompilationProvider = new SqlppCompilationProvider();
     protected static ILangCompilationProvider extensionLangCompilationProvider = null;
     protected static IStatementExecutorFactory statementExecutorFactory = new DefaultStatementExecutorFactory();
+    protected static IStorageComponentProvider storageComponentProvider = new StorageComponentProvider();
 
     protected static AsterixHyracksIntegrationUtil integrationUtil = new AsterixHyracksIntegrationUtil();
 
@@ -124,7 +127,7 @@ public class OptimizerTest {
 
     @Parameters(name = "OptimizerTest {index}: {0}")
     public static Collection<Object[]> tests() {
-        Collection<Object[]> testArgs = new ArrayList<Object[]>();
+        Collection<Object[]> testArgs = new ArrayList<>();
         if (only.isEmpty()) {
             suiteBuildPerFile(new File(PATH_QUERIES), testArgs, "");
         } else {
@@ -178,7 +181,8 @@ public class OptimizerTest {
                 provider = extensionLangCompilationProvider;
             }
             IHyracksClientConnection hcc = integrationUtil.getHyracksClientConnection();
-            AsterixJavaClient asterix = new AsterixJavaClient(hcc, query, plan, provider, statementExecutorFactory);
+            AsterixJavaClient asterix = new AsterixJavaClient(hcc, query, plan, provider, statementExecutorFactory,
+                    storageComponentProvider);
             try {
                 asterix.compile(true, false, false, true, true, false, false);
             } catch (AsterixException e) {

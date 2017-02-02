@@ -23,15 +23,15 @@ import org.apache.asterix.common.replication.IReplicationManager;
 import org.apache.asterix.common.transactions.ILogRecord;
 import org.apache.asterix.common.transactions.ITransactionContext;
 import org.apache.asterix.common.transactions.ITransactionManager;
+import org.apache.asterix.common.transactions.ITransactionSubsystem;
 import org.apache.asterix.common.transactions.LogSource;
 import org.apache.asterix.common.transactions.LogType;
-import org.apache.asterix.transaction.management.service.transaction.TransactionSubsystem;
 
 public class LogManagerWithReplication extends LogManager {
 
     private IReplicationManager replicationManager;
 
-    public LogManagerWithReplication(TransactionSubsystem txnSubsystem) {
+    public LogManagerWithReplication(ITransactionSubsystem txnSubsystem) {
         super(txnSubsystem);
     }
 

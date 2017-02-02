@@ -98,7 +98,7 @@ public class TransactionContext implements ITransactionContext, Serializable {
     // creations.
     // also, the pool can throttle the number of concurrent active jobs at every
     // moment.
-    public TransactionContext(JobId jobId, TransactionSubsystem transactionSubsystem) throws ACIDException {
+    public TransactionContext(JobId jobId) throws ACIDException {
         this.jobId = jobId;
         firstLSN = new AtomicLong(-1);
         lastLSN = new AtomicLong(-1);
@@ -106,7 +106,7 @@ public class TransactionContext implements ITransactionContext, Serializable {
         isTimeout = false;
         isWriteTxn = new AtomicBoolean(false);
         isMetadataTxn = false;
-        indexMap = new HashMap<MutableLong, AbstractLSMIOOperationCallback>();
+        indexMap = new HashMap<>();
         primaryIndex = null;
         tempResourceIdForRegister = new MutableLong();
         logRecord = new LogRecord();

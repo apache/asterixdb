@@ -36,7 +36,8 @@ import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.runtime.RuntimeRecordTypeInfo;
-import org.apache.asterix.om.util.NonTaggedFormatUtil;
+import org.apache.asterix.om.utils.NonTaggedFormatUtil;
+import org.apache.asterix.om.utils.RecordUtil;
 import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.asterix.runtime.exceptions.UnsupportedTypeException;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
@@ -154,7 +155,7 @@ public class FieldAccessNestedEvalFactory implements IScalarEvaluatorFactory {
                         if (subFieldIndex == -1) {
                             break;
                         }
-                        nullBitmapSize = ARecordType.computeNullBitmapSize((ARecordType) subType);
+                        nullBitmapSize = RecordUtil.computeNullBitmapSize((ARecordType) subType);
                         subFieldOffset = ARecordSerializerDeserializer.getFieldOffsetById(serRecord, start,
                                 subFieldIndex, nullBitmapSize, ((ARecordType) subType).isOpen());
                         if (subFieldOffset == 0) {

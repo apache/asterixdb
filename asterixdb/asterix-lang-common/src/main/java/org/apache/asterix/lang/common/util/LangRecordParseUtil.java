@@ -44,8 +44,8 @@ import org.apache.asterix.om.base.ARecord;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.base.IACursor;
 import org.apache.asterix.om.base.IAObject;
-import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.BuiltinType;
+import org.apache.asterix.om.utils.RecordUtil;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -96,7 +96,7 @@ public class LangRecordParseUtil {
         ArrayBackedValueStorage fieldName = new ArrayBackedValueStorage();
         ArrayBackedValueStorage fieldValue = new ArrayBackedValueStorage();
         RecordBuilder recordBuilder = new RecordBuilder();
-        recordBuilder.reset(ARecordType.FULLY_OPEN_RECORD_TYPE);
+        recordBuilder.reset(RecordUtil.FULLY_OPEN_RECORD_TYPE);
         recordBuilder.init();
         List<FieldBinding> fbList = recordValue.getFbList();
         HashSet<String> fieldNames = new HashSet<>();

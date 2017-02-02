@@ -21,7 +21,6 @@ package org.apache.asterix.external.operators;
 import java.io.IOException;
 import java.util.List;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.external.indexing.ExternalFile;
 import org.apache.asterix.external.indexing.FileIndexTupleTranslator;
 import org.apache.asterix.external.indexing.FilesIndexDescription;
@@ -46,7 +45,7 @@ import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.btree.impls.ExternalBTree;
 import org.apache.hyracks.storage.am.lsm.btree.impls.ExternalBTree.LSMTwoPCBTreeBulkLoader;
-import org.apache.hyracks.storage.common.IStorageManagerInterface;
+import org.apache.hyracks.storage.common.IStorageManager;
 import org.apache.hyracks.storage.common.file.ILocalResourceFactoryProvider;
 
 /**
@@ -63,13 +62,13 @@ public class ExternalFilesIndexOperatorDescriptor extends AbstractTreeIndexOpera
     private List<ExternalFile> files;
 
     public ExternalFilesIndexOperatorDescriptor(IOperatorDescriptorRegistry spec,
-            IStorageManagerInterface storageManager, IIndexLifecycleManagerProvider lifecycleManagerProvider,
+            IStorageManager storageManager, IIndexLifecycleManagerProvider lifecycleManagerProvider,
             IFileSplitProvider fileSplitProvider, IIndexDataflowHelperFactory dataflowHelperFactory,
             ILocalResourceFactoryProvider localResourceFactoryProvider, List<ExternalFile> files,
             boolean createNewIndex, IMetadataPageManagerFactory metadataPageManagerFactory) {
         super(spec, 0, 0, null, storageManager, lifecycleManagerProvider, fileSplitProvider,
                 new FilesIndexDescription().EXTERNAL_FILE_INDEX_TYPE_TRAITS,
-                new FilesIndexDescription().FILES_INDEX_COMP_FACTORIES, FilesIndexDescription.BLOOM_FILTER_FIELDS,
+                FilesIndexDescription.FILES_INDEX_COMP_FACTORIES, FilesIndexDescription.BLOOM_FILTER_FIELDS,
                 dataflowHelperFactory, null, false, false, null, localResourceFactoryProvider,
                 NoOpOperationCallbackFactory.INSTANCE, NoOpOperationCallbackFactory.INSTANCE,
                 metadataPageManagerFactory);
@@ -121,11 +120,11 @@ public class ExternalFilesIndexOperatorDescriptor extends AbstractTreeIndexOpera
                         // The files must be ordered according to their numbers
                         for (ExternalFile file : files) {
                             switch (file.getPendingOp()) {
-                                case PENDING_ADD_OP:
-                                case PENDING_APPEND_OP:
+                                case ADD_OP:
+                                case APPEND_OP:
                                     bulkLoader.add(filesTupleTranslator.getTupleFromFile(file));
                                     break;
-                                case PENDING_DROP_OP:
+                                case DROP_OP:
                                     bulkLoader.delete(filesTupleTranslator.getTupleFromFile(file));
                                     break;
                             }

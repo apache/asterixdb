@@ -28,8 +28,9 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.IAType;
-import org.apache.asterix.om.util.NonTaggedFormatUtil;
 import org.apache.asterix.om.util.container.IObjectFactory;
+import org.apache.asterix.om.utils.NonTaggedFormatUtil;
+import org.apache.asterix.om.utils.RecordUtil;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.data.std.api.AbstractPointable;
 import org.apache.hyracks.data.std.api.IPointable;
@@ -190,7 +191,7 @@ public class ARecordPointable extends AbstractPointable {
     }
 
     public int getNullBitmapSize(ARecordType recordType) {
-        return ARecordType.computeNullBitmapSize(recordType);
+        return RecordUtil.computeNullBitmapSize(recordType);
     }
 
     public boolean isClosedFieldNull(ARecordType recordType, int fieldId) {

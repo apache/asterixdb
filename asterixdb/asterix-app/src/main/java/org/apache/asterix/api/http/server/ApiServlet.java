@@ -38,6 +38,7 @@ import javax.imageio.ImageIO;
 import org.apache.asterix.app.result.ResultReader;
 import org.apache.asterix.app.result.ResultUtil;
 import org.apache.asterix.common.config.GlobalConfig;
+import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.asterix.lang.aql.parser.TokenMgrError;
@@ -69,14 +70,16 @@ public class ApiServlet extends AbstractServlet {
     private final ILangCompilationProvider aqlCompilationProvider;
     private final ILangCompilationProvider sqlppCompilationProvider;
     private final IStatementExecutorFactory statementExectorFactory;
+    private final IStorageComponentProvider componentProvider;
 
     public ApiServlet(ConcurrentMap<String, Object> ctx, String[] paths,
             ILangCompilationProvider aqlCompilationProvider, ILangCompilationProvider sqlppCompilationProvider,
-            IStatementExecutorFactory statementExecutorFactory) {
+            IStatementExecutorFactory statementExecutorFactory, IStorageComponentProvider componentProvider) {
         super(ctx, paths);
         this.aqlCompilationProvider = aqlCompilationProvider;
         this.sqlppCompilationProvider = sqlppCompilationProvider;
         this.statementExectorFactory = statementExecutorFactory;
+        this.componentProvider = componentProvider;
     }
 
     public void doPost(IServletRequest request, IServletResponse response) {
@@ -135,8 +138,8 @@ public class ApiServlet extends AbstractServlet {
             sessionConfig.setOOBData(isSet(printExprParam), isSet(printRewrittenExprParam),
                     isSet(printLogicalPlanParam), isSet(printOptimizedLogicalPlanParam), isSet(printJob));
             MetadataManager.INSTANCE.init();
-            IStatementExecutor translator =
-                    statementExectorFactory.create(aqlStatements, sessionConfig, compilationProvider);
+            IStatementExecutor translator = statementExectorFactory.create(aqlStatements, sessionConfig,
+                    compilationProvider, componentProvider);
             double duration;
             long startTime = System.currentTimeMillis();
             translator.compileAndExecute(hcc, hds, IStatementExecutor.ResultDelivery.IMMEDIATE);

@@ -77,7 +77,7 @@ public class LSMRTreeTestHarness {
     protected ILSMMergePolicy mergePolicy;
     protected ILSMOperationTracker opTracker;
     protected IMetadataPageManagerFactory metadataPageManagerFactory =
-            new AppendOnlyLinkedMetadataPageManagerFactory();
+            AppendOnlyLinkedMetadataPageManagerFactory.INSTANCE;
 
     protected final Random rnd = new Random();
     protected final static SimpleDateFormat simpleDateFormat = new SimpleDateFormat("ddMMyy-hhmmssSS");

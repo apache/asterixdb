@@ -22,31 +22,25 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.asterix.common.config.StorageProperties;
-import org.apache.asterix.common.context.AsterixVirtualBufferCacheProvider;
 import org.apache.asterix.common.dataflow.IApplicationContextInfo;
-import org.apache.asterix.common.dataflow.LSMIndexUtil;
-import org.apache.asterix.common.ioopcallbacks.LSMInvertedIndexIOOperationCallbackFactory;
 import org.apache.asterix.metadata.MetadataException;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.declared.DataSourceId;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
-import org.apache.asterix.metadata.utils.DatasetUtils;
+import org.apache.asterix.metadata.utils.DatasetUtil;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
-import org.apache.asterix.om.util.NonTaggedFormatUtil;
+import org.apache.asterix.om.utils.NonTaggedFormatUtil;
 import org.apache.asterix.optimizer.rules.am.InvertedIndexAccessMethod;
 import org.apache.asterix.optimizer.rules.am.InvertedIndexAccessMethod.SearchModifierType;
 import org.apache.asterix.optimizer.rules.am.InvertedIndexJobGenParams;
-import org.apache.asterix.runtime.util.AppContextInfo;
-import org.apache.asterix.runtime.util.RuntimeComponentsProvider;
-import org.apache.asterix.transaction.management.opcallbacks.SecondaryIndexOperationTrackerProvider;
+import org.apache.asterix.runtime.job.listener.JobEventListenerFactory;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
@@ -76,12 +70,10 @@ import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
 import org.apache.hyracks.data.std.primitive.ShortPointable;
 import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
-import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallbackFactory;
+import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexSearchModifierFactory;
-import org.apache.hyracks.storage.am.lsm.invertedindex.dataflow.LSMInvertedIndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.lsm.invertedindex.dataflow.LSMInvertedIndexSearchOperatorDescriptor;
-import org.apache.hyracks.storage.am.lsm.invertedindex.dataflow.PartitionedLSMInvertedIndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizerFactory;
 
 /**
@@ -140,12 +132,12 @@ public class InvertedIndexPOperator extends IndexSearchPOperator {
             retainNull = true;
         }
         // Build runtime.
-        Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> invIndexSearch = buildInvertedIndexRuntime(
-                metadataProvider, context, builder.getJobSpec(), unnestMapOp, opSchema, jobGenParams.getRetainInput(),
-                retainNull, jobGenParams.getDatasetName(), dataset, jobGenParams.getIndexName(),
-                jobGenParams.getSearchKeyType(), keyIndexes, jobGenParams.getSearchModifierType(),
-                jobGenParams.getSimilarityThreshold(), minFilterFieldIndexes, maxFilterFieldIndexes,
-                jobGenParams.getIsFullTextSearch());
+        Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> invIndexSearch =
+                buildInvertedIndexRuntime(metadataProvider, context, builder.getJobSpec(), unnestMapOp, opSchema,
+                        jobGenParams.getRetainInput(), retainNull, jobGenParams.getDatasetName(), dataset,
+                        jobGenParams.getIndexName(), jobGenParams.getSearchKeyType(), keyIndexes,
+                        jobGenParams.getSearchModifierType(), jobGenParams.getSimilarityThreshold(),
+                        minFilterFieldIndexes, maxFilterFieldIndexes, jobGenParams.getIsFullTextSearch());
 
         // Contribute operator in hyracks job.
         builder.contributeHyracksOperator(unnestMapOp, invIndexSearch.first);
@@ -161,12 +153,11 @@ public class InvertedIndexPOperator extends IndexSearchPOperator {
             SearchModifierType searchModifierType, IAlgebricksConstantValue similarityThreshold,
             int[] minFilterFieldIndexes, int[] maxFilterFieldIndexes, boolean isFullTextSearchQuery)
             throws AlgebricksException {
-
         try {
             IAObject simThresh = ((AsterixConstantValue) similarityThreshold).getObject();
             IAType itemType = MetadataManager.INSTANCE.getDatatype(metadataProvider.getMetadataTxnContext(),
                     dataset.getItemTypeDataverseName(), dataset.getItemTypeName()).getDatatype();
-            int numPrimaryKeys = DatasetUtils.getPartitioningKeys(dataset).size();
+            int numPrimaryKeys = DatasetUtil.getPartitioningKeys(dataset).size();
             Index secondaryIndex = MetadataManager.INSTANCE.getIndex(metadataProvider.getMetadataTxnContext(),
                     dataset.getDataverseName(), dataset.getDatasetName(), indexName);
             if (secondaryIndex == null) {
@@ -177,8 +168,9 @@ public class InvertedIndexPOperator extends IndexSearchPOperator {
             List<IAType> secondaryKeyTypeEntries = secondaryIndex.getKeyFieldTypes();
             int numSecondaryKeys = secondaryKeyFieldEntries.size();
             if (numSecondaryKeys != 1) {
-                throw new AlgebricksException("Cannot use " + numSecondaryKeys
-                        + " fields as a key for an inverted index. There can be only one field as a key for the inverted index index.");
+                throw new AlgebricksException(
+                        "Cannot use " + numSecondaryKeys + " fields as a key for an inverted index. "
+                                + "There can be only one field as a key for the inverted index index.");
             }
             if (itemType.getTypeTag() != ATypeTag.RECORD) {
                 throw new AlgebricksException("Only record types can be indexed.");
@@ -205,8 +197,8 @@ public class InvertedIndexPOperator extends IndexSearchPOperator {
             }
             if (isPartitioned) {
                 // The partitioning field is hardcoded to be a short *without* an Asterix type tag.
-                tokenComparatorFactories[numSecondaryKeys] = PointableBinaryComparatorFactory
-                        .of(ShortPointable.FACTORY);
+                tokenComparatorFactories[numSecondaryKeys] =
+                        PointableBinaryComparatorFactory.of(ShortPointable.FACTORY);
                 tokenTypeTraits[numSecondaryKeys] = ShortPointable.TYPE_TRAITS;
             }
 
@@ -221,17 +213,13 @@ public class InvertedIndexPOperator extends IndexSearchPOperator {
             int start = outputRecDesc.getFieldCount() - numPrimaryKeys;
             IBinaryComparatorFactory[] invListsComparatorFactories = JobGenHelper
                     .variablesToAscBinaryComparatorFactories(outputVars, start, numPrimaryKeys, typeEnv, context);
-            ITypeTraits[] invListsTypeTraits = JobGenHelper.variablesToTypeTraits(outputVars, start, numPrimaryKeys,
-                    typeEnv, context);
-
-            ITypeTraits[] filterTypeTraits = DatasetUtils.computeFilterTypeTraits(dataset, recordType);
-            IBinaryComparatorFactory[] filterCmpFactories = DatasetUtils.computeFilterBinaryComparatorFactories(dataset,
-                    recordType, context.getBinaryComparatorFactoryProvider());
-
-            int[] filterFields = null;
-            int[] invertedIndexFields = null;
-            int[] filterFieldsForNonBulkLoadOps = null;
-            int[] invertedIndexFieldsForNonBulkLoadOps = null;
+            ITypeTraits[] invListsTypeTraits =
+                    JobGenHelper.variablesToTypeTraits(outputVars, start, numPrimaryKeys, typeEnv, context);
+            ITypeTraits[] filterTypeTraits = DatasetUtil.computeFilterTypeTraits(dataset, recordType);
+            int[] filterFields;
+            int[] invertedIndexFields;
+            int[] filterFieldsForNonBulkLoadOps;
+            int[] invertedIndexFieldsForNonBulkLoadOps;
             if (filterTypeTraits != null) {
                 filterFields = new int[1];
                 filterFields[0] = numTokenKeys + numPrimaryKeys;
@@ -247,50 +235,37 @@ public class InvertedIndexPOperator extends IndexSearchPOperator {
                     invertedIndexFieldsForNonBulkLoadOps[k] = k;
                 }
             }
-
             IApplicationContextInfo appContext = (IApplicationContextInfo) context.getAppContext();
-            Pair<IFileSplitProvider, AlgebricksPartitionConstraint> secondarySplitsAndConstraint = metadataProvider
-                    .splitProviderAndPartitionConstraintsForDataset(dataset.getDataverseName(), datasetName, indexName,
+            Pair<IFileSplitProvider, AlgebricksPartitionConstraint> secondarySplitsAndConstraint =
+                    metadataProvider.getSplitProviderAndConstraints(dataset.getDataverseName(), datasetName, indexName,
                             dataset.getDatasetDetails().isTemp());
             // TODO: Here we assume there is only one search key field.
             int queryField = keyFields[0];
             // Get tokenizer and search modifier factories.
-            IInvertedIndexSearchModifierFactory searchModifierFactory = InvertedIndexAccessMethod
-                    .getSearchModifierFactory(searchModifierType, simThresh, secondaryIndex);
+            IInvertedIndexSearchModifierFactory searchModifierFactory =
+                    InvertedIndexAccessMethod.getSearchModifierFactory(searchModifierType, simThresh, secondaryIndex);
             IBinaryTokenizerFactory queryTokenizerFactory = InvertedIndexAccessMethod
                     .getBinaryTokenizerFactory(searchModifierType, searchKeyType, secondaryIndex);
-            IIndexDataflowHelperFactory dataflowHelperFactory;
-
-            StorageProperties storageProperties = AppContextInfo.INSTANCE.getStorageProperties();
-            Pair<ILSMMergePolicyFactory, Map<String, String>> compactionInfo = DatasetUtils
-                    .getMergePolicyFactory(dataset, metadataProvider.getMetadataTxnContext());
-            boolean temp = dataset.getDatasetDetails().isTemp();
-            if (!isPartitioned) {
-                dataflowHelperFactory = new LSMInvertedIndexDataflowHelperFactory(
-                        new AsterixVirtualBufferCacheProvider(dataset.getDatasetId()), compactionInfo.first,
-                        compactionInfo.second, new SecondaryIndexOperationTrackerProvider(dataset.getDatasetId()),
-                        RuntimeComponentsProvider.RUNTIME_PROVIDER,
-                        LSMInvertedIndexIOOperationCallbackFactory.INSTANCE,
-                        storageProperties.getBloomFilterFalsePositiveRate(), invertedIndexFields, filterTypeTraits,
-                        filterCmpFactories, filterFields, filterFieldsForNonBulkLoadOps,
-                        invertedIndexFieldsForNonBulkLoadOps, !temp);
-            } else {
-                dataflowHelperFactory = new PartitionedLSMInvertedIndexDataflowHelperFactory(
-                        new AsterixVirtualBufferCacheProvider(dataset.getDatasetId()), compactionInfo.first,
-                        compactionInfo.second, new SecondaryIndexOperationTrackerProvider(dataset.getDatasetId()),
-                        RuntimeComponentsProvider.RUNTIME_PROVIDER,
-                        LSMInvertedIndexIOOperationCallbackFactory.INSTANCE,
-                        storageProperties.getBloomFilterFalsePositiveRate(), invertedIndexFields, filterTypeTraits,
-                        filterCmpFactories, filterFields, filterFieldsForNonBulkLoadOps,
-                        invertedIndexFieldsForNonBulkLoadOps, !temp);
-            }
+            ARecordType metaType = dataset.hasMetaPart()
+                    ? (ARecordType) metadataProvider
+                            .findType(dataset.getMetaItemTypeDataverseName(), dataset.getMetaItemTypeName()).getType()
+                    : null;
+            Pair<ILSMMergePolicyFactory, Map<String, String>> compactionInfo =
+                    DatasetUtil.getMergePolicyFactory(dataset, metadataProvider.getMetadataTxnContext());
+            IIndexDataflowHelperFactory dataflowHelperFactory = dataset.getIndexDataflowHelperFactory(metadataProvider,
+                    secondaryIndex, recordType, metaType, compactionInfo.first, compactionInfo.second);
             LSMInvertedIndexSearchOperatorDescriptor invIndexSearchOp = new LSMInvertedIndexSearchOperatorDescriptor(
-                    jobSpec, queryField, appContext.getStorageManagerInterface(), secondarySplitsAndConstraint.first,
+                    jobSpec, queryField, appContext.getStorageManager(), secondarySplitsAndConstraint.first,
                     appContext.getIndexLifecycleManagerProvider(), tokenTypeTraits, tokenComparatorFactories,
                     invListsTypeTraits, invListsComparatorFactories, dataflowHelperFactory, queryTokenizerFactory,
-                    searchModifierFactory, outputRecDesc, retainInput, retainMissing, context.getMissingWriterFactory(),
-                    NoOpOperationCallbackFactory.INSTANCE, minFilterFieldIndexes, maxFilterFieldIndexes,
-                    LSMIndexUtil.getMetadataPageManagerFactory(), isFullTextSearchQuery);
+                    searchModifierFactory, outputRecDesc, retainInput, retainMissing,
+                    context.getMissingWriterFactory(),
+                    dataset.getSearchCallbackFactory(metadataProvider.getStorageComponentProvider(), secondaryIndex,
+                            ((JobEventListenerFactory) jobSpec.getJobletEventListenerFactory()).getJobId(),
+                            IndexOperation.SEARCH, null),
+                    minFilterFieldIndexes, maxFilterFieldIndexes,
+                    metadataProvider.getStorageComponentProvider().getMetadataPageManagerFactory(),
+                    isFullTextSearchQuery);
             return new Pair<>(invIndexSearchOp, secondarySplitsAndConstraint.second);
         } catch (MetadataException e) {
             throw new AlgebricksException(e);

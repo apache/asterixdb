@@ -20,21 +20,21 @@ package org.apache.asterix.transaction.management.resource;
 
 import java.util.Map;
 
+import org.apache.asterix.common.api.IAppRuntimeContext;
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
-import org.apache.asterix.common.context.BaseOperationTracker;
-import org.apache.asterix.common.dataflow.LSMIndexUtil;
-import org.apache.asterix.common.ioopcallbacks.LSMBTreeIOOperationCallbackFactory;
-import org.apache.asterix.common.transactions.IAppRuntimeContextProvider;
 import org.apache.asterix.common.transactions.Resource;
+import org.apache.hyracks.api.application.INCApplicationContext;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
-import org.apache.hyracks.storage.am.lsm.btree.impls.LSMBTree;
-import org.apache.hyracks.storage.am.lsm.btree.util.LSMBTreeUtils;
+import org.apache.hyracks.storage.am.common.api.IMetadataPageManagerFactory;
+import org.apache.hyracks.storage.am.lsm.btree.utils.LSMBTreeUtil;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
 import org.apache.hyracks.storage.common.file.LocalResource;
 
 public class LSMBTreeLocalResourceMetadata extends Resource {
@@ -51,10 +51,13 @@ public class LSMBTreeLocalResourceMetadata extends Resource {
 
     public LSMBTreeLocalResourceMetadata(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories,
             int[] bloomFilterKeyFields, boolean isPrimary, int datasetID, int partition,
-            ILSMMergePolicyFactory mergePolicyFactory,
-            Map<String, String> mergePolicyProperties, ITypeTraits[] filterTypeTraits,
-            IBinaryComparatorFactory[] filterCmpFactories, int[] btreeFields, int[] filterFields) {
-        super(datasetID, partition, filterTypeTraits, filterCmpFactories, filterFields);
+            ILSMMergePolicyFactory mergePolicyFactory, Map<String, String> mergePolicyProperties,
+            ITypeTraits[] filterTypeTraits, IBinaryComparatorFactory[] filterCmpFactories, int[] btreeFields,
+            int[] filterFields, ILSMOperationTrackerFactory opTrackerProvider,
+            ILSMIOOperationCallbackFactory ioOpCallbackFactory,
+            IMetadataPageManagerFactory metadataPageManagerFactory) {
+        super(datasetID, partition, filterTypeTraits, filterCmpFactories, filterFields, opTrackerProvider,
+                ioOpCallbackFactory, metadataPageManagerFactory);
         this.typeTraits = typeTraits;
         this.cmpFactories = cmpFactories;
         this.bloomFilterKeyFields = bloomFilterKeyFields;
@@ -72,24 +75,22 @@ public class LSMBTreeLocalResourceMetadata extends Resource {
     }
 
     @Override
-    public ILSMIndex createIndexInstance(IAppRuntimeContextProvider runtimeContextProvider,
-            LocalResource resource) throws HyracksDataException {
-        IIOManager ioManager = runtimeContextProvider.getIOManager();
+    public ILSMIndex createIndexInstance(INCApplicationContext appCtx, LocalResource resource)
+            throws HyracksDataException {
+        IAppRuntimeContext appRuntimeCtx = (IAppRuntimeContext) appCtx.getApplicationObject();
+        IIOManager ioManager = appRuntimeCtx.getIOManager();
         FileReference file = ioManager.resolve(resource.getPath());
         int ioDeviceNum = Resource.getIoDeviceNum(ioManager, file.getDeviceHandle());
-        final IDatasetLifecycleManager datasetLifecycleManager = runtimeContextProvider.getDatasetLifecycleManager();
-        LSMBTree lsmBTree = LSMBTreeUtils.createLSMTree(ioManager, datasetLifecycleManager.getVirtualBufferCaches(
-                datasetId(),
-                ioDeviceNum), file, runtimeContextProvider.getBufferCache(), runtimeContextProvider.getFileMapManager(),
-                typeTraits, cmpFactories, bloomFilterKeyFields, runtimeContextProvider
+        final IDatasetLifecycleManager datasetLifecycleManager = appRuntimeCtx.getDatasetLifecycleManager();
+        return LSMBTreeUtil.createLSMTree(ioManager, datasetLifecycleManager.getVirtualBufferCaches(
+                datasetId(), ioDeviceNum), file, appRuntimeCtx.getBufferCache(), appRuntimeCtx
+                        .getFileMapManager(),
+                typeTraits, cmpFactories, bloomFilterKeyFields, appRuntimeCtx
                         .getBloomFilterFalsePositiveRate(),
                 mergePolicyFactory.createMergePolicy(mergePolicyProperties, datasetLifecycleManager),
-                isPrimary ? runtimeContextProvider.getLSMBTreeOperationTracker(datasetId())
-                        : new BaseOperationTracker(datasetId(), datasetLifecycleManager.getDatasetInfo(datasetId())),
-                runtimeContextProvider.getLSMIOScheduler(),
-                LSMBTreeIOOperationCallbackFactory.INSTANCE.createIOOperationCallback(), isPrimary, filterTypeTraits,
-                filterCmpFactories, btreeFields, filterFields, true, LSMIndexUtil
-                        .getMetadataPageManagerFactory());
-        return lsmBTree;
+                opTrackerProvider.getOperationTracker(appCtx),
+                appRuntimeCtx.getLSMIOScheduler(),
+                ioOpCallbackFactory.createIOOperationCallback(), isPrimary, filterTypeTraits,
+                filterCmpFactories, btreeFields, filterFields, true, metadataPageManagerFactory);
     }
 }

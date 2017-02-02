@@ -39,6 +39,9 @@ public class StoragePathUtil {
     public static final String DATASET_INDEX_NAME_SEPARATOR = "_idx_";
     public static final String ADAPTER_INSTANCE_PREFIX = "adapter_";
 
+    private StoragePathUtil() {
+    }
+
     public static Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitProviderAndPartitionConstraints(
             FileSplit[] splits) {
         IFileSplitProvider splitProvider = new ConstantFileSplitProvider(splits);
@@ -67,7 +70,7 @@ public class StoragePathUtil {
     }
 
     private static String prepareFullIndexName(String datasetName, String idxName) {
-        return (datasetName + DATASET_INDEX_NAME_SEPARATOR + idxName);
+        return datasetName + DATASET_INDEX_NAME_SEPARATOR + idxName;
     }
 
     public static int getPartitionNumFromName(String name) {

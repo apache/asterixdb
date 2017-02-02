@@ -25,17 +25,18 @@ import java.util.List;
 import org.apache.asterix.common.api.IExtension;
 import org.apache.asterix.common.config.AsterixExtension;
 import org.apache.asterix.common.exceptions.ACIDException;
-import org.apache.asterix.common.exceptions.RuntimeDataException;
-import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.metadata.api.IMetadataExtension;
+import org.apache.asterix.metadata.api.INCExtensionManager;
 import org.apache.asterix.metadata.entitytupletranslators.MetadataTupleTranslatorProvider;
+import org.apache.asterix.utils.ExtensionUtil;
+import org.apache.hyracks.api.application.INCApplicationContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 /**
  * AsterixDB's implementation of {@code INCExtensionManager} which takes care of
  * initializing extensions on Node Controllers
  */
-public class NCExtensionManager {
+public class NCExtensionManager implements INCExtensionManager {
 
     private final MetadataTupleTranslatorProvider tupleTranslatorProvider;
     private final List<IMetadataExtension> mdExtensions;
@@ -44,15 +45,19 @@ public class NCExtensionManager {
      * Initialize {@code CCExtensionManager} from configuration
      *
      * @param list
+     *            list of user configured extensions
      * @throws InstantiationException
+     *             if an extension couldn't be created
      * @throws IllegalAccessException
+     *             if user doesn't have enough acess priveleges
      * @throws ClassNotFoundException
+     *             if a class was not found
      * @throws HyracksDataException
+     *             if two extensions conlict with each other
      */
     public NCExtensionManager(List<AsterixExtension> list)
             throws InstantiationException, IllegalAccessException, ClassNotFoundException, HyracksDataException {
-        MetadataTupleTranslatorProvider ttp = null;
-        IMetadataExtension tupleTranslatorExtension = null;
+        IMetadataExtension tupleTranslatorProviderExtension = null;
         mdExtensions = new ArrayList<>();
         if (list != null) {
             for (AsterixExtension extensionConf : list) {
@@ -62,31 +67,23 @@ public class NCExtensionManager {
                     case METADATA:
                         IMetadataExtension mde = (IMetadataExtension) extension;
                         mdExtensions.add(mde);
-                        ttp = extendTupleTranslator(ttp, tupleTranslatorExtension, mde);
-                        tupleTranslatorExtension = ttp == null ? null : mde;
+                        tupleTranslatorProviderExtension =
+                                ExtensionUtil.extendTupleTranslatorProvider(tupleTranslatorProviderExtension, mde);
                         break;
                     default:
                         break;
                 }
             }
         }
-        this.tupleTranslatorProvider = ttp == null ? new MetadataTupleTranslatorProvider() : ttp;
-    }
-
-    private MetadataTupleTranslatorProvider extendTupleTranslator(MetadataTupleTranslatorProvider ttp,
-            IMetadataExtension tupleTranslatorExtension, IMetadataExtension mde) throws HyracksDataException {
-        if (ttp != null) {
-            throw new RuntimeDataException(ErrorCode.EXTENSION_COMPONENT_CONFLICT,
-                    tupleTranslatorExtension.getId(),
-                    mde.getId(), IMetadataExtension.class.getSimpleName());
-        }
-        return mde.getMetadataTupleTranslatorProvider();
+        this.tupleTranslatorProvider = tupleTranslatorProviderExtension == null ? new MetadataTupleTranslatorProvider()
+                : tupleTranslatorProviderExtension.getMetadataTupleTranslatorProvider();
     }
 
     public List<IMetadataExtension> getMetadataExtensions() {
         return mdExtensions;
     }
 
+    @Override
     public MetadataTupleTranslatorProvider getMetadataTupleTranslatorProvider() {
         return tupleTranslatorProvider;
     }
@@ -94,13 +91,15 @@ public class NCExtensionManager {
     /**
      * Called on bootstrap of metadata node allowing extensions to instantiate their Metadata artifacts
      *
+     * @param ncApplicationContext
+     *            the node controller application context
      * @throws HyracksDataException
      */
-    public void initializeMetadata() throws HyracksDataException {
+    public void initializeMetadata(INCApplicationContext appCtx) throws HyracksDataException {
         if (mdExtensions != null) {
             for (IMetadataExtension mdExtension : mdExtensions) {
                 try {
-                    mdExtension.initializeMetadata();
+                    mdExtension.initializeMetadata(appCtx);
                 } catch (RemoteException | ACIDException e) {
                     throw new HyracksDataException(e);
                 }

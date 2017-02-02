@@ -41,7 +41,7 @@ import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.util.HyracksConstants;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
-import org.apache.hyracks.dataflow.common.util.TaskUtils;
+import org.apache.hyracks.dataflow.common.utils.TaskUtil;
 import org.apache.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
 
 public class FeedMetaStoreNodePushable extends AbstractUnaryInputUnaryOutputOperatorNodePushable {
@@ -101,7 +101,7 @@ public class FeedMetaStoreNodePushable extends AbstractUnaryInputUnaryOutputOper
                 .getApplicationObject()).getActiveManager();
         this.targetId = targetId;
         this.message = new VSizeFrame(ctx);
-        TaskUtils.putInSharedMap(HyracksConstants.KEY_MESSAGE, message, ctx);
+        TaskUtil.putInSharedMap(HyracksConstants.KEY_MESSAGE, message, ctx);
         this.recordDescProvider = recordDescProvider;
         this.opDesc = feedMetaOperatorDescriptor;
     }

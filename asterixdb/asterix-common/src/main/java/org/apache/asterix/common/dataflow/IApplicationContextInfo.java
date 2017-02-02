@@ -18,15 +18,20 @@
  */
 package org.apache.asterix.common.dataflow;
 
-import org.apache.asterix.common.cluster.IGlobalRecoveryMaanger;
+import org.apache.asterix.common.cluster.IGlobalRecoveryManager;
 import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.hyracks.api.application.ICCApplicationContext;
 import org.apache.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
-import org.apache.hyracks.storage.common.IStorageManagerInterface;
+import org.apache.hyracks.storage.common.IStorageManager;
 
 /**
- * Provides methods for obtaining the IIndexLifecycleManagerProvider, IStorageManagerInterface and
- * ICCApplicationContext implementation.
+ * Provides methods for obtaining
+ * {@link org.apache.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider},
+ * {@link org.apache.hyracks.storage.common.IStorageManager},
+ * {@link org.apache.hyracks.api.application.ICCApplicationContext},
+ * {@link org.apache.asterix.common.cluster.IGlobalRecoveryManager},
+ * and {@link org.apache.asterix.common.library.ILibraryManager}
+ * at the cluster controller side.
  */
 public interface IApplicationContextInfo {
 
@@ -38,26 +43,23 @@ public interface IApplicationContextInfo {
     public IIndexLifecycleManagerProvider getIndexLifecycleManagerProvider();
 
     /**
-     * Returns an instance of the implementation for IStorageManagerInterface.
-     *
-     * @return IStorageManagerInterface implementation instance
+     * @return an instance which implements {@link org.apache.hyracks.storage.common.IStorageManager}
      */
-    public IStorageManagerInterface getStorageManagerInterface();
+    public IStorageManager getStorageManager();
 
     /**
-     * Returns an instance of the implementation for ICCApplicationContext.
-     *
-     * @return ICCApplicationContext implementation instance
+     * @return an instance which implements {@link org.apache.hyracks.api.application.ICCApplicationContext}
      */
     public ICCApplicationContext getCCApplicationContext();
 
     /**
-     * @return the global recovery manager.
+     * @return the global recovery manager which implements
+     *         {@link org.apache.asterix.common.cluster.IGlobalRecoveryManager}
      */
-    public IGlobalRecoveryMaanger getGlobalRecoveryManager();
+    public IGlobalRecoveryManager getGlobalRecoveryManager();
 
     /**
-     * @return the library manager (at CC side).
+     * @return the library manager which implements {@link org.apache.asterix.common.library.ILibraryManager}
      */
     public ILibraryManager getLibraryManager();
 }

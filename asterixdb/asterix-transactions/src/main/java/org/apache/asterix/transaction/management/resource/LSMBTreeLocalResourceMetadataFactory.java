@@ -24,7 +24,10 @@ import org.apache.asterix.common.transactions.Resource;
 import org.apache.asterix.common.transactions.ResourceFactory;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
+import org.apache.hyracks.storage.am.common.api.IMetadataPageManagerFactory;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
 
 public class LSMBTreeLocalResourceMetadataFactory extends ResourceFactory {
 
@@ -41,8 +44,12 @@ public class LSMBTreeLocalResourceMetadataFactory extends ResourceFactory {
             int[] bloomFilterKeyFields, boolean isPrimary, int datasetID,
             ILSMMergePolicyFactory mergePolicyFactory,
             Map<String, String> mergePolicyProperties, ITypeTraits[] filterTypeTraits,
-            IBinaryComparatorFactory[] filterCmpFactories, int[] btreeFields, int[] filterFields) {
-        super(datasetID, filterTypeTraits, filterCmpFactories, filterFields);
+            IBinaryComparatorFactory[] filterCmpFactories, int[] btreeFields, int[] filterFields,
+            ILSMOperationTrackerFactory opTrackerProvider,
+            ILSMIOOperationCallbackFactory ioOpCallbackFactory,
+            IMetadataPageManagerFactory metadataPageManagerFactory) {
+        super(datasetID, filterTypeTraits, filterCmpFactories, filterFields, opTrackerProvider, ioOpCallbackFactory,
+                metadataPageManagerFactory);
         this.typeTraits = typeTraits;
         this.cmpFactories = cmpFactories;
         this.bloomFilterKeyFields = bloomFilterKeyFields;
@@ -56,6 +63,6 @@ public class LSMBTreeLocalResourceMetadataFactory extends ResourceFactory {
     public Resource resource(int partition) {
         return new LSMBTreeLocalResourceMetadata(typeTraits, cmpFactories, bloomFilterKeyFields, isPrimary, datasetId,
                 partition, mergePolicyFactory, mergePolicyProperties, typeTraits, filterCmpFactories, btreeFields,
-                filterFields);
+                filterFields, opTrackerProvider, ioOpCallbackFactory, metadataPageManagerFactory);
     }
 }

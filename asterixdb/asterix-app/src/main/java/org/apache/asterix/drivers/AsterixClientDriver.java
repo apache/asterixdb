@@ -25,6 +25,7 @@ import org.apache.asterix.api.java.AsterixJavaClient;
 import org.apache.asterix.app.translator.DefaultStatementExecutorFactory;
 import org.apache.asterix.compiler.provider.AqlCompilationProvider;
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
+import org.apache.asterix.file.StorageComponentProvider;
 import org.apache.hyracks.api.client.HyracksConnection;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.kohsuke.args4j.CmdLineParser;
@@ -64,7 +65,7 @@ public class AsterixClientDriver {
         ILangCompilationProvider compilationProvider = new AqlCompilationProvider();
         FileReader reader = new FileReader(filename);
         AsterixJavaClient q = new AsterixJavaClient(hcc, reader, compilationProvider,
-                new DefaultStatementExecutorFactory());
+                new DefaultStatementExecutorFactory(), new StorageComponentProvider());
         q.compile(optimize, true, true, true, onlyPhysical, createBinaryRuntime, createBinaryRuntime);
         return q;
     }

@@ -25,6 +25,7 @@ import org.apache.asterix.translator.IStatementExecutorFactory;
  * An interface for extensions of {@code IStatementExecutor}
  */
 public interface IStatementExecutorExtension extends IExtension {
+
     @Override
     default ExtensionKind getExtensionKind() {
         return ExtensionKind.STATEMENT_EXECUTOR;

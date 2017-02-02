@@ -27,7 +27,7 @@ import org.apache.asterix.metadata.entities.Dataverse;
 
 public class MetadataLockManager {
 
-    public static MetadataLockManager INSTANCE = new MetadataLockManager();
+    public static final MetadataLockManager INSTANCE = new MetadataLockManager();
     private final ConcurrentHashMap<String, ReentrantReadWriteLock> dataversesLocks;
     private final ConcurrentHashMap<String, DatasetLock> datasetsLocks;
     private final ConcurrentHashMap<String, ReentrantReadWriteLock> functionsLocks;
@@ -38,14 +38,14 @@ public class MetadataLockManager {
     private final ConcurrentHashMap<String, ReentrantReadWriteLock> dataTypeLocks;
 
     private MetadataLockManager() {
-        dataversesLocks = new ConcurrentHashMap<String, ReentrantReadWriteLock>();
-        datasetsLocks = new ConcurrentHashMap<String, DatasetLock>();
-        functionsLocks = new ConcurrentHashMap<String, ReentrantReadWriteLock>();
-        nodeGroupsLocks = new ConcurrentHashMap<String, ReentrantReadWriteLock>();
-        feedsLocks = new ConcurrentHashMap<String, ReentrantReadWriteLock>();
-        feedPolicyLocks = new ConcurrentHashMap<String, ReentrantReadWriteLock>();
-        compactionPolicyLocks = new ConcurrentHashMap<String, ReentrantReadWriteLock>();
-        dataTypeLocks = new ConcurrentHashMap<String, ReentrantReadWriteLock>();
+        dataversesLocks = new ConcurrentHashMap<>();
+        datasetsLocks = new ConcurrentHashMap<>();
+        functionsLocks = new ConcurrentHashMap<>();
+        nodeGroupsLocks = new ConcurrentHashMap<>();
+        feedsLocks = new ConcurrentHashMap<>();
+        feedPolicyLocks = new ConcurrentHashMap<>();
+        compactionPolicyLocks = new ConcurrentHashMap<>();
+        dataTypeLocks = new ConcurrentHashMap<>();
     }
 
     public void acquireDataverseReadLock(String dataverseName) {
@@ -408,8 +408,8 @@ public class MetadataLockManager {
         releaseDataverseReadLock(dataverseName);
     }
 
-    public void insertDeleteUpsertBegin(String dataverseName, String datasetFullyQualifiedName, List<String> dataverses,
-            List<String> datasets) {
+    public void insertDeleteUpsertBegin(String dataverseName, String datasetFullyQualifiedName,
+            List<String> dataverses, List<String> datasets) {
         dataverses.add(dataverseName);
         datasets.add(datasetFullyQualifiedName);
         Collections.sort(dataverses);

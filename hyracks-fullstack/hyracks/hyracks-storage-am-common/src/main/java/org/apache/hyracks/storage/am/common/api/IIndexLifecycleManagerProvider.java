@@ -22,6 +22,10 @@ import java.io.Serializable;
 
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 
+/**
+ * Provides an {@link org.apache.hyracks.storage.am.common.api.IResourceLifecycleManager<IIndex>} instance
+ */
+@FunctionalInterface
 public interface IIndexLifecycleManagerProvider extends Serializable {
-    public IResourceLifecycleManager<IIndex> getLifecycleManager(IHyracksTaskContext ctx);
+    IResourceLifecycleManager<IIndex> getLifecycleManager(IHyracksTaskContext ctx);
 }

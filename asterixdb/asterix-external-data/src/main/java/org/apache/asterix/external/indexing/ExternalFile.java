@@ -48,7 +48,7 @@ public class ExternalFile implements Serializable, Comparable<ExternalFile> {
         this.fileName = "";
         this.lastModefiedTime = new Date();
         this.size = 0;
-        this.pendingOp = ExternalFilePendingOp.PENDING_NO_OP;
+        this.pendingOp = ExternalFilePendingOp.NO_OP;
     }
 
     public ExternalFile(String dataverseName, String datasetName, int fileNumber, String fileName,

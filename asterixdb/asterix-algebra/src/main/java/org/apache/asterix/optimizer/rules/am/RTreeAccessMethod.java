@@ -32,7 +32,7 @@ import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.IAType;
-import org.apache.asterix.om.util.NonTaggedFormatUtil;
+import org.apache.asterix.om.utils.NonTaggedFormatUtil;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -216,7 +216,7 @@ public class RTreeAccessMethod implements IAccessMethod {
             AbstractFunctionCallExpression createMBR = new ScalarFunctionCallExpression(
                     FunctionUtil.getFunctionInfo(BuiltinFunctions.CREATE_MBR));
             // Spatial object is the constant from the func expr we are optimizing.
-            createMBR.getArguments().add(new MutableObject<ILogicalExpression>(searchKeyExpr));
+            createMBR.getArguments().add(new MutableObject<>(searchKeyExpr));
             // The number of dimensions.
             createMBR.getArguments().add(new MutableObject<ILogicalExpression>(
                     new ConstantExpression(new AsterixConstantValue(new AInt32(numDimensions)))));
@@ -235,7 +235,7 @@ public class RTreeAccessMethod implements IAccessMethod {
         if (probeSubTree == null) {
             // We are optimizing a selection query.
             // Input to this assign is the EmptyTupleSource (which the dataSourceScan also must have had as input).
-            assignSearchKeys.getInputs().add(new MutableObject<ILogicalOperator>(
+            assignSearchKeys.getInputs().add(new MutableObject<>(
                     OperatorManipulationUtil.deepCopy(dataSourceOp.getInputs().get(0).getValue())));
             assignSearchKeys.setExecutionMode(dataSourceOp.getExecutionMode());
         } else {
@@ -249,7 +249,7 @@ public class RTreeAccessMethod implements IAccessMethod {
         // Generate the rest of the upstream plan which feeds the search results into the primary index.
         return dataset.getDatasetType() == DatasetType.EXTERNAL
                 ? AccessMethodUtils.createExternalDataLookupUnnestMap(dataSourceOp, dataset, recordType,
-                        secondaryIndexUnnestOp, context, chosenIndex, retainInput, retainNull)
+                        secondaryIndexUnnestOp, context, retainInput, retainNull)
                 : AccessMethodUtils.createPrimaryIndexUnnestMap(dataSourceOp, dataset, recordType, metaRecordType,
                         secondaryIndexUnnestOp, context, true, retainInput, false, false);
     }

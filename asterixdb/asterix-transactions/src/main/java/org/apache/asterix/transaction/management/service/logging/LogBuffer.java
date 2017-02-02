@@ -32,20 +32,21 @@ import org.apache.asterix.common.transactions.DatasetId;
 import org.apache.asterix.common.transactions.ILogBuffer;
 import org.apache.asterix.common.transactions.ILogRecord;
 import org.apache.asterix.common.transactions.ITransactionContext;
+import org.apache.asterix.common.transactions.ITransactionSubsystem;
 import org.apache.asterix.common.transactions.JobId;
 import org.apache.asterix.common.transactions.LogRecord;
 import org.apache.asterix.common.transactions.LogSource;
 import org.apache.asterix.common.transactions.LogType;
 import org.apache.asterix.common.transactions.MutableLong;
+import org.apache.asterix.common.utils.TransactionUtil;
 import org.apache.asterix.transaction.management.service.transaction.TransactionManagementConstants.LockManagerConstants.LockMode;
-import org.apache.asterix.transaction.management.service.transaction.TransactionSubsystem;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class LogBuffer implements ILogBuffer {
 
     public static final boolean IS_DEBUG_MODE = false;//true
     private static final Logger LOGGER = Logger.getLogger(LogBuffer.class.getName());
-    private final TransactionSubsystem txnSubsystem;
+    private final ITransactionSubsystem txnSubsystem;
     private final LogBufferTailReader logBufferTailReader;
     private final int logPageSize;
     private final MutableLong flushLSN;
@@ -64,7 +65,7 @@ public class LogBuffer implements ILogBuffer {
     private final DatasetId reusableDsId;
     private final JobId reusableJobId;
 
-    public LogBuffer(TransactionSubsystem txnSubsystem, int logPageSize, MutableLong flushLSN) {
+    public LogBuffer(ITransactionSubsystem txnSubsystem, int logPageSize, MutableLong flushLSN) {
         this.txnSubsystem = txnSubsystem;
         this.logPageSize = logPageSize;
         this.flushLSN = flushLSN;
@@ -266,7 +267,7 @@ public class LogBuffer implements ILogBuffer {
                             // since this operation consisted of delete and insert, we need to notify the optracker twice
                             txnCtx.notifyOptracker(false);
                         }
-                        if (TransactionSubsystem.IS_PROFILE_MODE) {
+                        if (TransactionUtil.PROFILE_MODE) {
                             txnSubsystem.incrementEntityCommitCount();
                         }
                     } else if (logRecord.getLogType() == LogType.JOB_COMMIT

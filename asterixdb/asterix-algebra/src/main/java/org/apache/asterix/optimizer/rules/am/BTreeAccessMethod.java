@@ -148,9 +148,9 @@ public class BTreeAccessMethod implements IAccessMethod {
             select.getInputs().clear();
             if (op != null) {
                 subTree.getDataSourceRef().setValue(primaryIndexUnnestOp);
-                select.getInputs().add(new MutableObject<ILogicalOperator>(op));
+                select.getInputs().add(new MutableObject<>(op));
             } else {
-                select.getInputs().add(new MutableObject<ILogicalOperator>(primaryIndexUnnestOp));
+                select.getInputs().add(new MutableObject<>(primaryIndexUnnestOp));
             }
         } else {
             ((AbstractLogicalOperator) primaryIndexUnnestOp).setExecutionMode(ExecutionMode.PARTITIONED);
@@ -465,10 +465,10 @@ public class BTreeAccessMethod implements IAccessMethod {
         // Here we generate vars and funcs for assigning the secondary-index keys to be fed into the secondary-index
         // search.
         // List of variables for the assign.
-        ArrayList<LogicalVariable> keyVarList = new ArrayList<LogicalVariable>();
+        ArrayList<LogicalVariable> keyVarList = new ArrayList<>();
         // List of variables and expressions for the assign.
-        ArrayList<LogicalVariable> assignKeyVarList = new ArrayList<LogicalVariable>();
-        ArrayList<Mutable<ILogicalExpression>> assignKeyExprList = new ArrayList<Mutable<ILogicalExpression>>();
+        ArrayList<LogicalVariable> assignKeyVarList = new ArrayList<>();
+        ArrayList<Mutable<ILogicalExpression>> assignKeyExprList = new ArrayList<>();
         int numLowKeys = createKeyVarsAndExprs(numSecondaryKeys, lowKeyLimits, lowKeyExprs, assignKeyVarList,
                 assignKeyExprList, keyVarList, context, constantAtRuntimeExpressions, constAtRuntimeExprVars);
         int numHighKeys = createKeyVarsAndExprs(numSecondaryKeys, highKeyLimits, highKeyExprs, assignKeyVarList,
@@ -487,7 +487,7 @@ public class BTreeAccessMethod implements IAccessMethod {
             // Assign operator that sets the constant secondary-index search-key fields if necessary.
             AssignOperator assignConstantSearchKeys = new AssignOperator(assignKeyVarList, assignKeyExprList);
             // Input to this assign is the EmptyTupleSource (which the dataSourceScan also must have had as input).
-            assignConstantSearchKeys.getInputs().add(new MutableObject<ILogicalOperator>(
+            assignConstantSearchKeys.getInputs().add(new MutableObject<>(
                     OperatorManipulationUtil.deepCopy(dataSourceOp.getInputs().get(0).getValue())));
             assignConstantSearchKeys.setExecutionMode(dataSourceOp.getExecutionMode());
             inputOp = assignConstantSearchKeys;
@@ -518,7 +518,7 @@ public class BTreeAccessMethod implements IAccessMethod {
         if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
             // External dataset
             UnnestMapOperator externalDataAccessOp = AccessMethodUtils.createExternalDataLookupUnnestMap(dataSourceOp,
-                    dataset, recordType, secondaryIndexUnnestOp, context, chosenIndex, retainInput, retainNull);
+                    dataset, recordType, secondaryIndexUnnestOp, context, retainInput, retainNull);
             indexSubTree.getDataSourceRef().setValue(externalDataAccessOp);
             return externalDataAccessOp;
         } else if (!isPrimaryIndex) {
@@ -530,7 +530,7 @@ public class BTreeAccessMethod implements IAccessMethod {
             EquivalenceClassUtils.addEquivalenceClassesForPrimaryIndexAccess(primaryIndexUnnestOp,
                     dataSourceOp.getVariables(), recordType, metaRecordType, dataset, context);
         } else {
-            List<Object> primaryIndexOutputTypes = new ArrayList<Object>();
+            List<Object> primaryIndexOutputTypes = new ArrayList<>();
             AccessMethodUtils.appendPrimaryIndexTypes(dataset, recordType, metaRecordType, primaryIndexOutputTypes);
             List<LogicalVariable> scanVariables = dataSourceOp.getVariables();
 
@@ -540,7 +540,7 @@ public class BTreeAccessMethod implements IAccessMethod {
             // operator will be removed.
             // If not, we create a new condition based on remaining ones.
             if (!primaryIndexPostProccessingIsNeeded) {
-                List<Mutable<ILogicalExpression>> remainingFuncExprs = new ArrayList<Mutable<ILogicalExpression>>();
+                List<Mutable<ILogicalExpression>> remainingFuncExprs = new ArrayList<>();
                 getNewConditionExprs(conditionRef, replacedFuncExprs, remainingFuncExprs);
                 // Generate new condition.
                 if (!remainingFuncExprs.isEmpty()) {
@@ -562,7 +562,7 @@ public class BTreeAccessMethod implements IAccessMethod {
             if (conditionRef.getValue() != null) {
                 // The job gen parameters are transferred to the actual job gen
                 // via the UnnestMapOperator's function arguments.
-                List<Mutable<ILogicalExpression>> primaryIndexFuncArgs = new ArrayList<Mutable<ILogicalExpression>>();
+                List<Mutable<ILogicalExpression>> primaryIndexFuncArgs = new ArrayList<>();
                 jobGenParams.writeToFuncArgs(primaryIndexFuncArgs);
                 // An index search is expressed as an unnest-map over an
                 // index-search function.
@@ -591,7 +591,7 @@ public class BTreeAccessMethod implements IAccessMethod {
                 }
             }
 
-            primaryIndexUnnestOp.getInputs().add(new MutableObject<ILogicalOperator>(inputOp));
+            primaryIndexUnnestOp.getInputs().add(new MutableObject<>(inputOp));
 
             // Adds equivalence classes --- one equivalent class between a primary key
             // variable and a record field-access expression.
@@ -615,12 +615,12 @@ public class BTreeAccessMethod implements IAccessMethod {
             LogicalVariable keyVar = null;
             if (searchKeyExpr.getExpressionTag() == LogicalExpressionTag.CONSTANT) {
                 keyVar = context.newVar();
-                assignKeyExprList.add(new MutableObject<ILogicalExpression>(searchKeyExpr));
+                assignKeyExprList.add(new MutableObject<>(searchKeyExpr));
                 assignKeyVarList.add(keyVar);
             } else {
                 keyVar = ((VariableReferenceExpression) searchKeyExpr).getVariableReference();
                 if (constExpression != null) {
-                    assignKeyExprList.add(new MutableObject<ILogicalExpression>(constExpression));
+                    assignKeyExprList.add(new MutableObject<>(constExpression));
                     assignKeyVarList.add(constExprVars[i]);
                 }
             }

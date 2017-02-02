@@ -33,7 +33,7 @@ import org.apache.hyracks.storage.am.common.api.ISearchOperationCallbackFactory;
 import org.apache.hyracks.storage.am.common.api.ITupleFilterFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexOperatorDescriptor;
-import org.apache.hyracks.storage.common.IStorageManagerInterface;
+import org.apache.hyracks.storage.common.IStorageManager;
 import org.apache.hyracks.storage.common.file.ILocalResourceFactoryProvider;
 
 /*
@@ -43,9 +43,9 @@ public class IndexInfoOperatorDescriptor implements IIndexOperatorDescriptor{
 
     private static final long serialVersionUID = 1L;
     private final IFileSplitProvider fileSplitProvider;
-    private final IStorageManagerInterface storageManager;
+    private final IStorageManager storageManager;
     private final IIndexLifecycleManagerProvider lifecycleManagerProvider;
-    public IndexInfoOperatorDescriptor(IFileSplitProvider fileSplitProvider,IStorageManagerInterface storageManager,
+    public IndexInfoOperatorDescriptor(IFileSplitProvider fileSplitProvider,IStorageManager storageManager,
             IIndexLifecycleManagerProvider lifecycleManagerProvider){
         this.fileSplitProvider = fileSplitProvider;
         this.lifecycleManagerProvider = lifecycleManagerProvider;
@@ -69,7 +69,7 @@ public class IndexInfoOperatorDescriptor implements IIndexOperatorDescriptor{
     }
 
     @Override
-    public IStorageManagerInterface getStorageManager() {
+    public IStorageManager getStorageManager() {
         return storageManager;
     }
 

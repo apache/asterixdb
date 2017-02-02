@@ -25,24 +25,18 @@ import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.util.IndexFileNameUtil;
-import org.apache.hyracks.storage.am.lsm.btree.dataflow.ExternalBTreeDataflowHelperFactory;
-import org.apache.hyracks.storage.am.lsm.btree.dataflow.ExternalBTreeWithBuddyDataflowHelperFactory;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbortRecoverLSMIndexFileManager;
-import org.apache.hyracks.storage.am.lsm.rtree.dataflow.ExternalRTreeDataflowHelperFactory;
 
 public class ExternalDatasetIndexesAbortOperatorDescriptor extends AbstractExternalDatasetIndexesOperatorDescriptor {
 
     private static final long serialVersionUID = 1L;
 
     public ExternalDatasetIndexesAbortOperatorDescriptor(IOperatorDescriptorRegistry spec,
-            ExternalBTreeDataflowHelperFactory filesIndexDataflowHelperFactory,
-            IndexInfoOperatorDescriptor fileIndexesInfo,
-            List<ExternalBTreeWithBuddyDataflowHelperFactory> bTreeIndexesDataflowHelperFactories,
-            List<IndexInfoOperatorDescriptor> bTreeIndexesInfos,
-            List<ExternalRTreeDataflowHelperFactory> rTreeIndexesDataflowHelperFactories,
-            List<IndexInfoOperatorDescriptor> rTreeIndexesInfos) {
-        super(spec, filesIndexDataflowHelperFactory, fileIndexesInfo, bTreeIndexesDataflowHelperFactories,
-                bTreeIndexesInfos, rTreeIndexesDataflowHelperFactories, rTreeIndexesInfos);
+            IIndexDataflowHelperFactory filesIndexDataflowHelperFactory, IndexInfoOperatorDescriptor fileIndexesInfo,
+            List<IIndexDataflowHelperFactory> indexesDataflowHelperFactories,
+            List<IndexInfoOperatorDescriptor> indexesInfos) {
+        super(spec, filesIndexDataflowHelperFactory, fileIndexesInfo, indexesDataflowHelperFactories,
+                indexesInfos);
     }
 
     @Override

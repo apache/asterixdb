@@ -27,7 +27,7 @@ import org.apache.hyracks.storage.am.common.dataflow.IIndexOperatorDescriptor;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationSchedulerProvider;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerProvider;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
 import org.apache.hyracks.storage.am.lsm.common.dataflow.AbstractLSMIndexDataflowHelperFactory;
 
 public class ExternalBTreeWithBuddyDataflowHelperFactory extends AbstractLSMIndexDataflowHelperFactory {
@@ -37,7 +37,7 @@ public class ExternalBTreeWithBuddyDataflowHelperFactory extends AbstractLSMInde
     private final int version;
 
     public ExternalBTreeWithBuddyDataflowHelperFactory(ILSMMergePolicyFactory mergePolicyFactory,
-            Map<String, String> mergePolicyProperties, ILSMOperationTrackerProvider opTrackerFactory,
+            Map<String, String> mergePolicyProperties, ILSMOperationTrackerFactory opTrackerFactory,
             ILSMIOOperationSchedulerProvider ioSchedulerProvider, ILSMIOOperationCallbackFactory ioOpCallbackFactory,
             double bloomFilterFalsePositiveRate, int[] buddyBtreeFields, int version, boolean durable) {
         super(null, mergePolicyFactory, mergePolicyProperties, opTrackerFactory, ioSchedulerProvider,

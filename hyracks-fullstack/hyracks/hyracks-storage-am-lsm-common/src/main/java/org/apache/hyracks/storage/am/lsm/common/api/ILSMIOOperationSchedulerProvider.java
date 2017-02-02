@@ -22,6 +22,10 @@ import java.io.Serializable;
 
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 
+/**
+ * Provides the {@link ILSMIOOperationScheduler} for the application
+ */
+@FunctionalInterface
 public interface ILSMIOOperationSchedulerProvider extends Serializable {
-    public ILSMIOOperationScheduler getIOScheduler(IHyracksTaskContext ctx);
+    ILSMIOOperationScheduler getIOScheduler(IHyracksTaskContext ctx);
 }

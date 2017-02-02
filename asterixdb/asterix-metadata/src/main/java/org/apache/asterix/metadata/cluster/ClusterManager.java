@@ -47,7 +47,7 @@ import org.apache.asterix.event.service.ServiceProvider;
 import org.apache.asterix.event.util.PatternCreator;
 import org.apache.asterix.installer.schema.conf.Configuration;
 import org.apache.asterix.metadata.api.IClusterManager;
-import org.apache.asterix.runtime.util.AppContextInfo;
+import org.apache.asterix.runtime.utils.AppContextInfo;
 
 public class ClusterManager implements IClusterManager {
 

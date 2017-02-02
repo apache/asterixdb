@@ -20,19 +20,20 @@ package org.apache.asterix.transaction.management.resource;
 
 import java.util.Map;
 
-import org.apache.asterix.common.context.BaseOperationTracker;
-import org.apache.asterix.common.dataflow.LSMIndexUtil;
-import org.apache.asterix.common.ioopcallbacks.LSMBTreeWithBuddyIOOperationCallbackFactory;
-import org.apache.asterix.common.transactions.IAppRuntimeContextProvider;
+import org.apache.asterix.common.api.IAppRuntimeContext;
 import org.apache.asterix.common.transactions.Resource;
+import org.apache.hyracks.api.application.INCApplicationContext;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
-import org.apache.hyracks.storage.am.lsm.btree.util.LSMBTreeUtils;
+import org.apache.hyracks.storage.am.common.api.IMetadataPageManagerFactory;
+import org.apache.hyracks.storage.am.lsm.btree.utils.LSMBTreeUtil;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
 import org.apache.hyracks.storage.common.file.LocalResource;
 
 /**
@@ -51,8 +52,11 @@ public class ExternalBTreeWithBuddyLocalResourceMetadata extends Resource {
     public ExternalBTreeWithBuddyLocalResourceMetadata(int datasetID, int partition,
             IBinaryComparatorFactory[] btreeCmpFactories,
             ITypeTraits[] typeTraits, ILSMMergePolicyFactory mergePolicyFactory,
-            Map<String, String> mergePolicyProperties, int[] buddyBtreeFields) {
-        super(datasetID, partition, null, null, null);
+            Map<String, String> mergePolicyProperties, int[] buddyBtreeFields,
+            ILSMOperationTrackerFactory opTrackerProvider, ILSMIOOperationCallbackFactory ioOpCallbackFactory,
+            IMetadataPageManagerFactory metadataPageManagerFactory) {
+        super(datasetID, partition, null, null, null, opTrackerProvider, ioOpCallbackFactory,
+                metadataPageManagerFactory);
         this.btreeCmpFactories = btreeCmpFactories;
         this.typeTraits = typeTraits;
         this.mergePolicyFactory = mergePolicyFactory;
@@ -61,19 +65,21 @@ public class ExternalBTreeWithBuddyLocalResourceMetadata extends Resource {
     }
 
     @Override
-    public ILSMIndex createIndexInstance(IAppRuntimeContextProvider runtimeContextProvider,
-            LocalResource resource) throws HyracksDataException {
-        IIOManager ioManager = runtimeContextProvider.getIOManager();
+    public ILSMIndex createIndexInstance(INCApplicationContext appCtx, LocalResource resource)
+            throws HyracksDataException {
+        IAppRuntimeContext appRuntimeCtx = (IAppRuntimeContext) appCtx.getApplicationObject();
+        IIOManager ioManager = appCtx.getIoManager();
         FileReference file = ioManager.resolve(resource.getPath());
-        return LSMBTreeUtils.createExternalBTreeWithBuddy(ioManager, file, runtimeContextProvider.getBufferCache(),
-                runtimeContextProvider.getFileMapManager(), typeTraits, btreeCmpFactories,
-                runtimeContextProvider.getBloomFilterFalsePositiveRate(),
-                mergePolicyFactory.createMergePolicy(mergePolicyProperties,
-                        runtimeContextProvider.getDatasetLifecycleManager()),
-                new BaseOperationTracker(datasetId(),
-                        runtimeContextProvider.getDatasetLifecycleManager().getDatasetInfo(datasetId())),
-                runtimeContextProvider.getLSMIOScheduler(),
-                LSMBTreeWithBuddyIOOperationCallbackFactory.INSTANCE.createIOOperationCallback(), buddyBtreeFields, -1,
-                true, LSMIndexUtil.getMetadataPageManagerFactory());
+        return LSMBTreeUtil.createExternalBTreeWithBuddy(
+                ioManager, file, appRuntimeCtx.getBufferCache(),
+                appRuntimeCtx.getFileMapManager(), typeTraits, btreeCmpFactories,
+                appRuntimeCtx.getBloomFilterFalsePositiveRate(),
+                mergePolicyFactory.createMergePolicy(
+                        mergePolicyProperties,
+                        appRuntimeCtx.getDatasetLifecycleManager()),
+                opTrackerProvider.getOperationTracker(appCtx),
+                appRuntimeCtx.getLSMIOScheduler(),
+                ioOpCallbackFactory.createIOOperationCallback(), buddyBtreeFields, -1,
+                true, metadataPageManagerFactory);
     }
 }

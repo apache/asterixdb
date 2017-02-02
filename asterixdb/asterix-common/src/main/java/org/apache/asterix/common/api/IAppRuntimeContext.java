@@ -22,6 +22,8 @@ import java.io.IOException;
 import java.rmi.RemoteException;
 import java.util.concurrent.Executor;
 
+import org.apache.asterix.common.config.IPropertiesProvider;
+import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.library.ILibraryManager;
@@ -40,58 +42,58 @@ import org.apache.hyracks.storage.common.file.IFileMapProvider;
 import org.apache.hyracks.storage.common.file.ILocalResourceRepository;
 import org.apache.hyracks.storage.common.file.IResourceIdFactory;
 
-public interface IAppRuntimeContext {
+public interface IAppRuntimeContext extends IPropertiesProvider {
 
-    public IIOManager getIOManager();
+    IIOManager getIOManager();
 
-    public Executor getThreadExecutor();
+    Executor getThreadExecutor();
 
-    public ITransactionSubsystem getTransactionSubsystem();
+    ITransactionSubsystem getTransactionSubsystem();
 
-    public boolean isShuttingdown();
+    boolean isShuttingdown();
 
-    public ILSMIOOperationScheduler getLSMIOScheduler();
+    ILSMIOOperationScheduler getLSMIOScheduler();
 
-    public ILSMMergePolicyFactory getMetadataMergePolicyFactory();
+    ILSMMergePolicyFactory getMetadataMergePolicyFactory();
 
-    public IBufferCache getBufferCache();
+    IBufferCache getBufferCache();
 
-    public IFileMapProvider getFileMapManager();
+    IFileMapProvider getFileMapManager();
 
-    public ILocalResourceRepository getLocalResourceRepository();
+    ILocalResourceRepository getLocalResourceRepository();
 
-    public IDatasetLifecycleManager getDatasetLifecycleManager();
+    IDatasetLifecycleManager getDatasetLifecycleManager();
 
-    public IResourceIdFactory getResourceIdFactory();
+    IResourceIdFactory getResourceIdFactory();
 
-    public ILSMOperationTracker getLSMBTreeOperationTracker(int datasetID);
+    ILSMOperationTracker getLSMBTreeOperationTracker(int datasetID);
 
-    public void initialize(boolean initialRun) throws IOException, ACIDException, AsterixException;
+    void initialize(boolean initialRun) throws IOException, ACIDException, AsterixException;
 
-    public void setShuttingdown(boolean b);
+    void setShuttingdown(boolean b);
 
-    public void deinitialize() throws HyracksDataException;
+    void deinitialize() throws HyracksDataException;
 
-    public double getBloomFilterFalsePositiveRate();
+    double getBloomFilterFalsePositiveRate();
 
-    public Object getActiveManager();
+    Object getActiveManager();
 
-    public IRemoteRecoveryManager getRemoteRecoveryManager();
+    IRemoteRecoveryManager getRemoteRecoveryManager();
 
-    public IReplicaResourcesManager getReplicaResourcesManager();
+    IReplicaResourcesManager getReplicaResourcesManager();
 
-    public IReplicationManager getReplicationManager();
+    IReplicationManager getReplicationManager();
 
-    public IReplicationChannel getReplicationChannel();
+    IReplicationChannel getReplicationChannel();
 
-    public ILibraryManager getLibraryManager();
+    ILibraryManager getLibraryManager();
 
     /**
      * Exports the metadata node to the metadata RMI port.
      *
      * @throws RemoteException
      */
-    public void exportMetadataNodeStub() throws RemoteException;
+    void exportMetadataNodeStub() throws RemoteException;
 
     /**
      * Initializes the metadata node and bootstraps the metadata.
@@ -99,12 +101,17 @@ public interface IAppRuntimeContext {
      * @param newUniverse
      * @throws Exception
      */
-    public void initializeMetadata(boolean newUniverse) throws Exception;
+    void initializeMetadata(boolean newUniverse) throws Exception;
 
     /**
      * Unexports the metadata node from the RMI registry
      *
      * @throws RemoteException
      */
-    public void unexportMetadataNodeStub() throws RemoteException;
+    void unexportMetadataNodeStub() throws RemoteException;
+
+    /**
+     * @return instance of {@link org.apache.asterix.common.context.IStorageComponentProvider}
+     */
+    IStorageComponentProvider getStorageComponentProvider();
 }

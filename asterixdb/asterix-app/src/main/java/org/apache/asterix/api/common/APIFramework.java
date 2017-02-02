@@ -31,7 +31,6 @@ import java.util.Set;
 
 import org.apache.asterix.algebra.base.ILangExpressionToPlanTranslator;
 import org.apache.asterix.algebra.base.ILangExpressionToPlanTranslatorFactory;
-import org.apache.asterix.api.common.Job.SubmissionMode;
 import org.apache.asterix.app.result.ResultUtil;
 import org.apache.asterix.common.config.CompilerProperties;
 import org.apache.asterix.common.config.ExternalProperties;
@@ -40,6 +39,8 @@ import org.apache.asterix.common.config.OptimizationConfUtil;
 import org.apache.asterix.common.config.PropertyInterpreters;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.utils.Job;
+import org.apache.asterix.common.utils.Job.SubmissionMode;
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.asterix.compiler.provider.IRuleSetFactory;
 import org.apache.asterix.dataflow.data.common.ConflictingTypeResolver;
@@ -59,12 +60,12 @@ import org.apache.asterix.lang.common.statement.FunctionDecl;
 import org.apache.asterix.lang.common.statement.Query;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.runtime.job.listener.JobEventListenerFactory;
-import org.apache.asterix.runtime.util.AppContextInfo;
+import org.apache.asterix.runtime.utils.AppContextInfo;
 import org.apache.asterix.transaction.management.service.transaction.JobIdFactory;
 import org.apache.asterix.translator.CompiledStatements.ICompiledDmlStatement;
 import org.apache.asterix.translator.IStatementExecutor.Stats;
+import org.apache.asterix.utils.ResourceUtils;
 import org.apache.asterix.translator.SessionConfig;
-import org.apache.asterix.util.ResourceUtils;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -79,7 +80,7 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionEvalSiz
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionTypeComputer;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IMergeAggregationExpressionFactory;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IMissableTypeComputer;
-import org.apache.hyracks.algebricks.core.algebra.expressions.LogicalExpressionJobGenToExpressionRuntimeProviderAdapter;
+import org.apache.hyracks.algebricks.core.algebra.expressions.ExpressionRuntimeProvider;
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.AlgebricksAppendable;
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.LogicalOperatorPrettyPrintVisitor;
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.PlanPlotter;
@@ -126,7 +127,8 @@ public class APIFramework {
                 IExpressionEvalSizeComputer expressionEvalSizeComputer,
                 IMergeAggregationExpressionFactory mergeAggregationExpressionFactory,
                 IExpressionTypeComputer expressionTypeComputer, IMissableTypeComputer missableTypeComputer,
-                IConflictingTypeResolver conflictingTypeResolver, PhysicalOptimizationConfig physicalOptimizationConfig,
+                IConflictingTypeResolver conflictingTypeResolver,
+                PhysicalOptimizationConfig physicalOptimizationConfig,
                 AlgebricksPartitionConstraint clusterLocations) {
             return new AlgebricksOptimizationContext(varCounter, expressionEvalSizeComputer,
                     mergeAggregationExpressionFactory, expressionTypeComputer, missableTypeComputer,
@@ -181,8 +183,8 @@ public class APIFramework {
 
         org.apache.asterix.common.transactions.JobId asterixJobId = JobIdFactory.generateJobId();
         metadataProvider.setJobId(asterixJobId);
-        ILangExpressionToPlanTranslator t = translatorFactory.createExpressionToPlanTranslator(metadataProvider,
-                varCounter);
+        ILangExpressionToPlanTranslator t =
+                translatorFactory.createExpressionToPlanTranslator(metadataProvider, varCounter);
 
         ILogicalPlan plan;
         // statement = null when it's a query
@@ -224,8 +226,8 @@ public class APIFramework {
         OptimizationConfUtil.getPhysicalOptimizationConfig().setMaxFramesExternalGroupBy(groupFrameLimit);
         OptimizationConfUtil.getPhysicalOptimizationConfig().setMaxFramesForJoin(joinFrameLimit);
 
-        HeuristicCompilerFactoryBuilder builder = new HeuristicCompilerFactoryBuilder(
-                OptimizationContextFactory.INSTANCE);
+        HeuristicCompilerFactoryBuilder builder =
+                new HeuristicCompilerFactoryBuilder(OptimizationContextFactory.INSTANCE);
         builder.setPhysicalOptimizationConfig(OptimizationConfUtil.getPhysicalOptimizationConfig());
         builder.setLogicalRewrites(ruleSetFactory.getLogicalRewrites());
         builder.setPhysicalRewrites(ruleSetFactory.getPhysicalRewrites());
@@ -240,8 +242,8 @@ public class APIFramework {
 
         int parallelism = getParallelism(querySpecificConfig.get(CompilerProperties.COMPILER_PARALLELISM_KEY),
                 compilerProperties.getParallelism());
-        AlgebricksAbsolutePartitionConstraint computationLocations = chooseLocations(clusterInfoCollector, parallelism,
-                metadataProvider.getClusterLocations());
+        AlgebricksAbsolutePartitionConstraint computationLocations =
+                chooseLocations(clusterInfoCollector, parallelism, metadataProvider.getClusterLocations());
         builder.setClusterLocations(computationLocations);
 
         ICompiler compiler = compilerFactory.createCompiler(plan, metadataProvider, t.getVarCounter());
@@ -285,7 +287,7 @@ public class APIFramework {
         builder.setBinaryIntegerInspectorFactory(format.getBinaryIntegerInspectorFactory());
         builder.setComparatorFactoryProvider(format.getBinaryComparatorFactoryProvider());
         builder.setExpressionRuntimeProvider(
-                new LogicalExpressionJobGenToExpressionRuntimeProviderAdapter(QueryLogicalExpressionJobGen.INSTANCE));
+                new ExpressionRuntimeProvider(QueryLogicalExpressionJobGen.INSTANCE));
         builder.setHashFunctionFactoryProvider(format.getBinaryHashFunctionFactoryProvider());
         builder.setHashFunctionFamilyProvider(format.getBinaryHashFunctionFamilyProvider());
         builder.setMissingWriterFactory(format.getMissingWriterFactory());
@@ -313,8 +315,8 @@ public class APIFramework {
         builder.setTypeTraitProvider(format.getTypeTraitProvider());
         builder.setNormalizedKeyComputerFactoryProvider(format.getNormalizedKeyComputerFactoryProvider());
 
-        JobEventListenerFactory jobEventListenerFactory = new JobEventListenerFactory(asterixJobId,
-                metadataProvider.isWriteTransaction());
+        JobEventListenerFactory jobEventListenerFactory =
+                new JobEventListenerFactory(asterixJobId, metadataProvider.isWriteTransaction());
         JobSpecification spec = compiler.createJob(AppContextInfo.INSTANCE, jobEventListenerFactory);
 
         // When the top-level statement is a query, the statement parameter is null.
@@ -427,10 +429,10 @@ public class APIFramework {
         for (Map.Entry<String, NodeControllerInfo> entry : ncMap.entrySet()) {
             String nodeId = entry.getKey();
             int availableCores = entry.getValue().getNumAvailableCores();
-            int nodeParallelism = selectedNodesWithOneMorePartition.contains(nodeId) ? perNodeParallelismMax
-                    : perNodeParallelismMin;
-            int coresToUse = nodeParallelism >= 0 && nodeParallelism < availableCores ? nodeParallelism
-                    : availableCores;
+            int nodeParallelism =
+                    selectedNodesWithOneMorePartition.contains(nodeId) ? perNodeParallelismMax : perNodeParallelismMin;
+            int coresToUse =
+                    nodeParallelism >= 0 && nodeParallelism < availableCores ? nodeParallelism : availableCores;
             for (int count = 0; count < coresToUse; ++count) {
                 locations.add(nodeId);
             }
@@ -450,15 +452,15 @@ public class APIFramework {
     // Gets the frame limit.
     private int getFrameLimit(String parameter, long memBudgetInConfiguration, int frameSize) {
         IPropertyInterpreter<Long> longBytePropertyInterpreter = PropertyInterpreters.getLongBytePropertyInterpreter();
-        long memBudget = parameter == null ? memBudgetInConfiguration
-                : longBytePropertyInterpreter.interpret(parameter);
+        long memBudget =
+                parameter == null ? memBudgetInConfiguration : longBytePropertyInterpreter.interpret(parameter);
         return (int) (memBudget / frameSize);
     }
 
     // Gets the parallelism parameter.
     private int getParallelism(String parameter, int parallelismInConfiguration) {
-        IPropertyInterpreter<Integer> integerIPropertyInterpreter = PropertyInterpreters
-                .getIntegerPropertyInterpreter();
+        IPropertyInterpreter<Integer> integerIPropertyInterpreter =
+                PropertyInterpreters.getIntegerPropertyInterpreter();
         return parameter == null ? parallelismInConfiguration : integerIPropertyInterpreter.interpret(parameter);
     }
 }

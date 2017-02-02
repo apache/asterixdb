@@ -66,11 +66,11 @@ import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.am.lsm.rtree.utils.LSMRTreeUtils;
 import org.apache.hyracks.storage.am.rtree.frames.RTreePolicyType;
 import org.apache.hyracks.storage.am.rtree.util.RTreeUtils;
-import org.apache.hyracks.storage.common.IStorageManagerInterface;
+import org.apache.hyracks.storage.common.IStorageManager;
 import org.apache.hyracks.storage.common.file.TransientLocalResourceFactoryProvider;
 import org.apache.hyracks.test.support.TestIndexLifecycleManagerProvider;
 import org.apache.hyracks.test.support.TestStorageManagerComponentHolder;
-import org.apache.hyracks.test.support.TestStorageManagerInterface;
+import org.apache.hyracks.test.support.TestStorageManager;
 import org.apache.hyracks.tests.am.common.ITreeIndexOperatorTestHelper;
 import org.apache.hyracks.tests.integration.AbstractIntegrationTest;
 import org.junit.After;
@@ -89,7 +89,7 @@ public abstract class AbstractRTreeOperatorTest extends AbstractIntegrationTest 
 
     protected RTreeType rTreeType;
 
-    protected final IStorageManagerInterface storageManager = new TestStorageManagerInterface();
+    protected final IStorageManager storageManager = new TestStorageManager();
     protected final IIndexLifecycleManagerProvider lcManagerProvider = new TestIndexLifecycleManagerProvider();
     protected final IPageManagerFactory pageManagerFactory = new LinkedMetadataPageManagerFactory();
     protected IIndexDataflowHelperFactory rtreeDataflowHelperFactory;

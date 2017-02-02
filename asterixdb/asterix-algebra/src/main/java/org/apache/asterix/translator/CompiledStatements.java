@@ -18,16 +18,15 @@
  */
 package org.apache.asterix.translator;
 
-import java.util.List;
 import java.util.Map;
 
-import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.external.feed.management.FeedConnectionRequest;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.statement.Query;
-import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.metadata.entities.Dataset;
+import org.apache.asterix.metadata.entities.Index;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 
 /**
@@ -182,62 +181,30 @@ public class CompiledStatements {
     }
 
     public static class CompiledCreateIndexStatement implements ICompiledDmlStatement {
-        private final String indexName;
-        private final String dataverseName;
-        private final String datasetName;
-        private final List<List<String>> keyFields;
-        private final List<IAType> keyTypes;
-        private final boolean isEnforced;
-        private final IndexType indexType;
+        private final Dataset dataset;
+        private final Index index;
 
-        // Specific to NGram index.
-        private final int gramLength;
-
-        public CompiledCreateIndexStatement(String indexName, String dataverseName, String datasetName,
-                List<List<String>> keyFields, List<IAType> keyTypes, boolean isEnforced, int gramLength,
-                IndexType indexType) {
-            this.indexName = indexName;
-            this.dataverseName = dataverseName;
-            this.datasetName = datasetName;
-            this.keyFields = keyFields;
-            this.keyTypes = keyTypes;
-            this.gramLength = gramLength;
-            this.isEnforced = isEnforced;
-            this.indexType = indexType;
+        public CompiledCreateIndexStatement(Dataset dataset, Index index) {
+            this.dataset = dataset;
+            this.index = index;
         }
 
         @Override
         public String getDatasetName() {
-            return datasetName;
+            return index.getDatasetName();
         }
 
         @Override
         public String getDataverseName() {
-            return dataverseName;
+            return index.getDataverseName();
         }
 
-        public String getIndexName() {
-            return indexName;
+        public Index getIndex() {
+            return index;
         }
 
-        public List<List<String>> getKeyFields() {
-            return keyFields;
-        }
-
-        public List<IAType> getKeyFieldTypes() {
-            return keyTypes;
-        }
-
-        public IndexType getIndexType() {
-            return indexType;
-        }
-
-        public int getGramLength() {
-            return gramLength;
-        }
-
-        public boolean isEnforced() {
-            return isEnforced;
+        public Dataset getDataset() {
+            return dataset;
         }
 
         @Override
@@ -538,49 +505,21 @@ public class CompiledStatements {
     }
 
     public static class CompiledIndexCompactStatement extends CompiledCompactStatement {
-        private final String indexName;
-        private final List<List<String>> keyFields;
-        private final List<IAType> keyTypes;
-        private final IndexType indexType;
-        private final boolean isEnforced;
+        private Dataset dataset;
+        private Index index;
 
-        // Specific to NGram index.
-        private final int gramLength;
-
-        public CompiledIndexCompactStatement(String dataverseName, String datasetName, String indexName,
-                List<List<String>> keyFields, List<IAType> keyTypes, boolean isEnforced, int gramLength,
-                IndexType indexType) {
-            super(dataverseName, datasetName);
-            this.indexName = indexName;
-            this.keyFields = keyFields;
-            this.keyTypes = keyTypes;
-            this.gramLength = gramLength;
-            this.indexType = indexType;
-            this.isEnforced = isEnforced;
+        public CompiledIndexCompactStatement(Dataset dataset, Index index) {
+            super(dataset.getDataverseName(), dataset.getDatasetName());
+            this.dataset = dataset;
+            this.index = index;
         }
 
-        public String getIndexName() {
-            return indexName;
+        public Dataset getDataset() {
+            return dataset;
         }
 
-        public List<List<String>> getKeyFields() {
-            return keyFields;
-        }
-
-        public List<IAType> getKeyTypes() {
-            return keyTypes;
-        }
-
-        public IndexType getIndexType() {
-            return indexType;
-        }
-
-        public int getGramLength() {
-            return gramLength;
-        }
-
-        public boolean isEnforced() {
-            return isEnforced;
+        public Index getIndex() {
+            return index;
         }
     }
 }

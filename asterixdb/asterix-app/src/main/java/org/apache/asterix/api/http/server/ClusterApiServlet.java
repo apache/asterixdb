@@ -31,7 +31,7 @@ import java.util.regex.Pattern;
 import org.apache.asterix.common.config.AbstractProperties;
 import org.apache.asterix.common.config.ReplicationProperties;
 import org.apache.asterix.common.utils.JSONUtil;
-import org.apache.asterix.runtime.util.ClusterStateManager;
+import org.apache.asterix.runtime.utils.ClusterStateManager;
 import org.apache.hyracks.http.api.IServlet;
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;

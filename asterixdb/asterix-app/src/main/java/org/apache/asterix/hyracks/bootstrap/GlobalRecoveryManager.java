@@ -25,14 +25,14 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.asterix.app.external.ExternalIndexingOperations;
 import org.apache.asterix.common.api.IClusterManagementWork;
 import org.apache.asterix.common.api.IClusterManagementWork.ClusterState;
 import org.apache.asterix.common.api.IClusterManagementWorkResponse;
-import org.apache.asterix.common.cluster.IGlobalRecoveryMaanger;
+import org.apache.asterix.common.cluster.IGlobalRecoveryManager;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
-import org.apache.asterix.common.config.DatasetConfig.ExternalDatasetTransactionState;
 import org.apache.asterix.common.config.DatasetConfig.ExternalFilePendingOp;
+import org.apache.asterix.common.config.DatasetConfig.TransactionState;
+import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.external.indexing.ExternalFile;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
@@ -41,22 +41,25 @@ import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Dataverse;
 import org.apache.asterix.metadata.entities.ExternalDatasetDetails;
 import org.apache.asterix.metadata.entities.Index;
+import org.apache.asterix.metadata.utils.ExternalIndexingOperations;
 import org.apache.asterix.metadata.utils.MetadataConstants;
-import org.apache.asterix.runtime.util.ClusterStateManager;
+import org.apache.asterix.runtime.utils.ClusterStateManager;
 import org.apache.hyracks.api.client.HyracksConnection;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
 
-public class GlobalRecoveryManager implements IGlobalRecoveryMaanger {
+public class GlobalRecoveryManager implements IGlobalRecoveryManager {
 
     private static final Logger LOGGER = Logger.getLogger(GlobalRecoveryManager.class.getName());
     private static GlobalRecoveryManager instance;
     private static ClusterState state;
+    private final IStorageComponentProvider componentProvider;
     private HyracksConnection hcc;
 
-    private GlobalRecoveryManager(HyracksConnection hcc) {
+    private GlobalRecoveryManager(HyracksConnection hcc, IStorageComponentProvider componentProvider) {
         setState(ClusterState.UNUSABLE);
         this.hcc = hcc;
+        this.componentProvider = componentProvider;
     }
 
     @Override
@@ -107,7 +110,7 @@ public class GlobalRecoveryManager implements IGlobalRecoveryMaanger {
                         List<Dataverse> dataverses = MetadataManager.INSTANCE.getDataverses(mdTxnCtx);
                         for (Dataverse dataverse : dataverses) {
                             if (!dataverse.getDataverseName().equals(MetadataConstants.METADATA_DATAVERSE_NAME)) {
-                                MetadataProvider metadataProvider = new MetadataProvider(dataverse);
+                                MetadataProvider metadataProvider = new MetadataProvider(dataverse, componentProvider);
                                 List<Dataset> datasets = MetadataManager.INSTANCE.getDataverseDatasets(mdTxnCtx,
                                         dataverse.getDataverseName());
                                 for (Dataset dataset : datasets) {
@@ -118,16 +121,16 @@ public class GlobalRecoveryManager implements IGlobalRecoveryMaanger {
                                                 dataset.getDataverseName(), dataset.getDatasetName());
                                         if (!indexes.isEmpty()) {
                                             // Get the state of the dataset
-                                            ExternalDatasetDetails dsd = (ExternalDatasetDetails) dataset
-                                                    .getDatasetDetails();
-                                            ExternalDatasetTransactionState datasetState = dsd.getState();
-                                            if (datasetState == ExternalDatasetTransactionState.BEGIN) {
+                                            ExternalDatasetDetails dsd =
+                                                    (ExternalDatasetDetails) dataset.getDatasetDetails();
+                                            TransactionState datasetState = dsd.getState();
+                                            if (datasetState == TransactionState.BEGIN) {
                                                 List<ExternalFile> files = MetadataManager.INSTANCE
                                                         .getDatasetExternalFiles(mdTxnCtx, dataset);
                                                 // if persumed abort, roll backward
                                                 // 1. delete all pending files
                                                 for (ExternalFile file : files) {
-                                                    if (file.getPendingOp() != ExternalFilePendingOp.PENDING_NO_OP) {
+                                                    if (file.getPendingOp() != ExternalFilePendingOp.NO_OP) {
                                                         MetadataManager.INSTANCE.dropExternalFile(mdTxnCtx, file);
                                                     }
                                                 }
@@ -138,11 +141,11 @@ public class GlobalRecoveryManager implements IGlobalRecoveryMaanger {
                                                 executeHyracksJob(jobSpec);
                                                 // 3. correct the dataset state
                                                 ((ExternalDatasetDetails) dataset.getDatasetDetails())
-                                                        .setState(ExternalDatasetTransactionState.COMMIT);
+                                                        .setState(TransactionState.COMMIT);
                                                 MetadataManager.INSTANCE.updateDataset(mdTxnCtx, dataset);
                                                 MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
                                                 mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
-                                            } else if (datasetState == ExternalDatasetTransactionState.READY_TO_COMMIT) {
+                                            } else if (datasetState == TransactionState.READY_TO_COMMIT) {
                                                 List<ExternalFile> files = MetadataManager.INSTANCE
                                                         .getDatasetExternalFiles(mdTxnCtx, dataset);
                                                 // if ready to commit, roll forward
@@ -153,15 +156,15 @@ public class GlobalRecoveryManager implements IGlobalRecoveryMaanger {
                                                 executeHyracksJob(jobSpec);
                                                 // 2. add pending files in metadata
                                                 for (ExternalFile file : files) {
-                                                    if (file.getPendingOp() == ExternalFilePendingOp.PENDING_ADD_OP) {
+                                                    if (file.getPendingOp() == ExternalFilePendingOp.ADD_OP) {
                                                         MetadataManager.INSTANCE.dropExternalFile(mdTxnCtx, file);
-                                                        file.setPendingOp(ExternalFilePendingOp.PENDING_NO_OP);
+                                                        file.setPendingOp(ExternalFilePendingOp.NO_OP);
                                                         MetadataManager.INSTANCE.addExternalFile(mdTxnCtx, file);
-                                                    } else if (file
-                                                            .getPendingOp() == ExternalFilePendingOp.PENDING_DROP_OP) {
+                                                    } else if (file.getPendingOp() == ExternalFilePendingOp.DROP_OP) {
                                                         // find original file
                                                         for (ExternalFile originalFile : files) {
-                                                            if (originalFile.getFileName().equals(file.getFileName())) {
+                                                            if (originalFile.getFileName()
+                                                                    .equals(file.getFileName())) {
                                                                 MetadataManager.INSTANCE.dropExternalFile(mdTxnCtx,
                                                                         file);
                                                                 MetadataManager.INSTANCE.dropExternalFile(mdTxnCtx,
@@ -170,10 +173,11 @@ public class GlobalRecoveryManager implements IGlobalRecoveryMaanger {
                                                             }
                                                         }
                                                     } else if (file
-                                                            .getPendingOp() == ExternalFilePendingOp.PENDING_APPEND_OP) {
+                                                            .getPendingOp() == ExternalFilePendingOp.APPEND_OP) {
                                                         // find original file
                                                         for (ExternalFile originalFile : files) {
-                                                            if (originalFile.getFileName().equals(file.getFileName())) {
+                                                            if (originalFile.getFileName()
+                                                                    .equals(file.getFileName())) {
                                                                 MetadataManager.INSTANCE.dropExternalFile(mdTxnCtx,
                                                                         file);
                                                                 MetadataManager.INSTANCE.dropExternalFile(mdTxnCtx,
@@ -187,7 +191,7 @@ public class GlobalRecoveryManager implements IGlobalRecoveryMaanger {
                                                 }
                                                 // 3. correct the dataset state
                                                 ((ExternalDatasetDetails) dataset.getDatasetDetails())
-                                                        .setState(ExternalDatasetTransactionState.COMMIT);
+                                                        .setState(TransactionState.COMMIT);
                                                 MetadataManager.INSTANCE.updateDataset(mdTxnCtx, dataset);
                                                 MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
                                                 mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
@@ -225,8 +229,8 @@ public class GlobalRecoveryManager implements IGlobalRecoveryMaanger {
         return instance;
     }
 
-    public static synchronized void instantiate(HyracksConnection hcc) {
-        instance = new GlobalRecoveryManager(hcc);
+    public static synchronized void instantiate(HyracksConnection hcc, IStorageComponentProvider componentProvider) {
+        instance = new GlobalRecoveryManager(hcc, componentProvider);
     }
 
     public static synchronized void setState(ClusterState state) {

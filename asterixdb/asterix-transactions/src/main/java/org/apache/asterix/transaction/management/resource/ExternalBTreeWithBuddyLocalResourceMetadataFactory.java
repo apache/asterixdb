@@ -24,7 +24,10 @@ import org.apache.asterix.common.transactions.Resource;
 import org.apache.asterix.common.transactions.ResourceFactory;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
+import org.apache.hyracks.storage.am.common.api.IMetadataPageManagerFactory;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
 
 public class ExternalBTreeWithBuddyLocalResourceMetadataFactory extends ResourceFactory {
     private static final long serialVersionUID = 1L;
@@ -37,8 +40,11 @@ public class ExternalBTreeWithBuddyLocalResourceMetadataFactory extends Resource
     public ExternalBTreeWithBuddyLocalResourceMetadataFactory(int datasetID,
             IBinaryComparatorFactory[] btreeCmpFactories,
             ITypeTraits[] typeTraits, ILSMMergePolicyFactory mergePolicyFactory,
-            Map<String, String> mergePolicyProperties, int[] buddyBtreeFields) {
-        super(datasetID, null, null, null);
+            Map<String, String> mergePolicyProperties, int[] buddyBtreeFields,
+            ILSMOperationTrackerFactory opTrackerProvider,
+            ILSMIOOperationCallbackFactory ioOpCallbackFactory,
+            IMetadataPageManagerFactory metadataPageManagerFactory) {
+        super(datasetID, null, null, null, opTrackerProvider, ioOpCallbackFactory, metadataPageManagerFactory);
         this.btreeCmpFactories = btreeCmpFactories;
         this.typeTraits = typeTraits;
         this.mergePolicyFactory = mergePolicyFactory;
@@ -49,6 +55,7 @@ public class ExternalBTreeWithBuddyLocalResourceMetadataFactory extends Resource
     @Override
     public Resource resource(int partition) {
         return new ExternalBTreeWithBuddyLocalResourceMetadata(datasetId, partition, btreeCmpFactories, typeTraits,
-                mergePolicyFactory, mergePolicyProperties, buddyBtreeFields);
+                mergePolicyFactory, mergePolicyProperties, buddyBtreeFields, opTrackerProvider, ioOpCallbackFactory,
+                metadataPageManagerFactory);
     }
 }

@@ -21,7 +21,7 @@ package org.apache.asterix.metadata.dataset.hints;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.apache.asterix.runtime.util.AppContextInfo;
+import org.apache.asterix.runtime.utils.AppContextInfo;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 
 /**

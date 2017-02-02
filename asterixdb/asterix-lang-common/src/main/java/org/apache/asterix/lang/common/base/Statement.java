@@ -26,7 +26,7 @@ public interface Statement extends ILangExpression {
     public static final List<Byte> KINDS = Collections.unmodifiableList(Kind.range(Kind.DATASET_DECL, Kind.RUN));
 
     /**
-     * get a byte representing the statement kind
+     * get a byte representing the statement kind.
      * Note: bytes 0x00 - 0x7f are reserved for core asterix statements
      * Use negative bytes for extension statements
      *

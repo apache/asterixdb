@@ -26,7 +26,7 @@ public class LSMRTreeIOOperationCallbackFactory implements ILSMIOOperationCallba
 
     private static final long serialVersionUID = 1L;
 
-    public static LSMRTreeIOOperationCallbackFactory INSTANCE = new LSMRTreeIOOperationCallbackFactory();
+    public static final LSMRTreeIOOperationCallbackFactory INSTANCE = new LSMRTreeIOOperationCallbackFactory();
 
     private LSMRTreeIOOperationCallbackFactory() {
     }

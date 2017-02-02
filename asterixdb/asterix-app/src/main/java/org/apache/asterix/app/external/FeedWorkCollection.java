@@ -24,17 +24,19 @@ import java.util.List;
 
 import org.apache.asterix.app.translator.DefaultStatementExecutorFactory;
 import org.apache.asterix.app.translator.QueryTranslator;
+import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.compiler.provider.AqlCompilationProvider;
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.asterix.external.feed.api.IFeedWork;
 import org.apache.asterix.external.feed.api.IFeedWorkEventListener;
 import org.apache.asterix.external.feed.management.FeedConnectionRequest;
 import org.apache.asterix.external.feed.management.FeedConnectionRequest.ConnectionStatus;
+import org.apache.asterix.file.StorageComponentProvider;
 import org.apache.asterix.lang.aql.statement.SubscribeFeedStatement;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.statement.DataverseDecl;
 import org.apache.asterix.lang.common.struct.Identifier;
-import org.apache.asterix.runtime.util.AppContextInfo;
+import org.apache.asterix.runtime.utils.AppContextInfo;
 import org.apache.asterix.translator.IStatementExecutor;
 import org.apache.asterix.translator.SessionConfig;
 import org.apache.asterix.translator.SessionConfig.OutputFormat;
@@ -48,6 +50,7 @@ public class FeedWorkCollection {
 
     private static Logger LOGGER = Logger.getLogger(FeedWorkCollection.class.getName());
     private static final ILangCompilationProvider compilationProvider = new AqlCompilationProvider();
+    private static final IStorageComponentProvider storageComponentProvider = new StorageComponentProvider();
 
     /**
      * The task of subscribing to a feed to obtain data.
@@ -91,7 +94,8 @@ public class FeedWorkCollection {
                     List<Statement> statements = new ArrayList<>();
                     statements.add(dataverseDecl);
                     statements.add(subscribeStmt);
-                    IStatementExecutor translator = qtFactory.create(statements, pc, compilationProvider);
+                    IStatementExecutor translator = qtFactory.create(statements, pc, compilationProvider,
+                            storageComponentProvider);
                     translator.compileAndExecute(AppContextInfo.INSTANCE.getHcc(), null,
                             QueryTranslator.ResultDelivery.IMMEDIATE);
                     if (LOGGER.isEnabledFor(Level.INFO)) {

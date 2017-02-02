@@ -19,6 +19,17 @@
 
 package org.apache.hyracks.storage.am.common.api;
 
+/**
+ * Provides double values for RTree operations from encoded bytes
+ */
+@FunctionalInterface
 public interface IPrimitiveValueProvider {
-    public double getValue(byte[] bytes, int offset);
+    /**
+     * @param bytes
+     *            the source byte array
+     * @param offset
+     *            the offset of the value
+     * @return the decoded double value
+     */
+    double getValue(byte[] bytes, int offset);
 }

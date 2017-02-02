@@ -20,6 +20,10 @@ package org.apache.hyracks.storage.am.lsm.common.api;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
+/**
+ * Schedules IO operations for LSM indexes
+ */
+@FunctionalInterface
 public interface ILSMIOOperationScheduler {
-    public void scheduleOperation(ILSMIOOperation operation) throws HyracksDataException;
+    void scheduleOperation(ILSMIOOperation operation) throws HyracksDataException;
 }

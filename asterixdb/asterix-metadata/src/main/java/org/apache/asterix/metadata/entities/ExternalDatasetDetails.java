@@ -21,17 +21,20 @@ package org.apache.asterix.metadata.entities;
 
 import java.io.DataOutput;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.apache.asterix.builders.IARecordBuilder;
 import org.apache.asterix.builders.OrderedListBuilder;
 import org.apache.asterix.builders.RecordBuilder;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
-import org.apache.asterix.common.config.DatasetConfig.ExternalDatasetTransactionState;
+import org.apache.asterix.common.config.DatasetConfig.TransactionState;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.metadata.IDatasetDetails;
 import org.apache.asterix.metadata.bootstrap.MetadataRecordTypes;
-import org.apache.asterix.metadata.utils.DatasetUtils;
+import org.apache.asterix.metadata.utils.DatasetUtil;
 import org.apache.asterix.om.base.ADateTime;
 import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.base.AMutableString;
@@ -42,17 +45,21 @@ import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 public class ExternalDatasetDetails implements IDatasetDetails {
 
     private static final long serialVersionUID = 1L;
+    private static final Logger LOGGER = Logger.getLogger(ExternalDatasetDetails.class.getName());
     private final String adapter;
     private final Map<String, String> properties;
     private final long addToCacheTime;
     private Date lastRefreshTime;
-    private ExternalDatasetTransactionState state;
+    private TransactionState state;
 
     public ExternalDatasetDetails(String adapter, Map<String, String> properties, Date lastRefreshTime,
-            ExternalDatasetTransactionState state) {
+            TransactionState state) {
         this.properties = properties;
         this.adapter = adapter;
         this.addToCacheTime = System.currentTimeMillis();
@@ -103,7 +110,7 @@ public class ExternalDatasetDetails implements IDatasetDetails {
             String name = property.getKey();
             String value = property.getValue();
             itemValue.reset();
-            DatasetUtils.writePropertyTypeRecord(name, value, itemValue.getDataOutput(),
+            DatasetUtil.writePropertyTypeRecord(name, value, itemValue.getDataOutput(),
                     MetadataRecordTypes.DATASOURCE_ADAPTER_PROPERTIES_RECORDTYPE);
             listBuilder.addItem(itemValue);
         }
@@ -143,11 +150,31 @@ public class ExternalDatasetDetails implements IDatasetDetails {
         this.lastRefreshTime = timestamp;
     }
 
-    public ExternalDatasetTransactionState getState() {
+    public TransactionState getState() {
         return state;
     }
 
-    public void setState(ExternalDatasetTransactionState state) {
+    public void setState(TransactionState state) {
         this.state = state;
+    }
+
+    @Override
+    public String toString() {
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            return mapper.writeValueAsString(toMap());
+        } catch (JsonProcessingException e) {
+            LOGGER.log(Level.WARNING, "Unable to convert map to json String", e);
+            return getClass().getSimpleName();
+        }
+    }
+
+    private Map<String, Object> toMap() {
+        Map<String, Object> map = new HashMap<>();
+        map.put("adapter", adapter);
+        map.put("properties", properties);
+        map.put("lastRefreshTime", lastRefreshTime.toString());
+        map.put("state", state.name());
+        return map;
     }
 }

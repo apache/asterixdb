@@ -31,13 +31,13 @@ import org.apache.asterix.external.indexing.ExternalFile;
 import org.apache.asterix.external.indexing.IndexingScheduler;
 import org.apache.asterix.external.indexing.RecordId.RecordIdType;
 import org.apache.asterix.external.input.stream.HDFSInputStream;
-import org.apache.asterix.runtime.util.AppContextInfo;
-import org.apache.asterix.runtime.util.ClusterStateManager;
 import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.asterix.hivecompat.io.RCFileInputFormat;
+import org.apache.asterix.runtime.utils.AppContextInfo;
+import org.apache.asterix.runtime.utils.ClusterStateManager;
 import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
@@ -102,7 +102,7 @@ public class HDFSUtils {
                 // file was deleted at some point, skip to next file
                 continue;
             }
-            if (file.getPendingOp() == ExternalFilePendingOp.PENDING_ADD_OP
+            if (file.getPendingOp() == ExternalFilePendingOp.ADD_OP
                     && fileStatus.getModificationTime() == file.getLastModefiedTime().getTime()) {
                 // Get its information from HDFS name node
                 BlockLocation[] fileBlocks = fs.getFileBlockLocations(fileStatus, 0, file.getSize());
@@ -117,7 +117,7 @@ public class HDFSUtils {
                         orderedExternalFiles.add(file);
                     }
                 }
-            } else if (file.getPendingOp() == ExternalFilePendingOp.PENDING_NO_OP
+            } else if (file.getPendingOp() == ExternalFilePendingOp.NO_OP
                     && fileStatus.getModificationTime() == file.getLastModefiedTime().getTime()) {
                 long oldSize = 0L;
                 long newSize = file.getSize();

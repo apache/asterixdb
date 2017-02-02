@@ -59,7 +59,8 @@ import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.IAType;
-import org.apache.asterix.om.util.ConstantExpressionUtil;
+import org.apache.asterix.om.utils.ConstantExpressionUtil;
+import org.apache.asterix.om.utils.RecordUtil;
 import org.apache.asterix.runtime.evaluators.common.CreateMBREvalFactory;
 import org.apache.asterix.runtime.evaluators.common.FunctionManagerImpl;
 import org.apache.asterix.runtime.evaluators.functions.records.FieldAccessByIndexEvalFactory;
@@ -535,7 +536,7 @@ public class NonTaggedDataFormat implements IDataFormat {
                         break;
                     }
                     case ANY:
-                        fd.setImmutableStates(ARecordType.FULLY_OPEN_RECORD_TYPE, listFieldPath);
+                        fd.setImmutableStates(RecordUtil.FULLY_OPEN_RECORD_TYPE, listFieldPath);
                         break;
                     default: {
                         throw new NotImplementedException("field-access-nested for data of type " + t);
@@ -553,7 +554,7 @@ public class NonTaggedDataFormat implements IDataFormat {
                 if (typeTag.equals(ATypeTag.RECORD)) {
                     fd.setImmutableStates(t);
                 } else if (typeTag.equals(ATypeTag.ANY)) {
-                    fd.setImmutableStates(ARecordType.FULLY_OPEN_RECORD_TYPE);
+                    fd.setImmutableStates(RecordUtil.FULLY_OPEN_RECORD_TYPE);
                 } else {
                     throw new NotImplementedException("get-record-fields for data of type " + t);
                 }
@@ -569,7 +570,7 @@ public class NonTaggedDataFormat implements IDataFormat {
                 if (typeTag.equals(ATypeTag.RECORD)) {
                     fd.setImmutableStates(t);
                 } else if (typeTag.equals(ATypeTag.ANY)) {
-                    fd.setImmutableStates(ARecordType.FULLY_OPEN_RECORD_TYPE);
+                    fd.setImmutableStates(RecordUtil.FULLY_OPEN_RECORD_TYPE);
                 } else {
                     throw new NotImplementedException("get-record-field-value for data of type " + t);
                 }
@@ -585,7 +586,7 @@ public class NonTaggedDataFormat implements IDataFormat {
                 if (typeTag.equals(ATypeTag.RECORD)) {
                     fd.setImmutableStates(t);
                 } else if (typeTag.equals(ATypeTag.ANY)) {
-                    fd.setImmutableStates(ARecordType.FULLY_OPEN_RECORD_TYPE);
+                    fd.setImmutableStates(RecordUtil.FULLY_OPEN_RECORD_TYPE);
                 } else {
                     throw new NotImplementedException("record-fields with data of type " + t);
                 }

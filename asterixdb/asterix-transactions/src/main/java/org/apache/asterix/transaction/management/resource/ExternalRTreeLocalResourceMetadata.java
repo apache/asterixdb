@@ -20,20 +20,21 @@ package org.apache.asterix.transaction.management.resource;
 
 import java.util.Map;
 
-import org.apache.asterix.common.context.BaseOperationTracker;
-import org.apache.asterix.common.dataflow.LSMIndexUtil;
-import org.apache.asterix.common.ioopcallbacks.LSMRTreeIOOperationCallbackFactory;
-import org.apache.asterix.common.transactions.IAppRuntimeContextProvider;
+import org.apache.asterix.common.api.IAppRuntimeContext;
+import org.apache.hyracks.api.application.INCApplicationContext;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ILinearizeComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
+import org.apache.hyracks.storage.am.common.api.IMetadataPageManagerFactory;
 import org.apache.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import org.apache.hyracks.storage.am.common.api.TreeIndexException;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
 import org.apache.hyracks.storage.am.lsm.rtree.utils.LSMRTreeUtils;
 import org.apache.hyracks.storage.am.rtree.frames.RTreePolicyType;
 import org.apache.hyracks.storage.common.file.LocalResource;
@@ -49,15 +50,18 @@ public class ExternalRTreeLocalResourceMetadata extends LSMRTreeLocalResourceMet
             IBinaryComparatorFactory[] btreeCmpFactories, IPrimitiveValueProviderFactory[] valueProviderFactories,
             RTreePolicyType rtreePolicyType, ILinearizeComparatorFactory linearizeCmpFactory, int datasetID,
             int partition, ILSMMergePolicyFactory mergePolicyFactory, Map<String, String> mergePolicyProperties,
-            int[] btreeFields, boolean isPointMBR) {
+            int[] btreeFields, boolean isPointMBR, ILSMOperationTrackerFactory opTrackerProvider,
+            ILSMIOOperationCallbackFactory ioOpCallbackFactory,
+            IMetadataPageManagerFactory metadataPageManagerFactory) {
         super(typeTraits, rtreeCmpFactories, btreeCmpFactories, valueProviderFactories, rtreePolicyType,
                 linearizeCmpFactory, datasetID, partition, mergePolicyFactory, mergePolicyProperties, null, null, null,
-                btreeFields, null, isPointMBR);
+                btreeFields, null, isPointMBR, opTrackerProvider, ioOpCallbackFactory, metadataPageManagerFactory);
     }
 
     @Override
-    public ILSMIndex createIndexInstance(IAppRuntimeContextProvider runtimeContextProvider,
+    public ILSMIndex createIndexInstance(INCApplicationContext appCtx,
             LocalResource resource) throws HyracksDataException {
+        IAppRuntimeContext runtimeContextProvider = (IAppRuntimeContext) appCtx.getApplicationObject();
         IIOManager ioManager = runtimeContextProvider.getIOManager();
         FileReference file = ioManager.resolve(resource.getPath());
         try {
@@ -66,11 +70,10 @@ public class ExternalRTreeLocalResourceMetadata extends LSMRTreeLocalResourceMet
                     valueProviderFactories, rtreePolicyType, runtimeContextProvider.getBloomFilterFalsePositiveRate(),
                     mergePolicyFactory.createMergePolicy(mergePolicyProperties,
                             runtimeContextProvider.getDatasetLifecycleManager()),
-                    new BaseOperationTracker(datasetId(),
-                            runtimeContextProvider.getDatasetLifecycleManager().getDatasetInfo(datasetId())),
+                    opTrackerProvider.getOperationTracker(appCtx),
                     runtimeContextProvider.getLSMIOScheduler(),
-                    LSMRTreeIOOperationCallbackFactory.INSTANCE.createIOOperationCallback(), linearizeCmpFactory,
-                    btreeFields, -1, true, isPointMBR, LSMIndexUtil.getMetadataPageManagerFactory());
+                    ioOpCallbackFactory.createIOOperationCallback(), linearizeCmpFactory,
+                    btreeFields, -1, true, isPointMBR, metadataPageManagerFactory);
         } catch (TreeIndexException e) {
             throw new HyracksDataException(e);
         }
