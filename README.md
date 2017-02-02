@@ -16,40 +16,40 @@
  ! specific language governing permissions and limitations
  ! under the License.
  !-->
-<img src="http://asterixdb.apache.org/img/asterixdb_tm.png" height=100></img>
+<a href="http://asterixdb.apache.org"><img src="http://asterixdb.apache.org/img/asterixdb_tm.png" height=100></img></a>
 
 ## What is AsterixDB?
 
 AsterixDB is a BDMS (Big Data Management System) with a rich feature set that sets it apart from other Big Data platforms.  Its feature set makes it well-suited to modern needs such as web data warehousing and social data storage and analysis. AsterixDB has:
 
-- __Data model__
+- __Data model__</br>
 A semistructured NoSQL style data model (ADM) resulting from extending JSON with object database ideas
 
-- __Query languages__
+- __Query languages__</br>
 Two expressive and declarative query languages (SQL++ and AQL) that support a broad range of queries and analysis over semistructured data
 
-- __Scalability__
+- __Scalability__</br>
 A parallel runtime query execution engine, Apache Hyracks, that has been scale-tested on up to 1000+ cores and 500+ disks
 
-- __Native storage__
+- __Native storage__</br>
 Partitioned LSM-based data storage and indexing to support efficient ingestion and management of semistructured data
 
-- __External storage__
+- __External storage__</br>
 Support for query access to externally stored data (e.g., data in HDFS) as well as to data stored natively by AsterixDB
 
-- __Data types__
+- __Data types__</br>
 A rich set of primitive data types, including spatial and temporal data in addition to integer, floating point, and textual data
 
-- __Indexing__
+- __Indexing__</br>
 Secondary indexing options that include B+ trees, R trees, and inverted keyword (exact and fuzzy) index types
 
-- __Transactions__
+- __Transactions__</br>
 Basic transactional (concurrency and recovery) capabilities akin to those of a NoSQL store
 
-Learn more about AsterixDB at [http://asterixdb.apache.org] (http://asterixdb.apache.org)
+Learn more about AsterixDB at its [website](http://asterixdb.apache.org).
 
 
-##Building AsterixDB
+## Build from source
 
 To build AsterixDB from source, you should have a platform with the following:
 
@@ -70,7 +70,7 @@ Instructions for building the master:
         $mvn clean package -DskipTests
 
 
-##Running AsterixDB (on your machine from your build)
+## Run the build on your machine
 Here are steps to get AsterixDB running on your local machine:
 
 * Start a single-machine AsterixDB instance:
@@ -82,14 +82,19 @@ Here are steps to get AsterixDB running on your local machine:
 
         http://localhost:19001
 
-* Read more documentations to learn the data model, query language, and how to create a cluster instance:
-  [https://ci.apache.org/projects/asterixdb/index.html] (https://ci.apache.org/projects/asterixdb/index.html)
+* Read more [documentations](https://ci.apache.org/projects/asterixdb/index.html) to learn the data model, query language, and how to create a cluster instance.
 
-##Documentation
+## Documentation
 
-AsterixDB's official documentation resides at [https://ci.apache.org/projects/asterixdb/index.html] (https://ci.apache.org/projects/asterixdb/index.html). This is built from the maven project under `asterix-doc/` as a maven site. The documentation on the official website refers to the most stable build version, so for pre-release versions one should refer to the compiled documentation.
+[master](https://ci.apache.org/projects/asterixdb/index.html) |
+[0.9.0](https://ci.apache.org/projects/asterixdb/index.html)
 
-##Support/Contact
+## Community support
 
-If you have any questions, please feel free to ask on our mailing list, [users@asterixdb.apache.org](mailto:users@asterixdb.apache.org). Join the list by sending an email to [users-subscribe@asterixdb.apache.org](mailto:users-subscribe@asterixdb.apache.org). If you are interested in the internals or developement of AsterixDB, also please feel free to subscribe to our developer mailing list, [dev@asterixdb.apache.org](mailto:dev@asterixdb.apache.org), by sending an email to [dev-subscribe@asterixdb.apache.org](mailto:dev-subscribe@asterixdb.apache.org).
+- __Users__</br>
+maling list: [users@asterixdb.apache.org](mailto:users@asterixdb.apache.org)</br>
+Join the list by sending an email to [users-subscribe@asterixdb.apache.org](mailto:users-subscribe@asterixdb.apache.org)</br>
+- __Developers and contributors__</br>
+mailing list:[dev@asterixdb.apache.org](mailto:dev@asterixdb.apache.org)</br>
+Join the list by sending an email to [dev-subscribe@asterixdb.apache.org](mailto:dev-subscribe@asterixdb.apache.org)
 
