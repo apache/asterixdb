@@ -27,6 +27,7 @@ import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.api.IPointableFactory;
 
 public final class LongPointable extends AbstractPointable implements IHashable, IComparable, INumeric {
+    public static final LongPointableFactory FACTORY = new LongPointableFactory();
     public static final ITypeTraits TYPE_TRAITS = new ITypeTraits() {
         private static final long serialVersionUID = 1L;
 
@@ -41,19 +42,28 @@ public final class LongPointable extends AbstractPointable implements IHashable,
         }
     };
 
-    public static final IPointableFactory FACTORY = new IPointableFactory() {
+    public static class LongPointableFactory implements IPointableFactory {
         private static final long serialVersionUID = 1L;
 
+        private LongPointableFactory() {
+        }
+
         @Override
-        public IPointable createPointable() {
+        public LongPointable createPointable() {
             return new LongPointable();
+        }
+
+        public LongPointable createPointable(long value) {
+            LongPointable pointable = new LongPointable();
+            pointable.setLong(value);
+            return pointable;
         }
 
         @Override
         public ITypeTraits getTypeTraits() {
             return TYPE_TRAITS;
         }
-    };
+    }
 
     public static long getLong(byte[] bytes, int start) {
         return (((long) (bytes[start] & 0xff)) << 56) + (((long) (bytes[start + 1] & 0xff)) << 48)
@@ -78,6 +88,11 @@ public final class LongPointable extends AbstractPointable implements IHashable,
     }
 
     public void setLong(long value) {
+        if (bytes == null) {
+            start = 0;
+            length = TYPE_TRAITS.getFixedLength();
+            bytes = new byte[length];
+        }
         setLong(bytes, start, value);
     }
 

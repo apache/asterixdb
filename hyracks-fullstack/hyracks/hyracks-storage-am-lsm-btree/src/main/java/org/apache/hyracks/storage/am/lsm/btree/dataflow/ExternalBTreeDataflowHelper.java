@@ -72,7 +72,7 @@ public class ExternalBTreeDataflowHelper extends LSMBTreeDataflowHelper {
                 .getTreeIndexComparatorFactories(), treeOpDesc.getTreeIndexBloomFilterKeyFields(),
                 bloomFilterFalsePositiveRate, mergePolicy, opTrackerFactory.getOperationTracker(ctx.getJobletContext()
                         .getApplicationContext()), ioScheduler,
-                ioOpCallbackFactory.createIOOperationCallback(), getVersion(), durable,
+                ioOpCallbackFactory.createIoOpCallback(), getVersion(), durable,
                 (IMetadataPageManagerFactory) opDesc.getPageManagerFactory());
     }
 

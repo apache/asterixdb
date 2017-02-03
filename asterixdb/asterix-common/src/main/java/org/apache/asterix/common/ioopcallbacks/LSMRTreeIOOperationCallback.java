@@ -24,6 +24,7 @@ import java.util.List;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.common.api.IMetadataPageManager;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
 import org.apache.hyracks.storage.am.lsm.rtree.impls.LSMRTreeDiskComponent;
 import org.apache.hyracks.storage.am.lsm.rtree.impls.LSMRTreeFileManager;
@@ -35,16 +36,16 @@ public class LSMRTreeIOOperationCallback extends AbstractLSMIOOperationCallback 
     }
 
     @Override
-    public void afterOperation(LSMOperationType opType, List<ILSMComponent> oldComponents, ILSMComponent newComponent)
-            throws HyracksDataException {
+    public void afterOperation(LSMOperationType opType, List<ILSMComponent> oldComponents,
+            ILSMDiskComponent newComponent) throws HyracksDataException {
         if (newComponent != null) {
             LSMRTreeDiskComponent rtreeComponent = (LSMRTreeDiskComponent) newComponent;
-            putLSNIntoMetadata(rtreeComponent.getRTree(), oldComponents);
+            putLSNIntoMetadata(rtreeComponent, oldComponents);
         }
     }
 
     @Override
-    public long getComponentLSN(List<ILSMComponent> diskComponents) throws HyracksDataException {
+    public long getComponentLSN(List<? extends ILSMComponent> diskComponents) throws HyracksDataException {
         if (diskComponents == null) {
             // Implies a flush IO operation.
             synchronized (this) {
@@ -62,12 +63,12 @@ public class LSMRTreeIOOperationCallback extends AbstractLSMIOOperationCallback 
     }
 
     @Override
-    public long getComponentFileLSNOffset(ILSMComponent diskComponent, String diskComponentFilePath)
+    public long getComponentFileLSNOffset(ILSMDiskComponent diskComponent, String diskComponentFilePath)
             throws HyracksDataException {
         if (diskComponentFilePath.endsWith(LSMRTreeFileManager.RTREE_STRING)) {
             LSMRTreeDiskComponent rtreeComponent = (LSMRTreeDiskComponent) diskComponent;
-            IMetadataPageManager metadataPageManager = (IMetadataPageManager) rtreeComponent.getRTree()
-                    .getPageManager();
+            IMetadataPageManager metadataPageManager =
+                    (IMetadataPageManager) rtreeComponent.getRTree().getPageManager();
             return metadataPageManager.getFileOffset(metadataPageManager.createMetadataFrame(), LSN_KEY);
         }
         return INVALID;

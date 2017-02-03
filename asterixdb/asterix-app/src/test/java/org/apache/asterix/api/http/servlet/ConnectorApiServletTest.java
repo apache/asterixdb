@@ -57,7 +57,7 @@ import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.HttpMethod;
 import junit.extensions.PA;
 
-public class ConnectorApiLetTest {
+public class ConnectorApiServletTest {
 
     @Test
     public void testGet() throws Exception {

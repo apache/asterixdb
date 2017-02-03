@@ -39,8 +39,8 @@ public class JobFailureTest extends AbstractMultiNCIntegrationTest {
 
     private void execTest() throws Exception {
         JobSpecification spec = new JobSpecification();
-        AbstractSingleActivityOperatorDescriptor sourceOpDesc = new ExceptionOnCreatePushRuntimeOperatorDescriptor(spec,
-                0, 1, new int[] { 4 }, true);
+        AbstractSingleActivityOperatorDescriptor sourceOpDesc =
+                new ExceptionOnCreatePushRuntimeOperatorDescriptor(spec, 0, 1, new int[] { 4 }, true);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, sourceOpDesc, ASTERIX_IDS);
         SinkOperatorDescriptor sinkOpDesc = new SinkOperatorDescriptor(spec, 1);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, sinkOpDesc, ASTERIX_IDS);
@@ -53,7 +53,10 @@ public class JobFailureTest extends AbstractMultiNCIntegrationTest {
             e.printStackTrace();
             throw e;
         }
-        Assert.assertTrue(ExceptionOnCreatePushRuntimeOperatorDescriptor.succeed());
+        Assert.assertTrue(
+                ExceptionOnCreatePushRuntimeOperatorDescriptor.stats()
+                        + ExceptionOnCreatePushRuntimeOperatorDescriptor.succeed(),
+                ExceptionOnCreatePushRuntimeOperatorDescriptor.succeed());
         // should also check the content of the different ncs
     }
 }

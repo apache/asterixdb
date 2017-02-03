@@ -26,12 +26,10 @@ import org.apache.hyracks.storage.am.common.api.ITreeIndex;
 
 public interface ILSMComponentFilterManager {
 
-    public void updateFilterInfo(ILSMComponentFilter filter, List<ITupleReference> filterTuples)
-            throws HyracksDataException;
+    void updateFilter(ILSMComponentFilter filter, List<ITupleReference> filterTuples) throws HyracksDataException;
 
-    public boolean readFilterInfo(ILSMComponentFilter filter, ITreeIndex treeIndex) throws HyracksDataException;
+    boolean readFilter(ILSMComponentFilter filter, ITreeIndex index) throws HyracksDataException;
 
-    public void writeFilterInfo(ILSMComponentFilter filter, ITreeIndex treeIndex)
-            throws HyracksDataException;
+    void writeFilter(ILSMComponentFilter filter, ITreeIndex index) throws HyracksDataException;
 
 }

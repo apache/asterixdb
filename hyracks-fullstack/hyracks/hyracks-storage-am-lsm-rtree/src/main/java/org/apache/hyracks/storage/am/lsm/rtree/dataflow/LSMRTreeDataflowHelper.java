@@ -89,7 +89,7 @@ public class LSMRTreeDataflowHelper extends AbstractLSMRTreeDataflowHelper {
                     diskFileMapProvider,
                     typeTraits, rtreeCmpFactories, btreeCmpFactories, valueProviderFactories, rtreePolicyType,
                     bloomFilterFalsePositiveRate, mergePolicy, opTracker, ioScheduler,
-                    ioOpCallbackFactory.createIOOperationCallback(), linearizeCmpFactory, rtreeFields, btreeFields,
+                    ioOpCallbackFactory.createIoOpCallback(), linearizeCmpFactory, rtreeFields, btreeFields,
                     filterTypeTraits, filterCmpFactories, filterFields, durable, isPointMBR,
                     (IMetadataPageManagerFactory) opDesc.getPageManagerFactory());
         } catch (TreeIndexException e) {

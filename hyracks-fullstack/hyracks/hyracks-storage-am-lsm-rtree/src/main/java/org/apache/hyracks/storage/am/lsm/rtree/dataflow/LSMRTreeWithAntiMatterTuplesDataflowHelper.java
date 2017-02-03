@@ -70,7 +70,7 @@ public class LSMRTreeWithAntiMatterTuplesDataflowHelper extends AbstractLSMRTree
             return LSMRTreeUtils.createLSMTreeWithAntiMatterTuples(ctx.getIOManager(), virtualBufferCaches, file,
                     diskBufferCache, diskFileMapProvider, typeTraits, rtreeCmpFactories, btreeCmpFactories,
                     valueProviderFactories, rtreePolicyType, mergePolicy, opTracker, ioScheduler, ioOpCallbackFactory
-                            .createIOOperationCallback(), linearizeCmpFactory, rtreeFields, filterTypeTraits,
+                            .createIoOpCallback(), linearizeCmpFactory, rtreeFields, filterTypeTraits,
                     filterCmpFactories, filterFields, durable, isPointMBR, (IMetadataPageManagerFactory) opDesc
                             .getPageManagerFactory());
         } catch (TreeIndexException e) {

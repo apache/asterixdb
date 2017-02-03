@@ -21,22 +21,26 @@ package org.apache.hyracks.storage.am.lsm.btree.impls;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.bloomfilter.impls.BloomFilter;
 import org.apache.hyracks.storage.am.btree.impls.BTree;
-import org.apache.hyracks.storage.am.lsm.common.impls.AbstractDiskLSMComponent;
+import org.apache.hyracks.storage.am.common.api.IMetadataPageManager;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilter;
+import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMDiskComponent;
 
-public class LSMBTreeWithBuddyDiskComponent extends AbstractDiskLSMComponent {
+public class LSMBTreeWithBuddyDiskComponent extends AbstractLSMDiskComponent {
 
     private final BTree btree;
     private final BTree buddyBtree;
     private final BloomFilter bloomFilter;
 
-    public LSMBTreeWithBuddyDiskComponent(BTree btree, BTree buddyBtree, BloomFilter bloomFilter) {
+    public LSMBTreeWithBuddyDiskComponent(BTree btree, BTree buddyBtree, BloomFilter bloomFilter,
+            ILSMComponentFilter filter) {
+        super((IMetadataPageManager) btree.getPageManager(), filter);
         this.btree = btree;
         this.buddyBtree = buddyBtree;
         this.bloomFilter = bloomFilter;
     }
 
     @Override
-    protected void destroy() throws HyracksDataException {
+    public void destroy() throws HyracksDataException {
         btree.deactivate();
         btree.destroy();
         buddyBtree.deactivate();

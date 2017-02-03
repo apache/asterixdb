@@ -35,7 +35,6 @@ import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent.ComponentState;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexInternal;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndex;
@@ -101,8 +100,7 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
 
         if (!flushOnExit) {
             for (ILSMIndex lsmIndex : indexes) {
-                ILSMIndexInternal lsmIndexInternal = (ILSMIndexInternal) lsmIndex;
-                if (lsmIndexInternal.hasFlushRequestForCurrentMutableComponent()) {
+                if (lsmIndex.hasFlushRequestForCurrentMutableComponent()) {
                     needsFlush = true;
                     break;
                 }

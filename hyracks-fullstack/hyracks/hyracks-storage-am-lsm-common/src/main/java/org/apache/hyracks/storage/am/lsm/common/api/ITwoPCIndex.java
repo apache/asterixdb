@@ -53,22 +53,24 @@ public interface ITwoPCIndex {
     /**
      * This function is used to add the committed disk component to the appropriate list and reflect the changes
      */
-    public void commitTransactionDiskComponent(ILSMComponent newComponent) throws IndexException, HyracksDataException;
+    public void commitTransactionDiskComponent(ILSMDiskComponent newComponent)
+            throws IndexException, HyracksDataException;
 
     /**
      * This function is used to create a version specific accessor to search a specific version
      */
-    public ILSMIndexAccessorInternal createAccessor(ISearchOperationCallback searchCallback, int targetIndexVersion) throws HyracksDataException;
+    public ILSMIndexAccessor createAccessor(ISearchOperationCallback searchCallback, int targetIndexVersion)
+            throws HyracksDataException;
 
     /**
      * This function is used to get the first components list
      */
-    public List<ILSMComponent> getFirstComponentList();
+    public List<ILSMDiskComponent> getFirstComponentList();
 
     /**
      * This function is used to get teh second components list
      */
-    public List<ILSMComponent> getSecondComponentList();
+    public List<ILSMDiskComponent> getSecondComponentList();
 
     /**
      * This function is used to get the current version id of the index

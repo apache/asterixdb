@@ -24,6 +24,7 @@ import java.io.Serializable;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class RuntimeDataException extends HyracksDataException {
+    private static final long serialVersionUID = 1L;
 
     public RuntimeDataException(int errorCode, Serializable... params) {
         super(ErrorCode.ASTERIX, errorCode, ErrorCode.getErrorMessage(errorCode), params);

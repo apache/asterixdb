@@ -23,7 +23,6 @@
     <groupId>org.apache.asterix</groupId>
     <version>0.9.1-SNAPSHOT</version>
   </parent>
-
   <licenses>
     <license>
       <name>Apache License, Version 2.0</name>
@@ -32,7 +31,6 @@
       <comments>A business-friendly OSS license</comments>
     </license>
   </licenses>
-
   <artifactId>asterix-lang-sqlpp</artifactId>
   <build>
     <plugins>
@@ -93,15 +91,9 @@
               <pluginExecutions>
                 <pluginExecution>
                   <pluginExecutionFilter>
-                    <groupId>
-                      org.codehaus.mojo
-                    </groupId>
-                    <artifactId>
-                      javacc-maven-plugin
-                    </artifactId>
-                    <versionRange>
-                      [2.6,)
-                    </versionRange>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>javacc-maven-plugin</artifactId>
+                    <versionRange>[2.6,)</versionRange>
                     <goals>
                       <goal>jjdoc</goal>
                       <goal>javacc</goal>
@@ -118,7 +110,6 @@
       </plugins>
     </pluginManagement>
   </build>
-
   <dependencies>
     <dependency>
       <groupId>org.apache.asterix</groupId>
@@ -162,5 +153,4 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
-
 </project>

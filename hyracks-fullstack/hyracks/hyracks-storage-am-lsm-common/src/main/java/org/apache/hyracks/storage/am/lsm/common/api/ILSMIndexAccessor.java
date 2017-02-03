@@ -24,6 +24,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.common.api.IIndexAccessor;
 import org.apache.hyracks.storage.am.common.api.IndexException;
+import org.apache.hyracks.storage.am.common.api.TreeIndexException;
 
 /**
  * Client handle for performing operations
@@ -33,12 +34,12 @@ import org.apache.hyracks.storage.am.common.api.IndexException;
  * concurrent operations).
  */
 public interface ILSMIndexAccessor extends IIndexAccessor {
-    public void scheduleFlush(ILSMIOOperationCallback callback) throws HyracksDataException;
+    void scheduleFlush(ILSMIOOperationCallback callback) throws HyracksDataException;
 
-    public void scheduleMerge(ILSMIOOperationCallback callback, List<ILSMComponent> components)
+    void scheduleMerge(ILSMIOOperationCallback callback, List<ILSMDiskComponent> components)
             throws HyracksDataException, IndexException;
 
-    public void scheduleFullMerge(ILSMIOOperationCallback callback) throws HyracksDataException, IndexException;
+    void scheduleFullMerge(ILSMIOOperationCallback callback) throws HyracksDataException, IndexException;
 
     /**
      * Deletes the tuple from the memory component only.
@@ -46,7 +47,7 @@ public interface ILSMIndexAccessor extends IIndexAccessor {
      * @throws HyracksDataException
      * @throws IndexException
      */
-    public void physicalDelete(ITupleReference tuple) throws HyracksDataException, IndexException;
+    void physicalDelete(ITupleReference tuple) throws HyracksDataException, IndexException;
 
     /**
      * Attempts to insert the given tuple.
@@ -62,7 +63,7 @@ public interface ILSMIndexAccessor extends IIndexAccessor {
      *             If an index-specific constraint is violated, e.g., the key
      *             already exists.
      */
-    public boolean tryInsert(ITupleReference tuple) throws HyracksDataException, IndexException;
+    boolean tryInsert(ITupleReference tuple) throws HyracksDataException, IndexException;
 
     /**
      * Attempts to delete the given tuple.
@@ -77,7 +78,7 @@ public interface ILSMIndexAccessor extends IIndexAccessor {
      * @throws IndexException
      *             If there is no matching tuple in the index.
      */
-    public boolean tryDelete(ITupleReference tuple) throws HyracksDataException, IndexException;
+    boolean tryDelete(ITupleReference tuple) throws HyracksDataException, IndexException;
 
     /**
      * Attempts to update the given tuple.
@@ -93,7 +94,7 @@ public interface ILSMIndexAccessor extends IIndexAccessor {
      * @throws IndexException
      *             If there is no matching tuple in the index.
      */
-    public boolean tryUpdate(ITupleReference tuple) throws HyracksDataException, IndexException;
+    boolean tryUpdate(ITupleReference tuple) throws HyracksDataException, IndexException;
 
     /**
      * This operation is only supported by indexes with the notion of a unique key.
@@ -110,14 +111,30 @@ public interface ILSMIndexAccessor extends IIndexAccessor {
      * @throws IndexException
      *             If there is no matching tuple in the index.
      */
-    public boolean tryUpsert(ITupleReference tuple) throws HyracksDataException, IndexException;
+    boolean tryUpsert(ITupleReference tuple) throws HyracksDataException, IndexException;
 
-    public void forcePhysicalDelete(ITupleReference tuple) throws HyracksDataException, IndexException;
+    void forcePhysicalDelete(ITupleReference tuple) throws HyracksDataException, IndexException;
 
-    public void forceInsert(ITupleReference tuple) throws HyracksDataException, IndexException;
+    void forceInsert(ITupleReference tuple) throws HyracksDataException, IndexException;
 
-    public void forceDelete(ITupleReference tuple) throws HyracksDataException, IndexException;
+    void forceDelete(ITupleReference tuple) throws HyracksDataException, IndexException;
 
-    public void scheduleReplication(List<ILSMComponent> lsmComponents, boolean bulkload, LSMOperationType opType)
+    void scheduleReplication(List<ILSMDiskComponent> diskComponents, boolean bulkload, LSMOperationType opType)
             throws HyracksDataException;
+
+    /**
+     * Force a flush of the in-memory component.
+     *
+     * @throws HyracksDataException
+     * @throws TreeIndexException
+     */
+    void flush(ILSMIOOperation operation) throws HyracksDataException, IndexException;
+
+    /**
+     * Merge all on-disk components.
+     *
+     * @throws HyracksDataException
+     * @throws TreeIndexException
+     */
+    void merge(ILSMIOOperation operation) throws HyracksDataException, IndexException;
 }

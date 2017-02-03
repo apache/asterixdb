@@ -361,8 +361,8 @@ public class MetadataBootstrap {
                     runtimeContext.getMetadataMergePolicyFactory().createMergePolicy(
                             GlobalConfig.DEFAULT_COMPACTION_POLICY_PROPERTIES, dataLifecycleManager),
                     opTrackerProvider.getOperationTracker(appCtx), runtimeContext.getLSMIOScheduler(),
-                    ioOpCallbackFactory.createIOOperationCallback(), index.isPrimaryIndex(), null, null, null, null,
-                    true, runtimeContext.getStorageComponentProvider().getMetadataPageManagerFactory());
+                    ioOpCallbackFactory.createIoOpCallback(), index.isPrimaryIndex(), null, null, null, null, true,
+                    runtimeContext.getStorageComponentProvider().getMetadataPageManagerFactory());
             lsmBtree.create();
             resourceID = index.getResourceID();
             Resource localResourceMetadata = new LSMBTreeLocalResourceMetadata(typeTraits, comparatorFactories,
@@ -396,8 +396,8 @@ public class MetadataBootstrap {
                         runtimeContext.getMetadataMergePolicyFactory().createMergePolicy(
                                 GlobalConfig.DEFAULT_COMPACTION_POLICY_PROPERTIES, dataLifecycleManager),
                         opTrackerProvider.getOperationTracker(appCtx), runtimeContext.getLSMIOScheduler(),
-                        LSMBTreeIOOperationCallbackFactory.INSTANCE.createIOOperationCallback(),
-                        index.isPrimaryIndex(), null, null, null, null, true,
+                        LSMBTreeIOOperationCallbackFactory.INSTANCE.createIoOpCallback(), index.isPrimaryIndex(), null,
+                        null, null, null, true,
                         runtimeContext.getStorageComponentProvider().getMetadataPageManagerFactory());
                 dataLifecycleManager.register(file.getRelativePath(), lsmBtree);
             }

@@ -29,10 +29,11 @@ import org.apache.hyracks.storage.am.common.api.IIndexCursor;
 import org.apache.hyracks.storage.am.common.api.ISearchPredicate;
 import org.apache.hyracks.storage.am.common.api.IndexException;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexInternal;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
@@ -42,7 +43,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
 public class ExternalIndexHarness extends LSMHarness {
     private static final Logger LOGGER = Logger.getLogger(ExternalIndexHarness.class.getName());
 
-    public ExternalIndexHarness(ILSMIndexInternal lsmIndex, ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker,
+    public ExternalIndexHarness(ILSMIndex lsmIndex, ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker,
             boolean replicationEnabled) {
         super(lsmIndex, mergePolicy, opTracker, replicationEnabled);
     }
@@ -112,7 +113,7 @@ public class ExternalIndexHarness extends LSMHarness {
         return true;
     }
 
-    private void exitComponents(ILSMIndexOperationContext ctx, LSMOperationType opType, ILSMComponent newComponent,
+    private void exitComponents(ILSMIndexOperationContext ctx, LSMOperationType opType, ILSMDiskComponent newComponent,
             boolean failedOperation) throws HyracksDataException, IndexException {
         /**
          * FLUSH and MERGE operations should always exit the components
@@ -130,11 +131,11 @@ public class ExternalIndexHarness extends LSMHarness {
                         case INACTIVE:
                             if (replicationEnabled) {
                                 componentsToBeReplicated.clear();
-                                componentsToBeReplicated.add(c);
+                                componentsToBeReplicated.add((ILSMDiskComponent) c);
                                 lsmIndex.scheduleReplication(null, componentsToBeReplicated, false,
                                         ReplicationOperation.DELETE, opType);
                             }
-                            ((AbstractDiskLSMComponent) c).destroy();
+                            ((ILSMDiskComponent) c).destroy();
                             break;
                         default:
                             break;
@@ -233,7 +234,7 @@ public class ExternalIndexHarness extends LSMHarness {
             LOGGER.info("Started a merge operation for index: " + lsmIndex + " ...");
         }
 
-        ILSMComponent newComponent = null;
+        ILSMDiskComponent newComponent = null;
         try {
             newComponent = lsmIndex.merge(operation);
             operation.getCallback().afterOperation(LSMOperationType.MERGE, ctx.getComponentHolder(), newComponent);
@@ -248,10 +249,10 @@ public class ExternalIndexHarness extends LSMHarness {
     }
 
     @Override
-    public void addBulkLoadedComponent(ILSMComponent c) throws HyracksDataException, IndexException {
+    public void addBulkLoadedComponent(ILSMDiskComponent c) throws HyracksDataException, IndexException {
         lsmIndex.markAsValid(c);
         synchronized (opTracker) {
-            lsmIndex.addComponent(c);
+            lsmIndex.addDiskComponent(c);
             if (replicationEnabled) {
                 componentsToBeReplicated.clear();
                 componentsToBeReplicated.add(c);
@@ -267,11 +268,11 @@ public class ExternalIndexHarness extends LSMHarness {
     // 1. this needs synchronization since others might be accessing the index (specifically merge operations that might change the lists of components)
     // 2. the actions taken by the index itself are different
     // 3. the component has already been marked valid by the bulk update operation
-    public void addTransactionComponents(ILSMComponent newComponent) throws HyracksDataException, IndexException {
+    public void addTransactionComponents(ILSMDiskComponent newComponent) throws HyracksDataException, IndexException {
         ITwoPCIndex index = (ITwoPCIndex) lsmIndex;
         synchronized (opTracker) {
-            List<ILSMComponent> newerList;
-            List<ILSMComponent> olderList;
+            List<ILSMDiskComponent> newerList;
+            List<ILSMDiskComponent> olderList;
             if (index.getCurrentVersion() == 0) {
                 newerList = index.getFirstComponentList();
                 olderList = index.getSecondComponentList();
@@ -281,11 +282,11 @@ public class ExternalIndexHarness extends LSMHarness {
             }
             // Exit components in old version of the index so they are ready to be
             // deleted if they are not needed anymore
-            for (ILSMComponent c : olderList) {
+            for (ILSMDiskComponent c : olderList) {
                 exitComponent(c);
             }
             // Enter components in the newer list
-            for (ILSMComponent c : newerList) {
+            for (ILSMDiskComponent c : newerList) {
                 enterComponent(c);
             }
             if (newComponent != null) {
@@ -320,7 +321,7 @@ public class ExternalIndexHarness extends LSMHarness {
         if (index.getFirstComponentList().containsAll(mergedComponents)) {
             // exit un-needed components
             for (ILSMComponent c : mergedComponents) {
-                exitComponent(c);
+                exitComponent((ILSMDiskComponent) c);
             }
             // enter new component
             enterComponent(newComponent);
@@ -329,7 +330,7 @@ public class ExternalIndexHarness extends LSMHarness {
         if (index.getSecondComponentList().containsAll(mergedComponents)) {
             // exit un-needed components
             for (ILSMComponent c : mergedComponents) {
-                exitComponent(c);
+                exitComponent((ILSMDiskComponent) c);
             }
             // enter new component
             enterComponent(newComponent);
@@ -342,7 +343,7 @@ public class ExternalIndexHarness extends LSMHarness {
         diskComponent.threadEnter(LSMOperationType.SEARCH, false);
     }
 
-    private void exitComponent(ILSMComponent diskComponent) throws HyracksDataException {
+    private void exitComponent(ILSMDiskComponent diskComponent) throws HyracksDataException {
         diskComponent.threadExit(LSMOperationType.SEARCH, false, false);
         if (diskComponent.getState() == ILSMComponent.ComponentState.INACTIVE) {
             if (replicationEnabled) {
@@ -350,7 +351,7 @@ public class ExternalIndexHarness extends LSMHarness {
                 componentsToBeReplicated.add(diskComponent);
                 lsmIndex.scheduleReplication(null, componentsToBeReplicated, false, ReplicationOperation.DELETE, null);
             }
-            ((AbstractDiskLSMComponent) diskComponent).destroy();
+            diskComponent.destroy();
         }
     }
 
@@ -368,10 +369,10 @@ public class ExternalIndexHarness extends LSMHarness {
 
     public void indexClear() throws HyracksDataException {
         ITwoPCIndex index = (ITwoPCIndex) lsmIndex;
-        for (ILSMComponent c : index.getFirstComponentList()) {
+        for (ILSMDiskComponent c : index.getFirstComponentList()) {
             exitComponent(c);
         }
-        for (ILSMComponent c : index.getSecondComponentList()) {
+        for (ILSMDiskComponent c : index.getSecondComponentList()) {
             exitComponent(c);
         }
     }

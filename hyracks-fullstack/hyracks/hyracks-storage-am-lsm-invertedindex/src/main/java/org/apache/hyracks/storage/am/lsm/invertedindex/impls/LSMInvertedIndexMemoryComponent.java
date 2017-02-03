@@ -23,10 +23,10 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.btree.impls.BTree;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilter;
 import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
-import org.apache.hyracks.storage.am.lsm.common.impls.AbstractMemoryLSMComponent;
+import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMMemoryComponent;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndex;
 
-public class LSMInvertedIndexMemoryComponent extends AbstractMemoryLSMComponent {
+public class LSMInvertedIndexMemoryComponent extends AbstractLSMMemoryComponent {
 
     private final IInvertedIndex invIndex;
     private final BTree deletedKeysBTree;
@@ -47,7 +47,7 @@ public class LSMInvertedIndexMemoryComponent extends AbstractMemoryLSMComponent 
     }
 
     @Override
-    protected void reset() throws HyracksDataException {
+    public void reset() throws HyracksDataException {
         super.reset();
         invIndex.deactivate();
         invIndex.destroy();

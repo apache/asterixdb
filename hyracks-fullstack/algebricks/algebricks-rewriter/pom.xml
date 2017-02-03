@@ -16,18 +16,15 @@
  ! specific language governing permissions and limitations
  ! under the License.
  !-->
-
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <artifactId>algebricks-rewriter</artifactId>
   <name>algebricks-rewriter</name>
-
   <parent>
     <groupId>org.apache.hyracks</groupId>
     <artifactId>algebricks</artifactId>
     <version>0.3.1-SNAPSHOT</version>
   </parent>
-
   <licenses>
     <license>
       <name>Apache License, Version 2.0</name>
@@ -36,11 +33,9 @@
       <comments>A business-friendly OSS license</comments>
     </license>
   </licenses>
-
   <properties>
     <root.dir>${basedir}/../..</root.dir>
   </properties>
-
   <dependencies>
     <dependency>
       <groupId>org.apache.hyracks</groupId>

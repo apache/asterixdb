@@ -90,7 +90,7 @@ public final class LSMInvertedIndexDataflowHelper extends AbstractLSMIndexDatafl
                     invIndexOpDesc.getTokenComparatorFactories(), invIndexOpDesc.getTokenizerFactory(),
                     diskBufferCache, fileRef.getFile().getAbsolutePath(), bloomFilterFalsePositiveRate, mergePolicy,
                     opTrackerFactory.getOperationTracker(ctx.getJobletContext().getApplicationContext()), ioScheduler,
-                    ioOpCallbackFactory.createIOOperationCallback(), invertedIndexFields, filterTypeTraits,
+                    ioOpCallbackFactory.createIoOpCallback(), invertedIndexFields, filterTypeTraits,
                     filterCmpFactories, filterFields, filterFieldsForNonBulkLoadOps,
                     invertedIndexFieldsForNonBulkLoadOps, durable, (IMetadataPageManagerFactory) opDesc
                             .getPageManagerFactory());

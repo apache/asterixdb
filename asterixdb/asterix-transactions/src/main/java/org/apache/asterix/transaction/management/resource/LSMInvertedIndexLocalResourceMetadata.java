@@ -98,7 +98,7 @@ public class LSMInvertedIndexLocalResourceMetadata extends Resource {
                         mergePolicyFactory.createMergePolicy(mergePolicyProperties,
                                 runtimeContextProvider.getDatasetLifecycleManager()),
                         opTrackerProvider.getOperationTracker(appCtx), runtimeContextProvider.getLSMIOScheduler(),
-                        ioOpCallbackFactory.createIOOperationCallback(), invertedIndexFields, filterTypeTraits,
+                        ioOpCallbackFactory.createIoOpCallback(), invertedIndexFields, filterTypeTraits,
                         filterCmpFactories, filterFields, filterFieldsForNonBulkLoadOps,
                         invertedIndexFieldsForNonBulkLoadOps, true, metadataPageManagerFactory);
             } else {
@@ -109,7 +109,7 @@ public class LSMInvertedIndexLocalResourceMetadata extends Resource {
                         mergePolicyFactory.createMergePolicy(mergePolicyProperties,
                                 runtimeContextProvider.getDatasetLifecycleManager()),
                         opTrackerProvider.getOperationTracker(appCtx), runtimeContextProvider.getLSMIOScheduler(),
-                        ioOpCallbackFactory.createIOOperationCallback(), invertedIndexFields, filterTypeTraits,
+                        ioOpCallbackFactory.createIoOpCallback(), invertedIndexFields, filterTypeTraits,
                         filterCmpFactories, filterFields, filterFieldsForNonBulkLoadOps,
                         invertedIndexFieldsForNonBulkLoadOps, true, metadataPageManagerFactory);
             }

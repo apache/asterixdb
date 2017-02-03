@@ -50,10 +50,10 @@ public class ExternalBTreeWithBuddyLocalResourceMetadata extends Resource {
     private final int[] buddyBtreeFields;
 
     public ExternalBTreeWithBuddyLocalResourceMetadata(int datasetID, int partition,
-            IBinaryComparatorFactory[] btreeCmpFactories,
-            ITypeTraits[] typeTraits, ILSMMergePolicyFactory mergePolicyFactory,
-            Map<String, String> mergePolicyProperties, int[] buddyBtreeFields,
-            ILSMOperationTrackerFactory opTrackerProvider, ILSMIOOperationCallbackFactory ioOpCallbackFactory,
+            IBinaryComparatorFactory[] btreeCmpFactories, ITypeTraits[] typeTraits,
+            ILSMMergePolicyFactory mergePolicyFactory, Map<String, String> mergePolicyProperties,
+            int[] buddyBtreeFields, ILSMOperationTrackerFactory opTrackerProvider,
+            ILSMIOOperationCallbackFactory ioOpCallbackFactory,
             IMetadataPageManagerFactory metadataPageManagerFactory) {
         super(datasetID, partition, null, null, null, opTrackerProvider, ioOpCallbackFactory,
                 metadataPageManagerFactory);
@@ -70,16 +70,12 @@ public class ExternalBTreeWithBuddyLocalResourceMetadata extends Resource {
         IAppRuntimeContext appRuntimeCtx = (IAppRuntimeContext) appCtx.getApplicationObject();
         IIOManager ioManager = appCtx.getIoManager();
         FileReference file = ioManager.resolve(resource.getPath());
-        return LSMBTreeUtil.createExternalBTreeWithBuddy(
-                ioManager, file, appRuntimeCtx.getBufferCache(),
+        return LSMBTreeUtil.createExternalBTreeWithBuddy(ioManager, file, appRuntimeCtx.getBufferCache(),
                 appRuntimeCtx.getFileMapManager(), typeTraits, btreeCmpFactories,
                 appRuntimeCtx.getBloomFilterFalsePositiveRate(),
-                mergePolicyFactory.createMergePolicy(
-                        mergePolicyProperties,
+                mergePolicyFactory.createMergePolicy(mergePolicyProperties,
                         appRuntimeCtx.getDatasetLifecycleManager()),
-                opTrackerProvider.getOperationTracker(appCtx),
-                appRuntimeCtx.getLSMIOScheduler(),
-                ioOpCallbackFactory.createIOOperationCallback(), buddyBtreeFields, -1,
-                true, metadataPageManagerFactory);
+                opTrackerProvider.getOperationTracker(appCtx), appRuntimeCtx.getLSMIOScheduler(),
+                ioOpCallbackFactory.createIoOpCallback(), buddyBtreeFields, -1, true, metadataPageManagerFactory);
     }
 }

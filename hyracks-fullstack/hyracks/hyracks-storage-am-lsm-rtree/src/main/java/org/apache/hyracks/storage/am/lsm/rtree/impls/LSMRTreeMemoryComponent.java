@@ -23,10 +23,10 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.btree.impls.BTree;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilter;
 import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
-import org.apache.hyracks.storage.am.lsm.common.impls.AbstractMemoryLSMComponent;
+import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMMemoryComponent;
 import org.apache.hyracks.storage.am.rtree.impls.RTree;
 
-public class LSMRTreeMemoryComponent extends AbstractMemoryLSMComponent {
+public class LSMRTreeMemoryComponent extends AbstractLSMMemoryComponent {
 
     private final RTree rtree;
     private final BTree btree;
@@ -47,7 +47,7 @@ public class LSMRTreeMemoryComponent extends AbstractMemoryLSMComponent {
     }
 
     @Override
-    protected void reset() throws HyracksDataException {
+    public void reset() throws HyracksDataException {
         super.reset();
         rtree.deactivate();
         rtree.destroy();

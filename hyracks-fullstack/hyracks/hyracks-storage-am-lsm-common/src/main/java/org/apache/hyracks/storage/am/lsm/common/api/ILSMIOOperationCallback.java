@@ -25,20 +25,23 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 public interface ILSMIOOperationCallback {
 
     /**
-     * This method is called on an IO operation sometime before the operation is executed.
+     * This method is called on an IO operation before the operation starts.
      * (i.e. IO operations could be flush or merge operations.)
      */
-    public void beforeOperation(LSMOperationType opType) throws HyracksDataException;
+    void beforeOperation(LSMOperationType opType) throws HyracksDataException;
 
     /**
      * This method is called on an IO operation sometime after the operation was completed.
      * (i.e. IO operations could be flush or merge operations.)
      *
+     * Copying content of metadata page from memory component to disk component should be done in this call
+     * Merging content of metadata pages from disk components to new disk component should be done in this call
+     *
      * @param oldComponents
      * @param newComponent
      * @throws HyracksDataException
      */
-    public void afterOperation(LSMOperationType opType, List<ILSMComponent> oldComponents, ILSMComponent newComponent)
+    void afterOperation(LSMOperationType opType, List<ILSMComponent> oldComponents, ILSMDiskComponent newComponent)
             throws HyracksDataException;
 
     /**
@@ -49,7 +52,7 @@ public interface ILSMIOOperationCallback {
      * @param newComponent
      * @throws HyracksDataException
      */
-    public void afterFinalize(LSMOperationType opType, ILSMComponent newComponent) throws HyracksDataException;
+    void afterFinalize(LSMOperationType opType, ILSMDiskComponent newComponent) throws HyracksDataException;
 
-    public void setNumOfMutableComponents(int count);
+    void setNumOfMutableComponents(int count);
 }

@@ -136,4 +136,9 @@ public class ExceptionOnCreatePushRuntimeOperatorDescriptor extends AbstractSing
         }
         return success;
     }
+
+    public static String stats() {
+        return "Failure: CreatePushRuntime:" + createPushRuntime.get() + ", InitializeCounter:"
+                + initializeCounter.get() + ", OpenCloseCounter:" + openCloseCounter.get();
+    }
 }

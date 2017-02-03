@@ -27,8 +27,6 @@ import org.apache.hyracks.storage.am.common.api.ISearchOperationCallback;
  * This interface exposes methods for tracking and setting the status of operations for the purpose
  * of coordinating flushes/merges in {@link ILSMIndex}.
  * Note that 'operation' below refers to {@link IIndexAccessor} methods.
- *
- * @author zheilbron
  */
 public interface ILSMOperationTracker {
 
@@ -39,7 +37,7 @@ public interface ILSMOperationTracker {
      * then this method does not block and returns false.
      * Otherwise, this method returns true, and the operation is considered 'active' in the index.
      */
-    public void beforeOperation(ILSMIndex index, LSMOperationType opType, ISearchOperationCallback searchCallback,
+    void beforeOperation(ILSMIndex index, LSMOperationType opType, ISearchOperationCallback searchCallback,
             IModificationOperationCallback modificationCallback) throws HyracksDataException;
 
     /**
@@ -48,7 +46,7 @@ public interface ILSMOperationTracker {
      * After this method has been called, the operation is still considered 'active',
      * until the issuer of the operation declares it completed by calling completeOperation().
      */
-    public void afterOperation(ILSMIndex index, LSMOperationType opType, ISearchOperationCallback searchCallback,
+    void afterOperation(ILSMIndex index, LSMOperationType opType, ISearchOperationCallback searchCallback,
             IModificationOperationCallback modificationCallback) throws HyracksDataException;
 
     /**
@@ -56,6 +54,6 @@ public interface ILSMOperationTracker {
      * The use of this method indicates that the operation is no longer 'active'
      * for the purpose of coordinating flushes/merges.
      */
-    public void completeOperation(ILSMIndex index, LSMOperationType opType, ISearchOperationCallback searchCallback,
+    void completeOperation(ILSMIndex index, LSMOperationType opType, ISearchOperationCallback searchCallback,
             IModificationOperationCallback modificationCallback) throws HyracksDataException;
 }

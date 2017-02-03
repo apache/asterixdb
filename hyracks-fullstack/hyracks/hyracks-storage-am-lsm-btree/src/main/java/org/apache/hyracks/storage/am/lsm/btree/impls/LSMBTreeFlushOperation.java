@@ -29,28 +29,26 @@ import org.apache.hyracks.storage.am.common.api.IndexException;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessorInternal;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 
 public class LSMBTreeFlushOperation implements ILSMIOOperation, Comparable<LSMBTreeFlushOperation> {
 
-    private final ILSMIndexAccessorInternal accessor;
+    private final ILSMIndexAccessor accessor;
     private final ILSMComponent flushingComponent;
     private final FileReference btreeFlushTarget;
     private final FileReference bloomFilterFlushTarget;
     private final ILSMIOOperationCallback callback;
     private final String indexIdentifier;
-    private final long prevMarkerLSN;
 
-    public LSMBTreeFlushOperation(ILSMIndexAccessorInternal accessor, ILSMComponent flushingComponent,
+    public LSMBTreeFlushOperation(ILSMIndexAccessor accessor, ILSMComponent flushingComponent,
             FileReference btreeFlushTarget, FileReference bloomFilterFlushTarget, ILSMIOOperationCallback callback,
-            String indexIdentifier, long prevMarkerLSN) {
+            String indexIdentifier) {
         this.accessor = accessor;
         this.flushingComponent = flushingComponent;
         this.btreeFlushTarget = btreeFlushTarget;
         this.bloomFilterFlushTarget = bloomFilterFlushTarget;
         this.callback = callback;
         this.indexIdentifier = indexIdentifier;
-        this.prevMarkerLSN = prevMarkerLSN;
     }
 
     @Override
@@ -60,7 +58,7 @@ public class LSMBTreeFlushOperation implements ILSMIOOperation, Comparable<LSMBT
 
     @Override
     public Set<IODeviceHandle> getWriteDevices() {
-        Set<IODeviceHandle> devs = new HashSet<IODeviceHandle>();
+        Set<IODeviceHandle> devs = new HashSet<>();
         devs.add(btreeFlushTarget.getDeviceHandle());
         if (bloomFilterFlushTarget != null) {
             devs.add(bloomFilterFlushTarget.getDeviceHandle());
@@ -87,7 +85,7 @@ public class LSMBTreeFlushOperation implements ILSMIOOperation, Comparable<LSMBT
         return bloomFilterFlushTarget;
     }
 
-    public ILSMIndexAccessorInternal getAccessor() {
+    public ILSMIndexAccessor getAccessor() {
         return accessor;
     }
 
@@ -108,9 +106,5 @@ public class LSMBTreeFlushOperation implements ILSMIOOperation, Comparable<LSMBT
     @Override
     public int compareTo(LSMBTreeFlushOperation o) {
         return btreeFlushTarget.getFile().getName().compareTo(o.getBTreeFlushTarget().getFile().getName());
-    }
-
-    public long getPrevMarkerLSN() {
-        return prevMarkerLSN;
     }
 }

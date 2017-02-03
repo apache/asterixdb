@@ -22,16 +22,13 @@ package org.apache.hyracks.storage.am.lsm.rtree.impls;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.bloomfilter.impls.BloomFilterFactory;
 import org.apache.hyracks.storage.am.btree.impls.BTree;
-import org.apache.hyracks.storage.am.common.api.IndexException;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilterFactory;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponentFactory;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
 import org.apache.hyracks.storage.am.lsm.common.impls.TreeIndexFactory;
 import org.apache.hyracks.storage.am.rtree.impls.RTree;
-import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 
-public class LSMRTreeDiskComponentFactory implements ILSMComponentFactory {
+public class LSMRTreeDiskComponentFactory implements ILSMDiskComponentFactory {
     private final TreeIndexFactory<RTree> rtreeFactory;
     private final TreeIndexFactory<BTree> btreeFactory;
     private final BloomFilterFactory bloomFilterFactory;
@@ -46,16 +43,10 @@ public class LSMRTreeDiskComponentFactory implements ILSMComponentFactory {
     }
 
     @Override
-    public ILSMComponent createLSMComponentInstance(LSMComponentFileReferences cfr) throws IndexException,
-            HyracksDataException {
+    public LSMRTreeDiskComponent createComponent(LSMComponentFileReferences cfr) throws HyracksDataException {
         return new LSMRTreeDiskComponent(rtreeFactory.createIndexInstance(cfr.getInsertIndexFileReference()),
                 btreeFactory.createIndexInstance(cfr.getDeleteIndexFileReference()),
                 bloomFilterFactory.createBloomFiltertInstance(cfr.getBloomFilterFileReference()),
-                filterFactory == null ? null : filterFactory.createLSMComponentFilter());
-    }
-
-    @Override
-    public IBufferCache getBufferCache() {
-        return rtreeFactory.getBufferCache();
+                filterFactory == null ? null : filterFactory.createFilter());
     }
 }

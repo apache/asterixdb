@@ -23,14 +23,14 @@ import org.apache.hyracks.storage.am.bloomfilter.impls.BloomFilter;
 import org.apache.hyracks.storage.am.btree.impls.BTree;
 import org.apache.hyracks.storage.am.common.api.IMetadataPageManager;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilter;
-import org.apache.hyracks.storage.am.lsm.common.impls.AbstractDiskLSMComponent;
+import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMDiskComponent;
 
-public class LSMBTreeDiskComponent extends AbstractDiskLSMComponent {
+public class LSMBTreeDiskComponent extends AbstractLSMDiskComponent {
     private final BTree btree;
     private final BloomFilter bloomFilter;
 
     public LSMBTreeDiskComponent(BTree btree, BloomFilter bloomFilter, ILSMComponentFilter filter) {
-        super(filter);
+        super((IMetadataPageManager) btree.getPageManager(), filter);
         this.btree = btree;
         this.bloomFilter = bloomFilter;
     }
@@ -62,11 +62,5 @@ public class LSMBTreeDiskComponent extends AbstractDiskLSMComponent {
     @Override
     public int getFileReferenceCount() {
         return btree.getBufferCache().getFileReferenceCount(btree.getFileId());
-    }
-
-    public void readMostRecentMarkerLSN(BTree treeIndex) throws HyracksDataException {
-        IMetadataPageManager treeMetaManager = (IMetadataPageManager) treeIndex.getPageManager();
-        treeMetaManager.get(treeMetaManager.createMetadataFrame(), MARKER_LSN_KEY, pointable);
-        mostRecentMarkerLSN = pointable.getByteArray() == null ? -1L : pointable.longValue();
     }
 }

@@ -27,7 +27,6 @@ import org.apache.hyracks.storage.am.btree.util.BTreeTestHarness;
 import org.apache.hyracks.storage.am.btree.util.BTreeUtils;
 import org.apache.hyracks.storage.am.common.api.ITreeIndex;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexMetadataFrameFactory;
-import org.apache.hyracks.storage.am.common.api.TreeIndexException;
 import org.apache.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
 import org.apache.hyracks.storage.am.common.freepage.LinkedMetaDataPageManager;
 import org.junit.After;
@@ -49,10 +48,10 @@ public class BTreeExamplesTest extends OrderedIndexExamplesTest {
     @Override
     protected ITreeIndex createTreeIndex(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories,
             int[] bloomFilterKeyFields, ITypeTraits[] filterTypeTraits, IBinaryComparatorFactory[] filterCmpFactories,
-            int[] btreeFields, int[] filterFields) throws TreeIndexException {
+            int[] btreeFields, int[] filterFields) throws HyracksDataException {
         ITreeIndexMetadataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
-        LinkedMetaDataPageManager freePageManager = new LinkedMetaDataPageManager(harness.getBufferCache(),
-                metaFrameFactory);
+        LinkedMetaDataPageManager freePageManager =
+                new LinkedMetaDataPageManager(harness.getBufferCache(), metaFrameFactory);
         return BTreeUtils.createBTree(harness.getBufferCache(), harness.getFileMapProvider(), typeTraits, cmpFactories,
                 BTreeLeafFrameType.REGULAR_NSM, harness.getFileReference(), freePageManager);
     }

@@ -22,9 +22,15 @@ package org.apache.hyracks.storage.am.lsm.common.api;
 import java.util.List;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.replication.IReplicationJob.ReplicationOperation;
+import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.common.api.IIndex;
+import org.apache.hyracks.storage.am.common.api.IIndexCursor;
+import org.apache.hyracks.storage.am.common.api.IIndexOperationContext;
 import org.apache.hyracks.storage.am.common.api.IModificationOperationCallback;
 import org.apache.hyracks.storage.am.common.api.ISearchOperationCallback;
+import org.apache.hyracks.storage.am.common.api.ISearchPredicate;
+import org.apache.hyracks.storage.am.common.api.IndexException;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMHarness;
 
 /**
@@ -37,24 +43,94 @@ import org.apache.hyracks.storage.am.lsm.common.impls.LSMHarness;
  */
 public interface ILSMIndex extends IIndex {
 
-    public void deactivate(boolean flushOnExit) throws HyracksDataException;
+    void deactivate(boolean flushOnExit) throws HyracksDataException;
 
     @Override
-    public ILSMIndexAccessor createAccessor(IModificationOperationCallback modificationCallback,
+    ILSMIndexAccessor createAccessor(IModificationOperationCallback modificationCallback,
             ISearchOperationCallback searchCallback) throws HyracksDataException;
 
-    public ILSMOperationTracker getOperationTracker();
+    ILSMOperationTracker getOperationTracker();
 
-    public ILSMIOOperationScheduler getIOScheduler();
+    ILSMIOOperationScheduler getIOScheduler();
 
-    public ILSMIOOperationCallback getIOOperationCallback();
+    ILSMIOOperationCallback getIOOperationCallback();
 
-    public List<ILSMComponent> getImmutableComponents();
+    /**
+     * components with lower indexes are newer than components with higher index
+     */
+    List<ILSMDiskComponent> getImmutableComponents();
 
-    public boolean isPrimaryIndex();
+    boolean isPrimaryIndex();
+
+    void modify(IIndexOperationContext ictx, ITupleReference tuple) throws HyracksDataException, IndexException;
+
+    void search(ILSMIndexOperationContext ictx, IIndexCursor cursor, ISearchPredicate pred)
+            throws HyracksDataException, IndexException;
+
+    void scheduleFlush(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback) throws HyracksDataException;
+
+    ILSMDiskComponent flush(ILSMIOOperation operation) throws HyracksDataException, IndexException;
+
+    void scheduleMerge(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
+            throws HyracksDataException, IndexException;
+
+    ILSMDiskComponent merge(ILSMIOOperation operation) throws HyracksDataException, IndexException;
+
+    void addDiskComponent(ILSMDiskComponent index) throws HyracksDataException;
+
+    void subsumeMergedComponents(ILSMDiskComponent newComponent, List<ILSMComponent> mergedComponents)
+            throws HyracksDataException;
+
+    void changeMutableComponent();
+
+    void changeFlushStatusForCurrentMutableCompoent(boolean needsFlush);
+
+    boolean hasFlushRequestForCurrentMutableComponent();
+
+    /**
+     * Populates the context's component holder with a snapshot of the components involved in the operation.
+     *
+     * @param ctx
+     *            - the operation's context
+     * @throws HyracksDataException
+     */
+    void getOperationalComponents(ILSMIndexOperationContext ctx) throws HyracksDataException;
+
+    List<ILSMDiskComponent> getInactiveDiskComponents();
+
+    void addInactiveDiskComponent(ILSMDiskComponent diskComponent);
+
+    /**
+     * Persist the LSM component
+     *
+     * @param lsmComponent
+     *            , the component to be persistent
+     * @throws HyracksDataException
+     */
+    void markAsValid(ILSMDiskComponent lsmComponent) throws HyracksDataException;
+
+    boolean isCurrentMutableComponentEmpty() throws HyracksDataException;
+
+    void scheduleReplication(ILSMIndexOperationContext ctx, List<ILSMDiskComponent> diskComponents, boolean bulkload,
+            ReplicationOperation operation, LSMOperationType opType) throws HyracksDataException;
+
+    boolean isMemoryComponentsAllocated();
+
+    /**
+     * Allocates the memory components of an LSM index in the buffer cache.
+     *
+     * @throws HyracksDataException
+     */
+    void allocateMemoryComponents() throws HyracksDataException;
+
+    ILSMMemoryComponent getCurrentMemoryComponent();
+
+    int getCurrentMemoryComponentIndex();
+
+    List<ILSMMemoryComponent> getMemoryComponents();
 
     /**
      * @return true if the index is durable. Otherwise false.
      */
-    public boolean isDurable();
+    boolean isDurable();
 }

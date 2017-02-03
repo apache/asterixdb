@@ -18,6 +18,7 @@
  */
 package org.apache.hyracks.storage.am.common.freepage;
 
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.api.IValueReference;
@@ -38,9 +39,8 @@ public class AppendOnlyLinkedMetadataPageManager implements IMetadataPageManager
     private int metadataPage = IBufferCache.INVALID_PAGEID;
     private int fileId = -1;
     private final ITreeIndexMetadataFrameFactory frameFactory;
-    ICachedPage confiscatedPage;
-    ICachedPage filterPage;
-    boolean ready = false;
+    private ICachedPage confiscatedPage;
+    private boolean ready = false;
 
     public AppendOnlyLinkedMetadataPageManager(IBufferCache bufferCache, ITreeIndexMetadataFrameFactory frameFactory) {
         this.bufferCache = bufferCache;
@@ -299,6 +299,9 @@ public class AppendOnlyLinkedMetadataPageManager implements IMetadataPageManager
     @Override
     public void put(ITreeIndexMetadataFrame frame, IValueReference key, IValueReference value)
             throws HyracksDataException {
+        if (confiscatedPage == null) {
+            throw HyracksDataException.create(ErrorCode.ILLEGAL_WRITE_AFTER_FLUSH_ATTEMPT);
+        }
         confiscatedPage.acquireWriteLatch();
         try {
             frame.setPage(confiscatedPage);
@@ -309,8 +312,9 @@ public class AppendOnlyLinkedMetadataPageManager implements IMetadataPageManager
     }
 
     private ICachedPage pinPage() throws HyracksDataException {
-        return confiscatedPage == null ? bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, getMetadataPageId()),
-                false) : confiscatedPage;
+        return confiscatedPage == null
+                ? bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, getMetadataPageId()), false)
+                : confiscatedPage;
     }
 
     private void unpinPage(ICachedPage page) throws HyracksDataException {
@@ -342,8 +346,7 @@ public class AppendOnlyLinkedMetadataPageManager implements IMetadataPageManager
                 frame.setPage(page);
                 int inPageOffset = frame.getOffset(key);
                 return inPageOffset >= 0 ? ((long) pageId * bufferCache.getPageSizeWithHeader()) + frame.getOffset(key)
-                        + IBufferCache.RESERVED_HEADER_BYTES
-                        : -1L;
+                        + IBufferCache.RESERVED_HEADER_BYTES : -1L;
             } finally {
                 page.releaseReadLatch();
                 unpinPage(page);

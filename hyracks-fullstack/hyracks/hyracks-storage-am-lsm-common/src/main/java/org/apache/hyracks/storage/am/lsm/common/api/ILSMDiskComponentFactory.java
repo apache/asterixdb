@@ -16,12 +16,21 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.data.std.api;
+package org.apache.hyracks.storage.am.lsm.common.api;
 
-public interface IValueReference {
-    byte[] getByteArray();
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
 
-    int getStartOffset();
+@FunctionalInterface
+public interface ILSMDiskComponentFactory {
 
-    int getLength();
+    /**
+     * Create a disk component from the file references
+     *
+     * @param cfr
+     *            the disk file references which points to the different physical files of the index
+     * @return a disk component
+     * @throws HyracksDataException
+     */
+    ILSMDiskComponent createComponent(LSMComponentFileReferences cfr) throws HyracksDataException;
 }

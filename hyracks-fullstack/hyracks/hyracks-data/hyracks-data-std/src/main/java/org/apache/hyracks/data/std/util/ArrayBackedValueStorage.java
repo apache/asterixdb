@@ -20,6 +20,7 @@ package org.apache.hyracks.data.std.util;
 
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.Objects;
 
 import org.apache.hyracks.data.std.api.IMutableValueStorage;
 import org.apache.hyracks.data.std.api.IValueReference;
@@ -53,6 +54,7 @@ public class ArrayBackedValueStorage implements IMutableValueStorage {
         return data.getLength();
     }
 
+    //TODO: don't swallow, but throw the exception
     public void append(IValueReference value) {
         try {
             data.append(value);
@@ -69,4 +71,22 @@ public class ArrayBackedValueStorage implements IMutableValueStorage {
     public void setSize(int bytesRequired) {
         data.setSize(bytesRequired);
     }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(data);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (!(obj instanceof ArrayBackedValueStorage)) {
+            return false;
+        }
+        ArrayBackedValueStorage other = (ArrayBackedValueStorage) obj;
+        return Objects.equals(data, other.data);
+    }
+
 }

@@ -32,7 +32,6 @@ import org.apache.hyracks.storage.am.common.IIndexTestWorkerFactory;
 import org.apache.hyracks.storage.am.common.TestOperationSelector.TestOperation;
 import org.apache.hyracks.storage.am.common.TestWorkloadConf;
 import org.apache.hyracks.storage.am.common.api.ITreeIndex;
-import org.apache.hyracks.storage.am.common.api.TreeIndexException;
 import org.apache.hyracks.storage.am.common.datagen.ProbabilityHelper;
 
 public class BTreeMultiThreadTest extends OrderedIndexMultiThreadTest {
@@ -52,10 +51,10 @@ public class BTreeMultiThreadTest extends OrderedIndexMultiThreadTest {
 
     @Override
     protected ITreeIndex createIndex(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories,
-            int[] bloomFilterKeyFields) throws TreeIndexException {
+            int[] bloomFilterKeyFields) throws HyracksDataException {
         return BTreeUtils.createBTree(harness.getBufferCache(), harness.getFileMapProvider(), typeTraits, cmpFactories,
-                BTreeLeafFrameType.REGULAR_NSM, harness.getFileReference(), harness.getPageManagerFactory()
-                        .createPageManager(harness.getBufferCache()));
+                BTreeLeafFrameType.REGULAR_NSM, harness.getFileReference(),
+                harness.getPageManagerFactory().createPageManager(harness.getBufferCache()));
     }
 
     @Override
@@ -69,20 +68,20 @@ public class BTreeMultiThreadTest extends OrderedIndexMultiThreadTest {
 
         // Insert only workload.
         TestOperation[] insertOnlyOps = new TestOperation[] { TestOperation.INSERT };
-        workloadConfs.add(new TestWorkloadConf(insertOnlyOps, ProbabilityHelper
-                .getUniformProbDist(insertOnlyOps.length)));
+        workloadConfs
+                .add(new TestWorkloadConf(insertOnlyOps, ProbabilityHelper.getUniformProbDist(insertOnlyOps.length)));
 
         // Inserts mixed with point searches and scans.
         TestOperation[] insertSearchOnlyOps = new TestOperation[] { TestOperation.INSERT, TestOperation.POINT_SEARCH,
                 TestOperation.SCAN, TestOperation.DISKORDER_SCAN };
-        workloadConfs.add(new TestWorkloadConf(insertSearchOnlyOps, ProbabilityHelper
-                .getUniformProbDist(insertSearchOnlyOps.length)));
+        workloadConfs.add(new TestWorkloadConf(insertSearchOnlyOps,
+                ProbabilityHelper.getUniformProbDist(insertSearchOnlyOps.length)));
 
         // Inserts, updates, deletes, and upserts.
         TestOperation[] insertDeleteUpdateUpsertOps = new TestOperation[] { TestOperation.INSERT, TestOperation.DELETE,
                 TestOperation.UPDATE, TestOperation.UPSERT };
-        workloadConfs.add(new TestWorkloadConf(insertDeleteUpdateUpsertOps, ProbabilityHelper
-                .getUniformProbDist(insertDeleteUpdateUpsertOps.length)));
+        workloadConfs.add(new TestWorkloadConf(insertDeleteUpdateUpsertOps,
+                ProbabilityHelper.getUniformProbDist(insertDeleteUpdateUpsertOps.length)));
 
         // All operations mixed.
         TestOperation[] allOps = new TestOperation[] { TestOperation.INSERT, TestOperation.DELETE,

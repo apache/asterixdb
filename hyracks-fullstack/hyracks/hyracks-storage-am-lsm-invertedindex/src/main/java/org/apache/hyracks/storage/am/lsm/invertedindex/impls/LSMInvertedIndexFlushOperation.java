@@ -30,10 +30,10 @@ import org.apache.hyracks.storage.am.common.api.IndexException;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessorInternal;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 
 public class LSMInvertedIndexFlushOperation implements ILSMIOOperation, Comparable<LSMInvertedIndexFlushOperation> {
-    private final ILSMIndexAccessorInternal accessor;
+    private final ILSMIndexAccessor accessor;
     private final ILSMComponent flushingComponent;
     private final FileReference dictBTreeFlushTarget;
     private final FileReference deletedKeysBTreeFlushTarget;
@@ -41,7 +41,7 @@ public class LSMInvertedIndexFlushOperation implements ILSMIOOperation, Comparab
     private final ILSMIOOperationCallback callback;
     private final String indexIdentifier;
 
-    public LSMInvertedIndexFlushOperation(ILSMIndexAccessorInternal accessor, ILSMComponent flushingComponent,
+    public LSMInvertedIndexFlushOperation(ILSMIndexAccessor accessor, ILSMComponent flushingComponent,
             FileReference dictBTreeFlushTarget, FileReference deletedKeysBTreeFlushTarget,
             FileReference bloomFilterFlushTarget, ILSMIOOperationCallback callback, String indexIdentifier) {
         this.accessor = accessor;
@@ -60,7 +60,7 @@ public class LSMInvertedIndexFlushOperation implements ILSMIOOperation, Comparab
 
     @Override
     public Set<IODeviceHandle> getWriteDevices() {
-        Set<IODeviceHandle> devs = new HashSet<IODeviceHandle>();
+        Set<IODeviceHandle> devs = new HashSet<>();
         devs.add(dictBTreeFlushTarget.getDeviceHandle());
         devs.add(deletedKeysBTreeFlushTarget.getDeviceHandle());
         devs.add(bloomFilterFlushTarget.getDeviceHandle());

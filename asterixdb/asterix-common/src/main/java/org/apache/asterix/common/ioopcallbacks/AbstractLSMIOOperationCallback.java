@@ -27,13 +27,13 @@ import org.apache.hyracks.storage.am.common.api.IMetadataPageManager;
 import org.apache.hyracks.storage.am.common.api.ITreeIndex;
 import org.apache.hyracks.storage.am.common.freepage.MutableArrayValueReference;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
 
 // A single LSMIOOperationCallback per LSM index used to perform actions around Flush and Merge operations
 public abstract class AbstractLSMIOOperationCallback implements ILSMIOOperationCallback {
-    public static final MutableArrayValueReference LSN_KEY = new MutableArrayValueReference("LSN"
-            .getBytes());
+    public static final MutableArrayValueReference LSN_KEY = new MutableArrayValueReference("LSN".getBytes());
     public static final long INVALID = -1L;
 
     // First LSN per mutable component
@@ -78,7 +78,7 @@ public abstract class AbstractLSMIOOperationCallback implements ILSMIOOperationC
     }
 
     @Override
-    public void afterFinalize(LSMOperationType opType, ILSMComponent newComponent) {
+    public void afterFinalize(LSMOperationType opType, ILSMDiskComponent newComponent) {
         // The operation was complete and the next I/O operation for the LSM index didn't start yet
         if (opType == LSMOperationType.FLUSH && newComponent != null) {
             synchronized (this) {
@@ -93,15 +93,11 @@ public abstract class AbstractLSMIOOperationCallback implements ILSMIOOperationC
         }
     }
 
-    public abstract long getComponentLSN(List<ILSMComponent> oldComponents) throws HyracksDataException;
+    public abstract long getComponentLSN(List<? extends ILSMComponent> oldComponents) throws HyracksDataException;
 
-    public void putLSNIntoMetadata(ITreeIndex treeIndex, List<ILSMComponent> oldComponents)
+    public void putLSNIntoMetadata(ILSMDiskComponent index, List<ILSMComponent> oldComponents)
             throws HyracksDataException {
-        byte[] lsn = new byte[Long.BYTES];
-        LongPointable.setLong(lsn, 0, getComponentLSN(oldComponents));
-        IMetadataPageManager metadataPageManager = (IMetadataPageManager) treeIndex.getPageManager();
-        metadataPageManager.put(metadataPageManager.createMetadataFrame(), LSN_KEY, new MutableArrayValueReference(
-                lsn));
+        index.getMetadata().put(LSN_KEY, LongPointable.FACTORY.createPointable(getComponentLSN(oldComponents)));
     }
 
     public static long getTreeIndexLSN(ITreeIndex treeIndex) throws HyracksDataException {
@@ -144,6 +140,6 @@ public abstract class AbstractLSMIOOperationCallback implements ILSMIOOperationC
      *         otherwise {@link IMetadataPageManager#INVALID_LSN_OFFSET}.
      * @throws HyracksDataException
      */
-    public abstract long getComponentFileLSNOffset(ILSMComponent component, String componentFilePath)
+    public abstract long getComponentFileLSNOffset(ILSMDiskComponent component, String componentFilePath)
             throws HyracksDataException;
 }

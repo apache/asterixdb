@@ -21,20 +21,21 @@ package org.apache.hyracks.storage.am.lsm.invertedindex.impls;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.bloomfilter.impls.BloomFilter;
 import org.apache.hyracks.storage.am.btree.impls.BTree;
+import org.apache.hyracks.storage.am.common.api.IMetadataPageManager;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilter;
-import org.apache.hyracks.storage.am.lsm.common.impls.AbstractDiskLSMComponent;
+import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndex;
 import org.apache.hyracks.storage.am.lsm.invertedindex.ondisk.OnDiskInvertedIndex;
 
-public class LSMInvertedIndexDiskComponent extends AbstractDiskLSMComponent {
+public class LSMInvertedIndexDiskComponent extends AbstractLSMDiskComponent {
 
     private final IInvertedIndex invIndex;
     private final BTree deletedKeysBTree;
     private final BloomFilter bloomFilter;
 
     public LSMInvertedIndexDiskComponent(IInvertedIndex invIndex, BTree deletedKeysBTree, BloomFilter bloomFilter,
-            ILSMComponentFilter filter) {
-        super(filter);
+            ILSMComponentFilter filter) throws HyracksDataException {
+        super((IMetadataPageManager) deletedKeysBTree.getPageManager(), filter);
         this.invIndex = invIndex;
         this.deletedKeysBTree = deletedKeysBTree;
         this.bloomFilter = bloomFilter;

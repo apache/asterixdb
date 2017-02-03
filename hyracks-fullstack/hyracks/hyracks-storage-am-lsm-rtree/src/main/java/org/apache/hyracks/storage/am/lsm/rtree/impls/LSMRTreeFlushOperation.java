@@ -29,11 +29,11 @@ import org.apache.hyracks.storage.am.common.api.IndexException;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessorInternal;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 
 public class LSMRTreeFlushOperation implements ILSMIOOperation, Comparable<LSMRTreeFlushOperation> {
 
-    private final ILSMIndexAccessorInternal accessor;
+    private final ILSMIndexAccessor accessor;
     private final ILSMComponent flushingComponent;
     private final FileReference rtreeFlushTarget;
     private final FileReference btreeFlushTarget;
@@ -41,7 +41,7 @@ public class LSMRTreeFlushOperation implements ILSMIOOperation, Comparable<LSMRT
     private final ILSMIOOperationCallback callback;
     private final String indexIdentifier;
 
-    public LSMRTreeFlushOperation(ILSMIndexAccessorInternal accessor, ILSMComponent flushingComponent,
+    public LSMRTreeFlushOperation(ILSMIndexAccessor accessor, ILSMComponent flushingComponent,
             FileReference rtreeFlushTarget, FileReference btreeFlushTarget, FileReference bloomFilterFlushTarget,
             ILSMIOOperationCallback callback, String indexIdentifier) {
         this.accessor = accessor;
@@ -60,7 +60,7 @@ public class LSMRTreeFlushOperation implements ILSMIOOperation, Comparable<LSMRT
 
     @Override
     public Set<IODeviceHandle> getWriteDevices() {
-        Set<IODeviceHandle> devs = new HashSet<IODeviceHandle>();
+        Set<IODeviceHandle> devs = new HashSet<>();
         devs.add(rtreeFlushTarget.getDeviceHandle());
         if (btreeFlushTarget != null) {
             devs.add(btreeFlushTarget.getDeviceHandle());

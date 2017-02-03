@@ -32,7 +32,7 @@ public class LSMBTreeWithBuddyIOOperationCallbackFactory implements ILSMIOOperat
     }
 
     @Override
-    public ILSMIOOperationCallback createIOOperationCallback() {
+    public ILSMIOOperationCallback createIoOpCallback() {
         return new LSMBTreeWithBuddyIOOperationCallback();
     }
 }

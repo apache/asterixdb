@@ -31,11 +31,11 @@ import org.apache.hyracks.storage.am.common.api.IndexException;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessorInternal;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 
 public class LSMBTreeMergeOperation implements ILSMIOOperation {
 
-    private final ILSMIndexAccessorInternal accessor;
+    private final ILSMIndexAccessor accessor;
     private final List<ILSMComponent> mergingComponents;
     private final ITreeIndexCursor cursor;
     private final FileReference btreeMergeTarget;
@@ -43,7 +43,7 @@ public class LSMBTreeMergeOperation implements ILSMIOOperation {
     private final ILSMIOOperationCallback callback;
     private final String indexIdentifier;
 
-    public LSMBTreeMergeOperation(ILSMIndexAccessorInternal accessor, List<ILSMComponent> mergingComponents,
+    public LSMBTreeMergeOperation(ILSMIndexAccessor accessor, List<ILSMComponent> mergingComponents,
             ITreeIndexCursor cursor, FileReference btreeMergeTarget, FileReference bloomFilterMergeTarget,
             ILSMIOOperationCallback callback, String indexIdentifier) {
         this.accessor = accessor;
@@ -57,7 +57,7 @@ public class LSMBTreeMergeOperation implements ILSMIOOperation {
 
     @Override
     public Set<IODeviceHandle> getReadDevices() {
-        Set<IODeviceHandle> devs = new HashSet<IODeviceHandle>();
+        Set<IODeviceHandle> devs = new HashSet<>();
         for (ILSMComponent o : mergingComponents) {
             LSMBTreeDiskComponent component = (LSMBTreeDiskComponent) o;
             devs.add(component.getBTree().getFileReference().getDeviceHandle());
@@ -70,7 +70,7 @@ public class LSMBTreeMergeOperation implements ILSMIOOperation {
 
     @Override
     public Set<IODeviceHandle> getWriteDevices() {
-        Set<IODeviceHandle> devs = new HashSet<IODeviceHandle>();
+        Set<IODeviceHandle> devs = new HashSet<>();
         devs.add(btreeMergeTarget.getDeviceHandle());
         if (bloomFilterMergeTarget != null) {
             devs.add(bloomFilterMergeTarget.getDeviceHandle());

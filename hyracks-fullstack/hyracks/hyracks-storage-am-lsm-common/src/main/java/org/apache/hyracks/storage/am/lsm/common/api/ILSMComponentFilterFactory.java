@@ -18,7 +18,8 @@
  */
 package org.apache.hyracks.storage.am.lsm.common.api;
 
+@FunctionalInterface
 public interface ILSMComponentFilterFactory {
-    public ILSMComponentFilter createLSMComponentFilter();
+    ILSMComponentFilter createFilter();
 
 }

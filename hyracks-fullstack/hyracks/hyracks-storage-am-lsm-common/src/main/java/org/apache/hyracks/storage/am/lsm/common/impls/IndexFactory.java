@@ -24,7 +24,6 @@ import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.storage.am.common.api.IIndex;
 import org.apache.hyracks.storage.am.common.api.IPageManagerFactory;
-import org.apache.hyracks.storage.am.common.api.IndexException;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.file.IFileMapProvider;
 
@@ -43,7 +42,7 @@ public abstract class IndexFactory<T extends IIndex> {
         this.freePageManagerFactory = freePageManagerFactory;
     }
 
-    public abstract T createIndexInstance(FileReference file) throws IndexException, HyracksDataException;
+    public abstract T createIndexInstance(FileReference file) throws HyracksDataException;
 
     public IBufferCache getBufferCache() {
         return bufferCache;

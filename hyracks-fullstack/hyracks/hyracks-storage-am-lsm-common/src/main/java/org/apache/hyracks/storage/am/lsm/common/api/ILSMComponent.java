@@ -20,34 +20,105 @@ package org.apache.hyracks.storage.am.lsm.common.api;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
+/**
+ * An LSM index component. can be an in memory or on disk. Can be readable or unreadable, writable or unwritable
+ */
 public interface ILSMComponent {
 
+    /**
+     * Memory or Disk
+     */
     enum LSMComponentType {
+        /**
+         * Memory component
+         */
         MEMORY,
+        /**
+         * Disk component
+         */
         DISK
     }
 
+    /**
+     * The state of a component
+     */
     enum ComponentState {
+        /**
+         * The component is inactive (Unreadable and Unwritable). Can be activated
+         */
         INACTIVE,
+        /**
+         * The component can be read from and can be written to
+         */
         READABLE_WRITABLE,
+        /**
+         * Immutable component that can be read from but not written to
+         */
         READABLE_UNWRITABLE,
+        /**
+         * A component that is being flushed. Can be read from but not written to
+         */
         READABLE_UNWRITABLE_FLUSHING,
+        /**
+         * A component that has completed flushing but still has some readers inside
+         * This is equivalent to a DEACTIVATING state
+         */
         UNREADABLE_UNWRITABLE,
+        /**
+         * An immutable component that is being merged
+         */
         READABLE_MERGING
     }
 
-    public boolean threadEnter(LSMOperationType opType, boolean isMutableComponent) throws HyracksDataException;
+    /**
+     * Enter the component
+     *
+     * @param opType
+     *            the operation over the whole LSM index
+     * @param isMutableComponent
+     *            true if the thread intends to modify this component (write access), false otherwise
+     * @return
+     *         true if the thread entered the component, false otherwise
+     * @throws HyracksDataException
+     *             if the attempted operation is not allowed on the component
+     */
+    boolean threadEnter(LSMOperationType opType, boolean isMutableComponent) throws HyracksDataException;
 
-    public void threadExit(LSMOperationType opType, boolean failedOperation, boolean isMutableComponent)
+    /**
+     * Exit the component
+     *
+     * @param opType
+     *            the operation over the whole LSM index under which the thread is running
+     * @param failedOperation
+     *            whether the operation failed
+     * @param isMutableComponent
+     *            true if the thread intended to modify the component
+     * @throws HyracksDataException
+     */
+    void threadExit(LSMOperationType opType, boolean failedOperation, boolean isMutableComponent)
             throws HyracksDataException;
 
-    public LSMComponentType getType();
+    /**
+     * @return the component type (memory vs, disk)
+     */
+    LSMComponentType getType();
 
-    public ComponentState getState();
+    /**
+     * @return the component state
+     */
+    ComponentState getState();
 
-    public ILSMComponentFilter getLSMComponentFilter();
+    /**
+     * @return the metadata associated with the component
+     */
+    IComponentMetadata getMetadata();
 
-    public void setMostRecentMarkerLSN(long lsn);
-
-    public long getMostRecentMarkerLSN();
+    /**
+     * Note: the component filter is a special case of component metadata in the sense that it is
+     * strongly connected with the index and is used by the index logic when doing read and write operations
+     * hence, we're leaving this call here
+     *
+     * @return the component filter
+     */
+    ILSMComponentFilter getLSMComponentFilter();
 }

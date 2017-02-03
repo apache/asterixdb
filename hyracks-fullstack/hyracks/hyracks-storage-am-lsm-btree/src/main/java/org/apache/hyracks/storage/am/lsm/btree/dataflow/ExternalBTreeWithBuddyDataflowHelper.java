@@ -83,7 +83,7 @@ public class ExternalBTreeWithBuddyDataflowHelper extends AbstractLSMIndexDatafl
                 opDesc.getStorageManager().getFileMapProvider(ctx), treeOpDesc.getTreeIndexTypeTraits(),
                 treeOpDesc.getTreeIndexComparatorFactories(), bloomFilterFalsePositiveRate, mergePolicy,
                 opTrackerFactory.getOperationTracker(ctx.getJobletContext().getApplicationContext()), ioScheduler,
-                ioOpCallbackFactory.createIOOperationCallback(), buddyBtreeFields, version, durable,
+                ioOpCallbackFactory.createIoOpCallback(), buddyBtreeFields, version, durable,
                 (IMetadataPageManagerFactory) opDesc.getPageManagerFactory());
     }
     public int getTargetVersion() {

@@ -50,8 +50,7 @@ public class PartitionedOnDiskInvertedIndex extends OnDiskInvertedIndex implemen
             IInvertedListBuilder invListBuilder, ITypeTraits[] invListTypeTraits,
             IBinaryComparatorFactory[] invListCmpFactories, ITypeTraits[] tokenTypeTraits,
             IBinaryComparatorFactory[] tokenCmpFactories, FileReference btreeFile, FileReference invListsFile,
-            IPageManagerFactory pageManagerFactory)
-            throws IndexException {
+            IPageManagerFactory pageManagerFactory) throws HyracksDataException {
         super(bufferCache, fileMapProvider, invListBuilder, invListTypeTraits, invListCmpFactories, tokenTypeTraits,
                 tokenCmpFactories, btreeFile, invListsFile, pageManagerFactory);
     }
@@ -99,7 +98,8 @@ public class PartitionedOnDiskInvertedIndex extends OnDiskInvertedIndex implemen
             while (ctx.btreeCursor.hasNext()) {
                 ctx.btreeCursor.next();
                 ITupleReference btreeTuple = ctx.btreeCursor.getTuple();
-                short numTokens = ShortPointable.getShort(btreeTuple.getFieldData(PARTITIONING_NUM_TOKENS_FIELD), btreeTuple.getFieldStart(PARTITIONING_NUM_TOKENS_FIELD));
+                short numTokens = ShortPointable.getShort(btreeTuple.getFieldData(PARTITIONING_NUM_TOKENS_FIELD),
+                        btreeTuple.getFieldStart(PARTITIONING_NUM_TOKENS_FIELD));
                 IInvertedListCursor invListCursor = partSearcher.getCachedInvertedListCursor();
                 resetInvertedListCursor(btreeTuple, invListCursor);
                 cursorsOrderedByTokens.add(invListCursor);

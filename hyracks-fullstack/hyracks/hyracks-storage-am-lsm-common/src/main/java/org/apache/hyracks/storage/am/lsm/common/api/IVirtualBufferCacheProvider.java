@@ -25,7 +25,8 @@ import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
 
+@FunctionalInterface
 public interface IVirtualBufferCacheProvider extends Serializable {
-    public List<IVirtualBufferCache> getVirtualBufferCaches(IHyracksTaskContext ctx,
-            IFileSplitProvider fileSplitProvider) throws HyracksDataException;
+    List<IVirtualBufferCache> getVirtualBufferCaches(IHyracksTaskContext ctx, IFileSplitProvider fileSplitProvider)
+            throws HyracksDataException;
 }

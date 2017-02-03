@@ -20,16 +20,13 @@
 package org.apache.hyracks.storage.am.lsm.rtree.impls;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.storage.am.common.api.IndexException;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilterFactory;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponentFactory;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
 import org.apache.hyracks.storage.am.lsm.common.impls.TreeIndexFactory;
 import org.apache.hyracks.storage.am.rtree.impls.RTree;
-import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 
-public class LSMRTreeWithAntiMatterTuplesDiskComponentFactory implements ILSMComponentFactory {
+public class LSMRTreeWithAntiMatterTuplesDiskComponentFactory implements ILSMDiskComponentFactory {
     private final TreeIndexFactory<RTree> rtreeFactory;
     private final ILSMComponentFilterFactory filterFactory;
 
@@ -40,14 +37,8 @@ public class LSMRTreeWithAntiMatterTuplesDiskComponentFactory implements ILSMCom
     }
 
     @Override
-    public ILSMComponent createLSMComponentInstance(LSMComponentFileReferences cfr) throws IndexException,
-            HyracksDataException {
+    public LSMRTreeDiskComponent createComponent(LSMComponentFileReferences cfr) throws HyracksDataException {
         return new LSMRTreeDiskComponent(rtreeFactory.createIndexInstance(cfr.getInsertIndexFileReference()), null,
-                null, filterFactory == null ? null : filterFactory.createLSMComponentFilter());
-    }
-
-    @Override
-    public IBufferCache getBufferCache() {
-        return rtreeFactory.getBufferCache();
+                null, filterFactory == null ? null : filterFactory.createFilter());
     }
 }

@@ -21,9 +21,9 @@ package org.apache.hyracks.storage.am.btree.util;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
-import org.apache.hyracks.storage.am.btree.exceptions.BTreeException;
 import org.apache.hyracks.storage.am.btree.frames.BTreeFieldPrefixNSMLeafFrameFactory;
 import org.apache.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
 import org.apache.hyracks.storage.am.btree.frames.BTreeNSMInteriorFrameFactory;
@@ -40,7 +40,7 @@ import org.apache.hyracks.storage.common.file.IFileMapProvider;
 public class BTreeUtils {
     public static BTree createBTree(IBufferCache bufferCache, IFileMapProvider fileMapProvider,
             ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories, BTreeLeafFrameType leafType,
-            FileReference file, IPageManager freePageManager) throws BTreeException {
+            FileReference file, IPageManager freePageManager) throws HyracksDataException {
         TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(typeTraits);
         ITreeIndexFrameFactory leafFrameFactory = getLeafFrameFactory(tupleWriterFactory, leafType);
         ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(tupleWriterFactory);
@@ -51,7 +51,7 @@ public class BTreeUtils {
 
     public static BTree createBTree(IBufferCache bufferCache, IPageManager freePageManager,
             IFileMapProvider fileMapProvider, ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories,
-            BTreeLeafFrameType leafType, FileReference file) throws BTreeException {
+            BTreeLeafFrameType leafType, FileReference file) throws HyracksDataException {
         TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(typeTraits);
         ITreeIndexFrameFactory leafFrameFactory = getLeafFrameFactory(tupleWriterFactory, leafType);
         ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(tupleWriterFactory);
@@ -74,7 +74,7 @@ public class BTreeUtils {
     }
 
     public static ITreeIndexFrameFactory getLeafFrameFactory(ITreeIndexTupleWriterFactory tupleWriterFactory,
-            BTreeLeafFrameType leafType) throws BTreeException {
+            BTreeLeafFrameType leafType) throws HyracksDataException {
         switch (leafType) {
             case REGULAR_NSM: {
                 return new BTreeNSMLeafFrameFactory(tupleWriterFactory);
@@ -83,7 +83,7 @@ public class BTreeUtils {
                 return new BTreeFieldPrefixNSMLeafFrameFactory(tupleWriterFactory);
             }
             default: {
-                throw new BTreeException("Unknown BTreeLeafFrameType: " + leafType.toString());
+                throw new HyracksDataException("Unknown BTreeLeafFrameType: " + leafType.toString());
             }
         }
     }

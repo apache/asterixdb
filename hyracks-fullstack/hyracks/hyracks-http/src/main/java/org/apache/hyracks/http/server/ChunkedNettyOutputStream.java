@@ -34,6 +34,7 @@ public class ChunkedNettyOutputStream extends OutputStream {
     private final ChannelHandlerContext ctx;
     private final ChunkedResponse response;
     private ByteBuf buffer;
+    private boolean closed;
 
     public ChunkedNettyOutputStream(ChannelHandlerContext ctx, int chunkSize, ChunkedResponse response) {
         this.response = response;
@@ -73,13 +74,16 @@ public class ChunkedNettyOutputStream extends OutputStream {
 
     @Override
     public void close() throws IOException {
-        if (response.isHeaderSent() || response.status() != HttpResponseStatus.OK) {
-            flush();
-            buffer.release();
-        } else {
-            response.fullReponse(buffer);
+        if (!closed) {
+            if (response.isHeaderSent() || response.status() != HttpResponseStatus.OK) {
+                flush();
+                buffer.release();
+            } else {
+                response.fullReponse(buffer);
+            }
+            super.close();
         }
-        super.close();
+        closed = true;
     }
 
     @Override
@@ -96,6 +100,7 @@ public class ChunkedNettyOutputStream extends OutputStream {
                 ByteBuf aBuffer = ctx.alloc().buffer(buffer.readableBytes());
                 aBuffer.writeBytes(buffer);
                 response.error(aBuffer);
+                buffer.clear();
             }
         }
     }

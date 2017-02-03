@@ -19,18 +19,19 @@
 package org.apache.hyracks.storage.am.lsm.common.impls;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.storage.am.common.api.IMetadataPageManager;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilter;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
 
-public abstract class AbstractDiskLSMComponent extends AbstractLSMComponent {
+public abstract class AbstractLSMDiskComponent extends AbstractLSMComponent implements ILSMDiskComponent {
 
-    public AbstractDiskLSMComponent(ILSMComponentFilter filter) {
+    private final DiskComponentMetadata metadata;
+
+    public AbstractLSMDiskComponent(IMetadataPageManager mdPageManager, ILSMComponentFilter filter) {
         super(filter);
         state = ComponentState.READABLE_UNWRITABLE;
-    }
-
-    public AbstractDiskLSMComponent() {
-        this(null);
+        metadata = new DiskComponentMetadata(mdPageManager);
     }
 
     @Override
@@ -67,11 +68,12 @@ public abstract class AbstractDiskLSMComponent extends AbstractLSMComponent {
             throws HyracksDataException {
         switch (opType) {
             case MERGE:
-                // In case two merge operations were scheduled to merge an overlapping set of components, the second merge will fail and it must
-                // reset those components back to their previous state.
+                // In case two merge operations were scheduled to merge an overlapping set of components,
+                // the second merge will fail and it must reset those components back to their previous state.
                 if (failedOperation) {
                     state = ComponentState.READABLE_UNWRITABLE;
                 }
+                // Fallthrough
             case FORCE_MODIFICATION:
             case MODIFICATION:
             case REPLICATE:
@@ -91,19 +93,7 @@ public abstract class AbstractDiskLSMComponent extends AbstractLSMComponent {
     }
 
     @Override
-    public LSMComponentType getType() {
-        return LSMComponentType.DISK;
+    public DiskComponentMetadata getMetadata() {
+        return metadata;
     }
-
-    @Override
-    public ComponentState getState() {
-        return state;
-    }
-
-    protected abstract void destroy() throws HyracksDataException;
-
-    public abstract long getComponentSize();
-
-    public abstract int getFileReferenceCount();
-
 }

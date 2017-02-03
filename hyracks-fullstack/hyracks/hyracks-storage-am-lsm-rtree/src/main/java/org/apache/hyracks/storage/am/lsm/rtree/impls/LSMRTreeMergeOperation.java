@@ -30,10 +30,10 @@ import org.apache.hyracks.storage.am.common.api.IndexException;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessorInternal;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 
 public class LSMRTreeMergeOperation implements ILSMIOOperation {
-    private final ILSMIndexAccessorInternal accessor;
+    private final ILSMIndexAccessor accessor;
     private final List<ILSMComponent> mergingComponents;
     private final ITreeIndexCursor cursor;
     private final FileReference rtreeMergeTarget;
@@ -43,7 +43,7 @@ public class LSMRTreeMergeOperation implements ILSMIOOperation {
     private final String indexIdentifier;
     private boolean keepDeletedTuples;
 
-    public LSMRTreeMergeOperation(ILSMIndexAccessorInternal accessor, List<ILSMComponent> mergingComponents,
+    public LSMRTreeMergeOperation(ILSMIndexAccessor accessor, List<ILSMComponent> mergingComponents,
             ITreeIndexCursor cursor, FileReference rtreeMergeTarget, FileReference btreeMergeTarget,
             FileReference bloomFilterMergeTarget, ILSMIOOperationCallback callback, String indexIdentifier) {
         this.accessor = accessor;
@@ -58,7 +58,7 @@ public class LSMRTreeMergeOperation implements ILSMIOOperation {
 
     @Override
     public Set<IODeviceHandle> getReadDevices() {
-        Set<IODeviceHandle> devs = new HashSet<IODeviceHandle>();
+        Set<IODeviceHandle> devs = new HashSet<>();
         for (ILSMComponent o : mergingComponents) {
             LSMRTreeDiskComponent component = (LSMRTreeDiskComponent) o;
             devs.add(component.getRTree().getFileReference().getDeviceHandle());
@@ -72,7 +72,7 @@ public class LSMRTreeMergeOperation implements ILSMIOOperation {
 
     @Override
     public Set<IODeviceHandle> getWriteDevices() {
-        Set<IODeviceHandle> devs = new HashSet<IODeviceHandle>();
+        Set<IODeviceHandle> devs = new HashSet<>();
         devs.add(rtreeMergeTarget.getDeviceHandle());
         if (btreeMergeTarget != null) {
             devs.add(btreeMergeTarget.getDeviceHandle());

@@ -24,7 +24,6 @@ import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.storage.am.common.api.IMetadataPageManagerFactory;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
-import org.apache.hyracks.storage.am.common.api.IndexException;
 import org.apache.hyracks.storage.am.lsm.common.impls.TreeIndexFactory;
 import org.apache.hyracks.storage.am.rtree.impls.RTree;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
@@ -44,7 +43,7 @@ public class RTreeFactory extends TreeIndexFactory<RTree> {
     }
 
     @Override
-    public RTree createIndexInstance(FileReference file) throws IndexException {
+    public RTree createIndexInstance(FileReference file) {
         return new RTree(bufferCache, fileMapProvider, freePageManagerFactory.createPageManager(bufferCache),
                 interiorFrameFactory, leafFrameFactory, cmpFactories, fieldCount, file, isPointMBR);
     }

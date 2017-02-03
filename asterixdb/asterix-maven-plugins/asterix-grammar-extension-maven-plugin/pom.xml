@@ -11,7 +11,6 @@
     <dependency>
       <groupId>org.apache.maven</groupId>
       <artifactId>maven-plugin-api</artifactId>
-      <version>3.3.9</version>
     </dependency>
     <dependency>
       <groupId>org.apache.maven</groupId>
@@ -31,6 +30,10 @@
       <scope>provided</scope>
     </dependency>
     <dependency>
+      <groupId>org.apache.hyracks</groupId>
+      <artifactId>algebricks-common</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.apache.asterix</groupId>
       <artifactId>asterix-external-data</artifactId>
       <version>${project.version}</version>
@@ -45,10 +48,6 @@
       <groupId>org.apache.asterix</groupId>
       <artifactId>asterix-lang-common</artifactId>
       <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.hyracks</groupId>
-      <artifactId>algebricks-common</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.asterix</groupId>
@@ -97,7 +96,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>
-        <version>2.10</version>
         <configuration>
           <usedDependencies>
             <usedDependency>org.apache.maven:maven-core</usedDependency>

@@ -18,6 +18,9 @@
  */
 package org.apache.hyracks.algebricks.common.utils;
 
+import java.util.Objects;
+
+//TODO: Remove and use apache commons lang3 instead
 public class Triple<T1, T2, T3> {
     public T1 first;
     public T2 second;
@@ -36,15 +39,17 @@ public class Triple<T1, T2, T3> {
 
     @Override
     public int hashCode() {
-        return first.hashCode() * 31 + second.hashCode() * 15 + third.hashCode();
+        return Objects.hash(first, second, third);
     }
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof Triple<?, ?, ?>))
+        if (!(o instanceof Triple<?, ?, ?>)) {
             return false;
+        }
         Triple<?, ?, ?> triple = (Triple<?, ?, ?>) o;
-        return first.equals(triple.first) && second.equals(triple.second) && third.equals(triple.third);
+        return Objects.equals(first, triple.first) && Objects.equals(second, triple.second)
+                && Objects.equals(third, triple.third);
     }
 
 }

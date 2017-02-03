@@ -46,6 +46,7 @@ public class ErrorCode {
     public static final int JOB_REQUIREMENTS_EXCEED_CAPACITY = 9;
     public static final int NO_SUCH_NODE = 10;
     public static final int CLASS_LOADING_ISSUE = 11;
+    public static final int ILLEGAL_WRITE_AFTER_FLUSH_ATTEMPT = 12;
 
     // Compilation error codes.
     public static final int RULECOLLECTION_NOT_INSTANCE_OF_LIST = 10001;

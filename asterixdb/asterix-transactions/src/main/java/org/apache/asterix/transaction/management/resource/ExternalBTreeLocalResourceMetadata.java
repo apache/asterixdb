@@ -41,9 +41,8 @@ public class ExternalBTreeLocalResourceMetadata extends LSMBTreeLocalResourceMet
 
     public ExternalBTreeLocalResourceMetadata(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories,
             int[] bloomFilterKeyFields, boolean isPrimary, int datasetID, int partition,
-            ILSMMergePolicyFactory mergePolicyFactory,
-            Map<String, String> mergePolicyProperties, ILSMOperationTrackerFactory opTrackerProvider,
-            ILSMIOOperationCallbackFactory ioOpCallbackFactory,
+            ILSMMergePolicyFactory mergePolicyFactory, Map<String, String> mergePolicyProperties,
+            ILSMOperationTrackerFactory opTrackerProvider, ILSMIOOperationCallbackFactory ioOpCallbackFactory,
             IMetadataPageManagerFactory metadataPageManagerFactory) {
         super(typeTraits, cmpFactories, bloomFilterKeyFields, isPrimary, datasetID, partition, mergePolicyFactory,
                 mergePolicyProperties, null, null, null, null, opTrackerProvider, ioOpCallbackFactory,
@@ -51,8 +50,8 @@ public class ExternalBTreeLocalResourceMetadata extends LSMBTreeLocalResourceMet
     }
 
     @Override
-    public ILSMIndex createIndexInstance(INCApplicationContext appCtx,
-            LocalResource resource) throws HyracksDataException {
+    public ILSMIndex createIndexInstance(INCApplicationContext appCtx, LocalResource resource)
+            throws HyracksDataException {
         IAppRuntimeContext runtimeContextProvider = (IAppRuntimeContext) appCtx.getApplicationObject();
         IIOManager ioManager = runtimeContextProvider.getIOManager();
         FileReference file = ioManager.resolve(resource.getPath());
@@ -61,9 +60,7 @@ public class ExternalBTreeLocalResourceMetadata extends LSMBTreeLocalResourceMet
                 runtimeContextProvider.getBloomFilterFalsePositiveRate(),
                 mergePolicyFactory.createMergePolicy(mergePolicyProperties,
                         runtimeContextProvider.getDatasetLifecycleManager()),
-                opTrackerProvider.getOperationTracker(appCtx),
-                runtimeContextProvider.getLSMIOScheduler(),
-                ioOpCallbackFactory.createIOOperationCallback(), -1, true,
-                metadataPageManagerFactory);
+                opTrackerProvider.getOperationTracker(appCtx), runtimeContextProvider.getLSMIOScheduler(),
+                ioOpCallbackFactory.createIoOpCallback(), -1, true, metadataPageManagerFactory);
     }
 }

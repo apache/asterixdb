@@ -78,7 +78,7 @@ public class LSMBTreeDataflowHelper extends AbstractLSMIndexDataflowHelper {
                 treeOpDesc.getTreeIndexComparatorFactories(), treeOpDesc.getTreeIndexBloomFilterKeyFields(),
                 bloomFilterFalsePositiveRate, mergePolicy, opTrackerFactory.getOperationTracker(ctx.getJobletContext()
                         .getApplicationContext()), ioScheduler,
-                ioOpCallbackFactory.createIOOperationCallback(), needKeyDupCheck, filterTypeTraits, filterCmpFactories,
+                ioOpCallbackFactory.createIoOpCallback(), needKeyDupCheck, filterTypeTraits, filterCmpFactories,
                 btreeFields, filterFields, durable, (IMetadataPageManagerFactory) opDesc.getPageManagerFactory());
     }
 }

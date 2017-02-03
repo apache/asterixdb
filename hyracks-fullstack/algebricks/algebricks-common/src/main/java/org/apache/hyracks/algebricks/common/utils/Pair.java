@@ -19,7 +19,9 @@
 package org.apache.hyracks.algebricks.common.utils;
 
 import java.io.Serializable;
+import java.util.Objects;
 
+//TODO: Remove and use apache commons lang3 instead
 public class Pair<T1, T2> implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -38,17 +40,15 @@ public class Pair<T1, T2> implements Serializable {
 
     @Override
     public boolean equals(Object obj) {
-        if (!(obj instanceof Pair<?, ?>)) {
+        if (!(obj instanceof Pair)) {
             return false;
-        } else {
-            Pair<?, ?> p = (Pair<?, ?>) obj;
-            return this.first.equals(p.first) && this.second.equals(p.second);
         }
+        Pair<?, ?> p = (Pair<?, ?>) obj;
+        return Objects.equals(first, p.first) && Objects.equals(second, p.second);
     }
 
     @Override
     public int hashCode() {
-        return first.hashCode() * 31 + second.hashCode();
+        return Objects.hash(first, second);
     }
-
 }

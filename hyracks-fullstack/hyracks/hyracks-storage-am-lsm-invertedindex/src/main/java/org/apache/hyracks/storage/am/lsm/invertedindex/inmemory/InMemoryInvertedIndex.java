@@ -23,7 +23,6 @@ import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
-import org.apache.hyracks.storage.am.btree.exceptions.BTreeException;
 import org.apache.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
 import org.apache.hyracks.storage.am.btree.impls.BTree;
 import org.apache.hyracks.storage.am.btree.impls.BTree.BTreeAccessor;
@@ -59,7 +58,7 @@ public class InMemoryInvertedIndex implements IInvertedIndex {
     public InMemoryInvertedIndex(IBufferCache virtualBufferCache, IPageManager virtualFreePageManager,
             ITypeTraits[] invListTypeTraits, IBinaryComparatorFactory[] invListCmpFactories,
             ITypeTraits[] tokenTypeTraits, IBinaryComparatorFactory[] tokenCmpFactories,
-            IBinaryTokenizerFactory tokenizerFactory, FileReference btreeFileRef) throws BTreeException {
+            IBinaryTokenizerFactory tokenizerFactory, FileReference btreeFileRef) throws HyracksDataException {
         this.tokenTypeTraits = tokenTypeTraits;
         this.tokenCmpFactories = tokenCmpFactories;
         this.invListTypeTraits = invListTypeTraits;
@@ -168,8 +167,8 @@ public class InMemoryInvertedIndex implements IInvertedIndex {
     @Override
     public IIndexAccessor createAccessor(IModificationOperationCallback modificationCallback,
             ISearchOperationCallback searchCallback) throws HyracksDataException {
-        return new InMemoryInvertedIndexAccessor(this, new InMemoryInvertedIndexOpContext(btree, tokenCmpFactories,
-                tokenizerFactory));
+        return new InMemoryInvertedIndexAccessor(this,
+                new InMemoryInvertedIndexOpContext(btree, tokenCmpFactories, tokenizerFactory));
     }
 
     @Override

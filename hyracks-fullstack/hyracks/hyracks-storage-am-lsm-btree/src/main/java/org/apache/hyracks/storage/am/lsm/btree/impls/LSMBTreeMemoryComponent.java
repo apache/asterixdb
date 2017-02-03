@@ -23,20 +23,16 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.btree.impls.BTree;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilter;
 import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
-import org.apache.hyracks.storage.am.lsm.common.impls.AbstractMemoryLSMComponent;
+import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMMemoryComponent;
 
-public class LSMBTreeMemoryComponent extends AbstractMemoryLSMComponent {
+public class LSMBTreeMemoryComponent extends AbstractLSMMemoryComponent {
 
     private final BTree btree;
 
-    public LSMBTreeMemoryComponent(BTree btree, IVirtualBufferCache vbc, boolean isActive, ILSMComponentFilter filter,
-            long mostRecentMarkerLSN) {
-        super(vbc, isActive, filter, mostRecentMarkerLSN);
+    public LSMBTreeMemoryComponent(BTree btree, IVirtualBufferCache vbc, boolean isActive,
+            ILSMComponentFilter filter) {
+        super(vbc, isActive, filter);
         this.btree = btree;
-    }
-
-    public LSMBTreeMemoryComponent(BTree btree, IVirtualBufferCache vbc, boolean isActive, ILSMComponentFilter filter) {
-        this(btree, vbc, isActive, filter, -1L);
     }
 
     public BTree getBTree() {
@@ -44,7 +40,7 @@ public class LSMBTreeMemoryComponent extends AbstractMemoryLSMComponent {
     }
 
     @Override
-    protected void reset() throws HyracksDataException {
+    public void reset() throws HyracksDataException {
         super.reset();
         btree.deactivate();
         btree.destroy();

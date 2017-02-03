@@ -19,13 +19,36 @@
 package org.apache.hyracks.storage.am.lsm.common.api;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.storage.am.common.api.IndexException;
-import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
-import org.apache.hyracks.storage.common.buffercache.IBufferCache;
+import org.apache.hyracks.data.std.api.IPointable;
+import org.apache.hyracks.data.std.api.IValueReference;
 
-public interface ILSMComponentFactory {
-    public ILSMComponent createLSMComponentInstance(LSMComponentFileReferences cfr) throws IndexException,
-            HyracksDataException;
+public interface IComponentMetadata {
 
-    public IBufferCache getBufferCache();
+    /**
+     * Put the key value pair in this metadata, overwrite if it exists
+     *
+     * @param key
+     * @param value
+     * @throws HyracksDataException
+     *             if the component is immutable
+     */
+    void put(IValueReference key, IValueReference value) throws HyracksDataException;
+
+    /**
+     * Get the value of the key from the metadata, 0 length value if not exists
+     *
+     * @param key
+     * @param value
+     * @throws HyracksDataException
+     */
+    void get(IValueReference key, IPointable value) throws HyracksDataException;
+
+    /**
+     * Get the value
+     *
+     * @param key
+     * @return
+     * @throws HyracksDataException
+     */
+    IValueReference get(IValueReference key) throws HyracksDataException;
 }

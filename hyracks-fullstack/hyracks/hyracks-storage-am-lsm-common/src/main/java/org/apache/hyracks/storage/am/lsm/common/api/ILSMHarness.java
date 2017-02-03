@@ -28,38 +28,34 @@ import org.apache.hyracks.storage.am.common.api.IndexException;
 
 public interface ILSMHarness {
 
-    public void forceModify(ILSMIndexOperationContext ctx, ITupleReference tuple)
+    void forceModify(ILSMIndexOperationContext ctx, ITupleReference tuple) throws HyracksDataException, IndexException;
+
+    boolean modify(ILSMIndexOperationContext ctx, boolean tryOperation, ITupleReference tuple)
             throws HyracksDataException, IndexException;
 
-    public boolean modify(ILSMIndexOperationContext ctx, boolean tryOperation, ITupleReference tuple)
+    void search(ILSMIndexOperationContext ctx, IIndexCursor cursor, ISearchPredicate pred)
             throws HyracksDataException, IndexException;
 
-    public void search(ILSMIndexOperationContext ctx, IIndexCursor cursor, ISearchPredicate pred)
+    void endSearch(ILSMIndexOperationContext ctx) throws HyracksDataException;
+
+    void scheduleMerge(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
             throws HyracksDataException, IndexException;
 
-    public void endSearch(ILSMIndexOperationContext ctx) throws HyracksDataException;
-
-    public void scheduleMerge(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
+    void scheduleFullMerge(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
             throws HyracksDataException, IndexException;
 
-    public void scheduleFullMerge(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
-            throws HyracksDataException, IndexException;
+    void merge(ILSMIndexOperationContext ctx, ILSMIOOperation operation) throws HyracksDataException, IndexException;
 
-    public void merge(ILSMIndexOperationContext ctx, ILSMIOOperation operation)
-            throws HyracksDataException, IndexException;
+    void scheduleFlush(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback) throws HyracksDataException;
 
-    public void scheduleFlush(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
-            throws HyracksDataException;
+    void flush(ILSMIndexOperationContext ctx, ILSMIOOperation operation) throws HyracksDataException, IndexException;
 
-    public void flush(ILSMIndexOperationContext ctx, ILSMIOOperation operation)
-            throws HyracksDataException, IndexException;
+    void addBulkLoadedComponent(ILSMDiskComponent index) throws HyracksDataException, IndexException;
 
-    public void addBulkLoadedComponent(ILSMComponent index) throws HyracksDataException, IndexException;
+    ILSMOperationTracker getOperationTracker();
 
-    public ILSMOperationTracker getOperationTracker();
-
-    public void scheduleReplication(ILSMIndexOperationContext ctx, List<ILSMComponent> lsmComponents, boolean bulkload,
+    void scheduleReplication(ILSMIndexOperationContext ctx, List<ILSMDiskComponent> diskComponents, boolean bulkload,
             LSMOperationType opType) throws HyracksDataException;
 
-    public void endReplication(ILSMIndexOperationContext ctx) throws HyracksDataException;
+    void endReplication(ILSMIndexOperationContext ctx) throws HyracksDataException;
 }

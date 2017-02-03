@@ -22,6 +22,7 @@ import java.util.List;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
 
@@ -48,13 +49,14 @@ public class BlockingIOOperationCallbackWrapper implements ILSMIOOperationCallba
     }
 
     @Override
-    public void afterOperation(LSMOperationType opType, List<ILSMComponent> oldComponents, ILSMComponent newComponent)
-            throws HyracksDataException {
+    public void afterOperation(LSMOperationType opType, List<ILSMComponent> oldComponents,
+            ILSMDiskComponent newComponent) throws HyracksDataException {
         wrappedCallback.afterOperation(opType, oldComponents, newComponent);
     }
 
     @Override
-    public synchronized void afterFinalize(LSMOperationType opType, ILSMComponent newComponent) throws HyracksDataException {
+    public synchronized void afterFinalize(LSMOperationType opType, ILSMDiskComponent newComponent)
+            throws HyracksDataException {
         wrappedCallback.afterFinalize(opType, newComponent);
         notifyAll();
         notified = true;

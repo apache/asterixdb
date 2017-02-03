@@ -18,6 +18,7 @@
  */
 package org.apache.hyracks.storage.am.lsm.common.api;
 
+@FunctionalInterface
 public interface ILSMIOOperationCallbackProvider {
-    public ILSMIOOperationCallback getIOOperationCallback(ILSMIndex index);
+    ILSMIOOperationCallback getIOOperationCallback(ILSMIndex index);
 }

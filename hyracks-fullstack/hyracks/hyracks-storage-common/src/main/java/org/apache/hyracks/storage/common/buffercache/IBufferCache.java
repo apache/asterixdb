@@ -24,53 +24,53 @@ import org.apache.hyracks.api.replication.IIOReplicationManager;
 
 public interface IBufferCache {
 
-    long INVALID_DPID = -1l;
+    long INVALID_DPID = -1L;
     int INVALID_PAGEID = -1;
     int RESERVED_HEADER_BYTES = 8;
 
-    public void createFile(FileReference fileRef) throws HyracksDataException;
+    void createFile(FileReference fileRef) throws HyracksDataException;
 
-    public void openFile(int fileId) throws HyracksDataException;
+    void openFile(int fileId) throws HyracksDataException;
 
-    public void closeFile(int fileId) throws HyracksDataException;
+    void closeFile(int fileId) throws HyracksDataException;
 
-    public void deleteFile(int fileId, boolean flushDirtyPages) throws HyracksDataException;
+    void deleteFile(int fileId, boolean flushDirtyPages) throws HyracksDataException;
 
-    public ICachedPage tryPin(long dpid) throws HyracksDataException;
+    ICachedPage tryPin(long dpid) throws HyracksDataException;
 
-    public ICachedPage pin(long dpid, boolean newPage) throws HyracksDataException;
+    ICachedPage pin(long dpid, boolean newPage) throws HyracksDataException;
 
-    public void unpin(ICachedPage page) throws HyracksDataException;
+    void unpin(ICachedPage page) throws HyracksDataException;
 
-    public void flushDirtyPage(ICachedPage page) throws HyracksDataException;
+    void flushDirtyPage(ICachedPage page) throws HyracksDataException;
 
-    public void adviseWontNeed(ICachedPage page);
+    void adviseWontNeed(ICachedPage page);
 
-    public ICachedPage confiscatePage(long dpid) throws HyracksDataException;
+    ICachedPage confiscatePage(long dpid) throws HyracksDataException;
 
-    public ICachedPage confiscateLargePage(long dpid, int multiplier, int extraBlockPageId) throws HyracksDataException;
+    ICachedPage confiscateLargePage(long dpid, int multiplier, int extraBlockPageId) throws HyracksDataException;
 
-    public void returnPage(ICachedPage page);
+    void returnPage(ICachedPage page);
 
-    public void returnPage(ICachedPage page, boolean reinsert);
+    void returnPage(ICachedPage page, boolean reinsert);
 
-    public void force(int fileId, boolean metadata) throws HyracksDataException;
+    void force(int fileId, boolean metadata) throws HyracksDataException;
 
     int getPageSize();
 
     int getPageSizeWithHeader();
 
-    public int getNumPages();
+    int getNumPages();
 
-    public int getNumPagesOfFile(int fileId) throws HyracksDataException;
+    int getNumPagesOfFile(int fileId) throws HyracksDataException;
 
-    public int getFileReferenceCount(int fileId);
+    int getFileReferenceCount(int fileId);
 
-    public void close() throws HyracksDataException;
+    void close() throws HyracksDataException;
 
-    public IFIFOPageQueue createFIFOQueue();
+    IFIFOPageQueue createFIFOQueue();
 
-    public void finishQueue();
+    void finishQueue();
 
     void setPageDiskId(ICachedPage page, long dpid);
 

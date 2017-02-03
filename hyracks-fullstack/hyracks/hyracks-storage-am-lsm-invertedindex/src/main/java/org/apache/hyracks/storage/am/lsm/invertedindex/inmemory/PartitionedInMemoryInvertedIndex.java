@@ -26,12 +26,11 @@ import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
-import org.apache.hyracks.storage.am.btree.exceptions.BTreeException;
 import org.apache.hyracks.storage.am.btree.impls.BTree.BTreeAccessor;
-import org.apache.hyracks.storage.am.common.api.IPageManager;
 import org.apache.hyracks.storage.am.common.api.IIndexAccessor;
 import org.apache.hyracks.storage.am.common.api.IIndexOperationContext;
 import org.apache.hyracks.storage.am.common.api.IModificationOperationCallback;
+import org.apache.hyracks.storage.am.common.api.IPageManager;
 import org.apache.hyracks.storage.am.common.api.ISearchOperationCallback;
 import org.apache.hyracks.storage.am.common.api.IndexException;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
@@ -53,7 +52,7 @@ public class PartitionedInMemoryInvertedIndex extends InMemoryInvertedIndex impl
     public PartitionedInMemoryInvertedIndex(IBufferCache memBufferCache, IPageManager memFreePageManager,
             ITypeTraits[] invListTypeTraits, IBinaryComparatorFactory[] invListCmpFactories,
             ITypeTraits[] tokenTypeTraits, IBinaryComparatorFactory[] tokenCmpFactories,
-            IBinaryTokenizerFactory tokenizerFactory, FileReference btreeFileRef) throws BTreeException {
+            IBinaryTokenizerFactory tokenizerFactory, FileReference btreeFileRef) throws HyracksDataException {
         super(memBufferCache, memFreePageManager, invListTypeTraits, invListCmpFactories, tokenTypeTraits,
                 tokenCmpFactories, tokenizerFactory, btreeFileRef);
     }
@@ -63,7 +62,8 @@ public class PartitionedInMemoryInvertedIndex extends InMemoryInvertedIndex impl
             throws HyracksDataException, IndexException {
         super.insert(tuple, btreeAccessor, ictx);
         PartitionedInMemoryInvertedIndexOpContext ctx = (PartitionedInMemoryInvertedIndexOpContext) ictx;
-        PartitionedInvertedIndexTokenizingTupleIterator tupleIter = (PartitionedInvertedIndexTokenizingTupleIterator) ctx.tupleIter;
+        PartitionedInvertedIndexTokenizingTupleIterator tupleIter =
+                (PartitionedInvertedIndexTokenizingTupleIterator) ctx.tupleIter;
         updatePartitionIndexes(tupleIter.getNumTokens());
     }
 
@@ -91,8 +91,8 @@ public class PartitionedInMemoryInvertedIndex extends InMemoryInvertedIndex impl
     @Override
     public IIndexAccessor createAccessor(IModificationOperationCallback modificationCallback,
             ISearchOperationCallback searchCallback) throws HyracksDataException {
-        return new PartitionedInMemoryInvertedIndexAccessor(this, new PartitionedInMemoryInvertedIndexOpContext(btree,
-                tokenCmpFactories, tokenizerFactory));
+        return new PartitionedInMemoryInvertedIndexAccessor(this,
+                new PartitionedInMemoryInvertedIndexOpContext(btree, tokenCmpFactories, tokenizerFactory));
     }
 
     @Override
@@ -131,8 +131,8 @@ public class PartitionedInMemoryInvertedIndex extends InMemoryInvertedIndex impl
         // using the last existing partition and re-searching the BTree with an open interval as low key.
         for (short i = partitionStartIndex; i <= partitionEndIndex; i++) {
             partSearcher.setNumTokensBoundsInSearchKeys(i, i);
-            InMemoryInvertedListCursor inMemListCursor = (InMemoryInvertedListCursor) partSearcher
-                    .getCachedInvertedListCursor();
+            InMemoryInvertedListCursor inMemListCursor =
+                    (InMemoryInvertedListCursor) partSearcher.getCachedInvertedListCursor();
             inMemListCursor.prepare(ctx.btreeAccessor, ctx.btreePred, ctx.tokenFieldsCmp, ctx.btreeCmp);
             inMemListCursor.reset(searchKey);
             invListPartitions.addInvertedListCursor(inMemListCursor, i);

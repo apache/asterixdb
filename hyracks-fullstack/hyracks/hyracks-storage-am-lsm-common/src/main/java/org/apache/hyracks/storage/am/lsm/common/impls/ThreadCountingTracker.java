@@ -26,7 +26,6 @@ import org.apache.hyracks.storage.am.common.api.ISearchOperationCallback;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexInternal;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
 
@@ -56,13 +55,11 @@ public class ThreadCountingTracker implements ILSMOperationTracker {
     public void completeOperation(ILSMIndex index, LSMOperationType opType, ISearchOperationCallback searchCallback,
             IModificationOperationCallback modificationCallback) throws HyracksDataException {
         // Flush will only be handled by last exiting thread.
-        if (opType == LSMOperationType.MODIFICATION) {
-            if (threadRefCount.decrementAndGet() == 0
-                    && ((ILSMIndexInternal) index).hasFlushRequestForCurrentMutableComponent()) {
-                ILSMIndexAccessor accessor = (ILSMIndexAccessor) index.createAccessor(NoOpOperationCallback.INSTANCE,
-                        NoOpOperationCallback.INSTANCE);
-                accessor.scheduleFlush(NoOpIOOperationCallback.INSTANCE);
-            }
+        if (opType == LSMOperationType.MODIFICATION && threadRefCount.decrementAndGet() == 0
+                && index.hasFlushRequestForCurrentMutableComponent()) {
+            ILSMIndexAccessor accessor =
+                    index.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+            accessor.scheduleFlush(NoOpIOOperationCallback.INSTANCE);
         }
     }
 }

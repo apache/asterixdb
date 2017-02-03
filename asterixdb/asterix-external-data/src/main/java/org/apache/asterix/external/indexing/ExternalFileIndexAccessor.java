@@ -21,7 +21,6 @@ package org.apache.asterix.external.indexing;
 import java.io.ByteArrayInputStream;
 import java.io.DataInput;
 import java.io.DataInputStream;
-import java.io.Serializable;
 import java.util.Date;
 
 import org.apache.asterix.common.exceptions.ErrorCode;
@@ -44,20 +43,20 @@ import org.apache.hyracks.storage.am.btree.impls.RangePredicate;
 import org.apache.hyracks.storage.am.btree.util.BTreeUtils;
 import org.apache.hyracks.storage.am.common.api.IIndexCursor;
 import org.apache.hyracks.storage.am.common.api.ISearchOperationCallback;
+import org.apache.hyracks.storage.am.common.api.IndexException;
 import org.apache.hyracks.storage.am.common.ophelpers.MultiComparator;
 import org.apache.hyracks.storage.am.lsm.btree.dataflow.ExternalBTreeDataflowHelper;
 import org.apache.hyracks.storage.am.lsm.btree.impls.ExternalBTree;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessorInternal;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 
 /*
  * This class was created specifically to facilitate accessing
  * external file index when doing external lookup during runtime
  */
 @SuppressWarnings({ "rawtypes", "unchecked" })
-public class ExternalFileIndexAccessor implements Serializable {
+public class ExternalFileIndexAccessor {
 
     private final FilesIndexDescription filesIndexDescription = new FilesIndexDescription();
-    private static final long serialVersionUID = 1L;
     private ExternalBTreeDataflowHelper indexDataflowHelper;
     private ExternalLookupOperatorDescriptor opDesc;
 
@@ -65,12 +64,11 @@ public class ExternalFileIndexAccessor implements Serializable {
     private ExternalBTree index;
     private ArrayTupleBuilder searchKeyTupleBuilder;
     private ArrayTupleReference searchKey;
-    private MultiComparator searchCmp;
     private AMutableInt32 currentFileNumber = new AMutableInt32(-1);
-    private ISerializerDeserializer intSerde = SerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.AINT32);
+    private ISerializerDeserializer intSerde =
+            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT32);
     private RangePredicate searchPredicate;
-    private ILSMIndexAccessorInternal fileIndexAccessor;
+    private ILSMIndexAccessor fileIndexAccessor;
     private IIndexCursor fileIndexSearchCursor;
 
     public ExternalFileIndexAccessor(ExternalBTreeDataflowHelper indexDataflowHelper,
@@ -89,7 +87,7 @@ public class ExternalFileIndexAccessor implements Serializable {
         searchKeyTupleBuilder.reset();
         searchKeyTupleBuilder.addField(intSerde, currentFileNumber);
         searchKey.reset(searchKeyTupleBuilder.getFieldEndOffsets(), searchKeyTupleBuilder.getByteArray());
-        searchCmp = BTreeUtils.getSearchMultiComparator(index.getComparatorFactories(), searchKey);
+        MultiComparator searchCmp = BTreeUtils.getSearchMultiComparator(index.getComparatorFactories(), searchKey);
         searchPredicate = new RangePredicate(searchKey, searchKey, true, true, searchCmp, searchCmp);
 
         // create the accessor  and the cursor using the passed version
@@ -99,7 +97,7 @@ public class ExternalFileIndexAccessor implements Serializable {
         fileIndexSearchCursor = fileIndexAccessor.createSearchCursor(false);
     }
 
-    public void lookup(int fileId, ExternalFile file) throws Exception {
+    public void lookup(int fileId, ExternalFile file) throws HyracksDataException, IndexException {
         // Set search parameters
         currentFileNumber.setValue(fileId);
         searchKeyTupleBuilder.reset();
@@ -122,8 +120,7 @@ public class ExternalFileIndexAccessor implements Serializable {
             setFile(externalFileRecord, file);
         } else {
             // This should never happen
-            throw new RuntimeDataException(
-                    ErrorCode.INDEXING_EXTERNAL_FILE_INDEX_ACCESSOR_UNABLE_TO_FIND_FILE_INDEX);
+            throw new RuntimeDataException(ErrorCode.INDEXING_EXTERNAL_FILE_INDEX_ACCESSOR_UNABLE_TO_FIND_FILE_INDEX);
         }
     }
 
@@ -133,9 +130,8 @@ public class ExternalFileIndexAccessor implements Serializable {
                         .getStringValue());
         file.setSize(((AInt64) externalFileRecord.getValueByPos(FilesIndexDescription.EXTERNAL_FILE_SIZE_FIELD_INDEX))
                 .getLongValue());
-        file.setLastModefiedTime((new Date(
-                ((ADateTime) externalFileRecord.getValueByPos(FilesIndexDescription.EXTERNAL_FILE_MOD_DATE_FIELD_INDEX))
-                        .getChrononTime())));
+        file.setLastModefiedTime(new Date(((ADateTime) externalFileRecord
+                .getValueByPos(FilesIndexDescription.EXTERNAL_FILE_MOD_DATE_FIELD_INDEX)).getChrononTime()));
     }
 
     public void close() throws HyracksDataException {

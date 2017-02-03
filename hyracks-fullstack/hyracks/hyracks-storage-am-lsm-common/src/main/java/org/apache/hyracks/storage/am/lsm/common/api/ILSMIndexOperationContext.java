@@ -26,26 +26,26 @@ import org.apache.hyracks.storage.am.common.api.ISearchOperationCallback;
 import org.apache.hyracks.storage.am.common.api.ISearchPredicate;
 
 public interface ILSMIndexOperationContext extends IIndexOperationContext {
-    public List<ILSMComponent> getComponentHolder();
+    List<ILSMComponent> getComponentHolder();
 
-    public List<ILSMComponent> getComponentsToBeMerged();
+    List<ILSMDiskComponent> getComponentsToBeMerged();
 
-    public ISearchOperationCallback getSearchOperationCallback();
+    ISearchOperationCallback getSearchOperationCallback();
 
-    public IModificationOperationCallback getModificationCallback();
+    IModificationOperationCallback getModificationCallback();
 
-    public void setCurrentMutableComponentId(int currentMutableComponentId);
+    void setCurrentMutableComponentId(int currentMutableComponentId);
 
-    public void setSearchPredicate(ISearchPredicate searchPredicate);
+    void setSearchPredicate(ISearchPredicate searchPredicate);
 
-    public ISearchPredicate getSearchPredicate();
+    ISearchPredicate getSearchPredicate();
 
-    public List<ILSMComponent> getComponentsToBeReplicated();
+    List<ILSMDiskComponent> getComponentsToBeReplicated();
 
     /**
      * @return true if this operation entered the components. Otherwise false.
      */
-    public boolean isAccessingComponents();
+    boolean isAccessingComponents();
 
-    public void setAccessingComponents(boolean accessingComponents);
+    void setAccessingComponents(boolean accessingComponents);
 }

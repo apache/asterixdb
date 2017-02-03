@@ -23,11 +23,11 @@ import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.file.IFileMapManager;
 
 public interface IVirtualBufferCache extends IBufferCache {
-    public void open() throws HyracksDataException;
+    void open() throws HyracksDataException;
 
-    public boolean isFull();
+    boolean isFull();
 
-    public void reset();
+    void reset();
 
-    public IFileMapManager getFileMapProvider();
+    IFileMapManager getFileMapProvider();
 }

@@ -28,6 +28,7 @@ import org.apache.hyracks.storage.am.common.api.ISearchPredicate;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.am.common.ophelpers.MultiComparator;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMHarness;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexOperationContext;
@@ -37,8 +38,8 @@ public class ExternalRTreeOpContext extends AbstractLSMIndexOperationContext {
     private MultiComparator bTreeCmp;
     private MultiComparator rTreeCmp;
     public final List<ILSMComponent> componentHolder;
-    private final List<ILSMComponent> componentsToBeMerged;
-    private final List<ILSMComponent> componentsToBeReplicated;
+    private final List<ILSMDiskComponent> componentsToBeMerged;
+    private final List<ILSMDiskComponent> componentsToBeReplicated;
     public final ISearchOperationCallback searchCallback;
     private final int targetIndexVersion;
     public ISearchPredicate searchPredicate;
@@ -49,16 +50,16 @@ public class ExternalRTreeOpContext extends AbstractLSMIndexOperationContext {
             int targetIndexVersion, ILSMHarness lsmHarness, int[] comparatorFields,
             IBinaryComparatorFactory[] linearizerArray, ITreeIndexFrameFactory rtreeLeafFrameFactory,
             ITreeIndexFrameFactory rtreeInteriorFrameFactory, ITreeIndexFrameFactory btreeLeafFrameFactory) {
-        this.componentHolder = new LinkedList<ILSMComponent>();
-        this.componentsToBeMerged = new LinkedList<ILSMComponent>();
-        this.componentsToBeReplicated = new LinkedList<ILSMComponent>();
+        this.componentHolder = new LinkedList<>();
+        this.componentsToBeMerged = new LinkedList<>();
+        this.componentsToBeReplicated = new LinkedList<>();
         this.searchCallback = searchCallback;
         this.targetIndexVersion = targetIndexVersion;
         this.bTreeCmp = MultiComparator.create(btreeCmpFactories);
         this.rTreeCmp = MultiComparator.create(rtreeCmpFactories);
-        initialState = new LSMRTreeCursorInitialState(rtreeLeafFrameFactory, rtreeInteriorFrameFactory,
-                btreeLeafFrameFactory, bTreeCmp, lsmHarness, comparatorFields, linearizerArray, searchCallback,
-                componentHolder);
+        initialState =
+                new LSMRTreeCursorInitialState(rtreeLeafFrameFactory, rtreeInteriorFrameFactory, btreeLeafFrameFactory,
+                        bTreeCmp, lsmHarness, comparatorFields, linearizerArray, searchCallback, componentHolder);
     }
 
     @Override
@@ -110,7 +111,7 @@ public class ExternalRTreeOpContext extends AbstractLSMIndexOperationContext {
     }
 
     @Override
-    public List<ILSMComponent> getComponentsToBeMerged() {
+    public List<ILSMDiskComponent> getComponentsToBeMerged() {
         return componentsToBeMerged;
     }
 
@@ -129,7 +130,7 @@ public class ExternalRTreeOpContext extends AbstractLSMIndexOperationContext {
     }
 
     @Override
-    public List<ILSMComponent> getComponentsToBeReplicated() {
+    public List<ILSMDiskComponent> getComponentsToBeReplicated() {
         return componentsToBeReplicated;
     }
 }

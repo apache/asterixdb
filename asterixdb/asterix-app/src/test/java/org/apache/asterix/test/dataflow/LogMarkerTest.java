@@ -51,6 +51,7 @@ import org.apache.hyracks.api.test.CountAnswer;
 import org.apache.hyracks.api.test.FrameWriterTestUtils;
 import org.apache.hyracks.api.test.FrameWriterTestUtils.FrameWriterOperation;
 import org.apache.hyracks.api.util.HyracksConstants;
+import org.apache.hyracks.data.std.primitive.LongPointable;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.dataflow.common.io.MessagingFrameTupleAppender;
@@ -58,6 +59,7 @@ import org.apache.hyracks.dataflow.common.utils.TaskUtil;
 import org.apache.hyracks.storage.am.common.api.IIndexDataflowHelper;
 import org.apache.hyracks.storage.am.lsm.btree.impls.LSMBTree;
 import org.apache.hyracks.storage.am.lsm.common.impls.NoMergePolicyFactory;
+import org.apache.hyracks.storage.am.lsm.common.utils.ComponentMetadataUtil;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -68,8 +70,8 @@ public class LogMarkerTest {
     private static final IAType[] KEY_TYPES = { BuiltinType.AINT32 };
     private static final ARecordType RECORD_TYPE = new ARecordType("TestRecordType", new String[] { "key", "value" },
             new IAType[] { BuiltinType.AINT32, BuiltinType.AINT64 }, false);
-    private static final GenerationFunction[] RECORD_GEN_FUNCTION = { GenerationFunction.DETERMINISTIC,
-            GenerationFunction.DETERMINISTIC };
+    private static final GenerationFunction[] RECORD_GEN_FUNCTION =
+            { GenerationFunction.DETERMINISTIC, GenerationFunction.DETERMINISTIC };
     private static final boolean[] UNIQUE_RECORD_FIELDS = { true, false };
     private static final ARecordType META_TYPE = null;
     private static final GenerationFunction[] META_GEN_FUNCTION = null;
@@ -146,7 +148,9 @@ public class LogMarkerTest {
                         KEY_INDICATORS_LIST);
                 dataflowHelper.open();
                 LSMBTree btree = (LSMBTree) dataflowHelper.getIndexInstance();
-                long lsn = btree.getMostRecentMarkerLSN();
+                LongPointable longPointable = LongPointable.FACTORY.createPointable();
+                ComponentMetadataUtil.get(btree, ComponentMetadataUtil.MARKER_LSN_KEY, longPointable);
+                long lsn = longPointable.getLong();
                 int numOfMarkers = 0;
                 LogReader logReader = (LogReader) nc.getTransactionSubsystem().getLogManager().getLogReader(false);
                 long expectedMarkerId = markerId - 1;

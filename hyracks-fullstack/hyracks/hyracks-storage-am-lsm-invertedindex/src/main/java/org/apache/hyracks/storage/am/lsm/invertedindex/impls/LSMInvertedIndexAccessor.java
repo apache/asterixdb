@@ -26,17 +26,17 @@ import org.apache.hyracks.storage.am.common.api.IIndexCursor;
 import org.apache.hyracks.storage.am.common.api.ISearchPredicate;
 import org.apache.hyracks.storage.am.common.api.IndexException;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMHarness;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessorInternal;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedListCursor;
 
-public class LSMInvertedIndexAccessor implements ILSMIndexAccessorInternal, IInvertedIndexAccessor {
+public class LSMInvertedIndexAccessor implements ILSMIndexAccessor, IInvertedIndexAccessor {
 
     protected final ILSMHarness lsmHarness;
     protected final ILSMIndexOperationContext ctx;
@@ -93,7 +93,7 @@ public class LSMInvertedIndexAccessor implements ILSMIndexAccessorInternal, IInv
     }
 
     @Override
-    public void scheduleMerge(ILSMIOOperationCallback callback, List<ILSMComponent> components)
+    public void scheduleMerge(ILSMIOOperationCallback callback, List<ILSMDiskComponent> components)
             throws HyracksDataException, IndexException {
         ctx.setOperation(IndexOperation.MERGE);
         ctx.getComponentsToBeMerged().clear();
@@ -102,7 +102,7 @@ public class LSMInvertedIndexAccessor implements ILSMIndexAccessorInternal, IInv
     }
 
     @Override
-    public void scheduleReplication(List<ILSMComponent> lsmComponents, boolean bulkload, LSMOperationType opType)
+    public void scheduleReplication(List<ILSMDiskComponent> lsmComponents, boolean bulkload, LSMOperationType opType)
             throws HyracksDataException {
         ctx.setOperation(IndexOperation.REPLICATE);
         ctx.getComponentsToBeReplicated().clear();
@@ -127,8 +127,8 @@ public class LSMInvertedIndexAccessor implements ILSMIndexAccessorInternal, IInv
     }
 
     @Override
-    public void rangeSearch(IIndexCursor cursor, ISearchPredicate searchPred) throws IndexException,
-            HyracksDataException {
+    public void rangeSearch(IIndexCursor cursor, ISearchPredicate searchPred)
+            throws IndexException, HyracksDataException {
         search(cursor, searchPred);
     }
 

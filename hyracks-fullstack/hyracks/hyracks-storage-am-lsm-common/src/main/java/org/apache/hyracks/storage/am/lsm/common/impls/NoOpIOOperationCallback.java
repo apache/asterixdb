@@ -22,13 +22,15 @@ import java.util.List;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackProvider;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
 
-public enum NoOpIOOperationCallback implements ILSMIOOperationCallback, ILSMIOOperationCallbackProvider, ILSMIOOperationCallbackFactory {
+public enum NoOpIOOperationCallback
+        implements ILSMIOOperationCallback, ILSMIOOperationCallbackProvider, ILSMIOOperationCallbackFactory {
     INSTANCE;
 
     @Override
@@ -37,13 +39,13 @@ public enum NoOpIOOperationCallback implements ILSMIOOperationCallback, ILSMIOOp
     }
 
     @Override
-    public void afterOperation(LSMOperationType opType, List<ILSMComponent> oldComponents, ILSMComponent newComponent)
-            throws HyracksDataException {
+    public void afterOperation(LSMOperationType opType, List<ILSMComponent> oldComponents,
+            ILSMDiskComponent newComponent) throws HyracksDataException {
         // Do nothing.
     }
 
     @Override
-    public void afterFinalize(LSMOperationType opType, ILSMComponent newComponent) throws HyracksDataException {
+    public void afterFinalize(LSMOperationType opType, ILSMDiskComponent newComponent) throws HyracksDataException {
         // Do nothing.
     }
 
@@ -53,7 +55,7 @@ public enum NoOpIOOperationCallback implements ILSMIOOperationCallback, ILSMIOOp
     }
 
     @Override
-    public ILSMIOOperationCallback createIOOperationCallback() {
+    public ILSMIOOperationCallback createIoOpCallback() {
         return INSTANCE;
     }
 

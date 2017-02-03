@@ -46,7 +46,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.HttpMethod;
 
-public class VersionApiLetTest {
+public class VersionApiServletTest {
 
     @Test
     public void testGet() throws Exception {

@@ -36,8 +36,10 @@ import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.am.common.ophelpers.MultiComparator;
 import org.apache.hyracks.storage.am.common.tuples.PermutingTupleReference;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMHarness;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMMemoryComponent;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexOperationContext;
 
 public final class LSMBTreeOpContext extends AbstractLSMIndexOperationContext {
@@ -57,8 +59,8 @@ public final class LSMBTreeOpContext extends AbstractLSMIndexOperationContext {
     public IModificationOperationCallback modificationCallback;
     public ISearchOperationCallback searchCallback;
     private final List<ILSMComponent> componentHolder;
-    private final List<ILSMComponent> componentsToBeMerged;
-    private final List<ILSMComponent> componentsToBeReplicated;
+    private final List<ILSMDiskComponent> componentsToBeMerged;
+    private final List<ILSMDiskComponent> componentsToBeReplicated;
     public final PermutingTupleReference indexTuple;
     public final MultiComparator filterCmp;
     public final PermutingTupleReference filterTuple;
@@ -67,10 +69,10 @@ public final class LSMBTreeOpContext extends AbstractLSMIndexOperationContext {
     public LSMBTreeCursorInitialState searchInitialState;
     public LSMBTreePointSearchCursor insertSearchCursor;
 
-    public LSMBTreeOpContext(List<ILSMComponent> mutableComponents, ITreeIndexFrameFactory insertLeafFrameFactory,
+    public LSMBTreeOpContext(List<ILSMMemoryComponent> mutableComponents, ITreeIndexFrameFactory insertLeafFrameFactory,
             ITreeIndexFrameFactory deleteLeafFrameFactory, IModificationOperationCallback modificationCallback,
-            ISearchOperationCallback searchCallback, int numBloomFilterKeyFields, int[] btreeFields, int[] filterFields,
-            ILSMHarness lsmHarness) {
+            ISearchOperationCallback searchCallback, int numBloomFilterKeyFields, int[] btreeFields,
+            int[] filterFields, ILSMHarness lsmHarness) {
         LSMBTreeMemoryComponent c = (LSMBTreeMemoryComponent) mutableComponents.get(0);
         IBinaryComparatorFactory cmpFactories[] = c.getBTree().getComparatorFactories();
         if (cmpFactories[0] != null) {
@@ -103,9 +105,9 @@ public final class LSMBTreeOpContext extends AbstractLSMIndexOperationContext {
         if (deleteLeafFrame != null && this.cmp != null) {
             deleteLeafFrame.setMultiComparator(cmp);
         }
-        this.componentHolder = new LinkedList<ILSMComponent>();
-        this.componentsToBeMerged = new LinkedList<ILSMComponent>();
-        this.componentsToBeReplicated = new LinkedList<ILSMComponent>();
+        this.componentHolder = new LinkedList<>();
+        this.componentsToBeMerged = new LinkedList<>();
+        this.componentsToBeReplicated = new LinkedList<>();
         this.modificationCallback = modificationCallback;
         this.searchCallback = searchCallback;
 
@@ -199,7 +201,7 @@ public final class LSMBTreeOpContext extends AbstractLSMIndexOperationContext {
     }
 
     @Override
-    public List<ILSMComponent> getComponentsToBeMerged() {
+    public List<ILSMDiskComponent> getComponentsToBeMerged() {
         return componentsToBeMerged;
     }
 
@@ -214,7 +216,7 @@ public final class LSMBTreeOpContext extends AbstractLSMIndexOperationContext {
     }
 
     @Override
-    public List<ILSMComponent> getComponentsToBeReplicated() {
+    public List<ILSMDiskComponent> getComponentsToBeReplicated() {
         return componentsToBeReplicated;
     }
 }

@@ -22,12 +22,15 @@ package org.apache.asterix.common.ioopcallbacks;
 import java.util.List;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.primitive.LongPointable;
 import org.apache.hyracks.storage.am.btree.impls.BTree;
 import org.apache.hyracks.storage.am.common.api.IMetadataPageManager;
 import org.apache.hyracks.storage.am.lsm.btree.impls.LSMBTreeDiskComponent;
 import org.apache.hyracks.storage.am.lsm.btree.impls.LSMBTreeFileManager;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
+import org.apache.hyracks.storage.am.lsm.common.utils.ComponentMetadataUtil;
 
 public class LSMBTreeIOOperationCallback extends AbstractLSMIOOperationCallback {
 
@@ -36,16 +39,24 @@ public class LSMBTreeIOOperationCallback extends AbstractLSMIOOperationCallback 
     }
 
     @Override
-    public void afterOperation(LSMOperationType opType, List<ILSMComponent> oldComponents, ILSMComponent newComponent)
-            throws HyracksDataException {
+    public void afterOperation(LSMOperationType opType, List<ILSMComponent> oldComponents,
+            ILSMDiskComponent newComponent) throws HyracksDataException {
+        //TODO: Copying Filters and all content of the metadata pages for flush operation should be done here
         if (newComponent != null) {
             LSMBTreeDiskComponent btreeComponent = (LSMBTreeDiskComponent) newComponent;
-            putLSNIntoMetadata(btreeComponent.getBTree(), oldComponents);
+            putLSNIntoMetadata(btreeComponent, oldComponents);
+            if (opType == LSMOperationType.MERGE) {
+                LongPointable markerLsn = LongPointable.FACTORY
+                        .createPointable(ComponentMetadataUtil.getLong(oldComponents.get(0).getMetadata(),
+                                ComponentMetadataUtil.MARKER_LSN_KEY, ComponentMetadataUtil.NOT_FOUND));
+                btreeComponent.getMetadata().put(ComponentMetadataUtil.MARKER_LSN_KEY, markerLsn);
+            }
+
         }
     }
 
     @Override
-    public long getComponentLSN(List<ILSMComponent> diskComponents) throws HyracksDataException {
+    public long getComponentLSN(List<? extends ILSMComponent> diskComponents) throws HyracksDataException {
         if (diskComponents == null) {
             // Implies a flush IO operation. --> moves the flush pointer
             // Flush operation of an LSM index are executed sequentially.
@@ -64,12 +75,12 @@ public class LSMBTreeIOOperationCallback extends AbstractLSMIOOperationCallback 
     }
 
     @Override
-    public long getComponentFileLSNOffset(ILSMComponent diskComponent, String diskComponentFilePath)
+    public long getComponentFileLSNOffset(ILSMDiskComponent diskComponent, String diskComponentFilePath)
             throws HyracksDataException {
         if (diskComponentFilePath.endsWith(LSMBTreeFileManager.BTREE_STRING)) {
             LSMBTreeDiskComponent btreeComponent = (LSMBTreeDiskComponent) diskComponent;
-            IMetadataPageManager metadataPageManager = (IMetadataPageManager) btreeComponent.getBTree()
-                    .getPageManager();
+            IMetadataPageManager metadataPageManager =
+                    (IMetadataPageManager) btreeComponent.getBTree().getPageManager();
             return metadataPageManager.getFileOffset(metadataPageManager.createMetadataFrame(), LSN_KEY);
         }
         return INVALID;

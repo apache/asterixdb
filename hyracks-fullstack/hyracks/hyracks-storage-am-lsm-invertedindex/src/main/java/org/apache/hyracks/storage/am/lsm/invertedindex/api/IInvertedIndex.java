@@ -28,16 +28,16 @@ import org.apache.hyracks.storage.am.common.api.IIndexOperationContext;
 import org.apache.hyracks.storage.am.common.api.IndexException;
 
 public interface IInvertedIndex extends IIndex {
-    public IInvertedListCursor createInvertedListCursor();
+    IInvertedListCursor createInvertedListCursor();
 
-    public void openInvertedListCursor(IInvertedListCursor listCursor, ITupleReference searchKey, IIndexOperationContext ictx)
+    void openInvertedListCursor(IInvertedListCursor listCursor, ITupleReference searchKey, IIndexOperationContext ictx)
             throws HyracksDataException, IndexException;
 
-    public ITypeTraits[] getInvListTypeTraits();
+    ITypeTraits[] getInvListTypeTraits();
 
-    public IBinaryComparatorFactory[] getInvListCmpFactories();
+    IBinaryComparatorFactory[] getInvListCmpFactories();
 
-    public ITypeTraits[] getTokenTypeTraits();
+    ITypeTraits[] getTokenTypeTraits();
 
-    public IBinaryComparatorFactory[] getTokenCmpFactories();
+    IBinaryComparatorFactory[] getTokenCmpFactories();
 }

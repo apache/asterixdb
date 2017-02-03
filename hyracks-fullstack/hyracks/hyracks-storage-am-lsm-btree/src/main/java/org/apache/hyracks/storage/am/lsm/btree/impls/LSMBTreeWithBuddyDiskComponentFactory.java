@@ -21,45 +21,27 @@ package org.apache.hyracks.storage.am.lsm.btree.impls;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.bloomfilter.impls.BloomFilterFactory;
 import org.apache.hyracks.storage.am.btree.impls.BTree;
-import org.apache.hyracks.storage.am.common.api.IndexException;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFactory;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponentFactory;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
 import org.apache.hyracks.storage.am.lsm.common.impls.TreeIndexFactory;
-import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 
-public class LSMBTreeWithBuddyDiskComponentFactory implements
-        ILSMComponentFactory {
+public class LSMBTreeWithBuddyDiskComponentFactory implements ILSMDiskComponentFactory {
 
     private final TreeIndexFactory<BTree> btreeFactory;
     private final TreeIndexFactory<BTree> buddyBtreeFactory;
     private final BloomFilterFactory bloomFilterFactory;
 
-    public LSMBTreeWithBuddyDiskComponentFactory(
-            TreeIndexFactory<BTree> btreeFactory,
-            TreeIndexFactory<BTree> buddyBtreeFactory,
-            BloomFilterFactory bloomFilterFactory) {
+    public LSMBTreeWithBuddyDiskComponentFactory(TreeIndexFactory<BTree> btreeFactory,
+            TreeIndexFactory<BTree> buddyBtreeFactory, BloomFilterFactory bloomFilterFactory) {
         this.btreeFactory = btreeFactory;
         this.buddyBtreeFactory = buddyBtreeFactory;
         this.bloomFilterFactory = bloomFilterFactory;
     }
 
     @Override
-    public ILSMComponent createLSMComponentInstance(
-            LSMComponentFileReferences cfr) throws IndexException,
-            HyracksDataException {
-        return new LSMBTreeWithBuddyDiskComponent(
-                btreeFactory.createIndexInstance(cfr
-                        .getInsertIndexFileReference()),
-                buddyBtreeFactory.createIndexInstance(cfr
-                        .getDeleteIndexFileReference()),
-                bloomFilterFactory.createBloomFiltertInstance(cfr
-                        .getBloomFilterFileReference()));
+    public LSMBTreeWithBuddyDiskComponent createComponent(LSMComponentFileReferences cfr) throws HyracksDataException {
+        return new LSMBTreeWithBuddyDiskComponent(btreeFactory.createIndexInstance(cfr.getInsertIndexFileReference()),
+                buddyBtreeFactory.createIndexInstance(cfr.getDeleteIndexFileReference()),
+                bloomFilterFactory.createBloomFiltertInstance(cfr.getBloomFilterFileReference()), null);
     }
-
-    @Override
-    public IBufferCache getBufferCache() {
-        return btreeFactory.getBufferCache();
-    }
-
 }

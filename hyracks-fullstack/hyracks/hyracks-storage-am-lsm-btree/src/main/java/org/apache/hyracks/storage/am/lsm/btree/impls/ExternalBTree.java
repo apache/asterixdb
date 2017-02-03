@@ -49,11 +49,12 @@ import org.apache.hyracks.storage.am.common.api.TreeIndexException;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.am.lsm.btree.tuples.LSMBTreeRefrencingTupleWriterFactory;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessorInternal;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexFileManager;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
@@ -81,7 +82,7 @@ public class ExternalBTree extends LSMBTree implements ITwoPCIndex {
     private final LSMBTreeDiskComponentFactory transactionComponentFactory;
     // A second disk component list that will be used when a transaction is
     // committed and will be seen by subsequent accessors
-    private final List<ILSMComponent> secondDiskComponents;
+    private final List<ILSMDiskComponent> secondDiskComponents;
     // A pointer that points to the current most recent list (either
     // diskComponents = 0, or secondDiskComponents = 1). It starts with -1 to
     // indicate first time activation
@@ -91,45 +92,30 @@ public class ExternalBTree extends LSMBTree implements ITwoPCIndex {
 
     //TODO remove BloomFilter from external dataset's secondary LSMBTree index
     public ExternalBTree(IIOManager ioManager, ITreeIndexFrameFactory interiorFrameFactory,
-            ITreeIndexFrameFactory insertLeafFrameFactory,
-            ITreeIndexFrameFactory deleteLeafFrameFactory, ILSMIndexFileManager fileManager,
-            TreeIndexFactory<BTree> diskBTreeFactory, TreeIndexFactory<BTree> bulkLoadBTreeFactory,
-            BloomFilterFactory bloomFilterFactory, double bloomFilterFalsePositiveRate,
-            IFileMapProvider diskFileMapProvider, int fieldCount, IBinaryComparatorFactory[] cmpFactories,
-            ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler,
-            ILSMIOOperationCallback ioOpCallback, TreeIndexFactory<BTree> transactionBTreeFactory, int version,
-            boolean durable) {
-        super(ioManager, insertLeafFrameFactory, deleteLeafFrameFactory, fileManager,
-                diskBTreeFactory,
-                bulkLoadBTreeFactory, bloomFilterFactory, bloomFilterFalsePositiveRate, diskFileMapProvider, fieldCount,
-                cmpFactories, mergePolicy, opTracker, ioScheduler, ioOpCallback, false, durable);
-        this.transactionComponentFactory = new LSMBTreeDiskComponentFactory(transactionBTreeFactory, bloomFilterFactory,
-                null);
+            ITreeIndexFrameFactory insertLeafFrameFactory, ITreeIndexFrameFactory deleteLeafFrameFactory,
+            ILSMIndexFileManager fileManager, TreeIndexFactory<BTree> diskBTreeFactory,
+            TreeIndexFactory<BTree> bulkLoadBTreeFactory, BloomFilterFactory bloomFilterFactory,
+            double bloomFilterFalsePositiveRate, IFileMapProvider diskFileMapProvider, int fieldCount,
+            IBinaryComparatorFactory[] cmpFactories, ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker,
+            ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallback ioOpCallback,
+            TreeIndexFactory<BTree> transactionBTreeFactory, int version, boolean durable) {
+        super(ioManager, insertLeafFrameFactory, deleteLeafFrameFactory, fileManager, diskBTreeFactory,
+                bulkLoadBTreeFactory, bloomFilterFactory, bloomFilterFalsePositiveRate, diskFileMapProvider,
+                fieldCount, cmpFactories, mergePolicy, opTracker, ioScheduler, ioOpCallback, false, durable);
+        this.transactionComponentFactory =
+                new LSMBTreeDiskComponentFactory(transactionBTreeFactory, bloomFilterFactory, null);
         this.secondDiskComponents = new LinkedList<>();
         this.interiorFrameFactory = interiorFrameFactory;
         this.version = version;
     }
 
-    // This method is used to create a target for a bulk modify operation. This
-    // component must then be either committed or deleted
-    private ILSMComponent createTransactionTarget() throws HyracksDataException, IndexException {
-        LSMComponentFileReferences componentFileRefs;
-        try {
-            componentFileRefs = fileManager.getNewTransactionFileReference();
-        } catch (IOException e) {
-            throw new HyracksDataException("Failed to create transaction components", e);
-        }
-        return createDiskComponent(transactionComponentFactory, componentFileRefs.getInsertIndexFileReference(),
-                componentFileRefs.getBloomFilterFileReference(), true);
-    }
-
     // The subsume merged components is overridden to account for:
     // Maintaining two versions of the index
     @Override
-    public void subsumeMergedComponents(ILSMComponent newComponent, List<ILSMComponent> mergedComponents)
+    public void subsumeMergedComponents(ILSMDiskComponent newComponent, List<ILSMComponent> mergedComponents)
             throws HyracksDataException {
-        List<ILSMComponent> newerList;
-        List<ILSMComponent> olderList;
+        List<ILSMDiskComponent> newerList;
+        List<ILSMDiskComponent> olderList;
         if (version == 0) {
             newerList = diskComponents;
             olderList = secondDiskComponents;
@@ -155,7 +141,7 @@ public class ExternalBTree extends LSMBTree implements ITwoPCIndex {
     // is needed.
     // It only needs to return the newer list
     @Override
-    public List<ILSMComponent> getImmutableComponents() {
+    public List<ILSMDiskComponent> getImmutableComponents() {
         if (version == 0) {
             return diskComponents;
         } else {
@@ -204,9 +190,9 @@ public class ExternalBTree extends LSMBTree implements ITwoPCIndex {
         BTree lastBTree = ((LSMBTreeDiskComponent) mergingComponents.get(mergingComponents.size() - 1)).getBTree();
         FileReference firstFile = firstBTree.getFileReference();
         FileReference lastFile = lastBTree.getFileReference();
-        LSMComponentFileReferences relMergeFileRefs = fileManager
-                .getRelMergeFileReference(firstFile.getFile().getName(), lastFile.getFile().getName());
-        ILSMIndexAccessorInternal accessor = new LSMBTreeAccessor(lsmHarness, opCtx);
+        LSMComponentFileReferences relMergeFileRefs =
+                fileManager.getRelMergeFileReference(firstFile.getFile().getName(), lastFile.getFile().getName());
+        ILSMIndexAccessor accessor = new LSMBTreeAccessor(lsmHarness, opCtx);
         ioScheduler.scheduleOperation(new LSMBTreeMergeOperation(accessor, mergingComponents, cursor,
                 relMergeFileRefs.getInsertIndexFileReference(), relMergeFileRefs.getBloomFilterFileReference(),
                 callback, fileManager.getBaseDir()));
@@ -222,7 +208,7 @@ public class ExternalBTree extends LSMBTree implements ITwoPCIndex {
     // This function in an instance of this index is only used after a bulk load
     // is successful
     @Override
-    public void addComponent(ILSMComponent c) throws HyracksDataException {
+    public void addDiskComponent(ILSMDiskComponent c) throws HyracksDataException {
         if (version == 0) {
             diskComponents.add(0, c);
         } else if (version == 1) {
@@ -232,10 +218,10 @@ public class ExternalBTree extends LSMBTree implements ITwoPCIndex {
 
     // This function is used when a new component is to be committed.
     @Override
-    public void commitTransactionDiskComponent(ILSMComponent newComponent) throws HyracksDataException {
+    public void commitTransactionDiskComponent(ILSMDiskComponent newComponent) throws HyracksDataException {
         // determine which list is the new one and flip the pointer
-        List<ILSMComponent> newerList;
-        List<ILSMComponent> olderList;
+        List<ILSMDiskComponent> newerList;
+        List<ILSMDiskComponent> olderList;
         if (version == 0) {
             newerList = diskComponents;
             olderList = secondDiskComponents;
@@ -409,7 +395,8 @@ public class ExternalBTree extends LSMBTree implements ITwoPCIndex {
 
     // Not supported
     @Override
-    public void modify(IIndexOperationContext ictx, ITupleReference tuple) throws HyracksDataException, IndexException {
+    public void modify(IIndexOperationContext ictx, ITupleReference tuple)
+            throws HyracksDataException, IndexException {
         throw new UnsupportedOperationException("tuple modify not supported in LSM-Disk-Only-BTree");
     }
 
@@ -422,7 +409,7 @@ public class ExternalBTree extends LSMBTree implements ITwoPCIndex {
 
     // Not supported
     @Override
-    public ILSMComponent flush(ILSMIOOperation operation) throws HyracksDataException, IndexException {
+    public ILSMDiskComponent flush(ILSMIOOperation operation) throws HyracksDataException, IndexException {
         throw new UnsupportedOperationException("flush not supported in LSM-Disk-Only-BTree");
     }
 
@@ -430,7 +417,7 @@ public class ExternalBTree extends LSMBTree implements ITwoPCIndex {
     @Override
     public void getOperationalComponents(ILSMIndexOperationContext ctx) {
         List<ILSMComponent> operationalComponents = ctx.getComponentHolder();
-        List<ILSMComponent> immutableComponents;
+        List<ILSMDiskComponent> immutableComponents;
         // Identify current list in case of a merge
         if (version == 0) {
             immutableComponents = diskComponents;
@@ -486,7 +473,7 @@ public class ExternalBTree extends LSMBTree implements ITwoPCIndex {
     // The bulk loader used for both initial loading and transaction
     // modifications
     public class LSMTwoPCBTreeBulkLoader implements IIndexBulkLoader, ITwoPCIndexBulkLoader {
-        private final ILSMComponent component;
+        private final ILSMDiskComponent component;
         private final BTreeBulkLoader bulkLoader;
         private final IIndexBulkLoader builder;
         private boolean cleanedUpArtifacts = false;
@@ -516,14 +503,14 @@ public class ExternalBTree extends LSMBTree implements ITwoPCIndex {
                 }
             }
 
-            frameTupleWriterFactory = ((LSMBTreeDiskComponent) component).getBTree().getLeafFrameFactory()
-                    .getTupleWriterFactory();
+            frameTupleWriterFactory =
+                    ((LSMBTreeDiskComponent) component).getBTree().getLeafFrameFactory().getTupleWriterFactory();
             bulkLoader = (BTreeBulkLoader) ((LSMBTreeDiskComponent) component).getBTree().createBulkLoader(fillFactor,
                     verifyInput, numElementsHint, false);
 
             int maxBucketsPerElement = BloomCalculations.maxBucketsPerElement(numElementsHint);
-            BloomFilterSpecification bloomFilterSpec = BloomCalculations.computeBloomSpec(maxBucketsPerElement,
-                    bloomFilterFalsePositiveRate);
+            BloomFilterSpecification bloomFilterSpec =
+                    BloomCalculations.computeBloomSpec(maxBucketsPerElement, bloomFilterFalsePositiveRate);
             builder = ((LSMBTreeDiskComponent) component).getBloomFilter().createBuilder(numElementsHint,
                     bloomFilterSpec.getNumHashes(), bloomFilterSpec.getNumBucketsPerElements());
         }
@@ -619,6 +606,19 @@ public class ExternalBTree extends LSMBTree implements ITwoPCIndex {
                 // Do nothing
             }
         }
+
+        // This method is used to create a target for a bulk modify operation. This
+        // component must then be either committed or deleted
+        private ILSMDiskComponent createTransactionTarget() throws HyracksDataException, IndexException {
+            LSMComponentFileReferences componentFileRefs;
+            try {
+                componentFileRefs = fileManager.getNewTransactionFileReference();
+            } catch (IOException e) {
+                throw new HyracksDataException("Failed to create transaction components", e);
+            }
+            return createDiskComponent(transactionComponentFactory, componentFileRefs.getInsertIndexFileReference(),
+                    componentFileRefs.getBloomFilterFileReference(), true);
+        }
     }
 
     @Override
@@ -628,13 +628,13 @@ public class ExternalBTree extends LSMBTree implements ITwoPCIndex {
 
     // The accessor for disk only indexes don't use modification callback and always carry the target index version with them
     @Override
-    public ILSMIndexAccessorInternal createAccessor(IModificationOperationCallback modificationCallback,
+    public ILSMIndexAccessor createAccessor(IModificationOperationCallback modificationCallback,
             ISearchOperationCallback searchCallback) {
         return new LSMBTreeAccessor(lsmHarness, createOpContext(searchCallback, version));
     }
 
     @Override
-    public ILSMIndexAccessorInternal createAccessor(ISearchOperationCallback searchCallback, int targetIndexVersion)
+    public ILSMIndexAccessor createAccessor(ISearchOperationCallback searchCallback, int targetIndexVersion)
             throws HyracksDataException {
         return new LSMBTreeAccessor(lsmHarness, createOpContext(searchCallback, targetIndexVersion));
     }
@@ -670,12 +670,12 @@ public class ExternalBTree extends LSMBTree implements ITwoPCIndex {
     }
 
     @Override
-    public List<ILSMComponent> getFirstComponentList() {
+    public List<ILSMDiskComponent> getFirstComponentList() {
         return diskComponents;
     }
 
     @Override
-    public List<ILSMComponent> getSecondComponentList() {
+    public List<ILSMDiskComponent> getSecondComponentList() {
         return secondDiskComponents;
     }
 

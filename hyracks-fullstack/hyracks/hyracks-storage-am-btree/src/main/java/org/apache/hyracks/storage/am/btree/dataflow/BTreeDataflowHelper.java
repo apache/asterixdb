@@ -22,7 +22,6 @@ package org.apache.hyracks.storage.am.btree.dataflow;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
-import org.apache.hyracks.storage.am.btree.exceptions.BTreeException;
 import org.apache.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
 import org.apache.hyracks.storage.am.btree.util.BTreeUtils;
 import org.apache.hyracks.storage.am.common.api.ITreeIndex;
@@ -42,16 +41,11 @@ public class BTreeDataflowHelper extends TreeIndexDataflowHelper {
     @Override
     public ITreeIndex createIndexInstance() throws HyracksDataException {
         AbstractTreeIndexOperatorDescriptor treeOpDesc = (AbstractTreeIndexOperatorDescriptor) opDesc;
-        try {
-            FileReference fileRef = IndexFileNameUtil.getIndexAbsoluteFileRef(treeOpDesc, ctx.getTaskAttemptId()
-                    .getTaskId().getPartition(), ctx.getIOManager());
-            IBufferCache bufferCache = opDesc.getStorageManager().getBufferCache(ctx);
-            return BTreeUtils.createBTree(bufferCache, opDesc.getStorageManager()
-                    .getFileMapProvider(ctx), treeOpDesc.getTreeIndexTypeTraits(), treeOpDesc
-                            .getTreeIndexComparatorFactories(), BTreeLeafFrameType.REGULAR_NSM, fileRef,
-                    pageManagerFactory.createPageManager(bufferCache));
-        } catch (BTreeException e) {
-            throw new HyracksDataException(e);
-        }
+        FileReference fileRef = IndexFileNameUtil.getIndexAbsoluteFileRef(treeOpDesc,
+                ctx.getTaskAttemptId().getTaskId().getPartition(), ctx.getIOManager());
+        IBufferCache bufferCache = opDesc.getStorageManager().getBufferCache(ctx);
+        return BTreeUtils.createBTree(bufferCache, opDesc.getStorageManager().getFileMapProvider(ctx),
+                treeOpDesc.getTreeIndexTypeTraits(), treeOpDesc.getTreeIndexComparatorFactories(),
+                BTreeLeafFrameType.REGULAR_NSM, fileRef, pageManagerFactory.createPageManager(bufferCache));
     }
 }

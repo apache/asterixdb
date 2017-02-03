@@ -22,19 +22,20 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilter;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMMemoryComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
 
-public abstract class AbstractMemoryLSMComponent extends AbstractLSMComponent {
+public abstract class AbstractLSMMemoryComponent extends AbstractLSMComponent implements ILSMMemoryComponent {
 
     private final IVirtualBufferCache vbc;
     private final AtomicBoolean isModified;
     private int writerCount;
     private boolean requestedToBeActive;
+    private final MemoryComponentMetadata metadata;
 
-    public AbstractMemoryLSMComponent(IVirtualBufferCache vbc, boolean isActive, ILSMComponentFilter filter,
-            long mostRecentMarkerLSN) {
-        super(filter, mostRecentMarkerLSN);
+    public AbstractLSMMemoryComponent(IVirtualBufferCache vbc, boolean isActive, ILSMComponentFilter filter) {
+        super(filter);
         this.vbc = vbc;
         writerCount = 0;
         if (isActive) {
@@ -43,14 +44,7 @@ public abstract class AbstractMemoryLSMComponent extends AbstractLSMComponent {
             state = ComponentState.INACTIVE;
         }
         isModified = new AtomicBoolean();
-    }
-
-    public AbstractMemoryLSMComponent(IVirtualBufferCache vbc, boolean isActive, ILSMComponentFilter filter) {
-        this(vbc, isActive, filter, -1L);
-    }
-
-    public AbstractMemoryLSMComponent(IVirtualBufferCache vbc, boolean isActive) {
-        this(vbc, isActive, null);
+        metadata = new MemoryComponentMetadata();
     }
 
     @Override
@@ -126,7 +120,8 @@ public abstract class AbstractMemoryLSMComponent extends AbstractLSMComponent {
             case MODIFICATION:
                 if (isMutableComponent) {
                     writerCount--;
-                    //A failed operation should not change the component state since it's better for the failed operation's effect to be no-op.
+                    // A failed operation should not change the component state since it's better for
+                    // the failed operation's effect to be no-op.
                     if (state == ComponentState.READABLE_WRITABLE && !failedOperation && isFull()) {
                         state = ComponentState.READABLE_UNWRITABLE;
                     }
@@ -164,6 +159,7 @@ public abstract class AbstractMemoryLSMComponent extends AbstractLSMComponent {
         }
     }
 
+    @Override
     public boolean isReadable() {
         if (state == ComponentState.INACTIVE || state == ComponentState.UNREADABLE_UNWRITABLE) {
             return false;
@@ -172,43 +168,43 @@ public abstract class AbstractMemoryLSMComponent extends AbstractLSMComponent {
     }
 
     @Override
-    public LSMComponentType getType() {
-        return LSMComponentType.MEMORY;
-    }
-
-    @Override
-    public ComponentState getState() {
-        return state;
-    }
-
     public void setState(ComponentState state) {
         this.state = state;
     }
 
-    public void setActive() {
+    @Override
+    public void activate() {
         requestedToBeActive = true;
     }
 
-    public void setIsModified() {
+    @Override
+    public void setModified() {
         isModified.set(true);
     }
 
+    @Override
     public boolean isModified() {
         return isModified.get();
     }
 
+    @Override
     public boolean isFull() {
         return vbc.isFull();
     }
 
-    protected void reset() throws HyracksDataException {
+    @Override
+    public void reset() throws HyracksDataException {
         isModified.set(false);
-        if (filter != null) {
-            filter.reset();
-        }
+        metadata.reset();
     }
 
+    @Override
     public int getWriterCount() {
         return writerCount;
+    }
+
+    @Override
+    public MemoryComponentMetadata getMetadata() {
+        return metadata;
     }
 }

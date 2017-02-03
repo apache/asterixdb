@@ -19,24 +19,31 @@
 package org.apache.hyracks.storage.am.lsm.common.api;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.storage.am.common.api.IndexException;
-import org.apache.hyracks.storage.am.common.api.TreeIndexException;
+import org.apache.hyracks.storage.am.lsm.common.impls.DiskComponentMetadata;
 
-public interface ILSMIndexAccessorInternal extends ILSMIndexAccessor {
+public interface ILSMDiskComponent extends ILSMComponent {
+    @Override
+    default LSMComponentType getType() {
+        return LSMComponentType.DISK;
+    }
 
-    /**
-     * Force a flush of the in-memory component.
-     *
-     * @throws HyracksDataException
-     * @throws TreeIndexException
-     */
-    public void flush(ILSMIOOperation operation) throws HyracksDataException, IndexException;
+    @Override
+    DiskComponentMetadata getMetadata();
 
     /**
-     * Merge all on-disk components.
+     * @return the on disk size of this component
+     */
+    long getComponentSize();
+
+    /**
+     * @return the reference count for the component
+     */
+    int getFileReferenceCount();
+
+    /**
+     * Delete the component from disk
      *
      * @throws HyracksDataException
-     * @throws TreeIndexException
      */
-    public void merge(ILSMIOOperation operation) throws HyracksDataException, IndexException;
+    void destroy() throws HyracksDataException;
 }

@@ -100,7 +100,7 @@ public class ExternalRTreeDataflowHelper extends LSMRTreeDataflowHelper {
                     typeTraits,
                     rtreeCmpFactories, btreeCmpFactories, valueProviderFactories, rtreePolicyType,
                     bloomFilterFalsePositiveRate, mergePolicy, opTracker, ioScheduler,
-                    ioOpCallbackFactory.createIOOperationCallback(), linearizeCmpFactory, btreeFields, version, durable,
+                    ioOpCallbackFactory.createIoOpCallback(), linearizeCmpFactory, btreeFields, version, durable,
                     isPointMBR, (IMetadataPageManagerFactory) opDesc.getPageManagerFactory());
         } catch (TreeIndexException e) {
             throw new HyracksDataException(e);

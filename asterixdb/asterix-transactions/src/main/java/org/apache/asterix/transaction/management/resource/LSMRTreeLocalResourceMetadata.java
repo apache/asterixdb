@@ -97,8 +97,8 @@ public class LSMRTreeLocalResourceMetadata extends Resource {
                     mergePolicyFactory.createMergePolicy(mergePolicyProperties,
                             runtimeContextProvider.getDatasetLifecycleManager()),
                     opTrackerProvider.getOperationTracker(appCtx), runtimeContextProvider.getLSMIOScheduler(),
-                    ioOpCallbackFactory.createIOOperationCallback(), linearizeCmpFactory, rtreeFields,
-                    filterTypeTraits, filterCmpFactories, filterFields, true, isPointMBR, metadataPageManagerFactory);
+                    ioOpCallbackFactory.createIoOpCallback(), linearizeCmpFactory, rtreeFields, filterTypeTraits,
+                    filterCmpFactories, filterFields, true, isPointMBR, metadataPageManagerFactory);
         } catch (TreeIndexException e) {
             throw new HyracksDataException(e);
         }

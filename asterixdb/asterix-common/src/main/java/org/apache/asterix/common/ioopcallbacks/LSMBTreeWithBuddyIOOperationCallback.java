@@ -25,21 +25,22 @@ import org.apache.hyracks.storage.am.common.api.IMetadataPageManager;
 import org.apache.hyracks.storage.am.lsm.btree.impls.LSMBTreeWithBuddyDiskComponent;
 import org.apache.hyracks.storage.am.lsm.btree.impls.LSMBTreeWithBuddyFileManager;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
 
 public class LSMBTreeWithBuddyIOOperationCallback extends AbstractLSMIOOperationCallback {
 
     @Override
-    public void afterOperation(LSMOperationType opType, List<ILSMComponent> oldComponents, ILSMComponent newComponent)
-            throws HyracksDataException {
+    public void afterOperation(LSMOperationType opType, List<ILSMComponent> oldComponents,
+            ILSMDiskComponent newComponent) throws HyracksDataException {
         if (newComponent != null) {
             LSMBTreeWithBuddyDiskComponent btreeComponent = (LSMBTreeWithBuddyDiskComponent) newComponent;
-            putLSNIntoMetadata(btreeComponent.getBTree(), oldComponents);
+            putLSNIntoMetadata(btreeComponent, oldComponents);
         }
     }
 
     @Override
-    public long getComponentLSN(List<ILSMComponent> diskComponents) throws HyracksDataException {
+    public long getComponentLSN(List<? extends ILSMComponent> diskComponents) throws HyracksDataException {
         if (diskComponents == null) {
             // Implies a flush IO operation <Will never happen currently as Btree with buddy btree is only used with external datasets>
             synchronized (this) {
@@ -57,12 +58,12 @@ public class LSMBTreeWithBuddyIOOperationCallback extends AbstractLSMIOOperation
     }
 
     @Override
-    public long getComponentFileLSNOffset(ILSMComponent diskComponent, String diskComponentFilePath)
+    public long getComponentFileLSNOffset(ILSMDiskComponent diskComponent, String diskComponentFilePath)
             throws HyracksDataException {
         if (diskComponentFilePath.endsWith(LSMBTreeWithBuddyFileManager.BTREE_STRING)) {
             LSMBTreeWithBuddyDiskComponent btreeComponent = (LSMBTreeWithBuddyDiskComponent) diskComponent;
-            IMetadataPageManager metadataPageManager = (IMetadataPageManager) btreeComponent.getBTree()
-                    .getPageManager();
+            IMetadataPageManager metadataPageManager =
+                    (IMetadataPageManager) btreeComponent.getBTree().getPageManager();
             return metadataPageManager.getFileOffset(metadataPageManager.createMetadataFrame(), LSN_KEY);
         }
         return INVALID;

@@ -59,8 +59,8 @@ public class ExternalRTreeLocalResourceMetadata extends LSMRTreeLocalResourceMet
     }
 
     @Override
-    public ILSMIndex createIndexInstance(INCApplicationContext appCtx,
-            LocalResource resource) throws HyracksDataException {
+    public ILSMIndex createIndexInstance(INCApplicationContext appCtx, LocalResource resource)
+            throws HyracksDataException {
         IAppRuntimeContext runtimeContextProvider = (IAppRuntimeContext) appCtx.getApplicationObject();
         IIOManager ioManager = runtimeContextProvider.getIOManager();
         FileReference file = ioManager.resolve(resource.getPath());
@@ -70,10 +70,9 @@ public class ExternalRTreeLocalResourceMetadata extends LSMRTreeLocalResourceMet
                     valueProviderFactories, rtreePolicyType, runtimeContextProvider.getBloomFilterFalsePositiveRate(),
                     mergePolicyFactory.createMergePolicy(mergePolicyProperties,
                             runtimeContextProvider.getDatasetLifecycleManager()),
-                    opTrackerProvider.getOperationTracker(appCtx),
-                    runtimeContextProvider.getLSMIOScheduler(),
-                    ioOpCallbackFactory.createIOOperationCallback(), linearizeCmpFactory,
-                    btreeFields, -1, true, isPointMBR, metadataPageManagerFactory);
+                    opTrackerProvider.getOperationTracker(appCtx), runtimeContextProvider.getLSMIOScheduler(),
+                    ioOpCallbackFactory.createIoOpCallback(), linearizeCmpFactory, btreeFields, -1, true, isPointMBR,
+                    metadataPageManagerFactory);
         } catch (TreeIndexException e) {
             throw new HyracksDataException(e);
         }

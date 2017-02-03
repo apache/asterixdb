@@ -30,11 +30,11 @@ public interface ILSMMergePolicyFactory extends Serializable {
     // because we want to have an access to the IIndexLifecycleManager inside some of the merge policies. However,
     // in order to get the IIndexLifecycleManager instance, we need to cast to IAsterixAppRuntimeContext which exist
     // in asterix and cannot be seen in hyracks. Thus we pass IHyracksTaskContext and let the merge policy do the casting.
-    public ILSMMergePolicy createMergePolicy(Map<String, String> configuration, IHyracksTaskContext ctx);
+    ILSMMergePolicy createMergePolicy(Map<String, String> configuration, IHyracksTaskContext ctx);
 
-    public ILSMMergePolicy createMergePolicy(Map<String, String> configuration, IResourceLifecycleManager ilcm);
+    ILSMMergePolicy createMergePolicy(Map<String, String> configuration, IResourceLifecycleManager ilcm);
 
-    public String getName();
+    String getName();
 
-    public Set<String> getPropertiesNames();
+    Set<String> getPropertiesNames();
 }

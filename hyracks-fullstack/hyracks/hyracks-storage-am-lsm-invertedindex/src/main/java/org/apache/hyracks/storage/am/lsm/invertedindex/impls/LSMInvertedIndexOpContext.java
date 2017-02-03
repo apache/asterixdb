@@ -31,7 +31,9 @@ import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.am.common.ophelpers.MultiComparator;
 import org.apache.hyracks.storage.am.common.tuples.PermutingTupleReference;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMMemoryComponent;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexOperationContext;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexAccessor;
 
@@ -41,8 +43,8 @@ public class LSMInvertedIndexOpContext extends AbstractLSMIndexOperationContext 
 
     private IndexOperation op;
     private final List<ILSMComponent> componentHolder;
-    private final List<ILSMComponent> componentsToBeMerged;
-    private final List<ILSMComponent> componentsToBeReplicated;
+    private final List<ILSMDiskComponent> componentsToBeMerged;
+    private final List<ILSMDiskComponent> componentsToBeReplicated;
 
     private IModificationOperationCallback modificationCallback;
     private ISearchOperationCallback searchCallback;
@@ -64,12 +66,12 @@ public class LSMInvertedIndexOpContext extends AbstractLSMIndexOperationContext 
 
     public ISearchPredicate searchPredicate;
 
-    public LSMInvertedIndexOpContext(List<ILSMComponent> mutableComponents,
+    public LSMInvertedIndexOpContext(List<ILSMMemoryComponent> mutableComponents,
             IModificationOperationCallback modificationCallback, ISearchOperationCallback searchCallback,
             int[] invertedIndexFields, int[] filterFields) throws HyracksDataException {
-        this.componentHolder = new LinkedList<ILSMComponent>();
-        this.componentsToBeMerged = new LinkedList<ILSMComponent>();
-        this.componentsToBeReplicated = new LinkedList<ILSMComponent>();
+        this.componentHolder = new LinkedList<>();
+        this.componentsToBeMerged = new LinkedList<>();
+        this.componentsToBeReplicated = new LinkedList<>();
         this.modificationCallback = modificationCallback;
         this.searchCallback = searchCallback;
 
@@ -77,8 +79,8 @@ public class LSMInvertedIndexOpContext extends AbstractLSMIndexOperationContext 
         deletedKeysBTreeAccessors = new IIndexAccessor[mutableComponents.size()];
 
         for (int i = 0; i < mutableComponents.size(); i++) {
-            LSMInvertedIndexMemoryComponent mutableComponent = (LSMInvertedIndexMemoryComponent) mutableComponents
-                    .get(i);
+            LSMInvertedIndexMemoryComponent mutableComponent =
+                    (LSMInvertedIndexMemoryComponent) mutableComponents.get(i);
             mutableInvIndexAccessors[i] = (IInvertedIndexAccessor) mutableComponent.getInvIndex()
                     .createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
             deletedKeysBTreeAccessors[i] = mutableComponent.getDeletedKeysBTree()
@@ -149,7 +151,7 @@ public class LSMInvertedIndexOpContext extends AbstractLSMIndexOperationContext 
     }
 
     @Override
-    public List<ILSMComponent> getComponentsToBeMerged() {
+    public List<ILSMDiskComponent> getComponentsToBeMerged() {
         return componentsToBeMerged;
     }
 
@@ -164,7 +166,7 @@ public class LSMInvertedIndexOpContext extends AbstractLSMIndexOperationContext 
     }
 
     @Override
-    public List<ILSMComponent> getComponentsToBeReplicated() {
+    public List<ILSMDiskComponent> getComponentsToBeReplicated() {
         return componentsToBeReplicated;
     }
 }

@@ -25,16 +25,15 @@ import org.apache.hyracks.storage.am.common.ophelpers.MultiComparator;
 
 public interface ILSMComponentFilter {
 
-    public void update(ITupleReference tuple, MultiComparator cmp) throws HyracksDataException;
+    void update(ITupleReference tuple, MultiComparator cmp) throws HyracksDataException;
 
-    public boolean satisfy(ITupleReference minTuple, ITupleReference maxTuple, MultiComparator filterCmp)
-            throws HyracksDataException;
+    boolean satisfy(ITupleReference min, ITupleReference max, MultiComparator cmp) throws HyracksDataException;
 
-    public ITupleReference getMinTuple();
+    ITupleReference getMinTuple();
 
-    public ITupleReference getMaxTuple();
+    ITupleReference getMaxTuple();
 
-    public IBinaryComparatorFactory[] getFilterCmpFactories();
+    IBinaryComparatorFactory[] getFilterCmpFactories();
 
-    public void reset();
+    void reset();
 }

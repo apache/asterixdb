@@ -42,7 +42,7 @@ public class LSMComponentFilterManager implements ILSMComponentFilterManager {
     }
 
     @Override
-    public void updateFilterInfo(ILSMComponentFilter filter, List<ITupleReference> filterTuples)
+    public void updateFilter(ILSMComponentFilter filter, List<ITupleReference> filterTuples)
             throws HyracksDataException {
         MultiComparator filterCmp = MultiComparator.create(filter.getFilterCmpFactories());
         for (ITupleReference tuple : filterTuples) {
@@ -51,7 +51,7 @@ public class LSMComponentFilterManager implements ILSMComponentFilterManager {
     }
 
     @Override
-    public void writeFilterInfo(ILSMComponentFilter filter, ITreeIndex treeIndex) throws HyracksDataException {
+    public void writeFilter(ILSMComponentFilter filter, ITreeIndex treeIndex) throws HyracksDataException {
         IMetadataPageManager treeMetaManager = (IMetadataPageManager) treeIndex.getPageManager();
         ILSMComponentFilterReference filterFrame = filterFrameFactory.createFrame();
         try {
@@ -67,7 +67,7 @@ public class LSMComponentFilterManager implements ILSMComponentFilterManager {
     }
 
     @Override
-    public boolean readFilterInfo(ILSMComponentFilter filter, ITreeIndex treeIndex) throws HyracksDataException {
+    public boolean readFilter(ILSMComponentFilter filter, ITreeIndex treeIndex) throws HyracksDataException {
         IMetadataPageManager treeMetaManager = (IMetadataPageManager) treeIndex.getPageManager();
         ILSMComponentFilterReference filterFrame = filterFrameFactory.createFrame();
         treeMetaManager.get(treeMetaManager.createMetadataFrame(), FILTER_KEY, filterFrame);
@@ -78,7 +78,7 @@ public class LSMComponentFilterManager implements ILSMComponentFilterManager {
         List<ITupleReference> filterTuples = new ArrayList<>();
         filterTuples.add(filterFrame.getMinTuple());
         filterTuples.add(filterFrame.getMaxTuple());
-        updateFilterInfo(filter, filterTuples);
+        updateFilter(filter, filterTuples);
         return true;
     }
 

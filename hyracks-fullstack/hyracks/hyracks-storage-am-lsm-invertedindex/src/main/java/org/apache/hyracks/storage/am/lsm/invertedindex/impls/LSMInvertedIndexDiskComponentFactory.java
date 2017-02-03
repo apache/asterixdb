@@ -22,16 +22,13 @@ package org.apache.hyracks.storage.am.lsm.invertedindex.impls;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.bloomfilter.impls.BloomFilterFactory;
 import org.apache.hyracks.storage.am.btree.impls.BTree;
-import org.apache.hyracks.storage.am.common.api.IndexException;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilterFactory;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponentFactory;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
 import org.apache.hyracks.storage.am.lsm.common.impls.TreeIndexFactory;
 import org.apache.hyracks.storage.am.lsm.invertedindex.ondisk.OnDiskInvertedIndexFactory;
-import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 
-public class LSMInvertedIndexDiskComponentFactory implements ILSMComponentFactory {
+public class LSMInvertedIndexDiskComponentFactory implements ILSMDiskComponentFactory {
     private final OnDiskInvertedIndexFactory diskInvIndexFactory;
     private final TreeIndexFactory<BTree> btreeFactory;
     private final BloomFilterFactory bloomFilterFactory;
@@ -47,16 +44,11 @@ public class LSMInvertedIndexDiskComponentFactory implements ILSMComponentFactor
     }
 
     @Override
-    public ILSMComponent createLSMComponentInstance(LSMComponentFileReferences cfr) throws IndexException,
-            HyracksDataException {
-        return new LSMInvertedIndexDiskComponent(diskInvIndexFactory.createIndexInstance(cfr
-                .getInsertIndexFileReference()), btreeFactory.createIndexInstance(cfr.getDeleteIndexFileReference()),
+    public LSMInvertedIndexDiskComponent createComponent(LSMComponentFileReferences cfr) throws HyracksDataException {
+        return new LSMInvertedIndexDiskComponent(
+                diskInvIndexFactory.createIndexInstance(cfr.getInsertIndexFileReference()),
+                btreeFactory.createIndexInstance(cfr.getDeleteIndexFileReference()),
                 bloomFilterFactory.createBloomFiltertInstance(cfr.getBloomFilterFileReference()),
-                filterFactory == null ? null : filterFactory.createLSMComponentFilter());
-    }
-
-    @Override
-    public IBufferCache getBufferCache() {
-        return diskInvIndexFactory.getBufferCache();
+                filterFactory == null ? null : filterFactory.createFilter());
     }
 }

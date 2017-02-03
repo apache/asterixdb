@@ -33,7 +33,7 @@ public class LSMInvertedIndexIOOperationCallbackFactory implements ILSMIOOperati
     }
 
     @Override
-    public ILSMIOOperationCallback createIOOperationCallback() {
+    public ILSMIOOperationCallback createIoOpCallback() {
         return new LSMInvertedIndexIOOperationCallback();
     }
 }

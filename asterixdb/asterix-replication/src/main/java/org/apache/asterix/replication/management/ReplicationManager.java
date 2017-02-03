@@ -83,9 +83,8 @@ import org.apache.hyracks.api.replication.IReplicationJob;
 import org.apache.hyracks.api.replication.IReplicationJob.ReplicationExecutionType;
 import org.apache.hyracks.api.replication.IReplicationJob.ReplicationJobType;
 import org.apache.hyracks.api.replication.IReplicationJob.ReplicationOperation;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexReplicationJob;
-import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndex;
 import org.apache.hyracks.util.StorageUtil;
 import org.apache.hyracks.util.StorageUtil.StorageUnit;
 
@@ -123,8 +122,8 @@ public class ReplicationManager implements IReplicationManager {
     private ReplicationJobsProccessor replicationJobsProcessor;
     private final ReplicasEventsMonitor replicationMonitor;
     //dummy job used to stop ReplicationJobsProccessor thread.
-    private static final IReplicationJob REPLICATION_JOB_POISON_PILL = new ReplicationJob(
-            ReplicationJobType.METADATA, ReplicationOperation.REPLICATE, ReplicationExecutionType.ASYNC, null);
+    private static final IReplicationJob REPLICATION_JOB_POISON_PILL = new ReplicationJob(ReplicationJobType.METADATA,
+            ReplicationOperation.REPLICATE, ReplicationExecutionType.ASYNC, null);
     //used to identify the correct IP address when the node has multiple network interfaces
     private String hostIPAddressFirstOctet = null;
 
@@ -163,8 +162,9 @@ public class ReplicationManager implements IReplicationManager {
         replicationJobsProcessor = new ReplicationJobsProccessor();
         replicationMonitor = new ReplicasEventsMonitor();
 
-        Map<String, ClusterPartition[]> nodePartitions = ((IPropertiesProvider) asterixAppRuntimeContextProvider
-                .getAppContext()).getMetadataProperties().getNodePartitions();
+        Map<String, ClusterPartition[]> nodePartitions =
+                ((IPropertiesProvider) asterixAppRuntimeContextProvider.getAppContext()).getMetadataProperties()
+                        .getNodePartitions();
         //add list of replicas from configurations (To be read from another source e.g. Zookeeper)
         Set<Replica> replicaNodes = replicationProperties.getRemoteReplicas(nodeId);
         replica2PartitionsMap = new HashMap<>(replicaNodes.size());
@@ -300,8 +300,8 @@ public class ReplicationManager implements IReplicationManager {
                         //send LSMComponent properties
                         LSMComponentJob = (ILSMIndexReplicationJob) job;
                         LSMComponentProperties lsmCompProp = new LSMComponentProperties(LSMComponentJob, nodeId);
-                        requestBuffer = ReplicationProtocol.writeLSMComponentPropertiesRequest(lsmCompProp,
-                                requestBuffer);
+                        requestBuffer =
+                                ReplicationProtocol.writeLSMComponentPropertiesRequest(lsmCompProp, requestBuffer);
                         sendRequest(replicasSockets, requestBuffer);
                     }
 
@@ -325,10 +325,10 @@ public class ReplicationManager implements IReplicationManager {
                                  * since this is LSM_COMPONENT REPLICATE job, the job will contain
                                  * only the component being replicated.
                                  */
-                                ILSMComponent diskComponent = LSMComponentJob.getLSMIndexOperationContext()
+                                ILSMDiskComponent diskComponent = LSMComponentJob.getLSMIndexOperationContext()
                                         .getComponentsToBeReplicated().get(0);
-                                long lsnOffset = LSMIndexUtil.getComponentFileLSNOffset(
-                                        (AbstractLSMIndex) LSMComponentJob.getLSMIndex(), diskComponent, filePath);
+                                long lsnOffset = LSMIndexUtil.getComponentFileLSNOffset(LSMComponentJob.getLSMIndex(),
+                                        diskComponent, filePath);
                                 asterixFileProperties.initialize(filePath, fileSize, nodeId, isLSMComponentFile,
                                         lsnOffset, remainingFiles == 0);
                             } else {
@@ -338,7 +338,8 @@ public class ReplicationManager implements IReplicationManager {
                             requestBuffer = ReplicationProtocol.writeFileReplicationRequest(requestBuffer,
                                     asterixFileProperties, ReplicationRequestType.REPLICATE_FILE);
 
-                            Iterator<Map.Entry<String, SocketChannel>> iterator = replicasSockets.entrySet().iterator();
+                            Iterator<Map.Entry<String, SocketChannel>> iterator =
+                                    replicasSockets.entrySet().iterator();
                             while (iterator.hasNext()) {
                                 Map.Entry<String, SocketChannel> entry = iterator.next();
                                 //if the remote replica is not interested in this partition, skip it.
@@ -351,8 +352,8 @@ public class ReplicationManager implements IReplicationManager {
                                     NetworkingUtil.transferBufferToChannel(socketChannel, requestBuffer);
                                     NetworkingUtil.sendFile(fileChannel, socketChannel);
                                     if (asterixFileProperties.requiresAck()) {
-                                        ReplicationRequestType responseType = waitForResponse(socketChannel,
-                                                responseBuffer);
+                                        ReplicationRequestType responseType =
+                                                waitForResponse(socketChannel, responseBuffer);
                                         if (responseType != ReplicationRequestType.ACK) {
                                             throw new IOException(
                                                     "Could not receive ACK from replica " + entry.getKey());
@@ -788,10 +789,11 @@ public class ReplicationManager implements IReplicationManager {
 
             //if got ACKs from all remote replicas, notify pending jobs if any
 
-            if (jobCommitAcks.get(jobId).size() == replicationFactor && replicationJobsPendingAcks.containsKey(jobId)) {
+            if (jobCommitAcks.get(jobId).size() == replicationFactor
+                    && replicationJobsPendingAcks.containsKey(jobId)) {
                 ILogRecord pendingLog = replicationJobsPendingAcks.get(jobId);
                 synchronized (pendingLog) {
-                    pendingLog.notify();
+                    pendingLog.notifyAll();
                 }
             }
         }
@@ -997,17 +999,17 @@ public class ReplicationManager implements IReplicationManager {
         ByteBuffer requestBuffer = ByteBuffer.allocate(INITIAL_BUFFER_SIZE);
         for (String replicaId : replicaIds) {
             //1. identify replica indexes with LSN less than nonSharpCheckpointTargetLSN.
-            Map<Long, String> laggingIndexes = replicaResourcesManager.getLaggingReplicaIndexesId2PathMap(replicaId,
-                    nonSharpCheckpointTargetLSN);
+            Map<Long, String> laggingIndexes =
+                    replicaResourcesManager.getLaggingReplicaIndexesId2PathMap(replicaId, nonSharpCheckpointTargetLSN);
 
             if (laggingIndexes.size() > 0) {
                 //2. send request to remote replicas that have lagging indexes.
                 ReplicaIndexFlushRequest laggingIndexesResponse = null;
                 try (SocketChannel socketChannel = getReplicaSocket(replicaId)) {
-                    ReplicaIndexFlushRequest laggingIndexesRequest = new ReplicaIndexFlushRequest(
-                            laggingIndexes.keySet());
-                    requestBuffer = ReplicationProtocol.writeGetReplicaIndexFlushRequest(requestBuffer,
-                            laggingIndexesRequest);
+                    ReplicaIndexFlushRequest laggingIndexesRequest =
+                            new ReplicaIndexFlushRequest(laggingIndexes.keySet());
+                    requestBuffer =
+                            ReplicationProtocol.writeGetReplicaIndexFlushRequest(requestBuffer, laggingIndexesRequest);
                     NetworkingUtil.transferBufferToChannel(socketChannel, requestBuffer);
 
                     //3. remote replicas will respond with indexes that were not flushed.
@@ -1298,8 +1300,8 @@ public class ReplicationManager implements IReplicationManager {
             Thread.currentThread().setName("TxnLogs Replication Listener Thread");
             LOGGER.log(Level.INFO, "Started listening on socket: " + replicaSocket.socket().getRemoteSocketAddress());
 
-            try (BufferedReader incomingResponse = new BufferedReader(
-                    new InputStreamReader(replicaSocket.socket().getInputStream()))) {
+            try (BufferedReader incomingResponse =
+                    new BufferedReader(new InputStreamReader(replicaSocket.socket().getInputStream()))) {
                 while (true) {
                     String responseLine = incomingResponse.readLine();
                     if (responseLine == null) {

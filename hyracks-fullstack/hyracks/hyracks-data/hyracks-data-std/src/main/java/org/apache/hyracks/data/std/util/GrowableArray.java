@@ -71,4 +71,33 @@ public class GrowableArray implements IDataOutputProvider {
     public void setSize(int bytesRequired) {
         baaos.setSize(bytesRequired);
     }
+
+    @Override
+    public int hashCode() {
+        return 31 * baaos.getLength();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (!(obj instanceof GrowableArray)) {
+            return false;
+        }
+        GrowableArray other = (GrowableArray) obj;
+        int length = baaos.getLength();
+        if (other.baaos.getLength() != length) {
+            return false;
+        }
+        byte[] array1 = baaos.getByteArray();
+        byte[] array2 = other.baaos.getByteArray();
+        for (int i = 0; i < length; i++) {
+            if (array1[i] != array2[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
 }

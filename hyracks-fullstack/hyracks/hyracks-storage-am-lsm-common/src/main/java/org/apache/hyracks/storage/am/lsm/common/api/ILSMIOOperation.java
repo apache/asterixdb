@@ -27,20 +27,21 @@ import org.apache.hyracks.storage.am.common.api.IndexException;
 
 public interface ILSMIOOperation extends Callable<Boolean> {
 
-    public enum LSMIOOpertionType {
+    enum LSMIOOpertionType {
         FLUSH,
         MERGE
     }
 
-    public Set<IODeviceHandle> getReadDevices();
+    Set<IODeviceHandle> getReadDevices();
 
-    public Set<IODeviceHandle> getWriteDevices();
+    Set<IODeviceHandle> getWriteDevices();
 
-    public Boolean call() throws HyracksDataException, IndexException;
+    @Override
+    Boolean call() throws HyracksDataException, IndexException;
 
-    public ILSMIOOperationCallback getCallback();
+    ILSMIOOperationCallback getCallback();
 
-    public String getIndexUniqueIdentifier();
+    String getIndexUniqueIdentifier();
 
-    public LSMIOOpertionType getIOOpertionType();
+    LSMIOOpertionType getIOOpertionType();
 }

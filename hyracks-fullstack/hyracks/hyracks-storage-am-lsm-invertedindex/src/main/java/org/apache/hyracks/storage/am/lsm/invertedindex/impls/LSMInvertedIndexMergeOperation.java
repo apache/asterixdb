@@ -31,11 +31,11 @@ import org.apache.hyracks.storage.am.common.api.IndexException;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessorInternal;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.invertedindex.ondisk.OnDiskInvertedIndex;
 
 public class LSMInvertedIndexMergeOperation implements ILSMIOOperation {
-    private final ILSMIndexAccessorInternal accessor;
+    private final ILSMIndexAccessor accessor;
     private final List<ILSMComponent> mergingComponents;
     private final IIndexCursor cursor;
     private final FileReference dictBTreeMergeTarget;
@@ -44,7 +44,7 @@ public class LSMInvertedIndexMergeOperation implements ILSMIOOperation {
     private final ILSMIOOperationCallback callback;
     private final String indexIdentifier;
 
-    public LSMInvertedIndexMergeOperation(ILSMIndexAccessorInternal accessor, List<ILSMComponent> mergingComponents,
+    public LSMInvertedIndexMergeOperation(ILSMIndexAccessor accessor, List<ILSMComponent> mergingComponents,
             IIndexCursor cursor, FileReference dictBTreeMergeTarget, FileReference deletedKeysBTreeMergeTarget,
             FileReference bloomFilterMergeTarget, ILSMIOOperationCallback callback, String indexIdentifier) {
         this.accessor = accessor;
@@ -59,7 +59,7 @@ public class LSMInvertedIndexMergeOperation implements ILSMIOOperation {
 
     @Override
     public Set<IODeviceHandle> getReadDevices() {
-        Set<IODeviceHandle> devs = new HashSet<IODeviceHandle>();
+        Set<IODeviceHandle> devs = new HashSet<>();
         for (Object o : mergingComponents) {
             LSMInvertedIndexDiskComponent component = (LSMInvertedIndexDiskComponent) o;
             OnDiskInvertedIndex invIndex = (OnDiskInvertedIndex) component.getInvIndex();
@@ -72,7 +72,7 @@ public class LSMInvertedIndexMergeOperation implements ILSMIOOperation {
 
     @Override
     public Set<IODeviceHandle> getWriteDevices() {
-        Set<IODeviceHandle> devs = new HashSet<IODeviceHandle>();
+        Set<IODeviceHandle> devs = new HashSet<>();
         devs.add(dictBTreeMergeTarget.getDeviceHandle());
         devs.add(deletedKeysBTreeMergeTarget.getDeviceHandle());
         devs.add(bloomFilterMergeTarget.getDeviceHandle());

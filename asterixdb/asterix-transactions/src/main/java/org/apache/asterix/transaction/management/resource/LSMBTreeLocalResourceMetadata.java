@@ -69,9 +69,9 @@ public class LSMBTreeLocalResourceMetadata extends Resource {
 
     @Override
     public String toString() {
-        return new StringBuilder().append(" { \"").append(LSMBTreeLocalResourceMetadata.class.getName()).append(
-                "\" : {").append("\"datasetId\" : ").append(datasetId()).append(", \"partition\" : ").append(
-                        partition()).append(" } ").append(" }").toString();
+        return new StringBuilder().append(" { \"").append(LSMBTreeLocalResourceMetadata.class.getName())
+                .append("\" : {").append("\"datasetId\" : ").append(datasetId()).append(", \"partition\" : ")
+                .append(partition()).append(" } ").append(" }").toString();
     }
 
     @Override
@@ -82,15 +82,13 @@ public class LSMBTreeLocalResourceMetadata extends Resource {
         FileReference file = ioManager.resolve(resource.getPath());
         int ioDeviceNum = Resource.getIoDeviceNum(ioManager, file.getDeviceHandle());
         final IDatasetLifecycleManager datasetLifecycleManager = appRuntimeCtx.getDatasetLifecycleManager();
-        return LSMBTreeUtil.createLSMTree(ioManager, datasetLifecycleManager.getVirtualBufferCaches(
-                datasetId(), ioDeviceNum), file, appRuntimeCtx.getBufferCache(), appRuntimeCtx
-                        .getFileMapManager(),
-                typeTraits, cmpFactories, bloomFilterKeyFields, appRuntimeCtx
-                        .getBloomFilterFalsePositiveRate(),
+        return LSMBTreeUtil.createLSMTree(ioManager,
+                datasetLifecycleManager.getVirtualBufferCaches(datasetId(), ioDeviceNum), file,
+                appRuntimeCtx.getBufferCache(), appRuntimeCtx.getFileMapManager(), typeTraits, cmpFactories,
+                bloomFilterKeyFields, appRuntimeCtx.getBloomFilterFalsePositiveRate(),
                 mergePolicyFactory.createMergePolicy(mergePolicyProperties, datasetLifecycleManager),
-                opTrackerProvider.getOperationTracker(appCtx),
-                appRuntimeCtx.getLSMIOScheduler(),
-                ioOpCallbackFactory.createIOOperationCallback(), isPrimary, filterTypeTraits,
-                filterCmpFactories, btreeFields, filterFields, true, metadataPageManagerFactory);
+                opTrackerProvider.getOperationTracker(appCtx), appRuntimeCtx.getLSMIOScheduler(),
+                ioOpCallbackFactory.createIoOpCallback(), isPrimary, filterTypeTraits, filterCmpFactories, btreeFields,
+                filterFields, true, metadataPageManagerFactory);
     }
 }

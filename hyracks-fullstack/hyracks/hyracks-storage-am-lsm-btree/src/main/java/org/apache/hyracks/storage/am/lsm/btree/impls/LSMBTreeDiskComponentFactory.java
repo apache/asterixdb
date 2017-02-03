@@ -22,15 +22,12 @@ package org.apache.hyracks.storage.am.lsm.btree.impls;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.bloomfilter.impls.BloomFilterFactory;
 import org.apache.hyracks.storage.am.btree.impls.BTree;
-import org.apache.hyracks.storage.am.common.api.IndexException;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilterFactory;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponentFactory;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
 import org.apache.hyracks.storage.am.lsm.common.impls.TreeIndexFactory;
-import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 
-public class LSMBTreeDiskComponentFactory implements ILSMComponentFactory {
+public class LSMBTreeDiskComponentFactory implements ILSMDiskComponentFactory {
     private final TreeIndexFactory<BTree> btreeFactory;
     private final BloomFilterFactory bloomFilterFactory;
     private final ILSMComponentFilterFactory filterFactory;
@@ -43,17 +40,11 @@ public class LSMBTreeDiskComponentFactory implements ILSMComponentFactory {
     }
 
     @Override
-    public ILSMComponent createLSMComponentInstance(LSMComponentFileReferences cfr)
-            throws IndexException, HyracksDataException {
+    public LSMBTreeDiskComponent createComponent(LSMComponentFileReferences cfr) throws HyracksDataException {
         return new LSMBTreeDiskComponent(btreeFactory.createIndexInstance(cfr.getInsertIndexFileReference()),
                 bloomFilterFactory == null ? null
                         : bloomFilterFactory.createBloomFiltertInstance(cfr.getBloomFilterFileReference()),
-                filterFactory == null ? null : filterFactory.createLSMComponentFilter());
-    }
-
-    @Override
-    public IBufferCache getBufferCache() {
-        return btreeFactory.getBufferCache();
+                filterFactory == null ? null : filterFactory.createFilter());
     }
 
     public int[] getBloomFilterKeyFields() {

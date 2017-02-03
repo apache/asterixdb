@@ -34,30 +34,32 @@ import org.apache.hyracks.api.replication.IReplicationJob.ReplicationExecutionTy
 import org.apache.hyracks.api.replication.IReplicationJob.ReplicationOperation;
 import org.apache.hyracks.storage.am.bloomfilter.impls.BloomFilter;
 import org.apache.hyracks.storage.am.common.api.ITreeIndex;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent.ComponentState;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilterFrameFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMHarness;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexFileManager;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexInternal;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMMemoryComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.file.IFileMapProvider;
 
-public abstract class AbstractLSMIndex implements ILSMIndexInternal {
+public abstract class AbstractLSMIndex implements ILSMIndex {
     protected final ILSMHarness lsmHarness;
     protected final IIOManager ioManager;
     protected final ILSMIOOperationScheduler ioScheduler;
     protected final ILSMIOOperationCallback ioOpCallback;
 
     // In-memory components.
-    protected final List<ILSMComponent> memoryComponents;
+    protected final List<ILSMMemoryComponent> memoryComponents;
     protected final List<IVirtualBufferCache> virtualBufferCaches;
     protected AtomicInteger currentMutableComponentId;
 
@@ -65,8 +67,9 @@ public abstract class AbstractLSMIndex implements ILSMIndexInternal {
     protected final IBufferCache diskBufferCache;
     protected final ILSMIndexFileManager fileManager;
     protected final IFileMapProvider diskFileMapProvider;
-    protected final List<ILSMComponent> diskComponents;
-    protected final List<ILSMComponent> inactiveDiskComponents;
+    // components with lower indexes are newer than components with higher index
+    protected final List<ILSMDiskComponent> diskComponents;
+    protected final List<ILSMDiskComponent> inactiveDiskComponents;
     protected final double bloomFilterFalsePositiveRate;
     protected final ILSMComponentFilterFrameFactory filterFrameFactory;
     protected final LSMComponentFilterManager filterManager;
@@ -77,11 +80,11 @@ public abstract class AbstractLSMIndex implements ILSMIndexInternal {
     protected boolean memoryComponentsAllocated = false;
 
     public AbstractLSMIndex(IIOManager ioManager, List<IVirtualBufferCache> virtualBufferCaches,
-            IBufferCache diskBufferCache,
-            ILSMIndexFileManager fileManager, IFileMapProvider diskFileMapProvider, double bloomFilterFalsePositiveRate,
-            ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler,
-            ILSMIOOperationCallback ioOpCallback, ILSMComponentFilterFrameFactory filterFrameFactory,
-            LSMComponentFilterManager filterManager, int[] filterFields, boolean durable) {
+            IBufferCache diskBufferCache, ILSMIndexFileManager fileManager, IFileMapProvider diskFileMapProvider,
+            double bloomFilterFalsePositiveRate, ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker,
+            ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallback ioOpCallback,
+            ILSMComponentFilterFrameFactory filterFrameFactory, LSMComponentFilterManager filterManager,
+            int[] filterFields, boolean durable) {
         this.ioManager = ioManager;
         this.virtualBufferCaches = virtualBufferCaches;
         this.diskBufferCache = diskBufferCache;
@@ -154,12 +157,12 @@ public abstract class AbstractLSMIndex implements ILSMIndexInternal {
     }
 
     @Override
-    public void addComponent(ILSMComponent c) throws HyracksDataException {
+    public void addDiskComponent(ILSMDiskComponent c) throws HyracksDataException {
         diskComponents.add(0, c);
     }
 
     @Override
-    public void subsumeMergedComponents(ILSMComponent newComponent, List<ILSMComponent> mergedComponents)
+    public void subsumeMergedComponents(ILSMDiskComponent newComponent, List<ILSMComponent> mergedComponents)
             throws HyracksDataException {
         int swapIndex = diskComponents.indexOf(mergedComponents.get(0));
         diskComponents.removeAll(mergedComponents);
@@ -169,11 +172,11 @@ public abstract class AbstractLSMIndex implements ILSMIndexInternal {
     @Override
     public void changeMutableComponent() {
         currentMutableComponentId.set((currentMutableComponentId.get() + 1) % memoryComponents.size());
-        ((AbstractMemoryLSMComponent) memoryComponents.get(currentMutableComponentId.get())).setActive();
+        memoryComponents.get(currentMutableComponentId.get()).activate();
     }
 
     @Override
-    public List<ILSMComponent> getImmutableComponents() {
+    public List<ILSMDiskComponent> getImmutableComponents() {
         return diskComponents;
     }
 
@@ -210,7 +213,7 @@ public abstract class AbstractLSMIndex implements ILSMIndexInternal {
     public boolean isEmptyIndex() {
         boolean isModified = false;
         for (ILSMComponent c : memoryComponents) {
-            AbstractMemoryLSMComponent mutableComponent = (AbstractMemoryLSMComponent) c;
+            AbstractLSMMemoryComponent mutableComponent = (AbstractLSMMemoryComponent) c;
             if (mutableComponent.isModified()) {
                 isModified = true;
                 break;
@@ -232,36 +235,36 @@ public abstract class AbstractLSMIndex implements ILSMIndexInternal {
     @Override
     public boolean isCurrentMutableComponentEmpty() throws HyracksDataException {
         //check if the current memory component has been modified
-        return !((AbstractMemoryLSMComponent) memoryComponents.get(currentMutableComponentId.get())).isModified();
+        return !memoryComponents.get(currentMutableComponentId.get()).isModified();
     }
 
     public void setCurrentMutableComponentState(ComponentState componentState) {
-        ((AbstractMemoryLSMComponent) memoryComponents.get(currentMutableComponentId.get())).setState(componentState);
+        memoryComponents.get(currentMutableComponentId.get()).setState(componentState);
     }
 
     public ComponentState getCurrentMutableComponentState() {
-        return ((AbstractMemoryLSMComponent) memoryComponents.get(currentMutableComponentId.get())).getState();
+        return memoryComponents.get(currentMutableComponentId.get()).getState();
     }
 
     public int getCurrentMutableComponentWriterCount() {
-        return ((AbstractMemoryLSMComponent) memoryComponents.get(currentMutableComponentId.get())).getWriterCount();
+        return memoryComponents.get(currentMutableComponentId.get()).getWriterCount();
     }
 
     @Override
-    public List<ILSMComponent> getInactiveDiskComponents() {
+    public List<ILSMDiskComponent> getInactiveDiskComponents() {
         return inactiveDiskComponents;
     }
 
     @Override
-    public void addInactiveDiskComponent(ILSMComponent diskComponent) {
+    public void addInactiveDiskComponent(ILSMDiskComponent diskComponent) {
         inactiveDiskComponents.add(diskComponent);
     }
 
     public abstract Set<String> getLSMComponentPhysicalFiles(ILSMComponent newComponent);
 
     @Override
-    public void scheduleReplication(ILSMIndexOperationContext ctx, List<ILSMComponent> lsmComponents, boolean bulkload,
-            ReplicationOperation operation, LSMOperationType opType) throws HyracksDataException {
+    public void scheduleReplication(ILSMIndexOperationContext ctx, List<ILSMDiskComponent> lsmComponents,
+            boolean bulkload, ReplicationOperation operation, LSMOperationType opType) throws HyracksDataException {
         //get set of files to be replicated for this component
         Set<String> componentFiles = new HashSet<>();
 
@@ -278,8 +281,8 @@ public abstract class AbstractLSMIndex implements ILSMIndexInternal {
         }
 
         //create replication job and submit it
-        LSMIndexReplicationJob job = new LSMIndexReplicationJob(this, ctx, componentFiles, operation, executionType,
-                opType);
+        LSMIndexReplicationJob job =
+                new LSMIndexReplicationJob(this, ctx, componentFiles, operation, executionType, opType);
         try {
             diskBufferCache.getIOReplicationManager().submitJob(job);
         } catch (IOException e) {
@@ -300,7 +303,18 @@ public abstract class AbstractLSMIndex implements ILSMIndexInternal {
         return durable;
     }
 
-    public ILSMComponent getCurrentMemoryComponent() {
+    @Override
+    public ILSMMemoryComponent getCurrentMemoryComponent() {
         return memoryComponents.get(currentMutableComponentId.get());
+    }
+
+    @Override
+    public int getCurrentMemoryComponentIndex() {
+        return currentMutableComponentId.get();
+    }
+
+    @Override
+    public List<ILSMMemoryComponent> getMemoryComponents() {
+        return memoryComponents;
     }
 }
