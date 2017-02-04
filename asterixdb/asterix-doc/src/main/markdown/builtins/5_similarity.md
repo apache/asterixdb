@@ -47,6 +47,36 @@ including [edit distance](http://en.wikipedia.org/wiki/Levenshtein_distance) and
 
         2
 
+### edit_distance_check ###
+* Syntax:
+
+        edit_distance_check(expression1, expression2, threshold)
+
+* Checks whether the edit distance of `expression1` and `expression2` is within a given threshold.
+
+* Arguments:
+    * `expression1` : a `string` or a homogeneous `array` of a comparable item type.
+    * `expression2` : The same type as `expression1`.
+    * `threshold` : a `bigint` that represents the distance threshold.
+* Return Value:
+    * an `array` with two items:
+        * The first item contains a `boolean` value representing whether the edit distance of `expression1` and `expression2` is within the given threshold.
+        * The second item contains an `integer` that represents the edit distance of `expression1` and `expression2` if the first item is true.
+        * If the first item is false, then the second item is set to 2147483647.
+    * `missing` if any argument is a `missing` value,
+    * `null` if any argument is a `null` value but no argument is a `missing` value,
+    * a type error will be raised if:
+        * the first or second argument is any other non-string value,
+        * or, the third argument is any other non-bigint value.
+* Note: an [n_gram index](similarity.html#UsingIndexesToSupportSimilarityQueries) can be utilized for this function.
+* Example:
+
+        edit_distance_check("happy","hapr",2);
+
+
+* The expected result is:
+
+        [ true, 2 ]
 
 ### edit_distance_contains ###
 * Syntax:

@@ -21,10 +21,12 @@ package org.apache.asterix.fuzzyjoin.similarity;
 
 import org.apache.asterix.fuzzyjoin.tokenizer.Tokenizer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.util.ISequenceIterator;
 
 public abstract class SimilarityMetric {
 
-    public static int getIntersectSize(IListIterator tokensX, IListIterator tokensY) throws HyracksDataException {
+    public static int getIntersectSize(ISequenceIterator tokensX, ISequenceIterator tokensY)
+            throws HyracksDataException {
         int intersectSize = 0;
         while (tokensX.hasNext() && tokensY.hasNext()) {
             int cmp = tokensX.compare(tokensY);
@@ -64,23 +66,6 @@ public abstract class SimilarityMetric {
     }
 
     public static int getIntersectSize(int[] tokensX, int startX, int[] tokensY, int startY) {
-        // int intersectSize = 0;
-        //
-        // while (startX < tokensX.length && startY < tokensY.length) {
-        // int tokenX = tokensX[startX];
-        // int tokenY = tokensY[startY];
-        // if (tokenX > tokenY) {
-        // startY++;
-        // } else if (tokenX < tokenY) {
-        // startX++;
-        // } else {
-        // intersectSize++;
-        // startX++;
-        // startY++;
-        // }
-        // }
-        //
-        // return intersectSize;
         return getIntersectSize(tokensX, startX, tokensX.length, tokensY, startY, tokensY.length);
     }
 
@@ -129,52 +114,6 @@ public abstract class SimilarityMetric {
 
     public static PartialIntersect getPartialIntersectSize(int[] tokensX, int[] tokensY, int tokenStop) {
         return getPartialIntersectSize(tokensX, 0, tokensX.length, tokensY, 0, tokensY.length, tokenStop);
-    }
-
-    // @SuppressWarnings("unchecked")
-    // public static int getIntersectSize(DataBag tokensX, DataBag tokensY) {
-    // int intersectSize = 0;
-    //
-    // Iterator<Tuple> iteratorX = tokensX.iterator();
-    // Iterator<Tuple> iteratorY = tokensY.iterator();
-    //
-    // Tuple nextX = null;
-    // Tuple nextY = null;
-    //
-    // while ((nextX != null || iteratorX.hasNext())
-    // && (nextY != null || iteratorY.hasNext())) {
-    // if (nextX == null) {
-    // nextX = iteratorX.next();
-    // }
-    // if (nextY == null) {
-    // nextY = iteratorY.next();
-    // }
-    //
-    // int cmp = nextX.compareTo(nextY);
-    // if (cmp > 0) {
-    // nextY = null;
-    // } else if (cmp < 0) {
-    // nextX = null;
-    // } else {
-    // intersectSize++;
-    // nextX = null;
-    // nextY = null;
-    // }
-    // }
-    //
-    // return intersectSize;
-    // }
-
-    // public abstract float getSimilarity(DataBag tokensX, DataBag tokensY);
-
-    // public abstract float getSimilarity(DataBag tokensX, int lengthX,
-    // DataBag tokensY, int lengthY);
-
-    public float getSimilarity(IListIterator tokensX, IListIterator tokensY) throws HyracksDataException {
-        int intersectionSize = SimilarityMetric.getIntersectSize(tokensX, tokensY);
-        int totalSize = tokensX.size() + tokensY.size();
-
-        return (float) intersectionSize / (totalSize - intersectionSize);
     }
 
     public abstract float getSimilarity(int[] tokensX, int startX, int lengthX, int[] tokensY, int startY, int lengthY);

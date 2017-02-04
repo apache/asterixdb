@@ -35,6 +35,6 @@ public class SimilarityJaccardSortedEvaluator extends SimilarityJaccardEvaluator
 
     @Override
     protected float computeResult() throws HyracksDataException {
-        return jaccard.getSimilarity(firstListIter, secondListIter);
+        return jaccard.computeSimilarity(firstListIter, secondListIter);
     }
 }

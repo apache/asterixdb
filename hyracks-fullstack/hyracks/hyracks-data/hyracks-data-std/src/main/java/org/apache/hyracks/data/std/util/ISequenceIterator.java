@@ -17,12 +17,12 @@
  * under the License.
  */
 
-package org.apache.asterix.fuzzyjoin.similarity;
+package org.apache.hyracks.data.std.util;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-public interface IListIterator {
-    public int compare(IListIterator cmpIter) throws HyracksDataException;
+public interface ISequenceIterator {
+    public int compare(ISequenceIterator cmpIter) throws HyracksDataException;
 
     public byte[] getData();
 
@@ -33,6 +33,8 @@ public interface IListIterator {
     public void next() throws HyracksDataException;
 
     public void reset() throws HyracksDataException;
+
+    public void reset(byte[] data, int startOff) throws HyracksDataException;
 
     public int size();
 }

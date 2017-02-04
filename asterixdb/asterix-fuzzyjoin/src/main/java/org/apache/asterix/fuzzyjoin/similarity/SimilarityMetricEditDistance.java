@@ -19,39 +19,59 @@
 
 package org.apache.asterix.fuzzyjoin.similarity;
 
-import java.util.Arrays;
-
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.util.ISequenceIterator;
+import org.apache.hyracks.data.std.util.UTF8StringCharByCharIterator;
 import org.apache.hyracks.util.string.UTF8StringUtil;
 
 public class SimilarityMetricEditDistance implements IGenericSimilarityMetric {
 
-    // dp implementation only needs 2 rows
+    // This Dynamic Programming implementation only needs 2 rows.
     private final int rows = 2;
     private int cols;
     private int[][] matrix;
 
-    // for letter count filtering
-    private final int[] fsLcCount = new int[128];
-    private final int[] ssLcCount = new int[128];
+    // for string edit-distance calculation
+    private final UTF8StringCharByCharIterator leftIt = new UTF8StringCharByCharIterator();
+    private final UTF8StringCharByCharIterator rightIt = new UTF8StringCharByCharIterator();
+
+    public static final int SIMILARITY_THRESHOLD_NOT_SATISFIED_VALUE = -1;
 
     public SimilarityMetricEditDistance() {
         cols = 100; // arbitrary default value
         matrix = new int[rows][cols];
     }
 
-    @Override
-    public float getSimilarity(IListIterator firstList, IListIterator secondList) throws HyracksDataException {
-        int flLen = firstList.size();
-        int slLen = secondList.size();
+    /**
+     * Gets the edit distance value for the given two sequences using a Dynamic Programming approach.
+     * If a positive simThresh value is provided, this method only calculates 2 * (simThresh + 1) cells per row,
+     * not all the cells in a row as an optimization. Refer to https://en.wikipedia.org/wiki/Wagner–Fischer_algorithm
+     * for more details. Also, as one more optimization, during the calculation steps, if this method finds out
+     * that the final edit distance value cannot be within simThresh, this method stops the calculation
+     * and immediately returns -1.
+     * If the final edit distance value is less than or equal to simThresh, then that value will be returned.
+     * If a non-positive simThresh is given, then it calculates all cells and rows and returns
+     * the final edit distance value.
+     *
+     * @return the edit distance of the two lists. -1 if a positive simThresh value is given and the edit distance
+     *         value is greater than the given simThresh.
+     */
+    private float computeActualSimilarity(ISequenceIterator firstSequence, ISequenceIterator secondSequence,
+            float simThresh) throws HyracksDataException {
+        int flLen = firstSequence.size();
+        int slLen = secondSequence.size();
 
-        // reuse existing matrix if possible
+        // When a positive threshold is given, then we can apply two optimizations.
+        int edThresh = (int) simThresh;
+        boolean canTerminateEarly = edThresh >= 0;
+
+        // Reuses the existing matrix if possible.
         if (slLen >= cols) {
             cols = slLen + 1;
             matrix = new int[rows][cols];
         }
 
-        // init matrix
+        // Inits the matrix.
         for (int i = 0; i <= slLen; i++) {
             matrix[0][i] = i;
         }
@@ -59,20 +79,54 @@ public class SimilarityMetricEditDistance implements IGenericSimilarityMetric {
         int currRow = 1;
         int prevRow = 0;
 
-        // expand dynamic programming matrix row by row
+        int from = 1;
+        int to = slLen;
+        int minDistance = -1;
+
+        // Expands the dynamic programming matrix row by row.
         for (int i = 1; i <= flLen; i++) {
             matrix[currRow][0] = i;
 
-            secondList.reset();
-            for (int j = 1; j <= slLen; j++) {
+            secondSequence.reset();
 
-                matrix[currRow][j] = Math.min(Math.min(matrix[prevRow][j] + 1, matrix[currRow][j - 1] + 1),
-                        matrix[prevRow][j - 1] + (firstList.compare(secondList) == 0 ? 0 : 1));
-
-                secondList.next();
+            // Only calculates 2 * (simThresh + 1) cells per row as an optimization.
+            // Also keeps minDistance to see whether the possible edit distance after
+            // each row calculation is greater than the simThresh.
+            if (canTerminateEarly) {
+                minDistance = edThresh + 1;
+                from = Math.max(i - edThresh - 1, 1);
+                to = Math.min(i + edThresh + 1, slLen);
+                for (int j = 1; j < from; j++) {
+                    // Moves the pointer of the second list to the point where the calculation starts for this row.
+                    secondSequence.next();
+                }
+                if (from > 1) {
+                    // Sets the left Boundary cell value to make sure that the calculation is correct.
+                    matrix[currRow][from - 1] = edThresh + 1;
+                }
+                if (to < slLen) {
+                    // Sets the right Boundary cell value to make sure that the calculation is correct.
+                    matrix[currRow][to + 1] = edThresh + 1;
+                }
             }
 
-            firstList.next();
+            for (int j = from; j <= to; j++) {
+
+                matrix[currRow][j] = Math.min(Math.min(matrix[prevRow][j] + 1, matrix[currRow][j - 1] + 1),
+                        matrix[prevRow][j - 1] + (firstSequence.compare(secondSequence) == 0 ? 0 : 1));
+
+                // Replaces minDistance after each cell computation if we find a smaller value than that.
+                if (canTerminateEarly && matrix[currRow][j] < minDistance) {
+                    minDistance = matrix[currRow][j];
+                }
+
+                secondSequence.next();
+            }
+            // If the minimum distance value is greater than the given threshold, no reason to process next row.
+            if (canTerminateEarly && minDistance > edThresh) {
+                return SIMILARITY_THRESHOLD_NOT_SATISFIED_VALUE;
+            }
+            firstSequence.next();
 
             int tmp = currRow;
             currRow = prevRow;
@@ -82,8 +136,12 @@ public class SimilarityMetricEditDistance implements IGenericSimilarityMetric {
         return matrix[prevRow][slLen];
     }
 
+    /**
+     * Gets the similarity value for the given two sequences. If the value doesn't satisfy the given simThresh,
+     * this method returns -1. Else, this returns the real similarity value.
+     */
     @Override
-    public float getSimilarity(IListIterator firstList, IListIterator secondList, float simThresh)
+    public float computeSimilarity(ISequenceIterator firstList, ISequenceIterator secondList, float simThresh)
             throws HyracksDataException {
 
         int edThresh = (int) simThresh;
@@ -93,18 +151,18 @@ public class SimilarityMetricEditDistance implements IGenericSimilarityMetric {
 
         // length filter
         if (Math.abs(flLen - slLen) > edThresh) {
-            return -1;
+            return SIMILARITY_THRESHOLD_NOT_SATISFIED_VALUE;
         }
 
-        float ed = getSimilarity(firstList, secondList);
-        if (ed > edThresh) {
-            return -1;
+        float ed = computeActualSimilarity(firstList, secondList, simThresh);
+        if (ed > edThresh || ed < 0) {
+            return SIMILARITY_THRESHOLD_NOT_SATISFIED_VALUE;
         } else {
             return ed;
         }
     }
 
-    public int getSimilarityContains(IListIterator exprList, IListIterator patternList, int simThresh)
+    public int getSimilarityContains(ISequenceIterator exprList, ISequenceIterator patternList, int simThresh)
             throws HyracksDataException {
         int exprLen = exprList.size();
         int patternLen = patternList.size();
@@ -148,182 +206,50 @@ public class SimilarityMetricEditDistance implements IGenericSimilarityMetric {
         }
 
         if (minEd > simThresh) {
-            return -1;
+            return SIMILARITY_THRESHOLD_NOT_SATISFIED_VALUE;
         } else {
             return minEd;
         }
     }
 
     // faster implementation for common case of string edit distance
-    public int UTF8StringEditDistance(byte[] leftBytes, int fsStart, byte[] rightBytes, int ssStart) {
-        int fsLen = UTF8StringUtil.getStringLength(leftBytes, fsStart);
-        int ssLen = UTF8StringUtil.getStringLength(rightBytes, ssStart);
-
-        int fsUtfLen = UTF8StringUtil.getUTFLength(leftBytes, fsStart);
-        int ssUtfLen = UTF8StringUtil.getUTFLength(rightBytes, ssStart);
-        int fsMetaLen = UTF8StringUtil.getNumBytesToStoreLength(fsUtfLen);
-        int ssMetaLen = UTF8StringUtil.getNumBytesToStoreLength(ssUtfLen);
-
-        // reuse existing matrix if possible
-        if (ssLen >= cols) {
-            cols = ssLen + 1;
-            matrix = new int[rows][cols];
-        }
-
-        int fsDataStart = fsStart + fsMetaLen;
-        int ssDataStart = ssStart + ssMetaLen;
-
-        // init matrix
-        for (int i = 0; i <= ssLen; i++) {
-            matrix[0][i] = i;
-        }
-
-        int currRow = 1;
-        int prevRow = 0;
-
-        // expand dynamic programming matrix row by row
-        int fsPos = fsDataStart;
-        for (int i = 1; i <= fsLen; i++) {
-            matrix[currRow][0] = i;
-            char fsChar = Character.toLowerCase(UTF8StringUtil.charAt(leftBytes, fsPos));
-            int ssPos = ssDataStart;
-            for (int j = 1; j <= ssLen; j++) {
-                char ssChar = Character.toLowerCase(UTF8StringUtil.charAt(rightBytes, ssPos));
-
-                matrix[currRow][j] = Math.min(Math.min(matrix[prevRow][j] + 1, matrix[currRow][j - 1] + 1),
-                        matrix[prevRow][j - 1] + (fsChar == ssChar ? 0 : 1));
-
-                ssPos += UTF8StringUtil.charSize(rightBytes, ssPos);
-            }
-            fsPos += UTF8StringUtil.charSize(leftBytes, fsPos);
-            int tmp = currRow;
-            currRow = prevRow;
-            prevRow = tmp;
-        }
-        return matrix[prevRow][ssLen];
+    public int getActualUTF8StringEditDistanceVal(byte[] leftBytes, int fsStart, byte[] rightBytes, int ssStart,
+            int edThresh) throws HyracksDataException {
+        leftIt.reset(leftBytes, fsStart);
+        rightIt.reset(rightBytes, ssStart);
+        return (int) computeActualSimilarity(leftIt, rightIt, edThresh);
     }
 
-    public int UTF8StringEditDistance(byte[] bytesLeft, int fsStart, byte[] bytesRight, int ssStart, int edThresh) {
+    public int UTF8StringEditDistance(byte[] bytesLeft, int fsStart, byte[] bytesRight, int ssStart, int edThresh)
+            throws HyracksDataException {
         int fsStrLen = UTF8StringUtil.getStringLength(bytesLeft, fsStart);
         int ssStrLen = UTF8StringUtil.getStringLength(bytesRight, ssStart);
 
-        int fsUtfLen = UTF8StringUtil.getUTFLength(bytesLeft, fsStart);
-        int ssUtfLen = UTF8StringUtil.getUTFLength(bytesRight, ssStart);
-        int fsMetaLen = UTF8StringUtil.getNumBytesToStoreLength(fsUtfLen);
-        int ssMetaLen = UTF8StringUtil.getNumBytesToStoreLength(ssUtfLen);
-
         // length filter
         if (Math.abs(fsStrLen - ssStrLen) > edThresh) {
-            return -1;
+            return SIMILARITY_THRESHOLD_NOT_SATISFIED_VALUE;
         }
 
-        // initialize letter count filtering
-        Arrays.fill(fsLcCount, 0);
-        Arrays.fill(ssLcCount, 0);
-
-        // compute letter counts for first string
-        int fsPos = fsStart + fsMetaLen;
-        int fsEnd = fsPos + fsUtfLen;;
-        while (fsPos < fsEnd) {
-            char c = Character.toLowerCase(UTF8StringUtil.charAt(bytesLeft, fsPos));
-            if (c < 128) {
-                fsLcCount[c]++;
-            }
-            fsPos += UTF8StringUtil.charSize(bytesLeft, fsPos);
-        }
-
-        // compute letter counts for second string
-        int ssPos = ssStart + ssMetaLen;
-        int ssEnd = ssPos + ssUtfLen;
-        while (ssPos < ssEnd) {
-            char c = Character.toLowerCase(UTF8StringUtil.charAt(bytesRight, ssPos));
-            if (c < 128) {
-                ssLcCount[c]++;
-            }
-            ssPos += UTF8StringUtil.charSize(bytesRight, ssPos);
-        }
-
-        // apply filter
-        int gtSum = 0;
-        int ltSum = 0;
-        for (int i = 0; i < 128; i++) {
-            if (fsLcCount[i] > ssLcCount[i]) {
-                gtSum += fsLcCount[i] - ssLcCount[i];
-                if (gtSum > edThresh) {
-                    return -1;
-                }
-            } else {
-                ltSum += ssLcCount[i] - fsLcCount[i];
-                if (ltSum > edThresh) {
-                    return -1;
-                }
-            }
-        }
-
-        int ed = UTF8StringEditDistance(bytesLeft, fsStart, bytesRight, ssStart);
-        if (ed > edThresh) {
-            return -1;
+        int ed = getActualUTF8StringEditDistanceVal(bytesLeft, fsStart, bytesRight, ssStart, edThresh);
+        if (ed > edThresh || ed < 0) {
+            return SIMILARITY_THRESHOLD_NOT_SATISFIED_VALUE;
         } else {
             return ed;
         }
     }
 
     // checks whether the first string contains a similar string to the second string
-    public int UTF8StringEditDistanceContains(byte[] strBytes, int stringStart, byte[] pattenBytes, int patternStart,
-            int edThresh) {
+    public int UTF8StringEditDistanceContains(byte[] strBytes, int stringStart, byte[] patternBytes, int patternStart,
+            int edThresh) throws HyracksDataException {
+        leftIt.reset(strBytes, stringStart);
+        rightIt.reset(patternBytes, patternStart);
+        return getSimilarityContains(leftIt, rightIt, edThresh);
+    }
 
-        int stringLen = UTF8StringUtil.getStringLength(strBytes, stringStart);
-        int patternLen = UTF8StringUtil.getStringLength(pattenBytes, patternStart);
-
-        int stringUTFLen = UTF8StringUtil.getUTFLength(strBytes, stringStart);
-        int stringMetaLen = UTF8StringUtil.getNumBytesToStoreLength(stringUTFLen);
-
-        int patternUTFLen = UTF8StringUtil.getUTFLength(pattenBytes, patternStart);
-        int patternMetaLen = UTF8StringUtil.getNumBytesToStoreLength(patternUTFLen);
-
-        // reuse existing matrix if possible
-        if (patternLen >= cols) {
-            cols = patternLen + 1;
-            matrix = new int[rows][cols];
-        }
-
-        int stringDataStart = stringStart + stringMetaLen;
-        int patternDataStart = patternStart + patternMetaLen;
-
-        // init matrix
-        for (int i = 0; i <= patternLen; i++) {
-            matrix[0][i] = i;
-        }
-
-        int currRow = 1;
-        int prevRow = 0;
-        int minEd = Integer.MAX_VALUE;
-        // expand dynamic programming matrix row by row
-        int stringPos = stringDataStart;
-        for (int i = 1; i <= stringLen; i++) {
-            matrix[currRow][0] = 0;
-            char stringChar = Character.toLowerCase(UTF8StringUtil.charAt(strBytes, stringPos));
-
-            int patternPos = patternDataStart;
-            for (int j = 1; j <= patternLen; j++) {
-                char patternChar = Character.toLowerCase(UTF8StringUtil.charAt(pattenBytes, patternPos));
-                matrix[currRow][j] = Math.min(Math.min(matrix[prevRow][j] + 1, matrix[currRow][j - 1] + 1),
-                        matrix[prevRow][j - 1] + (stringChar == patternChar ? 0 : 1));
-                patternPos += UTF8StringUtil.charSize(pattenBytes, patternPos);
-                if (j == patternLen && matrix[currRow][patternLen] < minEd) {
-                    minEd = matrix[currRow][patternLen];
-                }
-            }
-
-            stringPos += UTF8StringUtil.charSize(strBytes, stringPos);
-            int tmp = currRow;
-            currRow = prevRow;
-            prevRow = tmp;
-        }
-        if (minEd > edThresh) {
-            return -1;
-        } else {
-            return minEd;
-        }
+    @Override
+    public float computeSimilarity(ISequenceIterator firstSequence, ISequenceIterator secondSequence)
+            throws HyracksDataException {
+        // Passes -1 as the simThresh to calculate the edit distance without applying any calculation optimizations.
+        return computeActualSimilarity(firstSequence, secondSequence, -1);
     }
 }

@@ -20,13 +20,33 @@
 package org.apache.asterix.fuzzyjoin.similarity;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.util.ISequenceIterator;
 
 public interface IGenericSimilarityMetric {
-    // returns similarity
-    public float getSimilarity(IListIterator firstList, IListIterator secondList) throws HyracksDataException;
+    /**
+     * Returns the similarity value for the given two lists.
+     *
+     * @param firstSequence
+     *            an instance of {@link org.apache.hyracks.data.std.util.ISequenceIterator}
+     * @param secondSequence
+     *            an instance of {@link org.apache.hyracks.data.std.util.ISequenceIterator}
+     * @return a float similarity value
+     * @throws HyracksDataException
+     */
+    public float computeSimilarity(ISequenceIterator firstSequence, ISequenceIterator secondSequence)
+            throws HyracksDataException;
 
-    // returns -1 if does not satisfy threshold
-    // else returns similarity
-    public float getSimilarity(IListIterator firstList, IListIterator secondList, float simThresh)
+    /**
+     * Returns the similarity value for the given two lists. If the calculated similarity value
+     * doesn't satisfy the given simThresh value based on the function's check condition, this returns -1.
+     *
+     * @param firstSequence
+     *            an instance of {@link org.apache.hyracks.data.std.util.ISequenceIterator}
+     * @param secondSequence
+     *            an instance of {@link org.apache.hyracks.data.std.util.ISequenceIterator}
+     * @return a float similarity value.
+     * @throws HyracksDataException
+     */
+    public float computeSimilarity(ISequenceIterator firstSequence, ISequenceIterator secondSequence, float simThresh)
             throws HyracksDataException;
 }

@@ -20,13 +20,13 @@ package org.apache.asterix.runtime.evaluators.common;
 
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.formats.nontagged.BinaryComparatorFactoryProvider;
-import org.apache.asterix.fuzzyjoin.similarity.IListIterator;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.util.ISequenceIterator;
 
-public abstract class AbstractAsterixListIterator implements IListIterator {
+public abstract class AbstractAsterixListIterator implements ISequenceIterator {
 
     protected byte[] data;
     protected int count = 0;
@@ -42,7 +42,7 @@ public abstract class AbstractAsterixListIterator implements IListIterator {
     protected final boolean ignoreCase = true;
 
     @Override
-    public int compare(IListIterator cmpIter) throws HyracksDataException {
+    public int compare(ISequenceIterator cmpIter) throws HyracksDataException {
         return cmp.compare(data, pos, -1, cmpIter.getData(), cmpIter.getPos(), -1);
     }
 
@@ -100,6 +100,7 @@ public abstract class AbstractAsterixListIterator implements IListIterator {
         }
     }
 
+    @Override
     public void reset(byte[] data, int startOff) throws HyracksDataException {
         this.data = data;
         this.startOff = startOff;

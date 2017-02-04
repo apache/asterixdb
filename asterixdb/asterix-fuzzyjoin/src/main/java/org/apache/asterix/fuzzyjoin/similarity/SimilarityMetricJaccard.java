@@ -24,6 +24,7 @@ import java.util.TreeSet;
 
 import org.apache.asterix.fuzzyjoin.tokenizer.Tokenizer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.util.ISequenceIterator;
 
 public class SimilarityMetricJaccard extends SimilarityMetric implements IGenericSimilarityMetric {
 
@@ -44,24 +45,8 @@ public class SimilarityMetricJaccard extends SimilarityMetric implements IGeneri
         return ((float) setX.size()) / (tokensX.length + tokensY.length - setX.size());
     }
 
-    // @Override
-    // public float getSimilarity(DataBag tokensX, DataBag tokensY) {
-    // return getSimilarity(tokensX, (int) tokensX.size(), tokensY,
-    // (int) tokensY.size());
-    // }
-
-    // @Override
-    // public float getSimilarity(DataBag tokensX, int lengthX, DataBag tokensY,
-    // int lengthY) {
-    // int intersectionSize = SimilarityMetric.getIntersectSize(tokensX,
-    // tokensY);
-    // int totalSize = lengthX + lengthY;
-    //
-    // return (float) intersectionSize / (totalSize - intersectionSize);
-    // }
-
     @Override
-    public float getSimilarity(IListIterator tokensX, IListIterator tokensY) throws HyracksDataException {
+    public float computeSimilarity(ISequenceIterator tokensX, ISequenceIterator tokensY) throws HyracksDataException {
         int intersectionSize = SimilarityMetric.getIntersectSize(tokensX, tokensY);
         int totalSize = tokensX.size() + tokensY.size();
 
@@ -69,7 +54,7 @@ public class SimilarityMetricJaccard extends SimilarityMetric implements IGeneri
     }
 
     @Override
-    public float getSimilarity(IListIterator firstList, IListIterator secondList, float simThresh)
+    public float computeSimilarity(ISequenceIterator firstList, ISequenceIterator secondList, float simThresh)
             throws HyracksDataException {
 
         // apply length filter
@@ -81,7 +66,7 @@ public class SimilarityMetricJaccard extends SimilarityMetric implements IGeneri
             return -1f;
         }
 
-        float jacc = getSimilarity(firstList, secondList);
+        float jacc = computeSimilarity(firstList, secondList);
         if (jacc < simThresh) {
             return -1f;
         } else {

@@ -21,6 +21,8 @@ package org.apache.asterix.runtime.evaluators.common;
 import java.io.IOException;
 
 import org.apache.asterix.builders.OrderedListBuilder;
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.functions.BuiltinFunctions;
@@ -77,6 +79,10 @@ public class EditDistanceCheckEvaluator extends EditDistanceEvaluator {
         try {
             edThresh = ATypeHierarchy.getIntegerValue(BuiltinFunctions.EDIT_DISTANCE_CHECK.getName(), 2,
                     argPtrThreshold.getByteArray(), argPtrThreshold.getStartOffset());
+            if (edThresh < 0) {
+                throw new RuntimeDataException(ErrorCode.NEGATIVE_VALUE, BuiltinFunctions.EDIT_DISTANCE_CHECK.getName(),
+                        3, edThresh);
+            }
             editDistance = computeResult(argPtr1, argPtr2, firstTypeTag);
             writeResult(editDistance);
         } catch (IOException e) {
@@ -101,7 +107,7 @@ public class EditDistanceCheckEvaluator extends EditDistanceEvaluator {
             case ORDEREDLIST: {
                 firstOrdListIter.reset(leftBytes, leftStartOffset);
                 secondOrdListIter.reset(rightBytes, rightStartOffset);
-                return (int) ed.getSimilarity(firstOrdListIter, secondOrdListIter, edThresh);
+                return (int) ed.computeSimilarity(firstOrdListIter, secondOrdListIter, edThresh);
             }
 
             default: {

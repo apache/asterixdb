@@ -105,13 +105,15 @@ public class EditDistanceEvaluator implements IScalarEvaluator {
 
         switch (argType) {
             case STRING: {
-                return ed.UTF8StringEditDistance(leftBytes, leftStartOffset + typeIndicatorSize, rightBytes,
-                        rightStartOffset + typeIndicatorSize);
+                // Passes -1 as the simThresh to calculate the edit distance
+                // without applying any calculation optimizations.
+                return ed.getActualUTF8StringEditDistanceVal(leftBytes, leftStartOffset + typeIndicatorSize, rightBytes,
+                        rightStartOffset + typeIndicatorSize, -1);
             }
             case ORDEREDLIST: {
                 firstOrdListIter.reset(leftBytes, leftStartOffset);
                 secondOrdListIter.reset(rightBytes, rightStartOffset);
-                return (int) ed.getSimilarity(firstOrdListIter, secondOrdListIter);
+                return (int) ed.computeSimilarity(firstOrdListIter, secondOrdListIter);
             }
             default: {
                 throw new TypeMismatchException(BuiltinFunctions.EDIT_DISTANCE, 0, argType.serialize(),
