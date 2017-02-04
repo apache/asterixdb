@@ -29,7 +29,6 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 public class ABooleanSerializerDeserializer implements ISerializerDeserializer<ABoolean> {
 
     private static final long serialVersionUID = 1L;
-
     public static final ABooleanSerializerDeserializer INSTANCE = new ABooleanSerializerDeserializer();
 
     private ABooleanSerializerDeserializer() {
@@ -54,11 +53,6 @@ public class ABooleanSerializerDeserializer implements ISerializerDeserializer<A
     }
 
     public static boolean getBoolean(byte[] bytes, int offset) {
-        if (bytes[offset] == 0) {
-            return false;
-        } else {
-            return true;
-        }
+        return bytes[offset] != 0;
     }
-
 }

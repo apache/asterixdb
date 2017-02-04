@@ -22,6 +22,7 @@ package org.apache.asterix.runtime.evaluators.functions;
 import java.io.DataOutput;
 import java.io.IOException;
 
+import org.apache.asterix.dataflow.data.nontagged.serde.ABooleanSerializerDeserializer;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.functions.BuiltinFunctions;
@@ -35,7 +36,6 @@ import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
-import org.apache.hyracks.data.std.primitive.BooleanPointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -56,8 +56,8 @@ public class EditDistanceStringIsFilterableEvaluator implements IScalarEvaluator
     protected final IScalarEvaluator usePrePostEval;
 
     @SuppressWarnings("unchecked")
-    private final ISerializerDeserializer<ABoolean> booleanSerde = SerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.ABOOLEAN);
+    private final ISerializerDeserializer<ABoolean> booleanSerde =
+            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ABOOLEAN);
 
     private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();
 
@@ -88,14 +88,12 @@ public class EditDistanceStringIsFilterableEvaluator implements IScalarEvaluator
         int strLen = utf8Ptr.getStringLength();
 
         // Check type and extract edit-distance threshold.
-        long edThresh = ATypeHierarchy.getIntegerValue(
-                BuiltinFunctions.EDIT_DISTANCE_LIST_IS_FILTERABLE.getName(), 1, edThreshPtr.getByteArray(),
-                edThreshPtr.getStartOffset());
+        long edThresh = ATypeHierarchy.getIntegerValue(BuiltinFunctions.EDIT_DISTANCE_LIST_IS_FILTERABLE.getName(), 1,
+                edThreshPtr.getByteArray(), edThreshPtr.getStartOffset());
 
         // Check type and extract gram length.
-        long gramLen = ATypeHierarchy.getIntegerValue(
-                BuiltinFunctions.EDIT_DISTANCE_LIST_IS_FILTERABLE.getName(), 2, gramLenPtr.getByteArray(),
-                gramLenPtr.getStartOffset());
+        long gramLen = ATypeHierarchy.getIntegerValue(BuiltinFunctions.EDIT_DISTANCE_LIST_IS_FILTERABLE.getName(), 2,
+                gramLenPtr.getByteArray(), gramLenPtr.getStartOffset());
 
         // Check type and extract usePrePost flag.
         typeTag = usePrePostPtr.getByteArray()[usePrePostPtr.getStartOffset()];
@@ -103,7 +101,7 @@ public class EditDistanceStringIsFilterableEvaluator implements IScalarEvaluator
             throw new TypeMismatchException(BuiltinFunctions.EDIT_DISTANCE_STRING_IS_FILTERABLE, 3, typeTag,
                     ATypeTag.SERIALIZED_BOOLEAN_TYPE_TAG);
         }
-        boolean usePrePost = BooleanPointable.getBoolean(usePrePostPtr.getByteArray(),
+        boolean usePrePost = ABooleanSerializerDeserializer.getBoolean(usePrePostPtr.getByteArray(),
                 usePrePostPtr.getStartOffset() + 1);
 
         // Compute result.

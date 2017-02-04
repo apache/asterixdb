@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.algebra.operators.physical;
+package org.apache.asterix.transaction.management.runtime;
 
 import java.nio.ByteBuffer;
 

@@ -18,6 +18,12 @@
  */
 package org.apache.asterix.external.library.java;
 
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
+import java.io.IOException;
+import java.util.LinkedHashMap;
+import java.util.List;
+
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
@@ -86,12 +92,6 @@ import org.apache.asterix.om.types.TypeTagUtil;
 import org.apache.asterix.om.util.container.IObjectPool;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.util.string.UTF8StringReader;
-
-import java.io.ByteArrayInputStream;
-import java.io.DataInputStream;
-import java.io.IOException;
-import java.util.LinkedHashMap;
-import java.util.List;
 
 public class JObjectAccessors {
 
@@ -455,7 +455,7 @@ public class JObjectAccessors {
             this.typeInfo = new TypeInfo(objectPool, null, null);
             this.jObjects = new IJObject[recordType.getFieldNames().length];
             this.jRecord = new JRecord(recordType, jObjects);
-            this.openFields = new LinkedHashMap<String, IJObject>();
+            this.openFields = new LinkedHashMap<>();
         }
 
         @Override
@@ -473,12 +473,11 @@ public class JObjectAccessors {
                 for (IVisitablePointable fieldPointable : fieldPointables) {
                     closedPart = index < recordType.getFieldTypes().length;
                     IVisitablePointable tt = fieldTypeTags.get(index);
-                    ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER
-                            .deserialize(tt.getByteArray()[tt.getStartOffset()]);
+                    ATypeTag typeTag =
+                            EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(tt.getByteArray()[tt.getStartOffset()]);
                     IAType fieldType;
-                    fieldType = closedPart ?
-                            recordType.getFieldTypes()[index] :
-                            TypeTagUtil.getBuiltinTypeByTag(typeTag);
+                    fieldType =
+                            closedPart ? recordType.getFieldTypes()[index] : TypeTagUtil.getBuiltinTypeByTag(typeTag);
                     IVisitablePointable fieldName = fieldNames.get(index);
                     typeInfo.reset(fieldType, typeTag);
                     switch (typeTag) {
@@ -491,8 +490,8 @@ public class JObjectAccessors {
                                 // value is null
                                 fieldObject = null;
                             } else {
-                                fieldObject = pointableVisitor
-                                        .visit((AListVisitablePointable) fieldPointable, typeInfo);
+                                fieldObject =
+                                        pointableVisitor.visit((AListVisitablePointable) fieldPointable, typeInfo);
                             }
                             break;
                         case ANY:

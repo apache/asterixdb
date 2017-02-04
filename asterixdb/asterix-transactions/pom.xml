@@ -24,7 +24,6 @@
     <version>0.9.1-SNAPSHOT</version>
   </parent>
   <artifactId>asterix-transactions</artifactId>
-
   <licenses>
     <license>
       <name>Apache License, Version 2.0</name>
@@ -33,11 +32,9 @@
       <comments>A business-friendly OSS license</comments>
     </license>
   </licenses>
-
   <properties>
     <appendedResourcesDirectory>${basedir}/../src/main/appended-resources</appendedResourcesDirectory>
   </properties>
-
   <build>
     <plugins>
       <plugin>
@@ -83,9 +80,7 @@
         </executions>
       </plugin>
     </plugins>
-
   </build>
-
   <dependencies>
     <dependency>
       <groupId>org.apache.hyracks</groupId>
@@ -109,6 +104,11 @@
       <version>${project.version}</version>
       <type>jar</type>
       <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.asterix</groupId>
+      <artifactId>asterix-om</artifactId>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>com.google.guava</groupId>
@@ -149,6 +149,13 @@
       <groupId>org.apache.hyracks</groupId>
       <artifactId>hyracks-storage-common</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.apache.hyracks</groupId>
+      <artifactId>hyracks-storage-am-bloomfilter</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hyracks</groupId>
+      <artifactId>algebricks-runtime</artifactId>
+    </dependency>
   </dependencies>
-
 </project>

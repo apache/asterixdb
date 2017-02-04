@@ -71,8 +71,8 @@ public class NotDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                     private IScalarEvaluator eval = args[0].createScalarEvaluator(ctx);
 
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ABoolean> booleanSerde = SerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ABOOLEAN);
+                    private ISerializerDeserializer<ABoolean> booleanSerde =
+                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ABOOLEAN);
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
@@ -86,8 +86,8 @@ public class NotDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                             ABoolean aResult = argRes ? ABoolean.FALSE : ABoolean.TRUE;
                             booleanSerde.serialize(aResult, out);
                         } else {
-                            throw new TypeMismatchException(getIdentifier(), 0,
-                                    bytes[offset], ATypeTag.SERIALIZED_BOOLEAN_TYPE_TAG);
+                            throw new TypeMismatchException(getIdentifier(), 0, bytes[offset],
+                                    ATypeTag.SERIALIZED_BOOLEAN_TYPE_TAG);
                         }
                         result.set(resultStorage);
                     }

@@ -27,6 +27,7 @@ import org.apache.asterix.common.transactions.JobId;
 import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.metadata.declared.DatasetDataSource;
 import org.apache.asterix.metadata.declared.MetadataProvider;
+import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
@@ -70,9 +71,7 @@ public class SetupCommitExtensionOpRule implements IAlgebraicRewriteRule {
         boolean isSink = ((CommitOperator) eOp.getDelegate()).isSink();
 
         List<Mutable<ILogicalExpression>> primaryKeyExprs = null;
-        int datasetId = 0;
-        String dataverse = null;
-        String datasetName = null;
+        Dataset dataset = null;
         AbstractLogicalOperator descendantOp = (AbstractLogicalOperator) eOp.getInputs().get(0).getValue();
         LogicalVariable upsertVar = null;
         while (descendantOp != null) {
@@ -80,29 +79,19 @@ public class SetupCommitExtensionOpRule implements IAlgebraicRewriteRule {
                 IndexInsertDeleteUpsertOperator operator = (IndexInsertDeleteUpsertOperator) descendantOp;
                 if (!operator.isBulkload() && operator.getPrevSecondaryKeyExprs() == null) {
                     primaryKeyExprs = operator.getPrimaryKeyExpressions();
-                    datasetId = ((DatasetDataSource) operator.getDataSourceIndex().getDataSource()).getDataset()
-                            .getDatasetId();
-                    dataverse = ((DatasetDataSource) operator.getDataSourceIndex().getDataSource()).getDataset()
-                            .getDataverseName();
-                    datasetName = ((DatasetDataSource) operator.getDataSourceIndex().getDataSource()).getDataset()
-                            .getDatasetName();
+                    dataset = ((DatasetDataSource) operator.getDataSourceIndex().getDataSource()).getDataset();
                     break;
                 }
             } else if (descendantOp.getOperatorTag() == LogicalOperatorTag.INSERT_DELETE_UPSERT) {
                 InsertDeleteUpsertOperator insertDeleteUpsertOperator = (InsertDeleteUpsertOperator) descendantOp;
                 if (!insertDeleteUpsertOperator.isBulkload()) {
                     primaryKeyExprs = insertDeleteUpsertOperator.getPrimaryKeyExpressions();
-                    datasetId = ((DatasetDataSource) insertDeleteUpsertOperator.getDataSource()).getDataset()
-                            .getDatasetId();
-                    dataverse = ((DatasetDataSource) insertDeleteUpsertOperator.getDataSource()).getDataset()
-                            .getDataverseName();
-                    datasetName = ((DatasetDataSource) insertDeleteUpsertOperator.getDataSource()).getDataset()
-                            .getDatasetName();
+                    dataset = ((DatasetDataSource) insertDeleteUpsertOperator.getDataSource()).getDataset();
                     if (insertDeleteUpsertOperator.getOperation() == Kind.UPSERT) {
                         //we need to add a function that checks if previous record was found
                         upsertVar = context.newVar();
-                        AbstractFunctionCallExpression orFunc = new ScalarFunctionCallExpression(
-                                FunctionUtil.getFunctionInfo(BuiltinFunctions.OR));
+                        AbstractFunctionCallExpression orFunc =
+                                new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(BuiltinFunctions.OR));
                         // is new value missing? -> this means that the expected operation is delete
                         AbstractFunctionCallExpression isNewMissingFunc = new ScalarFunctionCallExpression(
                                 FunctionUtil.getFunctionInfo(BuiltinFunctions.IS_MISSING));
@@ -116,11 +105,10 @@ public class SetupCommitExtensionOpRule implements IAlgebraicRewriteRule {
                         orFunc.getArguments().add(new MutableObject<ILogicalExpression>(isNewMissingFunc));
 
                         // AssignOperator puts in the cast var the casted record
-                        AssignOperator upsertFlagAssign = new AssignOperator(upsertVar,
-                                new MutableObject<ILogicalExpression>(orFunc));
+                        AssignOperator upsertFlagAssign =
+                                new AssignOperator(upsertVar, new MutableObject<ILogicalExpression>(orFunc));
                         // Connect the current top of the plan to the cast operator
-                        upsertFlagAssign.getInputs()
-                                .add(new MutableObject<ILogicalOperator>(eOp.getInputs().get(0).getValue()));
+                        upsertFlagAssign.getInputs().add(new MutableObject<>(eOp.getInputs().get(0).getValue()));
                         eOp.getInputs().clear();
                         eOp.getInputs().add(new MutableObject<ILogicalOperator>(upsertFlagAssign));
                         context.computeAndSetTypeEnvironmentForOperator(upsertFlagAssign);
@@ -151,8 +139,8 @@ public class SetupCommitExtensionOpRule implements IAlgebraicRewriteRule {
 
         //create the logical and physical operator
         CommitOperator commitOperator = new CommitOperator(primaryKeyLogicalVars, upsertVar, isSink);
-        CommitPOperator commitPOperator = new CommitPOperator(jobId, dataverse, datasetName, datasetId,
-                primaryKeyLogicalVars, upsertVar, isSink);
+        CommitPOperator commitPOperator =
+                new CommitPOperator(jobId, dataset, primaryKeyLogicalVars, upsertVar, isSink);
         commitOperator.setPhysicalOperator(commitPOperator);
 
         //create ExtensionOperator and put the commitOperator in it.

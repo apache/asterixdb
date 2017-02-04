@@ -55,7 +55,7 @@ public final class BooleanPointable extends AbstractPointable implements IHashab
     };
 
     public static boolean getBoolean(byte[] bytes, int start) {
-        return bytes[start] == 0 ? false : true;
+        return bytes[start] != 0;
     }
 
     public static void setBoolean(byte[] bytes, int start, boolean value) {

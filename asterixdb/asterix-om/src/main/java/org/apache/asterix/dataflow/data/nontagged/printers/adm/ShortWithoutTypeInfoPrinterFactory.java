@@ -29,8 +29,8 @@ public class ShortWithoutTypeInfoPrinterFactory implements IPrinterFactory {
     private static final long serialVersionUID = 1L;
     public static final ShortWithoutTypeInfoPrinterFactory INSTANCE = new ShortWithoutTypeInfoPrinterFactory();
 
-    public static final IPrinter PRINTER = (byte[] b, int s, int l, PrintStream ps) -> ps
-            .print(ABooleanSerializerDeserializer.getBoolean(b, s + 1));
+    public static final IPrinter PRINTER =
+            (byte[] b, int s, int l, PrintStream ps) -> ps.print(ABooleanSerializerDeserializer.getBoolean(b, s + 1));
 
     @Override
     public IPrinter createPrinter() {

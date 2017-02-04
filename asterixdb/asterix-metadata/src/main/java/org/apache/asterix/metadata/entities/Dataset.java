@@ -22,6 +22,7 @@ package org.apache.asterix.metadata.entities;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -66,11 +67,13 @@ import org.apache.asterix.transaction.management.opcallbacks.SecondaryIndexOpera
 import org.apache.asterix.transaction.management.opcallbacks.SecondaryIndexSearchOperationCallbackFactory;
 import org.apache.asterix.transaction.management.opcallbacks.TempDatasetSecondaryIndexModificationOperationCallbackFactory;
 import org.apache.asterix.transaction.management.opcallbacks.UpsertOperationCallbackFactory;
+import org.apache.asterix.transaction.management.runtime.CommitRuntimeFactory;
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
+import org.apache.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
@@ -241,13 +244,8 @@ public class Dataset implements IMetadataEntity<Dataset> {
             return false;
         }
         Dataset otherDataset = (Dataset) other;
-        if (!otherDataset.dataverseName.equals(dataverseName)) {
-            return false;
-        }
-        if (!otherDataset.datasetName.equals(datasetName)) {
-            return false;
-        }
-        return true;
+        return Objects.equals(dataverseName, otherDataset.dataverseName)
+                && Objects.equals(datasetName, otherDataset.datasetName);
     }
 
     public boolean allow(ILogicalOperator topOp, byte operation) {//NOSONAR: this method is meant to be extended
@@ -567,10 +565,13 @@ public class Dataset implements IMetadataEntity<Dataset> {
 
     @Override
     public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((datasetName == null) ? 0 : datasetName.hashCode());
-        result = prime * result + ((dataverseName == null) ? 0 : dataverseName.hashCode());
-        return result;
+        return Objects.hash(dataverseName, datasetName);
+    }
+
+    public IPushRuntimeFactory getCommitRuntimeFactory(JobId jobId, int[] primaryKeyFields,
+            MetadataProvider metadataProvider, int upsertVarIdx, int[] datasetPartitions, boolean isSink) {
+        return new CommitRuntimeFactory(jobId, datasetId, primaryKeyFields,
+                metadataProvider.isTemporaryDatasetWriteJob(), metadataProvider.isWriteTransaction(), upsertVarIdx,
+                datasetPartitions, isSink);
     }
 }

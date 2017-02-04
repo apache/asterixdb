@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.asterix.algebra.operators.physical;
+package org.apache.asterix.transaction.management.runtime;
 
 import java.nio.ByteBuffer;
 
@@ -86,7 +86,7 @@ public class CommitRuntime extends AbstractOneInputOneOutputOneFramePushRuntime 
             transactionContext = transactionManager.getTransactionContext(jobId, false);
             transactionContext.setWriteTxn(isWriteTransaction);
             ILogMarkerCallback callback =
-                    TaskUtil.<ILogMarkerCallback> get(ILogMarkerCallback.KEY_MARKER_CALLBACK, ctx);
+                    TaskUtil.<ILogMarkerCallback>get(ILogMarkerCallback.KEY_MARKER_CALLBACK, ctx);
             logRecord = new LogRecord(callback);
             if (isSink) {
                 return;
@@ -126,7 +126,7 @@ public class CommitRuntime extends AbstractOneInputOneOutputOneFramePushRuntime 
                 }
             }
         }
-        VSizeFrame message = TaskUtil.<VSizeFrame> get(HyracksConstants.KEY_MESSAGE, ctx);
+        VSizeFrame message = TaskUtil.<VSizeFrame>get(HyracksConstants.KEY_MESSAGE, ctx);
         if (message != null
                 && MessagingFrameTupleAppender.getMessageType(message) == MessagingFrameTupleAppender.MARKER_MESSAGE) {
             try {
@@ -183,5 +183,6 @@ public class CommitRuntime extends AbstractOneInputOneOutputOneFramePushRuntime 
 
     @Override
     public void flush() throws HyracksDataException {
+        // Commit is at the end of a modification pipeline and there is no need to flush
     }
 }

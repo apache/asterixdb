@@ -22,6 +22,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import org.apache.asterix.builders.OrderedListBuilder;
+import org.apache.asterix.dataflow.data.nontagged.serde.ABooleanSerializerDeserializer;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.BuiltinType;
@@ -31,7 +32,6 @@ import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
-import org.apache.hyracks.data.std.primitive.BooleanPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
@@ -75,7 +75,7 @@ public class GramTokensEvaluator implements IScalarEvaluator {
         int gramLength = ATypeHierarchy.getIntegerValue(BuiltinFunctions.GRAM_TOKENS.getName(), 1,
                 gramLengthArg.getByteArray(), gramLengthArg.getStartOffset());
         tokenizer.setGramlength(gramLength);
-        boolean prePost = BooleanPointable.getBoolean(prePostArg.getByteArray(),
+        boolean prePost = ABooleanSerializerDeserializer.getBoolean(prePostArg.getByteArray(),
                 prePostArg.getStartOffset() + typeIndicatorSize);
         tokenizer.setPrePost(prePost);
         tokenizer.reset(stringArg.getByteArray(), stringArg.getStartOffset(), stringArg.getLength());
