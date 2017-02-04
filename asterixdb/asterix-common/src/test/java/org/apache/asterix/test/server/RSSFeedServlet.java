@@ -24,10 +24,14 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ConcurrentMap;
+import java.util.logging.Level;
 
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import org.apache.asterix.common.config.GlobalConfig;
+import org.apache.hyracks.http.api.IServletRequest;
+import org.apache.hyracks.http.api.IServletResponse;
+import org.apache.hyracks.http.server.AbstractServlet;
+import org.apache.hyracks.http.server.util.ServletUtils;
 
 import com.rometools.rome.feed.synd.SyndContent;
 import com.rometools.rome.feed.synd.SyndContentImpl;
@@ -38,9 +42,11 @@ import com.rometools.rome.feed.synd.SyndFeedImpl;
 import com.rometools.rome.io.FeedException;
 import com.rometools.rome.io.SyndFeedOutput;
 
-public class RSSFeedServlet extends HttpServlet {
+import io.netty.handler.codec.http.HttpMethod;
+import io.netty.handler.codec.http.HttpResponseStatus;
 
-    private static final long serialVersionUID = 1L;
+public class RSSFeedServlet extends AbstractServlet {
+
     private static final String DEFAULT_FEED_TYPE = "default.feed.type";
     private static final String FEED_TYPE = "type";
     private static final String MIME_TYPE = "application/xml; charset=UTF-8";
@@ -49,30 +55,45 @@ public class RSSFeedServlet extends HttpServlet {
     private static final DateFormat DATE_PARSER = new SimpleDateFormat("yyyy-MM-dd");
     private String defaultFeedType;
 
-    @Override
-    public void init() {
-        defaultFeedType = getServletConfig().getInitParameter(DEFAULT_FEED_TYPE);
+    public RSSFeedServlet(ConcurrentMap<String, Object> ctx, String[] paths) {
+        super(ctx, paths);
+        defaultFeedType = (String) ctx.get(DEFAULT_FEED_TYPE);
         defaultFeedType = (defaultFeedType != null) ? defaultFeedType : "atom_0.3";
     }
 
-    @Override
-    public void doGet(HttpServletRequest req, HttpServletResponse res) throws IOException {
+    protected void doGet(IServletRequest req, IServletResponse res) throws IOException {
         try {
             SyndFeed feed = getFeed(req);
             String feedType = req.getParameter(FEED_TYPE);
             feedType = (feedType != null) ? feedType : defaultFeedType;
             feed.setFeedType(feedType);
-            res.setContentType(MIME_TYPE);
+            ServletUtils.setContentType(res, MIME_TYPE);
             SyndFeedOutput output = new SyndFeedOutput();
-            output.output(feed, res.getWriter());
+            output.output(feed, res.writer());
         } catch (FeedException | ParseException ex) {
+            GlobalConfig.ASTERIX_LOGGER.log(Level.WARNING, ex.getMessage(), ex);
             String msg = COULD_NOT_GENERATE_FEED_ERROR;
-            log(msg, ex);
-            res.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, msg);
+            res.writer().print(msg);
+            res.setStatus(HttpResponseStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    protected SyndFeed getFeed(HttpServletRequest req) throws IOException, FeedException, ParseException {
+    @Override
+    public void handle(IServletRequest req, IServletResponse res) {
+        if (req.getHttpRequest().method() == HttpMethod.GET) {
+            try {
+                doGet(req, res);
+            } catch (IOException e) {
+                // Servlet methods should not throw exceptions
+                // http://cwe.mitre.org/data/definitions/600.html
+                GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, e.getMessage(), e);
+            }
+        } else {
+            res.setStatus(HttpResponseStatus.METHOD_NOT_ALLOWED);
+        }
+    }
+
+    protected SyndFeed getFeed(IServletRequest req) throws IOException, FeedException, ParseException {
         SyndFeed feed = new SyndFeedImpl();
         feed.setTitle("Sample Feed (created with ROME)");
         feed.setLink("http://rome.dev.java.net");

@@ -129,7 +129,6 @@
         <configuration>
           <usedDependencies>
             <usedDependency>org.codehaus.mojo.appassembler:appassembler-booter</usedDependency>
-            <usedDependency>javax.servlet:javax.servlet-api</usedDependency>
           </usedDependencies>
         </configuration>
       </plugin>
@@ -167,10 +166,6 @@
     <dependency>
       <groupId>args4j</groupId>
       <artifactId>args4j</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>javax.servlet</groupId>
-      <artifactId>javax.servlet-api</artifactId>
     </dependency>
     <dependency>
       <groupId>org.codehaus.mojo.appassembler</groupId>

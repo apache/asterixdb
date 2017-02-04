@@ -22,13 +22,11 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.nio.charset.StandardCharsets;
 
-import javax.servlet.http.HttpServletResponse;
+import org.apache.asterix.clienthelper.Args;
+import org.apache.commons.io.IOUtils;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.asterix.clienthelper.Args;
-import org.apache.commons.io.IOUtils;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class GetClusterStateCommand extends RemoteCommand {
 
@@ -48,7 +46,7 @@ public class GetClusterStateCommand extends RemoteCommand {
         // 0 = ACTIVE, 1 = DOWN, 2 = UNUSABLE, 3 = OTHER
         try {
             conn = openConnection(args.getClusterStatePath(), Method.GET);
-            if (conn.getResponseCode() == HttpServletResponse.SC_OK) {
+            if (conn.getResponseCode() == HttpURLConnection.HTTP_OK) {
                 String result = IOUtils.toString(conn.getInputStream(), StandardCharsets.UTF_8.name());
                 ObjectMapper om = new ObjectMapper();
                 JsonNode json = om.readTree(result);

@@ -77,12 +77,23 @@
       <groupId>org.apache.hyracks</groupId>
       <artifactId>hyracks-control-common</artifactId>
       <version>${project.version}</version>
-      <type>jar</type>
-      <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-server</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>javax.servlet</groupId>
+      <artifactId>javax.servlet-api</artifactId>
+      <version>3.1.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-servlet</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-http</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.wicket</groupId>
@@ -96,26 +107,18 @@
       </exclusions>
     </dependency>
     <dependency>
-      <groupId>commons-io</groupId>
-      <artifactId>commons-io</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>javax.servlet</groupId>
-      <artifactId>javax.servlet-api</artifactId>
-      <version>3.1.0</version>
-    </dependency>
-    <dependency>
-      <groupId>org.eclipse.jetty</groupId>
-      <artifactId>jetty-servlet</artifactId>
-    </dependency>
-    <dependency>
       <groupId>org.apache.wicket</groupId>
       <artifactId>wicket-request</artifactId>
       <version>1.5.2</version>
     </dependency>
     <dependency>
-      <groupId>org.eclipse.jetty</groupId>
-      <artifactId>jetty-http</artifactId>
+      <groupId>org.apache.wicket</groupId>
+      <artifactId>wicket-util</artifactId>
+      <version>1.5.2</version>
+    </dependency>
+    <dependency>
+      <groupId>commons-io</groupId>
+      <artifactId>commons-io</artifactId>
     </dependency>
     <dependency>
       <groupId>org.ini4j</groupId>
@@ -126,11 +129,6 @@
       <groupId>org.apache.hyracks</groupId>
       <artifactId>hyracks-ipc</artifactId>
       <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.wicket</groupId>
-      <artifactId>wicket-util</artifactId>
-      <version>1.5.2</version>
     </dependency>
     <dependency>
       <groupId>args4j</groupId>

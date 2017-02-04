@@ -16,12 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.hyracks.bootstrap;
+package org.apache.hyracks.http.server;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import org.apache.hyracks.http.server.HttpServer;
 
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;

@@ -67,7 +67,6 @@
     <algebricks.version>0.3.1-SNAPSHOT</algebricks.version>
     <hyracks.version>0.3.1-SNAPSHOT</hyracks.version>
     <hadoop.version>2.2.0</hadoop.version>
-    <jetty.version>9.3.11.v20160721</jetty.version>
     <jacoco.version>0.7.6.201602180812</jacoco.version>
   </properties>
 
@@ -652,16 +651,6 @@
   <dependencyManagement>
     <dependencies>
       <dependency>
-        <groupId>org.eclipse.jetty</groupId>
-        <artifactId>jetty-server</artifactId>
-        <version>${jetty.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.eclipse.jetty</groupId>
-        <artifactId>jetty-servlet</artifactId>
-        <version>${jetty.version}</version>
-      </dependency>
-      <dependency>
         <groupId>org.slf4j</groupId>
         <artifactId>slf4j-simple</artifactId>
         <version>1.7.5</version>
@@ -964,11 +953,6 @@
         <artifactId>hyracks-hdfs-2.x</artifactId>
         <version>${hyracks.version}</version>
         <type>test-jar</type>
-      </dependency>
-      <dependency>
-        <groupId>javax.servlet</groupId>
-        <artifactId>javax.servlet-api</artifactId>
-        <version>3.1.0</version>
       </dependency>
       <dependency>
         <groupId>commons-io</groupId>

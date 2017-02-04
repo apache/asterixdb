@@ -18,20 +18,18 @@
  */
 package org.apache.asterix.test.server;
 
-import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.eclipse.jetty.servlet.ServletHolder;
+import org.apache.hyracks.http.server.HttpServer;
+import org.apache.hyracks.http.server.WebManager;
 
 public class RSSTestServer implements ITestServer {
 
-    private Server rssServer;
+    private WebManager webManager;
 
     public RSSTestServer(int port) {
-        rssServer = new Server(port);
-        ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
-        context.setContextPath("/");
-        rssServer.setHandler(context);
-        context.addServlet(new ServletHolder(new RSSFeedServlet()), "/");
+        webManager = new WebManager();
+        HttpServer rssServer = new HttpServer(webManager.getBosses(), webManager.getWorkers(), port);
+        rssServer.addLet(new RSSFeedServlet(null, new String[] { "/" }));
+        webManager.add(rssServer);
     }
 
     @Override
@@ -40,13 +38,12 @@ public class RSSTestServer implements ITestServer {
 
     @Override
     public void start() throws Exception {
-        rssServer.start();
+        webManager.start();
     }
 
     @Override
     public void stop() throws Exception {
-        rssServer.stop();
-        rssServer.join();
+        webManager.stop();
     }
 
 }

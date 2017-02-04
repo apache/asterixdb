@@ -25,8 +25,6 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.servlet.Servlet;
-
 import org.apache.asterix.active.ActiveLifecycleListener;
 import org.apache.asterix.api.http.server.ApiServlet;
 import org.apache.asterix.api.http.server.ClusterApiServlet;
@@ -76,9 +74,7 @@ import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.common.controllers.CCConfig;
 import org.apache.hyracks.http.api.IServlet;
 import org.apache.hyracks.http.server.HttpServer;
-import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.eclipse.jetty.servlet.ServletHolder;
-import org.eclipse.jetty.servlet.ServletMapping;
+import org.apache.hyracks.http.server.WebManager;
 
 public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
 
@@ -208,7 +204,7 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
     }
 
     protected void addLet(HttpServer server, Lets let) {
-        server.addLet(createServLet(server, let, let.getPath()));
+        server.addLet(createServlet(server, let, let.getPath()));
     }
 
     protected HttpServer setupQueryWebServer(ExternalProperties externalProperties) throws Exception {
@@ -220,15 +216,6 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
         return queryWebServer;
     }
 
-    protected void addServlet(ServletContextHandler context, Servlet servlet, String... paths) {
-        final ServletHolder holder = new ServletHolder(servlet);
-        context.getServletHandler().addServlet(holder);
-        ServletMapping mapping = new ServletMapping();
-        mapping.setServletName(holder.getName());
-        mapping.setPathSpecs(paths);
-        context.getServletHandler().addServletMapping(mapping);
-    }
-
     protected HttpServer setupFeedServer(ExternalProperties externalProperties) throws Exception {
         HttpServer feedServer = new HttpServer(webManager.getBosses(), webManager.getWorkers(),
                 externalProperties.getFeedServerPort());
@@ -237,7 +224,7 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
         return feedServer;
     }
 
-    protected IServlet createServLet(HttpServer server, Lets key, String... paths) {
+    protected IServlet createServlet(HttpServer server, Lets key, String... paths) {
         switch (key) {
             case AQL:
                 return new FullApiServlet(server.ctx(), paths, ccExtensionManager.getAqlCompilationProvider(),

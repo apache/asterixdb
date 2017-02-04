@@ -19,8 +19,7 @@
 package org.apache.asterix.clienthelper.commands;
 
 import java.io.IOException;
-
-import javax.servlet.http.HttpServletResponse;
+import java.net.HttpURLConnection;
 
 import org.apache.asterix.clienthelper.Args;
 
@@ -46,7 +45,7 @@ public class ShutdownCommand extends RemoteCommand {
         int statusCode = tryPost(shutdownPath);
         // TODO (mblow): interrogate result to determine acceptance, not rely on HTTP 200
         switch (statusCode) {
-            case HttpServletResponse.SC_ACCEPTED:
+            case HttpURLConnection.HTTP_ACCEPTED:
                 clusterLog("accepted shutdown request.");
                 return 0;
             case -1:
