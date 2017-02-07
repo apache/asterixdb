@@ -63,10 +63,10 @@ public class LSMSecondaryUpsertOperatorNodePushable extends LSMIndexInsertUpdate
     }
 
     public static boolean equals(byte[] a, int aOffset, int aLength, byte[] b, int bOffset, int bLength) {
-        if (a.length != b.length) {
+        if (aLength != bLength) {
             return false;
         }
-        for (int i = 0; i < a.length; i++) {
+        for (int i = 0; i < aLength; i++) {
             if (a[aOffset + i] != b[bOffset + i]) {
                 return false;
             }
