@@ -23,6 +23,8 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -62,6 +64,7 @@ public class IOManager implements IIOManager {
 
     public IOManager(List<IODeviceHandle> devices) throws HyracksDataException {
         this.ioDevices = Collections.unmodifiableList(devices);
+        checkDeviceValidity(devices);
         workspaces = new ArrayList<>();
         for (IODeviceHandle d : ioDevices) {
             if (d.getWorkspace() != null) {
@@ -74,6 +77,23 @@ public class IOManager implements IIOManager {
         }
         workspaceIndex = 0;
         deviceComputer = new DefaultDeviceComputer(this);
+    }
+
+    private void checkDeviceValidity(List<IODeviceHandle> devices) throws HyracksDataException {
+        for (IODeviceHandle d : devices) {
+            Path p = Paths.get(d.getMount().toURI());
+            for (IODeviceHandle e : devices) {
+                if (e != d) {
+                    Path q = Paths.get(e.getMount().toURI());
+                    if (p.equals(q)) {
+                        throw HyracksDataException.create(ErrorCode.DUPLICATE_IODEVICE);
+                    } else if (p.startsWith(q)) {
+                        throw HyracksDataException.create(ErrorCode.NESTED_IODEVICES);
+                    }
+                }
+            }
+
+        }
     }
 
     @Override
@@ -350,8 +370,9 @@ public class IOManager implements IIOManager {
     }
 
     public IODeviceHandle getDevice(String fullPath) {
+        Path full = Paths.get(fullPath);
         for (IODeviceHandle d : ioDevices) {
-            if (fullPath.startsWith(d.getMount().getAbsolutePath())) {
+            if (full.startsWith(Paths.get(d.getMount().getAbsolutePath()))) {
                 return d;
             }
         }
