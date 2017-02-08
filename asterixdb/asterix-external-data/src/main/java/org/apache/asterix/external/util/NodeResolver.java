@@ -38,46 +38,34 @@ import org.apache.asterix.runtime.utils.RuntimeUtils;
 public class NodeResolver implements INodeResolver {
     //TODO: change this call and replace by calling AsterixClusterProperties
     private static final Random random = new Random();
-    private static final Map<InetAddress, Set<String>> ncMap = new HashMap<InetAddress, Set<String>>();
-    private static final Set<String> ncs = new HashSet<String>();
+    private static final Map<InetAddress, Set<String>> ncMap = new HashMap<>();
+    private static final Set<String> ncs = new HashSet<>();
 
     @Override
     public String resolveNode(String value) throws AsterixException {
-        UnknownHostException uhe = null;
         try {
             if (ncMap.isEmpty()) {
                 NodeResolver.updateNCs();
+            }
+            if (ncs.contains(value)) {
+                return value;
+            } else {
+                NodeResolver.updateNCs();
+                if (ncs.contains(value)) {
+                    return value;
+                }
             }
             InetAddress ipAddress = null;
             try {
                 ipAddress = InetAddress.getByName(value);
             } catch (UnknownHostException e) {
-                uhe = e;
-            }
-            if (ipAddress == null) {
-                if (ncs.contains(value)) {
-                    return value;
-                } else {
-                    NodeResolver.updateNCs();
-                    if (ncs.contains(value)) {
-                        return value;
-                    } else {
-                        throw new AsterixException(ErrorCode.NODE_RESOLVER_COULDNT_RESOLVE_ADDRESS, uhe, value,
-                                ncs.toString());
-                    }
-                }
-
+                throw new AsterixException(ErrorCode.NODE_RESOLVER_UNABLE_RESOLVE_HOST, e, value);
             }
             Set<String> nodeControllers = ncMap.get(ipAddress);
             if (nodeControllers == null || nodeControllers.isEmpty()) {
                 throw new AsterixException(ErrorCode.NODE_RESOLVER_NO_NODE_CONTROLLERS, value);
             }
-            String chosenNCId = nodeControllers.toArray(new String[] {})[random.nextInt(nodeControllers.size())];
-            return chosenNCId;
-        } catch (UnknownHostException e) {
-            throw new AsterixException(ErrorCode.NODE_RESOLVER_UNABLE_RESOLVE_HOST, value);
-        } catch (AsterixException ae) {
-            throw ae;
+            return nodeControllers.toArray(new String[] {})[random.nextInt(nodeControllers.size())];
         } catch (Exception e) {
             throw new AsterixException(e);
         }

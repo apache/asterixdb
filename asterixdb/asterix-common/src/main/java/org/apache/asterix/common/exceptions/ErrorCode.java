@@ -108,7 +108,6 @@ public class ErrorCode {
     public static final int UNKNOWN_RECORD_FORMAT_FOR_META_PARSER = 3027;
     public static final int LIBRARY_JAVA_JOBJECTS_FIELD_ALREADY_DEFINED = 3028;
     public static final int LIBRARY_JAVA_JOBJECTS_UNKNOWN_FIELD = 3029;
-    public static final int NODE_RESOLVER_COULDNT_RESOLVE_ADDRESS = 3030;
     public static final int NODE_RESOLVER_NO_NODE_CONTROLLERS = 3031;
     public static final int NODE_RESOLVER_UNABLE_RESOLVE_HOST = 3032;
     public static final int INPUT_RECORD_CONVERTER_DCP_MSG_TO_RECORD_CONVERTER_UNKNOWN_DCP_REQUEST = 3033;
