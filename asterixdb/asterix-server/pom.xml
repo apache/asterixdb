@@ -343,6 +343,66 @@
         </executions>
       </plugin>
       <plugin>
+        <artifactId>jdeb</artifactId>
+        <groupId>org.vafer</groupId>
+        <version>1.5</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>jdeb</goal>
+            </goals>
+            <configuration>
+              <dataSet>
+                <data>
+                  <src>${project.build.directory}/${project.build.finalName}-binary-assembly/</src>
+                  <excludes>bin/**</excludes>
+                  <type>directory</type>
+                  <mapper>
+                    <type>perm</type>
+                    <prefix>/opt/apache-asterixdb/</prefix>
+                    <user>asterixdb</user>
+                    <group>asterixdb</group>
+                    <filemode>644</filemode>
+                  </mapper>
+                </data>
+                <data>
+                  <src>${project.build.directory}/${project.build.finalName}-binary-assembly/bin</src>
+                  <type>directory</type>
+                  <mapper>
+                    <type>perm</type>
+                    <prefix>/opt/apache-asterixdb/bin</prefix>
+                    <user>asterixdb</user>
+                    <group>asterixdb</group>
+                    <filemode>754</filemode>
+                  </mapper>
+                </data>
+                <data>
+                  <type>file</type>
+                  <src>src/deb/systemd/asterix-cc.service</src>
+                  <mapper>
+                     <prefix>/lib/systemd/system</prefix>
+                     <type>perm</type>
+                     <user>root</user>
+                     <group>root</group>
+                  </mapper>
+                </data>
+                <data>
+                  <type>file</type>
+                  <src>src/deb/systemd/asterix-nc.service</src>
+                  <mapper>
+                     <prefix>/lib/systemd/system</prefix>
+                     <type>perm</type>
+                     <user>root</user>
+                     <group>root</group>
+                  </mapper>
+                </data>
+              </dataSet>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>
         <version>2.10</version>
