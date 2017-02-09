@@ -19,6 +19,7 @@
 package org.apache.hyracks.control.cc.work;
 
 import org.apache.hyracks.api.dataset.ResultSetId;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.common.work.AbstractWork;
@@ -42,7 +43,11 @@ public class ReportResultPartitionWriteCompletionWork extends AbstractWork {
 
     @Override
     public void run() {
-        ccs.getDatasetDirectoryService().reportResultPartitionWriteCompletion(jobId, rsId, partition);
+        try {
+            ccs.getDatasetDirectoryService().reportResultPartitionWriteCompletion(jobId, rsId, partition);
+        } catch (HyracksDataException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override

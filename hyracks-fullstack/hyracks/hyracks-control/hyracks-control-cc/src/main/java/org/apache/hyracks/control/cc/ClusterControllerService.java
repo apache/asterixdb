@@ -325,8 +325,12 @@ public class ClusterControllerService implements IControllerService {
         return workQueue;
     }
 
-    public Executor getExecutor() {
+    public ExecutorService getExecutorService() {
         return executor;
+    }
+
+    public Executor getExecutor() {
+        return getExecutorService();
     }
 
     public CCConfig getConfig() {

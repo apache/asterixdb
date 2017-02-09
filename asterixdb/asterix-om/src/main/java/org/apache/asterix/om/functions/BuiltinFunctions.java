@@ -92,6 +92,7 @@ import org.apache.asterix.om.typecomputer.impl.RecordMergeTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.RecordPairsTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.RecordRemoveFieldsTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.ScalarVersionOfAggregateResultType;
+import org.apache.asterix.om.typecomputer.impl.SleepTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.StringBooleanTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.StringInt32TypeComputer;
 import org.apache.asterix.om.typecomputer.impl.StringIntToStringTypeComputer;
@@ -651,6 +652,8 @@ public class BuiltinFunctions {
             "spatial-cell", 4);
     public static final FunctionIdentifier SWITCH_CASE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "switch-case", FunctionIdentifier.VARARGS);
+    public static final FunctionIdentifier SLEEP = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "sleep", 2);
     public static final FunctionIdentifier INJECT_FAILURE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "inject-failure", 2);
     public static final FunctionIdentifier FLOW_RECORD = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
@@ -1058,6 +1061,7 @@ public class BuiltinFunctions {
         addPrivateFunction(SUBSET_COLLECTION, SubsetCollectionTypeComputer.INSTANCE, true);
         addFunction(SUBSTRING, SubstringTypeComputer.INSTANCE, true);
         addFunction(SWITCH_CASE, SwitchCaseComputer.INSTANCE, true);
+        addFunction(SLEEP, SleepTypeComputer.INSTANCE, false);
         addPrivateFunction(INJECT_FAILURE, InjectFailureTypeComputer.INSTANCE, true);
         addPrivateFunction(CAST_TYPE, CastTypeComputer.INSTANCE, true);
 

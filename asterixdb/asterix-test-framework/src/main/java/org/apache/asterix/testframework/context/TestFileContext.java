@@ -59,10 +59,16 @@ public class TestFileContext implements Comparable<TestFileContext> {
 
     @Override
     public int compareTo(TestFileContext o) {
-        if (this.seqNum > o.seqNum)
+        if (this.seqNum > o.seqNum) {
             return 1;
-        else if (this.seqNum < o.seqNum)
+        } else if (this.seqNum < o.seqNum) {
             return -1;
+        }
         return 0;
+    }
+
+    @Override
+    public String toString() {
+        return String.valueOf(seqNum) + ":" + type + ":" + file;
     }
 }

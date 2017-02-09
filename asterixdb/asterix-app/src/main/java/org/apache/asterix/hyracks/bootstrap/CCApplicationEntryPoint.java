@@ -63,6 +63,7 @@ import org.apache.asterix.metadata.bootstrap.AsterixStateProxy;
 import org.apache.asterix.metadata.cluster.ClusterManagerProvider;
 import org.apache.asterix.runtime.job.resource.JobCapacityController;
 import org.apache.asterix.runtime.utils.AppContextInfo;
+import org.apache.asterix.translator.IStatementExecutorFactory;
 import org.apache.hyracks.api.application.ICCApplicationContext;
 import org.apache.hyracks.api.application.ICCApplicationEntryPoint;
 import org.apache.hyracks.api.client.HyracksConnection;
@@ -164,7 +165,7 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
         webServer.setAttribute(HYRACKS_CONNECTION_ATTR, hcc);
         webServer.addLet(new ApiServlet(webServer.ctx(), new String[] { "/*" },
                 ccExtensionManager.getAqlCompilationProvider(), ccExtensionManager.getSqlppCompilationProvider(),
-                ccExtensionManager.getQueryTranslatorFactory(), componentProvider));
+                getStatementExecutorFactory(), componentProvider));
         return webServer;
     }
 
@@ -228,35 +229,35 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
         switch (key) {
             case AQL:
                 return new FullApiServlet(server.ctx(), paths, ccExtensionManager.getAqlCompilationProvider(),
-                        ccExtensionManager.getQueryTranslatorFactory(), componentProvider);
+                        getStatementExecutorFactory(), componentProvider);
             case AQL_QUERY:
                 return new QueryApiServlet(server.ctx(), paths, ccExtensionManager.getAqlCompilationProvider(),
-                        ccExtensionManager.getQueryTranslatorFactory(), componentProvider);
+                        getStatementExecutorFactory(), componentProvider);
             case AQL_UPDATE:
                 return new UpdateApiServlet(server.ctx(), paths, ccExtensionManager.getAqlCompilationProvider(),
-                        ccExtensionManager.getQueryTranslatorFactory(), componentProvider);
+                        getStatementExecutorFactory(), componentProvider);
             case AQL_DDL:
                 return new DdlApiServlet(server.ctx(), paths, ccExtensionManager.getAqlCompilationProvider(),
-                        ccExtensionManager.getQueryTranslatorFactory(), componentProvider);
+                        getStatementExecutorFactory(), componentProvider);
             case SQLPP:
                 return new FullApiServlet(server.ctx(), paths, ccExtensionManager.getSqlppCompilationProvider(),
-                        ccExtensionManager.getQueryTranslatorFactory(), componentProvider);
+                        getStatementExecutorFactory(), componentProvider);
             case SQLPP_QUERY:
                 return new QueryApiServlet(server.ctx(), paths, ccExtensionManager.getSqlppCompilationProvider(),
-                        ccExtensionManager.getQueryTranslatorFactory(), componentProvider);
+                        getStatementExecutorFactory(), componentProvider);
             case SQLPP_UPDATE:
                 return new UpdateApiServlet(server.ctx(), paths, ccExtensionManager.getSqlppCompilationProvider(),
-                        ccExtensionManager.getQueryTranslatorFactory(), componentProvider);
+                        getStatementExecutorFactory(), componentProvider);
             case SQLPP_DDL:
                 return new DdlApiServlet(server.ctx(), paths, ccExtensionManager.getSqlppCompilationProvider(),
-                        ccExtensionManager.getQueryTranslatorFactory(), componentProvider);
+                        getStatementExecutorFactory(), componentProvider);
             case QUERY_STATUS:
                 return new QueryStatusApiServlet(server.ctx(), paths);
             case QUERY_RESULT:
                 return new QueryResultApiServlet(server.ctx(), paths);
             case QUERY_SERVICE:
                 return new QueryServiceServlet(server.ctx(), paths, ccExtensionManager.getSqlppCompilationProvider(),
-                        ccExtensionManager.getQueryTranslatorFactory(), componentProvider);
+                        getStatementExecutorFactory(), componentProvider);
             case CONNECTOR:
                 return new ConnectorApiServlet(server.ctx(), paths);
             case SHUTDOWN:
@@ -274,6 +275,11 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
             default:
                 throw new IllegalStateException(String.valueOf(key));
         }
+    }
+
+    private IStatementExecutorFactory getStatementExecutorFactory() {
+        return ccExtensionManager.getStatementExecutorFactory(
+                ((ClusterControllerService) appCtx.getControllerService()).getExecutorService());
     }
 
     @Override

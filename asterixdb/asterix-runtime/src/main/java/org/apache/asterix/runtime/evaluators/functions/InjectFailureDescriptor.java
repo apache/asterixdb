@@ -18,6 +18,9 @@
  */
 package org.apache.asterix.runtime.evaluators.functions;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.dataflow.data.nontagged.serde.ABooleanSerializerDeserializer;
@@ -39,6 +42,9 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public class InjectFailureDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
+
+    private static final Logger LOGGER = Logger.getLogger(SleepDescriptor.class.getSimpleName());
+
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         @Override
         public IFunctionDescriptor createFunctionDescriptor() {
@@ -75,6 +81,7 @@ public class InjectFailureDescriptor extends AbstractScalarFunctionDynamicDescri
                             boolean argResult = ABooleanSerializerDeserializer.getBoolean(argPtr.getByteArray(),
                                     argPtr.getStartOffset() + 1);
                             if (argResult) {
+                                LOGGER.log(Level.SEVERE, ctx.getTaskAttemptId() + " injecting failure");
                                 throw new RuntimeDataException(ErrorCode.INJECTED_FAILURE, getIdentifier());
                             }
                         }

@@ -31,7 +31,6 @@ import org.apache.hyracks.api.job.JobId;
  * Sweeper to clean up the stale result distribution files and result states.
  */
 public class ResultStateSweeper implements Runnable {
-    private static final Logger LOGGER = Logger.getLogger(ResultStateSweeper.class.getName());
 
     private final IDatasetManager datasetManager;
 
@@ -39,12 +38,16 @@ public class ResultStateSweeper implements Runnable {
 
     private final long resultSweepThreshold;
 
+    private final Logger logger;
+
     private final List<JobId> toBeCollected;
 
-    public ResultStateSweeper(IDatasetManager datasetManager, long resultTTL, long resultSweepThreshold) {
+    public ResultStateSweeper(IDatasetManager datasetManager, long resultTTL, long resultSweepThreshold,
+            Logger logger) {
         this.datasetManager = datasetManager;
         this.resultTTL = resultTTL;
         this.resultSweepThreshold = resultSweepThreshold;
+        this.logger = logger;
         toBeCollected = new ArrayList<JobId>();
     }
 
@@ -56,11 +59,10 @@ public class ResultStateSweeper implements Runnable {
                 Thread.sleep(resultSweepThreshold);
                 sweep();
             } catch (InterruptedException e) {
-                LOGGER.severe("Result cleaner thread interrupted, shutting down.");
+                logger.log(Level.SEVERE, "Result cleaner thread interrupted, shutting down.", e);
                 break; // the interrupt was explicit from another thread. This thread should shut down...
             }
         }
-
     }
 
     private void sweep() {
@@ -75,8 +77,8 @@ public class ResultStateSweeper implements Runnable {
                 datasetManager.deinitState(jobId);
             }
         }
-        if (LOGGER.isLoggable(Level.FINER)) {
-            LOGGER.finer("Result state cleanup instance successfully completed.");
+        if (logger.isLoggable(Level.FINER)) {
+            logger.finer("Result state cleanup instance successfully completed.");
         }
     }
 }

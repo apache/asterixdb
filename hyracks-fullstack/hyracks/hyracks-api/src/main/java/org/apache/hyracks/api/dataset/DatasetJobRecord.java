@@ -20,9 +20,14 @@ package org.apache.hyracks.api.dataset;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-public class DatasetJobRecord extends HashMap<ResultSetId, ResultSetMetaData> implements IDatasetStateRecord {
+import org.apache.hyracks.api.exceptions.ErrorCode;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+
+public class DatasetJobRecord implements IDatasetStateRecord {
     public enum Status {
+        IDLE,
         RUNNING,
         SUCCESS,
         FAILED
@@ -36,20 +41,30 @@ public class DatasetJobRecord extends HashMap<ResultSetId, ResultSetMetaData> im
 
     private List<Exception> exceptions;
 
+    private Map<ResultSetId, ResultSetMetaData> resultSetMetadataMap = new HashMap<>();
+
     public DatasetJobRecord() {
         this.timestamp = System.currentTimeMillis();
-        this.status = Status.RUNNING;
+        this.status = Status.IDLE;
+    }
+
+    private void updateStatus(Status newStatus) {
+        // FAILED is a stable status
+        if (status != Status.FAILED) {
+            status = newStatus;
+        }
     }
 
     public void start() {
-        status = Status.RUNNING;
+        updateStatus(Status.RUNNING);
     }
 
     public void success() {
-        status = Status.SUCCESS;
+        updateStatus(Status.SUCCESS);
     }
 
-    public void fail() {
+    public void fail(ResultSetId rsId, int partition) {
+        getOrCreateDirectoryRecord(rsId, partition).fail();
         status = Status.FAILED;
     }
 
@@ -58,6 +73,7 @@ public class DatasetJobRecord extends HashMap<ResultSetId, ResultSetMetaData> im
         this.exceptions = exceptions;
     }
 
+    @Override
     public long getTimestamp() {
         return timestamp;
     }
@@ -66,7 +82,57 @@ public class DatasetJobRecord extends HashMap<ResultSetId, ResultSetMetaData> im
         return status;
     }
 
+    @Override
+    public String toString() {
+        return resultSetMetadataMap.toString();
+    }
+
     public List<Exception> getExceptions() {
         return exceptions;
+    }
+
+    public void setResultSetMetaData(ResultSetId rsId, boolean orderedResult, int nPartitions) throws
+            HyracksDataException {
+        ResultSetMetaData rsMd = resultSetMetadataMap.get(rsId);
+        if (rsMd == null) {
+            resultSetMetadataMap.put(rsId, new ResultSetMetaData(nPartitions, orderedResult));
+        } else if (rsMd.getOrderedResult() != orderedResult || rsMd.getRecords().length != nPartitions) {
+            throw HyracksDataException.create(ErrorCode.INCONSISTENT_RESULT_METADATA, rsId.toString());
+        }
+        //TODO(tillw) throwing a HyracksDataException here hangs the execution tests
+    }
+
+    public ResultSetMetaData getResultSetMetaData(ResultSetId rsId) {
+        return resultSetMetadataMap.get(rsId);
+    }
+
+    public synchronized DatasetDirectoryRecord getOrCreateDirectoryRecord(ResultSetId rsId, int partition) {
+        DatasetDirectoryRecord[] records = getResultSetMetaData(rsId).getRecords();
+        if (records[partition] == null) {
+            records[partition] = new DatasetDirectoryRecord();
+        }
+        return records[partition];
+    }
+
+    public synchronized DatasetDirectoryRecord getDirectoryRecord(ResultSetId rsId, int partition) throws
+            HyracksDataException {
+        DatasetDirectoryRecord[] records = getResultSetMetaData(rsId).getRecords();
+        if (records[partition] == null) {
+            throw new HyracksDataException("no record for partition " + partition + " of result set " + rsId);
+        }
+        return records[partition];
+    }
+
+    public synchronized void updateStatus(ResultSetId rsId) {
+        int successCount = 0;
+        DatasetDirectoryRecord[] records = getResultSetMetaData(rsId).getRecords();
+        for (DatasetDirectoryRecord record : records) {
+            if ((record != null) && (record.getStatus() == DatasetDirectoryRecord.Status.SUCCESS)) {
+                successCount++;
+            }
+        }
+        if (successCount == records.length) {
+            success();
+        }
     }
 }

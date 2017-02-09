@@ -32,23 +32,11 @@ public class JobUtils {
 
     public static JobId runJob(IHyracksClientConnection hcc, JobSpecification spec, boolean waitForCompletion)
             throws Exception {
-        JobId[] jobIds = executeJobArray(hcc, new Job[] { new Job(spec) }, waitForCompletion);
-        return jobIds[0];
-    }
-
-    public static JobId[] executeJobArray(IHyracksClientConnection hcc, Job[] jobs, boolean waitForCompletion)
-            throws Exception {
-        JobId[] startedJobIds = new JobId[jobs.length];
-        for (int i = 0; i < jobs.length; i++) {
-            JobSpecification spec = jobs[i].getJobSpec();
-            spec.setMaxReattempts(0);
-            JobId jobId = hcc.startJob(spec);
-            startedJobIds[i] = jobId;
-            if (waitForCompletion) {
-                hcc.waitForCompletion(jobId);
-            }
+        spec.setMaxReattempts(0);
+        final JobId jobId = hcc.startJob(spec);
+        if (waitForCompletion) {
+            hcc.waitForCompletion(jobId);
         }
-        return startedJobIds;
+        return jobId;
     }
-
 }

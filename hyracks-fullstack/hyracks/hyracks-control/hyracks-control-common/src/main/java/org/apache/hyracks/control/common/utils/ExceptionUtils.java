@@ -58,8 +58,12 @@ public class ExceptionUtils {
     public static void setNodeIds(Collection<Exception> exceptions, String nodeId) {
         List<Exception> newExceptions = new ArrayList<>();
         for (Exception e : exceptions) {
-            newExceptions.add(
-                    new HyracksDataException(ErrorCode.HYRACKS, ErrorCode.FAILURE_ON_NODE, e.getMessage(), e, nodeId));
+            if (e instanceof HyracksDataException) {
+                newExceptions.add(HyracksDataException.create((HyracksDataException) e, nodeId));
+            } else {
+                newExceptions.add(new HyracksDataException(ErrorCode.HYRACKS, ErrorCode.FAILURE_ON_NODE, e.getMessage(),
+                        e, nodeId));
+            }
         }
         exceptions.clear();
         exceptions.addAll(newExceptions);

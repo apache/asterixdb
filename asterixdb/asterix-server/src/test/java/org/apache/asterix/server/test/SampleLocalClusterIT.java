@@ -24,6 +24,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
+import java.net.URI;
 import java.net.URL;
 import java.util.Collections;
 
@@ -89,7 +90,8 @@ public class SampleLocalClusterIT {
     public void test1_sanityQuery() throws Exception {
         TestExecutor testExecutor = new TestExecutor();
         InputStream resultStream = testExecutor.executeQuery("1+1", OutputFormat.ADM,
-                "http://127.0.0.1:19002" + Lets.AQL_QUERY.getPath(), Collections.emptyList());
+                new URI("http", null, "127.0.0.1", 19002, Lets.AQL_QUERY.getPath(), null, null),
+                Collections.emptyList());
         StringWriter sw = new StringWriter();
         IOUtils.copy(resultStream, sw);
         Assert.assertEquals("2", sw.toString().trim());

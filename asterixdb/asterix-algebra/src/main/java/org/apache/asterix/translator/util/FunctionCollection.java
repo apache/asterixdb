@@ -205,6 +205,7 @@ import org.apache.asterix.runtime.evaluators.functions.SimilarityJaccardPrefixCh
 import org.apache.asterix.runtime.evaluators.functions.SimilarityJaccardPrefixDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.SimilarityJaccardSortedCheckDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.SimilarityJaccardSortedDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.SleepDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.SpatialAreaDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.SpatialCellDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.SpatialDistanceDescriptor;
@@ -411,6 +412,9 @@ public class FunctionCollection {
         // List constructors
         temp.add(OrderedListConstructorDescriptor.FACTORY);
         temp.add(UnorderedListConstructorDescriptor.FACTORY);
+
+        // Sleep function
+        temp.add(SleepDescriptor.FACTORY);
 
         // Inject failure function
         temp.add(InjectFailureDescriptor.FACTORY);

@@ -18,14 +18,15 @@
  */
 package org.apache.hyracks.api.dataset;
 
+import java.util.Arrays;
+
 public class ResultSetMetaData {
+    private final DatasetDirectoryRecord[] records;
     private final boolean ordered;
 
-    private final DatasetDirectoryRecord[] records;
-
-    public ResultSetMetaData(boolean ordered, DatasetDirectoryRecord[] records) {
+    ResultSetMetaData(int len, boolean ordered) {
+        this.records = new DatasetDirectoryRecord[len];
         this.ordered = ordered;
-        this.records = records;
     }
 
     public boolean getOrderedResult() {
@@ -34,5 +35,12 @@ public class ResultSetMetaData {
 
     public DatasetDirectoryRecord[] getRecords() {
         return records;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("{ordered: ").append(ordered).append(", records: ").append(Arrays.toString(records));
+        return sb.toString();
     }
 }

@@ -26,6 +26,9 @@ import java.io.Serializable;
 import org.apache.hyracks.api.io.IWritable;
 
 public final class JobId implements IWritable, Serializable {
+
+    public static final JobId INVALID = new JobId(-1l);
+
     private static final long serialVersionUID = 1L;
     private long id;
 

@@ -35,9 +35,11 @@ public interface IDatasetDirectoryService extends IJobLifecycleListener, IDatase
     public void init(ExecutorService executor);
 
     public void registerResultPartitionLocation(JobId jobId, ResultSetId rsId, boolean orderedResult,
-            boolean emptyResult, int partition, int nPartitions, NetworkAddress networkAddress);
+            boolean emptyResult, int partition, int nPartitions, NetworkAddress networkAddress)
+            throws HyracksDataException;
 
-    public void reportResultPartitionWriteCompletion(JobId jobId, ResultSetId rsId, int partition);
+    public void reportResultPartitionWriteCompletion(JobId jobId, ResultSetId rsId, int partition)
+            throws HyracksDataException;
 
     public void reportResultPartitionFailure(JobId jobId, ResultSetId rsId, int partition);
 

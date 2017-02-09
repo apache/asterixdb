@@ -71,15 +71,22 @@ public class DatasetDirectoryRecord implements Serializable {
     }
 
     public void start() {
-        status = Status.RUNNING;
+        updateStatus(Status.RUNNING);
     }
 
     public void writeEOS() {
-        status = Status.SUCCESS;
+        updateStatus(Status.SUCCESS);
     }
 
     public void fail() {
         status = Status.FAILED;
+    }
+
+    private void updateStatus(final DatasetDirectoryRecord.Status newStatus) {
+        // FAILED is a stable status
+        if (status != Status.FAILED) {
+            status = newStatus;
+        }
     }
 
     public Status getStatus() {
@@ -99,6 +106,6 @@ public class DatasetDirectoryRecord implements Serializable {
 
     @Override
     public String toString() {
-        return address.toString() + " " + status + (empty ? " (empty)" : "") + (readEOS ? " (EOS)" : "");
+        return String.valueOf(address) + " " + status + (empty ? " (empty)" : "") + (readEOS ? " (EOS)" : "");
     }
 }

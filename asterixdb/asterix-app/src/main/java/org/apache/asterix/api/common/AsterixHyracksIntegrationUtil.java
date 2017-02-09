@@ -111,7 +111,7 @@ public class AsterixHyracksIntegrationUtil {
         ccConfig.clientNetPort = DEFAULT_HYRACKS_CC_CLIENT_PORT;
         ccConfig.clusterNetPort = DEFAULT_HYRACKS_CC_CLUSTER_PORT;
         ccConfig.defaultMaxJobAttempts = 0;
-        ccConfig.resultTTL = 30000;
+        ccConfig.resultTTL = 120000;
         ccConfig.resultSweepThreshold = 1000;
         ccConfig.appCCMainClass = CCApplicationEntryPoint.class.getName();
         return ccConfig;
@@ -126,7 +126,7 @@ public class AsterixHyracksIntegrationUtil {
         ncConfig.resultIPAddress = Inet4Address.getLoopbackAddress().getHostAddress();
         ncConfig.messagingIPAddress = Inet4Address.getLoopbackAddress().getHostAddress();
         ncConfig.nodeId = ncName;
-        ncConfig.resultTTL = 30000;
+        ncConfig.resultTTL = 120000;
         ncConfig.resultSweepThreshold = 1000;
         ncConfig.appArgs = Collections.singletonList("-virtual-NC");
         ncConfig.appNCMainClass = NCApplicationEntryPoint.class.getName();

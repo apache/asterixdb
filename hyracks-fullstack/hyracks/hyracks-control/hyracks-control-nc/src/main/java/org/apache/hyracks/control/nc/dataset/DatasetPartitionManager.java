@@ -18,10 +18,8 @@
  */
 package org.apache.hyracks.control.nc.dataset;
 
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.logging.Logger;
@@ -66,29 +64,22 @@ public class DatasetPartitionManager implements IDatasetPartitionManager {
             datasetMemoryManager = null;
         }
         partitionResultStateMap = new LinkedHashMap<>();
-        executor.execute(new ResultStateSweeper(this, resultTTL, resultSweepThreshold));
+        executor.execute(new ResultStateSweeper(this, resultTTL, resultSweepThreshold, LOGGER));
     }
 
     @Override
     public IFrameWriter createDatasetPartitionWriter(IHyracksTaskContext ctx, ResultSetId rsId, boolean orderedResult,
             boolean asyncMode, int partition, int nPartitions) throws HyracksException {
-        DatasetPartitionWriter dpw = null;
+        DatasetPartitionWriter dpw;
         JobId jobId = ctx.getJobletContext().getJobId();
         synchronized (this) {
             dpw = new DatasetPartitionWriter(ctx, this, jobId, rsId, asyncMode, orderedResult, partition, nPartitions,
                     datasetMemoryManager, fileFactory);
 
-            ResultSetMap rsIdMap = (ResultSetMap) partitionResultStateMap.get(jobId);
-            if (rsIdMap == null) {
-                rsIdMap = new ResultSetMap();
-                partitionResultStateMap.put(jobId, rsIdMap);
-            }
+            ResultSetMap rsIdMap = (ResultSetMap) partitionResultStateMap.computeIfAbsent(jobId,
+                    k -> new ResultSetMap());
 
-            ResultState[] resultStates = rsIdMap.get(rsId);
-            if (resultStates == null) {
-                resultStates = new ResultState[nPartitions];
-                rsIdMap.put(rsId, resultStates);
-            }
+            ResultState[] resultStates = rsIdMap.createOrGetResultStates(rsId, nPartitions);
             resultStates[partition] = dpw.getResultState();
         }
 
@@ -141,7 +132,7 @@ public class DatasetPartitionManager implements IDatasetPartitionManager {
                 throw new HyracksException("Unknown JobId " + jobId);
             }
 
-            ResultState[] resultStates = rsIdMap.get(resultSetId);
+            ResultState[] resultStates = rsIdMap.getResultStates(resultSetId);
             if (resultStates == null) {
                 throw new HyracksException("Unknown JobId: " + jobId + " ResultSetId: " + resultSetId);
             }
@@ -161,49 +152,16 @@ public class DatasetPartitionManager implements IDatasetPartitionManager {
     @Override
     public synchronized void removePartition(JobId jobId, ResultSetId resultSetId, int partition) {
         ResultSetMap rsIdMap = (ResultSetMap) partitionResultStateMap.get(jobId);
-        if (rsIdMap != null) {
-            ResultState[] resultStates = rsIdMap.get(resultSetId);
-            if (resultStates != null) {
-                ResultState state = resultStates[partition];
-                if (state != null) {
-                    state.closeAndDelete();
-                    LOGGER.fine("Removing partition: " + partition + " for JobId: " + jobId);
-                }
-                resultStates[partition] = null;
-                boolean stateEmpty = true;
-                for (int i = 0; i < resultStates.length; i++) {
-                    if (resultStates[i] != null) {
-                        stateEmpty = false;
-                        break;
-                    }
-                }
-                if (stateEmpty) {
-                    rsIdMap.remove(resultSetId);
-                }
-            }
-            if (rsIdMap.isEmpty()) {
-                partitionResultStateMap.remove(jobId);
-            }
+        if (rsIdMap != null && rsIdMap.removePartition(jobId, resultSetId, partition)) {
+            partitionResultStateMap.remove(jobId);
         }
     }
 
     @Override
     public synchronized void abortReader(JobId jobId) {
         ResultSetMap rsIdMap = (ResultSetMap) partitionResultStateMap.get(jobId);
-
-        if (rsIdMap == null) {
-            return;
-        }
-
-        for (Entry<ResultSetId, ResultState[]> mapEntry : rsIdMap.entrySet()) {
-            ResultState[] resultStates = mapEntry.getValue();
-            if (resultStates != null) {
-                for (ResultState state : resultStates) {
-                    if (state != null) {
-                        state.abort();
-                    }
-                }
-            }
+        if (rsIdMap != null) {
+            rsIdMap.abortAll();
         }
     }
 
@@ -214,59 +172,33 @@ public class DatasetPartitionManager implements IDatasetPartitionManager {
 
     @Override
     public synchronized void close() {
-        for (Entry<JobId, IDatasetStateRecord> entry : partitionResultStateMap.entrySet()) {
-            deinit(entry.getKey());
+        for (JobId jobId : getJobIds()) {
+            deinit(jobId);
         }
         deallocatableRegistry.close();
     }
 
     @Override
-    public Set<JobId> getJobIds() {
+    public synchronized Set<JobId> getJobIds() {
         return partitionResultStateMap.keySet();
     }
 
     @Override
-    public IDatasetStateRecord getState(JobId jobId) {
+    public synchronized IDatasetStateRecord getState(JobId jobId) {
         return partitionResultStateMap.get(jobId);
     }
 
     @Override
-    public void deinitState(JobId jobId) {
+    public synchronized void deinitState(JobId jobId) {
         deinit(jobId);
         partitionResultStateMap.remove(jobId);
     }
 
-    private void deinit(JobId jobId) {
+    private synchronized void deinit(JobId jobId) {
         ResultSetMap rsIdMap = (ResultSetMap) partitionResultStateMap.get(jobId);
         if (rsIdMap != null) {
-            for (Entry<ResultSetId, ResultState[]> mapEntry : rsIdMap.entrySet()) {
-                ResultState[] resultStates = mapEntry.getValue();
-                if (resultStates != null) {
-                    for (int i = 0; i < resultStates.length; i++) {
-                        ResultState state = resultStates[i];
-                        if (state != null) {
-                            state.closeAndDelete();
-                            LOGGER.fine("Removing partition: " + i + " for JobId: " + jobId);
-                        }
-                    }
-                }
-            }
+            rsIdMap.closeAndDeleteAll();
         }
     }
 
-    private class ResultSetMap extends HashMap<ResultSetId, ResultState[]> implements IDatasetStateRecord {
-        private static final long serialVersionUID = 1L;
-
-        long timestamp;
-
-        public ResultSetMap() {
-            super();
-            timestamp = System.currentTimeMillis();
-        }
-
-        @Override
-        public long getTimestamp() {
-            return timestamp;
-        }
-    }
 }

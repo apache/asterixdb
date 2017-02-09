@@ -86,10 +86,7 @@ public class DatasetPartitionWriter implements IFrameWriter {
 
     @Override
     public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
-        if (!partitionRegistered) {
-            registerResultPartitionLocation(false);
-            partitionRegistered = true;
-        }
+        registerResultPartitionLocation(false);
         if (datasetMemoryManager == null) {
             resultState.write(buffer);
         } else {
@@ -102,6 +99,7 @@ public class DatasetPartitionWriter implements IFrameWriter {
         try {
             resultState.closeAndDelete();
             resultState.abort();
+            registerResultPartitionLocation(false);
             manager.reportPartitionFailure(jobId, resultSetId, partition);
         } catch (HyracksException e) {
             throw new HyracksDataException(e);
@@ -113,10 +111,7 @@ public class DatasetPartitionWriter implements IFrameWriter {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("close(" + partition + ")");
         }
-        if (!partitionRegistered) {
-            registerResultPartitionLocation(true);
-            partitionRegistered = true;
-        }
+        registerResultPartitionLocation(true);
         resultState.close();
         try {
             manager.reportPartitionWriteCompletion(jobId, resultSetId, partition);
@@ -127,7 +122,11 @@ public class DatasetPartitionWriter implements IFrameWriter {
 
     void registerResultPartitionLocation(boolean empty) throws HyracksDataException {
         try {
-            manager.registerResultPartitionLocation(jobId, resultSetId, partition, nPartitions, orderedResult, empty);
+            if (!partitionRegistered) {
+                manager.registerResultPartitionLocation(jobId, resultSetId, partition, nPartitions, orderedResult,
+                        empty);
+                partitionRegistered = true;
+            }
         } catch (HyracksException e) {
             if (e instanceof HyracksDataException) {
                 throw (HyracksDataException) e;

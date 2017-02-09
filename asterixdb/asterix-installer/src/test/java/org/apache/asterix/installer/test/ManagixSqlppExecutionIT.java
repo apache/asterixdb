@@ -29,7 +29,7 @@ import org.junit.runners.Parameterized.Parameters;
 @RunWith(Parameterized.class)
 public class ManagixSqlppExecutionIT extends ManagixExecutionIT {
 
-    @Parameters
+    @Parameters(name = "ManagixSqlppExecutionIT {index}: {0}")
     public static Collection<Object[]> tests() throws Exception {
         Collection<Object[]> testArgs = buildTestsInXml("only_sqlpp.xml");
         if (testArgs.size() == 0) {
@@ -48,10 +48,7 @@ public class ManagixSqlppExecutionIT extends ManagixExecutionIT {
 
     }
 
-    private TestCaseContext tcCtx;
-
     public ManagixSqlppExecutionIT(TestCaseContext tcCtx) {
         super(tcCtx);
-        this.tcCtx = tcCtx;
     }
 }

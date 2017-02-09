@@ -20,6 +20,7 @@ package org.apache.hyracks.control.cc.work;
 
 import org.apache.hyracks.api.comm.NetworkAddress;
 import org.apache.hyracks.api.dataset.ResultSetId;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.common.work.AbstractWork;
@@ -42,7 +43,8 @@ public class RegisterResultPartitionLocationWork extends AbstractWork {
     private final NetworkAddress networkAddress;
 
     public RegisterResultPartitionLocationWork(ClusterControllerService ccs, JobId jobId, ResultSetId rsId,
-            boolean orderedResult, boolean emptyResult, int partition, int nPartitions, NetworkAddress networkAddress) {
+            boolean orderedResult, boolean emptyResult, int partition, int nPartitions, NetworkAddress
+            networkAddress) {
         this.ccs = ccs;
         this.jobId = jobId;
         this.rsId = rsId;
@@ -55,8 +57,13 @@ public class RegisterResultPartitionLocationWork extends AbstractWork {
 
     @Override
     public void run() {
-        ccs.getDatasetDirectoryService().registerResultPartitionLocation(jobId, rsId, orderedResult, emptyResult,
-                partition, nPartitions, networkAddress);
+        try {
+            ccs.getDatasetDirectoryService()
+                    .registerResultPartitionLocation(jobId, rsId, orderedResult, emptyResult, partition, nPartitions,
+                            networkAddress);
+        } catch (HyracksDataException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override

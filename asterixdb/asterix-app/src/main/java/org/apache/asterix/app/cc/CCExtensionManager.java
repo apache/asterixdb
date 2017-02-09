@@ -21,6 +21,7 @@ package org.apache.asterix.app.cc;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
 
 import org.apache.asterix.algebra.base.ILangExtension;
 import org.apache.asterix.algebra.base.ILangExtension.Language;
@@ -50,12 +51,13 @@ public class CCExtensionManager implements IAlgebraExtensionManager {
     private final IStatementExecutorExtension statementExecutorExtension;
     private final ILangCompilationProvider aqlCompilationProvider;
     private final ILangCompilationProvider sqlppCompilationProvider;
-    private final DefaultStatementExecutorFactory defaultQueryTranslatorFactory;
+    private transient IStatementExecutorFactory statementExecutorFactory;
 
     /**
      * Initialize {@code CompilerExtensionManager} from configuration
      *
      * @param list
+     *            a list of extensions
      * @throws InstantiationException
      * @throws IllegalAccessException
      * @throws ClassNotFoundException
@@ -66,7 +68,6 @@ public class CCExtensionManager implements IAlgebraExtensionManager {
         Pair<ExtensionId, ILangCompilationProvider> aqlcp = null;
         Pair<ExtensionId, ILangCompilationProvider> sqlppcp = null;
         IStatementExecutorExtension see = null;
-        defaultQueryTranslatorFactory = new DefaultStatementExecutorFactory();
         if (list != null) {
             for (AsterixExtension extensionConf : list) {
                 IExtension extension = (IExtension) Class.forName(extensionConf.getClassName()).newInstance();
@@ -94,9 +95,19 @@ public class CCExtensionManager implements IAlgebraExtensionManager {
         this.sqlppCompilationProvider = sqlppcp == null ? new SqlppCompilationProvider() : sqlppcp.second;
     }
 
+    /** @deprecated use getStatementExecutorFactory instead */
+    @Deprecated
     public IStatementExecutorFactory getQueryTranslatorFactory() {
-        return statementExecutorExtension == null ? defaultQueryTranslatorFactory
-                : statementExecutorExtension.getQueryTranslatorFactory();
+        return getStatementExecutorFactory(null);
+    }
+
+    public IStatementExecutorFactory getStatementExecutorFactory(ExecutorService executorService) {
+        if (statementExecutorFactory == null) {
+            statementExecutorFactory = statementExecutorExtension == null
+                    ? new DefaultStatementExecutorFactory(executorService)
+                    : statementExecutorExtension.getStatementExecutorFactory(executorService);
+        }
+        return statementExecutorFactory;
     }
 
     public ILangCompilationProvider getAqlCompilationProvider() {

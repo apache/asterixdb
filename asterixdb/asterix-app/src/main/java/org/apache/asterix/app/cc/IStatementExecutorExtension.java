@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.app.cc;
 
+import java.util.concurrent.ExecutorService;
+
 import org.apache.asterix.common.api.IExtension;
 import org.apache.asterix.translator.IStatementExecutorFactory;
 
@@ -33,6 +35,15 @@ public interface IStatementExecutorExtension extends IExtension {
 
     /**
      * @return The extension implementation of the {@code IStatementExecutorFactory}
+     * @deprecated use getStatementExecutorFactory instead
      */
+    @Deprecated
     IStatementExecutorFactory getQueryTranslatorFactory();
+
+    /**
+     * @return The extension implementation of the {@code IStatementExecutorFactory}
+     */
+    default IStatementExecutorFactory getStatementExecutorFactory(ExecutorService executorService) {
+        return getQueryTranslatorFactory();
+    }
 }

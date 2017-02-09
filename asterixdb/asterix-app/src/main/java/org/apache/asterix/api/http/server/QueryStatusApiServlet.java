@@ -94,19 +94,7 @@ public class QueryStatusApiServlet extends AbstractServlet {
             resultReader.open(jobId, rsId);
 
             ObjectNode jsonResponse = om.createObjectNode();
-            String status;
-            switch (resultReader.getStatus()) {
-                case RUNNING:
-                    status = "RUNNING";
-                    break;
-                case SUCCESS:
-                    status = "SUCCESS";
-                    break;
-                default:
-                    status = "ERROR";
-                    break;
-            }
-            jsonResponse.put("status", status);
+            jsonResponse.put("status", resultReader.getStatus().name());
             out.write(jsonResponse.toString());
 
         } catch (Exception e) {

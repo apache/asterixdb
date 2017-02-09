@@ -28,11 +28,6 @@
              QueryFileExtension=".sqlpp">
   <test-group name="flwor">
     <test-case FilePath="flwor">
-      <compilation-unit name="at00">
-        <output-dir compare="AST">at00</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
       <compilation-unit name="at01">
         <output-dir compare="AST">at01</output-dir>
       </compilation-unit>

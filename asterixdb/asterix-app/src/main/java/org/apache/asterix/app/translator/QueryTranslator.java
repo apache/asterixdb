@@ -34,6 +34,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Random;
+import java.util.concurrent.ExecutorService;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -218,9 +219,10 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     protected final APIFramework apiFramework;
     protected final IRewriterFactory rewriterFactory;
     protected final IStorageComponentProvider componentProvider;
+    protected final ExecutorService executorService;
 
-    public QueryTranslator(List<Statement> statements, SessionConfig conf,
-            ILangCompilationProvider compliationProvider, IStorageComponentProvider componentProvider) {
+    public QueryTranslator(List<Statement> statements, SessionConfig conf, ILangCompilationProvider compliationProvider,
+            IStorageComponentProvider componentProvider, ExecutorService executorService) {
         this.statements = statements;
         this.sessionConfig = conf;
         this.componentProvider = componentProvider;
@@ -228,6 +230,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         apiFramework = new APIFramework(compliationProvider);
         rewriterFactory = compliationProvider.getRewriterFactory();
         activeDataverse = MetadataBuiltinEntities.DEFAULT_DATAVERSE;
+        this.executorService = executorService;
     }
 
     protected List<FunctionDecl> getDeclaredFunctions(List<Statement> statements) {
@@ -1327,11 +1330,6 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
     }
 
-    protected Dataset getDataset(MetadataTransactionContext mdTxnCtx, String dataverseName, String datasetName)
-            throws MetadataException {
-        return MetadataManager.INSTANCE.getDataset(mdTxnCtx, dataverseName, datasetName);
-    }
-
     public void handleDatasetDropStatement(MetadataProvider metadataProvider, Statement stmt,
             IHyracksClientConnection hcc) throws Exception {
         DropDatasetStatement stmtDelete = (DropDatasetStatement) stmt;
@@ -1826,41 +1824,60 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
     }
 
-    public JobSpecification handleInsertUpsertStatement(MetadataProvider metadataProvider, Statement stmt,
+    public void handleInsertUpsertStatement(MetadataProvider metadataProvider, Statement stmt,
             IHyracksClientConnection hcc, IHyracksDataset hdc, ResultDelivery resultDelivery,
             IStatementExecutor.Stats stats, boolean compileOnly) throws Exception {
 
         InsertStatement stmtInsertUpsert = (InsertStatement) stmt;
         String dataverseName = getActiveDataverse(stmtInsertUpsert.getDataverseName());
         Query query = stmtInsertUpsert.getQuery();
-        MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
-        boolean bActiveTxn = true;
-        metadataProvider.setMetadataTxnContext(mdTxnCtx);
-        MetadataLockManager.INSTANCE.insertDeleteUpsertBegin(dataverseName,
-                dataverseName + "." + stmtInsertUpsert.getDatasetName(), query.getDataverses(), query.getDatasets());
-        try {
-            metadataProvider.setWriteTransaction(true);
-            JobSpecification jobSpec = rewriteCompileInsertUpsert(hcc, metadataProvider, stmtInsertUpsert);
-            MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
-            bActiveTxn = false;
 
-            if (jobSpec != null && !compileOnly) {
-                if (stmtInsertUpsert.getReturnExpression() != null) {
-                    handleQueryResult(metadataProvider, hcc, hdc, jobSpec, resultDelivery, stats);
-                } else {
-                    JobUtils.runJob(hcc, jobSpec, true);
+        final IMetadataLocker locker = new IMetadataLocker() {
+            @Override
+            public void lock() {
+                MetadataLockManager.INSTANCE.insertDeleteUpsertBegin(dataverseName,
+                        dataverseName + "." + stmtInsertUpsert.getDatasetName(), query.getDataverses(),
+                        query.getDatasets());
+            }
+
+            @Override
+            public void unlock() {
+                MetadataLockManager.INSTANCE.insertDeleteUpsertEnd(dataverseName,
+                        dataverseName + "." + stmtInsertUpsert.getDatasetName(), query.getDataverses(),
+                        query.getDatasets());
+            }
+        };
+        final IStatementCompiler compiler = () -> {
+            MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+            boolean bActiveTxn = true;
+            metadataProvider.setMetadataTxnContext(mdTxnCtx);
+            try {
+                metadataProvider.setWriteTransaction(true);
+                final JobSpecification jobSpec = rewriteCompileInsertUpsert(hcc, metadataProvider, stmtInsertUpsert);
+                MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+                bActiveTxn = false;
+                return compileOnly ? null : jobSpec;
+            } catch (Exception e) {
+                if (bActiveTxn) {
+                    abort(e, e, mdTxnCtx);
                 }
+                throw e;
             }
-            return jobSpec;
-        } catch (Exception e) {
-            if (bActiveTxn) {
-                abort(e, e, mdTxnCtx);
+        };
+
+        if (stmtInsertUpsert.getReturnExpression() != null) {
+            deliverResult(hcc, hdc, compiler, metadataProvider, locker, resultDelivery, stats);
+        } else {
+            locker.lock();
+            try {
+                final JobSpecification jobSpec = compiler.compile();
+                if (jobSpec == null) {
+                    return;
+                }
+                JobUtils.runJob(hcc, jobSpec, true);
+            } finally {
+                locker.unlock();
             }
-            throw e;
-        } finally {
-            MetadataLockManager.INSTANCE.insertDeleteUpsertEnd(dataverseName,
-                    dataverseName + "." + stmtInsertUpsert.getDatasetName(), query.getDataverses(),
-                    query.getDatasets());
         }
     }
 
@@ -2515,66 +2532,121 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 new StorageComponentProvider()));
     }
 
-    protected JobSpecification handleQuery(MetadataProvider metadataProvider, Query query,
-            IHyracksClientConnection hcc, IHyracksDataset hdc, ResultDelivery resultDelivery, Stats stats)
-            throws Exception {
-        MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
-        boolean bActiveTxn = true;
-        metadataProvider.setMetadataTxnContext(mdTxnCtx);
-        MetadataLockManager.INSTANCE.queryBegin(activeDataverse, query.getDataverses(), query.getDatasets());
-        try {
-            JobSpecification jobSpec = rewriteCompileQuery(hcc, metadataProvider, query, null);
+    private interface IMetadataLocker {
+        void lock();
 
-            MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
-            bActiveTxn = false;
-
-            if (query.isExplain()) {
-                sessionConfig.out().flush();
-                return jobSpec;
-            } else if (sessionConfig.isExecuteQuery() && jobSpec != null) {
-                handleQueryResult(metadataProvider, hcc, hdc, jobSpec, resultDelivery, stats);
-            }
-            return jobSpec;
-        } catch (Exception e) {
-            LOGGER.log(Level.INFO, e.getMessage(), e);
-            if (bActiveTxn) {
-                abort(e, e, mdTxnCtx);
-            }
-            throw e;
-        } finally {
-            MetadataLockManager.INSTANCE.queryEnd(query.getDataverses(), query.getDatasets());
-            // release external datasets' locks acquired during compilation of the query
-            ExternalDatasetsRegistry.INSTANCE.releaseAcquiredLocks(metadataProvider);
-        }
+        void unlock();
     }
 
-    private void handleQueryResult(MetadataProvider metadataProvider, IHyracksClientConnection hcc,
-            IHyracksDataset hdc, JobSpecification jobSpec, ResultDelivery resultDelivery, Stats stats)
-            throws Exception {
-        JobId jobId = JobUtils.runJob(hcc, jobSpec, false);
+    private interface IResultPrinter {
+        void print(JobId jobId) throws HyracksDataException, AlgebricksException;
+    }
 
-        ResultHandle hand;
+    private interface IStatementCompiler {
+        JobSpecification compile() throws AlgebricksException, RemoteException, ACIDException;
+    }
+
+    protected void handleQuery(MetadataProvider metadataProvider, Query query, IHyracksClientConnection hcc,
+            IHyracksDataset hdc, ResultDelivery resultDelivery, Stats stats) throws Exception {
+        final IMetadataLocker locker = new IMetadataLocker() {
+            @Override
+            public void lock() {
+                MetadataLockManager.INSTANCE.queryBegin(activeDataverse, query.getDataverses(), query.getDatasets());
+            }
+
+            @Override
+            public void unlock() {
+                MetadataLockManager.INSTANCE.queryEnd(query.getDataverses(), query.getDatasets());
+                // release external datasets' locks acquired during compilation of the query
+                ExternalDatasetsRegistry.INSTANCE.releaseAcquiredLocks(metadataProvider);
+            }
+        };
+        final IStatementCompiler compiler = () -> {
+            MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+            boolean bActiveTxn = true;
+            metadataProvider.setMetadataTxnContext(mdTxnCtx);
+            try {
+                final JobSpecification jobSpec = rewriteCompileQuery(hcc, metadataProvider, query, null);
+                MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+                bActiveTxn = false;
+                return query.isExplain() || !sessionConfig.isExecuteQuery() ? null : jobSpec;
+            } catch (Exception e) {
+                LOGGER.log(Level.INFO, e.getMessage(), e);
+                if (bActiveTxn) {
+                    abort(e, e, mdTxnCtx);
+                }
+                throw e;
+            }
+        };
+        deliverResult(hcc, hdc, compiler, metadataProvider, locker, resultDelivery, stats);
+    }
+
+    private void deliverResult(IHyracksClientConnection hcc, IHyracksDataset hdc, IStatementCompiler compiler,
+            MetadataProvider metadataProvider, IMetadataLocker locker, ResultDelivery resultDelivery, Stats stats)
+            throws Exception {
+        final ResultSetId resultSetId = metadataProvider.getResultSetId();
         switch (resultDelivery) {
             case ASYNC:
-                hand = new ResultHandle(jobId, metadataProvider.getResultSetId());
-                ResultUtil.printResultHandle(hand, sessionConfig);
-                hcc.waitForCompletion(jobId);
-                sessionConfig.out().flush();
+                MutableBoolean printed = new MutableBoolean(false);
+                executorService.submit(() -> {
+                    JobId jobId = null;
+                    try {
+                        jobId = createAndRunJob(hcc, compiler, locker, resultDelivery, id -> {
+                            final ResultHandle handle = new ResultHandle(id, resultSetId);
+                            ResultUtil.printResultHandle(handle, sessionConfig);
+                            synchronized (printed) {
+                                printed.setTrue();
+                                printed.notify();
+                            }
+                        });
+                    } catch (Exception e) {
+                        GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE,
+                                resultDelivery.name() + " job " + "with id " + jobId + " failed", e);
+                    }
+                });
+                synchronized (printed) {
+                    while (!printed.booleanValue()) {
+                        printed.wait();
+                    }
+                }
                 break;
             case IMMEDIATE:
-                hcc.waitForCompletion(jobId);
-                ResultReader resultReader = new ResultReader(hdc);
-                resultReader.open(jobId, metadataProvider.getResultSetId());
-                ResultUtil.printResults(resultReader, sessionConfig, stats, metadataProvider.findOutputRecordType());
+                createAndRunJob(hcc, compiler, locker, resultDelivery, id -> {
+                    final ResultReader resultReader = new ResultReader(hdc);
+                    resultReader.open(id, resultSetId);
+                    ResultUtil.printResults(resultReader, sessionConfig, stats,
+                            metadataProvider.findOutputRecordType());
+                });
                 break;
             case DEFERRED:
-                hcc.waitForCompletion(jobId);
-                hand = new ResultHandle(jobId, metadataProvider.getResultSetId());
-                ResultUtil.printResultHandle(hand, sessionConfig);
-                sessionConfig.out().flush();
+                createAndRunJob(hcc, compiler, locker, resultDelivery, id -> {
+                    ResultUtil.printResultHandle(new ResultHandle(id, resultSetId), sessionConfig);
+                });
                 break;
             default:
                 break;
+        }
+    }
+
+    private static JobId createAndRunJob(IHyracksClientConnection hcc, IStatementCompiler compiler,
+            IMetadataLocker locker, ResultDelivery resultDelivery, IResultPrinter printer) throws Exception {
+        locker.lock();
+        try {
+            final JobSpecification jobSpec = compiler.compile();
+            if (jobSpec == null) {
+                return JobId.INVALID;
+            }
+            final JobId jobId = JobUtils.runJob(hcc, jobSpec, false);
+            if (ResultDelivery.ASYNC == resultDelivery) {
+                printer.print(jobId);
+                hcc.waitForCompletion(jobId);
+            } else {
+                hcc.waitForCompletion(jobId);
+                printer.print(jobId);
+            }
+            return jobId;
+        } finally {
+            locker.unlock();
         }
     }
 

@@ -49,6 +49,10 @@ public class ErrorCode {
     public static final int ILLEGAL_WRITE_AFTER_FLUSH_ATTEMPT = 12;
     public static final int DUPLICATE_IODEVICE = 13;
     public static final int NESTED_IODEVICES = 14;
+    public static final int MORE_THAN_ONE_RESULT = 15;
+    public static final int RESULT_FAILURE_EXCEPTION = 16;
+    public static final int RESULT_FAILURE_NO_EXCEPTION = 17;
+    public static final int INCONSISTENT_RESULT_METADATA = 18;
 
     // Compilation error codes.
     public static final int RULECOLLECTION_NOT_INSTANCE_OF_LIST = 10001;

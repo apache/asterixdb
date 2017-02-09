@@ -20,6 +20,7 @@ package org.apache.asterix.api.http.server;
 
 import static org.apache.asterix.api.http.servlet.ServletConstants.HYRACKS_CONNECTION_ATTR;
 import static org.apache.asterix.api.http.servlet.ServletConstants.HYRACKS_DATASET_ATTR;
+import static org.apache.asterix.translator.IStatementExecutor.ResultDelivery;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -33,7 +34,6 @@ import java.util.logging.Logger;
 
 import org.apache.asterix.app.result.ResultReader;
 import org.apache.asterix.app.result.ResultUtil;
-import org.apache.asterix.app.translator.QueryTranslator;
 import org.apache.asterix.common.api.IClusterManagementWork;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.context.IStorageComponentProvider;
@@ -156,6 +156,7 @@ public class QueryServiceServlet extends AbstractServlet {
     }
 
     public enum ResultStatus {
+        STARTED("started"),
         SUCCESS("success"),
         TIMEOUT("timeout"),
         ERRORS("errors"),
@@ -458,13 +459,13 @@ public class QueryServiceServlet extends AbstractServlet {
         return request.getHttpRequest().content().toString(StandardCharsets.UTF_8);
     }
 
-    private static QueryTranslator.ResultDelivery parseResultDelivery(String mode) {
+    private static ResultDelivery parseResultDelivery(String mode) {
         if ("async".equals(mode)) {
-            return QueryTranslator.ResultDelivery.ASYNC;
+            return ResultDelivery.ASYNC;
         } else if ("deferred".equals(mode)) {
-            return QueryTranslator.ResultDelivery.DEFERRED;
+            return ResultDelivery.DEFERRED;
         } else {
-            return QueryTranslator.ResultDelivery.IMMEDIATE;
+            return ResultDelivery.IMMEDIATE;
         }
     }
 
@@ -474,7 +475,7 @@ public class QueryServiceServlet extends AbstractServlet {
         final StringWriter stringWriter = new StringWriter();
         final PrintWriter resultWriter = new PrintWriter(stringWriter);
 
-        QueryTranslator.ResultDelivery delivery = parseResultDelivery(param.mode);
+        ResultDelivery delivery = parseResultDelivery(param.mode);
 
         SessionConfig sessionConfig = createSessionConfig(param, resultWriter);
         ServletUtils.setContentType(response, IServlet.ContentType.APPLICATION_JSON, IServlet.Encoding.UTF8);
@@ -517,7 +518,7 @@ public class QueryServiceServlet extends AbstractServlet {
             execStart = System.nanoTime();
             translator.compileAndExecute(hcc, hds, delivery, stats);
             execEnd = System.nanoTime();
-            printStatus(resultWriter, ResultStatus.SUCCESS);
+            printStatus(resultWriter, ResultDelivery.ASYNC == delivery ? ResultStatus.STARTED : ResultStatus.SUCCESS);
         } catch (AsterixException | TokenMgrError | org.apache.asterix.aqlplus.parser.TokenMgrError pe) {
             GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, pe.getMessage(), pe);
             printError(resultWriter, pe);
