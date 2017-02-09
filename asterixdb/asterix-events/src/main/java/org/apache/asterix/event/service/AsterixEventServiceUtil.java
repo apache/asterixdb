@@ -71,6 +71,7 @@ public class AsterixEventServiceUtil {
     public static final int CLUSTER_NET_PORT_DEFAULT = 1098;
     public static final int CLIENT_NET_PORT_DEFAULT = 1099;
     public static final int HTTP_PORT_DEFAULT = 8888;
+    private static final String EMPTY_STRING = "";
 
     public static final String MANAGIX_CONF_XML = "conf" + File.separator + "managix-conf.xml";
 
@@ -345,25 +346,23 @@ public class AsterixEventServiceUtil {
     public static void zipDir(File sourceDir, File destFile) throws IOException {
         FileOutputStream fos = new FileOutputStream(destFile);
         ZipOutputStream zos = new ZipOutputStream(fos);
-        zipDir(sourceDir, destFile, zos);
+        zipDir(EMPTY_STRING, sourceDir, destFile, zos);
         zos.close();
     }
 
-    private static void zipDir(File sourceDir, final File destFile, ZipOutputStream zos) throws IOException {
-        File[] dirList = sourceDir.listFiles(new FileFilter() {
-            public boolean accept(File f) {
-                return !f.getName().endsWith(destFile.getName());
-            }
-        });
+    private static void zipDir(String prefix, File sourceDir, final File destFile, ZipOutputStream zos)
+            throws IOException {
+        File[] dirList = sourceDir.listFiles(f->!f.getName().endsWith(destFile.getName()));
+        String newPrefix = prefix.equals(EMPTY_STRING) ? prefix : prefix + File.separator;
         for (int i = 0; i < dirList.length; i++) {
             File f = dirList[i];
             if (f.isDirectory()) {
-                zipDir(f, destFile, zos);
+                zipDir(newPrefix + f.getName(), f, destFile, zos);
             } else {
                 int bytesIn = 0;
                 byte[] readBuffer = new byte[2156];
                 FileInputStream fis = new FileInputStream(f);
-                ZipEntry entry = new ZipEntry(sourceDir.getName() + File.separator + f.getName());
+                ZipEntry entry = new ZipEntry(newPrefix + f.getName());
                 zos.putNextEntry(entry);
                 while ((bytesIn = fis.read(readBuffer)) != -1) {
                     zos.write(readBuffer, 0, bytesIn);

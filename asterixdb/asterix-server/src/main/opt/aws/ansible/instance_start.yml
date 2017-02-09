@@ -28,7 +28,10 @@
     - name: Install JDK
       shell: sudo yum -y localinstall jdk-8u121-linux-x64.rpm
 
-    - include: customize_deployment.yml
+    - name: Deploy binaries
+      synchronize:
+          src: "{{ dist }}"
+          dest: "{{ binarydir }}"
 
     - name: Ensure the log directory exists
       file:
@@ -49,7 +52,7 @@
   tasks:
     - include_vars: ../conf/instance_settings.yml
     - name: Copy cluster config to CC
-      copy:
+      synchronize:
         src: /tmp/asterixdb/cc.conf
         dest: "{{ basedir }}/cc.conf"
 
@@ -60,4 +63,3 @@
       shell: nohup "{{ cc }}" -config-file "{{ basedir }}/cc.conf" &> "{{ binarydir }}/logs/cc.log" &
       async: 10
       poll: 0
-

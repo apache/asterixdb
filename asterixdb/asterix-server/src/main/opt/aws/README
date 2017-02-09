@@ -20,12 +20,12 @@
 To start an AWS cluster, you need to do the following steps:
 
 1. Create an AWS account and an IAM user.
-   Sets up a security group that you'd like to use for your AWS cluster. The security group should at least allow
+   Set up a security group that you'd like to use for your AWS cluster. The security group should at least allow
    all TCP connection from anywhere.
 
-2. Retrieve your AWS key pair name and fill that after "keypair:" in conf/aws_settings.yml;
-   retrieve your AWS "access key ID" and fill that after "access_key_id:" in conf/aws_settings.yml;
-   retrieve your AWS "secret access key" and fill that after "secret_access_key:" in conf/aws_settings.yml.
+2. Retrieve your AWS EC2 key pair name and fill that after "keypair:" in conf/aws_settings.yml;
+   retrieve your AWS IAM "access key ID" and fill that after "access_key_id:" in conf/aws_settings.yml;
+   retrieve your AWS IAM "secret access key" and fill that after "secret_access_key:" in conf/aws_settings.yml.
    Note that you can only read or download "access key ID" and "secret access key" once from your AWS console.
    If you forget them, you have to create new keys again and delete the old ones.
 
@@ -41,8 +41,9 @@ To start an AWS cluster, you need to do the following steps:
    Host *.amazonaws.com
         IdentityFile ~/.ssh/id_rsa
 
-5. Install ansible and boto3:
-   ansible: http://docs.ansible.com/ansible/intro_installation.html
+5. Install ansible, boto, and boto3:
+   ansible: pip install ansible
+   boto: pip install boto
    boto3: pip install boto3
 
 6. Launch your cluster instance on AWS:

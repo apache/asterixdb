@@ -76,7 +76,7 @@ Here are steps to get AsterixDB running on your local machine:
 * Start a single-machine AsterixDB instance:
 
         $cd asterixdb/asterix-server/target/asterix-server-*-binary-assembly/
-        $./samples/local/bin/start-sample-cluster.sh
+        $./opt/local/bin/start-sample-cluster.sh
 
 * Good to go and run queries in your browser at:
 

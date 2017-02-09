@@ -1,3 +1,4 @@
+#!/bin/bash
 # ------------------------------------------------------------
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
@@ -17,32 +18,28 @@
 # under the License.
 # ------------------------------------------------------------
 
-# The name of the product (or extension) being used.
-product: asterixdb
+# Gets the absolute path so that the script can work no matter where it is invoked.
+pushd `dirname $0` > /dev/null
+SCRIPT_PATH=`pwd -P`
+popd > /dev/null
+AWS_PATH=`dirname "${SCRIPT_PATH}"`
+OPT_PATH=`dirname "${AWS_PATH}"`
+DIST_PATH=`dirname "${OPT_PATH}"`
 
-# The server binary zip.
-binary: asterix-server-*-binary-assembly.zip
+# Starts an AWS cluster.
+ansible-playbook -i "localhost," $AWS_PATH/ansible/aws_start.yml
 
-# The script that starts a nc service.
-ncsbin: "asterixncservice"
+# Generates an Ansible inventory file and an AsterixDB configuration file.
+temp=/tmp/asterixdb
+inventory=$temp/inventory
+conf=$temp/cc.conf
+java -cp "${DIST_PATH}/repo/*" org.apache.asterixdb.aws.ConfigGenerator $temp/nodes $inventory $conf
 
-# The script that starts a nc.
-ncbin: "asterixnc"
+# Waits a while so that all instances are up and running.
+# TODO(yingyi) pull the "status check" field of each instance.
+sleep 90
 
-# The script that starts a cc.
-ccbin: "asterixcc"
+# Installs asterixdb on all AWS instances.
+export ANSIBLE_HOST_KEY_CHECKING=false
+ansible-playbook -i $inventory $AWS_PATH/ansible/instance_start.yml
 
-# The parent directory for the working directory.
-basedir: /home/ec2-user
-
-# The working directory.
-binarydir: "{{ basedir }}/{{ product }}"
-
-# The pattern for retrieving the sever binary zip from the current build.
-srcpattern: "../../../{{ binary }}"
-
-# The nc service command (script).
-ncservice: "{{ binarydir}}/bin/{{ ncsbin }}"
-
-# The cc service command (script).
-cc: "{{ binarydir}}/bin/{{ ccbin }}"

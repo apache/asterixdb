@@ -17,12 +17,29 @@
 # under the License.
 # ------------------------------------------------------------
 
-- name: Ensure the working directory exists
-  file:
-      path: "{{ binarydir }}"
-      state: directory
+# The name of the product (or extension) being used.
+product: asterixdb
 
-- name: Unzip binary
-  unarchive:
-      src: "{{ lookup('pipe', 'ls -1 ' + srcpattern) }}"
-      dest: "{{ binarydir }}"
+# The script that starts a nc service.
+ncsbin: "asterixncservice"
+
+# The script that starts a nc.
+ncbin: "asterixnc"
+
+# The script that starts a cc.
+ccbin: "asterixcc"
+
+# The parent directory for the working directory.
+basedir: /home/ec2-user
+
+# The working directory.
+binarydir: "{{ basedir }}/{{ product }}"
+
+# The full binary distribution directory.
+dist: "../../../"
+
+# The nc service command (script).
+ncservice: "{{ binarydir}}/bin/{{ ncsbin }}"
+
+# The cc service command (script).
+cc: "{{ binarydir}}/bin/{{ ccbin }}"

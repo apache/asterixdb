@@ -54,7 +54,7 @@ public class SampleLocalClusterIT {
     // src/test/resources/NCServiceExecutionIT/cc.conf.
     private static final String OUTPUT_DIR = joinPath(TARGET_DIR, "sample-local-cluster");
 
-    private static final String LOCAL_SAMPLES_DIR = joinPath(OUTPUT_DIR, "samples", "local");
+    private static final String LOCAL_SAMPLES_DIR = joinPath(OUTPUT_DIR, "opt", "local");
 
     @Rule
     public TestRule watcher = new TestMethodTracer();

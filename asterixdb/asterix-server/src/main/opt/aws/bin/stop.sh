@@ -1,4 +1,4 @@
-#!/bin/bash -x
+#!/bin/bash
 # ------------------------------------------------------------
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
@@ -18,21 +18,11 @@
 # under the License.
 # ------------------------------------------------------------
 
+# Gets the absolute path so that the script can work no matter where it is invoked.
+pushd `dirname $0` > /dev/null
+SCRIPT_PATH=`pwd -P`
+popd > /dev/null
+AWS_PATH=`dirname "${SCRIPT_PATH}"`
 
-# Starts an AWS cluster.
-ansible-playbook -i "localhost," ansible/aws_start.yml
-
-# Generates an Ansible inventory file and an AsterixDB configuration file.
-temp=/tmp/asterixdb
-inventory=$temp/inventory
-conf=$temp/cc.conf
-java -cp "../repo/*" org.apache.asterixdb.aws.ConfigGenerator $temp/nodes $inventory $conf
-
-# Waits a while so that all instances are up and running.
-# TODO(yingyi) pull the "status check" field of each instance.
-sleep 90
-
-# Installs asterixdb on all AWS instances.
-export ANSIBLE_HOST_KEY_CHECKING=false
-ansible-playbook -i $inventory ansible/instance_start.yml
-
+# Terminates an AWS cluster.
+ansible-playbook -i "localhost," $AWS_PATH/ansible/aws_stop.yml

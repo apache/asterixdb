@@ -35,33 +35,16 @@
       </includes>
     </fileSet>
     <fileSet>
-      <directory>src/main/samples</directory>
-      <outputDirectory>samples</outputDirectory>
+      <directory>src/main/opt</directory>
+      <outputDirectory>opt</outputDirectory>
       <excludes>
         <exclude>**/*.sh</exclude>
       </excludes>
       <filtered>true</filtered>
     </fileSet>
     <fileSet>
-      <directory>src/main/samples</directory>
-      <outputDirectory>samples</outputDirectory>
-      <includes>
-        <include>**/*.sh</include>
-      </includes>
-      <filtered>true</filtered>
-      <fileMode>0755</fileMode>
-    </fileSet>
-    <fileSet>
-      <directory>src/main/aws</directory>
-      <outputDirectory>aws</outputDirectory>
-      <excludes>
-        <exclude>**/*.sh</exclude>
-      </excludes>
-      <filtered>true</filtered>
-    </fileSet>
-    <fileSet>
-      <directory>src/main/aws</directory>
-      <outputDirectory>aws</outputDirectory>
+      <directory>src/main/opt</directory>
+      <outputDirectory>opt</outputDirectory>
       <includes>
         <include>**/*.sh</include>
       </includes>
