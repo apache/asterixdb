@@ -406,6 +406,16 @@
             </lifecycleMappingMetadata>
           </configuration>
         </plugin>
+        <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>versions-maven-plugin</artifactId>
+            <version>2.1</version>
+        </plugin>
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-scm-plugin</artifactId>
+            <version>1.9.5</version>
+        </plugin>
       </plugins>
     </pluginManagement>
   </build>
@@ -514,6 +524,27 @@
                     <descriptor>src/main/assembly/source.xml</descriptor>
                   </descriptors>
                 </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>release</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-gpg-plugin</artifactId>
+            <version>1.6</version>
+            <executions>
+              <execution>
+                <id>sign-artifacts</id>
+                <phase>verify</phase>
+                <goals>
+                  <goal>sign</goal>
+                </goals>
               </execution>
             </executions>
           </plugin>

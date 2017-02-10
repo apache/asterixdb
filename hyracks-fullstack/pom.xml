@@ -395,6 +395,16 @@
             </lifecycleMappingMetadata>
           </configuration>
         </plugin>
+        <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>versions-maven-plugin</artifactId>
+            <version>2.1</version>
+        </plugin>
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-scm-plugin</artifactId>
+            <version>1.9.5</version>
+        </plugin>
       </plugins>
     </pluginManagement>
   </build>
@@ -407,35 +417,20 @@
       </properties>
     </profile>
     <profile>
-      <id>asterix-release</id>
-      <activation>
-        <file>
-          <exists>src/main/assembly/source.xml</exists>
-        </file>
-      </activation>
+      <id>release</id>
       <build>
         <plugins>
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-assembly-plugin</artifactId>
-            <!-- We override the configuration plugin to override the descriptor to use for building
-            the source release zip. Specifically, we would like to control the inclusions/exclusions.
-            For example, we exclude the KEYS file from the zip -->
+            <artifactId>maven-gpg-plugin</artifactId>
+            <version>1.6</version>
             <executions>
               <execution>
-                <!-- Use this id to match the id mentioned in the assembly plugin configuration in
-                the apache parent POM under the apache-release profile -->
-                <id>source-release-assembly</id>
-                <phase>package</phase>
+                <id>sign-artifacts</id>
+                <phase>verify</phase>
                 <goals>
-                  <goal>single</goal>
+                  <goal>sign</goal>
                 </goals>
-                <!-- combine.self should be override to replace the configuration in the parent POM -->
-                <configuration combine.self="override">
-                  <descriptors>
-                    <descriptor>src/main/assembly/source.xml</descriptor>
-                  </descriptors>
-                </configuration>
               </execution>
             </executions>
           </plugin>
