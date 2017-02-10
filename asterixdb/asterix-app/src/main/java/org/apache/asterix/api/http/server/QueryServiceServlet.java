@@ -337,11 +337,18 @@ public class QueryServiceServlet extends AbstractServlet {
     }
 
     private static void printField(PrintWriter pw, String name, String value, boolean comma) {
+        printFieldInternal(pw, name, "\"" + value + "\"", comma);
+    }
+
+    private static void printField(PrintWriter pw, String name, long value, boolean comma) {
+        printFieldInternal(pw, name, String.valueOf(value), comma);
+    }
+
+    private static void printFieldInternal(PrintWriter pw, String name, String value, boolean comma) {
         pw.print("\t\"");
         pw.print(name);
-        pw.print("\": \"");
+        pw.print("\": ");
         pw.print(value);
-        pw.print('"');
         if (comma) {
             pw.print(',');
         }
@@ -409,9 +416,9 @@ public class QueryServiceServlet extends AbstractServlet {
         pw.print("\t");
         printField(pw, Metrics.EXECUTION_TIME.str(), TimeUnit.formatNanos(executionTime));
         pw.print("\t");
-        printField(pw, Metrics.RESULT_COUNT.str(), String.valueOf(resultCount));
+        printField(pw, Metrics.RESULT_COUNT.str(), resultCount, true);
         pw.print("\t");
-        printField(pw, Metrics.RESULT_SIZE.str(), String.valueOf(resultSize), false);
+        printField(pw, Metrics.RESULT_SIZE.str(), resultSize, false);
         pw.print("\t}\n");
     }
 
