@@ -128,7 +128,7 @@ app.controller('queryCtrl', function ($rootScope, $scope, $http, recordFunctions
     }
 
     $scope.initDataverses = function () {
-        $http.get(SERVER_HOST + "/query?query=" + encodeURI(DATAVERSE_QUERY)).then(function (response) {
+        $http.get(SERVER_HOST + "/query?query=" + encodeURIComponent(DATAVERSE_QUERY)).then(function (response) {
                 for (i in response.data) {
                     $scope.dataverses.push(response.data[i].DataverseName);
                     $scope.selected_dataverse = $scope.dataverses[0];
@@ -147,8 +147,9 @@ app.controller('queryCtrl', function ($rootScope, $scope, $http, recordFunctions
     $scope.query = function () {
         var timer = new Date().getTime();
         $scope.save($scope.query_input, $scope.selected_dataverse);
-        $http.get(SERVER_HOST + "/query?query=" +
-            encodeURI("use dataverse " + $scope.selected_dataverse + ";" + $scope.query_input))
+        var uri = SERVER_HOST + "/query?query=" +
+            encodeURIComponent("use dataverse " + $scope.selected_dataverse + ";" + $scope.query_input)
+        $http.get(uri)
             .then(function (response) {
                     $scope.results = response.data;
                     console.log(response);
