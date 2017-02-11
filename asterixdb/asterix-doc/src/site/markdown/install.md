@@ -197,7 +197,9 @@ Execute 'exit' to close the session.
 ### Configuring Managix ###
 You will need the AsterixDB installer (a.k.a. Managix). Download the Standalone Cluster installer from [here](https://asterixdb.apache.org/download.html); this includes the bits for Managix as well as AsterixDB.
 
-To be able to create an AsterixDB instance and manage its lifecycle, the Managix requires you to configure a set of configuration files namely:
+We will refer to the directory containing the extracted files as MANAGIX_HOME and we assume that MANAGIX_HOME/bin is on your PATH.
+
+To be able to create an AsterixDB instance and manage its lifecycle, Managix requires you to configure a set of configuration files namely:
 
  * `conf/managix-conf.xml`:  A configuration XML file that contains configuration settings for Managix.
  * A configuration XML file that describes the nodes in the cluster, e.g., `clusters/local/local.xml`.
