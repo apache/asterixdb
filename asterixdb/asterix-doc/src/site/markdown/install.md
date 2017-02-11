@@ -195,7 +195,7 @@ Execute 'exit' to close the session.
     Connection to 127.0.0.1 closed.
 
 ### Configuring Managix ###
-You will need the AsterixDB installer (a.k.a. Managix). Download Managix from [here](http://asterixdb.ics.uci.edu/download.html); this includes the bits for Managix as well as AsterixDB.
+You will need the AsterixDB installer (a.k.a. Managix). Download the Standalone Cluster installer from [here](https://asterixdb.apache.org/download.html); this includes the bits for Managix as well as AsterixDB.
 
 To be able to create an AsterixDB instance and manage its lifecycle, the Managix requires you to configure a set of configuration files namely:
 
@@ -445,7 +445,7 @@ Then run the following step again and type "yes" if prompted:
 
 ### Step (2): Define the AsterixDB cluster ###
 
-We first log into the master machine as the user "joe". On this machine, download Managix from [here](http://asterixdb.ics.uci.edu/download.html) (save as above), then do the following steps similar to the single-machine case described above:
+We first log into the master machine as the user "joe". On this machine, download the Standalone Cluster installer from [here](https://asterixdb.apache.org/download.html) (save as above), then do the following steps similar to the single-machine case described above:
 
     machineA> cd ~
     machineA> mkdir asterix-mgmt
