@@ -40,6 +40,7 @@ import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.hyracks.algebricks.core.algebra.base.Counter;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
@@ -64,7 +65,13 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperat
 class AqlExpressionToPlanTranslator extends LangExpressionToPlanTranslator implements ILangExpressionToPlanTranslator,
         IAQLVisitor<Pair<ILogicalOperator, LogicalVariable>, Mutable<ILogicalOperator>> {
 
-    public AqlExpressionToPlanTranslator(MetadataProvider metadataProvider, int currentVarCounter)
+    public AqlExpressionToPlanTranslator(MetadataProvider metadataProvider, int currentVarCounterValue)
+            throws AlgebricksException {
+        super(metadataProvider, currentVarCounterValue);
+    }
+
+    // Keeps the given Counter if one is provided instead of a value.
+    public AqlExpressionToPlanTranslator(MetadataProvider metadataProvider, Counter currentVarCounter)
             throws AlgebricksException {
         super(metadataProvider, currentVarCounter);
     }

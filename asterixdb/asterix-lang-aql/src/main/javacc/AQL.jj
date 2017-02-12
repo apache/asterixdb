@@ -2302,6 +2302,9 @@ Expression IfThenElse() throws ParseException:
     }
 }
 
+// Note: if you modify this part: "tmp = LetClause() {clauseList.add(tmp);}", please also apply the necessary
+// change to the AQLPlusExtension.jj file since it refers to this string part and may behave incorrectly if this
+// part is modified. For more details, please refer to AQLPlusExtension.jj file.
 Expression FLWOGR() throws ParseException:
 {
     FLWOGRExpression flworg = new FLWOGRExpression();

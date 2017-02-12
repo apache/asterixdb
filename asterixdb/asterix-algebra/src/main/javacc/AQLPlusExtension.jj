@@ -1,0 +1,175 @@
+// This is not a complete javacc file.
+// This file is used by asterix-grammar-extension-maven-plugin to extend the AQL grammar to AQL+ grammar.
+// For more details about how to use this plugin, refer to asterix-grammar-extension-maven-plugin.
+
+// If you want to put an additional import, just add import statements like the following.
+// import package name
+import org.apache.asterix.lang.aql.clause.JoinClause;
+import org.apache.asterix.lang.aql.clause.MetaVariableClause;
+import org.apache.asterix.lang.aql.expression.MetaVariableExpr;
+
+// To remove an import, use the keyword unimport
+// unimport package name
+
+// If you want to add a method in the class definition (before PARSER_END), use the following phrase and attach
+// new method right after the phrase.
+// @new_at_the_end
+@new_at_the_class_def
+    public void initScope() {
+            scopeStack.push(RootScopeFactory.createRootScope(this));
+    }
+
+// Merging of non-terminals can only be done on non-terminals which conform to the following structure.
+// Content will simply be prepended or appended to the base blocks.
+// Note: refrain from using the strings "before:" and "after:" in the merge areas as that will break the merge.
+// As a workaround, you can always override
+// one additional possible change is direct replacement and it can be done through the followin syntax:
+// @merge replace "base phrase" with "extension phrase" true/false
+// Here, true/false tells whether the tool needs to process the three blocks.
+// If true, like normal @merge case, before and after clause in each block will be processed
+// after "base phrase" in the blocks have been replaced with "new phrase".
+// If false, then it just expects the blank form that consists of three blocks and not process them.
+// Only, "base phrase" in the blocks will be replaced with "new phrase".
+@merge
+Clause Clause() throws ParseException :
+{
+  // merge area 1
+  before:
+  after:
+}
+{
+  (
+    // merge area 2
+    before:
+    after:    | clause = MetaVariableClause()
+              | clause = JoinClause())
+  {
+    // merge area 3
+  }
+}
+
+@merge
+Expression PrimaryExpr()throws ParseException:
+{
+  // merge area 1
+  before:
+  after:
+}
+{
+  (
+    // merge area 2
+    before:
+    after:    | expr = MetaVariableRef())
+  {
+    // merge area 3
+  }
+}
+
+// In the following case, all instances of "tmp = LetClause() {clauseList.add(tmp);}" will be replaced
+// with "tmp = LetClause() {clauseList.add(tmp);} | tmp = MetaVariableClause() {clauseList.add(tmp);}".
+// Also, we don't check "before:" and "after:" section of each area. That check will be ignored since
+// the last parameter is set to false.
+@merge replace "tmp = LetClause() {clauseList.add(tmp);}" with "tmp = LetClause() {clauseList.add(tmp);} | tmp = MetaVariableClause() {clauseList.add(tmp);}" false
+Expression FLWOGR() throws ParseException:
+{
+  // merge area 1
+}
+{
+    (
+    // merge area 2
+    )
+    {
+      // merge area 3
+    }
+}
+
+// The default option when you don't specify any @optiontype.
+// Adding a new node. if a node exists, it will throw an exception.
+@new
+Clause MetaVariableClause() throws ParseException :
+{
+    MetaVariableClause mc = new MetaVariableClause();
+    VarIdentifier var = new VarIdentifier();
+}
+{
+    <METAVARIABLECLAUSE>
+    {
+      mc.setVar(var);
+      var.setValue(token.image);
+      return mc;
+    }
+}
+
+@new
+MetaVariableExpr MetaVariableRef() throws ParseException:
+{
+    MetaVariableExpr metaVarExp = new MetaVariableExpr();
+    VarIdentifier var = new VarIdentifier();
+}
+{
+      <METAVARIABLE>
+    {
+     metaVarExp.setVar(var);
+     var.setValue(token.image);
+     return metaVarExp;
+    }
+}
+
+@new
+Clause JoinClause() throws ParseException :
+{
+    Expression whereExpr;
+    List<Clause> leftClauses, rightClauses;
+    JoinClause.JoinKind kind = JoinClause.JoinKind.INNER;
+}
+{
+    ("join" | "loj" { kind = JoinClause.JoinKind.LEFT_OUTER; } )
+      <LEFTPAREN> <LEFTPAREN> leftClauses = Clauses() <RIGHTPAREN> <COMMA>
+      <LEFTPAREN> rightClauses = Clauses() <RIGHTPAREN> <COMMA>
+      whereExpr = Expression() <RIGHTPAREN>
+    {
+      JoinClause jc = new JoinClause(kind);
+      jc.setLeftClauses(leftClauses);
+      jc.setRightClauses(rightClauses);
+      jc.setWhereExpr(whereExpr);
+      return jc;
+    }
+}
+
+@new
+List<Clause> Clauses() throws ParseException:
+{
+    List<Clause> clauses = new ArrayList<Clause>();
+    Clause c = null;
+}
+{
+    (
+        (
+            c = Clause() {
+                clauses.add(c);
+            }
+        )*
+    )
+    {
+        return clauses;
+    }
+}
+
+// Overriding a non-terminal. if exists in base, it will be overriden, otherwise, it will be added.
+// @override
+
+
+// If something needs to be added at the end of file, you can use @new_at_the_end like the following.
+@new_at_the_end
+<DEFAULT,IN_DBL_BRACE>
+TOKEN :
+{
+    <METAVARIABLE : "$$" <IDENTIFIER> >
+}
+
+@new_at_the_end
+<DEFAULT,IN_DBL_BRACE>
+TOKEN :
+{
+   <METAVARIABLECLAUSE : "##" <IDENTIFIER> >
+}

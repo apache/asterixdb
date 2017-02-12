@@ -177,9 +177,17 @@ class LangExpressionToPlanTranslator
     private static final AtomicLong outputFileID = new AtomicLong(0);
     private static final String OUTPUT_FILE_PREFIX = "OUTPUT_";
 
-    public LangExpressionToPlanTranslator(MetadataProvider metadataProvider, int currentVarCounter)
+    public LangExpressionToPlanTranslator(MetadataProvider metadataProvider, int currentVarCounterValue)
             throws AlgebricksException {
-        this.context = new TranslationContext(new Counter(currentVarCounter));
+        this.context = new TranslationContext(new Counter(currentVarCounterValue));
+        this.metadataProvider = metadataProvider;
+        FormatUtils.getDefaultFormat().registerRuntimeFunctions(FunctionCollection.getFunctionDescriptorFactories());
+    }
+
+    // Keeps the given Counter if one is provided instead of a value.
+    public LangExpressionToPlanTranslator(MetadataProvider metadataProvider, Counter currentVarCounter)
+            throws AlgebricksException {
+        this.context = new TranslationContext(currentVarCounter);
         this.metadataProvider = metadataProvider;
         FormatUtils.getDefaultFormat().registerRuntimeFunctions(FunctionCollection.getFunctionDescriptorFactories());
     }
