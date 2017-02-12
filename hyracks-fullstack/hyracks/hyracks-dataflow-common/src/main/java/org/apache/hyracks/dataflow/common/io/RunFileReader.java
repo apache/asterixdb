@@ -18,14 +18,18 @@
  */
 package org.apache.hyracks.dataflow.common.io;
 
+import java.io.IOException;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.hyracks.api.comm.FrameHelper;
 import org.apache.hyracks.api.comm.IFrame;
 import org.apache.hyracks.api.comm.IFrameReader;
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IFileHandle;
 import org.apache.hyracks.api.io.IIOManager;
+import org.apache.hyracks.control.nc.io.FileHandle;
 
 public class RunFileReader implements IFrameReader {
     private final FileReference file;
@@ -44,7 +48,9 @@ public class RunFileReader implements IFrameReader {
 
     @Override
     public void open() throws HyracksDataException {
-        handle = ioManager.open(file, IIOManager.FileReadWriteMode.READ_ONLY, null);
+        // Opens RW mode because we need to truncate the given file if required.
+        handle = ioManager.open(file, IIOManager.FileReadWriteMode.READ_WRITE,
+                IIOManager.FileSyncMode.METADATA_ASYNC_DATA_ASYNC);
         readPtr = 0;
     }
 
@@ -79,9 +85,17 @@ public class RunFileReader implements IFrameReader {
 
     @Override
     public void close() throws HyracksDataException {
-        ioManager.close(handle);
         if (deleteAfterClose) {
-            FileUtils.deleteQuietly(file.getFile());
+            try {
+                // Truncates the file size to zero since OS might be keeping the file for a while.
+                ((FileHandle) handle).getFileChannel().truncate(0);
+                ioManager.close(handle);
+                FileUtils.deleteQuietly(file.getFile());
+            } catch (IOException e) {
+                throw HyracksDataException.create(ErrorCode.CANNOT_TRUNCATE_OR_DELETE_FILE, e, file.toString());
+            }
+        } else {
+            ioManager.close(handle);
         }
     }
 
