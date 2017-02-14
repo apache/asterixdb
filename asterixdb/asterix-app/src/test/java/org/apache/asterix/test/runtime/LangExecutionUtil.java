@@ -92,13 +92,19 @@ public class LangExecutionUtil {
     }
 
     public static void test(TestCaseContext tcCtx) throws Exception {
+        test(testExecutor, tcCtx);
+    }
+
+    public static void test(TestExecutor testExecutor, TestCaseContext tcCtx) throws Exception {
         int repeat = LangExecutionUtil.repeat * tcCtx.getRepeat();
         try {
             for (int i = 1; i <= repeat; i++) {
                 if (repeat > 1) {
                     System.err.print("[" + i + "/" + repeat + "] ");
                 }
-                librarian.cleanup();
+                if (librarian != null) {
+                    librarian.cleanup();
+                }
                 testExecutor.executeTest(PATH_ACTUAL, tcCtx, null, false, ExecutionTestUtil.FailedGroup);
                 try {
                     testExecutor.cleanup(tcCtx.toString(), badTestCases);
