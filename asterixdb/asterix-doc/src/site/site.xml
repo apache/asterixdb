@@ -109,6 +109,7 @@
 
     <menu name="API/SDK">
       <item name="HTTP API" href="api.html"/>
+      <item name="CSV Output" href="csv.html"/>
     </menu>
 
     <menu ref="reports"/>
