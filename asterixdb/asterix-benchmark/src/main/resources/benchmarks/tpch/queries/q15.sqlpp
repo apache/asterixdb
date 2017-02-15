@@ -1,0 +1,39 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+USE tpch;
+
+WITH revenue AS (
+    SELECT l_suppkey AS supplier_no,
+           sum(l.l_extendedprice * (1 - l.l_discount)) AS total_revenue
+    FROM  LineItem l
+    WHERE l.l_shipdate >= '1996-01-01' and l.l_shipdate < '1996-04-01'
+    GROUP BY l.l_suppkey l_suppkey
+),
+m AS (
+      SELECT ELEMENT max(r2.total_revenue)
+      FROM revenue r2
+)[0]
+
+SELECT s.s_suppkey, s.s_name, s.s_address, s.s_phone, r.total_revenue
+FROM  Supplier s,
+      revenue r
+WHERE s.s_suppkey = r.supplier_no AND r.total_revenue < m + 0.000000001
+      AND r.total_revenue > m - 0.000000001
+;

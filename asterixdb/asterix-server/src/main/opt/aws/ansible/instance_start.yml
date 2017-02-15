@@ -17,9 +17,10 @@
 # under the License.
 # ------------------------------------------------------------
 
-- hosts: ncs
+- hosts: all
   tasks:
     - include_vars: ../conf/instance_settings.yml
+
     - name: Download JDK
       shell: "wget -q --tries=5 --no-cookies --no-check-certificate --header \
               \"Cookie: gpw_e24=http%3A%2F%2Fwww.oracle.com%2F; oraclelicense=accept-securebackup-cookie\" \
@@ -32,11 +33,17 @@
       synchronize:
           src: "{{ dist }}"
           dest: "{{ binarydir }}"
+          archive: true
 
     - name: Ensure the log directory exists
       file:
-          path: "{{ binarydir }}/logs"
-          state: directory
+        path: "{{ binarydir }}/logs"
+        state: directory
+
+- hosts: ncs
+  tasks:
+    - include_vars: ../conf/instance_settings.yml
+
 
     - name: Ensure the io device directory exit
       file:
@@ -51,6 +58,7 @@
 - hosts: cc
   tasks:
     - include_vars: ../conf/instance_settings.yml
+
     - name: Copy cluster config to CC
       synchronize:
         src: /tmp/asterixdb/cc.conf

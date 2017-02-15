@@ -1,4 +1,3 @@
-#!/bin/bash
 # ------------------------------------------------------------
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
@@ -18,22 +17,31 @@
 # under the License.
 # ------------------------------------------------------------
 
-# Gets the absolute path so that the script can work no matter where it is invoked.
-pushd `dirname $0` > /dev/null
-SCRIPT_PATH=`pwd -P`
-popd > /dev/null
-AWS_PATH=`dirname "${SCRIPT_PATH}"`
-OPT_PATH=`dirname "${AWS_PATH}"`
-DIST_PATH=`dirname "${OPT_PATH}"`
+- include_vars: settings.yml
 
-# Starts an AWS cluster.
-ansible-playbook -i "localhost," $AWS_PATH/ansible/aws_start.yml
+- name: Install gcc
+  shell: sudo yum install -y gcc
 
-# Generates an Ansible inventory file and an AsterixDB configuration file.
-temp=/tmp/asterixdb
-inventory=$temp/inventory
+- name: Clean up data generator
+  file:
+    path: "{{ binary_dir }}"
+    state: absent
 
-# Installs asterixdb on all AWS instances.
-export ANSIBLE_HOST_KEY_CHECKING=false
-ansible-playbook -i $inventory $AWS_PATH/ansible/instance_start.yml
+- name: Clean up leftover file
+  file:
+    path: "{{ generatorzip }}"
+    state: absent
 
+- name: Download TPC-H data generator
+  get_url:
+    url: "{{ tpch_url }}"
+    dest: "{{ home_dir }}"
+    force: yes
+
+- name: Unzip data generator
+  shell: unzip "{{ generatorzip }}"
+
+- name: Compile dbgen
+  command: make
+  args:
+    chdir: "{{ binary_dir }}"

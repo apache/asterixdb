@@ -1,0 +1,51 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+// Error: budget exceeds
+
+USE tpch;
+
+WITH q2_minimum_cost_supplier_tmp1 AS
+(
+ SELECT s.s_acctbal, s.s_name, n.n_name, p.p_partkey, ps.ps_supplycost, p.p_mfgr, s.s_address, s.s_phone, s.s_comment
+ FROM
+  Nation n JOIN Region r
+  ON n.n_regionkey = r.r_regionkey and r.r_name = 'EUROPE'
+  JOIN Supplier s
+  ON s.s_nationkey = n.n_nationkey
+  JOIN Partsupp ps
+  ON s.s_suppkey = ps.ps_suppkey
+  JOIN Part p
+  ON p.p_partkey = ps.ps_partkey AND p.p_type LIKE '%BRASS' AND p.p_size = 15
+),
+q2_minimum_cost_supplier_tmp2 AS
+(
+ SELECT p.p_partkey, min(p.ps_supplycost) AS ps_min_supplycost
+ FROM
+  q2_minimum_cost_supplier_tmp1 p
+ GROUP BY p.p_partkey
+)
+
+SELECT t1.s_acctbal, t1.s_name, t1.n_name, t1.p_partkey, t1.p_mfgr AS p_mfgr, t1.s_address, t1.s_phone, t1.s_comment
+FROM
+  q2_minimum_cost_supplier_tmp1 t1 JOIN q2_minimum_cost_supplier_tmp2 t2
+ON
+  t1.p_partkey = t2.p_partkey AND t1.ps_supplycost=t2.ps_min_supplycost
+ORDER BY t1.s_acctbal DESC, t1.n_name, t1.s_name, t1.p_partkey
+LIMIT 100;

@@ -45,6 +45,7 @@ To start an AWS cluster, you need to do the following steps:
    ansible: pip install ansible
    boto: pip install boto
    boto3: pip install boto3
+   Make sure that the version of ansible is no less than 2.2.1.0.
 
 6. Launch your cluster instance on AWS:
    bin/start.sh

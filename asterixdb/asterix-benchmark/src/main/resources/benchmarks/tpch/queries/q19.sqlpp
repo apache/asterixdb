@@ -1,0 +1,59 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+USE tpch;
+
+WITH tmp AS
+(
+SELECT
+    l_partkey AS lpkey,
+    l_quantity AS quantity,
+    l_extendedprice AS extndprice,
+    l_discount AS discount
+FROM LineItem
+WHERE (l_shipmode = 'AIR' or l_shipmode = 'AIR REG')
+AND l_shipinstruct = 'DELIVER IN PERSON'
+)
+
+SELECT SUM(l.extndprice * (1 - l.discount))
+FROM tmp l
+JOIN Part p
+ON p.p_partkey = l.lpkey
+WHERE
+  (
+    p.p_brand = 'Brand#12'
+    AND regexp_contains(p.p_container, 'SM CASE|SM BOX|SM PACK|SM PKG')
+    AND l.quantity >= 1 and l.quantity <= 11
+    AND p.p_size >= 1 and p.p_size <= 5
+  )
+  OR
+  (
+    p.p_brand = 'Brand#23'
+    AND regexp_contains(p.p_container, 'MED BAG|MED BOX|MED PKG|MED PACK')
+    AND l.quantity >= 10 and l.quantity <= 20
+    AND p.p_size >= 1 and p.p_size <= 10
+  )
+  OR
+  (
+    p.p_brand = 'Brand#34'
+    AND regexp_contains(p.p_container, 'LG CASE|LG BOX|LG PACK|LG PKG')
+    AND l.quantity >= 20 and l.quantity <= 30
+    AND p.p_size >= 1 and p.p_size <= 15
+  )
+;

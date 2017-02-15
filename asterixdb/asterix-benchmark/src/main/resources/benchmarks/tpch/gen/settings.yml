@@ -1,4 +1,3 @@
-#!/bin/bash
 # ------------------------------------------------------------
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
@@ -18,22 +17,29 @@
 # under the License.
 # ------------------------------------------------------------
 
-# Gets the absolute path so that the script can work no matter where it is invoked.
-pushd `dirname $0` > /dev/null
-SCRIPT_PATH=`pwd -P`
-popd > /dev/null
-AWS_PATH=`dirname "${SCRIPT_PATH}"`
-OPT_PATH=`dirname "${AWS_PATH}"`
-DIST_PATH=`dirname "${OPT_PATH}"`
+# Data generator executable name.
+generator: dbgen
 
-# Starts an AWS cluster.
-ansible-playbook -i "localhost," $AWS_PATH/ansible/aws_start.yml
+# The zip contains all files for the generator.
+generatorzip: "{{ generator }}.zip"
 
-# Generates an Ansible inventory file and an AsterixDB configuration file.
-temp=/tmp/asterixdb
-inventory=$temp/inventory
+# The user name for data generation.
+user: ec2-user
 
-# Installs asterixdb on all AWS instances.
-export ANSIBLE_HOST_KEY_CHECKING=false
-ansible-playbook -i $inventory $AWS_PATH/ansible/instance_start.yml
+# The home directory.
+home_dir: "/home/{{ user }}"
 
+# The location for generated data.
+data_dir: "{{ home_dir }}/tpch"
+
+# The location for data generator binary.
+binary_dir: "{{ home_dir }}/{{ generator }}"
+
+# The location for each local generator script on each machine.
+localgen: "{{ binary_dir }}/gen.sh"
+
+# The local data generation command.
+localgencmd: "gen.sh"
+
+# The url for the TPC-H benchmark.
+tpch_url: <to be filed>

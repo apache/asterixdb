@@ -656,6 +656,7 @@
     <module>asterix-yarn</module>
     <module>asterix-replication</module>
     <module>asterix-experiments</module>
+    <module>asterix-benchmark</module>
     <module>asterix-coverage</module>
     <module>asterix-active</module>
     <module>asterix-client-helper</module>

@@ -1,0 +1,67 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+// Error: budget exceeds
+
+USE tpch;
+
+SELECT  year,
+        SUM( CASE t.s_name = 'BRAZIL' WHEN true THEN t.revenue ELSE 0.0 END ) / SUM(t.revenue) AS mkt_share
+FROM  (
+        SELECT o_year AS year,
+               slnrcop.l_extendedprice * (1 - slnrcop.l_discount) AS revenue,
+               n2.n_name AS s_name
+        FROM  (
+                SELECT lnrcop.o_orderdate, lnrcop.l_discount, lnrcop.l_extendedprice, lnrcop.l_suppkey, s.s_nationkey
+                FROM  Supplier s,
+                (
+                  SELECT lnrco.o_orderdate, lnrco.l_discount, lnrco.l_extendedprice, lnrco.l_suppkey
+                  FROM  (
+                         SELECT nrco.o_orderdate, l.l_partkey, l.l_discount, l.l_extendedprice, l.l_suppkey
+                         FROM  LineItem l,
+                               (
+                                SELECT o.o_orderdate, o.o_orderkey
+                                FROM  Orders o,
+                                      (
+                                        SELECT c.c_custkey
+                                        FROM  Customer c,
+                                              (
+                                                SELECT n.n_nationkey
+                                                FROM  Nation n,
+                                                      Region r
+                                                WHERE n.n_regionkey = r.r_regionkey AND r.r_name = 'AMERICA'
+                                                ) AS nr
+                                         WHERE c.c_nationkey = nr.n_nationkey
+                                       ) AS nrc
+                                WHERE nrc.c_custkey = o.o_custkey
+                                ) AS nrco
+                        WHERE l.l_orderkey = nrco.o_orderkey and nrco.o_orderdate >= '1995-01-01' and nrco.o_orderdate < '1996-12-31'
+                        ) AS lnrco,
+                        Part p
+                        WHERE p.p_partkey = lnrco.l_partkey and p.p_type = 'ECONOMY ANODIZED STEEL'
+                    ) AS lnrcop
+                WHERE s.s_suppkey = lnrcop.l_suppkey
+                ) AS slnrcop,
+                Nation n2
+                LET o_year = `get-year`(slnrcop.o_orderdate)
+                WHERE slnrcop.s_nationkey = n2.n_nationkey
+             ) as t
+GROUP BY year
+ORDER BY year
+;

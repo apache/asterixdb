@@ -1,0 +1,54 @@
+# ------------------------------------------------------------
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+# ------------------------------------------------------------
+
+# Generates a loading statement for a given dataset with partitioned files.
+# This script assumes there is an input variable: {{ dataset }}.
+
+- include_vars: settings.yml
+- include_vars: ../gen/settings.yml
+
+- name: Create path file
+  shell: printf "" > "{{ path_file }}"
+
+- name: Generate partition-dependent file path
+  shell: echo "{{ inner_item.0 + 1  }}://{{ data_dir }}/{{ dataset|lower }}.tbl.{{ inner_item.0 + 1  }}" >> "{{ path_file }}"
+  with_indexed_items: "{{ groups['ncs'] }}"
+  loop_control:
+     loop_var: inner_item
+
+- name: Put together file paths
+  set_fact:
+     contents: "{{ lookup('file', path_file ) }}"
+
+- name: Concatenate file paths
+  set_fact:
+     paths: "{{ contents.split('\n')|join(',') }}"
+
+- name: Set target DML file name
+  set_fact:
+     target_file: "{{ dml_dir }}/load{{ dataset }}.sqlpp"
+
+- name: Create DML for dataset {{ dataset }}
+  shell: cp template.sqlpp "{{ target_file }}"
+
+- name: Set dataset name to "{{ dataset }}"
+  shell: find -P "{{ target_file }}" | xargs perl -pi -e 's|<DATASET>|{{ dataset }}|g'
+
+- name: Set file paths for dataset "{{ dataset }}"
+  shell: find -P "{{ target_file }}" | xargs perl -pi -e 's|<FILES>|{{ paths }}|g'

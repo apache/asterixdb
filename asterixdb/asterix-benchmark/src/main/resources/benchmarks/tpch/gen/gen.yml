@@ -1,4 +1,3 @@
-#!/bin/bash
 # ------------------------------------------------------------
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
@@ -18,22 +17,29 @@
 # under the License.
 # ------------------------------------------------------------
 
-# Gets the absolute path so that the script can work no matter where it is invoked.
-pushd `dirname $0` > /dev/null
-SCRIPT_PATH=`pwd -P`
-popd > /dev/null
-AWS_PATH=`dirname "${SCRIPT_PATH}"`
-OPT_PATH=`dirname "${AWS_PATH}"`
-DIST_PATH=`dirname "${OPT_PATH}"`
 
-# Starts an AWS cluster.
-ansible-playbook -i "localhost," $AWS_PATH/ansible/aws_start.yml
+# Compiles data generation source code.
+- hosts: ncs
+  tasks:
+    - name: Compile binary
+      include: compile.yml
 
-# Generates an Ansible inventory file and an AsterixDB configuration file.
-temp=/tmp/asterixdb
-inventory=$temp/inventory
+# Generates a script for each host.
+- hosts: [localhost,]
+  vars:
+      partitions: "{{ groups['ncs'] | length }}"
+  tasks:
+    - include_vars:  ../../../conf/benchmark_setting.yml
 
-# Installs asterixdb on all AWS instances.
-export ANSIBLE_HOST_KEY_CHECKING=false
-ansible-playbook -i $inventory $AWS_PATH/ansible/instance_start.yml
+    - name: Generate host-dependent script
+      shell: "ansible-playbook -i {{ node.1}}, genscript.yml \
+              --extra-vars=\"partition={{ node.0 }} partitions={{ partitions }} sf={{ partitions|float * scale }} ansible_ssh_user=ec2-user\""
+      with_indexed_items:  "{{ groups['ncs'] }}"
+      loop_control:
+          loop_var: node
 
+# Generates data and copy them to the data directory.
+- hosts: ncs
+  tasks:
+    - name: Generate data
+      include: gendata.yml

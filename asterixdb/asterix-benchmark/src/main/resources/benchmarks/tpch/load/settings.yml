@@ -1,4 +1,3 @@
-#!/bin/bash
 # ------------------------------------------------------------
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
@@ -18,22 +17,21 @@
 # under the License.
 # ------------------------------------------------------------
 
-# Gets the absolute path so that the script can work no matter where it is invoked.
-pushd `dirname $0` > /dev/null
-SCRIPT_PATH=`pwd -P`
-popd > /dev/null
-AWS_PATH=`dirname "${SCRIPT_PATH}"`
-OPT_PATH=`dirname "${AWS_PATH}"`
-DIST_PATH=`dirname "${OPT_PATH}"`
+# Datasets with partitioned files.
+partitioned_datasets: ["LineItem", "Orders", "Customer", "Part", "Partsupp", "Supplier"]
 
-# Starts an AWS cluster.
-ansible-playbook -i "localhost," $AWS_PATH/ansible/aws_start.yml
+# Datasets with a single file.
+centralized_datasets: ["Region", "Nation"]
 
-# Generates an Ansible inventory file and an AsterixDB configuration file.
-temp=/tmp/asterixdb
-inventory=$temp/inventory
+# Temp directory.
+temp_dir: "/tmp/asterixdb"
 
-# Installs asterixdb on all AWS instances.
-export ANSIBLE_HOST_KEY_CHECKING=false
-ansible-playbook -i $inventory $AWS_PATH/ansible/instance_start.yml
+# Temp file to store all data paths.
+path_file:  "{{ temp_dir }}/paths"
+
+# Temp directory for generated DDLs.
+dml_dir: "{{ temp_dir }}/dmls"
+
+# The prefix for ddl files.
+ddl_prefix: "create"
 

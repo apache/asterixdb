@@ -36,7 +36,7 @@ basedir: /home/ec2-user
 binarydir: "{{ basedir }}/{{ product }}"
 
 # The full binary distribution directory.
-dist: "../../../"
+dist: "../../../../"
 
 # The nc service command (script).
 ncservice: "{{ binarydir}}/bin/{{ ncsbin }}"

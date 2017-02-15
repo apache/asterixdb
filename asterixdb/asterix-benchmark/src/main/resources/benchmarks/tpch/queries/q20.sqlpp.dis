@@ -1,0 +1,64 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+// Error: budget exceeds
+
+USE tpch;
+
+WITH q20_tmp1 AS
+(
+  SELECT DISTINCT p_partkey
+  FROM Part
+  WHERE p_name LIKE 'forest%'
+)
+,
+q20_tmp2 AS
+(
+  SELECT l_partkey, l_suppkey, 0.5 * sum(l_quantity) AS sum_quantity
+  FROM LineItem
+  WHERE l_shipdate >= '1994-01-01' and l_shipdate < '1995-01-01'
+  GROUP BY l_partkey l_partkey, l_suppkey l_suppkey
+)
+,
+q20_tmp3 AS
+(
+  SELECT ps_suppkey, ps_availqty, t2.sum_quantity
+  FROM Partsupp
+  JOIN q20_tmp1 t1
+  ON ps_partkey = t1.p_partkey
+  JOIN q20_tmp2 t2
+  ON ps_partkey = t2.l_partkey and ps_suppkey = t2.l_suppkey
+)
+,
+q20_tmp4 AS
+(
+  SELECT ps_suppkey
+  FROM q20_tmp3
+  WHERE ps_availqty > sum_quantity
+  GROUP BY ps_suppkey
+)
+
+SELECT s.s_name, s.s_address
+FROM Supplier s
+JOIN Nation n
+ON s.s_nationkey = n.n_nationkey
+JOIN q20_tmp4 t4
+ON s.s_suppkey = t4.ps_suppkey
+WHERE n.n_name = 'CANADA'
+ORDER BY s.s_name;

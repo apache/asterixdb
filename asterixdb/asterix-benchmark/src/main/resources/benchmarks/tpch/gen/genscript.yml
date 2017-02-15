@@ -1,4 +1,3 @@
-#!/bin/bash
 # ------------------------------------------------------------
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
@@ -18,22 +17,20 @@
 # under the License.
 # ------------------------------------------------------------
 
-# Gets the absolute path so that the script can work no matter where it is invoked.
-pushd `dirname $0` > /dev/null
-SCRIPT_PATH=`pwd -P`
-popd > /dev/null
-AWS_PATH=`dirname "${SCRIPT_PATH}"`
-OPT_PATH=`dirname "${AWS_PATH}"`
-DIST_PATH=`dirname "${OPT_PATH}"`
+- hosts: all
+  tasks:
+   - include_vars: settings.yml
 
-# Starts an AWS cluster.
-ansible-playbook -i "localhost," $AWS_PATH/ansible/aws_start.yml
+   - name: Ensure data directory exits
+     file:
+        path: "{{ data_dir }}"
+        state: directory
 
-# Generates an Ansible inventory file and an AsterixDB configuration file.
-temp=/tmp/asterixdb
-inventory=$temp/inventory
+   - name: Generate host-dependent data generation script
+     shell: echo "./{{ generator }} -s {{ sf }} -S {{ partition | int + 1 }} -C {{ partitions }}" > "{{ localgen }}"
 
-# Installs asterixdb on all AWS instances.
-export ANSIBLE_HOST_KEY_CHECKING=false
-ansible-playbook -i $inventory $AWS_PATH/ansible/instance_start.yml
-
+   - name: Change the permission for data generation script
+     file:
+       path: "{{ localgen }}"
+       owner: "{{ user }}"
+       mode: 0755

@@ -20,6 +20,11 @@
 - name: Start AWS cluster
   hosts: localhost
   gather_facts: false
+  vars:
+     temp_dir: "/tmp/asterixdb"
+     inventory: "{{ temp_dir }}/inventory"
+     ccconf: "{{ temp_dir }}/cc.conf"
+     home_dir: "/home/{{ user }}"
   tasks:
     - include_vars: ../conf/aws_settings.yml
     - name: Launch all instances
@@ -38,11 +43,66 @@
         instance_tags:
             Name: "{{ tag }}"
       register: ec2
+
     - name: Create local temporary directory
       file:
-        path: /tmp/asterixdb
+        path: "{{ temp_dir }}"
         state: directory
-        mode: 0755
-    - name: Output the information of all nodes
-      local_action: copy content="{{ ec2|to_json }}" dest=/tmp/asterixdb/nodes
 
+    - name: Set CC node
+      set_fact:
+        cc: "{{ ec2.instances[0] }}"
+
+    - name: Populate CC to the cluster inventory file {{ inventory }}
+      shell: printf "[cc]\n{{ cc.public_dns_name }}\n" > "{{ inventory }}"
+
+    - name: Start the NC section in the cluster inventory file {{ inventory }}
+      shell: printf "\n[ncs]\n" >> "{{ inventory }}"
+
+    - name: Populate CC to the NC section (if needed) in the cluster configuration file "{{ ccconf }}"
+      shell: printf "[cc]\n{{ cc.private_ip }}\n\n" > "{{ ccconf }}"
+      when: cc_on_nc
+
+    - name: Populate NCs to the cluster inventory file {{ inventory }}
+      shell: printf "{{ node.1.public_dns_name }}\n" >> "{{ inventory }}"
+      when: node.0 != 0
+      with_indexed_items: "{{ ec2.instances }}"
+      loop_control:
+        loop_var: node
+
+    - name: Populate NCs to the cluster inventory file {{ inventory }}
+      shell: printf "\n[all:vars]\nansible_ssh_user={{ user }}\n" >> "{{ inventory }}"
+
+    - name: Populate CC to the cluster configuration file "{{ ccconf }}"
+      shell: printf "[cc]\ncluster.address={{ cc.private_ip }}\n\n" > "{{ ccconf }}"
+
+    - name: Populate NCs to the cluster configuration file
+      shell: printf "[nc/1]\naddress={{ cc.private_ip }}\n\n" >> "{{ ccconf }}"
+      when: cc_on_nc
+
+    - set_fact:
+        start: 0
+
+    - set_fact:
+        start: 1
+      when: cc_on_nc
+
+    - name: Populate NCs to the cluster configuration file
+      shell: printf "[nc/{{ node.0 + start }}]\naddress={{ node.1.private_ip }}\n\n" >> "{{ ccconf }}"
+      when: node.0 != 0
+      with_indexed_items: "{{ ec2.instances }}"
+      loop_control:
+        loop_var: node
+
+    - name: Populate the NC txnlogdir to the cluster configuration file {{ ccconf }}
+      shell: printf "[nc]\ntxnlogdir={{ home_dir }}/txnlog\n" >> "{{ ccconf }}"
+
+    - name: Populate NC iodevices to the cluster configuration file {{ ccconf }}
+      shell: printf "iodevices={{ home_dir }}/iodevice\n" >> "{{ ccconf }}"
+
+    - name: Populate the NC command to the cluster configuration file {{ ccconf }}
+      shell: printf "command=asterixnc\n" >> "{{ ccconf }}"
+
+    - name: Wait for SSH to come up
+      wait_for: host="{{ item.public_ip }}" port=22  search_regex=OpenSSH delay=0 timeout=300 state=started
+      with_items: "{{ ec2.instances }}"

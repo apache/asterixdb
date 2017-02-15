@@ -1,0 +1,43 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+// Error: budget exceeds
+
+USE tpch;
+
+WITH q22_customer_tmp AS
+(
+    SELECT c_acctbal, c_custkey, cntrycode
+    FROM  Customer
+    LET cntrycode = substring(c_phone,1,2)
+    WHERE  cntrycode = '13' OR cntrycode = '31' OR cntrycode = '23' OR cntrycode = '29' OR cntrycode = '30' OR cntrycode = '18' OR cntrycode = '17'
+),
+avg AS (
+        SELECT ELEMENT AVG(c_acctbal)
+        FROM  Customer
+        LET cntrycode = substring(c_phone,1,2)
+        WHERE c_acctbal > 0.0 AND (cntrycode = '13' OR cntrycode = '31' OR cntrycode = '23' OR cntrycode = '29' OR cntrycode = '30' OR cntrycode = '18' OR cntrycode = '17')
+)[0]
+
+SELECT  cntrycode, count(ct) AS numcust, SUM(c_acctbal) AS totacctbal
+FROM  q22_customer_tmp AS ct
+WHERE ct.c_acctbal > avg AND EXISTS ( SELECT * FROM  Orders as o WHERE ct.c_custkey = o.o_custkey )
+GROUP BY cntrycode
+ORDER BY cntrycode
+;

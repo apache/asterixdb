@@ -43,4 +43,10 @@ secret_access_key: <to be filled>
 instance_type: t2.micro
 
 # The number of ec2 instances that construct a cluster.
-count: 2
+count: 3
+
+# The user name.
+user: ec2-user
+
+# Whether to reuse one nc machine to host cc.
+cc_on_nc: false
