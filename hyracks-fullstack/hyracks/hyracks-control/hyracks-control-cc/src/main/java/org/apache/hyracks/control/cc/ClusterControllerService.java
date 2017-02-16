@@ -44,6 +44,7 @@ import org.apache.hyracks.api.comm.NetworkAddress;
 import org.apache.hyracks.api.context.ICCContext;
 import org.apache.hyracks.api.deployment.DeploymentId;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.job.resource.DefaultJobCapacityController;
 import org.apache.hyracks.api.job.resource.IJobCapacityController;
 import org.apache.hyracks.api.service.IControllerService;
@@ -90,13 +91,15 @@ public class ClusterControllerService implements IControllerService {
 
     private final LogFile jobLog;
 
-    private final ServerContext serverCtx;
+    private ServerContext serverCtx;
 
-    private final WebServer webServer;
+    private WebServer webServer;
 
     private ClusterControllerInfo info;
 
     private CCApplicationContext appCtx;
+
+    private final PreDistributedJobStore preDistributedJobStore = new PreDistributedJobStore();
 
     private final WorkQueue workQueue;
 
@@ -130,14 +133,6 @@ public class ClusterControllerService implements IControllerService {
         this.ccConfig = ccConfig;
         File jobLogFolder = new File(ccConfig.ccRoot, "logs/jobs");
         jobLog = new LogFile(jobLogFolder);
-        serverCtx = new ServerContext(ServerContext.ServerType.CLUSTER_CONTROLLER, new File(ccConfig.ccRoot));
-        IIPCI ccIPCI = new ClusterControllerIPCI(this);
-        clusterIPC = new IPCSystem(new InetSocketAddress(ccConfig.clusterNetPort), ccIPCI,
-                new CCNCFunctions.SerializerDeserializer());
-        IIPCI ciIPCI = new ClientInterfaceIPCI(this);
-        clientIPC = new IPCSystem(new InetSocketAddress(ccConfig.clientNetIpAddress, ccConfig.clientNetPort), ciIPCI,
-                new JavaSerializationBasedPayloadSerializerDeserializer());
-        webServer = new WebServer(this);
 
         // WorkQueue is in charge of heartbeat as well as other events.
         workQueue = new WorkQueue("ClusterController", Thread.MAX_PRIORITY);
@@ -171,6 +166,14 @@ public class ClusterControllerService implements IControllerService {
     @Override
     public void start() throws Exception {
         LOGGER.log(Level.INFO, "Starting ClusterControllerService: " + this);
+        serverCtx = new ServerContext(ServerContext.ServerType.CLUSTER_CONTROLLER, new File(ccConfig.ccRoot));
+        IIPCI ccIPCI = new ClusterControllerIPCI(this);
+        clusterIPC = new IPCSystem(new InetSocketAddress(ccConfig.clusterNetPort), ccIPCI,
+                new CCNCFunctions.SerializerDeserializer());
+        IIPCI ciIPCI = new ClientInterfaceIPCI(this);
+        clientIPC = new IPCSystem(new InetSocketAddress(ccConfig.clientNetIpAddress, ccConfig.clientNetPort), ciIPCI,
+                new JavaSerializationBasedPayloadSerializerDeserializer());
+        webServer = new WebServer(this);
         clusterIPC.start();
         clientIPC.start();
         webServer.setPort(ccConfig.httpPort);
@@ -311,6 +314,10 @@ public class ClusterControllerService implements IControllerService {
 
     public INodeManager getNodeManager() {
         return nodeManager;
+    }
+
+    public PreDistributedJobStore getPreDistributedJobStore() throws HyracksException {
+        return preDistributedJobStore;
     }
 
     public IResourceManager getResourceManager() {

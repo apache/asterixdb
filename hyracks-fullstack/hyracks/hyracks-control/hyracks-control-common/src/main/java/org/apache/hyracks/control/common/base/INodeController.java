@@ -50,6 +50,10 @@ public interface INodeController {
 
     public void undeployBinary(DeploymentId deploymentId) throws Exception;
 
+    public void distributeJob(JobId jobId, byte[] planBytes) throws Exception;
+
+    public void destroyJob(JobId jobId) throws Exception;
+
     public void dumpState(String stateDumpId) throws Exception;
 
     public void shutdown(boolean terminateNCService) throws Exception;

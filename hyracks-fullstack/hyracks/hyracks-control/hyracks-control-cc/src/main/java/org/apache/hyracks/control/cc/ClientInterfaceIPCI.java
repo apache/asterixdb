@@ -27,10 +27,11 @@ import org.apache.hyracks.api.dataset.DatasetJobRecord.Status;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobIdFactory;
 import org.apache.hyracks.api.job.JobInfo;
-import org.apache.hyracks.api.job.JobStatus;
 import org.apache.hyracks.control.cc.work.CliDeployBinaryWork;
 import org.apache.hyracks.control.cc.work.CliUnDeployBinaryWork;
 import org.apache.hyracks.control.cc.work.ClusterShutdownWork;
+import org.apache.hyracks.control.cc.work.DestroyJobWork;
+import org.apache.hyracks.control.cc.work.DistributeJobWork;
 import org.apache.hyracks.control.cc.work.GetDatasetDirectoryServiceInfoWork;
 import org.apache.hyracks.control.cc.work.GetJobInfoWork;
 import org.apache.hyracks.control.cc.work.GetJobStatusWork;
@@ -81,18 +82,34 @@ class ClientInterfaceIPCI implements IIPCI {
                 ccs.getWorkQueue().schedule(new GetJobInfoWork(ccs.getJobManager(), gjif.getJobId(),
                         new IPCResponder<JobInfo>(handle, mid)));
                 break;
+            case DISTRIBUTE_JOB:
+                HyracksClientInterfaceFunctions.DistributeJobFunction djf =
+                        (HyracksClientInterfaceFunctions.DistributeJobFunction) fn;
+                ccs.getWorkQueue().schedule(new DistributeJobWork(ccs, djf.getACGGFBytes(), jobIdFactory.create(),
+                        new IPCResponder<JobId>(handle, mid)));
+                break;
+            case DESTROY_JOB:
+                HyracksClientInterfaceFunctions.DestroyJobFunction dsjf =
+                        (HyracksClientInterfaceFunctions.DestroyJobFunction) fn;
+                ccs.getWorkQueue()
+                        .schedule(new DestroyJobWork(ccs, dsjf.getJobId(), new IPCResponder<JobId>(handle, mid)));
+                break;
             case START_JOB:
                 HyracksClientInterfaceFunctions.StartJobFunction sjf =
                         (HyracksClientInterfaceFunctions.StartJobFunction) fn;
                 JobId jobId = sjf.getJobId();
                 byte[] acggfBytes = null;
+                boolean predistributed = false;
                 if (jobId == null) {
+                    //The job is new
                     jobId = jobIdFactory.create();
+                    acggfBytes = sjf.getACGGFBytes();
+                } else {
+                    //The job has been predistributed. We don't need to send an ActivityClusterGraph
+                    predistributed = true;
                 }
-                //TODO: only send these when the jobId is null
-                acggfBytes = sjf.getACGGFBytes();
                 ccs.getWorkQueue().schedule(new JobStartWork(ccs, sjf.getDeploymentId(), acggfBytes, sjf.getJobFlags(),
-                        jobId, new IPCResponder<JobId>(handle, mid)));
+                        jobId, new IPCResponder<JobId>(handle, mid), predistributed));
                 break;
             case GET_DATASET_DIRECTORY_SERIVICE_INFO:
                 ccs.getWorkQueue().schedule(new GetDatasetDirectoryServiceInfoWork(ccs,

@@ -44,6 +44,11 @@ import org.junit.Test;
 public class UnionTest extends AbstractIntegrationTest {
     @Test
     public void union01() throws Exception {
+        JobSpecification spec = createUnionJobSpec();
+        runTest(spec);
+    }
+
+    public static JobSpecification createUnionJobSpec() throws Exception {
         JobSpecification spec = new JobSpecification();
 
         IFileSplitProvider splitProvider = new ConstantFileSplitProvider(new FileSplit[] {
@@ -82,6 +87,6 @@ public class UnionTest extends AbstractIntegrationTest {
         spec.connect(new OneToOneConnectorDescriptor(spec), unionAll, 0, printer, 0);
 
         spec.addRoot(printer);
-        runTest(spec);
+        return spec;
     }
 }

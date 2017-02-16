@@ -84,6 +84,18 @@ public class NodeControllerRemoteProxy implements INodeController {
     }
 
     @Override
+    public void distributeJob(JobId jobId, byte[] planBytes) throws Exception {
+        CCNCFunctions.DistributeJobFunction fn = new CCNCFunctions.DistributeJobFunction(jobId, planBytes);
+        ipcHandle.send(-1, fn, null);
+    }
+
+    @Override
+    public void destroyJob(JobId jobId) throws Exception {
+        CCNCFunctions.DestroyJobFunction fn = new CCNCFunctions.DestroyJobFunction(jobId);
+        ipcHandle.send(-1, fn, null);
+    }
+
+    @Override
     public void dumpState(String stateDumpId) throws Exception {
         CCNCFunctions.StateDumpRequestFunction dsf = new CCNCFunctions.StateDumpRequestFunction(stateDumpId);
         ipcHandle.send(-1, dsf, null);

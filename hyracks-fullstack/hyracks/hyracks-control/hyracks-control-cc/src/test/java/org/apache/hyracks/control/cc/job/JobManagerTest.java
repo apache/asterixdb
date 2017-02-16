@@ -65,7 +65,7 @@ public class JobManagerTest {
             // Mocks an immediately executable job.
             JobRun run = mockJobRun(id);
             JobSpecification job = mock(JobSpecification.class);
-            when(run.getActivityClusterGraphFactory().getJobSpecification()).thenReturn(job);
+            when(run.getJobSpecification()).thenReturn(job);
             when(jobCapacityController.allocate(job)).thenReturn(IJobCapacityController.JobSubmissionStatus.EXECUTE);
 
             // Submits the job.
@@ -81,7 +81,7 @@ public class JobManagerTest {
             // Mocks a deferred job.
             JobRun run = mockJobRun(id);
             JobSpecification job = mock(JobSpecification.class);
-            when(run.getActivityClusterGraphFactory().getJobSpecification()).thenReturn(job);
+            when(run.getJobSpecification()).thenReturn(job);
             when(jobCapacityController.allocate(job)).thenReturn(IJobCapacityController.JobSubmissionStatus.QUEUE)
                     .thenReturn(IJobCapacityController.JobSubmissionStatus.EXECUTE);
 
@@ -97,7 +97,7 @@ public class JobManagerTest {
         try {
             JobRun run = mockJobRun(8193);
             JobSpecification job = mock(JobSpecification.class);
-            when(run.getActivityClusterGraphFactory().getJobSpecification()).thenReturn(job);
+            when(run.getJobSpecification()).thenReturn(job);
             when(jobCapacityController.allocate(job)).thenReturn(IJobCapacityController.JobSubmissionStatus.QUEUE)
                     .thenReturn(IJobCapacityController.JobSubmissionStatus.EXECUTE);
             jobManager.add(run);
@@ -138,7 +138,7 @@ public class JobManagerTest {
         try {
             JobRun run = mockJobRun(1);
             JobSpecification job = mock(JobSpecification.class);
-            when(run.getActivityClusterGraphFactory().getJobSpecification()).thenReturn(job);
+            when(run.getJobSpecification()).thenReturn(job);
             when(jobCapacityController.allocate(job))
                     .thenThrow(HyracksException.create(ErrorCode.JOB_REQUIREMENTS_EXCEED_CAPACITY, "1", "0"));
             jobManager.add(run);
@@ -162,14 +162,14 @@ public class JobManagerTest {
         // A normal run.
         JobRun run1 = mockJobRun(1);
         JobSpecification job1 = mock(JobSpecification.class);
-        when(run1.getActivityClusterGraphFactory().getJobSpecification()).thenReturn(job1);
+        when(run1.getJobSpecification()).thenReturn(job1);
         when(jobCapacityController.allocate(job1)).thenReturn(IJobCapacityController.JobSubmissionStatus.EXECUTE);
         jobManager.add(run1);
 
         // A failure run.
         JobRun run2 = mockJobRun(2);
         JobSpecification job2 = mock(JobSpecification.class);
-        when(run2.getActivityClusterGraphFactory().getJobSpecification()).thenReturn(job2);
+        when(run2.getJobSpecification()).thenReturn(job2);
         when(jobCapacityController.allocate(job2)).thenReturn(IJobCapacityController.JobSubmissionStatus.QUEUE)
                 .thenThrow(HyracksException.create(ErrorCode.JOB_REQUIREMENTS_EXCEED_CAPACITY, "1", "0"));
         jobManager.add(run2);

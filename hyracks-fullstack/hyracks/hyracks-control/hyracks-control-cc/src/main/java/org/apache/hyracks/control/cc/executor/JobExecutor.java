@@ -31,8 +31,6 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.hyracks.control.cc.cluster.INodeManager;
-import org.apache.hyracks.control.cc.job.IJobManager;
 import org.apache.hyracks.api.comm.NetworkAddress;
 import org.apache.hyracks.api.constraints.Constraint;
 import org.apache.hyracks.api.constraints.expressions.LValueConstraintExpression;
@@ -54,7 +52,9 @@ import org.apache.hyracks.api.partitions.PartitionId;
 import org.apache.hyracks.api.util.JavaSerializationUtils;
 import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.cc.NodeControllerState;
+import org.apache.hyracks.control.cc.cluster.INodeManager;
 import org.apache.hyracks.control.cc.job.ActivityClusterPlan;
+import org.apache.hyracks.control.cc.job.IJobManager;
 import org.apache.hyracks.control.cc.job.JobRun;
 import org.apache.hyracks.control.cc.job.Task;
 import org.apache.hyracks.control.cc.job.TaskAttempt;
@@ -65,6 +65,7 @@ import org.apache.hyracks.control.cc.work.JobCleanupWork;
 import org.apache.hyracks.control.common.job.PartitionState;
 import org.apache.hyracks.control.common.job.TaskAttemptDescriptor;
 
+
 public class JobExecutor {
     private static final Logger LOGGER = Logger.getLogger(JobExecutor.class.getName());
 
@@ -74,20 +75,28 @@ public class JobExecutor {
 
     private final PartitionConstraintSolver solver;
 
+    private final boolean predistributed;
+
     private final Map<PartitionId, TaskCluster> partitionProducingTaskClusterMap;
 
     private final Set<TaskCluster> inProgressTaskClusters;
 
     private final Random random;
 
-    public JobExecutor(ClusterControllerService ccs, JobRun jobRun, Collection<Constraint> constraints) {
+    public JobExecutor(ClusterControllerService ccs, JobRun jobRun, Collection<Constraint> constraints,
+            boolean predistributed) {
         this.ccs = ccs;
         this.jobRun = jobRun;
+        this.predistributed = predistributed;
         solver = new PartitionConstraintSolver();
         partitionProducingTaskClusterMap = new HashMap<PartitionId, TaskCluster>();
         inProgressTaskClusters = new HashSet<TaskCluster>();
         solver.addConstraints(constraints);
         random = new Random();
+    }
+
+    public boolean isPredistributed() {
+        return predistributed;
     }
 
     public JobRun getJobRun() {
@@ -475,7 +484,7 @@ public class JobExecutor {
                 jobRun.getConnectorPolicyMap());
         INodeManager nodeManager = ccs.getNodeManager();
         try {
-            byte[] acgBytes = JavaSerializationUtils.serialize(acg);
+            byte[] acgBytes = predistributed ? null : JavaSerializationUtils.serialize(acg);
             for (Map.Entry<String, List<TaskAttemptDescriptor>> entry : taskAttemptMap.entrySet()) {
                 String nodeId = entry.getKey();
                 final List<TaskAttemptDescriptor> taskDescriptors = entry.getValue();

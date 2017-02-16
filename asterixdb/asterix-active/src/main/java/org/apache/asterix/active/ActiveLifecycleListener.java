@@ -26,9 +26,9 @@ import java.util.logging.Logger;
 
 import org.apache.asterix.active.message.ActivePartitionMessage;
 import org.apache.hyracks.api.exceptions.HyracksException;
-import org.apache.hyracks.api.job.IActivityClusterGraphGeneratorFactory;
 import org.apache.hyracks.api.job.IJobLifecycleListener;
 import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.api.job.JobSpecification;
 
 public class ActiveLifecycleListener implements IJobLifecycleListener {
 
@@ -65,8 +65,8 @@ public class ActiveLifecycleListener implements IJobLifecycleListener {
     }
 
     @Override
-    public void notifyJobCreation(JobId jobId, IActivityClusterGraphGeneratorFactory acggf) throws HyracksException {
-        ActiveJobNotificationHandler.INSTANCE.notifyJobCreation(jobId, acggf.getJobSpecification());
+    public void notifyJobCreation(JobId jobId, JobSpecification spec) throws HyracksException {
+        ActiveJobNotificationHandler.INSTANCE.notifyJobCreation(jobId, spec);
     }
 
     public void receive(ActivePartitionMessage message) {

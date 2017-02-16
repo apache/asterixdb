@@ -32,9 +32,9 @@ import org.apache.hyracks.api.application.ICCApplicationContext;
 import org.apache.hyracks.api.application.IClusterLifecycleListener;
 import org.apache.hyracks.api.context.ICCContext;
 import org.apache.hyracks.api.exceptions.HyracksException;
-import org.apache.hyracks.api.job.IActivityClusterGraphGeneratorFactory;
 import org.apache.hyracks.api.job.IJobLifecycleListener;
 import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.api.service.IControllerService;
 import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.common.application.ApplicationContext;
@@ -93,10 +93,10 @@ public class CCApplicationContext extends ApplicationContext implements ICCAppli
         }
     }
 
-    public synchronized void notifyJobCreation(JobId jobId, IActivityClusterGraphGeneratorFactory acggf)
+    public synchronized void notifyJobCreation(JobId jobId, JobSpecification spec)
             throws HyracksException {
         for (IJobLifecycleListener l : jobLifecycleListeners) {
-            l.notifyJobCreation(jobId, acggf);
+            l.notifyJobCreation(jobId, spec);
         }
     }
 

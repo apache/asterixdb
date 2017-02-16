@@ -77,17 +77,33 @@ public interface IHyracksClientConnection extends IClusterInfoCollector {
     public JobId startJob(JobSpecification jobSpec, EnumSet<JobFlag> jobFlags) throws Exception;
 
     /**
-     * Start the specified Job.
+     * Distribute the specified Job.
      *
      * @param jobSpec
      *            Job Specification
      * @param jobFlags
      *            Flags
-     * @param jobId
-     *            Used to run a pre-distributed job by id (the same value will be returned)
      * @throws Exception
      */
-    public JobId startJob(JobSpecification jobSpec, EnumSet<JobFlag> jobFlags, JobId jobId) throws Exception;
+    public JobId distributeJob(JobSpecification jobSpec) throws Exception;
+
+    /**
+     * Destroy the distributed graph for a pre-distributed job
+     *
+     * @param jobId
+     *            The id of the predistributed job
+     * @throws Exception
+     */
+    public JobId destroyJob(JobId jobId) throws Exception;
+
+    /**
+     * Used to run a pre-distributed job by id (the same JobId will be returned)
+     *
+     * @param jobId
+     *            The id of the predistributed job
+     * @throws Exception
+     */
+    public JobId startJob(JobId jobId) throws Exception;
 
     /**
      * Start the specified Job.

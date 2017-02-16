@@ -46,6 +46,7 @@ import org.apache.hyracks.api.dataflow.connectors.IConnectorPolicy;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.deployment.DeploymentId;
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.job.ActivityCluster;
@@ -186,17 +187,12 @@ public class StartTasksWork extends AbstractWork {
         Map<JobId, Joblet> jobletMap = ncs.getJobletMap();
         Joblet ji = jobletMap.get(jobId);
         if (ji == null) {
-            Map<JobId, ActivityClusterGraph> acgMap = ncs.getActivityClusterGraphMap();
-            ActivityClusterGraph acg = acgMap.get(jobId);
+            ActivityClusterGraph acg = ncs.getActivityClusterGraph(jobId);
             if (acg == null) {
                 if (acgBytes == null) {
-                    throw new HyracksException("Joblet was not found. This job was most likely aborted.");
+                    throw HyracksException.create(ErrorCode.ERROR_FINDING_DISTRIBUTED_JOB, jobId);
                 }
                 acg = (ActivityClusterGraph) DeploymentUtils.deserialize(acgBytes, deploymentId, appCtx);
-                if (flags.contains(JobFlag.STORE_JOB)) {
-                    //TODO: Right now the map is append-only
-                    acgMap.put(jobId, acg);
-                }
             }
             ji = new Joblet(ncs, deploymentId, jobId, appCtx, acg);
             jobletMap.put(jobId, ji);

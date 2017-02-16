@@ -16,14 +16,39 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.api.job;
+
+package org.apache.hyracks.control.nc.work;
 
 import org.apache.hyracks.api.exceptions.HyracksException;
+import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.control.common.work.AbstractWork;
+import org.apache.hyracks.control.nc.NodeControllerService;
 
-public interface IJobLifecycleListener {
-    public void notifyJobCreation(JobId jobId, JobSpecification spec) throws HyracksException;
+/**
+ * destroy a pre-distributed job
+ *
+ */
+public class DestroyJobWork extends AbstractWork {
 
-    public void notifyJobStart(JobId jobId) throws HyracksException;
+    private final NodeControllerService ncs;
+    private final JobId jobId;
 
-    public void notifyJobFinish(JobId jobId) throws HyracksException;
+    public DestroyJobWork(NodeControllerService ncs, JobId jobId) {
+        this.ncs = ncs;
+        this.jobId = jobId;
+    }
+
+    @Override
+    public void run() {
+        try {
+            ncs.removeActivityClusterGraph(jobId);
+        } catch (HyracksException e) {
+            try {
+                ncs.getClusterController().notifyDistributedJobFailure(jobId, ncs.getId());
+            } catch (Exception e1) {
+                e1.printStackTrace();
+            }
+        }
+    }
+
 }

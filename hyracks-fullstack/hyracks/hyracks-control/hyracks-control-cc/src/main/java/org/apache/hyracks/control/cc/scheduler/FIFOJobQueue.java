@@ -68,7 +68,7 @@ public class FIFOJobQueue implements IJobQueue {
         Iterator<JobRun> runIterator = jobQueue.iterator();
         while (runIterator.hasNext()) {
             JobRun run = runIterator.next();
-            JobSpecification job = run.getActivityClusterGraphFactory().getJobSpecification();
+            JobSpecification job = run.getJobSpecification();
             // Cluster maximum capacity can change over time, thus we have to re-check if the job should be rejected
             // or not.
             try {

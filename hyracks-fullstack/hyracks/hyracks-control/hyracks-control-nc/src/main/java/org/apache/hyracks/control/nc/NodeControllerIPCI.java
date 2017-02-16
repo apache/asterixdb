@@ -26,6 +26,8 @@ import org.apache.hyracks.control.nc.work.AbortTasksWork;
 import org.apache.hyracks.control.nc.work.ApplicationMessageWork;
 import org.apache.hyracks.control.nc.work.CleanupJobletWork;
 import org.apache.hyracks.control.nc.work.DeployBinaryWork;
+import org.apache.hyracks.control.nc.work.DestroyJobWork;
+import org.apache.hyracks.control.nc.work.DistributeJobWork;
 import org.apache.hyracks.control.nc.work.ReportPartitionAvailabilityWork;
 import org.apache.hyracks.control.nc.work.StartTasksWork;
 import org.apache.hyracks.control.nc.work.StateDumpWork;
@@ -97,6 +99,16 @@ final class NodeControllerIPCI implements IIPCI {
             case UNDEPLOY_BINARY:
                 CCNCFunctions.UnDeployBinaryFunction ndbf = (CCNCFunctions.UnDeployBinaryFunction) fn;
                 ncs.getWorkQueue().schedule(new UnDeployBinaryWork(ncs, ndbf.getDeploymentId()));
+                return;
+
+            case DISTRIBUTE_JOB:
+                CCNCFunctions.DistributeJobFunction djf = (CCNCFunctions.DistributeJobFunction) fn;
+                ncs.getWorkQueue().schedule(new DistributeJobWork(ncs, djf.getJobId(), djf.getacgBytes()));
+                return;
+
+            case DESTROY_JOB:
+                CCNCFunctions.DestroyJobFunction dsjf = (CCNCFunctions.DestroyJobFunction) fn;
+                ncs.getWorkQueue().schedule(new DestroyJobWork(ncs, dsjf.getJobId()));
                 return;
 
             case STATE_DUMP_REQUEST:

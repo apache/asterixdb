@@ -16,14 +16,24 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.api.job;
+package org.apache.hyracks.control.cc.work;
 
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksException;
+import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.control.common.work.SynchronizableWork;
 
-public interface IJobLifecycleListener {
-    public void notifyJobCreation(JobId jobId, JobSpecification spec) throws HyracksException;
+public class DistributedJobFailureWork extends SynchronizableWork {
+    protected final JobId jobId;
+    protected final String nodeId;
 
-    public void notifyJobStart(JobId jobId) throws HyracksException;
+    public DistributedJobFailureWork(JobId jobId, String nodeId) {
+        this.jobId = jobId;
+        this.nodeId = nodeId;
+    }
 
-    public void notifyJobFinish(JobId jobId) throws HyracksException;
+    @Override
+    public void doRun() throws HyracksException {
+        throw HyracksException.create(ErrorCode.DISTRIBUTED_JOB_FAILURE, jobId, nodeId);
+    }
 }

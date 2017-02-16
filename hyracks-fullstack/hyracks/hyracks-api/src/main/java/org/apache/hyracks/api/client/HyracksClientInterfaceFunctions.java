@@ -36,6 +36,8 @@ public class HyracksClientInterfaceFunctions {
         GET_JOB_STATUS,
         GET_JOB_INFO,
         START_JOB,
+        DISTRIBUTE_JOB,
+        DESTROY_JOB,
         GET_DATASET_DIRECTORY_SERIVICE_INFO,
         GET_DATASET_RESULT_STATUS,
         GET_DATASET_RESULT_LOCATIONS,
@@ -101,6 +103,44 @@ public class HyracksClientInterfaceFunctions {
         }
     }
 
+    public static class DistributeJobFunction extends Function {
+        private static final long serialVersionUID = 1L;
+
+        private final byte[] acggfBytes;
+
+        public DistributeJobFunction(byte[] acggfBytes) {
+            this.acggfBytes = acggfBytes;
+        }
+
+        @Override
+        public FunctionId getFunctionId() {
+            return FunctionId.DISTRIBUTE_JOB;
+        }
+
+        public byte[] getACGGFBytes() {
+            return acggfBytes;
+        }
+    }
+
+    public static class DestroyJobFunction extends Function {
+        private static final long serialVersionUID = 1L;
+
+        private final JobId jobId;
+
+        public DestroyJobFunction(JobId jobId) {
+            this.jobId = jobId;
+        }
+
+        @Override
+        public FunctionId getFunctionId() {
+            return FunctionId.DESTROY_JOB;
+        }
+
+        public JobId getJobId() {
+            return jobId;
+        }
+    }
+
     public static class StartJobFunction extends Function {
         private static final long serialVersionUID = 1L;
 
@@ -116,8 +156,8 @@ public class HyracksClientInterfaceFunctions {
             this.jobId = jobId;
         }
 
-        public StartJobFunction(byte[] acggfBytes, EnumSet<JobFlag> jobFlags, JobId jobId) {
-            this(null, acggfBytes, jobFlags, jobId);
+        public StartJobFunction(JobId jobId) {
+            this(null, null, null, jobId);
         }
 
         public StartJobFunction(byte[] acggfBytes, EnumSet<JobFlag> jobFlags) {

@@ -100,6 +100,10 @@ public class CCNCFunctions {
         SHUTDOWN_REQUEST,
         SHUTDOWN_RESPONSE,
 
+        DISTRIBUTE_JOB,
+        DESTROY_JOB,
+        DISTRIBUTED_JOB_FAILURE,
+
         STATE_DUMP_REQUEST,
         STATE_DUMP_RESPONSE,
 
@@ -279,6 +283,31 @@ public class CCNCFunctions {
 
         public List<Exception> getExceptions() {
             return exceptions;
+        }
+    }
+
+    public static class ReportDistributedJobFailureFunction extends Function {
+        private static final long serialVersionUID = 1L;
+
+        private final JobId jobId;
+        private final String nodeId;
+
+        public ReportDistributedJobFailureFunction(JobId jobId, String nodeId) {
+            this.jobId = jobId;
+            this.nodeId = nodeId;
+        }
+
+        @Override
+        public FunctionId getFunctionId() {
+            return FunctionId.DISTRIBUTED_JOB_FAILURE;
+        }
+
+        public JobId getJobId() {
+            return jobId;
+        }
+
+        public String getNodeId() {
+            return nodeId;
         }
     }
 
@@ -667,6 +696,51 @@ public class CCNCFunctions {
 
         public Exception getException() {
             return exception;
+        }
+    }
+
+    public static class DistributeJobFunction extends Function {
+        private static final long serialVersionUID = 1L;
+
+        private final JobId jobId;
+
+        private final byte[] acgBytes;
+
+        public DistributeJobFunction(JobId jobId, byte[] acgBytes) {
+            this.jobId = jobId;
+            this.acgBytes = acgBytes;
+        }
+
+        @Override
+        public FunctionId getFunctionId() {
+            return FunctionId.DISTRIBUTE_JOB;
+        }
+
+        public JobId getJobId() {
+            return jobId;
+        }
+
+        public byte[] getacgBytes() {
+            return acgBytes;
+        }
+    }
+
+    public static class DestroyJobFunction extends Function {
+        private static final long serialVersionUID = 1L;
+
+        private final JobId jobId;
+
+        public DestroyJobFunction(JobId jobId) {
+            this.jobId = jobId;
+        }
+
+        @Override
+        public FunctionId getFunctionId() {
+            return FunctionId.DESTROY_JOB;
+        }
+
+        public JobId getJobId() {
+            return jobId;
         }
     }
 

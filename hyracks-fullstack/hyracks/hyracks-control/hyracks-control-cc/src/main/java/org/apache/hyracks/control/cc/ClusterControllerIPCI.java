@@ -23,6 +23,7 @@ import java.util.logging.Logger;
 
 import org.apache.hyracks.api.client.NodeControllerInfo;
 import org.apache.hyracks.control.cc.work.ApplicationMessageWork;
+import org.apache.hyracks.control.cc.work.DistributedJobFailureWork;
 import org.apache.hyracks.control.cc.work.GetNodeControllersInfoWork;
 import org.apache.hyracks.control.cc.work.JobletCleanupNotificationWork;
 import org.apache.hyracks.control.cc.work.NodeHeartbeatWork;
@@ -98,6 +99,11 @@ class ClusterControllerIPCI implements IIPCI {
                 CCNCFunctions.NotifyTaskFailureFunction ntff = (CCNCFunctions.NotifyTaskFailureFunction) fn;
                 ccs.getWorkQueue().schedule(new TaskFailureWork(ccs, ntff.getJobId(),
                         ntff.getTaskId(), ntff.getNodeId(), ntff.getExceptions()));
+                break;
+            case DISTRIBUTED_JOB_FAILURE:
+                CCNCFunctions.ReportDistributedJobFailureFunction rdjf =
+                        (CCNCFunctions.ReportDistributedJobFailureFunction) fn;
+                ccs.getWorkQueue().schedule(new DistributedJobFailureWork(rdjf.getJobId(), rdjf.getNodeId()));
                 break;
             case REGISTER_PARTITION_PROVIDER:
                 CCNCFunctions.RegisterPartitionProviderFunction rppf =

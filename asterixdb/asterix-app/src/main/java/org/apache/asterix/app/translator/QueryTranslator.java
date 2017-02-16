@@ -233,6 +233,10 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         this.executorService = executorService;
     }
 
+    public SessionConfig getSessionConfig() {
+        return sessionConfig;
+    }
+
     protected List<FunctionDecl> getDeclaredFunctions(List<Statement> statements) {
         List<FunctionDecl> functionDecls = new ArrayList<>();
         for (Statement st : statements) {
@@ -343,7 +347,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         handleInsertUpsertStatement(metadataProvider, stmt, hcc, hdc, resultDelivery, stats, false);
                         break;
                     case Statement.Kind.DELETE:
-                        handleDeleteStatement(metadataProvider, stmt, hcc);
+                        handleDeleteStatement(metadataProvider, stmt, hcc, false);
                         break;
                     case Statement.Kind.CREATE_PRIMARY_FEED:
                     case Statement.Kind.CREATE_SECONDARY_FEED:
@@ -1403,7 +1407,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             // prepare job spec(s) that would disconnect any active feeds involving the dataset.
             IActiveEntityEventsListener[] activeListeners = ActiveJobNotificationHandler.INSTANCE.getEventListeners();
             for (IActiveEntityEventsListener listener : activeListeners) {
-                if (listener.isEntityUsingDataset(dataverseName, datasetName)) {
+                if (listener.isEntityUsingDataset(dataverseName, datasetName) && listener.isEntityActive()) {
                     throw new CompilationException(
                             "Can't drop dataset since it is connected to active entity: " + listener.getEntityId());
                 }
@@ -1824,7 +1828,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
     }
 
-    public void handleInsertUpsertStatement(MetadataProvider metadataProvider, Statement stmt,
+    public JobSpecification handleInsertUpsertStatement(MetadataProvider metadataProvider, Statement stmt,
             IHyracksClientConnection hcc, IHyracksDataset hdc, ResultDelivery resultDelivery,
             IStatementExecutor.Stats stats, boolean compileOnly) throws Exception {
 
@@ -1856,7 +1860,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 final JobSpecification jobSpec = rewriteCompileInsertUpsert(hcc, metadataProvider, stmtInsertUpsert);
                 MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
                 bActiveTxn = false;
-                return compileOnly ? null : jobSpec;
+                return jobSpec;
             } catch (Exception e) {
                 if (bActiveTxn) {
                     abort(e, e, mdTxnCtx);
@@ -1864,6 +1868,9 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 throw e;
             }
         };
+        if (compileOnly) {
+            return compiler.compile();
+        }
 
         if (stmtInsertUpsert.getReturnExpression() != null) {
             deliverResult(hcc, hdc, compiler, metadataProvider, locker, resultDelivery, stats);
@@ -1872,17 +1879,18 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             try {
                 final JobSpecification jobSpec = compiler.compile();
                 if (jobSpec == null) {
-                    return;
+                    return jobSpec;
                 }
                 JobUtils.runJob(hcc, jobSpec, true);
             } finally {
                 locker.unlock();
             }
         }
+        return null;
     }
 
-    public void handleDeleteStatement(MetadataProvider metadataProvider, Statement stmt, IHyracksClientConnection hcc)
-            throws Exception {
+    public JobSpecification handleDeleteStatement(MetadataProvider metadataProvider, Statement stmt,
+            IHyracksClientConnection hcc, boolean compileOnly) throws Exception {
 
         DeleteStatement stmtDelete = (DeleteStatement) stmt;
         String dataverseName = getActiveDataverse(stmtDelete.getDataverseName());
@@ -1903,9 +1911,10 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             bActiveTxn = false;
 
-            if (jobSpec != null) {
+            if (jobSpec != null && !compileOnly) {
                 JobUtils.runJob(hcc, jobSpec, true);
             }
+            return jobSpec;
 
         } catch (Exception e) {
             if (bActiveTxn) {

@@ -63,10 +63,10 @@ public abstract class AbstractIntegrationTest {
     public static final String NC1_ID = "nc1";
     public static final String NC2_ID = "nc2";
 
-    private static ClusterControllerService cc;
+    protected static ClusterControllerService cc;
     protected static NodeControllerService nc1;
     protected static NodeControllerService nc2;
-    private static IHyracksClientConnection hcc;
+    protected static IHyracksClientConnection hcc;
 
     private final List<File> outputFiles;
     private static AtomicInteger aInteger = new AtomicInteger(0);

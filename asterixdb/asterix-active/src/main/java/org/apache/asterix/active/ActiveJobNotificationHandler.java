@@ -35,13 +35,13 @@ public class ActiveJobNotificationHandler implements Runnable {
     private static final Logger LOGGER = Logger.getLogger(ActiveJobNotificationHandler.class.getName());
     private static final boolean DEBUG = false;
     private final LinkedBlockingQueue<ActiveEvent> eventInbox;
-    private final Map<EntityId, IActiveEntityEventsListener> entityEventListener;
+    private final Map<EntityId, IActiveEntityEventsListener> entityEventListeners;
     private final Map<JobId, ActiveJob> jobId2ActiveJobInfos;
 
     private ActiveJobNotificationHandler() {
         this.eventInbox = new LinkedBlockingQueue<>();
         this.jobId2ActiveJobInfos = new HashMap<>();
-        this.entityEventListener = new HashMap<>();
+        this.entityEventListeners = new HashMap<>();
     }
 
     @Override
@@ -53,15 +53,14 @@ public class ActiveJobNotificationHandler implements Runnable {
                 ActiveEvent event = getEventInbox().take();
                 ActiveJob jobInfo = jobId2ActiveJobInfos.get(event.getJobId());
                 EntityId entityId = jobInfo.getEntityId();
-                IActiveEntityEventsListener listener = entityEventListener.get(entityId);
+                IActiveEntityEventsListener listener = entityEventListeners.get(entityId);
                 if (DEBUG) {
                     LOGGER.log(Level.WARNING, "Next event is of type " + event.getEventKind());
                     LOGGER.log(Level.WARNING, "Notifying the listener");
                 }
                 listener.notify(event);
                 if (event.getEventKind() == EventKind.JOB_FINISH) {
-                    removeFinishedJob(event.getJobId());
-                    removeInactiveListener(listener);
+                    removeJob(event.getJobId(), listener);
                 }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
@@ -72,11 +71,18 @@ public class ActiveJobNotificationHandler implements Runnable {
         LOGGER.log(Level.INFO, "Stopped " + ActiveJobNotificationHandler.class.getSimpleName());
     }
 
-    private void removeFinishedJob(JobId jobId) {
-        if (DEBUG) {
-            LOGGER.log(Level.WARNING, "Removing the job");
+    public void removeJob(JobId jobId, IActiveEntityEventsListener listener) {
+        removeFinishedJob(jobId, listener);
+        removeInactiveListener(listener);
+    }
+
+    private void removeFinishedJob(JobId jobId, IActiveEntityEventsListener listener) {
+        if (!listener.isEntityActive()) {
+            if (DEBUG) {
+                LOGGER.log(Level.WARNING, "Remove job" + jobId);
+            }
+            jobId2ActiveJobInfos.remove(jobId);
         }
-        jobId2ActiveJobInfos.remove(jobId);
     }
 
     private void removeInactiveListener(IActiveEntityEventsListener listener) {
@@ -84,17 +90,17 @@ public class ActiveJobNotificationHandler implements Runnable {
             if (DEBUG) {
                 LOGGER.log(Level.WARNING, "Removing the listener since it is not active anymore");
             }
-            entityEventListener.remove(listener.getEntityId());
+            entityEventListeners.remove(listener.getEntityId());
         }
     }
 
     public IActiveEntityEventsListener getActiveEntityListener(EntityId entityId) {
         if (DEBUG) {
             LOGGER.log(Level.WARNING, "getActiveEntityListener(EntityId entityId) was called with entity " + entityId);
-            IActiveEntityEventsListener listener = entityEventListener.get(entityId);
+            IActiveEntityEventsListener listener = entityEventListeners.get(entityId);
             LOGGER.log(Level.WARNING, "Listener found: " + listener);
         }
-        return entityEventListener.get(entityId);
+        return entityEventListeners.get(entityId);
     }
 
     public synchronized ActiveJob[] getActiveJobs() {
@@ -141,7 +147,7 @@ public class ActiveJobNotificationHandler implements Runnable {
         ActiveJob jobInfo = jobId2ActiveJobInfos.get(jobId);
         if (jobInfo != null) {
             EntityId entityId = jobInfo.getEntityId();
-            IActiveEntityEventsListener listener = entityEventListener.get(entityId);
+            IActiveEntityEventsListener listener = entityEventListeners.get(entityId);
             listener.notifyJobCreation(jobId, jobSpecification);
             if (DEBUG) {
                 LOGGER.log(Level.WARNING, "Listener was notified" + jobId);
@@ -161,9 +167,9 @@ public class ActiveJobNotificationHandler implements Runnable {
     public synchronized IActiveEntityEventsListener[] getEventListeners() {
         if (DEBUG) {
             LOGGER.log(Level.WARNING, "getEventListeners() was called");
-            LOGGER.log(Level.WARNING, "returning " + entityEventListener.size() + " Listeners");
+            LOGGER.log(Level.WARNING, "returning " + entityEventListeners.size() + " Listeners");
         }
-        return entityEventListener.values().toArray(new IActiveEntityEventsListener[entityEventListener.size()]);
+        return entityEventListeners.values().toArray(new IActiveEntityEventsListener[entityEventListeners.size()]);
     }
 
     public synchronized void registerListener(IActiveEntityEventsListener listener) throws HyracksDataException {
@@ -172,11 +178,11 @@ public class ActiveJobNotificationHandler implements Runnable {
                     "registerListener(IActiveEntityEventsListener listener) was called for the entity "
                             + listener.getEntityId());
         }
-        if (entityEventListener.containsKey(listener.getEntityId())) {
+        if (entityEventListeners.containsKey(listener.getEntityId())) {
             throw new HyracksDataException(
                     "Active Entity Listener " + listener.getEntityId() + " is already registered");
         }
-        entityEventListener.put(listener.getEntityId(), listener);
+        entityEventListeners.put(listener.getEntityId(), listener);
     }
 
     public synchronized void monitorJob(JobId jobId, ActiveJob activeJob) {
@@ -185,7 +191,7 @@ public class ActiveJobNotificationHandler implements Runnable {
             boolean found = jobId2ActiveJobInfos.get(jobId) != null;
             LOGGER.log(Level.WARNING, "Job was found to be: " + (found ? "Active" : "Inactive"));
         }
-        if (entityEventListener.containsKey(activeJob.getEntityId())) {
+        if (entityEventListeners.containsKey(activeJob.getEntityId())) {
             if (jobId2ActiveJobInfos.containsKey(jobId)) {
                 LOGGER.severe("Job is already being monitored for job: " + jobId);
                 return;
@@ -205,7 +211,7 @@ public class ActiveJobNotificationHandler implements Runnable {
                     "unregisterListener(IActiveEntityEventsListener listener) was called for the entity "
                             + listener.getEntityId());
         }
-        IActiveEntityEventsListener registeredListener = entityEventListener.remove(listener.getEntityId());
+        IActiveEntityEventsListener registeredListener = entityEventListeners.remove(listener.getEntityId());
         if (registeredListener == null) {
             throw new HyracksDataException(
                     "Active Entity Listener " + listener.getEntityId() + " hasn't been registered");

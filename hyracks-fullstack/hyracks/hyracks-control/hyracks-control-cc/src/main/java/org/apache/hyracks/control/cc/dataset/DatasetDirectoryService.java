@@ -38,8 +38,8 @@ import org.apache.hyracks.api.dataset.ResultSetMetaData;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.HyracksException;
-import org.apache.hyracks.api.job.IActivityClusterGraphGeneratorFactory;
 import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.control.common.dataset.ResultStateSweeper;
 import org.apache.hyracks.control.common.work.IResultCallback;
 
@@ -72,7 +72,7 @@ public class DatasetDirectoryService implements IDatasetDirectoryService {
     }
 
     @Override
-    public synchronized void notifyJobCreation(JobId jobId, IActivityClusterGraphGeneratorFactory acggf)
+    public synchronized void notifyJobCreation(JobId jobId, JobSpecification spec)
             throws HyracksException {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info(getClass().getSimpleName() + " notified of new job " + jobId);

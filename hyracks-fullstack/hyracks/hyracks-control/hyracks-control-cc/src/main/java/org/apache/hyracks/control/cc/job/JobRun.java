@@ -20,12 +20,14 @@ package org.apache.hyracks.control.cc.job;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.hyracks.api.constraints.Constraint;
 import org.apache.hyracks.api.dataflow.ActivityId;
 import org.apache.hyracks.api.dataflow.ConnectorDescriptorId;
 import org.apache.hyracks.api.dataflow.OperatorDescriptorId;
@@ -40,9 +42,11 @@ import org.apache.hyracks.api.job.IActivityClusterGraphGenerator;
 import org.apache.hyracks.api.job.IActivityClusterGraphGeneratorFactory;
 import org.apache.hyracks.api.job.JobFlag;
 import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.api.job.JobStatus;
 import org.apache.hyracks.api.partitions.PartitionId;
 import org.apache.hyracks.control.cc.ClusterControllerService;
+import org.apache.hyracks.control.cc.PreDistributedJobStore.PreDistributedJobDescriptor;
 import org.apache.hyracks.control.cc.executor.ActivityPartitionDetails;
 import org.apache.hyracks.control.cc.executor.JobExecutor;
 import org.apache.hyracks.control.cc.partitions.PartitionMatchMaker;
@@ -59,13 +63,11 @@ public class JobRun implements IJobStatusConditionVariable {
 
     private final JobId jobId;
 
-    private final IActivityClusterGraphGeneratorFactory acggf;
-
-    private final IActivityClusterGraphGenerator acgg;
+    private final JobSpecification spec;
 
     private final ActivityClusterGraph acg;
 
-    private final JobExecutor scheduler;
+    private JobExecutor scheduler;
 
     private final Set<JobFlag> jobFlags;
 
@@ -99,17 +101,13 @@ public class JobRun implements IJobStatusConditionVariable {
 
     private final IResultCallback<JobId> callback;
 
-    public JobRun(ClusterControllerService ccs, DeploymentId deploymentId, JobId jobId,
-            IActivityClusterGraphGeneratorFactory acggf, IActivityClusterGraphGenerator acgg, Set<JobFlag> jobFlags,
-            IResultCallback<JobId> callback) {
+    private JobRun(DeploymentId deploymentId, JobId jobId, Set<JobFlag> jobFlags, IResultCallback<JobId> callback,
+            JobSpecification spec, ActivityClusterGraph acg) {
         this.deploymentId = deploymentId;
         this.jobId = jobId;
-        this.acggf = acggf;
-        this.acgg = acgg;
-        this.acg = acgg.initialize();
-        this.scheduler = new JobExecutor(ccs, this, acgg.getConstraints());
         this.jobFlags = jobFlags;
-        this.callback = callback;
+        this.spec = spec;
+        this.acg = acg;
         activityClusterPlanMap = new HashMap<>();
         pmm = new PartitionMatchMaker();
         participatingNodeIds = new HashSet<>();
@@ -118,18 +116,37 @@ public class JobRun implements IJobStatusConditionVariable {
         connectorPolicyMap = new HashMap<>();
         operatorLocations = new HashMap<>();
         createTime = System.currentTimeMillis();
+        this.callback = callback;
+    }
+
+    //Run a Pre-distributed job by passing the JobId
+    public JobRun(ClusterControllerService ccs, DeploymentId deploymentId, JobId jobId, IResultCallback<JobId> callback,
+            PreDistributedJobDescriptor distributedJobDescriptor)
+            throws HyracksException {
+        this(deploymentId, jobId, EnumSet.noneOf(JobFlag.class), callback,
+                distributedJobDescriptor.getJobSpecification(), distributedJobDescriptor.getActivityClusterGraph());
+        Set<Constraint> constaints = distributedJobDescriptor.getActivityClusterGraphConstraints();
+        this.scheduler = new JobExecutor(ccs, this, constaints, true);
+    }
+
+    //Run a new job by creating an ActivityClusterGraph
+    public JobRun(ClusterControllerService ccs, DeploymentId deploymentId, JobId jobId,
+            IActivityClusterGraphGeneratorFactory acggf, IActivityClusterGraphGenerator acgg, Set<JobFlag> jobFlags,
+            IResultCallback<JobId> callback) {
+        this(deploymentId, jobId, jobFlags, callback, acggf.getJobSpecification(), acgg.initialize());
+        this.scheduler = new JobExecutor(ccs, this, acgg.getConstraints(), false);
     }
 
     public DeploymentId getDeploymentId() {
         return deploymentId;
     }
 
-    public JobId getJobId() {
-        return jobId;
+    public JobSpecification getJobSpecification() {
+        return spec;
     }
 
-    public IActivityClusterGraphGeneratorFactory getActivityClusterGraphFactory() {
-        return acggf;
+    public JobId getJobId() {
+        return jobId;
     }
 
     public ActivityClusterGraph getActivityClusterGraph() {

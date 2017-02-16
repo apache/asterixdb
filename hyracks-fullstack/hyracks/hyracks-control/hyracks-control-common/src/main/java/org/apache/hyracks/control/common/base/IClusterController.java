@@ -44,6 +44,8 @@ public interface IClusterController {
     public void notifyTaskFailure(JobId jobId, TaskAttemptId taskId, String nodeId, List<Exception> exceptions)
             throws Exception;
 
+    public void notifyDistributedJobFailure(JobId jobId, String nodeId) throws Exception;
+
     public void notifyJobletCleanup(JobId jobId, String nodeId) throws Exception;
 
     public void notifyDeployBinary(DeploymentId deploymentId, String nodeId, DeploymentStatus status) throws Exception;

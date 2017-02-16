@@ -38,7 +38,11 @@ public interface IHyracksClientInterface {
 
     public JobId startJob(byte[] acggfBytes, EnumSet<JobFlag> jobFlags) throws Exception;
 
-    public JobId startJob(byte[] acggfBytes, EnumSet<JobFlag> jobFlags, JobId jobId) throws Exception;
+    public JobId startJob(JobId jobId) throws Exception;
+
+    public JobId distributeJob(byte[] acggfBytes) throws Exception;
+
+    public JobId destroyJob(JobId jobId) throws Exception;
 
     public NetworkAddress getDatasetDirectoryServiceInfo() throws Exception;
 

@@ -103,19 +103,28 @@ public final class HyracksConnection implements IHyracksClientConnection {
     }
 
     @Override
-    public JobId startJob(JobSpecification jobSpec, EnumSet<JobFlag> jobFlags, JobId jobId) throws Exception {
+    public JobId distributeJob(JobSpecification jobSpec) throws Exception {
         JobSpecificationActivityClusterGraphGeneratorFactory jsacggf =
                 new JobSpecificationActivityClusterGraphGeneratorFactory(jobSpec);
-        return startJob(jsacggf, jobFlags, jobId);
+        return distributeJob(jsacggf);
+    }
+
+    @Override
+    public JobId destroyJob(JobId jobId) throws Exception {
+        return hci.destroyJob(jobId);
+    }
+
+    @Override
+    public JobId startJob(JobId jobId) throws Exception {
+        return hci.startJob(jobId);
     }
 
     public JobId startJob(IActivityClusterGraphGeneratorFactory acggf, EnumSet<JobFlag> jobFlags) throws Exception {
         return hci.startJob(JavaSerializationUtils.serialize(acggf), jobFlags);
     }
 
-    public JobId startJob(IActivityClusterGraphGeneratorFactory acggf, EnumSet<JobFlag> jobFlags, JobId jobId)
-            throws Exception {
-        return hci.startJob(JavaSerializationUtils.serialize(acggf), jobFlags, jobId);
+    public JobId distributeJob(IActivityClusterGraphGeneratorFactory acggf) throws Exception {
+        return hci.distributeJob(JavaSerializationUtils.serialize(acggf));
     }
 
     public NetworkAddress getDatasetDirectoryServiceInfo() throws Exception {
