@@ -28,7 +28,7 @@ import java.net.URI;
 import java.net.URL;
 import java.util.Collections;
 
-import org.apache.asterix.common.utils.LetUtil.Lets;
+import org.apache.asterix.common.utils.Servlets;
 import org.apache.asterix.test.aql.TestExecutor;
 import org.apache.asterix.test.base.TestMethodTracer;
 import org.apache.asterix.test.common.TestHelper;
@@ -90,7 +90,7 @@ public class SampleLocalClusterIT {
     public void test1_sanityQuery() throws Exception {
         TestExecutor testExecutor = new TestExecutor();
         InputStream resultStream = testExecutor.executeQuery("1+1", OutputFormat.ADM,
-                new URI("http", null, "127.0.0.1", 19002, Lets.AQL_QUERY.getPath(), null, null),
+                new URI("http", null, "127.0.0.1", 19002, Servlets.AQL_QUERY, null, null),
                 Collections.emptyList());
         StringWriter sw = new StringWriter();
         IOUtils.copy(resultStream, sw);
@@ -99,8 +99,8 @@ public class SampleLocalClusterIT {
 
     @Test
     public void test2_stopCluster() throws Exception {
-        Process process = new ProcessBuilder(joinPath(LOCAL_SAMPLES_DIR, "bin/stop-sample-cluster.sh"))
-                .inheritIO().start();
+        Process process =
+                new ProcessBuilder(joinPath(LOCAL_SAMPLES_DIR, "bin/stop-sample-cluster.sh")).inheritIO().start();
         Assert.assertEquals(0, process.waitFor());
         try {
             new URL("http://127.0.0.1:19002").openConnection().connect();

@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.hyracks.http.api.IServletRequest;
-import org.apache.hyracks.http.server.util.ServletUtils;
+import org.apache.hyracks.http.server.utils.HttpUtil;
 
 import io.netty.handler.codec.http.FullHttpRequest;
 
@@ -42,7 +42,7 @@ public class GetRequest implements IServletRequest {
 
     @Override
     public String getParameter(CharSequence name) {
-        return ServletUtils.getParameter(parameters, name);
+        return HttpUtil.getParameter(parameters, name);
     }
 
     @Override

@@ -53,7 +53,7 @@ import org.apache.asterix.common.config.ExternalProperties;
 import org.apache.asterix.common.config.MetadataProperties;
 import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.library.ILibraryManager;
-import org.apache.asterix.common.utils.LetUtil.Lets;
+import org.apache.asterix.common.utils.Servlets;
 import org.apache.asterix.external.library.ExternalLibraryManager;
 import org.apache.asterix.file.StorageComponentProvider;
 import org.apache.asterix.messaging.CCMessageBroker;
@@ -163,7 +163,7 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
                 externalProperties.getWebInterfacePort());
         IHyracksClientConnection hcc = getNewHyracksClientConnection();
         webServer.setAttribute(HYRACKS_CONNECTION_ATTR, hcc);
-        webServer.addLet(new ApiServlet(webServer.ctx(), new String[] { "/*" },
+        webServer.addServlet(new ApiServlet(webServer.ctx(), new String[] { "/*" },
                 ccExtensionManager.getAqlCompilationProvider(), ccExtensionManager.getSqlppCompilationProvider(),
                 getStatementExecutorFactory(), componentProvider));
         return webServer;
@@ -179,33 +179,33 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
                 ((ClusterControllerService) appCtx.getControllerService()).getExecutor());
 
         // AQL rest APIs.
-        addLet(jsonAPIServer, Lets.AQL_QUERY);
-        addLet(jsonAPIServer, Lets.AQL_UPDATE);
-        addLet(jsonAPIServer, Lets.AQL_DDL);
-        addLet(jsonAPIServer, Lets.AQL);
+        addServlet(jsonAPIServer, Servlets.AQL_QUERY);
+        addServlet(jsonAPIServer, Servlets.AQL_UPDATE);
+        addServlet(jsonAPIServer, Servlets.AQL_DDL);
+        addServlet(jsonAPIServer, Servlets.AQL);
 
         // SQL+x+ rest APIs.
-        addLet(jsonAPIServer, Lets.SQLPP_QUERY);
-        addLet(jsonAPIServer, Lets.SQLPP_UPDATE);
-        addLet(jsonAPIServer, Lets.SQLPP_DDL);
-        addLet(jsonAPIServer, Lets.SQLPP);
+        addServlet(jsonAPIServer, Servlets.SQLPP_QUERY);
+        addServlet(jsonAPIServer, Servlets.SQLPP_UPDATE);
+        addServlet(jsonAPIServer, Servlets.SQLPP_DDL);
+        addServlet(jsonAPIServer, Servlets.SQLPP);
 
         // Other APIs.
-        addLet(jsonAPIServer, Lets.QUERY_STATUS);
-        addLet(jsonAPIServer, Lets.QUERY_RESULT);
-        addLet(jsonAPIServer, Lets.QUERY_SERVICE);
-        addLet(jsonAPIServer, Lets.CONNECTOR);
-        addLet(jsonAPIServer, Lets.SHUTDOWN);
-        addLet(jsonAPIServer, Lets.VERSION);
-        addLet(jsonAPIServer, Lets.CLUSTER_STATE);
-        addLet(jsonAPIServer, Lets.CLUSTER_STATE_NODE_DETAIL); // this must not precede add of CLUSTER_STATE
-        addLet(jsonAPIServer, Lets.CLUSTER_STATE_CC_DETAIL); // this must not precede add of CLUSTER_STATE
-        addLet(jsonAPIServer, Lets.DIAGNOSTICS);
+        addServlet(jsonAPIServer, Servlets.QUERY_STATUS);
+        addServlet(jsonAPIServer, Servlets.QUERY_RESULT);
+        addServlet(jsonAPIServer, Servlets.QUERY_SERVICE);
+        addServlet(jsonAPIServer, Servlets.CONNECTOR);
+        addServlet(jsonAPIServer, Servlets.SHUTDOWN);
+        addServlet(jsonAPIServer, Servlets.VERSION);
+        addServlet(jsonAPIServer, Servlets.CLUSTER_STATE);
+        addServlet(jsonAPIServer, Servlets.CLUSTER_STATE_NODE_DETAIL); // must not precede add of CLUSTER_STATE
+        addServlet(jsonAPIServer, Servlets.CLUSTER_STATE_CC_DETAIL); // must not precede add of CLUSTER_STATE
+        addServlet(jsonAPIServer, Servlets.DIAGNOSTICS);
         return jsonAPIServer;
     }
 
-    protected void addLet(HttpServer server, Lets let) {
-        server.addLet(createServlet(server, let, let.getPath()));
+    protected void addServlet(HttpServer server, String path) {
+        server.addServlet(createServlet(server, path, path));
     }
 
     protected HttpServer setupQueryWebServer(ExternalProperties externalProperties) throws Exception {
@@ -213,7 +213,7 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
                 externalProperties.getQueryWebInterfacePort());
         IHyracksClientConnection hcc = getNewHyracksClientConnection();
         queryWebServer.setAttribute(HYRACKS_CONNECTION_ATTR, hcc);
-        queryWebServer.addLet(new QueryWebInterfaceServlet(queryWebServer.ctx(), new String[] { "/*" }));
+        queryWebServer.addServlet(new QueryWebInterfaceServlet(queryWebServer.ctx(), new String[] { "/*" }));
         return queryWebServer;
     }
 
@@ -221,56 +221,56 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
         HttpServer feedServer = new HttpServer(webManager.getBosses(), webManager.getWorkers(),
                 externalProperties.getFeedServerPort());
         feedServer.setAttribute(HYRACKS_CONNECTION_ATTR, getNewHyracksClientConnection());
-        feedServer.addLet(new FeedServlet(feedServer.ctx(), new String[] { "/" }));
+        feedServer.addServlet(new FeedServlet(feedServer.ctx(), new String[] { "/" }));
         return feedServer;
     }
 
-    protected IServlet createServlet(HttpServer server, Lets key, String... paths) {
+    protected IServlet createServlet(HttpServer server, String key, String... paths) {
         switch (key) {
-            case AQL:
+            case Servlets.AQL:
                 return new FullApiServlet(server.ctx(), paths, ccExtensionManager.getAqlCompilationProvider(),
                         getStatementExecutorFactory(), componentProvider);
-            case AQL_QUERY:
+            case Servlets.AQL_QUERY:
                 return new QueryApiServlet(server.ctx(), paths, ccExtensionManager.getAqlCompilationProvider(),
                         getStatementExecutorFactory(), componentProvider);
-            case AQL_UPDATE:
+            case Servlets.AQL_UPDATE:
                 return new UpdateApiServlet(server.ctx(), paths, ccExtensionManager.getAqlCompilationProvider(),
                         getStatementExecutorFactory(), componentProvider);
-            case AQL_DDL:
+            case Servlets.AQL_DDL:
                 return new DdlApiServlet(server.ctx(), paths, ccExtensionManager.getAqlCompilationProvider(),
                         getStatementExecutorFactory(), componentProvider);
-            case SQLPP:
+            case Servlets.SQLPP:
                 return new FullApiServlet(server.ctx(), paths, ccExtensionManager.getSqlppCompilationProvider(),
                         getStatementExecutorFactory(), componentProvider);
-            case SQLPP_QUERY:
+            case Servlets.SQLPP_QUERY:
                 return new QueryApiServlet(server.ctx(), paths, ccExtensionManager.getSqlppCompilationProvider(),
                         getStatementExecutorFactory(), componentProvider);
-            case SQLPP_UPDATE:
+            case Servlets.SQLPP_UPDATE:
                 return new UpdateApiServlet(server.ctx(), paths, ccExtensionManager.getSqlppCompilationProvider(),
                         getStatementExecutorFactory(), componentProvider);
-            case SQLPP_DDL:
+            case Servlets.SQLPP_DDL:
                 return new DdlApiServlet(server.ctx(), paths, ccExtensionManager.getSqlppCompilationProvider(),
                         getStatementExecutorFactory(), componentProvider);
-            case QUERY_STATUS:
+            case Servlets.QUERY_STATUS:
                 return new QueryStatusApiServlet(server.ctx(), paths);
-            case QUERY_RESULT:
+            case Servlets.QUERY_RESULT:
                 return new QueryResultApiServlet(server.ctx(), paths);
-            case QUERY_SERVICE:
+            case Servlets.QUERY_SERVICE:
                 return new QueryServiceServlet(server.ctx(), paths, ccExtensionManager.getSqlppCompilationProvider(),
                         getStatementExecutorFactory(), componentProvider);
-            case CONNECTOR:
+            case Servlets.CONNECTOR:
                 return new ConnectorApiServlet(server.ctx(), paths);
-            case SHUTDOWN:
+            case Servlets.SHUTDOWN:
                 return new ShutdownApiServlet(server.ctx(), paths);
-            case VERSION:
+            case Servlets.VERSION:
                 return new VersionApiServlet(server.ctx(), paths);
-            case CLUSTER_STATE:
+            case Servlets.CLUSTER_STATE:
                 return new ClusterApiServlet(server.ctx(), paths);
-            case CLUSTER_STATE_NODE_DETAIL:
+            case Servlets.CLUSTER_STATE_NODE_DETAIL:
                 return new NodeControllerDetailsApiServlet(server.ctx(), paths);
-            case CLUSTER_STATE_CC_DETAIL:
+            case Servlets.CLUSTER_STATE_CC_DETAIL:
                 return new ClusterControllerDetailsApiServlet(server.ctx(), paths);
-            case DIAGNOSTICS:
+            case Servlets.DIAGNOSTICS:
                 return new DiagnosticsApiServlet(server.ctx(), paths);
             default:
                 throw new IllegalStateException(String.valueOf(key));

@@ -22,7 +22,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.hyracks.http.api.IServlet;
-import org.apache.hyracks.http.server.util.ServletUtils;
+import org.apache.hyracks.http.server.utils.HttpUtil;
 
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
@@ -71,7 +71,7 @@ public class HttpServerHandler extends SimpleChannelInboundHandler<Object> {
                         new DefaultHttpResponse(request.protocolVersion(), HttpResponseStatus.METHOD_NOT_ALLOWED);
                 ctx.write(notAllowed).addListener(ChannelFutureListener.CLOSE);
             } else {
-                handler = new HttpRequestHandler(ctx, servlet, ServletUtils.toServletRequest(request), chunkSize);
+                handler = new HttpRequestHandler(ctx, servlet, HttpUtil.toServletRequest(request), chunkSize);
                 server.getExecutor().submit(handler);
             }
         } catch (Exception e) {

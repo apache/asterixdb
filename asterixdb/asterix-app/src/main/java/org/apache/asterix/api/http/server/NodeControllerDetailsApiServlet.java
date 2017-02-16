@@ -31,10 +31,9 @@ import java.util.logging.Logger;
 
 import org.apache.asterix.runtime.utils.ClusterStateManager;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
-import org.apache.hyracks.http.api.IServlet;
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
-import org.apache.hyracks.http.server.util.ServletUtils;
+import org.apache.hyracks.http.server.utils.HttpUtil;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -67,7 +66,7 @@ public class NodeControllerDetailsApiServlet extends ClusterApiServlet {
             } else {
                 json = processNode(request, hcc);
             }
-            ServletUtils.setContentType(response, IServlet.ContentType.APPLICATION_JSON, IServlet.Encoding.UTF8);
+            HttpUtil.setContentType(response, HttpUtil.ContentType.APPLICATION_JSON, HttpUtil.Encoding.UTF8);
             responseWriter.write(om.writerWithDefaultPrettyPrinter().writeValueAsString(json));
         } catch (IllegalStateException e) { // NOSONAR - exception not logged or rethrown
             response.setStatus(HttpResponseStatus.SERVICE_UNAVAILABLE);

@@ -28,7 +28,7 @@ public class RSSTestServer implements ITestServer {
     public RSSTestServer(int port) {
         webManager = new WebManager();
         HttpServer rssServer = new HttpServer(webManager.getBosses(), webManager.getWorkers(), port);
-        rssServer.addLet(new RSSFeedServlet(null, new String[] { "/" }));
+        rssServer.addServlet(new RSSFeedServlet(null, new String[] { "/" }));
         webManager.add(rssServer);
     }
 

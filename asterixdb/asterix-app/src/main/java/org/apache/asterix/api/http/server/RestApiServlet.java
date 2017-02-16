@@ -49,11 +49,10 @@ import org.apache.hyracks.algebricks.core.algebra.prettyprint.AlgebricksAppendab
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.dataset.IHyracksDataset;
 import org.apache.hyracks.client.dataset.HyracksDataset;
-import org.apache.hyracks.http.api.IServlet;
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
 import org.apache.hyracks.http.server.AbstractServlet;
-import org.apache.hyracks.http.server.util.ServletUtils;
+import org.apache.hyracks.http.server.utils.HttpUtil;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -85,7 +84,7 @@ public abstract class RestApiServlet extends AbstractServlet {
      * based on the Accept: header and other servlet parameters.
      */
     static SessionConfig initResponse(IServletRequest request, IServletResponse response) throws IOException {
-        ServletUtils.setContentType(response, IServlet.ContentType.TEXT_PLAIN, IServlet.Encoding.UTF8);
+        HttpUtil.setContentType(response, HttpUtil.ContentType.TEXT_PLAIN, HttpUtil.Encoding.UTF8);
         // CLEAN_JSON output is the default; most generally useful for a
         // programmatic HTTP API
         OutputFormat format = OutputFormat.CLEAN_JSON;
@@ -135,20 +134,20 @@ public abstract class RestApiServlet extends AbstractServlet {
         // Now that format is set, output the content-type
         switch (format) {
             case ADM:
-                ServletUtils.setContentType(response, "application/x-adm");
+                HttpUtil.setContentType(response, "application/x-adm");
                 break;
             case CLEAN_JSON:
                 // No need to reflect "clean-ness" in output type; fall through
             case LOSSLESS_JSON:
-                ServletUtils.setContentType(response, "application/json");
+                HttpUtil.setContentType(response, "application/json");
                 break;
             case CSV:
                 // Check for header parameter or in Accept:.
                 if ("present".equals(request.getParameter("header")) || accept.contains("header=present")) {
-                    ServletUtils.setContentType(response, "text/csv; header=present");
+                    HttpUtil.setContentType(response, "text/csv; header=present");
                     sessionConfig.set(SessionConfig.FORMAT_CSV_HEADER, true);
                 } else {
-                    ServletUtils.setContentType(response, "text/csv; header=absent");
+                    HttpUtil.setContentType(response, "text/csv; header=absent");
                 }
                 break;
             default:

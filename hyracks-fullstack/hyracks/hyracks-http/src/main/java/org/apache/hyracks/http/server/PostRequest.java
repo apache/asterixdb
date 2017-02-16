@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.hyracks.http.api.IServletRequest;
-import org.apache.hyracks.http.server.util.ServletUtils;
+import org.apache.hyracks.http.server.utils.HttpUtil;
 
 import io.netty.handler.codec.http.FullHttpRequest;
 
@@ -52,7 +52,7 @@ public class PostRequest implements IServletRequest {
                 return values.get(i);
             }
         }
-        return ServletUtils.getParameter(parameters, name);
+        return HttpUtil.getParameter(parameters, name);
     }
 
     @Override

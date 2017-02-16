@@ -37,10 +37,9 @@ import java.util.logging.Logger;
 import org.apache.asterix.api.http.servlet.ServletConstants;
 import org.apache.asterix.runtime.utils.AppContextInfo;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
-import org.apache.hyracks.http.api.IServlet;
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
-import org.apache.hyracks.http.server.util.ServletUtils;
+import org.apache.hyracks.http.server.utils.HttpUtil;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -57,7 +56,7 @@ public class DiagnosticsApiServlet extends NodeControllerDetailsApiServlet {
 
     @Override
     protected void getUnsafe(IServletRequest request, IServletResponse response) throws IOException {
-        ServletUtils.setContentType(response, IServlet.ContentType.APPLICATION_JSON, IServlet.Encoding.UTF8);
+        HttpUtil.setContentType(response, HttpUtil.ContentType.APPLICATION_JSON, HttpUtil.Encoding.UTF8);
         PrintWriter responseWriter = response.writer();
         ObjectNode json;
         ObjectMapper om = new ObjectMapper();

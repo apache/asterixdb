@@ -29,11 +29,10 @@ import java.util.logging.Logger;
 import org.apache.asterix.common.config.ExternalProperties;
 import org.apache.asterix.runtime.utils.AppContextInfo;
 import org.apache.commons.io.IOUtils;
-import org.apache.hyracks.http.api.IServlet;
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
 import org.apache.hyracks.http.server.AbstractServlet;
-import org.apache.hyracks.http.server.util.ServletUtils;
+import org.apache.hyracks.http.server.utils.HttpUtil;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -71,7 +70,7 @@ public class QueryWebInterfaceServlet extends AbstractServlet {
         response.setStatus(HttpResponseStatus.OK);
 
         if ("/".equals(requestURI)) {
-            ServletUtils.setContentType(response, IServlet.ContentType.TEXT_HTML);
+            HttpUtil.setContentType(response, HttpUtil.ContentType.TEXT_HTML);
             resourcePath = "/queryui/queryui.html";
         } else {
             resourcePath = requestURI;
@@ -85,10 +84,10 @@ public class QueryWebInterfaceServlet extends AbstractServlet {
             int i = resourcePath.lastIndexOf('.');
             if (i >= 0) {
                 String extension = resourcePath.substring(i);
-                String mime = IServlet.ContentType.mime(extension);
+                String mime = HttpUtil.mime(extension);
                 if (mime != null) {
                     OutputStream out = response.outputStream();
-                    ServletUtils.setContentType(response, mime);
+                    HttpUtil.setContentType(response, mime);
                     try {
                         IOUtils.copy(is, out);
                     } catch (Exception e) {
@@ -107,7 +106,7 @@ public class QueryWebInterfaceServlet extends AbstractServlet {
     }
 
     private void doPost(IServletResponse response) throws IOException {
-        ServletUtils.setContentType(response, IServlet.ContentType.APPLICATION_JSON, IServlet.Encoding.UTF8);
+        HttpUtil.setContentType(response, HttpUtil.ContentType.APPLICATION_JSON, HttpUtil.Encoding.UTF8);
         ExternalProperties externalProperties = AppContextInfo.INSTANCE.getExternalProperties();
         response.setStatus(HttpResponseStatus.OK);
         ObjectMapper om = new ObjectMapper();

@@ -55,7 +55,7 @@ public class HttpServer {
     private final Object lock = new Object();
     private final AtomicInteger threadId = new AtomicInteger();
     private final ConcurrentMap<String, Object> ctx;
-    private final List<IServlet> lets;
+    private final List<IServlet> servlets;
     private final EventLoopGroup bossGroup;
     private final EventLoopGroup workerGroup;
     private final int port;
@@ -70,7 +70,7 @@ public class HttpServer {
         this.workerGroup = workerGroup;
         this.port = port;
         ctx = new ConcurrentHashMap<>();
-        lets = new ArrayList<>();
+        servlets = new ArrayList<>();
         executor = Executors.newFixedThreadPool(16,
                 runnable -> new Thread(runnable, "HttpExecutor(port:" + port + ")-" + threadId.getAndIncrement()));
     }
@@ -166,22 +166,22 @@ public class HttpServer {
         return ctx;
     }
 
-    public void addLet(IServlet let) {
-        lets.add(let);
+    public void addServlet(IServlet let) {
+        servlets.add(let);
     }
 
     protected void doStart() throws InterruptedException {
         /*
-         * This is a hacky way to ensure that ILets with more specific paths are checked first.
+         * This is a hacky way to ensure that IServlets with more specific paths are checked first.
          * For example:
          * "/path/to/resource/"
          * is checked before
          * "/path/to/"
          * which in turn is checked before
          * "/path/"
-         * Note that it doesn't work for the case where multiple paths map to a single ILet
+         * Note that it doesn't work for the case where multiple paths map to a single IServlet
          */
-        Collections.sort(lets, (l1, l2) -> l2.getPaths()[0].length() - l1.getPaths()[0].length());
+        Collections.sort(servlets, (l1, l2) -> l2.getPaths()[0].length() - l1.getPaths()[0].length());
         ServerBootstrap b = new ServerBootstrap();
         b.group(bossGroup, workerGroup).channel(NioServerSocketChannel.class)
                 .childOption(ChannelOption.WRITE_BUFFER_WATER_MARK,
@@ -201,7 +201,7 @@ public class HttpServer {
         if (i >= 0) {
             uri = uri.substring(0, i);
         }
-        for (IServlet let : lets) {
+        for (IServlet let : servlets) {
             for (String path : let.getPaths()) {
                 if (match(path, uri)) {
                     return let;

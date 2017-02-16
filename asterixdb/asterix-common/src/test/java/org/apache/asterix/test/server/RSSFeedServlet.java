@@ -31,7 +31,7 @@ import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
 import org.apache.hyracks.http.server.AbstractServlet;
-import org.apache.hyracks.http.server.util.ServletUtils;
+import org.apache.hyracks.http.server.utils.HttpUtil;
 
 import com.rometools.rome.feed.synd.SyndContent;
 import com.rometools.rome.feed.synd.SyndContentImpl;
@@ -67,7 +67,7 @@ public class RSSFeedServlet extends AbstractServlet {
             String feedType = req.getParameter(FEED_TYPE);
             feedType = (feedType != null) ? feedType : defaultFeedType;
             feed.setFeedType(feedType);
-            ServletUtils.setContentType(res, MIME_TYPE);
+            HttpUtil.setContentType(res, MIME_TYPE);
             SyndFeedOutput output = new SyndFeedOutput();
             output.output(feed, res.writer());
         } catch (FeedException | ParseException ex) {
@@ -99,7 +99,7 @@ public class RSSFeedServlet extends AbstractServlet {
         feed.setLink("http://rome.dev.java.net");
         feed.setDescription("This feed has been created using ROME (Java syndication utilities");
 
-        List<SyndEntry> entries = new ArrayList<SyndEntry>();
+        List<SyndEntry> entries = new ArrayList<>();
         SyndEntry entry;
         SyndContent description;
 

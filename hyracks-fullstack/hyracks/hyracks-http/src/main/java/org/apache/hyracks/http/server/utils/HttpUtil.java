@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.http.server.util;
+package org.apache.hyracks.http.server.utils;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -40,10 +40,29 @@ import io.netty.handler.codec.http.multipart.InterfaceHttpData;
 import io.netty.handler.codec.http.multipart.InterfaceHttpData.HttpDataType;
 import io.netty.handler.codec.http.multipart.MixedAttribute;
 
-public class ServletUtils {
-    private static final Logger LOGGER = Logger.getLogger(ServletUtils.class.getName());
+public class HttpUtil {
+    private static final Logger LOGGER = Logger.getLogger(HttpUtil.class.getName());
 
-    private ServletUtils() {
+    private HttpUtil() {
+    }
+
+    public static class Encoding {
+        public static final String UTF8 = "utf-8";
+
+        private Encoding() {
+        }
+    }
+
+    public static class ContentType {
+        public static final String APPLICATION_ADM = "application/x-adm";
+        public static final String APPLICATION_JSON = "application/json";
+        public static final String CSV = "text/csv";
+        public static final String IMG_PNG = "image/png";
+        public static final String TEXT_HTML = "text/html";
+        public static final String TEXT_PLAIN = "text/plain";
+
+        private ContentType() {
+        }
     }
 
     public static String getParameter(Map<String, List<String>> parameters, CharSequence name) {
@@ -94,7 +113,7 @@ public class ServletUtils {
     }
 
     public static IServletRequest toServletRequest(FullHttpRequest request) throws IOException {
-        return request.method() == HttpMethod.GET ? ServletUtils.get(request) : ServletUtils.post(request);
+        return request.method() == HttpMethod.GET ? HttpUtil.get(request) : HttpUtil.post(request);
     }
 
     public static void setContentType(IServletResponse response, String type, String charset) throws IOException {
@@ -103,5 +122,35 @@ public class ServletUtils {
 
     public static void setContentType(IServletResponse response, String type) throws IOException {
         response.setHeader(HttpHeaderNames.CONTENT_TYPE, type);
+    }
+
+    /**
+     * Get the mime string representation from the extension
+     *
+     * @param extension
+     * @return
+     */
+    public static String mime(String extension) {
+        switch (extension) {
+            case ".png":
+                return "image/png";
+            case ".eot":
+                return "application/vnd.ms-fontobject";
+            case ".svg":
+                return "image/svg+xml\t";
+            case ".ttf":
+                return "application/x-font-ttf";
+            case ".woff":
+            case ".woff2":
+                return "application/x-font-woff";
+            case ".html":
+                return "text/html";
+            case ".css":
+                return "text/css";
+            case ".js":
+                return "application/javascript";
+            default:
+                return null;
+        }
     }
 }
