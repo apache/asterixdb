@@ -32,11 +32,10 @@
     path: "{{ generatorzip }}"
     state: absent
 
-- name: Download TPC-H data generator
-  get_url:
-    url: "{{ tpch_url }}"
+- name: Upload TPC-H data generator
+  synchronize:
+    src: "{{ tpch_path }}"
     dest: "{{ home_dir }}"
-    force: yes
 
 - name: Unzip data generator
   shell: unzip "{{ generatorzip }}"

@@ -41,5 +41,5 @@ localgen: "{{ binary_dir }}/gen.sh"
 # The local data generation command.
 localgencmd: "gen.sh"
 
-# The url for the TPC-H benchmark.
-tpch_url: <to be filed>
+# The path for the TPC-H benchmark source zip.
+tpch_path: <an absolute path to be filed>
