@@ -350,7 +350,7 @@ For example, a user might not be able to know the value of a field and let it be
 
 
 ### <a id="IncompleteInformationTypesMissing">Missing</a> ###
-`missing` represents a missing name-value pair in a object.
+`missing` represents a missing name-value pair in an object.
 If the referenced field does not exist, an empty result value is returned by the query.
 
 As neither the data model nor the system enforces homogeneity for datasets or collections,
@@ -371,13 +371,22 @@ Since a field with value `missing` means the field is absent, we get an empty ob
 ## <a id="DerivedTypes">Derived Types</a> ##
 
 ### <a id="DerivedTypesObject">Object</a>###
-A `object` contains a set of ﬁelds, where each ﬁeld is described by its name and type. A object type is either open or closed. Open objects can contain ﬁelds that are not part of the type deﬁnition, while closed objects cannot. Syntactically, object constructors are surrounded by curly braces "{...}".
+An `object` contains a set of ﬁelds, where each ﬁeld is described by its name and type. An object type may be defined as either open or closed. Open objects (instances of open object types) are permitted to contain ﬁelds that are not part of the type deﬁnition, while closed objects do not permit their instances to carry extra fields. An example type definition for an object is:
 
-An example would be
+        create type SoldierType as open {
+            name: string?,
+            rank: string,
+            serialno: int
+        };
 
+Syntactically, object constructors are surrounded by curly braces "{...}".
+Some examples of legitimate instances of the above type include:
 
-        { "id": 213508, "name": "Alice Bob" }
+        { "name": "Joe Blow", "rank": "Sergeant", "serialno": 1234567 }
+        { "rank": "Private", "serialno": 9876543 }
+        { "name": "Sally Forth", "rank": "Major", "serialno": 2345678, "gender": "F" }
 
+The first instance has all of the type's prescribed content. The second instance is missing the name field, which is fine because it is optional (due to the ?). The third instance has an extra field; that is fine because the type definition specifies that it is open (which is also true by default, if open is not specified). To more tightly control object content, specifying closed instead of open in the type definition for SoldierType would have made the third example instance an invalid instance of the type.
 
 ### <a id="DerivedTypesArray">Array</a>###
 An `array` is a container that holds a fixed number of values. Array constructors are denoted by brackets: "[...]".
