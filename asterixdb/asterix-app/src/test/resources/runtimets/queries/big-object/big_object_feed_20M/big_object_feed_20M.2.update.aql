@@ -28,3 +28,5 @@ use dataverse testdv2;
 set wait-for-completion-feed "true";
 
 connect feed BigFeed to dataset testds;
+
+start feed BigFeed;

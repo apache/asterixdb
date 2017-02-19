@@ -25,3 +25,5 @@
 use dataverse test;
 set wait-for-completion-feed "true";
 connect feed MessageFeed to dataset FacebookMessages;
+
+start feed MessageFeed;

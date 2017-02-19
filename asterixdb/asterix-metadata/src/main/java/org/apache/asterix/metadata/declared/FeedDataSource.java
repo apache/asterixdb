@@ -28,6 +28,7 @@ import org.apache.asterix.external.operators.FeedCollectOperatorDescriptor;
 import org.apache.asterix.external.util.FeedUtils.FeedRuntimeType;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.metadata.entities.Feed;
+import org.apache.asterix.metadata.entities.FeedConnection;
 import org.apache.asterix.metadata.entities.FeedPolicyEntity;
 import org.apache.asterix.metadata.feeds.BuiltinFeedPolicies;
 import org.apache.asterix.om.types.ARecordType;
@@ -54,29 +55,29 @@ public class FeedDataSource extends DataSource implements IMutationDataSource {
 
     private final Feed feed;
     private final EntityId sourceFeedId;
-    private final IFeed.FeedType sourceFeedType;
     private final FeedRuntimeType location;
     private final String targetDataset;
     private final String[] locations;
     private final int computeCardinality;
     private final List<IAType> pkTypes;
     private final List<ScalarFunctionCallExpression> keyAccessExpression;
+    private final FeedConnection feedConnection;
 
     public FeedDataSource(Feed feed, DataSourceId id, String targetDataset, IAType itemType, IAType metaType,
             List<IAType> pkTypes, List<List<String>> partitioningKeys,
             List<ScalarFunctionCallExpression> keyAccessExpression, EntityId sourceFeedId,
-            IFeed.FeedType sourceFeedType, FeedRuntimeType location, String[] locations, INodeDomain domain)
+            FeedRuntimeType location, String[] locations, INodeDomain domain, FeedConnection feedConnection)
             throws AlgebricksException {
         super(id, itemType, metaType, Type.FEED, domain);
         this.feed = feed;
         this.targetDataset = targetDataset;
         this.sourceFeedId = sourceFeedId;
-        this.sourceFeedType = sourceFeedType;
         this.location = location;
         this.locations = locations;
         this.pkTypes = pkTypes;
         this.keyAccessExpression = keyAccessExpression;
         this.computeCardinality = ClusterStateManager.INSTANCE.getParticipantNodes().size();
+        this.feedConnection = feedConnection;
         initFeedDataSource();
     }
 
@@ -118,10 +119,6 @@ public class FeedDataSource extends DataSource implements IMutationDataSource {
                 schemaTypes[i++] = type;
             }
         }
-    }
-
-    public IFeed.FeedType getSourceFeedType() {
-        return sourceFeedType;
     }
 
     public int getComputeCardinality() {
@@ -196,7 +193,7 @@ public class FeedDataSource extends DataSource implements IMutationDataSource {
             FeedConnectionId feedConnectionId = new FeedConnectionId(getId().getDataverseName(),
                     getId().getDatasourceName(), getTargetDataset());
             FeedCollectOperatorDescriptor feedCollector = new FeedCollectOperatorDescriptor(jobSpec, feedConnectionId,
-                    getSourceFeedId(), feedOutputType, feedDesc, feedPolicy.getProperties(), getLocation());
+                    feedOutputType, feedDesc, feedPolicy.getProperties(), getLocation());
 
             return new Pair<>(feedCollector, new AlgebricksAbsolutePartitionConstraint(getLocations()));
 
@@ -208,5 +205,9 @@ public class FeedDataSource extends DataSource implements IMutationDataSource {
     @Override
     public boolean isScanAccessPathALeaf() {
         return true;
+    }
+
+    public FeedConnection getFeedConnection() {
+        return feedConnection;
     }
 }

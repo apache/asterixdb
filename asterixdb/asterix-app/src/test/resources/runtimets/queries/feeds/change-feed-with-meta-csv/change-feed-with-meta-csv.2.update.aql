@@ -25,3 +25,5 @@
 
  set wait-for-completion-feed "true";
  connect feed TestFeed to dataset TestDS;
+
+ start feed TestFeed;

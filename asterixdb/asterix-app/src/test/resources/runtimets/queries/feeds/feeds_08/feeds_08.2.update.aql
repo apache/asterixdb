@@ -28,9 +28,11 @@
  * Expected Res : Success
  * Date         : 8th Feb 2014
  */
-  
+
 use dataverse feeds;
 
 set wait-for-completion-feed "true";
 
 connect feed SyntheticTweetFeed to dataset SyntheticTweets;
+
+start feed SyntheticTweetFeed;

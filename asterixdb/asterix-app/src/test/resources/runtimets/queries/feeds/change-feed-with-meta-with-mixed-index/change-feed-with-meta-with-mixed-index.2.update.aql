@@ -26,3 +26,5 @@ use dataverse KeyVerse;
 
 set wait-for-completion-feed "true";
 connect feed KVChangeStream to dataset KVStore;
+
+start feed KVChangeStream;

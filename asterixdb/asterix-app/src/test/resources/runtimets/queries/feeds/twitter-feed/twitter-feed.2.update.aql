@@ -23,3 +23,5 @@
 
 use dataverse feeds;
 connect feed TwitterFeed to dataset Tweets;
+
+start feed TwitterFeed;

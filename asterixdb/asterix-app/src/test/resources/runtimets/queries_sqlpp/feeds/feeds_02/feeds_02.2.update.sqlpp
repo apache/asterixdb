@@ -26,3 +26,4 @@
 use feeds;
 set `wait-for-completion-feed` `true`;
 connect feed TweetFeed to  dataset Tweets;
+start feed TweetFeed;

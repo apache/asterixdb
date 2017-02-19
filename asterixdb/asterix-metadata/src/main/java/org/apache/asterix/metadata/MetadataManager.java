@@ -42,6 +42,7 @@ import org.apache.asterix.metadata.entities.DatasourceAdapter;
 import org.apache.asterix.metadata.entities.Datatype;
 import org.apache.asterix.metadata.entities.Dataverse;
 import org.apache.asterix.metadata.entities.Feed;
+import org.apache.asterix.metadata.entities.FeedConnection;
 import org.apache.asterix.metadata.entities.FeedPolicyEntity;
 import org.apache.asterix.metadata.entities.Function;
 import org.apache.asterix.metadata.entities.Index;
@@ -779,10 +780,16 @@ public class MetadataManager implements IMetadataManager {
 
     @Override
     public void dropFeed(MetadataTransactionContext ctx, String dataverse, String feedName) throws MetadataException {
-        Feed feed;
+        Feed feed = null;
+        List<FeedConnection> feedConnections = null;
         try {
             feed = metadataNode.getFeed(ctx.getJobId(), dataverse, feedName);
+            feedConnections = metadataNode.getFeedConnections(ctx.getJobId(), dataverse, feedName);
             metadataNode.dropFeed(ctx.getJobId(), dataverse, feedName);
+            for (FeedConnection feedConnection : feedConnections) {
+                metadataNode.dropFeedConnection(ctx.getJobId(), dataverse, feedName, feedConnection.getDatasetName());
+                ctx.dropFeedConnection(dataverse, feedName, feedConnection.getDatasetName());
+            }
         } catch (RemoteException e) {
             throw new MetadataException(e);
         }
@@ -797,6 +804,48 @@ public class MetadataManager implements IMetadataManager {
             throw new MetadataException(e);
         }
         ctx.addFeed(feed);
+    }
+
+    @Override
+    public void addFeedConnection(MetadataTransactionContext ctx, FeedConnection feedConnection)
+            throws MetadataException {
+        try {
+            metadataNode.addFeedConnection(ctx.getJobId(), feedConnection);
+        } catch (RemoteException e) {
+            throw new MetadataException(e);
+        }
+        ctx.addFeedConnection(feedConnection);
+    }
+
+    @Override
+    public void dropFeedConnection(MetadataTransactionContext ctx, String dataverseName, String feedName,
+            String datasetName) throws MetadataException {
+        try {
+            metadataNode.dropFeedConnection(ctx.getJobId(), dataverseName, feedName, datasetName);
+        } catch (RemoteException e) {
+            throw new MetadataException(e);
+        }
+        ctx.dropFeedConnection(dataverseName, feedName, datasetName);
+    }
+
+    @Override
+    public FeedConnection getFeedConnection(MetadataTransactionContext ctx, String dataverseName, String feedName,
+            String datasetName) throws MetadataException {
+        try {
+            return metadataNode.getFeedConnection(ctx.getJobId(), dataverseName, feedName, datasetName);
+        } catch (RemoteException e) {
+            throw new MetadataException(e);
+        }
+    }
+
+    @Override
+    public List<FeedConnection> getFeedConections(MetadataTransactionContext ctx, String dataverseName, String feedName)
+            throws MetadataException {
+        try {
+            return metadataNode.getFeedConnections(ctx.getJobId(), dataverseName, feedName);
+        } catch (RemoteException e) {
+            throw new MetadataException(e);
+        }
     }
 
     @Override

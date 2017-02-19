@@ -53,8 +53,8 @@ public class MetadataPrimaryIndexes {
             new MetadataIndexImmutableProperties("Library", 9, 9);
     public static final MetadataIndexImmutableProperties PROPERTIES_FEED =
             new MetadataIndexImmutableProperties("Feed", 10, 10);
-    public static final MetadataIndexImmutableProperties PROPERTIES_FEED_ACTIVITY_DATASET_ID =
-            new MetadataIndexImmutableProperties("FeedActivity", 11, 11);
+    public static final MetadataIndexImmutableProperties PROPERTIES_FEED_CONNECTION =
+            new MetadataIndexImmutableProperties("FeedConnection", 11, 11);
     public static final MetadataIndexImmutableProperties PROPERTIES_FEED_POLICY =
             new MetadataIndexImmutableProperties("FeedPolicy", 12, 12);
     public static final MetadataIndexImmutableProperties PROPERTIES_COMPACTION_POLICY =
@@ -128,6 +128,13 @@ public class MetadataPrimaryIndexes {
                     Arrays.asList(MetadataRecordTypes.FIELD_NAME_DATASET_NAME),
                     Arrays.asList(MetadataRecordTypes.FIELD_NAME_FILE_NUMBER)),
             0, MetadataRecordTypes.EXTERNAL_FILE_RECORDTYPE, true, new int[] { 0, 1, 2 });
+
+    public static final IMetadataIndex FEED_CONNECTION_DATASET = new MetadataIndex(PROPERTIES_FEED_CONNECTION, 4,
+            new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING },
+            Arrays.asList(Arrays.asList(MetadataRecordTypes.FIELD_NAME_DATAVERSE_NAME),
+                    Arrays.asList(MetadataRecordTypes.FIELD_NAME_FEED_NAME),
+                    Arrays.asList(MetadataRecordTypes.FIELD_NAME_DATASET_NAME)),
+            0, MetadataRecordTypes.FEED_CONNECTION_RECORDTYPE, true, new int[] { 0, 1, 2 });
 
     private MetadataPrimaryIndexes() {
     }

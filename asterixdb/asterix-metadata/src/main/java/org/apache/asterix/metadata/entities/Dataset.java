@@ -29,6 +29,7 @@ import java.util.logging.Logger;
 import org.apache.asterix.active.ActiveJobNotificationHandler;
 import org.apache.asterix.active.IActiveEntityEventsListener;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
+import org.apache.asterix.common.metadata.IDataset;
 import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
@@ -93,7 +94,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 /**
  * Metadata describing a dataset.
  */
-public class Dataset implements IMetadataEntity<Dataset> {
+public class Dataset implements IMetadataEntity<Dataset>, IDataset {
 
     /*
      * Constants
@@ -278,7 +279,9 @@ public class Dataset implements IMetadataEntity<Dataset> {
             // prepare job spec(s) that would disconnect any active feeds involving the dataset.
             IActiveEntityEventsListener[] activeListeners = ActiveJobNotificationHandler.INSTANCE.getEventListeners();
             for (IActiveEntityEventsListener listener : activeListeners) {
-                if (listener.isEntityActive() && listener.isEntityUsingDataset(dataverseName, datasetName)) {
+                IDataset ds = MetadataManager.INSTANCE.getDataset(metadataProvider.getMetadataTxnContext(),
+                        dataverseName, datasetName);
+                if (listener.isEntityUsingDataset(ds)) {
                     throw new CompilationException(ErrorCode.COMPILATION_CANT_DROP_ACTIVE_DATASET,
                             RecordUtil.toFullyQualifiedName(dataverseName, datasetName),
                             listener.getEntityId().toString());

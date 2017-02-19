@@ -24,6 +24,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.asterix.metadata.entities.Dataverse;
+import org.apache.asterix.metadata.entities.Feed;
+import org.apache.asterix.metadata.entities.FeedConnection;
 
 public class MetadataLockManager {
 
@@ -478,6 +480,33 @@ public class MetadataLockManager {
     public void dropFeedPolicyEnd(String dataverseName, String policyName) {
         releaseFeedWriteLock(policyName);
         releaseDataverseReadLock(dataverseName);
+    }
+
+    public void startFeedBegin(String dataverseName, String feedName, List<FeedConnection> feedConnections) {
+        acquireDataverseReadLock(dataverseName);
+        acquireFeedReadLock(feedName);
+        for (FeedConnection feedConnection : feedConnections) {
+            acquireDatasetReadLock(dataverseName + "." + feedConnection.getDatasetName());
+        }
+    }
+
+    public void startFeedEnd(String dataverseName, String feedName, List<FeedConnection> feedConnections) {
+        releaseDataverseReadLock(dataverseName);
+        releaseFeedReadLock(feedName);
+        for (FeedConnection feedConnection : feedConnections) {
+            releaseDatasetReadLock(dataverseName + "." + feedConnection.getDatasetName());
+        }
+    }
+
+    public void StopFeedBegin(String dataverseName, String feedName) {
+        // TODO: dataset lock?
+        acquireDataverseReadLock(dataverseName);
+        acquireFeedReadLock(feedName);
+    }
+
+    public void StopFeedEnd(String dataverseName, String feedName) {
+        releaseDataverseReadLock(dataverseName);
+        releaseFeedReadLock(feedName);
     }
 
     public void createFeedBegin(String dataverseName, String feedFullyQualifiedName) {

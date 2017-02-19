@@ -22,3 +22,7 @@
  * Date         : 24th Dec 2012
  */
 
+use feeds;
+
+connect feed TweetFeed to dataset Tweets
+apply function feed_processor;

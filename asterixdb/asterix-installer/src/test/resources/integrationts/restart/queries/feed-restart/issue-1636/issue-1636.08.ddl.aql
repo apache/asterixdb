@@ -24,4 +24,4 @@
  */
 use dataverse twitter;
 set wait-for-completion-feed "false";
-connect feed TweetFeed to dataset ds_tweet;
+start feed TweetFeed;

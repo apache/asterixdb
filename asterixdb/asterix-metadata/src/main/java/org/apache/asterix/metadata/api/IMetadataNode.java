@@ -35,6 +35,7 @@ import org.apache.asterix.metadata.entities.DatasourceAdapter;
 import org.apache.asterix.metadata.entities.Datatype;
 import org.apache.asterix.metadata.entities.Dataverse;
 import org.apache.asterix.metadata.entities.Feed;
+import org.apache.asterix.metadata.entities.FeedConnection;
 import org.apache.asterix.metadata.entities.FeedPolicyEntity;
 import org.apache.asterix.metadata.entities.Function;
 import org.apache.asterix.metadata.entities.Index;
@@ -764,4 +765,14 @@ public interface IMetadataNode extends Remote, Serializable {
     <T extends IExtensionMetadataEntity> List<T> getEntities(JobId jobId, IExtensionMetadataSearchKey searchKey)
             throws MetadataException, RemoteException;
 
+    void addFeedConnection(JobId jobId, FeedConnection feedConnection) throws MetadataException, RemoteException;
+
+    FeedConnection getFeedConnection(JobId jobId, String dataverseName, String feedName, String datasetName)
+            throws MetadataException, RemoteException;
+
+    void dropFeedConnection(JobId jobId, String dataverseName, String feedName, String datasetName)
+            throws MetadataException, RemoteException;
+
+    List<FeedConnection> getFeedConnections(JobId jobId, String dataverseName, String feedName)
+            throws MetadataException, RemoteException;
 }

@@ -41,7 +41,7 @@ create type feeds.TweetType as
 
 create  dataset Tweets(TweetType) primary key id hints (`CARDINALITY`=`200`);
 
-create  primary feed TweetFeed using localfs(
+create feed TweetFeed using localfs(
 (`path`=`asterix_nc1://data/twitter/obamatweets.adm`),
 (`format`=`adm`),
 (`type-name`=`TweetType`),

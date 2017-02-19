@@ -27,3 +27,4 @@ use experiments;
 set `wait-for-completion-feed` "false";
 
 connect feed UserFeed to dataset TwitterUsers;
+start feed UserFeed;

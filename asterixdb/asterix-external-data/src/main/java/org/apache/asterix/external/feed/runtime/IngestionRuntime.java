@@ -19,79 +19,43 @@
 package org.apache.asterix.external.feed.runtime;
 
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.apache.asterix.active.ActiveRuntimeId;
 import org.apache.asterix.active.EntityId;
 import org.apache.asterix.active.IActiveRuntime;
-import org.apache.asterix.external.feed.dataflow.DistributeFeedFrameWriter;
-import org.apache.asterix.external.feed.dataflow.FeedFrameCollector;
-import org.apache.hyracks.api.comm.VSizeFrame;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.util.HyracksConstants;
-import org.apache.hyracks.dataflow.common.utils.TaskUtil;
 
-public class IngestionRuntime extends SubscribableRuntime {
+public class IngestionRuntime implements IActiveRuntime {
+
+    private static final Logger LOGGER = Logger.getLogger(IngestionRuntime.class.getName());
 
     private final AdapterRuntimeManager adapterRuntimeManager;
-    private final IHyracksTaskContext ctx;
-    private int numSubscribers = 0;
+    private final ActiveRuntimeId runtimeId;
+    private final EntityId feedId;
 
-    public IngestionRuntime(EntityId entityId, ActiveRuntimeId runtimeId, DistributeFeedFrameWriter feedWriter,
-            AdapterRuntimeManager adaptorRuntimeManager, IHyracksTaskContext ctx) {
-        super(entityId, runtimeId, feedWriter);
+    public IngestionRuntime(EntityId entityId, ActiveRuntimeId runtimeId, AdapterRuntimeManager adaptorRuntimeManager) {
+        this.feedId = entityId;
+        this.runtimeId = runtimeId;
         this.adapterRuntimeManager = adaptorRuntimeManager;
-        this.ctx = ctx;
     }
 
     @Override
-    public synchronized void subscribe(CollectionRuntime collectionRuntime) throws HyracksDataException {
-        FeedFrameCollector collector = collectionRuntime.getFrameCollector();
-        dWriter.subscribe(collector);
-        subscribers.add(collectionRuntime);
-        if (numSubscribers == 0) {
-            TaskUtil.putInSharedMap(HyracksConstants.KEY_MESSAGE, new VSizeFrame(ctx), ctx);
-            TaskUtil.putInSharedMap(HyracksConstants.KEY_MESSAGE,
-                    TaskUtil.<VSizeFrame> get(HyracksConstants.KEY_MESSAGE, ctx), collectionRuntime.getCtx());
-            start();
-        }
-        numSubscribers++;
-        if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("Subscribed feed collection [" + collectionRuntime + "] to " + this);
-        }
-    }
-
-    @Override
-    public synchronized void unsubscribe(CollectionRuntime collectionRuntime) throws InterruptedException {
-        numSubscribers--;
-        if (numSubscribers == 0) {
-            stop();
-        }
-        subscribers.remove(collectionRuntime);
-    }
-
-    public AdapterRuntimeManager getAdapterRuntimeManager() {
-        return adapterRuntimeManager;
-    }
-
-    public void terminate() {
-        for (IActiveRuntime subscriber : subscribers) {
-            try {
-                unsubscribe((CollectionRuntime) subscriber);
-            } catch (Exception e) {
-                if (LOGGER.isLoggable(Level.WARNING)) {
-                    LOGGER.warning("Excpetion in unsubscribing " + subscriber + " message " + e.getMessage());
-                }
-            }
-        }
+    public ActiveRuntimeId getRuntimeId() {
+        return this.runtimeId;
     }
 
     public void start() {
         adapterRuntimeManager.start();
+        LOGGER.log(Level.INFO, "Feed " + feedId.getEntityName() + " running on partition " + runtimeId);
     }
 
     @Override
     public void stop() throws InterruptedException {
         adapterRuntimeManager.stop();
+        LOGGER.log(Level.INFO, "Feed " + feedId.getEntityName() + " stopped on partition " + runtimeId);
+    }
+
+    public EntityId getFeedId() {
+        return feedId;
     }
 }

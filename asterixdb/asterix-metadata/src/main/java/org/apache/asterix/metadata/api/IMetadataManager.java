@@ -34,6 +34,7 @@ import org.apache.asterix.metadata.entities.DatasourceAdapter;
 import org.apache.asterix.metadata.entities.Datatype;
 import org.apache.asterix.metadata.entities.Dataverse;
 import org.apache.asterix.metadata.entities.Feed;
+import org.apache.asterix.metadata.entities.FeedConnection;
 import org.apache.asterix.metadata.entities.FeedPolicyEntity;
 import org.apache.asterix.metadata.entities.Function;
 import org.apache.asterix.metadata.entities.Index;
@@ -431,7 +432,6 @@ public interface IMetadataManager extends IMetadataBootstrap {
     void dropAdapter(MetadataTransactionContext ctx, String dataverseName, String name) throws MetadataException;
 
     /**
-     *
      * @param ctx
      *            MetadataTransactionContext of an active metadata transaction.
      * @param dataverseName
@@ -691,4 +691,19 @@ public interface IMetadataManager extends IMetadataBootstrap {
      * rebind it
      */
     void rebindMetadataNode();
+
+    /**
+     * Feed Connection Related Metadata operations
+     */
+    void addFeedConnection(MetadataTransactionContext ctx, FeedConnection feedConnection)
+            throws MetadataException;
+
+    void dropFeedConnection(MetadataTransactionContext ctx, String dataverseName, String feedName,
+            String datasetName) throws MetadataException;
+
+    FeedConnection getFeedConnection(MetadataTransactionContext ctx, String dataverseName, String feedName,
+            String datasetName) throws MetadataException;
+
+    List<FeedConnection> getFeedConections(MetadataTransactionContext ctx, String dataverseName, String feedName)
+            throws MetadataException;
 }

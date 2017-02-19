@@ -25,4 +25,5 @@
  */
 
 use dataverse experiments;
+stop feed TweetFeed;
 disconnect feed TweetFeed from dataset Tweets;

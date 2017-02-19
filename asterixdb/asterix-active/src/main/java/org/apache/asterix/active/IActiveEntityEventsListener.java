@@ -18,19 +18,48 @@
  */
 package org.apache.asterix.active;
 
-import org.apache.hyracks.api.job.JobId;
-import org.apache.hyracks.api.job.JobSpecification;
+import org.apache.asterix.common.metadata.IDataset;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public interface IActiveEntityEventsListener {
 
-    public void notify(ActiveEvent message);
+    /**
+     * Notify the listener that an event related to the entity has taken place
+     * Examples of such events include
+     * 1. Job created
+     * 2. Job completed
+     * 3. Partition event
+     *
+     * @param event
+     *            the event that took place
+     */
+    void notify(ActiveEvent event);
 
-    public void notifyJobCreation(JobId jobId, JobSpecification jobSpecification);
+    /**
+     * @return the state of the entity
+     */
+    ActivityState getState();
 
-    public boolean isEntityActive();
+    /**
+     * get a subscriber that waits till state has been reached.
+     *
+     * @param state
+     *            the desired state
+     * @throws HyracksDataException
+     *             a failure happened while waiting for the state
+     */
+    IActiveEventSubscriber subscribe(ActivityState state) throws HyracksDataException;
 
-    public EntityId getEntityId();
+    /**
+     * @return the active entity id
+     */
+    EntityId getEntityId();
 
-    public boolean isEntityUsingDataset(String dataverseName, String datasetName);
+    /**
+     * dataset
+     *
+     * @return
+     */
+    boolean isEntityUsingDataset(IDataset dataset);
 
 }

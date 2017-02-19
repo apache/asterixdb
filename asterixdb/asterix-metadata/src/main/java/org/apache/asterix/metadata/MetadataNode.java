@@ -60,6 +60,7 @@ import org.apache.asterix.metadata.entities.DatasourceAdapter;
 import org.apache.asterix.metadata.entities.Datatype;
 import org.apache.asterix.metadata.entities.Dataverse;
 import org.apache.asterix.metadata.entities.Feed;
+import org.apache.asterix.metadata.entities.FeedConnection;
 import org.apache.asterix.metadata.entities.FeedPolicyEntity;
 import org.apache.asterix.metadata.entities.Function;
 import org.apache.asterix.metadata.entities.Index;
@@ -73,6 +74,7 @@ import org.apache.asterix.metadata.entitytupletranslators.DatasourceAdapterTuple
 import org.apache.asterix.metadata.entitytupletranslators.DatatypeTupleTranslator;
 import org.apache.asterix.metadata.entitytupletranslators.DataverseTupleTranslator;
 import org.apache.asterix.metadata.entitytupletranslators.ExternalFileTupleTranslator;
+import org.apache.asterix.metadata.entitytupletranslators.FeedConnectionTupleTranslator;
 import org.apache.asterix.metadata.entitytupletranslators.FeedPolicyTupleTranslator;
 import org.apache.asterix.metadata.entitytupletranslators.FeedTupleTranslator;
 import org.apache.asterix.metadata.entitytupletranslators.FunctionTupleTranslator;
@@ -487,11 +489,16 @@ public class MetadataNode implements IMetadataNode {
             }
 
             List<Feed> dataverseFeeds;
+            List<FeedConnection> feedConnections;
             Feed feed;
             dataverseFeeds = getDataverseFeeds(jobId, dataverseName);
-            // Drop all datasets in this dataverse.
+            // Drop all feeds&connections in this dataverse.
             for (int i = 0; i < dataverseFeeds.size(); i++) {
                 feed = dataverseFeeds.get(i);
+                feedConnections = getFeedConnections(jobId, dataverseName, feed.getFeedName());
+                for (FeedConnection feedConnection : feedConnections) {
+                    dropFeedConnection(jobId, dataverseName, feed.getFeedName(), feedConnection.getDatasetName());
+                }
                 dropFeed(jobId, dataverseName, feed.getFeedName());
             }
 
@@ -1475,6 +1482,63 @@ public class MetadataNode implements IMetadataNode {
             }
             return null;
         } catch (IndexException | IOException e) {
+            throw new MetadataException(e);
+        }
+    }
+
+    @Override
+    public void addFeedConnection(JobId jobId, FeedConnection feedConnection) throws MetadataException {
+        try {
+            FeedConnectionTupleTranslator tupleReaderWriter = new FeedConnectionTupleTranslator(true);
+            ITupleReference feedConnTuple = tupleReaderWriter.getTupleFromMetadataEntity(feedConnection);
+            insertTupleIntoIndex(jobId, MetadataPrimaryIndexes.FEED_CONNECTION_DATASET, feedConnTuple);
+        } catch (IndexException | ACIDException | IOException e) {
+            throw new MetadataException(e);
+        }
+    }
+
+    @Override
+    public List<FeedConnection> getFeedConnections(JobId jobId, String dataverseName, String feedName)
+            throws MetadataException {
+        try {
+            ITupleReference searchKey = createTuple(dataverseName, feedName);
+            FeedConnectionTupleTranslator tupleReaderWriter = new FeedConnectionTupleTranslator(false);
+            List<FeedConnection> results = new ArrayList<>();
+            IValueExtractor<FeedConnection> valueExtractor = new MetadataEntityValueExtractor<>(tupleReaderWriter);
+            searchIndex(jobId, MetadataPrimaryIndexes.FEED_CONNECTION_DATASET, searchKey, valueExtractor, results);
+            return results;
+        } catch (IndexException | IOException e) {
+            throw new MetadataException(e);
+        }
+    }
+
+    @Override
+    public FeedConnection getFeedConnection(JobId jobId, String dataverseName, String feedName, String datasetName)
+            throws MetadataException {
+        try {
+            ITupleReference searchKey = createTuple(dataverseName, feedName, datasetName);
+            FeedConnectionTupleTranslator tupleReaderWriter = new FeedConnectionTupleTranslator(false);
+            List<FeedConnection> results = new ArrayList<>();
+            IValueExtractor<FeedConnection> valueExtractor = new MetadataEntityValueExtractor<>(tupleReaderWriter);
+            searchIndex(jobId, MetadataPrimaryIndexes.FEED_CONNECTION_DATASET, searchKey, valueExtractor, results);
+            if (!results.isEmpty()) {
+                return results.get(0);
+            }
+            return null;
+        } catch (IndexException | IOException e) {
+            throw new MetadataException(e);
+        }
+    }
+
+    @Override
+    public void dropFeedConnection(JobId jobId, String dataverseName, String feedName, String datasetName)
+            throws MetadataException {
+        try {
+            ITupleReference searchKey = createTuple(dataverseName, feedName, datasetName);
+            ITupleReference tuple = getTupleToBeDeleted(jobId, MetadataPrimaryIndexes.FEED_CONNECTION_DATASET,
+                    searchKey);
+            deleteTupleFromIndex(jobId, MetadataPrimaryIndexes.FEED_CONNECTION_DATASET, tuple);
+        } catch (IndexException | IOException | ACIDException e) {
             throw new MetadataException(e);
         }
     }

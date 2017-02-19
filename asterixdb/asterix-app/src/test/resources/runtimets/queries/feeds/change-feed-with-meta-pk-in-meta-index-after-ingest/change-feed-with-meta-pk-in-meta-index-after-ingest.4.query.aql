@@ -26,6 +26,6 @@ use dataverse KeyVerse;
 
 count(
     for $d in dataset KVStore
-    where meta($d).vbucket = 5
+    where meta($d).vbucket = 8
     return $d
 );

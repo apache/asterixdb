@@ -29,7 +29,7 @@ import org.apache.asterix.active.EntityId;
 public class FeedConnectionId implements Serializable {
 
     private static final long serialVersionUID = 1L;
-    public static final String FEED_EXTENSION_NAME = "Feed";
+    private static final String FEED_EXTENSION_NAME = "Feed";
 
     private final EntityId feedId; // Dataverse - Feed
     private final String datasetName; // Dataset <Dataset is empty in case of no target dataset>

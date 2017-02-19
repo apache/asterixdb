@@ -20,6 +20,7 @@
  * Description  : Create a feed dataset with an associated function and verify contents in Metadata
  * Expected Res : Success
  * Date         : 24th Dec 2012
+ * Update       : 10th Oct 2016
  */
 
 drop dataverse feeds if exists;
@@ -32,7 +33,7 @@ create type TweetType as closed {
   location : string,
   text : string,
   timestamp : string
-}      
+}
 
 create dataset Tweets(TweetType)
 primary key id;
@@ -43,5 +44,5 @@ $x
 
 create feed TweetFeed
 using localfs
-(("type-name"="TweetType"),("path"="asterix_nc1://data/twitter/obamatweets.adm"),("format"="adm"),("tuple-interval"="10"))
-apply function feed_processor;
+(("type-name"="TweetType"),("path"="asterix_nc1://data/twitter/obamatweets.adm"),("format"="adm")
+,("tuple-interval"="10"));

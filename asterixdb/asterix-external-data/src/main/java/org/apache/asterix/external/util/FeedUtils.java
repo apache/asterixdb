@@ -44,6 +44,8 @@ import org.apache.hyracks.util.IntSerDeUtils;
 
 public class FeedUtils {
 
+    public static final String FEED_EXTENSION_NAME = "Feed";
+
     public enum JobType {
         INTAKE,
         FEED_CONNECT

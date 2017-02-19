@@ -43,9 +43,9 @@ create type feeds.TweetMessageType as
   country : string
 }
 
-create  dataset SyntheticTweets(TweetMessageType) primary key id;
+create dataset SyntheticTweets(TweetMessageType) primary key id;
 
-create  primary feed SyntheticTweetFeed using stream(
+create feed SyntheticTweetFeed using stream(
 (`duration`=`5`),
 (`tps`=`50`),
 (`type-name`=`TweetMessageType`),

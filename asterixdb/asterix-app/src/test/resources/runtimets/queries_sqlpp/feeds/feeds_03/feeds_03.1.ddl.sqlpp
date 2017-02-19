@@ -43,5 +43,5 @@ x
 
 create feed TweetFeed
 using localfs
-((`type-name`=`TweetType`),(`path`=`asterix_nc1://data/twitter/obamatweets.adm`),(`format`=`adm`),(`tuple-interval`=`10`))
-apply function feed_processor;
+((`type-name`=`TweetType`),(`path`=`asterix_nc1://data/twitter/obamatweets.adm`),(`format`=`adm`)
+,(`tuple-interval`=`10`));

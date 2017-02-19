@@ -18,46 +18,38 @@
  */
 package org.apache.asterix.external.operators;
 
+import java.nio.ByteBuffer;
 import java.util.Map;
 
 import org.apache.asterix.active.ActiveManager;
 import org.apache.asterix.active.ActiveRuntimeId;
-import org.apache.asterix.active.message.ActivePartitionMessage;
 import org.apache.asterix.common.api.IAppRuntimeContext;
-import org.apache.asterix.external.feed.api.ISubscribableRuntime;
-import org.apache.asterix.external.feed.dataflow.FeedFrameCollector;
 import org.apache.asterix.external.feed.dataflow.FeedRuntimeInputHandler;
 import org.apache.asterix.external.feed.dataflow.SyncFeedRuntimeInputHandler;
 import org.apache.asterix.external.feed.management.FeedConnectionId;
 import org.apache.asterix.external.feed.policy.FeedPolicyAccessor;
-import org.apache.asterix.external.feed.runtime.CollectionRuntime;
 import org.apache.asterix.external.util.FeedUtils.FeedRuntimeType;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
-import org.apache.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
+import org.apache.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
 
 /**
  * The first operator in a collect job in a feed.
  */
-public class FeedCollectOperatorNodePushable extends AbstractUnaryOutputSourceOperatorNodePushable {
+public class FeedCollectOperatorNodePushable extends AbstractUnaryInputUnaryOutputOperatorNodePushable {
 
     private final int partition;
     private final FeedConnectionId connectionId;
-    private final Map<String, String> feedPolicy;
     private final FeedPolicyAccessor policyAccessor;
     private final ActiveManager activeManager;
-    private final ISubscribableRuntime sourceRuntime;
     private final IHyracksTaskContext ctx;
-    private CollectionRuntime collectRuntime;
 
     public FeedCollectOperatorNodePushable(IHyracksTaskContext ctx, FeedConnectionId feedConnectionId,
-            Map<String, String> feedPolicy, int partition, ISubscribableRuntime sourceRuntime) {
+            Map<String, String> feedPolicy, int partition) {
         this.ctx = ctx;
         this.partition = partition;
         this.connectionId = feedConnectionId;
-        this.sourceRuntime = sourceRuntime;
-        this.feedPolicy = feedPolicy;
         this.policyAccessor = new FeedPolicyAccessor(feedPolicy);
         this.activeManager = (ActiveManager) ((IAppRuntimeContext) ctx.getJobletContext().getApplicationContext()
                 .getApplicationObject()).getActiveManager();
@@ -68,7 +60,6 @@ public class FeedCollectOperatorNodePushable extends AbstractUnaryOutputSourceOp
         try {
             ActiveRuntimeId runtimeId =
                     new ActiveRuntimeId(connectionId.getFeedId(), FeedRuntimeType.COLLECT.toString(), partition);
-            // Does this collector have a handler?
             FrameTupleAccessor tAccessor = new FrameTupleAccessor(recordDesc);
             if (policyAccessor.bufferingEnabled()) {
                 writer = new FeedRuntimeInputHandler(ctx, connectionId, runtimeId, writer, policyAccessor, tAccessor,
@@ -76,17 +67,33 @@ public class FeedCollectOperatorNodePushable extends AbstractUnaryOutputSourceOp
             } else {
                 writer = new SyncFeedRuntimeInputHandler(ctx, writer, tAccessor);
             }
-            collectRuntime = new CollectionRuntime(connectionId, runtimeId, sourceRuntime, feedPolicy, ctx,
-                    new FeedFrameCollector(policyAccessor, writer, connectionId));
-            activeManager.registerRuntime(collectRuntime);
-            sourceRuntime.subscribe(collectRuntime);
-            // Notify CC that Collection started
-            ctx.sendApplicationMessageToCC(new ActivePartitionMessage(runtimeId, ctx.getJobletContext().getJobId(),
-                    ActivePartitionMessage.ACTIVE_RUNTIME_REGISTERED), null);
-            collectRuntime.waitTillCollectionOver();
-            activeManager.deregisterRuntime(collectRuntime.getRuntimeId());
         } catch (Exception e) {
             throw new HyracksDataException(e);
         }
+    }
+
+    @Override
+    public void open() throws HyracksDataException {
+        writer.open();
+    }
+
+    @Override
+    public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
+        writer.nextFrame(buffer);
+    }
+
+    @Override
+    public void fail() throws HyracksDataException {
+        writer.fail();
+    }
+
+    @Override
+    public void flush() throws HyracksDataException {
+        writer.flush();
+    }
+
+    @Override
+    public void close() throws HyracksDataException {
+        writer.close();
     }
 }

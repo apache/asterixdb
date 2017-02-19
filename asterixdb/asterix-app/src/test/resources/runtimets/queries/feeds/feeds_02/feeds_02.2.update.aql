@@ -17,8 +17,8 @@
  * under the License.
  */
 /*
- * Description  : Create a feed dataset that uses the feed simulator adapter. 
-                  Begin ingestion and verify contents of the dataset post completion.  
+ * Description  : Create a feed dataset that uses the feed simulator adapter.
+                  Begin ingestion and verify contents of the dataset post completion.
  * Expected Res : Success
  * Date         : 24th Dec 2012
  */
@@ -28,3 +28,5 @@ use dataverse feeds;
 set wait-for-completion-feed "true";
 
 connect feed TweetFeed to dataset Tweets;
+
+start feed TweetFeed;

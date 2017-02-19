@@ -24,14 +24,13 @@ import java.util.ArrayList;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.transactions.JobId;
 import org.apache.asterix.external.dataset.adapter.AdapterIdentifier;
-import org.apache.asterix.external.feed.api.IFeed;
-import org.apache.asterix.external.feed.api.IFeed.FeedType;
 import org.apache.asterix.metadata.entities.CompactionPolicy;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.DatasourceAdapter;
 import org.apache.asterix.metadata.entities.Datatype;
 import org.apache.asterix.metadata.entities.Dataverse;
 import org.apache.asterix.metadata.entities.Feed;
+import org.apache.asterix.metadata.entities.FeedConnection;
 import org.apache.asterix.metadata.entities.FeedPolicyEntity;
 import org.apache.asterix.metadata.entities.Function;
 import org.apache.asterix.metadata.entities.Index;
@@ -231,15 +230,24 @@ public class MetadataTransactionContext extends MetadataCache {
     public void addFeed(Feed feed) {
         droppedCache.dropFeed(feed);
         logAndApply(new MetadataLogicalOperation(feed, true));
-
     }
 
-    public void dropFeed(String dataverseName, String feedName, IFeed.FeedType feedType) {
+    public void dropFeed(String dataverseName, String feedName) {
         Feed feed = null;
-        feed = new Feed(dataverseName, feedName, null, feedType, (feedType == FeedType.PRIMARY) ? feedName : null,
-                null, null);
+        feed = new Feed(dataverseName, feedName, null, null);
         droppedCache.addFeedIfNotExists(feed);
         logAndApply(new MetadataLogicalOperation(feed, false));
+    }
+
+    public void addFeedConnection(FeedConnection feedConnection) {
+        droppedCache.dropFeedConnection(feedConnection);
+        logAndApply(new MetadataLogicalOperation(feedConnection, true));
+    }
+
+    public void dropFeedConnection(String dataverseName, String feedName, String datasetName) {
+        FeedConnection feedConnection = new FeedConnection(dataverseName, feedName, datasetName, null, null, null);
+        droppedCache.addFeedConnectionIfNotExists(feedConnection);
+        logAndApply(new MetadataLogicalOperation(feedConnection, false));
     }
 
     @Override

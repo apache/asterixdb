@@ -21,6 +21,7 @@ package org.apache.asterix.optimizer.rules;
 import org.apache.asterix.metadata.declared.DataSource;
 import org.apache.asterix.metadata.declared.FeedDataSource;
 import org.apache.asterix.metadata.entities.Feed;
+import org.apache.asterix.metadata.entities.FeedConnection;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -59,8 +60,8 @@ public class IntroduceRandomPartitioningFeedComputationRule implements IAlgebrai
         }
 
         final FeedDataSource feedDataSource = (FeedDataSource) dataSource;
-        Feed feed = feedDataSource.getFeed();
-        if (feed.getAppliedFunction() == null) {
+        FeedConnection feedConnection = feedDataSource.getFeedConnection();
+        if (feedConnection.getAppliedFunctions() == null) {
             return false;
         }
 

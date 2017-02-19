@@ -17,7 +17,7 @@
  * under the License.
  */
 /*
- * Description  : Create a feed using the synthetic feed simulator adapter.                   
+ * Description  : Create a feed using the synthetic feed simulator adapter.
                   Create a dataset that has an associated ngram index.
                   The synthetic feed simulator uses the Social-Data generator to generate data and simulate a feed.
                   The feed lasts a configured duration with data arriving at a configured rate (tweets per second).
@@ -26,9 +26,11 @@
  * Expected Res : Success
  * Date         : 2nd April 2014
  */
-  
+
 use dataverse feeds_09;
 
 set wait-for-completion-feed "true";
 
 connect feed SyntheticTweetFeed to dataset SyntheticTweets;
+
+start feed SyntheticTweetFeed;

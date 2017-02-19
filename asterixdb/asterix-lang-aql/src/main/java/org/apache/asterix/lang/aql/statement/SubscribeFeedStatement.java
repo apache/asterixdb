@@ -32,6 +32,7 @@ import org.apache.asterix.external.feed.management.FeedConnectionRequest;
 import org.apache.asterix.external.feed.policy.FeedPolicyAccessor;
 import org.apache.asterix.external.feed.watch.FeedActivityDetails;
 import org.apache.asterix.external.util.ExternalDataConstants;
+import org.apache.asterix.external.util.FeedUtils;
 import org.apache.asterix.lang.aql.parser.AQLParserFactory;
 import org.apache.asterix.lang.common.base.IParser;
 import org.apache.asterix.lang.common.base.IParserFactory;
@@ -44,6 +45,7 @@ import org.apache.asterix.metadata.MetadataException;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.entities.Feed;
+import org.apache.asterix.metadata.entities.FeedConnection;
 import org.apache.asterix.metadata.entities.Function;
 import org.apache.asterix.metadata.feeds.FeedMetadataUtil;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -54,14 +56,14 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
  */
 public class SubscribeFeedStatement implements Statement {
 
+    public static final String WAIT_FOR_COMPLETION = "wait-for-completion-feed";
+    private static final Integer INSERT_STATEMENT_POS = 3;
     private static final Logger LOGGER = Logger.getLogger(SubscribeFeedStatement.class.getName());
-    private final FeedConnectionRequest connectionRequest;
-    private Query query;
     private final int varCounter;
     private final String[] locations;
-
-    public static final String WAIT_FOR_COMPLETION = "wait-for-completion-feed";
+    private final FeedConnectionRequest connectionRequest;
     private final IParserFactory parserFactory = new AQLParserFactory();
+    private Query query;
 
     public SubscribeFeedStatement(String[] locations, FeedConnectionRequest subscriptionRequest) {
         this.connectionRequest = subscriptionRequest;
@@ -71,7 +73,7 @@ public class SubscribeFeedStatement implements Statement {
 
     public void initialize(MetadataTransactionContext mdTxnCtx) throws MetadataException {
         this.query = new Query(false);
-        EntityId sourceFeedId = connectionRequest.getFeedJointKey().getFeedId();
+        EntityId sourceFeedId = connectionRequest.getReceivingFeedId();
         Feed subscriberFeed = MetadataManager.INSTANCE.getFeed(mdTxnCtx,
                 connectionRequest.getReceivingFeedId().getDataverse(),
                 connectionRequest.getReceivingFeedId().getEntityName());
@@ -80,18 +82,6 @@ public class SubscribeFeedStatement implements Statement {
         }
 
         String feedOutputType = getOutputType(mdTxnCtx);
-        FunctionSignature appliedFunction = subscriberFeed.getAppliedFunction();
-        Function function = null;
-        if (appliedFunction != null) {
-            function = MetadataManager.INSTANCE.getFunction(mdTxnCtx, appliedFunction);
-            if (function == null) {
-                throw new MetadataException(" Unknown function " + appliedFunction);
-            } else if (function.getParams().size() > 1) {
-                throw new MetadataException(
-                        " Incompatible function: " + appliedFunction + " Number if arguments must be 1");
-            }
-        }
-
         StringBuilder builder = new StringBuilder();
         builder.append("use dataverse " + sourceFeedId.getDataverse() + ";\n");
         builder.append("set" + " " + FunctionUtil.IMPORT_PRIVATE_FUNCTIONS + " " + "'" + Boolean.TRUE + "'" + ";\n");
@@ -105,14 +95,15 @@ public class SubscribeFeedStatement implements Statement {
                 + connectionRequest.getSubscriptionLocation().name() + "'" + "," + "'"
                 + connectionRequest.getTargetDataset() + "'" + "," + "'" + feedOutputType + "'" + ")");
 
-        List<String> functionsToApply = connectionRequest.getFunctionsToApply();
+        List<FunctionSignature> functionsToApply = connectionRequest.getFunctionsToApply();
         if ((functionsToApply != null) && functionsToApply.isEmpty()) {
             builder.append(" return $x");
         } else {
+            Function function;
             String rValueName = "x";
             String lValueName = "y";
             int variableIndex = 0;
-            for (String functionName : functionsToApply) {
+            for (FunctionSignature appliedFunction : functionsToApply) {
                 function = MetadataManager.INSTANCE.getFunction(mdTxnCtx, appliedFunction);
                 variableIndex++;
                 switch (function.getLanguage().toUpperCase()) {
@@ -122,8 +113,8 @@ public class SubscribeFeedStatement implements Statement {
                         builder.append("\n");
                         break;
                     case Function.LANGUAGE_JAVA:
-                        builder.append(" let " + "$" + lValueName + variableIndex + ":=" + functionName + "(" + "$"
-                                + rValueName + ")");
+                        builder.append(" let " + "$" + lValueName + variableIndex + ":=" + function.getName() + "("
+                                + "$" + rValueName + ")");
                         rValueName = lValueName + variableIndex;
                         break;
                 }
@@ -141,7 +132,7 @@ public class SubscribeFeedStatement implements Statement {
         List<Statement> statements;
         try {
             statements = parser.parse();
-            query = ((InsertStatement) statements.get(3)).getQuery();
+            query = ((InsertStatement) statements.get(INSERT_STATEMENT_POS)).getQuery();
         } catch (CompilationException pe) {
             throw new MetadataException(pe);
         }
@@ -179,21 +170,13 @@ public class SubscribeFeedStatement implements Statement {
     }
 
     private String getOutputType(MetadataTransactionContext mdTxnCtx) throws MetadataException {
-        String outputType = null;
+        String outputType;
         EntityId feedId = connectionRequest.getReceivingFeedId();
         Feed feed = MetadataManager.INSTANCE.getFeed(mdTxnCtx, feedId.getDataverse(), feedId.getEntityName());
-        FeedPolicyAccessor policyAccessor = new FeedPolicyAccessor(connectionRequest.getPolicyParameters());
         try {
-            switch (feed.getFeedType()) {
-                case PRIMARY:
-                    outputType = FeedMetadataUtil
-                            .getOutputType(feed, feed.getAdapterConfiguration(), ExternalDataConstants.KEY_TYPE_NAME)
-                            .getTypeName();
-                    break;
-                case SECONDARY:
-                    outputType = FeedMetadataUtil.getSecondaryFeedOutput(feed, policyAccessor, mdTxnCtx);
-                    break;
-            }
+            outputType = FeedMetadataUtil
+                    .getOutputType(feed, feed.getAdapterConfiguration(), ExternalDataConstants.KEY_TYPE_NAME)
+                    .getTypeName();
             return outputType;
 
         } catch (AlgebricksException | RemoteException | ACIDException ae) {

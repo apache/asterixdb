@@ -22,7 +22,6 @@ package org.apache.asterix.metadata.entities;
 import java.util.Map;
 
 import org.apache.asterix.active.EntityId;
-import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.external.feed.api.IFeed;
 import org.apache.asterix.metadata.MetadataCache;
 import org.apache.asterix.metadata.api.IMetadataEntity;
@@ -36,28 +35,18 @@ public class Feed implements IMetadataEntity<Feed>, IFeed {
 
     /** A unique identifier for the feed */
     private EntityId feedId;
-    /** The function that is to be applied on each incoming feed tuple **/
-    private FunctionSignature appliedFunction;
-    /** The type {@code FeedType} associated with the feed. **/
-    private IFeed.FeedType feedType;
     /** A string representation of the instance **/
     private String displayName;
     /** A string representation of the adapter name **/
     private String adapterName;
     /** Adapter configuration */
     private Map<String, String> adapterConfiguration;
-    /** Source primary feed */
-    private String sourceFeedName;
 
-    public Feed(String dataverseName, String feedName, FunctionSignature appliedFunction, IFeed.FeedType feedType,
-            String sourceFeedName, String adapterName, Map<String, String> configuration) {
+    public Feed(String dataverseName, String feedName,String adapterName, Map<String, String> configuration) {
         this.feedId = new EntityId(EXTENSION_NAME, dataverseName, feedName);
-        this.appliedFunction = appliedFunction;
-        this.feedType = feedType;
-        this.displayName = feedType + "(" + feedId + ")";
+        this.displayName = "(" + feedId + ")";
         this.adapterName = adapterName;
         this.adapterConfiguration = configuration;
-        this.sourceFeedName = sourceFeedName;
     }
 
     @Override
@@ -73,16 +62,6 @@ public class Feed implements IMetadataEntity<Feed>, IFeed {
     @Override
     public String getFeedName() {
         return feedId.getEntityName();
-    }
-
-    @Override
-    public FunctionSignature getAppliedFunction() {
-        return appliedFunction;
-    }
-
-    @Override
-    public IFeed.FeedType getFeedType() {
-        return feedType;
     }
 
     @Override
@@ -104,7 +83,7 @@ public class Feed implements IMetadataEntity<Feed>, IFeed {
 
     @Override
     public String toString() {
-        return feedType + "(" + feedId + ")";
+        return feedId.toString();
     }
 
     @Override
@@ -125,9 +104,5 @@ public class Feed implements IMetadataEntity<Feed>, IFeed {
     @Override
     public Map<String, String> getAdapterConfiguration() {
         return adapterConfiguration;
-    }
-
-    public String getSourceFeedName() {
-        return sourceFeedName;
     }
 }

@@ -23,19 +23,28 @@ import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
+import org.apache.hadoop.io.compress.bzip2.CBZip2InputStream;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 
-public abstract class CreateFeedStatement implements Statement {
+import java.util.Map;
+
+/**
+ * The new create feed statement only concerns the feed adaptor configuration.
+ * All feeds are considered as primary feeds.
+ */
+public class CreateFeedStatement implements Statement {
 
     private final Pair<Identifier, Identifier> qName;
-    private final FunctionSignature appliedFunction;
     private final boolean ifNotExists;
+    private final String adaptorName;
+    private final Map<String, String> adaptorConfiguration;
 
-    public CreateFeedStatement(Pair<Identifier, Identifier> qName, FunctionSignature appliedFunction,
-            boolean ifNotExists) {
+    public CreateFeedStatement(Pair<Identifier, Identifier> qName, String adaptorName,
+            Map<String, String> adaptorConfiguration, boolean ifNotExists) {
         this.qName = qName;
-        this.appliedFunction = appliedFunction;
         this.ifNotExists = ifNotExists;
+        this.adaptorName = adaptorName;
+        this.adaptorConfiguration = adaptorConfiguration;
     }
 
     public Identifier getDataverseName() {
@@ -46,16 +55,27 @@ public abstract class CreateFeedStatement implements Statement {
         return qName.second;
     }
 
-    public FunctionSignature getAppliedFunction() {
-        return appliedFunction;
-    }
-
     public boolean getIfNotExists() {
         return this.ifNotExists;
     }
 
+    public String getAdaptorName() {
+        return adaptorName;
+    }
+
+    public Map<String, String> getAdaptorConfiguration() {
+        return adaptorConfiguration;
+    }
+
     @Override
-    public abstract <R, T> R accept(ILangVisitor<R, T> visitor, T arg) throws CompilationException;
+    public byte getKind() {
+        return Kind.CREATE_FEED;
+    }
+
+    @Override
+    public <R, T> R accept(ILangVisitor<R, T> visitor, T arg) throws CompilationException {
+        return visitor.visit(this, arg);
+    }
 
     @Override
     public byte getCategory() {

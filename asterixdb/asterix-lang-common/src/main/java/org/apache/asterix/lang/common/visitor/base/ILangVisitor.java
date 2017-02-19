@@ -44,10 +44,9 @@ import org.apache.asterix.lang.common.statement.CompactStatement;
 import org.apache.asterix.lang.common.statement.ConnectFeedStatement;
 import org.apache.asterix.lang.common.statement.CreateDataverseStatement;
 import org.apache.asterix.lang.common.statement.CreateFeedPolicyStatement;
+import org.apache.asterix.lang.common.statement.CreateFeedStatement;
 import org.apache.asterix.lang.common.statement.CreateFunctionStatement;
 import org.apache.asterix.lang.common.statement.CreateIndexStatement;
-import org.apache.asterix.lang.common.statement.CreatePrimaryFeedStatement;
-import org.apache.asterix.lang.common.statement.CreateSecondaryFeedStatement;
 import org.apache.asterix.lang.common.statement.DatasetDecl;
 import org.apache.asterix.lang.common.statement.DataverseDecl;
 import org.apache.asterix.lang.common.statement.DataverseDropStatement;
@@ -65,6 +64,8 @@ import org.apache.asterix.lang.common.statement.NodeGroupDropStatement;
 import org.apache.asterix.lang.common.statement.NodegroupDecl;
 import org.apache.asterix.lang.common.statement.Query;
 import org.apache.asterix.lang.common.statement.SetStatement;
+import org.apache.asterix.lang.common.statement.StartFeedStatement;
+import org.apache.asterix.lang.common.statement.StopFeedStatement;
 import org.apache.asterix.lang.common.statement.TypeDecl;
 import org.apache.asterix.lang.common.statement.TypeDropStatement;
 import org.apache.asterix.lang.common.statement.UpdateStatement;
@@ -152,9 +153,11 @@ public interface ILangVisitor<R, T> {
 
     R visit(ConnectFeedStatement del, T arg) throws CompilationException;
 
-    R visit(CreatePrimaryFeedStatement cpfs, T arg) throws CompilationException;
+    R visit(StartFeedStatement sfs, T arg) throws CompilationException;
 
-    R visit(CreateSecondaryFeedStatement csfs, T arg) throws CompilationException;
+    R visit(StopFeedStatement sfs, T arg) throws CompilationException;
+
+    R visit(CreateFeedStatement cfs, T arg) throws CompilationException;
 
     R visit(FeedDropStatement del, T arg) throws CompilationException;
 

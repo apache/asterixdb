@@ -20,9 +20,7 @@ package org.apache.asterix.external.feed.api;
 
 import java.io.Serializable;
 import java.util.Map;
-
 import org.apache.asterix.active.EntityId;
-import org.apache.asterix.common.functions.FunctionSignature;
 
 public interface IFeed extends Serializable {
 
@@ -37,10 +35,6 @@ public interface IFeed extends Serializable {
          */
         SECONDARY
     }
-
-    public FeedType getFeedType();
-
-    public FunctionSignature getAppliedFunction();
 
     public String getFeedName();
 

@@ -22,25 +22,27 @@ import org.apache.hyracks.api.job.JobId;
 
 public class ActiveEvent {
 
-    private final JobId jobId;
-    private final EntityId entityId;
-    private final EventKind eventKind;
-    private final Object eventObject;
-
-    public enum EventKind {
-        JOB_START,
-        JOB_FINISH,
-        PARTITION_EVENT
+    public enum Kind {
+        JOB_CREATED,
+        JOB_STARTED,
+        JOB_FINISHED,
+        PARTITION_EVENT,
+        EXTENSION_EVENT
     }
 
-    public ActiveEvent(JobId jobId, ActiveEvent.EventKind eventKind, EntityId entityId, Object eventObject) {
+    private final JobId jobId;
+    private final EntityId entityId;
+    private final Kind eventKind;
+    private final Object eventObject;
+
+    public ActiveEvent(JobId jobId, Kind eventKind, EntityId entityId, Object eventObject) {
         this.jobId = jobId;
         this.entityId = entityId;
         this.eventKind = eventKind;
         this.eventObject = eventObject;
     }
 
-    public ActiveEvent(JobId jobId, ActiveEvent.EventKind eventKind, EntityId entityId) {
+    public ActiveEvent(JobId jobId, Kind eventKind, EntityId entityId) {
         this(jobId, eventKind, entityId, null);
     }
 
@@ -52,11 +54,16 @@ public class ActiveEvent {
         return entityId;
     }
 
-    public EventKind getEventKind() {
+    public Kind getEventKind() {
         return eventKind;
     }
 
     public Object getEventObject() {
         return eventObject;
+    }
+
+    @Override
+    public String toString() {
+        return "JobId:" + jobId + ", " + "EntityId:" + entityId + ", " + "Kind" + eventKind;
     }
 }

@@ -23,4 +23,4 @@
  * Expected Res : Success
  * Date         : 13th Aug 2016
  */
-start client 10001 file-client localhost ../asterix-app/data/tinysocial/twu_update.adm 500 50 1000
+start client 10001 file-client 127.0.0.1 ../asterix-app/data/tinysocial/twu_update.adm 500 50 1000

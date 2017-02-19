@@ -61,7 +61,6 @@ public final class MetadataRecordTypes {
     public static final String FIELD_NAME_FILE_NUMBER = "FileNumber";
     public static final String FIELD_NAME_FILE_SIZE = "FileSize";
     public static final String FIELD_NAME_FILE_STRUCTURE = "FileStructure";
-    public static final String FIELD_NAME_FUNCTION = "Function";
     public static final String FIELD_NAME_GROUP_NAME = "GroupName";
     public static final String FIELD_NAME_HINTS = "Hints";
     public static final String FIELD_NAME_INDEX_NAME = "IndexName";
@@ -87,13 +86,10 @@ public final class MetadataRecordTypes {
     public static final String FIELD_NAME_PENDING_OP = "PendingOp";
     public static final String FIELD_NAME_POLICY_NAME = "PolicyName";
     public static final String FIELD_NAME_PRIMARY_KEY = "PrimaryKey";
-    public static final String FIELD_NAME_PRIMARY_TYPE_DETAILS = "PrimaryTypeDetails";
     public static final String FIELD_NAME_PROPERTIES = "Properties";
     public static final String FIELD_NAME_RECORD = "Record";
     public static final String FIELD_NAME_RETURN_TYPE = "ReturnType";
     public static final String FIELD_NAME_SEARCH_KEY = "SearchKey";
-    public static final String FIELD_NAME_SECONDARY_TYPE_DETAILS = "SecondaryTypeDetails";
-    public static final String FIELD_NAME_SOURCE_FEED_NAME = "SourceFeedName";
     public static final String FIELD_NAME_STATUS = "Status";
     public static final String FIELD_NAME_TAG = "Tag";
     public static final String FIELD_NAME_TIMESTAMP = "Timestamp";
@@ -102,6 +98,7 @@ public final class MetadataRecordTypes {
     public static final String FIELD_NAME_UNORDERED_LIST = "UnorderedList";
     public static final String FIELD_NAME_VALUE = "Value";
     public static final String FIELD_NAME_WORKING_MEMORY_SIZE = "WorkingMemorySize";
+    public static final String FIELD_NAME_APPLIED_FUNCTIONS = "AppliedFunctions";
 
     //---------------------------------- Record Types Creation ----------------------------------//
     //--------------------------------------- Properties ----------------------------------------//
@@ -148,35 +145,6 @@ public final class MetadataRecordTypes {
                     BuiltinType.ADATETIME, BuiltinType.AINT32 },
             //IsOpen?
             true);
-    //-------------------------------------- Feed Details ---------------------------------------//
-    public static final int FEED_DETAILS_ARECORD_FILESTRUCTURE_FIELD_INDEX = 0;
-    public static final int FEED_DETAILS_ARECORD_PARTITIONSTRATEGY_FIELD_INDEX = 1;
-    public static final int FEED_DETAILS_ARECORD_PARTITIONKEY_FIELD_INDEX = 2;
-    public static final int FEED_DETAILS_ARECORD_PRIMARYKEY_FIELD_INDEX = 3;
-    public static final int FEED_DETAILS_ARECORD_GROUPNAME_FIELD_INDEX = 4;
-    public static final int FEED_DETAILS_ARECORD_DATASOURCE_ADAPTER_FIELD_INDEX = 5;
-    public static final int FEED_DETAILS_ARECORD_PROPERTIES_FIELD_INDEX = 6;
-    public static final int FEED_DETAILS_ARECORD_FUNCTION_FIELD_INDEX = 7;
-    public static final int FEED_DETAILS_ARECORD_STATE_FIELD_INDEX = 8;
-    public static final int FEED_DETAILS_ARECORD_COMPACTION_POLICY_FIELD_INDEX = 9;
-    public static final int FEED_DETAILS_ARECORD_COMPACTION_POLICY_PROPERTIES_FIELD_INDEX = 10;
-    public static final ARecordType FEED_DETAILS_RECORDTYPE = createRecordType(
-            // RecordTypeName
-            null,
-            // FieldNames
-            new String[] { FIELD_NAME_FILE_STRUCTURE, FIELD_NAME_PARTITIONING_STRATEGY, FIELD_NAME_PARTITIONING_KEY,
-                    FIELD_NAME_PRIMARY_KEY, FIELD_NAME_GROUP_NAME, FIELD_NAME_DATASOURCE_ADAPTER, FIELD_NAME_PROPERTIES,
-                    FIELD_NAME_FUNCTION, FIELD_NAME_STATUS, FIELD_NAME_COMPACTION_POLICY,
-                    FIELD_NAME_COMPACTION_POLICY_PROPERTIES },
-            // FieldTypes
-            new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING, new AOrderedListType(BuiltinType.ASTRING, null),
-                    new AOrderedListType(BuiltinType.ASTRING, null), BuiltinType.ASTRING, BuiltinType.ASTRING,
-                    new AOrderedListType(DATASOURCE_ADAPTER_PROPERTIES_RECORDTYPE, null),
-                    AUnionType.createUnknownableType(BuiltinType.ASTRING), BuiltinType.ASTRING, BuiltinType.ASTRING,
-                    new AOrderedListType(COMPACTION_POLICY_PROPERTIES_RECORDTYPE, null) },
-            //IsOpen?
-            true);
-
     //---------------------------------------- Dataset ------------------------------------------//
     public static final String RECORD_NAME_DATASET = "DatasetRecordType";
     public static final int DATASET_ARECORD_DATAVERSENAME_FIELD_INDEX = 0;
@@ -383,60 +351,45 @@ public final class MetadataRecordTypes {
                     BuiltinType.ASTRING },
             //IsOpen?
             true);
-    //---------------------------------- Primary Feed Details -----------------------------------//
-    public static final int FEED_TYPE_PRIMARY_ARECORD_ADAPTER_NAME_FIELD_INDEX = 0;
-    public static final int FEED_TYPE_PRIMARY_ARECORD_ADAPTER_CONFIGURATION_FIELD_INDEX = 1;
-    public static final ARecordType PRIMARY_FEED_DETAILS_RECORDTYPE = createRecordType(
-            // RecordTypeName
-            null,
-            // FieldNames
-            new String[] { FIELD_NAME_ADAPTER_NAME, FIELD_NAME_ADAPTER_CONFIGURATION },
-            // FieldTypes
-            new IAType[] { BuiltinType.ASTRING,
-                    new AUnorderedListType(DATASOURCE_ADAPTER_PROPERTIES_RECORDTYPE, null) },
-            //IsOpen?
-            true);
-    //--------------------------------- Secondary Feed Details ----------------------------------//
-    public static final int FEED_TYPE_SECONDARY_ARECORD_SOURCE_FEED_NAME_FIELD_INDEX = 0;
-    public static final ARecordType SECONDARY_FEED_DETAILS_RECORDTYPE = createRecordType(
-            // RecordTypeName
-            null,
-            // FieldNames
-            new String[] { FIELD_NAME_SOURCE_FEED_NAME },
-            // FieldTypes
-            new IAType[] { BuiltinType.ASTRING },
-            //IsOpen?
-            true);
-    //---------------------------------------- Feed Activity ------------------------------------//
+
+    //---------------------------------------- Feed Details ------------------------------------//
     public static final String RECORD_NAME_FEED = "FeedRecordType";
-    public static final int FEED_ACTIVITY_ARECORD_DATAVERSE_NAME_FIELD_INDEX = 0;
-    public static final int FEED_ACTIVITY_ARECORD_FEED_NAME_FIELD_INDEX = 1;
-    public static final int FEED_ACTIVITY_ARECORD_DATASET_NAME_FIELD_INDEX = 2;
-    public static final int FEED_ACTIVITY_ARECORD_ACTIVITY_ID_FIELD_INDEX = 3;
-    public static final int FEED_ACTIVITY_ARECORD_ACTIVITY_TYPE_FIELD_INDEX = 4;
-    public static final int FEED_ACTIVITY_ARECORD_DETAILS_FIELD_INDEX = 5;
-    public static final int FEED_ACTIVITY_ARECORD_LAST_UPDATE_TIMESTAMP_FIELD_INDEX = 6;
     public static final int FEED_ARECORD_DATAVERSE_NAME_FIELD_INDEX = 0;
     public static final int FEED_ARECORD_FEED_NAME_FIELD_INDEX = 1;
-    public static final int FEED_ARECORD_FUNCTION_FIELD_INDEX = 2;
-    public static final int FEED_ARECORD_FEED_TYPE_FIELD_INDEX = 3;
-    public static final int FEED_ARECORD_PRIMARY_TYPE_DETAILS_FIELD_INDEX = 4;
-    public static final int FEED_ARECORD_SECONDARY_TYPE_DETAILS_FIELD_INDEX = 5;
-    public static final int FEED_ARECORD_TIMESTAMP_FIELD_INDEX = 6;
-    public static final int FEED_ARECORD_PRIMARY_FIELD_DETAILS_ADAPTOR_NAME_FIELD_INDEX = 0;
-    public static final int FEED_ARECORD_PRIMARY_FIELD_DETAILS_ADAPTOR_CONFIGURATION_FIELD_INDEX = 1;
-    public static final int FEED_ARECORD_SECONDARY_FIELD_DETAILS_SOURCE_FEED_NAME_FIELD_INDEX = 0;
+    public static final int FEED_ARECORD_ADAPTOR_NAME_INDEX = 2;
+    public static final int FEED_ARECORD_ADAPTOR_CONFIG_INDEX = 3;
+    public static final int FEED_ARECORD_TIMESTAMP_FIELD_INDEX = 4;
     public static final ARecordType FEED_RECORDTYPE = createRecordType(
             // RecordTypeName
             RECORD_NAME_FEED,
             // FieldNames
-            new String[] { FIELD_NAME_DATAVERSE_NAME, FIELD_NAME_FEED_NAME, FIELD_NAME_FUNCTION, FIELD_NAME_FEED_TYPE,
-                    FIELD_NAME_PRIMARY_TYPE_DETAILS, FIELD_NAME_SECONDARY_TYPE_DETAILS, FIELD_NAME_TIMESTAMP },
+            new String[] { FIELD_NAME_DATAVERSE_NAME, FIELD_NAME_FEED_NAME, FIELD_NAME_ADAPTER_NAME,
+                    FIELD_NAME_ADAPTER_CONFIGURATION, FIELD_NAME_TIMESTAMP },
             // FieldTypes
-            new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING,
-                    AUnionType.createUnknownableType(BuiltinType.ASTRING), BuiltinType.ASTRING,
-                    AUnionType.createUnknownableType(PRIMARY_FEED_DETAILS_RECORDTYPE),
-                    AUnionType.createUnknownableType(SECONDARY_FEED_DETAILS_RECORDTYPE), BuiltinType.ASTRING },
+            new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING,
+                    new AUnorderedListType(FEED_ADAPTER_CONFIGURATION_RECORDTYPE, null), BuiltinType.ASTRING },
+            //IsOpen?
+            true);
+
+    //------------------------------------- Feed Connection ---------------------------------------//
+    public static final String RECORD_NAME_FEED_CONNECTION = "FeedConnectionRecordType";
+    public static final int FEED_CONN_DATAVERSE_NAME_FIELD_INDEX = 0;
+    public static final int FEED_CONN_FEED_NAME_FIELD_INDEX = 1;
+    public static final int FEED_CONN_DATASET_NAME_FIELD_INDEX = 2;
+    public static final int FEED_CONN_OUTPUT_TYPE_INDEX = 3;
+    public static final int FEED_CONN_APPLIED_FUNCTIONS_FIELD_INDEX = 4;
+    public static final int FEED_CONN_POLICY_FIELD_INDEX = 5;
+
+
+    public static final ARecordType FEED_CONNECTION_RECORDTYPE = createRecordType(
+            // RecordTypeName
+            RECORD_NAME_FEED_CONNECTION,
+            // FieldNames
+            new String[] { FIELD_NAME_DATAVERSE_NAME, FIELD_NAME_FEED_NAME, FIELD_NAME_DATASET_NAME,
+                    FIELD_NAME_RETURN_TYPE, FIELD_NAME_APPLIED_FUNCTIONS, FIELD_NAME_POLICY_NAME },
+            // FieldTypes
+            new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING,
+                    new AUnorderedListType(BuiltinType.ASTRING, null), BuiltinType.ASTRING},
             //IsOpen?
             true);
 

@@ -20,3 +20,4 @@
 use feeds_12;
 set `wait-for-completion-feed` `true`;
 connect  feed TweetFeed to  dataset Tweets using policy `BasicFT`;
+start feed TweetFeed;

@@ -79,12 +79,12 @@ public interface Statement extends ILangExpression {
         public static final byte INDEX_DECL = 0x13;
         public static final byte CREATE_DATAVERSE = 0x14;
         public static final byte INDEX_DROP = 0x15;
-        public static final byte CREATE_PRIMARY_FEED = 0x16;
-        public static final byte CREATE_SECONDARY_FEED = 0x17;
-        public static final byte DROP_FEED = 0x18;
-        public static final byte CONNECT_FEED = 0x19;
-        public static final byte DISCONNECT_FEED = 0x1a;
-        public static final byte SUBSCRIBE_FEED = 0x1b;
+        public static final byte CREATE_FEED = 0x16;
+        public static final byte DROP_FEED = 0x17;
+        public static final byte START_FEED = 0x18;
+        public static final byte STOP_FEED = 0x19;
+        public static final byte CONNECT_FEED = 0x1a;
+        public static final byte DISCONNECT_FEED = 0x1b;
         public static final byte CREATE_FEED_POLICY = 0x1c;
         public static final byte DROP_FEED_POLICY = 0x1d;
         public static final byte CREATE_FUNCTION = 0x1e;
@@ -93,6 +93,7 @@ public interface Statement extends ILangExpression {
         public static final byte EXTERNAL_DATASET_REFRESH = 0x21;
         public static final byte RUN = 0x22;
         public static final byte EXTENSION = 0x23;
+        public static final byte SUBSCRIBE_FEED = 0x24;
 
         private Kind() {
         }

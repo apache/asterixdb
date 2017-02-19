@@ -25,4 +25,5 @@
  */
 
 use experiments;
+stop feed UserFeed;
 disconnect feed UserFeed from dataset TwitterUsers;

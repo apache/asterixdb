@@ -167,6 +167,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="feeds">
+      <compilation-unit name="connect-feed">
+        <output-dir compare="Text">connect-feed</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="feeds">
       <compilation-unit name="feed-with-external-parser">
         <output-dir compare="Text">feed-with-external-parser</output-dir>
       </compilation-unit>
@@ -269,6 +274,23 @@
     <test-case FilePath="feeds">
       <compilation-unit name="issue_230_feeds">
         <output-dir compare="Text">issue_230_feeds</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="feeds">
+      <compilation-unit name="start-feed">
+        <output-dir compare="Text">start-feed</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="feeds">
+      <compilation-unit name="start-started-feed">
+        <output-dir compare="Text">start-started-feed</output-dir>
+        <expected-error>Feed TweetFeed is started already.</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="feeds">
+      <compilation-unit name="stop-stopped-feed">
+        <output-dir compare="Text">stop-stopped-feed</output-dir>
+        <expected-error>Feed TweetFeed is not started.</expected-error>
       </compilation-unit>
     </test-case>
   </test-group>

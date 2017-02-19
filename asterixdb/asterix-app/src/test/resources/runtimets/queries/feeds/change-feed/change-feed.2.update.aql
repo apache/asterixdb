@@ -25,3 +25,5 @@ use dataverse feeds;
 
 set wait-for-completion-feed "true";
 connect feed ChangeFeed to dataset FeedDataset;
+
+start feed ChangeFeed;

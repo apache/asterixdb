@@ -29,3 +29,5 @@ use dataverse externallibtest;
 set wait-for-completion-feed "true";
 
 connect feed CondorFeed to dataset Condor;
+
+start feed CondorFeed;

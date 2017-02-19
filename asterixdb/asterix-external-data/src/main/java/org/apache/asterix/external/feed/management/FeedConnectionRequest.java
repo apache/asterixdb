@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.active.EntityId;
+import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.external.util.FeedUtils.FeedRuntimeType;
 import org.apache.commons.lang3.StringUtils;
 
@@ -32,67 +33,23 @@ import org.apache.commons.lang3.StringUtils;
 public class FeedConnectionRequest implements Serializable {
 
     private static final long serialVersionUID = 1L;
-
-    public enum ConnectionStatus {
-        /** initial state upon creating a connection request **/
-        INITIALIZED,
-
-        /** connection establish; feed is receiving data **/
-        ACTIVE,
-
-        /** connection removed; feed is not receiving data **/
-        INACTIVE,
-
-        /** connection request failed **/
-        FAILED
-    }
-
-    /** Feed joint on the feed pipeline that serves as the source for this subscription **/
-    private final FeedJointKey feedJointKey;
-
     /** Location in the source feed pipeline from where feed tuples are received. **/
     private final FeedRuntimeType connectionLocation;
-
     /** List of functions that need to be applied in sequence after the data hand-off at the source feedPointKey. **/
-    private final List<String> functionsToApply;
-
-    /** Status associated with the subscription. */
-    private ConnectionStatus connectionStatus;
-
+    private final List<FunctionSignature> functionsToApply;
     /** Name of the policy that governs feed ingestion **/
     private final String policy;
-
-    /** Policy associated with a feed connection **/
-    private final Map<String, String> policyParameters;
-
     /** Target dataset associated with the connection request **/
     private final String targetDataset;
-
     private final EntityId receivingFeedId;
 
-    public FeedConnectionRequest(FeedJointKey feedPointKey, FeedRuntimeType connectionLocation,
-            List<String> functionsToApply, String targetDataset, String policy, Map<String, String> policyParameters,
-            EntityId receivingFeedId) {
-        this.feedJointKey = feedPointKey;
+    public FeedConnectionRequest(FeedRuntimeType connectionLocation, List<FunctionSignature> functionsToApply,
+            String targetDataset, String policy, EntityId receivingFeedId) {
         this.connectionLocation = connectionLocation;
         this.functionsToApply = functionsToApply;
         this.targetDataset = targetDataset;
         this.policy = policy;
-        this.policyParameters = policyParameters;
         this.receivingFeedId = receivingFeedId;
-        this.connectionStatus = ConnectionStatus.INITIALIZED;
-    }
-
-    public FeedJointKey getFeedJointKey() {
-        return feedJointKey;
-    }
-
-    public ConnectionStatus getConnectionStatus() {
-        return connectionStatus;
-    }
-
-    public void setSubscriptionStatus(ConnectionStatus connectionStatus) {
-        this.connectionStatus = connectionStatus;
     }
 
     public String getPolicy() {
@@ -111,17 +68,13 @@ public class FeedConnectionRequest implements Serializable {
         return receivingFeedId;
     }
 
-    public Map<String, String> getPolicyParameters() {
-        return policyParameters;
-    }
-
-    public List<String> getFunctionsToApply() {
+    public List<FunctionSignature> getFunctionsToApply() {
         return functionsToApply;
     }
 
     @Override
     public String toString() {
-        return "Feed Connection Request " + feedJointKey + " [" + connectionLocation + "]" + " Apply ("
+        return "Feed Connection Request " + receivingFeedId + " [" + connectionLocation + "]" + " Apply ("
                 + StringUtils.join(functionsToApply, ",") + ")";
     }
 

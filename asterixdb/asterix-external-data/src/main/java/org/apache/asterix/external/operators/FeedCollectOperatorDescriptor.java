@@ -20,11 +20,6 @@ package org.apache.asterix.external.operators;
 
 import java.util.Map;
 
-import org.apache.asterix.active.ActiveManager;
-import org.apache.asterix.active.ActiveRuntimeId;
-import org.apache.asterix.active.EntityId;
-import org.apache.asterix.common.api.IAppRuntimeContext;
-import org.apache.asterix.external.feed.api.ISubscribableRuntime;
 import org.apache.asterix.external.feed.management.FeedConnectionId;
 import org.apache.asterix.external.util.FeedUtils.FeedRuntimeType;
 import org.apache.asterix.om.types.ARecordType;
@@ -55,21 +50,17 @@ public class FeedCollectOperatorDescriptor extends AbstractSingleActivityOperato
     /** Map representation of policy parameters */
     private final Map<String, String> feedPolicyProperties;
 
-    /** The source feed from which the feed derives its data from. **/
-    private final EntityId sourceFeedId;
-
     /** The subscription location at which the recipient feed receives tuples from the source feed {SOURCE_FEED_INTAKE_STAGE , SOURCE_FEED_COMPUTE_STAGE} **/
     private final FeedRuntimeType subscriptionLocation;
 
-    public FeedCollectOperatorDescriptor(JobSpecification spec, FeedConnectionId feedConnectionId,
-            EntityId sourceFeedId, ARecordType atype, RecordDescriptor rDesc, Map<String, String> feedPolicyProperties,
+    public FeedCollectOperatorDescriptor(JobSpecification spec, FeedConnectionId feedConnectionId, ARecordType atype,
+            RecordDescriptor rDesc, Map<String, String> feedPolicyProperties,
             FeedRuntimeType subscriptionLocation) {
-        super(spec, 0, 1);
+        super(spec, 1, 1);
         this.recordDescriptors[0] = rDesc;
         this.outputType = atype;
         this.connectionId = feedConnectionId;
         this.feedPolicyProperties = feedPolicyProperties;
-        this.sourceFeedId = sourceFeedId;
         this.subscriptionLocation = subscriptionLocation;
     }
 
@@ -77,11 +68,7 @@ public class FeedCollectOperatorDescriptor extends AbstractSingleActivityOperato
     public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
             IRecordDescriptorProvider recordDescProvider, final int partition, int nPartitions)
             throws HyracksDataException {
-        ActiveManager feedManager = (ActiveManager) ((IAppRuntimeContext) ctx.getJobletContext()
-                .getApplicationContext().getApplicationObject()).getActiveManager();
-        ActiveRuntimeId sourceRuntimeId = new ActiveRuntimeId(sourceFeedId, subscriptionLocation.toString(), partition);
-        ISubscribableRuntime sourceRuntime = (ISubscribableRuntime) feedManager.getRuntime(sourceRuntimeId);
-        return new FeedCollectOperatorNodePushable(ctx, connectionId, feedPolicyProperties, partition, sourceRuntime);
+        return new FeedCollectOperatorNodePushable(ctx, connectionId, feedPolicyProperties, partition);
     }
 
     public FeedConnectionId getFeedConnectionId() {
@@ -98,10 +85,6 @@ public class FeedCollectOperatorDescriptor extends AbstractSingleActivityOperato
 
     public RecordDescriptor getRecordDescriptor() {
         return recordDescriptors[0];
-    }
-
-    public EntityId getSourceFeedId() {
-        return sourceFeedId;
     }
 
     public FeedRuntimeType getSubscriptionLocation() {

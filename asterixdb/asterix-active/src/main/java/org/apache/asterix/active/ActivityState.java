@@ -18,11 +18,25 @@
  */
 package org.apache.asterix.active;
 
-// TODO: Document the state machine and its transition.
 public enum ActivityState {
-    CREATED,
-    INACTIVE,
-    ACTIVE,
-    UNDER_RECOVERY,
-    ENDED
+    /**
+     * The starting state and a possible terminal state. Next state can only be {@code ActivityState.STARTING}
+     */
+    STOPPED,
+    /**
+     * A terminal state
+     */
+    FAILED,
+    /**
+     * An intermediate state. Next state can only be {@code ActivityState.STARTED} or {@code ActivityState.FAILED}
+     */
+    STARTING,
+    /**
+     * An intermediate state. Next state can only be {@code ActivityState.STOPPING} or {@code ActivityState.FAILED}
+     */
+    STARTED,
+    /**
+     * An intermediate state. Next state can only be {@code ActivityState.STOPPED} or {@code ActivityState.FAILED}
+     */
+    STOPPING
 }

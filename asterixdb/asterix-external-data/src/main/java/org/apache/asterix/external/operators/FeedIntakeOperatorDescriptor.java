@@ -28,7 +28,6 @@ import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.external.api.IAdapterFactory;
 import org.apache.asterix.external.feed.api.IFeed;
-import org.apache.asterix.external.feed.management.FeedConnectionId;
 import org.apache.asterix.external.feed.policy.FeedPolicyAccessor;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -45,6 +44,8 @@ import org.apache.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescri
  */
 public class FeedIntakeOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
 
+    private static final String FEED_EXTENSION_NAME = "Feed";
+
     private static final long serialVersionUID = 1L;
 
     private static final Logger LOGGER = Logger.getLogger(FeedIntakeOperatorDescriptor.class.getName());
@@ -53,29 +54,23 @@ public class FeedIntakeOperatorDescriptor extends AbstractSingleActivityOperator
     private final EntityId feedId;
 
     private final FeedPolicyAccessor policyAccessor;
-
+    private final ARecordType adapterOutputType;
     /** The adaptor factory that is used to create an instance of the feed adaptor **/
     private IAdapterFactory adaptorFactory;
-
     /** The library that contains the adapter in use. **/
     private String adaptorLibraryName;
-
     /**
      * The adapter factory class that is used to create an instance of the feed adapter.
      * This value is used only in the case of external adapters.
      **/
     private String adaptorFactoryClassName;
-
     /** The configuration parameters associated with the adapter. **/
     private Map<String, String> adaptorConfiguration;
-
-    private final ARecordType adapterOutputType;
 
     public FeedIntakeOperatorDescriptor(JobSpecification spec, IFeed primaryFeed, IAdapterFactory adapterFactory,
             ARecordType adapterOutputType, FeedPolicyAccessor policyAccessor, RecordDescriptor rDesc) {
         super(spec, 0, 1);
-        this.feedId = new EntityId(FeedConnectionId.FEED_EXTENSION_NAME, primaryFeed.getDataverseName(),
-                primaryFeed.getFeedName());
+        this.feedId = new EntityId(FEED_EXTENSION_NAME, primaryFeed.getDataverseName(), primaryFeed.getFeedName());
         this.adaptorFactory = adapterFactory;
         this.adapterOutputType = adapterOutputType;
         this.policyAccessor = policyAccessor;
@@ -86,8 +81,7 @@ public class FeedIntakeOperatorDescriptor extends AbstractSingleActivityOperator
             String adapterFactoryClassName, ARecordType adapterOutputType, FeedPolicyAccessor policyAccessor,
             RecordDescriptor rDesc) {
         super(spec, 0, 1);
-        this.feedId = new EntityId(FeedConnectionId.FEED_EXTENSION_NAME, primaryFeed.getDataverseName(),
-                primaryFeed.getFeedName());
+        this.feedId = new EntityId(FEED_EXTENSION_NAME, primaryFeed.getDataverseName(), primaryFeed.getFeedName());
         this.adaptorFactoryClassName = adapterFactoryClassName;
         this.adaptorLibraryName = adapterLibraryName;
         this.adaptorConfiguration = primaryFeed.getAdapterConfiguration();
@@ -108,8 +102,8 @@ public class FeedIntakeOperatorDescriptor extends AbstractSingleActivityOperator
 
     private IAdapterFactory createExternalAdapterFactory(IHyracksTaskContext ctx) throws HyracksDataException {
         IAdapterFactory adapterFactory;
-        IAppRuntimeContext runtimeCtx =
-                (IAppRuntimeContext) ctx.getJobletContext().getApplicationContext().getApplicationObject();
+        IAppRuntimeContext runtimeCtx = (IAppRuntimeContext) ctx.getJobletContext()
+                .getApplicationContext().getApplicationObject();
         ILibraryManager libraryManager = runtimeCtx.getLibraryManager();
         ClassLoader classLoader = libraryManager.getLibraryClassLoader(feedId.getDataverse(), adaptorLibraryName);
         if (classLoader != null) {
@@ -130,8 +124,32 @@ public class FeedIntakeOperatorDescriptor extends AbstractSingleActivityOperator
         return adapterFactory;
     }
 
-    public EntityId getFeedId() {
+    public EntityId getEntityId() {
         return feedId;
+    }
+
+    public IAdapterFactory getAdaptorFactory() {
+        return this.adaptorFactory;
+    }
+
+    public void setAdaptorFactory(IAdapterFactory factory) {
+        this.adaptorFactory = factory;
+    }
+
+    public ARecordType getAdapterOutputType() {
+        return this.adapterOutputType;
+    }
+
+    public FeedPolicyAccessor getPolicyAccessor() {
+        return this.policyAccessor;
+    }
+
+    public String getAdaptorLibraryName() {
+        return this.adaptorLibraryName;
+    }
+
+    public String getAdaptorFactoryClassName() {
+        return this.adaptorFactoryClassName;
     }
 
 }

@@ -60,14 +60,14 @@ import org.apache.asterix.lang.common.expression.TypeReferenceExpression;
 import org.apache.asterix.lang.common.expression.UnaryExpr;
 import org.apache.asterix.lang.common.expression.UnorderedListTypeDefinition;
 import org.apache.asterix.lang.common.expression.VariableExpr;
+import org.apache.asterix.lang.common.literal.IntegerLiteral;
 import org.apache.asterix.lang.common.statement.CompactStatement;
 import org.apache.asterix.lang.common.statement.ConnectFeedStatement;
 import org.apache.asterix.lang.common.statement.CreateDataverseStatement;
 import org.apache.asterix.lang.common.statement.CreateFeedPolicyStatement;
+import org.apache.asterix.lang.common.statement.CreateFeedStatement;
 import org.apache.asterix.lang.common.statement.CreateFunctionStatement;
 import org.apache.asterix.lang.common.statement.CreateIndexStatement;
-import org.apache.asterix.lang.common.statement.CreatePrimaryFeedStatement;
-import org.apache.asterix.lang.common.statement.CreateSecondaryFeedStatement;
 import org.apache.asterix.lang.common.statement.DatasetDecl;
 import org.apache.asterix.lang.common.statement.DataverseDecl;
 import org.apache.asterix.lang.common.statement.DataverseDropStatement;
@@ -87,6 +87,8 @@ import org.apache.asterix.lang.common.statement.NodeGroupDropStatement;
 import org.apache.asterix.lang.common.statement.NodegroupDecl;
 import org.apache.asterix.lang.common.statement.Query;
 import org.apache.asterix.lang.common.statement.SetStatement;
+import org.apache.asterix.lang.common.statement.StartFeedStatement;
+import org.apache.asterix.lang.common.statement.StopFeedStatement;
 import org.apache.asterix.lang.common.statement.TypeDecl;
 import org.apache.asterix.lang.common.statement.TypeDropStatement;
 import org.apache.asterix.lang.common.statement.UpdateStatement;
@@ -107,13 +109,12 @@ public class FormatPrintVisitor implements ILangVisitor<Void, Integer> {
     private final static String CREATE = "create ";
     private final static String FEED = " feed ";
     private final static String DEFAULT_DATAVERSE_FORMAT = "org.apache.asterix.runtime.formats.NonTaggedDataFormat";
+    private final PrintWriter out;
     protected Set<Character> validIdentifierChars = new HashSet<Character>();
     protected Set<Character> validIdentifierStartChars = new HashSet<Character>();
     protected String dataverseSymbol = " dataverse ";
     protected String datasetSymbol = " dataset ";
     protected String assignSymbol = ":=";
-
-    private final PrintWriter out;
 
     public FormatPrintVisitor() {
         this(new PrintWriter(System.out));
@@ -747,35 +748,36 @@ public class FormatPrintVisitor implements ILangVisitor<Void, Integer> {
         if (connectFeedStmt.getPolicy() != null) {
             out.print(" using policy " + revertStringToQuoted(connectFeedStmt.getPolicy()));
         }
-        out.println(SEMICOLON);
-        return null;
-    }
-
-    @Override
-    public Void visit(CreatePrimaryFeedStatement cpfs, Integer step) throws CompilationException {
-        out.print(skip(step) + CREATE + " primary feed ");
-        out.print(generateFullName(cpfs.getDataverseName(), cpfs.getFeedName()));
-        out.print(generateIfNotExists(cpfs.getIfNotExists()));
-        out.print(" using " + cpfs.getAdaptorName() + " ");
-        printConfiguration(cpfs.getAdaptorConfiguration());
-        FunctionSignature func = cpfs.getAppliedFunction();
-        if (func != null) {
-            out.print(" apply function " + generateFullName(func.getNamespace(), func.getName()));
+        if (connectFeedStmt.getAppliedFunctions() != null) {
+            out.print(" apply function " + connectFeedStmt.getAppliedFunctions());
         }
         out.println(SEMICOLON);
         return null;
     }
 
     @Override
-    public Void visit(CreateSecondaryFeedStatement csfs, Integer step) throws CompilationException {
-        out.print(skip(step) + CREATE + " secondary feed ");
-        out.print(generateFullName(csfs.getDataverseName(), csfs.getFeedName()));
-        out.print(generateIfNotExists(csfs.getIfNotExists()));
-        out.print(" from feed " + generateFullName(csfs.getSourceFeedDataverse(), csfs.getSourceFeedName()));
-        FunctionSignature func = csfs.getAppliedFunction();
-        if (func != null) {
-            out.print(" apply function " + generateFullName(func.getNamespace(), func.getName()));
-        }
+    public Void visit(CreateFeedStatement cfs, Integer step) throws CompilationException {
+        out.print(skip(step) + "create " + FEED);
+        out.print(generateFullName(cfs.getDataverseName(), cfs.getFeedName()));
+        out.print(generateIfNotExists(cfs.getIfNotExists()));
+        out.print(" using " + cfs.getAdaptorName() + " ");
+        printConfiguration(cfs.getAdaptorConfiguration());
+        out.println(SEMICOLON);
+        return null;
+    }
+
+    @Override
+    public Void visit(StartFeedStatement startFeedStatement, Integer step) throws CompilationException {
+        out.print(skip(step) + "start " + FEED);
+        out.print(generateFullName(startFeedStatement.getDataverseName(), startFeedStatement.getFeedName()));
+        out.println(SEMICOLON);
+        return null;
+    }
+
+    @Override
+    public Void visit(StopFeedStatement stopFeedStatement, Integer step) throws CompilationException {
+        out.print(skip(step) + "stop " + FEED);
+        out.print(generateFullName(stopFeedStatement.getDataverseName(), stopFeedStatement.getFeedName()));
         out.println(SEMICOLON);
         return null;
     }

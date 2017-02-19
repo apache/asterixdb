@@ -25,3 +25,5 @@
 
 use dataverse twitter;
 connect feed MessageFeed to dataset ds_tweet;
+
+start feed MessageFeed;

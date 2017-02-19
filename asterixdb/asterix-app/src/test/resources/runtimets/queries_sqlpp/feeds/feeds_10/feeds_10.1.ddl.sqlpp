@@ -36,7 +36,7 @@ create  dataset Tweets(TweetType) primary key id;
 
 create  index usernameIdx  on Tweets (username) type btree;
 
-create  primary feed TweetFeed using localfs
+create  feed TweetFeed using localfs
 ((`path`=`asterix_nc1://data/twitter/obamatweets.adm`),
 (`format`=`adm`),
 (`type-name`=`TweetType`),

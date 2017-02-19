@@ -23,6 +23,6 @@
  * Expected Res : Success
  * Date         : 13th Aug 2016
  */
-
 use dataverse experiments;
+stop feed UserFeed;
 disconnect feed UserFeed from dataset TwitterUsers;

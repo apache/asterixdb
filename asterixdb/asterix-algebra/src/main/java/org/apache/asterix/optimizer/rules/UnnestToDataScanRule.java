@@ -33,6 +33,7 @@ import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Dataverse;
 import org.apache.asterix.metadata.entities.Feed;
+import org.apache.asterix.metadata.entities.FeedConnection;
 import org.apache.asterix.metadata.entities.FeedPolicyEntity;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails;
 import org.apache.asterix.metadata.feeds.BuiltinFeedPolicies;
@@ -214,6 +215,8 @@ public class UnnestToDataScanRule implements IAlgebraicRewriteRule {
         Dataset dataset = metadataProvider.findDataset(aqlId.getDataverseName(), targetDataset);
         ARecordType feedOutputType = (ARecordType) metadataProvider.findType(aqlId.getDataverseName(), outputType);
         Feed sourceFeed = metadataProvider.findFeed(aqlId.getDataverseName(), sourceFeedName);
+        FeedConnection feedConnection = metadataProvider.findFeedConnection(aqlId.getDataverseName(), sourceFeedName,
+                targetDataset);
         ARecordType metaType = null;
         // Does dataset have meta?
         if (dataset.hasMetaPart()) {
@@ -260,8 +263,8 @@ public class UnnestToDataScanRule implements IAlgebraicRewriteRule {
         }
         FeedDataSource feedDataSource = new FeedDataSource(sourceFeed, aqlId, targetDataset, feedOutputType, metaType,
                 pkTypes, partitioningKeys, keyAccessScalarFunctionCallExpression, sourceFeed.getFeedId(),
-                sourceFeed.getFeedType(), FeedRuntimeType.valueOf(subscriptionLocation), locations.split(","),
-                context.getComputationNodeDomain());
+                 FeedRuntimeType.valueOf(subscriptionLocation), locations.split(","),
+                context.getComputationNodeDomain(), feedConnection);
         feedDataSource.getProperties().put(BuiltinFeedPolicies.CONFIG_FEED_POLICY_KEY, feedPolicy);
         return feedDataSource;
     }

@@ -33,3 +33,4 @@ create feed TweetFeed using localfs
 );
 set wait-for-completion-feed "true";
 connect feed TweetFeed to dataset ds_tweet;
+start feed TweetFeed;

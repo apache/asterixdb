@@ -20,6 +20,7 @@ package org.apache.asterix.external.input.stream.factory;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.util.ArrayList;
 import java.util.List;
@@ -109,7 +110,8 @@ public class SocketServerInputStreamFactory implements IInputStreamFactory {
         try {
             Pair<String, Integer> socket = sockets.get(partition);
             ServerSocket server;
-            server = new ServerSocket(socket.second);
+            server = new ServerSocket();
+            server.bind(new InetSocketAddress(socket.second));
             return new SocketServerInputStream(server);
         } catch (IOException e) {
             throw new HyracksDataException(e);

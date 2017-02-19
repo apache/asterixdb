@@ -48,6 +48,15 @@ public class TwitterRecordReaderFactory implements IRecordReaderFactory<String> 
     private Map<String, String> configuration;
     private transient AlgebricksAbsolutePartitionConstraint clusterLocations;
 
+    public static boolean isTwitterPull(Map<String, String> configuration) {
+        String reader = configuration.get(ExternalDataConstants.KEY_READER);
+        if (reader.equals(ExternalDataConstants.READER_TWITTER_PULL)
+                || reader.equals(ExternalDataConstants.READER_PULL_TWITTER)) {
+            return true;
+        }
+        return false;
+    }
+
     @Override
     public DataSourceType getDataSourceType() {
         return DataSourceType.RECORDS;
