@@ -50,13 +50,13 @@ public interface IReplicationManager extends IIOReplicationManager {
      *
      * @param remoteReplicaId
      *            The replica id to send the request to.
-     * @param replicasDataToRecover
-     *            Get files that belong to those replicas.
+     * @param partitionsToRecover
+     *            Get files that belong to those partitions.
      * @param existingFiles
      *            a list of already existing files on the requester
      * @throws IOException
      */
-    public void requestReplicaFiles(String remoteReplicaId, Set<String> replicasDataToRecover,
+    public void requestReplicaFiles(String remoteReplicaId, Set<Integer> partitionsToRecover,
             Set<String> existingFiles) throws IOException;
 
     /**

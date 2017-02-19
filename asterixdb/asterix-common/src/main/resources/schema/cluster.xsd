@@ -44,7 +44,7 @@
     <xs:element name="http_port" type="xs:integer" />
     <xs:element name="debug_port" type="xs:integer" />
     <xs:element name="metadata_node" type="xs:string" />
-    <xs:element name="enabled" type="xs:boolean" />
+    <xs:element name="enabled" type="xs:string" />
     <xs:element name="replication_port" type="xs:integer" />
     <xs:element name="replication_factor" type="xs:integer" />
     <xs:element name="auto_failover" type="xs:boolean" />
@@ -57,6 +57,8 @@
     <xs:element name="result_time_to_live" type="xs:long" />
     <xs:element name="result_sweep_threshold" type="xs:long" />
     <xs:element name="cc_root" type="xs:string" />
+    <xs:element name="strategy" type="xs:string" />
+    <xs:element name="node_id" type="xs:string" />
 
     <!-- definition of complex elements -->
     <xs:element name="working_dir">
@@ -87,11 +89,29 @@
     <xs:element name="data_replication">
         <xs:complexType>
             <xs:sequence>
-                <xs:element ref="cl:enabled" />
+                <xs:element ref="cl:strategy" />
                 <xs:element ref="cl:replication_port" />
                 <xs:element ref="cl:replication_factor" />
-                <xs:element ref="cl:auto_failover" />
                 <xs:element ref="cl:replication_time_out" />
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="fault_tolerance">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="cl:strategy" />
+                <xs:element ref="cl:replica" minOccurs="0"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="high_availability">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="cl:enabled" minOccurs="0"/>
+                <xs:element ref="cl:data_replication" minOccurs="0"/>
+                <xs:element ref="cl:fault_tolerance" minOccurs="0"/>
             </xs:sequence>
         </xs:complexType>
     </xs:element>
@@ -136,6 +156,14 @@
         </xs:complexType>
     </xs:element>
 
+    <xs:element name="replica">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="cl:node_id" maxOccurs="unbounded" />
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
     <xs:element name="cluster">
         <xs:complexType>
             <xs:sequence>
@@ -150,7 +178,7 @@
                 <xs:element ref="cl:iodevices" minOccurs="0" />
                 <xs:element ref="cl:working_dir" />
                 <xs:element ref="cl:metadata_node" />
-                <xs:element ref="cl:data_replication" minOccurs="0" />
+                <xs:element ref="cl:high_availability" minOccurs="0" />
                 <xs:element ref="cl:master_node" />
                 <xs:element ref="cl:node" maxOccurs="unbounded" />
                 <xs:element ref="cl:substitute_nodes" />

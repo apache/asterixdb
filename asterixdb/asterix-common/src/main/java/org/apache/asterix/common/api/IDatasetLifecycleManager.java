@@ -23,6 +23,7 @@ import java.util.List;
 import org.apache.asterix.common.context.DatasetInfo;
 import org.apache.asterix.common.context.IndexInfo;
 import org.apache.asterix.common.context.PrimaryIndexOperationTracker;
+import org.apache.asterix.common.replication.IReplicationStrategy;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.common.api.IIndex;
 import org.apache.hyracks.storage.am.common.api.IResourceLifecycleManager;
@@ -102,4 +103,12 @@ public interface IDatasetLifecycleManager extends IResourceLifecycleManager<IInd
      * @throws HyracksDataException
      */
     void closeUserDatasets() throws HyracksDataException;
+
+    /**
+     * Flushes all opened datasets that are matching {@code replicationStrategy}.
+     *
+     * @param replicationStrategy
+     * @throws HyracksDataException
+     */
+    void flushDataset(IReplicationStrategy replicationStrategy) throws HyracksDataException;
 }

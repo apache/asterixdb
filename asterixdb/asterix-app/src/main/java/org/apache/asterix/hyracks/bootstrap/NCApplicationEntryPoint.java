@@ -18,27 +18,17 @@
  */
 package org.apache.asterix.hyracks.bootstrap;
 
-import java.io.File;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import org.apache.asterix.app.external.ExternalLibraryUtils;
 import org.apache.asterix.app.nc.NCAppRuntimeContext;
+import org.apache.asterix.app.replication.message.StartupTaskRequestMessage;
 import org.apache.asterix.common.api.AsterixThreadFactory;
 import org.apache.asterix.common.api.IAppRuntimeContext;
 import org.apache.asterix.common.config.AsterixExtension;
-import org.apache.asterix.common.config.MetadataProperties;
-import org.apache.asterix.common.config.StorageProperties;
-import org.apache.asterix.common.config.TransactionProperties;
 import org.apache.asterix.common.config.ClusterProperties;
 import org.apache.asterix.common.config.IPropertiesProvider;
 import org.apache.asterix.common.config.MessagingProperties;
-import org.apache.asterix.common.replication.IRemoteRecoveryManager;
-import org.apache.asterix.common.transactions.ICheckpointManager;
+import org.apache.asterix.common.config.MetadataProperties;
+import org.apache.asterix.common.config.StorageProperties;
+import org.apache.asterix.common.config.TransactionProperties;
 import org.apache.asterix.common.transactions.IRecoveryManager;
 import org.apache.asterix.common.transactions.IRecoveryManager.SystemState;
 import org.apache.asterix.common.utils.PrintUtil;
@@ -47,39 +37,39 @@ import org.apache.asterix.event.schema.cluster.Cluster;
 import org.apache.asterix.event.schema.cluster.Node;
 import org.apache.asterix.messaging.MessagingChannelInterfaceFactory;
 import org.apache.asterix.messaging.NCMessageBroker;
-import org.apache.asterix.runtime.message.ReportMaxResourceIdMessage;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepository;
 import org.apache.commons.io.FileUtils;
 import org.apache.hyracks.api.application.INCApplicationContext;
 import org.apache.hyracks.api.application.INCApplicationEntryPoint;
 import org.apache.hyracks.api.job.resource.NodeCapacity;
-import org.apache.hyracks.api.lifecycle.ILifeCycleComponentManager;
-import org.apache.hyracks.api.lifecycle.LifeCycleComponentManager;
 import org.apache.hyracks.api.messages.IMessageBroker;
 import org.apache.hyracks.control.nc.NodeControllerService;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
+import java.io.File;
+import java.util.Collections;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
     private static final Logger LOGGER = Logger.getLogger(NCApplicationEntryPoint.class.getName());
 
-    @Option(name = "-initial-run",
-            usage = "A flag indicating if it's the first time the NC is started (default: false)", required = false)
+    @Option(name = "-initial-run", usage = "A flag indicating if it's the first time the NC is started "
+            + "(default: false)", required = false)
     public boolean initialRun = false;
 
-    @Option(name = "-virtual-NC",
-            usage = "A flag indicating if this NC is running on virtual cluster " + "(default: false)",
-            required = false)
+    @Option(name = "-virtual-NC", usage = "A flag indicating if this NC is running on virtual cluster "
+            + "(default: false)", required = false)
     public boolean virtualNC = false;
 
     private INCApplicationContext ncApplicationContext = null;
     private IAppRuntimeContext runtimeContext;
     private String nodeId;
-    private boolean isMetadataNode = false;
     private boolean stopInitiated = false;
-    private SystemState systemState = SystemState.NEW_UNIVERSE;
-    private boolean pendingFailbackCompletion = false;
+    private SystemState systemState;
     private IMessageBroker messageBroker;
 
     @Override
@@ -93,8 +83,8 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
             parser.printUsage(System.err);
             throw e;
         }
-        ncAppCtx.setThreadFactory(new AsterixThreadFactory(ncAppCtx.getThreadFactory(),
-                ncAppCtx.getLifeCycleComponentManager()));
+        ncAppCtx.setThreadFactory(
+                new AsterixThreadFactory(ncAppCtx.getThreadFactory(), ncAppCtx.getLifeCycleComponentManager()));
         ncApplicationContext = ncAppCtx;
         nodeId = ncApplicationContext.getNodeId();
         if (LOGGER.isLoggable(Level.INFO)) {
@@ -104,12 +94,11 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
         final NodeControllerService controllerService = (NodeControllerService) ncAppCtx.getControllerService();
 
         if (System.getProperty("java.rmi.server.hostname") == null) {
-            System.setProperty("java.rmi.server.hostname", (controllerService)
-                    .getConfiguration().clusterNetPublicIPAddress);
+            System.setProperty("java.rmi.server.hostname",
+                    (controllerService).getConfiguration().clusterNetPublicIPAddress);
         }
         runtimeContext = new NCAppRuntimeContext(ncApplicationContext, getExtensions());
-        MetadataProperties metadataProperties = ((IPropertiesProvider) runtimeContext)
-                .getMetadataProperties();
+        MetadataProperties metadataProperties = ((IPropertiesProvider) runtimeContext).getMetadataProperties();
         if (!metadataProperties.getNodeNames().contains(ncApplicationContext.getNodeId())) {
             if (LOGGER.isLoggable(Level.INFO)) {
                 LOGGER.info("Substitute node joining : " + ncApplicationContext.getNodeId());
@@ -118,67 +107,33 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
         }
         runtimeContext.initialize(initialRun);
         ncApplicationContext.setApplicationObject(runtimeContext);
-        MessagingProperties messagingProperties = ((IPropertiesProvider) runtimeContext)
-                .getMessagingProperties();
+        MessagingProperties messagingProperties = ((IPropertiesProvider) runtimeContext).getMessagingProperties();
         messageBroker = new NCMessageBroker(controllerService, messagingProperties);
         ncApplicationContext.setMessageBroker(messageBroker);
         MessagingChannelInterfaceFactory interfaceFactory = new MessagingChannelInterfaceFactory(
                 (NCMessageBroker) messageBroker, messagingProperties);
         ncApplicationContext.setMessagingChannelInterfaceFactory(interfaceFactory);
 
-        boolean replicationEnabled = ClusterProperties.INSTANCE.isReplicationEnabled();
-        boolean autoFailover = ClusterProperties.INSTANCE.isAutoFailoverEnabled();
-        if (initialRun) {
-            LOGGER.info("System is being initialized. (first run)");
-        } else {
-            IRecoveryManager recoveryMgr = runtimeContext.getTransactionSubsystem().getRecoveryManager();
-            systemState = recoveryMgr.getSystemState();
+        IRecoveryManager recoveryMgr = runtimeContext.getTransactionSubsystem().getRecoveryManager();
+        systemState = recoveryMgr.getSystemState();
 
+        if (systemState == SystemState.NEW_UNIVERSE) {
             if (LOGGER.isLoggable(Level.INFO)) {
-                LOGGER.info("System is in a state: " + systemState);
+                LOGGER.info("System state: " + SystemState.NEW_UNIVERSE);
+                LOGGER.info("Node ID: " + nodeId);
+                LOGGER.info("Stores: " + PrintUtil.toString(metadataProperties.getStores()));
+                LOGGER.info("Root Metadata Store: " + metadataProperties.getStores().get(nodeId)[0]);
             }
-
-            //do not attempt to perform remote recovery if this is a virtual NC
-            if (autoFailover && !virtualNC) {
-                if (systemState == SystemState.NEW_UNIVERSE || systemState == SystemState.CORRUPTED) {
-                    //Start failback process
-                    IRemoteRecoveryManager remoteRecoveryMgr = runtimeContext.getRemoteRecoveryManager();
-                    remoteRecoveryMgr.startFailbackProcess();
-                    systemState = SystemState.RECOVERING;
-                    pendingFailbackCompletion = true;
-                }
-            } else {
-                //recover if the system is corrupted by checking system state.
-                if (systemState == SystemState.CORRUPTED) {
-                    recoveryMgr.startRecovery(true);
-                }
-            }
+            PersistentLocalResourceRepository localResourceRepository =
+                    (PersistentLocalResourceRepository) runtimeContext.getLocalResourceRepository();
+            localResourceRepository.initializeNewUniverse(ClusterProperties.INSTANCE.getStorageDirectoryName());
         }
 
-        /**
-         * if the node pending failback completion, the replication channel
-         * should not be opened to avoid other nodes connecting to it before
-         * the node completes its failback. CC will notify other replicas once
-         * this node is ready to receive replication requests.
-         */
-        if (replicationEnabled && !pendingFailbackCompletion) {
-            startReplicationService();
-        }
+        performLocalCleanUp();
     }
 
     protected List<AsterixExtension> getExtensions() {
         return Collections.emptyList();
-    }
-
-    private void startReplicationService() throws InterruptedException {
-        //Open replication channel
-        runtimeContext.getReplicationChannel().start();
-
-        //Check the state of remote replicas
-        runtimeContext.getReplicationManager().initializeReplicasState();
-
-        //Start replication after the state of remote replicas has been initialized.
-        runtimeContext.getReplicationManager().startReplicationThreads();
     }
 
     @Override
@@ -204,63 +159,13 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
 
     @Override
     public void notifyStartupComplete() throws Exception {
-        //Send max resource id on this NC to the CC
-        ReportMaxResourceIdMessage.send((NodeControllerService) ncApplicationContext.getControllerService());
-        MetadataProperties metadataProperties = ((IPropertiesProvider) runtimeContext)
-                .getMetadataProperties();
-        if (initialRun || systemState == SystemState.NEW_UNIVERSE) {
-            if (LOGGER.isLoggable(Level.INFO)) {
-                LOGGER.info("System state: " + SystemState.NEW_UNIVERSE);
-                LOGGER.info("Node ID: " + nodeId);
-                LOGGER.info("Stores: " + PrintUtil.toString(metadataProperties.getStores()));
-                LOGGER.info("Root Metadata Store: " + metadataProperties.getStores().get(nodeId)[0]);
-            }
-
-            PersistentLocalResourceRepository localResourceRepository =
-                    (PersistentLocalResourceRepository) runtimeContext
-                            .getLocalResourceRepository();
-            localResourceRepository.initializeNewUniverse(ClusterProperties.INSTANCE.getStorageDirectoryName());
+        // Since we don't pass initial run flag in AsterixHyracksIntegrationUtil, we use the virtualNC flag
+        if (systemState == SystemState.NEW_UNIVERSE && (initialRun || virtualNC)) {
+            systemState = SystemState.INITIAL_RUN;
         }
-
-        isMetadataNode = nodeId.equals(metadataProperties.getMetadataNodeName());
-        if (isMetadataNode && !pendingFailbackCompletion) {
-            runtimeContext.initializeMetadata(systemState == SystemState.NEW_UNIVERSE);
-        }
-        ExternalLibraryUtils.setUpExternaLibraries(runtimeContext.getLibraryManager(),
-                isMetadataNode && !pendingFailbackCompletion);
-
-        if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("Starting lifecycle components");
-        }
-
-        Map<String, String> lifecycleMgmtConfiguration = new HashMap<String, String>();
-        String dumpPathKey = LifeCycleComponentManager.Config.DUMP_PATH_KEY;
-        String dumpPath = metadataProperties.getCoredumpPath(nodeId);
-        lifecycleMgmtConfiguration.put(dumpPathKey, dumpPath);
-        if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("Coredump directory for NC is: " + dumpPath);
-        }
-        ILifeCycleComponentManager lccm = ncApplicationContext.getLifeCycleComponentManager();
-        lccm.configure(lifecycleMgmtConfiguration);
-        if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("Configured:" + lccm);
-        }
-        ncApplicationContext.setStateDumpHandler(
-                new AsterixStateDumpHandler(ncApplicationContext.getNodeId(), lccm.getDumpPath(), lccm));
-
-        lccm.startAll();
-
-        if (!pendingFailbackCompletion) {
-            ICheckpointManager checkpointMgr = runtimeContext.getTransactionSubsystem().getCheckpointManager();
-            checkpointMgr.doSharpCheckpoint();
-
-            if (isMetadataNode) {
-                runtimeContext.exportMetadataNodeStub();
-            }
-        }
-
-        //Clean any temporary files
-        performLocalCleanUp();
+        // Request startup tasks from CC
+        StartupTaskRequestMessage.send((NodeControllerService) ncApplicationContext.getControllerService(),
+                systemState);
     }
 
     @Override
@@ -296,8 +201,7 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
     }
 
     private void updateOnNodeJoin() {
-        MetadataProperties metadataProperties = ((IPropertiesProvider) runtimeContext)
-                .getMetadataProperties();
+        MetadataProperties metadataProperties = ((IPropertiesProvider) runtimeContext).getMetadataProperties();
         if (!metadataProperties.getNodeNames().contains(nodeId)) {
             metadataProperties.getNodeNames().add(nodeId);
             Cluster cluster = ClusterProperties.INSTANCE.getCluster();
@@ -305,8 +209,7 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
                 throw new IllegalStateException("No cluster configuration found for this instance");
             }
             String asterixInstanceName = metadataProperties.getInstanceName();
-            TransactionProperties txnProperties = ((IPropertiesProvider) runtimeContext)
-                    .getTransactionProperties();
+            TransactionProperties txnProperties = ((IPropertiesProvider) runtimeContext).getTransactionProperties();
             Node self = null;
             List<Node> nodes;
             if (cluster.getSubstituteNodes() != null) {

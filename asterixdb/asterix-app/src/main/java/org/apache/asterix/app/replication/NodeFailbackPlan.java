@@ -16,12 +16,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.runtime.message;
+package org.apache.asterix.app.replication;
 
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+
+import org.apache.asterix.app.replication.message.CompleteFailbackRequestMessage;
+import org.apache.asterix.app.replication.message.PreparePartitionsFailbackRequestMessage;
 
 public class NodeFailbackPlan {
 

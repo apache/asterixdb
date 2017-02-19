@@ -44,7 +44,8 @@ public class ConfigureCommand extends AbstractCommand {
     @Override
     protected void execCommand() throws Exception {
         configureCluster("local", "local.xml");
-        configureCluster("local", "local_with_replication.xml");
+        configureCluster("local", "local_chained_declustering_rep.xml");
+        configureCluster("local", "local_metadata_only_rep.xml");
         configureCluster("demo", "demo.xml");
 
         String installerConfPath = InstallerDriver.getManagixHome() + File.separator + InstallerDriver.MANAGIX_CONF_XML;

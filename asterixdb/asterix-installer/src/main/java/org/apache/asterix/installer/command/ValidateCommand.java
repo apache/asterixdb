@@ -262,40 +262,16 @@ public class ValidateCommand extends AbstractCommand {
         boolean valid = true;
 
         //if replication is disabled, no need to validate the settings
-        if (cluster.getDataReplication() != null && cluster.getDataReplication().isEnabled()) {
-
-            if (cluster.getDataReplication().getReplicationFactor() == null) {
-                if (cluster.getNode().size() >= 3) {
-                    LOGGER.warn("Replication factor not defined. Using default value (3) " + WARNING);
-
-                } else {
-                    valid = false;
-                    LOGGER.fatal("Replication factor not defined for data repliaction. " + ERROR);
-                }
-
-            }
-
-            //replication factor = 1 means no replication
-            if (cluster.getDataReplication().getReplicationFactor().intValue() == 1) {
-                LOGGER.warn("Replication factor is set to 1. Disabling data replication" + WARNING);
-                return true;
-            }
-
-            if (cluster.getDataReplication().getReplicationFactor().intValue() > cluster.getNode().size()) {
-                LOGGER.fatal("Replication factor = " + cluster.getDataReplication().getReplicationFactor().intValue()
-                        + "  requires at least " + cluster.getDataReplication().getReplicationFactor().intValue()
-                        + " nodes in the cluster" + ERROR);
-                valid = false;
-            }
-
-            if (cluster.getDataReplication().getReplicationPort() == null
-                    || cluster.getDataReplication().getReplicationPort().toString().length() == 0) {
+        if (cluster.getHighAvailability() != null && cluster.getHighAvailability().getDataReplication() != null) {
+            if (cluster.getHighAvailability().getDataReplication().getReplicationPort() == null || cluster
+                    .getHighAvailability().getDataReplication().getReplicationPort().toString().length() == 0) {
                 valid = false;
                 LOGGER.fatal("Replication data port not defined for data repliaction. " + ERROR);
             }
 
-            if (cluster.getDataReplication().getReplicationTimeOut() == null
-                    || (cluster.getDataReplication().getReplicationTimeOut().intValue() + "").length() == 0) {
+            if (cluster.getHighAvailability().getDataReplication().getReplicationTimeOut() == null || String
+                    .valueOf(cluster.getHighAvailability().getDataReplication().getReplicationTimeOut().intValue())
+                    .length() == 0) {
                 LOGGER.warn("Replication maximum wait time not defined. Using default value (60 seconds) " + WARNING);
             }
 

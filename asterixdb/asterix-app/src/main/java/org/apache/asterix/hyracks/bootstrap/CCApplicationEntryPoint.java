@@ -18,41 +18,23 @@
  */
 package org.apache.asterix.hyracks.bootstrap;
 
-import static org.apache.asterix.api.http.servlet.ServletConstants.ASTERIX_BUILD_PROP_ATTR;
-import static org.apache.asterix.api.http.servlet.ServletConstants.HYRACKS_CONNECTION_ATTR;
-
-import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import org.apache.asterix.active.ActiveLifecycleListener;
-import org.apache.asterix.api.http.server.ApiServlet;
-import org.apache.asterix.api.http.server.ClusterApiServlet;
-import org.apache.asterix.api.http.server.ClusterControllerDetailsApiServlet;
-import org.apache.asterix.api.http.server.ConnectorApiServlet;
-import org.apache.asterix.api.http.server.DdlApiServlet;
-import org.apache.asterix.api.http.server.DiagnosticsApiServlet;
-import org.apache.asterix.api.http.server.FeedServlet;
-import org.apache.asterix.api.http.server.FullApiServlet;
-import org.apache.asterix.api.http.server.NodeControllerDetailsApiServlet;
-import org.apache.asterix.api.http.server.QueryApiServlet;
-import org.apache.asterix.api.http.server.QueryResultApiServlet;
-import org.apache.asterix.api.http.server.QueryServiceServlet;
-import org.apache.asterix.api.http.server.QueryStatusApiServlet;
-import org.apache.asterix.api.http.server.QueryWebInterfaceServlet;
-import org.apache.asterix.api.http.server.ShutdownApiServlet;
-import org.apache.asterix.api.http.server.UpdateApiServlet;
-import org.apache.asterix.api.http.server.VersionApiServlet;
+import org.apache.asterix.api.http.server.*;
 import org.apache.asterix.api.http.servlet.ServletConstants;
 import org.apache.asterix.app.cc.CCExtensionManager;
 import org.apache.asterix.app.cc.ResourceIdManager;
 import org.apache.asterix.app.external.ExternalLibraryUtils;
+import org.apache.asterix.app.replication.FaultToleranceStrategyFactory;
 import org.apache.asterix.common.api.AsterixThreadFactory;
 import org.apache.asterix.common.config.AsterixExtension;
+import org.apache.asterix.common.config.ClusterProperties;
 import org.apache.asterix.common.config.ExternalProperties;
 import org.apache.asterix.common.config.MetadataProperties;
 import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.library.ILibraryManager;
+import org.apache.asterix.common.messaging.api.ICCMessageBroker;
+import org.apache.asterix.common.replication.IFaultToleranceStrategy;
+import org.apache.asterix.common.replication.IReplicationStrategy;
 import org.apache.asterix.common.utils.Servlets;
 import org.apache.asterix.external.library.ExternalLibraryManager;
 import org.apache.asterix.file.StorageComponentProvider;
@@ -70,12 +52,18 @@ import org.apache.hyracks.api.client.HyracksConnection;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.job.resource.IJobCapacityController;
 import org.apache.hyracks.api.lifecycle.LifeCycleComponentManager;
-import org.apache.hyracks.api.messages.IMessageBroker;
 import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.common.controllers.CCConfig;
 import org.apache.hyracks.http.api.IServlet;
 import org.apache.hyracks.http.server.HttpServer;
 import org.apache.hyracks.http.server.WebManager;
+
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import static org.apache.asterix.api.http.servlet.ServletConstants.ASTERIX_BUILD_PROP_ATTR;
+import static org.apache.asterix.api.http.servlet.ServletConstants.HYRACKS_CONNECTION_ATTR;
 
 public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
 
@@ -90,7 +78,7 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
     @Override
     public void start(ICCApplicationContext ccAppCtx, String[] args) throws Exception {
         final ClusterControllerService controllerService = (ClusterControllerService) ccAppCtx.getControllerService();
-        IMessageBroker messageBroker = new CCMessageBroker(controllerService);
+        ICCMessageBroker messageBroker = new CCMessageBroker(controllerService);
         this.appCtx = ccAppCtx;
 
         if (LOGGER.isLoggable(Level.INFO)) {
@@ -100,11 +88,14 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
         appCtx.setThreadFactory(new AsterixThreadFactory(appCtx.getThreadFactory(), new LifeCycleComponentManager()));
         ILibraryManager libraryManager = new ExternalLibraryManager();
         ResourceIdManager resourceIdManager = new ResourceIdManager();
+        IReplicationStrategy repStrategy = ClusterProperties.INSTANCE.getReplicationStrategy();
+        IFaultToleranceStrategy ftStrategy = FaultToleranceStrategyFactory
+                .create(ClusterProperties.INSTANCE.getCluster(), repStrategy, messageBroker);
         ExternalLibraryUtils.setUpExternaLibraries(libraryManager, false);
         componentProvider = new StorageComponentProvider();
         GlobalRecoveryManager.instantiate((HyracksConnection) getNewHyracksClientConnection(), componentProvider);
         AppContextInfo.initialize(appCtx, getNewHyracksClientConnection(), libraryManager, resourceIdManager,
-                () -> MetadataManager.INSTANCE, GlobalRecoveryManager.instance());
+                () -> MetadataManager.INSTANCE, GlobalRecoveryManager.instance(), ftStrategy);
         ccExtensionManager = new CCExtensionManager(getExtensions());
         AppContextInfo.INSTANCE.setExtensionManager(ccExtensionManager);
         final CCConfig ccConfig = controllerService.getCCConfig();

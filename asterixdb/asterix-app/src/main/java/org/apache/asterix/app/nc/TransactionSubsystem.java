@@ -21,11 +21,11 @@ package org.apache.asterix.app.nc;
 import java.util.concurrent.Callable;
 import java.util.logging.Logger;
 
-import org.apache.asterix.common.config.ClusterProperties;
 import org.apache.asterix.common.config.IPropertiesProvider;
 import org.apache.asterix.common.config.ReplicationProperties;
 import org.apache.asterix.common.config.TransactionProperties;
 import org.apache.asterix.common.exceptions.ACIDException;
+import org.apache.asterix.common.replication.IReplicationStrategy;
 import org.apache.asterix.common.transactions.Checkpoint;
 import org.apache.asterix.common.transactions.CheckpointProperties;
 import org.apache.asterix.common.transactions.IAppRuntimeContextProvider;
@@ -70,7 +70,11 @@ public class TransactionSubsystem implements ITransactionSubsystem {
         this.txnProperties = txnProperties;
         this.transactionManager = new TransactionManager(this);
         this.lockManager = new ConcurrentLockManager(txnProperties.getLockManagerShrinkTimer());
-        final boolean replicationEnabled = ClusterProperties.INSTANCE.isReplicationEnabled();
+        ReplicationProperties repProperties = ((IPropertiesProvider) asterixAppRuntimeContextProvider
+                .getAppContext()).getReplicationProperties();
+        IReplicationStrategy replicationStrategy = repProperties.getReplicationStrategy();
+        final boolean replicationEnabled = repProperties.isParticipant(id);
+
         final CheckpointProperties checkpointProperties = new CheckpointProperties(txnProperties, id);
         checkpointManager = CheckpointManagerFactory.create(this, checkpointProperties, replicationEnabled);
         final Checkpoint latestCheckpoint = checkpointManager.getLatest();
@@ -80,14 +84,8 @@ public class TransactionSubsystem implements ITransactionSubsystem {
                             latestCheckpoint.getStorageVersion(), StorageConstants.VERSION));
         }
 
-        ReplicationProperties asterixReplicationProperties = null;
-        if (asterixAppRuntimeContextProvider != null) {
-            asterixReplicationProperties = ((IPropertiesProvider) asterixAppRuntimeContextProvider.getAppContext())
-                    .getReplicationProperties();
-        }
-
-        if (asterixReplicationProperties != null && replicationEnabled) {
-            this.logManager = new LogManagerWithReplication(this);
+        if (replicationEnabled) {
+            this.logManager = new LogManagerWithReplication(this, replicationStrategy);
         } else {
             this.logManager = new LogManager(this);
         }

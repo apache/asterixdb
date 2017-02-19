@@ -16,45 +16,48 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.runtime.message;
+package org.apache.asterix.app.replication.message;
 
-import org.apache.asterix.common.messaging.api.IApplicationMessage;
-import org.apache.asterix.runtime.utils.ClusterStateManager;
+import org.apache.asterix.common.replication.INCLifecycleMessage;
+import org.apache.asterix.runtime.utils.AppContextInfo;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.service.IControllerService;
 
-public class TakeoverPartitionsResponseMessage implements IApplicationMessage {
+public class NCLifecycleTaskReportMessage implements INCLifecycleMessage {
 
     private static final long serialVersionUID = 1L;
-    private final Integer[] partitions;
     private final String nodeId;
-    private final long requestId;
+    private final boolean success;
+    private Exception exception;
 
-    public TakeoverPartitionsResponseMessage(long requestId, String nodeId, Integer[] partitionsToTakeover) {
-        this.requestId = requestId;
+    public NCLifecycleTaskReportMessage(String nodeId, boolean success) {
         this.nodeId = nodeId;
-        this.partitions = partitionsToTakeover;
+        this.success = success;
     }
 
-    public Integer[] getPartitions() {
-        return partitions;
+    @Override
+    public void handle(IControllerService cs) throws HyracksDataException, InterruptedException {
+        AppContextInfo.INSTANCE.getFaultToleranceStrategy().process(this);
     }
 
     public String getNodeId() {
         return nodeId;
     }
 
-    public long getRequestId() {
-        return requestId;
+    public boolean isSuccess() {
+        return success;
+    }
+
+    public Exception getException() {
+        return exception;
+    }
+
+    public void setException(Exception exception) {
+        this.exception = exception;
     }
 
     @Override
-    public void handle(IControllerService cs) throws HyracksDataException, InterruptedException {
-        ClusterStateManager.INSTANCE.processPartitionTakeoverResponse(this);
-    }
-
-    @Override
-    public String toString() {
-        return TakeoverPartitionsResponseMessage.class.getSimpleName();
+    public MessageType getType() {
+        return MessageType.STARTUP_TASK_RESULT;
     }
 }

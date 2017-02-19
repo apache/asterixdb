@@ -19,8 +19,11 @@
 package org.apache.asterix.common.replication;
 
 import java.io.IOException;
+import java.util.Map;
+import java.util.Set;
 
 import org.apache.asterix.common.exceptions.ACIDException;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public interface IRemoteRecoveryManager {
 
@@ -46,4 +49,23 @@ public interface IRemoteRecoveryManager {
      * @throws InterruptedException
      */
     public void completeFailbackProcess() throws IOException, InterruptedException;
+
+    /**
+     * Replays all committed jobs logs for {@code partitions}. Optionally, flushes all datasets
+     * to convert the replayed logs into LSM Components.
+     *
+     * @param partitions
+     * @param flush
+     * @throws HyracksDataException
+     */
+    void replayReplicaPartitionLogs(Set<Integer> partitions, boolean flush) throws HyracksDataException;
+
+    /**
+     * Performs the remote recovery plan by requesting data from each specified node
+     * for each partitions specified.
+     *
+     * @param recoveryPlan
+     * @throws HyracksDataException
+     */
+    void doRemoteRecoveryPlan(Map<String, Set<Integer>> recoveryPlan) throws HyracksDataException;
 }

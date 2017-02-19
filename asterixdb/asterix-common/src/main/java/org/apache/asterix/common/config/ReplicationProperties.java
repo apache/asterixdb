@@ -18,11 +18,10 @@
  */
 package org.apache.asterix.common.config;
 
-import java.util.HashSet;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
+import org.apache.asterix.common.replication.IReplicationStrategy;
 import org.apache.asterix.common.replication.Replica;
 import org.apache.asterix.event.schema.cluster.Cluster;
 import org.apache.asterix.event.schema.cluster.Node;
@@ -31,15 +30,7 @@ import org.apache.hyracks.util.StorageUtil.StorageUnit;
 
 public class ReplicationProperties extends AbstractProperties {
 
-    private static final Logger LOGGER = Logger.getLogger(ReplicationProperties.class.getName());
-
-
     private static final int REPLICATION_DATAPORT_DEFAULT = 2000;
-
-    private static final String REPLICATION_ENABLED_KEY = "replication.enabled";
-
-    private static final String REPLICATION_FACTOR_KEY = "replication.factor";
-    private static final int REPLICATION_FACTOR_DEFAULT = 1;
 
     private static final String REPLICATION_TIMEOUT_KEY = "replication.timeout";
     private static final int REPLICATION_TIME_OUT_DEFAULT = 15;
@@ -60,203 +51,58 @@ public class ReplicationProperties extends AbstractProperties {
     private static final int REPLICATION_LOG_BUFFER_PAGE_SIZE_DEFAULT = StorageUtil.getSizeInBytes(128,
             StorageUnit.KILOBYTE);
 
-    private final String nodeNamePrefix;
     private final Cluster cluster;
+    private final IReplicationStrategy repStrategy;
 
     public ReplicationProperties(PropertiesAccessor accessor) {
         super(accessor);
         this.cluster = ClusterProperties.INSTANCE.getCluster();
-
-        if (cluster != null) {
-            nodeNamePrefix = cluster.getInstanceName() + "_";
-        } else {
-            nodeNamePrefix = "";
-        }
-    }
-
-    @PropertyKey(REPLICATION_ENABLED_KEY)
-    public boolean isReplicationEnabled() {
-        return ClusterProperties.INSTANCE.isReplicationEnabled();
+        this.repStrategy = ClusterProperties.INSTANCE.getReplicationStrategy();
     }
 
     public String getReplicaIPAddress(String nodeId) {
-        if (cluster != null) {
-            for (int i = 0; i < cluster.getNode().size(); i++) {
-                Node node = cluster.getNode().get(i);
-                if (getRealCluserNodeID(node.getId()).equals(nodeId)) {
-                    return node.getClusterIp();
-                }
-            }
-        }
-        return NODE_IP_ADDRESS_DEFAULT;
+        Node node = ClusterProperties.INSTANCE.getNodeById(nodeId);
+        return node != null ? node.getClusterIp() : NODE_IP_ADDRESS_DEFAULT;
     }
 
     public int getDataReplicationPort(String nodeId) {
-        if (cluster != null && cluster.getDataReplication() != null) {
-            for (int i = 0; i < cluster.getNode().size(); i++) {
-                Node node = cluster.getNode().get(i);
-                if (getRealCluserNodeID(node.getId()).equals(nodeId)) {
-                    return node.getReplicationPort() != null ? node.getReplicationPort().intValue()
-                            : cluster.getDataReplication().getReplicationPort().intValue();
-                }
-            }
+        Node node = ClusterProperties.INSTANCE.getNodeById(nodeId);
+        if (node != null) {
+            return node.getReplicationPort() != null ? node.getReplicationPort().intValue()
+                    : cluster.getHighAvailability().getDataReplication().getReplicationPort().intValue();
         }
         return REPLICATION_DATAPORT_DEFAULT;
     }
 
-    public Set<Replica> getRemoteReplicas(String nodeId) {
-        Set<Replica> remoteReplicas = new HashSet<>();;
-
-        int numberOfRemoteReplicas = getReplicationFactor() - 1;
-        //Using chained-declustering
-        if (cluster != null) {
-            int nodeIndex = -1;
-            //find the node index in the cluster config
-            for (int i = 0; i < cluster.getNode().size(); i++) {
-                Node node = cluster.getNode().get(i);
-                if (getRealCluserNodeID(node.getId()).equals(nodeId)) {
-                    nodeIndex = i;
-                    break;
-                }
-            }
-
-            if (nodeIndex == -1) {
-                LOGGER.log(Level.WARNING,
-                        "Could not find node " + getRealCluserNodeID(nodeId) + " in cluster configurations");
-                return null;
-            }
-
-            //find nodes to the right of this node
-            for (int i = nodeIndex + 1; i < cluster.getNode().size(); i++) {
-                remoteReplicas.add(getReplicaByNodeIndex(i));
-                if (remoteReplicas.size() == numberOfRemoteReplicas) {
-                    break;
-                }
-            }
-
-            //if not all remote replicas have been found, start from the beginning
-            if (remoteReplicas.size() != numberOfRemoteReplicas) {
-                for (int i = 0; i < cluster.getNode().size(); i++) {
-                    remoteReplicas.add(getReplicaByNodeIndex(i));
-                    if (remoteReplicas.size() == numberOfRemoteReplicas) {
-                        break;
-                    }
-                }
-            }
-        }
-        return remoteReplicas;
-    }
-
-    private Replica getReplicaByNodeIndex(int nodeIndex) {
-        Node node = cluster.getNode().get(nodeIndex);
-        Node replicaNode = new Node();
-        replicaNode.setId(getRealCluserNodeID(node.getId()));
-        replicaNode.setClusterIp(node.getClusterIp());
-        return new Replica(replicaNode);
-    }
-
     public Replica getReplicaById(String nodeId) {
-        int nodeIndex = -1;
-        if (cluster != null) {
-            for (int i = 0; i < cluster.getNode().size(); i++) {
-                Node node = cluster.getNode().get(i);
-
-                if (getRealCluserNodeID(node.getId()).equals(nodeId)) {
-                    nodeIndex = i;
-                    break;
-                }
-            }
+        Node node = ClusterProperties.INSTANCE.getNodeById(nodeId);
+        if (node != null) {
+            return new Replica(node);
         }
-
-        if (nodeIndex < 0) {
-            return null;
-        }
-
-        return getReplicaByNodeIndex(nodeIndex);
+        return null;
     }
 
     public Set<String> getRemoteReplicasIds(String nodeId) {
-        Set<String> remoteReplicasIds = new HashSet<>();
-        Set<Replica> remoteReplicas = getRemoteReplicas(nodeId);
-
-        for (Replica replica : remoteReplicas) {
-            remoteReplicasIds.add(replica.getId());
-        }
-
-        return remoteReplicasIds;
+        return repStrategy.getRemoteReplicas(nodeId).stream().map(Replica::getId).collect(Collectors.toSet());
     }
 
-    public String getRealCluserNodeID(String nodeId) {
-        return nodeNamePrefix + nodeId;
+    public Set<String> getRemotePrimaryReplicasIds(String nodeId) {
+        return repStrategy.getRemotePrimaryReplicas(nodeId).stream().map(Replica::getId).collect(Collectors.toSet());
     }
 
     public Set<String> getNodeReplicasIds(String nodeId) {
-        Set<String> replicaIds = new HashSet<>();
-        replicaIds.add(nodeId);
-        replicaIds.addAll(getRemoteReplicasIds(nodeId));
-        return replicaIds;
-    }
-
-    @PropertyKey(REPLICATION_FACTOR_KEY)
-    public int getReplicationFactor() {
-        if (cluster != null) {
-            if (cluster.getDataReplication() == null || cluster.getDataReplication().getReplicationFactor() == null) {
-                return REPLICATION_FACTOR_DEFAULT;
-            }
-            return cluster.getDataReplication().getReplicationFactor().intValue();
-        }
-        return REPLICATION_FACTOR_DEFAULT;
+        Set<String> remoteReplicasIds = getRemoteReplicasIds(nodeId);
+        // This includes the node itself
+        remoteReplicasIds.add(nodeId);
+        return remoteReplicasIds;
     }
 
     @PropertyKey(REPLICATION_TIMEOUT_KEY)
     public int getReplicationTimeOut() {
         if (cluster != null) {
-            return cluster.getDataReplication().getReplicationTimeOut().intValue();
+            return cluster.getHighAvailability().getDataReplication().getReplicationTimeOut().intValue();
         }
         return REPLICATION_TIME_OUT_DEFAULT;
-    }
-
-    /**
-     * @param nodeId
-     * @return The set of nodes which replicate to this node, including the node itself
-     */
-    public Set<String> getNodeReplicationClients(String nodeId) {
-        Set<String> clientReplicas = new HashSet<>();
-        clientReplicas.add(nodeId);
-
-        int clientsCount = getReplicationFactor();
-
-        //Using chained-declustering backwards
-        if (cluster != null) {
-            int nodeIndex = -1;
-            //find the node index in the cluster config
-            for (int i = 0; i < cluster.getNode().size(); i++) {
-                Node node = cluster.getNode().get(i);
-                if (getRealCluserNodeID(node.getId()).equals(nodeId)) {
-                    nodeIndex = i;
-                    break;
-                }
-            }
-
-            //find nodes to the left of this node
-            for (int i = nodeIndex - 1; i >= 0; i--) {
-                clientReplicas.add(getReplicaByNodeIndex(i).getId());
-                if (clientReplicas.size() == clientsCount) {
-                    break;
-                }
-            }
-
-            //if not all client replicas have been found, start from the end
-            if (clientReplicas.size() != clientsCount) {
-                for (int i = cluster.getNode().size() - 1; i >= 0; i--) {
-                    clientReplicas.add(getReplicaByNodeIndex(i).getId());
-                    if (clientReplicas.size() == clientsCount) {
-                        break;
-                    }
-                }
-            }
-        }
-        return clientReplicas;
     }
 
     @PropertyKey(REPLICATION_MAX_REMOTE_RECOVERY_ATTEMPTS_KEY)
@@ -280,5 +126,13 @@ public class ReplicationProperties extends AbstractProperties {
     public int getLogBatchSize() {
         return accessor.getProperty(REPLICATION_LOG_BATCH_SIZE_KEY, REPLICATION_LOG_BATCH_SIZE_DEFAULT,
                 PropertyInterpreters.getIntegerBytePropertyInterpreter());
+    }
+
+    public boolean isParticipant(String nodeId) {
+        return repStrategy.isParticipant(nodeId);
+    }
+
+    public IReplicationStrategy getReplicationStrategy() {
+        return repStrategy;
     }
 }

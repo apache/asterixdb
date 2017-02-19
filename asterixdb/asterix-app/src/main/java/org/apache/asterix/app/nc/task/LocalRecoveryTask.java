@@ -16,39 +16,36 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.runtime.message;
+package org.apache.asterix.app.nc.task;
 
+import java.io.IOException;
 import java.util.Set;
 
-import org.apache.asterix.runtime.utils.ClusterStateManager;
+import org.apache.asterix.common.api.IAppRuntimeContext;
+import org.apache.asterix.common.api.INCLifecycleTask;
+import org.apache.asterix.common.exceptions.ACIDException;
+import org.apache.asterix.common.exceptions.ExceptionUtils;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.service.IControllerService;
+import org.apache.hyracks.control.nc.NodeControllerService;
 
-public class CompleteFailbackResponseMessage extends AbstractFailbackPlanMessage {
+public class LocalRecoveryTask implements INCLifecycleTask {
 
     private static final long serialVersionUID = 1L;
     private final Set<Integer> partitions;
 
-    public CompleteFailbackResponseMessage(long planId, int requestId, Set<Integer> partitions) {
-        super(planId, requestId);
+    public LocalRecoveryTask(Set<Integer> partitions) {
         this.partitions = partitions;
     }
 
-    public Set<Integer> getPartitions() {
-        return partitions;
-    }
-
     @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append(CompleteFailbackResponseMessage.class.getSimpleName());
-        sb.append(" Plan ID: " + planId);
-        sb.append(" Partitions: " + partitions);
-        return sb.toString();
-    }
-
-    @Override
-    public void handle(IControllerService cs) throws HyracksDataException, InterruptedException {
-        ClusterStateManager.INSTANCE.processCompleteFailbackResponse(this);
+    public void perform(IControllerService cs) throws HyracksDataException {
+        NodeControllerService ncs = (NodeControllerService) cs;
+        IAppRuntimeContext runtimeContext = (IAppRuntimeContext) ncs.getApplicationContext().getApplicationObject();
+        try {
+            runtimeContext.getTransactionSubsystem().getRecoveryManager().startLocalRecovery(partitions);
+        } catch (IOException | ACIDException e) {
+            throw ExceptionUtils.convertToHyracksDataException(e);
+        }
     }
 }

@@ -19,14 +19,22 @@
 <cluster xmlns="cluster">
   <instance_name>asterix</instance_name>
   <store>storage</store>
+  <metadata_node>nc1</metadata_node>
 
-  <data_replication>
+  <high_availability>
     <enabled>false</enabled>
-    <replication_port>2016</replication_port>
-    <replication_factor>2</replication_factor>
-    <auto_failover>false</auto_failover>
-    <replication_time_out>30</replication_time_out>
-  </data_replication>
+    <data_replication>
+      <strategy>metadata_only</strategy>
+      <replication_port>2016</replication_port>
+      <replication_time_out>30</replication_time_out>
+    </data_replication>
+    <fault_tolerance>
+       <strategy>metadata_node</strategy>
+       <replica>
+         <node_id>nc2</node_id>
+       </replica>
+    </fault_tolerance>
+  </high_availability>
 
   <master_node>
     <id>master</id>

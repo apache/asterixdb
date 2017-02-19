@@ -80,7 +80,7 @@ public class ReplicationIT {
     @Before
     public void before() throws Exception {
         LOGGER.info("Creating new instance...");
-        AsterixInstallerIntegrationUtil.init(AsterixInstallerIntegrationUtil.LOCAL_CLUSTER_WITH_REPLICATION_PATH);
+        AsterixInstallerIntegrationUtil.init(AsterixInstallerIntegrationUtil.LOCAL_CLUSTER_CHAINED_DECLUSTERING_REP_PATH);
         LOGGER.info("Instacne created.");
         AsterixInstallerIntegrationUtil.transformIntoRequiredState(State.ACTIVE);
         LOGGER.info("Instance is in ACTIVE state.");

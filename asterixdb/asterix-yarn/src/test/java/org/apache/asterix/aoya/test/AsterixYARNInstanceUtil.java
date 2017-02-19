@@ -26,6 +26,7 @@ import org.apache.asterix.aoya.AsterixYARNClient;
 import org.apache.asterix.aoya.Utils;
 import org.apache.asterix.event.schema.yarnCluster.Cluster;
 import org.apache.asterix.event.schema.yarnCluster.Node;
+import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
@@ -37,6 +38,7 @@ import org.junit.Assert;
 public class AsterixYARNInstanceUtil {
     private static final String PATH_ACTUAL = "ittest/";
     private static final String INSTANCE_NAME = "asterix-integration-test";
+    private static final String TXN_LOG_PATH = "/tmp/asterix-yarn";
     private MiniYARNCluster miniCluster;
     private YarnConfiguration appConf;
     public String aoyaHome;
@@ -118,6 +120,13 @@ public class AsterixYARNInstanceUtil {
         File[] files = outdir.listFiles();
         if (files == null || files.length == 0) {
             outdir.delete();
+        }
+    }
+
+    public static void cleanUp() {
+        File txnLogFile = new File(TXN_LOG_PATH);
+        if (txnLogFile.exists()) {
+            FileUtils.deleteQuietly(txnLogFile);
         }
     }
 }

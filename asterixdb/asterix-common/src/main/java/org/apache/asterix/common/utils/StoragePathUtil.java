@@ -78,6 +78,17 @@ public class StoragePathUtil {
     }
 
     /**
+     * @param fileAbsolutePath
+     * @return the file relative path starting from the partition directory
+     */
+    public static String getIndexFileRelativePath(String fileAbsolutePath) {
+        String[] tokens = fileAbsolutePath.split(File.separator);
+        //partition/dataverse/idx/fileName
+        return tokens[tokens.length - 4] + File.separator + tokens[tokens.length - 3] + File.separator
+                + tokens[tokens.length - 2] + File.separator + tokens[tokens.length - 1];
+    }
+
+    /**
      * Create a file
      * Note: this method is not thread safe. It is the responsibility of the caller to ensure no path conflict when
      * creating files simultaneously

@@ -50,18 +50,20 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import org.apache.asterix.common.cluster.ClusterPartition;
-import org.apache.asterix.common.config.ClusterProperties;
 import org.apache.asterix.common.config.IPropertiesProvider;
 import org.apache.asterix.common.config.ReplicationProperties;
 import org.apache.asterix.common.dataflow.LSMIndexUtil;
 import org.apache.asterix.common.replication.IReplicaResourcesManager;
 import org.apache.asterix.common.replication.IReplicationManager;
+import org.apache.asterix.common.replication.IReplicationStrategy;
 import org.apache.asterix.common.replication.Replica;
 import org.apache.asterix.common.replication.Replica.ReplicaState;
 import org.apache.asterix.common.replication.ReplicaEvent;
 import org.apache.asterix.common.replication.ReplicationJob;
+import org.apache.asterix.common.storage.IndexFileProperties;
 import org.apache.asterix.common.transactions.IAppRuntimeContextProvider;
 import org.apache.asterix.common.transactions.ILogManager;
 import org.apache.asterix.common.transactions.ILogRecord;
@@ -101,7 +103,6 @@ public class ReplicationManager implements IReplicationManager {
     private final Map<Integer, Set<String>> jobCommitAcks;
     private final Map<Integer, ILogRecord> replicationJobsPendingAcks;
     private ByteBuffer dataBuffer;
-
     private final LinkedBlockingQueue<IReplicationJob> replicationJobsQ;
     private final LinkedBlockingQueue<ReplicaEvent> replicaEventsQ;
 
@@ -134,6 +135,8 @@ public class ReplicationManager implements IReplicationManager {
     private Future<? extends Object> txnLogReplicatorTask;
     private SocketChannel[] logsRepSockets;
     private final ByteBuffer txnLogsBatchSizeBuffer = ByteBuffer.allocate(Integer.BYTES);
+    private final IReplicationStrategy replicationStrategy;
+    private final PersistentLocalResourceRepository localResourceRepo;
 
     //TODO this class needs to be refactored by moving its private classes to separate files
     //and possibly using MessageBroker to send/receive remote replicas events.
@@ -142,36 +145,38 @@ public class ReplicationManager implements IReplicationManager {
             IAppRuntimeContextProvider asterixAppRuntimeContextProvider) {
         this.nodeId = nodeId;
         this.replicationProperties = replicationProperties;
+        replicationStrategy = replicationProperties.getReplicationStrategy();
         this.replicaResourcesManager = (ReplicaResourcesManager) remoteResoucesManager;
         this.asterixAppRuntimeContextProvider = asterixAppRuntimeContextProvider;
-        this.hostIPAddressFirstOctet = replicationProperties.getReplicaIPAddress(nodeId).substring(0, 3);
         this.logManager = logManager;
+        localResourceRepo = (PersistentLocalResourceRepository) asterixAppRuntimeContextProvider
+                .getLocalResourceRepository();
+        this.hostIPAddressFirstOctet = replicationProperties.getReplicaIPAddress(nodeId).substring(0, 3);
+        replicas = new HashMap<>();
         replicationJobsQ = new LinkedBlockingQueue<>();
         replicaEventsQ = new LinkedBlockingQueue<>();
         terminateJobsReplication = new AtomicBoolean(false);
         jobsReplicationSuspended = new AtomicBoolean(true);
         replicationSuspended = new AtomicBoolean(true);
-        replicas = new HashMap<>();
         jobCommitAcks = new ConcurrentHashMap<>();
         replicationJobsPendingAcks = new ConcurrentHashMap<>();
         shuttingDownReplicaIds = new HashSet<>();
         dataBuffer = ByteBuffer.allocate(INITIAL_BUFFER_SIZE);
+        replicationMonitor = new ReplicasEventsMonitor();
+        //add list of replicas from configurations (To be read from another source e.g. Zookeeper)
+        Set<Replica> replicaNodes = replicationProperties.getReplicationStrategy().getRemoteReplicas(nodeId);
 
         //Used as async listeners from replicas
         replicationListenerThreads = Executors.newCachedThreadPool();
         replicationJobsProcessor = new ReplicationJobsProccessor();
-        replicationMonitor = new ReplicasEventsMonitor();
 
-        Map<String, ClusterPartition[]> nodePartitions =
-                ((IPropertiesProvider) asterixAppRuntimeContextProvider.getAppContext()).getMetadataProperties()
-                        .getNodePartitions();
-        //add list of replicas from configurations (To be read from another source e.g. Zookeeper)
-        Set<Replica> replicaNodes = replicationProperties.getRemoteReplicas(nodeId);
+        Map<String, ClusterPartition[]> nodePartitions = ((IPropertiesProvider) asterixAppRuntimeContextProvider
+                .getAppContext()).getMetadataProperties().getNodePartitions();
         replica2PartitionsMap = new HashMap<>(replicaNodes.size());
         for (Replica replica : replicaNodes) {
-            replicas.put(replica.getNode().getId(), replica);
+            replicas.put(replica.getId(), replica);
             //for each remote replica, get the list of replication clients
-            Set<String> nodeReplicationClients = replicationProperties.getNodeReplicationClients(replica.getId());
+            Set<String> nodeReplicationClients = replicationProperties.getRemotePrimaryReplicasIds(replica.getId());
             //get the partitions of each client
             List<Integer> clientPartitions = new ArrayList<>();
             for (String clientId : nodeReplicationClients) {
@@ -255,7 +260,6 @@ public class ReplicationManager implements IReplicationManager {
                 getAndInitNewPage();
             }
         }
-
         currentTxnLogBuffer.append(logRecord);
     }
 
@@ -277,7 +281,12 @@ public class ReplicationManager implements IReplicationManager {
             //all of the job's files belong to a single storage partition.
             //get any of them to determine the partition from the file path.
             String jobFile = job.getJobFiles().iterator().next();
-            int jobPartitionId = PersistentLocalResourceRepository.getResourcePartition(jobFile);
+            IndexFileProperties indexFileRef = localResourceRepo.getIndexFileRef(jobFile);
+            if (!replicationStrategy.isMatch(indexFileRef.getDatasetId())) {
+                return;
+            }
+
+            int jobPartitionId = indexFileRef.getPartitionId();
 
             ByteBuffer responseBuffer = null;
             LSMIndexFileProperties asterixFileProperties = new LSMIndexFileProperties();
@@ -442,7 +451,7 @@ public class ReplicationManager implements IReplicationManager {
 
     @Override
     public boolean isReplicationEnabled() {
-        return ClusterProperties.INSTANCE.isReplicationEnabled();
+        return replicationProperties.isParticipant(nodeId);
     }
 
     @Override
@@ -822,7 +831,6 @@ public class ReplicationManager implements IReplicationManager {
                 }
             }
         }
-
         //presume replicated
         return true;
     }
@@ -908,18 +916,37 @@ public class ReplicationManager implements IReplicationManager {
     public void stop(boolean dumpState, OutputStream ouputStream) throws IOException {
         //stop replication thread afters all jobs/logs have been processed
         suspendReplication(false);
-        //send shutdown event to remote replicas
-        sendShutdownNotifiction();
-        //wait until all shutdown events come from all remote replicas
-        synchronized (shuttingDownReplicaIds) {
-            while (!shuttingDownReplicaIds.containsAll(getActiveReplicasIds())) {
-                try {
-                    shuttingDownReplicaIds.wait(1000);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
+
+        /**
+         * If this node has any remote replicas, it needs to inform them
+         * that it is shutting down.
+         */
+        if (!replicationStrategy.getRemoteReplicas(nodeId).isEmpty()) {
+            //send shutdown event to remote replicas
+            sendShutdownNotifiction();
+        }
+
+        /**
+         * If this node has any remote primary replicas, then it needs to wait
+         * until all of them send the shutdown notification.
+         */
+        // find active remote primary replicas
+        Set<String> activeRemotePrimaryReplicas = replicationStrategy.getRemotePrimaryReplicas(nodeId).stream()
+                .map(Replica::getId).filter(getActiveReplicasIds()::contains).collect(Collectors.toSet());
+
+        if (!activeRemotePrimaryReplicas.isEmpty()) {
+            //wait until all shutdown events come from all remote primary replicas
+            synchronized (shuttingDownReplicaIds) {
+                while (!shuttingDownReplicaIds.containsAll(activeRemotePrimaryReplicas)) {
+                    try {
+                        shuttingDownReplicaIds.wait();
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
                 }
             }
         }
+
         LOGGER.log(Level.INFO, "Got shutdown notification from all remote replicas");
         //close replication channel
         asterixAppRuntimeContextProvider.getAppContext().getReplicationChannel().close();
@@ -996,6 +1023,9 @@ public class ReplicationManager implements IReplicationManager {
     public void requestFlushLaggingReplicaIndexes(long nonSharpCheckpointTargetLSN) throws IOException {
         long startLSN = logManager.getAppendLSN();
         Set<String> replicaIds = getActiveReplicasIds();
+        if (replicaIds.isEmpty()) {
+            return;
+        }
         ByteBuffer requestBuffer = ByteBuffer.allocate(INITIAL_BUFFER_SIZE);
         for (String replicaId : replicaIds) {
             //1. identify replica indexes with LSN less than nonSharpCheckpointTargetLSN.
@@ -1079,9 +1109,9 @@ public class ReplicationManager implements IReplicationManager {
 
     //Recovery Method
     @Override
-    public void requestReplicaFiles(String selectedReplicaId, Set<String> replicasDataToRecover,
+    public void requestReplicaFiles(String selectedReplicaId, Set<Integer> partitionsToRecover,
             Set<String> existingFiles) throws IOException {
-        ReplicaFilesRequest request = new ReplicaFilesRequest(replicasDataToRecover, existingFiles);
+        ReplicaFilesRequest request = new ReplicaFilesRequest(partitionsToRecover, existingFiles);
         dataBuffer = ReplicationProtocol.writeGetReplicaFilesRequest(dataBuffer, request);
 
         try (SocketChannel socketChannel = getReplicaSocket(selectedReplicaId)) {

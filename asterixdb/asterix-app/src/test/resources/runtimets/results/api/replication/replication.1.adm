@@ -1,7 +1,5 @@
 {
   "config" : {
-    "enabled" : false,
-    "factor" : 2,
     "log.batchsize" : 4096,
     "log.buffer.numpages" : 8,
     "log.buffer.pagesize" : 131072,

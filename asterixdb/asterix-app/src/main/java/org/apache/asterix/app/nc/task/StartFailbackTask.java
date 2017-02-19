@@ -16,33 +16,22 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.runtime.message;
+package org.apache.asterix.app.nc.task;
 
-import org.apache.asterix.common.messaging.api.IApplicationMessage;
-import org.apache.asterix.runtime.utils.ClusterStateManager;
+import org.apache.asterix.common.api.IAppRuntimeContext;
+import org.apache.asterix.common.api.INCLifecycleTask;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.service.IControllerService;
+import org.apache.hyracks.control.nc.NodeControllerService;
 
-public class TakeoverMetadataNodeResponseMessage implements IApplicationMessage {
+public class StartFailbackTask implements INCLifecycleTask {
 
     private static final long serialVersionUID = 1L;
-    private final String nodeId;
-
-    public TakeoverMetadataNodeResponseMessage(String nodeId) {
-        this.nodeId = nodeId;
-    }
-
-    public String getNodeId() {
-        return nodeId;
-    }
 
     @Override
-    public void handle(IControllerService cs) throws HyracksDataException, InterruptedException {
-        ClusterStateManager.INSTANCE.processMetadataNodeTakeoverResponse(this);
-    }
-
-    @Override
-    public String toString() {
-        return TakeoverMetadataNodeResponseMessage.class.getSimpleName();
+    public void perform(IControllerService cs) throws HyracksDataException {
+        NodeControllerService ncs = (NodeControllerService) cs;
+        IAppRuntimeContext runtimeContext = (IAppRuntimeContext) ncs.getApplicationContext().getApplicationObject();
+        runtimeContext.getRemoteRecoveryManager().startFailbackProcess();
     }
 }

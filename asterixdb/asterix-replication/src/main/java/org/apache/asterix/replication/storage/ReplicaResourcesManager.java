@@ -38,8 +38,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.common.cluster.ClusterPartition;
-import org.apache.asterix.common.config.MetadataProperties;
 import org.apache.asterix.common.config.ClusterProperties;
+import org.apache.asterix.common.config.MetadataProperties;
 import org.apache.asterix.common.replication.IReplicaResourcesManager;
 import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.asterix.metadata.utils.SplitsAndConstraintsUtil;
@@ -285,7 +285,7 @@ public class ReplicaResourcesManager implements IReplicaResourcesManager {
                             partitionFiles.add(file.getAbsolutePath());
                         } else {
                             partitionFiles.add(
-                                    PersistentLocalResourceRepository.getResourceRelativePath(file.getAbsolutePath()));
+                                    StoragePathUtil.getIndexFileRelativePath(file.getAbsolutePath()));
                         }
                     }
                 }

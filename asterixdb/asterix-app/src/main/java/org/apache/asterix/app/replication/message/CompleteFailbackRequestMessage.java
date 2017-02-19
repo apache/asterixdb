@@ -16,23 +16,52 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.runtime.message;
+package org.apache.asterix.app.replication.message;
 
+import java.io.IOException;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.common.api.IAppRuntimeContext;
 import org.apache.asterix.common.exceptions.ExceptionUtils;
-import org.apache.asterix.common.messaging.api.IApplicationMessage;
 import org.apache.asterix.common.messaging.api.INCMessageBroker;
+import org.apache.asterix.common.replication.IRemoteRecoveryManager;
+import org.apache.asterix.runtime.message.AbstractFailbackPlanMessage;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.service.IControllerService;
 import org.apache.hyracks.control.nc.NodeControllerService;
 
-public class TakeoverMetadataNodeRequestMessage implements IApplicationMessage {
+public class CompleteFailbackRequestMessage extends AbstractFailbackPlanMessage {
 
     private static final long serialVersionUID = 1L;
-    private static final Logger LOGGER = Logger.getLogger(TakeoverMetadataNodeRequestMessage.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(CompleteFailbackRequestMessage.class.getName());
+    private final Set<Integer> partitions;
+    private final String nodeId;
+
+    public CompleteFailbackRequestMessage(long planId, int requestId, String nodeId, Set<Integer> partitions) {
+        super(planId, requestId);
+        this.nodeId = nodeId;
+        this.partitions = partitions;
+    }
+
+    public Set<Integer> getPartitions() {
+        return partitions;
+    }
+
+    public String getNodeId() {
+        return nodeId;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(CompleteFailbackRequestMessage.class.getSimpleName());
+        sb.append(" Plan ID: " + planId);
+        sb.append(" Node ID: " + nodeId);
+        sb.append(" Partitions: " + partitions);
+        return sb.toString();
+    }
 
     @Override
     public void handle(IControllerService cs) throws HyracksDataException, InterruptedException {
@@ -42,18 +71,18 @@ public class TakeoverMetadataNodeRequestMessage implements IApplicationMessage {
         INCMessageBroker broker = (INCMessageBroker) ncs.getApplicationContext().getMessageBroker();
         HyracksDataException hde = null;
         try {
-            appContext.initializeMetadata(false);
-            appContext.exportMetadataNodeStub();
-        } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Failed taking over metadata", e);
-            hde = new HyracksDataException(e);
+            IRemoteRecoveryManager remoteRecoeryManager = appContext.getRemoteRecoveryManager();
+            remoteRecoeryManager.completeFailbackProcess();
+        } catch (IOException | InterruptedException e) {
+            LOGGER.log(Level.SEVERE, "Failure during completion of failback process", e);
+            hde = ExceptionUtils.convertToHyracksDataException(e);
         } finally {
-            TakeoverMetadataNodeResponseMessage reponse = new TakeoverMetadataNodeResponseMessage(
-                    appContext.getTransactionSubsystem().getId());
+            CompleteFailbackResponseMessage reponse = new CompleteFailbackResponseMessage(planId,
+                    requestId, partitions);
             try {
                 broker.sendMessageToCC(reponse);
             } catch (Exception e) {
-                LOGGER.log(Level.SEVERE, "Failed taking over metadata", e);
+                LOGGER.log(Level.SEVERE, "Failure sending message to CC", e);
                 hde = ExceptionUtils.suppressIntoHyracksDataException(hde, e);
             }
         }
@@ -63,7 +92,7 @@ public class TakeoverMetadataNodeRequestMessage implements IApplicationMessage {
     }
 
     @Override
-    public String toString() {
-        return TakeoverMetadataNodeRequestMessage.class.getSimpleName();
+    public MessageType getType() {
+        return MessageType.COMPLETE_FAILBACK_REQUEST;
     }
 }

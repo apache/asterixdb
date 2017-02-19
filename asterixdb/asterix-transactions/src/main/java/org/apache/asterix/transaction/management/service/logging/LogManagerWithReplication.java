@@ -18,8 +18,12 @@
  */
 package org.apache.asterix.transaction.management.service.logging;
 
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.replication.IReplicationManager;
+import org.apache.asterix.common.replication.IReplicationStrategy;
 import org.apache.asterix.common.transactions.ILogRecord;
 import org.apache.asterix.common.transactions.ITransactionContext;
 import org.apache.asterix.common.transactions.ITransactionManager;
@@ -30,15 +34,37 @@ import org.apache.asterix.common.transactions.LogType;
 public class LogManagerWithReplication extends LogManager {
 
     private IReplicationManager replicationManager;
+    private final IReplicationStrategy replicationStrategy;
+    private final Set<Integer> replicatedJob = ConcurrentHashMap.newKeySet();
 
-    public LogManagerWithReplication(ITransactionSubsystem txnSubsystem) {
+    public LogManagerWithReplication(ITransactionSubsystem txnSubsystem, IReplicationStrategy replicationStrategy) {
         super(txnSubsystem);
+        this.replicationStrategy = replicationStrategy;
     }
 
     @Override
     public void log(ILogRecord logRecord) throws ACIDException {
-        //only locally generated logs should be replicated
-        logRecord.setReplicated(logRecord.getLogSource() == LogSource.LOCAL && logRecord.getLogType() != LogType.WAIT);
+        boolean shouldReplicate = logRecord.getLogSource() == LogSource.LOCAL && logRecord.getLogType() != LogType.WAIT;
+        if (shouldReplicate) {
+            switch (logRecord.getLogType()) {
+                case LogType.ENTITY_COMMIT:
+                case LogType.UPSERT_ENTITY_COMMIT:
+                case LogType.UPDATE:
+                case LogType.FLUSH:
+                    shouldReplicate = replicationStrategy.isMatch(logRecord.getDatasetId());
+                    if (shouldReplicate && !replicatedJob.contains(logRecord.getJobId())) {
+                        replicatedJob.add(logRecord.getJobId());
+                    }
+                    break;
+                case LogType.JOB_COMMIT:
+                case LogType.ABORT:
+                    shouldReplicate = replicatedJob.remove(logRecord.getJobId());
+                    break;
+                default:
+                    shouldReplicate = false;
+            }
+        }
+        logRecord.setReplicated(shouldReplicate);
 
         //Remote flush logs do not need to be flushed separately since they may not trigger local flush
         if (logRecord.getLogType() == LogType.FLUSH && logRecord.getLogSource() == LogSource.LOCAL) {
@@ -74,7 +100,8 @@ public class LogManagerWithReplication extends LogManager {
                     }
 
                     //wait for job Commit/Abort ACK from replicas
-                    if (logRecord.getLogType() == LogType.JOB_COMMIT || logRecord.getLogType() == LogType.ABORT) {
+                    if (logRecord.isReplicated() && (logRecord.getLogType() == LogType.JOB_COMMIT
+                            || logRecord.getLogType() == LogType.ABORT)) {
                         while (!replicationManager.hasBeenReplicated(logRecord)) {
                             try {
                                 logRecord.wait();

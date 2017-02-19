@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.runtime.message;
+package org.apache.asterix.app.replication.message;
 
 import java.rmi.RemoteException;
 import java.util.Set;
@@ -26,6 +26,7 @@ import java.util.logging.Logger;
 import org.apache.asterix.common.api.IAppRuntimeContext;
 import org.apache.asterix.common.exceptions.ExceptionUtils;
 import org.apache.asterix.common.messaging.api.INCMessageBroker;
+import org.apache.asterix.runtime.message.AbstractFailbackPlanMessage;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepository;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.service.IControllerService;
@@ -115,5 +116,10 @@ public class PreparePartitionsFailbackRequestMessage extends AbstractFailbackPla
             LOGGER.log(Level.SEVERE, "Failed sending message to cc", e);
             throw ExceptionUtils.convertToHyracksDataException(e);
         }
+    }
+
+    @Override
+    public MessageType getType() {
+        return MessageType.PREPARE_FAILBACK_REQUEST;
     }
 }

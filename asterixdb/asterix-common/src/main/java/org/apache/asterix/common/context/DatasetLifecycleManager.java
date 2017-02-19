@@ -30,6 +30,7 @@ import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.config.StorageProperties;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.ioopcallbacks.AbstractLSMIOOperationCallback;
+import org.apache.asterix.common.replication.IReplicationStrategy;
 import org.apache.asterix.common.transactions.ILogManager;
 import org.apache.asterix.common.transactions.LogRecord;
 import org.apache.asterix.common.transactions.Resource;
@@ -570,5 +571,14 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
 
     public int getNumPartitions() {
         return numPartitions;
+    }
+
+    @Override
+    public void flushDataset(IReplicationStrategy replicationStrategy) throws HyracksDataException {
+        for (DatasetResource dsr : datasets.values()) {
+            if (replicationStrategy.isMatch(dsr.getDatasetID())) {
+                flushDatasetOpenIndexes(dsr.getDatasetInfo(), false);
+            }
+        }
     }
 }

@@ -55,8 +55,10 @@ public class AsterixInstallerIntegrationUtil {
     private static IHyracksClientConnection hcc;
     private static final String CLUSTERS_BASE_PATH = "clusters" + File.separator + "local" + File.separator;
     public static final String LOCAL_CLUSTER_PATH = CLUSTERS_BASE_PATH + File.separator + "local.xml";
-    public static final String LOCAL_CLUSTER_WITH_REPLICATION_PATH = CLUSTERS_BASE_PATH + File.separator
-            + "local_with_replication.xml";
+    public static final String LOCAL_CLUSTER_CHAINED_DECLUSTERING_REP_PATH = CLUSTERS_BASE_PATH + File.separator
+            + "local_chained_declustering_rep.xml";
+    public static final String LOCAL_CLUSTER_METADATA_ONLY_REP_PATH = CLUSTERS_BASE_PATH + File.separator
+            + "local_metadata_only_rep.xml";
 
     public static void deinit() throws Exception {
         deleteInstance();

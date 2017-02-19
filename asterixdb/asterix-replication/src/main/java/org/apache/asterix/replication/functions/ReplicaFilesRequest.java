@@ -26,19 +26,19 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class ReplicaFilesRequest {
-    private final Set<String> replicaIds;
+    private final Set<Integer> partitionIds;
     private final Set<String> existingFiles;
 
-    public ReplicaFilesRequest(Set<String> replicaIds, Set<String> existingFiles) {
-        this.replicaIds = replicaIds;
+    public ReplicaFilesRequest(Set<Integer> partitionIds, Set<String> existingFiles) {
+        this.partitionIds = partitionIds;
         this.existingFiles = existingFiles;
     }
 
     public void serialize(OutputStream out) throws IOException {
         DataOutputStream dos = new DataOutputStream(out);
-        dos.writeInt(replicaIds.size());
-        for (String replicaId : replicaIds) {
-            dos.writeUTF(replicaId);
+        dos.writeInt(partitionIds.size());
+        for (Integer partitionId : partitionIds) {
+            dos.writeInt(partitionId);
         }
         dos.writeInt(existingFiles.size());
         for (String fileName : existingFiles) {
@@ -48,20 +48,20 @@ public class ReplicaFilesRequest {
 
     public static ReplicaFilesRequest create(DataInput input) throws IOException {
         int size = input.readInt();
-        Set<String> replicaIds = new HashSet<String>(size);
+        Set<Integer> partitionIds = new HashSet<>(size);
         for (int i = 0; i < size; i++) {
-            replicaIds.add(input.readUTF());
+            partitionIds.add(input.readInt());
         }
         int filesCount = input.readInt();
-        Set<String> existingFiles = new HashSet<String>(filesCount);
+        Set<String> existingFiles = new HashSet<>(filesCount);
         for (int i = 0; i < filesCount; i++) {
             existingFiles.add(input.readUTF());
         }
-        return new ReplicaFilesRequest(replicaIds, existingFiles);
+        return new ReplicaFilesRequest(partitionIds, existingFiles);
     }
 
-    public Set<String> getReplicaIds() {
-        return replicaIds;
+    public Set<Integer> getPartitionIds() {
+        return partitionIds;
     }
 
     public Set<String> getExistingFiles() {

@@ -43,7 +43,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
-import org.apache.asterix.common.config.ClusterProperties;
+import org.apache.asterix.common.config.IPropertiesProvider;
+import org.apache.asterix.common.config.ReplicationProperties;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.ioopcallbacks.AbstractLSMIOOperationCallback;
 import org.apache.asterix.common.replication.IReplicaResourcesManager;
@@ -97,9 +98,11 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
         this.appCtx = appCtx;
         this.txnSubsystem = txnSubsystem;
         logMgr = (LogManager) txnSubsystem.getLogManager();
-        replicationEnabled = ClusterProperties.INSTANCE.isReplicationEnabled();
-        localResourceRepository = (PersistentLocalResourceRepository) txnSubsystem
-                .getAsterixAppRuntimeContextProvider().getLocalResourceRepository();
+        ReplicationProperties repProperties = ((IPropertiesProvider) txnSubsystem.getAsterixAppRuntimeContextProvider()
+                .getAppContext()).getReplicationProperties();
+        replicationEnabled = repProperties.isParticipant(txnSubsystem.getId());
+        localResourceRepository = (PersistentLocalResourceRepository) txnSubsystem.getAsterixAppRuntimeContextProvider()
+                .getLocalResourceRepository();
         cachedEntityCommitsPerJobSize = txnSubsystem.getTransactionProperties().getJobRecoveryMemorySize();
         checkpointManager = txnSubsystem.getCheckpointManager();
     }
@@ -127,15 +130,15 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
         }
 
         if (replicationEnabled) {
-            if (checkpointObject.getMinMCTFirstLsn() == AbstractCheckpointManager.SHARP_CHECKPOINT_LSN
-                    || (checkpointObject.getCheckpointLsn() == logMgr.getAppendLSN() && checkpointObject.isSharp())) {
-                //no logs exist or only remote logs exist
+            if (checkpointObject.getMinMCTFirstLsn() == AbstractCheckpointManager.SHARP_CHECKPOINT_LSN) {
+                //no logs exist
                 state = SystemState.HEALTHY;
-                return state;
+            } else if (checkpointObject.getCheckpointLsn() == logMgr.getAppendLSN() && checkpointObject.isSharp()) {
+                //only remote logs exist
+                state = SystemState.HEALTHY;
             } else {
                 //need to perform remote recovery
                 state = SystemState.CORRUPTED;
-                return state;
             }
         } else {
             long readableSmallestLSN = logMgr.getReadableSmallestLSN();
@@ -145,16 +148,14 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
                     //No choice but continuing when the log files are lost.
                 }
                 state = SystemState.HEALTHY;
-                return state;
             } else if (checkpointObject.getCheckpointLsn() == logMgr.getAppendLSN()
                     && checkpointObject.getMinMCTFirstLsn() == AbstractCheckpointManager.SHARP_CHECKPOINT_LSN) {
                 state = SystemState.HEALTHY;
-                return state;
             } else {
                 state = SystemState.CORRUPTED;
-                return state;
             }
         }
+        return state;
     }
 
     //This method is used only when replication is disabled.
@@ -176,6 +177,25 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
         //get active partitions on this node
         Set<Integer> activePartitions = localResourceRepository.getNodeOrignalPartitions();
         replayPartitionsLogs(activePartitions, logMgr.getLogReader(true), lowWaterMarkLSN);
+    }
+
+    @Override
+    public void startLocalRecovery(Set<Integer> partitions) throws IOException, ACIDException {
+        state = SystemState.RECOVERING;
+        LOGGER.log(Level.INFO, "starting recovery ...");
+
+        long readableSmallestLSN = logMgr.getReadableSmallestLSN();
+        Checkpoint checkpointObject = checkpointManager.getLatest();
+        long lowWaterMarkLSN = checkpointObject.getMinMCTFirstLsn();
+        if (lowWaterMarkLSN < readableSmallestLSN) {
+            lowWaterMarkLSN = readableSmallestLSN;
+        }
+
+        //delete any recovery files from previous failed recovery attempts
+        deleteRecoveryTemporaryFiles();
+
+        //get active partitions on this node
+        replayPartitionsLogs(partitions, logMgr.getLogReader(true), lowWaterMarkLSN);
     }
 
     @Override

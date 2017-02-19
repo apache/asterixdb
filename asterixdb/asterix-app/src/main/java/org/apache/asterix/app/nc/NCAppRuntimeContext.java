@@ -35,7 +35,6 @@ import org.apache.asterix.common.api.ThreadExecutor;
 import org.apache.asterix.common.cluster.ClusterPartition;
 import org.apache.asterix.common.config.AsterixExtension;
 import org.apache.asterix.common.config.BuildProperties;
-import org.apache.asterix.common.config.ClusterProperties;
 import org.apache.asterix.common.config.CompilerProperties;
 import org.apache.asterix.common.config.ExtensionProperties;
 import org.apache.asterix.common.config.ExternalProperties;
@@ -206,7 +205,7 @@ public class NCAppRuntimeContext implements IAppRuntimeContext {
         activeManager = new ActiveManager(threadExecutor, ncApplicationContext.getNodeId(),
                 feedProperties.getMemoryComponentGlobalBudget(), compilerProperties.getFrameSize());
 
-        if (ClusterProperties.INSTANCE.isReplicationEnabled()) {
+        if (replicationProperties.isParticipant(ncApplicationContext.getNodeId())) {
             String nodeId = ncApplicationContext.getNodeId();
 
             replicaResourcesManager = new ReplicaResourcesManager(localResourceRepository, metadataProperties);
@@ -225,10 +224,8 @@ public class NCAppRuntimeContext implements IAppRuntimeContext {
              * add the partitions that will be replicated in this node as inactive partitions
              */
             //get nodes which replicate to this node
-            Set<String> replicationClients = replicationProperties.getNodeReplicationClients(nodeId);
-            //remove the node itself
-            replicationClients.remove(nodeId);
-            for (String clientId : replicationClients) {
+            Set<String> remotePrimaryReplicas = replicationProperties.getRemotePrimaryReplicasIds(nodeId);
+            for (String clientId : remotePrimaryReplicas) {
                 //get the partitions of each client
                 ClusterPartition[] clientPartitions = metadataProperties.getNodePartitions().get(clientId);
                 for (ClusterPartition partition : clientPartitions) {
@@ -475,5 +472,4 @@ public class NCAppRuntimeContext implements IAppRuntimeContext {
     public IStorageComponentProvider getStorageComponentProvider() {
         return componentProvider;
     }
-
 }

@@ -19,50 +19,36 @@
 package org.apache.asterix.runtime.utils;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import org.apache.asterix.common.api.IClusterManagementWork.ClusterState;
 import org.apache.asterix.common.cluster.ClusterPartition;
-import org.apache.asterix.common.config.ReplicationProperties;
+import org.apache.asterix.common.cluster.IClusterStateManager;
 import org.apache.asterix.common.config.ClusterProperties;
-import org.apache.asterix.common.messaging.api.ICCMessageBroker;
+import org.apache.asterix.common.replication.IFaultToleranceStrategy;
 import org.apache.asterix.event.schema.cluster.Cluster;
 import org.apache.asterix.event.schema.cluster.Node;
-import org.apache.asterix.runtime.message.CompleteFailbackRequestMessage;
-import org.apache.asterix.runtime.message.CompleteFailbackResponseMessage;
-import org.apache.asterix.runtime.message.NodeFailbackPlan;
-import org.apache.asterix.runtime.message.NodeFailbackPlan.FailbackPlanState;
-import org.apache.asterix.runtime.message.PreparePartitionsFailbackRequestMessage;
-import org.apache.asterix.runtime.message.PreparePartitionsFailbackResponseMessage;
-import org.apache.asterix.runtime.message.ReplicaEventMessage;
-import org.apache.asterix.runtime.message.TakeoverMetadataNodeRequestMessage;
-import org.apache.asterix.runtime.message.TakeoverMetadataNodeResponseMessage;
-import org.apache.asterix.runtime.message.TakeoverPartitionsRequestMessage;
-import org.apache.asterix.runtime.message.TakeoverPartitionsResponseMessage;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
-import org.apache.hyracks.api.application.IClusterLifecycleListener.ClusterEventType;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.HyracksException;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 /**
  * A holder class for properties related to the Asterix cluster.
  */
 
-public class ClusterStateManager {
+public class ClusterStateManager implements IClusterStateManager {
     /*
      * TODO: currently after instance restarts we require all nodes to join again,
      * otherwise the cluster wont be ACTIVE. we may overcome this by storing the cluster state before the instance
@@ -71,9 +57,8 @@ public class ClusterStateManager {
 
     private static final Logger LOGGER = Logger.getLogger(ClusterStateManager.class.getName());
     public static final ClusterStateManager INSTANCE = new ClusterStateManager();
-    private static final String CLUSTER_NET_IP_ADDRESS_KEY = "cluster-net-ip-address";
     private static final String IO_DEVICES = "iodevices";
-    private Map<String, Map<String, String>> activeNcConfiguration = new HashMap<>();
+    private final Map<String, Map<String, String>> activeNcConfiguration = new HashMap<>();
 
     private final Cluster cluster;
     private ClusterState state = ClusterState.UNUSABLE;
@@ -84,32 +69,21 @@ public class ClusterStateManager {
 
     private Map<String, ClusterPartition[]> node2PartitionsMap = null;
     private SortedMap<Integer, ClusterPartition> clusterPartitions = null;
-    private Map<Long, TakeoverPartitionsRequestMessage> pendingTakeoverRequests = null;
 
-    private long clusterRequestId = 0;
     private String currentMetadataNode = null;
     private boolean metadataNodeActive = false;
-    private boolean autoFailover = false;
-    private boolean replicationEnabled = false;
     private Set<String> failedNodes = new HashSet<>();
-    private LinkedList<NodeFailbackPlan> pendingProcessingFailbackPlans;
-    private Map<Long, NodeFailbackPlan> planId2FailbackPlanMap;
+    private IFaultToleranceStrategy ftStrategy;
 
     private ClusterStateManager() {
         cluster = ClusterProperties.INSTANCE.getCluster();
         // if this is the CC process
-        if (AppContextInfo.INSTANCE.initialized()
-                && AppContextInfo.INSTANCE.getCCApplicationContext() != null) {
+        if (AppContextInfo.INSTANCE.initialized() && AppContextInfo.INSTANCE.getCCApplicationContext() != null) {
             node2PartitionsMap = AppContextInfo.INSTANCE.getMetadataProperties().getNodePartitions();
             clusterPartitions = AppContextInfo.INSTANCE.getMetadataProperties().getClusterPartitions();
             currentMetadataNode = AppContextInfo.INSTANCE.getMetadataProperties().getMetadataNodeName();
-            replicationEnabled = ClusterProperties.INSTANCE.isReplicationEnabled();
-            autoFailover = ClusterProperties.INSTANCE.isAutoFailoverEnabled();
-            if (autoFailover) {
-                pendingTakeoverRequests = new HashMap<>();
-                pendingProcessingFailbackPlans = new LinkedList<>();
-                planId2FailbackPlanMap = new HashMap<>();
-            }
+            ftStrategy = AppContextInfo.INSTANCE.getFaultToleranceStrategy();
+            ftStrategy.bindTo(this);
         }
     }
 
@@ -117,30 +91,8 @@ public class ClusterStateManager {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Removing configuration parameters for node id " + nodeId);
         }
-        activeNcConfiguration.remove(nodeId);
-
-        //if this node was waiting for failback and failed before it completed
-        if (failedNodes.contains(nodeId)) {
-            if (autoFailover) {
-                notifyFailbackPlansNodeFailure(nodeId);
-                revertFailedFailbackPlanEffects();
-            }
-        } else {
-            //an active node failed
-            failedNodes.add(nodeId);
-            if (nodeId.equals(currentMetadataNode)) {
-                metadataNodeActive = false;
-                LOGGER.info("Metadata node is now inactive");
-            }
-            updateNodePartitions(nodeId, false);
-            if (replicationEnabled) {
-                notifyImpactedReplicas(nodeId, ClusterEventType.NODE_FAILURE);
-                if (autoFailover) {
-                    notifyFailbackPlansNodeFailure(nodeId);
-                    requestPartitionsTakeover(nodeId);
-                }
-            }
-        }
+        failedNodes.add(nodeId);
+        ftStrategy.notifyNodeFailure(nodeId);
     }
 
     public synchronized void addNCConfiguration(String nodeId, Map<String, String> configuration)
@@ -149,46 +101,51 @@ public class ClusterStateManager {
             LOGGER.info("Registering configuration parameters for node id " + nodeId);
         }
         activeNcConfiguration.put(nodeId, configuration);
-
-        //a node trying to come back after failure
-        if (failedNodes.contains(nodeId)) {
-            if (autoFailover) {
-                prepareFailbackPlan(nodeId);
-                return;
-            } else {
-                //a node completed local or remote recovery and rejoined
-                failedNodes.remove(nodeId);
-                if (replicationEnabled) {
-                    //notify other replica to reconnect to this node
-                    notifyImpactedReplicas(nodeId, ClusterEventType.NODE_JOIN);
-                }
-            }
-        }
-
-        if (nodeId.equals(currentMetadataNode)) {
-            metadataNodeActive = true;
-            LOGGER.info("Metadata node is now active");
-        }
-        updateNodePartitions(nodeId, true);
+        failedNodes.remove(nodeId);
+        ftStrategy.notifyNodeJoin(nodeId);
     }
 
-    private synchronized void updateNodePartitions(String nodeId, boolean added) throws HyracksDataException {
+    @Override
+    public synchronized void setState(ClusterState state) {
+        this.state = state;
+        LOGGER.info("Cluster State is now " + state.name());
+    }
+
+    @Override
+    public void updateMetadataNode(String nodeId, boolean active) {
+        currentMetadataNode = nodeId;
+        metadataNodeActive = active;
+        if (active) {
+            LOGGER.info(String.format("Metadata node %s is now active", currentMetadataNode));
+        }
+    }
+
+    @Override
+    public synchronized void updateNodePartitions(String nodeId, boolean active) throws HyracksDataException {
         ClusterPartition[] nodePartitions = node2PartitionsMap.get(nodeId);
         // if this isn't a storage node, it will not have cluster partitions
         if (nodePartitions != null) {
             for (ClusterPartition p : nodePartitions) {
-                // set the active node for this node's partitions
-                p.setActive(added);
-                if (added) {
-                    p.setActiveNodeId(nodeId);
-                }
+                updateClusterPartition(p.getPartitionId(), nodeId, active);
             }
-            resetClusterPartitionConstraint();
-            updateClusterState();
         }
     }
 
-    private synchronized void updateClusterState() throws HyracksDataException {
+    @Override
+    public synchronized void updateClusterPartition(Integer partitionNum, String activeNode, boolean active) {
+        ClusterPartition clusterPartition = clusterPartitions.get(partitionNum);
+        if (clusterPartition != null) {
+            // set the active node for this node's partitions
+            clusterPartition.setActive(active);
+            if (active) {
+                clusterPartition.setActiveNodeId(activeNode);
+            }
+        }
+    }
+
+    @Override
+    public synchronized void refreshState() throws HyracksDataException {
+        resetClusterPartitionConstraint();
         for (ClusterPartition p : clusterPartitions.values()) {
             if (!p.isActive()) {
                 state = ClusterState.UNUSABLE;
@@ -196,20 +153,19 @@ public class ClusterStateManager {
                 return;
             }
         }
+
+        state = ClusterState.PENDING;
+        LOGGER.info("Cluster is now " + state);
+
         // if all storage partitions are active as well as the metadata node, then the cluster is active
         if (metadataNodeActive) {
-            state = ClusterState.PENDING;
-            LOGGER.info("Cluster is now " + state);
             AppContextInfo.INSTANCE.getMetadataBootstrap().init();
             state = ClusterState.ACTIVE;
             LOGGER.info("Cluster is now " + state);
+            // Notify any waiting threads for the cluster to be active.
+            notifyAll();
             // start global recovery
             AppContextInfo.INSTANCE.getGlobalRecoveryManager().startGlobalRecovery();
-            if (autoFailover && !pendingProcessingFailbackPlans.isEmpty()) {
-                processPendingFailbackPlans();
-            }
-        } else {
-            requestMetadataNodeTakeover();
         }
     }
 
@@ -232,6 +188,7 @@ public class ClusterStateManager {
         return ncConfig.get(IO_DEVICES).split(",");
     }
 
+    @Override
     public ClusterState getState() {
         return state;
     }
@@ -287,6 +244,7 @@ public class ClusterStateManager {
         return AppContextInfo.INSTANCE.getMetadataProperties().getNodeNames().size();
     }
 
+    @Override
     public synchronized ClusterPartition[] getNodePartitions(String nodeId) {
         return node2PartitionsMap.get(nodeId);
     }
@@ -298,337 +256,13 @@ public class ClusterStateManager {
         return 0;
     }
 
+    @Override
     public synchronized ClusterPartition[] getClusterPartitons() {
         ArrayList<ClusterPartition> partitons = new ArrayList<>();
         for (ClusterPartition partition : clusterPartitions.values()) {
             partitons.add(partition);
         }
         return partitons.toArray(new ClusterPartition[] {});
-    }
-
-    private synchronized void requestPartitionsTakeover(String failedNodeId) {
-        //replica -> list of partitions to takeover
-        Map<String, List<Integer>> partitionRecoveryPlan = new HashMap<>();
-        ReplicationProperties replicationProperties = AppContextInfo.INSTANCE.getReplicationProperties();
-
-        //collect the partitions of the failed NC
-        List<ClusterPartition> lostPartitions = getNodeAssignedPartitions(failedNodeId);
-        if (!lostPartitions.isEmpty()) {
-            for (ClusterPartition partition : lostPartitions) {
-                //find replicas for this partitions
-                Set<String> partitionReplicas = replicationProperties.getNodeReplicasIds(partition.getNodeId());
-                //find a replica that is still active
-                for (String replica : partitionReplicas) {
-                    //TODO (mhubail) currently this assigns the partition to the first found active replica.
-                    //It needs to be modified to consider load balancing.
-                    if (addActiveReplica(replica, partition, partitionRecoveryPlan)) {
-                        break;
-                    }
-                }
-            }
-
-            if (partitionRecoveryPlan.size() == 0) {
-                //no active replicas were found for the failed node
-                LOGGER.severe("Could not find active replicas for the partitions " + lostPartitions);
-                return;
-            } else {
-                LOGGER.info("Partitions to recover: " + lostPartitions);
-            }
-            ICCMessageBroker messageBroker = (ICCMessageBroker) AppContextInfo.INSTANCE.getCCApplicationContext()
-                    .getMessageBroker();
-            //For each replica, send a request to takeover the assigned partitions
-            for (Entry<String, List<Integer>> entry : partitionRecoveryPlan.entrySet()) {
-                String replica = entry.getKey();
-                Integer[] partitionsToTakeover = entry.getValue().toArray(new Integer[entry.getValue().size()]);
-                long requestId = clusterRequestId++;
-                TakeoverPartitionsRequestMessage takeoverRequest = new TakeoverPartitionsRequestMessage(requestId,
-                        replica, partitionsToTakeover);
-                pendingTakeoverRequests.put(requestId, takeoverRequest);
-                try {
-                    messageBroker.sendApplicationMessageToNC(takeoverRequest, replica);
-                } catch (Exception e) {
-                    /**
-                     * if we fail to send the request, it means the NC we tried to send the request to
-                     * has failed. When the failure notification arrives, we will send any pending request
-                     * that belongs to the failed NC to a different active replica.
-                     */
-                    LOGGER.log(Level.WARNING, "Failed to send takeover request: " + takeoverRequest, e);
-                }
-            }
-        }
-    }
-
-    private boolean addActiveReplica(String replica, ClusterPartition partition,
-            Map<String, List<Integer>> partitionRecoveryPlan) {
-        if (activeNcConfiguration.containsKey(replica) && !failedNodes.contains(replica)) {
-            if (!partitionRecoveryPlan.containsKey(replica)) {
-                List<Integer> replicaPartitions = new ArrayList<>();
-                replicaPartitions.add(partition.getPartitionId());
-                partitionRecoveryPlan.put(replica, replicaPartitions);
-            } else {
-                partitionRecoveryPlan.get(replica).add(partition.getPartitionId());
-            }
-            return true;
-        }
-        return false;
-    }
-
-    private synchronized List<ClusterPartition> getNodeAssignedPartitions(String nodeId) {
-        List<ClusterPartition> nodePartitions = new ArrayList<>();
-        for (ClusterPartition partition : clusterPartitions.values()) {
-            if (partition.getActiveNodeId().equals(nodeId)) {
-                nodePartitions.add(partition);
-            }
-        }
-        /**
-         * if there is any pending takeover request that this node was supposed to handle,
-         * it needs to be sent to a different replica
-         */
-        List<Long> failedTakeoverRequests = new ArrayList<>();
-        for (TakeoverPartitionsRequestMessage request : pendingTakeoverRequests.values()) {
-            if (request.getNodeId().equals(nodeId)) {
-                for (Integer partitionId : request.getPartitions()) {
-                    nodePartitions.add(clusterPartitions.get(partitionId));
-                }
-                failedTakeoverRequests.add(request.getRequestId());
-            }
-        }
-
-        //remove failed requests
-        for (Long requestId : failedTakeoverRequests) {
-            pendingTakeoverRequests.remove(requestId);
-        }
-        return nodePartitions;
-    }
-
-    private synchronized void requestMetadataNodeTakeover() {
-        //need a new node to takeover metadata node
-        ClusterPartition metadataPartiton = AppContextInfo.INSTANCE.getMetadataProperties()
-                .getMetadataPartition();
-        //request the metadataPartition node to register itself as the metadata node
-        TakeoverMetadataNodeRequestMessage takeoverRequest = new TakeoverMetadataNodeRequestMessage();
-        ICCMessageBroker messageBroker = (ICCMessageBroker) AppContextInfo.INSTANCE.getCCApplicationContext()
-                .getMessageBroker();
-        try {
-            messageBroker.sendApplicationMessageToNC(takeoverRequest, metadataPartiton.getActiveNodeId());
-        } catch (Exception e) {
-            /**
-             * if we fail to send the request, it means the NC we tried to send the request to
-             * has failed. When the failure notification arrives, a new NC will be assigned to
-             * the metadata partition and a new metadata node takeover request will be sent to it.
-             */
-            LOGGER.log(Level.WARNING,
-                    "Failed to send metadata node takeover request to: " + metadataPartiton.getActiveNodeId(), e);
-        }
-    }
-
-    public synchronized void processPartitionTakeoverResponse(TakeoverPartitionsResponseMessage response)
-            throws HyracksDataException {
-        for (Integer partitonId : response.getPartitions()) {
-            ClusterPartition partition = clusterPartitions.get(partitonId);
-            partition.setActive(true);
-            partition.setActiveNodeId(response.getNodeId());
-        }
-        pendingTakeoverRequests.remove(response.getRequestId());
-        resetClusterPartitionConstraint();
-        updateClusterState();
-    }
-
-    public synchronized void processMetadataNodeTakeoverResponse(TakeoverMetadataNodeResponseMessage response)
-            throws HyracksDataException {
-        currentMetadataNode = response.getNodeId();
-        metadataNodeActive = true;
-        LOGGER.info("Current metadata node: " + currentMetadataNode);
-        updateClusterState();
-    }
-
-    private synchronized void prepareFailbackPlan(String failingBackNodeId) {
-        NodeFailbackPlan plan = NodeFailbackPlan.createPlan(failingBackNodeId);
-        pendingProcessingFailbackPlans.add(plan);
-        planId2FailbackPlanMap.put(plan.getPlanId(), plan);
-
-        //get all partitions this node requires to resync
-        ReplicationProperties replicationProperties = AppContextInfo.INSTANCE.getReplicationProperties();
-        Set<String> nodeReplicas = replicationProperties.getNodeReplicationClients(failingBackNodeId);
-        for (String replicaId : nodeReplicas) {
-            ClusterPartition[] nodePartitions = node2PartitionsMap.get(replicaId);
-            for (ClusterPartition partition : nodePartitions) {
-                plan.addParticipant(partition.getActiveNodeId());
-                /**
-                 * if the partition original node is the returning node,
-                 * add it to the list of the partitions which will be failed back
-                 */
-                if (partition.getNodeId().equals(failingBackNodeId)) {
-                    plan.addPartitionToFailback(partition.getPartitionId(), partition.getActiveNodeId());
-                }
-            }
-        }
-
-        if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("Prepared Failback plan: " + plan.toString());
-        }
-
-        processPendingFailbackPlans();
-    }
-
-    private synchronized void processPendingFailbackPlans() {
-        /**
-         * if the cluster state is not ACTIVE, then failbacks should not be processed
-         * since some partitions are not active
-         */
-        if (state == ClusterState.ACTIVE) {
-            while (!pendingProcessingFailbackPlans.isEmpty()) {
-                //take the first pending failback plan
-                NodeFailbackPlan plan = pendingProcessingFailbackPlans.pop();
-                /**
-                 * A plan at this stage will be in one of two states:
-                 * 1. PREPARING -> the participants were selected but we haven't sent any request.
-                 * 2. PENDING_ROLLBACK -> a participant failed before we send any requests
-                 */
-                if (plan.getState() == FailbackPlanState.PREPARING) {
-                    //set the partitions that will be failed back as inactive
-                    String failbackNode = plan.getNodeId();
-                    for (Integer partitionId : plan.getPartitionsToFailback()) {
-                        ClusterPartition clusterPartition = clusterPartitions.get(partitionId);
-                        clusterPartition.setActive(false);
-                        //partition expected to be returned to the failing back node
-                        clusterPartition.setActiveNodeId(failbackNode);
-                    }
-
-                    /**
-                     * if the returning node is the original metadata node,
-                     * then metadata node will change after the failback completes
-                     */
-                    String originalMetadataNode = AppContextInfo.INSTANCE.getMetadataProperties()
-                            .getMetadataNodeName();
-                    if (originalMetadataNode.equals(failbackNode)) {
-                        plan.setNodeToReleaseMetadataManager(currentMetadataNode);
-                        currentMetadataNode = "";
-                        metadataNodeActive = false;
-                    }
-
-                    //force new jobs to wait
-                    state = ClusterState.REBALANCING;
-                    ICCMessageBroker messageBroker = (ICCMessageBroker) AppContextInfo.INSTANCE
-                            .getCCApplicationContext().getMessageBroker();
-                    handleFailbackRequests(plan, messageBroker);
-                    /**
-                     * wait until the current plan is completed before processing the next plan.
-                     * when the current one completes or is reverted, the cluster state will be
-                     * ACTIVE again, and the next failback plan (if any) will be processed.
-                     */
-                    break;
-                } else if (plan.getState() == FailbackPlanState.PENDING_ROLLBACK) {
-                    //this plan failed before sending any requests -> nothing to rollback
-                    planId2FailbackPlanMap.remove(plan.getPlanId());
-                }
-            }
-        }
-    }
-
-    private void handleFailbackRequests(NodeFailbackPlan plan, ICCMessageBroker messageBroker) {
-        //send requests to other nodes to complete on-going jobs and prepare partitions for failback
-        for (PreparePartitionsFailbackRequestMessage request : plan.getPlanFailbackRequests()) {
-            try {
-                messageBroker.sendApplicationMessageToNC(request, request.getNodeID());
-                plan.addPendingRequest(request);
-            } catch (Exception e) {
-                LOGGER.log(Level.WARNING, "Failed to send failback request to: " + request.getNodeID(), e);
-                plan.notifyNodeFailure(request.getNodeID());
-                revertFailedFailbackPlanEffects();
-                break;
-            }
-        }
-    }
-
-    public synchronized void processPreparePartitionsFailbackResponse(PreparePartitionsFailbackResponseMessage msg) {
-        NodeFailbackPlan plan = planId2FailbackPlanMap.get(msg.getPlanId());
-        plan.markRequestCompleted(msg.getRequestId());
-        /**
-         * A plan at this stage will be in one of three states:
-         * 1. PENDING_PARTICIPANT_REPONSE -> one or more responses are still expected (wait).
-         * 2. PENDING_COMPLETION -> all responses received (time to send completion request).
-         * 3. PENDING_ROLLBACK -> the plan failed and we just received the final pending response (revert).
-         */
-        if (plan.getState() == FailbackPlanState.PENDING_COMPLETION) {
-            CompleteFailbackRequestMessage request = plan.getCompleteFailbackRequestMessage();
-
-            //send complete resync and takeover partitions to the failing back node
-            ICCMessageBroker messageBroker = (ICCMessageBroker) AppContextInfo.INSTANCE.getCCApplicationContext()
-                    .getMessageBroker();
-            try {
-                messageBroker.sendApplicationMessageToNC(request, request.getNodeId());
-            } catch (Exception e) {
-                LOGGER.log(Level.WARNING, "Failed to send complete failback request to: " + request.getNodeId(), e);
-                notifyFailbackPlansNodeFailure(request.getNodeId());
-                revertFailedFailbackPlanEffects();
-            }
-        } else if (plan.getState() == FailbackPlanState.PENDING_ROLLBACK) {
-            revertFailedFailbackPlanEffects();
-        }
-    }
-
-    public synchronized void processCompleteFailbackResponse(CompleteFailbackResponseMessage response)
-            throws HyracksDataException {
-        /**
-         * the failback plan completed successfully:
-         * Remove all references to it.
-         * Remove the the failing back node from the failed nodes list.
-         * Notify its replicas to reconnect to it.
-         * Set the failing back node partitions as active.
-         */
-        NodeFailbackPlan plan = planId2FailbackPlanMap.remove(response.getPlanId());
-        String nodeId = plan.getNodeId();
-        failedNodes.remove(nodeId);
-        //notify impacted replicas they can reconnect to this node
-        notifyImpactedReplicas(nodeId, ClusterEventType.NODE_JOIN);
-        updateNodePartitions(nodeId, true);
-    }
-
-    private synchronized void notifyImpactedReplicas(String nodeId, ClusterEventType event) {
-        ReplicationProperties replicationProperties = AppContextInfo.INSTANCE.getReplicationProperties();
-        Set<String> remoteReplicas = replicationProperties.getRemoteReplicasIds(nodeId);
-        String nodeIdAddress = "";
-        //in case the node joined with a new IP address, we need to send it to the other replicas
-        if (event == ClusterEventType.NODE_JOIN) {
-            nodeIdAddress = activeNcConfiguration.get(nodeId).get(CLUSTER_NET_IP_ADDRESS_KEY);
-        }
-
-        ReplicaEventMessage msg = new ReplicaEventMessage(nodeId, nodeIdAddress, event);
-        ICCMessageBroker messageBroker = (ICCMessageBroker) AppContextInfo.INSTANCE.getCCApplicationContext()
-                .getMessageBroker();
-        for (String replica : remoteReplicas) {
-            //if the remote replica is alive, send the event
-            if (activeNcConfiguration.containsKey(replica)) {
-                try {
-                    messageBroker.sendApplicationMessageToNC(msg, replica);
-                } catch (Exception e) {
-                    LOGGER.log(Level.WARNING, "Failed sending an application message to an NC", e);
-                }
-            }
-        }
-    }
-
-    private synchronized void revertFailedFailbackPlanEffects() {
-        Iterator<NodeFailbackPlan> iterator = planId2FailbackPlanMap.values().iterator();
-        while (iterator.hasNext()) {
-            NodeFailbackPlan plan = iterator.next();
-            if (plan.getState() == FailbackPlanState.PENDING_ROLLBACK) {
-                //TODO if the failing back node is still active, notify it to construct a new plan for it
-                iterator.remove();
-
-                //reassign the partitions that were supposed to be failed back to an active replica
-                requestPartitionsTakeover(plan.getNodeId());
-            }
-        }
-    }
-
-    private synchronized void notifyFailbackPlansNodeFailure(String nodeId) {
-        Iterator<NodeFailbackPlan> iterator = planId2FailbackPlanMap.values().iterator();
-        while (iterator.hasNext()) {
-            NodeFailbackPlan plan = iterator.next();
-            plan.notifyNodeFailure(nodeId);
-        }
     }
 
     public synchronized boolean isMetadataNodeActive() {
@@ -675,5 +309,15 @@ public class ClusterStateManager {
         stateDescription.putPOJO("metadata_node", currentMetadataNode);
         stateDescription.putPOJO("partitions", clusterPartitions);
         return stateDescription;
+    }
+
+    @Override
+    public Map<String, Map<String, String>> getActiveNcConfiguration() {
+        return Collections.unmodifiableMap(activeNcConfiguration);
+    }
+
+    @Override
+    public String getCurrentMetadataNodeId() {
+        return currentMetadataNode;
     }
 }

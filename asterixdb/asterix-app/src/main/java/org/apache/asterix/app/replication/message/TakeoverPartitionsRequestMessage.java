@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.runtime.message;
+package org.apache.asterix.app.replication.message;
 
 import java.io.IOException;
 import java.util.logging.Level;
@@ -25,14 +25,14 @@ import java.util.logging.Logger;
 import org.apache.asterix.common.api.IAppRuntimeContext;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.ExceptionUtils;
-import org.apache.asterix.common.messaging.api.IApplicationMessage;
 import org.apache.asterix.common.messaging.api.INCMessageBroker;
+import org.apache.asterix.common.replication.INCLifecycleMessage;
 import org.apache.asterix.common.replication.IRemoteRecoveryManager;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.service.IControllerService;
 import org.apache.hyracks.control.nc.NodeControllerService;
 
-public class TakeoverPartitionsRequestMessage implements IApplicationMessage {
+public class TakeoverPartitionsRequestMessage implements INCLifecycleMessage {
 
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = Logger.getLogger(TakeoverPartitionsRequestMessage.class.getName());
@@ -76,8 +76,7 @@ public class TakeoverPartitionsRequestMessage implements IApplicationMessage {
     @Override
     public void handle(IControllerService cs) throws HyracksDataException, InterruptedException {
         NodeControllerService ncs = (NodeControllerService) cs;
-        IAppRuntimeContext appContext =
-                (IAppRuntimeContext) ncs.getApplicationContext().getApplicationObject();
+        IAppRuntimeContext appContext = (IAppRuntimeContext) ncs.getApplicationContext().getApplicationObject();
         INCMessageBroker broker = (INCMessageBroker) ncs.getApplicationContext().getMessageBroker();
         //if the NC is shutting down, it should ignore takeover partitions request
         if (!appContext.isShuttingdown()) {
@@ -103,5 +102,10 @@ public class TakeoverPartitionsRequestMessage implements IApplicationMessage {
                 throw hde;
             }
         }
+    }
+
+    @Override
+    public MessageType getType() {
+        return MessageType.TAKEOVER_PARTITION_REQUEST;
     }
 }

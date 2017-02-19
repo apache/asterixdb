@@ -18,7 +18,23 @@
  */
 package org.apache.asterix.api.common;
 
-import static org.apache.asterix.api.common.AsterixHyracksIntegrationUtil.LoggerHolder.LOGGER;
+import org.apache.asterix.common.api.IClusterManagementWork.ClusterState;
+import org.apache.asterix.common.config.GlobalConfig;
+import org.apache.asterix.common.config.PropertiesAccessor;
+import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.hyracks.bootstrap.CCApplicationEntryPoint;
+import org.apache.asterix.hyracks.bootstrap.NCApplicationEntryPoint;
+import org.apache.asterix.runtime.utils.ClusterStateManager;
+import org.apache.commons.io.FileUtils;
+import org.apache.hyracks.api.client.HyracksConnection;
+import org.apache.hyracks.api.client.IHyracksClientConnection;
+import org.apache.hyracks.api.job.JobFlag;
+import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.api.job.JobSpecification;
+import org.apache.hyracks.control.cc.ClusterControllerService;
+import org.apache.hyracks.control.common.controllers.CCConfig;
+import org.apache.hyracks.control.common.controllers.NCConfig;
+import org.apache.hyracks.control.nc.NodeControllerService;
 
 import java.io.File;
 import java.io.IOException;
@@ -30,21 +46,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.asterix.common.config.PropertiesAccessor;
-import org.apache.asterix.common.config.GlobalConfig;
-import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.hyracks.bootstrap.CCApplicationEntryPoint;
-import org.apache.asterix.hyracks.bootstrap.NCApplicationEntryPoint;
-import org.apache.commons.io.FileUtils;
-import org.apache.hyracks.api.client.HyracksConnection;
-import org.apache.hyracks.api.client.IHyracksClientConnection;
-import org.apache.hyracks.api.job.JobFlag;
-import org.apache.hyracks.api.job.JobId;
-import org.apache.hyracks.api.job.JobSpecification;
-import org.apache.hyracks.control.cc.ClusterControllerService;
-import org.apache.hyracks.control.common.controllers.CCConfig;
-import org.apache.hyracks.control.common.controllers.NCConfig;
-import org.apache.hyracks.control.nc.NodeControllerService;
+import static org.apache.asterix.api.common.AsterixHyracksIntegrationUtil.LoggerHolder.LOGGER;
 
 public class AsterixHyracksIntegrationUtil {
     static class LoggerHolder {
@@ -99,6 +101,12 @@ public class AsterixHyracksIntegrationUtil {
         //wait until all NCs complete their startup
         for (Thread thread : startupThreads) {
             thread.join();
+        }
+        // Wait until cluster becomes active
+        synchronized (ClusterStateManager.INSTANCE) {
+            while (ClusterStateManager.INSTANCE.getState() != ClusterState.ACTIVE) {
+                ClusterStateManager.INSTANCE.wait();
+            }
         }
         hcc = new HyracksConnection(cc.getConfig().clientNetIpAddress, cc.getConfig().clientNetPort);
         ncs = nodeControllers.toArray(new NodeControllerService[nodeControllers.size()]);

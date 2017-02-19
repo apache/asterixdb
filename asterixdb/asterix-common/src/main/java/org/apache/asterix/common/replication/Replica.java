@@ -36,11 +36,13 @@ public class Replica {
         UNKNOWN
     }
 
-    final Node node;
+    private final Node node;
     private ReplicaState state = ReplicaState.UNKNOWN;
 
     public Replica(Node node) {
-        this.node = node;
+        this.node = new Node();
+        this.node.setId(node.getId());
+        this.node.setClusterIp(node.getClusterIp());
     }
 
     public ReplicaState getState() {

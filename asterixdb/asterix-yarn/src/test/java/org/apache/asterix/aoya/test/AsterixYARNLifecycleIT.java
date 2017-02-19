@@ -47,6 +47,7 @@ public class AsterixYARNLifecycleIT {
 
     @BeforeClass
     public static void setUp() throws Exception {
+        AsterixYARNInstanceUtil.cleanUp();
         instance = new AsterixYARNInstanceUtil();
         appConf = instance.setUp();
         configPath = instance.configPath;

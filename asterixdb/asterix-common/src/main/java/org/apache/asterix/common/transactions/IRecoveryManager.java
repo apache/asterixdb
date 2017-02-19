@@ -34,6 +34,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 public interface IRecoveryManager {
 
     public enum SystemState {
+        INITIAL_RUN,
         NEW_UNIVERSE,
         RECOVERING,
         HEALTHY,
@@ -120,4 +121,6 @@ public interface IRecoveryManager {
      * Deletes all temporary recovery files
      */
     public void deleteRecoveryTemporaryFiles();
+
+    void startLocalRecovery(Set<Integer> partitions) throws IOException, ACIDException;
 }

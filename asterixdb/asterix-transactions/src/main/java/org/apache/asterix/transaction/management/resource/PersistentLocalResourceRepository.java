@@ -45,6 +45,8 @@ import org.apache.asterix.common.config.MetadataProperties;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.replication.IReplicationManager;
 import org.apache.asterix.common.replication.ReplicationJob;
+import org.apache.asterix.common.storage.IndexFileProperties;
+import org.apache.asterix.common.transactions.Resource;
 import org.apache.asterix.common.utils.StorageConstants;
 import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.commons.io.FileUtils;
@@ -483,20 +485,27 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
         nodeActivePartitions.remove(partitonId);
     }
 
-    /**
-     * @param resourceAbsolutePath
-     * @return the resource relative path starting from the partition directory
-     */
-    public static String getResourceRelativePath(String resourceAbsolutePath) {
-        String[] tokens = resourceAbsolutePath.split(File.separator);
-        //partition/dataverse/idx/fileName
-        return tokens[tokens.length - 4] + File.separator + tokens[tokens.length - 3] + File.separator
-                + tokens[tokens.length - 2] + File.separator + tokens[tokens.length - 1];
+    private static String getLocalResourceRelativePath(String absolutePath) {
+        final String[] tokens = absolutePath.split(File.separator);
+        // Format: storage_dir/partition/dataverse/idx
+        return tokens[tokens.length - 5] + File.separator + tokens[tokens.length - 4] + File.separator
+                + tokens[tokens.length - 3] + File.separator + tokens[tokens.length - 2];
     }
 
-    public static int getResourcePartition(String resourceAbsolutePath) {
-        String[] tokens = resourceAbsolutePath.split(File.separator);
-        //partition/dataverse/idx/fileName
-        return StoragePathUtil.getPartitionNumFromName(tokens[tokens.length - 4]);
+    public IndexFileProperties getIndexFileRef(String absoluteFilePath) throws HyracksDataException {
+        //TODO pass relative path
+        final String[] tokens = absoluteFilePath.split(File.separator);
+        if (tokens.length < 5) {
+            throw new HyracksDataException("Invalid file format");
+        }
+        String fileName = tokens[tokens.length - 1];
+        String index = tokens[tokens.length - 2];
+        String dataverse = tokens[tokens.length - 3];
+        String partition = tokens[tokens.length - 4];
+        int partitionId = StoragePathUtil.getPartitionNumFromName(partition);
+        String relativePath = getLocalResourceRelativePath(absoluteFilePath);
+        final LocalResource lr = get(relativePath);
+        int datasetId = lr == null ? -1 : ((Resource) lr.getResource()).datasetId();
+        return new IndexFileProperties(partitionId, dataverse, index, fileName, datasetId);
     }
 }

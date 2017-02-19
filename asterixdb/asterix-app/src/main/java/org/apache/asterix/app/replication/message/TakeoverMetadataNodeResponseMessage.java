@@ -16,35 +16,38 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.runtime.message;
+package org.apache.asterix.app.replication.message;
 
-import java.util.Set;
-
-import org.apache.asterix.runtime.utils.ClusterStateManager;
+import org.apache.asterix.common.replication.INCLifecycleMessage;
+import org.apache.asterix.runtime.utils.AppContextInfo;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.service.IControllerService;
 
-public class PreparePartitionsFailbackResponseMessage extends AbstractFailbackPlanMessage {
+public class TakeoverMetadataNodeResponseMessage implements INCLifecycleMessage {
 
     private static final long serialVersionUID = 1L;
-    private final Set<Integer> partitions;
+    private final String nodeId;
 
-    public PreparePartitionsFailbackResponseMessage(long planId, int requestId, Set<Integer> partitions) {
-        super(planId, requestId);
-        this.partitions = partitions;
+    public TakeoverMetadataNodeResponseMessage(String nodeId) {
+        this.nodeId = nodeId;
     }
 
-    public Set<Integer> getPartitions() {
-        return partitions;
+    public String getNodeId() {
+        return nodeId;
     }
 
     @Override
     public void handle(IControllerService cs) throws HyracksDataException, InterruptedException {
-        ClusterStateManager.INSTANCE.processPreparePartitionsFailbackResponse(this);
+        AppContextInfo.INSTANCE.getFaultToleranceStrategy().process(this);
     }
 
     @Override
     public String toString() {
-        return PreparePartitionsFailbackResponseMessage.class.getSimpleName() + " " + partitions.toString();
+        return TakeoverMetadataNodeResponseMessage.class.getSimpleName();
+    }
+
+    @Override
+    public MessageType getType() {
+        return MessageType.TAKEOVER_METADATA_NODE_RESPONSE;
     }
 }

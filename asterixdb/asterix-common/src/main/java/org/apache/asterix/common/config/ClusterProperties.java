@@ -19,21 +19,27 @@
 package org.apache.asterix.common.config;
 
 import java.io.InputStream;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 
+import org.apache.asterix.common.replication.IReplicationStrategy;
+import org.apache.asterix.common.replication.ReplicationStrategyFactory;
 import org.apache.asterix.event.schema.cluster.Cluster;
+import org.apache.asterix.event.schema.cluster.Node;
+import org.apache.asterix.event.schema.cluster.Replica;
+import org.apache.commons.lang3.StringUtils;
 
 public class ClusterProperties {
 
     public static final ClusterProperties INSTANCE = new ClusterProperties();
-
     private static final String CLUSTER_CONFIGURATION_FILE = "cluster.xml";
     private static final String DEFAULT_STORAGE_DIR_NAME = "storage";
-
-    private final Cluster cluster;
+    private String nodeNamePrefix = StringUtils.EMPTY;
+    private Cluster cluster;
 
     private ClusterProperties() {
         InputStream is = this.getClass().getClassLoader().getResourceAsStream(CLUSTER_CONFIGURATION_FILE);
@@ -42,11 +48,11 @@ public class ClusterProperties {
                 JAXBContext ctx = JAXBContext.newInstance(Cluster.class);
                 Unmarshaller unmarshaller = ctx.createUnmarshaller();
                 cluster = (Cluster) unmarshaller.unmarshal(is);
+                nodeNamePrefix = cluster.getInstanceName() + "_";
+                updateNodeIdToFullName();
             } catch (JAXBException e) {
                 throw new IllegalStateException("Failed to read configuration file " + CLUSTER_CONFIGURATION_FILE, e);
             }
-        } else {
-            cluster = null;
         }
     }
 
@@ -62,14 +68,41 @@ public class ClusterProperties {
         return DEFAULT_STORAGE_DIR_NAME;
     }
 
-    public boolean isReplicationEnabled() {
-        if (cluster != null && cluster.getDataReplication() != null) {
-            return cluster.getDataReplication().isEnabled();
-        }
-        return false;
+    public Node getNodeById(String nodeId) {
+        Optional<Node> matchingNode = cluster.getNode().stream().filter(node -> node.getId().equals(nodeId)).findAny();
+        return matchingNode.isPresent() ? matchingNode.get() : null;
     }
 
-    public boolean isAutoFailoverEnabled() {
-        return isReplicationEnabled() && cluster.getDataReplication().isAutoFailover();
+    public int getNodeIndex(String nodeId) {
+        for (int i = 0; i < cluster.getNode().size(); i++) {
+            Node node = cluster.getNode().get(i);
+            if (node.getId().equals(nodeId)) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    public IReplicationStrategy getReplicationStrategy() {
+        return ReplicationStrategyFactory.create(cluster);
+    }
+
+    private String getNodeFullName(String nodeId) {
+        if (nodeId.startsWith(nodeNamePrefix)) {
+            return nodeId;
+        }
+        return nodeNamePrefix + nodeId;
+    }
+
+    private void updateNodeIdToFullName() {
+        cluster.getNode().forEach(node -> node.setId(getNodeFullName(node.getId())));
+        if (cluster.getMetadataNode() != null) {
+            cluster.setMetadataNode(getNodeFullName(cluster.getMetadataNode()));
+        }
+        if (cluster.getHighAvailability() != null && cluster.getHighAvailability().getFaultTolerance() != null
+                && cluster.getHighAvailability().getFaultTolerance().getReplica() != null) {
+            Replica replicas = cluster.getHighAvailability().getFaultTolerance().getReplica();
+            replicas.setNodeId(replicas.getNodeId().stream().map(this::getNodeFullName).collect(Collectors.toList()));
+        }
     }
 }

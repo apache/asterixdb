@@ -16,51 +16,23 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.runtime.message;
+package org.apache.asterix.app.replication.message;
 
-import java.io.IOException;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.common.api.IAppRuntimeContext;
 import org.apache.asterix.common.exceptions.ExceptionUtils;
 import org.apache.asterix.common.messaging.api.INCMessageBroker;
-import org.apache.asterix.common.replication.IRemoteRecoveryManager;
+import org.apache.asterix.common.replication.INCLifecycleMessage;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.service.IControllerService;
 import org.apache.hyracks.control.nc.NodeControllerService;
 
-public class CompleteFailbackRequestMessage extends AbstractFailbackPlanMessage {
+public class TakeoverMetadataNodeRequestMessage implements INCLifecycleMessage {
 
     private static final long serialVersionUID = 1L;
-    private static final Logger LOGGER = Logger.getLogger(CompleteFailbackRequestMessage.class.getName());
-    private final Set<Integer> partitions;
-    private final String nodeId;
-
-    public CompleteFailbackRequestMessage(long planId, int requestId, String nodeId, Set<Integer> partitions) {
-        super(planId, requestId);
-        this.nodeId = nodeId;
-        this.partitions = partitions;
-    }
-
-    public Set<Integer> getPartitions() {
-        return partitions;
-    }
-
-    public String getNodeId() {
-        return nodeId;
-    }
-
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append(CompleteFailbackRequestMessage.class.getSimpleName());
-        sb.append(" Plan ID: " + planId);
-        sb.append(" Node ID: " + nodeId);
-        sb.append(" Partitions: " + partitions);
-        return sb.toString();
-    }
+    private static final Logger LOGGER = Logger.getLogger(TakeoverMetadataNodeRequestMessage.class.getName());
 
     @Override
     public void handle(IControllerService cs) throws HyracksDataException, InterruptedException {
@@ -70,23 +42,33 @@ public class CompleteFailbackRequestMessage extends AbstractFailbackPlanMessage 
         INCMessageBroker broker = (INCMessageBroker) ncs.getApplicationContext().getMessageBroker();
         HyracksDataException hde = null;
         try {
-            IRemoteRecoveryManager remoteRecoeryManager = appContext.getRemoteRecoveryManager();
-            remoteRecoeryManager.completeFailbackProcess();
-        } catch (IOException | InterruptedException e) {
-            LOGGER.log(Level.SEVERE, "Failure during completion of failback process", e);
-            hde = ExceptionUtils.convertToHyracksDataException(e);
+            appContext.initializeMetadata(false);
+            appContext.exportMetadataNodeStub();
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Failed taking over metadata", e);
+            hde = new HyracksDataException(e);
         } finally {
-            CompleteFailbackResponseMessage reponse = new CompleteFailbackResponseMessage(planId,
-                    requestId, partitions);
+            TakeoverMetadataNodeResponseMessage reponse = new TakeoverMetadataNodeResponseMessage(
+                    appContext.getTransactionSubsystem().getId());
             try {
                 broker.sendMessageToCC(reponse);
             } catch (Exception e) {
-                LOGGER.log(Level.SEVERE, "Failure sending message to CC", e);
+                LOGGER.log(Level.SEVERE, "Failed taking over metadata", e);
                 hde = ExceptionUtils.suppressIntoHyracksDataException(hde, e);
             }
         }
         if (hde != null) {
             throw hde;
         }
+    }
+
+    @Override
+    public String toString() {
+        return TakeoverMetadataNodeRequestMessage.class.getSimpleName();
+    }
+
+    @Override
+    public MessageType getType() {
+        return MessageType.TAKEOVER_METADATA_NODE_REQUEST;
     }
 }
