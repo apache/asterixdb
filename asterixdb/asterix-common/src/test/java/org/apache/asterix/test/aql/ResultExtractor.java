@@ -46,7 +46,6 @@ public class ResultExtractor {
 
     public static InputStream extract(InputStream resultStream) throws Exception {
         ObjectMapper om = new ObjectMapper();
-        StringWriter sw = new StringWriter();
         String resultStr = IOUtils.toString(resultStream, Charset.defaultCharset());
         PrettyPrinter singleLine = new SingleLinePrettyPrinter();
         ObjectNode result = om.readValue(resultStr, ObjectNode.class);

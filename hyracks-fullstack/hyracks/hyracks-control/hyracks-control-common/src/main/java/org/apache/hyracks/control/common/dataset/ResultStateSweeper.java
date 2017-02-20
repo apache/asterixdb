@@ -59,7 +59,7 @@ public class ResultStateSweeper implements Runnable {
                 Thread.sleep(resultSweepThreshold);
                 sweep();
             } catch (InterruptedException e) {
-                logger.log(Level.SEVERE, "Result cleaner thread interrupted, shutting down.", e);
+                logger.log(Level.WARNING, "Result cleaner thread interrupted, shutting down.");
                 break; // the interrupt was explicit from another thread. This thread should shut down...
             }
         }

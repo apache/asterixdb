@@ -20,7 +20,9 @@
 package org.apache.hyracks.control.cc.work;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.UUID;
 
@@ -43,7 +45,9 @@ public class GatherStateDumpsWork extends SynchronizableWork {
     public void doRun() throws Exception {
         ccs.addStateDumpRun(sdr.stateDumpId, sdr);
         INodeManager nodeManager = ccs.getNodeManager();
-        sdr.setNCs(nodeManager.getAllNodeIds());
+        Collection<String> nodeIds = new HashSet<>();
+        nodeIds.addAll(nodeManager.getAllNodeIds());
+        sdr.setNCs(nodeIds);
         for (NodeControllerState ncs : nodeManager.getAllNodeControllerStates()) {
             ncs.getNodeController().dumpState(sdr.stateDumpId);
         }
