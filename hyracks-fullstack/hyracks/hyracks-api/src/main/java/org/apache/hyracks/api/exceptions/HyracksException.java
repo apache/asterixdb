@@ -129,7 +129,9 @@ public class HyracksException extends IOException {
     @Override
     public String getMessage() {
         if (msgCache == null) {
-            msgCache = ErrorMessageUtil.formatMessage(component, errorCode, super.getMessage(), params);
+            synchronized (this) {
+                msgCache = ErrorMessageUtil.formatMessage(component, errorCode, super.getMessage(), params);
+            }
         }
         return msgCache;
     }
