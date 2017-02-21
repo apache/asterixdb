@@ -18,19 +18,25 @@
  */
 package org.apache.hyracks.http.server;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+import io.netty.handler.codec.http.QueryStringDecoder;
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.server.utils.HttpUtil;
 
 import io.netty.handler.codec.http.FullHttpRequest;
 
-public class GetRequest implements IServletRequest {
-    private final FullHttpRequest request;
-    private final Map<String, List<String>> parameters;
+public class BaseRequest implements IServletRequest {
+    protected final FullHttpRequest request;
+    protected final Map<String, List<String>> parameters;
 
-    public GetRequest(FullHttpRequest request, Map<String, List<String>> parameters) {
+    public static IServletRequest create(FullHttpRequest request) throws IOException {
+        return new BaseRequest(request, new QueryStringDecoder(request.uri()).parameters());
+    }
+
+    protected BaseRequest(FullHttpRequest request, Map<String, List<String>> parameters) {
         this.request = request;
         this.parameters = parameters;
     }

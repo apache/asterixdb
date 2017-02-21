@@ -26,6 +26,7 @@ import org.apache.hyracks.http.api.IServletResponse;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.DefaultHttpResponse;
@@ -115,6 +116,9 @@ public class ChunkedResponse implements IServletResponse {
                 fullResponse(response.protocolVersion(), response.status(),
                         error == null ? ctx.alloc().buffer(0, 0) : error, response.headers());
             }
+
+            // since the request failed, we need to close the channel on complete
+            future.addListener(ChannelFutureListener.CLOSE);
         }
         done = true;
     }

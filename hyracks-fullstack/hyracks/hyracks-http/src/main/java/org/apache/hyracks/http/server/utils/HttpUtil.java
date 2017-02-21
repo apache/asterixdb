@@ -19,29 +19,19 @@
 package org.apache.hyracks.http.server.utils;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
-import org.apache.hyracks.http.server.GetRequest;
+import org.apache.hyracks.http.server.BaseRequest;
 import org.apache.hyracks.http.server.PostRequest;
 
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpMethod;
-import io.netty.handler.codec.http.QueryStringDecoder;
-import io.netty.handler.codec.http.multipart.Attribute;
-import io.netty.handler.codec.http.multipart.HttpPostRequestDecoder;
-import io.netty.handler.codec.http.multipart.InterfaceHttpData;
-import io.netty.handler.codec.http.multipart.InterfaceHttpData.HttpDataType;
-import io.netty.handler.codec.http.multipart.MixedAttribute;
 
 public class HttpUtil {
-    private static final Logger LOGGER = Logger.getLogger(HttpUtil.class.getName());
 
     private HttpUtil() {
     }
@@ -80,40 +70,8 @@ public class HttpUtil {
         }
     }
 
-    public static IServletRequest post(FullHttpRequest request) throws IOException {
-        List<String> names = new ArrayList<>();
-        List<String> values = new ArrayList<>();
-        HttpPostRequestDecoder decoder = null;
-        try {
-            decoder = new HttpPostRequestDecoder(request);
-        } catch (Exception e) {
-            //ignore. this means that the body of the POST request does not have key value pairs
-            LOGGER.log(Level.WARNING, "Failed to decode a post message. Fix the API not to have queries as POST body",
-                    e);
-        }
-        if (decoder != null) {
-            try {
-                List<InterfaceHttpData> bodyHttpDatas = decoder.getBodyHttpDatas();
-                for (InterfaceHttpData data : bodyHttpDatas) {
-                    if (data.getHttpDataType().equals(HttpDataType.Attribute)) {
-                        Attribute attr = (MixedAttribute) data;
-                        names.add(data.getName());
-                        values.add(attr.getValue());
-                    }
-                }
-            } finally {
-                decoder.destroy();
-            }
-        }
-        return new PostRequest(request, new QueryStringDecoder(request.uri()).parameters(), names, values);
-    }
-
-    public static IServletRequest get(FullHttpRequest request) throws IOException {
-        return new GetRequest(request, new QueryStringDecoder(request.uri()).parameters());
-    }
-
     public static IServletRequest toServletRequest(FullHttpRequest request) throws IOException {
-        return request.method() == HttpMethod.GET ? HttpUtil.get(request) : HttpUtil.post(request);
+        return request.method() == HttpMethod.POST ? PostRequest.create(request) : BaseRequest.create(request);
     }
 
     public static void setContentType(IServletResponse response, String type, String charset) throws IOException {

@@ -18,31 +18,63 @@
  */
 package org.apache.hyracks.http.server;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.server.utils.HttpUtil;
 
 import io.netty.handler.codec.http.FullHttpRequest;
+import io.netty.handler.codec.http.QueryStringDecoder;
+import io.netty.handler.codec.http.multipart.Attribute;
+import io.netty.handler.codec.http.multipart.HttpPostRequestDecoder;
+import io.netty.handler.codec.http.multipart.InterfaceHttpData;
+import io.netty.handler.codec.http.multipart.MixedAttribute;
 
-public class PostRequest implements IServletRequest {
-    private final FullHttpRequest request;
+public class PostRequest extends BaseRequest implements IServletRequest {
+
+    private static final Logger LOGGER = Logger.getLogger(PostRequest.class.getName());
+
     private final List<String> names;
     private final List<String> values;
-    private final Map<String, List<String>> parameters;
 
-    public PostRequest(FullHttpRequest request, Map<String, List<String>> parameters, List<String> names,
-            List<String> values) {
-        this.request = request;
-        this.parameters = parameters;
-        this.names = names;
-        this.values = values;
+    public static IServletRequest create(FullHttpRequest request) throws IOException {
+        List<String> names = new ArrayList<>();
+        List<String> values = new ArrayList<>();
+        HttpPostRequestDecoder decoder = null;
+        try {
+            decoder = new HttpPostRequestDecoder(request);
+        } catch (Exception e) {
+            //ignore. this means that the body of the POST request does not have key value pairs
+            LOGGER.log(Level.WARNING, "Failed to decode a post message. Fix the API not to have queries as POST body",
+                    e);
+        }
+        if (decoder != null) {
+            try {
+                List<InterfaceHttpData> bodyHttpDatas = decoder.getBodyHttpDatas();
+                for (InterfaceHttpData data : bodyHttpDatas) {
+                    if (data.getHttpDataType().equals(InterfaceHttpData.HttpDataType.Attribute)) {
+                        Attribute attr = (MixedAttribute) data;
+                        names.add(data.getName());
+                        values.add(attr.getValue());
+                    }
+                }
+            } finally {
+                decoder.destroy();
+            }
+        }
+        return new PostRequest(request, new QueryStringDecoder(request.uri()).parameters(), names, values);
     }
 
-    @Override
-    public FullHttpRequest getHttpRequest() {
-        return request;
+    protected PostRequest(FullHttpRequest request, Map<String, List<String>> parameters, List<String> names,
+            List<String> values) {
+        super(request, parameters);
+        this.names = names;
+        this.values = values;
     }
 
     @Override
@@ -53,10 +85,5 @@ public class PostRequest implements IServletRequest {
             }
         }
         return HttpUtil.getParameter(parameters, name);
-    }
-
-    @Override
-    public String getHeader(CharSequence name) {
-        return request.headers().get(name);
     }
 }
