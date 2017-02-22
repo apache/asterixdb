@@ -31,7 +31,7 @@ import org.apache.hyracks.api.util.ErrorMessageUtil;
  * 10000 ---- 19999: compilation errors
  */
 public class ErrorCode {
-    private static final String RESOURCE_PATH = "errormsg" + File.separator + "en.properties";
+    private static final String RESOURCE_PATH = "errormsg/en.properties";
     public static final String HYRACKS = "HYR";
 
     // Runtime error codes.

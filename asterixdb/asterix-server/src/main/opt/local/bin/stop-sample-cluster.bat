@@ -58,17 +58,6 @@ shift
 goto opts
 :postopts
 
-if NOT DEFINED JAVA_HOME (
-  echo ERROR: JAVA_HOME not defined
-  goto :ERROR
-)
-
-REM ensure JAVA_HOME has no spaces nor quotes, since appassembler can't handle them
-set JAVA_HOME=%JAVA_HOME:"=%
-for %%I in ("%JAVA_HOME%") do (
-  set JAVA_HOME=%%~sI
-)
-
 set DIRNAME=%~dp0
 
 pushd %DIRNAME%\..
@@ -92,12 +81,12 @@ set /A tries=%tries% + 1
 if "%tries%" == "60" goto :timed_out
 wmic process where ^
   "name='java.exe' and CommandLine like '%%org.codehaus.mojo.appassembler.booter.AppassemblerBooter%%' and (CommandLine like '%%app.name=\"%%[cn]c\"%%' or CommandLine like '%%app.name=\"%%ncservice\"%%')" ^
-  GET processid >%tempfile% 2>/dev/null
+  GET processid >%tempfile% 2> nul
 
 set found=
 for /F "skip=1" %%P in ('type %tempfile%') DO set found=1
 if "%found%" == "1" (
-  timeout /T 1 /NOBREAK >/dev/null
+  timeout /T 1 /NOBREAK > nul
   goto :wait_loop
 )
 goto :post_shutdown
@@ -110,7 +99,7 @@ echo.
 
 wmic process where ^
   "name='java.exe' and CommandLine like '%%org.codehaus.mojo.appassembler.booter.AppassemblerBooter%%' and (CommandLine like '%%app.name=\"%%[cn]c\"%%' or CommandLine like '%%app.name=\"%%ncservice\"%%')" ^
-  GET processid > %tempfile% 2>/dev/null
+  GET processid > %tempfile% 2> nul
 
 set found=
 for /F "skip=1" %%P in ('type %tempfile%') DO set found=1

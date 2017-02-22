@@ -41,26 +41,17 @@
             <program>
               <platforms>
                 <platform>unix</platform>
+                <platform>windows</platform>
               </platforms>
               <name>asterixhelper</name>
               <mainClass>org.apache.asterix.clienthelper.AsterixHelper</mainClass>
             </program>
           </programs>
-          <daemons>
-            <daemon>
-              <id>asterixhelper</id>
-              <mainClass>org.apache.asterix.clienthelper.AsterixHelper</mainClass>
-              <platforms>
-                <platform>booter-windows</platform>
-              </platforms>
-            </daemon>
-          </daemons>
         </configuration>
         <executions>
           <execution>
             <goals>
               <goal>assemble</goal>
-              <goal>generate-daemons</goal>
             </goals>
           </execution>
         </executions>

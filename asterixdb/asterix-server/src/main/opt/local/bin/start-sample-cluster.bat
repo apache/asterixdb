@@ -52,20 +52,6 @@ shift
 goto opts
 :postopts
 
-if NOT DEFINED JAVA_HOME (
-  echo ERROR: JAVA_HOME not defined
-  goto :ERROR
-)
-REM ensure JAVA_HOME has no spaces nor quotes, since appassembler can't handle them
-set JAVA_HOME=%JAVA_HOME:"=%
-for %%I in ("%JAVA_HOME%") do (
-  set JAVA_HOME=%%~sI
-)
-
-set JAVACMD=%JAVA_HOME%\bin\java
-
-REM TODO(mblow): check java version, spaces in CWD
-
 set DIRNAME=%~dp0
 
 pushd %DIRNAME%\..
@@ -92,7 +78,7 @@ set tempfile="%TEMP%\start-sample-cluster-%random%"
 
 wmic process where ^
   "name='java.exe' and CommandLine like '%%org.codehaus.mojo.appassembler.booter.AppassemblerBooter%%' and (CommandLine like '%%app.name=\"%%[cn]c\"%%' or CommandLine like '%%app.name=\"%%ncservice\"%%')" ^
-  GET processid > %tempfile% 2>/dev/null
+  GET processid > %tempfile% 2> nul
 
 set severity=ERROR
 if "%force%" == "1" set severity=WARNING

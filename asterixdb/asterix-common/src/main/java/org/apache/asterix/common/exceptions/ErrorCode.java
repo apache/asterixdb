@@ -31,7 +31,7 @@ import org.apache.hyracks.api.util.ErrorMessageUtil;
 // 3000 ---- 3999: feed errors
 // 4000 ---- 4999: lifecycle management errors
 public class ErrorCode {
-    private static final String RESOURCE_PATH = "asx_errormsg" + File.separator + "en.properties";
+    private static final String RESOURCE_PATH = "asx_errormsg/en.properties";
     public static final String ASTERIX = "ASX";
 
     // Extension errors
