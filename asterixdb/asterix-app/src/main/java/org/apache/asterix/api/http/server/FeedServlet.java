@@ -46,7 +46,7 @@ public class FeedServlet extends AbstractServlet {
     }
 
     @Override
-    public void handle(IServletRequest request, IServletResponse response) {
+    protected void get(IServletRequest request, IServletResponse response) {
         try {
             response.setStatus(HttpResponseStatus.OK);
             String resourcePath;

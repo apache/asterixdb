@@ -46,7 +46,7 @@ public class ClusterControllerDetailsApiServlet extends ClusterApiServlet {
     }
 
     @Override
-    protected void getUnsafe(IServletRequest request, IServletResponse response) throws IOException {
+    protected void get(IServletRequest request, IServletResponse response) throws IOException {
         PrintWriter responseWriter = response.writer();
         IHyracksClientConnection hcc = (IHyracksClientConnection) ctx.get(HYRACKS_CONNECTION_ATTR);
         try {

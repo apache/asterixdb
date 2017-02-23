@@ -48,23 +48,7 @@ public class QueryWebInterfaceServlet extends AbstractServlet {
     }
 
     @Override
-    public void handle(IServletRequest request, IServletResponse response) {
-        try {
-            if (request.getHttpRequest().method() == HttpMethod.GET) {
-                doGet(request, response);
-            } else if (request.getHttpRequest().method() == HttpMethod.POST) {
-                doPost(response);
-            } else {
-                response.setStatus(HttpResponseStatus.METHOD_NOT_ALLOWED);
-            }
-        } catch (IOException e) {
-            LOGGER.log(Level.WARNING, "Failure setting content type", e);
-            response.setStatus(HttpResponseStatus.INTERNAL_SERVER_ERROR);
-            return;
-        }
-    }
-
-    private void doGet(IServletRequest request, IServletResponse response) throws IOException {
+    protected void get(IServletRequest request, IServletResponse response) throws IOException {
         String resourcePath = null;
         String requestURI = request.getHttpRequest().uri();
         response.setStatus(HttpResponseStatus.OK);
@@ -105,7 +89,8 @@ public class QueryWebInterfaceServlet extends AbstractServlet {
         }
     }
 
-    private void doPost(IServletResponse response) throws IOException {
+    @Override
+    protected void post(IServletRequest request, IServletResponse response) throws IOException {
         HttpUtil.setContentType(response, HttpUtil.ContentType.APPLICATION_JSON, HttpUtil.Encoding.UTF8);
         ExternalProperties externalProperties = AppContextInfo.INSTANCE.getExternalProperties();
         response.setStatus(HttpResponseStatus.OK);

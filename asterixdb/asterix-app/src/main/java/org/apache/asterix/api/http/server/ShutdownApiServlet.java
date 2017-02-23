@@ -54,11 +54,7 @@ public class ShutdownApiServlet extends AbstractServlet {
     }
 
     @Override
-    public void handle(IServletRequest request, IServletResponse response) {
-        if (request.getHttpRequest().method() != HttpMethod.POST) {
-            response.setStatus(HttpResponseStatus.METHOD_NOT_ALLOWED);
-            return;
-        }
+    protected void post(IServletRequest request, IServletResponse response) {
         IHyracksClientConnection hcc = (IHyracksClientConnection) ctx.get(HYRACKS_CONNECTION_ATTR);
         boolean terminateNCServices = "true".equalsIgnoreCase(request.getParameter("all"));
         Thread t = new Thread(() -> {

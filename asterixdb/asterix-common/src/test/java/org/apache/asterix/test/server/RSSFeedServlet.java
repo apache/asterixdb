@@ -61,7 +61,8 @@ public class RSSFeedServlet extends AbstractServlet {
         defaultFeedType = (defaultFeedType != null) ? defaultFeedType : "atom_0.3";
     }
 
-    protected void doGet(IServletRequest req, IServletResponse res) throws IOException {
+    @Override
+    protected void get(IServletRequest req, IServletResponse res) throws IOException {
         try {
             SyndFeed feed = getFeed(req);
             String feedType = req.getParameter(FEED_TYPE);
@@ -75,21 +76,6 @@ public class RSSFeedServlet extends AbstractServlet {
             String msg = COULD_NOT_GENERATE_FEED_ERROR;
             res.writer().print(msg);
             res.setStatus(HttpResponseStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    @Override
-    public void handle(IServletRequest req, IServletResponse res) {
-        if (req.getHttpRequest().method() == HttpMethod.GET) {
-            try {
-                doGet(req, res);
-            } catch (IOException e) {
-                // Servlet methods should not throw exceptions
-                // http://cwe.mitre.org/data/definitions/600.html
-                GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, e.getMessage(), e);
-            }
-        } else {
-            res.setStatus(HttpResponseStatus.METHOD_NOT_ALLOWED);
         }
     }
 

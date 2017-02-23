@@ -83,7 +83,8 @@ public class ApiServlet extends AbstractServlet {
         this.componentProvider = componentProvider;
     }
 
-    public void doPost(IServletRequest request, IServletResponse response) {
+    @Override
+    protected void post(IServletRequest request, IServletResponse response) {
         // Query language
         ILangCompilationProvider compilationProvider = "AQL".equals(request.getParameter("query-language"))
                 ? aqlCompilationProvider : sqlppCompilationProvider;
@@ -157,7 +158,8 @@ public class ApiServlet extends AbstractServlet {
         }
     }
 
-    public void doGet(IServletRequest request, IServletResponse response) {
+    @Override
+    protected void get(IServletRequest request, IServletResponse response) {
         String resourcePath = null;
         String requestURI = request.getHttpRequest().uri();
 
@@ -226,17 +228,4 @@ public class ApiServlet extends AbstractServlet {
     private static boolean isSet(String requestParameter) {
         return requestParameter != null && "true".equals(requestParameter);
     }
-
-    @Override
-    public void handle(IServletRequest request, IServletResponse response) {
-        response.setStatus(HttpResponseStatus.OK);
-        if (request.getHttpRequest().method() == HttpMethod.GET) {
-            doGet(request, response);
-        } else if (request.getHttpRequest().method() == HttpMethod.POST) {
-            doPost(request, response);
-        } else {
-            response.setStatus(HttpResponseStatus.METHOD_NOT_ALLOWED);
-        }
-    }
-
 }

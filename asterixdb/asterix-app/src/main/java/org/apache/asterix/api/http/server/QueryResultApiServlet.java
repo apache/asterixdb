@@ -59,11 +59,7 @@ public class QueryResultApiServlet extends AbstractServlet {
     }
 
     @Override
-    public void handle(IServletRequest request, IServletResponse response) {
-        if (request.getHttpRequest().method() != HttpMethod.GET) {
-            response.setStatus(HttpResponseStatus.METHOD_NOT_ALLOWED);
-            return;
-        }
+    protected void get(IServletRequest request, IServletResponse response) {
         response.setStatus(HttpResponseStatus.OK);
         // TODO this seems wrong ...
         try {

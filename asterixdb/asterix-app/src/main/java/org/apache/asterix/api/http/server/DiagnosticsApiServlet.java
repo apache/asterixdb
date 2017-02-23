@@ -55,7 +55,7 @@ public class DiagnosticsApiServlet extends NodeControllerDetailsApiServlet {
     }
 
     @Override
-    protected void getUnsafe(IServletRequest request, IServletResponse response) throws IOException {
+    protected void get(IServletRequest request, IServletResponse response) throws IOException {
         HttpUtil.setContentType(response, HttpUtil.ContentType.APPLICATION_JSON, HttpUtil.Encoding.UTF8);
         PrintWriter responseWriter = response.writer();
         ObjectNode json;

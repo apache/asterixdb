@@ -47,11 +47,7 @@ public class VersionApiServlet extends AbstractServlet {
     }
 
     @Override
-    public void handle(IServletRequest request, IServletResponse response) {
-        if (request.getHttpRequest().method() != HttpMethod.GET) {
-            response.setStatus(HttpResponseStatus.METHOD_NOT_ALLOWED);
-            return;
-        }
+    protected void get(IServletRequest request, IServletResponse response) {
         response.setStatus(HttpResponseStatus.OK);
         AppContextInfo props = (AppContextInfo) ctx.get(ASTERIX_BUILD_PROP_ATTR);
         Map<String, String> buildProperties = props.getBuildProperties().getAllProps();

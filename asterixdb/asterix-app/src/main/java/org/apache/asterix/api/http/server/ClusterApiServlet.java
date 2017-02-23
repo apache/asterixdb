@@ -65,7 +65,8 @@ public class ClusterApiServlet extends AbstractServlet {
         super(ctx, paths);
     }
 
-    protected void getUnsafe(IServletRequest request, IServletResponse response) throws IOException {
+    @Override
+    protected void get(IServletRequest request, IServletResponse response) throws IOException {
         HttpUtil.setContentType(response, HttpUtil.ContentType.APPLICATION_JSON, HttpUtil.Encoding.UTF8);
         PrintWriter responseWriter = response.writer();
         try {
@@ -173,18 +174,4 @@ public class ClusterApiServlet extends AbstractServlet {
         }
         return clusterURL;
     }
-
-    @Override
-    public void handle(IServletRequest request, IServletResponse response) {
-        if (request.getHttpRequest().method() != HttpMethod.GET) {
-            response.setStatus(HttpResponseStatus.METHOD_NOT_ALLOWED);
-            return;
-        }
-        try {
-            getUnsafe(request, response);
-        } catch (IOException e) {
-            LOGGER.log(Level.WARNING, "Unhandled IOException thrown from " + getClass().getName() + " get impl", e);
-        }
-    }
-
 }

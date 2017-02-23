@@ -85,11 +85,7 @@ public class QueryServiceServlet extends AbstractServlet {
     }
 
     @Override
-    public void handle(IServletRequest request, IServletResponse response) {
-        if (request.getHttpRequest().method() != HttpMethod.POST) {
-            response.setStatus(HttpResponseStatus.METHOD_NOT_ALLOWED);
-            return;
-        }
+    protected void post(IServletRequest request, IServletResponse response) {
         try {
             handleRequest(getRequestParameters(request), response);
         } catch (IOException e) {

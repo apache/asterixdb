@@ -157,7 +157,16 @@ public abstract class RestApiServlet extends AbstractServlet {
     }
 
     @Override
-    public void handle(IServletRequest request, IServletResponse response) {
+    protected void get(IServletRequest request, IServletResponse response) {
+        getOrPost(request, response);
+    }
+
+    @Override
+    protected void post(IServletRequest request, IServletResponse response) {
+        getOrPost(request, response);
+    }
+
+    private void getOrPost(IServletRequest request, IServletResponse response) {
         try {
             String query = query(request);
             // enable cross-origin resource sharing
