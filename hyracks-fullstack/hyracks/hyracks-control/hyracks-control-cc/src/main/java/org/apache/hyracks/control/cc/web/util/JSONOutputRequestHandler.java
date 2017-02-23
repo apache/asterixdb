@@ -19,41 +19,69 @@
 package org.apache.hyracks.control.cc.web.util;
 
 import java.io.IOException;
+import java.util.concurrent.ConcurrentMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import org.apache.hyracks.http.api.IServletRequest;
+import org.apache.hyracks.http.api.IServletResponse;
+import org.apache.hyracks.http.server.AbstractServlet;
+import org.apache.hyracks.http.server.utils.HttpUtil;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.eclipse.jetty.server.Request;
-import org.eclipse.jetty.server.handler.AbstractHandler;
 
-public class JSONOutputRequestHandler extends AbstractHandler {
+import io.netty.handler.codec.http.HttpMethod;
+import io.netty.handler.codec.http.HttpResponseStatus;
+
+public class JSONOutputRequestHandler extends AbstractServlet {
+
+    private static final Logger LOGGER = Logger.getLogger(JSONOutputRequestHandler.class.getName());
     private final IJSONOutputFunction fn;
 
-    public JSONOutputRequestHandler(IJSONOutputFunction fn) {
+    public JSONOutputRequestHandler(ConcurrentMap<String, Object> ctx, String[] paths, IJSONOutputFunction fn) {
+        super(ctx, paths);
         this.fn = fn;
     }
 
     @Override
-    public void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response)
-            throws IOException, ServletException {
-        while (target.startsWith("/")) {
-            target = target.substring(1);
+    public void handle(IServletRequest request, IServletResponse response) {
+        if (request.getHttpRequest().method() != HttpMethod.GET) {
+            response.setStatus(HttpResponseStatus.METHOD_NOT_ALLOWED);
+            return;
         }
-        while (target.endsWith("/")) {
-            target = target.substring(0, target.length() - 1);
+        String path = path(request);
+        while (path.startsWith("/")) {
+            path = path.substring(1);
         }
-        String[] parts = target.split("/");
+        String[] parts = path.split("/");
+        ObjectNode result = invoke(response, parts);
+        if (result != null) {
+            deliver(response, result);
+        }
+    }
+
+    protected ObjectNode invoke(IServletResponse response, String[] parts) {
         try {
-            ObjectNode result = fn.invoke(parts);
-            response.setContentType("application/json");
-            ObjectMapper om = new ObjectMapper();
-            om.writer().writeValue(response.getWriter(),result);
-            baseRequest.setHandled(true);
+            return fn.invoke(parts);
         } catch (Exception e) {
-            e.printStackTrace();
+            LOGGER.log(Level.WARNING, "Exception invoking " + fn.getClass().getName(), e);
+            response.setStatus(HttpResponseStatus.BAD_REQUEST);
+            response.writer().print(e.getMessage());
+        }
+        return null;
+    }
+
+    protected void deliver(IServletResponse response, ObjectNode result) {
+        try {
+            HttpUtil.setContentType(response, HttpUtil.ContentType.APPLICATION_JSON, HttpUtil.Encoding.UTF8);
+            ObjectMapper om = new ObjectMapper();
+            om.writer().writeValue(response.writer(), result);
+            response.setStatus(HttpResponseStatus.OK);
+        } catch (IOException e) {
+            LOGGER.log(Level.WARNING, "Exception delivering result in " + getClass().getName(), e);
+            response.setStatus(HttpResponseStatus.INTERNAL_SERVER_ERROR);
+            response.writer().print(e.getMessage());
         }
     }
 }

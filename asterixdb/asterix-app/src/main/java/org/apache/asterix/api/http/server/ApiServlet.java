@@ -56,11 +56,11 @@ import org.apache.hyracks.client.dataset.HyracksDataset;
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
 import org.apache.hyracks.http.server.AbstractServlet;
+import org.apache.hyracks.http.server.StaticResourceServlet;
 import org.apache.hyracks.http.server.utils.HttpUtil;
 import org.apache.hyracks.http.server.utils.HttpUtil.ContentType;
 import org.apache.hyracks.http.server.utils.HttpUtil.Encoding;
 
-import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpResponseStatus;
 
 public class ApiServlet extends AbstractServlet {
@@ -191,7 +191,7 @@ public class ApiServlet extends AbstractServlet {
                 outputStream.close();
                 return;
             }
-            String type = HttpUtil.mime(QueryWebInterfaceServlet.extension(resourcePath));
+            String type = HttpUtil.mime(StaticResourceServlet.extension(resourcePath));
             HttpUtil.setContentType(response, "".equals(type) ? HttpUtil.ContentType.TEXT_PLAIN : type,
                     HttpUtil.Encoding.UTF8);
             writeOutput(response, is, resourcePath);

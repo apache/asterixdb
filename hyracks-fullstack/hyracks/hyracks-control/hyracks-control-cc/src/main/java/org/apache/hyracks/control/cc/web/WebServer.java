@@ -19,63 +19,55 @@
 package org.apache.hyracks.control.cc.web;
 
 import java.util.EnumSet;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import javax.servlet.DispatcherType;
 
 import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.cc.adminconsole.HyracksAdminConsoleApplication;
+import org.apache.hyracks.control.cc.web.util.IJSONOutputFunction;
 import org.apache.hyracks.control.cc.web.util.JSONOutputRequestHandler;
-import org.apache.hyracks.control.cc.web.util.RoutingHandler;
+import org.apache.hyracks.http.server.HttpServer;
+import org.apache.hyracks.http.server.StaticResourceServlet;
+import org.apache.hyracks.http.server.WebManager;
 import org.apache.wicket.Application;
 import org.apache.wicket.RuntimeConfigurationType;
 import org.apache.wicket.protocol.http.ContextParamWebApplicationFactory;
 import org.apache.wicket.protocol.http.WicketFilter;
-import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Handler;
-import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.ServerConnector;
-import org.eclipse.jetty.server.handler.ContextHandler;
-import org.eclipse.jetty.server.handler.ContextHandlerCollection;
-import org.eclipse.jetty.server.handler.HandlerCollection;
 import org.eclipse.jetty.servlet.DefaultServlet;
 import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 
 public class WebServer {
     private final ClusterControllerService ccs;
-    private final Server server;
-    private final ServerConnector connector;
-    private final HandlerCollection handlerCollection;
+    private final int listeningPort;
+    private final ConcurrentMap<String, Object> ctx;
+    private final WebManager webMgr;
+    private final HttpServer server;
 
-    public WebServer(ClusterControllerService ccs) throws Exception {
+    public WebServer(ClusterControllerService ccs, int port) throws Exception {
         this.ccs = ccs;
-        server = new Server();
-
-        connector = new ServerConnector(server);
-
-        server.setConnectors(new Connector[] { connector });
-
-        handlerCollection = new ContextHandlerCollection();
-        server.setHandler(handlerCollection);
+        listeningPort = port;
+        ctx = new ConcurrentHashMap<String, Object>();
+        webMgr = new WebManager();
+        server = new HttpServer(webMgr.getBosses(), webMgr.getWorkers(), listeningPort);
         addHandlers();
+        webMgr.add(server);
     }
 
     private void addHandlers() {
-        ContextHandler handler = new ContextHandler("/rest");
-        RoutingHandler rh = new RoutingHandler();
-        rh.addHandler("jobs", new JSONOutputRequestHandler(new JobsRESTAPIFunction(ccs)));
-        rh.addHandler("nodes", new JSONOutputRequestHandler(new NodesRESTAPIFunction(ccs)));
-        rh.addHandler("statedump", new JSONOutputRequestHandler(new StateDumpRESTAPIFunction(ccs)));
-        handler.setHandler(rh);
-        addHandler(handler);
+        addJSONHandler("/rest/jobs/*", new JobsRESTAPIFunction(ccs));
+        addJSONHandler("/rest/nodes/*", new NodesRESTAPIFunction(ccs));
+        addJSONHandler("/rest/statedump", new StateDumpRESTAPIFunction(ccs));
+        // TODO(tillw) addHandler(createAdminConsoleHandler());
+        server.addServlet(new StaticResourceServlet(ctx, new String[] { "/static/*" }));
+        server.addServlet(new ApplicationInstallationHandler(ctx, new String[] { "/applications/*" }, ccs));
+    }
 
-        addHandler(createAdminConsoleHandler());
-        addHandler(createStaticResourcesHandler());
-
-        /** the service of uploading/downloading deployment jars */
-        handler = new ContextHandler("/applications");
-        handler.setHandler(new ApplicationInstallationHandler(ccs));
-        addHandler(handler);
+    private void addJSONHandler(String path, IJSONOutputFunction fn) {
+        server.addServlet(new JSONOutputRequestHandler(ctx, new String[] { path }, fn));
     }
 
     private Handler createAdminConsoleHandler() {
@@ -93,32 +85,15 @@ public class WebServer {
         return handler;
     }
 
-    private Handler createStaticResourcesHandler() {
-        String staticDir = WebServer.class.getClassLoader().getResource("static").toExternalForm();
-        ServletContextHandler handler = new ServletContextHandler(ServletContextHandler.SESSIONS);
-        handler.setContextPath("/static");
-        handler.setResourceBase(staticDir);
-        handler.addServlet(DefaultServlet.class, "/");
-        return handler;
-    }
-
-    public void setPort(int port) {
-        connector.setPort(port);
-    }
-
     public int getListeningPort() {
-        return connector.getLocalPort();
+        return listeningPort;
     }
 
     public void start() throws Exception {
-        server.start();
+        webMgr.start();
     }
 
     public void stop() throws Exception {
-        server.stop();
-    }
-
-    public void addHandler(Handler handler) {
-        handlerCollection.addHandler(handler);
+        webMgr.stop();
     }
 }

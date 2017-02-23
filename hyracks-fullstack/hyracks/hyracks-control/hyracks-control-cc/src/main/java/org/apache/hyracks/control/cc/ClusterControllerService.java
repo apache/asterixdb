@@ -173,10 +173,9 @@ public class ClusterControllerService implements IControllerService {
         IIPCI ciIPCI = new ClientInterfaceIPCI(this);
         clientIPC = new IPCSystem(new InetSocketAddress(ccConfig.clientNetIpAddress, ccConfig.clientNetPort), ciIPCI,
                 new JavaSerializationBasedPayloadSerializerDeserializer());
-        webServer = new WebServer(this);
+        webServer = new WebServer(this, ccConfig.httpPort);
         clusterIPC.start();
         clientIPC.start();
-        webServer.setPort(ccConfig.httpPort);
         webServer.start();
         info = new ClusterControllerInfo(ccConfig.clientNetIpAddress, ccConfig.clientNetPort,
                 webServer.getListeningPort());

@@ -18,6 +18,7 @@
  */
 package org.apache.hyracks.http.server;
 
+import java.util.Arrays;
 import java.util.concurrent.ConcurrentMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -137,5 +138,10 @@ public abstract class AbstractServlet implements IServlet {
             trim = trims[0];
         }
         return request.getHttpRequest().uri().substring(trim);
+    }
+
+    @Override
+    public String toString() {
+        return this.getClass().getSimpleName() + Arrays.toString(paths);
     }
 }
