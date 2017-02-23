@@ -42,22 +42,7 @@ public class StaticResourceServlet extends AbstractServlet {
     }
 
     @Override
-    public void handle(IServletRequest request, IServletResponse response) {
-        try {
-            if (request.getHttpRequest().method() == HttpMethod.GET) {
-                doGet(request, response);
-            } else if (request.getHttpRequest().method() == HttpMethod.POST) {
-                doPost(request, response);
-            } else {
-                response.setStatus(HttpResponseStatus.METHOD_NOT_ALLOWED);
-            }
-        } catch (IOException e) {
-            LOGGER.log(Level.WARNING, "Failure setting content type", e);
-            response.setStatus(HttpResponseStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    protected void doGet(IServletRequest request, IServletResponse response) throws IOException {
+    protected void get(IServletRequest request, IServletResponse response) throws IOException {
         String resourcePath = request.getHttpRequest().uri();
         deliverResource(resourcePath, response);
     }
@@ -88,10 +73,6 @@ public class StaticResourceServlet extends AbstractServlet {
                 }
             }
         }
-    }
-
-    protected void doPost(IServletRequest request, IServletResponse response) throws IOException {
-        response.setStatus(HttpResponseStatus.METHOD_NOT_ALLOWED);
     }
 
     public static String extension(String path) {

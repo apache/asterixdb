@@ -45,11 +45,7 @@ public class JSONOutputRequestHandler extends AbstractServlet {
     }
 
     @Override
-    public void handle(IServletRequest request, IServletResponse response) {
-        if (request.getHttpRequest().method() != HttpMethod.GET) {
-            response.setStatus(HttpResponseStatus.METHOD_NOT_ALLOWED);
-            return;
-        }
+    protected void get(IServletRequest request, IServletResponse response) {
         String path = path(request);
         while (path.startsWith("/")) {
             path = path.substring(1);
