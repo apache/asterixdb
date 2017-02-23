@@ -30,7 +30,7 @@ import org.apache.asterix.event.model.AsterixInstance.State;
 import org.apache.asterix.event.model.AsterixRuntimeState;
 import org.apache.asterix.event.service.ServiceProvider;
 import org.apache.asterix.installer.command.CommandHandler;
-import org.apache.asterix.test.aql.TestExecutor;
+import org.apache.asterix.test.common.TestExecutor;
 import org.apache.asterix.testframework.context.TestCaseContext;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;

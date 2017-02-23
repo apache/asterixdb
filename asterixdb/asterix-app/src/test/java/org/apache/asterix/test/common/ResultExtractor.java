@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.test.aql;
+package org.apache.asterix.test.common;
 
 import java.io.InputStream;
 import java.io.StringWriter;
@@ -24,16 +24,15 @@ import java.nio.charset.Charset;
 import java.util.Iterator;
 import java.util.logging.Logger;
 
-import com.fasterxml.jackson.core.JsonFactory;
+import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.commons.io.IOUtils;
+
 import com.fasterxml.jackson.core.PrettyPrinter;
-import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Iterators;
-import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.commons.io.IOUtils;
 
 /**
  * extracts results from the response of the QueryServiceServlet.

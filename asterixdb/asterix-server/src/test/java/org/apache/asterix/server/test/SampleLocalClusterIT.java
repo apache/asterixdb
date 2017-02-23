@@ -29,8 +29,8 @@ import java.net.URL;
 import java.util.Collections;
 
 import org.apache.asterix.common.utils.Servlets;
-import org.apache.asterix.test.aql.TestExecutor;
 import org.apache.asterix.test.base.TestMethodTracer;
+import org.apache.asterix.test.common.TestExecutor;
 import org.apache.asterix.test.common.TestHelper;
 import org.apache.asterix.testframework.context.TestCaseContext.OutputFormat;
 import org.apache.commons.io.FileUtils;

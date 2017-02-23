@@ -21,7 +21,7 @@ import java.util.logging.Level;
 
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.IdentitiyResolverFactory;
-import org.apache.asterix.test.aql.TestExecutor;
+import org.apache.asterix.test.common.TestExecutor;
 import org.apache.asterix.test.runtime.HDFSCluster;
 import org.apache.asterix.testframework.context.TestCaseContext;
 import org.apache.commons.lang3.StringUtils;

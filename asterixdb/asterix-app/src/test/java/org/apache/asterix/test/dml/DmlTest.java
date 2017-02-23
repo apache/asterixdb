@@ -31,8 +31,8 @@ import org.apache.asterix.app.translator.DefaultStatementExecutorFactory;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.compiler.provider.AqlCompilationProvider;
 import org.apache.asterix.file.StorageComponentProvider;
-import org.apache.asterix.test.aql.TestExecutor;
 import org.apache.asterix.test.base.AsterixTestHelper;
+import org.apache.asterix.test.common.TestExecutor;
 import org.junit.Test;
 
 public class DmlTest {

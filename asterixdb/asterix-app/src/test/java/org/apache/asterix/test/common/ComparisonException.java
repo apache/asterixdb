@@ -16,16 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.test.aql;
+package org.apache.asterix.test.common;
 
-import java.io.IOException;
-import java.rmi.RemoteException;
+public class ComparisonException extends Exception {
+    private static final long serialVersionUID = 1L;
 
-import org.apache.asterix.common.exceptions.ACIDException;
-import org.apache.asterix.common.exceptions.AsterixException;
-
-public interface ITestLibrarian {
-    public void install(String dvName, String libName, String libPath) throws IOException, Exception;
-
-    public void uninstall(String dvName, String libName) throws RemoteException, AsterixException, ACIDException;
+    public ComparisonException(String message) {
+        super(message);
+    }
 }

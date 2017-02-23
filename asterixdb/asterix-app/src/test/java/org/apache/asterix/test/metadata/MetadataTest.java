@@ -24,7 +24,7 @@ import java.util.Collection;
 
 import org.apache.asterix.api.common.AsterixHyracksIntegrationUtil;
 import org.apache.asterix.common.config.GlobalConfig;
-import org.apache.asterix.test.aql.TestExecutor;
+import org.apache.asterix.test.common.TestExecutor;
 import org.apache.asterix.testframework.context.TestCaseContext;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.AfterClass;

@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.test.aql;
+package org.apache.asterix.test.common;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
@@ -52,7 +52,6 @@ import java.util.regex.Pattern;
 
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.utils.Servlets;
-import org.apache.asterix.test.base.ComparisonException;
 import org.apache.asterix.test.server.ITestServer;
 import org.apache.asterix.test.server.TestServerProvider;
 import org.apache.asterix.testframework.context.TestCaseContext;

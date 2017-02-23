@@ -23,8 +23,8 @@ import java.util.logging.Logger;
 
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.IdentitiyResolverFactory;
-import org.apache.asterix.test.aql.TestExecutor;
 import org.apache.asterix.test.base.RetainLogsRule;
+import org.apache.asterix.test.common.TestExecutor;
 import org.apache.asterix.test.runtime.HDFSCluster;
 import org.apache.asterix.testframework.context.TestCaseContext;
 import org.apache.asterix.testframework.context.TestFileContext;

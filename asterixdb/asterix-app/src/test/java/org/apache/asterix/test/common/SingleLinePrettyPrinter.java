@@ -17,13 +17,14 @@
  * under the License.
  */
 
-package org.apache.asterix.test.aql;
+package org.apache.asterix.test.common;
 
-import java.io.*;
+import java.io.IOException;
 
-import com.fasterxml.jackson.core.*;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.PrettyPrinter;
+import com.fasterxml.jackson.core.SerializableString;
 import com.fasterxml.jackson.core.io.SerializedString;
-import com.fasterxml.jackson.core.util.DefaultIndenter;
 import com.fasterxml.jackson.core.util.Instantiatable;
 
 /**
