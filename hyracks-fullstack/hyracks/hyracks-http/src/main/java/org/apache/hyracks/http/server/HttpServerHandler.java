@@ -18,6 +18,8 @@
  */
 package org.apache.hyracks.http.server;
 
+import java.io.IOException;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -67,11 +69,20 @@ public class HttpServerHandler extends SimpleChannelInboundHandler<Object> {
                 ctx.write(notFound).addListener(ChannelFutureListener.CLOSE);
             } else {
                 handler = new HttpRequestHandler(ctx, servlet, HttpUtil.toServletRequest(request), chunkSize);
-                server.getExecutor().submit(handler);
+                submit();
             }
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Failure handling HTTP Request", e);
             ctx.close();
+        }
+    }
+
+    private void submit() throws IOException {
+        try {
+            server.getExecutor().submit(handler);
+        } catch (RejectedExecutionException e) { // NOSONAR
+            LOGGER.log(Level.WARNING, "Request rejected by server executor service. " + e.getMessage());
+            handler.reject();
         }
     }
 
