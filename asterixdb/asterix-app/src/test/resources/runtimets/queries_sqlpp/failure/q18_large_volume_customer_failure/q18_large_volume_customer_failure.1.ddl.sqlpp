@@ -23,13 +23,12 @@ create  dataverse tpch;
 use tpch;
 
 
-create type LineItemType as
- closed {
-  l_orderkey : integer,
-  l_partkey : integer,
-  l_suppkey : integer,
-  l_linenumber : integer,
-  l_quantity : double,
+create type LineItemType as {
+  l_orderkey : bigint,
+  l_partkey : bigint,
+  l_suppkey : bigint,
+  l_linenumber : bigint,
+  l_quantity : bigint,
   l_extendedprice : double,
   l_discount : double,
   l_tax : double,
@@ -43,5 +42,32 @@ create type LineItemType as
   l_comment : string
 }
 
+create type OrderType as {
+  o_orderkey : bigint,
+  o_custkey : bigint,
+  o_orderstatus : string,
+  o_totalprice : double,
+  o_orderdate : string,
+  o_orderpriority : string,
+  o_clerk : string,
+  o_shippriority : bigint,
+  o_comment : string
+}
+
+create type CustomerType as {
+  c_custkey : bigint,
+  c_name : string,
+  c_address : string,
+  c_nationkey : bigint,
+  c_phone : string,
+  c_acctbal : double,
+  c_mktsegment : string,
+  c_comment : string
+}
+
 create  dataset LineItem(LineItemType) primary key l_orderkey,l_linenumber;
+
+create  dataset Orders(OrderType) primary key o_orderkey;
+
+create  dataset Customer(CustomerType) primary key c_custkey;
 

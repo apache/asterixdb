@@ -50,7 +50,6 @@ public class NestedLoopJoin {
     private final IFrame outBuffer;
     private final IFrame innerBuffer;
     private final VariableFrameMemoryManager outerBufferMngr;
-    private RunFileReader runFileReader;
     private final RunFileWriter runFileWriter;
     private final boolean isLeftOuter;
     private final ArrayTupleBuilder missingTupleBuilder;
@@ -103,14 +102,17 @@ public class NestedLoopJoin {
 
     public void join(ByteBuffer outerBuffer, IFrameWriter writer) throws HyracksDataException {
         if (outerBufferMngr.insertFrame(outerBuffer) < 0) {
-            runFileReader = runFileWriter.createReader();
-            runFileReader.open();
-            while (runFileReader.nextFrame(innerBuffer)) {
-                for (int i = 0; i < outerBufferMngr.getNumFrames(); i++) {
-                    blockJoin(outerBufferMngr.getFrame(i, tempInfo), innerBuffer.getBuffer(), writer);
+            RunFileReader runFileReader = runFileWriter.createReader();
+            try {
+                runFileReader.open();
+                while (runFileReader.nextFrame(innerBuffer)) {
+                    for (int i = 0; i < outerBufferMngr.getNumFrames(); i++) {
+                        blockJoin(outerBufferMngr.getFrame(i, tempInfo), innerBuffer.getBuffer(), writer);
+                    }
                 }
+            } finally {
+                runFileReader.close();
             }
-            runFileReader.close();
             outerBufferMngr.reset();
             if (outerBufferMngr.insertFrame(outerBuffer) < 0) {
                 throw new HyracksDataException("The given outer frame of size:" + outerBuffer.capacity()
@@ -174,18 +176,23 @@ public class NestedLoopJoin {
         }
     }
 
-    public void closeJoin(IFrameWriter writer) throws HyracksDataException {
-        runFileReader = runFileWriter.createDeleteOnCloseReader();
-        runFileReader.open();
-        while (runFileReader.nextFrame(innerBuffer)) {
-            for (int i = 0; i < outerBufferMngr.getNumFrames(); i++) {
-                blockJoin(outerBufferMngr.getFrame(i, tempInfo), innerBuffer.getBuffer(), writer);
+    public void completeJoin(IFrameWriter writer) throws HyracksDataException {
+        RunFileReader runFileReader = runFileWriter.createDeleteOnCloseReader();
+        try {
+            runFileReader.open();
+            while (runFileReader.nextFrame(innerBuffer)) {
+                for (int i = 0; i < outerBufferMngr.getNumFrames(); i++) {
+                    blockJoin(outerBufferMngr.getFrame(i, tempInfo), innerBuffer.getBuffer(), writer);
+                }
             }
+        } finally {
+            runFileReader.close();
         }
-        runFileReader.close();
-        outerBufferMngr.reset();
-
         appender.write(writer, true);
+    }
+
+    public void releaseMemory() throws HyracksDataException {
+        outerBufferMngr.reset();
     }
 
     private int compare(FrameTupleAccessor accessor0, int tIndex0, FrameTupleAccessor accessor1, int tIndex1)

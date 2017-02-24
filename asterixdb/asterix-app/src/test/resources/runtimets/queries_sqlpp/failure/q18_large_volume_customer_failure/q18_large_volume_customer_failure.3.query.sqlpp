@@ -17,9 +17,21 @@
  * under the License.
  */
 
-use tpch;
+USE tpch;
 
+SET `import-private-functions` "true";
 
-load  dataset LineItem using localfs ((`path`=`asterix_nc1://data/tpch0.001/lineitem.tbl`),
-(`format`=`delimited-text`),(`delimiter`=`|`)) pre-sorted;
+WITH tmp AS
+(
+    SELECT l_orderkey, SUM(l_quantity) t_sum_quantity
+    FROM  LineItem
+    GROUP BY l_orderkey
+)
 
+SELECT c.c_name, c.c_custkey, inject_failure(o.o_orderkey, o.o_orderkey=5988),
+       o.o_orderdate, o.o_totalprice, l.l_quantity
+FROM  LineItem l
+JOIN  tmp t ON t.l_orderkey = l.l_orderkey
+JOIN  Orders o ON o.o_orderkey = t.l_orderkey
+JOIN  Customer c ON c.c_custkey = o.o_custkey
+;

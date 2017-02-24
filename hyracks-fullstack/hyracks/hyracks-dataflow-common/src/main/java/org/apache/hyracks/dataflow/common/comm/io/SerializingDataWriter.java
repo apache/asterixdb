@@ -62,8 +62,14 @@ public class SerializingDataWriter implements IOpenableDataWriter<Object[]> {
         if (!open) {
             throw new HyracksDataException("Closing SerializingDataWriter that has not been opened");
         }
-        tupleAppender.write(frameWriter, true);
-        frameWriter.close();
+        try {
+            tupleAppender.write(frameWriter, true);
+        } catch (Exception e) {
+            frameWriter.fail();
+            throw e;
+        } finally {
+            frameWriter.close();
+        }
         open = false;
     }
 

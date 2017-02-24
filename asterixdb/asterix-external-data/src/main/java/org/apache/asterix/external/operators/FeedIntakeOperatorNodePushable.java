@@ -74,15 +74,17 @@ public class FeedIntakeOperatorNodePushable extends ActiveSourceOperatorNodePush
                 throw new RuntimeDataException(
                         ErrorCode.OPERATORS_FEED_INTAKE_OPERATOR_NODE_PUSHABLE_FAIL_AT_INGESTION);
             }
-        } catch (Throwable ie) {
+        } catch (Exception e) {
             /*
-             * An Interrupted Exception is thrown if the Intake job cannot progress further due to failure of another node involved in the Hyracks job.
-             * As the Intake job involves only the intake operator, the exception is indicative of a failure at the sibling intake operator location.
-             * The surviving intake partitions must continue to live and receive data from the external source.
+             * An Interrupted Exception is thrown if the Intake job cannot progress further due to failure of another
+             * node involved in the Hyracks job. As the Intake job involves only the intake operator, the exception is
+             * indicative of a failure at the sibling intake operator location. The surviving intake partitions must
+             * continue to live and receive data from the external source.
              */
-            throw new HyracksDataException(ie);
+            writer.fail();
+            throw e;
         } finally {
-                writer.close();
+            writer.close();
         }
     }
 

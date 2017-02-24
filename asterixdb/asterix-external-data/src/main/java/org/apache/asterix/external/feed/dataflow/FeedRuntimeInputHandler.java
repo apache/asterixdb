@@ -129,8 +129,9 @@ public class FeedRuntimeInputHandler extends AbstractUnaryInputUnaryOutputOperat
             }
         } catch (Throwable th) {
             LOGGER.log(Level.WARNING, th.getMessage(), th);
+        } finally {
+            writer.close();
         }
-        writer.close();
     }
 
     @Override

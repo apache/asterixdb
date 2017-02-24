@@ -275,9 +275,13 @@ public class InMemoryHashJoinOperatorDescriptor extends AbstractOperatorDescript
                 @Override
                 public void close() throws HyracksDataException {
                     try {
-                        state.joiner.closeJoin(writer);
+                        state.joiner.completeJoin(writer);
                     } finally {
-                        writer.close();
+                        try {
+                            state.joiner.releaseMemory();
+                        } finally {
+                            writer.close();
+                        }
                     }
                 }
 

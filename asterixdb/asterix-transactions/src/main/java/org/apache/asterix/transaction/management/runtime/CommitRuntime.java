@@ -170,8 +170,14 @@ public class CommitRuntime extends AbstractOneInputOneOutputOneFramePushRuntime 
         if (isSink) {
             return;
         }
-        flushIfNotFailed();
-        writer.close();
+        try {
+            flushIfNotFailed();
+        } catch (Exception e) {
+            writer.fail();
+            throw e;
+        } finally {
+            writer.close();
+        }
         appender.reset(frame, true);
     }
 

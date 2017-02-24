@@ -27,8 +27,8 @@ import org.apache.hyracks.api.io.IFileHandle;
 import org.apache.hyracks.api.io.IIOManager;
 
 public class RunFileWriter implements IFrameWriter {
-    private final FileReference file;
     private final IIOManager ioManager;
+    private FileReference file;
     private boolean failed;
 
     private IFileHandle handle;
@@ -67,6 +67,15 @@ public class RunFileWriter implements IFrameWriter {
         if (!failed) {
             ioManager.close(handle);
         }
+    }
+
+    public void erase() throws HyracksDataException {
+        close();
+        file.delete();
+
+        // Make sure we never access the file if it is deleted.
+        file = null;
+        handle = null;
     }
 
     public FileReference getFileReference() {

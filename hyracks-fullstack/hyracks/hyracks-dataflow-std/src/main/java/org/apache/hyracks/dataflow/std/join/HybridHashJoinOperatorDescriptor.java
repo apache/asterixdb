@@ -470,8 +470,12 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
                 @Override
                 public void close() throws HyracksDataException {
                     try {
-                        state.joiner.join(inBuffer.getBuffer(), writer);
-                        state.joiner.closeJoin(writer);
+                        try {
+                            state.joiner.join(inBuffer.getBuffer(), writer);
+                            state.joiner.completeJoin(writer);
+                        } finally {
+                            state.joiner.releaseMemory();
+                        }
                         ITuplePartitionComputer hpcRep0 = new RepartitionComputerFactory(state.nPartitions, hpcf0)
                                 .createPartitioner();
                         ITuplePartitionComputer hpcRep1 = new RepartitionComputerFactory(state.nPartitions, hpcf1)
@@ -508,25 +512,35 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
 
                                 if (buildWriter != null) {
                                     RunFileReader buildReader = buildWriter.createDeleteOnCloseReader();
-                                    buildReader.open();
-                                    while (buildReader.nextFrame(inBuffer)) {
-                                        ByteBuffer copyBuffer = ctx.allocateFrame(inBuffer.getFrameSize());
-                                        FrameUtils.copyAndFlip(inBuffer.getBuffer(), copyBuffer);
-                                        joiner.build(copyBuffer);
-                                        inBuffer.reset();
+                                    try {
+                                        buildReader.open();
+                                        while (buildReader.nextFrame(inBuffer)) {
+                                            ByteBuffer copyBuffer = ctx.allocateFrame(inBuffer.getFrameSize());
+                                            FrameUtils.copyAndFlip(inBuffer.getBuffer(), copyBuffer);
+                                            joiner.build(copyBuffer);
+                                            inBuffer.reset();
+                                        }
+                                    } finally {
+                                        buildReader.close();
                                     }
-                                    buildReader.close();
                                 }
 
                                 // probe
                                 RunFileReader probeReader = probeWriter.createDeleteOnCloseReader();
-                                probeReader.open();
-                                while (probeReader.nextFrame(inBuffer)) {
-                                    joiner.join(inBuffer.getBuffer(), writer);
-                                    inBuffer.reset();
+                                try {
+                                    probeReader.open();
+                                    try {
+                                        while (probeReader.nextFrame(inBuffer)) {
+                                            joiner.join(inBuffer.getBuffer(), writer);
+                                            inBuffer.reset();
+                                        }
+                                        joiner.completeJoin(writer);
+                                    } finally {
+                                        joiner.releaseMemory();
+                                    }
+                                } finally {
+                                    probeReader.close();
                                 }
-                                probeReader.close();
-                                joiner.closeJoin(writer);
                             }
                         }
                     } finally {

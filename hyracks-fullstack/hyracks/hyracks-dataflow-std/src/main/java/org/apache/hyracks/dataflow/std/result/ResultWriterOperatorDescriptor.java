@@ -80,7 +80,8 @@ public class ResultWriterOperatorDescriptor extends AbstractSingleActivityOperat
         final FrameTupleAccessor frameTupleAccessor = new FrameTupleAccessor(outRecordDesc);
 
         return new AbstractUnaryInputSinkOperatorNodePushable() {
-            IFrameWriter datasetPartitionWriter;
+            private IFrameWriter datasetPartitionWriter;
+            private boolean failed = false;
 
             @Override
             public void open() throws HyracksDataException {
@@ -110,15 +111,22 @@ public class ResultWriterOperatorDescriptor extends AbstractSingleActivityOperat
 
             @Override
             public void fail() throws HyracksDataException {
+                failed = true;
                 datasetPartitionWriter.fail();
             }
 
             @Override
             public void close() throws HyracksDataException {
-                if (frameOutputStream.getTupleCount() > 0) {
-                    frameOutputStream.flush(datasetPartitionWriter);
+                try {
+                    if (!failed && frameOutputStream.getTupleCount() > 0) {
+                        frameOutputStream.flush(datasetPartitionWriter);
+                    }
+                } catch (Exception e) {
+                    datasetPartitionWriter.fail();
+                    throw e;
+                } finally {
+                    datasetPartitionWriter.close();
                 }
-                datasetPartitionWriter.close();
             }
         };
     }

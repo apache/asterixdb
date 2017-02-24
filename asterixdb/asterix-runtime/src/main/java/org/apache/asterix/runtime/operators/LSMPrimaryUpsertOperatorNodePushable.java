@@ -301,10 +301,11 @@ public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDe
     @Override
     public void close() throws HyracksDataException {
         try {
-            cursor.close();
-            writer.close();
-        } catch (Exception e) {
-            throw new HyracksDataException(e);
+            try {
+                cursor.close();
+            } finally {
+                writer.close();
+            }
         } finally {
             indexHelper.close();
         }

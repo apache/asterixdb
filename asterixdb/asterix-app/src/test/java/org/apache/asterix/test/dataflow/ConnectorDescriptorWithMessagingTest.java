@@ -83,47 +83,53 @@ public class ConnectorDescriptorWithMessagingTest {
             TestPartitionWriterFactory partitionWriterFactory = new TestPartitionWriterFactory();
             IFrameWriter partitioner = connector.createPartitioner(ctx, rDesc, partitionWriterFactory,
                     CURRENT_PRODUCER, NUMBER_OF_CONSUMERS, NUMBER_OF_CONSUMERS);
-            partitioner.open();
-            FrameTupleAccessor fta = new FrameTupleAccessor(rDesc);
             List<TestFrameWriter> recipients = new ArrayList<>();
-            for (IFrameWriter writer : partitionWriterFactory.getWriters().values()) {
-                recipients.add((TestFrameWriter) writer);
-            }
-            partitioner.flush();
-            for (TestFrameWriter writer : recipients) {
-                Assert.assertEquals(writer.nextFrameCount(), 1);
-                fta.reset(writer.getLastFrame());
-                Assert.assertEquals(fta.getTupleCount(), 1);
-                FeedUtils.processFeedMessage(writer.getLastFrame(), tempBuffer, fta);
-                Assert.assertEquals(MessagingFrameTupleAppender.NULL_FEED_MESSAGE,
-                        MessagingFrameTupleAppender.getMessageType(tempBuffer));
-            }
-            message.getBuffer().clear();
-            message.getBuffer().put(MessagingFrameTupleAppender.ACK_REQ_FEED_MESSAGE);
-            message.getBuffer().flip();
-            partitioner.flush();
-            for (TestFrameWriter writer : recipients) {
-                Assert.assertEquals(writer.nextFrameCount(), 2);
-                fta.reset(writer.getLastFrame());
-                Assert.assertEquals(fta.getTupleCount(), 1);
-                FeedUtils.processFeedMessage(writer.getLastFrame(), tempBuffer, fta);
-                Assert.assertEquals(MessagingFrameTupleAppender.ACK_REQ_FEED_MESSAGE,
-                        MessagingFrameTupleAppender.getMessageType(tempBuffer));
-            }
+            try {
+                partitioner.open();
+                FrameTupleAccessor fta = new FrameTupleAccessor(rDesc);
+                for (IFrameWriter writer : partitionWriterFactory.getWriters().values()) {
+                    recipients.add((TestFrameWriter) writer);
+                }
+                partitioner.flush();
+                for (TestFrameWriter writer : recipients) {
+                    Assert.assertEquals(writer.nextFrameCount(), 1);
+                    fta.reset(writer.getLastFrame());
+                    Assert.assertEquals(fta.getTupleCount(), 1);
+                    FeedUtils.processFeedMessage(writer.getLastFrame(), tempBuffer, fta);
+                    Assert.assertEquals(MessagingFrameTupleAppender.NULL_FEED_MESSAGE,
+                            MessagingFrameTupleAppender.getMessageType(tempBuffer));
+                }
+                message.getBuffer().clear();
+                message.getBuffer().put(MessagingFrameTupleAppender.ACK_REQ_FEED_MESSAGE);
+                message.getBuffer().flip();
+                partitioner.flush();
+                for (TestFrameWriter writer : recipients) {
+                    Assert.assertEquals(writer.nextFrameCount(), 2);
+                    fta.reset(writer.getLastFrame());
+                    Assert.assertEquals(fta.getTupleCount(), 1);
+                    FeedUtils.processFeedMessage(writer.getLastFrame(), tempBuffer, fta);
+                    Assert.assertEquals(MessagingFrameTupleAppender.ACK_REQ_FEED_MESSAGE,
+                            MessagingFrameTupleAppender.getMessageType(tempBuffer));
+                }
 
-            message.getBuffer().clear();
-            message.getBuffer().put(MessagingFrameTupleAppender.NULL_FEED_MESSAGE);
-            message.getBuffer().flip();
-            partitioner.flush();
-            for (TestFrameWriter writer : recipients) {
-                Assert.assertEquals(writer.nextFrameCount(), 3);
-                fta.reset(writer.getLastFrame());
-                Assert.assertEquals(fta.getTupleCount(), 1);
-                FeedUtils.processFeedMessage(writer.getLastFrame(), tempBuffer, fta);
-                Assert.assertEquals(MessagingFrameTupleAppender.NULL_FEED_MESSAGE,
-                        MessagingFrameTupleAppender.getMessageType(tempBuffer));
+                message.getBuffer().clear();
+                message.getBuffer().put(MessagingFrameTupleAppender.NULL_FEED_MESSAGE);
+                message.getBuffer().flip();
+                partitioner.flush();
+                for (TestFrameWriter writer : recipients) {
+                    Assert.assertEquals(writer.nextFrameCount(), 3);
+                    fta.reset(writer.getLastFrame());
+                    Assert.assertEquals(fta.getTupleCount(), 1);
+                    FeedUtils.processFeedMessage(writer.getLastFrame(), tempBuffer, fta);
+                    Assert.assertEquals(MessagingFrameTupleAppender.NULL_FEED_MESSAGE,
+                            MessagingFrameTupleAppender.getMessageType(tempBuffer));
+                }
+            } catch (Throwable t) {
+                partitioner.fail();
+                throw t;
+            } finally {
+                partitioner.close();
             }
-            partitioner.close();
             for (TestFrameWriter writer : recipients) {
                 Assert.assertEquals(writer.nextFrameCount(), 4);
                 Assert.assertEquals(writer.closeCount(), 1);

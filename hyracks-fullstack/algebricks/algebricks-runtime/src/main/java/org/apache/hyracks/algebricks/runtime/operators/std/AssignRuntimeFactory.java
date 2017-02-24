@@ -179,7 +179,7 @@ public class AssignRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
             @Override
             public void fail() throws HyracksDataException {
                 if (isOpen) {
-                    writer.fail();
+                    super.fail();
                 }
             }
 

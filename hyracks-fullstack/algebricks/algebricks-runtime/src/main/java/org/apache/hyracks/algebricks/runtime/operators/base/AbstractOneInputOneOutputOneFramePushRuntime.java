@@ -53,6 +53,9 @@ public abstract class AbstractOneInputOneOutputOneFramePushRuntime extends Abstr
     public void close() throws HyracksDataException {
         try {
             flushIfNotFailed();
+        } catch (Exception e) {
+            writer.fail();
+            throw e;
         } finally {
             writer.close();
         }

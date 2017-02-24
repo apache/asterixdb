@@ -107,10 +107,9 @@ public class ExternalGroupBuildOperatorNodePushable extends AbstractUnaryInputSi
     @Override
     public void close() throws HyracksDataException {
         if (isFailed && state.getRuns() != null) {
-            for (int i = 0; i < state.getRuns().length; i++) {
-                RunFileWriter run = state.getRuns()[i];
+            for (RunFileWriter run : state.getRuns()) {
                 if (run != null) {
-                    run.getFileReference().delete();
+                    run.erase();
                 }
             }
         } else {

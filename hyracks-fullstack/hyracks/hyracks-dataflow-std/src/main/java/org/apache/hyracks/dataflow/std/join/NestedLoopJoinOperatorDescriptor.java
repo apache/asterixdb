@@ -173,6 +173,7 @@ public class NestedLoopJoinOperatorDescriptor extends AbstractOperatorDescriptor
                 IRecordDescriptorProvider recordDescProvider, final int partition, int nPartitions) {
             return new AbstractUnaryInputUnaryOutputOperatorNodePushable() {
                 private JoinCacheTaskState state;
+                boolean failed = false;
 
                 @Override
                 public void open() throws HyracksDataException {
@@ -188,8 +189,24 @@ public class NestedLoopJoinOperatorDescriptor extends AbstractOperatorDescriptor
 
                 @Override
                 public void close() throws HyracksDataException {
+                    if (failed) {
+                        try {
+                            state.joiner.closeCache();
+                        } finally {
+                            writer.close();
+                        }
+                        return;
+                    }
                     try {
-                        state.joiner.closeJoin(writer);
+                        try {
+                            state.joiner.completeJoin(writer);
+                        } finally {
+                            state.joiner.releaseMemory();
+                        }
+                    } catch (Exception e) {
+                        state.joiner.closeCache();
+                        writer.fail();
+                        throw e;
                     } finally {
                         writer.close();
                     }
@@ -197,6 +214,7 @@ public class NestedLoopJoinOperatorDescriptor extends AbstractOperatorDescriptor
 
                 @Override
                 public void fail() throws HyracksDataException {
+                    failed = true;
                     writer.fail();
                 }
             };

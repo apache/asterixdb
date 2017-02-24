@@ -130,13 +130,16 @@ public abstract class AbstractRunGeneratorTest {
 
         assertTrue(runs.size() > 0);
         for (GeneratedRunFileReader run : runs) {
-            run.open();
-            int preKey = Integer.MIN_VALUE;
-            while (run.nextFrame(frame)) {
-                fta.reset(frame.getBuffer());
-                preKey = assertFTADataIsSorted(fta, keyValuePair, preKey);
+            try {
+                run.open();
+                int preKey = Integer.MIN_VALUE;
+                while (run.nextFrame(frame)) {
+                    fta.reset(frame.getBuffer());
+                    preKey = assertFTADataIsSorted(fta, keyValuePair, preKey);
+                }
+            } finally {
+                run.close();
             }
-            run.close();
         }
         assertTrue(keyValuePair.isEmpty());
     }

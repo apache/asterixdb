@@ -53,7 +53,7 @@ public class ErrorCode {
     public static final int RESULT_FAILURE_EXCEPTION = 16;
     public static final int RESULT_FAILURE_NO_EXCEPTION = 17;
     public static final int INCONSISTENT_RESULT_METADATA = 18;
-    public static final int CANNOT_TRUNCATE_OR_DELETE_FILE = 19;
+    public static final int CANNOT_DELETE_FILE = 19;
     public static final int NOT_A_JOBID = 20;
     public static final int ERROR_FINDING_DISTRIBUTED_JOB = 21;
     public static final int DUPLICATE_DISTRIBUTED_JOB = 22;

@@ -19,7 +19,12 @@
 
 package org.apache.asterix.test.runtime;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.lang.management.ManagementFactory;
+import java.lang.management.RuntimeMXBean;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -28,7 +33,9 @@ import org.apache.asterix.app.external.TestLibrarian;
 import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.test.common.TestExecutor;
 import org.apache.asterix.testframework.context.TestCaseContext;
+import org.apache.commons.lang.SystemUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.junit.Assert;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
@@ -63,6 +70,9 @@ public class LangExecutionUtil {
     }
 
     public static void tearDown() throws Exception {
+        // Check whether there are leaked open run file handles.
+        checkRunFileLeaks();
+
         TestLibrarian.removeLibraryDir();
         ExecutionTestUtil.tearDown(cleanupOnStop);
         ExecutionTestUtil.integrationUtil.removeTestStorageFiles();
@@ -115,6 +125,24 @@ public class LangExecutionUtil {
             }
         } finally {
             System.err.flush();
+        }
+    }
+
+    private static void checkRunFileLeaks() throws IOException {
+        if (SystemUtils.IS_OS_WINDOWS) {
+            return;
+        }
+        // Only run the check on Linux and MacOS.
+        RuntimeMXBean runtimeMXBean = ManagementFactory.getRuntimeMXBean();
+        String processName = runtimeMXBean.getName();
+        String processId = processName.split("@")[0];
+
+        // Checks whether there are leaked run files from operators.
+        Process process = Runtime.getRuntime()
+                .exec(new String[] { "bash", "-c", "lsof -p " + processId + "|grep waf|wc -l" });
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+            int runFileCount = Integer.parseInt(reader.readLine().trim());
+            Assert.assertTrue(runFileCount == 0);
         }
     }
 }

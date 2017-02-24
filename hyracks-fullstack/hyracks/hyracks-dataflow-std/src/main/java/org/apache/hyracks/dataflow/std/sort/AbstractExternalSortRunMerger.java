@@ -84,10 +84,13 @@ public abstract class AbstractExternalSortRunMerger {
                 finalWriter = prepareSkipMergingFinalResultWriter(writer);
                 finalWriter.open();
                 if (sorter != null) {
-                    if (sorter.hasRemaining()) {
-                        sorter.flush(finalWriter);
+                    try {
+                        if (sorter.hasRemaining()) {
+                            sorter.flush(finalWriter);
+                        }
+                    } finally {
+                        sorter.close();
                     }
-                    sorter.close();
                 }
             } else {
                 /** recycle sort buffer */
@@ -128,10 +131,15 @@ public abstract class AbstractExternalSortRunMerger {
                             RunFileWriter mergeFileWriter = prepareIntermediateMergeRunFile();
                             IFrameWriter mergeResultWriter = prepareIntermediateMergeResultWriter(mergeFileWriter);
 
-                            mergeResultWriter.open();
-                            merge(mergeResultWriter, partialRuns);
-                            mergeResultWriter.close();
-
+                            try {
+                                mergeResultWriter.open();
+                                merge(mergeResultWriter, partialRuns);
+                            } catch (Throwable t) {
+                                mergeResultWriter.fail();
+                                throw t;
+                            } finally {
+                                mergeResultWriter.close();
+                            }
                             reader = mergeFileWriter.createReader();
                         }
                         runs.add(reader);

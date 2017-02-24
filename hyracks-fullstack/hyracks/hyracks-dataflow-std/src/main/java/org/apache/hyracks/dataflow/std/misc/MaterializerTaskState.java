@@ -82,14 +82,12 @@ public class MaterializerTaskState extends AbstractStateObject {
                 while (in.nextFrame(frame)) {
                     writer.nextFrame(frame.getBuffer());
                 }
-            } catch (Throwable th) {
-                throw new HyracksDataException(th);
             } finally {
                 in.close();
             }
-        } catch (Throwable th) {
+        } catch (Exception e) {
             writer.fail();
-            throw new HyracksDataException(th);
+            throw e;
         } finally {
             writer.close();
             if (numConsumers.decrementAndGet() == 0) {

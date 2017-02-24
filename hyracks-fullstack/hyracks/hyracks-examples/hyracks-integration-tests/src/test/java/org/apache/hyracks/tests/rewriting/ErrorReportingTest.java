@@ -103,7 +103,7 @@ class TestSourceOperatorDescriptor extends AbstractSingleActivityOperatorDescrip
                     writer.nextFrame(frame);
                 } catch (Exception e) {
                     writer.fail();
-                    throw new HyracksDataException(e);
+                    throw e;
                 } finally {
                     writer.close();
                 }

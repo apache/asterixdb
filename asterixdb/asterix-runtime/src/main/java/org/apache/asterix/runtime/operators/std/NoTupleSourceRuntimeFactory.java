@@ -39,8 +39,11 @@ public class NoTupleSourceRuntimeFactory implements IPushRuntimeFactory {
 
             @Override
             public void open() throws HyracksDataException {
-                writer.open();
-                writer.close();
+                try {
+                    writer.open();
+                } finally {
+                    writer.close();
+                }
             }
 
         };

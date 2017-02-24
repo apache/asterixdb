@@ -227,12 +227,14 @@ public abstract class AbstractExternalGroupbyTest {
 
         ResultValidateWriter writer = new ResultValidateWriter(keyValueMap);
 
-        getBuilder().open();
-        for (IFrame frame : input) {
-            getBuilder().nextFrame(frame.getBuffer());
+        try {
+            getBuilder().open();
+            for (IFrame frame : input) {
+                getBuilder().nextFrame(frame.getBuffer());
+            }
+        } finally {
+            getBuilder().close();
         }
-        getBuilder().close();
-
         getMerger().setOutputFrameWriter(0, writer, outputRec);
         getMerger().initialize();
     }

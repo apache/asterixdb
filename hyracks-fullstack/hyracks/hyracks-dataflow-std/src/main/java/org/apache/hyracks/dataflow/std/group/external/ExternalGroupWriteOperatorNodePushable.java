@@ -95,9 +95,14 @@ public class ExternalGroupWriteOperatorNodePushable extends AbstractUnaryOutputS
             writer.open();
             doPass(table, partitionRuns, numberOfTuples, writer, 1); // level 0 use used at build stage.
         } catch (Exception e) {
-            generatedRuns.forEach(run -> run.getFileReference().delete());
-            writer.fail();
-            throw new HyracksDataException(e);
+            try {
+                for (RunFileWriter run : generatedRuns) {
+                    run.erase();
+                }
+            } finally {
+                writer.fail();
+            }
+            throw e;
         } finally {
             writer.close();
         }

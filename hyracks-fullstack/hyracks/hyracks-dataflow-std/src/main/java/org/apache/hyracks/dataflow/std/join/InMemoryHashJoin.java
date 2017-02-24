@@ -196,8 +196,11 @@ public class InMemoryHashJoin {
         accessorProbe.reset(newAccessorProbe.getBuffer());
     }
 
-    public void closeJoin(IFrameWriter writer) throws HyracksDataException {
+    public void completeJoin(IFrameWriter writer) throws HyracksDataException {
         appender.write(writer, true);
+    }
+
+    public void releaseMemory() throws HyracksDataException {
         int nFrames = buffers.size();
         // Frames assigned to the data table will be released here.
         if (bufferManager != null) {
@@ -206,7 +209,6 @@ public class InMemoryHashJoin {
             }
         }
         buffers.clear();
-
         if (LOGGER.isLoggable(Level.FINE)) {
             LOGGER.fine("InMemoryHashJoin has finished using " + nFrames + " frames for Thread ID "
                     + Thread.currentThread().getId() + ".");

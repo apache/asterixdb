@@ -86,6 +86,7 @@ public class ResultState implements IStateObject {
 
     public synchronized void close() {
         eos.set(true);
+        closeWriteFileHandle();
         notifyAll();
     }
 
@@ -93,15 +94,19 @@ public class ResultState implements IStateObject {
         // Deleting a job is equivalent to aborting the job for all practical purposes, so the same action, needs
         // to be taken when there are more requests to these result states.
         failed.set(true);
+        closeWriteFileHandle();
+        if (fileRef != null) {
+            fileRef.delete();
+        }
+    }
+
+    private void closeWriteFileHandle() {
         if (writeFileHandle != null) {
             try {
                 ioManager.close(writeFileHandle);
             } catch (IOException e) {
                 // Since file handle could not be closed, just ignore.
             }
-        }
-        if (fileRef != null) {
-            fileRef.delete();
         }
     }
 
@@ -114,7 +119,6 @@ public class ResultState implements IStateObject {
         }
 
         size += ioManager.syncWrite(writeFileHandle, size, buffer);
-
         notifyAll();
     }
 

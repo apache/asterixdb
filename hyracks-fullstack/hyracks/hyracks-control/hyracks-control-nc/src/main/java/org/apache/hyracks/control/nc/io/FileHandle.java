@@ -72,16 +72,11 @@ public class FileHandle implements IFileHandle {
     }
 
     public void close() throws IOException {
-        channel.close();
         raf.close();
     }
 
     public FileReference getFileReference() {
         return fileRef;
-    }
-
-    public RandomAccessFile getRandomAccessFile() {
-        return raf;
     }
 
     public FileChannel getFileChannel() {

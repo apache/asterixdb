@@ -75,10 +75,17 @@ public class ExternalHashGroupBy {
     }
 
     public void flushSpilledPartitions() throws HyracksDataException {
-        for (int i = 0; i < runWriters.length; ++i) {
-            if (runWriters[i] != null) {
-                flushPartitionToRun(i, runWriters[i]);
-                runWriters[i].close();
+        try {
+            for (int i = 0; i < runWriters.length; ++i) {
+                if (runWriters[i] != null) {
+                    flushPartitionToRun(i, runWriters[i]);
+                }
+            }
+        } finally {
+            for (int i = 0; i < runWriters.length; ++i) {
+                if (runWriters[i] != null) {
+                    runWriters[i].close();
+                }
             }
         }
     }

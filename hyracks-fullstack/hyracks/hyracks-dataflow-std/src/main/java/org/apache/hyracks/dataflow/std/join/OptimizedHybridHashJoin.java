@@ -240,10 +240,10 @@ public class OptimizedHybridHashJoin {
     /**
      * In case of failure happens, we need to clear up the generated temporary files.
      */
-    public void clearBuildTempFiles() {
+    public void clearBuildTempFiles() throws HyracksDataException {
         for (int i = 0; i < buildRFWriters.length; i++) {
             if (buildRFWriters[i] != null) {
-                buildRFWriters[i].getFileReference().delete();
+                buildRFWriters[i].erase();
             }
         }
     }
@@ -258,17 +258,22 @@ public class OptimizedHybridHashJoin {
                 runFileWriters = probeRFWriters;
                 break;
         }
-
-        for (int pid = spilledStatus.nextSetBit(0); pid >= 0
-                && pid < numOfPartitions; pid = spilledStatus.nextSetBit(pid + 1)) {
-            if (bufferManager.getNumTuples(pid) > 0) {
-                bufferManager.flushPartition(pid, getSpillWriterOrCreateNewOneIfNotExist(pid, whichSide));
-                bufferManager.clearPartition(pid);
+        try {
+            for (int pid = spilledStatus.nextSetBit(0); pid >= 0
+                    && pid < numOfPartitions; pid = spilledStatus.nextSetBit(pid + 1)) {
+                if (bufferManager.getNumTuples(pid) > 0) {
+                    bufferManager.flushPartition(pid, getSpillWriterOrCreateNewOneIfNotExist(pid, whichSide));
+                    bufferManager.clearPartition(pid);
+                }
             }
-            // It doesn't matter whether a spilled partition currently holds a tuple in memory or not.
-            // The file that holds the corresponding spilled partition needs to be closed.
-            if (runFileWriters[pid] != null) {
-                runFileWriters[pid].close();
+        } finally {
+            // Force to close all run file writers.
+            if (runFileWriters != null) {
+                for (RunFileWriter runFileWriter : runFileWriters) {
+                    if (runFileWriter != null) {
+                        runFileWriter.close();
+                    }
+                }
             }
         }
     }
@@ -418,26 +423,28 @@ public class OptimizedHybridHashJoin {
 
     private boolean loadSpilledPartitionToMem(int pid, RunFileWriter wr) throws HyracksDataException {
         RunFileReader r = wr.createReader();
-        r.open();
-        if (reloadBuffer == null) {
-            reloadBuffer = new VSizeFrame(ctx);
-        }
-        while (r.nextFrame(reloadBuffer)) {
-            accessorBuild.reset(reloadBuffer.getBuffer());
-            for (int tid = 0; tid < accessorBuild.getTupleCount(); tid++) {
-                if (!bufferManager.insertTuple(pid, accessorBuild, tid, tempPtr)) {
+        try {
+            r.open();
+            if (reloadBuffer == null) {
+                reloadBuffer = new VSizeFrame(ctx);
+            }
+            while (r.nextFrame(reloadBuffer)) {
+                accessorBuild.reset(reloadBuffer.getBuffer());
+                for (int tid = 0; tid < accessorBuild.getTupleCount(); tid++) {
+                    if (bufferManager.insertTuple(pid, accessorBuild, tid, tempPtr)) {
+                        continue;
+                    }
                     // for some reason (e.g. due to fragmentation) if the inserting failed,
                     // we need to clear the occupied frames
                     bufferManager.clearPartition(pid);
-                    r.close();
                     return false;
                 }
             }
+            // Closes and deletes the run file if it is already loaded into memory.
+            r.setDeleteAfterClose(true);
+        } finally {
+            r.close();
         }
-
-        // Closes and deletes the run file if it is already loaded into memory.
-        r.setDeleteAfterClose(true);
-        r.close();
         spilledStatus.set(pid, false);
         buildRFWriters[pid] = null;
         return true;
@@ -538,10 +545,13 @@ public class OptimizedHybridHashJoin {
         return spilledStatus.nextSetBit(0) < 0;
     }
 
-    public void closeProbe(IFrameWriter writer) throws HyracksDataException {
+    public void completeProbe(IFrameWriter writer) throws HyracksDataException {
         //We do NOT join the spilled partitions here, that decision is made at the descriptor level
         //(which join technique to use)
-        inMemJoiner.closeJoin(writer);
+        inMemJoiner.completeJoin(writer);
+    }
+
+    public void releaseResource() throws HyracksDataException {
         inMemJoiner.closeTable();
         closeAllSpilledPartitions(SIDE.PROBE);
         bufferManager.close();
@@ -553,10 +563,10 @@ public class OptimizedHybridHashJoin {
     /**
      * In case of failure happens, we need to clear up the generated temporary files.
      */
-    public void clearProbeTempFiles() {
+    public void clearProbeTempFiles() throws HyracksDataException {
         for (int i = 0; i < probeRFWriters.length; i++) {
             if (probeRFWriters[i] != null) {
-                probeRFWriters[i].getFileReference().delete();
+                probeRFWriters[i].erase();
             }
         }
     }

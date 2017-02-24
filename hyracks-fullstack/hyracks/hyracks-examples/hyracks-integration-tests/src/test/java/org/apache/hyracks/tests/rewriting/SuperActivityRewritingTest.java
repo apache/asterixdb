@@ -84,9 +84,9 @@ class DummySourceOperatorDescriptor extends AbstractSingleActivityOperatorDescri
             public void initialize() throws HyracksDataException {
                 try {
                     writer.open();
-                } catch (Throwable th) {
+                } catch (Exception e) {
                     writer.fail();
-                    throw new HyracksDataException(th);
+                    throw e;
                 } finally {
                     writer.close();
                 }

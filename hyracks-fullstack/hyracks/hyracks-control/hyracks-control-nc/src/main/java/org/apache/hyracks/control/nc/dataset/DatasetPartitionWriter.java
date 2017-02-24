@@ -55,6 +55,8 @@ public class DatasetPartitionWriter implements IFrameWriter {
 
     private boolean partitionRegistered;
 
+    private boolean failed = false;
+
     public DatasetPartitionWriter(IHyracksTaskContext ctx, IDatasetPartitionManager manager, JobId jobId,
             ResultSetId rsId, boolean asyncMode, boolean orderedResult, int partition, int nPartitions,
             DatasetMemoryManager datasetMemoryManager, IWorkspaceFileFactory fileFactory) {
@@ -97,6 +99,7 @@ public class DatasetPartitionWriter implements IFrameWriter {
     @Override
     public void fail() throws HyracksDataException {
         try {
+            failed = true;
             resultState.closeAndDelete();
             resultState.abort();
             registerResultPartitionLocation(false);
@@ -111,8 +114,13 @@ public class DatasetPartitionWriter implements IFrameWriter {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("close(" + partition + ")");
         }
-        registerResultPartitionLocation(true);
-        resultState.close();
+        try {
+            if (!failed) {
+                registerResultPartitionLocation(true);
+            }
+        } finally {
+            resultState.close();
+        }
         try {
             manager.reportPartitionWriteCompletion(jobId, resultSetId, partition);
         } catch (HyracksException e) {

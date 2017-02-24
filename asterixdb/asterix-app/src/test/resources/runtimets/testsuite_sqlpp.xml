@@ -2028,13 +2028,36 @@
     </test-case>
   </test-group>
   <test-group name="failure">
-    <!--
-        <test-case FilePath="failure">
-          <compilation-unit name="q1_pricing_summary_report_failure">
-            <output-dir compare="Text">q1_pricing_summary_report_failure</output-dir>
-          </compilation-unit>
-        </test-case>
-        -->
+    <test-case FilePath="failure">
+      <compilation-unit name="group_by_failure">
+        <output-dir compare="Text">group_by_failure</output-dir>
+        <expected-error>Injected failure in asterix:inject-failure</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="failure">
+      <compilation-unit name="group_by_hash_failure">
+        <output-dir compare="Text">group_by_hash_failure</output-dir>
+        <expected-error>Injected failure in asterix:inject-failure</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="failure">
+      <compilation-unit name="q01_pricing_summary_report_failure">
+        <output-dir compare="Text">q01_pricing_summary_report_failure</output-dir>
+        <expected-error>Injected failure in asterix:inject-failure</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="failure">
+      <compilation-unit name="q18_large_volume_customer_failure">
+        <output-dir compare="Text">q18_large_volume_customer_failure</output-dir>
+        <expected-error>Injected failure in asterix:inject-failure</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="failure">
+      <compilation-unit name="order_by_failure">
+        <output-dir compare="Text">order_by_failure</output-dir>
+        <expected-error>Injected failure in asterix:inject-failure</expected-error>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <!--
     <test-group name="flwor">
