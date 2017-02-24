@@ -25,9 +25,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.active.ActiveEvent;
+import org.apache.asterix.active.ActiveJobNotificationHandler;
 import org.apache.asterix.active.ActivityState;
 import org.apache.asterix.active.EntityId;
-import org.apache.asterix.active.IActiveEntityEventsListener;
 import org.apache.asterix.active.IActiveEventSubscriber;
 import org.apache.asterix.active.message.ActivePartitionMessage;
 import org.apache.asterix.common.metadata.IDataset;
@@ -36,20 +36,15 @@ import org.apache.asterix.external.feed.watch.NoOpSubscriber;
 import org.apache.asterix.runtime.utils.AppContextInfo;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobStatus;
 
-public class FeedEventsListener implements IActiveEntityEventsListener {
+public class FeedEventsListener extends ActiveEntityEventsListener {
     // constants
     private static final Logger LOGGER = Logger.getLogger(FeedEventsListener.class.getName());
     // members
-    private final EntityId entityId;
-    private final List<IDataset> datasets;
     private final String[] sources;
     private final List<IActiveEventSubscriber> subscribers;
-    private volatile ActivityState state;
     private int numRegistered;
-    private JobId jobId;
 
     public FeedEventsListener(EntityId entityId, List<IDataset> datasets, String[] sources) {
         this.entityId = entityId;
@@ -111,21 +106,12 @@ public class FeedEventsListener implements IActiveEntityEventsListener {
         IHyracksClientConnection hcc = AppContextInfo.INSTANCE.getHcc();
         JobStatus status = hcc.getJobStatus(jobId);
         state = status.equals(JobStatus.FAILURE) ? ActivityState.FAILED : ActivityState.STOPPED;
+        ActiveJobNotificationHandler.INSTANCE.removeListener(this);
     }
 
     private void start(ActiveEvent event) {
         this.jobId = event.getJobId();
         state = ActivityState.STARTING;
-    }
-
-    @Override
-    public EntityId getEntityId() {
-        return entityId;
-    }
-
-    @Override
-    public ActivityState getState() {
-        return state;
     }
 
     @Override
@@ -148,11 +134,6 @@ public class FeedEventsListener implements IActiveEntityEventsListener {
         FeedEventSubscriber subscriber = new FeedEventSubscriber(this, state);
         subscribers.add(subscriber);
         return subscriber;
-    }
-
-    @Override
-    public boolean isEntityUsingDataset(IDataset dataset) {
-        return datasets.contains(dataset);
     }
 
     public String[] getSources() {
