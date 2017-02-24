@@ -113,6 +113,7 @@ public class ApiServlet extends AbstractServlet {
         String printJob = request.getParameter("print-job");
         String executeQuery = request.getParameter("execute-query");
         try {
+            response.setStatus(HttpResponseStatus.OK);
             HttpUtil.setContentType(response, ContentType.TEXT_HTML, Encoding.UTF8);
         } catch (IOException e) {
             LOGGER.log(Level.WARNING, "Failure setting content type", e);
@@ -162,7 +163,7 @@ public class ApiServlet extends AbstractServlet {
     protected void get(IServletRequest request, IServletResponse response) {
         String resourcePath = null;
         String requestURI = request.getHttpRequest().uri();
-
+        response.setStatus(HttpResponseStatus.OK);
         if ("/".equals(requestURI)) {
             try {
                 HttpUtil.setContentType(response, HttpUtil.ContentType.TEXT_HTML, HttpUtil.Encoding.UTF8);
