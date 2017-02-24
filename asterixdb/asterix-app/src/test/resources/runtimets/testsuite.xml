@@ -19,7 +19,6 @@
 <!-- Keep test-suite list in Alphabetical order. -->
 <!DOCTYPE test-suite [
 
-             <!ENTITY APIQueries SYSTEM "queries/api/APIQueries.xml">
              <!ENTITY ComparisonQueries SYSTEM "queries/comparison/ComparisonQueries.xml">
              <!ENTITY DeepEqualQueries SYSTEM "queries/comparison/deep_equal/DeepEqualQueries.xml">
              <!ENTITY RecordsQueries SYSTEM "queries/objects/ObjectsQueries.xml">
@@ -32,7 +31,6 @@
              ResultOffsetPath="results"
              QueryOffsetPath="queries"
              QueryFileExtension=".aql">
-  &APIQueries;
   <test-group name="external-library">
     <test-case FilePath="external-library">
       <compilation-unit name="typed_adapter">

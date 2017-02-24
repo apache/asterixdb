@@ -25,6 +25,7 @@ import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.hyracks.api.channels.IInputChannel;
@@ -37,6 +38,7 @@ import org.apache.hyracks.api.dataset.IDatasetInputChannelMonitor;
 import org.apache.hyracks.api.dataset.IHyracksDatasetDirectoryServiceConnection;
 import org.apache.hyracks.api.dataset.IHyracksDatasetReader;
 import org.apache.hyracks.api.dataset.ResultSetId;
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.job.JobId;
@@ -87,13 +89,16 @@ public class HyracksDatasetReader implements IHyracksDatasetReader {
 
     @Override
     public Status getResultStatus() {
-        Status status = null;
         try {
-            status = datasetDirectoryServiceConnection.getDatasetResultStatus(jobId, resultSetId);
+            return datasetDirectoryServiceConnection.getDatasetResultStatus(jobId, resultSetId);
+        } catch (HyracksDataException e) {
+            if (e.getErrorCode() != ErrorCode.NO_RESULTSET) {
+                LOGGER.log(Level.WARNING, "Exception retrieving result set for job " + jobId, e);
+            }
         } catch (Exception e) {
-            // TODO(madhusudancs): Decide what to do in case of error
+            LOGGER.log(Level.WARNING, "Exception retrieving result set for job " + jobId, e);
         }
-        return status;
+        return null;
     }
 
     private DatasetDirectoryRecord getRecord(int partition) throws Exception {

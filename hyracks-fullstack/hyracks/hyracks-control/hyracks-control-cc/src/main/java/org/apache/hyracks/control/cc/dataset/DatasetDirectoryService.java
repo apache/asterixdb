@@ -162,13 +162,9 @@ public class DatasetDirectoryService implements IDatasetDirectoryService {
 
     @Override
     public synchronized Status getResultStatus(JobId jobId, ResultSetId rsId) throws HyracksDataException {
-        DatasetJobRecord djr;
-        while ((djr = getDatasetJobRecord(jobId)) == null) {
-            try {
-                wait();
-            } catch (InterruptedException e) {
-                throw new HyracksDataException(e);
-            }
+        DatasetJobRecord djr = getDatasetJobRecord(jobId);
+        if (djr == null) {
+            throw HyracksDataException.create(ErrorCode.NO_RESULTSET, rsId, jobId);
         }
         return djr.getStatus();
     }

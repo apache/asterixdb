@@ -21,6 +21,8 @@ package org.apache.hyracks.ipc.impl;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.apache.hyracks.ipc.api.IIPCHandle;
 import org.apache.hyracks.ipc.api.IIPCI;
@@ -29,6 +31,8 @@ import org.apache.hyracks.ipc.api.IPayloadSerializerDeserializer;
 import org.apache.hyracks.ipc.exceptions.IPCException;
 
 public class IPCSystem {
+    private static final Logger LOGGER = Logger.getLogger(IPCSystem.class.getName());
+
     private final IPCConnectionManager cMgr;
 
     private final IIPCI ipci;
@@ -88,7 +92,7 @@ public class IPCSystem {
         Exception exception = null;
         if (message.getFlag() == Message.ERROR) {
             exception = (Exception) message.getPayload();
-            exception.printStackTrace();
+            LOGGER.log(Level.INFO, "Exception in message " + message.toString());
         } else {
             payload = message.getPayload();
         }

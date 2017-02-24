@@ -33,7 +33,7 @@ import org.junit.runners.Parameterized.Parameters;
  * Runs the cluster state runtime tests with the storage parallelism.
  */
 @RunWith(Parameterized.class)
-public class ClusterStateExecutionTest {
+public class APIExecutionTest {
     protected static final String TEST_CONFIG_FILE_NAME = "asterix-build-configuration.xml";
 
     @BeforeClass
@@ -46,14 +46,14 @@ public class ClusterStateExecutionTest {
         LangExecutionUtil.tearDown();
     }
 
-    @Parameters(name = "ClusterStateExecutionTest {index}: {0}")
+    @Parameters(name = "APIExecutionTest {index}: {0}")
     public static Collection<Object[]> tests() throws Exception {
-        return LangExecutionUtil.tests("only_cluster_state.xml", "cluster_state.xml");
+        return LangExecutionUtil.tests("only_api.xml", "api.xml");
     }
 
     protected TestCaseContext tcCtx;
 
-    public ClusterStateExecutionTest(TestCaseContext tcCtx) {
+    public APIExecutionTest(TestCaseContext tcCtx) {
         this.tcCtx = tcCtx;
     }
 
