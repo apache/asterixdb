@@ -183,6 +183,7 @@
             <exclude>**/*.tsv</exclude>
             <exclude>**/*.txt</exclude>
             <exclude>**/*.xsd</exclude>
+            <exclude>**/target/**</exclude>
           </excludes>
           <includes>
             <include>**/asterix-*</include>

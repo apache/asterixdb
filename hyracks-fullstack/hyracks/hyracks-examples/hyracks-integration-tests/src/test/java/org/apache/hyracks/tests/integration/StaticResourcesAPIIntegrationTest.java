@@ -25,12 +25,12 @@ import org.junit.Test;
 
 public class StaticResourcesAPIIntegrationTest extends AbstractIntegrationTest {
 
-    public static final String ROOT_PATH = "/static/stylesheet/json.human.css";
+    public static final String ROOT_PATH = "/static/file.txt";
 
     @Test
     public void testStaticResources() throws Exception {
         String res = httpGetAsString(ROOT_PATH);
-        Assert.assertTrue(res.length() == 3167);
+        Assert.assertTrue(res.length() == 755);
     }
 
 }
