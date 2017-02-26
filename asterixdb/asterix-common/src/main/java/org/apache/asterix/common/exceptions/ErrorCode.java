@@ -52,6 +52,8 @@ public class ErrorCode {
     public static final int OUT_OF_BOUND = 11;
     public static final int COERCION = 12;
     public static final int DUPLICATE_FIELD_NAME = 13;
+    public static final int PROPERTY_NOT_SET = 14;
+
 
     // Compilation errors
     public static final int PARSE_ERROR = 1001;

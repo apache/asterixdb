@@ -72,8 +72,7 @@ public class DatasetDirectoryService implements IDatasetDirectoryService {
     }
 
     @Override
-    public synchronized void notifyJobCreation(JobId jobId, JobSpecification spec)
-            throws HyracksException {
+    public synchronized void notifyJobCreation(JobId jobId, JobSpecification spec) throws HyracksException {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info(getClass().getSimpleName() + " notified of new job " + jobId);
         }
@@ -98,18 +97,18 @@ public class DatasetDirectoryService implements IDatasetDirectoryService {
         return jri == null ? null : jri.getRecord();
     }
 
-    private DatasetJobRecord getNonNullDatasetJobRecord(JobId jobId) {
+    private DatasetJobRecord getNonNullDatasetJobRecord(JobId jobId) throws HyracksDataException {
         final DatasetJobRecord djr = getDatasetJobRecord(jobId);
         if (djr == null) {
-            throw new NullPointerException();
+            throw HyracksDataException.create(ErrorCode.NO_RESULTSET, jobId);
         }
         return djr;
     }
 
     @Override
     public synchronized void registerResultPartitionLocation(JobId jobId, ResultSetId rsId, boolean orderedResult,
-            boolean emptyResult, int partition, int nPartitions, NetworkAddress networkAddress) throws
-            HyracksDataException {
+            boolean emptyResult, int partition, int nPartitions, NetworkAddress networkAddress)
+            throws HyracksDataException {
         DatasetJobRecord djr = getNonNullDatasetJobRecord(jobId);
         djr.setResultSetMetaData(rsId, orderedResult, nPartitions);
         DatasetDirectoryRecord record = djr.getOrCreateDirectoryRecord(rsId, partition);
@@ -145,16 +144,20 @@ public class DatasetDirectoryService implements IDatasetDirectoryService {
 
     @Override
     public synchronized void reportResultPartitionFailure(JobId jobId, ResultSetId rsId, int partition) {
-        DatasetJobRecord djr = getNonNullDatasetJobRecord(jobId);
-        djr.fail(rsId, partition);
+        DatasetJobRecord djr = getDatasetJobRecord(jobId);
+        if (djr != null) {
+            djr.fail(rsId, partition);
+        }
         jobResultLocations.get(jobId).setException(new Exception());
         notifyAll();
     }
 
     @Override
     public synchronized void reportJobFailure(JobId jobId, List<Exception> exceptions) {
-        DatasetJobRecord djr = getNonNullDatasetJobRecord(jobId);
-        djr.fail(exceptions);
+        DatasetJobRecord djr = getDatasetJobRecord(jobId);
+        if (djr != null) {
+            djr.fail(exceptions);
+        }
         // TODO(tillw) throwing an NPE here hangs the system, why?
         jobResultLocations.get(jobId).setException(exceptions.isEmpty() ? null : exceptions.get(0));
         notifyAll();
@@ -162,11 +165,7 @@ public class DatasetDirectoryService implements IDatasetDirectoryService {
 
     @Override
     public synchronized Status getResultStatus(JobId jobId, ResultSetId rsId) throws HyracksDataException {
-        DatasetJobRecord djr = getDatasetJobRecord(jobId);
-        if (djr == null) {
-            throw HyracksDataException.create(ErrorCode.NO_RESULTSET, rsId, jobId);
-        }
-        return djr.getStatus();
+        return getNonNullDatasetJobRecord(jobId).getStatus();
     }
 
     @Override
@@ -214,8 +213,8 @@ public class DatasetDirectoryService implements IDatasetDirectoryService {
      *             TODO(madhusudancs): Think about caching (and still be stateless) instead of this ugly O(n) iterations for
      *             every check. This already looks very expensive.
      */
-    private DatasetDirectoryRecord[] updatedRecords(JobId jobId, ResultSetId rsId, DatasetDirectoryRecord[] knownRecords)
-            throws HyracksDataException {
+    private DatasetDirectoryRecord[] updatedRecords(JobId jobId, ResultSetId rsId,
+            DatasetDirectoryRecord[] knownRecords) throws HyracksDataException {
         DatasetJobRecord djr = getNonNullDatasetJobRecord(jobId);
 
         if (djr.getStatus() == Status.FAILED) {

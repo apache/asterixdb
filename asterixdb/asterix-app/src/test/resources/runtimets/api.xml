@@ -94,5 +94,29 @@
         <expected-error>HTTP/1.1 400 Bad Request</expected-error>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="api">
+      <compilation-unit name="query_result_1">
+        <output-dir compare="Text">query_result_1</output-dir>
+        <expected-error>HTTP/1.1 404 Not Found</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="api">
+      <compilation-unit name="query_result_2">
+        <output-dir compare="Text">query_result_2</output-dir>
+        <expected-error>HTTP/1.1 400 Bad Request</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="api">
+      <compilation-unit name="query_result_3">
+        <output-dir compare="Text">query_result_3</output-dir>
+        <expected-error>HTTP/1.1 400 Bad Request</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="api">
+      <compilation-unit name="query_result_4">
+        <output-dir compare="Text">query_result_4</output-dir>
+        <expected-error>HTTP/1.1 400 Bad Request</expected-error>
+      </compilation-unit>
+    </test-case>
   </test-group>
 </test-suite>

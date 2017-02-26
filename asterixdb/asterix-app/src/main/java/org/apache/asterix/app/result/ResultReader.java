@@ -30,8 +30,6 @@ import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.dataflow.common.comm.io.ResultFrameTupleAccessor;
 
 public class ResultReader {
-    private final IHyracksDataset hyracksDataset;
-
     private IHyracksDatasetReader reader;
 
     private IFrameTupleAccessor frameTupleAccessor;
@@ -41,12 +39,8 @@ public class ResultReader {
 
     public static final int FRAME_SIZE = AppContextInfo.INSTANCE.getCompilerProperties().getFrameSize();
 
-    public ResultReader(IHyracksDataset hdc) {
-        hyracksDataset = hdc;
-    }
-
-    public void open(JobId jobId, ResultSetId resultSetId) throws HyracksDataException {
-        reader = hyracksDataset.createReader(jobId, resultSetId);
+    public ResultReader(IHyracksDataset hdc, JobId jobId, ResultSetId resultSetId) throws HyracksDataException {
+        reader = hdc.createReader(jobId, resultSetId);
         frameTupleAccessor = new ResultFrameTupleAccessor();
     }
 

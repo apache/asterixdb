@@ -2436,8 +2436,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 break;
             case IMMEDIATE:
                 createAndRunJob(hcc, compiler, locker, resultDelivery, id -> {
-                    final ResultReader resultReader = new ResultReader(hdc);
-                    resultReader.open(id, resultSetId);
+                    final ResultReader resultReader = new ResultReader(hdc, id, resultSetId);
                     ResultUtil.printResults(resultReader, sessionConfig, stats,
                             metadataProvider.findOutputRecordType());
                 });

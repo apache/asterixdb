@@ -125,6 +125,8 @@ public class HyracksDatasetReader implements IHyracksDatasetReader {
             resultChannel.registerMonitor(lastMonitor);
             resultChannel.open(datasetClientCtx);
             return true;
+        } catch (HyracksDataException e) {
+            throw e;
         } catch (Exception e) {
             throw new HyracksDataException(e);
         }
