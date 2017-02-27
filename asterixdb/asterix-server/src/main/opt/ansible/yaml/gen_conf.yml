@@ -1,4 +1,3 @@
-#!/bin/bash
 # ------------------------------------------------------------
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
@@ -18,11 +17,21 @@
 # under the License.
 # ------------------------------------------------------------
 
-# Gets the absolute path so that the script can work no matter where it is invoked.
-pushd `dirname $0` > /dev/null
-SCRIPT_PATH=`pwd -P`
-popd > /dev/null
-AWS_PATH=`dirname "${SCRIPT_PATH}"`
 
-# Terminates an AWS cluster.
-ansible-playbook -i "localhost," $AWS_PATH/yaml/aws_stop.yml
+- name: Ensure that the local temporary directory exists
+  file:
+    path: "{{ temp_dir }}"
+    state: directory
+
+- name: Generate the cluster configuration file
+  shell: cp "{{ playbook_dir }}/../conf/cc.conf" "{{ ccconf }}"
+
+- name: Populate NCs to the cluster configuration file
+  shell: printf "\n[nc/{{ node.0 + 1 }}]\naddress={{ node.1 }}\n" >> "{{ ccconf }}"
+  with_indexed_items: "{{ groups['ncs'] }}"
+  loop_control:
+      loop_var: node
+
+- name: Populate CC to the cluster configuration file "{{ ccconf }}"
+  shell: printf "\n[cc]\ncluster.address={{ groups['cc'][0] }}\n\n" >> "{{ ccconf }}"
+

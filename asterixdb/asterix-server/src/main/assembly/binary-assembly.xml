@@ -52,6 +52,26 @@
       <fileMode>0755</fileMode>
     </fileSet>
     <fileSet>
+      <directory>src/main/opt/ansible/yaml</directory>
+      <outputDirectory>opt/aws/yaml</outputDirectory>
+      <includes>
+        <include>**/*.yml</include>
+      </includes>
+      <excludes>
+        <exclude>**/instance_start.yml</exclude>
+        <exclude>**/gen_conf.yml</exclude>
+      </excludes>
+      <filtered>true</filtered>
+    </fileSet>
+    <fileSet>
+      <directory>src/main/opt/ansible/conf</directory>
+      <outputDirectory>opt/aws/conf</outputDirectory>
+      <includes>
+        <include>**/instance_settings.yml</include>
+      </includes>
+      <filtered>true</filtered>
+    </fileSet>
+    <fileSet>
       <directory>target/appassembler/repo</directory>
       <outputDirectory>repo</outputDirectory>
     </fileSet>

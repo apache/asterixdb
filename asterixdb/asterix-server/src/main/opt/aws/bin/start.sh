@@ -27,7 +27,7 @@ OPT_PATH=`dirname "${AWS_PATH}"`
 DIST_PATH=`dirname "${OPT_PATH}"`
 
 # Starts an AWS cluster.
-ansible-playbook -i "localhost," $AWS_PATH/ansible/aws_start.yml
+ansible-playbook -i "localhost," $AWS_PATH/yaml/aws_start.yml
 
 # Generates an Ansible inventory file and an AsterixDB configuration file.
 temp=/tmp/asterixdb
@@ -35,5 +35,5 @@ inventory=$temp/inventory
 
 # Installs asterixdb on all AWS instances.
 export ANSIBLE_HOST_KEY_CHECKING=false
-ansible-playbook -i $inventory $AWS_PATH/ansible/instance_start.yml
+ansible-playbook -i $inventory $AWS_PATH/yaml/instance_start.yml
 

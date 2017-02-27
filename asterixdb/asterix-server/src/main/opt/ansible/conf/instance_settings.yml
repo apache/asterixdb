@@ -1,4 +1,3 @@
-#!/bin/bash
 # ------------------------------------------------------------
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
@@ -18,11 +17,29 @@
 # under the License.
 # ------------------------------------------------------------
 
-# Gets the absolute path so that the script can work no matter where it is invoked.
-pushd `dirname $0` > /dev/null
-SCRIPT_PATH=`pwd -P`
-popd > /dev/null
-AWS_PATH=`dirname "${SCRIPT_PATH}"`
+# The name of the product (or extension) being used.
+product: asterixdb
 
-# Terminates an AWS cluster.
-ansible-playbook -i "localhost," $AWS_PATH/yaml/aws_stop.yml
+# The script that starts a nc service.
+ncsbin: "asterixncservice"
+
+# The script that starts a nc.
+ncbin: "asterixnc"
+
+# The script that starts a cc.
+ccbin: "asterixcc"
+
+# The parent directory for the working directory.
+basedir: "{{ ansible_env.HOME }}"
+
+# The working directory.
+binarydir: "{{ basedir }}/{{ product }}"
+
+# The full binary distribution directory.
+dist: "../../../../"
+
+# The nc service command (script).
+ncservice: "{{ binarydir}}/bin/{{ ncsbin }}"
+
+# The cc service command (script).
+cc: "{{ binarydir}}/bin/{{ ccbin }}"

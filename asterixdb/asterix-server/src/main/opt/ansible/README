@@ -1,0 +1,60 @@
+# ------------------------------------------------------------
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+# ------------------------------------------------------------
+
+To start cluster-based instance, you need to do the following steps:
+
+1. (Pre-requisite) Install Ansible, boto, and boto3:
+   ansible: pip install ansible
+   boto: pip install boto
+   boto3: pip install boto3
+   Make sure that the version of Ansible is no less than 2.2.1.0.
+
+2. Configure passwordless ssh from your current client that runs the scripts to
+   all nodes listed in conf/inventory.
+
+3. Edit the instance configuration file conf/cc.conf when necessary.
+   You can add/update whatever parameters in the [app] and [cc] sections.
+
+4. Edit the inventory file conf/inventory when necessary.
+   You mostly only need to sepecify the node DNS names (or IPs) for the cluster controller ([cc]) and node controllers
+   ([ncs]).
+
+   If the ssh user account for target machines is different from your current username, please uncomment
+   and edit the following two lines:
+   ;[all:vars]
+   ;ansible_ssh_user=<fill with your ssh account username>
+
+   If you want to specify advanced Ansible builtin variables, please refer to the following Ansible documentation:
+   http://docs.ansible.com/ansible/intro_inventory.html.
+
+5. Edit conf/instance_settings.yml to change the instance binary directories and commands when necessary.
+   By default, the binary directory will be under the home directory of the ssh user account on each node.
+
+6. Deploy the binary to all nodes:
+   bin/deploy.sh
+
+7. Launch your cluster instance:
+   bin/start.sh
+   Now you can use the cluster instance.
+
+8. If you want to stop the cluster instance, run the following script:
+   bin/stop.sh
+
+9. If you want to remove the binary on all nodes, run the following script:
+   bin/erase.sh

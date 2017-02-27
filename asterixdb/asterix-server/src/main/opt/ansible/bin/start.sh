@@ -22,7 +22,10 @@
 pushd `dirname $0` > /dev/null
 SCRIPT_PATH=`pwd -P`
 popd > /dev/null
-AWS_PATH=`dirname "${SCRIPT_PATH}"`
+ANSB_PATH=`dirname "${SCRIPT_PATH}"`
 
-# Terminates an AWS cluster.
-ansible-playbook -i "localhost," $AWS_PATH/yaml/aws_stop.yml
+INVENTORY=$ANSB_PATH/conf/inventory
+
+# Start the cluster
+export ANSIBLE_HOST_KEY_CHECKING=false
+ansible-playbook -i $INVENTORY $ANSB_PATH/yaml/instance_start.yml

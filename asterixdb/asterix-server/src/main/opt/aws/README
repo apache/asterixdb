@@ -19,33 +19,33 @@
 
 To start an AWS cluster, you need to do the following steps:
 
-1. Create an AWS account and an IAM user.
+1. (Pre-requisite) Install Ansible, boto, and boto3:
+   ansible: pip install ansible
+   boto: pip install boto
+   boto3: pip install boto3
+   Make sure that the version of Ansible is no less than 2.2.1.0.
+
+2. Create an AWS account and an IAM user.
    Set up a security group that you'd like to use for your AWS cluster. The security group should at least allow
    all TCP connection from anywhere.
 
-2. Retrieve your AWS EC2 key pair name and fill that after "keypair:" in conf/aws_settings.yml;
+3. Retrieve your AWS EC2 key pair name and fill that after "keypair:" in conf/aws_settings.yml;
    retrieve your AWS IAM "access key ID" and fill that after "access_key_id:" in conf/aws_settings.yml;
    retrieve your AWS IAM "secret access key" and fill that after "secret_access_key:" in conf/aws_settings.yml.
    Note that you can only read or download "access key ID" and "secret access key" once from your AWS console.
    If you forget them, you have to create new keys again and delete the old ones.
 
-3. Customize other settings in conf/aws_settings.yml and conf/instance_settings.yml to whatever you want.
+4. Customize other settings in conf/aws_settings.yml and conf/instance_settings.yml to whatever you want.
    Note that you have to make sure that the security group name (e.g., "group: default") matches the one you setup
    in step 1.
 
-4. Configure your ssh setting by editing ~/.ssh/config and adding the following entry:
+5. Configure your ssh setting by editing ~/.ssh/config and adding the following entry:
    Host *.amazonaws.com
      IdentityFile <path_of_private_key>
    Note that <path_of_private_key> should be replaced by the path to the file that stores the private key for the key
    pair that you uploaded to AWS and used in step 2. For example:
    Host *.amazonaws.com
         IdentityFile ~/.ssh/id_rsa
-
-5. Install ansible, boto, and boto3:
-   ansible: pip install ansible
-   boto: pip install boto
-   boto3: pip install boto3
-   Make sure that the version of ansible is no less than 2.2.1.0.
 
 6. Launch your cluster instance on AWS:
    bin/start.sh
