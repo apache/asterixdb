@@ -111,7 +111,7 @@ public class NCService {
         return cList;
     }
 
-    private static void configEnvironment(Map<String,String> env) {
+    private static void configEnvironment(Map<String, String> env) {
         String jvmargs = IniUtils.getString(ini, nodeSection, "jvm.args", null);
         if (jvmargs != null) {
             LOGGER.info("Using JAVA_OPTS from conf file (jvm.args)");
@@ -122,7 +122,11 @@ public class NCService {
             } else {
                 LOGGER.info("Using default JAVA_OPTS");
                 long ramSize = ((com.sun.management.OperatingSystemMXBean) osMXBean).getTotalPhysicalMemorySize();
-                jvmargs = "-Xmx" + (int) Math.ceil(0.6 * ramSize / (1024 * 1024)) + "m";
+                int proportionalRamSize = (int) Math.ceil(0.6 * ramSize / (1024 * 1024));
+                //if under 32bit JVM, use less than 1GB heap by default. otherwise use proportional ramsize.
+                int heapSize = "32".equals(System.getProperty("sun.arch.data.model"))
+                        ? (proportionalRamSize <= 1024 ? proportionalRamSize : 1024) : proportionalRamSize;
+                jvmargs = "-Xmx" + heapSize + "m";
             }
         }
         env.put("JAVA_OPTS", jvmargs);
@@ -132,10 +136,11 @@ public class NCService {
     /**
      * Attempts to launch the "real" NCDriver, based on the configuration
      * information gathered so far.
+     *
      * @return true if the process was successfully launched and has now
-     * exited with a 0 (normal) exit code. false if some configuration error
-     * prevented the process from being launched or the process returned
-     * a non-0 (abnormal) exit code.
+     *         exited with a 0 (normal) exit code. false if some configuration error
+     *         prevented the process from being launched or the process returned
+     *         a non-0 (abnormal) exit code.
      */
     private static boolean launchNCProcess() {
         try {
@@ -149,13 +154,11 @@ public class NCService {
             }
 
             // Logfile
-            if (! "-".equals(config.logdir)) {
+            if (!"-".equals(config.logdir)) {
                 pb.redirectErrorStream(true);
                 File log = new File(config.logdir);
-                if (! log.mkdirs()) {
-                    if (! log.isDirectory()) {
-                        throw new IOException(config.logdir + ": cannot create");
-                    }
+                if (!log.mkdirs() && !log.isDirectory()) {
+                    throw new IOException(config.logdir + ": cannot create");
                     // If the directory IS there, all is well
                 }
                 File logfile = new File(config.logdir, "nc-" + ncId + ".log");
@@ -202,7 +205,7 @@ public class NCService {
         try {
             ObjectInputStream ois = new ObjectInputStream(is);
             String magic = ois.readUTF();
-            if (! ServiceConstants.NC_SERVICE_MAGIC_COOKIE.equals(magic)) {
+            if (!ServiceConstants.NC_SERVICE_MAGIC_COOKIE.equals(magic)) {
                 LOGGER.severe("Connection used incorrect magic cookie");
                 return false;
             }
