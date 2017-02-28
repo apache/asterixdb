@@ -117,9 +117,9 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
         IRecoveryManager recoveryMgr = runtimeContext.getTransactionSubsystem().getRecoveryManager();
         systemState = recoveryMgr.getSystemState();
 
-        if (systemState == SystemState.NEW_UNIVERSE) {
+        if (systemState == SystemState.PERMANENT_DATA_LOSS) {
             if (LOGGER.isLoggable(Level.INFO)) {
-                LOGGER.info("System state: " + SystemState.NEW_UNIVERSE);
+                LOGGER.info("System state: " + SystemState.PERMANENT_DATA_LOSS);
                 LOGGER.info("Node ID: " + nodeId);
                 LOGGER.info("Stores: " + PrintUtil.toString(metadataProperties.getStores()));
                 LOGGER.info("Root Metadata Store: " + metadataProperties.getStores().get(nodeId)[0]);
@@ -160,8 +160,8 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
     @Override
     public void notifyStartupComplete() throws Exception {
         // Since we don't pass initial run flag in AsterixHyracksIntegrationUtil, we use the virtualNC flag
-        if (systemState == SystemState.NEW_UNIVERSE && (initialRun || virtualNC)) {
-            systemState = SystemState.INITIAL_RUN;
+        if (systemState == SystemState.PERMANENT_DATA_LOSS && (initialRun || virtualNC)) {
+            systemState = SystemState.BOOTSTRAPPING;
         }
         // Request startup tasks from CC
         StartupTaskRequestMessage.send((NodeControllerService) ncApplicationContext.getControllerService(),

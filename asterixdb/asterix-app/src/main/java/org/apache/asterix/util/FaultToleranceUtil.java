@@ -59,7 +59,9 @@ public class FaultToleranceUtil {
                 try {
                     messageBroker.sendApplicationMessageToNC(msg, replica);
                 } catch (Exception e) {
-                    LOGGER.log(Level.WARNING, "Failed sending an application message to an NC", e);
+                    if (LOGGER.isLoggable(Level.WARNING)) {
+                        LOGGER.log(Level.WARNING, "Failed sending an application message to an NC", e);
+                    }
                 }
             }
         }

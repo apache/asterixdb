@@ -46,7 +46,9 @@ import org.apache.asterix.app.replication.message.StartupTaskResponseMessage;
 import org.apache.asterix.common.api.INCLifecycleTask;
 import org.apache.asterix.common.cluster.ClusterPartition;
 import org.apache.asterix.common.cluster.IClusterStateManager;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.ExceptionUtils;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.common.messaging.api.ICCMessageBroker;
 import org.apache.asterix.common.replication.IFaultToleranceStrategy;
 import org.apache.asterix.common.replication.INCLifecycleMessage;
@@ -129,7 +131,7 @@ public class MetadataNodeFaultToleranceStrategy implements IFaultToleranceStrate
                 process((ReplayPartitionLogsResponseMessage) message);
                 break;
             default:
-                throw new HyracksDataException("Unsupported message type: " + message.getType().name());
+                throw new RuntimeDataException(ErrorCode.UNSUPPORTED_MESSAGE_TYPE, message.getType().name());
         }
     }
 
@@ -141,7 +143,9 @@ public class MetadataNodeFaultToleranceStrategy implements IFaultToleranceStrate
 
     private synchronized void process(ReplayPartitionLogsResponseMessage msg) {
         hotStandbyMetadataReplica.add(msg.getNodeId());
-        LOGGER.log(Level.INFO, "Hot Standby Metadata Replicas: " + hotStandbyMetadataReplica);
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("Hot Standby Metadata Replicas: " + hotStandbyMetadataReplica);
+        }
     }
 
     private synchronized void process(StartupTaskRequestMessage msg) throws HyracksDataException {
@@ -202,7 +206,7 @@ public class MetadataNodeFaultToleranceStrategy implements IFaultToleranceStrate
     private List<INCLifecycleTask> buildParticipantStartupSequence(String nodeId, SystemState state) {
         final List<INCLifecycleTask> tasks = new ArrayList<>();
         switch (state) {
-            case NEW_UNIVERSE:
+            case PERMANENT_DATA_LOSS:
                 // If the metadata node (or replica) failed and lost its data
                 // => Metadata Remote Recovery from standby replica
                 tasks.add(getMetadataPartitionRecoveryPlan());
@@ -215,7 +219,7 @@ public class MetadataNodeFaultToleranceStrategy implements IFaultToleranceStrate
                         .stream().map(ClusterPartition::getPartitionId).collect(Collectors.toSet()));
                 tasks.add(rt);
                 break;
-            case INITIAL_RUN:
+            case BOOTSTRAPPING:
             case HEALTHY:
             case RECOVERING:
                 break;

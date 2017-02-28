@@ -34,11 +34,11 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 public interface IRecoveryManager {
 
     public enum SystemState {
-        INITIAL_RUN,
-        NEW_UNIVERSE,
-        RECOVERING,
-        HEALTHY,
-        CORRUPTED
+        BOOTSTRAPPING, // The first time the NC is bootstrapped.
+        PERMANENT_DATA_LOSS, // No checkpoint files found on NC and it is not BOOTSTRAPPING (data loss).
+        RECOVERING, // Recovery process is on-going.
+        HEALTHY, // All txn logs effects are on disk (no need to perform recovery).
+        CORRUPTED // Some txn logs need to be replayed (need to perform recover).
     }
 
     public class ResourceType {
@@ -99,7 +99,6 @@ public interface IRecoveryManager {
      *
      * @param partitions
      * @param lowWaterMarkLSN
-     * @param failedNode
      * @throws IOException
      * @throws ACIDException
      */
@@ -122,5 +121,12 @@ public interface IRecoveryManager {
      */
     public void deleteRecoveryTemporaryFiles();
 
+    /**
+     * Performs the local recovery process on {@code partitions}
+     *
+     * @param partitions
+     * @throws IOException
+     * @throws ACIDException
+     */
     void startLocalRecovery(Set<Integer> partitions) throws IOException, ACIDException;
 }

@@ -25,6 +25,7 @@ import org.apache.asterix.common.replication.IReplicationStrategy;
 import org.apache.asterix.common.replication.Replica;
 import org.apache.asterix.event.schema.cluster.Cluster;
 import org.apache.asterix.event.schema.cluster.Node;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.util.StorageUtil;
 import org.apache.hyracks.util.StorageUtil.StorageUnit;
 
@@ -54,7 +55,7 @@ public class ReplicationProperties extends AbstractProperties {
     private final Cluster cluster;
     private final IReplicationStrategy repStrategy;
 
-    public ReplicationProperties(PropertiesAccessor accessor) {
+    public ReplicationProperties(PropertiesAccessor accessor) throws HyracksDataException {
         super(accessor);
         this.cluster = ClusterProperties.INSTANCE.getCluster();
         this.repStrategy = ClusterProperties.INSTANCE.getReplicationStrategy();

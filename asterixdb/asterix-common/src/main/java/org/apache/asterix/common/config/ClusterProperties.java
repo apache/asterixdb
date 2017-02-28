@@ -32,6 +32,7 @@ import org.apache.asterix.event.schema.cluster.Cluster;
 import org.apache.asterix.event.schema.cluster.Node;
 import org.apache.asterix.event.schema.cluster.Replica;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class ClusterProperties {
 
@@ -83,7 +84,7 @@ public class ClusterProperties {
         return -1;
     }
 
-    public IReplicationStrategy getReplicationStrategy() {
+    public IReplicationStrategy getReplicationStrategy() throws HyracksDataException {
         return ReplicationStrategyFactory.create(cluster);
     }
 

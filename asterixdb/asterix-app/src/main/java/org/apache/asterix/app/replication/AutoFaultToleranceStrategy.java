@@ -55,7 +55,9 @@ import org.apache.asterix.common.api.INCLifecycleTask;
 import org.apache.asterix.common.cluster.ClusterPartition;
 import org.apache.asterix.common.cluster.IClusterStateManager;
 import org.apache.asterix.common.config.ReplicationProperties;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.ExceptionUtils;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.common.messaging.api.ICCMessageBroker;
 import org.apache.asterix.common.replication.IFaultToleranceStrategy;
 import org.apache.asterix.common.replication.INCLifecycleMessage;
@@ -448,7 +450,7 @@ public class AutoFaultToleranceStrategy implements IFaultToleranceStrategy {
                 process((CompleteFailbackResponseMessage) message);
                 break;
             default:
-                throw new HyracksDataException("Unsupported message type: " + message.getType().name());
+                throw new RuntimeDataException(ErrorCode.UNSUPPORTED_MESSAGE_TYPE, message.getType().name());
         }
     }
 
@@ -485,7 +487,7 @@ public class AutoFaultToleranceStrategy implements IFaultToleranceStrategy {
         final String nodeId = msg.getNodeId();
         final SystemState state = msg.getState();
         List<INCLifecycleTask> tasks;
-        if (state == SystemState.INITIAL_RUN || state == SystemState.HEALTHY) {
+        if (state == SystemState.BOOTSTRAPPING || state == SystemState.HEALTHY) {
             tasks = buildStartupSequence(nodeId);
         } else {
             // failed node returned. Need to start failback process

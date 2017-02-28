@@ -121,10 +121,10 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
         Checkpoint checkpointObject = checkpointManager.getLatest();
         if (checkpointObject == null) {
             //The checkpoint file doesn't exist => Failure happened during NC initialization.
-            //Retry to initialize the NC by setting the state to NEW_UNIVERSE
-            state = SystemState.NEW_UNIVERSE;
+            //Retry to initialize the NC by setting the state to PERMANENT_DATA_LOSS
+            state = SystemState.PERMANENT_DATA_LOSS;
             if (LOGGER.isLoggable(Level.INFO)) {
-                LOGGER.info("The checkpoint file doesn't exist: systemState = NEW_UNIVERSE");
+                LOGGER.info("The checkpoint file doesn't exist: systemState = PERMANENT_DATA_LOSS");
             }
             return state;
         }
@@ -182,7 +182,9 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
     @Override
     public void startLocalRecovery(Set<Integer> partitions) throws IOException, ACIDException {
         state = SystemState.RECOVERING;
-        LOGGER.log(Level.INFO, "starting recovery ...");
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("starting recovery ...");
+        }
 
         long readableSmallestLSN = logMgr.getReadableSmallestLSN();
         Checkpoint checkpointObject = checkpointManager.getLatest();

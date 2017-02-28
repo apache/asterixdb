@@ -36,7 +36,7 @@ public class MetadataBootstrapTask implements INCLifecycleTask {
         IAppRuntimeContext appContext = (IAppRuntimeContext) ncs.getApplicationContext().getApplicationObject();
         try {
             SystemState state = appContext.getTransactionSubsystem().getRecoveryManager().getSystemState();
-            appContext.initializeMetadata(state == SystemState.NEW_UNIVERSE);
+            appContext.initializeMetadata(state == SystemState.PERMANENT_DATA_LOSS);
         } catch (Exception e) {
             throw ExceptionUtils.convertToHyracksDataException(e);
         }

@@ -25,7 +25,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.common.config.ClusterProperties;
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.event.schema.cluster.Cluster;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class ChainedDeclusteringReplicationStrategy implements IReplicationStrategy {
 
@@ -45,7 +48,9 @@ public class ChainedDeclusteringReplicationStrategy implements IReplicationStrat
         int nodeIndex = ClusterProperties.INSTANCE.getNodeIndex(nodeId);
 
         if (nodeIndex == -1) {
-            LOGGER.log(Level.WARNING, "Could not find node " + nodeId + " in cluster configurations");
+            if (LOGGER.isLoggable(Level.WARNING)) {
+                LOGGER.warning("Could not find node " + nodeId + " in cluster configurations");
+            }
             return Collections.emptySet();
         }
 
@@ -74,9 +79,9 @@ public class ChainedDeclusteringReplicationStrategy implements IReplicationStrat
     }
 
     @Override
-    public ChainedDeclusteringReplicationStrategy from(Cluster cluster) {
+    public ChainedDeclusteringReplicationStrategy from(Cluster cluster) throws HyracksDataException {
         if (cluster.getHighAvailability().getDataReplication().getReplicationFactor() == null) {
-            throw new IllegalStateException("Replication factor must be specified.");
+            throw new RuntimeDataException(ErrorCode.INVALID_CONFIGURATION, "Replication factor must be specified.");
         }
         ChainedDeclusteringReplicationStrategy cd = new ChainedDeclusteringReplicationStrategy();
         cd.replicationFactor = cluster.getHighAvailability().getDataReplication().getReplicationFactor().intValue();

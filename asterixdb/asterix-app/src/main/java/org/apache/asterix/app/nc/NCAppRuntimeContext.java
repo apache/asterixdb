@@ -191,7 +191,7 @@ public class NCAppRuntimeContext implements IAppRuntimeContext {
 
         IRecoveryManager recoveryMgr = txnSubsystem.getRecoveryManager();
         SystemState systemState = recoveryMgr.getSystemState();
-        if (initialRun || systemState == SystemState.NEW_UNIVERSE) {
+        if (initialRun || systemState == SystemState.PERMANENT_DATA_LOSS) {
             //delete any storage data before the resource factory is initialized
             localResourceRepository.deleteStorageData(true);
         }

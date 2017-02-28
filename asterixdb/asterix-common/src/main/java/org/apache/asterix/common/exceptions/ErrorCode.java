@@ -18,10 +18,10 @@
  */
 package org.apache.asterix.common.exceptions;
 
-import java.io.File;
 import java.io.InputStream;
 import java.util.Map;
 
+import org.apache.asterix.event.schema.cluster.FaultTolerance;
 import org.apache.hyracks.api.util.ErrorMessageUtil;
 
 // Error code:
@@ -37,6 +37,9 @@ public class ErrorCode {
     // Extension errors
     public static final int EXTENSION_ID_CONFLICT = 4001;
     public static final int EXTENSION_COMPONENT_CONFLICT = 4002;
+    public static final int UNSUPPORTED_MESSAGE_TYPE = 4003;
+    public static final int INVALID_CONFIGURATION = 4004;
+    public static final int UNSUPPORTED_REPLICATION_STRATEGY = 4005;
 
     // Runtime errors
     public static final int CASTING_FIELD = 1;
@@ -53,7 +56,7 @@ public class ErrorCode {
     public static final int COERCION = 12;
     public static final int DUPLICATE_FIELD_NAME = 13;
     public static final int PROPERTY_NOT_SET = 14;
-
+    public static final int INSTANTIATION_ERROR = 100;
 
     // Compilation errors
     public static final int PARSE_ERROR = 1001;

@@ -40,7 +40,9 @@ import org.apache.asterix.app.replication.message.StartupTaskResponseMessage;
 import org.apache.asterix.common.api.INCLifecycleTask;
 import org.apache.asterix.common.cluster.ClusterPartition;
 import org.apache.asterix.common.cluster.IClusterStateManager;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.ExceptionUtils;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.common.messaging.api.ICCMessageBroker;
 import org.apache.asterix.common.replication.IFaultToleranceStrategy;
 import org.apache.asterix.common.replication.INCLifecycleMessage;
@@ -81,7 +83,7 @@ public class NoFaultToleranceStrategy implements IFaultToleranceStrategy {
                 process((NCLifecycleTaskReportMessage) message);
                 break;
             default:
-                throw new HyracksDataException("Unsupported message type: " + message.getType().name());
+                throw new RuntimeDataException(ErrorCode.UNSUPPORTED_MESSAGE_TYPE, message.getType().name());
         }
     }
 
@@ -118,7 +120,9 @@ public class NoFaultToleranceStrategy implements IFaultToleranceStrategy {
             }
             clusterManager.refreshState();
         } else {
-            LOGGER.log(Level.SEVERE, msg.getNodeId() + " failed to complete startup. ", msg.getException());
+            if (LOGGER.isLoggable(Level.SEVERE)) {
+                LOGGER.log(Level.SEVERE, msg.getNodeId() + " failed to complete startup. ", msg.getException());
+            }
         }
     }
 

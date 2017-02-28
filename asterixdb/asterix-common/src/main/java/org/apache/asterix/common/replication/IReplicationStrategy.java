@@ -21,6 +21,7 @@ package org.apache.asterix.common.replication;
 import java.util.Set;
 
 import org.apache.asterix.event.schema.cluster.Cluster;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public interface IReplicationStrategy {
 
@@ -54,5 +55,5 @@ public interface IReplicationStrategy {
      * @param cluster
      * @return A replication strategy based on the passed configurations.
      */
-    IReplicationStrategy from(Cluster cluster);
+    IReplicationStrategy from(Cluster cluster) throws HyracksDataException;
 }

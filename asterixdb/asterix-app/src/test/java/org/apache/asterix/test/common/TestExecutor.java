@@ -59,6 +59,7 @@ import org.apache.asterix.testframework.context.TestCaseContext.OutputFormat;
 import org.apache.asterix.testframework.context.TestFileContext;
 import org.apache.asterix.testframework.xml.TestCase.CompilationUnit;
 import org.apache.asterix.testframework.xml.TestGroup;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.commons.lang3.StringUtils;
@@ -1119,8 +1120,7 @@ public class TestExecutor {
         String config = actual.toString();
         ObjectMapper om = new ObjectMapper();
         String logDir = om.readTree(config).findPath("transaction.log.dirs").get(nodeId).asText();
-        ProcessBuilder pb = new ProcessBuilder("rm", "-rf", logDir);
-        pb.start().waitFor();
+        FileUtils.deleteQuietly(new File(logDir));
     }
 
     public void executeTest(String actualPath, TestCaseContext testCaseCtx, ProcessBuilder pb,

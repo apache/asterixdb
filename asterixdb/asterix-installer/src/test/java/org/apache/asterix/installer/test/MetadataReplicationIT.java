@@ -19,6 +19,7 @@
 package org.apache.asterix.installer.test;
 
 import java.io.File;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
@@ -41,7 +42,9 @@ import org.junit.runners.Parameterized;
 @RunWith(Parameterized.class)
 public class MetadataReplicationIT {
 
-    private static final String PATH_BASE = "src/test/resources/integrationts/metadata_only_replication/";
+    private static final String PATH_BASE =
+            Paths.get("src", "test", "resources", "integrationts", "metadata_only_replication").toString()
+                    + File.separator;
     private static final String PATH_ACTUAL = "target" + File.separator + "ittest" + File.separator;
     private static final Logger LOGGER = Logger.getLogger(MetadataReplicationIT.class.getName());
     private static String reportPath = new File(

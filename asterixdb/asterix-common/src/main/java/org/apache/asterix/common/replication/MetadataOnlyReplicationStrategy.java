@@ -24,9 +24,12 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.asterix.common.config.ClusterProperties;
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.common.metadata.MetadataIndexImmutableProperties;
 import org.apache.asterix.event.schema.cluster.Cluster;
 import org.apache.asterix.event.schema.cluster.Node;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class MetadataOnlyReplicationStrategy implements IReplicationStrategy {
 
@@ -57,9 +60,9 @@ public class MetadataOnlyReplicationStrategy implements IReplicationStrategy {
     }
 
     @Override
-    public MetadataOnlyReplicationStrategy from(Cluster cluster) {
+    public MetadataOnlyReplicationStrategy from(Cluster cluster) throws HyracksDataException {
         if (cluster.getMetadataNode() == null) {
-            throw new IllegalStateException("Metadata node must be specified.");
+            throw new RuntimeDataException(ErrorCode.INVALID_CONFIGURATION, "Metadata node must be specified.");
         }
 
         Node metadataNode = ClusterProperties.INSTANCE.getNodeById(cluster.getMetadataNode());
@@ -70,14 +73,15 @@ public class MetadataOnlyReplicationStrategy implements IReplicationStrategy {
         if (cluster.getHighAvailability().getFaultTolerance().getReplica() == null
                 || cluster.getHighAvailability().getFaultTolerance().getReplica().getNodeId() == null
                 || cluster.getHighAvailability().getFaultTolerance().getReplica().getNodeId().isEmpty()) {
-            throw new IllegalStateException("One or more replicas must be specified for metadata node.");
+            throw new RuntimeDataException(ErrorCode.INVALID_CONFIGURATION,
+                    "One or more replicas must be specified for metadata node.");
         }
 
         final Set<Replica> replicas = new HashSet<>();
         for (String nodeId : cluster.getHighAvailability().getFaultTolerance().getReplica().getNodeId()) {
             Node node = ClusterProperties.INSTANCE.getNodeById(nodeId);
             if (node == null) {
-                throw new IllegalStateException("Invalid replica specified: " + nodeId);
+                throw new RuntimeDataException(ErrorCode.INVALID_CONFIGURATION, "Invalid replica specified: " + nodeId);
             }
             replicas.add(new Replica(node));
         }
