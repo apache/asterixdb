@@ -86,18 +86,24 @@ public class AInt8ConstructorDescriptor extends AbstractScalarFunctionDynamicDes
                             if (serString[startOffset] == ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
                                 utf8Ptr.set(serString, startOffset + 1, len - 1);
                                 offset = utf8Ptr.getCharStartOffset();
+                                //accumulating value in negative domain
+                                //otherwise Byte.MIN_VALUE = -(Byte.MAX_VALUE + 1) would have caused overflow
                                 value = 0;
                                 positive = true;
+                                byte limit = -Byte.MAX_VALUE;
                                 if (serString[offset] == '+') {
                                     offset++;
                                 } else if (serString[offset] == '-') {
                                     offset++;
                                     positive = false;
+                                    limit = Byte.MIN_VALUE;
                                 }
                                 int end = startOffset + len;
                                 for (; offset < end; offset++) {
+                                    int digit;
                                     if (serString[offset] >= '0' && serString[offset] <= '9') {
-                                        value = (byte) (value * 10 + serString[offset] - '0');
+                                        value = (byte) (value * 10);
+                                        digit = serString[offset] - '0';
                                     } else if (serString[offset] == 'i' && serString[offset + 1] == '8'
                                             && offset + 2 == end) {
                                         break;
@@ -105,12 +111,17 @@ public class AInt8ConstructorDescriptor extends AbstractScalarFunctionDynamicDes
                                         throw new InvalidDataFormatException(getIdentifier(),
                                                 ATypeTag.SERIALIZED_INT8_TYPE_TAG);
                                     }
+                                    if (value < limit + digit) {
+                                        throw new InvalidDataFormatException(getIdentifier(),
+                                                ATypeTag.SERIALIZED_INT8_TYPE_TAG);
+                                    }
+                                    value = (byte) (value - digit);
                                 }
-                                if (value < 0) {
+                                if (value > 0) {
                                     throw new InvalidDataFormatException(getIdentifier(),
                                             ATypeTag.SERIALIZED_INT8_TYPE_TAG);
                                 }
-                                if (value > 0 && !positive) {
+                                if (value < 0 && positive) {
                                     value *= -1;
                                 }
 

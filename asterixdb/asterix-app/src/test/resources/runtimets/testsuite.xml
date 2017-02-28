@@ -6966,6 +6966,20 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="types">
+      <compilation-unit name="domain_boundaries">
+        <output-dir compare="Text">domain_boundaries</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="types">
+      <compilation-unit name="domain_boundaries_error">
+        <output-dir compare="Text">domain_boundaries_error</output-dir>
+        <expected-error>ASX0006: Invalid format for int8 in int8</expected-error>
+        <expected-error>ASX0006: Invalid format for int16 in int16</expected-error>
+        <expected-error>ASX0006: Invalid format for int32 in int32</expected-error>
+        <expected-error>ASX0006: Invalid format for int64 in int64</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="types">
       <compilation-unit name="record01">
         <output-dir compare="Text">record01</output-dir>
       </compilation-unit>

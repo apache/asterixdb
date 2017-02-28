@@ -86,18 +86,24 @@ public class AInt64ConstructorDescriptor extends AbstractScalarFunctionDynamicDe
                             if (serString[startOffset] == ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
                                 utf8Ptr.set(serString, startOffset + 1, len - 1);
                                 offset = utf8Ptr.getCharStartOffset();
+                                //accumulating value in negative domain
+                                //otherwise Long.MIN_VALUE = -(Long.MAX_VALUE + 1) would have caused overflow
                                 value = 0;
                                 positive = true;
+                                long limit = -Long.MAX_VALUE;
                                 if (serString[offset] == '+') {
                                     offset++;
                                 } else if (serString[offset] == '-') {
                                     offset++;
                                     positive = false;
+                                    limit = Long.MIN_VALUE;
                                 }
                                 int end = startOffset + len;
                                 for (; offset < end; offset++) {
+                                    int digit;
                                     if (serString[offset] >= '0' && serString[offset] <= '9') {
-                                        value = value * 10 + serString[offset] - '0';
+                                        value *= 10;
+                                        digit = serString[offset] - '0';
                                     } else if (serString[offset] == 'i' && serString[offset + 1] == '6'
                                             && serString[offset + 2] == '4' && offset + 3 == end) {
                                         break;
@@ -105,12 +111,17 @@ public class AInt64ConstructorDescriptor extends AbstractScalarFunctionDynamicDe
                                         throw new InvalidDataFormatException(getIdentifier(),
                                                 ATypeTag.SERIALIZED_INT64_TYPE_TAG);
                                     }
+                                    if (value < limit + digit) {
+                                        throw new InvalidDataFormatException(getIdentifier(),
+                                                ATypeTag.SERIALIZED_INT64_TYPE_TAG);
+                                    }
+                                    value -= digit;
                                 }
-                                if (value < 0 && value != Long.MIN_VALUE) {
+                                if (value > 0) {
                                     throw new InvalidDataFormatException(getIdentifier(),
                                             ATypeTag.SERIALIZED_INT64_TYPE_TAG);
                                 }
-                                if (value > 0 && !positive) {
+                                if (value < 0 && positive) {
                                     value *= -1;
                                 }
 
