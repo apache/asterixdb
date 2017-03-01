@@ -390,19 +390,25 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
         // complicated for now).
         if (funcIdent == AlgebricksBuiltinFunctions.OR) {
             return false;
-        }
-        boolean found = analyzeFunctionExpr(funcExpr, assignsAndUnnests, analyzedAMs, context, typeEnvironment);
-        for (Mutable<ILogicalExpression> arg : funcExpr.getArguments()) {
-            ILogicalExpression argExpr = arg.getValue();
-            if (argExpr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
-                continue;
+        } else if (funcIdent == AlgebricksBuiltinFunctions.AND) {
+            // This is the only case that the optimizer can check the given function's arguments to see
+            // if one of its argument can utilize an index.
+            boolean found = false;
+            for (Mutable<ILogicalExpression> arg : funcExpr.getArguments()) {
+                ILogicalExpression argExpr = arg.getValue();
+                if (argExpr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
+                    continue;
+                }
+                AbstractFunctionCallExpression argFuncExpr = (AbstractFunctionCallExpression) argExpr;
+                boolean matchFound =
+                        analyzeFunctionExpr(argFuncExpr, assignsAndUnnests, analyzedAMs, context, typeEnvironment);
+                found = found || matchFound;
             }
-            AbstractFunctionCallExpression argFuncExpr = (AbstractFunctionCallExpression) argExpr;
-            boolean matchFound =
-                    analyzeFunctionExpr(argFuncExpr, assignsAndUnnests, analyzedAMs, context, typeEnvironment);
-            found = found || matchFound;
+            return found;
+        } else {
+            // For single function or "NOT" case:
+            return analyzeFunctionExpr(funcExpr, assignsAndUnnests, analyzedAMs, context, typeEnvironment);
         }
-        return found;
     }
 
     /**

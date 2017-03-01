@@ -31,6 +31,8 @@ import java.util.Set;
 import org.apache.asterix.common.annotations.SkipSecondaryIndexSearchExpressionAnnotation;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
+import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
@@ -541,7 +543,11 @@ public class BTreeAccessMethod implements IAccessMethod {
             // If not, we create a new condition based on remaining ones.
             if (!primaryIndexPostProccessingIsNeeded) {
                 List<Mutable<ILogicalExpression>> remainingFuncExprs = new ArrayList<>();
-                getNewConditionExprs(conditionRef, replacedFuncExprs, remainingFuncExprs);
+                try {
+                    getNewConditionExprs(conditionRef, replacedFuncExprs, remainingFuncExprs);
+                } catch (CompilationException e) {
+                    return null;
+                }
                 // Generate new condition.
                 if (!remainingFuncExprs.isEmpty()) {
                     ILogicalExpression pulledCond = createSelectCondition(remainingFuncExprs);
@@ -630,7 +636,8 @@ public class BTreeAccessMethod implements IAccessMethod {
     }
 
     private void getNewConditionExprs(Mutable<ILogicalExpression> conditionRef,
-            Set<ILogicalExpression> replacedFuncExprs, List<Mutable<ILogicalExpression>> remainingFuncExprs) {
+            Set<ILogicalExpression> replacedFuncExprs, List<Mutable<ILogicalExpression>> remainingFuncExprs)
+            throws CompilationException {
         remainingFuncExprs.clear();
         if (replacedFuncExprs.isEmpty()) {
             return;
@@ -648,7 +655,8 @@ public class BTreeAccessMethod implements IAccessMethod {
         }
         // The original select cond must be an AND. Check it just to be sure.
         if (funcExpr.getFunctionIdentifier() != AlgebricksBuiltinFunctions.AND) {
-            throw new IllegalStateException();
+            throw new CompilationException(ErrorCode.COMPILATION_FUNC_EXPRESSION_CANNOT_UTILIZE_INDEX,
+                    funcExpr.toString());
         }
         // Clean the conjuncts.
         for (Mutable<ILogicalExpression> arg : funcExpr.getArguments()) {
