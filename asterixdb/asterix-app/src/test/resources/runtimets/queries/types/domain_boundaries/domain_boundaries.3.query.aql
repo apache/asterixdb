@@ -16,4 +16,4 @@
  * specific language governing permissions and limitations
  * under the License.
  */
- for $x in dataset test.TestDS return $x;
+for $x in dataset test.TestDS return $x;
