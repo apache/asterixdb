@@ -120,6 +120,6 @@ public class ClusterCapacity implements IClusterCapacity {
 
     @Override
     public String toString() {
-        return "capacity (memory: " + aggregatedMemoryByteSize + " bytes, CPU cores: " + aggregatedCores + ")";
+        return "(memory: " + aggregatedMemoryByteSize + " bytes, CPU cores: " + aggregatedCores + ")";
     }
 }
