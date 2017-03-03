@@ -58,7 +58,7 @@ public class PushSelectDownRule implements IAlgebraicRewriteRule {
         LogicalOperatorTag tag2 = op2.getOperatorTag();
 
         if (tag2 == LogicalOperatorTag.INNERJOIN || tag2 == LogicalOperatorTag.LEFTOUTERJOIN
-                || tag2 == LogicalOperatorTag.REPLICATE) {
+                || tag2 == LogicalOperatorTag.REPLICATE || tag2 == LogicalOperatorTag.SPLIT) {
             return false;
         } else { // not a join
             boolean res = propagateSelectionRec(opRef, opRef2);

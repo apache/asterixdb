@@ -146,9 +146,10 @@ public class ExtractCommonExpressionsRule implements IAlgebraicRewriteRule {
             }
         }
 
-        // TODO: Deal with replicate properly. Currently, we just clear the expr equivalence map, since we want to avoid incorrect expression replacement
-        // (the resulting new variables should be assigned live below a replicate).
-        if (op.getOperatorTag() == LogicalOperatorTag.REPLICATE) {
+        // TODO: Deal with replicate properly. Currently, we just clear the expr equivalence map,
+        // since we want to avoid incorrect expression replacement
+        // (the resulting new variables should be assigned live below a replicate/split).
+        if (op.getOperatorTag() == LogicalOperatorTag.REPLICATE || op.getOperatorTag() == LogicalOperatorTag.SPLIT) {
             exprEqClassMap.clear();
             return modified;
         }

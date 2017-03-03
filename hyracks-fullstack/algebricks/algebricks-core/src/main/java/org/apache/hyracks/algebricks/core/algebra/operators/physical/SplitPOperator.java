@@ -47,6 +47,8 @@ public class SplitPOperator extends AbstractReplicatePOperator {
             throws AlgebricksException {
         SplitOperator sop = (SplitOperator) op;
         int outputArity = sop.getOutputArity();
+        int defaultBranch = sop.getDefaultBranch();
+        boolean propageToAllBranchAsDefault = sop.getPropageToAllBranchAsDefault();
 
         IOperatorDescriptorRegistry spec = builder.getJobSpec();
         RecordDescriptor recDescriptor = JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op),
@@ -59,7 +61,7 @@ public class SplitPOperator extends AbstractReplicatePOperator {
         IBinaryIntegerInspectorFactory intInsepctorFactory = context.getBinaryIntegerInspectorFactory();
 
         SplitOperatorDescriptor splitOpDesc = new SplitOperatorDescriptor(spec, recDescriptor, outputArity,
-                brachingExprEvalFactory, intInsepctorFactory);
+                brachingExprEvalFactory, intInsepctorFactory, defaultBranch, propageToAllBranchAsDefault);
 
         contributeOpDesc(builder, (AbstractLogicalOperator) op, splitOpDesc);
         ILogicalOperator src = op.getInputs().get(0).getValue();

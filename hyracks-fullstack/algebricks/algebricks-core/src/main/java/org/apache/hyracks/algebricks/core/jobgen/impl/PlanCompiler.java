@@ -25,14 +25,13 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.apache.commons.lang3.mutable.Mutable;
-
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.IHyracksJobBuilder;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractReplicateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.ReplicateOperator;
 import org.apache.hyracks.api.job.IJobletEventListenerFactory;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
 import org.apache.hyracks.api.job.JobSpecification;
@@ -107,8 +106,9 @@ public class PlanCompiler {
             Mutable<ILogicalOperator> child = entry.getKey();
             List<Mutable<ILogicalOperator>> parents = entry.getValue();
             if (parents.size() > 1) {
-                if (child.getValue().getOperatorTag() == LogicalOperatorTag.REPLICATE) {
-                    ReplicateOperator rop = (ReplicateOperator) child.getValue();
+                if (child.getValue().getOperatorTag() == LogicalOperatorTag.REPLICATE
+                        || child.getValue().getOperatorTag() == LogicalOperatorTag.SPLIT) {
+                    AbstractReplicateOperator rop = (AbstractReplicateOperator) child.getValue();
                     if (rop.isBlocker()) {
                         // make the order of the graph edges consistent with the order of rop's outputs
                         List<Mutable<ILogicalOperator>> outputs = rop.getOutputs();

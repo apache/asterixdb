@@ -49,14 +49,24 @@ import org.apache.hyracks.dataflow.std.base.AbstractUnaryInputOperatorNodePushab
 public class SplitOperatorDescriptor extends AbstractReplicateOperatorDescriptor {
     private static final long serialVersionUID = 1L;
 
-    private IScalarEvaluatorFactory brachingExprEvalFactory;
-    private IBinaryIntegerInspectorFactory intInsepctorFactory;
+    private final IScalarEvaluatorFactory brachingExprEvalFactory;
+    private final IBinaryIntegerInspectorFactory intInsepctorFactory;
+    private final int defaultBranch;
+    private final boolean propageToAllBranchAsDefault;
 
     public SplitOperatorDescriptor(IOperatorDescriptorRegistry spec, RecordDescriptor rDesc, int outputArity,
             IScalarEvaluatorFactory brachingExprEvalFactory, IBinaryIntegerInspectorFactory intInsepctorFactory) {
+        this(spec, rDesc, outputArity, brachingExprEvalFactory, intInsepctorFactory, 0, false);
+    }
+
+    public SplitOperatorDescriptor(IOperatorDescriptorRegistry spec, RecordDescriptor rDesc, int outputArity,
+            IScalarEvaluatorFactory brachingExprEvalFactory, IBinaryIntegerInspectorFactory intInsepctorFactory,
+            int defaultBranch, boolean propageToAllBranchAsDefault) {
         super(spec, rDesc, outputArity);
         this.brachingExprEvalFactory = brachingExprEvalFactory;
         this.intInsepctorFactory = intInsepctorFactory;
+        this.defaultBranch = defaultBranch;
+        this.propageToAllBranchAsDefault = propageToAllBranchAsDefault;
     }
 
     @Override
@@ -91,8 +101,7 @@ public class SplitOperatorDescriptor extends AbstractReplicateOperatorDescriptor
             final FrameTupleAppender[] appenders = new FrameTupleAppender[numberOfNonMaterializedOutputs];
             final FrameTupleReference tRef = new FrameTupleReference();;
             final IBinaryIntegerInspector intInsepctor = intInsepctorFactory.createBinaryIntegerInspector(ctx);
-            final IScalarEvaluator eval;
-            eval = brachingExprEvalFactory.createScalarEvaluator(ctx);
+            final IScalarEvaluator eval = brachingExprEvalFactory.createScalarEvaluator(ctx);
             for (int i = 0; i < numberOfNonMaterializedOutputs; i++) {
                 appenders[i] = new FrameTupleAppender(new VSizeFrame(ctx), true);
             }
@@ -112,17 +121,40 @@ public class SplitOperatorDescriptor extends AbstractReplicateOperatorDescriptor
                     accessor.reset(bufferAccessor);
                     int tupleCount = accessor.getTupleCount();
                     // The output branch number that starts from 0.
-                    int outputBranch;
+                    int outputBranch = defaultBranch;
+                    boolean correctBranchValue;
 
                     for (int i = 0; i < tupleCount; i++) {
                         // Get the output branch number from the field in the given tuple.
                         tRef.reset(accessor, i);
                         eval.evaluate(tRef, p);
-                        outputBranch = intInsepctor.getIntegerValue(p.getByteArray(), p.getStartOffset(),
-                                p.getLength());
+                        correctBranchValue = true;
+
+                        try {
+                            outputBranch =
+                                    intInsepctor.getIntegerValue(p.getByteArray(), p.getStartOffset(), p.getLength());
+
+                            if (outputBranch < 0 || outputBranch >= outputArity) {
+                                correctBranchValue = false;
+                            }
+                        } catch (Exception e) {
+                            correctBranchValue = false;
+                        }
 
                         // Add this tuple to the correct output frame.
-                        FrameUtils.appendToWriter(writers[outputBranch], appenders[outputBranch], accessor, i);
+                        if (correctBranchValue) {
+                            FrameUtils.appendToWriter(writers[outputBranch], appenders[outputBranch], accessor, i);
+                        } else {
+                            // Need to propagate to the all branches?
+                            if (!propageToAllBranchAsDefault) {
+                                FrameUtils.appendToWriter(writers[outputBranch], appenders[outputBranch], accessor, i);
+                            } else {
+                                for (int j = 0; j < outputArity; j++) {
+                                    FrameUtils.appendToWriter(writers[j], appenders[j], accessor, i);
+                                }
+                            }
+                        }
+
                     }
                 }
 

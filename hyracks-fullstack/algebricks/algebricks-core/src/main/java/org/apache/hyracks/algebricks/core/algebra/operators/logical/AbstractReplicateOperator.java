@@ -100,4 +100,13 @@ public abstract class AbstractReplicateOperator extends AbstractLogicalOperator 
         return createPropagatingAllInputsTypeEnvironment(ctx);
     }
 
+    public boolean isBlocker() {
+        for (boolean requiresMaterialization : outputMaterializationFlags) {
+            if (requiresMaterialization) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 }

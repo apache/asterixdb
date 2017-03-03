@@ -459,9 +459,10 @@ public class ExtractCommonOperatorsRule implements IAlgebraicRewriteRule {
 
     private void computeClusters(Mutable<ILogicalOperator> parentRef, Mutable<ILogicalOperator> opRef,
             MutableInt currentClusterId) {
-        // only replicate operator has multiple outputs
+        // only replicate or split operator has multiple outputs
         int outputIndex = 0;
-        if (opRef.getValue().getOperatorTag() == LogicalOperatorTag.REPLICATE) {
+        if (opRef.getValue().getOperatorTag() == LogicalOperatorTag.REPLICATE
+                || opRef.getValue().getOperatorTag() == LogicalOperatorTag.SPLIT) {
             ReplicateOperator rop = (ReplicateOperator) opRef.getValue();
             List<Mutable<ILogicalOperator>> outputs = rop.getOutputs();
             for (outputIndex = 0; outputIndex < outputs.size(); outputIndex++) {

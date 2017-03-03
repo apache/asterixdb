@@ -42,12 +42,4 @@ public class ReplicateOperator extends AbstractReplicateOperator {
         return visitor.visitReplicateOperator(this, arg);
     }
 
-    public boolean isBlocker() {
-        for (boolean requiresMaterialization : outputMaterializationFlags) {
-            if (requiresMaterialization) {
-                return true;
-            }
-        }
-        return false;
-    }
 }

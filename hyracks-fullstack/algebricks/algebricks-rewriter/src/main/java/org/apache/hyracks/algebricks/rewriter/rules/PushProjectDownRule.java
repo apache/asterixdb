@@ -87,6 +87,7 @@ public class PushProjectDownRule implements IAlgebraicRewriteRule {
                     || op2.getOperatorTag() == LogicalOperatorTag.NESTEDTUPLESOURCE
                     || op2.getOperatorTag() == LogicalOperatorTag.PROJECT
                     || op2.getOperatorTag() == LogicalOperatorTag.REPLICATE
+                    || op2.getOperatorTag() == LogicalOperatorTag.SPLIT
                     || op2.getOperatorTag() == LogicalOperatorTag.UNIONALL) {
                 return new Pair<Boolean, Boolean>(false, false);
             }

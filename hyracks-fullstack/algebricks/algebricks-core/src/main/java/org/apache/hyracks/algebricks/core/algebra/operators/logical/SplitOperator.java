@@ -32,10 +32,22 @@ public class SplitOperator extends AbstractReplicateOperator {
 
     // Expression that keeps the output branch information for each tuple
     private final Mutable<ILogicalExpression> branchingExpression;
+    // Default branch when there is no value from the given branching expression. The default is 0.
+    private final int defaultBranch;
+    // When the following is set to true, defaultBranch will be ignored and incoming tuples will be
+    // propagated to all output branches. The default is false.
+    private final boolean propageToAllBranchAsDefault;
 
     public SplitOperator(int outputArity, Mutable<ILogicalExpression> branchingExpression) {
+        this(outputArity, branchingExpression, 0, false);
+    }
+
+    public SplitOperator(int outputArity, Mutable<ILogicalExpression> branchingExpression, int defaultBranch,
+            boolean propageToAllBranchForMissingExprValue) {
         super(outputArity);
         this.branchingExpression = branchingExpression;
+        this.defaultBranch = defaultBranch;
+        this.propageToAllBranchAsDefault = propageToAllBranchForMissingExprValue;
     }
 
     @Override
@@ -50,6 +62,14 @@ public class SplitOperator extends AbstractReplicateOperator {
 
     public Mutable<ILogicalExpression> getBranchingExpression() {
         return branchingExpression;
+    }
+
+    public int getDefaultBranch() {
+        return defaultBranch;
+    }
+
+    public boolean getPropageToAllBranchAsDefault() {
+        return propageToAllBranchAsDefault;
     }
 
     @Override

@@ -73,6 +73,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.physical.ReplicatePO
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.RunningAggregatePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.SinkPOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.SinkWritePOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.physical.SplitPOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.StableSortPOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.StreamLimitPOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.StreamProjectPOperator;
@@ -236,6 +237,9 @@ public class SetAlgebricksPhysicalOperatorsRule implements IAlgebraicRewriteRule
                     op.setPhysicalOperator(new ReplicatePOperator());
                     break;
                 }
+                case SPLIT:
+                    op.setPhysicalOperator(new SplitPOperator());
+                    break;
                 case SCRIPT: {
                     op.setPhysicalOperator(new StringStreamingScriptPOperator());
                     break;
