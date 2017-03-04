@@ -18,17 +18,25 @@
  */
 package org.apache.hyracks.control.cc.web;
 
+import java.net.URI;
+import java.net.URISyntaxException;
+
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.cc.web.util.IJSONOutputFunction;
+import org.apache.hyracks.control.cc.web.util.JSONOutputRequestUtil;
 import org.apache.hyracks.control.cc.work.GetActivityClusterGraphJSONWork;
 import org.apache.hyracks.control.cc.work.GetJobRunJSONWork;
 import org.apache.hyracks.control.cc.work.GetJobSummariesJSONWork;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class JobsRESTAPIFunction implements IJSONOutputFunction {
+
+    private static final String[] DETAILS = new String[] { "job-run", "job-activity-graph" };
+
     private ClusterControllerService ccs;
 
     public JobsRESTAPIFunction(ClusterControllerService ccs) {
@@ -36,7 +44,7 @@ public class JobsRESTAPIFunction implements IJSONOutputFunction {
     }
 
     @Override
-    public ObjectNode invoke(String[] arguments) throws Exception {
+    public ObjectNode invoke(String host, String servletPath, String[] arguments) throws Exception {
         ObjectMapper om = new ObjectMapper();
         ObjectNode result = om.createObjectNode();
         switch (arguments.length) {
@@ -47,7 +55,7 @@ public class JobsRESTAPIFunction implements IJSONOutputFunction {
             case 0: {
                 GetJobSummariesJSONWork gjse = new GetJobSummariesJSONWork(ccs.getJobManager());
                 ccs.getWorkQueue().scheduleAndSync(gjse);
-                result.set("result", gjse.getSummaries());
+                result.set("result", enhanceSummaries(gjse.getSummaries(), host, servletPath));
                 break;
             }
 
@@ -68,5 +76,18 @@ public class JobsRESTAPIFunction implements IJSONOutputFunction {
             }
         }
         return result;
+    }
+
+    private static ArrayNode enhanceSummaries(final ArrayNode summaries, String host, String servletPath)
+            throws URISyntaxException {
+        for (int i = 0; i < summaries.size(); ++i) {
+            ObjectNode node = (ObjectNode) summaries.get(i);
+            final String jid = node.get("job-id").asText();
+            for (String field : DETAILS) {
+                URI uri = JSONOutputRequestUtil.uri(host, servletPath, jid + "/" + field);
+                node.put(field, uri.toString());
+            }
+        }
+        return summaries;
     }
 }

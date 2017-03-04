@@ -60,7 +60,7 @@ public class NodeControllerDetailsApiServlet extends ClusterApiServlet {
         try {
             ObjectNode json;
             response.setStatus(HttpResponseStatus.OK);
-            if ("".equals(path(request))) {
+            if ("".equals(localPath(request))) {
                 json = om.createObjectNode();
                 json.set("ncs", getClusterStateJSON(request, "../").get("ncs"));
             } else {
@@ -81,11 +81,11 @@ public class NodeControllerDetailsApiServlet extends ClusterApiServlet {
     }
 
     private ObjectNode processNode(IServletRequest request, IHyracksClientConnection hcc) throws Exception {
-        String pathInfo = path(request);
-        if (pathInfo.endsWith("/")) {
+        String localPath = localPath(request);
+        if (localPath.endsWith("/")) {
             throw new IllegalArgumentException();
         }
-        String[] parts = pathInfo.substring(1).split("/");
+        String[] parts = localPath.substring(1).split("/");
         final String node = parts[0];
 
         if (parts.length == 1) {

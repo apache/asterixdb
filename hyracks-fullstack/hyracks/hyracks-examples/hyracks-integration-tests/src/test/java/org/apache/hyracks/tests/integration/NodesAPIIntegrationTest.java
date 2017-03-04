@@ -22,6 +22,7 @@ import static org.apache.hyracks.tests.integration.TestUtil.httpGetAsObject;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
@@ -29,12 +30,13 @@ import java.util.List;
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class NodesAPIIntegrationTest extends AbstractIntegrationTest {
 
-    static final String[] NODE_SUMMARY_FIELDS = { "node-id", "heap-used", "system-load-average" };
+    static final String[] NODE_SUMMARY_FIELDS = { "node-id", "heap-used", "system-load-average", "details" };
 
     static final String[] NODE_DETAILS_FIELDS = { "node-id", "os-name", "arch", "os-version", "num-processors",
             "vm-name", "vm-version", "vm-vendor", "classpath", "library-path", "boot-classpath", "input-arguments",
@@ -52,9 +54,7 @@ public class NodesAPIIntegrationTest extends AbstractIntegrationTest {
 
     @Test
     public void testNodeSummaries() throws Exception {
-        ObjectNode res = httpGetAsObject(ROOT_PATH);
-        Assert.assertTrue(res.has("result"));
-        ArrayNode nodes = (ArrayNode) res.get("result");
+        ArrayNode nodes = getNodeSummaries();
         final int size = nodes.size();
         Assert.assertEquals(2, size);
         for (int i = 0; i < size; ++i) {
@@ -62,11 +62,19 @@ public class NodesAPIIntegrationTest extends AbstractIntegrationTest {
         }
     }
 
+    protected ArrayNode getNodeSummaries() throws URISyntaxException, IOException {
+        ObjectNode res = httpGetAsObject(ROOT_PATH);
+        Assert.assertTrue(res.has("result"));
+        return (ArrayNode) res.get("result");
+    }
+
     @Test
     public void testNodeDetails() throws Exception {
-        List<String> nodeIds = getNodeIds();
-        for (String nodeId : nodeIds) {
-            ObjectNode res = httpGetAsObject(ROOT_PATH + "/" + nodeId);
+        ArrayNode nodes = getNodeSummaries();
+        for (JsonNode n : nodes) {
+            ObjectNode o = (ObjectNode) n;
+            URI uri = new URI(o.get("details").asText());
+            ObjectNode res = httpGetAsObject(uri);
             checkNodeFields((ObjectNode) res.get("result"), NODE_DETAILS_FIELDS);
         }
     }
@@ -93,9 +101,7 @@ public class NodesAPIIntegrationTest extends AbstractIntegrationTest {
     }
 
     private List<String> getNodeIds() throws IOException, URISyntaxException {
-        ObjectNode res = httpGetAsObject(ROOT_PATH);
-        Assert.assertTrue(res.has("result"));
-        ArrayNode nodes = (ArrayNode) res.get("result");
+        ArrayNode nodes = getNodeSummaries();
         final int size = nodes.size();
         List<String> nodeIds = new ArrayList<>();
         for (int i = 0; i < size; ++i) {

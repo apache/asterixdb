@@ -27,6 +27,7 @@ import org.apache.hyracks.http.api.IServlet;
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
 
+import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpResponseStatus;
 
@@ -124,12 +125,26 @@ public abstract class AbstractServlet implements IServlet {
         response.setStatus(HttpResponseStatus.METHOD_NOT_ALLOWED);
     }
 
-    public String path(IServletRequest request) {
+    public String host(IServletRequest request) {
+        return request.getHttpRequest().headers().get(HttpHeaderNames.HOST);
+    }
+
+    public String localPath(IServletRequest request) {
+        final String uri = request.getHttpRequest().uri();
+        return uri.substring(trim(uri));
+    }
+
+    public String servletPath(IServletRequest request) {
+        final String uri = request.getHttpRequest().uri();
+        return uri.substring(0, trim(uri));
+    }
+
+    protected int trim(final String uri) {
         int trim = -1;
         if (paths.length > 1) {
             for (int i = 0; i < paths.length; i++) {
                 String path = paths[i].indexOf('*') >= 0 ? paths[i].substring(0, paths[i].indexOf('*')) : paths[0];
-                if (request.getHttpRequest().uri().indexOf(path) == 0) {
+                if (uri.indexOf(path) == 0) {
                     trim = trims[i];
                     break;
                 }
@@ -137,7 +152,7 @@ public abstract class AbstractServlet implements IServlet {
         } else {
             trim = trims[0];
         }
-        return request.getHttpRequest().uri().substring(trim);
+        return trim;
     }
 
     @Override

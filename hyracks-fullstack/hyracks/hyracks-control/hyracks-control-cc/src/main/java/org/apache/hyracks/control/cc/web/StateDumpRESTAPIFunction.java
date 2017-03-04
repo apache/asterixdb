@@ -36,7 +36,7 @@ public class StateDumpRESTAPIFunction implements IJSONOutputFunction {
     }
 
     @Override
-    public ObjectNode invoke(String[] arguments) throws Exception {
+    public ObjectNode invoke(String host, String servletPath, String[] arguments) throws Exception {
         GatherStateDumpsWork gsdw = new GatherStateDumpsWork(ccs);
         ccs.getWorkQueue().scheduleAndSync(gsdw);
         StateDumpRun sdr = gsdw.getStateDumpRun();

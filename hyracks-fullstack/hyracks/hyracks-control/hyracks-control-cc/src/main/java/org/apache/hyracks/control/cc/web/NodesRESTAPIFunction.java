@@ -18,12 +18,17 @@
  */
 package org.apache.hyracks.control.cc.web;
 
+import java.net.URI;
+import java.net.URISyntaxException;
+
 import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.cc.web.util.IJSONOutputFunction;
+import org.apache.hyracks.control.cc.web.util.JSONOutputRequestUtil;
 import org.apache.hyracks.control.cc.work.GetNodeDetailsJSONWork;
 import org.apache.hyracks.control.cc.work.GetNodeSummariesJSONWork;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class NodesRESTAPIFunction implements IJSONOutputFunction {
@@ -34,7 +39,7 @@ public class NodesRESTAPIFunction implements IJSONOutputFunction {
     }
 
     @Override
-    public ObjectNode invoke(String[] arguments) throws Exception {
+    public ObjectNode invoke(String host, String servletPath, String[] arguments) throws Exception {
         ObjectMapper om = new ObjectMapper();
         ObjectNode result = om.createObjectNode();
         switch (arguments.length) {
@@ -42,16 +47,26 @@ public class NodesRESTAPIFunction implements IJSONOutputFunction {
                 if ("".equals(arguments[0])) {
                     GetNodeSummariesJSONWork gnse = new GetNodeSummariesJSONWork(ccs.getNodeManager());
                     ccs.getWorkQueue().scheduleAndSync(gnse);
-                    result.set("result", gnse.getSummaries());
+                    result.set("result", enhanceSummaries(gnse.getSummaries(), host, servletPath));
                 } else {
                     String nodeId = arguments[0];
-                    GetNodeDetailsJSONWork gnde = new GetNodeDetailsJSONWork(ccs.getNodeManager(), ccs.getCCConfig(),
-                            nodeId, true, true);
+                    GetNodeDetailsJSONWork gnde =
+                            new GetNodeDetailsJSONWork(ccs.getNodeManager(), ccs.getCCConfig(), nodeId, true, true);
                     ccs.getWorkQueue().scheduleAndSync(gnde);
                     result.set("result", gnde.getDetail());
                 }
             }
         }
         return result;
+    }
+
+    private static ArrayNode enhanceSummaries(final ArrayNode summaries, String host, String servletPath)
+            throws URISyntaxException {
+        for (int i = 0; i < summaries.size(); ++i) {
+            ObjectNode node = (ObjectNode) summaries.get(i);
+            URI detailsUri = JSONOutputRequestUtil.uri(host, servletPath, node.get("node-id").asText());
+            node.put("details", detailsUri.toString());
+        }
+        return summaries;
     }
 }

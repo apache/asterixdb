@@ -18,8 +18,22 @@
  */
 package org.apache.hyracks.control.cc.web.util;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import java.net.URI;
+import java.net.URISyntaxException;
 
-public interface IJSONOutputFunction {
-    ObjectNode invoke(String host, String servletPath, String[] arguments) throws Exception;
+public class JSONOutputRequestUtil {
+
+    private JSONOutputRequestUtil() {}
+
+    public static URI uri(String host, String prefix, String path) throws URISyntaxException {
+        String name = host;
+        int port = 80;
+        int index = host.indexOf(':');
+        if (index > 0) {
+            String[] split = host.split(":");
+            name = split[0];
+            port = Integer.valueOf(split[1]);
+        }
+        return new URI("http", null, name, port, prefix + "/" + path, null, null);
+    }
 }

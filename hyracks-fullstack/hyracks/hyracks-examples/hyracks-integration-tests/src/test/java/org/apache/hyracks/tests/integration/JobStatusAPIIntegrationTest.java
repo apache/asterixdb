@@ -21,6 +21,7 @@ package org.apache.hyracks.tests.integration;
 import static org.apache.hyracks.tests.integration.TestUtil.httpGetAsObject;
 
 import java.io.IOException;
+import java.net.URI;
 import java.net.URISyntaxException;
 
 import org.apache.hyracks.api.constraints.PartitionConstraintHelper;
@@ -118,15 +119,20 @@ public class JobStatusAPIIntegrationTest extends AbstractIntegrationTest {
         return res;
     }
 
-    private String getJobStatus(JobId jid) throws IOException, URISyntaxException {
+    private ObjectNode getJobSummary(JobId jId) throws IOException, URISyntaxException {
         ArrayNode jobArray = getJobs();
         for (JsonNode n : jobArray) {
             ObjectNode o = (ObjectNode) n;
-            if (JobId.parse(o.get("job-id").asText()).equals(jid)) {
-                return o.get("status").asText();
+            if (JobId.parse(o.get("job-id").asText()).equals(jId)) {
+                return o;
             }
         }
         return null;
+    }
+
+    private String getJobStatus(JobId jId) throws IOException, URISyntaxException {
+        ObjectNode o = getJobSummary(jId);
+        return o != null ? o.get("status").asText() : null;
     }
 
     protected ArrayNode getJobs() throws URISyntaxException, IOException {
@@ -134,10 +140,14 @@ public class JobStatusAPIIntegrationTest extends AbstractIntegrationTest {
     }
 
     protected ObjectNode getJobActivityGraph(JobId jId) throws URISyntaxException, IOException {
-        return httpGetAsObject(ROOT_PATH + "/" + jId.toString() + "/job-activity-graph");
+        ObjectNode o = getJobSummary(jId);
+        URI uri = new URI(o.get("job-activity-graph").asText());
+        return httpGetAsObject(uri);
     }
 
     protected ObjectNode getJobRun(JobId jId) throws URISyntaxException, IOException {
-        return httpGetAsObject(ROOT_PATH + "/" + jId.toString() + "/job-run");
+        ObjectNode o = getJobSummary(jId);
+        URI uri = new URI(o.get("job-run").asText());
+        return httpGetAsObject(uri);
     }
 }

@@ -42,7 +42,6 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.netty.handler.codec.http.HttpHeaderNames;
-import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpResponseStatus;
 
 public class ClusterApiServlet extends AbstractServlet {
@@ -72,7 +71,7 @@ public class ClusterApiServlet extends AbstractServlet {
         try {
             ObjectNode json;
             response.setStatus(HttpResponseStatus.OK);
-            switch (path(request)) {
+            switch (localPath(request)) {
                 case "":
                     json = getClusterStateJSON(request, "");
                     break;

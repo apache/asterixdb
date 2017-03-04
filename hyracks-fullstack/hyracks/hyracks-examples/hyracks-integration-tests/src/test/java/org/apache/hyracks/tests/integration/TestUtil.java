@@ -42,14 +42,18 @@ class TestUtil {
         return new URI("http", null, HOST, PORT, path, null, null);
     }
 
-    static InputStream httpGetAsInputStream(String path) throws URISyntaxException, IOException {
+    static InputStream httpGetAsInputStream(URI uri) throws URISyntaxException, IOException {
         HttpClient client = HttpClients.createMinimal();
-        HttpResponse response = client.execute(new HttpGet(uri(path)));
+        HttpResponse response = client.execute(new HttpGet(uri));
         return response.getEntity().getContent();
     }
 
     static String httpGetAsString(String path) throws URISyntaxException, IOException {
-        InputStream resultStream = httpGetAsInputStream(path);
+        return httpGetAsString(uri(path));
+    }
+
+    static String httpGetAsString(URI uri) throws URISyntaxException, IOException {
+        InputStream resultStream = httpGetAsInputStream(uri);
         return IOUtils.toString(resultStream, Charset.defaultCharset());
     }
 
@@ -59,5 +63,9 @@ class TestUtil {
 
     static ObjectNode httpGetAsObject(String path) throws URISyntaxException, IOException {
         return getResultAsJson(httpGetAsString(path));
+    }
+
+    static ObjectNode httpGetAsObject(URI uri) throws URISyntaxException, IOException {
+        return getResultAsJson(httpGetAsString(uri));
     }
 }

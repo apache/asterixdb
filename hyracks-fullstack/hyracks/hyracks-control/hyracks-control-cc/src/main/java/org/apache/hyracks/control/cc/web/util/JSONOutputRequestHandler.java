@@ -31,7 +31,6 @@ import org.apache.hyracks.http.server.utils.HttpUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpResponseStatus;
 
 public class JSONOutputRequestHandler extends AbstractServlet {
@@ -46,20 +45,23 @@ public class JSONOutputRequestHandler extends AbstractServlet {
 
     @Override
     protected void get(IServletRequest request, IServletResponse response) {
-        String path = path(request);
-        while (path.startsWith("/")) {
-            path = path.substring(1);
+        String localPath = localPath(request);
+        String servletPath = servletPath(request);
+        String host = host(request);
+        while (localPath.startsWith("/")) {
+            localPath = localPath.substring(1);
         }
-        String[] parts = path.split("/");
-        ObjectNode result = invoke(response, parts);
+        String[] parts = localPath.split("/");
+
+        ObjectNode result = invoke(response, host, servletPath, parts);
         if (result != null) {
             deliver(response, result);
         }
     }
 
-    protected ObjectNode invoke(IServletResponse response, String[] parts) {
+    protected ObjectNode invoke(IServletResponse response, String host, String servletPath, String[] parts) {
         try {
-            return fn.invoke(parts);
+            return fn.invoke(host, servletPath, parts);
         } catch (Exception e) {
             LOGGER.log(Level.WARNING, "Exception invoking " + fn.getClass().getName(), e);
             response.setStatus(HttpResponseStatus.BAD_REQUEST);

@@ -63,7 +63,7 @@ public class DiagnosticsApiServlet extends NodeControllerDetailsApiServlet {
         response.setStatus(HttpResponseStatus.OK);
         om.enable(SerializationFeature.INDENT_OUTPUT);
         try {
-            if (!"".equals(path(request))) {
+            if (!"".equals(localPath(request))) {
                 throw new IllegalArgumentException();
             }
             json = getClusterDiagnosticsJSON();

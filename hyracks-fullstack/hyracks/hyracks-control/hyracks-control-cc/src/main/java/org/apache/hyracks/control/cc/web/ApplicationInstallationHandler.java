@@ -54,11 +54,11 @@ public class ApplicationInstallationHandler extends AbstractServlet {
 
     @Override
     public void handle(IServletRequest request, IServletResponse response) {
-        String path = path(request);
-        while (path.startsWith("/")) {
-            path = path.substring(1);
+        String localPath = localPath(request);
+        while (localPath.startsWith("/")) {
+            localPath = localPath.substring(1);
         }
-        final String[] params = path.split("&");
+        final String[] params = localPath.split("&");
         if (params.length != 2 || params[0].isEmpty() || params[1].isEmpty()) {
             response.setStatus(HttpResponseStatus.BAD_REQUEST);
             return;
