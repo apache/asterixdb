@@ -18,7 +18,6 @@
  */
 package org.apache.hyracks.api.exceptions;
 
-import java.io.File;
 import java.io.InputStream;
 import java.util.Map;
 
@@ -59,6 +58,8 @@ public class ErrorCode {
     public static final int DUPLICATE_DISTRIBUTED_JOB = 22;
     public static final int DISTRIBUTED_JOB_FAILURE = 23;
     public static final int NO_RESULTSET = 24;
+    public static final int JOB_CANCELED = 25;
+    public static final int NODE_FAILED = 26;
 
     // Compilation error codes.
     public static final int RULECOLLECTION_NOT_INSTANCE_OF_LIST = 10001;

@@ -38,6 +38,7 @@ public class HyracksClientInterfaceFunctions {
         START_JOB,
         DISTRIBUTE_JOB,
         DESTROY_JOB,
+        CANCEL_JOB,
         GET_DATASET_DIRECTORY_SERIVICE_INFO,
         GET_DATASET_RESULT_STATUS,
         GET_DATASET_RESULT_LOCATIONS,
@@ -119,6 +120,25 @@ public class HyracksClientInterfaceFunctions {
 
         public byte[] getACGGFBytes() {
             return acggfBytes;
+        }
+    }
+
+    public static class CancelJobFunction extends Function {
+        private static final long serialVersionUID = 1L;
+
+        private final JobId jobId;
+
+        public CancelJobFunction(JobId jobId) {
+            this.jobId = jobId;
+        }
+
+        @Override
+        public FunctionId getFunctionId() {
+            return FunctionId.CANCEL_JOB;
+        }
+
+        public JobId getJobId() {
+            return jobId;
         }
     }
 

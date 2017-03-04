@@ -91,6 +91,11 @@ public final class HyracksConnection implements IHyracksClientConnection {
     }
 
     @Override
+    public void cancelJob(JobId jobId) throws Exception {
+        hci.cancelJob(jobId);
+    }
+
+    @Override
     public JobId startJob(JobSpecification jobSpec) throws Exception {
         return startJob(jobSpec, EnumSet.noneOf(JobFlag.class));
     }

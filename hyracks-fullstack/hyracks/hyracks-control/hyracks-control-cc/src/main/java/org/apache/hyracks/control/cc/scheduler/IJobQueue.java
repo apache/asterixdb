@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.List;
 
 import org.apache.hyracks.api.exceptions.HyracksException;
+import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.control.cc.job.JobRun;
 
 /**
@@ -39,6 +40,22 @@ public interface IJobQueue {
      *             when the size of the queue exceeds its capacity.
      */
     void add(JobRun run) throws HyracksException;
+
+    /**
+     * Removes a job with a given jobId from the job queue.
+     *
+     * @param jobId,
+     *            the job id of the job to be removed.
+     */
+    JobRun remove(JobId jobId);
+
+    /**
+     * Retrieves a job with a given jobId from the job queue.
+     *
+     * @param jobId,
+     *            the job id of the job to be retrieved.
+     */
+    JobRun get(JobId jobId);
 
     /**
      * Pull a list of jobs from the job queque, when more cluster capacity becomes available.

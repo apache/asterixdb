@@ -33,6 +33,13 @@ public class HyracksException extends IOException {
     private final String nodeId;
     private transient volatile String msgCache;
 
+    public static HyracksException create(Throwable cause) {
+        if (cause instanceof HyracksException) {
+            return (HyracksException) cause;
+        }
+        return new HyracksException(cause);
+    }
+
     public static HyracksException create(int code, Serializable... params) {
         return new HyracksException(ErrorCode.HYRACKS, code, ErrorCode.getErrorMessage(code), params);
     }

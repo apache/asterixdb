@@ -26,8 +26,9 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.io.FileUtils;
+import org.apache.hyracks.api.application.ICCApplicationContext;
+import org.apache.hyracks.api.application.ICCApplicationEntryPoint;
 import org.apache.hyracks.api.client.HyracksConnection;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
@@ -35,9 +36,11 @@ import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.dataset.IHyracksDataset;
 import org.apache.hyracks.api.dataset.IHyracksDatasetReader;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.job.JobFlag;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
+import org.apache.hyracks.api.job.resource.IJobCapacityController;
 import org.apache.hyracks.client.dataset.HyracksDataset;
 import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.common.controllers.CCConfig;
@@ -46,11 +49,13 @@ import org.apache.hyracks.control.nc.NodeControllerService;
 import org.apache.hyracks.control.nc.resources.memory.FrameManager;
 import org.apache.hyracks.dataflow.common.comm.io.ResultFrameTupleAccessor;
 import org.apache.hyracks.dataflow.common.comm.util.ByteBufferInputStream;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.rules.TemporaryFolder;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 
 public abstract class AbstractMultiNCIntegrationTest {
 
@@ -88,6 +93,7 @@ public abstract class AbstractMultiNCIntegrationTest {
         ccRoot.delete();
         ccRoot.mkdir();
         ccConfig.ccRoot = ccRoot.getAbsolutePath();
+        ccConfig.appCCMainClass = DummyApplicationEntryPoint.class.getName();
         cc = new ClusterControllerService(ccConfig);
         cc.start();
 
@@ -120,6 +126,18 @@ public abstract class AbstractMultiNCIntegrationTest {
             nc.stop();
         }
         cc.stop();
+    }
+
+    protected JobId startJob(JobSpecification spec) throws Exception {
+        return hcc.startJob(spec);
+    }
+
+    protected void waitForCompletion(JobId jobId) throws Exception {
+        hcc.waitForCompletion(jobId);
+    }
+
+    protected void cancelJob(JobId jobId) throws Exception {
+        hcc.cancelJob(jobId);
     }
 
     protected void runTest(JobSpecification spec) throws Exception {
@@ -199,6 +217,42 @@ public abstract class AbstractMultiNCIntegrationTest {
         }
         outputFiles.add(tempFile);
         return tempFile;
+    }
+
+    public static class DummyApplicationEntryPoint implements ICCApplicationEntryPoint {
+
+        @Override
+        public void start(ICCApplicationContext ccAppCtx, String[] args) throws Exception {
+
+        }
+
+        @Override
+        public void stop() throws Exception {
+
+        }
+
+        @Override
+        public void startupCompleted() throws Exception {
+
+        }
+
+        @Override
+        public IJobCapacityController getJobCapacityController() {
+            return new IJobCapacityController() {
+                private long maxRAM = Runtime.getRuntime().maxMemory();
+
+                @Override
+                public JobSubmissionStatus allocate(JobSpecification job) throws HyracksException {
+                    return maxRAM > job.getRequiredClusterCapacity().getAggregatedMemoryByteSize()
+                            ? JobSubmissionStatus.EXECUTE : JobSubmissionStatus.QUEUE;
+                }
+
+                @Override
+                public void release(JobSpecification job) {
+
+                }
+            };
+        }
     }
 
 }

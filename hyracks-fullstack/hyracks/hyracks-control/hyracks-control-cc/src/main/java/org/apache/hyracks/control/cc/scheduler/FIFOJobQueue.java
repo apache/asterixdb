@@ -23,13 +23,15 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
-import java.util.LinkedList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksException;
+import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.api.job.JobStatus;
 import org.apache.hyracks.api.job.resource.IJobCapacityController;
@@ -42,9 +44,9 @@ import org.apache.hyracks.control.cc.job.JobRun;
 public class FIFOJobQueue implements IJobQueue {
 
     private static final Logger LOGGER = Logger.getLogger(FIFOJobQueue.class.getName());
-
     private static final int CAPACITY = 4096;
-    private final List<JobRun> jobQueue = new LinkedList<>();
+
+    private final Map<JobId, JobRun> jobListMap = new LinkedHashMap<>();
     private final IJobManager jobManager;
     private final IJobCapacityController jobCapacityController;
 
@@ -55,17 +57,27 @@ public class FIFOJobQueue implements IJobQueue {
 
     @Override
     public void add(JobRun run) throws HyracksException {
-        int size = jobQueue.size();
+        int size = jobListMap.size();
         if (size >= CAPACITY) {
-            throw HyracksException.create(ErrorCode.JOB_QUEUE_FULL, new Integer(CAPACITY));
+            throw HyracksException.create(ErrorCode.JOB_QUEUE_FULL, CAPACITY);
         }
-        jobQueue.add(run);
+        jobListMap.put(run.getJobId(), run);
+    }
+
+    @Override
+    public JobRun remove(JobId jobId) {
+        return jobListMap.remove(jobId);
+    }
+
+    @Override
+    public JobRun get(JobId jobId) {
+        return jobListMap.get(jobId);
     }
 
     @Override
     public List<JobRun> pull() {
         List<JobRun> jobRuns = new ArrayList<>();
-        Iterator<JobRun> runIterator = jobQueue.iterator();
+        Iterator<JobRun> runIterator = jobListMap.values().iterator();
         while (runIterator.hasNext()) {
             JobRun run = runIterator.next();
             JobSpecification job = run.getJobSpecification();
@@ -89,7 +101,6 @@ public class FIFOJobQueue implements IJobQueue {
                 } catch (HyracksException e) {
                     LOGGER.log(Level.SEVERE, e.getMessage(), e);
                 }
-                continue;
             }
         }
         return jobRuns;
@@ -97,7 +108,7 @@ public class FIFOJobQueue implements IJobQueue {
 
     @Override
     public Collection<JobRun> jobs() {
-        return Collections.unmodifiableCollection(jobQueue);
+        return Collections.unmodifiableCollection(jobListMap.values());
     }
 
 }

@@ -52,7 +52,6 @@ import org.apache.hyracks.control.cc.executor.JobExecutor;
 import org.apache.hyracks.control.cc.partitions.PartitionMatchMaker;
 import org.apache.hyracks.control.common.job.profiling.om.JobProfile;
 import org.apache.hyracks.control.common.utils.ExceptionUtils;
-import org.apache.hyracks.control.common.work.IResultCallback;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -99,9 +98,7 @@ public class JobRun implements IJobStatusConditionVariable {
 
     private Map<OperatorDescriptorId, Map<Integer, String>> operatorLocations;
 
-    private final IResultCallback<JobId> callback;
-
-    private JobRun(DeploymentId deploymentId, JobId jobId, Set<JobFlag> jobFlags, IResultCallback<JobId> callback,
+    private JobRun(DeploymentId deploymentId, JobId jobId, Set<JobFlag> jobFlags,
             JobSpecification spec, ActivityClusterGraph acg) {
         this.deploymentId = deploymentId;
         this.jobId = jobId;
@@ -116,14 +113,13 @@ public class JobRun implements IJobStatusConditionVariable {
         connectorPolicyMap = new HashMap<>();
         operatorLocations = new HashMap<>();
         createTime = System.currentTimeMillis();
-        this.callback = callback;
     }
 
     //Run a Pre-distributed job by passing the JobId
-    public JobRun(ClusterControllerService ccs, DeploymentId deploymentId, JobId jobId, IResultCallback<JobId> callback,
+    public JobRun(ClusterControllerService ccs, DeploymentId deploymentId, JobId jobId,
             PreDistributedJobDescriptor distributedJobDescriptor)
             throws HyracksException {
-        this(deploymentId, jobId, EnumSet.noneOf(JobFlag.class), callback,
+        this(deploymentId, jobId, EnumSet.noneOf(JobFlag.class),
                 distributedJobDescriptor.getJobSpecification(), distributedJobDescriptor.getActivityClusterGraph());
         Set<Constraint> constaints = distributedJobDescriptor.getActivityClusterGraphConstraints();
         this.scheduler = new JobExecutor(ccs, this, constaints, true);
@@ -131,9 +127,8 @@ public class JobRun implements IJobStatusConditionVariable {
 
     //Run a new job by creating an ActivityClusterGraph
     public JobRun(ClusterControllerService ccs, DeploymentId deploymentId, JobId jobId,
-            IActivityClusterGraphGeneratorFactory acggf, IActivityClusterGraphGenerator acgg, Set<JobFlag> jobFlags,
-            IResultCallback<JobId> callback) {
-        this(deploymentId, jobId, jobFlags, callback, acggf.getJobSpecification(), acgg.initialize());
+            IActivityClusterGraphGeneratorFactory acggf, IActivityClusterGraphGenerator acgg, Set<JobFlag> jobFlags) {
+        this(deploymentId, jobId, jobFlags, acggf.getJobSpecification(), acgg.initialize());
         this.scheduler = new JobExecutor(ccs, this, acgg.getConstraints(), false);
     }
 
@@ -196,10 +191,6 @@ public class JobRun implements IJobStatusConditionVariable {
         return createTime;
     }
 
-    public IResultCallback<JobId> getCallback() {
-        return callback;
-    }
-
     public long getStartTime() {
         return startTime;
     }
@@ -231,13 +222,7 @@ public class JobRun implements IJobStatusConditionVariable {
             wait();
         }
         if (exceptions != null && !exceptions.isEmpty()) {
-            StringBuilder buffer = new StringBuilder();
-            buffer.append("Job failed on account of:\n");
-            for (Exception e : exceptions) {
-                buffer.append(e.getMessage()).append('\n');
-            }
-            HyracksException he;
-            he = new HyracksException(buffer.toString(), exceptions.get(0));
+            HyracksException he = HyracksException.create(exceptions.get(0));
             for (int i = 1; i < exceptions.size(); ++i) {
                 he.addSuppressed(exceptions.get(i));
             }

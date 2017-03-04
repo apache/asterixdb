@@ -65,14 +65,14 @@ public class JobStartWork extends SynchronizableWork {
                         .deserialize(acggfBytes, deploymentId, appCtx);
                 IActivityClusterGraphGenerator acgg =
                         acggf.createActivityClusterGraphGenerator(jobId, appCtx, jobFlags);
-                run = new JobRun(ccs, deploymentId, jobId, acggf, acgg, jobFlags, callback);
+                run = new JobRun(ccs, deploymentId, jobId, acggf, acgg, jobFlags);
             } else {
                 //ActivityClusterGraph has already been distributed
-                run = new JobRun(ccs, deploymentId, jobId, callback,
+                run = new JobRun(ccs, deploymentId, jobId,
                         ccs.getPreDistributedJobStore().getDistributedJobDescriptor(jobId));
             }
             jobManager.add(run);
-
+            callback.setValue(jobId);
         } catch (Exception e) {
             callback.setException(e);
         }

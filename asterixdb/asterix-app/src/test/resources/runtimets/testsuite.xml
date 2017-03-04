@@ -6758,7 +6758,7 @@
     <test-case FilePath="load">
       <compilation-unit name="duplicate-key-error">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>org.apache.hyracks.api.exceptions.HyracksException</expected-error>
+        <expected-error>Input stream given to BTree bulk load has duplicates</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="load">

@@ -43,6 +43,7 @@ import org.apache.hyracks.api.dataflow.TaskAttemptId;
 import org.apache.hyracks.api.dataflow.TaskId;
 import org.apache.hyracks.api.dataflow.connectors.IConnectorPolicy;
 import org.apache.hyracks.api.deployment.DeploymentId;
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.job.ActivityCluster;
 import org.apache.hyracks.api.job.ActivityClusterGraph;
@@ -83,6 +84,8 @@ public class JobExecutor {
 
     private final Random random;
 
+    private boolean cancelled = false;
+
     public JobExecutor(ClusterControllerService ccs, JobRun jobRun, Collection<Constraint> constraints,
             boolean predistributed) {
         this.ccs = ccs;
@@ -110,6 +113,19 @@ public class JobExecutor {
     public void startJob() throws HyracksException {
         startRunnableActivityClusters();
         ccs.getApplicationContext().notifyJobStart(jobRun.getJobId());
+    }
+
+    public void cancelJob() throws HyracksException {
+        // If the job is already terminated or failed, do nothing here.
+        if (jobRun.getPendingStatus() != null) {
+            return;
+        }
+        // Sets the cancelled flag.
+        cancelled = true;
+        // Aborts on-ongoing task clusters.
+        abortOngoingTaskClusters(ta -> false, ta -> null);
+        // Aborts the whole job.
+        abortJob(Collections.singletonList(HyracksException.create(ErrorCode.JOB_CANCELED, jobRun.getJobId())));
     }
 
     private void findRunnableTaskClusterRoots(Set<TaskCluster> frontier, Collection<ActivityCluster> roots)
@@ -661,7 +677,7 @@ public class JobExecutor {
                 ta.setStatus(TaskAttempt.TaskStatus.FAILED, exceptions);
                 abortTaskCluster(lastAttempt, TaskClusterAttempt.TaskClusterStatus.FAILED);
                 abortDoomedTaskClusters();
-                if (lastAttempt.getAttempt() >= jobRun.getActivityClusterGraph().getMaxReattempts()) {
+                if (lastAttempt.getAttempt() >= jobRun.getActivityClusterGraph().getMaxReattempts() || isCancelled()) {
                     abortJob(exceptions);
                     return;
                 }
@@ -691,42 +707,70 @@ public class JobExecutor {
                 jobManager.finalComplete(jobRun);
                 return;
             }
-            for (ActivityCluster ac : jobRun.getActivityClusterGraph().getActivityClusterMap().values()) {
-                if (!isPlanned(ac)) {
-                    continue;
-                }
-                TaskCluster[] taskClusters = getActivityClusterPlan(ac).getTaskClusters();
-                if (taskClusters == null) {
-                    continue;
-                }
-                for (TaskCluster tc : taskClusters) {
-                    TaskClusterAttempt lastTaskClusterAttempt = findLastTaskClusterAttempt(tc);
-                    if (lastTaskClusterAttempt == null || !(lastTaskClusterAttempt
-                            .getStatus() == TaskClusterAttempt.TaskClusterStatus.COMPLETED
-                            || lastTaskClusterAttempt.getStatus() == TaskClusterAttempt.TaskClusterStatus.RUNNING)) {
-                        continue;
-                    }
-                    boolean abort = false;
-                    for (TaskAttempt ta : lastTaskClusterAttempt.getTaskAttempts().values()) {
-                        assert ta.getStatus() == TaskAttempt.TaskStatus.COMPLETED
-                                || ta.getStatus() == TaskAttempt.TaskStatus.RUNNING;
-                        if (deadNodes.contains(ta.getNodeId())) {
-                            ta.setStatus(TaskAttempt.TaskStatus.FAILED,
-                                    Collections.singletonList(new Exception("Node " + ta.getNodeId() + " failed")));
-                            ta.setEndTime(System.currentTimeMillis());
-                            abort = true;
-                        }
-                    }
-                    if (abort) {
-                        abortTaskCluster(lastTaskClusterAttempt, TaskClusterAttempt.TaskClusterStatus.ABORTED);
-                    }
-                }
-                abortDoomedTaskClusters();
-            }
+            abortOngoingTaskClusters(ta -> deadNodes.contains(ta.getNodeId()),
+                    ta -> HyracksException.create(ErrorCode.NODE_FAILED, ta.getNodeId()));
             startRunnableActivityClusters();
         } catch (Exception e) {
             abortJob(Collections.singletonList(e));
         }
+    }
+
+    private interface ITaskFilter {
+        boolean directlyMarkAsFailed(TaskAttempt ta);
+    }
+
+    private interface IExceptionGenerator {
+        HyracksException getException(TaskAttempt ta);
+    }
+
+    /**
+     * Aborts ongoing task clusters.
+     *
+     * @param taskFilter,
+     *            selects tasks that should be directly marked as failed without doing the aborting RPC.
+     * @param exceptionGenerator,
+     *            generates an exception for tasks that are directly marked as failed.
+     */
+    private void abortOngoingTaskClusters(ITaskFilter taskFilter, IExceptionGenerator exceptionGenerator)
+            throws HyracksException {
+        for (ActivityCluster ac : jobRun.getActivityClusterGraph().getActivityClusterMap().values()) {
+            if (!isPlanned(ac)) {
+                continue;
+            }
+            TaskCluster[] taskClusters = getActivityClusterPlan(ac).getTaskClusters();
+            if (taskClusters == null) {
+                continue;
+            }
+            for (TaskCluster tc : taskClusters) {
+                TaskClusterAttempt lastTaskClusterAttempt = findLastTaskClusterAttempt(tc);
+                if (lastTaskClusterAttempt == null || !(lastTaskClusterAttempt
+                        .getStatus() == TaskClusterAttempt.TaskClusterStatus.COMPLETED
+                        || lastTaskClusterAttempt.getStatus() == TaskClusterAttempt.TaskClusterStatus.RUNNING)) {
+                    continue;
+                }
+                boolean abort = false;
+                for (TaskAttempt ta : lastTaskClusterAttempt.getTaskAttempts().values()) {
+                    assert ta.getStatus() == TaskAttempt.TaskStatus.COMPLETED
+                            || ta.getStatus() == TaskAttempt.TaskStatus.RUNNING;
+                    if (taskFilter.directlyMarkAsFailed(ta)) {
+                        // Directly mark it as fail, without further aborting.
+                        ta.setStatus(TaskAttempt.TaskStatus.FAILED,
+                                Collections.singletonList(exceptionGenerator.getException(ta)));
+                        ta.setEndTime(System.currentTimeMillis());
+                        abort = true;
+                    }
+                }
+                if (abort) {
+                    abortTaskCluster(lastTaskClusterAttempt, TaskClusterAttempt.TaskClusterStatus.ABORTED);
+                }
+            }
+            abortDoomedTaskClusters();
+        }
+    }
+
+    // Returns whether the job has been cancelled.
+    private boolean isCancelled() {
+        return cancelled;
     }
 
 }

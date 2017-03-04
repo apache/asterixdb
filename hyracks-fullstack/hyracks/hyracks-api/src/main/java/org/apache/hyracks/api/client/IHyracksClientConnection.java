@@ -57,6 +57,15 @@ public interface IHyracksClientConnection extends IClusterInfoCollector {
     public JobInfo getJobInfo(JobId jobId) throws Exception;
 
     /**
+     * Cancel the job that has the given job id.
+     *
+     * @param jobId
+     *            the JobId of the Job
+     * @throws Exception
+     */
+    public void cancelJob(JobId jobId) throws Exception;
+
+    /**
      * Start the specified Job.
      *
      * @param jobSpec

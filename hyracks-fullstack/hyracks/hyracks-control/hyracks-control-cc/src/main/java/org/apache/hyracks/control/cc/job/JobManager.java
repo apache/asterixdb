@@ -47,7 +47,6 @@ import org.apache.hyracks.control.cc.scheduler.FIFOJobQueue;
 import org.apache.hyracks.control.cc.scheduler.IJobQueue;
 import org.apache.hyracks.control.cc.work.JobCleanupWork;
 import org.apache.hyracks.control.common.controllers.CCConfig;
-import org.apache.hyracks.control.common.work.IResultCallback;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -108,12 +107,37 @@ public class JobManager implements IJobManager {
         IJobCapacityController.JobSubmissionStatus status = jobCapacityController.allocate(job);
         switch (status) {
             case QUEUE:
-                jobRun.setStatus(JobStatus.PENDING, null);
-                jobQueue.add(jobRun);
+                queueJob(jobRun);
                 break;
             case EXECUTE:
                 executeJob(jobRun);
                 break;
+        }
+    }
+
+    @Override
+    public void cancel(JobId jobId) throws HyracksException {
+        if (jobId == null) {
+            return;
+        }
+        // Cancels a running job.
+        if (activeRunMap.containsKey(jobId)) {
+            JobRun jobRun = activeRunMap.get(jobId);
+            // The following call will abort all ongoing tasks and then consequently
+            // trigger JobCleanupWork and JobCleanupNotificationWork which will update the lifecyle of the job.
+            // Therefore, we do not remove the job out of activeRunMap here.
+            jobRun.getExecutor().cancelJob();
+            return;
+        }
+        // Removes a pending job.
+        JobRun jobRun = jobQueue.remove(jobId);
+        if (jobRun != null) {
+            List<Exception> exceptions = Collections
+                    .singletonList(HyracksException.create(ErrorCode.JOB_CANCELED, jobId));
+            // Since the job has not been executed, we only need to update its status and lifecyle here.
+            jobRun.setStatus(JobStatus.FAILURE, exceptions);
+            runMapArchive.put(jobId, jobRun);
+            runMapHistory.put(jobId, exceptions);
         }
     }
 
@@ -244,9 +268,12 @@ public class JobManager implements IJobManager {
 
     @Override
     public JobRun get(JobId jobId) {
-        JobRun jobRun = activeRunMap.get(jobId);
+        JobRun jobRun = activeRunMap.get(jobId); // Running job.
         if (jobRun == null) {
-            jobRun = runMapArchive.get(jobId);
+            jobRun = jobQueue.get(jobId); // Pending job.
+        }
+        if (jobRun == null) {
+            jobRun = runMapArchive.get(jobId); // Completed job.
         }
         return jobRun;
     }
@@ -256,7 +283,7 @@ public class JobManager implements IJobManager {
         return runMapHistory.get(jobId);
     }
 
-    private void pickJobsToRun() {
+    private void pickJobsToRun() throws HyracksException {
         List<JobRun> selectedRuns = jobQueue.pull();
         for (JobRun run : selectedRuns) {
             executeJob(run);
@@ -264,24 +291,24 @@ public class JobManager implements IJobManager {
     }
 
     // Executes a job when the required capacity for the job is met.
-    private void executeJob(JobRun run) {
-        IResultCallback<JobId> callback = run.getCallback();
-        try {
-            run.setStartTime(System.currentTimeMillis());
-            JobId jobId = run.getJobId();
-            activeRunMap.put(jobId, run);
+    private void executeJob(JobRun run) throws HyracksException {
+        run.setStartTime(System.currentTimeMillis());
+        JobId jobId = run.getJobId();
+        activeRunMap.put(jobId, run);
 
-            CCApplicationContext appCtx = ccs.getApplicationContext();
-            JobSpecification spec = run.getJobSpecification();
-            if (!run.getExecutor().isPredistributed()) {
-                appCtx.notifyJobCreation(jobId, spec);
-            }
-            run.setStatus(JobStatus.RUNNING, null);
-            executeJobInternal(run);
-            callback.setValue(jobId);
-        } catch (Exception e) {
-            callback.setException(e);
+        CCApplicationContext appCtx = ccs.getApplicationContext();
+        JobSpecification spec = run.getJobSpecification();
+        if (!run.getExecutor().isPredistributed()) {
+            appCtx.notifyJobCreation(jobId, spec);
         }
+        run.setStatus(JobStatus.RUNNING, null);
+        executeJobInternal(run);
+    }
+
+    // Queue a job when the required capacity for the job is not met.
+    private void queueJob(JobRun jobRun) throws HyracksException {
+        jobRun.setStatus(JobStatus.PENDING, null);
+        jobQueue.add(jobRun);
     }
 
     private void executeJobInternal(JobRun run) {

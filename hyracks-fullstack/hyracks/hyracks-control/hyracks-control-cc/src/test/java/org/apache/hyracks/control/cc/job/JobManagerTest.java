@@ -199,6 +199,61 @@ public class JobManagerTest {
         Assert.assertTrue(jobManager.getPendingJobs().isEmpty());
     }
 
+    @Test
+    public void testCancel() throws HyracksException {
+        CCConfig ccConfig = new CCConfig();
+        IJobCapacityController jobCapacityController = mock(IJobCapacityController.class);
+        IJobManager jobManager = spy(new JobManager(ccConfig, mockClusterControllerService(), jobCapacityController));
+
+        // Submits runnable jobs.
+        List<JobRun> acceptedRuns = new ArrayList<>();
+        for (int id = 0; id < 4096; ++id) {
+            // Mocks an immediately executable job.
+            JobRun run = mockJobRun(id);
+            JobSpecification job = mock(JobSpecification.class);
+            when(run.getJobSpecification()).thenReturn(job);
+            when(jobCapacityController.allocate(job)).thenReturn(IJobCapacityController.JobSubmissionStatus.EXECUTE);
+
+            // Submits the job.
+            acceptedRuns.add(run);
+            jobManager.add(run);
+            Assert.assertTrue(jobManager.getRunningJobs().size() == id + 1);
+            Assert.assertTrue(jobManager.getPendingJobs().isEmpty());
+        }
+
+        // Submits jobs that will be deferred due to the capacity limitation.
+        List<JobRun> deferredRuns = new ArrayList<>();
+        for (int id = 4096; id < 8192; ++id) {
+            // Mocks a deferred job.
+            JobRun run = mockJobRun(id);
+            JobSpecification job = mock(JobSpecification.class);
+            when(run.getJobSpecification()).thenReturn(job);
+            when(jobCapacityController.allocate(job)).thenReturn(IJobCapacityController.JobSubmissionStatus.QUEUE)
+                    .thenReturn(IJobCapacityController.JobSubmissionStatus.EXECUTE);
+
+            // Submits the job.
+            deferredRuns.add(run);
+            jobManager.add(run);
+            Assert.assertTrue(jobManager.getRunningJobs().size() == 4096);
+            Assert.assertTrue(jobManager.getPendingJobs().size() == id + 1 - 4096);
+        }
+
+        // Cancels deferred jobs.
+        for (JobRun run : deferredRuns) {
+            jobManager.cancel(run.getJobId());
+        }
+
+        // Cancels runnable jobs.
+        for (JobRun run : acceptedRuns) {
+            jobManager.cancel(run.getJobId());
+        }
+
+        Assert.assertTrue(jobManager.getPendingJobs().isEmpty());
+        Assert.assertTrue(jobManager.getArchivedJobs().size() == ccConfig.jobHistorySize);
+        verify(jobManager, times(0)).prepareComplete(any(), any(), any());
+        verify(jobManager, times(0)).finalComplete(any());
+    }
+
     private JobRun mockJobRun(long id) {
         JobRun run = mock(JobRun.class, Mockito.RETURNS_DEEP_STUBS);
         when(run.getExceptions()).thenReturn(Collections.emptyList());

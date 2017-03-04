@@ -40,6 +40,8 @@ public interface IHyracksClientInterface {
 
     public JobId startJob(JobId jobId) throws Exception;
 
+    public void cancelJob(JobId jobId) throws Exception;
+
     public JobId distributeJob(byte[] acggfBytes) throws Exception;
 
     public JobId destroyJob(JobId jobId) throws Exception;

@@ -28,6 +28,13 @@ import org.apache.hyracks.api.util.ErrorMessageUtil;
  */
 public class HyracksDataException extends HyracksException {
 
+    public static HyracksDataException create(Throwable cause) {
+        if (cause instanceof HyracksDataException) {
+            return (HyracksDataException) cause;
+        }
+        return new HyracksDataException(cause);
+    }
+
     public static HyracksDataException create(int code, Serializable... params) {
         return new HyracksDataException(ErrorCode.HYRACKS, code, ErrorCode.getErrorMessage(code), params);
     }

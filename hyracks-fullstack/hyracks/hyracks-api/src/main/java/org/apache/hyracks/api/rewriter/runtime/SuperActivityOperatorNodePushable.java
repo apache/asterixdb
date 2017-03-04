@@ -221,11 +221,11 @@ public class SuperActivityOperatorNodePushable implements IOperatorNodePushable 
             for (Future<Void> initializationTask : initializationTasks) {
                 initializationTask.get();
             }
-        } catch (Throwable th) {
+        } catch (Exception e) {
             for (Future<Void> initializationTask : initializationTasks) {
                 initializationTask.cancel(true);
             }
-            throw new HyracksDataException(th);
+            throw new HyracksDataException(e);
         }
     }
 }
