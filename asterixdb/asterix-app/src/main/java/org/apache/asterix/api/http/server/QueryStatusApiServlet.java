@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.api.http.server;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.concurrent.ConcurrentMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -33,7 +35,6 @@ import org.apache.hyracks.http.server.utils.HttpUtil;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
 
@@ -59,16 +60,54 @@ public class QueryStatusApiServlet extends AbstractQueryApiServlet {
         IHyracksDataset hds = getHyracksDataset();
         ResultReader resultReader = new ResultReader(hds, jobId, rsId);
 
-        ObjectNode jsonResponse = om.createObjectNode();
-        final DatasetJobRecord.Status status = resultReader.getStatus();
-        if (status == null) {
+        ResultStatus resultStatus = resultStatus(resultReader.getStatus());
+
+        if (resultStatus == null) {
             LOGGER.log(Level.INFO, "No results for: \"" + strHandle + "\"");
             response.setStatus(HttpResponseStatus.NOT_FOUND);
             return;
         }
-        jsonResponse.put("status", status.name());
-        HttpUtil.setContentType(response, HttpUtil.ContentType.TEXT_PLAIN, HttpUtil.Encoding.UTF8);
-        response.setStatus(HttpResponseStatus.OK);
-        response.writer().write(jsonResponse.toString());
+
+        final StringWriter stringWriter = new StringWriter();
+        final PrintWriter resultWriter = new PrintWriter(stringWriter);
+
+        HttpUtil.setContentType(response, HttpUtil.ContentType.APPLICATION_JSON, HttpUtil.Encoding.UTF8);
+        HttpResponseStatus httpStatus = HttpResponseStatus.OK;
+
+        resultWriter.print("{\n");
+        printStatus(resultWriter, resultStatus);
+
+        if (ResultStatus.SUCCESS == resultStatus) {
+            String servletPath = servletPath(request).replace("status", "result");
+            String resHandle = "http://" + host(request) + servletPath + localPath(request);
+            printHandle(resultWriter, resHandle);
+        }
+
+        resultWriter.print("}\n");
+        resultWriter.flush();
+        String result = stringWriter.toString();
+
+        response.setStatus(httpStatus);
+        response.writer().print(result);
+        if (response.writer().checkError()) {
+            LOGGER.warning("Error flushing output writer");
+        }
+    }
+
+    ResultStatus resultStatus(DatasetJobRecord.Status status) {
+        if (status == null) {
+            return null;
+        }
+        switch (status) {
+            case IDLE:
+            case RUNNING:
+                return ResultStatus.RUNNING;
+            case SUCCESS:
+                return ResultStatus.SUCCESS;
+            case FAILED:
+                return ResultStatus.FAILED;
+            default:
+                return ResultStatus.FATAL;
+        }
     }
 }

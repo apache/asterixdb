@@ -22,6 +22,8 @@ import static org.apache.asterix.api.http.servlet.ServletConstants.HYRACKS_CONNE
 import static org.apache.asterix.api.http.servlet.ServletConstants.HYRACKS_DATASET_ATTR;
 
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -32,6 +34,7 @@ import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.dataset.IHyracksDataset;
 import org.apache.hyracks.client.dataset.HyracksDataset;
+import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.server.AbstractServlet;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -39,6 +42,46 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 class AbstractQueryApiServlet extends AbstractServlet {
+
+    public enum ResultFields {
+        REQUEST_ID("requestID"),
+        CLIENT_ID("clientContextID"),
+        SIGNATURE("signature"),
+        TYPE("type"),
+        STATUS("status"),
+        RESULTS("results"),
+        HANDLE("handle"),
+        ERRORS("errors"),
+        METRICS("metrics");
+
+        private final String str;
+
+        ResultFields(String str) {
+            this.str = str;
+        }
+
+        public String str() {
+            return str;
+        }
+    }
+
+    public enum ResultStatus {
+        RUNNING("running"),
+        SUCCESS("success"),
+        TIMEOUT("timeout"),
+        FAILED("failed"),
+        FATAL("fatal");
+
+        private final String str;
+
+        ResultStatus(String str) {
+            this.str = str;
+        }
+
+        public String str() {
+            return str;
+        }
+    }
 
     AbstractQueryApiServlet(ConcurrentMap<String, Object> ctx, String[] paths) {
         super(ctx, paths);
@@ -82,4 +125,42 @@ class AbstractQueryApiServlet extends AbstractServlet {
         }
         return null;
     }
+
+    protected static UUID printRequestId(PrintWriter pw) {
+        UUID requestId = UUID.randomUUID();
+        printField(pw, ResultFields.REQUEST_ID.str(), requestId.toString());
+        return requestId;
+    }
+
+    protected static void printStatus(PrintWriter pw, ResultStatus rs) {
+        printField(pw, ResultFields.STATUS.str(), rs.str());
+    }
+
+    protected static void printHandle(PrintWriter pw, String handle) {
+        printField(pw, ResultFields.HANDLE.str(), handle);
+    }
+
+    protected static void printField(PrintWriter pw, String name, String value) {
+        printField(pw, name, value, true);
+    }
+
+    protected static void printField(PrintWriter pw, String name, String value, boolean comma) {
+        printFieldInternal(pw, name, "\"" + value + "\"", comma);
+    }
+
+    protected static void printField(PrintWriter pw, String name, long value, boolean comma) {
+        printFieldInternal(pw, name, String.valueOf(value), comma);
+    }
+
+    protected static void printFieldInternal(PrintWriter pw, String name, String value, boolean comma) {
+        pw.print("\t\"");
+        pw.print(name);
+        pw.print("\": ");
+        pw.print(value);
+        if (comma) {
+            pw.print(',');
+        }
+        pw.print('\n');
+    }
+
 }
