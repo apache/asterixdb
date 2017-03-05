@@ -20,14 +20,16 @@
 - hosts: all
   tasks:
     - name: Check CC and NC processes
-      shell: jps | egrep '(CDriver|NCService)' | awk '{print $1}'
+      shell: ps aux | awk '/[j]ava.*(CDriver|NCService)/'
       register: procs
+      failed_when: false
 
     - set_fact:
         lines: "{{ procs.stdout_lines|length }}"
 
     - name: Stop the CC and NCs
-      shell: kill `jps | egrep '(CDriver|NCService)' | awk '{print $1}'`
+      shell: kill `ps aux | awk '/[j]ava.*(CDriver|NCService)/ {print $2}'`
+      failed_when: false
       when: lines != "0"
 
     - name: Wait two seconds
@@ -35,12 +37,14 @@
       when: lines != "0"
 
     - name: Check leftover CC and NC processes
-      shell: jps | egrep '(CDriver|NCService)' | awk '{print $1}'
+      shell: ps aux | awk '/[j]ava.*(CDriver|NCService)/'
       register: procs
+      failed_when: false
 
     - set_fact:
         lines: "{{ procs.stdout_lines|length }}"
 
     - name: Force stopping leftover CC and NC processes
-      shell: kill -9 `jps | egrep '(CDriver|NCService)' | awk '{print $1}'`
+      shell: kill -9 `ps aux | awk '/[j]ava.*(CDriver|NCService)/ {print $2}'`
+      failed_when: false
       when: lines != "0"

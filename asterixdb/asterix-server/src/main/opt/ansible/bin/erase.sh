@@ -26,6 +26,9 @@ ANSB_PATH=`dirname "${SCRIPT_PATH}"`
 
 INVENTORY=$ANSB_PATH/conf/inventory
 
+# Stop the instance first.
+$ANSB_PATH/bin/stop.sh
+
 # Erase the installation binary on all nodes.
 # TODO(yingyi): erase all data/txn/log directories.
 export ANSIBLE_HOST_KEY_CHECKING=false

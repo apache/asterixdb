@@ -20,13 +20,13 @@
 - name: Copy cluster config to CC
   synchronize:
     src: /tmp/asterixdb/cc.conf
-    dest: "{{ basedir }}/cc.conf"
+    dest: "{{ binarydir }}/cc.conf"
 
 - name: Update cluster config
-  shell: find -P "{{ basedir }}/cc.conf" | xargs perl -pi -e 's|command=asterixnc|command={{ ncbin }}|g'
+  shell: find -P "{{ binarydir }}/cc.conf" | xargs perl -pi -e 's|command=asterixnc|command={{ ncbin }}|g'
 
 - name: Start CC
-  shell: nohup "{{ cc }}" -config-file "{{ basedir }}/cc.conf" &> "{{ binarydir }}/logs/cc.log" &
+  shell: nohup "{{ cc }}" -config-file "{{ binarydir }}/cc.conf" &> "{{ binarydir }}/logs/cc.log" &
   args:
     chdir: "{{ binarydir }}"
   async: 10
