@@ -18,7 +18,9 @@
 # ------------------------------------------------------------
 
 - name: Start NC Service
-  shell: nohup "{{ ncservice }}" &> "{{ binarydir }}/logs/ncservice.log" &
+  shell: |
+    nohup "{{ ncservice }}" >> "{{ binarydir }}/logs/ncservice.log" 2>&1 &
+    sleep 1
   args:
     chdir: "{{ binarydir }}"
   async: 10
