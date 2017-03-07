@@ -29,7 +29,7 @@ To start cluster-based instance, you need to do the following steps:
    all nodes listed in conf/inventory.
 
 3. Edit the instance configuration file conf/cc.conf when necessary.
-   You can add/update whatever parameters in the [app] and [cc] sections.
+   You can add/update whatever parameters in the [common] and [cc] sections.
 
 4. Edit the inventory file conf/inventory when necessary.
    You mostly only need to sepecify the node DNS names (or IPs) for the cluster controller ([cc]) and node controllers
