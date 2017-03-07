@@ -69,5 +69,3 @@ ${license.content}
    and condition of the following licenses.
 ===
 <#include "source_licenses.ftl">
-<#-- TODO(mblow): consume hyracks license via maven artifact -->
-<#include "hyracks-fullstack_source_licenses.ftl">

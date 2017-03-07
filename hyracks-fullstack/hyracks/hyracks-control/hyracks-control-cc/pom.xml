@@ -44,31 +44,6 @@
             </goals>
           </execution>
         </executions>
-        <configuration>
-          <licenses combine.children="append">
-            <license implementation="org.apache.rat.analysis.license.MITLicense"/>
-            <license implementation="org.apache.rat.analysis.license.SimplePatternBasedLicense">
-              <licenseFamilyCategory>MIT</licenseFamilyCategory>
-              <licenseFamilyName>The MIT License</licenseFamilyName>
-              <notes>For JQuery MIT/GPL2 Dual License</notes>
-              <patterns>
-                <pattern>jQuery UI 1.8.17</pattern>
-                <pattern>jQuery v1.6.4</pattern>
-                <pattern>Released under the MIT license by IOLA, December 2007.</pattern>
-                <pattern>licensed under the MIT (http://www.opensource.org/licenses/mit-license.php)</pattern>
-                <pattern>jQuery UI CSS Framework 1.8.17</pattern>
-              </patterns>
-            </license>
-          </licenses>
-          <licenseFamilies combine.children="append">
-            <licenseFamily implementation="org.apache.rat.license.MITLicenseFamily"/>
-          </licenseFamilies>
-          <excludes combine.children="append">
-            <!-- See hyracks-fullstack-license/src/main/licenses/templates/source_licenses.ftl -->
-            <exclude>src/main/resources/static/javascript/flot/jquery.flot.resize.min.js</exclude>
-            <exclude>src/main/resources/static/javascript/jsplumb/jquery.jsPlumb-1.3.5-all-min.js</exclude>
-          </excludes>
-        </configuration>
       </plugin>
     </plugins>
   </build>

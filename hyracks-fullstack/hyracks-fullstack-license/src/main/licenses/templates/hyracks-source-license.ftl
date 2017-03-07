@@ -29,5 +29,4 @@ ${license.content}
    and license terms. Your use of this source code is subject to the terms
    and condition of the following licenses.
 ===
-<#include "source_licenses.ftl">
 <#include "source_only_licenses.ftl">
