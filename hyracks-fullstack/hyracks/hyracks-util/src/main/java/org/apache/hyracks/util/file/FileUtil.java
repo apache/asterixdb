@@ -19,14 +19,27 @@
 package org.apache.hyracks.util.file;
 
 import java.io.File;
+import java.util.regex.Pattern;
 
 public class FileUtil {
+
     private FileUtil() {
     }
 
     public static String joinPath(String... elements) {
-        return String.join(File.separator, elements)
-                .replaceAll("([^:])(" + File.separator + ")+", "$1$2")
-                .replaceAll(File.separator + "$", "");
+        return joinPath(File.separatorChar, elements);
+    }
+
+    static String joinPath(char separatorChar, String... elements) {
+        final String separator = String.valueOf(separatorChar);
+        final String escapedSeparator = Pattern.quote(separator);
+        String joined = String.join(separator, elements);
+        if (separatorChar == '\\') {
+            // preserve leading double-slash on windows (UNC)
+            return joined.replaceAll("([^" + escapedSeparator + "])(" + escapedSeparator + ")+", "$1$2")
+                    .replaceAll(escapedSeparator + "$", "");
+        } else {
+            return joined.replaceAll("(" + escapedSeparator + ")+", "$1").replaceAll(escapedSeparator + "$", "");
+        }
     }
 }
