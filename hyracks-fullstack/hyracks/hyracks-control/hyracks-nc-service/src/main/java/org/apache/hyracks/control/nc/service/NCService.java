@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.StringReader;
+import java.io.StringWriter;
 import java.lang.management.ManagementFactory;
 import java.lang.management.OperatingSystemMXBean;
 import java.net.InetAddress;
@@ -35,7 +36,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.commons.lang3.SystemUtils;
-import org.apache.hyracks.control.common.controllers.IniUtils;
+import org.apache.hyracks.control.common.config.ConfigUtils;
+import org.apache.hyracks.control.common.controllers.NCConfig;
+import org.apache.hyracks.api.config.Section;
 import org.apache.hyracks.control.common.controllers.ServiceConstants;
 import org.apache.hyracks.control.common.controllers.ServiceConstants.ServiceCommand;
 import org.ini4j.Ini;
@@ -85,7 +88,7 @@ public class NCService {
         // Find the command to run. For now, we allow overriding the name, but
         // still assume it's located in the bin/ directory of the deployment.
         // Even this is likely more configurability than we need.
-        String command = IniUtils.getString(ini, nodeSection, "command", "hyracksnc");
+        String command = ConfigUtils.getString(ini, nodeSection, NCConfig.Option.COMMAND.ini(), "hyracksnc");
         // app.home is specified by the Maven appassembler plugin. If it isn't set,
         // fall back to user's home dir. Again this is likely more flexibility
         // than we need.
@@ -112,7 +115,7 @@ public class NCService {
     }
 
     private static void configEnvironment(Map<String, String> env) {
-        String jvmargs = IniUtils.getString(ini, nodeSection, "jvm.args", null);
+        String jvmargs = ConfigUtils.getString(ini, nodeSection, NCConfig.Option.JVM_ARGS.ini(), null);
         if (jvmargs != null) {
             LOGGER.info("Using JAVA_OPTS from conf file (jvm.args)");
         } else {
@@ -188,7 +191,13 @@ public class NCService {
             return retval == 0;
         } catch (Exception e) {
             if (LOGGER.isLoggable(Level.SEVERE)) {
-                LOGGER.log(Level.SEVERE, "Configuration from CC broken", e);
+                StringWriter sw = new StringWriter();
+                try {
+                    ini.store(sw);
+                    LOGGER.log(Level.SEVERE, "Configuration from CC broken: \n" + sw.toString(), e);
+                } catch (IOException e1) {
+                    LOGGER.log(Level.SEVERE, "Configuration from CC broken, failed to serialize", e1);
+                }
             }
             return false;
         }
@@ -213,7 +222,7 @@ public class NCService {
                 case START_NC:
                     String iniString = ois.readUTF();
                     ini = new Ini(new StringReader(iniString));
-                    ncId = IniUtils.getString(ini, "localnc", "id", "");
+                    ncId = ConfigUtils.getString(ini, Section.LOCALNC, NCConfig.Option.NODE_ID, "");
                     nodeSection = "nc/" + ncId;
                     return launchNCProcess();
                 case TERMINATE:
@@ -272,7 +281,7 @@ public class NCService {
             try (ServerSocket listener = new ServerSocket(port, 5, addr)) {
                 boolean launched = false;
                 while (!launched) {
-                    LOGGER.info("Waiting for connection from CC on " + addr + ":" + port);
+                    LOGGER.info("Waiting for connection from CC on " + (addr == null ? "*" : addr) + ":" + port);
                     try (Socket socket = listener.accept()) {
                         // QQQ Because acceptConnection() doesn't return if the
                         // service is started appropriately, the socket remains

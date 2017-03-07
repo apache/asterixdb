@@ -1113,13 +1113,13 @@ public class TestExecutor {
 
     private void deleteNCTxnLogs(String nodeId, CompilationUnit cUnit) throws Exception {
         OutputFormat fmt = OutputFormat.forCompilationUnit(cUnit);
-        String endpoint = "/admin/cluster";
+        String endpoint = "/admin/cluster/node/" + nodeId + "/config";
         InputStream executeJSONGet = executeJSONGet(fmt, new URI("http://" + host + ":" + port + endpoint));
         StringWriter actual = new StringWriter();
         IOUtils.copy(executeJSONGet, actual, StandardCharsets.UTF_8);
         String config = actual.toString();
         ObjectMapper om = new ObjectMapper();
-        String logDir = om.readTree(config).findPath("transaction.log.dirs").get(nodeId).asText();
+        String logDir = om.readTree(config).findPath("txn.log.dir").asText();
         FileUtils.deleteQuietly(new File(logDir));
     }
 

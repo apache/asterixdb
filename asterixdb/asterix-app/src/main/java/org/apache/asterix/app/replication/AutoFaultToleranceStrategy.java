@@ -67,6 +67,7 @@ import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.runtime.utils.AppContextInfo;
 import org.apache.asterix.util.FaultToleranceUtil;
 import org.apache.hyracks.api.application.IClusterLifecycleListener.ClusterEventType;
+import org.apache.hyracks.api.config.IOption;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class AutoFaultToleranceStrategy implements IFaultToleranceStrategy {
@@ -113,9 +114,7 @@ public class AutoFaultToleranceStrategy implements IFaultToleranceStrategy {
     }
 
     private synchronized void notifyFailbackPlansNodeFailure(String nodeId) {
-        Iterator<NodeFailbackPlan> iterator = planId2FailbackPlanMap.values().iterator();
-        while (iterator.hasNext()) {
-            NodeFailbackPlan plan = iterator.next();
+        for (NodeFailbackPlan plan : planId2FailbackPlanMap.values()) {
             plan.notifyNodeFailure(nodeId);
         }
     }
@@ -173,7 +172,7 @@ public class AutoFaultToleranceStrategy implements IFaultToleranceStrategy {
                 try {
                     messageBroker.sendApplicationMessageToNC(takeoverRequest, replica);
                 } catch (Exception e) {
-                    /**
+                    /*
                      * if we fail to send the request, it means the NC we tried to send the request to
                      * has failed. When the failure notification arrives, we will send any pending request
                      * that belongs to the failed NC to a different active replica.
@@ -186,7 +185,7 @@ public class AutoFaultToleranceStrategy implements IFaultToleranceStrategy {
 
     private boolean addActiveReplica(String replica, ClusterPartition partition,
             Map<String, List<Integer>> partitionRecoveryPlan) {
-        Map<String, Map<String, String>> activeNcConfiguration = clusterManager.getActiveNcConfiguration();
+        Map<String, Map<IOption, Object>> activeNcConfiguration = clusterManager.getActiveNcConfiguration();
         if (activeNcConfiguration.containsKey(replica) && !failedNodes.contains(replica)) {
             if (!partitionRecoveryPlan.containsKey(replica)) {
                 List<Integer> replicaPartitions = new ArrayList<>();
@@ -213,7 +212,7 @@ public class AutoFaultToleranceStrategy implements IFaultToleranceStrategy {
             ClusterPartition[] nodePartitions = clusterManager.getNodePartitions(replicaId);
             for (ClusterPartition partition : nodePartitions) {
                 plan.addParticipant(partition.getActiveNodeId());
-                /**
+                /*
                  * if the partition original node is the returning node,
                  * add it to the list of the partitions which will be failed back
                  */
@@ -232,7 +231,7 @@ public class AutoFaultToleranceStrategy implements IFaultToleranceStrategy {
 
     private synchronized void processPendingFailbackPlans() {
         ClusterState state = clusterManager.getState();
-        /**
+        /*
          * if the cluster state is not ACTIVE, then failbacks should not be processed
          * since some partitions are not active
          */
@@ -240,7 +239,7 @@ public class AutoFaultToleranceStrategy implements IFaultToleranceStrategy {
             while (!pendingProcessingFailbackPlans.isEmpty()) {
                 //take the first pending failback plan
                 NodeFailbackPlan plan = pendingProcessingFailbackPlans.pop();
-                /**
+                /*
                  * A plan at this stage will be in one of two states:
                  * 1. PREPARING -> the participants were selected but we haven't sent any request.
                  * 2. PENDING_ROLLBACK -> a participant failed before we send any requests
@@ -253,7 +252,7 @@ public class AutoFaultToleranceStrategy implements IFaultToleranceStrategy {
                         clusterManager.updateClusterPartition(partitionId, failbackNode, false);
                     }
 
-                    /**
+                    /*
                      * if the returning node is the original metadata node,
                      * then metadata node will change after the failback completes
                      */
@@ -268,7 +267,7 @@ public class AutoFaultToleranceStrategy implements IFaultToleranceStrategy {
                     //force new jobs to wait
                     clusterManager.setState(ClusterState.REBALANCING);
                     handleFailbackRequests(plan, messageBroker);
-                    /**
+                    /*
                      * wait until the current plan is completed before processing the next plan.
                      * when the current one completes or is reverted, the cluster state will be
                      * ACTIVE again, and the next failback plan (if any) will be processed.
@@ -305,11 +304,11 @@ public class AutoFaultToleranceStrategy implements IFaultToleranceStrategy {
             clusterPartitionsMap.put(partition.getPartitionId(), partition);
         }
         for (ClusterPartition partition : clusterPartitons) {
-            if (partition.getActiveNodeId().equals(nodeId)) {
+            if (nodeId.equals(partition.getActiveNodeId())) {
                 nodePartitions.add(partition);
             }
         }
-        /**
+        /*
          * if there is any pending takeover request this node was supposed to handle,
          * it needs to be sent to a different replica
          */
@@ -359,7 +358,7 @@ public class AutoFaultToleranceStrategy implements IFaultToleranceStrategy {
     public synchronized void process(PreparePartitionsFailbackResponseMessage msg) {
         NodeFailbackPlan plan = planId2FailbackPlanMap.get(msg.getPlanId());
         plan.markRequestCompleted(msg.getRequestId());
-        /**
+        /*
          * A plan at this stage will be in one of three states:
          * 1. PENDING_PARTICIPANT_REPONSE -> one or more responses are still expected (wait).
          * 2. PENDING_COMPLETION -> all responses received (time to send completion request).
@@ -382,7 +381,7 @@ public class AutoFaultToleranceStrategy implements IFaultToleranceStrategy {
     }
 
     public synchronized void process(CompleteFailbackResponseMessage response) throws HyracksDataException {
-        /**
+        /*
          * the failback plan completed successfully:
          * Remove all references to it.
          * Remove the the failing back node from the failed nodes list.
@@ -409,8 +408,7 @@ public class AutoFaultToleranceStrategy implements IFaultToleranceStrategy {
             // Since the metadata node will be changed, we need to rebind the proxy object
             MetadataManager.INSTANCE.rebindMetadataNode();
         } catch (Exception e) {
-
-            /**
+            /*
              * if we fail to send the request, it means the NC we tried to send the request to
              * has failed. When the failure notification arrives, a new NC will be assigned to
              * the metadata partition and a new metadata node takeover request will be sent to it.

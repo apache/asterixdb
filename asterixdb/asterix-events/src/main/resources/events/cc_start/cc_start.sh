@@ -18,14 +18,14 @@
 # under the License.
 
 if [ ! -d $LOG_DIR ];
-then 
+then
   mkdir -p $LOG_DIR
 fi
-ccArgs='-client-net-ip-address '$CLIENT_NET_IP
-ccArgs=$ccArgs' -client-net-port '$CLIENT_NET_PORT
-ccArgs=$ccArgs' -cluster-net-ip-address '$CLUSTER_NET_IP
-ccArgs=$ccArgs' -cluster-net-port '$CLUSTER_NET_PORT
-ccArgs=$ccArgs' -http-port '$HTTP_PORT
+ccArgs='-client-listen-address '$CLIENT_NET_IP
+ccArgs=$ccArgs' -client-listen-port '$CLIENT_NET_PORT
+ccArgs=$ccArgs' -address '$CLUSTER_NET_IP
+ccArgs=$ccArgs' -cluster-listen-port '$CLUSTER_NET_PORT
+ccArgs=$ccArgs' -console-listen-port '$HTTP_PORT
 
 if [ ! -z $HEARTBEAT_PERIOD ]
 then
@@ -34,17 +34,12 @@ fi
 
 if [ ! -z $MAX_HEARTBEAT_LAPSE_PERIODS ]
 then
-ccArgs=$ccArgs' -max-heartbeat-lapse-periods '$MAX_HEARTBEAT_LAPSE_PERIODS
+ccArgs=$ccArgs' -heartbeat-max-misses '$MAX_HEARTBEAT_LAPSE_PERIODS
 fi
 
 if [ ! -z $PROFILE_DUMP_PERIOD ]
 then
 ccArgs=$ccArgs' -profile-dump-period '$PROFILE_DUMP_PERIOD
-fi
-
-if [ ! -z $DEFAULT_MAX_JOB_ATTEMPTS ]
-then
-ccArgs=$ccArgs' -default-max-job-attempts '$DEFAULT_MAX_JOB_ATTEMPTS
 fi
 
 if [ ! -z $JOB_HISTORY_SIZE ]
@@ -54,7 +49,7 @@ fi
 
 if [ ! -z $RESULT_TIME_TO_LIVE ]
 then
-ccArgs=$ccArgs' "-result-time-to-live '$RESULT_TIME_TO_LIVE
+ccArgs=$ccArgs' -result-ttl '$RESULT_TIME_TO_LIVE
 fi
 
 if [ ! -z $RESULT_SWEEP_THRESHOLD ]
@@ -64,14 +59,17 @@ fi
 
 if [ ! -z $CC_ROOT ]
 then
-ccArgs=$ccArgs' -cc-root '$CC_ROOT
+ccArgs=$ccArgs' -root-dir '$CC_ROOT
 fi
 cd $WORKING_DIR
-DATE=`date`
+# TODO(mblow): ensure logging configuration is correct here...
+# export JAVA_OPTS="$JAVA_OPTS -Dlog4j.configuration=file:$WORKING_DIR/conf/log4j.properties"
 
+DATE=`date`
 cat <<EOF >> $LOG_DIR/cc.log
 --------------------------------------------------------------------------------
 LOG START: $DATE
+JAVA_OPTS: $JAVA_OPTS
 --------------------------------------------------------------------------------
 EOF
-$ASTERIX_HOME/bin/asterixcc echo $ccArgs >> $LOG_DIR/cc.log 2>&1
+$ASTERIX_HOME/bin/asterixcc $ccArgs >> $LOG_DIR/cc.log 2>&1

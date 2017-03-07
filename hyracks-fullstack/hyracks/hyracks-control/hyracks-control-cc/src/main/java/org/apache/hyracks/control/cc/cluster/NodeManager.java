@@ -137,7 +137,7 @@ public class NodeManager implements INodeManager {
             Map.Entry<String, NodeControllerState> entry = nodeIterator.next();
             String nodeId = entry.getKey();
             NodeControllerState state = entry.getValue();
-            if (state.incrementLastHeartbeatDuration() >= ccConfig.maxHeartbeatLapsePeriods) {
+            if (state.incrementLastHeartbeatDuration() >= ccConfig.getHeartbeatMaxMisses()) {
                 deadNodes.add(nodeId);
                 affectedJobIds.addAll(state.getActiveJobIds());
                 // Removes the node from node map.
@@ -172,10 +172,7 @@ public class NodeManager implements INodeManager {
 
     // Retrieves the IP address for a given node.
     private InetAddress getIpAddress(NodeControllerState ncState) throws HyracksException {
-        String ipAddress = ncState.getNCConfig().dataIPAddress;
-        if (ncState.getNCConfig().dataPublicIPAddress != null) {
-            ipAddress = ncState.getNCConfig().dataPublicIPAddress;
-        }
+        String ipAddress = ncState.getNCConfig().getDataPublicAddress();
         try {
             return InetAddress.getByName(ipAddress);
         } catch (UnknownHostException e) {

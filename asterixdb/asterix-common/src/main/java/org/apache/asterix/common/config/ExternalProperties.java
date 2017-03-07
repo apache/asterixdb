@@ -18,101 +18,107 @@
  */
 package org.apache.asterix.common.config;
 
-import java.util.logging.Level;
+import static org.apache.hyracks.control.common.config.OptionTypes.*;
+
+import org.apache.hyracks.api.config.IOption;
+import org.apache.hyracks.api.config.IOptionType;
+import org.apache.hyracks.api.config.Section;
 
 public class ExternalProperties extends AbstractProperties {
 
-    public static final String EXTERNAL_WEBPORT_KEY = "web.port";
-    public static final int EXTERNAL_WEBPORT_DEFAULT = 19001;
+    public enum Option implements IOption {
+        WEB_PORT(INTEGER, 19001),
+        WEB_QUERYINTERFACE_PORT(INTEGER, 19006),
+        API_PORT(INTEGER, 19002),
+        FEED_PORT(INTEGER, 19003),
+        LOG_LEVEL(LEVEL, java.util.logging.Level.WARNING),
+        MAX_WAIT_ACTIVE_CLUSTER(INTEGER, 60),
+        PLOT_ACTIVATE(BOOLEAN, false),
+        CC_JAVA_OPTS(STRING, "-Xmx1024m"),
+        NC_JAVA_OPTS(STRING, "-Xmx1024m");
 
-    public static final String EXTERNAL_SECONDARY_WEBPORT_KEY = "web.secondary.port";
-    public static final int EXTERNAL_SECONDARY_WEBPORT_DEFAULT = 19005;
+        private final IOptionType type;
+        private final Object defaultValue;
 
-    public static final String QUERY_WEBPORT_KEY = "web.queryinterface.port";
-    public static final int QUERY_WEBPORT_DEFAULT = 19006;
+        Option(IOptionType type, Object defaultValue) {
+            this.type = type;
+            this.defaultValue = defaultValue;
+        }
 
-    public static final String EXTERNAL_LOGLEVEL_KEY = "log.level";
-    public static final Level EXTERNAL_LOGLEVEL_DEFAULT = Level.WARNING;
+        @Override
+        public Section section() {
+            switch (this) {
+                case WEB_PORT:
+                case WEB_QUERYINTERFACE_PORT:
+                case API_PORT:
+                case FEED_PORT:
+                    return Section.CC;
+                case LOG_LEVEL:
+                case MAX_WAIT_ACTIVE_CLUSTER:
+                case PLOT_ACTIVATE:
+                    return Section.COMMON;
+                case CC_JAVA_OPTS:
+                case NC_JAVA_OPTS:
+                    return Section.VIRTUAL;
+                default:
+                    throw new IllegalStateException("NYI: " + this);
+            }
+        }
 
-    public static final String EXTERNAL_APISERVER_KEY = "api.port";
-    public static final int EXTERNAL_APISERVER_DEFAULT = 19002;
+        @Override
+        public String description() {
+            // TODO(mblow): add descriptions
+            return null;
+        }
 
-    public static final String EXTERNAL_FEEDSERVER_KEY = "feed.port";
-    public static final int EXTERNAL_FEEDSERVER_DEFAULT = 19003;
+        @Override
+        public IOptionType type() {
+            return type;
+        }
 
-    public static final String EXTERNAL_CC_JAVA_OPTS_KEY = "cc.java.opts";
-    public static final String EXTERNAL_CC_JAVA_OPTS_DEFAULT = "-Xmx1024m";
-
-    public static final String EXTERNAL_NC_JAVA_OPTS_KEY = "nc.java.opts";
-    public static final String EXTERNAL_NC_JAVA_OPTS_DEFAULT = "-Xmx1024m";
-
-    public static final String EXTERNAL_MAX_WAIT_FOR_ACTIVE_CLUSTER = "max.wait.active.cluster";
-    public static final int EXTERNAL_MAX_WAIT_FOR_ACTIVE_CLUSTER_DEFAULT = 60;
-
-    public static final String EXTERNAL_PLOT_ACTIVATE = "plot.activate";
-    public static final boolean EXTERNAL_PLOT_ACTIVATE_DEFAULT = false;
+        @Override
+        public Object defaultValue() {
+            return defaultValue;
+        }
+    }
 
     public ExternalProperties(PropertiesAccessor accessor) {
         super(accessor);
     }
 
-    @PropertyKey(EXTERNAL_WEBPORT_KEY)
     public int getWebInterfacePort() {
-        return accessor.getProperty(EXTERNAL_WEBPORT_KEY, EXTERNAL_WEBPORT_DEFAULT,
-                PropertyInterpreters.getIntegerPropertyInterpreter());
+        return accessor.getInt(Option.WEB_PORT);
     }
 
-    @PropertyKey(EXTERNAL_SECONDARY_WEBPORT_KEY)
-    public int getSecondaryWebInterfacePort() {
-        return accessor.getProperty(EXTERNAL_SECONDARY_WEBPORT_KEY, EXTERNAL_SECONDARY_WEBPORT_DEFAULT,
-                PropertyInterpreters.getIntegerPropertyInterpreter());
-    }
-
-    @PropertyKey(QUERY_WEBPORT_KEY)
     public int getQueryWebInterfacePort() {
-        return accessor.getProperty(QUERY_WEBPORT_KEY, QUERY_WEBPORT_DEFAULT,
-                PropertyInterpreters.getIntegerPropertyInterpreter());
+        return accessor.getInt(Option.WEB_QUERYINTERFACE_PORT);
     }
 
-    @PropertyKey(EXTERNAL_APISERVER_KEY)
     public int getAPIServerPort() {
-        return accessor.getProperty(EXTERNAL_APISERVER_KEY, EXTERNAL_APISERVER_DEFAULT,
-                PropertyInterpreters.getIntegerPropertyInterpreter());
+        return accessor.getInt(Option.API_PORT);
     }
 
-    @PropertyKey(EXTERNAL_FEEDSERVER_KEY)
     public int getFeedServerPort() {
-        return accessor.getProperty(EXTERNAL_FEEDSERVER_KEY, EXTERNAL_FEEDSERVER_DEFAULT,
-                PropertyInterpreters.getIntegerPropertyInterpreter());
+        return accessor.getInt(Option.FEED_PORT);
     }
 
-    @PropertyKey(EXTERNAL_LOGLEVEL_KEY)
-    @Stringify
-    public Level getLogLevel() {
-        return accessor.getProperty(EXTERNAL_LOGLEVEL_KEY, EXTERNAL_LOGLEVEL_DEFAULT,
-                PropertyInterpreters.getLevelPropertyInterpreter());
+    public java.util.logging.Level getLogLevel() {
+        return accessor.getLoggingLevel(Option.LOG_LEVEL);
+    }
+
+    public int getMaxWaitClusterActive() {
+        return accessor.getInt(Option.MAX_WAIT_ACTIVE_CLUSTER);
+    }
+
+    public boolean getIsPlottingEnabled() {
+        return accessor.getBoolean(Option.PLOT_ACTIVATE);
     }
 
     public String getNCJavaParams() {
-        return accessor.getProperty(EXTERNAL_NC_JAVA_OPTS_KEY, EXTERNAL_NC_JAVA_OPTS_DEFAULT,
-                PropertyInterpreters.getStringPropertyInterpreter());
+        return accessor.getString(Option.NC_JAVA_OPTS);
     }
 
     public String getCCJavaParams() {
-        return accessor.getProperty(EXTERNAL_CC_JAVA_OPTS_KEY, EXTERNAL_CC_JAVA_OPTS_DEFAULT,
-                PropertyInterpreters.getStringPropertyInterpreter());
+        return accessor.getString(Option.CC_JAVA_OPTS);
     }
-
-    @PropertyKey(EXTERNAL_MAX_WAIT_FOR_ACTIVE_CLUSTER)
-    public int getMaxWaitClusterActive() {
-        return accessor.getProperty(EXTERNAL_MAX_WAIT_FOR_ACTIVE_CLUSTER, EXTERNAL_MAX_WAIT_FOR_ACTIVE_CLUSTER_DEFAULT,
-                PropertyInterpreters.getIntegerPropertyInterpreter());
-    }
-
-    @PropertyKey(EXTERNAL_PLOT_ACTIVATE)
-    public Boolean getIsPlottingEnabled() {
-        return accessor.getProperty(EXTERNAL_PLOT_ACTIVATE, EXTERNAL_PLOT_ACTIVATE_DEFAULT,
-                PropertyInterpreters.getBooleanPropertyInterpreter());
-    }
-
 }

@@ -140,6 +140,11 @@
         <version>3.5</version>
       </dependency>
       <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-collections4</artifactId>
+        <version>4.1</version>
+      </dependency>
+      <dependency>
         <groupId>org.apache.httpcomponents</groupId>
         <artifactId>httpcore</artifactId>
         <version>4.4.5</version>
@@ -154,6 +159,11 @@
         <artifactId>apache-rat-plugin</artifactId>
         <version>0.12</version>
       </dependency>
+      <dependency>
+        <groupId>args4j</groupId>
+        <artifactId>args4j</artifactId>
+        <version>2.33</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
@@ -164,7 +174,7 @@
         <artifactId>maven-jar-plugin</artifactId>
         <version>3.0.0</version>
         <configuration>
-          <excludes>
+          <excludes combine.children="append">
             <exclude>**/DEPENDENCIES</exclude>
           </excludes>
         </configuration>
@@ -176,6 +186,9 @@
         <configuration>
           <failOnWarning>true</failOnWarning>
           <outputXML>true</outputXML>
+          <usedDependencies>
+            <usedDependency>org.slf4j:slf4j-simple</usedDependency>
+          </usedDependencies>
         </configuration>
         <executions>
           <execution>
@@ -212,6 +225,10 @@
             <licenseFamily implementation="org.apache.rat.license.Apache20LicenseFamily"/>
           </licenseFamilies>
           <excludeSubProjects>true</excludeSubProjects>
+          <excludes combine.children="append">
+            <!-- TODO (mblow): ClusterControllerService should not get written outside of **/target/; remove once fixed -->
+            <exclude>**/ClusterControllerService/**</exclude>
+          </excludes>
         </configuration>
       </plugin>
       <plugin>
@@ -232,7 +249,7 @@
           <includes>
             <include>${global.test.includes},${test.includes}</include>
           </includes>
-          <excludes>
+          <excludes combine.children="append">
             <exclude>${global.test.excludes},${test.excludes}</exclude>
           </excludes>
         </configuration>
@@ -507,4 +524,14 @@
     <module>algebricks</module>
     <module>hyracks-fullstack-license</module>
   </modules>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-simple</artifactId>
+      <version>1.7.22</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
 </project>

@@ -27,9 +27,9 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.topology.ClusterTopology;
 
 public interface ICCContext {
-    public ClusterControllerInfo getClusterControllerInfo();
+    ClusterControllerInfo getClusterControllerInfo();
 
-    public void getIPAddressNodeMap(Map<InetAddress, Set<String>> map) throws HyracksDataException;
+    void getIPAddressNodeMap(Map<InetAddress, Set<String>> map) throws HyracksDataException;
 
-    public ClusterTopology getClusterTopology();
+    ClusterTopology getClusterTopology();
 }

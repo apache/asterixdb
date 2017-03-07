@@ -18,65 +18,84 @@
  */
 package org.apache.asterix.common.config;
 
-import org.apache.hyracks.util.StorageUtil;
-
+import static org.apache.hyracks.control.common.config.OptionTypes.INTEGER;
+import static org.apache.hyracks.control.common.config.OptionTypes.LONG;
+import static org.apache.hyracks.control.common.config.OptionTypes.LONG_BYTE_UNIT;
 import static org.apache.hyracks.util.StorageUtil.StorageUnit.MEGABYTE;
+
+import org.apache.hyracks.api.config.IOption;
+import org.apache.hyracks.api.config.IOptionType;
+import org.apache.hyracks.api.config.Section;
+import org.apache.hyracks.util.StorageUtil;
 
 public class FeedProperties extends AbstractProperties {
 
-    private static final String FEED_CENTRAL_MANAGER_PORT_KEY = "feed.central.manager.port";
-    private static final int FEED_CENTRAL_MANAGER_PORT_DEFAULT = 4500;
+    public enum Option implements IOption {
+        FEED_PENDING_WORK_THRESHOLD(INTEGER, 50),
+        FEED_MEMORY_GLOBAL_BUDGET(LONG_BYTE_UNIT, StorageUtil.getLongSizeInBytes(64L, MEGABYTE)),
+        FEED_MEMORY_AVAILABLE_WAIT_TIMEOUT(LONG, 10L),
+        FEED_CENTRAL_MANAGER_PORT(INTEGER, 4500),
+        FEED_MAX_THRESHOLD_PERIOD(INTEGER, 5);
 
-    private static final String FEED_MEMORY_GLOBALBUDGET_KEY = "feed.memory.global.budget";
-    private static final long FEED_MEMORY_GLOBALBUDGET_DEFAULT = StorageUtil.getSizeInBytes(64, MEGABYTE);
-                                                                 // i.e. 2048 frames (assuming 32768 as frame size)
+        private final IOptionType type;
+        private final Object defaultValue;
 
-    private static final String FEED_MEMORY_AVAILABLE_WAIT_TIMEOUT_KEY = "feed.memory.available.wait.timeout";
-    private static final long FEED_MEMORY_AVAILABLE_WAIT_TIMEOUT_DEFAULT = 10; // 10 seconds
+        Option(IOptionType type, Object defaultValue) {
+            this.type = type;
+            this.defaultValue = defaultValue;
+        }
 
-    private static final String FEED_PENDING_WORK_THRESHOLD_KEY = "feed.pending.work.threshold";
-    private static final int FEED_PENDING_WORK_THRESHOLD_DEFAULT = 50;
+        @Override
+        public Section section() {
+            return Section.COMMON;
+        }
 
-    private static final String FEED_MAX_SUCCESSIVE_THRESHOLD_PERIOD_KEY = "feed.max.threshold.period";
-    private static final int FEED_MAX_SUCCESSIVE_THRESHOLD_PERIOD_DEFAULT = 5;
+        @Override
+        public String description() {
+            // TODO(mblow): add missing descriptions
+            switch (this) {
+                case FEED_CENTRAL_MANAGER_PORT:
+                    return "port at which the Central Feed Manager listens for control messages from local Feed " +
+                            "Managers";
+                case FEED_MAX_THRESHOLD_PERIOD:
+                    return "maximum length of input queue before triggering corrective action";
+                default:
+                    return null;
+            }
+        }
+
+        @Override
+        public IOptionType type() {
+            return type;
+        }
+
+        @Override
+        public Object defaultValue() {
+            return defaultValue;
+        }
+    }
 
     public FeedProperties(PropertiesAccessor accessor) {
         super(accessor);
     }
 
-    @PropertyKey(FEED_MEMORY_GLOBALBUDGET_KEY)
-    public long getMemoryComponentGlobalBudget() {
-        return accessor.getProperty(FEED_MEMORY_GLOBALBUDGET_KEY, FEED_MEMORY_GLOBALBUDGET_DEFAULT,
-                PropertyInterpreters.getLongBytePropertyInterpreter());
-    }
-
-    @PropertyKey(FEED_MEMORY_AVAILABLE_WAIT_TIMEOUT_KEY)
-    public long getMemoryAvailableWaitTimeout() {
-        return accessor.getProperty(FEED_MEMORY_AVAILABLE_WAIT_TIMEOUT_KEY, FEED_MEMORY_AVAILABLE_WAIT_TIMEOUT_DEFAULT,
-                PropertyInterpreters.getLongPropertyInterpreter());
-    }
-
-    /**
-     * @return port at which the Central Feed Manager listens for control messages from local Feed Managers
-     */
-    @PropertyKey(FEED_CENTRAL_MANAGER_PORT_KEY)
-    public int getFeedCentralManagerPort() {
-        return accessor.getProperty(FEED_CENTRAL_MANAGER_PORT_KEY, FEED_CENTRAL_MANAGER_PORT_DEFAULT,
-                PropertyInterpreters.getIntegerPropertyInterpreter());
-    }
-
-    /**
-     * @return maximum length of input queue before triggering corrective action
-     */
-    @PropertyKey(FEED_PENDING_WORK_THRESHOLD_KEY)
     public int getPendingWorkThreshold() {
-        return accessor.getProperty(FEED_PENDING_WORK_THRESHOLD_KEY, FEED_PENDING_WORK_THRESHOLD_DEFAULT,
-                PropertyInterpreters.getIntegerPropertyInterpreter());
+        return accessor.getInt(Option.FEED_PENDING_WORK_THRESHOLD);
     }
 
-    @PropertyKey(FEED_MAX_SUCCESSIVE_THRESHOLD_PERIOD_KEY)
+    public long getMemoryComponentGlobalBudget() {
+        return accessor.getLong(Option.FEED_MEMORY_GLOBAL_BUDGET);
+    }
+
+    public long getMemoryAvailableWaitTimeout() {
+        return accessor.getLong(Option.FEED_MEMORY_AVAILABLE_WAIT_TIMEOUT);
+    }
+
+    public int getFeedCentralManagerPort() {
+        return accessor.getInt(Option.FEED_CENTRAL_MANAGER_PORT);
+    }
+
     public int getMaxSuccessiveThresholdPeriod() {
-        return accessor.getProperty(FEED_MAX_SUCCESSIVE_THRESHOLD_PERIOD_KEY,
-                FEED_MAX_SUCCESSIVE_THRESHOLD_PERIOD_DEFAULT, PropertyInterpreters.getIntegerPropertyInterpreter());
+        return accessor.getInt(Option.FEED_MAX_THRESHOLD_PERIOD);
     }
 }

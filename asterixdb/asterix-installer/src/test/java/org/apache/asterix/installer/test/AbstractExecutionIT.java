@@ -31,6 +31,7 @@ import org.apache.asterix.testframework.context.TestFileContext;
 import org.apache.asterix.testframework.xml.TestCase.CompilationUnit;
 import org.apache.asterix.testframework.xml.TestGroup;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.hyracks.util.file.FileUtil;
 import org.codehaus.plexus.util.FileUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -62,7 +63,7 @@ public abstract class AbstractExecutionIT {
     private static final List<String> badTestCases = new ArrayList<>();
 
     private static String reportPath =
-            new File(StringUtils.join(new String[] { "target", "failsafe-reports" }, File.separator)).getAbsolutePath();
+            new File(FileUtil.joinPath("target", "failsafe-reports")).getAbsolutePath();
 
     @Rule
     public TestRule retainLogs = new RetainLogsRule(
@@ -100,14 +101,14 @@ public abstract class AbstractExecutionIT {
         AsterixLifecycleIT.restartInstance();
 
         FileUtils.copyDirectoryStructure(
-                new File(StringUtils.join(new String[] { "..", "asterix-app", "data" }, File.separator)),
+                new File(FileUtil.joinPath("..", "asterix-app", "data")),
                 new File(AsterixInstallerIntegrationUtil.getManagixHome() + "/clusters/local/working_dir/data"));
 
         FileUtils.copyDirectoryStructure(
-                new File(StringUtils.join(new String[] { "..", "asterix-app", "target", "data" }, File.separator)),
+                new File(FileUtil.joinPath("..", "asterix-app", "target", "data")),
                 new File(AsterixInstallerIntegrationUtil.getManagixHome() + "/clusters/local/working_dir/target/data"));
 
-        FileUtils.copyDirectoryStructure(new File(StringUtils.join(new String[] { "target", "data" }, File.separator)),
+        FileUtils.copyDirectoryStructure(new File(FileUtil.joinPath("target", "data")),
                 new File(AsterixInstallerIntegrationUtil.getManagixHome()
                         + "/clusters/local/working_dir/target/data/csv"));
 
@@ -116,7 +117,7 @@ public abstract class AbstractExecutionIT {
         System.setProperty(ExternalDataConstants.NODE_RESOLVER_FACTORY_PROPERTY,
                 IdentitiyResolverFactory.class.getName());
 
-        reportPath = new File(StringUtils.join(new String[] { "target", "failsafe-reports" }, File.separator))
+        reportPath = new File(FileUtil.joinPath("target", "failsafe-reports"))
                 .getAbsolutePath();
     }
 

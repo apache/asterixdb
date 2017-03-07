@@ -41,6 +41,7 @@ import org.apache.asterix.common.config.ExternalProperties;
 import org.apache.asterix.common.config.FeedProperties;
 import org.apache.asterix.common.config.MessagingProperties;
 import org.apache.asterix.common.config.MetadataProperties;
+import org.apache.asterix.common.config.NodeProperties;
 import org.apache.asterix.common.config.PropertiesAccessor;
 import org.apache.asterix.common.config.ReplicationProperties;
 import org.apache.asterix.common.config.StorageProperties;
@@ -113,6 +114,7 @@ public class NCAppRuntimeContext implements IAppRuntimeContext {
     private BuildProperties buildProperties;
     private ReplicationProperties replicationProperties;
     private MessagingProperties messagingProperties;
+    private final NodeProperties nodeProperties;
     private ThreadExecutor threadExecutor;
     private IDatasetLifecycleManager datasetLifecycleManager;
     private IFileMapManager fileMapManager;
@@ -150,6 +152,7 @@ public class NCAppRuntimeContext implements IAppRuntimeContext {
         buildProperties = new BuildProperties(propertiesAccessor);
         replicationProperties = new ReplicationProperties(propertiesAccessor);
         messagingProperties = new MessagingProperties(propertiesAccessor);
+        nodeProperties = new NodeProperties(propertiesAccessor);
         libraryManager = new ExternalLibraryManager();
         if (extensions != null) {
             allExtensions.addAll(extensions);
@@ -220,7 +223,7 @@ public class NCAppRuntimeContext implements IAppRuntimeContext {
             //PersistentLocalResourceRepository to replicate metadata files and delete backups on drop index
             localResourceRepository.setReplicationManager(replicationManager);
 
-            /**
+            /*
              * add the partitions that will be replicated in this node as inactive partitions
              */
             //get nodes which replicate to this node
@@ -254,12 +257,12 @@ public class NCAppRuntimeContext implements IAppRuntimeContext {
          */
         ILifeCycleComponentManager lccm = ncApplicationContext.getLifeCycleComponentManager();
         lccm.register((ILifeCycleComponent) bufferCache);
-        /**
+        /*
          * LogManager must be stopped after RecoveryManager, DatasetLifeCycleManager, and ReplicationManager
          * to process any logs that might be generated during stopping these components
          */
         lccm.register((ILifeCycleComponent) txnSubsystem.getLogManager());
-        /**
+        /*
          * ReplicationManager must be stopped after indexLifecycleManager and recovery manager
          * so that any logs/files generated during closing datasets or checkpoints are sent to remote replicas
          */
@@ -267,7 +270,7 @@ public class NCAppRuntimeContext implements IAppRuntimeContext {
             lccm.register(replicationManager);
         }
         lccm.register((ILifeCycleComponent) txnSubsystem.getRecoveryManager());
-        /**
+        /*
          * Stopping indexLifecycleManager will flush and close all datasets.
          */
         lccm.register((ILifeCycleComponent) datasetLifecycleManager);
@@ -373,6 +376,11 @@ public class NCAppRuntimeContext implements IAppRuntimeContext {
     @Override
     public MessagingProperties getMessagingProperties() {
         return messagingProperties;
+    }
+
+    @Override
+    public NodeProperties getNodeProperties() {
+        return nodeProperties;
     }
 
     @Override

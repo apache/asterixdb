@@ -26,7 +26,7 @@ import org.apache.asterix.event.model.AsterixInstance.State;
 import org.apache.asterix.test.base.RetainLogsRule;
 import org.apache.asterix.test.common.TestExecutor;
 import org.apache.asterix.testframework.context.TestCaseContext;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.hyracks.util.file.FileUtil;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -44,7 +44,7 @@ public class AsterixExternalLibraryIT {
     private static final Logger LOGGER = Logger.getLogger(AsterixExternalLibraryIT.class.getName());
     private static List<TestCaseContext> testCaseCollection;
     private static String reportPath =
-            new File(StringUtils.join(new String[] { "target", "failsafe-reports" }, File.separator)).getAbsolutePath();
+            new File(FileUtil.joinPath("target", "failsafe-reports")).getAbsolutePath();
 
     private final TestExecutor testExecutor = new TestExecutor();
 

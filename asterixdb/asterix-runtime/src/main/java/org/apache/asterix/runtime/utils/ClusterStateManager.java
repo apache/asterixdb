@@ -37,12 +37,14 @@ import org.apache.asterix.common.replication.IFaultToleranceStrategy;
 import org.apache.asterix.event.schema.cluster.Cluster;
 import org.apache.asterix.event.schema.cluster.Node;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
+import org.apache.hyracks.api.config.IOption;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.HyracksException;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.apache.hyracks.control.common.controllers.NCConfig;
 
 /**
  * A holder class for properties related to the Asterix cluster.
@@ -57,8 +59,7 @@ public class ClusterStateManager implements IClusterStateManager {
 
     private static final Logger LOGGER = Logger.getLogger(ClusterStateManager.class.getName());
     public static final ClusterStateManager INSTANCE = new ClusterStateManager();
-    private static final String IO_DEVICES = "iodevices";
-    private final Map<String, Map<String, String>> activeNcConfiguration = new HashMap<>();
+    private final Map<String, Map<IOption, Object>> activeNcConfiguration = new HashMap<>();
 
     private final Cluster cluster;
     private ClusterState state = ClusterState.UNUSABLE;
@@ -95,7 +96,7 @@ public class ClusterStateManager implements IClusterStateManager {
         ftStrategy.notifyNodeFailure(nodeId);
     }
 
-    public synchronized void addNCConfiguration(String nodeId, Map<String, String> configuration)
+    public synchronized void addNCConfiguration(String nodeId, Map<IOption, Object> configuration)
             throws HyracksException {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Registering configuration parameters for node id " + nodeId);
@@ -177,7 +178,7 @@ public class ClusterStateManager implements IClusterStateManager {
      * @return a list of IO devices.
      */
     public synchronized String[] getIODevices(String nodeId) {
-        Map<String, String> ncConfig = activeNcConfiguration.get(nodeId);
+        Map<IOption, Object> ncConfig = activeNcConfiguration.get(nodeId);
         if (ncConfig == null) {
             if (LOGGER.isLoggable(Level.WARNING)) {
                 LOGGER.warning("Configuration parameters for nodeId " + nodeId
@@ -185,7 +186,7 @@ public class ClusterStateManager implements IClusterStateManager {
             }
             return new String[0];
         }
-        return ncConfig.get(IO_DEVICES).split(",");
+        return (String [])ncConfig.get(NCConfig.Option.IODEVICES);
     }
 
     @Override
@@ -312,7 +313,7 @@ public class ClusterStateManager implements IClusterStateManager {
     }
 
     @Override
-    public Map<String, Map<String, String>> getActiveNcConfiguration() {
+    public Map<String, Map<IOption, Object>> getActiveNcConfiguration() {
         return Collections.unmodifiableMap(activeNcConfiguration);
     }
 

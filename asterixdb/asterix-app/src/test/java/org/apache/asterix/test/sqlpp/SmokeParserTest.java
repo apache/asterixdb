@@ -24,7 +24,7 @@ import java.util.Collection;
 import java.util.logging.Logger;
 
 import org.apache.asterix.test.base.AsterixTestHelper;
-import org.apache.asterix.test.common.TestHelper;
+import org.apache.hyracks.util.file.FileUtil;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -41,10 +41,10 @@ public class SmokeParserTest {
     private static final String EXTENSION_RESULT = "ast";
     private static final String FILENAME_IGNORE = "ignore.txt";
     private static final String FILENAME_ONLY = "only.txt";
-    private static final String PATH_BASE = TestHelper.joinPath("src", "test", "resources", "parserts");
-    private static final String PATH_QUERIES = TestHelper.joinPath(PATH_BASE, "queries_sqlpp");
-    private static final String PATH_EXPECTED = TestHelper.joinPath(PATH_BASE, "results_parser_sqlpp");
-    private static final String PATH_ACTUAL = TestHelper.joinPath("target", "parserts");
+    private static final String PATH_BASE = FileUtil.joinPath("src", "test", "resources", "parserts");
+    private static final String PATH_QUERIES = FileUtil.joinPath(PATH_BASE, "queries_sqlpp");
+    private static final String PATH_EXPECTED = FileUtil.joinPath(PATH_BASE, "results_parser_sqlpp");
+    private static final String PATH_ACTUAL = FileUtil.joinPath("target", "parserts");
 
     private static final ArrayList<String> ignore = AsterixTestHelper.readFile(FILENAME_IGNORE, PATH_BASE);
     private static final ArrayList<String> only = AsterixTestHelper.readFile(FILENAME_ONLY, PATH_BASE);

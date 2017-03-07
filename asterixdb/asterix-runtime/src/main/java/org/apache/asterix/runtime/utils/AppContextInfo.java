@@ -18,8 +18,24 @@
  */
 package org.apache.asterix.runtime.utils;
 
+import java.io.IOException;
+import java.util.function.Supplier;
+import java.util.logging.Logger;
+
 import org.apache.asterix.common.cluster.IGlobalRecoveryManager;
-import org.apache.asterix.common.config.*;
+import org.apache.asterix.common.config.BuildProperties;
+import org.apache.asterix.common.config.CompilerProperties;
+import org.apache.asterix.common.config.ExtensionProperties;
+import org.apache.asterix.common.config.ExternalProperties;
+import org.apache.asterix.common.config.FeedProperties;
+import org.apache.asterix.common.config.IPropertiesProvider;
+import org.apache.asterix.common.config.MessagingProperties;
+import org.apache.asterix.common.config.MetadataProperties;
+import org.apache.asterix.common.config.NodeProperties;
+import org.apache.asterix.common.config.PropertiesAccessor;
+import org.apache.asterix.common.config.ReplicationProperties;
+import org.apache.asterix.common.config.StorageProperties;
+import org.apache.asterix.common.config.TransactionProperties;
 import org.apache.asterix.common.dataflow.IApplicationContextInfo;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.library.ILibraryManager;
@@ -30,10 +46,6 @@ import org.apache.hyracks.api.application.ICCApplicationContext;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
 import org.apache.hyracks.storage.common.IStorageManager;
-
-import java.io.IOException;
-import java.util.function.Supplier;
-import java.util.logging.Logger;
 
 /*
  * Acts as an holder class for IndexRegistryProvider, AsterixStorageManager
@@ -57,6 +69,7 @@ public class AppContextInfo implements IApplicationContextInfo, IPropertiesProvi
     private ReplicationProperties replicationProperties;
     private ExtensionProperties extensionProperties;
     private MessagingProperties messagingProperties;
+    private NodeProperties nodeProperties;
     private Supplier<IMetadataBootstrap> metadataBootstrapSupplier;
     private IHyracksClientConnection hcc;
     private Object extensionManager;
@@ -94,6 +107,7 @@ public class AppContextInfo implements IApplicationContextInfo, IPropertiesProvi
         INSTANCE.hcc = hcc;
         INSTANCE.buildProperties = new BuildProperties(propertiesAccessor);
         INSTANCE.messagingProperties = new MessagingProperties(propertiesAccessor);
+        INSTANCE.nodeProperties = new NodeProperties(propertiesAccessor);
         INSTANCE.metadataBootstrapSupplier = metadataBootstrapSupplier;
         INSTANCE.globalRecoveryManager = globalRecoveryManager;
 
@@ -189,6 +203,11 @@ public class AppContextInfo implements IApplicationContextInfo, IPropertiesProvi
     @Override
     public MessagingProperties getMessagingProperties() {
         return messagingProperties;
+    }
+
+    @Override
+    public NodeProperties getNodeProperties() {
+        return nodeProperties;
     }
 
     public IResourceIdManager getResourceIdManager() {

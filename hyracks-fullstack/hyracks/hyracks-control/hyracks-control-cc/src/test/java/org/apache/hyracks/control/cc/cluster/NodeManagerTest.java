@@ -46,8 +46,8 @@ public class NodeManagerTest {
     public void testNormal() throws HyracksException {
         IResourceManager resourceManager = new ResourceManager();
         INodeManager nodeManager = new NodeManager(makeCCConfig(), resourceManager);
-        NodeControllerState ncState1 = mockNodeControllerState(false);
-        NodeControllerState ncState2 = mockNodeControllerState(false);
+        NodeControllerState ncState1 = mockNodeControllerState(NODE1, false);
+        NodeControllerState ncState2 = mockNodeControllerState(NODE2, false);
 
         // Verifies states after adding nodes.
         nodeManager.addNode(NODE1, ncState1);
@@ -71,7 +71,7 @@ public class NodeManagerTest {
     public void testException() throws HyracksException {
         IResourceManager resourceManager = new ResourceManager();
         INodeManager nodeManager = new NodeManager(makeCCConfig(), resourceManager);
-        NodeControllerState ncState1 = mockNodeControllerState(true);
+        NodeControllerState ncState1 = mockNodeControllerState(NODE1, true);
 
         boolean invalidNetworkAddress = false;
         // Verifies states after a failure during adding nodes.
@@ -106,11 +106,11 @@ public class NodeManagerTest {
 
     private CCConfig makeCCConfig() {
         CCConfig ccConfig = new CCConfig();
-        ccConfig.maxHeartbeatLapsePeriods = 0;
+        ccConfig.setHeartbeatMaxMisses(0);
         return ccConfig;
     }
 
-    private NodeControllerState mockNodeControllerState(boolean invalidIpAddr) {
+    private NodeControllerState mockNodeControllerState(String nodeId, boolean invalidIpAddr) {
         NodeControllerState ncState = mock(NodeControllerState.class);
         String ipAddr = invalidIpAddr ? "255.255.255:255" : "127.0.0.2";
         NetworkAddress dataAddr = new NetworkAddress(ipAddr, 1001);
@@ -120,8 +120,8 @@ public class NodeManagerTest {
         when(ncState.getDataPort()).thenReturn(dataAddr);
         when(ncState.getDatasetPort()).thenReturn(resultAddr);
         when(ncState.getMessagingPort()).thenReturn(msgAddr);
-        NCConfig ncConfig = new NCConfig();
-        ncConfig.dataIPAddress = ipAddr;
+        NCConfig ncConfig = new NCConfig(nodeId);
+        ncConfig.setDataPublicAddress(ipAddr);
         when(ncState.getNCConfig()).thenReturn(ncConfig);
         return ncState;
     }

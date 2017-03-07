@@ -18,37 +18,37 @@
  */
 package org.apache.asterix.api.http.server;
 
+import static org.apache.asterix.api.http.servlet.ServletConstants.ASTERIX_APP_CONTEXT_INFO_ATTR;
+
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
+import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
-import org.apache.asterix.common.config.AbstractProperties;
-import org.apache.asterix.common.config.ReplicationProperties;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import io.netty.handler.codec.http.HttpHeaderNames;
+import io.netty.handler.codec.http.HttpResponseStatus;
 import org.apache.asterix.common.utils.JSONUtil;
+import org.apache.asterix.runtime.utils.AppContextInfo;
 import org.apache.asterix.runtime.utils.ClusterStateManager;
+import org.apache.hyracks.api.config.IOption;
+import org.apache.hyracks.api.config.Section;
+import org.apache.hyracks.control.common.config.ConfigUtils;
+import org.apache.hyracks.control.common.controllers.ControllerConfig;
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
 import org.apache.hyracks.http.server.AbstractServlet;
 import org.apache.hyracks.http.server.utils.HttpUtil;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
-import io.netty.handler.codec.http.HttpHeaderNames;
-import io.netty.handler.codec.http.HttpResponseStatus;
-
 public class ClusterApiServlet extends AbstractServlet {
 
     private static final Logger LOGGER = Logger.getLogger(ClusterApiServlet.class.getName());
     private static final Pattern PARENT_DIR = Pattern.compile("/[^./]+/\\.\\./");
-    private static final Pattern REPLICATION_PROPERTY = Pattern.compile("^replication\\.");
     protected static final String NODE_ID_KEY = "node_id";
     protected static final String CONFIG_URI_KEY = "configUri";
     protected static final String STATS_URI_KEY = "statsUri";
@@ -57,10 +57,9 @@ public class ClusterApiServlet extends AbstractServlet {
     protected static final String FULL_SHUTDOWN_URI_KEY = "fullShutdownUri";
     protected static final String VERSION_URI_KEY = "versionUri";
     protected static final String DIAGNOSTICS_URI_KEY = "diagnosticsUri";
-    protected static final String REPLICATION_URI_KEY = "replicationUri";
     private final ObjectMapper om = new ObjectMapper();
 
-    public ClusterApiServlet(ConcurrentMap<String, Object> ctx, String[] paths) {
+    public ClusterApiServlet(ConcurrentMap<String, Object> ctx, String... paths) {
         super(ctx, paths);
     }
 
@@ -74,9 +73,6 @@ public class ClusterApiServlet extends AbstractServlet {
             switch (localPath(request)) {
                 case "":
                     json = getClusterStateJSON(request, "");
-                    break;
-                case "/replication":
-                    json = getReplicationJSON();
                     break;
                 case "/summary":
                     json = getClusterStateSummaryJSON();
@@ -99,35 +95,11 @@ public class ClusterApiServlet extends AbstractServlet {
         return ClusterStateManager.INSTANCE.getClusterStateSummary();
     }
 
-    protected ObjectNode getReplicationJSON() {
-        for (AbstractProperties props : getPropertiesInstances()) {
-            if (props instanceof ReplicationProperties) {
-                ObjectNode json = om.createObjectNode();
-                json.putPOJO("config", props.getProperties(key -> REPLICATION_PROPERTY.matcher(key).replaceFirst("")));
-                return json;
-            }
-        }
-        throw new IllegalStateException("ERROR: replication properties not found");
-    }
-
-    protected Map<String, Object> getAllClusterProperties() {
-        Map<String, Object> allProperties = new HashMap<>();
-        for (AbstractProperties properties : getPropertiesInstances()) {
-            if (!(properties instanceof ReplicationProperties)) {
-                allProperties.putAll(properties.getProperties());
-            }
-        }
-        return allProperties;
-    }
-
-    protected List<AbstractProperties> getPropertiesInstances() {
-        return AbstractProperties.getImplementations();
-    }
-
     protected ObjectNode getClusterStateJSON(IServletRequest request, String pathToNode) {
         ObjectNode json = ClusterStateManager.INSTANCE.getClusterStateDescription();
-        Map<String, Object> allProperties = getAllClusterProperties();
-        json.putPOJO("config", allProperties);
+        AppContextInfo appConfig = (AppContextInfo) ctx.get(ASTERIX_APP_CONTEXT_INFO_ATTR);
+        json.putPOJO("config", ConfigUtils.getSectionOptionsForJSON(appConfig.getCCApplicationContext().getAppConfig(),
+                Section.COMMON, getConfigSelector()));
 
         ArrayNode ncs = (ArrayNode) json.get("ncs");
         final StringBuilder requestURL = new StringBuilder("http://");
@@ -156,12 +128,16 @@ public class ClusterApiServlet extends AbstractServlet {
         cc.put(CONFIG_URI_KEY, clusterURL + "cc/config");
         cc.put(STATS_URI_KEY, clusterURL + "cc/stats");
         cc.put(THREAD_DUMP_URI_KEY, clusterURL + "cc/threaddump");
-        json.put(REPLICATION_URI_KEY, clusterURL + "replication");
         json.put(SHUTDOWN_URI_KEY, adminURL + "shutdown");
         json.put(FULL_SHUTDOWN_URI_KEY, adminURL + "shutdown?all=true");
         json.put(VERSION_URI_KEY, adminURL + "version");
         json.put(DIAGNOSTICS_URI_KEY, adminURL + "diagnostics");
         return json;
+    }
+
+    protected Predicate<IOption> getConfigSelector() {
+        return option -> option != ControllerConfig.Option.CONFIG_FILE
+                && option != ControllerConfig.Option.CONFIG_FILE_URL;
     }
 
     private String canonicalize(CharSequence requestURL) {

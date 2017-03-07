@@ -27,7 +27,9 @@ import java.net.Socket;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.hyracks.api.config.Section;
 import org.apache.hyracks.control.cc.ClusterControllerService;
+import org.apache.hyracks.control.common.controllers.NCConfig;
 import org.apache.hyracks.control.common.controllers.ServiceConstants.ServiceCommand;
 import org.apache.hyracks.control.common.work.AbstractWork;
 import org.ini4j.Ini;
@@ -79,14 +81,18 @@ public class TriggerNCWork extends AbstractWork {
 
     /**
      * Given an Ini object, serialize it to String with some enhancements.
-     * @param ccini
+     * @param ccini the ini file to decorate and forward to NC
      */
-    String serializeIni(Ini ccini) throws IOException {
+    private String serializeIni(Ini ccini) throws IOException {
         StringWriter iniString = new StringWriter();
-        ccini.store(iniString);
+        ccini.get(Section.NC.sectionName()).putIfAbsent(NCConfig.Option.CLUSTER_ADDRESS.ini(),
+                ccs.getCCConfig().getClusterPublicAddress());
+        ccini.get(Section.NC.sectionName()).putIfAbsent(NCConfig.Option.CLUSTER_PORT.ini(),
+                String.valueOf(ccs.getCCConfig().getClusterPublicPort()));
         // Finally insert *this* NC's name into localnc section - this is a fixed
         // entry point so that NCs can determine where all their config is.
-        iniString.append("\n[localnc]\nid=").append(ncId).append("\n");
+        ccini.put(Section.LOCALNC.sectionName(), NCConfig.Option.NODE_ID.ini(), ncId);
+        ccini.store(iniString);
         if (LOGGER.isLoggable(Level.FINE)) {
             LOGGER.fine("Returning Ini file:\n" + iniString.toString());
         }

@@ -38,7 +38,7 @@ import org.apache.asterix.common.configuration.AsterixConfiguration;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.commons.compress.utils.IOUtils;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.hyracks.util.file.FileUtil;
 
 public final class TestHelper {
 
@@ -52,10 +52,6 @@ public final class TestHelper {
             }
         }
         return false;
-    }
-
-    public static String joinPath(String... pathElements) {
-        return StringUtils.join(pathElements, File.separatorChar);
     }
 
     public static void unzip(String sourceFile, String outputDir) throws IOException {
@@ -117,7 +113,7 @@ public final class TestHelper {
 
     public static void deleteExistingInstanceFiles() {
         for (String dirName : TEST_DIRS) {
-            File f = new File(joinPath(TEST_DIR_BASE_PATH, dirName));
+            File f = new File(FileUtil.joinPath(TEST_DIR_BASE_PATH, dirName));
             if (FileUtils.deleteQuietly(f)) {
                 System.out.println("Dir " + f.getName() + " deleted");
             }

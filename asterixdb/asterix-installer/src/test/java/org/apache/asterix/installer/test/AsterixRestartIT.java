@@ -28,7 +28,7 @@ import org.apache.asterix.event.model.AsterixInstance.State;
 import org.apache.asterix.test.base.RetainLogsRule;
 import org.apache.asterix.test.common.TestExecutor;
 import org.apache.asterix.testframework.context.TestCaseContext;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.hyracks.util.file.FileUtil;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -48,8 +48,7 @@ public class AsterixRestartIT {
     private static final String PATH_BASE = "src/test/resources/integrationts/restart/";
     private static final String PATH_ACTUAL = "target" + File.separator + "ittest" + File.separator;
     private static final Logger LOGGER = Logger.getLogger(AsterixRestartIT.class.getName());
-    private static String reportPath = new File(
-            StringUtils.join(new String[] { "target", "failsafe-reports" }, File.separator)).getAbsolutePath();
+    private static String reportPath = new File(FileUtil.joinPath("target", "failsafe-reports")).getAbsolutePath();
 
     private final TestExecutor testExecutor = new TestExecutor();
     private TestCaseContext tcCtx;

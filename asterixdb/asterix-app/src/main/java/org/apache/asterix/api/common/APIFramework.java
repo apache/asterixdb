@@ -34,9 +34,8 @@ import org.apache.asterix.algebra.base.ILangExpressionToPlanTranslatorFactory;
 import org.apache.asterix.app.result.ResultUtil;
 import org.apache.asterix.common.config.CompilerProperties;
 import org.apache.asterix.common.config.ExternalProperties;
-import org.apache.asterix.common.config.IPropertyInterpreter;
 import org.apache.asterix.common.config.OptimizationConfUtil;
-import org.apache.asterix.common.config.PropertyInterpreters;
+import org.apache.hyracks.control.common.config.OptionTypes;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.utils.Job;
@@ -96,6 +95,7 @@ import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.hyracks.api.config.IOptionType;
 
 /**
  * Provides helper methods for compilation of a query into a JobSpec and submission
@@ -451,16 +451,15 @@ public class APIFramework {
 
     // Gets the frame limit.
     private int getFrameLimit(String parameter, long memBudgetInConfiguration, int frameSize) {
-        IPropertyInterpreter<Long> longBytePropertyInterpreter = PropertyInterpreters.getLongBytePropertyInterpreter();
+        IOptionType<Long> longBytePropertyInterpreter = OptionTypes.LONG_BYTE_UNIT;
         long memBudget =
-                parameter == null ? memBudgetInConfiguration : longBytePropertyInterpreter.interpret(parameter);
+                parameter == null ? memBudgetInConfiguration : longBytePropertyInterpreter.parse(parameter);
         return (int) (memBudget / frameSize);
     }
 
     // Gets the parallelism parameter.
     private int getParallelism(String parameter, int parallelismInConfiguration) {
-        IPropertyInterpreter<Integer> integerIPropertyInterpreter =
-                PropertyInterpreters.getIntegerPropertyInterpreter();
-        return parameter == null ? parallelismInConfiguration : integerIPropertyInterpreter.interpret(parameter);
+        IOptionType<Integer> integerIPropertyInterpreter = OptionTypes.INTEGER;
+        return parameter == null ? parallelismInConfiguration : integerIPropertyInterpreter.parse(parameter);
     }
 }

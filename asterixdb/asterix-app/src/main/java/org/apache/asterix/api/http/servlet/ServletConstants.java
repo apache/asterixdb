@@ -21,7 +21,7 @@ package org.apache.asterix.api.http.servlet;
 public class ServletConstants {
     public static final String HYRACKS_CONNECTION_ATTR = "org.apache.asterix.HYRACKS_CONNECTION";
     public static final String HYRACKS_DATASET_ATTR = "org.apache.asterix.HYRACKS_DATASET";
-    public static final String ASTERIX_BUILD_PROP_ATTR = "org.apache.asterix.PROPS";
+    public static final String ASTERIX_APP_CONTEXT_INFO_ATTR = "org.apache.asterix.APP_CONTEXT_INFO";
     public static final String EXECUTOR_SERVICE = "org.apache.asterix.EXECUTOR_SERVICE";
 
     private ServletConstants() {

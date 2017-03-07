@@ -18,7 +18,9 @@
  */
 package org.apache.hyracks.api.application;
 
+import org.apache.hyracks.api.config.IConfigManager;
 import org.apache.hyracks.api.job.resource.NodeCapacity;
+import org.kohsuke.args4j.OptionHandlerFilter;
 
 public interface INCApplicationEntryPoint {
     void start(INCApplicationContext ncAppCtx, String[] args) throws Exception;
@@ -28,4 +30,10 @@ public interface INCApplicationEntryPoint {
     void stop() throws Exception;
 
     NodeCapacity getCapacity();
+
+    void registerConfigOptions(IConfigManager configManager);
+
+    default OptionHandlerFilter getUsageFilter() {
+        return OptionHandlerFilter.PUBLIC;
+    }
 }

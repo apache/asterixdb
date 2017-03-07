@@ -239,7 +239,7 @@
               <name>asterixcc</name>
               <mainClass>org.apache.hyracks.control.cc.CCDriver</mainClass>
               <commandLineArguments>
-                <commandLineArgument>-app-cc-main-class</commandLineArgument>
+                <commandLineArgument>-app-class</commandLineArgument>
                 <commandLineArgument>org.apache.asterix.hyracks.bootstrap.CCApplicationEntryPoint</commandLineArgument>
               </commandLineArguments>
             </program>
@@ -250,7 +250,7 @@
               <name>asterixnc</name>
               <mainClass>org.apache.hyracks.control.nc.NCDriver</mainClass>
               <commandLineArguments>
-                <commandLineArgument>-app-nc-main-class</commandLineArgument>
+                <commandLineArgument>-app-class</commandLineArgument>
                 <commandLineArgument>org.apache.asterix.hyracks.bootstrap.NCApplicationEntryPoint</commandLineArgument>
               </commandLineArguments>
             </program>
@@ -270,7 +270,7 @@
                 <platform>booter-windows</platform>
               </platforms>
               <commandLineArguments>
-                <commandLineArgument>-app-cc-main-class</commandLineArgument>
+                <commandLineArgument>-app-class</commandLineArgument>
                 <commandLineArgument>org.apache.asterix.hyracks.bootstrap.CCApplicationEntryPoint</commandLineArgument>
               </commandLineArguments>
             </daemon>
@@ -281,7 +281,7 @@
                 <platform>booter-windows</platform>
               </platforms>
               <commandLineArguments>
-                <commandLineArgument>-app-nc-main-class</commandLineArgument>
+                <commandLineArgument>-app-class</commandLineArgument>
                 <commandLineArgument>org.apache.asterix.hyracks.bootstrap.NCApplicationEntryPoint</commandLineArgument>
               </commandLineArguments>
             </daemon>
@@ -407,10 +407,10 @@
         <artifactId>maven-dependency-plugin</artifactId>
         <version>2.10</version>
         <configuration>
-          <ignoredDependencies>
+          <ignoredDependencies combine.children="append">
             <ignoredDependency>org.apache.asterix:asterix-opt-bom:*</ignoredDependency>
           </ignoredDependencies>
-          <usedDependencies>
+          <usedDependencies combine.children="append">
             <usedDependency>org.apache.asterix:asterix-app</usedDependency>
             <usedDependency>org.apache.asterix:asterix-client-helper</usedDependency>
             <usedDependency>org.apache.hadoop:hadoop-minicluster</usedDependency>
@@ -547,6 +547,10 @@
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-minicluster</artifactId>
       <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hyracks</groupId>
+      <artifactId>hyracks-util</artifactId>
     </dependency>
   </dependencies>
 </project>

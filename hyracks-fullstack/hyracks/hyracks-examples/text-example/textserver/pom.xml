@@ -40,10 +40,11 @@
         <artifactId>maven-dependency-plugin</artifactId>
         <version>2.10</version>
         <configuration>
-          <failOnWarning>true</failOnWarning>
-          <outputXML>true</outputXML>
-          <usedDependencies>
-            org.apache.hyracks:hyracks-control-nc,org.apache.hyracks:hyracks-control-cc,org.apache.hyracks:hyracks-dataflow-std,org.apache.hyracks:texthelper
+          <usedDependencies combine.children="append">
+            <usedDependency>org.apache.hyracks:hyracks-control-nc</usedDependency>
+            <usedDependency>org.apache.hyracks:hyracks-control-cc</usedDependency>
+            <usedDependency>org.apache.hyracks:hyracks-dataflow-std</usedDependency>
+            <usedDependency>org.apache.hyracks:texthelper</usedDependency>
           </usedDependencies>
         </configuration>
         <executions>
@@ -103,7 +104,7 @@
         <groupId>org.apache.rat</groupId>
         <artifactId>apache-rat-plugin</artifactId>
         <configuration>
-          <excludes>
+          <excludes combine.children="append">
             <exclude>data/file1.txt</exclude>
             <exclude>data/file2.txt</exclude>
           </excludes>

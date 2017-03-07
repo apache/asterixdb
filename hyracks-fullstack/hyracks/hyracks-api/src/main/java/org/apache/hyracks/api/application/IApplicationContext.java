@@ -21,6 +21,7 @@ package org.apache.hyracks.api.application;
 import java.io.Serializable;
 import java.util.concurrent.ThreadFactory;
 
+import org.apache.hyracks.api.config.IApplicationConfig;
 import org.apache.hyracks.api.job.IJobSerializerDeserializerContainer;
 import org.apache.hyracks.api.messages.IMessageBroker;
 import org.apache.hyracks.api.service.IControllerService;

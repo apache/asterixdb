@@ -21,6 +21,7 @@ package org.apache.asterix.common.cluster;
 import java.util.Map;
 
 import org.apache.asterix.common.api.IClusterManagementWork.ClusterState;
+import org.apache.hyracks.api.config.IOption;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public interface IClusterStateManager {
@@ -65,7 +66,7 @@ public interface IClusterStateManager {
     /**
      * @return a map of nodeId and NC Configuration for active nodes.
      */
-    Map<String, Map<String, String>> getActiveNcConfiguration();
+    Map<String, Map<IOption, Object>> getActiveNcConfiguration();
 
     /**
      * @return The current metadata node Id.

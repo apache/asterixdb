@@ -50,7 +50,7 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 public class DiagnosticsApiServlet extends NodeControllerDetailsApiServlet {
     private static final Logger LOGGER = Logger.getLogger(DiagnosticsApiServlet.class.getName());
 
-    public DiagnosticsApiServlet(ConcurrentMap<String, Object> ctx, String[] paths) {
+    public DiagnosticsApiServlet(ConcurrentMap<String, Object> ctx, String... paths) {
         super(ctx, paths);
     }
 

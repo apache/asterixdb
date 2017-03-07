@@ -18,63 +18,11 @@
  */
 package org.apache.asterix.common.config;
 
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.function.UnaryOperator;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 public abstract class AbstractProperties {
-    private static final Logger LOGGER = Logger.getLogger(AbstractProperties.class.getName());
-    private static final List<AbstractProperties> IMPLS = Collections.synchronizedList(new ArrayList<>());
 
     protected final PropertiesAccessor accessor;
 
     public AbstractProperties(PropertiesAccessor accessor) {
         this.accessor = accessor;
-        IMPLS.add(this);
-    }
-
-    public Map<String, Object> getProperties() {
-        return getProperties(UnaryOperator.identity());
-    }
-
-    public Map<String, Object> getProperties(UnaryOperator<String> keyTransformer) {
-        Map<String, Object> properties = new HashMap<>();
-        for (Method m : getClass().getMethods()) {
-            PropertyKey key = m.getAnnotation(PropertyKey.class);
-            Stringify stringify = m.getAnnotation(Stringify.class);
-            if (key != null) {
-                try {
-                    if (stringify != null) {
-                        properties.put(keyTransformer.apply(key.value()), String.valueOf(m.invoke(this)));
-                    } else {
-                        properties.put(keyTransformer.apply(key.value()), m.invoke(this));
-                    }
-                } catch (Exception e) {
-                    LOGGER.log(Level.INFO, "Error accessing property: " + key.value(), e);
-                }
-            }
-        }
-        return properties;
-    }
-
-    @Retention(RetentionPolicy.RUNTIME)
-    public @interface PropertyKey {
-        String value();
-    }
-
-    @Retention(RetentionPolicy.RUNTIME)
-    public @interface Stringify {
-    }
-
-    public static List<AbstractProperties> getImplementations() {
-        return Collections.unmodifiableList(IMPLS);
     }
 }

@@ -18,7 +18,9 @@
  */
 package org.apache.hyracks.api.application;
 
+import org.apache.hyracks.api.config.IConfigManager;
 import org.apache.hyracks.api.job.resource.IJobCapacityController;
+import org.kohsuke.args4j.OptionHandlerFilter;
 
 public interface ICCApplicationEntryPoint {
     void start(ICCApplicationContext ccAppCtx, String[] args) throws Exception;
@@ -28,4 +30,10 @@ public interface ICCApplicationEntryPoint {
     void startupCompleted() throws Exception;
 
     IJobCapacityController getJobCapacityController();
+
+    void registerConfig(IConfigManager configManager);
+
+    default OptionHandlerFilter getUsageFilter() {
+        return OptionHandlerFilter.PUBLIC;
+    }
 }

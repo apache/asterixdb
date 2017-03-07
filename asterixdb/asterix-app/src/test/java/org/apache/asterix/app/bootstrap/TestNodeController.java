@@ -58,7 +58,6 @@ import org.apache.asterix.transaction.management.resource.LSMBTreeLocalResourceM
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceFactoryProvider;
 import org.apache.asterix.transaction.management.runtime.CommitRuntime;
 import org.apache.asterix.transaction.management.service.logging.LogReader;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.runtime.base.IPushRuntime;
 import org.apache.hyracks.algebricks.runtime.operators.std.EmptyTupleSourceRuntimeFactory;
@@ -93,6 +92,7 @@ import org.apache.hyracks.storage.am.lsm.common.impls.NoMergePolicyFactory;
 import org.apache.hyracks.storage.common.file.ILocalResourceFactoryProvider;
 import org.apache.hyracks.storage.common.file.LocalResource;
 import org.apache.hyracks.test.support.TestUtils;
+import org.apache.hyracks.util.file.FileUtil;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
@@ -101,8 +101,7 @@ public class TestNodeController {
     protected static final Logger LOGGER = Logger.getLogger(TestNodeController.class.getName());
 
     protected static final String PATH_ACTUAL = "unittest" + File.separator;
-    protected static final String PATH_BASE =
-            StringUtils.join(new String[] { "src", "test", "resources", "nodetests" }, File.separator);
+    protected static final String PATH_BASE = FileUtil.joinPath("src", "test", "resources", "nodetests");
 
     protected static final String TEST_CONFIG_FILE_NAME = "asterix-build-configuration.xml";
     protected static TransactionProperties txnProperties;

@@ -48,7 +48,7 @@ public class NodesAPIIntegrationTest extends AbstractIntegrationTest {
             "net-signaling-bytes-written", "dataset-net-payload-bytes-read", "dataset-net-payload-bytes-written",
             "dataset-net-signaling-bytes-read", "dataset-net-signaling-bytes-written", "ipc-messages-sent",
             "ipc-message-bytes-sent", "ipc-messages-received", "ipc-message-bytes-received", "disk-reads",
-            "disk-writes", "ini" };
+            "disk-writes", "config" };
 
     public static final String ROOT_PATH = "/rest/nodes";
 

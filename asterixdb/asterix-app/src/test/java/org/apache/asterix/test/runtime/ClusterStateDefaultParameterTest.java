@@ -65,7 +65,7 @@ public class ClusterStateDefaultParameterTest {
     @Test
     public void test() throws Exception {
         StringBuilder result = new StringBuilder();
-        URL url = new URL("http://localhost:19002/admin/cluster");
+        URL url = new URL("http://localhost:19002/admin/cluster/node/asterix_nc1/config");
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("GET");
         BufferedReader rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));

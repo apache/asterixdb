@@ -97,7 +97,7 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>
         <configuration>
-          <usedDependencies>
+          <usedDependencies combine.children="append">
             <usedDependency>org.apache.maven:maven-core</usedDependency>
             <usedDependency>org.apache.maven:maven-compat</usedDependency>
           </usedDependencies>

@@ -72,7 +72,7 @@
       shell: printf "\n[all:vars]\nansible_ssh_user={{ user }}\n" >> "{{ inventory }}"
 
     - name: Populate CC to the cluster configuration file "{{ ccconf }}"
-      shell: printf "[cc]\ncluster.address={{ cc.private_ip }}\n\n" > "{{ ccconf }}"
+      shell: printf "[cc]\naddress={{ cc.private_ip }}\n\n" > "{{ ccconf }}"
 
     - name: Populate NCs to the cluster configuration file
       shell: printf "[nc/1]\naddress={{ cc.private_ip }}\n\n" >> "{{ ccconf }}"
@@ -93,7 +93,7 @@
         loop_var: node
 
     - name: Populate the NC txnlogdir to the cluster configuration file {{ ccconf }}
-      shell: printf "[nc]\ntxnlogdir={{ home_dir }}/txnlog\n" >> "{{ ccconf }}"
+      shell: printf "[nc]\ntxn.log.dir={{ home_dir }}/txnlog\n" >> "{{ ccconf }}"
 
     - name: Populate NC iodevices to the cluster configuration file {{ ccconf }}
       shell: printf "iodevices={{ home_dir }}/iodevice\n" >> "{{ ccconf }}"

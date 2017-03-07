@@ -22,7 +22,6 @@ import java.io.File;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.StringTokenizer;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
@@ -79,11 +78,10 @@ public class IODeviceHandle implements Serializable {
      *            comma separated list of devices
      * @return
      */
-    public static List<IODeviceHandle> getDevices(String ioDevices) {
+    public static List<IODeviceHandle> getDevices(String [] ioDevices) {
         List<IODeviceHandle> devices = new ArrayList<>();
-        StringTokenizer tok = new StringTokenizer(ioDevices, ",");
-        while (tok.hasMoreElements()) {
-            String devPath = tok.nextToken().trim();
+        for (String ioDevice : ioDevices) {
+            String devPath = ioDevice.trim();
             devices.add(new IODeviceHandle(new File(devPath), "."));
         }
         return devices;

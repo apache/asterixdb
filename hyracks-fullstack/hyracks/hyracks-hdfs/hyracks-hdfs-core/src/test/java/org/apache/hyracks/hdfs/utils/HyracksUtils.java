@@ -50,36 +50,33 @@ public class HyracksUtils {
 
     public static void init() throws Exception {
         CCConfig ccConfig = new CCConfig();
-        ccConfig.clientNetIpAddress = CC_HOST;
-        ccConfig.clusterNetIpAddress = CC_HOST;
-        ccConfig.clusterNetPort = TEST_HYRACKS_CC_PORT;
-        ccConfig.clientNetPort = TEST_HYRACKS_CC_CLIENT_PORT;
-        ccConfig.defaultMaxJobAttempts = 0;
-        ccConfig.jobHistorySize = 0;
-        ccConfig.profileDumpPeriod = -1;
+        ccConfig.setClientListenAddress(CC_HOST);
+        ccConfig.setClusterListenAddress(CC_HOST);
+        ccConfig.setClusterListenPort(TEST_HYRACKS_CC_PORT);
+        ccConfig.setClientListenPort(TEST_HYRACKS_CC_CLIENT_PORT);
+        ccConfig.setJobHistorySize(0);
+        ccConfig.setProfileDumpPeriod(-1);
 
         // cluster controller
         cc = new ClusterControllerService(ccConfig);
         cc.start();
 
         // two node controllers
-        NCConfig ncConfig1 = new NCConfig();
-        ncConfig1.ccHost = "localhost";
-        ncConfig1.clusterNetIPAddress = "localhost";
-        ncConfig1.ccPort = TEST_HYRACKS_CC_PORT;
-        ncConfig1.dataIPAddress = "127.0.0.1";
-        ncConfig1.resultIPAddress = "127.0.0.1";
-        ncConfig1.nodeId = NC1_ID;
+        NCConfig ncConfig1 = new NCConfig(NC1_ID);
+        ncConfig1.setClusterAddress("localhost");
+        ncConfig1.setClusterListenAddress("localhost");
+        ncConfig1.setClusterPort(TEST_HYRACKS_CC_PORT);
+        ncConfig1.setDataListenAddress("127.0.0.1");
+        ncConfig1.setResultListenAddress("127.0.0.1");
         nc1 = new NodeControllerService(ncConfig1);
         nc1.start();
 
-        NCConfig ncConfig2 = new NCConfig();
-        ncConfig2.ccHost = "localhost";
-        ncConfig2.clusterNetIPAddress = "localhost";
-        ncConfig2.ccPort = TEST_HYRACKS_CC_PORT;
-        ncConfig2.dataIPAddress = "127.0.0.1";
-        ncConfig2.resultIPAddress = "127.0.0.1";
-        ncConfig2.nodeId = NC2_ID;
+        NCConfig ncConfig2 = new NCConfig(NC2_ID);
+        ncConfig2.setClusterAddress("localhost");
+        ncConfig2.setClusterListenAddress("localhost");
+        ncConfig2.setClusterPort(TEST_HYRACKS_CC_PORT);
+        ncConfig2.setDataListenAddress("127.0.0.1");
+        ncConfig2.setResultListenAddress("127.0.0.1");
         nc2 = new NodeControllerService(ncConfig2);
         nc2.start();
 

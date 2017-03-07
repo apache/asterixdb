@@ -18,8 +18,33 @@
  */
 package org.apache.asterix.hyracks.bootstrap;
 
+import static org.apache.asterix.api.http.servlet.ServletConstants.ASTERIX_APP_CONTEXT_INFO_ATTR;
+import static org.apache.asterix.api.http.servlet.ServletConstants.HYRACKS_CONNECTION_ATTR;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.ConcurrentMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import org.apache.asterix.active.ActiveLifecycleListener;
-import org.apache.asterix.api.http.server.*;
+import org.apache.asterix.api.http.server.ApiServlet;
+import org.apache.asterix.api.http.server.ClusterApiServlet;
+import org.apache.asterix.api.http.server.ClusterControllerDetailsApiServlet;
+import org.apache.asterix.api.http.server.ConnectorApiServlet;
+import org.apache.asterix.api.http.server.DdlApiServlet;
+import org.apache.asterix.api.http.server.DiagnosticsApiServlet;
+import org.apache.asterix.api.http.server.FeedServlet;
+import org.apache.asterix.api.http.server.FullApiServlet;
+import org.apache.asterix.api.http.server.NodeControllerDetailsApiServlet;
+import org.apache.asterix.api.http.server.QueryApiServlet;
+import org.apache.asterix.api.http.server.QueryResultApiServlet;
+import org.apache.asterix.api.http.server.QueryServiceServlet;
+import org.apache.asterix.api.http.server.QueryStatusApiServlet;
+import org.apache.asterix.api.http.server.QueryWebInterfaceServlet;
+import org.apache.asterix.api.http.server.ShutdownApiServlet;
+import org.apache.asterix.api.http.server.UpdateApiServlet;
+import org.apache.asterix.api.http.server.VersionApiServlet;
 import org.apache.asterix.api.http.servlet.ServletConstants;
 import org.apache.asterix.app.cc.CCExtensionManager;
 import org.apache.asterix.app.cc.ResourceIdManager;
@@ -27,6 +52,7 @@ import org.apache.asterix.app.external.ExternalLibraryUtils;
 import org.apache.asterix.app.replication.FaultToleranceStrategyFactory;
 import org.apache.asterix.common.api.AsterixThreadFactory;
 import org.apache.asterix.common.config.AsterixExtension;
+import org.apache.asterix.common.config.AsterixProperties;
 import org.apache.asterix.common.config.ClusterProperties;
 import org.apache.asterix.common.config.ExternalProperties;
 import org.apache.asterix.common.config.MetadataProperties;
@@ -47,9 +73,9 @@ import org.apache.asterix.runtime.job.resource.JobCapacityController;
 import org.apache.asterix.runtime.utils.AppContextInfo;
 import org.apache.asterix.translator.IStatementExecutorFactory;
 import org.apache.hyracks.api.application.ICCApplicationContext;
-import org.apache.hyracks.api.application.ICCApplicationEntryPoint;
 import org.apache.hyracks.api.client.HyracksConnection;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
+import org.apache.hyracks.api.config.IConfigManager;
 import org.apache.hyracks.api.job.resource.IJobCapacityController;
 import org.apache.hyracks.api.lifecycle.LifeCycleComponentManager;
 import org.apache.hyracks.control.cc.ClusterControllerService;
@@ -57,15 +83,9 @@ import org.apache.hyracks.control.common.controllers.CCConfig;
 import org.apache.hyracks.http.api.IServlet;
 import org.apache.hyracks.http.server.HttpServer;
 import org.apache.hyracks.http.server.WebManager;
+import org.apache.hyracks.util.file.FileUtil;
 
-import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import static org.apache.asterix.api.http.servlet.ServletConstants.ASTERIX_BUILD_PROP_ATTR;
-import static org.apache.asterix.api.http.servlet.ServletConstants.HYRACKS_CONNECTION_ATTR;
-
-public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
+public class CCApplicationEntryPoint extends org.apache.hyracks.control.cc.CCApplicationEntryPoint {
 
     private static final Logger LOGGER = Logger.getLogger(CCApplicationEntryPoint.class.getName());
     private static IAsterixStateProxy proxy;
@@ -75,8 +95,15 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
     private IJobCapacityController jobCapacityController;
     protected WebManager webManager;
 
+    public CCApplicationEntryPoint() {
+        CCConfig.defaultDir = FileUtil.joinPath(System.getProperty("java.io.tmpdir"), "asterixdb");
+    }
+
     @Override
     public void start(ICCApplicationContext ccAppCtx, String[] args) throws Exception {
+        if (args.length > 0) {
+            throw new IllegalArgumentException("Unrecognized argument(s): " + Arrays.toString(args));
+        }
         final ClusterControllerService controllerService = (ClusterControllerService) ccAppCtx.getControllerService();
         ICCMessageBroker messageBroker = new CCMessageBroker(controllerService);
         this.appCtx = ccAppCtx;
@@ -100,7 +127,7 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
         AppContextInfo.INSTANCE.setExtensionManager(ccExtensionManager);
         final CCConfig ccConfig = controllerService.getCCConfig();
         if (System.getProperty("java.rmi.server.hostname") == null) {
-            System.setProperty("java.rmi.server.hostname", ccConfig.clusterNetIpAddress);
+            System.setProperty("java.rmi.server.hostname", ccConfig.getClusterListenAddress());
         }
         MetadataProperties metadataProperties = AppContextInfo.INSTANCE.getMetadataProperties();
 
@@ -165,7 +192,7 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
                 new HttpServer(webManager.getBosses(), webManager.getWorkers(), externalProperties.getAPIServerPort());
         IHyracksClientConnection hcc = getNewHyracksClientConnection();
         jsonAPIServer.setAttribute(HYRACKS_CONNECTION_ATTR, hcc);
-        jsonAPIServer.setAttribute(ASTERIX_BUILD_PROP_ATTR, AppContextInfo.INSTANCE);
+        jsonAPIServer.setAttribute(ASTERIX_APP_CONTEXT_INFO_ATTR, AppContextInfo.INSTANCE);
         jsonAPIServer.setAttribute(ServletConstants.EXECUTOR_SERVICE,
                 ((ClusterControllerService) appCtx.getControllerService()).getExecutor());
 
@@ -196,7 +223,7 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
     }
 
     protected void addServlet(HttpServer server, String path) {
-        server.addServlet(createServlet(server, path, path));
+        server.addServlet(createServlet(server.ctx(), path, path));
     }
 
     protected HttpServer setupQueryWebServer(ExternalProperties externalProperties) throws Exception {
@@ -216,53 +243,53 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
         return feedServer;
     }
 
-    protected IServlet createServlet(HttpServer server, String key, String... paths) {
+    protected IServlet createServlet(ConcurrentMap<String, Object> ctx, String key, String... paths) {
         switch (key) {
             case Servlets.AQL:
-                return new FullApiServlet(server.ctx(), paths, ccExtensionManager.getAqlCompilationProvider(),
+                return new FullApiServlet(ctx, paths, ccExtensionManager.getAqlCompilationProvider(),
                         getStatementExecutorFactory(), componentProvider);
             case Servlets.AQL_QUERY:
-                return new QueryApiServlet(server.ctx(), paths, ccExtensionManager.getAqlCompilationProvider(),
+                return new QueryApiServlet(ctx, paths, ccExtensionManager.getAqlCompilationProvider(),
                         getStatementExecutorFactory(), componentProvider);
             case Servlets.AQL_UPDATE:
-                return new UpdateApiServlet(server.ctx(), paths, ccExtensionManager.getAqlCompilationProvider(),
+                return new UpdateApiServlet(ctx, paths, ccExtensionManager.getAqlCompilationProvider(),
                         getStatementExecutorFactory(), componentProvider);
             case Servlets.AQL_DDL:
-                return new DdlApiServlet(server.ctx(), paths, ccExtensionManager.getAqlCompilationProvider(),
+                return new DdlApiServlet(ctx, paths, ccExtensionManager.getAqlCompilationProvider(),
                         getStatementExecutorFactory(), componentProvider);
             case Servlets.SQLPP:
-                return new FullApiServlet(server.ctx(), paths, ccExtensionManager.getSqlppCompilationProvider(),
+                return new FullApiServlet(ctx, paths, ccExtensionManager.getSqlppCompilationProvider(),
                         getStatementExecutorFactory(), componentProvider);
             case Servlets.SQLPP_QUERY:
-                return new QueryApiServlet(server.ctx(), paths, ccExtensionManager.getSqlppCompilationProvider(),
+                return new QueryApiServlet(ctx, paths, ccExtensionManager.getSqlppCompilationProvider(),
                         getStatementExecutorFactory(), componentProvider);
             case Servlets.SQLPP_UPDATE:
-                return new UpdateApiServlet(server.ctx(), paths, ccExtensionManager.getSqlppCompilationProvider(),
+                return new UpdateApiServlet(ctx, paths, ccExtensionManager.getSqlppCompilationProvider(),
                         getStatementExecutorFactory(), componentProvider);
             case Servlets.SQLPP_DDL:
-                return new DdlApiServlet(server.ctx(), paths, ccExtensionManager.getSqlppCompilationProvider(),
+                return new DdlApiServlet(ctx, paths, ccExtensionManager.getSqlppCompilationProvider(),
                         getStatementExecutorFactory(), componentProvider);
             case Servlets.QUERY_STATUS:
-                return new QueryStatusApiServlet(server.ctx(), paths);
+                return new QueryStatusApiServlet(ctx, paths);
             case Servlets.QUERY_RESULT:
-                return new QueryResultApiServlet(server.ctx(), paths);
+                return new QueryResultApiServlet(ctx, paths);
             case Servlets.QUERY_SERVICE:
-                return new QueryServiceServlet(server.ctx(), paths, ccExtensionManager.getSqlppCompilationProvider(),
+                return new QueryServiceServlet(ctx, paths, ccExtensionManager.getSqlppCompilationProvider(),
                         getStatementExecutorFactory(), componentProvider);
             case Servlets.CONNECTOR:
-                return new ConnectorApiServlet(server.ctx(), paths);
+                return new ConnectorApiServlet(ctx, paths);
             case Servlets.SHUTDOWN:
-                return new ShutdownApiServlet(server.ctx(), paths);
+                return new ShutdownApiServlet(ctx, paths);
             case Servlets.VERSION:
-                return new VersionApiServlet(server.ctx(), paths);
+                return new VersionApiServlet(ctx, paths);
             case Servlets.CLUSTER_STATE:
-                return new ClusterApiServlet(server.ctx(), paths);
+                return new ClusterApiServlet(ctx, paths);
             case Servlets.CLUSTER_STATE_NODE_DETAIL:
-                return new NodeControllerDetailsApiServlet(server.ctx(), paths);
+                return new NodeControllerDetailsApiServlet(ctx, paths);
             case Servlets.CLUSTER_STATE_CC_DETAIL:
-                return new ClusterControllerDetailsApiServlet(server.ctx(), paths);
+                return new ClusterControllerDetailsApiServlet(ctx, paths);
             case Servlets.DIAGNOSTICS:
-                return new DiagnosticsApiServlet(server.ctx(), paths);
+                return new DiagnosticsApiServlet(ctx, paths);
             default:
                 throw new IllegalStateException(String.valueOf(key));
         }
@@ -283,7 +310,13 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
         return jobCapacityController;
     }
 
+    @Override
+    public void registerConfig(IConfigManager configManager) {
+        super.registerConfig(configManager);
+        AsterixProperties.registerConfigOptions(configManager);
+    }
+
     public static synchronized void setAsterixStateProxy(IAsterixStateProxy proxy) {
-        CCApplicationEntryPoint.proxy = proxy;
+        org.apache.asterix.hyracks.bootstrap.CCApplicationEntryPoint.proxy = proxy;
     }
 }

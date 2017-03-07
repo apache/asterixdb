@@ -18,68 +18,91 @@
  */
 package org.apache.asterix.common.config;
 
+import static org.apache.hyracks.control.common.config.OptionTypes.INTEGER;
+import static org.apache.hyracks.control.common.config.OptionTypes.INTEGER_BYTE_UNIT;
+import static org.apache.hyracks.control.common.config.OptionTypes.LONG_BYTE_UNIT;
+import static org.apache.hyracks.control.common.config.OptionTypes.STRING;
 import static org.apache.hyracks.util.StorageUtil.StorageUnit.KILOBYTE;
 import static org.apache.hyracks.util.StorageUtil.StorageUnit.MEGABYTE;
 
+import org.apache.hyracks.api.config.IOption;
+import org.apache.hyracks.api.config.IOptionType;
+import org.apache.hyracks.api.config.Section;
 import org.apache.hyracks.util.StorageUtil;
 
 public class CompilerProperties extends AbstractProperties {
 
-    public static final String COMPILER_SORTMEMORY_KEY = "compiler.sortmemory";
-    private static final long COMPILER_SORTMEMORY_DEFAULT = StorageUtil.getSizeInBytes(32, MEGABYTE);
+    public enum Option implements IOption {
+        COMPILER_SORTMEMORY(LONG_BYTE_UNIT, StorageUtil.getLongSizeInBytes(32L, MEGABYTE)),
+        COMPILER_JOINMEMORY(LONG_BYTE_UNIT, StorageUtil.getLongSizeInBytes(32L, MEGABYTE)),
+        COMPILER_GROUPMEMORY(LONG_BYTE_UNIT, StorageUtil.getLongSizeInBytes(32L, MEGABYTE)),
+        COMPILER_FRAMESIZE(INTEGER_BYTE_UNIT, StorageUtil.getIntSizeInBytes(32, KILOBYTE)),
+        COMPILER_PARALLELISM(INTEGER, COMPILER_PARALLELISM_AS_STORAGE),
+        COMPILER_PREGELIX_HOME(STRING, "~/pregelix");
 
-    public static final String COMPILER_GROUPMEMORY_KEY = "compiler.groupmemory";
-    private static final long COMPILER_GROUPMEMORY_DEFAULT = StorageUtil.getSizeInBytes(32, MEGABYTE);
+        private final IOptionType type;
+        private final Object defaultValue;
 
-    public static final String COMPILER_JOINMEMORY_KEY = "compiler.joinmemory";
-    private static final long COMPILER_JOINMEMORY_DEFAULT = StorageUtil.getSizeInBytes(32, MEGABYTE);
+        Option(IOptionType type, Object defaultValue) {
+            this.type = type;
+            this.defaultValue = defaultValue;
+        }
 
-    private static final String COMPILER_FRAMESIZE_KEY = "compiler.framesize";
-    private static final int COMPILER_FRAMESIZE_DEFAULT = StorageUtil.getSizeInBytes(32, KILOBYTE);
+        @Override
+        public Section section() {
+            return Section.COMMON;
+        }
 
-    public static final String COMPILER_PARALLELISM_KEY = "compiler.parallelism";
+        @Override
+        public String description() {
+            return "";
+        }
+
+        @Override
+        public IOptionType type() {
+            return type;
+        }
+
+        @Override
+        public Object defaultValue() {
+            return defaultValue;
+        }
+    }
+    public static final String COMPILER_SORTMEMORY_KEY = Option.COMPILER_SORTMEMORY.ini();
+
+    public static final String COMPILER_GROUPMEMORY_KEY = Option.COMPILER_GROUPMEMORY.ini();
+
+    public static final String COMPILER_JOINMEMORY_KEY = Option.COMPILER_JOINMEMORY.ini();
+
+    public static final String COMPILER_PARALLELISM_KEY = Option.COMPILER_PARALLELISM.ini();
+
     public static final int COMPILER_PARALLELISM_AS_STORAGE = 0;
-
-    private static final String COMPILER_PREGELIX_HOME = "compiler.pregelix.home";
-    private static final String COMPILER_PREGELIX_HOME_DEFAULT = "~/pregelix";
 
     public CompilerProperties(PropertiesAccessor accessor) {
         super(accessor);
     }
 
-    @PropertyKey(COMPILER_SORTMEMORY_KEY)
     public long getSortMemorySize() {
-        return accessor.getProperty(COMPILER_SORTMEMORY_KEY, COMPILER_SORTMEMORY_DEFAULT,
-                PropertyInterpreters.getLongBytePropertyInterpreter());
+        return accessor.getLong(Option.COMPILER_SORTMEMORY);
     }
 
-    @PropertyKey(COMPILER_JOINMEMORY_KEY)
     public long getJoinMemorySize() {
-        return accessor.getProperty(COMPILER_JOINMEMORY_KEY, COMPILER_JOINMEMORY_DEFAULT,
-                PropertyInterpreters.getLongBytePropertyInterpreter());
+        return accessor.getLong(Option.COMPILER_JOINMEMORY);
     }
 
-    @PropertyKey(COMPILER_GROUPMEMORY_KEY)
     public long getGroupMemorySize() {
-        return accessor.getProperty(COMPILER_GROUPMEMORY_KEY, COMPILER_GROUPMEMORY_DEFAULT,
-                PropertyInterpreters.getLongBytePropertyInterpreter());
+        return accessor.getLong(Option.COMPILER_GROUPMEMORY);
     }
 
-    @PropertyKey(COMPILER_FRAMESIZE_KEY)
     public int getFrameSize() {
-        return accessor.getProperty(COMPILER_FRAMESIZE_KEY, COMPILER_FRAMESIZE_DEFAULT,
-                PropertyInterpreters.getIntegerBytePropertyInterpreter());
+        return accessor.getInt(Option.COMPILER_FRAMESIZE);
     }
 
-    @PropertyKey(COMPILER_PARALLELISM_KEY)
     public int getParallelism() {
-        return accessor.getProperty(COMPILER_PARALLELISM_KEY, COMPILER_PARALLELISM_AS_STORAGE,
-                PropertyInterpreters.getIntegerPropertyInterpreter());
+        return accessor.getInt(Option.COMPILER_PARALLELISM);
     }
 
-    @PropertyKey(COMPILER_PREGELIX_HOME)
     public String getPregelixHome() {
-        return accessor.getProperty(COMPILER_PREGELIX_HOME, COMPILER_PREGELIX_HOME_DEFAULT,
-                PropertyInterpreters.getStringPropertyInterpreter());
+        return accessor.getString(Option.COMPILER_PREGELIX_HOME);
     }
 }

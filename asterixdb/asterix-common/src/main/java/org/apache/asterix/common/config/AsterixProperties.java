@@ -18,37 +18,40 @@
  */
 package org.apache.asterix.common.config;
 
-import java.io.File;
+import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.hyracks.api.config.IConfigManager;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class AsterixProperties {
-    //---------------------------- Directories ---------------------------//
-    private static final String VAR = File.separator + "var";
-    private static final String LIB = VAR + File.separator + "lib";
-    private static final String ASTERIXDB = LIB + File.separator + "asterixdb";
-    //----------------------------- Sections -----------------------------//
-    public static final String SECTION_ASTERIX = "asterix";
+
     public static final String SECTION_PREFIX_EXTENSION = "extension/";
-    public static final String SECTION_CC = "cc";
-    public static final String SECTION_PREFIX_NC = "nc/";
-    //---------------------------- Properties ---=------------------------//
-    public static final String PROPERTY_CLUSTER_ADDRESS = "cluster.address";
-    public static final String PROPERTY_INSTANCE_NAME = "instance";
-    public static final String DEFAULT_INSTANCE_NAME = "DEFAULT_INSTANCE";
-    public static final String PROPERTY_METADATA_NODE = "metadata.node";
-    public static final String PROPERTY_COREDUMP_DIR = "coredumpdir";
-    public static final String DEFAULT_COREDUMP_DIR = String.join(File.separator, ASTERIXDB, "coredump");
-    public static final String PROPERTY_TXN_LOG_DIR = "txnlogdir";
-    public static final String DEFAULT_TXN_LOG_DIR = String.join(File.separator, ASTERIXDB, "txn-log");
-    public static final String PROPERTY_IO_DEV = "iodevices";
-    public static final String DEFAULT_IO_DEV = String.join(File.separator, ASTERIXDB, "iodevice");
-    public static final String PROPERTY_STORAGE_DIR = "storagedir";
-    public static final String DEFAULT_STORAGE_DIR = "storage";
-    public static final String PROPERTY_CLASS = "class";
 
     private AsterixProperties() {
     }
 
-    public static final String getSectionId(String prefix, String section) {
+    public static String getSectionId(String prefix, String section) {
         return section.substring(prefix.length());
+    }
+
+    public static void registerConfigOptions(IConfigManager configManager) {
+        configManager.register(
+                NodeProperties.Option.class,
+                CompilerProperties.Option.class,
+                MetadataProperties.Option.class,
+                ExternalProperties.Option.class,
+                FeedProperties.Option.class,
+                MessagingProperties.Option.class,
+                ReplicationProperties.Option.class,
+                StorageProperties.Option.class,
+                TransactionProperties.Option.class);
+
+        // we need to process the old-style asterix config before we apply defaults!
+        configManager.addConfigurator(IConfigManager.APPLY_DEFAULTS_METRIC - 1, () -> {
+            try {
+                PropertiesAccessor.getInstance(configManager.getAppConfig());
+            } catch (AsterixException e) {
+                throw new HyracksDataException(e);
+            }
+        });
     }
 }

@@ -18,6 +18,8 @@
  */
 package org.apache.hyracks.algebricks.tests.util;
 
+import static org.apache.hyracks.util.file.FileUtil.joinPath;
+
 import java.io.File;
 import java.util.EnumSet;
 
@@ -47,43 +49,41 @@ public class AlgebricksHyracksIntegrationUtil {
     private static IHyracksClientConnection hcc;
 
     public static void init() throws Exception {
-        FileUtils.deleteQuietly(new File("target" + File.separator + "data"));
-        FileUtils.copyDirectory(new File("data"), new File("target" + File.separator + "data"));
+        FileUtils.deleteQuietly(new File(joinPath("target", "data")));
+        FileUtils.copyDirectory(new File("data"), new File(joinPath("target", "data")));
         CCConfig ccConfig = new CCConfig();
-        ccConfig.clientNetIpAddress = "127.0.0.1";
-        ccConfig.clientNetPort = TEST_HYRACKS_CC_CLIENT_NET_PORT;
-        ccConfig.clusterNetIpAddress = "127.0.0.1";
-        ccConfig.clusterNetPort = TEST_HYRACKS_CC_CLUSTER_NET_PORT;
+        ccConfig.setClientListenAddress("127.0.0.1");
+        ccConfig.setClientListenPort(TEST_HYRACKS_CC_CLIENT_NET_PORT);
+        ccConfig.setClusterListenAddress("127.0.0.1");
+        ccConfig.setClusterListenPort(TEST_HYRACKS_CC_CLUSTER_NET_PORT);
         cc = new ClusterControllerService(ccConfig);
         cc.start();
 
-        NCConfig ncConfig1 = new NCConfig();
-        ncConfig1.ccHost = "localhost";
-        ncConfig1.ccPort = TEST_HYRACKS_CC_CLUSTER_NET_PORT;
-        ncConfig1.clusterNetIPAddress = "127.0.0.1";
-        ncConfig1.dataIPAddress = "127.0.0.1";
-        ncConfig1.resultIPAddress = "127.0.0.1";
-        ncConfig1.nodeId = NC1_ID;
-        ncConfig1.ioDevices = System.getProperty("user.dir") + File.separator + "target" + File.separator + "data"
-                + File.separator + "device0";
-        FileUtils.forceMkdir(new File(ncConfig1.ioDevices));
+        NCConfig ncConfig1 = new NCConfig(NC1_ID);
+        ncConfig1.setClusterAddress("localhost");
+        ncConfig1.setClusterPort(TEST_HYRACKS_CC_CLUSTER_NET_PORT);
+        ncConfig1.setClusterListenAddress("127.0.0.1");
+        ncConfig1.setDataListenAddress("127.0.0.1");
+        ncConfig1.setResultListenAddress("127.0.0.1");
+        ncConfig1.setIODevices(new String [] { joinPath(System.getProperty("user.dir"), "target", "data",
+                "device0") });
+        FileUtils.forceMkdir(new File(ncConfig1.getIODevices()[0]));
         nc1 = new NodeControllerService(ncConfig1);
         nc1.start();
 
-        NCConfig ncConfig2 = new NCConfig();
-        ncConfig2.ccHost = "localhost";
-        ncConfig2.ccPort = TEST_HYRACKS_CC_CLUSTER_NET_PORT;
-        ncConfig2.clusterNetIPAddress = "127.0.0.1";
-        ncConfig2.dataIPAddress = "127.0.0.1";
-        ncConfig2.resultIPAddress = "127.0.0.1";
-        ncConfig2.nodeId = NC2_ID;
-        ncConfig1.ioDevices = System.getProperty("user.dir") + File.separator + "target" + File.separator + "data"
-                + File.separator + "device1";
-        FileUtils.forceMkdir(new File(ncConfig1.ioDevices));
+        NCConfig ncConfig2 = new NCConfig(NC2_ID);
+        ncConfig2.setClusterAddress("localhost");
+        ncConfig2.setClusterPort(TEST_HYRACKS_CC_CLUSTER_NET_PORT);
+        ncConfig2.setClusterListenAddress("127.0.0.1");
+        ncConfig2.setDataListenAddress("127.0.0.1");
+        ncConfig2.setResultListenAddress("127.0.0.1");
+        ncConfig2.setIODevices(new String [] { joinPath(System.getProperty("user.dir"), "target", "data",
+                "device1") });
+        FileUtils.forceMkdir(new File(ncConfig1.getIODevices()[0]));
         nc2 = new NodeControllerService(ncConfig2);
         nc2.start();
 
-        hcc = new HyracksConnection(ccConfig.clientNetIpAddress, ccConfig.clientNetPort);
+        hcc = new HyracksConnection(ccConfig.getClientListenAddress(), ccConfig.getClientListenPort());
     }
 
     public static void deinit() throws Exception {

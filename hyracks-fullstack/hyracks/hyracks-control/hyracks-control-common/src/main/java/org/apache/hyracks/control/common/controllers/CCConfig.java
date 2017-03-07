@@ -18,156 +18,160 @@
  */
 package org.apache.hyracks.control.common.controllers;
 
+import static org.apache.hyracks.control.common.config.OptionTypes.INTEGER;
+import static org.apache.hyracks.control.common.config.OptionTypes.LONG;
+import static org.apache.hyracks.control.common.config.OptionTypes.STRING;
+
 import java.io.File;
-import java.io.IOException;
 import java.net.InetAddress;
-import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 
-import org.apache.hyracks.api.application.IApplicationConfig;
-import org.apache.hyracks.control.common.application.IniApplicationConfig;
+import org.apache.hyracks.api.config.IOption;
+import org.apache.hyracks.api.config.IOptionType;
+import org.apache.hyracks.api.config.Section;
+import org.apache.hyracks.control.common.config.ConfigManager;
+import org.apache.hyracks.util.file.FileUtil;
 import org.ini4j.Ini;
-import org.kohsuke.args4j.Argument;
-import org.kohsuke.args4j.Option;
-import org.kohsuke.args4j.spi.StopOptionHandler;
 
-public class CCConfig {
-    @Option(name = "-address", usage = "IP Address for CC (default: localhost)", required = false)
-    public String ipAddress = InetAddress.getLoopbackAddress().getHostAddress();
+public class CCConfig extends ControllerConfig {
 
-    @Option(name = "-client-net-ip-address",
-            usage = "Sets the IP Address to listen for connections from clients (default: same as -address)",
-            required = false)
-    public String clientNetIpAddress;
+    public static String defaultDir = System.getProperty("java.io.tmpdir");
 
-    @Option(name = "-client-net-port", usage = "Sets the port to listen for connections from clients (default 1098)")
-    public int clientNetPort = 1098;
+    public enum Option implements IOption {
+        APP_CLASS(STRING),
+        ADDRESS(STRING, InetAddress.getLoopbackAddress().getHostAddress()),
+        CLUSTER_LISTEN_ADDRESS(STRING, ADDRESS),
+        CLUSTER_LISTEN_PORT(INTEGER, 1099),
+        CLUSTER_PUBLIC_ADDRESS(STRING, CLUSTER_LISTEN_ADDRESS),
+        CLUSTER_PUBLIC_PORT(INTEGER, CLUSTER_LISTEN_PORT),
+        CLIENT_LISTEN_ADDRESS(STRING, ADDRESS),
+        CLIENT_LISTEN_PORT(INTEGER, 1098),
+        CONSOLE_LISTEN_ADDRESS(STRING, ADDRESS),
+        CONSOLE_LISTEN_PORT(INTEGER, 16001),
+        HEARTBEAT_PERIOD(INTEGER, 10000), // TODO (mblow): add time unit
+        HEARTBEAT_MAX_MISSES(INTEGER, 5),
+        PROFILE_DUMP_PERIOD(INTEGER, 0),
+        JOB_HISTORY_SIZE(INTEGER, 10),
+        RESULT_TTL(LONG, 86400000L), // TODO(mblow): add time unit
+        RESULT_SWEEP_THRESHOLD(LONG, 60000L), // TODO(mblow): add time unit
+        @SuppressWarnings("RedundantCast") // not redundant- false positive from IDEA
+        ROOT_DIR(STRING, (Supplier<String>)() -> FileUtil.joinPath(defaultDir, "ClusterControllerService")),
+        CLUSTER_TOPOLOGY(STRING),
+        JOB_QUEUE_CLASS(STRING, "org.apache.hyracks.control.cc.scheduler.FIFOJobQueue"),
+        JOB_MANAGER_CLASS(STRING, "org.apache.hyracks.control.cc.job.JobManager");
 
-    // QQQ Note that clusterNetIpAddress is *not directly used* yet. Both
-    // the cluster listener and the web server listen on "all interfaces".
-    // This IP address is only used to instruct the NC on which IP to call in.
-    @Option(name = "-cluster-net-ip-address",
-            usage = "Sets the IP Address to listen for connections from NCs (default: same as -address)",
-            required = false)
-    public String clusterNetIpAddress;
+        private final IOptionType parser;
+        private final Object defaultValue;
 
-    @Option(name = "-cluster-net-port",
-            usage = "Sets the port to listen for connections from node controllers (default 1099)")
-    public int clusterNetPort = 1099;
-
-    @Option(name = "-http-port", usage = "Sets the http port for the Cluster Controller (default: 16001)")
-    public int httpPort = 16001;
-
-    @Option(name = "-heartbeat-period",
-            usage = "Sets the time duration between two heartbeats from each node controller in milliseconds" +
-                    " (default: 10000)")
-    public int heartbeatPeriod = 10000;
-
-    @Option(name = "-max-heartbeat-lapse-periods",
-            usage = "Sets the maximum number of missed heartbeats before a node is marked as dead (default: 5)")
-    public int maxHeartbeatLapsePeriods = 5;
-
-    @Option(name = "-profile-dump-period", usage = "Sets the time duration between two profile dumps from each node " +
-            "controller in milliseconds. 0 to disable. (default: 0)")
-    public int profileDumpPeriod = 0;
-
-    @Option(name = "-default-max-job-attempts", usage = "Sets the default number of job attempts allowed if not " +
-            "specified in the job specification. (default: 5)")
-    public int defaultMaxJobAttempts = 5;
-
-    @Option(name = "-job-history-size", usage = "Limits the number of historical jobs remembered by the system to " +
-            "the specified value. (default: 10)")
-    public int jobHistorySize = 10;
-
-    @Option(name = "-result-time-to-live", usage = "Limits the amount of time results for asynchronous jobs should " +
-            "be retained by the system in milliseconds. (default: 24 hours)")
-    public long resultTTL = 86400000;
-
-    @Option(name = "-result-sweep-threshold", usage = "The duration within which an instance of the result cleanup " +
-            "should be invoked in milliseconds. (default: 1 minute)")
-    public long resultSweepThreshold = 60000;
-
-    @Option(name = "-cc-root",
-            usage = "Sets the root folder used for file operations. (default: ClusterControllerService)")
-    public String ccRoot = "ClusterControllerService";
-
-    @Option(name = "-cluster-topology", required = false,
-            usage = "Sets the XML file that defines the cluster topology. (default: null)")
-    public File clusterTopologyDefinition = null;
-
-    @Option(name = "-app-cc-main-class", required = false, usage = "Application CC Main Class")
-    public String appCCMainClass = null;
-
-    @Option(name = "-config-file",
-            usage = "Specify path to master configuration file (default: none)", required = false)
-    public String configFile = null;
-
-    @Option(name = "-job-queue-class-name", usage = "Specify the implementation class name for the job queue. (default:"
-            + " org.apache.hyracks.control.cc.scheduler.FIFOJobQueue)",
-            required = false)
-    public String jobQueueClassName = "org.apache.hyracks.control.cc.scheduler.FIFOJobQueue";
-
-    @Option(name = "-job-manager-class-name", usage = "Specify the implementation class name for the job manager. "
-            + "(default: org.apache.hyracks.control.cc.job.JobManager)", required = false)
-    public String jobManagerClassName = "org.apache.hyracks.control.cc.job.JobManager";
-
-    @Argument
-    @Option(name = "--", handler = StopOptionHandler.class)
-    public List<String> appArgs;
-
-    public URL configFileUrl = null;
-
-    private Ini ini = null;
-
-    private void loadINIFile() throws IOException {
-        // This method simply maps from the ini parameters to the CCConfig's fields.
-        // It does not apply defaults or any logic.
-        if (configFile != null) {
-            ini = IniUtils.loadINIFile(configFile);
-        } else if (configFileUrl != null) {
-            ini = IniUtils.loadINIFile(configFileUrl);
-        } else {
-            return;
+        <T> Option(IOptionType<T> parser) {
+            this(parser, (T)null);
         }
 
-        ipAddress = IniUtils.getString(ini, "cc", "address", ipAddress);
-        clientNetIpAddress = IniUtils.getString(ini, "cc", "client.address", clientNetIpAddress);
-        clientNetPort = IniUtils.getInt(ini, "cc", "client.port", clientNetPort);
-        clusterNetIpAddress = IniUtils.getString(ini, "cc", "cluster.address", clusterNetIpAddress);
-        clusterNetPort = IniUtils.getInt(ini, "cc", "cluster.port", clusterNetPort);
-        httpPort = IniUtils.getInt(ini, "cc", "http.port", httpPort);
-        heartbeatPeriod = IniUtils.getInt(ini, "cc", "heartbeat.period", heartbeatPeriod);
-        maxHeartbeatLapsePeriods = IniUtils.getInt(ini, "cc", "heartbeat.maxlapse", maxHeartbeatLapsePeriods);
-        profileDumpPeriod = IniUtils.getInt(ini, "cc", "profiledump.period", profileDumpPeriod);
-        defaultMaxJobAttempts = IniUtils.getInt(ini, "cc", "job.defaultattempts", defaultMaxJobAttempts);
-        jobHistorySize = IniUtils.getInt(ini, "cc", "job.historysize", jobHistorySize);
-        resultTTL = IniUtils.getLong(ini, "cc", "results.ttl", resultTTL);
-        resultSweepThreshold = IniUtils.getLong(ini, "cc", "results.sweepthreshold", resultSweepThreshold);
-        ccRoot = IniUtils.getString(ini, "cc", "rootfolder", ccRoot);
-        // QQQ clusterTopologyDefinition is a "File"; should support verifying that the file
-        // exists, as @Option likely does
-        appCCMainClass = IniUtils.getString(ini, "cc", "app.class", appCCMainClass);
+        <T> Option(IOptionType<T> parser, Option defaultOption) {
+            this.parser = parser;
+            this.defaultValue = defaultOption;
+        }
+
+        <T> Option(IOptionType<T> parser, T defaultValue) {
+            this.parser = parser;
+            this.defaultValue = defaultValue;
+        }
+
+        <T> Option(IOptionType<T> parser, Supplier<T> defaultValue) {
+            this.parser = parser;
+            this.defaultValue = defaultValue;
+        }
+
+        @Override
+        public Section section() {
+            return Section.CC;
+        }
+
+        @Override
+        public IOptionType type() {
+            return parser;
+        }
+
+        @Override
+        public Object defaultValue() {
+            return defaultValue;
+        }
+
+        @Override
+        public String description() {
+            switch (this) {
+                case APP_CLASS:
+                    return "Application CC main class";
+                case ADDRESS:
+                    return "Default bind address for all services on this cluster controller";
+                case CLUSTER_LISTEN_ADDRESS:
+                    return "Sets the IP Address to listen for connections from NCs";
+                case CLUSTER_LISTEN_PORT:
+                    return "Sets the port to listen for connections from node controllers";
+                case CLUSTER_PUBLIC_ADDRESS:
+                    return "Address that NCs should use to contact this CC";
+                case CLUSTER_PUBLIC_PORT:
+                    return "Port that NCs should use to contact this CC";
+                case CLIENT_LISTEN_ADDRESS:
+                    return "Sets the IP Address to listen for connections from clients";
+                case CLIENT_LISTEN_PORT:
+                    return "Sets the port to listen for connections from clients";
+                case CONSOLE_LISTEN_ADDRESS:
+                    return "Sets the listen address for the Cluster Controller";
+                case CONSOLE_LISTEN_PORT:
+                    return "Sets the http port for the Cluster Controller)";
+                case HEARTBEAT_PERIOD:
+                    return "Sets the time duration between two heartbeats from each node controller in milliseconds";
+                case HEARTBEAT_MAX_MISSES:
+                    return "Sets the maximum number of missed heartbeats before a node is marked as dead";
+                case PROFILE_DUMP_PERIOD:
+                    return "Sets the time duration between two profile dumps from each node controller in " +
+                            "milliseconds; 0 to disable";
+                case JOB_HISTORY_SIZE:
+                    return "Limits the number of historical jobs remembered by the system to the specified value";
+                case RESULT_TTL:
+                    return "Limits the amount of time results for asynchronous jobs should be retained by the system " +
+                            "in milliseconds";
+                case RESULT_SWEEP_THRESHOLD:
+                    return "The duration within which an instance of the result cleanup should be invoked in " +
+                            "milliseconds";
+                case ROOT_DIR:
+                    return "Sets the root folder used for file operations";
+                case CLUSTER_TOPOLOGY:
+                    return "Sets the XML file that defines the cluster topology";
+                case JOB_QUEUE_CLASS:
+                    return "Specify the implementation class name for the job queue";
+                case JOB_MANAGER_CLASS:
+                    return "Specify the implementation class name for the job manager";
+                default:
+                    throw new IllegalStateException("NYI: " + this);
+            }
+        }
     }
 
-    /**
-     * Once all @Option fields have been loaded from command-line or otherwise
-     * specified programmatically, call this method to:
-     * 1. Load options from a config file (as specified by -config-file)
-     * 2. Set default values for certain derived values, such as setting
-     *    clusterNetIpAddress to ipAddress
-     */
-    public void loadConfigAndApplyDefaults() throws IOException {
-        loadINIFile();
-        if (ini != null) {
-            // QQQ This way of passing overridden/defaulted values back into
-            // the ini feels clunky, and it's clearly incomplete
-            ini.add("cc", "cluster.address", clusterNetIpAddress);
-            ini.add("cc", "client.address", clientNetIpAddress);
-        }
+    private final ConfigManager configManager;
 
-        // "address" is the default for all IP addresses
-        clusterNetIpAddress = clusterNetIpAddress == null ? ipAddress : clusterNetIpAddress;
-        clientNetIpAddress = clientNetIpAddress == null ? ipAddress : clientNetIpAddress;
+    private List<String> appArgs = new ArrayList<>();
+
+    public CCConfig() {
+        this(new ConfigManager());
+    }
+
+    public CCConfig(ConfigManager configManager) {
+        super(configManager);
+        this.configManager = configManager;
+        configManager.register(Option.class);
+        configManager.registerArgsListener(appArgs::addAll);
+    }
+
+    public List<String> getAppArgs() {
+        return appArgs;
+    }
+
+    public String[] getAppArgsArray() {
+        return appArgs.toArray(new String[appArgs.size()]);
     }
 
     /**
@@ -175,15 +179,158 @@ public class CCConfig {
      * if -config-file wasn't specified.
      */
     public Ini getIni() {
-        return ini;
+        return configManager.toIni(false);
     }
 
-    /**
-     * @return An IApplicationConfig representing this NCConfig.
-     * Note: Currently this only includes the values from the configuration
-     * file, not anything specified on the command-line. QQQ
-     */
-    public IApplicationConfig getAppConfig() {
-        return new IniApplicationConfig(ini);
+    public ConfigManager getConfigManager() {
+        return configManager;
+    }
+
+    // QQQ Note that clusterListenAddress is *not directly used* yet. Both
+    // the cluster listener and the web server listen on "all interfaces".
+    // This IP address is only used to instruct the NC on which IP to call in.
+    public String getClusterListenAddress() {
+        return getAppConfig().getString(Option.CLUSTER_LISTEN_ADDRESS);
+    }
+
+    public void setClusterListenAddress(String clusterListenAddress) {
+        configManager.set(Option.CLUSTER_LISTEN_ADDRESS, clusterListenAddress);
+    }
+
+    public int getClusterListenPort() {
+        return getAppConfig().getInt(Option.CLUSTER_LISTEN_PORT);
+    }
+
+    public void setClusterListenPort(int clusterListenPort) {
+        configManager.set(Option.CLUSTER_LISTEN_PORT, clusterListenPort);
+    }
+
+    public String getClusterPublicAddress() {
+        return getAppConfig().getString(Option.CLUSTER_PUBLIC_ADDRESS);
+    }
+
+    public void setClusterPublicAddress(String clusterPublicAddress) {
+        configManager.set(Option.CLUSTER_PUBLIC_ADDRESS, clusterPublicAddress);
+    }
+
+    public int getClusterPublicPort() {
+        return getAppConfig().getInt(Option.CLUSTER_PUBLIC_PORT);
+    }
+
+    public void setClusterPublicPort(int clusterPublicPort) {
+        configManager.set(Option.CLUSTER_PUBLIC_PORT, clusterPublicPort);
+    }
+
+    public String getClientListenAddress() {
+        return getAppConfig().getString(Option.CLIENT_LISTEN_ADDRESS);
+    }
+
+    public void setClientListenAddress(String clientListenAddress) {
+        configManager.set(Option.CLIENT_LISTEN_ADDRESS, clientListenAddress);
+    }
+
+    public int getClientListenPort() {
+        return getAppConfig().getInt(Option.CLIENT_LISTEN_PORT);
+    }
+
+    public void setClientListenPort(int clientListenPort) {
+        configManager.set(Option.CLIENT_LISTEN_PORT, clientListenPort);
+    }
+
+    public int getConsoleListenPort() {
+        return getAppConfig().getInt(Option.CONSOLE_LISTEN_PORT);
+    }
+
+    public void setConsoleListenPort(int consoleListenPort) {
+        configManager.set(Option.CONSOLE_LISTEN_PORT, consoleListenPort);
+    }
+
+    public int getHeartbeatPeriod() {
+        return getAppConfig().getInt(Option.HEARTBEAT_PERIOD);
+    }
+
+    public void setHeartbeatPeriod(int heartbeatPeriod) {
+        configManager.set(Option.HEARTBEAT_PERIOD, heartbeatPeriod);
+    }
+
+    public int getHeartbeatMaxMisses() {
+        return getAppConfig().getInt(Option.HEARTBEAT_MAX_MISSES);
+    }
+
+    public void setHeartbeatMaxMisses(int heartbeatMaxMisses) {
+        configManager.set(Option.HEARTBEAT_MAX_MISSES, heartbeatMaxMisses);
+    }
+
+    public int getProfileDumpPeriod() {
+        return getAppConfig().getInt(Option.PROFILE_DUMP_PERIOD);
+    }
+
+    public void setProfileDumpPeriod(int profileDumpPeriod) {
+        configManager.set(Option.PROFILE_DUMP_PERIOD, profileDumpPeriod);
+    }
+
+    public int getJobHistorySize() {
+        return getAppConfig().getInt(Option.JOB_HISTORY_SIZE);
+    }
+
+    public void setJobHistorySize(int jobHistorySize) {
+        configManager.set(Option.JOB_HISTORY_SIZE, jobHistorySize);
+    }
+
+    public long getResultTTL() {
+        return getAppConfig().getLong(Option.RESULT_TTL);
+    }
+
+    public void setResultTTL(long resultTTL) {
+        configManager.set(Option.RESULT_TTL, resultTTL);
+    }
+
+    public long getResultSweepThreshold() {
+        return getAppConfig().getLong(Option.RESULT_SWEEP_THRESHOLD);
+    }
+
+    public void setResultSweepThreshold(long resultSweepThreshold) {
+        configManager.set(Option.RESULT_SWEEP_THRESHOLD, resultSweepThreshold);
+    }
+
+    public String getRootDir() {
+        return getAppConfig().getString(Option.ROOT_DIR);
+    }
+
+    public void setRootDir(String rootDir) {
+        configManager.set(Option.ROOT_DIR, rootDir);
+    }
+
+    public File getClusterTopology() {
+        return getAppConfig().getString(Option.CLUSTER_TOPOLOGY) == null ? null
+                : new File(getAppConfig().getString(Option.CLUSTER_TOPOLOGY));
+    }
+
+    public void setClusterTopology(File clusterTopology) {
+        configManager.set(Option.CLUSTER_TOPOLOGY, clusterTopology);
+    }
+
+    public String getAppClass() {
+        return getAppConfig().getString(Option.APP_CLASS);
+    }
+
+    public void setAppClass(String appClass) {
+        configManager.set(Option.APP_CLASS, appClass);
+    }
+
+    public String getJobQueueClass() {
+        return getAppConfig().getString(Option.JOB_QUEUE_CLASS);
+    }
+
+    public void setJobQueueClass(String jobQueueClass) {
+        configManager.set(Option.JOB_QUEUE_CLASS, jobQueueClass);
+    }
+
+    public String getJobManagerClass() {
+        return getAppConfig().getString(Option.JOB_MANAGER_CLASS);
+    }
+
+    public void setJobManagerClass(String jobManagerClass) {
+        configManager.set(Option.JOB_MANAGER_CLASS, jobManagerClass);
     }
 }

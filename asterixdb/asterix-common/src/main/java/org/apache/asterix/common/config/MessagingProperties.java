@@ -18,28 +18,60 @@
  */
 package org.apache.asterix.common.config;
 
+import static org.apache.hyracks.control.common.config.OptionTypes.INTEGER;
+import static org.apache.hyracks.control.common.config.OptionTypes.INTEGER_BYTE_UNIT;
+import static org.apache.hyracks.util.StorageUtil.StorageUnit.KILOBYTE;
+
+import org.apache.hyracks.api.config.IOption;
+import org.apache.hyracks.api.config.IOptionType;
+import org.apache.hyracks.api.config.Section;
 import org.apache.hyracks.util.StorageUtil;
-import org.apache.hyracks.util.StorageUtil.StorageUnit;
 
 public class MessagingProperties extends AbstractProperties {
 
-    private static final String MESSAGING_FRAME_SIZE_KEY = "messaging.frame.size";
-    private static final int MESSAGING_FRAME_SIZE_DEFAULT = StorageUtil.getSizeInBytes(4, StorageUnit.KILOBYTE);
+    public enum Option implements IOption {
+        MESSAGING_FRAME_SIZE(INTEGER_BYTE_UNIT, StorageUtil.getIntSizeInBytes(4, KILOBYTE)),
+        MESSAGING_FRAME_COUNT(INTEGER, 512);
 
-    private static final String MESSAGING_FRAME_COUNT_KEY = "messaging.frame.count";
-    private static final int MESSAGING_BUFFER_COUNTE_DEFAULT = 512;
+        private final IOptionType type;
+        private final Object defaultValue;
+
+        Option(IOptionType type, Object defaultValue) {
+            this.type = type;
+            this.defaultValue = defaultValue;
+        }
+
+        @Override
+        public Section section() {
+            return Section.COMMON;
+        }
+
+        @Override
+        public String description() {
+            // TODO(mblow): add missing descriptions
+            return null;
+        }
+
+        @Override
+        public IOptionType type() {
+            return type;
+        }
+
+        @Override
+        public Object defaultValue() {
+            return defaultValue;
+        }
+    }
 
     public MessagingProperties(PropertiesAccessor accessor) {
         super(accessor);
     }
 
     public int getFrameSize() {
-        return accessor.getProperty(MESSAGING_FRAME_SIZE_KEY, MESSAGING_FRAME_SIZE_DEFAULT,
-                PropertyInterpreters.getIntegerPropertyInterpreter());
+        return accessor.getInt(Option.MESSAGING_FRAME_SIZE);
     }
 
     public int getFrameCount() {
-        return accessor.getProperty(MESSAGING_FRAME_COUNT_KEY, MESSAGING_BUFFER_COUNTE_DEFAULT,
-                PropertyInterpreters.getIntegerPropertyInterpreter());
+        return accessor.getInt(Option.MESSAGING_FRAME_COUNT);
     }
 }

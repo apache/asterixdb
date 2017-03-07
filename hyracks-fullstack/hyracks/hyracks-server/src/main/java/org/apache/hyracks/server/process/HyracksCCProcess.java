@@ -18,10 +18,10 @@
  */
 package org.apache.hyracks.server.process;
 
-import org.apache.hyracks.control.cc.CCDriver;
-
 import java.io.File;
 import java.util.List;
+
+import org.apache.hyracks.control.cc.CCDriver;
 
 public class HyracksCCProcess extends HyracksServerProcess {
 
@@ -41,5 +41,6 @@ public class HyracksCCProcess extends HyracksServerProcess {
     protected void addJvmArgs(List<String> cList) {
         // CC needs more than default memory
         cList.add("-Xmx1024m");
+        //cList.add("-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005");
     }
 }

@@ -23,6 +23,8 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.hyracks.api.config.IApplicationConfig;
+import org.apache.hyracks.api.config.IOption;
 import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.cc.NodeControllerState;
 import org.apache.hyracks.control.cc.cluster.INodeManager;
@@ -50,19 +52,22 @@ public class RegisterNodeWork extends SynchronizableWork {
         String id = reg.getNodeId();
         IIPCHandle ncIPCHandle = ccs.getClusterIPC().getHandle(reg.getNodeControllerAddress());
         CCNCFunctions.NodeRegistrationResult result;
-        Map<String, String> ncConfiguration = new HashMap<>();
+        Map<IOption, Object> ncConfiguration = new HashMap<>();
         try {
             INodeController nodeController = new NodeControllerRemoteProxy(ncIPCHandle);
             NodeControllerState state = new NodeControllerState(nodeController, reg);
             INodeManager nodeManager = ccs.getNodeManager();
             nodeManager.addNode(id, state);
-            state.getNCConfig().toMap(ncConfiguration);
+            IApplicationConfig cfg = state.getNCConfig().getConfigManager().getNodeEffectiveConfig(id);
+            for (IOption option : cfg.getOptions()) {
+                ncConfiguration.put(option, cfg.get(option));
+            }
             LOGGER.log(Level.INFO, "Registered INodeController: id = " + id);
             NodeParameters params = new NodeParameters();
             params.setClusterControllerInfo(ccs.getClusterControllerInfo());
             params.setDistributedState(ccs.getApplicationContext().getDistributedState());
-            params.setHeartbeatPeriod(ccs.getCCConfig().heartbeatPeriod);
-            params.setProfileDumpPeriod(ccs.getCCConfig().profileDumpPeriod);
+            params.setHeartbeatPeriod(ccs.getCCConfig().getHeartbeatPeriod());
+            params.setProfileDumpPeriod(ccs.getCCConfig().getProfileDumpPeriod());
             result = new CCNCFunctions.NodeRegistrationResult(params, null);
         } catch (Exception e) {
             result = new CCNCFunctions.NodeRegistrationResult(null, e);

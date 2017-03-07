@@ -31,11 +31,12 @@ import org.apache.asterix.common.replication.Replica;
 import org.apache.asterix.runtime.message.ReplicaEventMessage;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hyracks.api.application.IClusterLifecycleListener.ClusterEventType;
+import org.apache.hyracks.api.config.IOption;
+import org.apache.hyracks.control.common.controllers.NCConfig;
 
 public class FaultToleranceUtil {
 
     private static final Logger LOGGER = Logger.getLogger(FaultToleranceUtil.class.getName());
-    private static final String CLUSTER_NET_IP_ADDRESS_KEY = "cluster-net-ip-address";
 
     private FaultToleranceUtil() {
         throw new AssertionError();
@@ -47,10 +48,10 @@ public class FaultToleranceUtil {
         List<String> primaryRemoteReplicas = replicationStrategy.getRemotePrimaryReplicas(nodeId).stream()
                 .map(Replica::getId).collect(Collectors.toList());
         String nodeIdAddress = StringUtils.EMPTY;
-        Map<String, Map<String, String>> activeNcConfiguration = clusterManager.getActiveNcConfiguration();
+        Map<String, Map<IOption, Object>> activeNcConfiguration = clusterManager.getActiveNcConfiguration();
         // In case the node joined with a new IP address, we need to send it to the other replicas
         if (event == ClusterEventType.NODE_JOIN) {
-            nodeIdAddress = activeNcConfiguration.get(nodeId).get(CLUSTER_NET_IP_ADDRESS_KEY);
+            nodeIdAddress = (String)activeNcConfiguration.get(nodeId).get(NCConfig.Option.CLUSTER_PUBLIC_ADDRESS);
         }
         ReplicaEventMessage msg = new ReplicaEventMessage(nodeId, nodeIdAddress, event);
         for (String replica : primaryRemoteReplicas) {

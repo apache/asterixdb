@@ -20,8 +20,8 @@ package org.apache.hyracks.api.application;
 
 import java.util.Collection;
 import java.util.Map;
-import java.util.Set;
 
+import org.apache.hyracks.api.config.IOption;
 import org.apache.hyracks.api.exceptions.HyracksException;
 
 /**
@@ -40,9 +40,8 @@ public interface IClusterLifecycleListener {
      * @param nodeId
      *            A unique identifier of a Node Controller
      * @param ncConfiguration
-     *            A map containing the set of configuration parameters that were used to start the Node Controller
      */
-    public void notifyNodeJoin(String nodeId, Map<String, String> ncConfiguration) throws HyracksException;
+    public void notifyNodeJoin(String nodeId, Map<IOption, Object> ncConfiguration) throws HyracksException;
 
     /**
      * @param deadNodeIds

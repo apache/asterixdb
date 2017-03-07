@@ -18,8 +18,6 @@
  */
 package org.apache.asterix.server.test;
 
-import static org.apache.asterix.test.common.TestHelper.joinPath;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -35,6 +33,7 @@ import org.apache.asterix.test.common.TestHelper;
 import org.apache.asterix.testframework.context.TestCaseContext.OutputFormat;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.hyracks.util.file.FileUtil;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.FixMethodOrder;
@@ -49,13 +48,13 @@ public class SampleLocalClusterIT {
     // Important paths and files for this test.
 
     // The "target" subdirectory of asterix-server. All outputs go here.
-    private static final String TARGET_DIR = joinPath(/*System.getProperty("basedir"),*/ "target");
+    private static final String TARGET_DIR = FileUtil.joinPath("target");
 
     // Directory where the NCs create and store all data, as configured by
     // src/test/resources/NCServiceExecutionIT/cc.conf.
-    private static final String OUTPUT_DIR = joinPath(TARGET_DIR, "sample-local-cluster");
+    private static final String OUTPUT_DIR = FileUtil.joinPath(TARGET_DIR, "sample-local-cluster");
 
-    private static final String LOCAL_SAMPLES_DIR = joinPath(OUTPUT_DIR, "opt", "local");
+    private static final String LOCAL_SAMPLES_DIR = FileUtil.joinPath(OUTPUT_DIR, "opt", "local");
 
     @Rule
     public TestRule watcher = new TestMethodTracer();
@@ -71,18 +70,18 @@ public class SampleLocalClusterIT {
         }
         outDir.mkdirs();
 
-        String installerZip = joinPath(TARGET_DIR,
-                new File(TARGET_DIR).list((dir, name) -> name.matches("asterix-server.*-binary-assembly.zip"))[0]);
+        String[] pathElements = new String[]{TARGET_DIR, new File(TARGET_DIR).list((dir, name) -> name.matches("asterix-server.*-binary-assembly.zip"))[0]};
+        String installerZip = FileUtil.joinPath(pathElements);
 
         TestHelper.unzip(installerZip, OUTPUT_DIR);
     }
 
     @Test
     public void test0_startCluster() throws Exception {
-        Process process = new ProcessBuilder(joinPath(LOCAL_SAMPLES_DIR, "bin/stop-sample-cluster.sh"), "-f")
+        Process process = new ProcessBuilder(FileUtil.joinPath(LOCAL_SAMPLES_DIR, "bin/stop-sample-cluster.sh"), "-f")
                 .inheritIO().start();
         Assert.assertEquals(0, process.waitFor());
-        process = new ProcessBuilder(joinPath(LOCAL_SAMPLES_DIR, "bin/start-sample-cluster.sh")).inheritIO().start();
+        process = new ProcessBuilder(FileUtil.joinPath(LOCAL_SAMPLES_DIR, "bin/start-sample-cluster.sh")).inheritIO().start();
         Assert.assertEquals(0, process.waitFor());
     }
 
@@ -100,7 +99,7 @@ public class SampleLocalClusterIT {
     @Test
     public void test2_stopCluster() throws Exception {
         Process process =
-                new ProcessBuilder(joinPath(LOCAL_SAMPLES_DIR, "bin/stop-sample-cluster.sh")).inheritIO().start();
+                new ProcessBuilder(FileUtil.joinPath(LOCAL_SAMPLES_DIR, "bin/stop-sample-cluster.sh")).inheritIO().start();
         Assert.assertEquals(0, process.waitFor());
         try {
             new URL("http://127.0.0.1:19002").openConnection().connect();

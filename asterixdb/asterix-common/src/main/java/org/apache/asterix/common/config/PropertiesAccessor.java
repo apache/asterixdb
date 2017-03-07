@@ -18,20 +18,29 @@
  */
 package org.apache.asterix.common.config;
 
+import static org.apache.asterix.common.config.MetadataProperties.Option.INSTANCE_NAME;
+import static org.apache.asterix.common.config.MetadataProperties.Option.METADATA_NODE;
+import static org.apache.asterix.common.config.NodeProperties.Option.STORAGE_SUBDIR;
+import static org.apache.hyracks.control.common.controllers.NCConfig.Option.IODEVICES;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -48,22 +57,23 @@ import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.utils.ConfigUtil;
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.apache.hyracks.algebricks.common.utils.Pair;
-import org.apache.hyracks.api.application.IApplicationConfig;
+import org.apache.hyracks.api.config.IApplicationConfig;
+import org.apache.hyracks.api.config.IOption;
+import org.apache.hyracks.api.config.IOptionType;
+import org.apache.hyracks.api.config.Section;
+import org.apache.hyracks.control.common.application.ConfigManagerApplicationConfig;
+import org.apache.hyracks.control.common.config.ConfigManager;
+import org.apache.hyracks.control.common.controllers.ControllerConfig;
+import org.apache.hyracks.control.common.controllers.NCConfig;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
-public class PropertiesAccessor {
+public class PropertiesAccessor implements IApplicationConfig {
     private static final Logger LOGGER = Logger.getLogger(PropertiesAccessor.class.getName());
 
-    private static final AtomicReference<PropertiesAccessor> instanceHolder = new AtomicReference<>();
-    private final String instanceName;
-    private final String metadataNodeName;
-    private final List<String> nodeNames = new ArrayList<>();;
-    private final Map<String, String[]> stores = new HashMap<>();;
+    private static final Map<IApplicationConfig, PropertiesAccessor> instances = new ConcurrentHashMap<>();
+    private final Map<String, String[]> stores = new HashMap<>();
     private final Map<String, String> coredumpConfig = new HashMap<>();
-
-    // This can be removed when asterix-configuration.xml is no longer required.
-    private final Map<String, Property> asterixConfigurationParams;
     private final IApplicationConfig cfg;
     private final Map<String, String> transactionLogDirs = new HashMap<>();
     private final Map<String, String> asterixBuildProperties = new HashMap<>();
@@ -73,61 +83,105 @@ public class PropertiesAccessor {
     private final List<AsterixExtension> extensions;
 
     /**
-     * Constructor which reads asterix-configuration.xml, the old way.
-     *
-     * @throws AsterixException
-     * @throws IOException
+     * Constructor which wraps an IApplicationConfig.
      */
-    private PropertiesAccessor() throws AsterixException, IOException {
-        String fileName = System.getProperty(GlobalConfig.CONFIG_FILE_PROPERTY);
-        if (fileName == null) {
-            fileName = GlobalConfig.DEFAULT_CONFIG_FILE_NAME;
-        }
-        AsterixConfiguration asterixConfiguration = configure(fileName);
-        cfg = null;
-        instanceName = asterixConfiguration.getInstanceName();
-        metadataNodeName = asterixConfiguration.getMetadataNode();
-        List<Store> configuredStores = asterixConfiguration.getStore();
+    private PropertiesAccessor(IApplicationConfig cfg) throws AsterixException, IOException {
+        this.cfg = cfg;
         nodePartitionsMap = new HashMap<>();
-        int uniquePartitionId = 0;
-        // Here we iterate through all <store> elements in asterix-configuration.xml.
-        // For each one, we create an array of ClusterPartitions and store this array
-        // in nodePartitionsMap, keyed by the node name. The array is the same length
-        // as the comma-separated <storeDirs> child element, because Managix will have
-        // arranged for that element to be populated with the full paths to each
-        // partition directory (as formed by appending the <store> subdirectory to
-        // each <iodevices> path from the user's original cluster.xml).
-        for (Store store : configuredStores) {
-            String trimmedStoreDirs = store.getStoreDirs().trim();
-            String[] nodeStores = trimmedStoreDirs.split(",");
-            ClusterPartition[] nodePartitions = new ClusterPartition[nodeStores.length];
-            for (int i = 0; i < nodePartitions.length; i++) {
-                ClusterPartition partition = new ClusterPartition(uniquePartitionId++, store.getNcId(), i);
-                clusterPartitions.put(partition.getPartitionId(), partition);
-                nodePartitions[i] = partition;
-            }
-            stores.put(store.getNcId(), nodeStores);
-            nodePartitionsMap.put(store.getNcId(), nodePartitions);
-            nodeNames.add(store.getNcId());
-        }
-
-        // Get extensions
         extensions = new ArrayList<>();
-        if (asterixConfiguration.getExtensions() != null) {
-            for (Extension ext : asterixConfiguration.getExtensions().getExtension()) {
-                extensions.add(ConfigUtil.toAsterixExtension(ext));
-            }
+        // Determine whether to use old-style asterix-configuration.xml or new-style configuration.
+        // QQQ strip this out eventually
+        // QQQ this is NOT a good way to determine whether to use config file
+        ConfigManager configManager = ((ConfigManagerApplicationConfig)cfg).getConfigManager();
+        boolean usingConfigFile = Stream
+                .of((IOption) ControllerConfig.Option.CONFIG_FILE, ControllerConfig.Option.CONFIG_FILE_URL)
+                .map(configManager::get).anyMatch(Objects::nonNull);
+        AsterixConfiguration asterixConfiguration = null;
+        try {
+            asterixConfiguration = configure(System.getProperty(GlobalConfig.CONFIG_FILE_PROPERTY,
+                    GlobalConfig.DEFAULT_CONFIG_FILE_NAME));
+        } catch (Exception e) {
+            // cannot load config file, assume new-style config
         }
 
-        asterixConfigurationParams = new HashMap<>();
-        for (Property p : asterixConfiguration.getProperty()) {
-            asterixConfigurationParams.put(p.getName(), p);
-        }
-        for (Coredump cd : asterixConfiguration.getCoredump()) {
-            coredumpConfig.put(cd.getNcId(), cd.getCoredumpPath());
-        }
-        for (TransactionLogDir txnLogDir : asterixConfiguration.getTransactionLogDir()) {
-            transactionLogDirs.put(txnLogDir.getNcId(), txnLogDir.getTxnLogDirPath());
+        if (!usingConfigFile && asterixConfiguration != null) {
+            LOGGER.info("using old-style configuration: " + System.getProperty(GlobalConfig.CONFIG_FILE_PROPERTY));
+            if (asterixConfiguration.getInstanceName() != null) {
+                configManager.set(INSTANCE_NAME, asterixConfiguration.getInstanceName());
+            }
+            if (asterixConfiguration.getMetadataNode() != null) {
+                configManager.set(METADATA_NODE, asterixConfiguration.getMetadataNode());
+            }
+            List<Store> configuredStores = asterixConfiguration.getStore();
+
+            int uniquePartitionId = 0;
+            // Here we iterate through all <store> elements in asterix-configuration.xml.
+            // For each one, we create an array of ClusterPartitions and store this array
+            // in nodePartitionsMap, keyed by the node name. The array is the same length
+            // as the comma-separated <storeDirs> child element, because Managix will have
+            // arranged for that element to be populated with the full paths to each
+            // partition directory (as formed by appending the <store> subdirectory to
+            // each <iodevices> path from the user's original cluster.xml).
+            for (Store store : configuredStores) {
+                String trimmedStoreDirs = store.getStoreDirs().trim();
+                String[] nodeStores = trimmedStoreDirs.split(",");
+                ClusterPartition[] nodePartitions = new ClusterPartition[nodeStores.length];
+                for (int i = 0; i < nodePartitions.length; i++) {
+                    ClusterPartition partition = new ClusterPartition(uniquePartitionId++, store.getNcId(), i);
+                    clusterPartitions.put(partition.getPartitionId(), partition);
+                    nodePartitions[i] = partition;
+                }
+                stores.put(store.getNcId(), nodeStores);
+                nodePartitionsMap.put(store.getNcId(), nodePartitions);
+                configManager.registerVirtualNode(store.getNcId());
+                // marking node as virtual, as we're not using NCServices with old-style config
+                configManager.set(store.getNcId(), NCConfig.Option.VIRTUAL_NC, true);
+            }
+            // Get extensions
+            if (asterixConfiguration.getExtensions() != null) {
+                for (Extension ext : asterixConfiguration.getExtensions().getExtension()) {
+                    extensions.add(ConfigUtil.toAsterixExtension(ext));
+                }
+            }
+            for (Property p : asterixConfiguration.getProperty()) {
+                IOption option = null;
+                for (Section section : Arrays.asList(Section.COMMON, Section.CC, Section.NC)) {
+                    IOption optionTemp = cfg.lookupOption(section.sectionName(), p.getName());
+                    if (optionTemp == null) {
+                        continue;
+                    }
+                    if (option != null) {
+                        throw new IllegalStateException("ERROR: option found in multiple sections: " +
+                                Arrays.asList(option, optionTemp));
+                    }
+                    option = optionTemp;
+                }
+                if (option == null) {
+                    LOGGER.warn("Ignoring unknown property: " + p.getName());
+                } else {
+                    configManager.set(option, option.type().parse(p.getValue()));
+                }
+            }
+            for (Coredump cd : asterixConfiguration.getCoredump()) {
+                coredumpConfig.put(cd.getNcId(), cd.getCoredumpPath());
+            }
+            for (TransactionLogDir txnLogDir : asterixConfiguration.getTransactionLogDir()) {
+                transactionLogDirs.put(txnLogDir.getNcId(), txnLogDir.getTxnLogDirPath());
+            }
+        } else {
+            LOGGER.info("using new-style configuration");
+            MutableInt uniquePartitionId = new MutableInt(0);
+            // Iterate through each configured NC.
+            for (String ncName : cfg.getNCNames()) {
+                configureNc(ncName, uniquePartitionId);
+            }
+            for (String section : cfg.getSectionNames()) {
+                if (section.startsWith(AsterixProperties.SECTION_PREFIX_EXTENSION)) {
+                    String className = AsterixProperties.getSectionId(
+                            AsterixProperties.SECTION_PREFIX_EXTENSION, section);
+                    configureExtension(className, section);
+                }
+            }
         }
         loadAsterixBuildProperties();
     }
@@ -163,31 +217,6 @@ public class PropertiesAccessor {
         }
     }
 
-    /**
-     * Constructor which wraps an IApplicationConfig.
-     */
-    private PropertiesAccessor(IApplicationConfig cfg) throws AsterixException {
-        this.cfg = cfg;
-        instanceName = cfg.getString(AsterixProperties.SECTION_ASTERIX, AsterixProperties.PROPERTY_INSTANCE_NAME,
-                AsterixProperties.DEFAULT_INSTANCE_NAME);
-        nodePartitionsMap = new HashMap<>();
-        MutableInt uniquePartitionId = new MutableInt(0);
-        extensions = new ArrayList<>();
-        // Iterate through each configured NC.
-        for (String section : cfg.getSections()) {
-            if (section.startsWith(AsterixProperties.SECTION_PREFIX_NC)) {
-                configureNc(section, uniquePartitionId);
-            } else if (section.startsWith(AsterixProperties.SECTION_PREFIX_EXTENSION)) {
-                String className = AsterixProperties.getSectionId(AsterixProperties.SECTION_PREFIX_EXTENSION, section);
-                configureExtension(className, section);
-            }
-        }
-        metadataNodeName = getProperty(AsterixProperties.PROPERTY_METADATA_NODE,
-                nodeNames.isEmpty() ? "" : nodeNames.get(0), PropertyInterpreters.getStringPropertyInterpreter());
-        asterixConfigurationParams = null;
-        loadAsterixBuildProperties();
-    }
-
     private void configureExtension(String className, String section) {
         Set<String> keys = cfg.getKeys(section);
         List<Pair<String, String>> kvs = new ArrayList<>();
@@ -198,27 +227,24 @@ public class PropertiesAccessor {
         extensions.add(new AsterixExtension(className, kvs));
     }
 
-    private void configureNc(String section, MutableInt uniquePartitionId) {
-        String ncId = AsterixProperties.getSectionId(AsterixProperties.SECTION_PREFIX_NC, section);
+    private void configureNc(String ncId, MutableInt uniquePartitionId) {
 
         // Now we assign the coredump and txnlog directories for this node.
         // QQQ Default values? Should they be specified here? Or should there
         // be a default.ini? Certainly wherever they are, they should be platform-dependent.
-        coredumpConfig.put(ncId, cfg.getString(section, AsterixProperties.PROPERTY_COREDUMP_DIR,
-                AsterixProperties.DEFAULT_COREDUMP_DIR));
+        IApplicationConfig nodeCfg = cfg.getNCEffectiveConfig(ncId);
+        coredumpConfig.put(ncId, nodeCfg.getString(NodeProperties.Option.CORE_DUMP_DIR));
         transactionLogDirs.put(ncId,
-                cfg.getString(section, AsterixProperties.PROPERTY_TXN_LOG_DIR, AsterixProperties.DEFAULT_TXN_LOG_DIR));
+                nodeCfg.getString(NodeProperties.Option.TXN_LOG_DIR));
 
         // Now we create an array of ClusterPartitions for all the partitions
         // on this NC.
-        String[] iodevices = cfg.getString(section, AsterixProperties.PROPERTY_IO_DEV,
-                AsterixProperties.DEFAULT_IO_DEV).split(",");
-        String storageSubdir = cfg.getString(section, AsterixProperties.PROPERTY_STORAGE_DIR,
-                AsterixProperties.DEFAULT_STORAGE_DIR);
+        String[] iodevices = nodeCfg.getStringArray(IODEVICES);
+        String storageSubdir = nodeCfg.getString(STORAGE_SUBDIR);
         String[] nodeStores = new String[iodevices.length];
         ClusterPartition[] nodePartitions = new ClusterPartition[iodevices.length];
         for (int i = 0; i < nodePartitions.length; i++) {
-            // Construct final storage path from iodevice dir + storage subdir.s
+            // Construct final storage path from iodevice dir + storage subdirs
             nodeStores[i] = iodevices[i] + File.separator + storageSubdir;
             // Create ClusterPartition instances for this NC.
             ClusterPartition partition = new ClusterPartition(uniquePartitionId.getValue(), ncId, i);
@@ -228,7 +254,6 @@ public class PropertiesAccessor {
         }
         stores.put(ncId, nodeStores);
         nodePartitionsMap.put(ncId, nodePartitions);
-        nodeNames.add(ncId);
     }
 
     private void loadAsterixBuildProperties() throws AsterixException {
@@ -248,16 +273,8 @@ public class PropertiesAccessor {
         }
     }
 
-    public String getMetadataNodeName() {
-        return metadataNodeName;
-    }
-
     public Map<String, String[]> getStores() {
         return stores;
-    }
-
-    public List<String> getNodeNames() {
-        return nodeNames;
     }
 
     public String getCoredumpPath(String nodeId) {
@@ -276,48 +293,17 @@ public class PropertiesAccessor {
         return asterixBuildProperties;
     }
 
-    public <T> T getProperty(String property, T defaultValue, IPropertyInterpreter<T> interpreter) {
-        String value;
-        Property p = null;
-        if (asterixConfigurationParams != null) {
-            p = asterixConfigurationParams.get(property);
-            value = (p == null) ? null : p.getValue();
-        } else {
-            value = cfg.getString("app", property);
-            if (value == null) {
-                value = cfg.getString("asterix", property);
-                if (value != null) {
-                    LOGGER.warn("[asterix] config section deprecated and will be removed in a future release;" +
-                            " please update to [app] (found: " + property + ')');
-                }
-            }
-        }
-        if (value == null) {
-            return defaultValue;
-        }
+    public <T> T getProperty(String property, T defaultValue, IOptionType<T> interpreter) {
+        String value = cfg.getString("common", property);
         try {
-            return interpreter.interpret(value);
+            return value == null ? defaultValue : interpreter.parse(value);
         } catch (IllegalArgumentException e) {
             if (LOGGER.isEnabledFor(Level.ERROR)) {
-                StringBuilder msg = new StringBuilder(
-                        "Invalid property value '" + value + "' for property '" + property + "'.\n");
-                if (p != null) {
-                    msg.append("See the description: \n" + p.getDescription() + "\n");
-                }
-                msg.append("Default = " + defaultValue);
-                LOGGER.error(msg.toString());
+                LOGGER.error("Invalid property value '" + value + "' for property '" + property + "'.\n" +
+                        "Default = " + defaultValue);
             }
             throw e;
         }
-    }
-
-    public String getInstanceName() {
-        return instanceName;
-    }
-
-    public ClusterPartition getMetadataPartition() {
-        // metadata partition is always the first partition on the metadata node
-        return nodePartitionsMap.get(metadataNodeName)[0];
     }
 
     public Map<String, ClusterPartition[]> getNodePartitions() {
@@ -333,22 +319,78 @@ public class PropertiesAccessor {
     }
 
     public static PropertiesAccessor getInstance(IApplicationConfig cfg) throws IOException, AsterixException {
-        // Determine whether to use old-style asterix-configuration.xml or new-style configuration.
-        // QQQ strip this out eventually
-        // QQQ this is NOT a good way to determine whether the config is valid
-        PropertiesAccessor propertiesAccessor;
-        if (cfg != null && cfg.getString("cc", "cluster.address") != null) {
-            propertiesAccessor = new PropertiesAccessor(cfg);
-        } else {
-            propertiesAccessor = new PropertiesAccessor();
+        PropertiesAccessor accessor = instances.get(cfg);
+        if (accessor == null) {
+            accessor = new PropertiesAccessor(cfg);
+            if (instances.putIfAbsent(cfg, accessor) != null) {
+                return instances.get(cfg);
+            }
         }
-        if (!instanceHolder.compareAndSet(null, propertiesAccessor)) {
-            propertiesAccessor = instanceHolder.get();
-        }
-        return propertiesAccessor;
+        return accessor;
     }
 
-    public static PropertiesAccessor getInstance() throws IOException, AsterixException {
-        return getInstance(null);
+    @Override
+    public Object getStatic(IOption option) {
+        return cfg.getStatic(option);
+    }
+
+    @Override
+    public String getString(String section, String key) {
+        return cfg.getString(section, key);
+    }
+
+    @Override
+    public int getInt(String section, String key) {
+        return cfg.getInt(section, key);
+    }
+
+    @Override
+    public long getLong(String section, String key) {
+        return cfg.getLong(section, key);
+    }
+
+    @Override
+    public Set<String> getSectionNames() {
+        return cfg.getSectionNames();
+    }
+
+    @Override
+    public Set<String> getKeys(String section) {
+        return cfg.getKeys(section);
+    }
+
+    @Override
+    public List<String> getNCNames() {
+        return cfg.getNCNames();
+    }
+
+    @Override
+    public IOption lookupOption(String sectionName, String propertyName) {
+        return cfg.lookupOption(sectionName, propertyName);
+    }
+
+    @Override
+    public IApplicationConfig getNCEffectiveConfig(String nodeId) {
+        return cfg.getNCEffectiveConfig(nodeId);
+    }
+
+    @Override
+    public Set<IOption> getOptions() {
+        return cfg.getOptions();
+    }
+
+    @Override
+    public Set<IOption> getOptions(Section section) {
+        return cfg.getOptions(section);
+    }
+
+    @Override
+    public Set<Section> getSections() {
+        return cfg.getSections();
+    }
+
+    @Override
+    public Set<Section> getSections(Predicate<Section> predicate) {
+        return cfg.getSections(predicate);
     }
 }

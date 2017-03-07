@@ -29,7 +29,7 @@ public class ServerContext {
     private final ServerType type;
     private final File baseDir;
 
-    public ServerContext(ServerType type, File baseDir) throws Exception {
+    public ServerContext(ServerType type, File baseDir) {
         this.type = type;
         this.baseDir = baseDir;
     }

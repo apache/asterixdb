@@ -48,7 +48,7 @@ public class NodeControllerDetailsApiServlet extends ClusterApiServlet {
     private static final Logger LOGGER = Logger.getLogger(NodeControllerDetailsApiServlet.class.getName());
     private final ObjectMapper om = new ObjectMapper();
 
-    public NodeControllerDetailsApiServlet(ConcurrentMap<String, Object> ctx, String[] paths) {
+    public NodeControllerDetailsApiServlet(ConcurrentMap<String, Object> ctx, String... paths) {
         super(ctx, paths);
         om.enable(SerializationFeature.INDENT_OUTPUT);
     }

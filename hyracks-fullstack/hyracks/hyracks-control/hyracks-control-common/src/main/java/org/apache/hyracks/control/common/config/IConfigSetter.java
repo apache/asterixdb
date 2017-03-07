@@ -16,33 +16,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.api.application;
+package org.apache.hyracks.control.common.config;
 
-import java.util.List;
-import java.util.Map.Entry;
-import java.util.Set;
+@FunctionalInterface
+public interface IConfigSetter {
+    void set(String nodeId, Object value, boolean isDefault) throws SetException;
 
-/**
- * Accessor for the data contained in the global application configuration file.
- */
-public interface IApplicationConfig {
-    String getString(String section, String key);
-
-    String getString(String section, String key, String defaultValue);
-
-    int getInt(String section, String key);
-
-    int getInt(String section, String key, int defaultValue);
-
-    long getLong(String section, String key);
-
-    long getLong(String section, String key, long defaultValue);
-
-    Set<String> getSections();
-
-    Set<String> getKeys(String section);
-
-    String[] getStringArray(String section, String key);
-
-    List<Set<Entry<String, String>>> getMultiSections(String section);
+    class SetException extends RuntimeException {
+        public SetException(Exception e) {
+            super(e);
+        }
+    }
 }

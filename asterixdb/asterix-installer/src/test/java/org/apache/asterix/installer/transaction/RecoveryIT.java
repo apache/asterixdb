@@ -106,7 +106,7 @@ public class RecoveryIT {
         HDFSCluster.getInstance().cleanup();
     }
 
-    @Parameters
+    @Parameters(name = "RecoveryIT {index}: {0}")
     public static Collection<Object[]> tests() throws Exception {
         Collection<Object[]> testArgs = new ArrayList<Object[]>();
         TestCaseContext.Builder b = new TestCaseContext.Builder();

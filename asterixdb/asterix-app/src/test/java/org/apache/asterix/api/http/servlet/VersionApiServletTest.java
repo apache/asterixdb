@@ -19,7 +19,7 @@
 
 package org.apache.asterix.api.http.servlet;
 
-import static org.apache.asterix.api.http.servlet.ServletConstants.ASTERIX_BUILD_PROP_ATTR;
+import static org.apache.asterix.api.http.servlet.ServletConstants.ASTERIX_APP_CONTEXT_INFO_ATTR;
 import static org.apache.asterix.api.http.servlet.ServletConstants.HYRACKS_CONNECTION_ATTR;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -69,7 +69,7 @@ public class VersionApiServletTest {
 
         // Put stuff in let map
         servlet.ctx().put(HYRACKS_CONNECTION_ATTR, mockHcc);
-        servlet.ctx().put(ASTERIX_BUILD_PROP_ATTR, mockCtx);
+        servlet.ctx().put(ASTERIX_APP_CONTEXT_INFO_ATTR, mockCtx);
         // Sets up mock returns.
         when(mockResponse.writer()).thenReturn(outputWriter);
         when(mockRequest.getHttpRequest()).thenReturn(mockHttpRequest);

@@ -64,14 +64,14 @@ public class IPCConnectionManager {
 
     IPCConnectionManager(IPCSystem system, InetSocketAddress socketAddress) throws IOException {
         this.system = system;
-        this.networkThread = new NetworkThread();
-        this.networkThread.setPriority(Thread.MAX_PRIORITY);
         this.serverSocketChannel = ServerSocketChannel.open();
         serverSocketChannel.socket().setReuseAddress(true);
         serverSocketChannel.configureBlocking(false);
         ServerSocket socket = serverSocketChannel.socket();
         socket.bind(socketAddress);
         address = new InetSocketAddress(socket.getInetAddress(), socket.getLocalPort());
+        networkThread = new NetworkThread();
+        networkThread.setPriority(Thread.MAX_PRIORITY);
         ipcHandleMap = new HashMap<>();
         pendingConnections = new ArrayList<>();
         workingPendingConnections = new ArrayList<>();
@@ -175,7 +175,7 @@ public class IPCConnectionManager {
         private final Selector selector;
 
         public NetworkThread() {
-            super("IPC Network Listener Thread");
+            super("IPC Network Listener Thread [" + address + "]");
             setDaemon(true);
             try {
                 selector = Selector.open();
@@ -323,7 +323,7 @@ public class IPCConnectionManager {
                     failingLoops = 0;
                 } catch (Exception e) {
                     int sleepSecs = (int)Math.pow(2, Math.min(11, failingLoops++));
-                    LOGGER.log(Level.WARNING, "Exception processing message; sleeping " + sleepSecs
+                    LOGGER.log(Level.SEVERE, "Exception processing message; sleeping " + sleepSecs
                             + " seconds", e);
                     try {
                         Thread.sleep(TimeUnit.SECONDS.toMillis(sleepSecs));

@@ -66,11 +66,6 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="api">
-      <compilation-unit name="replication">
-        <output-dir compare="Text">replication</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="api">
       <compilation-unit name="query_status_1">
         <output-dir compare="Text">query_status_1</output-dir>
         <expected-error>HTTP/1.1 404 Not Found</expected-error>

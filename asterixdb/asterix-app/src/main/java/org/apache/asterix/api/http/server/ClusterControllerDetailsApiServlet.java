@@ -41,7 +41,7 @@ public class ClusterControllerDetailsApiServlet extends ClusterApiServlet {
     private static final Logger LOGGER = Logger.getLogger(ClusterControllerDetailsApiServlet.class.getName());
     private final ObjectMapper om = new ObjectMapper();
 
-    public ClusterControllerDetailsApiServlet(ConcurrentMap<String, Object> ctx, String[] paths) {
+    public ClusterControllerDetailsApiServlet(ConcurrentMap<String, Object> ctx, String... paths) {
         super(ctx, paths);
     }
 

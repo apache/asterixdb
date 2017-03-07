@@ -19,15 +19,15 @@ bin/hyrackscc -port <port>
 
 The node controller is started by running bin/hyracksnc. It requires at least the following two command line arguments.
 
- -cc-host VAL                    : Cluster Controller host name
- -data-ip-address VAL            : IP Address to bind data listener
+ -cluster-address VAL                 : Cluster Controller host name
+ -data-listen-address VAL             : IP Address to bind data listener
 
 If the cluster controller was directed to listen on a port other than the default, you will need to pass one more argument to hyracksnc.
 
- -cc-port N                      : Cluster Controller port (default: 1099)
+ -cluster-port N                      : Cluster Controller port (default: 1099)
 
-The data-ip-address is the interface on which the Node Controller must listen on -- in the event the machine is multi-homed it must listen on an IP that is reachable from
-other Node Controllers. Make sure that the value passed to the data-ip-address is a valid IPv4 address (four octets separated by .).
+The data-listen-address is the interface on which the Node Controller must listen on -- in the event the machine is multi-homed it must listen on an IP that is reachable from
+other Node Controllers. Make sure that the value passed to the data-listen-address is a valid IPv4 address (four octets separated by .).
 
 3. Running a job on Hyracks
 

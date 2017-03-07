@@ -18,32 +18,50 @@
  */
 package org.apache.hyracks.control.cc;
 
-import org.kohsuke.args4j.CmdLineParser;
+import static org.apache.hyracks.control.common.controllers.CCConfig.Option.APP_CLASS;
 
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import org.apache.hyracks.api.application.ICCApplicationEntryPoint;
+import org.apache.hyracks.control.common.config.ConfigManager;
+import org.apache.hyracks.control.common.config.ConfigUtils;
 import org.apache.hyracks.control.common.controllers.CCConfig;
+import org.kohsuke.args4j.CmdLineException;
 
 public class CCDriver {
-    public static void main(String args []) throws Exception {
-        try {
-            CCConfig ccConfig = new CCConfig();
-            CmdLineParser cp = new CmdLineParser(ccConfig);
-            try {
-                cp.parseArgument(args);
-            } catch (Exception e) {
-                System.err.println(e.getMessage());
-                cp.printUsage(System.err);
-                return;
-            }
-            ccConfig.loadConfigAndApplyDefaults();
+    private static final Logger LOGGER = Logger.getLogger(CCDriver.class.getName());
 
-            ClusterControllerService ccService = new ClusterControllerService(ccConfig);
+    private CCDriver() {
+    }
+
+    public static void main(String[] args) throws Exception {
+        try {
+            final ConfigManager configManager = new ConfigManager(args);
+            ICCApplicationEntryPoint appEntryPoint = getAppEntryPoint(args);
+            appEntryPoint.registerConfig(configManager);
+            CCConfig ccConfig = new CCConfig(configManager);
+            ClusterControllerService ccService = new ClusterControllerService(ccConfig, appEntryPoint);
             ccService.start();
             while (true) {
                 Thread.sleep(100000);
             }
+        } catch (CmdLineException e) {
+            LOGGER.log(Level.FINE, "Exception parsing command line: " + Arrays.toString(args), e);
+            System.exit(2);
         } catch (Exception e) {
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Exiting NCDriver due to exception", e);
             System.exit(1);
         }
+    }
+
+    private static ICCApplicationEntryPoint getAppEntryPoint(String[] args)
+            throws ClassNotFoundException, InstantiationException, IllegalAccessException, IOException {
+        // determine app class so that we can use the correct implementation of the configuration...
+        String appClassName = ConfigUtils.getOptionValue(args, APP_CLASS);
+        return appClassName != null ? (ICCApplicationEntryPoint) (Class.forName(appClassName)).newInstance()
+                : CCApplicationEntryPoint.INSTANCE;
     }
 }

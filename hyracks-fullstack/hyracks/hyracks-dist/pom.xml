@@ -88,7 +88,7 @@
         <groupId>org.apache.rat</groupId>
         <artifactId>apache-rat-plugin</artifactId>
         <configuration>
-          <excludes>
+          <excludes combine.children="append">
             <exclude>src/main/resources/conf/master</exclude>
             <exclude>src/main/resources/conf/slaves</exclude>
           </excludes>

@@ -282,7 +282,7 @@ public class NodeControllerState {
     public synchronized ObjectNode toSummaryJSON()  {
         ObjectMapper om = new ObjectMapper();
         ObjectNode o = om.createObjectNode();
-        o.put("node-id", ncConfig.nodeId);
+        o.put("node-id", ncConfig.getNodeId());
         o.put("heap-used", heapUsedSize[(rrdPtr + RRD_SIZE - 1) % RRD_SIZE]);
         o.put("system-load-average", systemLoadAverage[(rrdPtr + RRD_SIZE - 1) % RRD_SIZE]);
 
@@ -293,7 +293,7 @@ public class NodeControllerState {
         ObjectMapper om = new ObjectMapper();
         ObjectNode o = om.createObjectNode();
 
-        o.put("node-id", ncConfig.nodeId);
+        o.put("node-id", ncConfig.getNodeId());
 
         if (includeConfig) {
             o.put("os-name", osName);

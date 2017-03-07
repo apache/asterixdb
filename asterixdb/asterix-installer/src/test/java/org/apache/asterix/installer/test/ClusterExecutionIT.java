@@ -25,6 +25,7 @@ import org.apache.asterix.test.common.TestExecutor;
 import org.apache.asterix.test.runtime.HDFSCluster;
 import org.apache.asterix.testframework.context.TestCaseContext;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.hyracks.util.file.FileUtil;
 import org.codehaus.plexus.util.FileUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -58,7 +59,7 @@ public class ClusterExecutionIT extends AbstractExecutionIT {
         AsterixClusterLifeCycleIT.setUp();
 
         FileUtils.copyDirectoryStructure(
-                new File(StringUtils.join(new String[] { "..", "asterix-app", "data" }, File.separator)),
+                new File(FileUtil.joinPath("..", "asterix-app", "data")),
                 new File(StringUtils.join(
                         new String[] { "src", "test", "resources", "clusterts", "managix-working", "data" },
                         File.separator)));

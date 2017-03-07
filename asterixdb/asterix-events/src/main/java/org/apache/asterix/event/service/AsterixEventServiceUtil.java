@@ -23,7 +23,6 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -157,10 +156,6 @@ public class AsterixEventServiceUtil {
             clusterProperties.add(
                     new Property("PROFILE_DUMP_PERIOD", String.valueOf(cluster.getProfileDumpPeriod().intValue())));
         }
-        if (cluster.getDefaultMaxJobAttempts() != null) {
-            clusterProperties.add(new Property("DEFAULT_MAX_JOB_ATTEMPTS",
-                    String.valueOf(cluster.getDefaultMaxJobAttempts().intValue())));
-        }
         if (cluster.getJobHistorySize() != null) {
             clusterProperties
                     .add(new Property("JOB_HISTORY_SIZE", String.valueOf(cluster.getJobHistorySize().intValue())));
@@ -288,15 +283,13 @@ public class AsterixEventServiceUtil {
         }
         configuration.setStore(stores);
         List<Coredump> coredump = new ArrayList<Coredump>();
-        String coredumpDir = null;
         List<TransactionLogDir> txnLogDirs = new ArrayList<TransactionLogDir>();
-        String txnLogDir = null;
         for (Node node : cluster.getNode()) {
-            coredumpDir = node.getLogDir() == null ? cluster.getLogDir() : node.getLogDir();
+            String coredumpdir = node.getLogDir() == null ? cluster.getLogDir() : node.getLogDir();
             coredump.add(new Coredump(asterixInstanceName + "_" + node.getId(),
-                    coredumpDir + File.separator + asterixInstanceName + "_" + node.getId()));
+                    coredumpdir + File.separator + asterixInstanceName + "_" + node.getId()));
 
-            txnLogDir = node.getTxnLogDir() == null ? cluster.getTxnLogDir() : node.getTxnLogDir();
+            String txnLogDir = node.getTxnLogDir() == null ? cluster.getTxnLogDir() : node.getTxnLogDir();
             txnLogDirs.add(new TransactionLogDir(asterixInstanceName + "_" + node.getId(), txnLogDir));
         }
         configuration.setCoredump(coredump);

@@ -110,4 +110,9 @@
     <description>Number of reusable frames for NC to NC messaging. (Default = 512)
     </description>
   </property>
+  <property>
+    <name>log.level</name>
+    <value>INFO</value>
+    <description>foo</description>
+  </property>
 </asterixConfiguration>

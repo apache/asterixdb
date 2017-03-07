@@ -33,5 +33,5 @@
       loop_var: node
 
 - name: Populate CC to the cluster configuration file "{{ ccconf }}"
-  shell: printf "\n[cc]\ncluster.address={{ groups['cc'][0] }}\n\n" >> "{{ ccconf }}"
+  shell: printf "\n[cc]\naddress={{ groups['cc'][0] }}\n\n" >> "{{ ccconf }}"
 

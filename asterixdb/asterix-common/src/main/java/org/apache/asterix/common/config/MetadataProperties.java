@@ -18,90 +18,135 @@
  */
 package org.apache.asterix.common.config;
 
+import static org.apache.hyracks.control.common.config.OptionTypes.INTEGER;
+import static org.apache.hyracks.control.common.config.OptionTypes.STRING;
+
 import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
 
 import org.apache.asterix.common.cluster.ClusterPartition;
+import org.apache.hyracks.api.config.IApplicationConfig;
+import org.apache.hyracks.api.config.IOption;
+import org.apache.hyracks.api.config.IOptionType;
+import org.apache.hyracks.api.config.Section;
 
 public class MetadataProperties extends AbstractProperties {
 
-    private static final String METADATA_REGISTRATION_TIMEOUT_KEY = "metadata.registration.timeout.secs";
-    private static final long METADATA_REGISTRATION_TIMEOUT_DEFAULT = 60;
+    public enum Option implements IOption {
+        INSTANCE_NAME(STRING, "DEFAULT_INSTANCE"),
+        METADATA_NODE(STRING, null),
+        METADATA_REGISTRATION_TIMEOUT_SECS(INTEGER, 60),
+        METADATA_LISTEN_PORT(INTEGER, 0),
+        METADATA_CALLBACK_PORT(INTEGER, 0);
 
-    private static final String METADATA_PORT_KEY = "metadata.port";
-    private static final int METADATA_PORT_DEFAULT = 0;
+        private final IOptionType type;
+        private final Object defaultValue;
 
-    private static final String METADATA_CALLBACK_PORT_KEY = "metadata.callback.port";
-    private static final int METADATA_CALLBACK_PORT_DEFAULT = 0;
+        <T> Option(IOptionType<T> type, T defaultValue) {
+            this.type = type;
+            this.defaultValue = defaultValue;
+        }
+
+        @Override
+        public Section section() {
+            return Section.COMMON;
+        }
+
+        @Override
+        public String description() {
+            switch (this) {
+                case INSTANCE_NAME:
+                    return "The name of this cluster instance";
+                case METADATA_NODE:
+                    return "the node which should serve as the metadata node";
+                case METADATA_REGISTRATION_TIMEOUT_SECS:
+                    return "how long in seconds to wait for the metadata node to register with the CC";
+                case METADATA_LISTEN_PORT:
+                    return "IP port to bind metadata listener (0 = random port)";
+                case METADATA_CALLBACK_PORT:
+                    return "IP port to bind metadata callback listener (0 = random port)";
+                default:
+                    throw new IllegalStateException("NYI: " + this);
+            }
+        }
+
+        @Override
+        public IOptionType type() {
+            return type;
+        }
+
+        @Override
+        public Object defaultValue() {
+            return defaultValue;
+        }
+
+        @Override
+        public Object get(IApplicationConfig cfg) {
+            if (this == METADATA_NODE) {
+                Object value = cfg.getStatic(this);
+                return value != null ? value : cfg.getNCNames().isEmpty() ? null : cfg.getNCNames().get(0);
+            } else {
+                return cfg.getStatic(this);
+            }
+        }
+
+    }
 
     public MetadataProperties(PropertiesAccessor accessor) {
         super(accessor);
     }
 
-    @PropertyKey("instance.name")
     public String getInstanceName() {
-        return accessor.getInstanceName();
+        return accessor.getString(Option.INSTANCE_NAME);
     }
 
-    @PropertyKey("metadata.node")
     public String getMetadataNodeName() {
-        return accessor.getMetadataNodeName();
+        return accessor.getString(Option.METADATA_NODE);
     }
 
-    @PropertyKey("metadata.partition")
     public ClusterPartition getMetadataPartition() {
-        return accessor.getMetadataPartition();
+        // metadata partition is always the first partition on the metadata node
+        return accessor.getNodePartitions().get(getMetadataNodeName())[0];
     }
 
-    @PropertyKey("node.stores")
     public Map<String, String[]> getStores() {
         return accessor.getStores();
     }
 
     public List<String> getNodeNames() {
-        return accessor.getNodeNames();
+        return accessor.getNCNames();
     }
 
     public String getCoredumpPath(String nodeId) {
         return accessor.getCoredumpPath(nodeId);
     }
 
-    @PropertyKey("core.dump.paths")
     public Map<String, String> getCoredumpPaths() {
         return accessor.getCoredumpConfig();
     }
 
-    @PropertyKey("node.partitions")
     public Map<String, ClusterPartition[]> getNodePartitions() {
         return accessor.getNodePartitions();
     }
 
-    @PropertyKey("cluster.partitions")
     public SortedMap<Integer, ClusterPartition> getClusterPartitions() {
         return accessor.getClusterPartitions();
     }
 
-    @PropertyKey("transaction.log.dirs")
     public Map<String, String> getTransactionLogDirs() {
         return accessor.getTransactionLogDirs();
     }
 
-    @PropertyKey(METADATA_REGISTRATION_TIMEOUT_KEY)
-    public long getRegistrationTimeoutSecs() {
-        return accessor.getProperty(METADATA_REGISTRATION_TIMEOUT_KEY, METADATA_REGISTRATION_TIMEOUT_DEFAULT,
-                PropertyInterpreters.getLongPropertyInterpreter());
+    public int getRegistrationTimeoutSecs() {
+        return accessor.getInt(Option.METADATA_REGISTRATION_TIMEOUT_SECS);
     }
 
-    @PropertyKey(METADATA_PORT_KEY)
     public int getMetadataPort() {
-        return accessor.getProperty(METADATA_PORT_KEY, METADATA_PORT_DEFAULT,
-                PropertyInterpreters.getIntegerPropertyInterpreter());
+        return accessor.getInt(Option.METADATA_LISTEN_PORT);
     }
 
-    @PropertyKey(METADATA_CALLBACK_PORT_KEY)
     public int getMetadataCallbackPort() {
-        return accessor.getProperty(METADATA_CALLBACK_PORT_KEY, METADATA_CALLBACK_PORT_DEFAULT,
-                PropertyInterpreters.getIntegerPropertyInterpreter());
+        return accessor.getInt(Option.METADATA_CALLBACK_PORT);
     }
 }

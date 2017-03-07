@@ -19,21 +19,23 @@
 package org.apache.asterix.common.config;
 
 public interface IPropertiesProvider {
-    public StorageProperties getStorageProperties();
+    StorageProperties getStorageProperties();
 
-    public TransactionProperties getTransactionProperties();
+    TransactionProperties getTransactionProperties();
 
-    public CompilerProperties getCompilerProperties();
+    CompilerProperties getCompilerProperties();
 
-    public MetadataProperties getMetadataProperties();
+    MetadataProperties getMetadataProperties();
 
-    public ExternalProperties getExternalProperties();
+    ExternalProperties getExternalProperties();
 
-    public FeedProperties getFeedProperties();
+    FeedProperties getFeedProperties();
 
     BuildProperties getBuildProperties();
 
-    public ReplicationProperties getReplicationProperties();
+    ReplicationProperties getReplicationProperties();
 
-    public MessagingProperties getMessagingProperties();
+    MessagingProperties getMessagingProperties();
+
+    NodeProperties getNodeProperties();
 }

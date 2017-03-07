@@ -16,8 +16,25 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.common.config;
+package org.apache.hyracks.api.config;
 
-public interface IPropertyInterpreter<T> {
-    public T interpret(String s) throws IllegalArgumentException;
+public interface IOptionType<T> {
+    /**
+     * @throws IllegalArgumentException when the supplied string cannot be interpreted
+     */
+    T parse(String s);
+
+    Class<T> targetType();
+
+    default Object serializeToJSON(Object value) {
+        return value;
+    }
+
+    default String serializeToIni(Object value) {
+        return String.valueOf(value);
+    }
+
+    default String serializeToString(Object value) {
+        return serializeToIni(value);
+    }
 }

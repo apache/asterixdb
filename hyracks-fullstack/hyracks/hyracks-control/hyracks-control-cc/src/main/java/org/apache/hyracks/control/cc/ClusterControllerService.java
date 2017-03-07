@@ -20,6 +20,7 @@ package org.apache.hyracks.control.cc;
 
 import java.io.File;
 import java.io.FileReader;
+import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.net.InetAddress;
@@ -32,20 +33,22 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.TreeMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.api.application.ICCApplicationEntryPoint;
 import org.apache.hyracks.api.client.ClusterControllerInfo;
 import org.apache.hyracks.api.comm.NetworkAddress;
+import org.apache.hyracks.api.config.IApplicationConfig;
 import org.apache.hyracks.api.context.ICCContext;
 import org.apache.hyracks.api.deployment.DeploymentId;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.HyracksException;
-import org.apache.hyracks.api.job.resource.DefaultJobCapacityController;
 import org.apache.hyracks.api.job.resource.IJobCapacityController;
 import org.apache.hyracks.api.service.IControllerService;
 import org.apache.hyracks.api.topology.ClusterTopology;
@@ -66,9 +69,10 @@ import org.apache.hyracks.control.cc.work.GetThreadDumpWork.ThreadDumpRun;
 import org.apache.hyracks.control.cc.work.RemoveDeadNodesWork;
 import org.apache.hyracks.control.cc.work.ShutdownNCServiceWork;
 import org.apache.hyracks.control.cc.work.TriggerNCWork;
+import org.apache.hyracks.control.common.config.ConfigManager;
 import org.apache.hyracks.control.common.context.ServerContext;
 import org.apache.hyracks.control.common.controllers.CCConfig;
-import org.apache.hyracks.control.common.controllers.IniUtils;
+import org.apache.hyracks.control.common.controllers.NCConfig;
 import org.apache.hyracks.control.common.deployment.DeploymentRun;
 import org.apache.hyracks.control.common.ipc.CCNCFunctions;
 import org.apache.hyracks.control.common.logs.LogFile;
@@ -77,13 +81,14 @@ import org.apache.hyracks.control.common.work.WorkQueue;
 import org.apache.hyracks.ipc.api.IIPCI;
 import org.apache.hyracks.ipc.impl.IPCSystem;
 import org.apache.hyracks.ipc.impl.JavaSerializationBasedPayloadSerializerDeserializer;
-import org.ini4j.Ini;
 import org.xml.sax.InputSource;
 
 public class ClusterControllerService implements IControllerService {
     private static final Logger LOGGER = Logger.getLogger(ClusterControllerService.class.getName());
 
     private final CCConfig ccConfig;
+
+    private final ConfigManager configManager;
 
     private IPCSystem clusterIPC;
 
@@ -127,11 +132,22 @@ public class ClusterControllerService implements IControllerService {
 
     private ShutdownRun shutdownCallback;
 
-    private ICCApplicationEntryPoint aep;
+    private final ICCApplicationEntryPoint aep;
 
-    public ClusterControllerService(final CCConfig ccConfig) throws Exception {
-        this.ccConfig = ccConfig;
-        File jobLogFolder = new File(ccConfig.ccRoot, "logs/jobs");
+    public ClusterControllerService(final CCConfig config) throws Exception {
+        this(config, getApplicationEntryPoint(config));
+    }
+
+    public ClusterControllerService(final CCConfig config,
+                                    final ICCApplicationEntryPoint aep) throws Exception {
+        this.ccConfig = config;
+        this.configManager = ccConfig.getConfigManager();
+        if (aep == null) {
+            throw new IllegalArgumentException("ICCApplicationEntryPoint cannot be null");
+        }
+        this.aep = aep;
+        configManager.processConfig();
+        File jobLogFolder = new File(ccConfig.getRootDir(), "logs/jobs");
         jobLog = new LogFile(jobLogFolder);
 
         // WorkQueue is in charge of heartbeat as well as other events.
@@ -140,7 +156,8 @@ public class ClusterControllerService implements IControllerService {
         final ClusterTopology topology = computeClusterTopology(ccConfig);
         ccContext = new ClusterControllerContext(topology);
         sweeper = new DeadNodeSweeper();
-        datasetDirectoryService = new DatasetDirectoryService(ccConfig.resultTTL, ccConfig.resultSweepThreshold);
+        datasetDirectoryService = new DatasetDirectoryService(ccConfig.getResultTTL(),
+                ccConfig.getResultSweepThreshold());
 
         deploymentRunMap = new HashMap<>();
         stateDumpRunMap = new HashMap<>();
@@ -151,10 +168,10 @@ public class ClusterControllerService implements IControllerService {
     }
 
     private static ClusterTopology computeClusterTopology(CCConfig ccConfig) throws Exception {
-        if (ccConfig.clusterTopologyDefinition == null) {
+        if (ccConfig.getClusterTopology() == null) {
             return null;
         }
-        FileReader fr = new FileReader(ccConfig.clusterTopologyDefinition);
+        FileReader fr = new FileReader(ccConfig.getClusterTopology());
         InputSource in = new InputSource(fr);
         try {
             return TopologyDefinitionParser.parse(in);
@@ -166,20 +183,21 @@ public class ClusterControllerService implements IControllerService {
     @Override
     public void start() throws Exception {
         LOGGER.log(Level.INFO, "Starting ClusterControllerService: " + this);
-        serverCtx = new ServerContext(ServerContext.ServerType.CLUSTER_CONTROLLER, new File(ccConfig.ccRoot));
+        serverCtx = new ServerContext(ServerContext.ServerType.CLUSTER_CONTROLLER, new File(ccConfig.getRootDir()));
         IIPCI ccIPCI = new ClusterControllerIPCI(this);
-        clusterIPC = new IPCSystem(new InetSocketAddress(ccConfig.clusterNetPort), ccIPCI,
+        clusterIPC = new IPCSystem(new InetSocketAddress(ccConfig.getClusterListenPort()), ccIPCI,
                 new CCNCFunctions.SerializerDeserializer());
         IIPCI ciIPCI = new ClientInterfaceIPCI(this);
-        clientIPC = new IPCSystem(new InetSocketAddress(ccConfig.clientNetIpAddress, ccConfig.clientNetPort), ciIPCI,
-                new JavaSerializationBasedPayloadSerializerDeserializer());
-        webServer = new WebServer(this, ccConfig.httpPort);
+        clientIPC = new IPCSystem(
+                new InetSocketAddress(ccConfig.getClientListenAddress(), ccConfig.getClientListenPort()),
+                ciIPCI, new JavaSerializationBasedPayloadSerializerDeserializer());
+        webServer = new WebServer(this, ccConfig.getConsoleListenPort());
         clusterIPC.start();
         clientIPC.start();
         webServer.start();
-        info = new ClusterControllerInfo(ccConfig.clientNetIpAddress, ccConfig.clientNetPort,
+        info = new ClusterControllerInfo(ccConfig.getClientListenAddress(), ccConfig.getClientListenPort(),
                 webServer.getListeningPort());
-        timer.schedule(sweeper, 0, ccConfig.heartbeatPeriod);
+        timer.schedule(sweeper, 0, ccConfig.getHeartbeatPeriod());
         jobLog.open();
         startApplication();
 
@@ -194,84 +212,62 @@ public class ClusterControllerService implements IControllerService {
         appCtx = new CCApplicationContext(this, serverCtx, ccContext, ccConfig.getAppConfig());
         appCtx.addJobLifecycleListener(datasetDirectoryService);
         executor = Executors.newCachedThreadPool(appCtx.getThreadFactory());
-        String className = ccConfig.appCCMainClass;
-
-        IJobCapacityController jobCapacityController = DefaultJobCapacityController.INSTANCE;
-        if (className != null) {
-            Class<?> c = Class.forName(className);
-            aep = (ICCApplicationEntryPoint) c.newInstance();
-            String[] args = ccConfig.appArgs == null ? null
-                    : ccConfig.appArgs.toArray(new String[ccConfig.appArgs.size()]);
-            aep.start(appCtx, args);
-            jobCapacityController = aep.getJobCapacityController();
-        }
+        aep.start(appCtx, ccConfig.getAppArgsArray());
+        IJobCapacityController jobCapacityController = aep.getJobCapacityController();
 
         // Job manager is in charge of job lifecycle management.
         try {
             Constructor<?> jobManagerConstructor = this.getClass().getClassLoader()
-                    .loadClass(ccConfig.jobManagerClassName)
+                    .loadClass(ccConfig.getJobManagerClass())
                     .getConstructor(CCConfig.class, ClusterControllerService.class, IJobCapacityController.class);
             jobManager = (IJobManager) jobManagerConstructor.newInstance(ccConfig, this, jobCapacityController);
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | NoSuchMethodException
                 | InvocationTargetException e) {
             if (LOGGER.isLoggable(Level.WARNING)) {
-                LOGGER.log(Level.WARNING, "class " + ccConfig.jobManagerClassName + " could not be used: ", e);
+                LOGGER.log(Level.WARNING, "class " + ccConfig.getJobManagerClass() + " could not be used: ", e);
             }
             // Falls back to the default implementation if the user-provided class name is not valid.
             jobManager = new JobManager(ccConfig, this, jobCapacityController);
         }
     }
 
-    private void connectNCs() throws Exception {
-        Ini ini = ccConfig.getIni();
-        if (ini == null || Boolean.parseBoolean(ini.get("cc", "virtual.cluster"))) {
-            return;
-        }
-        for (String section : ini.keySet()) {
-            if (!section.startsWith("nc/")) {
-                continue;
+    private Map<String, Pair<String, Integer>> getNCServices() throws IOException {
+        Map<String, Pair<String, Integer>> ncMap = new TreeMap<>();
+        for (String ncId : configManager.getNodeNames()) {
+            IApplicationConfig ncConfig = configManager.getNodeEffectiveConfig(ncId);
+            if (!ncConfig.getBoolean(NCConfig.Option.VIRTUAL_NC)) {
+                ncMap.put(ncId, Pair.of(ncConfig.getString(NCConfig.Option.NCSERVICE_ADDRESS),
+                        ncConfig.getInt(NCConfig.Option.NCSERVICE_PORT)));
             }
-            String ncid = section.substring(3);
-            String address = IniUtils.getString(ini, section, "address", null);
-            int port = IniUtils.getInt(ini, section, "port", 9090);
-            if (address == null) {
-                address = InetAddress.getLoopbackAddress().getHostAddress();
-            }
-            workQueue.schedule(new TriggerNCWork(this, address, port, ncid));
         }
+        return ncMap;
+    }
+
+    private void connectNCs() throws IOException {
+        getNCServices().entrySet().forEach(ncService -> {
+            final TriggerNCWork triggerWork = new TriggerNCWork(ClusterControllerService.this,
+                    ncService.getValue().getLeft(), ncService.getValue().getRight(), ncService.getKey());
+            workQueue.schedule(triggerWork);
+        });
     }
 
     private void terminateNCServices() throws Exception {
-        Ini ini = ccConfig.getIni();
-        if (ini == null || Boolean.parseBoolean(ini.get("cc", "virtual.cluster"))) {
-            return;
-        }
         List<ShutdownNCServiceWork> shutdownNCServiceWorks = new ArrayList<>();
-        for (String section : ini.keySet()) {
-            if (!section.startsWith("nc/")) {
-                continue;
-            }
-            String ncid = section.substring(3);
-            String address = IniUtils.getString(ini, section, "address", null);
-            int port = IniUtils.getInt(ini, section, "port", 9090);
-            if (address == null) {
-                address = InetAddress.getLoopbackAddress().getHostAddress();
-            }
-            ShutdownNCServiceWork shutdownWork = new ShutdownNCServiceWork(address, port, ncid);
+        getNCServices().entrySet().forEach(ncService -> {
+            ShutdownNCServiceWork shutdownWork = new ShutdownNCServiceWork(ncService.getValue().getLeft(),
+                    ncService.getValue().getRight(), ncService.getKey());
             workQueue.schedule(shutdownWork);
             shutdownNCServiceWorks.add(shutdownWork);
-        }
+        });
         for (ShutdownNCServiceWork shutdownWork : shutdownNCServiceWorks) {
             shutdownWork.sync();
         }
     }
 
     private void notifyApplication() throws Exception {
-        if (aep != null) {
-            // Sometimes, there is no application entry point. Check hyracks-client project
-            aep.startupCompleted();
-        }
+        aep.startupCompleted();
     }
+
     public void stop(boolean terminateNCService) throws Exception {
         if (terminateNCService) {
             terminateNCServices();
@@ -294,9 +290,7 @@ public class ClusterControllerService implements IControllerService {
     }
 
     private void stopApplication() throws Exception {
-        if (aep != null) {
-            aep.stop();
-        }
+        aep.stop();
     }
 
     public ServerContext getServerContext() {
@@ -360,7 +354,7 @@ public class ClusterControllerService implements IControllerService {
     }
 
     public NetworkAddress getDatasetDirectoryServiceInfo() {
-        return new NetworkAddress(ccConfig.clientNetIpAddress, ccConfig.clientNetPort);
+        return new NetworkAddress(ccConfig.getClientListenAddress(), ccConfig.getClientListenPort());
     }
 
     private final class ClusterControllerContext implements ICCContext {
@@ -390,6 +384,7 @@ public class ClusterControllerService implements IControllerService {
         public ClusterTopology getClusterTopology() {
             return topology;
         }
+
     }
 
     private class DeadNodeSweeper extends TimerTask {
@@ -457,5 +452,15 @@ public class ClusterControllerService implements IControllerService {
 
     public ThreadDumpRun removeThreadDumpRun(String requestKey) {
         return threadDumpRunMap.remove(requestKey);
+    }
+
+    private static ICCApplicationEntryPoint getApplicationEntryPoint(CCConfig ccConfig)
+            throws ClassNotFoundException, IllegalAccessException, InstantiationException {
+        if (ccConfig.getAppClass() != null) {
+            Class<?> c = Class.forName(ccConfig.getAppClass());
+            return (ICCApplicationEntryPoint) c.newInstance();
+        } else {
+            return CCApplicationEntryPoint.INSTANCE;
+        }
     }
 }

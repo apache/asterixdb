@@ -82,7 +82,7 @@ public class CheckpointingTest {
     private static final String DATASET_NAME = "TestDS";
     private static final String DATA_TYPE_NAME = "DUMMY";
     private static final String NODE_GROUP_NAME = "DEFAULT";
-    private static final int TXN_LOG_PARTITION_SIZE = StorageUtil.getSizeInBytes(2, StorageUnit.MEGABYTE);
+    private static final int TXN_LOG_PARTITION_SIZE = StorageUtil.getIntSizeInBytes(2, StorageUnit.MEGABYTE);
 
     @Before
     public void setUp() throws Exception {

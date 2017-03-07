@@ -18,7 +18,7 @@
  */
 package org.apache.hyracks.control.nc.service;
 
-import org.apache.hyracks.control.common.controllers.IniUtils;
+import org.apache.hyracks.control.common.config.ConfigUtils;
 import org.ini4j.Ini;
 import org.kohsuke.args4j.Option;
 
@@ -58,10 +58,10 @@ public class NCServiceConfig {
      * It does not apply defaults or any logic.
      */
     private void loadINIFile() throws IOException {
-        ini = IniUtils.loadINIFile(configFile);
-        address = IniUtils.getString(ini, "ncservice", "address", address);
-        port = IniUtils.getInt(ini, "ncservice", "port", port);
-        logdir = IniUtils.getString(ini, "ncservice", "logdir", logdir);
+        ini = ConfigUtils.loadINIFile(configFile);
+        address = ConfigUtils.getString(ini, "ncservice", "address", address);
+        port = ConfigUtils.getInt(ini, "ncservice", "port", port);
+        logdir = ConfigUtils.getString(ini, "ncservice", "logdir", logdir);
     }
 
     /**

@@ -16,10 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/*
- * Test case Name  : replication
- * Description     : Replication
- * Expected Result : Positive
- * Date            : 28th October 2016
- */
-/admin/cluster/replication
+package org.apache.hyracks.api.config;
+
+import java.io.IOException;
+
+import org.kohsuke.args4j.CmdLineException;
+
+public interface IConfigurator {
+    void run() throws IOException, CmdLineException;
+}

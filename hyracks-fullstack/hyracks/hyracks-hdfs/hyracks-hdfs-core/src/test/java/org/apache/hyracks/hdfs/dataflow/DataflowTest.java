@@ -19,8 +19,6 @@
 
 package org.apache.hyracks.hdfs.dataflow;
 
-import static org.apache.hyracks.test.support.TestUtils.joinPath;
-
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -61,6 +59,7 @@ import org.apache.hyracks.hdfs.lib.TextTupleWriterFactory;
 import org.apache.hyracks.hdfs.scheduler.Scheduler;
 import org.apache.hyracks.hdfs.utils.HyracksUtils;
 import org.apache.hyracks.hdfs.utils.TestUtils;
+import org.apache.hyracks.util.file.FileUtil;
 
 /**
  * Test the org.apache.hyracks.hdfs.dataflow package,
@@ -69,19 +68,19 @@ import org.apache.hyracks.hdfs.utils.TestUtils;
 @SuppressWarnings({ "deprecation" })
 public class DataflowTest extends TestCase {
 
-    protected static final String ACTUAL_RESULT_DIR = joinPath("target", "actual");
-    private static final String TEST_RESOURCES = joinPath("src", "test", "resources");
-    protected static final String EXPECTED_RESULT_PATH = joinPath(TEST_RESOURCES, "expected");
-    private static final String PATH_TO_HADOOP_CONF = joinPath(TEST_RESOURCES, "hadoop", "conf");
-    protected static final String BUILD_DIR = joinPath("target", "build");
+    protected static final String ACTUAL_RESULT_DIR = FileUtil.joinPath("target", "actual");
+    private static final String TEST_RESOURCES = FileUtil.joinPath("src", "test", "resources");
+    protected static final String EXPECTED_RESULT_PATH = FileUtil.joinPath(TEST_RESOURCES, "expected");
+    private static final String PATH_TO_HADOOP_CONF = FileUtil.joinPath(TEST_RESOURCES, "hadoop", "conf");
+    protected static final String BUILD_DIR = FileUtil.joinPath("target", "build");
 
 
-    private static final String DATA_PATH = joinPath(TEST_RESOURCES, "data", "customer.tbl");
+    private static final String DATA_PATH = FileUtil.joinPath(TEST_RESOURCES, "data", "customer.tbl");
     protected static final String HDFS_INPUT_PATH = "/customer/";
     protected static final String HDFS_OUTPUT_PATH = "/customer_result/";
 
     private static final String HADOOP_CONF_PATH = ACTUAL_RESULT_DIR + File.separator + "conf.xml";
-    private static final String MINIDFS_BASEDIR = joinPath("target", "hdfs");
+    private static final String MINIDFS_BASEDIR = FileUtil.joinPath("target", "hdfs");
     private MiniDFSCluster dfsCluster;
 
     private JobConf conf = new JobConf();
@@ -121,8 +120,8 @@ public class DataflowTest extends TestCase {
 
         FileSystem lfs = FileSystem.getLocal(new Configuration());
         lfs.delete(new Path(BUILD_DIR), true);
-        System.setProperty("hadoop.log.dir", joinPath("target", "logs"));
-        getConfiguration().set(MiniDFSCluster.HDFS_MINIDFS_BASEDIR, MINIDFS_BASEDIR);
+        System.setProperty("hadoop.log.dir", FileUtil.joinPath("target", "logs"));
+        getConfiguration().set("hdfs.minidfs.basedir", MINIDFS_BASEDIR);
         dfsCluster = getMiniDFSCluster(getConfiguration(), numberOfNC);
         FileSystem dfs = FileSystem.get(getConfiguration());
         Path src = new Path(DATA_PATH);
@@ -197,8 +196,8 @@ public class DataflowTest extends TestCase {
         Path actual = new Path(ACTUAL_RESULT_DIR);
         dfs.copyToLocalFile(result, actual);
 
-        TestUtils.compareWithResult(new File(joinPath(EXPECTED_RESULT_PATH, "part-0")), new File(
-                joinPath(ACTUAL_RESULT_DIR, "customer_result", "part-0")));
+        TestUtils.compareWithResult(new File(FileUtil.joinPath(EXPECTED_RESULT_PATH, "part-0")), new File(
+                FileUtil.joinPath(ACTUAL_RESULT_DIR, "customer_result", "part-0")));
         return true;
     }
 

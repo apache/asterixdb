@@ -27,28 +27,26 @@ import java.lang.management.MemoryUsage;
 import java.lang.management.OperatingSystemMXBean;
 import java.lang.management.RuntimeMXBean;
 import java.lang.management.ThreadMXBean;
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import org.apache.hyracks.control.cc.NodeControllerState;
-import org.apache.hyracks.control.cc.cluster.INodeManager;
-import org.apache.hyracks.control.common.controllers.CCConfig;
-import org.apache.hyracks.control.common.utils.PidHelper;
-import org.apache.hyracks.control.common.work.IPCResponder;
-import org.apache.hyracks.control.common.work.SynchronizableWork;
-import org.kohsuke.args4j.Option;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.apache.hyracks.api.config.Section;
+import org.apache.hyracks.control.cc.NodeControllerState;
+import org.apache.hyracks.control.cc.cluster.INodeManager;
+import org.apache.hyracks.control.common.config.ConfigUtils;
+import org.apache.hyracks.control.common.controllers.CCConfig;
+import org.apache.hyracks.control.common.controllers.NCConfig;
+import org.apache.hyracks.control.common.utils.PidHelper;
+import org.apache.hyracks.control.common.work.IPCResponder;
+import org.apache.hyracks.control.common.work.SynchronizableWork;
 
 public class GetNodeDetailsJSONWork extends SynchronizableWork {
-    private static final Logger LOGGER = Logger.getLogger(GetNodeDetailsJSONWork.class.getName());
+    private static final Section [] CC_SECTIONS = { Section.CC, Section.COMMON };
+    private static final Section [] NC_SECTIONS = { Section.NC, Section.COMMON };
+
     private final INodeManager nodeManager;
     private final CCConfig ccConfig;
     private final String nodeId;
@@ -59,7 +57,7 @@ public class GetNodeDetailsJSONWork extends SynchronizableWork {
     private ObjectMapper om = new ObjectMapper();
 
     public GetNodeDetailsJSONWork(INodeManager nodeManager, CCConfig ccConfig, String nodeId, boolean includeStats,
-                                  boolean includeConfig, IPCResponder<String> callback) {
+            boolean includeConfig, IPCResponder<String> callback) {
         this.nodeManager = nodeManager;
         this.ccConfig = ccConfig;
         this.nodeId = nodeId;
@@ -69,7 +67,7 @@ public class GetNodeDetailsJSONWork extends SynchronizableWork {
     }
 
     public GetNodeDetailsJSONWork(INodeManager nodeManager, CCConfig ccConfig, String nodeId, boolean includeStats,
-                                  boolean includeConfig) {
+            boolean includeConfig) {
         this(nodeManager, ccConfig, nodeId, includeStats, includeConfig, null);
     }
 
@@ -79,14 +77,18 @@ public class GetNodeDetailsJSONWork extends SynchronizableWork {
             // null nodeId is a request for CC
             detail = getCCDetails();
             if (includeConfig) {
-                addIni(detail, ccConfig);
+                ConfigUtils.addConfigToJSON(detail, ccConfig.getAppConfig(), CC_SECTIONS);
+                detail.putPOJO("app.args", ccConfig.getAppArgs());
             }
         } else {
             NodeControllerState ncs = nodeManager.getNodeControllerState(nodeId);
             if (ncs != null) {
                 detail = ncs.toDetailedJSON(includeStats, includeConfig);
                 if (includeConfig) {
-                    addIni(detail, ncs.getNCConfig());
+                    final NCConfig ncConfig = ncs.getNCConfig();
+                    ConfigUtils.addConfigToJSON(detail, ncConfig.getConfigManager().getNodeEffectiveConfig(nodeId),
+                            NC_SECTIONS);
+                    detail.putPOJO("app.args", ncConfig.getAppArgs());
                 }
             }
         }
@@ -96,7 +98,7 @@ public class GetNodeDetailsJSONWork extends SynchronizableWork {
         }
     }
 
-    private ObjectNode getCCDetails()  {
+    private ObjectNode getCCDetails() {
         ObjectNode o = om.createObjectNode();
         MemoryMXBean memoryMXBean = ManagementFactory.getMemoryMXBean();
         List<GarbageCollectorMXBean> gcMXBeans = ManagementFactory.getGarbageCollectorMXBeans();
@@ -151,33 +153,6 @@ public class GetNodeDetailsJSONWork extends SynchronizableWork {
         return o;
     }
 
-    private static void addIni(ObjectNode o, Object configBean)  {
-        Map<String, Object> iniMap = new HashMap<>();
-        for (Field f : configBean.getClass().getFields()) {
-            Option option = f.getAnnotation(Option.class);
-            if (option == null) {
-                continue;
-            }
-            final String optionName = option.name();
-            Object value = null;
-            try {
-                value = f.get(configBean);
-            } catch (IllegalAccessException e) {
-                LOGGER.log(Level.WARNING, "Unable to access ini option " + optionName, e);
-            }
-            if (value != null) {
-                if ("--".equals(optionName)) {
-                    iniMap.put("app_args", value);
-                } else {
-                    iniMap.put(optionName.substring(1).replace('-', '_'),
-                            "-iodevices".equals(optionName)
-                            ? String.valueOf(value).split(",")
-                            : value);
-                }
-            }
-        }
-        o.putPOJO("ini", iniMap);
-    }
 
     public ObjectNode getDetail() {
         return detail;

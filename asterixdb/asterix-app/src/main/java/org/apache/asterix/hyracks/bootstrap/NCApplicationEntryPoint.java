@@ -18,15 +18,24 @@
  */
 package org.apache.asterix.hyracks.bootstrap;
 
+import java.io.File;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import org.apache.asterix.app.nc.NCAppRuntimeContext;
 import org.apache.asterix.app.replication.message.StartupTaskRequestMessage;
 import org.apache.asterix.common.api.AsterixThreadFactory;
 import org.apache.asterix.common.api.IAppRuntimeContext;
 import org.apache.asterix.common.config.AsterixExtension;
+import org.apache.asterix.common.config.AsterixProperties;
 import org.apache.asterix.common.config.ClusterProperties;
 import org.apache.asterix.common.config.IPropertiesProvider;
 import org.apache.asterix.common.config.MessagingProperties;
 import org.apache.asterix.common.config.MetadataProperties;
+import org.apache.asterix.common.config.NodeProperties;
 import org.apache.asterix.common.config.StorageProperties;
 import org.apache.asterix.common.config.TransactionProperties;
 import org.apache.asterix.common.transactions.IRecoveryManager;
@@ -40,53 +49,42 @@ import org.apache.asterix.messaging.NCMessageBroker;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepository;
 import org.apache.commons.io.FileUtils;
 import org.apache.hyracks.api.application.INCApplicationContext;
-import org.apache.hyracks.api.application.INCApplicationEntryPoint;
+import org.apache.hyracks.api.config.IConfigManager;
 import org.apache.hyracks.api.job.resource.NodeCapacity;
 import org.apache.hyracks.api.messages.IMessageBroker;
+import org.apache.hyracks.control.common.controllers.NCConfig;
 import org.apache.hyracks.control.nc.NodeControllerService;
-import org.kohsuke.args4j.CmdLineException;
-import org.kohsuke.args4j.CmdLineParser;
-import org.kohsuke.args4j.Option;
+import org.apache.hyracks.util.file.FileUtil;
 
-import java.io.File;
-import java.util.Collections;
-import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
+public class NCApplicationEntryPoint extends org.apache.hyracks.control.nc.NCApplicationEntryPoint {
     private static final Logger LOGGER = Logger.getLogger(NCApplicationEntryPoint.class.getName());
 
-    @Option(name = "-initial-run", usage = "A flag indicating if it's the first time the NC is started "
-            + "(default: false)", required = false)
-    public boolean initialRun = false;
-
-    @Option(name = "-virtual-NC", usage = "A flag indicating if this NC is running on virtual cluster "
-            + "(default: false)", required = false)
-    public boolean virtualNC = false;
-
-    private INCApplicationContext ncApplicationContext = null;
+    private INCApplicationContext ncAppCtx;
     private IAppRuntimeContext runtimeContext;
     private String nodeId;
     private boolean stopInitiated = false;
     private SystemState systemState;
-    private IMessageBroker messageBroker;
+
+    public NCApplicationEntryPoint() {
+        NCConfig.defaultDir = FileUtil.joinPath(System.getProperty("java.io.tmpdir"), "asterixdb");
+        NCConfig.defaultAppClass = "org.apache.asterix.hyracks.bootstrap.NCApplicationEntryPoint";
+    }
+
+    @Override
+    public void registerConfigOptions(IConfigManager configManager) {
+        super.registerConfigOptions(configManager);
+        AsterixProperties.registerConfigOptions(configManager);
+    }
 
     @Override
     public void start(INCApplicationContext ncAppCtx, String[] args) throws Exception {
-        CmdLineParser parser = new CmdLineParser(this);
-        try {
-            parser.parseArgument(args);
-        } catch (CmdLineException e) {
-            LOGGER.severe(e.getMessage());
-            LOGGER.severe("Usage:");
-            parser.printUsage(System.err);
-            throw e;
+        if (args.length > 0) {
+            throw new IllegalArgumentException("Unrecognized argument(s): " + Arrays.toString(args));
         }
-        ncAppCtx.setThreadFactory(
-                new AsterixThreadFactory(ncAppCtx.getThreadFactory(), ncAppCtx.getLifeCycleComponentManager()));
-        ncApplicationContext = ncAppCtx;
-        nodeId = ncApplicationContext.getNodeId();
+        ncAppCtx.setThreadFactory(new AsterixThreadFactory(ncAppCtx.getThreadFactory(),
+                ncAppCtx.getLifeCycleComponentManager()));
+        this.ncAppCtx = ncAppCtx;
+        nodeId = this.ncAppCtx.getNodeId();
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Starting Asterix node controller: " + nodeId);
         }
@@ -94,25 +92,25 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
         final NodeControllerService controllerService = (NodeControllerService) ncAppCtx.getControllerService();
 
         if (System.getProperty("java.rmi.server.hostname") == null) {
-            System.setProperty("java.rmi.server.hostname",
-                    (controllerService).getConfiguration().clusterNetPublicIPAddress);
+            System.setProperty("java.rmi.server.hostname", (controllerService)
+                    .getConfiguration().getClusterPublicAddress());
         }
-        runtimeContext = new NCAppRuntimeContext(ncApplicationContext, getExtensions());
-        MetadataProperties metadataProperties = ((IPropertiesProvider) runtimeContext).getMetadataProperties();
-        if (!metadataProperties.getNodeNames().contains(ncApplicationContext.getNodeId())) {
+        runtimeContext = new NCAppRuntimeContext(this.ncAppCtx, getExtensions());
+        MetadataProperties metadataProperties = runtimeContext.getMetadataProperties();
+        if (!metadataProperties.getNodeNames().contains(this.ncAppCtx.getNodeId())) {
             if (LOGGER.isLoggable(Level.INFO)) {
-                LOGGER.info("Substitute node joining : " + ncApplicationContext.getNodeId());
+                LOGGER.info("Substitute node joining : " + this.ncAppCtx.getNodeId());
             }
             updateOnNodeJoin();
         }
-        runtimeContext.initialize(initialRun);
-        ncApplicationContext.setApplicationObject(runtimeContext);
-        MessagingProperties messagingProperties = ((IPropertiesProvider) runtimeContext).getMessagingProperties();
-        messageBroker = new NCMessageBroker(controllerService, messagingProperties);
-        ncApplicationContext.setMessageBroker(messageBroker);
+        runtimeContext.initialize(runtimeContext.getNodeProperties().isInitialRun());
+        this.ncAppCtx.setApplicationObject(runtimeContext);
+        MessagingProperties messagingProperties = runtimeContext.getMessagingProperties();
+        IMessageBroker messageBroker = new NCMessageBroker(controllerService, messagingProperties);
+        this.ncAppCtx.setMessageBroker(messageBroker);
         MessagingChannelInterfaceFactory interfaceFactory = new MessagingChannelInterfaceFactory(
                 (NCMessageBroker) messageBroker, messagingProperties);
-        ncApplicationContext.setMessagingChannelInterfaceFactory(interfaceFactory);
+        this.ncAppCtx.setMessagingChannelInterfaceFactory(interfaceFactory);
 
         IRecoveryManager recoveryMgr = runtimeContext.getTransactionSubsystem().getRecoveryManager();
         systemState = recoveryMgr.getSystemState();
@@ -148,7 +146,7 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
             performLocalCleanUp();
 
             //Note: stopping recovery manager will make a sharp checkpoint
-            ncApplicationContext.getLifeCycleComponentManager().stopAll(false);
+            ncAppCtx.getLifeCycleComponentManager().stopAll(false);
             runtimeContext.deinitialize();
         } else {
             if (LOGGER.isLoggable(Level.INFO)) {
@@ -160,17 +158,18 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
     @Override
     public void notifyStartupComplete() throws Exception {
         // Since we don't pass initial run flag in AsterixHyracksIntegrationUtil, we use the virtualNC flag
-        if (systemState == SystemState.PERMANENT_DATA_LOSS && (initialRun || virtualNC)) {
+        final NodeProperties nodeProperties = runtimeContext.getNodeProperties();
+        if (systemState == SystemState.PERMANENT_DATA_LOSS && (nodeProperties.isInitialRun() || nodeProperties.isVirtualNc())) {
             systemState = SystemState.BOOTSTRAPPING;
         }
         // Request startup tasks from CC
-        StartupTaskRequestMessage.send((NodeControllerService) ncApplicationContext.getControllerService(),
+        StartupTaskRequestMessage.send((NodeControllerService) ncAppCtx.getControllerService(),
                 systemState);
     }
 
     @Override
     public NodeCapacity getCapacity() {
-        IPropertiesProvider propertiesProvider = (IPropertiesProvider) runtimeContext;
+        IPropertiesProvider propertiesProvider = runtimeContext;
         StorageProperties storageProperties = propertiesProvider.getStorageProperties();
         // Deducts the reserved buffer cache size and memory component size from the maxium heap size,
         // and deducts one core for processing heartbeats.
@@ -201,15 +200,16 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
     }
 
     private void updateOnNodeJoin() {
-        MetadataProperties metadataProperties = ((IPropertiesProvider) runtimeContext).getMetadataProperties();
+        MetadataProperties metadataProperties = runtimeContext.getMetadataProperties();
         if (!metadataProperties.getNodeNames().contains(nodeId)) {
-            metadataProperties.getNodeNames().add(nodeId);
             Cluster cluster = ClusterProperties.INSTANCE.getCluster();
             if (cluster == null) {
                 throw new IllegalStateException("No cluster configuration found for this instance");
             }
+            NCConfig ncConfig = ((NodeControllerService) ncAppCtx.getControllerService()).getConfiguration();
+            ncConfig.getConfigManager().registerVirtualNode(nodeId);
             String asterixInstanceName = metadataProperties.getInstanceName();
-            TransactionProperties txnProperties = ((IPropertiesProvider) runtimeContext).getTransactionProperties();
+            TransactionProperties txnProperties = runtimeContext.getTransactionProperties();
             Node self = null;
             List<Node> nodes;
             if (cluster.getSubstituteNodes() != null) {

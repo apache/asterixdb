@@ -1362,12 +1362,12 @@ public class AsterixYARNClient {
         }
         configuration.setStore(stores);
         List<Coredump> coredump = new ArrayList<Coredump>();
-        String coredumpDir = null;
+        String coredumpdir = null;
         List<TransactionLogDir> txnLogDirs = new ArrayList<TransactionLogDir>();
         String txnLogDir = null;
         for (Node node : cluster.getNode()) {
-            coredumpDir = node.getLogDir() == null ? cluster.getLogDir() : node.getLogDir();
-            coredump.add(new Coredump(node.getId(), coredumpDir + "coredump" + File.separator));
+            coredumpdir = node.getLogDir() == null ? cluster.getLogDir() : node.getLogDir();
+            coredump.add(new Coredump(node.getId(), coredumpdir + "coredump" + File.separator));
             txnLogDir = node.getTxnLogDir() == null ? cluster.getTxnLogDir() : node.getTxnLogDir(); //node or cluster-wide
             txnLogDirs.add(new TransactionLogDir(node.getId(), txnLogDir
                     + (txnLogDir.charAt(txnLogDir.length() - 1) == File.separatorChar ? File.separator : "")

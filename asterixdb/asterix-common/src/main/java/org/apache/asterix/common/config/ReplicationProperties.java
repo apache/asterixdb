@@ -18,6 +18,9 @@
  */
 package org.apache.asterix.common.config;
 
+import static org.apache.hyracks.control.common.config.OptionTypes.INTEGER;
+import static org.apache.hyracks.control.common.config.OptionTypes.INTEGER_BYTE_UNIT;
+
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -25,40 +28,99 @@ import org.apache.asterix.common.replication.IReplicationStrategy;
 import org.apache.asterix.common.replication.Replica;
 import org.apache.asterix.event.schema.cluster.Cluster;
 import org.apache.asterix.event.schema.cluster.Node;
+import org.apache.hyracks.api.config.IApplicationConfig;
+import org.apache.hyracks.api.config.IOption;
+import org.apache.hyracks.api.config.IOptionType;
+import org.apache.hyracks.api.config.Section;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.util.StorageUtil;
 import org.apache.hyracks.util.StorageUtil.StorageUnit;
 
 public class ReplicationProperties extends AbstractProperties {
 
+    public enum Option implements IOption {
+        REPLICATION_MAX_REMOTE_RECOVERY_ATTEMPTS(INTEGER, 5),
+        REPLICATION_LOG_BUFFER_PAGESIZE(INTEGER_BYTE_UNIT, StorageUtil.getIntSizeInBytes(128,
+                StorageUnit.KILOBYTE)),
+        REPLICATION_LOG_BUFFER_NUMPAGES(INTEGER, 8),
+        REPLICATION_LOG_BATCHSIZE(INTEGER_BYTE_UNIT, StorageUtil.getIntSizeInBytes(4, StorageUnit.KILOBYTE)),
+        REPLICATION_TIMEOUT(INTEGER, REPLICATION_TIME_OUT_DEFAULT),
+        ;
+
+        private final IOptionType type;
+        private final Object defaultValue;
+
+        Option(IOptionType type, Object defaultValue) {
+            this.type = type;
+            this.defaultValue = defaultValue;
+        }
+
+        @Override
+        public Section section() {
+            return Section.COMMON;
+        }
+
+        @Override
+        public String description() {
+            // TODO(mblow): add missing descriptions
+            return null;
+        }
+
+        @Override
+        public IOptionType type() {
+            return type;
+        }
+
+        @Override
+        public Object defaultValue() {
+            return defaultValue;
+        }
+
+        @Override
+        public Object get(IApplicationConfig config) {
+            switch (this) {
+                case REPLICATION_TIMEOUT:
+                    final Cluster cluster = ClusterProperties.INSTANCE.getCluster();
+                    if (cluster != null
+                            && cluster.getHighAvailability() != null
+                            && cluster.getHighAvailability().getDataReplication() != null
+                            && cluster.getHighAvailability().getDataReplication().getReplicationTimeOut() != null) {
+                        return cluster.getHighAvailability().getDataReplication().getReplicationTimeOut().intValue();
+                    }
+                    return REPLICATION_TIME_OUT_DEFAULT;
+                default:
+                    return config.getStatic(this);
+            }
+        }
+    }
+
     private static final int REPLICATION_DATAPORT_DEFAULT = 2000;
 
-    private static final String REPLICATION_TIMEOUT_KEY = "replication.timeout";
     private static final int REPLICATION_TIME_OUT_DEFAULT = 15;
-
-    private static final String REPLICATION_MAX_REMOTE_RECOVERY_ATTEMPTS_KEY =
-            "replication.max.remote.recovery.attempts";
-    private static final int MAX_REMOTE_RECOVERY_ATTEMPTS = 5;
 
     private static final String NODE_IP_ADDRESS_DEFAULT = "127.0.0.1";
 
-    private static final String REPLICATION_LOG_BATCH_SIZE_KEY = "replication.log.batchsize";
-    private static final int REPLICATION_LOG_BATCH_SIZE_DEFAULT = StorageUtil.getSizeInBytes(4, StorageUnit.KILOBYTE);
-
-    private static final String REPLICATION_LOG_BUFFER_NUM_PAGES_KEY = "replication.log.buffer.numpages";
-    private static final int REPLICATION_LOG_BUFFER_NUM_PAGES_DEFAULT = 8;
-
-    private static final String REPLICATION_LOG_BUFFER_PAGE_SIZE_KEY = "replication.log.buffer.pagesize";
-    private static final int REPLICATION_LOG_BUFFER_PAGE_SIZE_DEFAULT = StorageUtil.getSizeInBytes(128,
-            StorageUnit.KILOBYTE);
-
-    private final Cluster cluster;
     private final IReplicationStrategy repStrategy;
 
     public ReplicationProperties(PropertiesAccessor accessor) throws HyracksDataException {
         super(accessor);
-        this.cluster = ClusterProperties.INSTANCE.getCluster();
         this.repStrategy = ClusterProperties.INSTANCE.getReplicationStrategy();
+    }
+
+    public int getMaxRemoteRecoveryAttempts() {
+        return accessor.getInt(Option.REPLICATION_MAX_REMOTE_RECOVERY_ATTEMPTS);
+    }
+
+    public int getLogBufferPageSize() {
+        return accessor.getInt(Option.REPLICATION_LOG_BUFFER_PAGESIZE);
+    }
+
+    public int getLogBufferNumOfPages() {
+        return accessor.getInt(Option.REPLICATION_LOG_BUFFER_NUMPAGES);
+    }
+
+    public int getLogBatchSize() {
+        return accessor.getInt(Option.REPLICATION_LOG_BATCHSIZE);
     }
 
     public String getReplicaIPAddress(String nodeId) {
@@ -67,6 +129,7 @@ public class ReplicationProperties extends AbstractProperties {
     }
 
     public int getDataReplicationPort(String nodeId) {
+        final Cluster cluster = ClusterProperties.INSTANCE.getCluster();
         Node node = ClusterProperties.INSTANCE.getNodeById(nodeId);
         if (node != null) {
             return node.getReplicationPort() != null ? node.getReplicationPort().intValue()
@@ -98,35 +161,8 @@ public class ReplicationProperties extends AbstractProperties {
         return remoteReplicasIds;
     }
 
-    @PropertyKey(REPLICATION_TIMEOUT_KEY)
     public int getReplicationTimeOut() {
-        if (cluster != null) {
-            return cluster.getHighAvailability().getDataReplication().getReplicationTimeOut().intValue();
-        }
-        return REPLICATION_TIME_OUT_DEFAULT;
-    }
-
-    @PropertyKey(REPLICATION_MAX_REMOTE_RECOVERY_ATTEMPTS_KEY)
-    public int getMaxRemoteRecoveryAttempts() {
-        return MAX_REMOTE_RECOVERY_ATTEMPTS;
-    }
-
-    @PropertyKey(REPLICATION_LOG_BUFFER_PAGE_SIZE_KEY)
-    public int getLogBufferPageSize() {
-        return accessor.getProperty(REPLICATION_LOG_BUFFER_PAGE_SIZE_KEY, REPLICATION_LOG_BUFFER_PAGE_SIZE_DEFAULT,
-                PropertyInterpreters.getIntegerBytePropertyInterpreter());
-    }
-
-    @PropertyKey(REPLICATION_LOG_BUFFER_NUM_PAGES_KEY)
-    public int getLogBufferNumOfPages() {
-        return accessor.getProperty(REPLICATION_LOG_BUFFER_NUM_PAGES_KEY, REPLICATION_LOG_BUFFER_NUM_PAGES_DEFAULT,
-                PropertyInterpreters.getIntegerPropertyInterpreter());
-    }
-
-    @PropertyKey(REPLICATION_LOG_BATCH_SIZE_KEY)
-    public int getLogBatchSize() {
-        return accessor.getProperty(REPLICATION_LOG_BATCH_SIZE_KEY, REPLICATION_LOG_BATCH_SIZE_DEFAULT,
-                PropertyInterpreters.getIntegerBytePropertyInterpreter());
+        return accessor.getInt(Option.REPLICATION_TIMEOUT);
     }
 
     public boolean isParticipant(String nodeId) {

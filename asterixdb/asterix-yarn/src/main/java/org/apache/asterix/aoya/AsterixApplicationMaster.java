@@ -1032,36 +1032,32 @@ public class AsterixApplicationMaster {
                 //get our java opts
                 vargs.add(ccJavaOpts);
                 vargs.add(CC_CLASSNAME);
-                vargs.add("-app-cc-main-class org.apache.asterix.hyracks.bootstrap.CCApplicationEntryPoint");
-                vargs.add("-cluster-net-ip-address " + cC.getClusterIp());
-                vargs.add("-client-net-ip-address " + cC.getClientIp());
+                vargs.add("-app-class org.apache.asterix.hyracks.bootstrap.CCApplicationEntryPoint");
+                vargs.add("-address " + cC.getClusterIp());
+                vargs.add("-client-listen-address " + cC.getClientIp());
                 //pass CC optional parameters
                 if (clusterDesc.getHeartbeatPeriod() != null) {
                     vargs.add("-heartbeat-period " + String.valueOf(clusterDesc.getHeartbeatPeriod().intValue()));
                 }
                 if (clusterDesc.getMaxHeartbeatLapsePeriods() != null) {
-                    vargs.add("-max-heartbeat-lapse-periods "
+                    vargs.add("-heartbeat-max-misses "
                             + String.valueOf(clusterDesc.getMaxHeartbeatLapsePeriods().intValue()));
                 }
                 if (clusterDesc.getProfileDumpPeriod() != null) {
                     vargs.add("-profile-dump-period " + String.valueOf(clusterDesc.getProfileDumpPeriod().intValue()));
                 }
-                if (clusterDesc.getDefaultMaxJobAttempts() != null) {
-                    vargs.add("-default-max-job-attempts "
-                            + String.valueOf(clusterDesc.getDefaultMaxJobAttempts().intValue()));
-                }
                 if (clusterDesc.getJobHistorySize() != null) {
                     vargs.add("-job-history-size " + String.valueOf(clusterDesc.getJobHistorySize().intValue()));
                 }
                 if (clusterDesc.getResultTimeToLive() != null) {
-                    vargs.add("-result-time-to-live " + String.valueOf(clusterDesc.getResultTimeToLive().intValue()));
+                    vargs.add("-result-ttl " + String.valueOf(clusterDesc.getResultTimeToLive().intValue()));
                 }
                 if (clusterDesc.getResultSweepThreshold() != null) {
                     vargs.add("-result-sweep-threshold "
                             + String.valueOf(clusterDesc.getResultSweepThreshold().intValue()));
                 }
                 if (clusterDesc.getCcRoot() != null) {
-                    vargs.add("-cc-root " + clusterDesc.getCcRoot());
+                    vargs.add("-root-dir " + clusterDesc.getCcRoot());
                 }
                 ccStarted.set(true);
 
@@ -1078,14 +1074,13 @@ public class AsterixApplicationMaster {
                     }
                     vargs.add(ncJavaOpts);
                     vargs.add(NC_CLASSNAME);
-                    vargs.add("-app-nc-main-class org.apache.asterix.hyracks.bootstrap.NCApplicationEntryPoint");
+                    vargs.add("-app-class org.apache.asterix.hyracks.bootstrap.NCApplicationEntryPoint");
                     vargs.add("-node-id " + local.getId());
-                    vargs.add("-cc-host " + cC.getClusterIp());
+                    vargs.add("-cluster-address " + cC.getClusterIp());
                     vargs.add("-iodevices " + iodevice);
-                    vargs.add("-cluster-net-ip-address " + local.getClusterIp());
-                    vargs.add("-data-ip-address " + local.getClusterIp());
-                    vargs.add("-result-ip-address " + local.getClusterIp());
-                    vargs.add("--");
+                    vargs.add("-address " + local.getClusterIp());
+                    vargs.add("-data-listen-address " + local.getClusterIp());
+                    vargs.add("-result-listen-address " + local.getClusterIp());
                     if (initial) {
                         vargs.add("-initial-run ");
                     }
