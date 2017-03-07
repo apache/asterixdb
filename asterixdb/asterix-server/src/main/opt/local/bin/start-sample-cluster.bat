@@ -64,17 +64,17 @@ echo CLUSTERDIR=%CLUSTERDIR%
 echo INSTALLDIR=%INSTALLDIR%
 echo LOGSDIR=%LOGSDIR%
 echo.
-cd %CLUSTERDIR%
-if NOT EXIST %LOGSDIR% (
-  mkdir %LOGSDIR%
+cd "%CLUSTERDIR%"
+if NOT EXIST "%LOGSDIR%" (
+  mkdir "%LOGSDIR%"
 )
-call %INSTALLDIR%\bin\${HELPER_COMMAND} get_cluster_state -quiet
+call "%INSTALLDIR%\bin\${HELPER_COMMAND}" get_cluster_state -quiet
 
 IF %ERRORLEVEL% EQU 0 (
   echo ERROR: sample cluster address [localhost:${LISTEN_PORT}] already in use
   goto :ERROR
 )
-set tempfile="%TEMP%\start-sample-cluster-%random%"
+set tempfile=%TEMP%\start-sample-cluster-%random%
 
 wmic process where ^
   "name='java.exe' and CommandLine like '%%org.codehaus.mojo.appassembler.booter.AppassemblerBooter%%' and (CommandLine like '%%app.name=\"%%[cn]c\"%%' or CommandLine like '%%app.name=\"%%ncservice\"%%')" ^
@@ -102,24 +102,24 @@ if "%found%" == "1" (
 goto :post_timestamp
 
 :timestamp
-if "%1" == "" exit /B 0
 echo "--------------------------" >> %1
 echo "%date% %time%" >> %1
 echo "--------------------------" >> %1
-shift
-goto :timestamp
+exit /B 0
 
 :post_timestamp
 echo Starting sample cluster...
 
-call :timestamp %LOGSDIR%\blue-service.log %LOGSDIR%\red-service.log %LOGSDIR%\cc.log
+call :timestamp "%LOGSDIR%\blue-service.log"
+call :timestamp "%LOGSDIR%\red-service.log"
+call :timestamp "%LOGSDIR%\cc.log"
 
-start /MIN "blue-nc" cmd /c "echo See output in %LOGSDIR%\blue-service.log && %INSTALLDIR%\bin\${NC_SERVICE_COMMAND} -logdir - -config-file %CLUSTERDIR%\conf\blue.conf >> %LOGSDIR%\blue-service.log 2>&1"
-start /MIN "red-nc" cmd /c "echo See output in %LOGSDIR%\red-service.log && %INSTALLDIR%\bin\${NC_SERVICE_COMMAND} -logdir - >> %LOGSDIR%\red-service.log 2>&1"
-start /MIN "cc" cmd /c "echo See output in %LOGSDIR%\cc.log && %INSTALLDIR%\bin\${CC_COMMAND} -config-file %CLUSTERDIR%\conf\cc.conf >>%LOGSDIR%\cc.log 2>&1"
+start /MIN "blue-nc" cmd /c "echo See output in %LOGSDIR%\blue-service.log && "%INSTALLDIR%\bin\${NC_SERVICE_COMMAND}" -logdir - -config-file "%CLUSTERDIR%\conf\blue.conf" >> "%LOGSDIR%\blue-service.log" 2>&1"
+start /MIN "red-nc" cmd /c "echo See output in %LOGSDIR%\red-service.log && "%INSTALLDIR%\bin\${NC_SERVICE_COMMAND}" -logdir - >> "%LOGSDIR%\red-service.log" 2>&1"
+start /MIN "cc" cmd /c "echo See output in %LOGSDIR%\cc.log && "%INSTALLDIR%\bin\${CC_COMMAND}" -config-file "%CLUSTERDIR%\conf\cc.conf" >>"%LOGSDIR%\cc.log" 2>&1"
 
 echo.
-call %INSTALLDIR%\bin\${HELPER_COMMAND} wait_for_cluster -timeout 30
+call "%INSTALLDIR%\bin\${HELPER_COMMAND}" wait_for_cluster -timeout 30
 if %ERRORLEVEL% EQU 0 (
   goto :END
 )

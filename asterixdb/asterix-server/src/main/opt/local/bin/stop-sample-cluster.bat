@@ -23,7 +23,7 @@ goto opts
 
 :usage
 echo.
-echo Usage: %~nx0 [-f[orce]]
+echo Usage: %~nx0 [-f[orce]]:
 echo.
 echo   -f[orce]  : Forcibly terminates any running ${PRODUCT} processes (after shutting down cluster, if running)
 exit /B 0
@@ -67,13 +67,13 @@ set INSTALLDIR=%cd%
 
 set tempfile="%TEMP%\stop-sample-cluster-%random%"
 
-call %INSTALLDIR%\bin\${HELPER_COMMAND} get_cluster_state -quiet
+call "%INSTALLDIR%\bin\${HELPER_COMMAND}" get_cluster_state -quiet
 if %ERRORLEVEL% EQU 1 (
   echo WARNING: sample cluster does not appear to be running
   goto :post_shutdown
 )
-call %INSTALLDIR%\bin\${HELPER_COMMAND} shutdown_cluster_all
-echo INFO: Waiting up for cluster to shutdown...
+call "%INSTALLDIR%\bin\${HELPER_COMMAND}" shutdown_cluster_all
+echo INFO: Waiting for cluster to shutdown...
 
 set tries=0
 :wait_loop
@@ -122,3 +122,4 @@ exit /B 1
 
 :END
 popd
+
