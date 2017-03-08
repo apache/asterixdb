@@ -21,6 +21,7 @@ package org.apache.hyracks.storage.am.lsm.common.api;
 import java.util.List;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.common.api.IIndexAccessor;
 import org.apache.hyracks.storage.am.common.api.IndexException;
@@ -34,16 +35,43 @@ import org.apache.hyracks.storage.am.common.api.TreeIndexException;
  * concurrent operations).
  */
 public interface ILSMIndexAccessor extends IIndexAccessor {
+    /**
+     * Schedule a flush operation
+     *
+     * @param callback
+     *            the IO operation callback
+     * @throws HyracksDataException
+     */
     void scheduleFlush(ILSMIOOperationCallback callback) throws HyracksDataException;
 
+    /**
+     * Schedule a merge operation
+     *
+     * @param callback
+     *            the merge operation callback
+     * @param components
+     *            the components to be merged
+     * @throws HyracksDataException
+     * @throws IndexException
+     */
     void scheduleMerge(ILSMIOOperationCallback callback, List<ILSMDiskComponent> components)
             throws HyracksDataException, IndexException;
 
+    /**
+     * Schedule a full merge
+     *
+     * @param callback
+     *            the merge operation callback
+     * @throws HyracksDataException
+     * @throws IndexException
+     */
     void scheduleFullMerge(ILSMIOOperationCallback callback) throws HyracksDataException, IndexException;
 
     /**
-     * Deletes the tuple from the memory component only.
+     * Delete the tuple from the memory component only. Don't replace with antimatter tuple
      *
+     * @param tuple
+     *            the tuple to be deleted
      * @throws HyracksDataException
      * @throws IndexException
      */
@@ -113,12 +141,49 @@ public interface ILSMIndexAccessor extends IIndexAccessor {
      */
     boolean tryUpsert(ITupleReference tuple) throws HyracksDataException, IndexException;
 
+    /**
+     * Delete the tuple from the memory component only. Don't replace with antimatter tuple
+     * Perform operation even if the memory component is full
+     *
+     * @param tuple
+     *            the tuple to delete
+     * @throws HyracksDataException
+     * @throws IndexException
+     */
     void forcePhysicalDelete(ITupleReference tuple) throws HyracksDataException, IndexException;
 
+    /**
+     * Insert a new tuple (failing if duplicate key entry is found)
+     *
+     * @param tuple
+     *            the tuple to insert
+     * @throws HyracksDataException
+     * @throws IndexException
+     */
     void forceInsert(ITupleReference tuple) throws HyracksDataException, IndexException;
 
+    /**
+     * Force deleting an index entry even if the memory component is full
+     * replace the entry if found with an antimatter tuple, otherwise, simply insert the antimatter tuple
+     *
+     * @param tuple
+     *            tuple to delete
+     * @throws HyracksDataException
+     * @throws IndexException
+     */
     void forceDelete(ITupleReference tuple) throws HyracksDataException, IndexException;
 
+    /**
+     * Schedule a replication for disk components
+     *
+     * @param diskComponents
+     *            the components to be replicated
+     * @param bulkload
+     *            true if the components were bulkloaded, false otherwise
+     * @param opType
+     *            the operation type
+     * @throws HyracksDataException
+     */
     void scheduleReplication(List<ILSMDiskComponent> diskComponents, boolean bulkload, LSMOperationType opType)
             throws HyracksDataException;
 
@@ -137,4 +202,24 @@ public interface ILSMIndexAccessor extends IIndexAccessor {
      * @throws TreeIndexException
      */
     void merge(ILSMIOOperation operation) throws HyracksDataException, IndexException;
+
+    /**
+     * Update the metadata of the memory component, wait for the new component if the current one is UNWRITABLE
+     *
+     * @param key
+     *            the key
+     * @param value
+     *            the value
+     * @throws HyracksDataException
+     */
+    void updateMeta(IValueReference key, IValueReference value) throws HyracksDataException;
+
+    /**
+     * Force update the metadata of the current memory component even if it is UNWRITABLE
+     *
+     * @param key
+     * @param value
+     * @throws HyracksDataException
+     */
+    void forceUpdateMeta(IValueReference key, IValueReference value) throws HyracksDataException;
 }

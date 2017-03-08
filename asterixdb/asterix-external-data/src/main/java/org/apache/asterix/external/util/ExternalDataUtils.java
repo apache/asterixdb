@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.external.util;
 
-import java.util.HashMap;
+import java.util.EnumMap;
 import java.util.Map;
 
 import org.apache.asterix.common.exceptions.AsterixException;
@@ -162,7 +162,7 @@ public class ExternalDataUtils {
     private static Map<ATypeTag, IValueParserFactory> valueParserFactoryMap = initializeValueParserFactoryMap();
 
     private static Map<ATypeTag, IValueParserFactory> initializeValueParserFactoryMap() {
-        Map<ATypeTag, IValueParserFactory> m = new HashMap<ATypeTag, IValueParserFactory>();
+        Map<ATypeTag, IValueParserFactory> m = new EnumMap<>(ATypeTag.class);
         m.put(ATypeTag.INT32, IntegerParserFactory.INSTANCE);
         m.put(ATypeTag.FLOAT, FloatParserFactory.INSTANCE);
         m.put(ATypeTag.DOUBLE, DoubleParserFactory.INSTANCE);
@@ -338,9 +338,5 @@ public class ExternalDataUtils {
             intIndicators[i] = Integer.parseInt(stringIndicators[i]);
         }
         return intIndicators;
-    }
-
-    public static boolean isSendMarker(Map<String, String> configuration) {
-        return Boolean.parseBoolean(configuration.get(ExternalDataConstants.KEY_SEND_MARKER));
     }
 }

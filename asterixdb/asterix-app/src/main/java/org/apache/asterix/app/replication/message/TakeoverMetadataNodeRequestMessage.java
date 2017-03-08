@@ -22,7 +22,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.common.api.IAppRuntimeContext;
-import org.apache.asterix.common.exceptions.ExceptionUtils;
 import org.apache.asterix.common.messaging.api.INCMessageBroker;
 import org.apache.asterix.common.replication.INCLifecycleMessage;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -46,7 +45,7 @@ public class TakeoverMetadataNodeRequestMessage implements INCLifecycleMessage {
             appContext.exportMetadataNodeStub();
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Failed taking over metadata", e);
-            hde = new HyracksDataException(e);
+            hde = HyracksDataException.create(e);
         } finally {
             TakeoverMetadataNodeResponseMessage reponse = new TakeoverMetadataNodeResponseMessage(
                     appContext.getTransactionSubsystem().getId());
@@ -54,7 +53,7 @@ public class TakeoverMetadataNodeRequestMessage implements INCLifecycleMessage {
                 broker.sendMessageToCC(reponse);
             } catch (Exception e) {
                 LOGGER.log(Level.SEVERE, "Failed taking over metadata", e);
-                hde = ExceptionUtils.suppressIntoHyracksDataException(hde, e);
+                hde = HyracksDataException.suppress(hde, e);
             }
         }
         if (hde != null) {

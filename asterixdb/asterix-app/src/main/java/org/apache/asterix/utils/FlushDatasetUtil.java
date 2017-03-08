@@ -62,8 +62,7 @@ public class FlushDatasetUtil {
         spec.connect(new OneToOneConnectorDescriptor(spec), emptySource, 0, flushOperator, 0);
 
         Pair<IFileSplitProvider, AlgebricksPartitionConstraint> primarySplitsAndConstraint =
-                metadataProvider.getSplitProviderAndConstraints(dataverseName, datasetName, indexName,
-                        dataset.getDatasetDetails().isTemp());
+                metadataProvider.getSplitProviderAndConstraints(dataset, indexName);
         AlgebricksPartitionConstraint primaryPartitionConstraint = primarySplitsAndConstraint.second;
 
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, emptySource,

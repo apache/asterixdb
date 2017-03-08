@@ -24,7 +24,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.common.api.IAppRuntimeContext;
-import org.apache.asterix.common.exceptions.ExceptionUtils;
 import org.apache.asterix.common.messaging.api.INCMessageBroker;
 import org.apache.asterix.common.replication.IRemoteRecoveryManager;
 import org.apache.asterix.runtime.message.AbstractFailbackPlanMessage;
@@ -75,7 +74,7 @@ public class CompleteFailbackRequestMessage extends AbstractFailbackPlanMessage 
             remoteRecoeryManager.completeFailbackProcess();
         } catch (IOException | InterruptedException e) {
             LOGGER.log(Level.SEVERE, "Failure during completion of failback process", e);
-            hde = ExceptionUtils.convertToHyracksDataException(e);
+            hde = HyracksDataException.create(e);
         } finally {
             CompleteFailbackResponseMessage reponse = new CompleteFailbackResponseMessage(planId,
                     requestId, partitions);
@@ -83,7 +82,7 @@ public class CompleteFailbackRequestMessage extends AbstractFailbackPlanMessage 
                 broker.sendMessageToCC(reponse);
             } catch (Exception e) {
                 LOGGER.log(Level.SEVERE, "Failure sending message to CC", e);
-                hde = ExceptionUtils.suppressIntoHyracksDataException(hde, e);
+                hde = HyracksDataException.suppress(hde, e);
             }
         }
         if (hde != null) {

@@ -79,12 +79,10 @@ public class TestTypedAdapterFactory implements IAdapterFactory {
                 ITupleForwarder forwarder;
                 ArrayTupleBuilder tb;
                 IPropertiesProvider propertiesProvider =
-                        (IPropertiesProvider) ((NodeControllerService) ctx
-                                .getJobletContext().getApplicationContext().getControllerService())
-                                        .getApplicationContext()
-                                        .getApplicationObject();
-                ClusterPartition nodePartition = propertiesProvider.getMetadataProperties().getNodePartitions()
-                        .get(nodeId)[0];
+                        (IPropertiesProvider) ((NodeControllerService) ctx.getJobletContext().getApplicationContext()
+                                .getControllerService()).getApplicationContext().getApplicationObject();
+                ClusterPartition nodePartition =
+                        propertiesProvider.getMetadataProperties().getNodePartitions().get(nodeId)[0];
                 parser = new ADMDataParser(outputType, true);
                 forwarder = DataflowUtils.getTupleForwarder(configuration,
                         FeedUtils.getFeedLogManager(ctx,
@@ -144,5 +142,4 @@ public class TestTypedAdapterFactory implements IAdapterFactory {
     public ARecordType getMetaType() {
         return null;
     }
-
 }

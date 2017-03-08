@@ -237,8 +237,7 @@ public class InvertedIndexPOperator extends IndexSearchPOperator {
             }
             IApplicationContextInfo appContext = (IApplicationContextInfo) context.getAppContext();
             Pair<IFileSplitProvider, AlgebricksPartitionConstraint> secondarySplitsAndConstraint =
-                    metadataProvider.getSplitProviderAndConstraints(dataset.getDataverseName(), datasetName, indexName,
-                            dataset.getDatasetDetails().isTemp());
+                    metadataProvider.getSplitProviderAndConstraints(dataset, indexName);
             // TODO: Here we assume there is only one search key field.
             int queryField = keyFields[0];
             // Get tokenizer and search modifier factories.

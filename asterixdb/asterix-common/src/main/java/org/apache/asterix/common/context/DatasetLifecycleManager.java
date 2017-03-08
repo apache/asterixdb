@@ -39,6 +39,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.lifecycle.ILifeCycleComponent;
 import org.apache.hyracks.storage.am.common.api.IIndex;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
@@ -72,7 +73,7 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
     }
 
     @Override
-    public synchronized IIndex get(String resourcePath) throws HyracksDataException {
+    public synchronized ILSMIndex get(String resourcePath) throws HyracksDataException {
         validateDatasetLifecycleManagerState();
         int datasetID = getDIDfromResourcePath(resourcePath);
         long resourceID = getResourceIDfromResourcePath(resourcePath);
@@ -80,7 +81,7 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
     }
 
     @Override
-    public synchronized IIndex getIndex(int datasetID, long resourceID) throws HyracksDataException {
+    public synchronized ILSMIndex getIndex(int datasetID, long resourceID) throws HyracksDataException {
         validateDatasetLifecycleManagerState();
         DatasetResource datasetResource = datasets.get(datasetID);
         if (datasetResource == null) {
@@ -556,7 +557,7 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
                 while (used + additionalSize > capacity) {
                     if (!evictCandidateDataset()) {
                         throw new HyracksDataException("Cannot allocate dataset " + dsInfo.getDatasetID()
-                                + " memory since memory budget would be exceeded.");
+                        + " memory since memory budget would be exceeded.");
                     }
                 }
                 used += additionalSize;

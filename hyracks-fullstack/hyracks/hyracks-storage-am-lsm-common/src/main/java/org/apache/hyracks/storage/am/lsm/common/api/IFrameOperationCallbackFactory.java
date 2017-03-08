@@ -16,29 +16,25 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.data.std.api;
+package org.apache.hyracks.storage.am.lsm.common.api;
+
+import java.io.Serializable;
+
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 
 /**
- * Point to range over byte array
+ * A factory for {@link IFrameOperationCallback}
  */
-public interface IPointable extends IValueReference {
+@FunctionalInterface
+public interface IFrameOperationCallbackFactory extends Serializable {
     /**
-     * Point to the range from position = start with length = length over the byte array bytes
+     * Create a {@link IFrameOperationCallback} for an index operator
      *
-     * @param bytes
-     *            the byte array
-     * @param start
-     *            the start offset
-     * @param length
-     *            the length of the range
+     * @param ctx
+     *            the task context
+     * @param indexAccessor
+     *            the accessor for the index
+     * @return an instance of {@link IFrameOperationCallback}
      */
-    void set(byte[] bytes, int start, int length);
-
-    /**
-     * Point to the same range pointed to by the passed pointer
-     *
-     * @param pointer
-     *            the pointer to the targetted range
-     */
-    void set(IValueReference pointer);
+    IFrameOperationCallback createFrameOperationCallback(IHyracksTaskContext ctx, ILSMIndexAccessor indexAccessor);
 }

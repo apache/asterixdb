@@ -28,16 +28,17 @@ import java.util.logging.Logger;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.replication.IReplicationJob.ReplicationOperation;
+import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.common.api.IIndexCursor;
 import org.apache.hyracks.storage.am.common.api.ISearchPredicate;
 import org.apache.hyracks.storage.am.common.api.IndexException;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent.ComponentState;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent.LSMComponentType;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMHarness;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
@@ -358,6 +359,44 @@ public class LSMHarness implements ILSMHarness {
             throws HyracksDataException, IndexException {
         LSMOperationType opType = LSMOperationType.MODIFICATION;
         return modify(ctx, tryOperation, tuple, opType);
+    }
+
+    @Override
+    public void updateMeta(ILSMIndexOperationContext ctx, IValueReference key, IValueReference value)
+            throws HyracksDataException {
+        if (!lsmIndex.isMemoryComponentsAllocated()) {
+            lsmIndex.allocateMemoryComponents();
+        }
+        getAndEnterComponents(ctx, LSMOperationType.MODIFICATION, false);
+        try {
+            lsmIndex.getCurrentMemoryComponent().getMetadata().put(key, value);
+        } finally {
+            exitAndComplete(ctx, LSMOperationType.MODIFICATION);
+        }
+    }
+
+    private void exitAndComplete(ILSMIndexOperationContext ctx, LSMOperationType op) throws HyracksDataException {
+        try {
+            exitComponents(ctx, op, null, false);
+        } catch (IndexException e) {
+            throw new HyracksDataException(e);
+        } finally {
+            opTracker.completeOperation(null, op, null, ctx.getModificationCallback());
+        }
+    }
+
+    @Override
+    public void forceUpdateMeta(ILSMIndexOperationContext ctx, IValueReference key, IValueReference value)
+            throws HyracksDataException {
+        if (!lsmIndex.isMemoryComponentsAllocated()) {
+            lsmIndex.allocateMemoryComponents();
+        }
+        getAndEnterComponents(ctx, LSMOperationType.FORCE_MODIFICATION, false);
+        try {
+            lsmIndex.getCurrentMemoryComponent().getMetadata().put(key, value);
+        } finally {
+            exitAndComplete(ctx, LSMOperationType.FORCE_MODIFICATION);
+        }
     }
 
     private boolean modify(ILSMIndexOperationContext ctx, boolean tryOperation, ITupleReference tuple,

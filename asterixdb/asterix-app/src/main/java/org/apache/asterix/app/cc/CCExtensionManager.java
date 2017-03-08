@@ -54,7 +54,7 @@ public class CCExtensionManager implements IAlgebraExtensionManager {
     private transient IStatementExecutorFactory statementExecutorFactory;
 
     /**
-     * Initialize {@code CompilerExtensionManager} from configuration
+     * Initialize {@link org.apache.asterix.app.cc.CCExtensionManager} from configuration
      *
      * @param list
      *            a list of extensions

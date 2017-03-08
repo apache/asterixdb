@@ -18,8 +18,6 @@
  */
 package org.apache.asterix.external.dataflow;
 
-import java.io.IOException;
-
 import org.apache.asterix.external.api.IRawRecord;
 import org.apache.asterix.external.api.IRecordReader;
 import org.apache.asterix.external.api.IRecordWithPKDataParser;
@@ -34,9 +32,9 @@ public class ChangeFeedDataFlowController<T> extends FeedRecordDataFlowControlle
 
     public ChangeFeedDataFlowController(final IHyracksTaskContext ctx, final FeedTupleForwarder tupleForwarder,
             final FeedLogManager feedLogManager, final int numOfOutputFields,
-            final IRecordWithPKDataParser<T> dataParser, final IRecordReader<T> recordReader, boolean sendMarker)
-            throws HyracksDataException {
-        super(ctx, tupleForwarder, feedLogManager, numOfOutputFields, dataParser, recordReader, sendMarker);
+            final IRecordWithPKDataParser<T> dataParser, final IRecordReader<T> recordReader)
+                    throws HyracksDataException {
+        super(ctx, tupleForwarder, feedLogManager, numOfOutputFields, dataParser, recordReader);
         this.dataParser = dataParser;
     }
 

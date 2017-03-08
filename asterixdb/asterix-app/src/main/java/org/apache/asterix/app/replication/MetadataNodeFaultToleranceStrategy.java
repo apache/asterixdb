@@ -47,7 +47,6 @@ import org.apache.asterix.common.api.INCLifecycleTask;
 import org.apache.asterix.common.cluster.ClusterPartition;
 import org.apache.asterix.common.cluster.IClusterStateManager;
 import org.apache.asterix.common.exceptions.ErrorCode;
-import org.apache.asterix.common.exceptions.ExceptionUtils;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.common.messaging.api.ICCMessageBroker;
 import org.apache.asterix.common.replication.IFaultToleranceStrategy;
@@ -162,7 +161,7 @@ public class MetadataNodeFaultToleranceStrategy implements IFaultToleranceStrate
         try {
             messageBroker.sendApplicationMessageToNC(response, msg.getNodeId());
         } catch (Exception e) {
-            throw ExceptionUtils.convertToHyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 

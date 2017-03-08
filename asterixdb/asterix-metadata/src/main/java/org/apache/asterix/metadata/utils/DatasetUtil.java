@@ -330,14 +330,12 @@ public class DatasetUtil {
         if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
             return RuntimeUtils.createJobSpecification();
         }
-        boolean temp = dataset.getDatasetDetails().isTemp();
         ARecordType itemType =
                 (ARecordType) metadataProvider.findType(dataset.getItemTypeDataverseName(), dataset.getItemTypeName());
         ARecordType metaType = DatasetUtil.getMetaType(metadataProvider, dataset);
         JobSpecification specPrimary = RuntimeUtils.createJobSpecification();
         Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint =
-                metadataProvider.getSplitProviderAndConstraints(dataset.getDataverseName(), dataset.getDatasetName(),
-                        dataset.getDatasetName(), temp);
+                metadataProvider.getSplitProviderAndConstraints(dataset);
         Pair<ILSMMergePolicyFactory, Map<String, String>> compactionInfo =
                 DatasetUtil.getMergePolicyFactory(dataset, metadataProvider.getMetadataTxnContext());
         IIndexDataflowHelperFactory indexDataflowHelperFactory = dataset.getIndexDataflowHelperFactory(
@@ -386,15 +384,12 @@ public class DatasetUtil {
         if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
             return RuntimeUtils.createJobSpecification();
         }
-
-        boolean temp = dataset.getDatasetDetails().isTemp();
         ARecordType itemType =
                 (ARecordType) metadataProvider.findType(dataset.getItemTypeDataverseName(), dataset.getItemTypeName());
         ARecordType metaType = DatasetUtil.getMetaType(metadataProvider, dataset);
         JobSpecification specPrimary = RuntimeUtils.createJobSpecification();
         Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint =
-                metadataProvider.getSplitProviderAndConstraints(dataset.getDataverseName(), dataset.getDatasetName(),
-                        dataset.getDatasetName(), temp);
+                metadataProvider.getSplitProviderAndConstraints(dataset);
         Pair<ILSMMergePolicyFactory, Map<String, String>> compactionInfo =
                 DatasetUtil.getMergePolicyFactory(dataset, metadataProvider.getMetadataTxnContext());
 
@@ -429,7 +424,6 @@ public class DatasetUtil {
         }
         Index index = MetadataManager.INSTANCE.getIndex(metadataProvider.getMetadataTxnContext(), dataverseName,
                 datasetName, datasetName);
-        boolean temp = dataset.getDatasetDetails().isTemp();
         ARecordType itemType =
                 (ARecordType) metadataProvider.findType(dataset.getItemTypeDataverseName(), dataset.getItemTypeName());
         // get meta item type
@@ -451,7 +445,7 @@ public class DatasetUtil {
         int[] btreeFields = DatasetUtil.createBTreeFieldsWhenThereisAFilter(dataset);
 
         Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint =
-                metadataProvider.getSplitProviderAndConstraints(dataverseName, datasetName, datasetName, temp);
+                metadataProvider.getSplitProviderAndConstraints(dataset);
         FileSplit[] fs = splitsAndConstraint.first.getFileSplits();
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < fs.length; i++) {
@@ -495,7 +489,6 @@ public class DatasetUtil {
         if (dataset == null) {
             throw new AsterixException("Could not find dataset " + datasetName + " in dataverse " + dataverseName);
         }
-        boolean temp = dataset.getDatasetDetails().isTemp();
         ARecordType itemType =
                 (ARecordType) metadataProvider.findType(dataset.getItemTypeDataverseName(), dataset.getItemTypeName());
         ARecordType metaItemType = DatasetUtil.getMetaType(metadataProvider, dataset);
@@ -505,7 +498,7 @@ public class DatasetUtil {
         ITypeTraits[] typeTraits = DatasetUtil.computeTupleTypeTraits(dataset, itemType, metaItemType);
         int[] blooFilterKeyFields = DatasetUtil.createBloomFilterKeyFields(dataset);
         Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint =
-                metadataProvider.getSplitProviderAndConstraints(dataverseName, datasetName, datasetName, temp);
+                metadataProvider.getSplitProviderAndConstraints(dataset);
         Pair<ILSMMergePolicyFactory, Map<String, String>> compactionInfo =
                 DatasetUtil.getMergePolicyFactory(dataset, metadataProvider.getMetadataTxnContext());
         Index index = MetadataManager.INSTANCE.getIndex(metadataProvider.getMetadataTxnContext(),

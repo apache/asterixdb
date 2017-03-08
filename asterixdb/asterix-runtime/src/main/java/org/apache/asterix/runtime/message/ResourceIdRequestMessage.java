@@ -20,7 +20,6 @@ package org.apache.asterix.runtime.message;
 
 import java.util.Set;
 
-import org.apache.asterix.common.exceptions.ExceptionUtils;
 import org.apache.asterix.common.messaging.api.IApplicationMessage;
 import org.apache.asterix.common.messaging.api.ICCMessageBroker;
 import org.apache.asterix.common.transactions.IResourceIdManager;
@@ -57,7 +56,7 @@ public class ResourceIdRequestMessage implements IApplicationMessage {
             }
             broker.sendApplicationMessageToNC(reponse, src);
         } catch (Exception e) {
-            throw ExceptionUtils.convertToHyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 

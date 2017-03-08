@@ -18,7 +18,6 @@
  */
 package org.apache.asterix.messaging;
 
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -32,7 +31,7 @@ import org.apache.hyracks.control.cc.cluster.INodeManager;
 
 public class CCMessageBroker implements ICCMessageBroker {
 
-    private final static Logger LOGGER = Logger.getLogger(CCMessageBroker.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(CCMessageBroker.class.getName());
     private final ClusterControllerService ccs;
 
     public CCMessageBroker(ClusterControllerService ccs) {

@@ -52,8 +52,7 @@ public class StreamRecordReaderFactory implements IRecordReaderFactory<char[]> {
     }
 
     @Override
-    public AlgebricksAbsolutePartitionConstraint getPartitionConstraint()
-            throws HyracksDataException, AlgebricksException {
+    public AlgebricksAbsolutePartitionConstraint getPartitionConstraint() throws AlgebricksException {
         return streamFactory.getPartitionConstraint();
     }
 

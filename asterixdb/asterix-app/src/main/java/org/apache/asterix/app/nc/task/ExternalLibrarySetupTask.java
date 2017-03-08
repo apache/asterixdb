@@ -21,7 +21,6 @@ package org.apache.asterix.app.nc.task;
 import org.apache.asterix.app.external.ExternalLibraryUtils;
 import org.apache.asterix.common.api.IAppRuntimeContext;
 import org.apache.asterix.common.api.INCLifecycleTask;
-import org.apache.asterix.common.exceptions.ExceptionUtils;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.service.IControllerService;
 import org.apache.hyracks.control.nc.NodeControllerService;
@@ -42,7 +41,7 @@ public class ExternalLibrarySetupTask implements INCLifecycleTask {
         try {
             ExternalLibraryUtils.setUpExternaLibraries(appContext.getLibraryManager(), metadataNode);
         } catch (Exception e) {
-            throw ExceptionUtils.convertToHyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 }

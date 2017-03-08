@@ -56,6 +56,9 @@ import org.apache.hyracks.storage.am.common.dataflow.IIndexOperatorDescriptor;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.am.common.ophelpers.MultiComparator;
 import org.apache.hyracks.storage.am.common.tuples.PermutingFrameTupleReference;
+import org.apache.hyracks.storage.am.lsm.common.api.IFrameOperationCallback;
+import org.apache.hyracks.storage.am.lsm.common.api.IFrameOperationCallbackFactory;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.common.dataflow.LSMIndexInsertUpdateDeleteOperatorNodePushable;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMTreeIndexAccessor;
@@ -83,13 +86,17 @@ public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDe
     private final int filterFieldIndex;
     private final int metaFieldIndex;
     private LockThenSearchOperationCallback searchCallback;
+    private IFrameOperationCallback frameOpCallback;
+    private final IFrameOperationCallbackFactory frameOpCallbackFactory;
 
-    public LSMPrimaryUpsertOperatorNodePushable(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
-            int partition, int[] fieldPermutation, IRecordDescriptorProvider recordDescProvider, int numOfPrimaryKeys,
-            ARecordType recordType, int filterFieldIndex) throws HyracksDataException {
+    public LSMPrimaryUpsertOperatorNodePushable(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx, int partition,
+            int[] fieldPermutation, IRecordDescriptorProvider recordDescProvider, int numOfPrimaryKeys,
+            ARecordType recordType, int filterFieldIndex, IFrameOperationCallbackFactory frameOpCallbackFactory)
+            throws HyracksDataException {
         super(opDesc, ctx, partition, fieldPermutation, recordDescProvider, IndexOperation.UPSERT);
         this.key = new PermutingFrameTupleReference();
         this.numOfPrimaryKeys = numOfPrimaryKeys;
+        this.frameOpCallbackFactory = frameOpCallbackFactory;
         missingWriter = opDesc.getMissingWriterFactory().createMissingWriter();
         int[] searchKeyPermutations = new int[numOfPrimaryKeys];
         for (int i = 0; i < searchKeyPermutations.length; i++) {
@@ -104,7 +111,7 @@ public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDe
             isFiltered = true;
             this.recordType = recordType;
             this.presetFieldIndex = filterFieldIndex;
-            this.recPointable = (ARecordPointable) ARecordPointable.FACTORY.createPointable();
+            this.recPointable = ARecordPointable.FACTORY.createPointable();
             this.prevRecWithPKWithFilterValue = new ArrayTupleBuilder(fieldPermutation.length + (hasMeta ? 1 : 0));
             this.prevDos = prevRecWithPKWithFilterValue.getDataOutput();
         }
@@ -140,17 +147,19 @@ public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDe
             tb = new ArrayTupleBuilder(recordDesc.getFieldCount());
             dos = tb.getDataOutput();
             appender = new FrameTupleAppender(new VSizeFrame(ctx), true);
-            modCallback = opDesc.getModificationOpCallbackFactory().createModificationOperationCallback(
-                    indexHelper.getResource(), ctx, this);
+            modCallback = opDesc.getModificationOpCallbackFactory()
+                    .createModificationOperationCallback(indexHelper.getResource(), ctx, this);
             searchCallback = (LockThenSearchOperationCallback) opDesc.getSearchOpCallbackFactory()
                     .createSearchOperationCallback(indexHelper.getResource().getId(), ctx, this);
             indexAccessor = index.createAccessor(modCallback, searchCallback);
             cursor = indexAccessor.createSearchCursor(false);
             frameTuple = new FrameTupleReference();
-            IAppRuntimeContext runtimeCtx = (IAppRuntimeContext) ctx.getJobletContext()
-                    .getApplicationContext().getApplicationObject();
+            IAppRuntimeContext runtimeCtx =
+                    (IAppRuntimeContext) ctx.getJobletContext().getApplicationContext().getApplicationObject();
             LSMIndexUtil.checkAndSetFirstLSN((AbstractLSMIndex) index,
                     runtimeCtx.getTransactionSubsystem().getLogManager());
+            frameOpCallback =
+                    frameOpCallbackFactory.createFrameOperationCallback(ctx, (ILSMIndexAccessor) indexAccessor);
         } catch (Exception e) {
             indexHelper.close();
             throw new HyracksDataException(e);
@@ -188,7 +197,6 @@ public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDe
         tb.addFieldEndOffset();
     }
 
-    //TODO: use tryDelete/tryInsert in order to prevent deadlocks
     @Override
     public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
         accessor.reset(buffer);
@@ -221,8 +229,7 @@ public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDe
                     }
                     // if with filters, append the filter
                     if (isFiltered) {
-                        dos.write(prevTuple.getFieldData(filterFieldIndex),
-                                prevTuple.getFieldStart(filterFieldIndex),
+                        dos.write(prevTuple.getFieldData(filterFieldIndex), prevTuple.getFieldStart(filterFieldIndex),
                                 prevTuple.getFieldLength(filterFieldIndex));
                         tb.addFieldEndOffset();
                     }
@@ -258,6 +265,8 @@ public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDe
                 writeOutput(i, recordWasInserted, prevTuple != null);
                 i++;
             }
+            // callback here before calling nextFrame on the next operator
+            frameOpCallback.frameCompleted(!firstModification);
             appender.write(writer, true);
         } catch (IndexException | IOException | AsterixException e) {
             throw new HyracksDataException(e);
@@ -318,6 +327,6 @@ public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDe
 
     @Override
     public void flush() throws HyracksDataException {
-        writer.flush();
+        // No op since nextFrame flushes by default
     }
 }

@@ -43,6 +43,7 @@ public class VSizeFrame implements IFrame {
         buffer = ctx.allocateFrame(frameSize);
     }
 
+    @Override
     public ByteBuffer getBuffer() {
         return buffer;
     }

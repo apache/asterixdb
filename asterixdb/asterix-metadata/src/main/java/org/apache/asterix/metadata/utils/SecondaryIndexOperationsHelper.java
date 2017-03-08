@@ -190,8 +190,7 @@ public abstract class SecondaryIndexOperationsHelper {
         metaSerde =
                 metaType == null ? null : SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(metaType);
         Pair<IFileSplitProvider, AlgebricksPartitionConstraint> secondarySplitsAndConstraint =
-                metadataProvider.getSplitProviderAndConstraints(index.getDataverseName(), index.getDatasetName(),
-                        index.getIndexName(), dataset.getDatasetDetails().isTemp());
+                metadataProvider.getSplitProviderAndConstraints(dataset, index.getIndexName());
         secondaryFileSplitProvider = secondarySplitsAndConstraint.first;
         secondaryPartitionConstraint = secondarySplitsAndConstraint.second;
         numPrimaryKeys = DatasetUtil.getPartitioningKeys(dataset).size();
@@ -203,8 +202,7 @@ public abstract class SecondaryIndexOperationsHelper {
                 numFilterFields = 0;
             }
             Pair<IFileSplitProvider, AlgebricksPartitionConstraint> primarySplitsAndConstraint =
-                    metadataProvider.getSplitProviderAndConstraints(dataset.getDataverseName(),
-                            dataset.getDatasetName(), dataset.getDatasetName(), dataset.getDatasetDetails().isTemp());
+                    metadataProvider.getSplitProviderAndConstraints(dataset);
             primaryFileSplitProvider = primarySplitsAndConstraint.first;
             primaryPartitionConstraint = primarySplitsAndConstraint.second;
             setPrimaryRecDescAndComparators();

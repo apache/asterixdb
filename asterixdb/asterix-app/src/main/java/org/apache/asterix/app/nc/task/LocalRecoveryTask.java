@@ -24,7 +24,6 @@ import java.util.Set;
 import org.apache.asterix.common.api.IAppRuntimeContext;
 import org.apache.asterix.common.api.INCLifecycleTask;
 import org.apache.asterix.common.exceptions.ACIDException;
-import org.apache.asterix.common.exceptions.ExceptionUtils;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.service.IControllerService;
 import org.apache.hyracks.control.nc.NodeControllerService;
@@ -45,7 +44,7 @@ public class LocalRecoveryTask implements INCLifecycleTask {
         try {
             runtimeContext.getTransactionSubsystem().getRecoveryManager().startLocalRecovery(partitions);
         } catch (IOException | ACIDException e) {
-            throw ExceptionUtils.convertToHyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 }

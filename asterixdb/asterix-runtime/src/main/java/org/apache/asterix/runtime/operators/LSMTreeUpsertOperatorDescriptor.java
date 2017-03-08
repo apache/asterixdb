@@ -37,12 +37,14 @@ import org.apache.hyracks.storage.am.common.api.ISearchOperationCallbackFactory;
 import org.apache.hyracks.storage.am.common.api.ITupleFilterFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
+import org.apache.hyracks.storage.am.lsm.common.api.IFrameOperationCallbackFactory;
 import org.apache.hyracks.storage.common.IStorageManager;
 
 public class LSMTreeUpsertOperatorDescriptor extends LSMTreeInsertDeleteOperatorDescriptor {
 
     private static final long serialVersionUID = 1L;
     private final int[] prevValuePermutation;
+    private final IFrameOperationCallbackFactory frameOpCallbackFactory;
     private ARecordType type;
     private int filterIndex = -1;
 
@@ -54,12 +56,13 @@ public class LSMTreeUpsertOperatorDescriptor extends LSMTreeInsertDeleteOperator
             boolean isPrimary, String indexName, IMissingWriterFactory missingWriterFactory,
             IModificationOperationCallbackFactory modificationOpCallbackProvider,
             ISearchOperationCallbackFactory searchOpCallbackProvider, int[] prevValuePermutation,
-            IPageManagerFactory pageManagerFactory) {
+            IPageManagerFactory pageManagerFactory, IFrameOperationCallbackFactory frameOpCallbackFactory) {
         super(spec, recDesc, storageManager, lifecycleManagerProvider, fileSplitProvider, typeTraits,
                 comparatorFactories, bloomFilterKeyFields, fieldPermutation, IndexOperation.UPSERT,
                 dataflowHelperFactory, tupleFilterFactory, isPrimary, indexName, missingWriterFactory,
                 modificationOpCallbackProvider, searchOpCallbackProvider, pageManagerFactory);
         this.prevValuePermutation = prevValuePermutation;
+        this.frameOpCallbackFactory = frameOpCallbackFactory;
     }
 
     @Override
@@ -67,7 +70,7 @@ public class LSMTreeUpsertOperatorDescriptor extends LSMTreeInsertDeleteOperator
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) throws HyracksDataException {
         return isPrimary()
                 ? new LSMPrimaryUpsertOperatorNodePushable(this, ctx, partition, fieldPermutation,
-                        recordDescProvider, comparatorFactories.length, type, filterIndex)
+                        recordDescProvider, comparatorFactories.length, type, filterIndex, frameOpCallbackFactory)
                 : new LSMSecondaryUpsertOperatorNodePushable(this, ctx, partition, fieldPermutation,
                         recordDescProvider, prevValuePermutation);
     }

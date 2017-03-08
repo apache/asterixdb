@@ -18,8 +18,6 @@
  */
 package org.apache.asterix.external.dataflow;
 
-import java.io.IOException;
-
 import org.apache.asterix.external.api.IRawRecord;
 import org.apache.asterix.external.api.IRecordReader;
 import org.apache.asterix.external.api.IRecordWithMetadataParser;
@@ -32,14 +30,14 @@ public class ChangeFeedWithMetaDataFlowController<T> extends FeedWithMetaDataFlo
 
     public ChangeFeedWithMetaDataFlowController(final IHyracksTaskContext ctx, final FeedTupleForwarder tupleForwarder,
             final FeedLogManager feedLogManager, final int numOfOutputFields,
-            final IRecordWithMetadataParser<T> dataParser, final IRecordReader<T> recordReader, boolean sendMarker)
-            throws HyracksDataException {
-        super(ctx, tupleForwarder, feedLogManager, numOfOutputFields, dataParser, recordReader, sendMarker);
+            final IRecordWithMetadataParser<T> dataParser, final IRecordReader<T> recordReader)
+                    throws HyracksDataException {
+        super(ctx, tupleForwarder, feedLogManager, numOfOutputFields, dataParser, recordReader);
     }
 
     @Override
     protected void addPrimaryKeys(final ArrayTupleBuilder tb, final IRawRecord<? extends T> record)
             throws HyracksDataException {
-        ((IRecordWithMetadataParser<T>) dataParser).appendLastParsedPrimaryKeyToTuple(tb);
+        dataParser.appendLastParsedPrimaryKeyToTuple(tb);
     }
 }

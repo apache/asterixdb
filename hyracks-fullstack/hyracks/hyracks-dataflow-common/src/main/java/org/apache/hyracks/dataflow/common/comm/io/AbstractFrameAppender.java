@@ -108,4 +108,11 @@ public class AbstractFrameAppender implements IFrameAppender {
         return false;
     }
 
+    @Override
+    public void flush(IFrameWriter writer) throws HyracksDataException {
+        if (tupleCount > 0) {
+            write(writer, true);
+        }
+        writer.flush();
+    }
 }

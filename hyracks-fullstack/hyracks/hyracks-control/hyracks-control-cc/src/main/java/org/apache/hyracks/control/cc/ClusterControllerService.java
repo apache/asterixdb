@@ -463,4 +463,8 @@ public class ClusterControllerService implements IControllerService {
             return CCApplicationEntryPoint.INSTANCE;
         }
     }
+
+    public ICCApplicationEntryPoint getApplication() {
+        return aep;
+    }
 }

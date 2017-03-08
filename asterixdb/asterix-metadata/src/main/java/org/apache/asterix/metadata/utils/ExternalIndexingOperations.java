@@ -452,12 +452,11 @@ public class ExternalIndexingOperations {
         JobSpecification spec = RuntimeUtils.createJobSpecification();
         Pair<ILSMMergePolicyFactory, Map<String, String>> compactionInfo =
                 DatasetUtil.getMergePolicyFactory(ds, metadataProvider.getMetadataTxnContext());
-        boolean temp = ds.getDatasetDetails().isTemp();
         ILSMMergePolicyFactory mergePolicyFactory = compactionInfo.first;
         Map<String, String> mergePolicyFactoryProperties = compactionInfo.second;
         Pair<IFileSplitProvider, AlgebricksPartitionConstraint> filesIndexSplitsAndConstraint =
-                metadataProvider.getSplitProviderAndConstraints(ds.getDataverseName(), ds.getDatasetName(),
-                        IndexingConstants.getFilesIndexName(ds.getDatasetName()), temp);
+                metadataProvider.getSplitProviderAndConstraints(ds,
+                        IndexingConstants.getFilesIndexName(ds.getDatasetName()));
         IFileSplitProvider filesIndexSplitProvider = filesIndexSplitsAndConstraint.first;
         String fileIndexName = BTreeDataflowHelperFactoryProvider.externalFileIndexName(ds);
         Index fileIndex = MetadataManager.INSTANCE.getIndex(metadataProvider.getMetadataTxnContext(),
@@ -472,8 +471,7 @@ public class ExternalIndexingOperations {
         for (Index index : indexes) {
             if (isValidIndexName(index.getDatasetName(), index.getIndexName())) {
                 Pair<IFileSplitProvider, AlgebricksPartitionConstraint> indexSplitsAndConstraint =
-                        metadataProvider.getSplitProviderAndConstraints(ds.getDataverseName(), ds.getDatasetName(),
-                                index.getIndexName(), temp);
+                        metadataProvider.getSplitProviderAndConstraints(ds, index.getIndexName());
                 IIndexDataflowHelperFactory indexDataflowHelperFactory = ds.getIndexDataflowHelperFactory(
                         metadataProvider, index, null, null, mergePolicyFactory, mergePolicyFactoryProperties);
                 treeDataflowHelperFactories.add(indexDataflowHelperFactory);
@@ -499,11 +497,9 @@ public class ExternalIndexingOperations {
                 DatasetUtil.getMergePolicyFactory(ds, metadataProvider.getMetadataTxnContext());
         ILSMMergePolicyFactory mergePolicyFactory = compactionInfo.first;
         Map<String, String> mergePolicyFactoryProperties = compactionInfo.second;
-
-        boolean temp = ds.getDatasetDetails().isTemp();
         Pair<IFileSplitProvider, AlgebricksPartitionConstraint> filesIndexSplitsAndConstraint =
-                metadataProvider.getSplitProviderAndConstraints(ds.getDataverseName(), ds.getDatasetName(),
-                        IndexingConstants.getFilesIndexName(ds.getDatasetName()), temp);
+                metadataProvider.getSplitProviderAndConstraints(ds,
+                        IndexingConstants.getFilesIndexName(ds.getDatasetName()));
         IFileSplitProvider filesIndexSplitProvider = filesIndexSplitsAndConstraint.first;
         String fileIndexName = BTreeDataflowHelperFactoryProvider.externalFileIndexName(ds);
         Index fileIndex = MetadataManager.INSTANCE.getIndex(metadataProvider.getMetadataTxnContext(),
@@ -518,8 +514,7 @@ public class ExternalIndexingOperations {
         for (Index index : indexes) {
             if (isValidIndexName(index.getDatasetName(), index.getIndexName())) {
                 Pair<IFileSplitProvider, AlgebricksPartitionConstraint> indexSplitsAndConstraint =
-                        metadataProvider.getSplitProviderAndConstraints(ds.getDataverseName(), ds.getDatasetName(),
-                                index.getIndexName(), temp);
+                        metadataProvider.getSplitProviderAndConstraints(ds, index.getIndexName());
                 IIndexDataflowHelperFactory indexDataflowHelperFactory = ds.getIndexDataflowHelperFactory(
                         metadataProvider, index, null, null, mergePolicyFactory, mergePolicyFactoryProperties);
                 treeDataflowHelperFactories.add(indexDataflowHelperFactory);
@@ -546,11 +541,9 @@ public class ExternalIndexingOperations {
                 DatasetUtil.getMergePolicyFactory(ds, metadataProvider.getMetadataTxnContext());
         ILSMMergePolicyFactory mergePolicyFactory = compactionInfo.first;
         Map<String, String> mergePolicyFactoryProperties = compactionInfo.second;
-        boolean temp = ds.getDatasetDetails().isTemp();
-
         Pair<IFileSplitProvider, AlgebricksPartitionConstraint> filesIndexSplitsAndConstraint =
-                metadataProvider.getSplitProviderAndConstraints(ds.getDataverseName(), ds.getDatasetName(),
-                        IndexingConstants.getFilesIndexName(ds.getDatasetName()), temp);
+                metadataProvider.getSplitProviderAndConstraints(ds,
+                        IndexingConstants.getFilesIndexName(ds.getDatasetName()));
         IFileSplitProvider filesIndexSplitProvider = filesIndexSplitsAndConstraint.first;
         String fileIndexName = BTreeDataflowHelperFactoryProvider.externalFileIndexName(ds);
         Index fileIndex = MetadataManager.INSTANCE.getIndex(metadataProvider.getMetadataTxnContext(),
@@ -565,8 +558,7 @@ public class ExternalIndexingOperations {
         for (Index index : indexes) {
             if (isValidIndexName(index.getDatasetName(), index.getIndexName())) {
                 Pair<IFileSplitProvider, AlgebricksPartitionConstraint> indexSplitsAndConstraint =
-                        metadataProvider.getSplitProviderAndConstraints(ds.getDataverseName(), ds.getDatasetName(),
-                                index.getIndexName(), temp);
+                        metadataProvider.getSplitProviderAndConstraints(ds, index.getIndexName());
                 IIndexDataflowHelperFactory indexDataflowHelperFactory = ds.getIndexDataflowHelperFactory(
                         metadataProvider, index, null, null, mergePolicyFactory, mergePolicyFactoryProperties);
                 treeDataflowHelperFactories.add(indexDataflowHelperFactory);

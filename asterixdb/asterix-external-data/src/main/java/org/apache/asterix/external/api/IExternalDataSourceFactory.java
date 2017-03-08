@@ -53,8 +53,7 @@ public interface IExternalDataSourceFactory extends Serializable {
      * @return
      * @throws AsterixException
      */
-    public AlgebricksAbsolutePartitionConstraint getPartitionConstraint()
-            throws AlgebricksException, HyracksDataException;
+    public AlgebricksAbsolutePartitionConstraint getPartitionConstraint() throws AlgebricksException;
 
     /**
      * Configure the data parser factory. The passed map contains key value pairs from the

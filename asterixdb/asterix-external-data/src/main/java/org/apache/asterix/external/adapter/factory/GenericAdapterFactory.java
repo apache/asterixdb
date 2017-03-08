@@ -61,7 +61,7 @@ public class GenericAdapterFactory implements IIndexingAdapterFactory, IAdapterF
     private boolean isFeed;
     private FileSplit[] feedLogFileSplits;
     private ARecordType metaType;
-    private FeedLogManager feedLogManager = null;
+    private transient FeedLogManager feedLogManager;
 
     @Override
     public void setSnapshot(List<ExternalFile> files, boolean indexingOp) {
@@ -75,8 +75,7 @@ public class GenericAdapterFactory implements IIndexingAdapterFactory, IAdapterF
     }
 
     @Override
-    public AlgebricksAbsolutePartitionConstraint getPartitionConstraint()
-            throws HyracksDataException, AlgebricksException {
+    public AlgebricksAbsolutePartitionConstraint getPartitionConstraint() throws AlgebricksException {
         return dataSourceFactory.getPartitionConstraint();
     }
 
@@ -86,12 +85,12 @@ public class GenericAdapterFactory implements IIndexingAdapterFactory, IAdapterF
     @Override
     public synchronized IDataSourceAdapter createAdapter(IHyracksTaskContext ctx, int partition)
             throws HyracksDataException {
-        IAppRuntimeContext runtimeCtx = (IAppRuntimeContext) ctx.getJobletContext()
-                .getApplicationContext().getApplicationObject();
+        IAppRuntimeContext runtimeCtx =
+                (IAppRuntimeContext) ctx.getJobletContext().getApplicationContext().getApplicationObject();
         try {
             restoreExternalObjects(runtimeCtx.getLibraryManager());
         } catch (Exception e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
         if (isFeed) {
             if (feedLogManager == null) {
@@ -184,6 +183,11 @@ public class GenericAdapterFactory implements IIndexingAdapterFactory, IAdapterF
         this.metaType = metaType;
     }
 
+    /**
+     * used by extensions to access shared datasource factory for a job
+     *
+     * @return the data source factory
+     */
     public IExternalDataSourceFactory getDataSourceFactory() {
         return dataSourceFactory;
     }

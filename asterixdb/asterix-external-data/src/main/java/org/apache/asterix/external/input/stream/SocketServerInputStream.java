@@ -23,7 +23,6 @@ import java.io.InputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-import org.apache.asterix.common.exceptions.ExceptionUtils;
 import org.apache.asterix.external.api.AsterixInputStream;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.log4j.Logger;
@@ -108,7 +107,7 @@ public class SocketServerInputStream extends AsterixInputStream {
             }
             connectionStream = null;
         } catch (IOException e) {
-            hde = new HyracksDataException(e);
+            hde = HyracksDataException.create(e);
         }
         try {
             if (socket != null) {
@@ -116,14 +115,14 @@ public class SocketServerInputStream extends AsterixInputStream {
             }
             socket = null;
         } catch (IOException e) {
-            hde = ExceptionUtils.suppressIntoHyracksDataException(hde, e);
+            hde = HyracksDataException.suppress(hde, e);
         }
         try {
             if (server != null) {
                 server.close();
             }
         } catch (IOException e) {
-            hde = ExceptionUtils.suppressIntoHyracksDataException(hde, e);
+            hde = HyracksDataException.suppress(hde, e);
         } finally {
             server = null;
         }

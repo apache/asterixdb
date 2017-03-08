@@ -32,7 +32,7 @@ import org.apache.asterix.common.transactions.LogRecord;
 import org.apache.asterix.common.transactions.LogType;
 import org.apache.asterix.common.utils.TransactionUtil;
 import org.apache.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputOneFramePushRuntime;
-import org.apache.hyracks.api.comm.VSizeFrame;
+import org.apache.hyracks.api.comm.IFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -46,7 +46,7 @@ import org.apache.hyracks.storage.am.bloomfilter.impls.MurmurHash128Bit;
 
 public class CommitRuntime extends AbstractOneInputOneOutputOneFramePushRuntime {
 
-    private final static long SEED = 0L;
+    protected static final long SEED = 0L;
 
     protected final ITransactionManager transactionManager;
     protected final ILogManager logMgr;
@@ -85,8 +85,7 @@ public class CommitRuntime extends AbstractOneInputOneOutputOneFramePushRuntime 
         try {
             transactionContext = transactionManager.getTransactionContext(jobId, false);
             transactionContext.setWriteTxn(isWriteTransaction);
-            ILogMarkerCallback callback =
-                    TaskUtil.<ILogMarkerCallback>get(ILogMarkerCallback.KEY_MARKER_CALLBACK, ctx);
+            ILogMarkerCallback callback = TaskUtil.get(ILogMarkerCallback.KEY_MARKER_CALLBACK, ctx);
             logRecord = new LogRecord(callback);
             if (isSink) {
                 return;
@@ -112,6 +111,8 @@ public class CommitRuntime extends AbstractOneInputOneOutputOneFramePushRuntime 
                  * active operation count of PrimaryIndexOptracker. By maintaining the count correctly and only allowing
                  * flushing when the count is 0, it can guarantee the no-steal policy for temporary datasets, too.
                  */
+                // TODO: Fix this for upserts. an upsert tuple right now expect to notify the opTracker twice (one for
+                // delete and one for insert)
                 transactionContext.notifyOptracker(false);
             } else {
                 tRef.reset(tAccess, t);
@@ -126,7 +127,7 @@ public class CommitRuntime extends AbstractOneInputOneOutputOneFramePushRuntime 
                 }
             }
         }
-        VSizeFrame message = TaskUtil.<VSizeFrame>get(HyracksConstants.KEY_MESSAGE, ctx);
+        IFrame message = TaskUtil.get(HyracksConstants.KEY_MESSAGE, ctx);
         if (message != null
                 && MessagingFrameTupleAppender.getMessageType(message) == MessagingFrameTupleAppender.MARKER_MESSAGE) {
             try {

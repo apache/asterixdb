@@ -101,10 +101,8 @@ public class IndexUtil {
             throws AlgebricksException {
         JobSpecification spec = RuntimeUtils.createJobSpecification();
         IStorageComponentProvider storageComponentProvider = metadataProvider.getStorageComponentProvider();
-        boolean temp = dataset.getDatasetDetails().isTemp();
         Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint =
-                metadataProvider.getSplitProviderAndConstraints(index.getDataverseName(), index.getDatasetName(),
-                        index.getIndexName(), temp);
+                metadataProvider.getSplitProviderAndConstraints(dataset, index.getIndexName());
         Pair<ILSMMergePolicyFactory, Map<String, String>> compactionInfo =
                 DatasetUtil.getMergePolicyFactory(dataset, metadataProvider.getMetadataTxnContext());
         ARecordType recordType =
@@ -153,11 +151,9 @@ public class IndexUtil {
     public static JobSpecification buildDropSecondaryIndexJobSpec(Index index, MetadataProvider metadataProvider,
             Dataset dataset) throws AlgebricksException {
         JobSpecification spec = RuntimeUtils.createJobSpecification();
-        boolean temp = dataset.getDatasetDetails().isTemp();
         IStorageComponentProvider storageComponentProvider = metadataProvider.getStorageComponentProvider();
         Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint =
-                metadataProvider.getSplitProviderAndConstraints(index.getDataverseName(), index.getDatasetName(),
-                        index.getIndexName(), temp);
+                metadataProvider.getSplitProviderAndConstraints(dataset, index.getIndexName());
         Pair<ILSMMergePolicyFactory, Map<String, String>> compactionInfo =
                 DatasetUtil.getMergePolicyFactory(dataset, metadataProvider.getMetadataTxnContext());
         ARecordType recordType =

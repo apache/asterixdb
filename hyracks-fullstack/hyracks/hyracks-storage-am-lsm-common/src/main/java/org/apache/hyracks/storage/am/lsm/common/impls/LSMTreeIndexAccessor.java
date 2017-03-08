@@ -22,6 +22,7 @@ package org.apache.hyracks.storage.am.lsm.common.impls;
 import java.util.List;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.common.api.IIndexCursor;
 import org.apache.hyracks.storage.am.common.api.ISearchPredicate;
@@ -163,5 +164,19 @@ public abstract class LSMTreeIndexAccessor implements ILSMIndexAccessor {
     public void forceDelete(ITupleReference tuple) throws HyracksDataException, IndexException {
         ctx.setOperation(IndexOperation.DELETE);
         lsmHarness.forceModify(ctx, tuple);
+    }
+
+    @Override
+    public void updateMeta(IValueReference key, IValueReference value) throws HyracksDataException {
+     // a hack because delete only gets the memory component
+        ctx.setOperation(IndexOperation.DELETE);
+        lsmHarness.updateMeta(ctx,key,value);
+    }
+
+    @Override
+    public void forceUpdateMeta(IValueReference key, IValueReference value) throws HyracksDataException {
+        // a hack because delete only gets the memory component
+        ctx.setOperation(IndexOperation.DELETE);
+        lsmHarness.forceUpdateMeta(ctx, key, value);
     }
 }

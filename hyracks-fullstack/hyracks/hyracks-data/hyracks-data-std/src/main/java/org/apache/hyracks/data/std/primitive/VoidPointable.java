@@ -20,10 +20,10 @@ package org.apache.hyracks.data.std.primitive;
 
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.data.std.api.AbstractPointable;
-import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.api.IPointableFactory;
 
 public final class VoidPointable extends AbstractPointable {
+    public static final VoidPointableFactory FACTORY = new VoidPointableFactory();
     public static final ITypeTraits TYPE_TRAITS = new ITypeTraits() {
         private static final long serialVersionUID = 1L;
 
@@ -38,11 +38,14 @@ public final class VoidPointable extends AbstractPointable {
         }
     };
 
-    public static final IPointableFactory FACTORY = new IPointableFactory() {
+    public static class VoidPointableFactory implements IPointableFactory {
         private static final long serialVersionUID = 1L;
 
+        private VoidPointableFactory() {
+        }
+
         @Override
-        public IPointable createPointable() {
+        public VoidPointable createPointable() {
             return new VoidPointable();
         }
 
@@ -50,5 +53,5 @@ public final class VoidPointable extends AbstractPointable {
         public ITypeTraits getTypeTraits() {
             return TYPE_TRAITS;
         }
-    };
+    }
 }

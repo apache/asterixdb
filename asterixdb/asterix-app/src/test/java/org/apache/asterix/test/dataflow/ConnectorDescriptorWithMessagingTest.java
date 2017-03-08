@@ -159,8 +159,8 @@ public class ConnectorDescriptorWithMessagingTest {
                     BooleanSerializerDeserializer.INSTANCE, new UTF8StringSerializerDeserializer() };
             RecordDescriptor rDesc = new RecordDescriptor(serdes);
             TestPartitionWriterFactory partitionWriterFactory = new TestPartitionWriterFactory();
-            IFrameWriter partitioner = connector.createPartitioner(ctx, rDesc, partitionWriterFactory,
-                    CURRENT_PRODUCER, NUMBER_OF_CONSUMERS, NUMBER_OF_CONSUMERS);
+            IFrameWriter partitioner = connector.createPartitioner(ctx, rDesc, partitionWriterFactory, CURRENT_PRODUCER,
+                    NUMBER_OF_CONSUMERS, NUMBER_OF_CONSUMERS);
             partitioner.open();
             FrameTupleAccessor fta = new FrameTupleAccessor(rDesc);
             List<TestFrameWriter> recipients = new ArrayList<>();
@@ -263,11 +263,11 @@ public class ConnectorDescriptorWithMessagingTest {
             }
             partitioner.nextFrame(frame.getBuffer());
             partitioner.flush();
-            Assert.assertEquals(partitionWriterFactory.getWriters().get(0).nextFrameCount(), 1);
-            Assert.assertEquals(partitionWriterFactory.getWriters().get(1).nextFrameCount(), 2);
-            Assert.assertEquals(partitionWriterFactory.getWriters().get(2).nextFrameCount(), 1);
-            Assert.assertEquals(partitionWriterFactory.getWriters().get(3).nextFrameCount(), 2);
-            Assert.assertEquals(partitionWriterFactory.getWriters().get(4).nextFrameCount(), 2);
+            Assert.assertEquals(1, partitionWriterFactory.getWriters().get(0).nextFrameCount());
+            Assert.assertEquals(2, partitionWriterFactory.getWriters().get(1).nextFrameCount());
+            Assert.assertEquals(1, partitionWriterFactory.getWriters().get(2).nextFrameCount());
+            Assert.assertEquals(2, partitionWriterFactory.getWriters().get(3).nextFrameCount());
+            Assert.assertEquals(2, partitionWriterFactory.getWriters().get(4).nextFrameCount());
             for (TestFrameWriter writer : recipients) {
                 fta.reset(writer.getLastFrame());
                 Assert.assertEquals(fta.getTupleCount(), 1);

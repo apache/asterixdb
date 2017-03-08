@@ -16,29 +16,22 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.data.std.api;
+package org.apache.hyracks.storage.am.lsm.common.api;
+
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 /**
- * Point to range over byte array
+ * An interface that is used to enable frame level operation on indexes
  */
-public interface IPointable extends IValueReference {
+@FunctionalInterface
+public interface IFrameOperationCallback {
     /**
-     * Point to the range from position = start with length = length over the byte array bytes
+     * Called once processing the frame is done before calling nextFrame on the next IFrameWriter in
+     * the pipeline
      *
-     * @param bytes
-     *            the byte array
-     * @param start
-     *            the start offset
-     * @param length
-     *            the length of the range
+     * @param modified
+     *            true if the index was modified during the processing of the frame, false otherwise
+     * @throws HyracksDataException
      */
-    void set(byte[] bytes, int start, int length);
-
-    /**
-     * Point to the same range pointed to by the passed pointer
-     *
-     * @param pointer
-     *            the pointer to the targetted range
-     */
-    void set(IValueReference pointer);
+    void frameCompleted(boolean modified) throws HyracksDataException;
 }

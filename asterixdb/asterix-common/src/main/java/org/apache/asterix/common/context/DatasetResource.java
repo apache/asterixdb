@@ -81,7 +81,7 @@ public class DatasetResource implements Comparable<DatasetResource> {
         return datasetVirtualBufferCaches;
     }
 
-    public IIndex getIndex(long resourceID) {
+    public ILSMIndex getIndex(long resourceID) {
         IndexInfo iInfo = getIndexInfo(resourceID);
         return (iInfo == null) ? null : iInfo.getIndex();
     }

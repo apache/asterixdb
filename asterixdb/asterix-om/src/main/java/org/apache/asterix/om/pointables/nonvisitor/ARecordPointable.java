@@ -71,6 +71,7 @@ import org.apache.hyracks.util.string.UTF8StringWriter;
 public class ARecordPointable extends AbstractPointable {
 
     private final UTF8StringWriter utf8Writer = new UTF8StringWriter();
+    public static final ARecordPointableFactory FACTORY = new ARecordPointableFactory();
 
     public static final ITypeTraits TYPE_TRAITS = new ITypeTraits() {
         private static final long serialVersionUID = 1L;
@@ -86,11 +87,15 @@ public class ARecordPointable extends AbstractPointable {
         }
     };
 
-    public static final IPointableFactory FACTORY = new IPointableFactory() {
+    public static class ARecordPointableFactory implements IPointableFactory {
+
         private static final long serialVersionUID = 1L;
 
+        private ARecordPointableFactory() {
+        }
+
         @Override
-        public IPointable createPointable() {
+        public ARecordPointable createPointable() {
             return new ARecordPointable();
         }
 
@@ -98,7 +103,8 @@ public class ARecordPointable extends AbstractPointable {
         public ITypeTraits getTypeTraits() {
             return TYPE_TRAITS;
         }
-    };
+
+    }
 
     public static final IObjectFactory<IPointable, ATypeTag> ALLOCATOR = new IObjectFactory<IPointable, ATypeTag>() {
         @Override

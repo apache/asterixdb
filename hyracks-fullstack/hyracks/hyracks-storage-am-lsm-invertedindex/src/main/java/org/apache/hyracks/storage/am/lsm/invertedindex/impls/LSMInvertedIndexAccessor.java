@@ -21,6 +21,7 @@ package org.apache.hyracks.storage.am.lsm.invertedindex.impls;
 import java.util.List;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.common.api.IIndexCursor;
 import org.apache.hyracks.storage.am.common.api.ISearchPredicate;
@@ -183,6 +184,20 @@ public class LSMInvertedIndexAccessor implements ILSMIndexAccessor, IInvertedInd
     public void openInvertedListCursor(IInvertedListCursor listCursor, ITupleReference searchKey)
             throws HyracksDataException, IndexException {
         throw new UnsupportedOperationException("Cannot open inverted list cursor on lsm inverted index.");
+    }
+
+    @Override
+    public void updateMeta(IValueReference key, IValueReference value) throws HyracksDataException {
+        // a hack because delete only gets the memory component
+        ctx.setOperation(IndexOperation.DELETE);
+        lsmHarness.updateMeta(ctx, key, value);
+    }
+
+    @Override
+    public void forceUpdateMeta(IValueReference key, IValueReference value) throws HyracksDataException {
+        // a hack because delete only gets the memory component
+        ctx.setOperation(IndexOperation.DELETE);
+        lsmHarness.forceUpdateMeta(ctx, key, value);
     }
 
 }

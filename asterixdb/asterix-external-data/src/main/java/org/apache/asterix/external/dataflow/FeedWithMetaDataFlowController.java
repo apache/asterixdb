@@ -28,15 +28,18 @@ import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 
 public class FeedWithMetaDataFlowController<T> extends FeedRecordDataFlowController<T> {
 
+    protected final IRecordWithMetadataParser<T> dataParser;
+
     public FeedWithMetaDataFlowController(IHyracksTaskContext ctx, FeedTupleForwarder tupleForwarder,
             FeedLogManager feedLogManager, int numOfOutputFields, IRecordWithMetadataParser<T> dataParser,
-            IRecordReader<T> recordReader, boolean sendMarker) throws HyracksDataException {
-        super(ctx, tupleForwarder, feedLogManager, numOfOutputFields, dataParser, recordReader, sendMarker);
+            IRecordReader<T> recordReader) throws HyracksDataException {
+        super(ctx, tupleForwarder, feedLogManager, numOfOutputFields, dataParser, recordReader);
+        this.dataParser = dataParser;
     }
 
     @Override
     protected void addMetaPart(ArrayTupleBuilder tb, IRawRecord<? extends T> record) throws HyracksDataException {
-        ((IRecordWithMetadataParser<T>) dataParser).parseMeta(tb.getDataOutput());
+        dataParser.parseMeta(tb.getDataOutput());
         tb.addFieldEndOffset();
     }
 }

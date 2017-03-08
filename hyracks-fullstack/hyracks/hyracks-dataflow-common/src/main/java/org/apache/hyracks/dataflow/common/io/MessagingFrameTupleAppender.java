@@ -22,8 +22,8 @@ import java.io.PrintStream;
 import java.nio.ByteBuffer;
 
 import org.apache.hyracks.api.comm.FrameHelper;
+import org.apache.hyracks.api.comm.IFrame;
 import org.apache.hyracks.api.comm.IFrameWriter;
-import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.util.HyracksConstants;
@@ -36,24 +36,24 @@ import org.apache.hyracks.util.IntSerDeUtils;
  * This appender must only be used on network boundary
  */
 public class MessagingFrameTupleAppender extends FrameTupleAppender {
-
-    private final IHyracksTaskContext ctx;
-    private static final int NULL_MESSAGE_SIZE = 1;
+    public static final int NULL_MESSAGE_SIZE = 1;
     public static final byte NULL_FEED_MESSAGE = 0x01;
     public static final byte ACK_REQ_FEED_MESSAGE = 0x02;
     public static final byte MARKER_MESSAGE = 0x03;
+
+    private final IHyracksTaskContext ctx;
     private boolean initialized = false;
-    private VSizeFrame message;
+    private IFrame message;
 
     public MessagingFrameTupleAppender(IHyracksTaskContext ctx) {
         this.ctx = ctx;
     }
 
-    public static void printMessage(VSizeFrame message, PrintStream out) throws HyracksDataException {
+    public static void printMessage(IFrame message, PrintStream out) throws HyracksDataException {
         out.println(getMessageString(message));
     }
 
-    public static String getMessageString(VSizeFrame message) throws HyracksDataException {
+    public static String getMessageString(IFrame message) throws HyracksDataException {
         StringBuilder aString = new StringBuilder();
         aString.append("Message Type: ");
         switch (getMessageType(message)) {
@@ -76,7 +76,7 @@ public class MessagingFrameTupleAppender extends FrameTupleAppender {
         return aString.toString();
     }
 
-    public static byte getMessageType(VSizeFrame message) throws HyracksDataException {
+    public static byte getMessageType(IFrame message) throws HyracksDataException {
         switch (message.getBuffer().array()[0]) {
             case NULL_FEED_MESSAGE:
                 return NULL_FEED_MESSAGE;
@@ -105,15 +105,13 @@ public class MessagingFrameTupleAppender extends FrameTupleAppender {
 
     @Override
     public int getTupleCount() {
-        // if message is set, there is always a message. that message could be a null message (TODO: optimize)
-        return tupleCount + ((message == null) ? 0 : 1);
+        return tupleCount + 1;
     }
 
     @Override
     public void write(IFrameWriter outWriter, boolean clearFrame) throws HyracksDataException {
         if (!initialized) {
-            message = TaskUtil.<VSizeFrame> get(HyracksConstants.KEY_MESSAGE, ctx);
-            initialized = true;
+            init();
         }
         // If message fits, we append it, otherwise, we append a null message, then send a message only
         // frame with the message
@@ -125,7 +123,7 @@ public class MessagingFrameTupleAppender extends FrameTupleAppender {
         } else {
             ByteBuffer buffer = message.getBuffer();
             int messageSize = buffer.limit() - buffer.position();
-            if (hasEnoughSpace(1, messageSize)) {
+            if (hasEnoughSpace(0, messageSize)) {
                 appendMessage(buffer);
                 forward(outWriter);
             } else {
@@ -133,7 +131,7 @@ public class MessagingFrameTupleAppender extends FrameTupleAppender {
                     appendNullMessage();
                     forward(outWriter);
                 }
-                if (!hasEnoughSpace(1, messageSize)) {
+                if (!hasEnoughSpace(0, messageSize)) {
                     frame.ensureFrameSize(FrameHelper.calcAlignedFrameSizeToStore(1, messageSize, frame.getMinSize()));
                     reset(frame.getBuffer(), true);
                 }
@@ -141,6 +139,11 @@ public class MessagingFrameTupleAppender extends FrameTupleAppender {
                 forward(outWriter);
             }
         }
+    }
+
+    private void init() {
+        message = TaskUtil.get(HyracksConstants.KEY_MESSAGE, ctx);
+        initialized = true;
     }
 
     private void forward(IFrameWriter outWriter) throws HyracksDataException {
@@ -167,5 +170,14 @@ public class MessagingFrameTupleAppender extends FrameTupleAppender {
                 FrameHelper.getTupleCountOffset(frame.getFrameSize()) - 4 * (tupleCount + 1), tupleDataEndOffset);
         ++tupleCount;
         IntSerDeUtils.putInt(getBuffer().array(), FrameHelper.getTupleCountOffset(frame.getFrameSize()), tupleCount);
+    }
+
+    /*
+     * Always write and then flush to send out the message if exists
+     */
+    @Override
+    public void flush(IFrameWriter writer) throws HyracksDataException {
+        write(writer, true);
+        writer.flush();
     }
 }

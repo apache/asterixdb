@@ -18,7 +18,9 @@
  */
 package org.apache.asterix.app.replication.message;
 
-import org.apache.asterix.common.exceptions.ExceptionUtils;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import org.apache.asterix.common.messaging.api.INCMessageBroker;
 import org.apache.asterix.common.replication.INCLifecycleMessage;
 import org.apache.asterix.common.transactions.IRecoveryManager.SystemState;
@@ -26,9 +28,6 @@ import org.apache.asterix.runtime.utils.AppContextInfo;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.service.IControllerService;
 import org.apache.hyracks.control.nc.NodeControllerService;
-
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class StartupTaskRequestMessage implements INCLifecycleMessage {
 
@@ -48,7 +47,7 @@ public class StartupTaskRequestMessage implements INCLifecycleMessage {
             ((INCMessageBroker) cs.getApplicationContext().getMessageBroker()).sendMessageToCC(msg);
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Unable to send StartupTaskRequestMessage to CC", e);
-            throw ExceptionUtils.convertToHyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 

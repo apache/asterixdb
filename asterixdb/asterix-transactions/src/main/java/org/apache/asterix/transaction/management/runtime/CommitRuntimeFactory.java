@@ -29,14 +29,14 @@ public class CommitRuntimeFactory implements IPushRuntimeFactory {
 
     private static final long serialVersionUID = 1L;
 
-    private final JobId jobId;
-    private final int datasetId;
-    private final int[] primaryKeyFields;
-    private final boolean isTemporaryDatasetWriteJob;
-    private final boolean isWriteTransaction;
-    private final int upsertVarIdx;
-    private int[] datasetPartitions;
-    private final boolean isSink;
+    protected final JobId jobId;
+    protected final int datasetId;
+    protected final int[] primaryKeyFields;
+    protected final boolean isTemporaryDatasetWriteJob;
+    protected final boolean isWriteTransaction;
+    protected final int upsertVarIdx;
+    protected int[] datasetPartitions;
+    protected final boolean isSink;
 
     public CommitRuntimeFactory(JobId jobId, int datasetId, int[] primaryKeyFields, boolean isTemporaryDatasetWriteJob,
             boolean isWriteTransaction, int upsertVarIdx, int[] datasetPartitions, boolean isSink) {

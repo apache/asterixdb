@@ -27,11 +27,13 @@ import org.apache.asterix.external.api.IAdapterFactory;
 import org.apache.asterix.external.dataset.adapter.FeedAdapter;
 import org.apache.asterix.external.feed.policy.FeedPolicyAccessor;
 import org.apache.asterix.external.feed.runtime.AdapterRuntimeManager;
+import org.apache.hyracks.api.comm.IFrame;
 import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.util.HyracksConstants;
+import org.apache.hyracks.dataflow.common.io.MessagingFrameTupleAppender;
 import org.apache.hyracks.dataflow.common.utils.TaskUtil;
 
 /**
@@ -58,12 +60,21 @@ public class FeedIntakeOperatorNodePushable extends ActiveSourceOperatorNodePush
 
     @Override
     protected void start() throws HyracksDataException, InterruptedException {
-        writer.open();
         try {
+            writer.open();
             Thread.currentThread().setName("Intake Thread");
             FeedAdapter adapter = (FeedAdapter) adapterFactory.createAdapter(ctx, partition);
             adapterRuntimeManager = new AdapterRuntimeManager(ctx, runtimeId.getEntityId(), adapter, writer, partition);
-            TaskUtil.putInSharedMap(HyracksConstants.KEY_MESSAGE, new VSizeFrame(ctx), ctx);
+            IFrame message = new VSizeFrame(ctx);
+            TaskUtil.putInSharedMap(HyracksConstants.KEY_MESSAGE, message, ctx);
+            /*
+             * Set null feed message. Feed pipeline carries with it a message with each frame
+             * Initially, the message is set to a null message that can be changed by feed adapters.
+             * One use case is adapters which consume data sources that allow restartability. Such adapters
+             * can propagate progress information through the ingestion pipeline to storage nodes
+             */
+            message.getBuffer().put(MessagingFrameTupleAppender.NULL_FEED_MESSAGE);
+            message.getBuffer().flip();
             adapterRuntimeManager.start();
             synchronized (adapterRuntimeManager) {
                 while (!adapterRuntimeManager.isDone()) {

@@ -23,10 +23,6 @@ import org.apache.hyracks.data.std.api.IValueReference;
 public class MutableArrayValueReference implements IValueReference {
     private byte[] array;
 
-    public MutableArrayValueReference() {
-        //mutable array. user doesn't need to specify the array in advance
-    }
-
     public MutableArrayValueReference(byte[] array) {
         this.array = array;
     }

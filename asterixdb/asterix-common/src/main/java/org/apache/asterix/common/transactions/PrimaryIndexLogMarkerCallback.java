@@ -119,4 +119,8 @@ public class PrimaryIndexLogMarkerCallback implements ILogMarkerCallback {
         pointable.setLong(lsn);
         index.getCurrentMemoryComponent().getMetadata().put(ComponentMetadataUtil.MARKER_LSN_KEY, pointable);
     }
+
+    public ILSMIndex getIndex() {
+        return index;
+    }
 }

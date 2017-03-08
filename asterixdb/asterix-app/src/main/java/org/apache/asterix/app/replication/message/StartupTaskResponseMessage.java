@@ -23,7 +23,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.common.api.INCLifecycleTask;
-import org.apache.asterix.common.exceptions.ExceptionUtils;
 import org.apache.asterix.common.messaging.api.INCMessageBroker;
 import org.apache.asterix.common.replication.INCLifecycleMessage;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -62,7 +61,7 @@ public class StartupTaskResponseMessage implements INCLifecycleMessage {
             broker.sendMessageToCC(result);
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Failed sending message to cc", e);
-            throw ExceptionUtils.convertToHyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 

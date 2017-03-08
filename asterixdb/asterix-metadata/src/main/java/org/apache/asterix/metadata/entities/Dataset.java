@@ -29,14 +29,15 @@ import java.util.logging.Logger;
 import org.apache.asterix.active.ActiveJobNotificationHandler;
 import org.apache.asterix.active.IActiveEntityEventsListener;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
-import org.apache.asterix.common.metadata.IDataset;
 import org.apache.asterix.common.context.IStorageComponentProvider;
+import org.apache.asterix.common.dataflow.NoOpFrameOperationCallbackFactory;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.ioopcallbacks.LSMBTreeIOOperationCallbackFactory;
 import org.apache.asterix.common.ioopcallbacks.LSMBTreeWithBuddyIOOperationCallbackFactory;
 import org.apache.asterix.common.ioopcallbacks.LSMInvertedIndexIOOperationCallbackFactory;
 import org.apache.asterix.common.ioopcallbacks.LSMRTreeIOOperationCallbackFactory;
+import org.apache.asterix.common.metadata.IDataset;
 import org.apache.asterix.common.transactions.IRecoveryManager.ResourceType;
 import org.apache.asterix.common.transactions.JobId;
 import org.apache.asterix.common.utils.JobUtils;
@@ -84,6 +85,7 @@ import org.apache.hyracks.storage.am.common.api.ISearchOperationCallbackFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallbackFactory;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
+import org.apache.hyracks.storage.am.lsm.common.api.IFrameOperationCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
@@ -409,8 +411,8 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
             case LENGTH_PARTITIONED_WORD_INVIX:
             case SINGLE_PARTITION_NGRAM_INVIX:
             case SINGLE_PARTITION_WORD_INVIX:
-                return invertedIndexDataflowHelperFactoryProvider.getIndexDataflowHelperFactory(mdProvider, this,
-                        index, recordType, metaType, mergePolicyFactory, mergePolicyProperties, filterTypeTraits,
+                return invertedIndexDataflowHelperFactoryProvider.getIndexDataflowHelperFactory(mdProvider, this, index,
+                        recordType, metaType, mergePolicyFactory, mergePolicyProperties, filterTypeTraits,
                         filterCmpFactories);
             default:
                 throw new CompilationException(ErrorCode.COMPILATION_UNKNOWN_INDEX_TYPE,
@@ -576,5 +578,31 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
         return new CommitRuntimeFactory(jobId, datasetId, primaryKeyFields,
                 metadataProvider.isTemporaryDatasetWriteJob(), metadataProvider.isWriteTransaction(), upsertVarIdx,
                 datasetPartitions, isSink);
+    }
+
+    /**
+     * Get the index dataflow helper factory for the dataset's primary index
+     *
+     * @param mdProvider
+     *            an instance of metadata provider that is used to fetch metadata information
+     * @throws AlgebricksException
+     */
+    public IIndexDataflowHelperFactory getIndexDataflowHelperFactory(MetadataProvider mdProvider)
+            throws AlgebricksException {
+        if (getDatasetType() != DatasetType.INTERNAL) {
+            throw new AlgebricksException(ErrorCode.ASTERIX,
+                    ErrorCode.COMPILATION_DATASET_TYPE_DOES_NOT_HAVE_PRIMARY_INDEX, getDatasetType());
+        }
+        Index index = mdProvider.getIndex(getDataverseName(), getDatasetName(), getDatasetName());
+        ARecordType recordType = (ARecordType) mdProvider.findType(getItemTypeDataverseName(), getItemTypeName());
+        ARecordType metaType = (ARecordType) mdProvider.findType(getMetaItemTypeDataverseName(), getMetaItemTypeName());
+        Pair<ILSMMergePolicyFactory, Map<String, String>> compactionInfo =
+                DatasetUtil.getMergePolicyFactory(this, mdProvider.getMetadataTxnContext());
+        return getIndexDataflowHelperFactory(mdProvider, index, recordType, metaType, compactionInfo.first,
+                compactionInfo.second);
+    }
+
+    public IFrameOperationCallbackFactory getFrameOpCallbackFactory() {
+        return NoOpFrameOperationCallbackFactory.INSTANCE;
     }
 }

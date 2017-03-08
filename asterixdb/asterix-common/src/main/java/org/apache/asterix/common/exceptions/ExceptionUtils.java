@@ -18,8 +18,6 @@
  */
 package org.apache.asterix.common.exceptions;
 
-import org.apache.hyracks.api.exceptions.HyracksDataException;
-
 public class ExceptionUtils {
     public static final String INCORRECT_PARAMETER = "Incorrect parameter.\n";
     public static final String MISSING_PARAMETER = "Missing parameter.\n";
@@ -33,30 +31,5 @@ public class ExceptionUtils {
     public static String incorrectParameterMessage(String parameterName, String expectedValue, String passedValue) {
         return INCORRECT_PARAMETER + PARAMETER_NAME + parameterName + System.lineSeparator() + EXPECTED_VALUE
                 + expectedValue + System.lineSeparator() + PASSED_VALUE + passedValue;
-    }
-
-    public static HyracksDataException suppressIntoHyracksDataException(HyracksDataException hde, Throwable th) {
-        if (hde == null) {
-            return new HyracksDataException(th);
-        } else {
-            hde.addSuppressed(th);
-            return hde;
-        }
-    }
-
-    public static Throwable suppress(Throwable suppressor, Throwable suppressed) {
-        if (suppressor == null) {
-            return suppressed;
-        } else if (suppressed != null) {
-            suppressor.addSuppressed(suppressed);
-        }
-        return suppressor;
-    }
-
-    public static HyracksDataException convertToHyracksDataException(Throwable throwable) {
-        if (throwable == null || throwable instanceof HyracksDataException) {
-            return (HyracksDataException) throwable;
-        }
-        return new HyracksDataException(throwable);
     }
 }

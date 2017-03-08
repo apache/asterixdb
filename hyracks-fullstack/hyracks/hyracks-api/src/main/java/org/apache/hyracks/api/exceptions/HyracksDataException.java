@@ -28,8 +28,10 @@ import org.apache.hyracks.api.util.ErrorMessageUtil;
  */
 public class HyracksDataException extends HyracksException {
 
+    private static final long serialVersionUID = 1L;
+
     public static HyracksDataException create(Throwable cause) {
-        if (cause instanceof HyracksDataException) {
+        if (cause instanceof HyracksDataException || cause == null) {
             return (HyracksDataException) cause;
         }
         return new HyracksDataException(cause);
@@ -46,6 +48,14 @@ public class HyracksDataException extends HyracksException {
     public static HyracksDataException create(HyracksDataException e, String nodeId) {
         return new HyracksDataException(e.getComponent(), e.getErrorCode(), e.getMessage(), e.getCause(), nodeId, e
                 .getParams());
+    }
+
+    public static HyracksDataException suppress(HyracksDataException root, Throwable th) {
+        if (root == null) {
+            return HyracksDataException.create(th);
+        }
+        root.addSuppressed(th);
+        return root;
     }
 
     public HyracksDataException(String component, int errorCode, String message, Throwable cause, String nodeId,

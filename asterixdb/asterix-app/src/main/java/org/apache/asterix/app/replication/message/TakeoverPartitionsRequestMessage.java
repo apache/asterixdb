@@ -24,7 +24,6 @@ import java.util.logging.Logger;
 
 import org.apache.asterix.common.api.IAppRuntimeContext;
 import org.apache.asterix.common.exceptions.ACIDException;
-import org.apache.asterix.common.exceptions.ExceptionUtils;
 import org.apache.asterix.common.messaging.api.INCMessageBroker;
 import org.apache.asterix.common.replication.INCLifecycleMessage;
 import org.apache.asterix.common.replication.IRemoteRecoveryManager;
@@ -86,7 +85,7 @@ public class TakeoverPartitionsRequestMessage implements INCLifecycleMessage {
                 remoteRecoeryManager.takeoverPartitons(partitions);
             } catch (IOException | ACIDException e) {
                 LOGGER.log(Level.SEVERE, "Failure taking over partitions", e);
-                hde = ExceptionUtils.suppressIntoHyracksDataException(hde, e);
+                hde = HyracksDataException.suppress(hde, e);
             } finally {
                 //send response after takeover is completed
                 TakeoverPartitionsResponseMessage reponse = new TakeoverPartitionsResponseMessage(requestId,
@@ -95,7 +94,7 @@ public class TakeoverPartitionsRequestMessage implements INCLifecycleMessage {
                     broker.sendMessageToCC(reponse);
                 } catch (Exception e) {
                     LOGGER.log(Level.SEVERE, "Failure taking over partitions", e);
-                    hde = ExceptionUtils.suppressIntoHyracksDataException(hde, e);
+                    hde = HyracksDataException.suppress(hde, e);
                 }
             }
             if (hde != null) {
