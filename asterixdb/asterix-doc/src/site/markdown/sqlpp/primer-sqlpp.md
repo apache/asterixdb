@@ -248,12 +248,10 @@ object from the metadata dataset containing the descriptions of all datasets.
 
 ## Loading Data Into AsterixDB ##
 Okay, so far so good---AsterixDB is now ready for data, so let's give it some data to store.
-Our next task will be to load some sample data into the four datasets that we just defined.
+Our next task will be to insert some sample data into the four datasets that we just defined.
 Here we will load a tiny set of objects, defined in ADM format (a superset of JSON), into each dataset.
-In the boxes below you can see the actual data instances contained in each of the provided sample files.
-In order to load this data yourself, you should first store the four corresponding `.adm` files
-(whose URLs are indicated on top of each box below) into a filesystem directory accessible to your
-running AsterixDB instance.
+In the boxes below you can see insert statements with a list of the objects to be inserted. The files
+themselves are also linked.
 Take a few minutes to look carefully at each of the sample data sets.
 This will give you a better sense of the nature of the data that we are about to load and query.
 We should note that ADM format is a textual serialization of what AsterixDB will actually store;
@@ -262,80 +260,77 @@ of the data instances will be stored separately from their associated field name
 
 [Chirp Users](../data/chu.adm)
 
-        {"screenName":"NathanGiesen@211","lang":"en","friendsCount":18,"statusesCount":473,"name":"Nathan Giesen","followersCount":49416}
-        {"screenName":"ColineGeyer@63","lang":"en","friendsCount":121,"statusesCount":362,"name":"Coline Geyer","followersCount":17159}
-        {"screenName":"NilaMilliron_tw","lang":"en","friendsCount":445,"statusesCount":164,"name":"Nila Milliron","followersCount":22649}
+        USE TinySocial;
+
+        INSERT INTO ChirpUsers
+        ([
+        {"screenName":"NathanGiesen@211","lang":"en","friendsCount":18,"statusesCount":473,"name":"Nathan Giesen","followersCount":49416},
+        {"screenName":"ColineGeyer@63","lang":"en","friendsCount":121,"statusesCount":362,"name":"Coline Geyer","followersCount":17159},
+        {"screenName":"NilaMilliron_tw","lang":"en","friendsCount":445,"statusesCount":164,"name":"Nila Milliron","followersCount":22649},
         {"screenName":"ChangEwing_573","lang":"en","friendsCount":182,"statusesCount":394,"name":"Chang Ewing","followersCount":32136}
+        ]);
 
 [Chirp Messages](../data/chm.adm)
 
-        {"chirpId":"1","user":{"screenName":"NathanGiesen@211","lang":"en","friendsCount":39339,"statusesCount":473,"name":"Nathan Giesen","followersCount":49416},"senderLocation":point("47.44,80.65"),"sendTime":datetime("2008-04-26T10:10:00"),"referredTopics":{{"t-mobile","customization"}},"messageText":" love t-mobile its customization is good:)"}
-        {"chirpId":"2","user":{"screenName":"ColineGeyer@63","lang":"en","friendsCount":121,"statusesCount":362,"name":"Coline Geyer","followersCount":17159},"senderLocation":point("32.84,67.14"),"sendTime":datetime("2010-05-13T10:10:00"),"referredTopics":{{"verizon","shortcut-menu"}},"messageText":" like verizon its shortcut-menu is awesome:)"}
-        {"chirpId":"3","user":{"screenName":"NathanGiesen@211","lang":"en","friendsCount":39339,"statusesCount":473,"name":"Nathan Giesen","followersCount":49416},"senderLocation":point("29.72,75.8"),"sendTime":datetime("2006-11-04T10:10:00"),"referredTopics":{{"motorola","speed"}},"messageText":" like motorola the speed is good:)"}
-        {"chirpId":"4","user":{"screenName":"NathanGiesen@211","lang":"en","friendsCount":39339,"statusesCount":473,"name":"Nathan Giesen","followersCount":49416},"senderLocation":point("39.28,70.48"),"sendTime":datetime("2011-12-26T10:10:00"),"referredTopics":{{"sprint","voice-command"}},"messageText":" like sprint the voice-command is mind-blowing:)"}
-        {"chirpId":"5","user":{"screenName":"NathanGiesen@211","lang":"en","friendsCount":39339,"statusesCount":473,"name":"Nathan Giesen","followersCount":49416},"senderLocation":point("40.09,92.69"),"sendTime":datetime("2006-08-04T10:10:00"),"referredTopics":{{"motorola","speed"}},"messageText":" can't stand motorola its speed is terrible:("}
-        {"chirpId":"6","user":{"screenName":"ColineGeyer@63","lang":"en","friendsCount":121,"statusesCount":362,"name":"Coline Geyer","followersCount":17159},"senderLocation":point("47.51,83.99"),"sendTime":datetime("2010-05-07T10:10:00"),"referredTopics":{{"iphone","voice-clarity"}},"messageText":" like iphone the voice-clarity is good:)"}
-        {"chirpId":"7","user":{"screenName":"ChangEwing_573","lang":"en","friendsCount":182,"statusesCount":394,"name":"Chang Ewing","followersCount":32136},"senderLocation":point("36.21,72.6"),"sendTime":datetime("2011-08-25T10:10:00"),"referredTopics":{{"samsung","platform"}},"messageText":" like samsung the platform is good"}
-        {"chirpId":"8","user":{"screenName":"NathanGiesen@211","lang":"en","friendsCount":39339,"statusesCount":473,"name":"Nathan Giesen","followersCount":49416},"senderLocation":point("46.05,93.34"),"sendTime":datetime("2005-10-14T10:10:00"),"referredTopics":{{"t-mobile","shortcut-menu"}},"messageText":" like t-mobile the shortcut-menu is awesome:)"}
-        {"chirpId":"9","user":{"screenName":"NathanGiesen@211","lang":"en","friendsCount":39339,"statusesCount":473,"name":"Nathan Giesen","followersCount":49416},"senderLocation":point("36.86,74.62"),"sendTime":datetime("2012-07-21T10:10:00"),"referredTopics":{{"verizon","voicemail-service"}},"messageText":" love verizon its voicemail-service is awesome"}
-        {"chirpId":"10","user":{"screenName":"ColineGeyer@63","lang":"en","friendsCount":121,"statusesCount":362,"name":"Coline Geyer","followersCount":17159},"senderLocation":point("29.15,76.53"),"sendTime":datetime("2008-01-26T10:10:00"),"referredTopics":{{"verizon","voice-clarity"}},"messageText":" hate verizon its voice-clarity is OMG:("}
-        {"chirpId":"11","user":{"screenName":"NilaMilliron_tw","lang":"en","friendsCount":445,"statusesCount":164,"name":"Nila Milliron","followersCount":22649},"senderLocation":point("37.59,68.42"),"sendTime":datetime("2008-03-09T10:10:00"),"referredTopics":{{"iphone","platform"}},"messageText":" can't stand iphone its platform is terrible"}
+        USE TinySocial;
+
+        INSERT INTO ChirpMessages
+        ([
+        {"chirpId":"1","user":{"screenName":"NathanGiesen@211","lang":"en","friendsCount":39339,"statusesCount":473,"name":"Nathan Giesen","followersCount":49416},"senderLocation":point("47.44,80.65"),"sendTime":datetime("2008-04-26T10:10:00"),"referredTopics":{{"t-mobile","customization"}},"messageText":" love t-mobile its customization is good:)"},
+        {"chirpId":"2","user":{"screenName":"ColineGeyer@63","lang":"en","friendsCount":121,"statusesCount":362,"name":"Coline Geyer","followersCount":17159},"senderLocation":point("32.84,67.14"),"sendTime":datetime("2010-05-13T10:10:00"),"referredTopics":{{"verizon","shortcut-menu"}},"messageText":" like verizon its shortcut-menu is awesome:)"},
+        {"chirpId":"3","user":{"screenName":"NathanGiesen@211","lang":"en","friendsCount":39339,"statusesCount":473,"name":"Nathan Giesen","followersCount":49416},"senderLocation":point("29.72,75.8"),"sendTime":datetime("2006-11-04T10:10:00"),"referredTopics":{{"motorola","speed"}},"messageText":" like motorola the speed is good:)"},
+        {"chirpId":"4","user":{"screenName":"NathanGiesen@211","lang":"en","friendsCount":39339,"statusesCount":473,"name":"Nathan Giesen","followersCount":49416},"senderLocation":point("39.28,70.48"),"sendTime":datetime("2011-12-26T10:10:00"),"referredTopics":{{"sprint","voice-command"}},"messageText":" like sprint the voice-command is mind-blowing:)"},
+        {"chirpId":"5","user":{"screenName":"NathanGiesen@211","lang":"en","friendsCount":39339,"statusesCount":473,"name":"Nathan Giesen","followersCount":49416},"senderLocation":point("40.09,92.69"),"sendTime":datetime("2006-08-04T10:10:00"),"referredTopics":{{"motorola","speed"}},"messageText":" can't stand motorola its speed is terrible:("},
+        {"chirpId":"6","user":{"screenName":"ColineGeyer@63","lang":"en","friendsCount":121,"statusesCount":362,"name":"Coline Geyer","followersCount":17159},"senderLocation":point("47.51,83.99"),"sendTime":datetime("2010-05-07T10:10:00"),"referredTopics":{{"iphone","voice-clarity"}},"messageText":" like iphone the voice-clarity is good:)"},
+        {"chirpId":"7","user":{"screenName":"ChangEwing_573","lang":"en","friendsCount":182,"statusesCount":394,"name":"Chang Ewing","followersCount":32136},"senderLocation":point("36.21,72.6"),"sendTime":datetime("2011-08-25T10:10:00"),"referredTopics":{{"samsung","platform"}},"messageText":" like samsung the platform is good"},
+        {"chirpId":"8","user":{"screenName":"NathanGiesen@211","lang":"en","friendsCount":39339,"statusesCount":473,"name":"Nathan Giesen","followersCount":49416},"senderLocation":point("46.05,93.34"),"sendTime":datetime("2005-10-14T10:10:00"),"referredTopics":{{"t-mobile","shortcut-menu"}},"messageText":" like t-mobile the shortcut-menu is awesome:)"},
+        {"chirpId":"9","user":{"screenName":"NathanGiesen@211","lang":"en","friendsCount":39339,"statusesCount":473,"name":"Nathan Giesen","followersCount":49416},"senderLocation":point("36.86,74.62"),"sendTime":datetime("2012-07-21T10:10:00"),"referredTopics":{{"verizon","voicemail-service"}},"messageText":" love verizon its voicemail-service is awesome"},
+        {"chirpId":"10","user":{"screenName":"ColineGeyer@63","lang":"en","friendsCount":121,"statusesCount":362,"name":"Coline Geyer","followersCount":17159},"senderLocation":point("29.15,76.53"),"sendTime":datetime("2008-01-26T10:10:00"),"referredTopics":{{"verizon","voice-clarity"}},"messageText":" hate verizon its voice-clarity is OMG:("},
+        {"chirpId":"11","user":{"screenName":"NilaMilliron_tw","lang":"en","friendsCount":445,"statusesCount":164,"name":"Nila Milliron","followersCount":22649},"senderLocation":point("37.59,68.42"),"sendTime":datetime("2008-03-09T10:10:00"),"referredTopics":{{"iphone","platform"}},"messageText":" can't stand iphone its platform is terrible"},
         {"chirpId":"12","user":{"screenName":"OliJackson_512","lang":"en","friendsCount":445,"statusesCount":164,"name":"Oli Jackson","followersCount":22649},"senderLocation":point("24.82,94.63"),"sendTime":datetime("2010-02-13T10:10:00"),"referredTopics":{{"samsung","voice-command"}},"messageText":" like samsung the voice-command is amazing:)"}
+        ]);
 
 [Gleambook Users](../data/gbu.adm)
 
-        {"id":1,"alias":"Margarita","name":"MargaritaStoddard","nickname":"Mags","userSince":datetime("2012-08-20T10:10:00"),"friendIds":{{2,3,6,10}},"employment":[{"organizationName":"Codetechno","startDate":date("2006-08-06")},{"organizationName":"geomedia","startDate":date("2010-06-17"),"endDate":date("2010-01-26")}],"gender":"F"}
-        {"id":2,"alias":"Isbel","name":"IsbelDull","nickname":"Izzy","userSince":datetime("2011-01-22T10:10:00"),"friendIds":{{1,4}},"employment":[{"organizationName":"Hexviafind","startDate":date("2010-04-27")}]}
-        {"id":3,"alias":"Emory","name":"EmoryUnk","userSince":datetime("2012-07-10T10:10:00"),"friendIds":{{1,5,8,9}},"employment":[{"organizationName":"geomedia","startDate":date("2010-06-17"),"endDate":date("2010-01-26")}]}
-        {"id":4,"alias":"Nicholas","name":"NicholasStroh","userSince":datetime("2010-12-27T10:10:00"),"friendIds":{{2}},"employment":[{"organizationName":"Zamcorporation","startDate":date("2010-06-08")}]}
-        {"id":5,"alias":"Von","name":"VonKemble","userSince":datetime("2010-01-05T10:10:00"),"friendIds":{{3,6,10}},"employment":[{"organizationName":"Kongreen","startDate":date("2010-11-27")}]}
-        {"id":6,"alias":"Willis","name":"WillisWynne","userSince":datetime("2005-01-17T10:10:00"),"friendIds":{{1,3,7}},"employment":[{"organizationName":"jaydax","startDate":date("2009-05-15")}]}
-        {"id":7,"alias":"Suzanna","name":"SuzannaTillson","userSince":datetime("2012-08-07T10:10:00"),"friendIds":{{6}},"employment":[{"organizationName":"Labzatron","startDate":date("2011-04-19")}]}
-        {"id":8,"alias":"Nila","name":"NilaMilliron","userSince":datetime("2008-01-01T10:10:00"),"friendIds":{{3}},"employment":[{"organizationName":"Plexlane","startDate":date("2010-02-28")}]}
-        {"id":9,"alias":"Woodrow","name":"WoodrowNehling","nickname":"Woody","userSince":datetime("2005-09-20T10:10:00"),"friendIds":{{3,10}},"employment":[{"organizationName":"Zuncan","startDate":date("2003-04-22"),"endDate":date("2009-12-13")}]}
+        USE TinySocial;
+
+        INSERT INTO GleambookUsers
+        ([
+        {"id":1,"alias":"Margarita","name":"MargaritaStoddard","nickname":"Mags","userSince":datetime("2012-08-20T10:10:00"),"friendIds":{{2,3,6,10}},"employment":[{"organizationName":"Codetechno","startDate":date("2006-08-06")},{"organizationName":"geomedia","startDate":date("2010-06-17"),"endDate":date("2010-01-26")}],"gender":"F"},
+        {"id":2,"alias":"Isbel","name":"IsbelDull","nickname":"Izzy","userSince":datetime("2011-01-22T10:10:00"),"friendIds":{{1,4}},"employment":[{"organizationName":"Hexviafind","startDate":date("2010-04-27")}]},
+        {"id":3,"alias":"Emory","name":"EmoryUnk","userSince":datetime("2012-07-10T10:10:00"),"friendIds":{{1,5,8,9}},"employment":[{"organizationName":"geomedia","startDate":date("2010-06-17"),"endDate":date("2010-01-26")}]},
+        {"id":4,"alias":"Nicholas","name":"NicholasStroh","userSince":datetime("2010-12-27T10:10:00"),"friendIds":{{2}},"employment":[{"organizationName":"Zamcorporation","startDate":date("2010-06-08")}]},
+        {"id":5,"alias":"Von","name":"VonKemble","userSince":datetime("2010-01-05T10:10:00"),"friendIds":{{3,6,10}},"employment":[{"organizationName":"Kongreen","startDate":date("2010-11-27")}]},
+        {"id":6,"alias":"Willis","name":"WillisWynne","userSince":datetime("2005-01-17T10:10:00"),"friendIds":{{1,3,7}},"employment":[{"organizationName":"jaydax","startDate":date("2009-05-15")}]},
+        {"id":7,"alias":"Suzanna","name":"SuzannaTillson","userSince":datetime("2012-08-07T10:10:00"),"friendIds":{{6}},"employment":[{"organizationName":"Labzatron","startDate":date("2011-04-19")}]},
+        {"id":8,"alias":"Nila","name":"NilaMilliron","userSince":datetime("2008-01-01T10:10:00"),"friendIds":{{3}},"employment":[{"organizationName":"Plexlane","startDate":date("2010-02-28")}]},
+        {"id":9,"alias":"Woodrow","name":"WoodrowNehling","nickname":"Woody","userSince":datetime("2005-09-20T10:10:00"),"friendIds":{{3,10}},"employment":[{"organizationName":"Zuncan","startDate":date("2003-04-22"),"endDate":date("2009-12-13")}]},
         {"id":10,"alias":"Bram","name":"BramHatch","userSince":datetime("2010-10-16T10:10:00"),"friendIds":{{1,5,9}},"employment":[{"organizationName":"physcane","startDate":date("2007-06-05"),"endDate":date("2011-11-05")}]}
+        ]);
 
 [Gleambook Messages](../data/gbm.adm)
 
-        {"messageId":1,"authorId":3,"inResponseTo":2,"senderLocation":point("47.16,77.75"),"message":" love sprint its shortcut-menu is awesome:)"}
-        {"messageId":2,"authorId":1,"inResponseTo":4,"senderLocation":point("41.66,80.87"),"message":" dislike iphone its touch-screen is horrible"}
-        {"messageId":3,"authorId":2,"inResponseTo":4,"senderLocation":point("48.09,81.01"),"message":" like samsung the plan is amazing"}
-        {"messageId":4,"authorId":1,"inResponseTo":2,"senderLocation":point("37.73,97.04"),"message":" can't stand at&t the network is horrible:("}
-        {"messageId":5,"authorId":6,"inResponseTo":2,"senderLocation":point("34.7,90.76"),"message":" love sprint the customization is mind-blowing"}
-        {"messageId":6,"authorId":2,"inResponseTo":1,"senderLocation":point("31.5,75.56"),"message":" like t-mobile its platform is mind-blowing"}
-        {"messageId":7,"authorId":5,"inResponseTo":15,"senderLocation":point("32.91,85.05"),"message":" dislike sprint the speed is horrible"}
-        {"messageId":8,"authorId":1,"inResponseTo":11,"senderLocation":point("40.33,80.87"),"message":" like verizon the 3G is awesome:)"}
-        {"messageId":9,"authorId":3,"inResponseTo":12,"senderLocation":point("34.45,96.48"),"message":" love verizon its wireless is good"}
-        {"messageId":10,"authorId":1,"inResponseTo":12,"senderLocation":point("42.5,70.01"),"message":" can't stand motorola the touch-screen is terrible"}
-        {"messageId":11,"authorId":1,"inResponseTo":1,"senderLocation":point("38.97,77.49"),"message":" can't stand at&t its plan is terrible"}
-        {"messageId":12,"authorId":10,"inResponseTo":6,"senderLocation":point("42.26,77.76"),"message":" can't stand t-mobile its voicemail-service is OMG:("}
-        {"messageId":13,"authorId":10,"inResponseTo":4,"senderLocation":point("42.77,78.92"),"message":" dislike iphone the voice-command is bad:("}
-        {"messageId":14,"authorId":9,"inResponseTo":12,"senderLocation":point("41.33,85.28"),"message":" love at&t its 3G is good:)"}
-        {"messageId":15,"authorId":7,"inResponseTo":11,"senderLocation":point("44.47,67.11"),"message":" like iphone the voicemail-service is awesome"}
-
-It's loading time! We can use SQL++ _LOAD_ statements to populate our datasets with the sample objects shown above.
-The following shows how loading can be done for data stored in `.adm` files in your local filesystem.
-*Note:* You _MUST_ replace the `<Host Name>` and `<Absolute File Path>` placeholders in each load
-statement below with valid values based on the host IP address (or host name) for the machine and
-directory that you have downloaded the provided `.adm` files to.
-As you do so, be very, very careful to retain the two slashes in the load statements, i.e.,
-do not delete the two slashes that appear in front of the absolute path to your `.adm` files.
-(This will lead to a three-slash character sequence at the start of each load statement's file
-input path specification.)
-
         USE TinySocial;
 
-        LOAD DATASET GleambookUsers USING localfs
-            (("path"="<Host Name>://<Absolute File Path>/gbu.adm"),("format"="adm"));
+        INSERT INTO GleambookMessages
+        ([
+        {"messageId":1,"authorId":3,"inResponseTo":2,"senderLocation":point("47.16,77.75"),"message":" love sprint its shortcut-menu is awesome:)"},
+        {"messageId":2,"authorId":1,"inResponseTo":4,"senderLocation":point("41.66,80.87"),"message":" dislike iphone its touch-screen is horrible"},
+        {"messageId":3,"authorId":2,"inResponseTo":4,"senderLocation":point("48.09,81.01"),"message":" like samsung the plan is amazing"},
+        {"messageId":4,"authorId":1,"inResponseTo":2,"senderLocation":point("37.73,97.04"),"message":" can't stand at&t the network is horrible:("},
+        {"messageId":5,"authorId":6,"inResponseTo":2,"senderLocation":point("34.7,90.76"),"message":" love sprint the customization is mind-blowing"},
+        {"messageId":6,"authorId":2,"inResponseTo":1,"senderLocation":point("31.5,75.56"),"message":" like t-mobile its platform is mind-blowing"},
+        {"messageId":7,"authorId":5,"inResponseTo":15,"senderLocation":point("32.91,85.05"),"message":" dislike sprint the speed is horrible"},
+        {"messageId":8,"authorId":1,"inResponseTo":11,"senderLocation":point("40.33,80.87"),"message":" like verizon the 3G is awesome:)"},
+        {"messageId":9,"authorId":3,"inResponseTo":12,"senderLocation":point("34.45,96.48"),"message":" love verizon its wireless is good"},
+        {"messageId":10,"authorId":1,"inResponseTo":12,"senderLocation":point("42.5,70.01"),"message":" can't stand motorola the touch-screen is terrible"},
+        {"messageId":11,"authorId":1,"inResponseTo":1,"senderLocation":point("38.97,77.49"),"message":" can't stand at&t its plan is terrible"},
+        {"messageId":12,"authorId":10,"inResponseTo":6,"senderLocation":point("42.26,77.76"),"message":" can't stand t-mobile its voicemail-service is OMG:("},
+        {"messageId":13,"authorId":10,"inResponseTo":4,"senderLocation":point("42.77,78.92"),"message":" dislike iphone the voice-command is bad:("},
+        {"messageId":14,"authorId":9,"inResponseTo":12,"senderLocation":point("41.33,85.28"),"message":" love at&t its 3G is good:)"},
+        {"messageId":15,"authorId":7,"inResponseTo":11,"senderLocation":point("44.47,67.11"),"message":" like iphone the voicemail-service is awesome"}
+        ]);
 
-        LOAD DATASET GleambookMessages USING localfs
-            (("path"="<Host Name>://<Absolute File Path>/gbm.adm"),("format"="adm"));
-
-        LOAD DATASET ChirpUsers USING localfs
-            (("path"="<Host Name>://<Absolute File Path>/chu.adm"),("format"="adm"));
-
-        LOAD DATASET ChirpMessages USING localfs
-            (("path"="<Host Name>://<Absolute File Path>/chm.adm"),("format"="adm"));
 
 ## SQL++: Querying Your AsterixDB Data ##
 Congratulations! You now have sample social data stored (and indexed) in AsterixDB.
@@ -855,36 +850,6 @@ The expected result for this fuzzy join query is:
         { "chirp": { "chirpId": "5", "user": { "screenName": "NathanGiesen@211", "lang": "en", "friendsCount": 39339, "statusesCount": 473, "name": "Nathan Giesen", "followersCount": 49416 }, "senderLocation": point("40.09,92.69"), "sendTime": datetime("2006-08-04T10:10:00.000Z"), "referredTopics": {{ "motorola", "speed" }}, "messageText": " can't stand motorola its speed is terrible:(" }, "similarChirps": [  ] }
         { "chirp": { "chirpId": "8", "user": { "screenName": "NathanGiesen@211", "lang": "en", "friendsCount": 39339, "statusesCount": 473, "name": "Nathan Giesen", "followersCount": 49416 }, "senderLocation": point("46.05,93.34"), "sendTime": datetime("2005-10-14T10:10:00.000Z"), "referredTopics": {{ "t-mobile", "shortcut-menu" }}, "messageText": " like t-mobile the shortcut-menu is awesome:)" }, "similarChirps": [  ] }
 
-### Inserting New Data  ###
-In addition to loading and querying data, AsterixDB supports incremental additions to datasets via the SQL++ _INSERT_ statement.
-
-The following example adds a new chirp by user "NathanGiesen@211" to the ChirpMessages dataset.
-(An astute reader may notice that this chirp was issued a half an hour after his last chirp, so his counts
-have all gone up in the interim, although he appears not to have moved in the last half hour.)
-
-        USE TinySocial;
-
-        INSERT INTO ChirpMessages
-        (
-           {"chirpId": "13",
-            "user":
-                {"screenName": "NathanGiesen@211",
-                 "lang": "en",
-                 "friendsCount": 39345,
-                 "statusesCount": 479,
-                 "name": "Nathan Giesen",
-                 "followersCount": 49420
-                },
-            "senderLocation": point("47.44,80.65"),
-            "sendTime": datetime("2008-04-26T10:10:35"),
-            "referredTopics": {{"chirping"}},
-            "messageText": "chirpy chirp, my fellow chirpers!"
-           }
-        );
-
-In general, the data to be inserted may be specified using any valid SQL++ query expression.
-The insertion of a single object instance, as in this example, is just a special case where
-the query expression happens to be a object constructor involving only constants.
 
 ### Deleting Existing Data  ###
 In addition to inserting new data, AsterixDB supports deletion from datasets via the SQL++ _DELETE_ statement.
@@ -908,6 +873,20 @@ SQL++ will soon have _UPSERT_ as well.
 ### Transaction Support
 
 AsterixDB supports object-level ACID transactions that begin and terminate implicitly for each object inserted, deleted, or searched while a given SQL++ statement is being executed. This is quite similar to the level of transaction support found in today's NoSQL stores. AsterixDB does not support multi-statement transactions, and in fact an SQL++ statement that involves multiple objects can itself involve multiple independent object-level transactions. An example consequence of this is that, when an SQL++ statement attempts to insert 1000 objects, it is possible that the first 800 objects could end up being committed while the remaining 200 objects fail to be inserted. This situation could happen, for example, if a duplicate key exception occurs as the 801st insertion is attempted. If this happens, AsterixDB will report the error (e.g., a duplicate key exception) as the result of the offending SQL++ _INSERT_ statement, and the application logic above will need to take the appropriate action(s) needed to assess the resulting state and to clean up and/or continue as appropriate.
+
+
+### Loading New Data in Bulk  ###
+
+In addition to incremental additions to datasets via the SQL++ _insert_ statement, the _load_ statement can be used to
+take a file from a given node and load it in a more efficient fashion. Note however that a dataset can currently only
+be loaded if it is empty.
+
+The following example loads a file in ADM format from "/home/user/gbm.adm" from the node named "nc1" into the GleambookUsers dataset.
+
+    USE TinySocial;
+
+    LOAD DATASET GleambookUsers USING localfs
+        (("path"="nc1://home/user/gbu.adm"),("format"="adm"));
 
 ## Further Help ##
 That's it! You are now armed and dangerous with respect to semistructured data management using AsterixDB via SQL++.
