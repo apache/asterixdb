@@ -997,7 +997,7 @@ public class SpatialIntersectDescriptor extends AbstractScalarFunctionDynamicDes
                             case CIRCLE:
                                 switch (tag1) {
                                     case POINT:
-                                        res = pointInCircle(bytes0, offset0, bytes1, offset1);
+                                        res = pointInCircle(bytes1, offset1, bytes0, offset0);
                                         break;
                                     case LINE:
                                         res = lineCircleIntersection(bytes1, offset1, bytes0, offset0);

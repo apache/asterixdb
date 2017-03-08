@@ -28,6 +28,11 @@
     </compilation-unit>
   </test-case>
   <test-case FilePath="comparison">
+    <compilation-unit name="circle-point">
+      <output-dir compare="Text">circle-point</output-dir>
+    </compilation-unit>
+  </test-case>
+  <test-case FilePath="comparison">
     <compilation-unit name="datetime_range">
       <output-dir compare="Text">datetime_range</output-dir>
     </compilation-unit>
