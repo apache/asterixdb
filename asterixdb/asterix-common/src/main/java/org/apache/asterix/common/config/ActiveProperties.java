@@ -18,8 +18,6 @@
  */
 package org.apache.asterix.common.config;
 
-import static org.apache.hyracks.control.common.config.OptionTypes.INTEGER;
-import static org.apache.hyracks.control.common.config.OptionTypes.LONG;
 import static org.apache.hyracks.control.common.config.OptionTypes.LONG_BYTE_UNIT;
 import static org.apache.hyracks.util.StorageUtil.StorageUnit.MEGABYTE;
 
@@ -28,21 +26,22 @@ import org.apache.hyracks.api.config.IOptionType;
 import org.apache.hyracks.api.config.Section;
 import org.apache.hyracks.util.StorageUtil;
 
-public class FeedProperties extends AbstractProperties {
+public class ActiveProperties extends AbstractProperties {
 
     public enum Option implements IOption {
-        FEED_PENDING_WORK_THRESHOLD(INTEGER, 50),
-        FEED_MEMORY_GLOBAL_BUDGET(LONG_BYTE_UNIT, StorageUtil.getLongSizeInBytes(64L, MEGABYTE)),
-        FEED_MEMORY_AVAILABLE_WAIT_TIMEOUT(LONG, 10L),
-        FEED_CENTRAL_MANAGER_PORT(INTEGER, 4500),
-        FEED_MAX_THRESHOLD_PERIOD(INTEGER, 5);
+        ACTIVE_MEMORY_GLOBAL_BUDGET(
+                LONG_BYTE_UNIT,
+                StorageUtil.getLongSizeInBytes(64L, MEGABYTE),
+                "The memory budget (in bytes) for the active runtime");
 
         private final IOptionType type;
         private final Object defaultValue;
+        private final String description;
 
-        Option(IOptionType type, Object defaultValue) {
+        Option(IOptionType type, Object defaultValue, String description) {
             this.type = type;
             this.defaultValue = defaultValue;
+            this.description = description;
         }
 
         @Override
@@ -52,16 +51,7 @@ public class FeedProperties extends AbstractProperties {
 
         @Override
         public String description() {
-            // TODO(mblow): add missing descriptions
-            switch (this) {
-                case FEED_CENTRAL_MANAGER_PORT:
-                    return "port at which the Central Feed Manager listens for control messages from local Feed " +
-                            "Managers";
-                case FEED_MAX_THRESHOLD_PERIOD:
-                    return "maximum length of input queue before triggering corrective action";
-                default:
-                    return null;
-            }
+            return description;
         }
 
         @Override
@@ -75,27 +65,11 @@ public class FeedProperties extends AbstractProperties {
         }
     }
 
-    public FeedProperties(PropertiesAccessor accessor) {
+    public ActiveProperties(PropertiesAccessor accessor) {
         super(accessor);
     }
 
-    public int getPendingWorkThreshold() {
-        return accessor.getInt(Option.FEED_PENDING_WORK_THRESHOLD);
-    }
-
     public long getMemoryComponentGlobalBudget() {
-        return accessor.getLong(Option.FEED_MEMORY_GLOBAL_BUDGET);
-    }
-
-    public long getMemoryAvailableWaitTimeout() {
-        return accessor.getLong(Option.FEED_MEMORY_AVAILABLE_WAIT_TIMEOUT);
-    }
-
-    public int getFeedCentralManagerPort() {
-        return accessor.getInt(Option.FEED_CENTRAL_MANAGER_PORT);
-    }
-
-    public int getMaxSuccessiveThresholdPeriod() {
-        return accessor.getInt(Option.FEED_MAX_THRESHOLD_PERIOD);
+        return accessor.getLong(Option.ACTIVE_MEMORY_GLOBAL_BUDGET);
     }
 }

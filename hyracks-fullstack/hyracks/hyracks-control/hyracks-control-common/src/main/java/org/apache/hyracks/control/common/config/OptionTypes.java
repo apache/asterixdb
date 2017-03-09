@@ -41,6 +41,11 @@ public class OptionTypes {
         public Class<Integer> targetType() {
             return Integer.class;
         }
+
+        @Override
+        public String serializeToHumanReadable(Object value) {
+            return value + " (" + StorageUtil.toHumanReadableSize((int)value) + ")";
+        }
     };
 
     public static final IOptionType<Long> LONG_BYTE_UNIT = new IOptionType<Long>() {
@@ -52,6 +57,11 @@ public class OptionTypes {
         @Override
         public Class<Long> targetType() {
             return Long.class;
+        }
+
+        @Override
+        public String serializeToHumanReadable(Object value) {
+            return value + " (" + StorageUtil.toHumanReadableSize((long)value) + ")";
         }
     };
 

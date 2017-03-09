@@ -23,11 +23,11 @@ import java.util.function.Supplier;
 import java.util.logging.Logger;
 
 import org.apache.asterix.common.cluster.IGlobalRecoveryManager;
+import org.apache.asterix.common.config.ActiveProperties;
 import org.apache.asterix.common.config.BuildProperties;
 import org.apache.asterix.common.config.CompilerProperties;
 import org.apache.asterix.common.config.ExtensionProperties;
 import org.apache.asterix.common.config.ExternalProperties;
-import org.apache.asterix.common.config.FeedProperties;
 import org.apache.asterix.common.config.IPropertiesProvider;
 import org.apache.asterix.common.config.MessagingProperties;
 import org.apache.asterix.common.config.MetadataProperties;
@@ -64,7 +64,7 @@ public class AppContextInfo implements IApplicationContextInfo, IPropertiesProvi
     private MetadataProperties metadataProperties;
     private StorageProperties storageProperties;
     private TransactionProperties txnProperties;
-    private FeedProperties feedProperties;
+    private ActiveProperties activeProperties;
     private BuildProperties buildProperties;
     private ReplicationProperties replicationProperties;
     private ExtensionProperties extensionProperties;
@@ -100,7 +100,7 @@ public class AppContextInfo implements IApplicationContextInfo, IPropertiesProvi
         INSTANCE.metadataProperties = new MetadataProperties(propertiesAccessor);
         INSTANCE.storageProperties = new StorageProperties(propertiesAccessor);
         INSTANCE.txnProperties = new TransactionProperties(propertiesAccessor);
-        INSTANCE.feedProperties = new FeedProperties(propertiesAccessor);
+        INSTANCE.activeProperties = new ActiveProperties(propertiesAccessor);
         INSTANCE.extensionProperties = new ExtensionProperties(propertiesAccessor);
         INSTANCE.replicationProperties = new ReplicationProperties(propertiesAccessor);
         INSTANCE.ftStrategy = ftStrategy;
@@ -150,8 +150,8 @@ public class AppContextInfo implements IApplicationContextInfo, IPropertiesProvi
     }
 
     @Override
-    public FeedProperties getFeedProperties() {
-        return feedProperties;
+    public ActiveProperties getActiveProperties() {
+        return activeProperties;
     }
 
     @Override

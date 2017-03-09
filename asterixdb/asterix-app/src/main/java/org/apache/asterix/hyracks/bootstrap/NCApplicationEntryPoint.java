@@ -30,7 +30,6 @@ import org.apache.asterix.app.replication.message.StartupTaskRequestMessage;
 import org.apache.asterix.common.api.AsterixThreadFactory;
 import org.apache.asterix.common.api.IAppRuntimeContext;
 import org.apache.asterix.common.config.AsterixExtension;
-import org.apache.asterix.common.config.AsterixProperties;
 import org.apache.asterix.common.config.ClusterProperties;
 import org.apache.asterix.common.config.IPropertiesProvider;
 import org.apache.asterix.common.config.MessagingProperties;
@@ -54,7 +53,6 @@ import org.apache.hyracks.api.job.resource.NodeCapacity;
 import org.apache.hyracks.api.messages.IMessageBroker;
 import org.apache.hyracks.control.common.controllers.NCConfig;
 import org.apache.hyracks.control.nc.NodeControllerService;
-import org.apache.hyracks.util.file.FileUtil;
 
 public class NCApplicationEntryPoint extends org.apache.hyracks.control.nc.NCApplicationEntryPoint {
     private static final Logger LOGGER = Logger.getLogger(NCApplicationEntryPoint.class.getName());
@@ -65,15 +63,10 @@ public class NCApplicationEntryPoint extends org.apache.hyracks.control.nc.NCApp
     private boolean stopInitiated = false;
     private SystemState systemState;
 
-    public NCApplicationEntryPoint() {
-        NCConfig.defaultDir = FileUtil.joinPath(System.getProperty("java.io.tmpdir"), "asterixdb");
-        NCConfig.defaultAppClass = "org.apache.asterix.hyracks.bootstrap.NCApplicationEntryPoint";
-    }
-
     @Override
     public void registerConfigOptions(IConfigManager configManager) {
         super.registerConfigOptions(configManager);
-        AsterixProperties.registerConfigOptions(configManager);
+        ApplicationEntryPointHelper.registerConfigOptions(configManager);
     }
 
     @Override

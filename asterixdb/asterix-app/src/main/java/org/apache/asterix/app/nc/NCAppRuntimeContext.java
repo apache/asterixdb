@@ -33,12 +33,12 @@ import org.apache.asterix.common.api.IAppRuntimeContext;
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.api.ThreadExecutor;
 import org.apache.asterix.common.cluster.ClusterPartition;
+import org.apache.asterix.common.config.ActiveProperties;
 import org.apache.asterix.common.config.AsterixExtension;
 import org.apache.asterix.common.config.BuildProperties;
 import org.apache.asterix.common.config.CompilerProperties;
 import org.apache.asterix.common.config.ExtensionProperties;
 import org.apache.asterix.common.config.ExternalProperties;
-import org.apache.asterix.common.config.FeedProperties;
 import org.apache.asterix.common.config.MessagingProperties;
 import org.apache.asterix.common.config.MetadataProperties;
 import org.apache.asterix.common.config.NodeProperties;
@@ -110,7 +110,7 @@ public class NCAppRuntimeContext implements IAppRuntimeContext {
     private MetadataProperties metadataProperties;
     private StorageProperties storageProperties;
     private TransactionProperties txnProperties;
-    private FeedProperties feedProperties;
+    private ActiveProperties activeProperties;
     private BuildProperties buildProperties;
     private ReplicationProperties replicationProperties;
     private MessagingProperties messagingProperties;
@@ -148,7 +148,7 @@ public class NCAppRuntimeContext implements IAppRuntimeContext {
         metadataProperties = new MetadataProperties(propertiesAccessor);
         storageProperties = new StorageProperties(propertiesAccessor);
         txnProperties = new TransactionProperties(propertiesAccessor);
-        feedProperties = new FeedProperties(propertiesAccessor);
+        activeProperties = new ActiveProperties(propertiesAccessor);
         buildProperties = new BuildProperties(propertiesAccessor);
         replicationProperties = new ReplicationProperties(propertiesAccessor);
         messagingProperties = new MessagingProperties(propertiesAccessor);
@@ -206,7 +206,7 @@ public class NCAppRuntimeContext implements IAppRuntimeContext {
         isShuttingdown = false;
 
         activeManager = new ActiveManager(threadExecutor, ncApplicationContext.getNodeId(),
-                feedProperties.getMemoryComponentGlobalBudget(), compilerProperties.getFrameSize());
+                activeProperties.getMemoryComponentGlobalBudget(), compilerProperties.getFrameSize());
 
         if (replicationProperties.isParticipant(ncApplicationContext.getNodeId())) {
             String nodeId = ncApplicationContext.getNodeId();
@@ -364,8 +364,8 @@ public class NCAppRuntimeContext implements IAppRuntimeContext {
     }
 
     @Override
-    public FeedProperties getFeedProperties() {
-        return feedProperties;
+    public ActiveProperties getActiveProperties() {
+        return activeProperties;
     }
 
     @Override

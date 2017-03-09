@@ -242,24 +242,12 @@
     <description>The minimum log level to be displayed. (Default = INFO)
     </description>
   </property>
+
   <property>
-    <name>feed.memory.global.budget</name>
+    <name>active.memory.global.budget</name>
     <value>1073741824</value>
     <description>Feed memory budget (1 GB = 1073741824 Bytes)
     </description>
   </property>
 
-  <property>
-    <name>feed.pending.work.threshold</name>
-    <value>1000</value>
-    <description>Feed pending work threshold
-    </description>
-  </property>
-
-  <property>
-    <name>feed.max.threshold.period</name>
-    <value>100</value>
-    <description>Feed max threshold period
-    </description>
-  </property>
 </asterixConfiguration>

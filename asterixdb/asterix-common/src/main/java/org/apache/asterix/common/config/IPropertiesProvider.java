@@ -29,7 +29,7 @@ public interface IPropertiesProvider {
 
     ExternalProperties getExternalProperties();
 
-    FeedProperties getFeedProperties();
+    ActiveProperties getActiveProperties();
 
     BuildProperties getBuildProperties();
 

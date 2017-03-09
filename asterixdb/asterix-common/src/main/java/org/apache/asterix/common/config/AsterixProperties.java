@@ -39,14 +39,14 @@ public class AsterixProperties {
                 CompilerProperties.Option.class,
                 MetadataProperties.Option.class,
                 ExternalProperties.Option.class,
-                FeedProperties.Option.class,
+                ActiveProperties.Option.class,
                 MessagingProperties.Option.class,
                 ReplicationProperties.Option.class,
                 StorageProperties.Option.class,
                 TransactionProperties.Option.class);
 
         // we need to process the old-style asterix config before we apply defaults!
-        configManager.addConfigurator(IConfigManager.APPLY_DEFAULTS_METRIC - 1, () -> {
+        configManager.addConfigurator(IConfigManager.ConfiguratorMetric.APPLY_DEFAULTS.metric() - 1, () -> {
             try {
                 PropertiesAccessor.getInstance(configManager.getAppConfig());
             } catch (AsterixException e) {

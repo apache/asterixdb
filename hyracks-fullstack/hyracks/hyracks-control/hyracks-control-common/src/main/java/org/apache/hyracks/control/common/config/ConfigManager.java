@@ -92,15 +92,19 @@ public class ConfigManager implements IConfigManager, Serializable {
         for (Section section : Section.values()) {
             allSections.add(section.sectionName());
         }
-        addConfigurator(PARSE_INI_POINTERS_METRIC, this::extractIniPointersFromCommandLine);
-        addConfigurator(PARSE_INI_METRIC, this::parseIni);
-        addConfigurator(PARSE_COMMAND_LINE_METRIC, this::processCommandLine);
-        addConfigurator(APPLY_DEFAULTS_METRIC, this::applyDefaults);
+        addConfigurator(ConfiguratorMetric.PARSE_INI_POINTERS, this::extractIniPointersFromCommandLine);
+        addConfigurator(ConfiguratorMetric.PARSE_INI, this::parseIni);
+        addConfigurator(ConfiguratorMetric.PARSE_COMMAND_LINE, this::processCommandLine);
+        addConfigurator(ConfiguratorMetric.APPLY_DEFAULTS, this::applyDefaults);
     }
 
     @Override
     public void addConfigurator(int metric, IConfigurator configurator) {
         configurators.computeIfAbsent(metric, metric1 -> new ArrayList<>()).add(configurator);
+    }
+
+    private void addConfigurator(ConfiguratorMetric metric, IConfigurator configurator) {
+        addConfigurator(metric.metric(), configurator);
     }
 
     @Override
@@ -340,10 +344,9 @@ public class ConfigManager implements IConfigManager, Serializable {
                                     new CompositeMap<>(nodeMap.getValue(), definedMap, new NoOpMapMutator()), option,
                                     nodeMap.getKey()));
                 }
-                // also push the defaults to the shared map, if the CC requests NC properties, they should receive the
-                // defaults -- TODO (mblow): seems lame, should log warning on access
+            } else {
+                entry.getValue().values().forEach(option -> getOrDefault(configurationMap, option, null));
             }
-            entry.getValue().values().forEach(option -> getOrDefault(configurationMap, option, null));
         }
     }
 
@@ -514,10 +517,11 @@ public class ConfigManager implements IConfigManager, Serializable {
             } else if (value instanceof Function) {
                 // TODO(mblow): defer usage calculation to enable evaluation of function
                 buf.append("<function>");
+            } else if (value == null) {
+                buf.append("<undefined>");
             } else {
-                buf.append(option.type().serializeToString(resolveDefault(option, appConfig)));
+                buf.append(option.type().serializeToHumanReadable(resolveDefault(option, appConfig)));
             }
-            // TODO(mblow): defer usage calculation to enable inclusion of evaluated actual default
         }
         return buf.toString();
     }

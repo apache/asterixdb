@@ -40,8 +40,7 @@ import org.apache.hyracks.util.file.FileUtil;
 public class NCConfig extends ControllerConfig {
     private static final long serialVersionUID = 3L;
 
-    public static String defaultDir = System.getProperty("java.io.tmpdir");
-    public static String defaultAppClass = null;
+    public static String defaultAppClass;
 
     public enum Option implements IOption {
         ADDRESS(STRING, InetAddress.getLoopbackAddress().getHostAddress()),

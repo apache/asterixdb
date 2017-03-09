@@ -24,102 +24,167 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import org.apache.asterix.hyracks.bootstrap.CCApplicationEntryPoint;
+import org.apache.commons.lang3.StringEscapeUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hyracks.api.config.IOption;
 import org.apache.hyracks.api.config.Section;
 import org.apache.hyracks.control.common.config.ConfigManager;
+import org.apache.hyracks.control.common.controllers.ControllerConfig;
 import org.apache.hyracks.util.file.FileUtil;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
 public class ConfigUsageTest {
+    private ConfigManager configManager;
+    final EnumMap<Column, Integer> maxWidths = new EnumMap<>(Column.class);
+
+    enum Column {
+        SECTION,
+        PARAMETER,
+        MEANING,
+        DEFAULT
+    }
 
     private static final String CSV_FILE = FileUtil.joinPath("target", "surefire-reports", "config-options.csv");
 
+    @Before
+    public void setup() {
+        configManager = getConfigManager();
+    }
+
     @Test
     public void generateUsage() {
-        generateUsage("| ", " | ", " |", true, System.err);
+        final EnumMap<Column, Boolean> align = new EnumMap<>(Column.class);
+        align.put(Column.SECTION, true);
+        align.put(Column.PARAMETER, true);
+        System.err.println();
+        generateUsage("| ", " | ", " |", align, System.err);
     }
 
     @Test
     public void generateUsageCSV() throws IOException {
         new File(CSV_FILE).getParentFile().mkdirs();
         try (final PrintStream output = new PrintStream(new FileOutputStream(CSV_FILE))) {
-            generateUsage("\"", "\",\"", "\"", false, output);
+            generateUsage("\"", "\",\"", "\"", new EnumMap<>(Column.class), output);
             // TODO(mblow): add some validation (in addition to just ensuring no exceptions...)
         }
     }
 
-    public void generateUsage(String startDelim, String midDelim, String endDelim, boolean align, PrintStream output) {
+    protected ConfigManager getConfigManager() {
         ConfigManager configManager = new ConfigManager();
         CCApplicationEntryPoint aep = new CCApplicationEntryPoint();
         aep.registerConfig(configManager);
+        ControllerConfig.defaultDir = ControllerConfig.defaultDir.replace(System.getProperty("java.io.tmpdir"),
+                "${java.io.tmpdir}/");
+        return configManager;
+    }
+
+    protected Set<Section> getSections(ConfigManager configManager) {
+        TreeSet<Section> sections = new TreeSet<>(Comparator.comparing(Section::sectionName));
+        sections.addAll(configManager.getSections());
+        sections.remove(Section.LOCALNC);
+        return sections;
+    }
+
+    protected Predicate<IOption> optionSelector() {
+        return o -> !o.hidden() && o != ControllerConfig.Option.CONFIG_FILE
+                && o != ControllerConfig.Option.CONFIG_FILE_URL;
+    }
+
+    protected Set<IOption> getSectionOptions(ConfigManager configManager, Section section) {
+        return configManager.getOptions(section).stream().filter(optionSelector()).collect(Collectors.toSet());
+    }
+
+    public void generateUsage(String startDelim, String midDelim, String endDelim, EnumMap<Column, Boolean> align,
+            PrintStream output) {
+        ConfigManager configManager = getConfigManager();
         StringBuilder buf = new StringBuilder();
-        int maxSectionWidth = 0;
-        int maxNameWidth = 0;
-        int maxDescriptionWidth = 0;
-        int maxDefaultWidth = 0;
-        if (align) {
-            for (Section section : configManager.getSections()) {
-                maxSectionWidth = Math.max(maxSectionWidth, section.sectionName().length());
-                for (IOption option : configManager.getOptions(section)) {
-                    if (option.hidden()) {
-                        continue;
+
+        final Column[] columns = Column.values();
+        for (Section section : getSections(configManager)) {
+            for (IOption option : getSectionOptions(configManager, section)) {
+                for (Column column : columns) {
+                    if (align.computeIfAbsent(column, c -> false)) {
+                        calculateMaxWidth(option, column);
                     }
-                    maxNameWidth = Math.max(maxNameWidth, option.ini().length());
-                    maxDescriptionWidth = Math.max(maxDescriptionWidth,
-                            option.description() == null ? 0 : option.description().length());
-                    maxDefaultWidth = Math.max(maxDefaultWidth, configManager.defaultTextForUsage(option, IOption::ini)
-                            .length());
                 }
             }
         }
-        maxDescriptionWidth = Math.min(80, maxDescriptionWidth);
-        for (Section section : configManager.getSections()) {
-            List<IOption> options = new ArrayList<>(configManager.getOptions(section));
+        // output header
+        for (Column column : columns) {
+            buf.append(column.ordinal() == 0 ? startDelim : midDelim);
+            pad(buf, StringUtils.capitalize(column.name().toLowerCase()), calculateMaxWidth(column, column.name()));
+        }
+        buf.append(endDelim).append('\n');
+
+        StringBuilder sepLine = new StringBuilder();
+        for (Column column : columns) {
+            sepLine.append(column.ordinal() == 0 ? startDelim : midDelim);
+            pad(sepLine, "", maxWidths.get(column), '-');
+        }
+        sepLine.append(endDelim).append('\n');
+        buf.append(sepLine.toString().replace(' ', '-'));
+
+        for (Section section : getSections(configManager)) {
+            List<IOption> options = new ArrayList<>(getSectionOptions(configManager, section));
             options.sort(Comparator.comparing(IOption::ini));
             for (IOption option : options) {
-                if (option.hidden()) {
-                    continue;
+                for (Column column : columns) {
+                    buf.append(column.ordinal() == 0 ? startDelim : midDelim);
+                    if (column == Column.SECTION) {
+                        center(buf, extractValue(column, option), maxWidths.get(column));
+                    } else {
+                        pad(buf, extractValue(column, option), maxWidths.get(column));
+                    }
                 }
-                buf.append(startDelim);
-                center(buf, section.sectionName(), maxSectionWidth).append(midDelim);
-                pad(buf, option.ini(), maxNameWidth).append(midDelim);
-                String description = option.description() == null ? "" : option.description();
-                String defaultText = configManager.defaultTextForUsage(option, IOption::ini);
-                boolean extra = false;
-                while (align && description.length() > maxDescriptionWidth) {
-                    int cut = description.lastIndexOf(' ', maxDescriptionWidth);
-                    pad(buf, description.substring(0, cut), maxDescriptionWidth).append(midDelim);
-                    pad(buf, defaultText, maxDefaultWidth).append(endDelim).append('\n');
-                    defaultText = "";
-                    description = description.substring(cut + 1);
-                    buf.append(startDelim);
-                    pad(buf, "", maxSectionWidth).append(midDelim);
-                    pad(buf, "", maxNameWidth).append(midDelim);
-                }
-                pad(buf, description, maxDescriptionWidth).append(midDelim);
-                pad(buf, defaultText, maxDefaultWidth).append(endDelim).append('\n');
-                if (extra) {
-                    buf.append(startDelim);
-                    pad(buf, "", maxSectionWidth).append(midDelim);
-                    pad(buf, "", maxNameWidth).append(midDelim);
-                    pad(buf, "", maxDescriptionWidth).append(midDelim);
-                    pad(buf, "", maxDefaultWidth).append(endDelim).append('\n');
-                }
+                buf.append(endDelim).append('\n');
             }
         }
         output.println(buf);
+    }
+
+    protected int calculateMaxWidth(IOption option, Column column) {
+        final String string = extractValue(column, option);
+        return calculateMaxWidth(column, string);
+    }
+
+    private int calculateMaxWidth(Column column, String string) {
+        final int maxWidth = Math.max(maxWidths.computeIfAbsent(column, c -> 0), string.length());
+        maxWidths.put(column, maxWidth);
+        return maxWidth;
+    }
+
+    private String extractValue(Column column, IOption option) {
+        switch (column) {
+            case SECTION:
+                return option.section().sectionName();
+            case PARAMETER:
+                return option.ini();
+            case MEANING:
+                return option.description() == null ? "N/A" : option.description();
+            case DEFAULT:
+                return configManager.defaultTextForUsage(option, IOption::ini);
+            default:
+                throw new IllegalStateException(String.valueOf(column));
+        }
     }
 
     private StringBuilder center(StringBuilder buf, String string, int width) {
         if (string == null) {
             string = "";
         }
+        string = StringEscapeUtils.escapeHtml4(string);
         int pad = width - string.length();
         int leftPad = pad / 2;
         for (int i = leftPad; i > 0; i--) {
@@ -133,12 +198,17 @@ public class ConfigUsageTest {
     }
 
     private StringBuilder pad(StringBuilder buf, String string, int width) {
+        return pad(buf, string, width, ' ');
+    }
+
+    private StringBuilder pad(StringBuilder buf, String string, int width, char padChar) {
         if (string == null) {
             string = "";
         }
+        string = StringEscapeUtils.escapeHtml4(string);
         buf.append(string);
         for (int i = width - string.length(); i > 0; i--) {
-            buf.append(' ');
+            buf.append(padChar);
         }
         return buf;
     }

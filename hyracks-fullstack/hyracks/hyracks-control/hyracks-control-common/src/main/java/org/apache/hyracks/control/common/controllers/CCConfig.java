@@ -38,10 +38,10 @@ import org.ini4j.Ini;
 @SuppressWarnings("SameParameterValue")
 public class CCConfig extends ControllerConfig {
 
-    public static String defaultDir = System.getProperty("java.io.tmpdir");
+    public static String defaultAppClass;
 
     public enum Option implements IOption {
-        APP_CLASS(STRING),
+        APP_CLASS(STRING, (Supplier<String>)() -> defaultAppClass),
         ADDRESS(STRING, InetAddress.getLoopbackAddress().getHostAddress()),
         CLUSTER_LISTEN_ADDRESS(STRING, ADDRESS),
         CLUSTER_LISTEN_PORT(INTEGER, 1099),

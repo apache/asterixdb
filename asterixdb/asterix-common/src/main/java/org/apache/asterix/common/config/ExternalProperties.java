@@ -27,22 +27,25 @@ import org.apache.hyracks.api.config.Section;
 public class ExternalProperties extends AbstractProperties {
 
     public enum Option implements IOption {
-        WEB_PORT(INTEGER, 19001),
-        WEB_QUERYINTERFACE_PORT(INTEGER, 19006),
-        API_PORT(INTEGER, 19002),
-        FEED_PORT(INTEGER, 19003),
-        LOG_LEVEL(LEVEL, java.util.logging.Level.WARNING),
-        MAX_WAIT_ACTIVE_CLUSTER(INTEGER, 60),
-        PLOT_ACTIVATE(BOOLEAN, false),
-        CC_JAVA_OPTS(STRING, "-Xmx1024m"),
-        NC_JAVA_OPTS(STRING, "-Xmx1024m");
+        WEB_PORT(INTEGER, 19001, "The listen port of the legacy query interface"),
+        WEB_QUERYINTERFACE_PORT(INTEGER, 19006, "The listen port of the query web interface"),
+        API_PORT(INTEGER, 19002, "The listen port of the API server"),
+        ACTIVE_PORT(INTEGER, 19003, "The listen port of the active server"),
+        LOG_LEVEL(LEVEL, java.util.logging.Level.WARNING, "The logging level for master and slave processes"),
+        MAX_WAIT_ACTIVE_CLUSTER(INTEGER, 60, "The max pending time (in seconds) for cluster startup. After the " +
+                "threshold, if the cluster still is not up and running, it is considered unavailable"),
+        PLOT_ACTIVATE(BOOLEAN, false, null),
+        CC_JAVA_OPTS(STRING, "-Xmx1024m", "The JVM options passed to the cluster controller process by managix"),
+        NC_JAVA_OPTS(STRING, "-Xmx1024m", "The JVM options passed to the node controller process(es) by managix");
 
         private final IOptionType type;
         private final Object defaultValue;
+        private final String description;
 
-        Option(IOptionType type, Object defaultValue) {
+        Option(IOptionType type, Object defaultValue, String description) {
             this.type = type;
             this.defaultValue = defaultValue;
+            this.description = description;
         }
 
         @Override
@@ -51,7 +54,7 @@ public class ExternalProperties extends AbstractProperties {
                 case WEB_PORT:
                 case WEB_QUERYINTERFACE_PORT:
                 case API_PORT:
-                case FEED_PORT:
+                case ACTIVE_PORT:
                     return Section.CC;
                 case LOG_LEVEL:
                 case MAX_WAIT_ACTIVE_CLUSTER:
@@ -67,8 +70,7 @@ public class ExternalProperties extends AbstractProperties {
 
         @Override
         public String description() {
-            // TODO(mblow): add descriptions
-            return null;
+            return description;
         }
 
         @Override
@@ -98,8 +100,8 @@ public class ExternalProperties extends AbstractProperties {
         return accessor.getInt(Option.API_PORT);
     }
 
-    public int getFeedServerPort() {
-        return accessor.getInt(Option.FEED_PORT);
+    public int getActiveServerPort() {
+        return accessor.getInt(Option.ACTIVE_PORT);
     }
 
     public java.util.logging.Level getLogLevel() {

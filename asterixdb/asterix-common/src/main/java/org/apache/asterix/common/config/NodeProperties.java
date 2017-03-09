@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.common.config;
 
+import java.util.function.Supplier;
+
 import org.apache.hyracks.api.config.IOption;
 import org.apache.hyracks.api.config.IOptionType;
 import org.apache.hyracks.api.config.Section;
@@ -28,18 +30,32 @@ import org.apache.hyracks.util.file.FileUtil;
 public class NodeProperties extends AbstractProperties {
 
     public enum Option implements IOption {
-        INITIAL_RUN(OptionTypes.BOOLEAN, false),
-        CORE_DUMP_DIR(OptionTypes.STRING, FileUtil.joinPath(NCConfig.defaultDir, "coredump")),
-        TXN_LOG_DIR(OptionTypes.STRING, FileUtil.joinPath(NCConfig.defaultDir, "txn-log")),
-        STORAGE_SUBDIR(OptionTypes.STRING, "storage"),
+        INITIAL_RUN(OptionTypes.BOOLEAN, false, "A flag indicating if it's the first time the NC is started"),
+        CORE_DUMP_DIR(
+                OptionTypes.STRING,
+                (Supplier<String>) () -> FileUtil.joinPath(NCConfig.defaultDir, "coredump"),
+                "The directory where node core dumps should be written"),
+        TXN_LOG_DIR(
+                OptionTypes.STRING,
+                (Supplier<String>) () -> FileUtil.joinPath(NCConfig.defaultDir, "txn-log"),
+                "The directory where transaction logs should be stored"),
+        STORAGE_SUBDIR(OptionTypes.STRING, "storage", "The subdirectory name under each iodevice used for storage"),
         ;
 
         private final IOptionType type;
         private final Object defaultValue;
+        private final String description;
 
-        <T> Option(IOptionType<T> type, T defaultValue) {
+        <T> Option(IOptionType<T> type, T defaultValue, String description) {
             this.type = type;
             this.defaultValue = defaultValue;
+            this.description = description;
+        }
+
+        <T> Option(IOptionType<T> type, Supplier<T> defaultValue, String description) {
+            this.type = type;
+            this.defaultValue = defaultValue;
+            this.description = description;
         }
 
         @Override
@@ -49,12 +65,7 @@ public class NodeProperties extends AbstractProperties {
 
         @Override
         public String description() {
-            switch (this) {
-                case INITIAL_RUN:
-                    return "A flag indicating if it's the first time the NC is started";
-                default:
-                    return null;
-            }
+            return description;
         }
 
         @Override

@@ -30,6 +30,8 @@ import org.apache.hyracks.control.common.config.OptionTypes;
 
 public class ControllerConfig implements Serializable {
 
+    public static String defaultDir = System.getProperty("java.io.tmpdir");
+
     public enum Option implements IOption {
         CONFIG_FILE(OptionTypes.STRING, "Specify path to master configuration file"),
         CONFIG_FILE_URL(OptionTypes.URL, "Specify URL to master configuration file");

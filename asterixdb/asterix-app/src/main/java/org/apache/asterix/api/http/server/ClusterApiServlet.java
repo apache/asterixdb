@@ -136,7 +136,7 @@ public class ClusterApiServlet extends AbstractServlet {
     }
 
     protected Predicate<IOption> getConfigSelector() {
-        return option -> option != ControllerConfig.Option.CONFIG_FILE
+        return option -> !option.hidden() && option != ControllerConfig.Option.CONFIG_FILE
                 && option != ControllerConfig.Option.CONFIG_FILE_URL;
     }
 

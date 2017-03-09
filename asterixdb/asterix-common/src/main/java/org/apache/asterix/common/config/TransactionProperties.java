@@ -18,8 +18,11 @@
  */
 package org.apache.asterix.common.config;
 
-import static org.apache.hyracks.control.common.config.OptionTypes.*;
-import static org.apache.hyracks.util.StorageUtil.StorageUnit.*;
+import static org.apache.hyracks.control.common.config.OptionTypes.INTEGER;
+import static org.apache.hyracks.control.common.config.OptionTypes.INTEGER_BYTE_UNIT;
+import static org.apache.hyracks.control.common.config.OptionTypes.LONG_BYTE_UNIT;
+import static org.apache.hyracks.util.StorageUtil.StorageUnit.KILOBYTE;
+import static org.apache.hyracks.util.StorageUtil.StorageUnit.MEGABYTE;
 
 import java.util.Map;
 
@@ -31,25 +34,31 @@ import org.apache.hyracks.util.StorageUtil;
 public class TransactionProperties extends AbstractProperties {
 
     public enum Option implements IOption {
-        TXN_LOG_BUFFER_NUMPAGES(INTEGER, 8),
-        TXN_LOG_BUFFER_PAGESIZE(INTEGER_BYTE_UNIT, StorageUtil.getIntSizeInBytes(128, KILOBYTE)),
-        TXN_LOG_PARTITIONSIZE(LONG_BYTE_UNIT, StorageUtil.getLongSizeInBytes(256L, MEGABYTE)),
-        TXN_LOG_CHECKPOINT_LSNTHRESHOLD(INTEGER_BYTE_UNIT, StorageUtil.getIntSizeInBytes(64, MEGABYTE)),
-        TXN_LOG_CHECKPOINT_POLLFREQUENCY(INTEGER, 120),
-        TXN_LOG_CHECKPOINT_HISTORY(INTEGER, 0),
-        TXN_LOCK_ESCALATIONTHRESHOLD(INTEGER, 1000),
-        TXN_LOCK_SHRINKTIMER(INTEGER, 5000),
-        TXN_LOCK_TIMEOUT_WAITTHRESHOLD(INTEGER, 60000),
-        TXN_LOCK_TIMEOUT_SWEEPTHRESHOLD(INTEGER, 10000),
-        TXN_COMMITPROFILER_REPORTINTERVAL(INTEGER, 5),
-        TXN_JOB_RECOVERY_MEMORYSIZE(LONG_BYTE_UNIT, StorageUtil.getLongSizeInBytes(64L, MEGABYTE));
+        TXN_LOG_BUFFER_NUMPAGES(INTEGER, 8, "The number of pages in the transaction log tail"),
+        TXN_LOG_BUFFER_PAGESIZE(INTEGER_BYTE_UNIT, StorageUtil.getIntSizeInBytes(128, KILOBYTE),
+                "The page size (in bytes) for transaction log buffer"),
+        TXN_LOG_PARTITIONSIZE(LONG_BYTE_UNIT, StorageUtil.getLongSizeInBytes(256L, MEGABYTE), null),
+        TXN_LOG_CHECKPOINT_LSNTHRESHOLD(INTEGER_BYTE_UNIT, StorageUtil.getIntSizeInBytes(64, MEGABYTE),
+                "The checkpoint threshold (in terms of LSNs (log sequence numbers) that have been written to the " +
+                        "transaction log, i.e., the length of the transaction log) for transaction logs"),
+        TXN_LOG_CHECKPOINT_POLLFREQUENCY(INTEGER, 120, null),
+        TXN_LOG_CHECKPOINT_HISTORY(INTEGER, 0, "The number of checkpoints to keep in the transaction log"),
+        TXN_LOCK_ESCALATIONTHRESHOLD(INTEGER, 1000, null),
+        TXN_LOCK_SHRINKTIMER(INTEGER, 5000, null),
+        TXN_LOCK_TIMEOUT_WAITTHRESHOLD(INTEGER, 60000, "Time out (in milliseconds) of waiting for a lock"),
+        TXN_LOCK_TIMEOUT_SWEEPTHRESHOLD(INTEGER, 10000, "Interval (in milliseconds) for checking lock timeout"),
+        TXN_COMMITPROFILER_REPORTINTERVAL(INTEGER, 5, null),
+        TXN_JOB_RECOVERY_MEMORYSIZE(LONG_BYTE_UNIT, StorageUtil.getLongSizeInBytes(64L, MEGABYTE),
+                "The memory budget (in bytes) used for recovery");
 
         private final IOptionType type;
         private final Object defaultValue;
+        private final String description;
 
-        Option(IOptionType type, Object defaultValue) {
+        Option(IOptionType type, Object defaultValue, String description) {
             this.type = type;
             this.defaultValue = defaultValue;
+            this.description = description;
         }
 
         @Override
@@ -59,8 +68,7 @@ public class TransactionProperties extends AbstractProperties {
 
         @Override
         public String description() {
-            // TODO(mblow): add missing descriptions
-            return null;
+            return description;
         }
 
         @Override

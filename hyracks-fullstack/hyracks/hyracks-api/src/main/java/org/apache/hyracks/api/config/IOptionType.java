@@ -26,15 +26,24 @@ public interface IOptionType<T> {
 
     Class<T> targetType();
 
+    /**
+     * @return the value in a format suitable for serialized JSON
+     */
     default Object serializeToJSON(Object value) {
         return value;
     }
 
+    /**
+     * @return the value in a format suitable for serialized ini file
+     */
     default String serializeToIni(Object value) {
         return String.valueOf(value);
     }
 
-    default String serializeToString(Object value) {
+    /**
+     * @return the value in human-readable form (e.g. for usage)
+     */
+    default String serializeToHumanReadable(Object value) {
         return serializeToIni(value);
     }
 }

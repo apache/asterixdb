@@ -5,17 +5,12 @@
     "threadDumpUri" : "http://127.0.0.1:19002/admin/cluster/cc/threaddump"
   },
   "config" : {
+    "active.memory.global.budget" : 67108864,
     "compiler.framesize" : 32768,
     "compiler.groupmemory" : 163840,
     "compiler.joinmemory" : 262144,
     "compiler.parallelism" : -1,
-    "compiler.pregelix.home" : "~/pregelix",
     "compiler.sortmemory" : 327680,
-    "feed.central.manager.port" : 4500,
-    "feed.max.threshold.period" : 5,
-    "feed.memory.available.wait.timeout" : 10,
-    "feed.memory.global.budget" : 67108864,
-    "feed.pending.work.threshold" : 50,
     "instance.name" : "DEFAULT_INSTANCE",
     "log.level" : "WARNING",
     "max.wait.active.cluster" : 60,

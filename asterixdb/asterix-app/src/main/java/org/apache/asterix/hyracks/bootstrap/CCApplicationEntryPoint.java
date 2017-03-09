@@ -52,7 +52,6 @@ import org.apache.asterix.app.external.ExternalLibraryUtils;
 import org.apache.asterix.app.replication.FaultToleranceStrategyFactory;
 import org.apache.asterix.common.api.AsterixThreadFactory;
 import org.apache.asterix.common.config.AsterixExtension;
-import org.apache.asterix.common.config.AsterixProperties;
 import org.apache.asterix.common.config.ClusterProperties;
 import org.apache.asterix.common.config.ExternalProperties;
 import org.apache.asterix.common.config.MetadataProperties;
@@ -83,7 +82,6 @@ import org.apache.hyracks.control.common.controllers.CCConfig;
 import org.apache.hyracks.http.api.IServlet;
 import org.apache.hyracks.http.server.HttpServer;
 import org.apache.hyracks.http.server.WebManager;
-import org.apache.hyracks.util.file.FileUtil;
 
 public class CCApplicationEntryPoint extends org.apache.hyracks.control.cc.CCApplicationEntryPoint {
 
@@ -94,10 +92,6 @@ public class CCApplicationEntryPoint extends org.apache.hyracks.control.cc.CCApp
     protected IStorageComponentProvider componentProvider;
     private IJobCapacityController jobCapacityController;
     protected WebManager webManager;
-
-    public CCApplicationEntryPoint() {
-        CCConfig.defaultDir = FileUtil.joinPath(System.getProperty("java.io.tmpdir"), "asterixdb");
-    }
 
     @Override
     public void start(ICCApplicationContext ccAppCtx, String[] args) throws Exception {
@@ -237,7 +231,7 @@ public class CCApplicationEntryPoint extends org.apache.hyracks.control.cc.CCApp
 
     protected HttpServer setupFeedServer(ExternalProperties externalProperties) throws Exception {
         HttpServer feedServer = new HttpServer(webManager.getBosses(), webManager.getWorkers(),
-                externalProperties.getFeedServerPort());
+                externalProperties.getActiveServerPort());
         feedServer.setAttribute(HYRACKS_CONNECTION_ATTR, getNewHyracksClientConnection());
         feedServer.addServlet(new FeedServlet(feedServer.ctx(), new String[] { "/" }));
         return feedServer;
@@ -313,7 +307,7 @@ public class CCApplicationEntryPoint extends org.apache.hyracks.control.cc.CCApp
     @Override
     public void registerConfig(IConfigManager configManager) {
         super.registerConfig(configManager);
-        AsterixProperties.registerConfigOptions(configManager);
+        ApplicationEntryPointHelper.registerConfigOptions(configManager);
     }
 
     public static synchronized void setAsterixStateProxy(IAsterixStateProxy proxy) {

@@ -24,10 +24,23 @@ import java.util.function.Predicate;
 import org.kohsuke.args4j.OptionHandlerFilter;
 
 public interface IConfigManager {
-    int PARSE_INI_POINTERS_METRIC = 100;
-    int PARSE_INI_METRIC = 200;
-    int PARSE_COMMAND_LINE_METRIC = 300;
-    int APPLY_DEFAULTS_METRIC = 400;
+
+    enum ConfiguratorMetric {
+        PARSE_INI_POINTERS(100),
+        PARSE_INI(200),
+        PARSE_COMMAND_LINE(300),
+        APPLY_DEFAULTS(400);
+
+        private final int metric;
+
+        ConfiguratorMetric(int metric) {
+            this.metric = metric;
+        }
+
+        public int metric() {
+            return metric;
+        }
+    }
 
     void register(IOption... options);
 
