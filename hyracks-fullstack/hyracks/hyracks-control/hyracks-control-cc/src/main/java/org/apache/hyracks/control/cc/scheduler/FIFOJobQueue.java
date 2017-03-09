@@ -44,22 +44,23 @@ import org.apache.hyracks.control.cc.job.JobRun;
 public class FIFOJobQueue implements IJobQueue {
 
     private static final Logger LOGGER = Logger.getLogger(FIFOJobQueue.class.getName());
-    private static final int CAPACITY = 4096;
 
     private final Map<JobId, JobRun> jobListMap = new LinkedHashMap<>();
     private final IJobManager jobManager;
     private final IJobCapacityController jobCapacityController;
+    private final int jobQueueCapacity;
 
     public FIFOJobQueue(IJobManager jobManager, IJobCapacityController jobCapacityController) {
         this.jobManager = jobManager;
         this.jobCapacityController = jobCapacityController;
+        this.jobQueueCapacity = jobManager.getJobQueueCapacity();
     }
 
     @Override
     public void add(JobRun run) throws HyracksException {
         int size = jobListMap.size();
-        if (size >= CAPACITY) {
-            throw HyracksException.create(ErrorCode.JOB_QUEUE_FULL, CAPACITY);
+        if (size >= jobQueueCapacity) {
+            throw HyracksException.create(ErrorCode.JOB_QUEUE_FULL, jobQueueCapacity);
         }
         jobListMap.put(run.getJobId(), run);
     }

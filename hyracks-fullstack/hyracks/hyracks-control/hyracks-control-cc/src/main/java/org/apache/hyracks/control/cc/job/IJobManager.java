@@ -118,4 +118,8 @@ public interface IJobManager {
      */
     Collection<JobRun> getArchivedJobs();
 
+    /**
+     * @return the maximum number of jobs to queue before rejecting new jobs
+     */
+    int getJobQueueCapacity();
 }

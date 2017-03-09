@@ -285,6 +285,7 @@ public class JobManagerTest {
         when(ccs.getApplicationContext()).thenReturn(appCtx);
         when(ccs.getJobLogFile()).thenReturn(logFile);
         when(ccs.getNodeManager()).thenReturn(nodeManager);
+        when(ccs.getCCConfig()).thenReturn(ccConfig);
         return ccs;
     }
 

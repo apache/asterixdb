@@ -283,6 +283,11 @@ public class JobManager implements IJobManager {
         return runMapHistory.get(jobId);
     }
 
+    @Override
+    public int getJobQueueCapacity() {
+        return ccs.getCCConfig().getJobQueueCapacity();
+    }
+
     private void pickJobsToRun() throws HyracksException {
         List<JobRun> selectedRuns = jobQueue.pull();
         for (JobRun run : selectedRuns) {
@@ -335,5 +340,4 @@ public class JobManager implements IJobManager {
             throw HyracksException.create(ErrorCode.INVALID_INPUT_PARAMETER);
         }
     }
-
 }

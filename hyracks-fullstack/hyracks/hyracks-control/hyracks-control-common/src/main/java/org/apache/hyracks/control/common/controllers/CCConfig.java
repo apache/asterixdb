@@ -35,6 +35,7 @@ import org.apache.hyracks.control.common.config.ConfigManager;
 import org.apache.hyracks.util.file.FileUtil;
 import org.ini4j.Ini;
 
+@SuppressWarnings("SameParameterValue")
 public class CCConfig extends ControllerConfig {
 
     public static String defaultDir = System.getProperty("java.io.tmpdir");
@@ -60,6 +61,7 @@ public class CCConfig extends ControllerConfig {
         ROOT_DIR(STRING, (Supplier<String>)() -> FileUtil.joinPath(defaultDir, "ClusterControllerService")),
         CLUSTER_TOPOLOGY(STRING),
         JOB_QUEUE_CLASS(STRING, "org.apache.hyracks.control.cc.scheduler.FIFOJobQueue"),
+        JOB_QUEUE_CAPACITY(INTEGER, 4096),
         JOB_MANAGER_CLASS(STRING, "org.apache.hyracks.control.cc.job.JobManager");
 
         private final IOptionType parser;
@@ -143,6 +145,8 @@ public class CCConfig extends ControllerConfig {
                     return "Sets the XML file that defines the cluster topology";
                 case JOB_QUEUE_CLASS:
                     return "Specify the implementation class name for the job queue";
+                case JOB_QUEUE_CAPACITY:
+                    return "The maximum number of jobs to queue before rejecting new jobs";
                 case JOB_MANAGER_CLASS:
                     return "Specify the implementation class name for the job manager";
                 default:
@@ -332,5 +336,9 @@ public class CCConfig extends ControllerConfig {
 
     public void setJobManagerClass(String jobManagerClass) {
         configManager.set(Option.JOB_MANAGER_CLASS, jobManagerClass);
+    }
+
+    public int getJobQueueCapacity() {
+        return getAppConfig().getInt(Option.JOB_QUEUE_CAPACITY);
     }
 }
