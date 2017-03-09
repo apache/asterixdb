@@ -221,7 +221,7 @@ public class NCConfig extends ControllerConfig {
 
     public NCConfig(String nodeId, ConfigManager configManager) {
         super(configManager);
-        this.appConfig = configManager.getNodeEffectiveConfig(nodeId);
+        this.appConfig = nodeId == null ? configManager.getAppConfig() : configManager.getNodeEffectiveConfig(nodeId);
         configManager.register(Option.class);
         setNodeId(nodeId);
         this.nodeId = nodeId;
