@@ -31,7 +31,8 @@ public abstract class ClientCommand {
         GET_CLUSTER_STATE("Get state of cluster (errorcode 0 = ACTIVE, 1 = DOWN, 2 = UNUSABLE, 3 = OTHER)"),
         WAIT_FOR_CLUSTER("Wait for cluster to be ready (errorcode 0 = ACTIVE, non-zero = UNKNOWN)"),
         SHUTDOWN_CLUSTER("Instructs the cluster to shut down, leaving NCService processes intact"),
-        SHUTDOWN_CLUSTER_ALL("Instructs the cluster to shut down, including NCService processes");
+        SHUTDOWN_CLUSTER_ALL("Instructs the cluster to shut down, including NCService processes"),
+        SLEEP("Sleep for specified -timeout seconds (-timeout must be set and greater than zero)");
 
         private final String usage;
         private static final Map<String, Command> nameMap = new HashMap<>();

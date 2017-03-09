@@ -86,7 +86,7 @@ wmic process where ^
 set found=
 for /F "skip=1" %%P in ('type %tempfile%') DO set found=1
 if "%found%" == "1" (
-  timeout /T 1 /NOBREAK > nul
+  call "%INSTALLDIR%\bin\${HELPER_COMMAND}" sleep -timeout 1 -quiet
   goto :wait_loop
 )
 goto :post_shutdown

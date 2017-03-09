@@ -26,6 +26,7 @@ import org.apache.asterix.clienthelper.commands.ClientCommand.Command;
 import org.apache.asterix.clienthelper.commands.GetClusterStateCommand;
 import org.apache.asterix.clienthelper.commands.ShutdownAllCommand;
 import org.apache.asterix.clienthelper.commands.ShutdownCommand;
+import org.apache.asterix.clienthelper.commands.SleepCommand;
 import org.apache.asterix.clienthelper.commands.WaitForClusterCommand;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
@@ -111,6 +112,8 @@ public class AsterixHelperExecution {
                 return new ShutdownCommand(args);
             case SHUTDOWN_CLUSTER_ALL:
                 return new ShutdownAllCommand(args);
+            case SLEEP:
+                return new SleepCommand(args);
             default:
                 throw new IllegalStateException("NYI: " + command);
         }
