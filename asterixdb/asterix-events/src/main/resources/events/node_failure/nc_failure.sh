@@ -25,10 +25,10 @@ PID_INFO=`ps -ef |  grep asterix | grep -v grep | grep -v nc_join |  grep $PAREN
 PID=`echo $PID_INFO | cut -d " " -f2`
 kill -15 $PID
 
-cmd_output=$(jps|grep "^$PID\s")
+cmd_output=$(ps -ef | awk '{print $2}' |grep "^$PID$")
 while [ ${#cmd_output} -ne 0 ]
 do
   sleep 1
   kill -15 $PID
-  cmd_output=$(jps|grep "^$PID\s")
+  cmd_output=$(ps -ef | awk '{print $2}' |grep "^$PID$")
 done

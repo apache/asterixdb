@@ -17,7 +17,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-PID=`/usr/local/java/vms/java/bin/jps | grep CCDriver | awk '{print $1}'`
+PID=`ps -ef | awk '/java.*CCDriver/ {print $2}'`
 
 echo $PID
 kill -9 $PID

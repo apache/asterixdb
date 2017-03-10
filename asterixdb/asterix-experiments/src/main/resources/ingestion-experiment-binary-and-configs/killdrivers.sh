@@ -1,3 +1,3 @@
 #!/bin/bash
 
-jps | grep Driver | awk '{print $1}' | xargs kill -9
+ps -ef | awk '/java.*Driver/ {print $2}' | xargs kill -9

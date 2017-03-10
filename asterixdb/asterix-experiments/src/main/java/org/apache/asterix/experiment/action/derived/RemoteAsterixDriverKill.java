@@ -27,7 +27,8 @@ public class RemoteAsterixDriverKill extends AbstractRemoteExecutableAction {
 
     @Override
     protected String getCommand() {
-        return "jps | awk '{if ($2 == \"NCDriver\" || $2 == \"CCDriver\") print $1;}' | xargs -n 1 kill -9";
+        return "ps -ef | awk '/java.*org\\.apache\\.hyracks\\.control\\.[cn]c\\.[CN]CDriver/ {print $2}' " +
+                "| xargs -n 1 kill -9";
     }
 
 }
