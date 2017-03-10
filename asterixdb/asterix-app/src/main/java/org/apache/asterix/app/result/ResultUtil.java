@@ -115,8 +115,8 @@ public class ResultUtil {
     public static void webUIErrorHandler(PrintWriter out, Exception e) {
         String errorTemplate = readTemplateFile("/webui/errortemplate.html", "%s\n%s\n%s");
 
-        String errorOutput = String.format(errorTemplate, escapeHTML(extractErrorMessage(e)),
-                escapeHTML(extractErrorSummary(e)), escapeHTML(extractFullStackTrace(e)));
+        String errorOutput =
+                String.format(errorTemplate, extractErrorMessage(e), extractErrorSummary(e), extractFullStackTrace(e));
         out.println(errorOutput);
     }
 
