@@ -68,7 +68,7 @@ public class NCApplication extends BaseNCApplication {
     @Override
     public void registerConfig(IConfigManager configManager) {
         super.registerConfig(configManager);
-        ApplicationClassHelper.registerConfigOptions(configManager);
+        ApplicationConfigurator.registerConfigOptions(configManager);
     }
 
     @Override

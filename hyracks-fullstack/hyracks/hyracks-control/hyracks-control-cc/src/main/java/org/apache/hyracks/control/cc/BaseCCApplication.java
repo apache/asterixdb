@@ -22,7 +22,6 @@ import java.util.Arrays;
 
 import org.apache.hyracks.api.application.ICCApplication;
 import org.apache.hyracks.api.application.IServiceContext;
-import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.config.IConfigManager;
 import org.apache.hyracks.api.config.Section;
 import org.apache.hyracks.api.job.resource.DefaultJobCapacityController;
@@ -69,11 +68,6 @@ public class BaseCCApplication implements ICCApplication {
 
     @Override
     public Object getApplicationContext() {
-        return null;
-    }
-
-    @Override
-    public IHyracksClientConnection getHcc() throws Exception {
         return null;
     }
 }

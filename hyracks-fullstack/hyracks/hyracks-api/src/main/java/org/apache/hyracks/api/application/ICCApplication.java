@@ -18,13 +18,10 @@
  */
 package org.apache.hyracks.api.application;
 
-import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.job.resource.IJobCapacityController;
 
 public interface ICCApplication extends IApplication {
 
     IJobCapacityController getJobCapacityController();
-
-    IHyracksClientConnection getHcc() throws Exception; //NOSONAR
 
 }

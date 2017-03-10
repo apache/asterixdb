@@ -25,13 +25,12 @@ import org.apache.hyracks.control.common.controllers.ControllerConfig;
 import org.apache.hyracks.control.common.controllers.NCConfig;
 import org.apache.hyracks.util.file.FileUtil;
 
-class ApplicationClassHelper {
-    private ApplicationClassHelper() {
+class ApplicationConfigurator {
+    private ApplicationConfigurator() {
     }
 
     static void registerConfigOptions(IConfigManager configManager) {
         AsterixProperties.registerConfigOptions(configManager);
-
         ControllerConfig.defaultDir = FileUtil.joinPath(System.getProperty("java.io.tmpdir"), "asterixdb");
         NCConfig.defaultAppClass = NCApplication.class.getName();
         CCConfig.defaultAppClass = CCApplication.class.getName();

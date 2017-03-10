@@ -304,7 +304,7 @@ public class CCApplication extends BaseCCApplication {
     @Override
     public void registerConfig(IConfigManager configManager) {
         super.registerConfig(configManager);
-        ApplicationClassHelper.registerConfigOptions(configManager);
+        ApplicationConfigurator.registerConfigOptions(configManager);
     }
 
     public static synchronized void setAsterixStateProxy(IAsterixStateProxy proxy) {
@@ -316,8 +316,7 @@ public class CCApplication extends BaseCCApplication {
         return AppContextInfo.INSTANCE;
     }
 
-    @Override
-    public IHyracksClientConnection getHcc() throws Exception {
+    protected IHyracksClientConnection getHcc() throws Exception {
         String strIP = ccServiceCtx.getCCContext().getClusterControllerInfo().getClientNetAddress();
         int port = ccServiceCtx.getCCContext().getClusterControllerInfo().getClientNetPort();
         return new HyracksConnection(strIP, port);
