@@ -224,7 +224,6 @@
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>appassembler-maven-plugin</artifactId>
-        <version>1.10</version>
         <configuration>
           <assembleDirectory>
             ${project.build.directory}/appassembler
@@ -515,13 +514,6 @@
     <dependency>
       <groupId>org.codehaus.mojo.appassembler</groupId>
       <artifactId>appassembler-booter</artifactId>
-      <version>1.10</version>
-      <exclusions>
-        <exclusion>
-          <groupId>junit</groupId>
-          <artifactId>junit</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.apache.asterix</groupId>
