@@ -19,10 +19,14 @@
 package org.apache.hyracks.maven.license.freemarker;
 
 import java.io.File;
-import java.io.FileReader;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.Writer;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
+
+import org.apache.commons.io.IOUtils;
+import org.apache.hyracks.maven.license.LicenseUtil;
 
 import freemarker.cache.FileTemplateLoader;
 import freemarker.core.Environment;
@@ -34,8 +38,6 @@ import freemarker.template.TemplateException;
 import freemarker.template.TemplateModel;
 import freemarker.template.TemplateModelException;
 import freemarker.template.TemplateScalarModel;
-import org.apache.hyracks.maven.license.LicenseUtil;
-import org.apache.commons.io.IOUtils;
 
 public class LoadFileDirective implements TemplateDirectiveModel {
 
@@ -104,7 +106,7 @@ public class LoadFileDirective implements TemplateDirectiveModel {
                 LicenseUtil.readAndTrim(out, file);
                 out.write('\n');
             } else {
-                IOUtils.copy(new FileReader(file), out);
+                IOUtils.copy(new FileInputStream(file), out, StandardCharsets.UTF_8);
             }
         } else if (defaultParam != null ) {
             out.append(defaultParam).append("\n");

@@ -19,8 +19,10 @@
 package org.apache.hyracks.maven.license;
 
 import java.io.File;
-import java.io.FileReader;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -73,8 +75,10 @@ public class SupplementalModelHelper {
                 log.debug("Loading supplemental models from " + f.getAbsolutePath());
 
                 SupplementalDataModelXpp3Reader reader = new SupplementalDataModelXpp3Reader();
-                SupplementalDataModel supplementalModel = reader.read(new FileReader(f));
-                supplements.addAll(supplementalModel.getSupplement());
+                try (FileInputStream fis = new FileInputStream(f); Reader fileReader = new InputStreamReader(fis)) {
+                    SupplementalDataModel supplementalModel = reader.read(fileReader);
+                    supplements.addAll(supplementalModel.getSupplement());
+                }
             } catch (Exception e) {
                 String msg = "Error loading supplemental data models: " + e.getMessage();
                 log.error(msg, e);

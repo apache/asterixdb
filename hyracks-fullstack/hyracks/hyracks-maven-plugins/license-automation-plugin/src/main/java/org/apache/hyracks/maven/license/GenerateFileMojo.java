@@ -19,9 +19,11 @@
 package org.apache.hyracks.maven.license;
 
 import java.io.File;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.io.StringWriter;
+import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -175,7 +177,7 @@ public class GenerateFileMojo extends LicenseMojo {
         Configuration config = new Configuration();
         config.setTemplateLoader(new FileTemplateLoader(templateRootDir));
         for (GeneratedFile generation : generatedFiles) {
-            Template template = config.getTemplate(generation.getTemplate());
+            Template template = config.getTemplate(generation.getTemplate(), StandardCharsets.UTF_8.name());
 
             if (template == null) {
                 throw new IOException("Could not load template " + generation.getTemplate());
@@ -184,7 +186,8 @@ public class GenerateFileMojo extends LicenseMojo {
             outputDir.mkdirs();
             final File file = new File(outputDir, generation.getOutputFile());
             getLog().info("Writing " + file + "...");
-            try (final FileWriter writer = new FileWriter(file)) {
+            try (final FileOutputStream fos = new FileOutputStream(file);
+                    final Writer writer = new OutputStreamWriter(fos, StandardCharsets.UTF_8)) {
                 template.process(props, writer);
             }
         }
