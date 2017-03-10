@@ -56,7 +56,7 @@ public class AsterixVirtualBufferCacheProvider implements IVirtualBufferCachePro
                 deviceId = i;
             }
         }
-        return ((IAppRuntimeContext) ctx.getJobletContext().getApplicationContext().getApplicationObject())
+        return ((IAppRuntimeContext) ctx.getJobletContext().getServiceContext().getApplicationContext())
                 .getDatasetLifecycleManager().getVirtualBufferCaches(datasetID, deviceId);
     }
 

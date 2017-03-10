@@ -43,7 +43,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
-import org.apache.asterix.common.config.IPropertiesProvider;
 import org.apache.asterix.common.config.ReplicationProperties;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.ioopcallbacks.AbstractLSMIOOperationCallback;
@@ -64,7 +63,7 @@ import org.apache.asterix.transaction.management.service.recovery.AbstractCheckp
 import org.apache.asterix.transaction.management.service.recovery.TxnId;
 import org.apache.asterix.transaction.management.service.transaction.TransactionManagementConstants;
 import org.apache.commons.io.FileUtils;
-import org.apache.hyracks.api.application.INCApplicationContext;
+import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.lifecycle.ILifeCycleComponent;
 import org.apache.hyracks.storage.am.common.api.IIndex;
@@ -92,14 +91,14 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
     private final PersistentLocalResourceRepository localResourceRepository;
     private final ICheckpointManager checkpointManager;
     private SystemState state;
-    private final INCApplicationContext appCtx;
+    private final INCServiceContext serviceCtx;
 
-    public RecoveryManager(ITransactionSubsystem txnSubsystem, INCApplicationContext appCtx) {
-        this.appCtx = appCtx;
+    public RecoveryManager(ITransactionSubsystem txnSubsystem, INCServiceContext serviceCtx) {
+        this.serviceCtx = serviceCtx;
         this.txnSubsystem = txnSubsystem;
         logMgr = (LogManager) txnSubsystem.getLogManager();
-        ReplicationProperties repProperties = ((IPropertiesProvider) txnSubsystem.getAsterixAppRuntimeContextProvider()
-                .getAppContext()).getReplicationProperties();
+        ReplicationProperties repProperties =
+                txnSubsystem.getAsterixAppRuntimeContextProvider().getAppContext().getReplicationProperties();
         replicationEnabled = repProperties.isParticipant(txnSubsystem.getId());
         localResourceRepository = (PersistentLocalResourceRepository) txnSubsystem.getAsterixAppRuntimeContextProvider()
                 .getLocalResourceRepository();
@@ -374,7 +373,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
                                 index = (ILSMIndex) datasetLifecycleManager.get(localResource.getPath());
                                 if (index == null) {
                                     //#. create index instance and register to indexLifeCycleManager
-                                    index = localResourceMetadata.createIndexInstance(appCtx, localResource);
+                                    index = localResourceMetadata.createIndexInstance(serviceCtx, localResource);
                                     datasetLifecycleManager.register(localResource.getPath(), index);
                                     datasetLifecycleManager.open(localResource.getPath());
 

@@ -25,7 +25,6 @@ import org.apache.asterix.common.api.IAppRuntimeContext;
 import org.apache.asterix.common.messaging.api.IApplicationMessage;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.service.IControllerService;
-import org.apache.hyracks.control.nc.NodeControllerService;
 
 public class ActiveManagerMessage implements IApplicationMessage {
     public static final byte STOP_ACTIVITY = 0x00;
@@ -55,9 +54,7 @@ public class ActiveManagerMessage implements IApplicationMessage {
 
     @Override
     public void handle(IControllerService cs) throws HyracksDataException, InterruptedException {
-        NodeControllerService ncs = (NodeControllerService) cs;
-        IAppRuntimeContext appContext =
-                (IAppRuntimeContext) ncs.getApplicationContext().getApplicationObject();
+        IAppRuntimeContext appContext = (IAppRuntimeContext) cs.getApplicationContext();
         ((ActiveManager) appContext.getActiveManager()).submit(this);
     }
 

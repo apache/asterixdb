@@ -45,7 +45,7 @@ public class ThreadDumpTask implements Runnable {
         }
         try {
             ncs.getClusterController().notifyThreadDump(
-                    ncs.getApplicationContext().getNodeId(), requestId, result);
+                    ncs.getContext().getNodeId(), requestId, result);
         } catch (Exception e) {
             LOGGER.log(Level.WARNING, "Exception sending thread dump to CC", e);
         }

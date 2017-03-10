@@ -40,7 +40,7 @@ public class ResourceIdRequestMessage implements IApplicationMessage {
     public void handle(IControllerService cs) throws HyracksDataException, InterruptedException {
         try {
             ICCMessageBroker broker =
-                    (ICCMessageBroker) AppContextInfo.INSTANCE.getCCApplicationContext().getMessageBroker();
+                    (ICCMessageBroker) AppContextInfo.INSTANCE.getCCServiceContext().getMessageBroker();
             ResourceIdRequestResponseMessage reponse = new ResourceIdRequestResponseMessage();
             if (!ClusterStateManager.INSTANCE.isClusterActive()) {
                 reponse.setResourceId(-1);

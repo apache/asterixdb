@@ -44,7 +44,7 @@ public class StartupTaskRequestMessage implements INCLifecycleMessage {
     public static void send(NodeControllerService cs, SystemState systemState) throws HyracksDataException {
         try {
             StartupTaskRequestMessage msg = new StartupTaskRequestMessage(cs.getId(), systemState);
-            ((INCMessageBroker) cs.getApplicationContext().getMessageBroker()).sendMessageToCC(msg);
+            ((INCMessageBroker) cs.getContext().getMessageBroker()).sendMessageToCC(msg);
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Unable to send StartupTaskRequestMessage to CC", e);
             throw HyracksDataException.create(e);

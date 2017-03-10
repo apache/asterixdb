@@ -25,7 +25,7 @@ import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.hyracks.api.application.ICCApplicationEntryPoint;
+import org.apache.hyracks.api.application.ICCApplication;
 import org.apache.hyracks.control.common.config.ConfigManager;
 import org.apache.hyracks.control.common.config.ConfigUtils;
 import org.apache.hyracks.control.common.controllers.CCConfig;
@@ -40,10 +40,10 @@ public class CCDriver {
     public static void main(String[] args) throws Exception {
         try {
             final ConfigManager configManager = new ConfigManager(args);
-            ICCApplicationEntryPoint appEntryPoint = getAppEntryPoint(args);
-            appEntryPoint.registerConfig(configManager);
+            ICCApplication application = getApplication(args);
+            application.registerConfig(configManager);
             CCConfig ccConfig = new CCConfig(configManager);
-            ClusterControllerService ccService = new ClusterControllerService(ccConfig, appEntryPoint);
+            ClusterControllerService ccService = new ClusterControllerService(ccConfig, application);
             ccService.start();
             while (true) {
                 Thread.sleep(100000);
@@ -52,16 +52,16 @@ public class CCDriver {
             LOGGER.log(Level.FINE, "Exception parsing command line: " + Arrays.toString(args), e);
             System.exit(2);
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Exiting NCDriver due to exception", e);
+            LOGGER.log(Level.SEVERE, "Exiting CCDriver due to exception", e);
             System.exit(1);
         }
     }
 
-    private static ICCApplicationEntryPoint getAppEntryPoint(String[] args)
+    private static ICCApplication getApplication(String[] args)
             throws ClassNotFoundException, InstantiationException, IllegalAccessException, IOException {
         // determine app class so that we can use the correct implementation of the configuration...
         String appClassName = ConfigUtils.getOptionValue(args, APP_CLASS);
-        return appClassName != null ? (ICCApplicationEntryPoint) (Class.forName(appClassName)).newInstance()
-                : CCApplicationEntryPoint.INSTANCE;
+        return appClassName != null ? (ICCApplication) (Class.forName(appClassName)).newInstance()
+                : BaseCCApplication.INSTANCE;
     }
 }

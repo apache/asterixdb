@@ -45,7 +45,7 @@ public class UnDeployBinaryWork extends AbstractWork {
     public void run() {
         DeploymentStatus status;
         try {
-            DeploymentUtils.undeploy(deploymentId, ncs.getApplicationContext().getJobSerializerDeserializerContainer(),
+            DeploymentUtils.undeploy(deploymentId, ncs.getContext().getJobSerializerDeserializerContainer(),
                     ncs.getServerContext());
             status = DeploymentStatus.SUCCEED;
         } catch (Exception e) {

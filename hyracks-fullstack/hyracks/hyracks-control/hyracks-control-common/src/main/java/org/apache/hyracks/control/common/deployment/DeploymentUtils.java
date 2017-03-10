@@ -34,7 +34,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.hyracks.api.application.IApplicationContext;
+import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.deployment.DeploymentId;
 import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.job.IJobSerializerDeserializer;
@@ -111,18 +111,17 @@ public class DeploymentUtils {
      *            the bytes to be deserialized
      * @param deploymentId
      *            the deployment id
-     * @param appCtx
+     * @param serviceCtx
      * @return the deserialized object
      * @throws HyracksException
      */
-    public static Object deserialize(byte[] bytes, DeploymentId deploymentId, IApplicationContext appCtx)
+    public static Object deserialize(byte[] bytes, DeploymentId deploymentId, IServiceContext serviceCtx)
             throws HyracksException {
         try {
-            IJobSerializerDeserializerContainer jobSerDeContainer = appCtx.getJobSerializerDeserializerContainer();
+            IJobSerializerDeserializerContainer jobSerDeContainer = serviceCtx.getJobSerializerDeserializerContainer();
             IJobSerializerDeserializer jobSerDe = deploymentId == null ? null
                     : jobSerDeContainer.getJobSerializerDeserializer(deploymentId);
-            Object obj = jobSerDe == null ? JavaSerializationUtils.deserialize(bytes) : jobSerDe.deserialize(bytes);
-            return obj;
+            return jobSerDe == null ? JavaSerializationUtils.deserialize(bytes) : jobSerDe.deserialize(bytes);
         } catch (Exception e) {
             throw new HyracksException(e);
         }
@@ -133,14 +132,14 @@ public class DeploymentUtils {
      *
      * @param className
      * @param deploymentId
-     * @param appCtx
+     * @param serviceCtx
      * @return the loaded class
      * @throws HyracksException
      */
-    public static Class<?> loadClass(String className, DeploymentId deploymentId, IApplicationContext appCtx)
+    public static Class<?> loadClass(String className, DeploymentId deploymentId, IServiceContext serviceCtx)
             throws HyracksException {
         try {
-            IJobSerializerDeserializerContainer jobSerDeContainer = appCtx.getJobSerializerDeserializerContainer();
+            IJobSerializerDeserializerContainer jobSerDeContainer = serviceCtx.getJobSerializerDeserializerContainer();
             IJobSerializerDeserializer jobSerDe = deploymentId == null ? null
                     : jobSerDeContainer.getJobSerializerDeserializer(deploymentId);
             return jobSerDe == null ? JavaSerializationUtils.loadClass(className) : jobSerDe.loadClass(className);
@@ -157,7 +156,7 @@ public class DeploymentUtils {
      * @return
      * @throws HyracksException
      */
-    public static ClassLoader getClassLoader(DeploymentId deploymentId, IApplicationContext appCtx)
+    public static ClassLoader getClassLoader(DeploymentId deploymentId, IServiceContext appCtx)
             throws HyracksException {
         IJobSerializerDeserializerContainer jobSerDeContainer = appCtx.getJobSerializerDeserializerContainer();
         IJobSerializerDeserializer jobSerDe = deploymentId == null ? null
@@ -185,7 +184,7 @@ public class DeploymentUtils {
         while (tried < retryCount) {
             try {
                 tried++;
-                List<URL> downloadedFileURLs = new ArrayList<URL>();
+                List<URL> downloadedFileURLs = new ArrayList<>();
                 File dir = new File(deploymentDir);
                 if (!dir.exists()) {
                     FileUtils.forceMkdir(dir);

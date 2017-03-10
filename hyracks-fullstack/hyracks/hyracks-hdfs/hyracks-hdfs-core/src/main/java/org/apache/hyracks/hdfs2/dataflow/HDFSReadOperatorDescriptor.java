@@ -107,7 +107,7 @@ public class HDFSReadOperatorDescriptor extends AbstractSingleActivityOperatorDe
         final List<FileSplit> inputSplits = splitsFactory.getSplits();
 
         return new AbstractUnaryOutputSourceOperatorNodePushable() {
-            private String nodeName = ctx.getJobletContext().getApplicationContext().getNodeId();
+            private String nodeName = ctx.getJobletContext().getServiceContext().getNodeId();
             private ContextFactory ctxFactory = new ContextFactory();
 
             @SuppressWarnings("unchecked")

@@ -31,7 +31,7 @@ import org.apache.hyracks.api.client.NodeStatus;
 import org.apache.hyracks.api.comm.NetworkAddress;
 import org.apache.hyracks.api.topology.ClusterTopology;
 import org.apache.hyracks.api.topology.TopologyDefinitionParser;
-import org.apache.hyracks.hdfs.utils.TestUtils;
+import org.apache.hyracks.test.support.TestUtils;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 

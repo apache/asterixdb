@@ -31,7 +31,7 @@ import java.util.TreeSet;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import org.apache.asterix.hyracks.bootstrap.CCApplicationEntryPoint;
+import org.apache.asterix.hyracks.bootstrap.CCApplication;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hyracks.api.config.IOption;
@@ -83,8 +83,8 @@ public class ConfigUsageTest {
 
     protected ConfigManager getConfigManager() {
         ConfigManager configManager = new ConfigManager();
-        CCApplicationEntryPoint aep = new CCApplicationEntryPoint();
-        aep.registerConfig(configManager);
+        CCApplication application = new CCApplication();
+        application.registerConfig(configManager);
         ControllerConfig.defaultDir = ControllerConfig.defaultDir.replace(System.getProperty("java.io.tmpdir"),
                 "${java.io.tmpdir}/");
         return configManager;

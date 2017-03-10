@@ -52,7 +52,7 @@ import org.apache.hyracks.hdfs.scheduler.Scheduler;
 public class HDFSUtils {
 
     public static Scheduler initializeHDFSScheduler() throws  HyracksDataException {
-        ICCContext ccContext = AppContextInfo.INSTANCE.getCCApplicationContext().getCCContext();
+        ICCContext ccContext = AppContextInfo.INSTANCE.getCCServiceContext().getCCContext();
         Scheduler scheduler = null;
         try {
             scheduler = new Scheduler(ccContext.getClusterControllerInfo().getClientNetAddress(),
@@ -64,7 +64,7 @@ public class HDFSUtils {
     }
 
     public static IndexingScheduler initializeIndexingHDFSScheduler() throws HyracksDataException {
-        ICCContext ccContext = AppContextInfo.INSTANCE.getCCApplicationContext().getCCContext();
+        ICCContext ccContext = AppContextInfo.INSTANCE.getCCServiceContext().getCCContext();
         IndexingScheduler scheduler = null;
         try {
             scheduler = new IndexingScheduler(ccContext.getClusterControllerInfo().getClientNetAddress(),

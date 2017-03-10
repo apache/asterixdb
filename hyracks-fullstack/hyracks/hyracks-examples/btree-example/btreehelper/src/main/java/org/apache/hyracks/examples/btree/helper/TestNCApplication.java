@@ -18,27 +18,29 @@
  */
 package org.apache.hyracks.examples.btree.helper;
 
-import org.apache.hyracks.api.application.INCApplicationContext;
-import org.apache.hyracks.api.application.INCApplicationEntryPoint;
+import org.apache.hyracks.api.application.INCApplication;
+import org.apache.hyracks.api.application.INCServiceContext;
+import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.config.IConfigManager;
 import org.apache.hyracks.api.job.resource.NodeCapacity;
 
-public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
+public class TestNCApplication implements INCApplication {
+
+    private RuntimeContext rCtx;
 
     @Override
-    public void start(INCApplicationContext ncAppCtx, String[] args) throws Exception {
-        RuntimeContext rCtx = new RuntimeContext(ncAppCtx);
-        ncAppCtx.setApplicationObject(rCtx);
+    public void start(IServiceContext serviceCtx, String[] args) throws Exception {
+        rCtx = new RuntimeContext((INCServiceContext) serviceCtx);
     }
 
     @Override
-    public void notifyStartupComplete() throws Exception {
-
+    public void startupCompleted() throws Exception {
+        // No-op
     }
 
     @Override
     public void stop() throws Exception {
-
+        // No-op
     }
 
     @Override
@@ -47,8 +49,13 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
     }
 
     @Override
-    public void registerConfigOptions(IConfigManager configManager) {
+    public void registerConfig(IConfigManager configManager) {
         // no-op
+    }
+
+    @Override
+    public RuntimeContext getApplicationContext() {
+        return rCtx;
     }
 
 }

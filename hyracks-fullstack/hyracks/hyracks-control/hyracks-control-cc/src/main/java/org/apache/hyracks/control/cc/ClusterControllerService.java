@@ -41,7 +41,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.hyracks.api.application.ICCApplicationEntryPoint;
+import org.apache.hyracks.api.application.ICCApplication;
 import org.apache.hyracks.api.client.ClusterControllerInfo;
 import org.apache.hyracks.api.comm.NetworkAddress;
 import org.apache.hyracks.api.config.IApplicationConfig;
@@ -53,7 +53,7 @@ import org.apache.hyracks.api.job.resource.IJobCapacityController;
 import org.apache.hyracks.api.service.IControllerService;
 import org.apache.hyracks.api.topology.ClusterTopology;
 import org.apache.hyracks.api.topology.TopologyDefinitionParser;
-import org.apache.hyracks.control.cc.application.CCApplicationContext;
+import org.apache.hyracks.control.cc.application.CCServiceContext;
 import org.apache.hyracks.control.cc.cluster.INodeManager;
 import org.apache.hyracks.control.cc.cluster.NodeManager;
 import org.apache.hyracks.control.cc.dataset.DatasetDirectoryService;
@@ -102,7 +102,7 @@ public class ClusterControllerService implements IControllerService {
 
     private ClusterControllerInfo info;
 
-    private CCApplicationContext appCtx;
+    private CCServiceContext serviceCtx;
 
     private final PreDistributedJobStore preDistributedJobStore = new PreDistributedJobStore();
 
@@ -132,20 +132,19 @@ public class ClusterControllerService implements IControllerService {
 
     private ShutdownRun shutdownCallback;
 
-    private final ICCApplicationEntryPoint aep;
+    private final ICCApplication application;
 
     public ClusterControllerService(final CCConfig config) throws Exception {
-        this(config, getApplicationEntryPoint(config));
+        this(config, getApplication(config));
     }
 
-    public ClusterControllerService(final CCConfig config,
-                                    final ICCApplicationEntryPoint aep) throws Exception {
+    public ClusterControllerService(final CCConfig config, final ICCApplication application) throws Exception {
         this.ccConfig = config;
         this.configManager = ccConfig.getConfigManager();
-        if (aep == null) {
-            throw new IllegalArgumentException("ICCApplicationEntryPoint cannot be null");
+        if (application == null) {
+            throw new IllegalArgumentException("ICCApplication cannot be null");
         }
-        this.aep = aep;
+        this.application = application;
         configManager.processConfig();
         File jobLogFolder = new File(ccConfig.getRootDir(), "logs/jobs");
         jobLog = new LogFile(jobLogFolder);
@@ -209,11 +208,11 @@ public class ClusterControllerService implements IControllerService {
     }
 
     private void startApplication() throws Exception {
-        appCtx = new CCApplicationContext(this, serverCtx, ccContext, ccConfig.getAppConfig());
-        appCtx.addJobLifecycleListener(datasetDirectoryService);
-        executor = Executors.newCachedThreadPool(appCtx.getThreadFactory());
-        aep.start(appCtx, ccConfig.getAppArgsArray());
-        IJobCapacityController jobCapacityController = aep.getJobCapacityController();
+        serviceCtx = new CCServiceContext(this, serverCtx, ccContext, ccConfig.getAppConfig());
+        serviceCtx.addJobLifecycleListener(datasetDirectoryService);
+        executor = Executors.newCachedThreadPool(serviceCtx.getThreadFactory());
+        application.start(serviceCtx, ccConfig.getAppArgsArray());
+        IJobCapacityController jobCapacityController = application.getJobCapacityController();
 
         // Job manager is in charge of job lifecycle management.
         try {
@@ -265,7 +264,7 @@ public class ClusterControllerService implements IControllerService {
     }
 
     private void notifyApplication() throws Exception {
-        aep.startupCompleted();
+        application.startupCompleted();
     }
 
     public void stop(boolean terminateNCService) throws Exception {
@@ -290,7 +289,7 @@ public class ClusterControllerService implements IControllerService {
     }
 
     private void stopApplication() throws Exception {
-        aep.stop();
+        application.stop();
     }
 
     public ServerContext getServerContext() {
@@ -337,8 +336,9 @@ public class ClusterControllerService implements IControllerService {
         return ccConfig;
     }
 
-    public CCApplicationContext getApplicationContext() {
-        return appCtx;
+    @Override
+    public CCServiceContext getContext() {
+        return serviceCtx;
     }
 
     public ClusterControllerInfo getClusterControllerInfo() {
@@ -454,17 +454,22 @@ public class ClusterControllerService implements IControllerService {
         return threadDumpRunMap.remove(requestKey);
     }
 
-    private static ICCApplicationEntryPoint getApplicationEntryPoint(CCConfig ccConfig)
+    private static ICCApplication getApplication(CCConfig ccConfig)
             throws ClassNotFoundException, IllegalAccessException, InstantiationException {
         if (ccConfig.getAppClass() != null) {
             Class<?> c = Class.forName(ccConfig.getAppClass());
-            return (ICCApplicationEntryPoint) c.newInstance();
+            return (ICCApplication) c.newInstance();
         } else {
-            return CCApplicationEntryPoint.INSTANCE;
+            return BaseCCApplication.INSTANCE;
         }
     }
 
-    public ICCApplicationEntryPoint getApplication() {
-        return aep;
+    public ICCApplication getApplication() {
+        return application;
+    }
+
+    @Override
+    public Object getApplicationContext() {
+        return application.getApplicationContext();
     }
 }

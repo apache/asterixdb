@@ -20,7 +20,6 @@
 package org.apache.hyracks.control.cc.work;
 
 import java.util.Collection;
-import java.util.Set;
 import java.util.UUID;
 
 import org.apache.hyracks.api.deployment.DeploymentId;
@@ -62,7 +61,7 @@ public class CliUnDeployBinaryWork extends SynchronizableWork {
             /**
              * Deploy for the cluster controller
              */
-            DeploymentUtils.undeploy(deploymentId, ccs.getApplicationContext().getJobSerializerDeserializerContainer(),
+            DeploymentUtils.undeploy(deploymentId, ccs.getContext().getJobSerializerDeserializerContainer(),
                     ccs.getServerContext());
 
             /**

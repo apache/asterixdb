@@ -20,7 +20,7 @@ package org.apache.asterix.common.dataflow;
 
 import org.apache.asterix.common.cluster.IGlobalRecoveryManager;
 import org.apache.asterix.common.library.ILibraryManager;
-import org.apache.hyracks.api.application.ICCApplicationContext;
+import org.apache.hyracks.api.application.ICCServiceContext;
 import org.apache.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
 import org.apache.hyracks.storage.common.IStorageManager;
 
@@ -28,7 +28,7 @@ import org.apache.hyracks.storage.common.IStorageManager;
  * Provides methods for obtaining
  * {@link org.apache.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider},
  * {@link org.apache.hyracks.storage.common.IStorageManager},
- * {@link org.apache.hyracks.api.application.ICCApplicationContext},
+ * {@link org.apache.hyracks.api.application.ICCServiceContext},
  * {@link org.apache.asterix.common.cluster.IGlobalRecoveryManager},
  * and {@link org.apache.asterix.common.library.ILibraryManager}
  * at the cluster controller side.
@@ -48,9 +48,9 @@ public interface IApplicationContextInfo {
     public IStorageManager getStorageManager();
 
     /**
-     * @return an instance which implements {@link org.apache.hyracks.api.application.ICCApplicationContext}
+     * @return an instance which implements {@link org.apache.hyracks.api.application.ICCServiceContext}
      */
-    public ICCApplicationContext getCCApplicationContext();
+    public ICCServiceContext getCCServiceContext();
 
     /**
      * @return the global recovery manager which implements

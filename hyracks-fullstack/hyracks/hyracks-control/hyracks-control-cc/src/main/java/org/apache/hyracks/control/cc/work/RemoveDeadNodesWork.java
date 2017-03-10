@@ -61,7 +61,7 @@ public class RemoveDeadNodesWork extends AbstractWork {
                 }
             }
             if (!deadNodes.isEmpty()) {
-                ccs.getApplicationContext().notifyNodeFailure(deadNodes);
+                ccs.getContext().notifyNodeFailure(deadNodes);
             }
         } catch (HyracksException e) {
             LOGGER.log(Level.WARNING, "Uncaught exception on notifyNodeFailure", e);

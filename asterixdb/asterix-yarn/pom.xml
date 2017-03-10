@@ -191,7 +191,6 @@
             <usedDependency>commons-lang:commons-lang</usedDependency>
             <usedDependency>commons-logging:commons-logging-api</usedDependency>
             <usedDependency>commons-net:commons-net</usedDependency>
-            <usedDependency>org.apache.asterix:asterix-app</usedDependency>
             <usedDependency>org.apache.asterix:asterix-events</usedDependency>
             <usedDependency>org.apache.asterix:asterix-runtime</usedDependency>
             <usedDependency>org.apache.asterix:asterix-server</usedDependency>

@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.hyracks.api.application.ICCApplicationContext;
+import org.apache.hyracks.api.application.ICCServiceContext;
 import org.apache.hyracks.api.application.IClusterLifecycleListener;
 import org.apache.hyracks.api.config.IApplicationConfig;
 import org.apache.hyracks.api.config.IOption;
@@ -38,12 +38,12 @@ import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.api.service.IControllerService;
 import org.apache.hyracks.control.cc.ClusterControllerService;
-import org.apache.hyracks.control.common.application.ApplicationContext;
+import org.apache.hyracks.control.common.application.ServiceContext;
 import org.apache.hyracks.control.common.context.ServerContext;
 import org.apache.hyracks.control.common.utils.HyracksThreadFactory;
 import org.apache.hyracks.control.common.work.IResultCallback;
 
-public class CCApplicationContext extends ApplicationContext implements ICCApplicationContext {
+public class CCServiceContext extends ServiceContext implements ICCServiceContext {
     private final ICCContext ccContext;
 
     protected final Set<String> initPendingNodeIds;
@@ -56,7 +56,7 @@ public class CCApplicationContext extends ApplicationContext implements ICCAppli
     private List<IClusterLifecycleListener> clusterLifecycleListeners;
     private final ClusterControllerService ccs;
 
-    public CCApplicationContext(ClusterControllerService ccs, ServerContext serverCtx, ICCContext ccContext,
+    public CCServiceContext(ClusterControllerService ccs, ServerContext serverCtx, ICCContext ccContext,
             IApplicationConfig appConfig) throws IOException {
         super(serverCtx, appConfig, new HyracksThreadFactory("ClusterController"));
         this.ccContext = ccContext;
@@ -121,5 +121,10 @@ public class CCApplicationContext extends ApplicationContext implements ICCAppli
     @Override
     public IControllerService getControllerService() {
         return ccs;
+    }
+
+    @Override
+    public Object getApplicationContext() {
+        return ccs.getApplicationContext();
     }
 }

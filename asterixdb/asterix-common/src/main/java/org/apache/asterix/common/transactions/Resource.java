@@ -21,7 +21,7 @@ package org.apache.asterix.common.transactions;
 import java.io.Serializable;
 import java.util.List;
 
-import org.apache.hyracks.api.application.INCApplicationContext;
+import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -72,7 +72,7 @@ public abstract class Resource implements Serializable {
         return datasetId;
     }
 
-    public abstract ILSMIndex createIndexInstance(INCApplicationContext appCtx, LocalResource resource)
+    public abstract ILSMIndex createIndexInstance(INCServiceContext ncServiceCtx, LocalResource resource)
             throws HyracksDataException;
 
     public static int getIoDeviceNum(IIOManager ioManager, IODeviceHandle deviceHandle) {

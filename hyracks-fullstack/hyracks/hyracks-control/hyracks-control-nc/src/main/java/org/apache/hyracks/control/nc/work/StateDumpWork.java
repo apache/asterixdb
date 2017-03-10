@@ -36,8 +36,7 @@ public class StateDumpWork extends SynchronizableWork {
     @Override
     protected void doRun() throws Exception {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        ncs.getApplicationContext().getStateDumpHandler().dumpState(baos);
-        ncs.getClusterController().notifyStateDump(ncs.getApplicationContext().getNodeId(), stateDumpId,
-                baos.toString("UTF-8"));
+        ncs.getContext().getStateDumpHandler().dumpState(baos);
+        ncs.getClusterController().notifyStateDump(ncs.getContext().getNodeId(), stateDumpId, baos.toString("UTF-8"));
     }
 }

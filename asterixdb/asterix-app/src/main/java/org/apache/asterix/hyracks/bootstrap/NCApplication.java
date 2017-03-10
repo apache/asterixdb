@@ -47,63 +47,64 @@ import org.apache.asterix.messaging.MessagingChannelInterfaceFactory;
 import org.apache.asterix.messaging.NCMessageBroker;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepository;
 import org.apache.commons.io.FileUtils;
-import org.apache.hyracks.api.application.INCApplicationContext;
+import org.apache.hyracks.api.application.INCServiceContext;
+import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.config.IConfigManager;
 import org.apache.hyracks.api.job.resource.NodeCapacity;
 import org.apache.hyracks.api.messages.IMessageBroker;
 import org.apache.hyracks.control.common.controllers.NCConfig;
+import org.apache.hyracks.control.nc.BaseNCApplication;
 import org.apache.hyracks.control.nc.NodeControllerService;
 
-public class NCApplicationEntryPoint extends org.apache.hyracks.control.nc.NCApplicationEntryPoint {
-    private static final Logger LOGGER = Logger.getLogger(NCApplicationEntryPoint.class.getName());
+public class NCApplication extends BaseNCApplication {
+    private static final Logger LOGGER = Logger.getLogger(NCApplication.class.getName());
 
-    private INCApplicationContext ncAppCtx;
+    private INCServiceContext ncServiceCtx;
     private IAppRuntimeContext runtimeContext;
     private String nodeId;
     private boolean stopInitiated = false;
     private SystemState systemState;
 
     @Override
-    public void registerConfigOptions(IConfigManager configManager) {
-        super.registerConfigOptions(configManager);
-        ApplicationEntryPointHelper.registerConfigOptions(configManager);
+    public void registerConfig(IConfigManager configManager) {
+        super.registerConfig(configManager);
+        ApplicationClassHelper.registerConfigOptions(configManager);
     }
 
     @Override
-    public void start(INCApplicationContext ncAppCtx, String[] args) throws Exception {
+    public void start(IServiceContext serviceCtx, String[] args) throws Exception {
         if (args.length > 0) {
             throw new IllegalArgumentException("Unrecognized argument(s): " + Arrays.toString(args));
         }
-        ncAppCtx.setThreadFactory(new AsterixThreadFactory(ncAppCtx.getThreadFactory(),
-                ncAppCtx.getLifeCycleComponentManager()));
-        this.ncAppCtx = ncAppCtx;
-        nodeId = this.ncAppCtx.getNodeId();
+        this.ncServiceCtx = (INCServiceContext) serviceCtx;
+        ncServiceCtx.setThreadFactory(
+                new AsterixThreadFactory(ncServiceCtx.getThreadFactory(), ncServiceCtx.getLifeCycleComponentManager()));
+        nodeId = this.ncServiceCtx.getNodeId();
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Starting Asterix node controller: " + nodeId);
         }
 
-        final NodeControllerService controllerService = (NodeControllerService) ncAppCtx.getControllerService();
+        final NodeControllerService controllerService = (NodeControllerService) ncServiceCtx.getControllerService();
 
         if (System.getProperty("java.rmi.server.hostname") == null) {
-            System.setProperty("java.rmi.server.hostname", (controllerService)
-                    .getConfiguration().getClusterPublicAddress());
+            System.setProperty("java.rmi.server.hostname",
+                    (controllerService).getConfiguration().getClusterPublicAddress());
         }
-        runtimeContext = new NCAppRuntimeContext(this.ncAppCtx, getExtensions());
+        runtimeContext = new NCAppRuntimeContext(this.ncServiceCtx, getExtensions());
         MetadataProperties metadataProperties = runtimeContext.getMetadataProperties();
-        if (!metadataProperties.getNodeNames().contains(this.ncAppCtx.getNodeId())) {
+        if (!metadataProperties.getNodeNames().contains(this.ncServiceCtx.getNodeId())) {
             if (LOGGER.isLoggable(Level.INFO)) {
-                LOGGER.info("Substitute node joining : " + this.ncAppCtx.getNodeId());
+                LOGGER.info("Substitute node joining : " + this.ncServiceCtx.getNodeId());
             }
             updateOnNodeJoin();
         }
         runtimeContext.initialize(runtimeContext.getNodeProperties().isInitialRun());
-        this.ncAppCtx.setApplicationObject(runtimeContext);
         MessagingProperties messagingProperties = runtimeContext.getMessagingProperties();
         IMessageBroker messageBroker = new NCMessageBroker(controllerService, messagingProperties);
-        this.ncAppCtx.setMessageBroker(messageBroker);
-        MessagingChannelInterfaceFactory interfaceFactory = new MessagingChannelInterfaceFactory(
-                (NCMessageBroker) messageBroker, messagingProperties);
-        this.ncAppCtx.setMessagingChannelInterfaceFactory(interfaceFactory);
+        this.ncServiceCtx.setMessageBroker(messageBroker);
+        MessagingChannelInterfaceFactory interfaceFactory =
+                new MessagingChannelInterfaceFactory((NCMessageBroker) messageBroker, messagingProperties);
+        this.ncServiceCtx.setMessagingChannelInterfaceFactory(interfaceFactory);
 
         IRecoveryManager recoveryMgr = runtimeContext.getTransactionSubsystem().getRecoveryManager();
         systemState = recoveryMgr.getSystemState();
@@ -139,7 +140,7 @@ public class NCApplicationEntryPoint extends org.apache.hyracks.control.nc.NCApp
             performLocalCleanUp();
 
             //Note: stopping recovery manager will make a sharp checkpoint
-            ncAppCtx.getLifeCycleComponentManager().stopAll(false);
+            ncServiceCtx.getLifeCycleComponentManager().stopAll(false);
             runtimeContext.deinitialize();
         } else {
             if (LOGGER.isLoggable(Level.INFO)) {
@@ -149,15 +150,15 @@ public class NCApplicationEntryPoint extends org.apache.hyracks.control.nc.NCApp
     }
 
     @Override
-    public void notifyStartupComplete() throws Exception {
+    public void startupCompleted() throws Exception {
         // Since we don't pass initial run flag in AsterixHyracksIntegrationUtil, we use the virtualNC flag
         final NodeProperties nodeProperties = runtimeContext.getNodeProperties();
-        if (systemState == SystemState.PERMANENT_DATA_LOSS && (nodeProperties.isInitialRun() || nodeProperties.isVirtualNc())) {
+        if (systemState == SystemState.PERMANENT_DATA_LOSS
+                && (nodeProperties.isInitialRun() || nodeProperties.isVirtualNc())) {
             systemState = SystemState.BOOTSTRAPPING;
         }
         // Request startup tasks from CC
-        StartupTaskRequestMessage.send((NodeControllerService) ncAppCtx.getControllerService(),
-                systemState);
+        StartupTaskRequestMessage.send((NodeControllerService) ncServiceCtx.getControllerService(), systemState);
     }
 
     @Override
@@ -182,8 +183,8 @@ public class NCApplicationEntryPoint extends org.apache.hyracks.control.nc.NCApp
         String[] ioDevices = ((PersistentLocalResourceRepository) runtimeContext.getLocalResourceRepository())
                 .getStorageMountingPoints();
         for (String ioDevice : ioDevices) {
-            String tempDatasetsDir = ioDevice + storageDirName + File.separator
-                    + StoragePathUtil.TEMP_DATASETS_STORAGE_FOLDER;
+            String tempDatasetsDir =
+                    ioDevice + storageDirName + File.separator + StoragePathUtil.TEMP_DATASETS_STORAGE_FOLDER;
             FileUtils.deleteQuietly(new File(tempDatasetsDir));
         }
 
@@ -199,7 +200,7 @@ public class NCApplicationEntryPoint extends org.apache.hyracks.control.nc.NCApp
             if (cluster == null) {
                 throw new IllegalStateException("No cluster configuration found for this instance");
             }
-            NCConfig ncConfig = ((NodeControllerService) ncAppCtx.getControllerService()).getConfiguration();
+            NCConfig ncConfig = ((NodeControllerService) ncServiceCtx.getControllerService()).getConfiguration();
             ncConfig.getConfigManager().registerVirtualNode(nodeId);
             String asterixInstanceName = metadataProperties.getInstanceName();
             TransactionProperties txnProperties = runtimeContext.getTransactionProperties();
@@ -244,5 +245,10 @@ public class NCApplicationEntryPoint extends org.apache.hyracks.control.nc.NCApp
                 throw new IllegalStateException("Unknown node joining the cluster");
             }
         }
+    }
+
+    @Override
+    public IAppRuntimeContext getApplicationContext() {
+        return runtimeContext;
     }
 }

@@ -27,7 +27,6 @@ import org.apache.asterix.common.messaging.api.INCMessageBroker;
 import org.apache.asterix.common.replication.INCLifecycleMessage;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.service.IControllerService;
-import org.apache.hyracks.control.nc.NodeControllerService;
 
 public class StartupTaskResponseMessage implements INCLifecycleMessage {
 
@@ -43,8 +42,7 @@ public class StartupTaskResponseMessage implements INCLifecycleMessage {
 
     @Override
     public void handle(IControllerService cs) throws HyracksDataException, InterruptedException {
-        NodeControllerService ncs = (NodeControllerService) cs;
-        INCMessageBroker broker = (INCMessageBroker) ncs.getApplicationContext().getMessageBroker();
+        INCMessageBroker broker = (INCMessageBroker) cs.getContext().getMessageBroker();
         boolean success = true;
         HyracksDataException exception = null;
         try {

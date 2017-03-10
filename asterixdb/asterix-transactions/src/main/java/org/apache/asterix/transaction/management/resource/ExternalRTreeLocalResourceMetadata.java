@@ -21,7 +21,7 @@ package org.apache.asterix.transaction.management.resource;
 import java.util.Map;
 
 import org.apache.asterix.common.api.IAppRuntimeContext;
-import org.apache.hyracks.api.application.INCApplicationContext;
+import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ILinearizeComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
@@ -59,18 +59,18 @@ public class ExternalRTreeLocalResourceMetadata extends LSMRTreeLocalResourceMet
     }
 
     @Override
-    public ILSMIndex createIndexInstance(INCApplicationContext appCtx, LocalResource resource)
+    public ILSMIndex createIndexInstance(INCServiceContext serviceCtx, LocalResource resource)
             throws HyracksDataException {
-        IAppRuntimeContext runtimeContextProvider = (IAppRuntimeContext) appCtx.getApplicationObject();
-        IIOManager ioManager = runtimeContextProvider.getIOManager();
+        IAppRuntimeContext appCtx = (IAppRuntimeContext) serviceCtx.getApplicationContext();
+        IIOManager ioManager = appCtx.getIOManager();
         FileReference file = ioManager.resolve(resource.getPath());
         try {
-            return LSMRTreeUtils.createExternalRTree(ioManager, file, runtimeContextProvider.getBufferCache(),
-                    runtimeContextProvider.getFileMapManager(), typeTraits, rtreeCmpFactories, btreeCmpFactories,
-                    valueProviderFactories, rtreePolicyType, runtimeContextProvider.getBloomFilterFalsePositiveRate(),
+            return LSMRTreeUtils.createExternalRTree(ioManager, file, appCtx.getBufferCache(),
+                    appCtx.getFileMapManager(), typeTraits, rtreeCmpFactories, btreeCmpFactories,
+                    valueProviderFactories, rtreePolicyType, appCtx.getBloomFilterFalsePositiveRate(),
                     mergePolicyFactory.createMergePolicy(mergePolicyProperties,
-                            runtimeContextProvider.getDatasetLifecycleManager()),
-                    opTrackerProvider.getOperationTracker(appCtx), runtimeContextProvider.getLSMIOScheduler(),
+                            appCtx.getDatasetLifecycleManager()),
+                    opTrackerProvider.getOperationTracker(serviceCtx), appCtx.getLSMIOScheduler(),
                     ioOpCallbackFactory.createIoOpCallback(), linearizeCmpFactory, btreeFields, -1, true, isPointMBR,
                     metadataPageManagerFactory);
         } catch (TreeIndexException e) {

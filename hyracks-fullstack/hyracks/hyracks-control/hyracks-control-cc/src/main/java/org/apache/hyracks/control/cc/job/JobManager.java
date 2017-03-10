@@ -41,7 +41,7 @@ import org.apache.hyracks.api.job.JobStatus;
 import org.apache.hyracks.api.job.resource.IJobCapacityController;
 import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.cc.NodeControllerState;
-import org.apache.hyracks.control.cc.application.CCApplicationContext;
+import org.apache.hyracks.control.cc.application.CCServiceContext;
 import org.apache.hyracks.control.cc.cluster.INodeManager;
 import org.apache.hyracks.control.cc.scheduler.FIFOJobQueue;
 import org.apache.hyracks.control.cc.scheduler.IJobQueue;
@@ -205,10 +205,10 @@ public class JobManager implements IJobManager {
         checkJob(run);
         JobId jobId = run.getJobId();
         HyracksException caughtException = null;
-        CCApplicationContext appCtx = ccs.getApplicationContext();
-        if (appCtx != null) {
+        CCServiceContext serviceCtx = ccs.getContext();
+        if (serviceCtx != null) {
             try {
-                appCtx.notifyJobFinish(jobId);
+                serviceCtx.notifyJobFinish(jobId);
             } catch (HyracksException e) {
                 LOGGER.log(Level.SEVERE, e.getMessage(), e);
                 caughtException = e;
@@ -301,10 +301,10 @@ public class JobManager implements IJobManager {
         JobId jobId = run.getJobId();
         activeRunMap.put(jobId, run);
 
-        CCApplicationContext appCtx = ccs.getApplicationContext();
+        CCServiceContext serviceCtx = ccs.getContext();
         JobSpecification spec = run.getJobSpecification();
         if (!run.getExecutor().isPredistributed()) {
-            appCtx.notifyJobCreation(jobId, spec);
+            serviceCtx.notifyJobCreation(jobId, spec);
         }
         run.setStatus(JobStatus.RUNNING, null);
         executeJobInternal(run);

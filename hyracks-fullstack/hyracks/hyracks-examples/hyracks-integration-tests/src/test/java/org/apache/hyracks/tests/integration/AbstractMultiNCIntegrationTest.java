@@ -42,7 +42,7 @@ import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.api.job.resource.IJobCapacityController;
 import org.apache.hyracks.client.dataset.HyracksDataset;
-import org.apache.hyracks.control.cc.CCApplicationEntryPoint;
+import org.apache.hyracks.control.cc.BaseCCApplication;
 import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.common.controllers.CCConfig;
 import org.apache.hyracks.control.common.controllers.NCConfig;
@@ -91,7 +91,7 @@ public abstract class AbstractMultiNCIntegrationTest {
         ccRoot.delete();
         ccRoot.mkdir();
         ccConfig.setRootDir(ccRoot.getAbsolutePath());
-        ccConfig.setAppClass(DummyApplicationEntryPoint.class.getName());
+        ccConfig.setAppClass(DummyApplication.class.getName());
         cc = new ClusterControllerService(ccConfig);
         cc.start();
 
@@ -216,7 +216,7 @@ public abstract class AbstractMultiNCIntegrationTest {
         return tempFile;
     }
 
-    public static class DummyApplicationEntryPoint extends CCApplicationEntryPoint {
+    public static class DummyApplication extends BaseCCApplication {
 
         @Override
         public IJobCapacityController getJobCapacityController() {

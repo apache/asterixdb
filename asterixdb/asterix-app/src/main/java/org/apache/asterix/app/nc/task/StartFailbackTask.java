@@ -22,7 +22,6 @@ import org.apache.asterix.common.api.IAppRuntimeContext;
 import org.apache.asterix.common.api.INCLifecycleTask;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.service.IControllerService;
-import org.apache.hyracks.control.nc.NodeControllerService;
 
 public class StartFailbackTask implements INCLifecycleTask {
 
@@ -30,8 +29,7 @@ public class StartFailbackTask implements INCLifecycleTask {
 
     @Override
     public void perform(IControllerService cs) throws HyracksDataException {
-        NodeControllerService ncs = (NodeControllerService) cs;
-        IAppRuntimeContext runtimeContext = (IAppRuntimeContext) ncs.getApplicationContext().getApplicationObject();
-        runtimeContext.getRemoteRecoveryManager().startFailbackProcess();
+        IAppRuntimeContext appContext = (IAppRuntimeContext) cs.getApplicationContext();
+        appContext.getRemoteRecoveryManager().startFailbackProcess();
     }
 }

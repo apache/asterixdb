@@ -51,7 +51,7 @@ public class DeployBinaryWork extends AbstractWork {
     public void run() {
         DeploymentStatus status;
         try {
-            DeploymentUtils.deploy(deploymentId, binaryURLs, ncs.getApplicationContext()
+            DeploymentUtils.deploy(deploymentId, binaryURLs, ncs.getContext()
                     .getJobSerializerDeserializerContainer(), ncs.getServerContext(), true);
             status = DeploymentStatus.SUCCEED;
         } catch (Exception e) {

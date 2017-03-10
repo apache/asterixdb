@@ -21,7 +21,7 @@ package org.apache.asterix.transaction.management.resource;
 import java.util.Map;
 
 import org.apache.asterix.common.api.IAppRuntimeContext;
-import org.apache.hyracks.api.application.INCApplicationContext;
+import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -50,17 +50,17 @@ public class ExternalBTreeLocalResourceMetadata extends LSMBTreeLocalResourceMet
     }
 
     @Override
-    public ILSMIndex createIndexInstance(INCApplicationContext appCtx, LocalResource resource)
+    public ILSMIndex createIndexInstance(INCServiceContext serviceCtx, LocalResource resource)
             throws HyracksDataException {
-        IAppRuntimeContext runtimeContextProvider = (IAppRuntimeContext) appCtx.getApplicationObject();
-        IIOManager ioManager = runtimeContextProvider.getIOManager();
+        IAppRuntimeContext appCtx = (IAppRuntimeContext) serviceCtx.getApplicationContext();
+        IIOManager ioManager = appCtx.getIOManager();
         FileReference file = ioManager.resolve(resource.getPath());
-        return LSMBTreeUtil.createExternalBTree(ioManager, file, runtimeContextProvider.getBufferCache(),
-                runtimeContextProvider.getFileMapManager(), typeTraits, cmpFactories, bloomFilterKeyFields,
-                runtimeContextProvider.getBloomFilterFalsePositiveRate(),
+        return LSMBTreeUtil.createExternalBTree(ioManager, file, appCtx.getBufferCache(),
+                appCtx.getFileMapManager(), typeTraits, cmpFactories, bloomFilterKeyFields,
+                appCtx.getBloomFilterFalsePositiveRate(),
                 mergePolicyFactory.createMergePolicy(mergePolicyProperties,
-                        runtimeContextProvider.getDatasetLifecycleManager()),
-                opTrackerProvider.getOperationTracker(appCtx), runtimeContextProvider.getLSMIOScheduler(),
+                        appCtx.getDatasetLifecycleManager()),
+                opTrackerProvider.getOperationTracker(serviceCtx), appCtx.getLSMIOScheduler(),
                 ioOpCallbackFactory.createIoOpCallback(), -1, true, metadataPageManagerFactory);
     }
 }

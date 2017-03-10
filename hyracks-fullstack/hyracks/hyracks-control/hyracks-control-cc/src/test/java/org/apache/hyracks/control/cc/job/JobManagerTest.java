@@ -42,7 +42,7 @@ import org.apache.hyracks.api.job.JobStatus;
 import org.apache.hyracks.api.job.resource.IJobCapacityController;
 import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.cc.NodeControllerState;
-import org.apache.hyracks.control.cc.application.CCApplicationContext;
+import org.apache.hyracks.control.cc.application.CCServiceContext;
 import org.apache.hyracks.control.cc.cluster.INodeManager;
 import org.apache.hyracks.control.cc.cluster.NodeManager;
 import org.apache.hyracks.control.common.base.INodeController;
@@ -279,10 +279,10 @@ public class JobManagerTest {
 
     private ClusterControllerService mockClusterControllerService() {
         ClusterControllerService ccs = mock(ClusterControllerService.class);
-        CCApplicationContext appCtx = mock(CCApplicationContext.class);
+        CCServiceContext ccServiceCtx = mock(CCServiceContext.class);
         LogFile logFile = mock(LogFile.class);
         INodeManager nodeManager = mockNodeManager();
-        when(ccs.getApplicationContext()).thenReturn(appCtx);
+        when(ccs.getContext()).thenReturn(ccServiceCtx);
         when(ccs.getJobLogFile()).thenReturn(logFile);
         when(ccs.getNodeManager()).thenReturn(nodeManager);
         when(ccs.getCCConfig()).thenReturn(ccConfig);

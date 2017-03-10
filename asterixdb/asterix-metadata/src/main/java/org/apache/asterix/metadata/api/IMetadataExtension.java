@@ -25,7 +25,7 @@ import java.util.List;
 import org.apache.asterix.common.api.IExtension;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.metadata.entitytupletranslators.MetadataTupleTranslatorProvider;
-import org.apache.hyracks.api.application.INCApplicationContext;
+import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 /**
@@ -57,6 +57,6 @@ public interface IMetadataExtension extends IExtension {
      * @throws RemoteException
      * @throws ACIDException
      */
-    void initializeMetadata(INCApplicationContext appCtx) throws HyracksDataException, RemoteException, ACIDException;
+    void initializeMetadata(INCServiceContext ncServiceCtx) throws HyracksDataException, RemoteException, ACIDException;
 
 }

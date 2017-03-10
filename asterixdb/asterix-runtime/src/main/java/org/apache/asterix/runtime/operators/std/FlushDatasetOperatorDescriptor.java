@@ -71,11 +71,11 @@ public class FlushDatasetOperatorDescriptor extends AbstractSingleActivityOperat
             @Override
             public void close() throws HyracksDataException {
                 try {
-                    IAppRuntimeContext runtimeCtx = (IAppRuntimeContext) ctx.getJobletContext()
-                            .getApplicationContext().getApplicationObject();
-                    IDatasetLifecycleManager datasetLifeCycleManager = runtimeCtx.getDatasetLifecycleManager();
-                    ILockManager lockManager = runtimeCtx.getTransactionSubsystem().getLockManager();
-                    ITransactionManager txnManager = runtimeCtx.getTransactionSubsystem().getTransactionManager();
+                    IAppRuntimeContext appCtx = (IAppRuntimeContext) ctx.getJobletContext()
+                            .getServiceContext().getApplicationContext();
+                    IDatasetLifecycleManager datasetLifeCycleManager = appCtx.getDatasetLifecycleManager();
+                    ILockManager lockManager = appCtx.getTransactionSubsystem().getLockManager();
+                    ITransactionManager txnManager = appCtx.getTransactionSubsystem().getTransactionManager();
                     // get the local transaction
                     ITransactionContext txnCtx = txnManager.getTransactionContext(jobId, false);
                     // lock the dataset granule

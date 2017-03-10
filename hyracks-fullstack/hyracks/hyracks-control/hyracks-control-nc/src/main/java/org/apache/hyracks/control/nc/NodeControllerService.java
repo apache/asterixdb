@@ -42,7 +42,7 @@ import java.util.logging.Logger;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
-import org.apache.hyracks.api.application.INCApplicationEntryPoint;
+import org.apache.hyracks.api.application.INCApplication;
 import org.apache.hyracks.api.client.NodeControllerInfo;
 import org.apache.hyracks.api.comm.NetworkAddress;
 import org.apache.hyracks.api.dataset.IDatasetPartitionManager;
@@ -69,7 +69,7 @@ import org.apache.hyracks.control.common.job.profiling.om.JobProfile;
 import org.apache.hyracks.control.common.utils.PidHelper;
 import org.apache.hyracks.control.common.work.FutureValue;
 import org.apache.hyracks.control.common.work.WorkQueue;
-import org.apache.hyracks.control.nc.application.NCApplicationContext;
+import org.apache.hyracks.control.nc.application.NCServiceContext;
 import org.apache.hyracks.control.nc.dataset.DatasetPartitionManager;
 import org.apache.hyracks.control.nc.io.IOManager;
 import org.apache.hyracks.control.nc.io.profiling.IIOCounter;
@@ -130,9 +130,9 @@ public class NodeControllerService implements IControllerService {
 
     private final ServerContext serverCtx;
 
-    private NCApplicationContext appCtx;
+    private NCServiceContext serviceCtx;
 
-    private final INCApplicationEntryPoint ncAppEntryPoint;
+    private final INCApplication application;
 
     private final ILifeCycleComponentManager lccm;
 
@@ -159,17 +159,17 @@ public class NodeControllerService implements IControllerService {
     private final ConfigManager configManager;
 
     public NodeControllerService(NCConfig config) throws Exception {
-        this(config, getApplicationEntryPoint(config));
+        this(config, getApplication(config));
     }
 
-    public NodeControllerService(NCConfig config, INCApplicationEntryPoint aep) throws IOException, CmdLineException {
+    public NodeControllerService(NCConfig config, INCApplication application) throws IOException, CmdLineException {
         this.ncConfig = config;
         this.configManager = ncConfig.getConfigManager();
-        if (aep == null) {
-            throw new IllegalArgumentException("INCApplicationEntryPoint cannot be null");
+        if (application == null) {
+            throw new IllegalArgumentException("INCApplication cannot be null");
         }
         configManager.processConfig();
-        this.ncAppEntryPoint = aep;
+        this.application = application;
         id = ncConfig.getNodeId();
 
         ioManager = new IOManager(IODeviceHandle.getDevices(ncConfig.getIODevices()));
@@ -199,8 +199,9 @@ public class NodeControllerService implements IControllerService {
         return ioManager;
     }
 
-    public NCApplicationContext getApplicationContext() {
-        return appCtx;
+    @Override
+    public NCServiceContext getContext() {
+        return serviceCtx;
     }
 
     public ILifeCycleComponentManager getLifeCycleComponentManager() {
@@ -244,11 +245,11 @@ public class NodeControllerService implements IControllerService {
                 ncConfig.getResultListenPort(), datasetPartitionManager, ncConfig.getNetThreadCount(),
                 ncConfig.getNetBufferCount(), ncConfig.getResultPublicAddress(), ncConfig.getResultPublicPort(),
                 FullFrameChannelInterfaceFactory.INSTANCE);
-        if (ncConfig.getMessagingListenAddress() != null && appCtx.getMessagingChannelInterfaceFactory() != null) {
+        if (ncConfig.getMessagingListenAddress() != null && serviceCtx.getMessagingChannelInterfaceFactory() != null) {
             messagingNetManager = new MessagingNetworkManager(this, ncConfig.getMessagingListenAddress(),
                     ncConfig.getMessagingListenPort(), ncConfig.getNetThreadCount(),
                     ncConfig.getMessagingPublicAddress(), ncConfig.getMessagingPublicPort(),
-                    appCtx.getMessagingChannelInterfaceFactory());
+                    serviceCtx.getMessagingChannelInterfaceFactory());
         }
     }
 
@@ -292,7 +293,7 @@ public class NodeControllerService implements IControllerService {
                 runtimeMXBean.getVmName(), runtimeMXBean.getVmVersion(), runtimeMXBean.getVmVendor(),
                 runtimeMXBean.getClassPath(), runtimeMXBean.getLibraryPath(), runtimeMXBean.getBootClassPath(),
                 runtimeMXBean.getInputArguments(), runtimeMXBean.getSystemProperties(), hbSchema, meesagingPort,
-                ncAppEntryPoint.getCapacity(), PidHelper.getPid()));
+                application.getCapacity(), PidHelper.getPid()));
 
         synchronized (this) {
             while (registrationPending) {
@@ -302,7 +303,7 @@ public class NodeControllerService implements IControllerService {
         if (registrationException != null) {
             throw registrationException;
         }
-        appCtx.setDistributedState(nodeParameters.getDistributedState());
+        serviceCtx.setDistributedState(nodeParameters.getDistributedState());
 
         workQueue.start();
 
@@ -322,13 +323,13 @@ public class NodeControllerService implements IControllerService {
         }
 
         LOGGER.log(Level.INFO, "Started NodeControllerService");
-        ncAppEntryPoint.notifyStartupComplete();
+        application.startupCompleted();
     }
 
     private void startApplication() throws Exception {
-        appCtx = new NCApplicationContext(this, serverCtx, ioManager, id, memoryManager, lccm, ncConfig.getAppConfig());
-        ncAppEntryPoint.start(appCtx, ncConfig.getAppArgsArray());
-        executor = Executors.newCachedThreadPool(appCtx.getThreadFactory());
+        serviceCtx = new NCServiceContext(this, serverCtx, ioManager, id, memoryManager, lccm, ncConfig.getAppConfig());
+        application.start(serviceCtx, ncConfig.getAppArgsArray());
+        executor = Executors.newCachedThreadPool(serviceCtx.getThreadFactory());
     }
 
     @Override
@@ -347,7 +348,7 @@ public class NodeControllerService implements IControllerService {
                 messagingNetManager.stop();
             }
             workQueue.stop();
-            ncAppEntryPoint.stop();
+            application.stop();
             /*
              * Stop heartbeat after NC has stopped to avoid false node failure detection
              * on CC if an NC takes a long time to stop.
@@ -530,13 +531,18 @@ public class NodeControllerService implements IControllerService {
         return messagingNetManager;
     }
 
-    private static INCApplicationEntryPoint getApplicationEntryPoint(NCConfig config)
+    private static INCApplication getApplication(NCConfig config)
             throws ClassNotFoundException, IllegalAccessException, InstantiationException {
             if (config.getAppClass() != null) {
                 Class<?> c = Class.forName(config.getAppClass());
-                return (INCApplicationEntryPoint) c.newInstance();
+                return (INCApplication) c.newInstance();
             } else {
-                return NCApplicationEntryPoint.INSTANCE;
+                return BaseNCApplication.INSTANCE;
             }
+    }
+
+    @Override
+    public Object getApplicationContext() {
+        return application.getApplicationContext();
     }
 }

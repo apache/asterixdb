@@ -28,7 +28,7 @@ import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.util.JavaSerializationUtils;
 import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.cc.NodeControllerState;
-import org.apache.hyracks.control.cc.application.CCApplicationContext;
+import org.apache.hyracks.control.cc.application.CCServiceContext;
 import org.apache.hyracks.control.cc.cluster.INodeManager;
 import org.apache.hyracks.control.common.deployment.DeploymentUtils;
 import org.apache.hyracks.control.common.work.IResultCallback;
@@ -51,17 +51,17 @@ public class DistributeJobWork extends SynchronizableWork {
     @Override
     protected void doRun() throws Exception {
         try {
-            final CCApplicationContext appCtx = ccs.getApplicationContext();
+            final CCServiceContext ccServiceCtx = ccs.getContext();
             ccs.getPreDistributedJobStore().checkForExistingDistributedJobDescriptor(jobId);
             IActivityClusterGraphGeneratorFactory acggf =
-                    (IActivityClusterGraphGeneratorFactory) DeploymentUtils.deserialize(acggfBytes, null, appCtx);
+                    (IActivityClusterGraphGeneratorFactory) DeploymentUtils.deserialize(acggfBytes, null, ccServiceCtx);
             IActivityClusterGraphGenerator acgg =
-                    acggf.createActivityClusterGraphGenerator(jobId, appCtx, EnumSet.noneOf(JobFlag.class));
+                    acggf.createActivityClusterGraphGenerator(jobId, ccServiceCtx, EnumSet.noneOf(JobFlag.class));
             ActivityClusterGraph acg = acgg.initialize();
             ccs.getPreDistributedJobStore().addDistributedJobDescriptor(jobId, acg, acggf.getJobSpecification(),
                     acgg.getConstraints());
 
-            appCtx.notifyJobCreation(jobId, acggf.getJobSpecification());
+            ccServiceCtx.notifyJobCreation(jobId, acggf.getJobSpecification());
 
             byte[] acgBytes = JavaSerializationUtils.serialize(acg);
 

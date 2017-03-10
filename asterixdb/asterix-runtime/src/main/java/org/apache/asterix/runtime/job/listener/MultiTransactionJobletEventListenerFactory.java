@@ -54,7 +54,7 @@ public class MultiTransactionJobletEventListenerFactory implements IJobletEventL
             public void jobletFinish(JobStatus jobStatus) {
                 try {
                     ITransactionManager txnManager =
-                            ((IAppRuntimeContext) jobletContext.getApplicationContext().getApplicationObject())
+                            ((IAppRuntimeContext) jobletContext.getServiceContext().getApplicationContext())
                                     .getTransactionSubsystem().getTransactionManager();
                     for (JobId jobId : jobIds) {
                         ITransactionContext txnContext = txnManager.getTransactionContext(jobId, false);
@@ -71,7 +71,7 @@ public class MultiTransactionJobletEventListenerFactory implements IJobletEventL
             public void jobletStart() {
                 try {
                     for (JobId jobId : jobIds) {
-                        ((IAppRuntimeContext) jobletContext.getApplicationContext().getApplicationObject())
+                        ((IAppRuntimeContext) jobletContext.getServiceContext().getApplicationContext())
                                 .getTransactionSubsystem().getTransactionManager().getTransactionContext(jobId, true);
                     }
                 } catch (ACIDException e) {

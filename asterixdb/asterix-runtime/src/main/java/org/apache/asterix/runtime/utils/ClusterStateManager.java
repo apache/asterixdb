@@ -79,7 +79,7 @@ public class ClusterStateManager implements IClusterStateManager {
     private ClusterStateManager() {
         cluster = ClusterProperties.INSTANCE.getCluster();
         // if this is the CC process
-        if (AppContextInfo.INSTANCE.initialized() && AppContextInfo.INSTANCE.getCCApplicationContext() != null) {
+        if (AppContextInfo.INSTANCE.initialized() && AppContextInfo.INSTANCE.getCCServiceContext() != null) {
             node2PartitionsMap = AppContextInfo.INSTANCE.getMetadataProperties().getNodePartitions();
             clusterPartitions = AppContextInfo.INSTANCE.getMetadataProperties().getClusterPartitions();
             currentMetadataNode = AppContextInfo.INSTANCE.getMetadataProperties().getMetadataNodeName();

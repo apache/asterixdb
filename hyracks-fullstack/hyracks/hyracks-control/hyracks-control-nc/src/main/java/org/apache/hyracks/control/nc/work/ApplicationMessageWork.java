@@ -26,7 +26,7 @@ import org.apache.hyracks.api.messages.IMessage;
 import org.apache.hyracks.control.common.deployment.DeploymentUtils;
 import org.apache.hyracks.control.common.work.AbstractWork;
 import org.apache.hyracks.control.nc.NodeControllerService;
-import org.apache.hyracks.control.nc.application.NCApplicationContext;
+import org.apache.hyracks.control.nc.application.NCServiceContext;
 
 /**
  * @author rico
@@ -47,7 +47,7 @@ public class ApplicationMessageWork extends AbstractWork {
 
     @Override
     public void run() {
-        NCApplicationContext ctx = ncs.getApplicationContext();
+        NCServiceContext ctx = ncs.getContext();
         try {
             IMessage data = (IMessage) DeploymentUtils.deserialize(message, deploymentId, ctx);;
             if (ctx.getMessageBroker() != null) {

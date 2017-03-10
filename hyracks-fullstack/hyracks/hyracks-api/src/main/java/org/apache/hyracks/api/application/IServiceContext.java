@@ -27,34 +27,32 @@ import org.apache.hyracks.api.messages.IMessageBroker;
 import org.apache.hyracks.api.service.IControllerService;
 
 /**
- * Base class of the {@link ICCApplicationContext} and the {@link INCApplicationContext}.
- *
- * @author vinayakb
+ * Base interface of the {@link ICCServiceContext} and the {@link INCServiceContext}.
  */
-public interface IApplicationContext {
+public interface IServiceContext {
     /**
-     * Gets the distributed state that is made available to all the Application
-     * Contexts of this application in the cluster.
-     *
-     * @return
+     * @return the distributed state that is made available to all the Application
+     *         Contexts of this application in the cluster.
      */
-    public Serializable getDistributedState();
+    Serializable getDistributedState();
 
-    public void setMessageBroker(IMessageBroker messageBroker);
+    void setMessageBroker(IMessageBroker messageBroker);
 
-    public IMessageBroker getMessageBroker();
+    IMessageBroker getMessageBroker();
 
-    public IJobSerializerDeserializerContainer getJobSerializerDeserializerContainer();
+    IJobSerializerDeserializerContainer getJobSerializerDeserializerContainer();
 
-    public ThreadFactory getThreadFactory();
+    ThreadFactory getThreadFactory();
 
-    public void setThreadFactory(ThreadFactory threadFactory);
+    void setThreadFactory(ThreadFactory threadFactory);
 
-    public IApplicationConfig getAppConfig();
+    IApplicationConfig getAppConfig();
 
     /**
      * @return The controller service which the application context belongs to.
      */
-    public IControllerService getControllerService();
+    IControllerService getControllerService();
+
+    Object getApplicationContext();
 
 }

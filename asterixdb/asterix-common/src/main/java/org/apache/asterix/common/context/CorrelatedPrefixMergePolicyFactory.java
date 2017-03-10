@@ -37,14 +37,14 @@ public class CorrelatedPrefixMergePolicyFactory implements ILSMMergePolicyFactor
 
     private static final String[] SET_VALUES = new String[] { "max-mergable-component-size",
             "max-tolerance-component-count" };
-    private static final Set<String> PROPERTIES_NAMES = new HashSet<String>(Arrays.asList(SET_VALUES));
+    private static final Set<String> PROPERTIES_NAMES = new HashSet<>(Arrays.asList(SET_VALUES));
 
     private int datasetID;
 
     @Override
     public ILSMMergePolicy createMergePolicy(Map<String, String> properties, IHyracksTaskContext ctx) {
         IDatasetLifecycleManager dslcManager = ((IAppRuntimeContext) ctx.getJobletContext()
-                .getApplicationContext().getApplicationObject()).getDatasetLifecycleManager();
+                .getServiceContext().getApplicationContext()).getDatasetLifecycleManager();
         ILSMMergePolicy policy = new CorrelatedPrefixMergePolicy(dslcManager, datasetID);
         policy.configure(properties);
         return policy;

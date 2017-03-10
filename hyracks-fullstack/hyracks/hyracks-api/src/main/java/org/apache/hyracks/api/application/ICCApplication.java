@@ -16,17 +16,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.api.job;
+package org.apache.hyracks.api.application;
 
-import java.io.Serializable;
-import java.util.Set;
+import org.apache.hyracks.api.client.IHyracksClientConnection;
+import org.apache.hyracks.api.job.resource.IJobCapacityController;
 
-import org.apache.hyracks.api.application.ICCServiceContext;
-import org.apache.hyracks.api.exceptions.HyracksException;
+public interface ICCApplication extends IApplication {
 
-public interface IActivityClusterGraphGeneratorFactory extends Serializable {
-    public IActivityClusterGraphGenerator createActivityClusterGraphGenerator(JobId jobId,
-            ICCServiceContext ccServiceCtx, Set<JobFlag> jobFlags) throws HyracksException;
+    IJobCapacityController getJobCapacityController();
 
-    public JobSpecification getJobSpecification();
+    IHyracksClientConnection getHcc() throws Exception; //NOSONAR
+
 }

@@ -391,7 +391,7 @@ public class FeedOperations {
 
     private static void SendActiveMessage(ActiveManagerMessage activeManagerMessage, String nodeId) throws Exception {
         ICCMessageBroker messageBroker =
-                (ICCMessageBroker) AppContextInfo.INSTANCE.getCCApplicationContext().getMessageBroker();
+                (ICCMessageBroker) AppContextInfo.INSTANCE.getCCServiceContext().getMessageBroker();
         messageBroker.sendApplicationMessageToNC(activeManagerMessage, nodeId);
     }
 }

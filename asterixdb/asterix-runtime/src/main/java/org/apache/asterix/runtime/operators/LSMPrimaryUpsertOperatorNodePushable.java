@@ -154,10 +154,10 @@ public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDe
             indexAccessor = index.createAccessor(modCallback, searchCallback);
             cursor = indexAccessor.createSearchCursor(false);
             frameTuple = new FrameTupleReference();
-            IAppRuntimeContext runtimeCtx =
-                    (IAppRuntimeContext) ctx.getJobletContext().getApplicationContext().getApplicationObject();
+            IAppRuntimeContext appCtx =
+                    (IAppRuntimeContext) ctx.getJobletContext().getServiceContext().getApplicationContext();
             LSMIndexUtil.checkAndSetFirstLSN((AbstractLSMIndex) index,
-                    runtimeCtx.getTransactionSubsystem().getLogManager());
+                    appCtx.getTransactionSubsystem().getLogManager());
             frameOpCallback =
                     frameOpCallbackFactory.createFrameOperationCallback(ctx, (ILSMIndexAccessor) indexAccessor);
         } catch (Exception e) {

@@ -22,13 +22,13 @@ import java.io.Serializable;
 import java.util.concurrent.ThreadFactory;
 
 import org.apache.hyracks.api.config.IApplicationConfig;
-import org.apache.hyracks.api.application.IApplicationContext;
+import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.job.IJobSerializerDeserializerContainer;
 import org.apache.hyracks.api.job.JobSerializerDeserializerContainer;
 import org.apache.hyracks.api.messages.IMessageBroker;
 import org.apache.hyracks.control.common.context.ServerContext;
 
-public abstract class ApplicationContext implements IApplicationContext {
+public abstract class ServiceContext implements IServiceContext {
     protected final ServerContext serverCtx;
     protected final IApplicationConfig appConfig;
     protected ThreadFactory threadFactory;
@@ -36,7 +36,7 @@ public abstract class ApplicationContext implements IApplicationContext {
     protected IMessageBroker messageBroker;
     protected IJobSerializerDeserializerContainer jobSerDeContainer = new JobSerializerDeserializerContainer();
 
-    public ApplicationContext(ServerContext serverCtx, IApplicationConfig appConfig, ThreadFactory threadFactory) {
+    public ServiceContext(ServerContext serverCtx, IApplicationConfig appConfig, ThreadFactory threadFactory) {
         this.serverCtx = serverCtx;
         this.appConfig = appConfig;
         this.threadFactory = threadFactory;

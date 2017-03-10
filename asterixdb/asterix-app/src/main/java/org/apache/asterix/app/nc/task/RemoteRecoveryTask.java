@@ -26,7 +26,6 @@ import org.apache.asterix.common.api.IAppRuntimeContext;
 import org.apache.asterix.common.api.INCLifecycleTask;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.service.IControllerService;
-import org.apache.hyracks.control.nc.NodeControllerService;
 
 public class RemoteRecoveryTask implements INCLifecycleTask {
 
@@ -39,9 +38,8 @@ public class RemoteRecoveryTask implements INCLifecycleTask {
 
     @Override
     public void perform(IControllerService cs) throws HyracksDataException {
-        NodeControllerService ncs = (NodeControllerService) cs;
-        IAppRuntimeContext runtimeContext = (IAppRuntimeContext) ncs.getApplicationContext().getApplicationObject();
-        runtimeContext.getRemoteRecoveryManager().doRemoteRecoveryPlan(recoveryPlan);
+        IAppRuntimeContext appContext = (IAppRuntimeContext) cs.getApplicationContext();
+        appContext.getRemoteRecoveryManager().doRemoteRecoveryPlan(recoveryPlan);
     }
 
     private void writeObject(java.io.ObjectOutputStream out) throws IOException {

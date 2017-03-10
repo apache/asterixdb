@@ -93,7 +93,7 @@ public abstract class AbstractLSMRTreeDataflowHelper extends AbstractLSMIndexDat
         return createLSMTree(virtualBufferCaches, fileRef, opDesc.getStorageManager().getBufferCache(ctx),
                 opDesc.getStorageManager().getFileMapProvider(ctx), treeOpDesc.getTreeIndexTypeTraits(),
                 treeOpDesc.getTreeIndexComparatorFactories(), btreeComparatorFactories,
-                opTrackerFactory.getOperationTracker(ctx.getJobletContext().getApplicationContext()),
+                opTrackerFactory.getOperationTracker(ctx.getJobletContext().getServiceContext()),
                 valueProviderFactories, rtreePolicyType, linearizeCmpFactory,
                 rtreeFields, filterTypeTraits, filterCmpFactories, filterFields);
 

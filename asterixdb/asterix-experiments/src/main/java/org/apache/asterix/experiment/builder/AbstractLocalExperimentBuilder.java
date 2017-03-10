@@ -19,19 +19,7 @@
 
 package org.apache.asterix.experiment.builder;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
 import org.apache.asterix.experiment.action.base.SequentialActionList;
-import org.apache.asterix.hyracks.bootstrap.CCApplicationEntryPoint;
-import org.apache.asterix.hyracks.bootstrap.NCApplicationEntryPoint;
-import org.apache.hyracks.control.cc.ClusterControllerService;
-import org.apache.hyracks.control.common.controllers.CCConfig;
-import org.apache.hyracks.control.common.controllers.NCConfig;
-import org.apache.hyracks.control.nc.NodeControllerService;
 
 public abstract class AbstractLocalExperimentBuilder extends AbstractExperimentBuilder {
 
@@ -46,74 +34,4 @@ public abstract class AbstractLocalExperimentBuilder extends AbstractExperimentB
 
     protected abstract void addPost(SequentialActionList post);
 
-//    @Override
-//    protected void prePost(SequentialExecutableSet pre, SequentialExecutableSet post) {
-//        int ccClientPort = 1098;
-//        int ccClusterPort = 1099;
-//        CCConfig ccConfig = new CCConfig();
-//        ccConfig.clusterNetIpAddress = "127.0.0.1";
-//        ccConfig.clientNetIpAddress = "127.0.0.1";
-//        ccConfig.clientNetPort = ccClientPort;
-//        ccConfig.clusterNetPort = ccClusterPort;
-//        ccConfig.defaultMaxJobAttempts = 0;
-//        ccConfig.resultTTL = 30000;
-//        ccConfig.resultSweepThreshold = 1000;
-//        ccConfig.appCCMainClass = CCApplicationEntryPoint.class.getName();
-//        final ClusterControllerService cc;
-//        try {
-//            cc = new ClusterControllerService(ccConfig);
-//        } catch (Exception e) {
-//            throw new IllegalArgumentException(e);
-//        }
-//
-//        final List<NodeControllerService> ncs = new ArrayList<>();
-//        for (int i = 0; i < nNodeControllers; ++i) {
-//            NCConfig ncConfig = new NCConfig();
-//            ncConfig.ccHost = "localhost";
-//            ncConfig.ccPort = ccClusterPort;
-//            ncConfig.clusterNetIPAddress = "127.0.0.1";
-//            ncConfig.dataIPAddress = "127.0.0.1";
-//            ncConfig.datasetIPAddress = "127.0.0.1";
-//            ncConfig.nodeId = "nc" + String.valueOf((i + 1));
-//            ncConfig.resultTTL = 30000;
-//            ncConfig.resultSweepThreshold = 1000;
-//            Path p0 = Paths.get(System.getProperty("java.io.tmpdir"), ncConfig.nodeId, "iodevice0");
-//            Path p1 = Paths.get(System.getProperty("java.io.tmpdir"), ncConfig.nodeId, "iodevice1");
-//            ncConfig.ioDevices = p0.toString() + "," + p1.toString();
-//            ncConfig.appNCMainClass = NCApplicationEntryPoint.class.getName();
-//            NodeControllerService nc;
-//            try {
-//                nc = new NodeControllerService(ncConfig);
-//            } catch (Exception e) {
-//                throw new IllegalArgumentException(e);
-//            }
-//            ncs.add(nc);
-//        }
-//
-//        pre.add(new AbstractExecutable() {
-//
-//            @Override
-//            protected void doExecute() throws Exception {
-//                cc.start();
-//                for (NodeControllerService nc : ncs) {
-//                    nc.start();
-//                }
-//            }
-//        });
-//
-//        post.add(new AbstractExecutable() {
-//
-//            @Override
-//            protected void doExecute() throws Exception {
-//                Collections.reverse(ncs);
-//                for (NodeControllerService nc : ncs) {
-//                    nc.stop();
-//                }
-//                cc.stop();
-//                System.exit(1);
-//            }
-//        });
-//        addPre(pre);
-//        addPost(post);
-//    }
 }

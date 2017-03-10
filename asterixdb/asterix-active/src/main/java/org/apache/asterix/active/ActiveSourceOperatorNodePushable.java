@@ -36,8 +36,8 @@ public abstract class ActiveSourceOperatorNodePushable extends AbstractUnaryOutp
 
     public ActiveSourceOperatorNodePushable(IHyracksTaskContext ctx, ActiveRuntimeId runtimeId) {
         this.ctx = ctx;
-        activeManager = (ActiveManager) ((IAppRuntimeContext) ctx.getJobletContext().getApplicationContext()
-                .getApplicationObject()).getActiveManager();
+        activeManager = (ActiveManager) ((IAppRuntimeContext) ctx.getJobletContext().getServiceContext()
+                .getApplicationContext()).getActiveManager();
         this.runtimeId = runtimeId;
     }
 

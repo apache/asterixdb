@@ -23,7 +23,7 @@ import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.hyracks.api.application.INCApplicationEntryPoint;
+import org.apache.hyracks.api.application.INCApplication;
 import org.apache.hyracks.control.common.config.ConfigManager;
 import org.apache.hyracks.control.common.config.ConfigUtils;
 import org.apache.hyracks.control.common.controllers.NCConfig;
@@ -40,10 +40,10 @@ public class NCDriver {
         try {
             final String nodeId = ConfigUtils.getOptionValue(args, NCConfig.Option.NODE_ID);
             final ConfigManager configManager = new ConfigManager(args);
-            INCApplicationEntryPoint appEntryPoint = getAppEntryPoint(args);
-            appEntryPoint.registerConfigOptions(configManager);
+            INCApplication application = getApplication(args);
+            application.registerConfig(configManager);
             NCConfig ncConfig = new NCConfig(nodeId, configManager);
-            final NodeControllerService ncService = new NodeControllerService(ncConfig, appEntryPoint);
+            final NodeControllerService ncService = new NodeControllerService(ncConfig, application);
             if (LOGGER.isLoggable(Level.SEVERE)) {
                 LOGGER.severe("Setting uncaught exception handler " + ncService.getLifeCycleComponentManager());
             }
@@ -62,11 +62,11 @@ public class NCDriver {
         }
     }
 
-    private static INCApplicationEntryPoint getAppEntryPoint(String[] args)
+    private static INCApplication getApplication(String[] args)
             throws ClassNotFoundException, InstantiationException, IllegalAccessException, IOException {
         // determine app class so that we can use the correct implementation of the configuration...
         String appClassName = ConfigUtils.getOptionValue(args, NCConfig.Option.APP_CLASS);
-        return appClassName != null ? (INCApplicationEntryPoint) (Class.forName(appClassName)).newInstance()
-                : NCApplicationEntryPoint.INSTANCE;
+        return appClassName != null ? (INCApplication) (Class.forName(appClassName)).newInstance()
+                : BaseNCApplication.INSTANCE;
     }
 }

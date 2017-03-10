@@ -29,7 +29,7 @@ import org.apache.asterix.metadata.api.IMetadataExtension;
 import org.apache.asterix.metadata.api.INCExtensionManager;
 import org.apache.asterix.metadata.entitytupletranslators.MetadataTupleTranslatorProvider;
 import org.apache.asterix.utils.ExtensionUtil;
-import org.apache.hyracks.api.application.INCApplicationContext;
+import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 /**
@@ -91,17 +91,17 @@ public class NCExtensionManager implements INCExtensionManager {
     /**
      * Called on bootstrap of metadata node allowing extensions to instantiate their Metadata artifacts
      *
-     * @param ncApplicationContext
-     *            the node controller application context
+     * @param ncServiceCtx
+     *            the node controller service context
      * @throws HyracksDataException
      */
-    public void initializeMetadata(INCApplicationContext appCtx) throws HyracksDataException {
+    public void initializeMetadata(INCServiceContext ncServiceCtx) throws HyracksDataException {
         if (mdExtensions != null) {
             for (IMetadataExtension mdExtension : mdExtensions) {
                 try {
-                    mdExtension.initializeMetadata(appCtx);
+                    mdExtension.initializeMetadata(ncServiceCtx);
                 } catch (RemoteException | ACIDException e) {
-                    throw new HyracksDataException(e);
+                    throw HyracksDataException.create(e);
                 }
             }
         }

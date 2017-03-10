@@ -65,7 +65,7 @@ public class CliDeployBinaryWork extends SynchronizableWork {
             /**
              * Deploy for the cluster controller
              */
-            DeploymentUtils.deploy(deploymentId, binaryURLs, ccs.getApplicationContext()
+            DeploymentUtils.deploy(deploymentId, binaryURLs, ccs.getContext()
                     .getJobSerializerDeserializerContainer(), ccs.getServerContext(), false);
 
             /**

@@ -21,7 +21,7 @@ package org.apache.hyracks.test.support;
 import java.io.Serializable;
 import java.util.concurrent.ThreadFactory;
 
-import org.apache.hyracks.api.application.INCApplicationContext;
+import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.application.IStateDumpHandler;
 import org.apache.hyracks.api.comm.IChannelInterfaceFactory;
 import org.apache.hyracks.api.config.IApplicationConfig;
@@ -33,17 +33,17 @@ import org.apache.hyracks.api.messages.IMessageBroker;
 import org.apache.hyracks.api.resources.memory.IMemoryManager;
 import org.apache.hyracks.api.service.IControllerService;
 
-public class TestNCApplicationContext implements INCApplicationContext {
+public class TestNCServiceContext implements INCServiceContext {
     private final ILifeCycleComponentManager lccm;
     private final IIOManager ioManager;
     private final String nodeId;
 
     private Serializable distributedState;
-    private Object appObject;
+    private Object appCtx;
 
     private final IMemoryManager mm;
 
-    public TestNCApplicationContext(IIOManager ioManager, String nodeId) {
+    public TestNCServiceContext(IIOManager ioManager, String nodeId) {
         this.lccm = new LifeCycleComponentManager();
         this.ioManager = ioManager;
         this.nodeId = nodeId;
@@ -83,16 +83,6 @@ public class TestNCApplicationContext implements INCApplicationContext {
     @Override
     public IIOManager getIoManager() {
         return ioManager;
-    }
-
-    @Override
-    public void setApplicationObject(Object object) {
-        this.appObject = object;
-    }
-
-    @Override
-    public Object getApplicationObject() {
-        return appObject;
     }
 
     @Override
@@ -150,5 +140,10 @@ public class TestNCApplicationContext implements INCApplicationContext {
     @Override
     public void setMessagingChannelInterfaceFactory(IChannelInterfaceFactory interfaceFactory) {
         // do nothing
+    }
+
+    @Override
+    public Object getApplicationContext() {
+        return appCtx;
     }
 }

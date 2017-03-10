@@ -19,19 +19,18 @@
 package org.apache.hyracks.api.application;
 
 import org.apache.hyracks.api.config.IConfigManager;
-import org.apache.hyracks.api.job.resource.IJobCapacityController;
 import org.kohsuke.args4j.OptionHandlerFilter;
 
-public interface ICCApplicationEntryPoint {
-    void start(ICCApplicationContext ccAppCtx, String[] args) throws Exception;
+public interface IApplication {
+    void start(IServiceContext ctx, String[] args) throws Exception; //NOSONAR
 
-    void stop() throws Exception;
+    void startupCompleted() throws Exception; //NOSONAR
 
-    void startupCompleted() throws Exception;
-
-    IJobCapacityController getJobCapacityController();
+    void stop() throws Exception; //NOSONAR
 
     void registerConfig(IConfigManager configManager);
+
+    Object getApplicationContext();
 
     default OptionHandlerFilter getUsageFilter() {
         return OptionHandlerFilter.PUBLIC;

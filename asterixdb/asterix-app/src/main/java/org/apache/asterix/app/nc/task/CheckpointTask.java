@@ -23,7 +23,6 @@ import org.apache.asterix.common.api.INCLifecycleTask;
 import org.apache.asterix.common.transactions.ICheckpointManager;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.service.IControllerService;
-import org.apache.hyracks.control.nc.NodeControllerService;
 
 public class CheckpointTask implements INCLifecycleTask {
 
@@ -31,9 +30,8 @@ public class CheckpointTask implements INCLifecycleTask {
 
     @Override
     public void perform(IControllerService cs) throws HyracksDataException {
-        NodeControllerService ncs = (NodeControllerService) cs;
-        IAppRuntimeContext runtimeContext = (IAppRuntimeContext) ncs.getApplicationContext().getApplicationObject();
-        ICheckpointManager checkpointMgr = runtimeContext.getTransactionSubsystem().getCheckpointManager();
+        IAppRuntimeContext appContext = (IAppRuntimeContext) cs.getApplicationContext();
+        ICheckpointManager checkpointMgr = appContext.getTransactionSubsystem().getCheckpointManager();
         checkpointMgr.doSharpCheckpoint();
     }
 }

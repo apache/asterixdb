@@ -22,7 +22,7 @@ import java.util.Map;
 
 import org.apache.asterix.common.api.IAppRuntimeContext;
 import org.apache.asterix.common.transactions.Resource;
-import org.apache.hyracks.api.application.INCApplicationContext;
+import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -65,17 +65,17 @@ public class ExternalBTreeWithBuddyLocalResourceMetadata extends Resource {
     }
 
     @Override
-    public ILSMIndex createIndexInstance(INCApplicationContext appCtx, LocalResource resource)
+    public ILSMIndex createIndexInstance(INCServiceContext serviceCtx, LocalResource resource)
             throws HyracksDataException {
-        IAppRuntimeContext appRuntimeCtx = (IAppRuntimeContext) appCtx.getApplicationObject();
-        IIOManager ioManager = appCtx.getIoManager();
+        IAppRuntimeContext appCtx = (IAppRuntimeContext) serviceCtx.getApplicationContext();
+        IIOManager ioManager = serviceCtx.getIoManager();
         FileReference file = ioManager.resolve(resource.getPath());
-        return LSMBTreeUtil.createExternalBTreeWithBuddy(ioManager, file, appRuntimeCtx.getBufferCache(),
-                appRuntimeCtx.getFileMapManager(), typeTraits, btreeCmpFactories,
-                appRuntimeCtx.getBloomFilterFalsePositiveRate(),
+        return LSMBTreeUtil.createExternalBTreeWithBuddy(ioManager, file, appCtx.getBufferCache(),
+                appCtx.getFileMapManager(), typeTraits, btreeCmpFactories,
+                appCtx.getBloomFilterFalsePositiveRate(),
                 mergePolicyFactory.createMergePolicy(mergePolicyProperties,
-                        appRuntimeCtx.getDatasetLifecycleManager()),
-                opTrackerProvider.getOperationTracker(appCtx), appRuntimeCtx.getLSMIOScheduler(),
+                        appCtx.getDatasetLifecycleManager()),
+                opTrackerProvider.getOperationTracker(serviceCtx), appCtx.getLSMIOScheduler(),
                 ioOpCallbackFactory.createIoOpCallback(), buddyBtreeFields, -1, true, metadataPageManagerFactory);
     }
 }

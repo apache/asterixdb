@@ -24,65 +24,48 @@ import org.apache.hyracks.api.lifecycle.ILifeCycleComponentManager;
 import org.apache.hyracks.api.resources.memory.IMemoryManager;
 
 /**
- * Application Context at the Node Controller for an application.
- *
- * @author vinayakb
+ * Service Context at the Node Controller for an application.
  */
-public interface INCApplicationContext extends IApplicationContext {
+public interface INCServiceContext extends IServiceContext {
     /**
      * Gets the life cycle component manager of the Node Controller.
      *
      * @return
      */
-    public ILifeCycleComponentManager getLifeCycleComponentManager();
+    ILifeCycleComponentManager getLifeCycleComponentManager();
 
     /**
      * Gets the node Id of the Node Controller.
      *
      * @return the Node Id.
      */
-    public String getNodeId();
+    String getNodeId();
 
     /**
      * @return the IO Manager
      */
-    public IIOManager getIoManager();
-
-    /**
-     * Set an object that can be later retrieved by the {@link #getApplicationObject()} call.
-     *
-     * @param object
-     *            Application Object
-     */
-    public void setApplicationObject(Object object);
-
-    /**
-     * Get the application object previously set by the {@link #setApplicationObject(Object)} call.
-     *
-     * @return Application Object
-     */
-    public Object getApplicationObject();
+    IIOManager getIoManager();
 
     /**
      * Get the memory manager at the node.
      *
      * @return Memory Manager
      */
-    public IMemoryManager getMemoryManager();
+    IMemoryManager getMemoryManager();
 
     /**
      * Set the handler for state dumps.
      *
      * @param handler
      */
-    public void setStateDumpHandler(IStateDumpHandler handler);
+    void setStateDumpHandler(IStateDumpHandler handler);
 
     /**
      * Set the application MessagingChannelInterfaceFactory
      *
      * @param interfaceFactory
      */
-    public void setMessagingChannelInterfaceFactory(IChannelInterfaceFactory interfaceFactory);
+    void setMessagingChannelInterfaceFactory(IChannelInterfaceFactory interfaceFactory);
 
     /**
      * Get the application MessagingChannelInterfaceFactory previously set by
@@ -90,5 +73,5 @@ public interface INCApplicationContext extends IApplicationContext {
      *
      * @return
      */
-    public IChannelInterfaceFactory getMessagingChannelInterfaceFactory();
+    IChannelInterfaceFactory getMessagingChannelInterfaceFactory();
 }

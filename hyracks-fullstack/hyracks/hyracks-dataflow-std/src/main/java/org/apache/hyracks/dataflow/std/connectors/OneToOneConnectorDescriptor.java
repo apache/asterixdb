@@ -20,7 +20,7 @@ package org.apache.hyracks.dataflow.std.connectors;
 
 import java.util.BitSet;
 
-import org.apache.hyracks.api.application.ICCApplicationContext;
+import org.apache.hyracks.api.application.ICCServiceContext;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.comm.IPartitionCollector;
 import org.apache.hyracks.api.comm.IPartitionWriterFactory;
@@ -65,7 +65,7 @@ public class OneToOneConnectorDescriptor extends AbstractConnectorDescriptor {
 
     @Override
     public void contributeSchedulingConstraints(IConstraintAcceptor constraintAcceptor, ActivityCluster ac,
-            ICCApplicationContext appCtx) {
+            ICCServiceContext serviceCtx) {
         OperatorDescriptorId consumer = ac.getConsumerActivity(getConnectorId()).getOperatorDescriptorId();
         OperatorDescriptorId producer = ac.getProducerActivity(getConnectorId()).getOperatorDescriptorId();
 

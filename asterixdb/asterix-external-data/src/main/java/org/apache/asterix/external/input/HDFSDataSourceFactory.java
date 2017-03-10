@@ -41,7 +41,6 @@ import org.apache.asterix.external.provider.StreamRecordReaderProvider.Format;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.external.util.HDFSUtils;
-import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.RecordReader;
@@ -129,15 +128,19 @@ public class HDFSDataSourceFactory implements IRecordReaderFactory<Object>, IInd
     public AsterixInputStream createInputStream(IHyracksTaskContext ctx, int partition, IExternalIndexer indexer)
             throws HyracksDataException {
         try {
-            if (!configured) {
-                conf = confFactory.getConf();
-                inputSplits = inputSplitsFactory.getSplits();
-                nodeName = ctx.getJobletContext().getApplicationContext().getNodeId();
-                configured = true;
-            }
+            restoreConfig(ctx);
             return new HDFSInputStream(read, inputSplits, readSchedule, nodeName, conf, configuration, files, indexer);
         } catch (Exception e) {
             throw new HyracksDataException(e);
+        }
+    }
+
+    private void restoreConfig(IHyracksTaskContext ctx) throws HyracksDataException {
+        if (!configured) {
+            conf = confFactory.getConf();
+            inputSplits = inputSplitsFactory.getSplits();
+            nodeName = ctx.getJobletContext().getServiceContext().getNodeId();
+            configured = true;
         }
     }
 
@@ -202,11 +205,8 @@ public class HDFSDataSourceFactory implements IRecordReaderFactory<Object>, IInd
                     return streamReader;
                 }
             }
-            JobConf conf = confFactory.getConf();
-            InputSplit[] inputSplits = inputSplitsFactory.getSplits();
-            String nodeName = ctx.getJobletContext().getApplicationContext().getNodeId();
-            return new HDFSRecordReader<Object, Writable>(read, inputSplits, readSchedule, nodeName, conf, files,
-                    indexer);
+            restoreConfig(ctx);
+            return new HDFSRecordReader<>(read, inputSplits, readSchedule, nodeName, conf, files, indexer);
         } catch (Exception e) {
             throw new HyracksDataException(e);
         }

@@ -21,7 +21,7 @@ package org.apache.hyracks.control.cc.work;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.hyracks.api.application.ICCApplicationContext;
+import org.apache.hyracks.api.application.ICCServiceContext;
 import org.apache.hyracks.api.deployment.DeploymentId;
 import org.apache.hyracks.api.messages.IMessage;
 import org.apache.hyracks.control.cc.ClusterControllerService;
@@ -49,7 +49,7 @@ public class ApplicationMessageWork extends AbstractHeartbeatWork {
 
     @Override
     public void runWork() {
-        final ICCApplicationContext ctx = ccs.getApplicationContext();
+        final ICCServiceContext ctx = ccs.getContext();
         try {
             final IMessage data = (IMessage) DeploymentUtils.deserialize(message, deploymentId, ctx);
             ccs.getExecutor().execute(new Runnable() {

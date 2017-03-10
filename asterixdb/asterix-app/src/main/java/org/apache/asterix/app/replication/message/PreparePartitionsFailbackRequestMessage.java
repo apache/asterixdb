@@ -29,7 +29,6 @@ import org.apache.asterix.runtime.message.AbstractFailbackPlanMessage;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepository;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.service.IControllerService;
-import org.apache.hyracks.control.nc.NodeControllerService;
 
 public class PreparePartitionsFailbackRequestMessage extends AbstractFailbackPlanMessage {
 
@@ -73,10 +72,8 @@ public class PreparePartitionsFailbackRequestMessage extends AbstractFailbackPla
 
     @Override
     public void handle(IControllerService cs) throws HyracksDataException, InterruptedException {
-        NodeControllerService ncs = (NodeControllerService) cs;
-        IAppRuntimeContext appContext =
-                (IAppRuntimeContext) ncs.getApplicationContext().getApplicationObject();
-        INCMessageBroker broker = (INCMessageBroker) ncs.getApplicationContext().getMessageBroker();
+        IAppRuntimeContext appContext = (IAppRuntimeContext) cs.getApplicationContext();
+        INCMessageBroker broker = (INCMessageBroker) cs.getContext().getMessageBroker();
         /**
          * if the metadata partition will be failed back
          * we need to flush and close all datasets including metadata datasets
@@ -100,15 +97,15 @@ public class PreparePartitionsFailbackRequestMessage extends AbstractFailbackPla
         }
 
         //mark the partitions to be closed as inactive
-        PersistentLocalResourceRepository localResourceRepo = (PersistentLocalResourceRepository) appContext
-                .getLocalResourceRepository();
+        PersistentLocalResourceRepository localResourceRepo =
+                (PersistentLocalResourceRepository) appContext.getLocalResourceRepository();
         for (Integer partitionId : partitions) {
             localResourceRepo.addInactivePartition(partitionId);
         }
 
         //send response after partitions prepared for failback
-        PreparePartitionsFailbackResponseMessage reponse = new PreparePartitionsFailbackResponseMessage(planId,
-                requestId, partitions);
+        PreparePartitionsFailbackResponseMessage reponse =
+                new PreparePartitionsFailbackResponseMessage(planId, requestId, partitions);
         try {
             broker.sendMessageToCC(reponse);
         } catch (Exception e) {

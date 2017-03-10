@@ -21,7 +21,7 @@ package org.apache.hyracks.dataflow.std.base;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.apache.hyracks.api.application.ICCApplicationContext;
+import org.apache.hyracks.api.application.ICCServiceContext;
 import org.apache.hyracks.api.constraints.IConstraintAcceptor;
 import org.apache.hyracks.api.dataflow.ConnectorDescriptorId;
 import org.apache.hyracks.api.dataflow.IConnectorDescriptor;
@@ -68,7 +68,7 @@ public abstract class AbstractConnectorDescriptor implements IConnectorDescripto
 
     @Override
     public void contributeSchedulingConstraints(IConstraintAcceptor constraintAcceptor, ActivityCluster ac,
-            ICCApplicationContext appCtx) {
+            ICCServiceContext serviceCtx) {
         // do nothing
     }
 

@@ -51,6 +51,8 @@ import org.apache.asterix.common.utils.StorageConstants;
 import org.apache.asterix.event.schema.yarnCluster.Cluster;
 import org.apache.asterix.event.schema.yarnCluster.MasterNode;
 import org.apache.asterix.event.schema.yarnCluster.Node;
+import org.apache.asterix.hyracks.bootstrap.CCApplication;
+import org.apache.asterix.hyracks.bootstrap.NCApplication;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.HelpFormatter;
@@ -152,7 +154,7 @@ public class AsterixApplicationMaster {
     //Tells us whether the Cluster Controller is up so we can safely start some Node Controllers
     private AtomicBoolean ccUp = new AtomicBoolean();
     private AtomicBoolean ccStarted = new AtomicBoolean();
-    private Queue<Node> pendingNCs = new ArrayDeque<Node>();
+    private Queue<Node> pendingNCs = new ArrayDeque<>();
 
     //HDFS path to AsterixDB distributable zip
     private String asterixZipPath = "";
@@ -176,7 +178,7 @@ public class AsterixApplicationMaster {
     private int numTotalContainers = 0;
 
     // Set the local resources
-    private Map<String, LocalResource> localResources = new HashMap<String, LocalResource>();
+    private Map<String, LocalResource> localResources = new HashMap<>();
 
     private Cluster clusterDesc = null;
     private MasterNode cC = null;
@@ -196,7 +198,7 @@ public class AsterixApplicationMaster {
     private boolean initial = false;
 
     // Launch threads
-    private List<Thread> launchThreads = new CopyOnWriteArrayList<Thread>();
+    private List<Thread> launchThreads = new CopyOnWriteArrayList<>();
 
     public static void main(String[] args) {
 
@@ -548,8 +550,9 @@ public class AsterixApplicationMaster {
         for (Node node : cl.getNode()) {
             InetAddress nodeIp = InetAddress.getByName(node.getClusterIp());
             LOG.info(nodeIp + "?=" + containerIp);
-            if (nodeIp.equals(containerIp))
+            if (nodeIp.equals(containerIp)) {
                 return node;
+            }
         }
         //if we find nothing, this is bad...
         throw new java.net.UnknownHostException("Could not resolve container" + containerHost + " to node");
@@ -626,12 +629,14 @@ public class AsterixApplicationMaster {
             if (fs.exists(p)) {
                 FileStatus[] dataverses = fs.listStatus(p);
                 for (FileStatus d : dataverses) {
-                    if (!d.isDirectory())
+                    if (!d.isDirectory()) {
                         throw new IOException("Library configuration directory structure is incorrect");
+                    }
                     FileStatus[] libraries = fs.listStatus(d.getPath());
                     for (FileStatus l : libraries) {
-                        if (l.isDirectory())
+                        if (l.isDirectory()) {
                             throw new IOException("Library configuration directory structure is incorrect");
+                        }
                         LocalResource lr = Records.newRecord(LocalResource.class);
                         lr.setResource(ConverterUtils.getYarnUrlFromURI(l.getPath().toUri()));
                         lr.setSize(l.getLen());
@@ -767,6 +772,7 @@ public class AsterixApplicationMaster {
      * is running.
      */
     private class RMCallbackHandler implements AMRMClientAsync.CallbackHandler {
+        @Override
         public void onContainersCompleted(List<ContainerStatus> completedContainers) {
             LOG.info("Got response from RM for container ask, completedCnt=" + completedContainers.size());
             for (ContainerStatus containerStatus : completedContainers) {
@@ -794,10 +800,12 @@ public class AsterixApplicationMaster {
             }
             //stop infinite looping of run()
             if (numCompletedContainers.get() + numFailedContainers.get() == numAllocatedContainers.get()
-                    && doneAllocating)
+                    && doneAllocating) {
                 done = true;
+            }
         }
 
+        @Override
         public void onContainersAllocated(List<Container> allocatedContainers) {
             LOG.info("Got response from RM for container ask, allocatedCnt=" + allocatedContainers.size());
             numAllocatedContainers.addAndGet(allocatedContainers.size());
@@ -850,15 +858,18 @@ public class AsterixApplicationMaster {
         /**
          * Ask the processes on the container to gracefully exit.
          */
+        @Override
         public void onShutdownRequest() {
             LOG.info("AM shutting down per request");
             done = true;
         }
 
+        @Override
         public void onNodesUpdated(List<NodeReport> updatedNodes) {
             //TODO: This will become important when we deal with what happens if an NC dies
         }
 
+        @Override
         public float getProgress() {
             //return half way because progress is basically meaningless for us
             if (!doneAllocating) {
@@ -867,6 +878,7 @@ public class AsterixApplicationMaster {
             return (float) 0.5;
         }
 
+        @Override
         public void onError(Throwable arg0) {
             LOG.error("Fatal Error recieved by AM: " + arg0);
             done = true;
@@ -875,12 +887,13 @@ public class AsterixApplicationMaster {
 
     private class NMCallbackHandler implements NMClientAsync.CallbackHandler {
 
-        private ConcurrentMap<ContainerId, Container> containers = new ConcurrentHashMap<ContainerId, Container>();
+        private ConcurrentMap<ContainerId, Container> containers = new ConcurrentHashMap<>();
 
         public void addContainer(ContainerId containerId, Container container) {
             containers.putIfAbsent(containerId, container);
         }
 
+        @Override
         public void onContainerStopped(ContainerId containerId) {
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Succeeded to stop Container " + containerId);
@@ -888,12 +901,14 @@ public class AsterixApplicationMaster {
             containers.remove(containerId);
         }
 
+        @Override
         public void onContainerStatusReceived(ContainerId containerId, ContainerStatus containerStatus) {
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Container Status: id=" + containerId + ", status=" + containerStatus);
             }
         }
 
+        @Override
         public void onContainerStarted(ContainerId containerId, Map<String, ByteBuffer> allServiceResponse) {
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Succeeded to start Container " + containerId);
@@ -904,15 +919,18 @@ public class AsterixApplicationMaster {
             }
         }
 
+        @Override
         public void onStartContainerError(ContainerId containerId, Throwable t) {
             LOG.error("Failed to start Container " + containerId);
             containers.remove(containerId);
         }
 
+        @Override
         public void onGetContainerStatusError(ContainerId containerId, Throwable t) {
             LOG.error("Failed to query the status of Container " + containerId);
         }
 
+        @Override
         public void onStopContainerError(ContainerId containerId, Throwable t) {
             LOG.error("Failed to stop Container " + containerId);
             containers.remove(containerId);
@@ -946,6 +964,7 @@ public class AsterixApplicationMaster {
          * for shell command and eventually dispatches the container
          * start request to the CM.
          */
+        @Override
         public void run() {
             LOG.info("Setting up container launch container for containerid=" + container.getId());
             ContainerLaunchContext ctx = Records.newRecord(ContainerLaunchContext.class);
@@ -954,7 +973,7 @@ public class AsterixApplicationMaster {
 
             //Set the env variables to be setup in the env where the application master will be run
             LOG.info("Set the environment for the node");
-            Map<String, String> env = new HashMap<String, String>();
+            Map<String, String> env = new HashMap<>();
 
             // Add AppMaster.jar location to classpath
             // At some point we should not be required to add
@@ -1019,9 +1038,9 @@ public class AsterixApplicationMaster {
          * @return A list of the commands that should be executed
          */
         private List<String> produceStartCmd(Container container) {
-            List<String> commands = new ArrayList<String>();
+            List<String> commands = new ArrayList<>();
             // Set the necessary command to execute on the allocated container
-            List<CharSequence> vargs = new ArrayList<CharSequence>(5);
+            List<CharSequence> vargs = new ArrayList<>(5);
 
             vargs.add(JAVA_HOME + File.separator + "bin" + File.separator + "java");
             vargs.add("-classpath " + '\'' + ASTERIX_ZIP_NAME + File.separator + "repo" + File.separator + "*\'");
@@ -1032,7 +1051,7 @@ public class AsterixApplicationMaster {
                 //get our java opts
                 vargs.add(ccJavaOpts);
                 vargs.add(CC_CLASSNAME);
-                vargs.add("-app-class org.apache.asterix.hyracks.bootstrap.CCApplicationEntryPoint");
+                vargs.add("-app-class " + CCApplication.class.getName());
                 vargs.add("-address " + cC.getClusterIp());
                 vargs.add("-client-listen-address " + cC.getClientIp());
                 //pass CC optional parameters
@@ -1074,7 +1093,7 @@ public class AsterixApplicationMaster {
                     }
                     vargs.add(ncJavaOpts);
                     vargs.add(NC_CLASSNAME);
-                    vargs.add("-app-class org.apache.asterix.hyracks.bootstrap.NCApplicationEntryPoint");
+                    vargs.add("-app-class " + NCApplication.class.getName());
                     vargs.add("-node-id " + local.getId());
                     vargs.add("-cluster-address " + cC.getClusterIp());
                     vargs.add("-iodevices " + iodevice);
@@ -1126,8 +1145,8 @@ public class AsterixApplicationMaster {
             StringBuilder classPathEnv = new StringBuilder("").append("*");
             classPathEnv.append(File.pathSeparatorChar).append("log4j.properties");
 
-            List<String> commands = new ArrayList<String>();
-            Vector<CharSequence> vargs = new Vector<CharSequence>(5);
+            List<String> commands = new ArrayList<>();
+            Vector<CharSequence> vargs = new Vector<>(5);
             vargs.add(JAVA_HOME + File.separator + "bin" + File.separator + "java");
             vargs.add("-cp " + classPathEnv.toString());
             vargs.add(OBLITERATOR_CLASSNAME);
@@ -1177,8 +1196,8 @@ public class AsterixApplicationMaster {
             }
             classPathEnv.append(File.pathSeparatorChar).append("." + File.separator + "log4j.properties");
 
-            List<String> commands = new ArrayList<String>();
-            Vector<CharSequence> vargs = new Vector<CharSequence>(5);
+            List<String> commands = new ArrayList<>();
+            Vector<CharSequence> vargs = new Vector<>(5);
             vargs.add(JAVA_HOME + File.separator + "bin" + File.separator + "java");
             vargs.add("-cp " + classPathEnv.toString());
             vargs.add(HDFS_BACKUP_CLASSNAME);
@@ -1230,7 +1249,7 @@ public class AsterixApplicationMaster {
 
         private List<String> produceRestoreCommand(Container container) {
             if (containerIsCC(container)) {
-                List<String> blank = new ArrayList<String>();
+                List<String> blank = new ArrayList<>();
                 blank.add("");
                 return blank;
             }
@@ -1260,8 +1279,8 @@ public class AsterixApplicationMaster {
             }
             classPathEnv.append(File.pathSeparatorChar).append("." + File.separator + "log4j.properties");
 
-            List<String> commands = new ArrayList<String>();
-            Vector<CharSequence> vargs = new Vector<CharSequence>(5);
+            List<String> commands = new ArrayList<>();
+            Vector<CharSequence> vargs = new Vector<>(5);
             vargs.add(JAVA_HOME + File.separator + "bin" + File.separator + "java");
             vargs.add("-cp " + classPathEnv.toString());
             vargs.add(HDFS_BACKUP_CLASSNAME);

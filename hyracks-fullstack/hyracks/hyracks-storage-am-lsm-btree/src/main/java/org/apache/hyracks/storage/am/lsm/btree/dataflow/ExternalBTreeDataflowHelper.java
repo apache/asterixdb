@@ -71,7 +71,7 @@ public class ExternalBTreeDataflowHelper extends LSMBTreeDataflowHelper {
                 .getStorageManager().getFileMapProvider(ctx), treeOpDesc.getTreeIndexTypeTraits(), treeOpDesc
                 .getTreeIndexComparatorFactories(), treeOpDesc.getTreeIndexBloomFilterKeyFields(),
                 bloomFilterFalsePositiveRate, mergePolicy, opTrackerFactory.getOperationTracker(ctx.getJobletContext()
-                        .getApplicationContext()), ioScheduler,
+                        .getServiceContext()), ioScheduler,
                 ioOpCallbackFactory.createIoOpCallback(), getVersion(), durable,
                 (IMetadataPageManagerFactory) opDesc.getPageManagerFactory());
     }

@@ -18,17 +18,17 @@
  */
 package org.apache.asterix.runtime.transaction;
 
-import org.apache.hyracks.api.application.IApplicationContext;
+import org.apache.hyracks.api.application.INCServiceContext;
 
 public class GlobalResourceIdFactoryProvider {
 
-    private final IApplicationContext appCtx;
+    private final INCServiceContext ncServiceCtx;
 
-    public GlobalResourceIdFactoryProvider(IApplicationContext appCtx) {
-        this.appCtx = appCtx;
+    public GlobalResourceIdFactoryProvider(INCServiceContext ncServiceCtx) {
+        this.ncServiceCtx = ncServiceCtx;
     }
 
     public GlobalResourceIdFactory createResourceIdFactory() {
-        return new GlobalResourceIdFactory(appCtx);
+        return new GlobalResourceIdFactory(ncServiceCtx);
     }
 }

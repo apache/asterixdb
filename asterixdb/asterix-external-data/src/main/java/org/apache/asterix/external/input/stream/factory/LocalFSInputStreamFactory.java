@@ -60,7 +60,7 @@ public class LocalFSInputStreamFactory implements IInputStreamFactory {
     public synchronized AsterixInputStream createInputStream(IHyracksTaskContext ctx, int partition)
             throws HyracksDataException {
         if (watcher == null) {
-            String nodeName = ctx.getJobletContext().getApplicationContext().getNodeId();
+            String nodeName = ctx.getJobletContext().getServiceContext().getNodeId();
             ArrayList<Path> inputResources = new ArrayList<>();
             for (int i = 0; i < inputFileSplits.length; i++) {
                 if (inputFileSplits[i].getNodeName().equals(nodeName)) {

@@ -21,7 +21,7 @@ package org.apache.asterix.transaction.management.opcallbacks;
 import org.apache.asterix.common.api.IAppRuntimeContext;
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.context.BaseOperationTracker;
-import org.apache.hyracks.api.application.INCApplicationContext;
+import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
 
@@ -36,9 +36,9 @@ public class SecondaryIndexOperationTrackerFactory implements ILSMOperationTrack
     }
 
     @Override
-    public ILSMOperationTracker getOperationTracker(INCApplicationContext ctx) {
-        IDatasetLifecycleManager dslcManager = ((IAppRuntimeContext) ctx.getApplicationObject())
-                .getDatasetLifecycleManager();
+    public ILSMOperationTracker getOperationTracker(INCServiceContext ctx) {
+        IDatasetLifecycleManager dslcManager =
+                ((IAppRuntimeContext) ctx.getApplicationContext()).getDatasetLifecycleManager();
         return new BaseOperationTracker(datasetID, dslcManager.getDatasetInfo(datasetID));
     }
 

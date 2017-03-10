@@ -29,7 +29,6 @@ import org.apache.asterix.common.replication.INCLifecycleMessage;
 import org.apache.asterix.common.replication.IRemoteRecoveryManager;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.service.IControllerService;
-import org.apache.hyracks.control.nc.NodeControllerService;
 
 public class TakeoverPartitionsRequestMessage implements INCLifecycleMessage {
 
@@ -74,9 +73,8 @@ public class TakeoverPartitionsRequestMessage implements INCLifecycleMessage {
 
     @Override
     public void handle(IControllerService cs) throws HyracksDataException, InterruptedException {
-        NodeControllerService ncs = (NodeControllerService) cs;
-        IAppRuntimeContext appContext = (IAppRuntimeContext) ncs.getApplicationContext().getApplicationObject();
-        INCMessageBroker broker = (INCMessageBroker) ncs.getApplicationContext().getMessageBroker();
+        IAppRuntimeContext appContext = (IAppRuntimeContext) cs.getApplicationContext();
+        INCMessageBroker broker = (INCMessageBroker) cs.getContext().getMessageBroker();
         //if the NC is shutting down, it should ignore takeover partitions request
         if (!appContext.isShuttingdown()) {
             HyracksDataException hde = null;

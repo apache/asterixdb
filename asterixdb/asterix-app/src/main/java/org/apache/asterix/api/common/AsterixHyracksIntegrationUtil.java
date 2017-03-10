@@ -33,12 +33,12 @@ import org.apache.asterix.common.api.IClusterManagementWork.ClusterState;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.config.PropertiesAccessor;
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.hyracks.bootstrap.CCApplicationEntryPoint;
-import org.apache.asterix.hyracks.bootstrap.NCApplicationEntryPoint;
+import org.apache.asterix.hyracks.bootstrap.CCApplication;
+import org.apache.asterix.hyracks.bootstrap.NCApplication;
 import org.apache.asterix.runtime.utils.ClusterStateManager;
 import org.apache.commons.io.FileUtils;
-import org.apache.hyracks.api.application.ICCApplicationEntryPoint;
-import org.apache.hyracks.api.application.INCApplicationEntryPoint;
+import org.apache.hyracks.api.application.ICCApplication;
+import org.apache.hyracks.api.application.INCApplication;
 import org.apache.hyracks.api.client.HyracksConnection;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.job.JobFlag;
@@ -70,11 +70,11 @@ public class AsterixHyracksIntegrationUtil {
 
     public void init(boolean deleteOldInstanceData) throws Exception {
         ncs = new NodeControllerService[0]; // ensure that ncs is not null
-        final ICCApplicationEntryPoint ccAppEntryPoint = createCCAppEntryPoint();
+        final ICCApplication ccApplication = createCCApplication();
         configManager = new ConfigManager();
-        ccAppEntryPoint.registerConfig(configManager);
+        ccApplication.registerConfig(configManager);
         final CCConfig ccConfig = createCCConfig(configManager);
-        cc = new ClusterControllerService(ccConfig, ccAppEntryPoint);
+        cc = new ClusterControllerService(ccConfig, ccApplication);
 
         nodeNames = ccConfig.getConfigManager().getNodeNames();
         if (deleteOldInstanceData) {
@@ -93,8 +93,8 @@ public class AsterixHyracksIntegrationUtil {
         List<NodeControllerService> nodeControllers = new ArrayList<>();
         List<Thread> startupThreads = new ArrayList<>();
         for (NCConfig ncConfig : ncConfigs) {
-            final INCApplicationEntryPoint ncAppEntryPoint = createNCAppEntryPoint();
-            NodeControllerService nodeControllerService = new NodeControllerService(ncConfig, ncAppEntryPoint);
+            final INCApplication ncApplication = createNCApplication();
+            NodeControllerService nodeControllerService = new NodeControllerService(ncConfig, ncApplication);
             nodeControllers.add(nodeControllerService);
             Thread ncStartThread = new Thread("IntegrationUtil-" + ncConfig.getNodeId()) {
                 @Override
@@ -141,8 +141,8 @@ public class AsterixHyracksIntegrationUtil {
         return ccConfig;
     }
 
-    protected ICCApplicationEntryPoint createCCAppEntryPoint() {
-        return new CCApplicationEntryPoint();
+    protected ICCApplication createCCApplication() {
+        return new CCApplication();
     }
 
     protected NCConfig createNCConfig(String ncName, ConfigManager configManager) {
@@ -159,8 +159,8 @@ public class AsterixHyracksIntegrationUtil {
         return ncConfig;
     }
 
-    protected INCApplicationEntryPoint createNCAppEntryPoint() {
-        return new NCApplicationEntryPoint();
+    protected INCApplication createNCApplication() {
+        return new NCApplication();
     }
 
     private NCConfig fixupIODevices(NCConfig ncConfig, PropertiesAccessor accessor) {

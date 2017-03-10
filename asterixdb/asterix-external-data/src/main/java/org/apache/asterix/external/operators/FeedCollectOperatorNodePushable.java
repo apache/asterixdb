@@ -51,8 +51,8 @@ public class FeedCollectOperatorNodePushable extends AbstractUnaryInputUnaryOutp
         this.partition = partition;
         this.connectionId = feedConnectionId;
         this.policyAccessor = new FeedPolicyAccessor(feedPolicy);
-        this.activeManager = (ActiveManager) ((IAppRuntimeContext) ctx.getJobletContext().getApplicationContext()
-                .getApplicationObject()).getActiveManager();
+        this.activeManager = (ActiveManager) ((IAppRuntimeContext) ctx.getJobletContext().getServiceContext()
+                .getApplicationContext()).getActiveManager();
     }
 
     @Override

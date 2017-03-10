@@ -26,7 +26,6 @@ import org.apache.asterix.event.schema.cluster.Node;
 import org.apache.hyracks.api.application.IClusterLifecycleListener.ClusterEventType;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.service.IControllerService;
-import org.apache.hyracks.control.nc.NodeControllerService;
 
 public class ReplicaEventMessage implements IApplicationMessage {
 
@@ -55,9 +54,7 @@ public class ReplicaEventMessage implements IApplicationMessage {
 
     @Override
     public void handle(IControllerService cs) throws HyracksDataException, InterruptedException {
-        NodeControllerService ncs = (NodeControllerService) cs;
-        IAppRuntimeContext appContext =
-                (IAppRuntimeContext) ncs.getApplicationContext().getApplicationObject();
+        IAppRuntimeContext appContext = (IAppRuntimeContext) cs.getApplicationContext();
         Node node = new Node();
         node.setId(nodeId);
         node.setClusterIp(nodeIPAddress);

@@ -76,7 +76,7 @@ public abstract class ExternalFunction implements IExternalFunction {
         } else {
             // Gets the library manager for real runtime evaluation.
             IAppRuntimeContext runtimeCtx = (IAppRuntimeContext) context.getJobletContext()
-                    .getApplicationContext().getApplicationObject();
+                    .getServiceContext().getApplicationContext();
             libraryManager = runtimeCtx.getLibraryManager();
         }
         ClassLoader libraryClassLoader = libraryManager.getLibraryClassLoader(dataverse, functionLibary);

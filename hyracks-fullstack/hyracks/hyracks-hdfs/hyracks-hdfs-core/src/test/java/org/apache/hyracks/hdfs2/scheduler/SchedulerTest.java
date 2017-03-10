@@ -27,7 +27,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.apache.hyracks.api.client.NodeControllerInfo;
-import org.apache.hyracks.hdfs.utils.TestUtils;
+import org.apache.hyracks.test.support.TestUtils;
 
 import junit.framework.Assert;
 import junit.framework.TestCase;
@@ -46,7 +46,7 @@ public class SchedulerTest extends TestCase {
         Map<String, NodeControllerInfo> ncNameToNcInfos = TestUtils.generateNodeControllerInfo(6, "nc", "10.0.0.", 5099,
                 5098, 5097);
 
-        List<InputSplit> fileSplits = new ArrayList<InputSplit>();
+        List<InputSplit> fileSplits = new ArrayList<>();
         fileSplits.add(new FileSplit(new Path("part-1"), 0, 0, new String[] { "10.0.0.1", "10.0.0.2", "10.0.0.3" }));
         fileSplits.add(new FileSplit(new Path("part-2"), 0, 0, new String[] { "10.0.0.3", "10.0.0.4", "10.0.0.5" }));
         fileSplits.add(new FileSplit(new Path("part-3"), 0, 0, new String[] { "10.0.0.4", "10.0.0.5", "10.0.0.6" }));
@@ -73,7 +73,7 @@ public class SchedulerTest extends TestCase {
         Map<String, NodeControllerInfo> ncNameToNcInfos = TestUtils.generateNodeControllerInfo(6, "nc", "10.0.0.", 5099,
                 5098, 5097);
 
-        List<InputSplit> fileSplits = new ArrayList<InputSplit>();
+        List<InputSplit> fileSplits = new ArrayList<>();
         fileSplits.add(new FileSplit(new Path("part-1"), 0, 0, new String[] { "10.0.0.1", "10.0.0.2", "10.0.0.3" }));
         fileSplits.add(new FileSplit(new Path("part-2"), 0, 0, new String[] { "10.0.0.3", "10.0.0.4", "10.0.0.5" }));
         fileSplits.add(new FileSplit(new Path("part-3"), 0, 0, new String[] { "10.0.0.4", "10.0.0.5", "10.0.0.6" }));
@@ -107,7 +107,7 @@ public class SchedulerTest extends TestCase {
         Map<String, NodeControllerInfo> ncNameToNcInfos = TestUtils.generateNodeControllerInfo(6, "nc", "10.0.0.", 5099,
                 5098, 5097);
 
-        List<InputSplit> fileSplits = new ArrayList<InputSplit>();
+        List<InputSplit> fileSplits = new ArrayList<>();
         fileSplits.add(new FileSplit(new Path("part-1"), 0, 0, new String[] { "10.0.0.1", "10.0.0.2", "10.0.0.3" }));
         fileSplits.add(new FileSplit(new Path("part-2"), 0, 0, new String[] { "10.0.0.3", "10.0.0.4", "10.0.0.5" }));
         fileSplits.add(new FileSplit(new Path("part-3"), 0, 0, new String[] { "10.0.0.4", "10.0.0.5", "10.0.0.3" }));
@@ -141,7 +141,7 @@ public class SchedulerTest extends TestCase {
         Map<String, NodeControllerInfo> ncNameToNcInfos = TestUtils.generateNodeControllerInfo(6, "nc", "10.0.0.", 5099,
                 5098, 5097);
 
-        List<InputSplit> fileSplits = new ArrayList<InputSplit>();
+        List<InputSplit> fileSplits = new ArrayList<>();
         fileSplits.add(new FileSplit(new Path("part-1"), 0, 0, new String[] { "10.0.0.1", "10.0.0.2", "10.0.0.3" }));
         fileSplits.add(new FileSplit(new Path("part-2"), 0, 0, new String[] { "10.0.0.3", "10.0.0.4", "10.0.0.5" }));
         fileSplits.add(new FileSplit(new Path("part-3"), 0, 0, new String[] { "10.0.0.4", "10.0.0.5", "10.0.0.3" }));

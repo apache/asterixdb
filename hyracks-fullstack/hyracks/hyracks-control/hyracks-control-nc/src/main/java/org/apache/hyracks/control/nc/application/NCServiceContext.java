@@ -22,31 +22,30 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Serializable;
 
-import org.apache.hyracks.api.application.INCApplicationContext;
+import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.application.IStateDumpHandler;
 import org.apache.hyracks.api.comm.IChannelInterfaceFactory;
 import org.apache.hyracks.api.config.IApplicationConfig;
 import org.apache.hyracks.api.lifecycle.ILifeCycleComponentManager;
 import org.apache.hyracks.api.resources.memory.IMemoryManager;
 import org.apache.hyracks.api.service.IControllerService;
-import org.apache.hyracks.control.common.application.ApplicationContext;
+import org.apache.hyracks.control.common.application.ServiceContext;
 import org.apache.hyracks.control.common.context.ServerContext;
 import org.apache.hyracks.control.common.utils.HyracksThreadFactory;
 import org.apache.hyracks.control.nc.NodeControllerService;
 import org.apache.hyracks.control.nc.io.IOManager;
 import org.apache.hyracks.control.nc.resources.memory.MemoryManager;
 
-public class NCApplicationContext extends ApplicationContext implements INCApplicationContext {
+public class NCServiceContext extends ServiceContext implements INCServiceContext {
     private final ILifeCycleComponentManager lccm;
     private final String nodeId;
     private final IOManager ioManager;
     private final MemoryManager memoryManager;
-    private Object appObject;
     private IStateDumpHandler sdh;
     private final NodeControllerService ncs;
     private IChannelInterfaceFactory messagingChannelInterfaceFactory;
 
-    public NCApplicationContext(NodeControllerService ncs, ServerContext serverCtx, IOManager ioManager,
+    public NCServiceContext(NodeControllerService ncs, ServerContext serverCtx, IOManager ioManager,
             String nodeId, MemoryManager memoryManager, ILifeCycleComponentManager lifeCyclecomponentManager,
             IApplicationConfig appConfig) throws IOException {
         super(serverCtx, appConfig, new HyracksThreadFactory(nodeId));
@@ -93,16 +92,6 @@ public class NCApplicationContext extends ApplicationContext implements INCAppli
     }
 
     @Override
-    public void setApplicationObject(Object object) {
-        this.appObject = object;
-    }
-
-    @Override
-    public Object getApplicationObject() {
-        return appObject;
-    }
-
-    @Override
     public IMemoryManager getMemoryManager() {
         return memoryManager;
     }
@@ -120,5 +109,10 @@ public class NCApplicationContext extends ApplicationContext implements INCAppli
     @Override
     public void setMessagingChannelInterfaceFactory(IChannelInterfaceFactory interfaceFactory) {
         this.messagingChannelInterfaceFactory = interfaceFactory;
+    }
+
+    @Override
+    public Object getApplicationContext() {
+        return ncs.getApplicationContext();
     }
 }

@@ -46,7 +46,7 @@ public class NCMessageBroker implements INCMessageBroker {
 
     public NCMessageBroker(NodeControllerService ncs, MessagingProperties messagingProperties) {
         this.ncs = ncs;
-        appContext = (IAppRuntimeContext) ncs.getApplicationContext().getApplicationObject();
+        appContext = (IAppRuntimeContext) ncs.getApplicationContext();
         maxMsgSize = messagingProperties.getFrameSize();
         int messagingMemoryBudget = messagingProperties.getFrameSize() * messagingProperties.getFrameCount();
         messagingFramePool = new ConcurrentFramePool(ncs.getId(), messagingMemoryBudget,

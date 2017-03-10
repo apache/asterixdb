@@ -240,7 +240,7 @@
               <mainClass>org.apache.hyracks.control.cc.CCDriver</mainClass>
               <commandLineArguments>
                 <commandLineArgument>-app-class</commandLineArgument>
-                <commandLineArgument>org.apache.asterix.hyracks.bootstrap.CCApplicationEntryPoint</commandLineArgument>
+                <commandLineArgument>org.apache.asterix.hyracks.bootstrap.CCApplication</commandLineArgument>
               </commandLineArguments>
             </program>
             <program>
@@ -251,7 +251,7 @@
               <mainClass>org.apache.hyracks.control.nc.NCDriver</mainClass>
               <commandLineArguments>
                 <commandLineArgument>-app-class</commandLineArgument>
-                <commandLineArgument>org.apache.asterix.hyracks.bootstrap.NCApplicationEntryPoint</commandLineArgument>
+                <commandLineArgument>org.apache.asterix.hyracks.bootstrap.NCApplication</commandLineArgument>
               </commandLineArguments>
             </program>
             <program>
@@ -271,7 +271,7 @@
               </platforms>
               <commandLineArguments>
                 <commandLineArgument>-app-class</commandLineArgument>
-                <commandLineArgument>org.apache.asterix.hyracks.bootstrap.CCApplicationEntryPoint</commandLineArgument>
+                <commandLineArgument>org.apache.asterix.hyracks.bootstrap.CCApplication</commandLineArgument>
               </commandLineArguments>
             </daemon>
             <daemon>
@@ -282,7 +282,7 @@
               </platforms>
               <commandLineArguments>
                 <commandLineArgument>-app-class</commandLineArgument>
-                <commandLineArgument>org.apache.asterix.hyracks.bootstrap.NCApplicationEntryPoint</commandLineArgument>
+                <commandLineArgument>org.apache.asterix.hyracks.bootstrap.NCApplication</commandLineArgument>
               </commandLineArguments>
             </daemon>
             <daemon>

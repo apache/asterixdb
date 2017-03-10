@@ -85,10 +85,10 @@ public class GenericAdapterFactory implements IIndexingAdapterFactory, IAdapterF
     @Override
     public synchronized IDataSourceAdapter createAdapter(IHyracksTaskContext ctx, int partition)
             throws HyracksDataException {
-        IAppRuntimeContext runtimeCtx =
-                (IAppRuntimeContext) ctx.getJobletContext().getApplicationContext().getApplicationObject();
+        IAppRuntimeContext appCtx =
+                (IAppRuntimeContext) ctx.getJobletContext().getServiceContext().getApplicationContext();
         try {
-            restoreExternalObjects(runtimeCtx.getLibraryManager());
+            restoreExternalObjects(appCtx.getLibraryManager());
         } catch (Exception e) {
             throw HyracksDataException.create(e);
         }

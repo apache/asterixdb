@@ -65,7 +65,7 @@ public class RegisterNodeWork extends SynchronizableWork {
             LOGGER.log(Level.INFO, "Registered INodeController: id = " + id);
             NodeParameters params = new NodeParameters();
             params.setClusterControllerInfo(ccs.getClusterControllerInfo());
-            params.setDistributedState(ccs.getApplicationContext().getDistributedState());
+            params.setDistributedState(ccs.getContext().getDistributedState());
             params.setHeartbeatPeriod(ccs.getCCConfig().getHeartbeatPeriod());
             params.setProfileDumpPeriod(ccs.getCCConfig().getProfileDumpPeriod());
             result = new CCNCFunctions.NodeRegistrationResult(params, null);
@@ -73,6 +73,6 @@ public class RegisterNodeWork extends SynchronizableWork {
             result = new CCNCFunctions.NodeRegistrationResult(null, e);
         }
         ncIPCHandle.send(-1, result, null);
-        ccs.getApplicationContext().notifyNodeJoin(id, ncConfiguration);
+        ccs.getContext().notifyNodeJoin(id, ncConfiguration);
     }
 }

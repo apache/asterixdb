@@ -22,7 +22,6 @@ import org.apache.asterix.common.api.IAppRuntimeContext;
 import org.apache.asterix.common.api.INCLifecycleTask;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.service.IControllerService;
-import org.apache.hyracks.control.nc.NodeControllerService;
 
 public class BindMetadataNodeTask implements INCLifecycleTask {
 
@@ -35,13 +34,12 @@ public class BindMetadataNodeTask implements INCLifecycleTask {
 
     @Override
     public void perform(IControllerService cs) throws HyracksDataException {
-        NodeControllerService ncs = (NodeControllerService) cs;
-        IAppRuntimeContext runtimeContext = (IAppRuntimeContext) ncs.getApplicationContext().getApplicationObject();
+        IAppRuntimeContext appContext = (IAppRuntimeContext) cs.getApplicationContext();
         try {
             if (exportStub) {
-                runtimeContext.exportMetadataNodeStub();
+                appContext.exportMetadataNodeStub();
             } else {
-                runtimeContext.unexportMetadataNodeStub();
+                appContext.unexportMetadataNodeStub();
             }
         } catch (Exception e) {
             throw HyracksDataException.create(e);

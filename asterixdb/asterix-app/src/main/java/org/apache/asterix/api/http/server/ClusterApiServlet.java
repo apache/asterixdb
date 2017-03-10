@@ -98,7 +98,7 @@ public class ClusterApiServlet extends AbstractServlet {
     protected ObjectNode getClusterStateJSON(IServletRequest request, String pathToNode) {
         ObjectNode json = ClusterStateManager.INSTANCE.getClusterStateDescription();
         AppContextInfo appConfig = (AppContextInfo) ctx.get(ASTERIX_APP_CONTEXT_INFO_ATTR);
-        json.putPOJO("config", ConfigUtils.getSectionOptionsForJSON(appConfig.getCCApplicationContext().getAppConfig(),
+        json.putPOJO("config", ConfigUtils.getSectionOptionsForJSON(appConfig.getCCServiceContext().getAppConfig(),
                 Section.COMMON, getConfigSelector()));
 
         ArrayNode ncs = (ArrayNode) json.get("ncs");

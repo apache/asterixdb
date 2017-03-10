@@ -53,13 +53,13 @@ public class RuntimeUtils {
 
     public static Map<InetAddress, Set<String>> getNodeControllerMap() throws HyracksDataException {
         Map<InetAddress, Set<String>> map = new HashMap<>();
-        AppContextInfo.INSTANCE.getCCApplicationContext().getCCContext().getIPAddressNodeMap(map);
+        AppContextInfo.INSTANCE.getCCServiceContext().getCCContext().getIPAddressNodeMap(map);
         return map;
     }
 
     public static void getNodeControllerMap(Map<InetAddress, Set<String>> map) {
         ClusterControllerService ccs =
-                (ClusterControllerService) AppContextInfo.INSTANCE.getCCApplicationContext().getControllerService();
+                (ClusterControllerService) AppContextInfo.INSTANCE.getCCServiceContext().getControllerService();
         INodeManager nodeManager = ccs.getNodeManager();
         map.putAll(nodeManager.getIpAddressNodeNameMap());
     }

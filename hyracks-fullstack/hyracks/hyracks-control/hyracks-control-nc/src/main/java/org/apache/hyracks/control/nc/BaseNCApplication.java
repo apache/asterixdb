@@ -16,36 +16,31 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.control.cc;
+package org.apache.hyracks.control.nc;
 
+import java.lang.management.ManagementFactory;
 import java.util.Arrays;
 
-import org.apache.hyracks.api.application.ICCApplicationContext;
-import org.apache.hyracks.api.application.ICCApplicationEntryPoint;
+import org.apache.hyracks.api.application.INCApplication;
+import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.config.IConfigManager;
 import org.apache.hyracks.api.config.Section;
-import org.apache.hyracks.api.job.resource.DefaultJobCapacityController;
-import org.apache.hyracks.api.job.resource.IJobCapacityController;
+import org.apache.hyracks.api.job.resource.NodeCapacity;
 import org.apache.hyracks.control.common.controllers.CCConfig;
 import org.apache.hyracks.control.common.controllers.ControllerConfig;
 import org.apache.hyracks.control.common.controllers.NCConfig;
 
-public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
-    public static final ICCApplicationEntryPoint INSTANCE = new CCApplicationEntryPoint();
+public class BaseNCApplication implements INCApplication {
+    public static final BaseNCApplication INSTANCE = new BaseNCApplication();
 
-    protected CCApplicationEntryPoint() {
+    protected BaseNCApplication() {
     }
 
     @Override
-    public void start(ICCApplicationContext ccAppCtx, String[] args) throws Exception {
+    public void start(IServiceContext ncAppCtx, String[] args) throws Exception {
         if (args.length > 0) {
             throw new IllegalArgumentException("Unrecognized argument(s): " + Arrays.toString(args));
         }
-    }
-
-    @Override
-    public void stop() throws Exception {
-        // no-op
     }
 
     @Override
@@ -54,15 +49,26 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
     }
 
     @Override
-    public IJobCapacityController getJobCapacityController() {
-        return DefaultJobCapacityController.INSTANCE;
+    public void stop() throws Exception {
+        // no-op
+    }
+
+    @Override
+    public NodeCapacity getCapacity() {
+        int allCores = ManagementFactory.getOperatingSystemMXBean().getAvailableProcessors();
+        return new NodeCapacity(Runtime.getRuntime().maxMemory(), allCores > 1 ? allCores - 1 : allCores);
     }
 
     @Override
     public void registerConfig(IConfigManager configManager) {
         configManager.addIniParamOptions(ControllerConfig.Option.CONFIG_FILE, ControllerConfig.Option.CONFIG_FILE_URL);
-        configManager.addCmdLineSections(Section.CC, Section.COMMON);
+        configManager.addCmdLineSections(Section.NC, Section.COMMON, Section.LOCALNC);
         configManager.setUsageFilter(getUsageFilter());
         configManager.register(ControllerConfig.Option.class, CCConfig.Option.class, NCConfig.Option.class);
+    }
+
+    @Override
+    public Object getApplicationContext() {
+        return null;
     }
 }

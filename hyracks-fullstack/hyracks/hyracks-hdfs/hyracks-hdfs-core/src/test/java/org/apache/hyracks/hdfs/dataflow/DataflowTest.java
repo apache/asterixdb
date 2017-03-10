@@ -24,9 +24,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
-import junit.framework.Assert;
-import junit.framework.TestCase;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -37,7 +34,6 @@ import org.apache.hadoop.mapred.FileOutputFormat;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.TextInputFormat;
-
 import org.apache.hyracks.api.client.HyracksConnection;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.constraints.PartitionConstraintHelper;
@@ -58,8 +54,11 @@ import org.apache.hyracks.hdfs.lib.TextKeyValueParserFactory;
 import org.apache.hyracks.hdfs.lib.TextTupleWriterFactory;
 import org.apache.hyracks.hdfs.scheduler.Scheduler;
 import org.apache.hyracks.hdfs.utils.HyracksUtils;
-import org.apache.hyracks.hdfs.utils.TestUtils;
+import org.apache.hyracks.test.support.TestUtils;
 import org.apache.hyracks.util.file.FileUtil;
+
+import junit.framework.Assert;
+import junit.framework.TestCase;
 
 /**
  * Test the org.apache.hyracks.hdfs.dataflow package,

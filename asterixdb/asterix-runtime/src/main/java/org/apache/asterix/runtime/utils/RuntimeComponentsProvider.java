@@ -42,37 +42,37 @@ public class RuntimeComponentsProvider implements IIndexLifecycleManagerProvider
 
     @Override
     public ILSMIOOperationScheduler getIOScheduler(IHyracksTaskContext ctx) {
-        return ((IAppRuntimeContext) ctx.getJobletContext().getApplicationContext().getApplicationObject())
+        return ((IAppRuntimeContext) ctx.getJobletContext().getServiceContext().getApplicationContext())
                 .getLSMIOScheduler();
     }
 
     @Override
     public IBufferCache getBufferCache(IHyracksTaskContext ctx) {
-        return ((IAppRuntimeContext) ctx.getJobletContext().getApplicationContext().getApplicationObject())
+        return ((IAppRuntimeContext) ctx.getJobletContext().getServiceContext().getApplicationContext())
                 .getBufferCache();
     }
 
     @Override
     public IFileMapProvider getFileMapProvider(IHyracksTaskContext ctx) {
-        return ((IAppRuntimeContext) ctx.getJobletContext().getApplicationContext().getApplicationObject())
+        return ((IAppRuntimeContext) ctx.getJobletContext().getServiceContext().getApplicationContext())
                 .getFileMapManager();
     }
 
     @Override
     public ILocalResourceRepository getLocalResourceRepository(IHyracksTaskContext ctx) {
-        return ((IAppRuntimeContext) ctx.getJobletContext().getApplicationContext().getApplicationObject())
+        return ((IAppRuntimeContext) ctx.getJobletContext().getServiceContext().getApplicationContext())
                 .getLocalResourceRepository();
     }
 
     @Override
     public IDatasetLifecycleManager getLifecycleManager(IHyracksTaskContext ctx) {
-        return ((IAppRuntimeContext) ctx.getJobletContext().getApplicationContext().getApplicationObject())
+        return ((IAppRuntimeContext) ctx.getJobletContext().getServiceContext().getApplicationContext())
                 .getDatasetLifecycleManager();
     }
 
     @Override
     public IResourceIdFactory getResourceIdFactory(IHyracksTaskContext ctx) {
-        return ((IAppRuntimeContext) ctx.getJobletContext().getApplicationContext().getApplicationObject())
+        return ((IAppRuntimeContext) ctx.getJobletContext().getServiceContext().getApplicationContext())
                 .getResourceIdFactory();
     }
 

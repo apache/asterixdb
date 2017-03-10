@@ -16,36 +16,32 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.control.nc;
+package org.apache.hyracks.control.cc;
 
-import java.lang.management.ManagementFactory;
 import java.util.Arrays;
 
-import org.apache.hyracks.api.application.INCApplicationContext;
-import org.apache.hyracks.api.application.INCApplicationEntryPoint;
+import org.apache.hyracks.api.application.ICCApplication;
+import org.apache.hyracks.api.application.IServiceContext;
+import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.config.IConfigManager;
 import org.apache.hyracks.api.config.Section;
-import org.apache.hyracks.api.job.resource.NodeCapacity;
+import org.apache.hyracks.api.job.resource.DefaultJobCapacityController;
+import org.apache.hyracks.api.job.resource.IJobCapacityController;
 import org.apache.hyracks.control.common.controllers.CCConfig;
 import org.apache.hyracks.control.common.controllers.ControllerConfig;
 import org.apache.hyracks.control.common.controllers.NCConfig;
 
-public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
-    public static final NCApplicationEntryPoint INSTANCE = new NCApplicationEntryPoint();
+public class BaseCCApplication implements ICCApplication {
+    public static final ICCApplication INSTANCE = new BaseCCApplication();
 
-    protected NCApplicationEntryPoint() {
+    protected BaseCCApplication() {
     }
 
     @Override
-    public void start(INCApplicationContext ncAppCtx, String[] args) throws Exception {
+    public void start(IServiceContext serviceCtx, String[] args) throws Exception {
         if (args.length > 0) {
             throw new IllegalArgumentException("Unrecognized argument(s): " + Arrays.toString(args));
         }
-    }
-
-    @Override
-    public void notifyStartupComplete() throws Exception {
-        // no-op
     }
 
     @Override
@@ -54,16 +50,30 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
     }
 
     @Override
-    public NodeCapacity getCapacity() {
-        int allCores = ManagementFactory.getOperatingSystemMXBean().getAvailableProcessors();
-        return new NodeCapacity(Runtime.getRuntime().maxMemory(), allCores > 1 ? allCores - 1 : allCores);
+    public void startupCompleted() throws Exception {
+        // no-op
     }
 
     @Override
-    public void registerConfigOptions(IConfigManager configManager) {
+    public IJobCapacityController getJobCapacityController() {
+        return DefaultJobCapacityController.INSTANCE;
+    }
+
+    @Override
+    public void registerConfig(IConfigManager configManager) {
         configManager.addIniParamOptions(ControllerConfig.Option.CONFIG_FILE, ControllerConfig.Option.CONFIG_FILE_URL);
-        configManager.addCmdLineSections(Section.NC, Section.COMMON, Section.LOCALNC);
+        configManager.addCmdLineSections(Section.CC, Section.COMMON);
         configManager.setUsageFilter(getUsageFilter());
         configManager.register(ControllerConfig.Option.class, CCConfig.Option.class, NCConfig.Option.class);
+    }
+
+    @Override
+    public Object getApplicationContext() {
+        return null;
+    }
+
+    @Override
+    public IHyracksClientConnection getHcc() throws Exception {
+        return null;
     }
 }

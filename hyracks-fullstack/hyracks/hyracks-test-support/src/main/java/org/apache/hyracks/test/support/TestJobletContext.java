@@ -20,7 +20,7 @@ package org.apache.hyracks.test.support;
 
 import java.nio.ByteBuffer;
 
-import org.apache.hyracks.api.application.INCApplicationContext;
+import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.context.IHyracksJobletContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.HyracksException;
@@ -35,14 +35,14 @@ import org.apache.hyracks.control.nc.resources.memory.FrameManager;
 
 public class TestJobletContext implements IHyracksJobletContext {
     private final int frameSize;
-    private final INCApplicationContext appContext;
+    private final INCServiceContext serviceContext;
     private final FrameManager frameManger;
     private JobId jobId;
     private WorkspaceFileFactory fileFactory;
 
-    public TestJobletContext(int frameSize, INCApplicationContext appContext, JobId jobId) throws HyracksException {
+    public TestJobletContext(int frameSize, INCServiceContext serviceContext, JobId jobId) throws HyracksException {
         this.frameSize = frameSize;
-        this.appContext = appContext;
+        this.serviceContext = serviceContext;
         this.jobId = jobId;
         fileFactory = new WorkspaceFileFactory(this, (IIOManager) getIOManager());
         this.frameManger = new FrameManager(frameSize);
@@ -69,7 +69,7 @@ public class TestJobletContext implements IHyracksJobletContext {
     }
 
     public IIOManager getIOManager() {
-        return appContext.getIoManager();
+        return serviceContext.getIoManager();
     }
 
     @Override
@@ -98,8 +98,8 @@ public class TestJobletContext implements IHyracksJobletContext {
     }
 
     @Override
-    public INCApplicationContext getApplicationContext() {
-        return appContext;
+    public INCServiceContext getServiceContext() {
+        return serviceContext;
     }
 
     @Override

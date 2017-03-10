@@ -21,7 +21,7 @@ package org.apache.hyracks.examples.btree.helper;
 
 import java.util.concurrent.ThreadFactory;
 
-import org.apache.hyracks.api.application.INCApplicationContext;
+import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.common.api.IResourceLifecycleManager;
@@ -55,7 +55,7 @@ public class RuntimeContext {
         }
     };
 
-    public RuntimeContext(INCApplicationContext appCtx) throws HyracksDataException {
+    public RuntimeContext(INCServiceContext appCtx) throws HyracksDataException {
         fileMapManager = new TransientFileMapManager();
         ICacheMemoryAllocator allocator = new HeapBufferAllocator();
         IPageReplacementStrategy prs = new ClockPageReplacementStrategy(allocator, 32768, 50);
@@ -80,7 +80,7 @@ public class RuntimeContext {
     }
 
     public static RuntimeContext get(IHyracksTaskContext ctx) {
-        return (RuntimeContext) ctx.getJobletContext().getApplicationContext().getApplicationObject();
+        return (RuntimeContext) ctx.getJobletContext().getServiceContext().getApplicationContext();
     }
 
     public ILocalResourceRepository getLocalResourceRepository() {

@@ -92,8 +92,8 @@ public class JobExecutor {
         this.jobRun = jobRun;
         this.predistributed = predistributed;
         solver = new PartitionConstraintSolver();
-        partitionProducingTaskClusterMap = new HashMap<PartitionId, TaskCluster>();
-        inProgressTaskClusters = new HashSet<TaskCluster>();
+        partitionProducingTaskClusterMap = new HashMap<>();
+        inProgressTaskClusters = new HashSet<>();
         solver.addConstraints(constraints);
         random = new Random();
     }
@@ -112,7 +112,7 @@ public class JobExecutor {
 
     public void startJob() throws HyracksException {
         startRunnableActivityClusters();
-        ccs.getApplicationContext().notifyJobStart(jobRun.getJobId());
+        ccs.getContext().notifyJobStart(jobRun.getJobId());
     }
 
     public void cancelJob() throws HyracksException {

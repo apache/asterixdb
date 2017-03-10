@@ -92,8 +92,7 @@ public class ExecutionTestUtil {
         libraryManagers.add(AppContextInfo.INSTANCE.getLibraryManager());
         // Adds library managers for NCs, one-per-NC.
         for (NodeControllerService nc : integrationUtil.ncs) {
-            IAppRuntimeContext runtimeCtx = (IAppRuntimeContext) nc.getApplicationContext()
-                    .getApplicationObject();
+            IAppRuntimeContext runtimeCtx = (IAppRuntimeContext) nc.getApplicationContext();
             libraryManagers.add(runtimeCtx.getLibraryManager());
         }
         return libraryManagers;

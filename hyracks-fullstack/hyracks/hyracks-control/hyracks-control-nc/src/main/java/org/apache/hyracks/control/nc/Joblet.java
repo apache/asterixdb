@@ -27,7 +27,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Logger;
 
-import org.apache.hyracks.api.application.INCApplicationContext;
+import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.comm.IPartitionCollector;
 import org.apache.hyracks.api.comm.PartitionChannel;
 import org.apache.hyracks.api.context.IHyracksJobletContext;
@@ -65,7 +65,7 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
 
     private final NodeControllerService nodeController;
 
-    private final INCApplicationContext appCtx;
+    private final INCServiceContext serviceCtx;
 
     private final DeploymentId deploymentId;
 
@@ -100,9 +100,9 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
     private boolean cleanupPending;
 
     public Joblet(NodeControllerService nodeController, DeploymentId deploymentId, JobId jobId,
-            INCApplicationContext appCtx, ActivityClusterGraph acg) {
+            INCServiceContext serviceCtx, ActivityClusterGraph acg) {
         this.nodeController = nodeController;
-        this.appCtx = appCtx;
+        this.serviceCtx = serviceCtx;
         this.deploymentId = deploymentId;
         this.jobId = jobId;
         this.frameManager = new FrameManager(acg.getFrameSize());
@@ -114,7 +114,7 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
         taskMap = new HashMap<>();
         counterMap = new HashMap<>();
         deallocatableRegistry = new DefaultDeallocatableRegistry();
-        fileFactory = new WorkspaceFileFactory(this, appCtx.getIoManager());
+        fileFactory = new WorkspaceFileFactory(this, serviceCtx.getIoManager());
         cleanupPending = false;
         IJobletEventListenerFactory jelf = acg.getJobletEventListenerFactory();
         if (jelf != null) {
@@ -197,8 +197,8 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
     }
 
     @Override
-    public INCApplicationContext getApplicationContext() {
-        return appCtx;
+    public INCServiceContext getServiceContext() {
+        return serviceCtx;
     }
 
     @Override
@@ -215,7 +215,7 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
         long stillAllocated = memoryAllocation.get();
         if (stillAllocated > 0) {
             LOGGER.warning("Freeing leaked " + stillAllocated + " bytes");
-            appCtx.getMemoryManager().deallocate(stillAllocated);
+            serviceCtx.getMemoryManager().deallocate(stillAllocated);
         }
         nodeController.getExecutorService().execute(new Runnable() {
             @Override
@@ -230,7 +230,7 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
     }
 
     ByteBuffer allocateFrame(int bytes) throws HyracksDataException {
-        if (appCtx.getMemoryManager().allocate(bytes)) {
+        if (serviceCtx.getMemoryManager().allocate(bytes)) {
             memoryAllocation.addAndGet(bytes);
             return frameManager.allocateFrame(bytes);
         }
@@ -244,7 +244,7 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
 
     void deallocateFrames(int bytes) {
         memoryAllocation.addAndGet(bytes);
-        appCtx.getMemoryManager().deallocate(bytes);
+        serviceCtx.getMemoryManager().deallocate(bytes);
         frameManager.deallocateFrames(bytes);
     }
 
@@ -253,7 +253,7 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
     }
 
     public IIOManager getIOManager() {
-        return appCtx.getIoManager();
+        return serviceCtx.getIoManager();
     }
 
     @Override
@@ -326,11 +326,11 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
 
     @Override
     public Class<?> loadClass(String className) throws HyracksException {
-        return DeploymentUtils.loadClass(className, deploymentId, appCtx);
+        return DeploymentUtils.loadClass(className, deploymentId, serviceCtx);
     }
 
     @Override
     public ClassLoader getClassLoader() throws HyracksException {
-        return DeploymentUtils.getClassLoader(deploymentId, appCtx);
+        return DeploymentUtils.getClassLoader(deploymentId, serviceCtx);
     }
 }

@@ -18,11 +18,10 @@
  */
 package org.apache.hyracks.api.client.impl;
 
-import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.apache.hyracks.api.application.ICCApplicationContext;
+import org.apache.hyracks.api.application.ICCServiceContext;
 import org.apache.hyracks.api.constraints.Constraint;
 import org.apache.hyracks.api.constraints.IConstraintAcceptor;
 import org.apache.hyracks.api.dataflow.IConnectorDescriptor;
@@ -53,7 +52,7 @@ public class JobSpecificationActivityClusterGraphGeneratorFactory implements IAc
 
     @Override
     public IActivityClusterGraphGenerator createActivityClusterGraphGenerator(JobId jobId,
-            final ICCApplicationContext ccAppCtx, EnumSet<JobFlag> jobFlags) throws HyracksException {
+            final ICCServiceContext ccServiceCtx, Set<JobFlag> jobFlags) throws HyracksException {
         final JobActivityGraphBuilder builder = new JobActivityGraphBuilder(spec, jobFlags);
         PlanUtils.visit(spec, new IConnectorDescriptorVisitor() {
             @Override
@@ -77,7 +76,7 @@ public class JobSpecificationActivityClusterGraphGeneratorFactory implements IAc
         acg.setJobletEventListenerFactory(spec.getJobletEventListenerFactory());
         acg.setConnectorPolicyAssignmentPolicy(spec.getConnectorPolicyAssignmentPolicy());
         acg.setUseConnectorPolicyForScheduling(spec.isUseConnectorPolicyForScheduling());
-        final Set<Constraint> constraints = new HashSet<Constraint>();
+        final Set<Constraint> constraints = new HashSet<>();
         final IConstraintAcceptor acceptor = new IConstraintAcceptor() {
             @Override
             public void addConstraint(Constraint constraint) {
@@ -87,14 +86,14 @@ public class JobSpecificationActivityClusterGraphGeneratorFactory implements IAc
         PlanUtils.visit(spec, new IOperatorDescriptorVisitor() {
             @Override
             public void visit(IOperatorDescriptor op) {
-                op.contributeSchedulingConstraints(acceptor, ccAppCtx);
+                op.contributeSchedulingConstraints(acceptor, ccServiceCtx);
             }
         });
         PlanUtils.visit(spec, new IConnectorDescriptorVisitor() {
             @Override
             public void visit(IConnectorDescriptor conn) {
                 conn.contributeSchedulingConstraints(acceptor, acg.getConnectorMap().get(conn.getConnectorId()),
-                        ccAppCtx);
+                        ccServiceCtx);
             }
         });
         constraints.addAll(spec.getUserConstraints());

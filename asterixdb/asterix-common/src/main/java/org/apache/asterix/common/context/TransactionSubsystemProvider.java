@@ -37,8 +37,8 @@ public class TransactionSubsystemProvider implements ITransactionSubsystemProvid
 
     @Override
     public ITransactionSubsystem getTransactionSubsystem(IHyracksTaskContext ctx) {
-        IAppRuntimeContext runtimeCtx = (IAppRuntimeContext) ctx.getJobletContext()
-                .getApplicationContext().getApplicationObject();
-        return runtimeCtx.getTransactionSubsystem();
+        IAppRuntimeContext appCtx =
+                (IAppRuntimeContext) ctx.getJobletContext().getServiceContext().getApplicationContext();
+        return appCtx.getTransactionSubsystem();
     }
 }

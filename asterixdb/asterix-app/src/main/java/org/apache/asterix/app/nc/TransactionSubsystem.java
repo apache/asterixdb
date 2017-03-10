@@ -42,7 +42,7 @@ import org.apache.asterix.transaction.management.service.logging.LogManager;
 import org.apache.asterix.transaction.management.service.logging.LogManagerWithReplication;
 import org.apache.asterix.transaction.management.service.recovery.CheckpointManagerFactory;
 import org.apache.asterix.transaction.management.service.transaction.TransactionManager;
-import org.apache.hyracks.api.application.INCApplicationContext;
+import org.apache.hyracks.api.application.INCServiceContext;
 
 /**
  * Provider for all the sub-systems (transaction/lock/log/recovery) managers.
@@ -62,7 +62,7 @@ public class TransactionSubsystem implements ITransactionSubsystem {
     private long profilerEntityCommitLogCount = 0;
     private EntityCommitProfiler ecp;
 
-    public TransactionSubsystem(INCApplicationContext appCtx, String id,
+    public TransactionSubsystem(INCServiceContext serviceCtx, String id,
             IAppRuntimeContextProvider asterixAppRuntimeContextProvider, TransactionProperties txnProperties)
             throws ACIDException {
         this.asterixAppRuntimeContextProvider = asterixAppRuntimeContextProvider;
@@ -89,7 +89,7 @@ public class TransactionSubsystem implements ITransactionSubsystem {
         } else {
             this.logManager = new LogManager(this);
         }
-        this.recoveryManager = new RecoveryManager(this, appCtx);
+        this.recoveryManager = new RecoveryManager(this, serviceCtx);
 
         if (TransactionUtil.PROFILE_MODE) {
             ecp = new EntityCommitProfiler(this, this.txnProperties.getCommitProfilerReportInterval());

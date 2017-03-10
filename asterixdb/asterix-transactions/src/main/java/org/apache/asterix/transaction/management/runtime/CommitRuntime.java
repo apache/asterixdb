@@ -65,10 +65,10 @@ public class CommitRuntime extends AbstractOneInputOneOutputOneFramePushRuntime 
     public CommitRuntime(IHyracksTaskContext ctx, JobId jobId, int datasetId, int[] primaryKeyFields,
             boolean isTemporaryDatasetWriteJob, boolean isWriteTransaction, int resourcePartition, boolean isSink) {
         this.ctx = ctx;
-        IAppRuntimeContext runtimeCtx =
-                (IAppRuntimeContext) ctx.getJobletContext().getApplicationContext().getApplicationObject();
-        this.transactionManager = runtimeCtx.getTransactionSubsystem().getTransactionManager();
-        this.logMgr = runtimeCtx.getTransactionSubsystem().getLogManager();
+        IAppRuntimeContext appCtx =
+                (IAppRuntimeContext) ctx.getJobletContext().getServiceContext().getApplicationContext();
+        this.transactionManager = appCtx.getTransactionSubsystem().getTransactionManager();
+        this.logMgr = appCtx.getTransactionSubsystem().getLogManager();
         this.jobId = jobId;
         this.datasetId = datasetId;
         this.primaryKeyFields = primaryKeyFields;

@@ -47,7 +47,7 @@ public class DistributeJobWork extends AbstractWork {
         try {
             ncs.checkForDuplicateDistributedJob(jobId);
             ActivityClusterGraph acg =
-                    (ActivityClusterGraph) DeploymentUtils.deserialize(acgBytes, null, ncs.getApplicationContext());
+                    (ActivityClusterGraph) DeploymentUtils.deserialize(acgBytes, null, ncs.getContext());
             ncs.storeActivityClusterGraph(jobId, acg);
         } catch (HyracksException e) {
             try {

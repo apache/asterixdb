@@ -20,9 +20,9 @@ package org.apache.hyracks.storage.am.lsm.common.api;
 
 import java.io.Serializable;
 
-import org.apache.hyracks.api.application.INCApplicationContext;
+import org.apache.hyracks.api.application.INCServiceContext;
 
 @FunctionalInterface
 public interface ILSMOperationTrackerFactory extends Serializable {
-    ILSMOperationTracker getOperationTracker(INCApplicationContext ctx);
+    ILSMOperationTracker getOperationTracker(INCServiceContext ctx);
 }

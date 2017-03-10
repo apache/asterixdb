@@ -22,7 +22,7 @@ import java.io.Serializable;
 import java.util.BitSet;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import org.apache.hyracks.api.application.ICCApplicationContext;
+import org.apache.hyracks.api.application.ICCServiceContext;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.comm.IPartitionCollector;
 import org.apache.hyracks.api.comm.IPartitionWriterFactory;
@@ -98,7 +98,7 @@ public interface IConnectorDescriptor extends Serializable {
      *            - Activity Cluster
      */
     public void contributeSchedulingConstraints(IConstraintAcceptor constraintAcceptor, ActivityCluster ac,
-            ICCApplicationContext appCtx);
+            ICCServiceContext ccServiceCtx);
 
     /**
      * Indicate which consumer partitions may receive data from the given

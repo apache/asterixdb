@@ -97,8 +97,8 @@ public class FeedMetaStoreNodePushable extends AbstractUnaryInputUnaryOutputOper
         this.policyEnforcer = new FeedPolicyEnforcer(feedConnectionId, feedPolicyProperties);
         this.partition = partition;
         this.connectionId = feedConnectionId;
-        this.feedManager = (ActiveManager) ((IAppRuntimeContext) ctx.getJobletContext().getApplicationContext()
-                .getApplicationObject()).getActiveManager();
+        this.feedManager = (ActiveManager) ((IAppRuntimeContext) ctx.getJobletContext().getServiceContext()
+                .getApplicationContext()).getActiveManager();
         this.targetId = targetId;
         this.message = new VSizeFrame(ctx);
         TaskUtil.putInSharedMap(HyracksConstants.KEY_MESSAGE, message, ctx);

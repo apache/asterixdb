@@ -23,7 +23,6 @@ import org.apache.asterix.common.messaging.api.IApplicationMessage;
 import org.apache.asterix.runtime.transaction.GlobalResourceIdFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.service.IControllerService;
-import org.apache.hyracks.control.nc.NodeControllerService;
 
 public class ResourceIdRequestResponseMessage implements IApplicationMessage {
     private static final long serialVersionUID = 1L;
@@ -49,10 +48,8 @@ public class ResourceIdRequestResponseMessage implements IApplicationMessage {
 
     @Override
     public void handle(IControllerService cs) throws HyracksDataException, InterruptedException {
-        NodeControllerService ncs = (NodeControllerService) cs;
-        IAppRuntimeContext asterixNcAppRuntimeCtx =
-                (IAppRuntimeContext) ncs.getApplicationContext().getApplicationObject();
-        ((GlobalResourceIdFactory) asterixNcAppRuntimeCtx.getResourceIdFactory()).addNewIds(this);
+        IAppRuntimeContext appCtx = (IAppRuntimeContext) cs.getApplicationContext();
+        ((GlobalResourceIdFactory) appCtx.getResourceIdFactory()).addNewIds(this);
     }
 
     @Override

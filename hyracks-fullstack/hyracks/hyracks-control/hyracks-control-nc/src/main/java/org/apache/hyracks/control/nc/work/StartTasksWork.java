@@ -28,7 +28,7 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.hyracks.api.application.INCApplicationContext;
+import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.comm.IPartitionCollector;
 import org.apache.hyracks.api.comm.IPartitionWriterFactory;
@@ -62,7 +62,7 @@ import org.apache.hyracks.control.common.work.AbstractWork;
 import org.apache.hyracks.control.nc.Joblet;
 import org.apache.hyracks.control.nc.NodeControllerService;
 import org.apache.hyracks.control.nc.Task;
-import org.apache.hyracks.control.nc.application.NCApplicationContext;
+import org.apache.hyracks.control.nc.application.NCServiceContext;
 import org.apache.hyracks.control.nc.partitions.MaterializedPartitionWriter;
 import org.apache.hyracks.control.nc.partitions.MaterializingPipelinedPartition;
 import org.apache.hyracks.control.nc.partitions.PipelinedPartition;
@@ -102,8 +102,8 @@ public class StartTasksWork extends AbstractWork {
     public void run() {
         Task task = null;
         try {
-            NCApplicationContext appCtx = ncs.getApplicationContext();
-            Joblet joblet = getOrCreateLocalJoblet(deploymentId, jobId, appCtx, acgBytes);
+            NCServiceContext serviceCtx = ncs.getContext();
+            Joblet joblet = getOrCreateLocalJoblet(deploymentId, jobId, serviceCtx, acgBytes);
             final ActivityClusterGraph acg = joblet.getActivityClusterGraph();
             IRecordDescriptorProvider rdp = new IRecordDescriptorProvider() {
                 @Override
@@ -182,7 +182,7 @@ public class StartTasksWork extends AbstractWork {
         }
     }
 
-    private Joblet getOrCreateLocalJoblet(DeploymentId deploymentId, JobId jobId, INCApplicationContext appCtx,
+    private Joblet getOrCreateLocalJoblet(DeploymentId deploymentId, JobId jobId, INCServiceContext appCtx,
             byte[] acgBytes) throws HyracksException {
         Map<JobId, Joblet> jobletMap = ncs.getJobletMap();
         Joblet ji = jobletMap.get(jobId);
@@ -265,10 +265,10 @@ public class StartTasksWork extends AbstractWork {
     private List<List<PartitionChannel>> createInputChannels(TaskAttemptDescriptor td,
             List<IConnectorDescriptor> inputs) throws UnknownHostException {
         NetworkAddress[][] inputAddresses = td.getInputPartitionLocations();
-        List<List<PartitionChannel>> channelsForInputConnectors = new ArrayList<List<PartitionChannel>>();
+        List<List<PartitionChannel>> channelsForInputConnectors = new ArrayList<>();
         if (inputAddresses != null) {
             for (int i = 0; i < inputAddresses.length; i++) {
-                List<PartitionChannel> channels = new ArrayList<PartitionChannel>();
+                List<PartitionChannel> channels = new ArrayList<>();
                 if (inputAddresses[i] != null) {
                     for (int j = 0; j < inputAddresses[i].length; j++) {
                         NetworkAddress networkAddress = inputAddresses[i][j];

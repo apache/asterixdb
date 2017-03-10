@@ -141,8 +141,7 @@ public class TestNodeController {
             throw th;
         }
         jobletCtx = Mockito.mock(IHyracksJobletContext.class);
-        Mockito.when(jobletCtx.getApplicationContext())
-                .thenReturn(ExecutionTestUtil.integrationUtil.ncs[0].getApplicationContext());
+        Mockito.when(jobletCtx.getServiceContext()).thenReturn(ExecutionTestUtil.integrationUtil.ncs[0].getContext());
         Mockito.when(jobletCtx.getJobId()).thenAnswer(new Answer<JobId>() {
             @Override
             public JobId answer(InvocationOnMock invocation) throws Throwable {
@@ -389,7 +388,7 @@ public class TestNodeController {
 
     public TransactionSubsystem getTransactionSubsystem() {
         return (TransactionSubsystem) ((NCAppRuntimeContext) ExecutionTestUtil.integrationUtil.ncs[0]
-                .getApplicationContext().getApplicationObject()).getTransactionSubsystem();
+                .getApplicationContext()).getTransactionSubsystem();
     }
 
     public ITransactionManager getTransactionManager() {
@@ -397,8 +396,7 @@ public class TestNodeController {
     }
 
     public NCAppRuntimeContext getAppRuntimeContext() {
-        return (NCAppRuntimeContext) ExecutionTestUtil.integrationUtil.ncs[0].getApplicationContext()
-                .getApplicationObject();
+        return (NCAppRuntimeContext) ExecutionTestUtil.integrationUtil.ncs[0].getApplicationContext();
     }
 
     public DatasetLifecycleManager getDatasetLifecycleManager() {

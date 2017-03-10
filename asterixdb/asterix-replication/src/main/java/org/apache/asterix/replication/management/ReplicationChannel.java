@@ -73,7 +73,7 @@ import org.apache.asterix.replication.storage.LSMComponentProperties;
 import org.apache.asterix.replication.storage.LSMIndexFileProperties;
 import org.apache.asterix.replication.storage.ReplicaResourcesManager;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepository;
-import org.apache.hyracks.api.application.INCApplicationContext;
+import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndex;
 import org.apache.hyracks.util.StorageUtil;
@@ -109,7 +109,7 @@ public class ReplicationChannel extends Thread implements IReplicationChannel {
 
     public ReplicationChannel(String nodeId, ReplicationProperties replicationProperties, ILogManager logManager,
             IReplicaResourcesManager replicaResoucesManager, IReplicationManager replicationManager,
-            INCApplicationContext appContext, IAppRuntimeContextProvider asterixAppRuntimeContextProvider) {
+            INCServiceContext ncServiceContext, IAppRuntimeContextProvider asterixAppRuntimeContextProvider) {
         this.logManager = logManager;
         this.localNodeID = nodeId;
         this.replicaResourcesManager = (ReplicaResourcesManager) replicaResoucesManager;
@@ -125,9 +125,9 @@ public class ReplicationChannel extends Thread implements IReplicationChannel {
         replicaUniqueLSN2RemoteMapping = new ConcurrentHashMap<>();
         lsmComponentLSNMappingService = new LSMComponentsSyncService();
         replicationNotifier = new ReplicationNotifier();
-        replicationThreads = Executors.newCachedThreadPool(appContext.getThreadFactory());
-        Map<String, ClusterPartition[]> nodePartitions = ((IPropertiesProvider) asterixAppRuntimeContextProvider
-                .getAppContext()).getMetadataProperties().getNodePartitions();
+        replicationThreads = Executors.newCachedThreadPool(ncServiceContext.getThreadFactory());
+        Map<String, ClusterPartition[]> nodePartitions =
+                asterixAppRuntimeContextProvider.getAppContext().getMetadataProperties().getNodePartitions();
         Set<String> nodeReplicationClients = replicationProperties.getRemotePrimaryReplicasIds(nodeId);
         List<Integer> clientsPartitions = new ArrayList<>();
         for (String clientId : nodeReplicationClients) {

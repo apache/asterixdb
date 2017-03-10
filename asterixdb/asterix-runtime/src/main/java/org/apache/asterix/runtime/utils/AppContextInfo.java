@@ -42,7 +42,7 @@ import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.common.metadata.IMetadataBootstrap;
 import org.apache.asterix.common.replication.IFaultToleranceStrategy;
 import org.apache.asterix.common.transactions.IResourceIdManager;
-import org.apache.hyracks.api.application.ICCApplicationContext;
+import org.apache.hyracks.api.application.ICCServiceContext;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
 import org.apache.hyracks.storage.common.IStorageManager;
@@ -55,7 +55,7 @@ import org.apache.hyracks.storage.common.IStorageManager;
 public class AppContextInfo implements IApplicationContextInfo, IPropertiesProvider {
 
     public static final AppContextInfo INSTANCE = new AppContextInfo();
-    private ICCApplicationContext appCtx;
+    private ICCServiceContext ccServiceCtx;
     private IGlobalRecoveryManager globalRecoveryManager;
     private ILibraryManager libraryManager;
     private IResourceIdManager resourceIdManager;
@@ -79,7 +79,7 @@ public class AppContextInfo implements IApplicationContextInfo, IPropertiesProvi
     private AppContextInfo() {
     }
 
-    public static synchronized void initialize(ICCApplicationContext ccAppCtx, IHyracksClientConnection hcc,
+    public static synchronized void initialize(ICCServiceContext ccServiceCtx, IHyracksClientConnection hcc,
             ILibraryManager libraryManager, IResourceIdManager resourceIdManager,
             Supplier<IMetadataBootstrap> metadataBootstrapSupplier, IGlobalRecoveryManager globalRecoveryManager,
             IFaultToleranceStrategy ftStrategy)
@@ -88,13 +88,13 @@ public class AppContextInfo implements IApplicationContextInfo, IPropertiesProvi
             throw new AsterixException(AppContextInfo.class.getSimpleName() + " has been initialized already");
         }
         INSTANCE.initialized = true;
-        INSTANCE.appCtx = ccAppCtx;
+        INSTANCE.ccServiceCtx = ccServiceCtx;
         INSTANCE.hcc = hcc;
         INSTANCE.libraryManager = libraryManager;
         INSTANCE.resourceIdManager = resourceIdManager;
         // Determine whether to use old-style asterix-configuration.xml or new-style configuration.
         // QQQ strip this out eventually
-        PropertiesAccessor propertiesAccessor = PropertiesAccessor.getInstance(ccAppCtx.getAppConfig());
+        PropertiesAccessor propertiesAccessor = PropertiesAccessor.getInstance(ccServiceCtx.getAppConfig());
         INSTANCE.compilerProperties = new CompilerProperties(propertiesAccessor);
         INSTANCE.externalProperties = new ExternalProperties(propertiesAccessor);
         INSTANCE.metadataProperties = new MetadataProperties(propertiesAccessor);
@@ -120,8 +120,8 @@ public class AppContextInfo implements IApplicationContextInfo, IPropertiesProvi
     }
 
     @Override
-    public ICCApplicationContext getCCApplicationContext() {
-        return appCtx;
+    public ICCServiceContext getCCServiceContext() {
+        return ccServiceCtx;
     }
 
     @Override

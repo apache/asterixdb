@@ -19,7 +19,6 @@
 package org.apache.hyracks.api.client.impl;
 
 import java.util.ArrayList;
-import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -29,7 +28,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.commons.lang3.tuple.Pair;
-
 import org.apache.hyracks.api.dataflow.ActivityId;
 import org.apache.hyracks.api.dataflow.ConnectorDescriptorId;
 import org.apache.hyracks.api.dataflow.IActivity;
@@ -53,12 +51,12 @@ public class JobActivityGraphBuilder implements IActivityGraphBuilder {
 
     private final Map<ConnectorDescriptorId, Pair<IActivity, Integer>> connectorConsumerMap;
 
-    public JobActivityGraphBuilder(JobSpecification jobSpec, EnumSet<JobFlag> jobFlags) {
-        activityOperatorMap = new HashMap<ActivityId, IOperatorDescriptor>();
+    public JobActivityGraphBuilder(JobSpecification jobSpec, Set<JobFlag> jobFlags) {
+        activityOperatorMap = new HashMap<>();
         jag = new JobActivityGraph();
         this.jobSpec = jobSpec;
-        connectorProducerMap = new HashMap<ConnectorDescriptorId, Pair<IActivity, Integer>>();
-        connectorConsumerMap = new HashMap<ConnectorDescriptorId, Pair<IActivity, Integer>>();
+        connectorProducerMap = new HashMap<>();
+        connectorConsumerMap = new HashMap<>();
     }
 
     public void addConnector(IConnectorDescriptor conn) {
@@ -116,7 +114,7 @@ public class JobActivityGraphBuilder implements IActivityGraphBuilder {
     private <K, V> void addToValueSet(Map<K, Set<V>> map, K n1, V n2) {
         Set<V> targets = map.get(n1);
         if (targets == null) {
-            targets = new HashSet<V>();
+            targets = new HashSet<>();
             map.put(n1, targets);
         }
         targets.add(n2);
@@ -132,7 +130,7 @@ public class JobActivityGraphBuilder implements IActivityGraphBuilder {
     private <K, V> void insertIntoIndexedMap(Map<K, List<V>> map, K key, int index, V value) {
         List<V> vList = map.get(key);
         if (vList == null) {
-            vList = new ArrayList<V>();
+            vList = new ArrayList<>();
             map.put(key, vList);
         }
         extend(vList, index);
