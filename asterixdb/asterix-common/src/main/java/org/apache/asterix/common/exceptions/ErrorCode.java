@@ -165,21 +165,27 @@ public class ErrorCode {
     public static final int UTIL_LOCAL_FILE_SYSTEM_UTILS_PATH_NOT_FOUND = 3077;
     public static final int UTIL_HDFS_UTILS_CANNOT_OBTAIN_HDFS_SCHEDULER = 3078;
 
-    // Loads the map that maps error codes to error message templates.
-    private static Map<Integer, String> errorMessageMap = null;
-
     private ErrorCode() {
     }
 
-    public static String getErrorMessage(int errorCode) {
-        if (errorMessageMap == null) {
+    private static class Holder {
+        private static final Map<Integer, String> errorMessageMap;
+
+        static {
+            // Loads the map that maps error codes to error message templates.
             try (InputStream resourceStream = ErrorCode.class.getClassLoader().getResourceAsStream(RESOURCE_PATH)) {
                 errorMessageMap = ErrorMessageUtil.loadErrorMap(resourceStream);
             } catch (Exception e) {
                 throw new IllegalStateException(e);
             }
         }
-        String msg = errorMessageMap.get(errorCode);
+
+        private Holder() {
+        }
+    }
+
+    public static String getErrorMessage(int errorCode) {
+        String msg = Holder.errorMessageMap.get(errorCode);
         if (msg == null) {
             throw new IllegalStateException("Undefined error code: " + errorCode);
         }

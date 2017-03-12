@@ -64,21 +64,27 @@ public class ErrorCode {
     // Compilation error codes.
     public static final int RULECOLLECTION_NOT_INSTANCE_OF_LIST = 10001;
 
-    // Loads the map that maps error codes to error message templates.
-    private static Map<Integer, String> errorMessageMap = null;
+    private static class Holder {
+        private static final Map<Integer, String> errorMessageMap;
 
-    private ErrorCode() {
-    }
-
-    public static String getErrorMessage(int errorCode) {
-        if (errorMessageMap == null) {
+        static {
+            // Loads the map that maps error codes to error message templates.
             try (InputStream resourceStream = ErrorCode.class.getClassLoader().getResourceAsStream(RESOURCE_PATH)) {
                 errorMessageMap = ErrorMessageUtil.loadErrorMap(resourceStream);
             } catch (Exception e) {
                 throw new IllegalStateException(e);
             }
         }
-        String msg = errorMessageMap.get(errorCode);
+
+        private Holder() {
+        }
+    }
+
+    private ErrorCode() {
+    }
+
+    public static String getErrorMessage(int errorCode) {
+        String msg = Holder.errorMessageMap.get(errorCode);
         if (msg == null) {
             throw new IllegalStateException("Undefined error code: " + errorCode);
         }
