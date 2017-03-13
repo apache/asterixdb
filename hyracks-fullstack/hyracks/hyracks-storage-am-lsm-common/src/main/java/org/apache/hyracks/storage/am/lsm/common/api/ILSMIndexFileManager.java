@@ -37,7 +37,7 @@ import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences
 public interface ILSMIndexFileManager {
     public void createDirs();
 
-    public void deleteDirs();
+    public void deleteDirs() throws HyracksDataException;
 
     public LSMComponentFileReferences getRelFlushFileReference() throws HyracksDataException;
 

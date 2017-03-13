@@ -60,6 +60,11 @@ public class ErrorCode {
     public static final int NO_RESULTSET = 24;
     public static final int JOB_CANCELED = 25;
     public static final int NODE_FAILED = 26;
+    public static final int FILE_IS_NOT_DIRECTORY = 27;
+    public static final int CANNOT_READ_FILE = 28;
+    public static final int UNIDENTIFIED_IO_ERROR_READING_FILE = 29;
+    public static final int FILE_DOES_NOT_EXISTS = 30;
+    public static final int UNIDENTIFIED_IO_ERROR_DELETING_DIR = 31;
 
     // Compilation error codes.
     public static final int RULECOLLECTION_NOT_INSTANCE_OF_LIST = 10001;

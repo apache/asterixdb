@@ -33,6 +33,8 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
@@ -70,7 +72,7 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
     private String prevTimestamp = null;
 
     public AbstractLSMIndexFileManager(IIOManager ioManager, IFileMapProvider fileMapProvider, FileReference file,
-                                       TreeIndexFactory<? extends ITreeIndex> treeFactory) {
+            TreeIndexFactory<? extends ITreeIndex> treeFactory) {
         this.ioManager = ioManager;
         this.baseDir = file.getFile().getAbsolutePath();
         if (!baseDir.endsWith(System.getProperty("file.separator"))) {
@@ -96,8 +98,8 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
                 return TreeIndexState.INVALID;
             }
             ITreeIndexMetadataFrame metadataFrame = treeIndex.getPageManager().createMetadataFrame();
-            ICachedPage page = bufferCache.pin(BufferedFileHandle.getDiskPageId(treeIndex.getFileId(), metadataPage),
-                    false);
+            ICachedPage page =
+                    bufferCache.pin(BufferedFileHandle.getDiskPageId(treeIndex.getFileId(), metadataPage), false);
             page.acquireReadLatch();
             try {
                 metadataFrame.setPage(page);
@@ -118,11 +120,10 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
     }
 
     protected void cleanupAndGetValidFilesInternal(FilenameFilter filter,
-                                                   TreeIndexFactory<? extends ITreeIndex> treeFactory,
-                                                   ArrayList<ComparableFileName> allFiles)
+            TreeIndexFactory<? extends ITreeIndex> treeFactory, ArrayList<ComparableFileName> allFiles)
             throws HyracksDataException, IndexException {
+        String[] files = listDirFiles(baseDir, filter);
         File dir = new File(baseDir);
-        String[] files = dir.list(filter);
         for (String fileName : files) {
             FileReference fileRef = ioManager.resolveAbsolutePath(dir.getPath() + File.separator + fileName);
             if (treeFactory == null) {
@@ -138,10 +139,28 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
         }
     }
 
+    static String[] listDirFiles(String path, FilenameFilter filter) throws HyracksDataException {
+        File dir = new File(path);
+        /*
+         * Returns null if this abstract pathname does not denote a directory, or if an I/O error occurs.
+         */
+        String[] files = dir.list(filter);
+        if (files == null) {
+            if (!dir.canRead()) {
+                throw HyracksDataException.create(ErrorCode.CANNOT_READ_FILE, path);
+            } else if (!dir.exists()) {
+                throw HyracksDataException.create(ErrorCode.FILE_DOES_NOT_EXISTS, path);
+            } else if (!dir.isDirectory()) {
+                throw HyracksDataException.create(ErrorCode.FILE_IS_NOT_DIRECTORY, path);
+            }
+            throw HyracksDataException.create(ErrorCode.UNIDENTIFIED_IO_ERROR_READING_FILE, path);
+        }
+        return files;
+    }
+
     protected void validateFiles(HashSet<String> groundTruth, ArrayList<ComparableFileName> validFiles,
-                                 FilenameFilter filter,
-                                 TreeIndexFactory<? extends ITreeIndex> treeFactory
-    ) throws HyracksDataException, IndexException {
+            FilenameFilter filter, TreeIndexFactory<? extends ITreeIndex> treeFactory)
+            throws HyracksDataException, IndexException {
         ArrayList<ComparableFileName> tmpAllInvListsFiles = new ArrayList<>();
         cleanupAndGetValidFilesInternal(filter, treeFactory, tmpAllInvListsFiles);
         for (ComparableFileName cmpFileName : tmpAllInvListsFiles) {
@@ -163,18 +182,17 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
     }
 
     @Override
-    public void deleteDirs() {
+    public void deleteDirs() throws HyracksDataException {
         File f = new File(baseDir);
-        delete(f);
+        if (f.exists()) {
+            delete(f);
+        }
     }
 
-    private void delete(File f) {
-        if (f.isDirectory()) {
-            for (File c : f.listFiles()) {
-                delete(c);
-            }
+    private void delete(File f) throws HyracksDataException {
+        if (!FileUtils.deleteQuietly(f)) {
+            throw HyracksDataException.create(ErrorCode.UNIDENTIFIED_IO_ERROR_DELETING_DIR, f.getPath());
         }
-        f.delete();
     }
 
     protected static FilenameFilter bloomFilterFilter = new FilenameFilter() {
@@ -205,8 +223,8 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
         String[] firstTimestampRange = firstFileName.split(SPLIT_STRING);
         String[] lastTimestampRange = lastFileName.split(SPLIT_STRING);
         // Get the range of timestamps by taking the earliest and the latest timestamps
-        return new LSMComponentFileReferences(createMergeFile(baseDir + firstTimestampRange[0] + SPLIT_STRING
-                + lastTimestampRange[1]), null, null);
+        return new LSMComponentFileReferences(
+                createMergeFile(baseDir + firstTimestampRange[0] + SPLIT_STRING + lastTimestampRange[1]), null, null);
     }
 
     @Override
@@ -291,8 +309,8 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
 
     @Override
     public void recoverTransaction() throws HyracksDataException {
+        String[] files = listDirFiles(baseDir, transactionFileNameFilter);
         File dir = new File(baseDir);
-        String[] files = dir.list(transactionFileNameFilter);
         try {
             if (files.length == 0) {
                 // Do nothing
@@ -345,16 +363,16 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
     // This function is used to delete transaction files for aborted transactions
     @Override
     public void deleteTransactionFiles() throws HyracksDataException {
-        File dir = new File(baseDir);
-        String[] files = dir.list(transactionFileNameFilter);
+        String[] files = listDirFiles(baseDir, transactionFileNameFilter);
         if (files.length == 0) {
             // Do nothing
         } else if (files.length > 1) {
             throw new HyracksDataException("Found more than one transaction");
         } else {
+            File dir = new File(baseDir);
             //create transaction filter
             FilenameFilter transactionFilter = createTransactionFilter(files[0], true);
-            String[] componentsFiles = dir.list(transactionFilter);
+            String[] componentsFiles = listDirFiles(baseDir, transactionFilter);
             for (String fileName : componentsFiles) {
                 try {
                     String absFileName = dir.getPath() + File.separator + fileName;
@@ -398,8 +416,8 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
     };
 
     protected static FilenameFilter createTransactionFilter(String transactionFileName, final boolean inclusive) {
-        final String timeStamp = transactionFileName.substring(transactionFileName.indexOf(TRANSACTION_PREFIX)
-                + TRANSACTION_PREFIX.length());
+        final String timeStamp = transactionFileName
+                .substring(transactionFileName.indexOf(TRANSACTION_PREFIX) + TRANSACTION_PREFIX.length());
         return new FilenameFilter() {
             @Override
             public boolean accept(File dir, String name) {
@@ -412,9 +430,8 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
         };
     }
 
-    protected FilenameFilter getTransactionFileFilter(boolean inclusive) {
-        File dir = new File(baseDir);
-        String[] files = dir.list(transactionFileNameFilter);
+    protected FilenameFilter getTransactionFileFilter(boolean inclusive) throws HyracksDataException {
+        String[] files = listDirFiles(baseDir, transactionFileNameFilter);
         if (files.length == 0) {
             return dummyFilter;
         } else {
@@ -433,7 +450,7 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
 
     /**
      * @return The string format of the current timestamp.
-     * The returned results of this method are guaranteed to not have duplicates.
+     *         The returned results of this method are guaranteed to not have duplicates.
      */
     protected String getCurrentTimestamp() {
         Date date = new Date();
