@@ -83,7 +83,7 @@ public class DiagnosticsApiServlet extends NodeControllerDetailsApiServlet {
     private ObjectNode getClusterDiagnosticsJSON() throws Exception {
         ObjectMapper om = new ObjectMapper();
         IHyracksClientConnection hcc = (IHyracksClientConnection) ctx.get(HYRACKS_CONNECTION_ATTR);
-        ExecutorService executor = (ExecutorService) ctx.get(ServletConstants.EXECUTOR_SERVICE);
+        ExecutorService executor = (ExecutorService) ctx.get(ServletConstants.EXECUTOR_SERVICE_ATTR);
         Map<String, Future<ObjectNode>> ccFutureData = new HashMap<>();
         ccFutureData.put("threaddump",
                 executor.submit(() -> fixupKeys((ObjectNode) om.readTree(hcc.getThreadDump(null)))));

@@ -423,7 +423,6 @@ public class TestExecutor {
             String exceptionMsg;
             try {
                 // First try to parse the response for a JSON error response.
-
                 ObjectMapper om = new ObjectMapper();
                 JsonNode result = om.readTree(errorBody);
                 String[] errors = { result.get("error-code").asText(), result.get("summary").asText(),
@@ -457,6 +456,11 @@ public class TestExecutor {
 
     public InputStream executeQueryService(String str, OutputFormat fmt, URI uri,
             List<CompilationUnit.Parameter> params, boolean jsonEncoded) throws Exception {
+        return executeQueryService(str, fmt, uri, params, jsonEncoded, false);
+    }
+
+    protected InputStream executeQueryService(String str, OutputFormat fmt, URI uri,
+            List<CompilationUnit.Parameter> params, boolean jsonEncoded, boolean cancellable) throws Exception {
         setParam(params, "format", fmt.mimeType());
         HttpUriRequest method = jsonEncoded ? constructPostMethodJson(str, uri, "statement", params)
                 : constructPostMethodUrl(str, uri, "statement", params);
@@ -830,7 +834,7 @@ public class TestExecutor {
                     }
                     final URI uri = getEndpoint(Servlets.QUERY_SERVICE);
                     if (DELIVERY_IMMEDIATE.equals(delivery)) {
-                        resultStream = executeQueryService(statement, fmt, uri, params, true);
+                        resultStream = executeQueryService(statement, fmt, uri, params, true, true);
                         resultStream = ResultExtractor.extract(resultStream);
                     } else {
                         String handleVar = getHandleVariable(statement);

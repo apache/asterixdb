@@ -104,7 +104,8 @@ public class AsterixJavaClient {
 
         IStatementExecutor translator =
                 statementExecutorFactory.create(statements, conf, compilationProvider, storageComponentProvider);
-        translator.compileAndExecute(hcc, null, QueryTranslator.ResultDelivery.IMMEDIATE);
+        translator.compileAndExecute(hcc, null, QueryTranslator.ResultDelivery.IMMEDIATE,
+                new IStatementExecutor.Stats());
         writer.flush();
     }
 

@@ -77,21 +77,7 @@ public interface IStatementExecutor {
     }
 
     /**
-     * Compiles and execute a list of statements.
-     *
-     * @param hcc
-     *            A Hyracks client connection that is used to submit a jobspec to Hyracks.
-     * @param hdc
-     *            A Hyracks dataset client object that is used to read the results.
-     * @param resultDelivery
-     *            The {@code ResultDelivery} kind required for queries in the list of statements
-     * @throws Exception
-     */
-    void compileAndExecute(IHyracksClientConnection hcc, IHyracksDataset hdc, ResultDelivery resultDelivery)
-            throws Exception;
-
-    /**
-     * Compiles and execute a list of statements.
+     * Compiles and execute a list of statements, without passing in client context id and context.
      *
      * @param hcc
      *            A Hyracks client connection that is used to submit a jobspec to Hyracks.
@@ -105,6 +91,26 @@ public interface IStatementExecutor {
      */
     void compileAndExecute(IHyracksClientConnection hcc, IHyracksDataset hdc, ResultDelivery resultDelivery,
             Stats stats) throws Exception;
+
+    /**
+     * Compiles and execute a list of statements, with passing in client context id and context.
+     *
+     * @param hcc
+     *            A Hyracks client connection that is used to submit a jobspec to Hyracks.
+     * @param hdc
+     *            A Hyracks dataset client object that is used to read the results.
+     * @param resultDelivery
+     *            The {@code ResultDelivery} kind required for queries in the list of statements
+     * @param stats
+     *            a reference to write the stats of executed queries
+     * @param clientContextId
+     *            the client context id for the query
+     * @param ctx
+     *            the context that contains the meta information for all queries
+     * @throws Exception
+     */
+    void compileAndExecute(IHyracksClientConnection hcc, IHyracksDataset hdc, ResultDelivery resultDelivery,
+            Stats stats, String clientContextId, IStatementExecutorContext ctx) throws Exception;
 
     /**
      * rewrites and compiles query into a hyracks job specifications

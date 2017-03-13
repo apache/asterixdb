@@ -68,11 +68,14 @@ public class FileHandle implements IFileHandle {
                 throw new IllegalArgumentException();
         }
         raf = new RandomAccessFile(fileRef.getFile(), mode);
-        channel = raf.getChannel();
     }
 
     public void close() throws IOException {
+        if (raf == null) {
+            return;
+        }
         raf.close();
+        raf = null;
     }
 
     public FileReference getFileReference() {
@@ -80,10 +83,10 @@ public class FileHandle implements IFileHandle {
     }
 
     public FileChannel getFileChannel() {
+        if (channel == null) {
+            channel = raf.getChannel();
+        }
         return channel;
     }
 
-    public void sync(boolean metadata) throws IOException {
-        channel.force(metadata);
-    }
 }

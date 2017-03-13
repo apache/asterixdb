@@ -35,6 +35,7 @@ import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.util.FrameUtils;
 import org.apache.hyracks.dataflow.common.io.GeneratedRunFileReader;
+import org.apache.hyracks.dataflow.common.io.RunFileReader;
 import org.apache.hyracks.dataflow.common.io.RunFileWriter;
 import org.apache.hyracks.dataflow.std.sort.util.GroupVSizeFrame;
 
@@ -167,10 +168,22 @@ public abstract class AbstractExternalSortRunMerger {
             if (finalWriter != null) {
                 finalWriter.fail();
             }
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         } finally {
-            if (finalWriter != null) {
-                finalWriter.close();
+            try {
+                if (finalWriter != null) {
+                    finalWriter.close();
+                }
+            } finally {
+                for (RunFileReader reader : runs) {
+                    try {
+                        reader.close(); // close is idempotent.
+                    } catch (Exception e) {
+                        if (LOGGER.isLoggable(Level.WARNING)) {
+                            LOGGER.log(Level.WARNING, e.getMessage(), e);
+                        }
+                    }
+                }
             }
         }
     }

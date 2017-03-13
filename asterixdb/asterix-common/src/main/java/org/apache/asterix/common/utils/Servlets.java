@@ -34,6 +34,7 @@ public class Servlets {
     public static final String CONNECTOR = "/connector";
     public static final String SHUTDOWN = "/admin/shutdown";
     public static final String VERSION = "/admin/version";
+    public static final String RUNNING_REQUESTS = "/admin/requests/running/*";
     public static final String CLUSTER_STATE = "/admin/cluster/*";
     public static final String CLUSTER_STATE_NODE_DETAIL = "/admin/cluster/node/*";
     public static final String CLUSTER_STATE_CC_DETAIL = "/admin/cluster/cc/*";

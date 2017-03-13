@@ -57,7 +57,14 @@ public class CleanupJobletWork extends AbstractWork {
             @Override
             public void run() {
                 for (IPartition p : unregisteredPartitions) {
-                    p.deallocate();
+                    try {
+                        // Put deallocate in a try block to make sure that every IPartition is de-allocated.
+                        p.deallocate();
+                    } catch (Exception e) {
+                        if (LOGGER.isLoggable(Level.WARNING)) {
+                            LOGGER.log(Level.WARNING, e.getMessage(), e);
+                        }
+                    }
                 }
             }
         });

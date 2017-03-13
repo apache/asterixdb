@@ -20,6 +20,7 @@ package org.apache.asterix.test.runtime;
 
 import java.util.Collection;
 
+import org.apache.asterix.test.common.TestExecutor;
 import org.apache.asterix.testframework.context.TestCaseContext;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -37,7 +38,7 @@ public class SqlppExecutionTest {
 
     @BeforeClass
     public static void setUp() throws Exception {
-        LangExecutionUtil.setUp(TEST_CONFIG_FILE_NAME);
+        LangExecutionUtil.setUp(TEST_CONFIG_FILE_NAME, new TestExecutor());
     }
 
     @AfterClass

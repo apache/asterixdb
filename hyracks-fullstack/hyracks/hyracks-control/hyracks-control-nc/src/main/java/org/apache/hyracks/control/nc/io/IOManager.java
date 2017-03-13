@@ -324,7 +324,7 @@ public class IOManager implements IIOManager {
     @Override
     public void sync(IFileHandle fileHandle, boolean metadata) throws HyracksDataException {
         try {
-            ((FileHandle) fileHandle).sync(metadata);
+            ((FileHandle) fileHandle).getFileChannel().force(metadata);
         } catch (IOException e) {
             throw new HyracksDataException(e);
         }

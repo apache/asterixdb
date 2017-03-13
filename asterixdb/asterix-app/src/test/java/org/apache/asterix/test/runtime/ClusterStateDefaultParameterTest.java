@@ -25,6 +25,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Collection;
 
+import org.apache.asterix.test.common.TestExecutor;
 import org.apache.asterix.testframework.context.TestCaseContext;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -43,7 +44,7 @@ public class ClusterStateDefaultParameterTest {
 
     @BeforeClass
     public static void setUp() throws Exception {
-        LangExecutionUtil.setUp(TEST_CONFIG_FILE_NAME);
+        LangExecutionUtil.setUp(TEST_CONFIG_FILE_NAME, new TestExecutor());
     }
 
     @AfterClass

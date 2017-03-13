@@ -156,6 +156,7 @@ import org.apache.asterix.translator.CompiledStatements.CompiledLoadFromFileStat
 import org.apache.asterix.translator.CompiledStatements.CompiledUpsertStatement;
 import org.apache.asterix.translator.CompiledStatements.ICompiledDmlStatement;
 import org.apache.asterix.translator.IStatementExecutor;
+import org.apache.asterix.translator.IStatementExecutorContext;
 import org.apache.asterix.translator.SessionConfig;
 import org.apache.asterix.translator.TypeTranslator;
 import org.apache.asterix.translator.util.ValidateUtil;
@@ -232,27 +233,15 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         return functionDecls;
     }
 
-    /**
-     * Compiles and submits for execution a list of AQL statements.
-     *
-     * @param hcc
-     *            A Hyracks client connection that is used to submit a jobspec to Hyracks.
-     * @param hdc
-     *            A Hyracks dataset client object that is used to read the results.
-     * @param resultDelivery
-     *            True if the results should be read asynchronously or false if we should wait for results to be read.
-     * @return A List<QueryResult> containing a QueryResult instance corresponding to each submitted query.
-     * @throws Exception
-     */
     @Override
-    public void compileAndExecute(IHyracksClientConnection hcc, IHyracksDataset hdc, ResultDelivery resultDelivery)
-            throws Exception {
-        compileAndExecute(hcc, hdc, resultDelivery, new Stats());
+    public void compileAndExecute(IHyracksClientConnection hcc, IHyracksDataset hdc, ResultDelivery resultDelivery,
+            Stats stats) throws Exception {
+        compileAndExecute(hcc, hdc, resultDelivery, stats, null, null);
     }
 
     @Override
     public void compileAndExecute(IHyracksClientConnection hcc, IHyracksDataset hdc, ResultDelivery resultDelivery,
-            Stats stats) throws Exception {
+            Stats stats, String clientContextId, IStatementExecutorContext ctx) throws Exception {
         int resultSetIdCounter = 0;
         FileSplit outputFile = null;
         IAWriterFactory writerFactory = PrinterBasedWriterFactory.INSTANCE;
@@ -329,7 +318,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                             metadataProvider.setResultAsyncMode(resultDelivery == ResultDelivery.ASYNC
                                     || resultDelivery == ResultDelivery.DEFERRED);
                         }
-                        handleInsertUpsertStatement(metadataProvider, stmt, hcc, hdc, resultDelivery, stats, false);
+                        handleInsertUpsertStatement(metadataProvider, stmt, hcc, hdc, resultDelivery, stats, false,
+                                clientContextId, ctx);
                         break;
                     case Statement.Kind.DELETE:
                         handleDeleteStatement(metadataProvider, stmt, hcc, false);
@@ -362,7 +352,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         metadataProvider.setResultSetId(new ResultSetId(resultSetIdCounter++));
                         metadataProvider.setResultAsyncMode(
                                 resultDelivery == ResultDelivery.ASYNC || resultDelivery == ResultDelivery.DEFERRED);
-                        handleQuery(metadataProvider, (Query) stmt, hcc, hdc, resultDelivery, stats);
+                        handleQuery(metadataProvider, (Query) stmt, hcc, hdc, resultDelivery, stats, clientContextId,
+                                ctx);
                         break;
                     case Statement.Kind.COMPACT:
                         handleCompactStatement(metadataProvider, stmt, hcc);
@@ -1809,8 +1800,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
 
     public JobSpecification handleInsertUpsertStatement(MetadataProvider metadataProvider, Statement stmt,
             IHyracksClientConnection hcc, IHyracksDataset hdc, ResultDelivery resultDelivery,
-            IStatementExecutor.Stats stats, boolean compileOnly) throws Exception {
-
+            IStatementExecutor.Stats stats, boolean compileOnly, String clientContextId, IStatementExecutorContext ctx)
+            throws Exception {
         InsertStatement stmtInsertUpsert = (InsertStatement) stmt;
         String dataverseName = getActiveDataverse(stmtInsertUpsert.getDataverseName());
         Query query = stmtInsertUpsert.getQuery();
@@ -1852,7 +1843,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
 
         if (stmtInsertUpsert.getReturnExpression() != null) {
-            deliverResult(hcc, hdc, compiler, metadataProvider, locker, resultDelivery, stats);
+            deliverResult(hcc, hdc, compiler, metadataProvider, locker, resultDelivery, stats, clientContextId, ctx);
         } else {
             locker.lock();
             try {
@@ -2371,7 +2362,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     }
 
     protected void handleQuery(MetadataProvider metadataProvider, Query query, IHyracksClientConnection hcc,
-            IHyracksDataset hdc, ResultDelivery resultDelivery, Stats stats) throws Exception {
+            IHyracksDataset hdc, ResultDelivery resultDelivery, Stats stats, String clientContextId,
+            IStatementExecutorContext ctx) throws Exception {
         final IMetadataLocker locker = new IMetadataLocker() {
             @Override
             public void lock() {
@@ -2402,11 +2394,12 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 throw e;
             }
         };
-        deliverResult(hcc, hdc, compiler, metadataProvider, locker, resultDelivery, stats);
+        deliverResult(hcc, hdc, compiler, metadataProvider, locker, resultDelivery, stats, clientContextId, ctx);
     }
 
     private void deliverResult(IHyracksClientConnection hcc, IHyracksDataset hdc, IStatementCompiler compiler,
-            MetadataProvider metadataProvider, IMetadataLocker locker, ResultDelivery resultDelivery, Stats stats)
+            MetadataProvider metadataProvider, IMetadataLocker locker, ResultDelivery resultDelivery, Stats stats,
+            String clientContextId, IStatementExecutorContext ctx)
             throws Exception {
         final ResultSetId resultSetId = metadataProvider.getResultSetId();
         switch (resultDelivery) {
@@ -2422,7 +2415,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                                 printed.setTrue();
                                 printed.notify();
                             }
-                        });
+                        }, clientContextId, ctx);
                     } catch (Exception e) {
                         GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE,
                                 resultDelivery.name() + " job " + "with id " + jobId + " failed", e);
@@ -2439,12 +2432,12 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     final ResultReader resultReader = new ResultReader(hdc, id, resultSetId);
                     ResultUtil.printResults(resultReader, sessionConfig, stats,
                             metadataProvider.findOutputRecordType());
-                });
+                }, clientContextId, ctx);
                 break;
             case DEFERRED:
                 createAndRunJob(hcc, compiler, locker, resultDelivery, id -> {
                     ResultUtil.printResultHandle(new ResultHandle(id, resultSetId), sessionConfig);
-                });
+                }, clientContextId, ctx);
                 break;
             default:
                 break;
@@ -2452,7 +2445,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     }
 
     private static JobId createAndRunJob(IHyracksClientConnection hcc, IStatementCompiler compiler,
-            IMetadataLocker locker, ResultDelivery resultDelivery, IResultPrinter printer) throws Exception {
+            IMetadataLocker locker, ResultDelivery resultDelivery, IResultPrinter printer, String clientContextId,
+            IStatementExecutorContext ctx) throws Exception {
         locker.lock();
         try {
             final JobSpecification jobSpec = compiler.compile();
@@ -2460,6 +2454,10 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 return JobId.INVALID;
             }
             final JobId jobId = JobUtils.runJob(hcc, jobSpec, false);
+
+            if (ctx != null && clientContextId != null) {
+                ctx.put(clientContextId, jobId); // Adds the running job into the context.
+            }
             if (ResultDelivery.ASYNC == resultDelivery) {
                 printer.print(jobId);
                 hcc.waitForCompletion(jobId);
@@ -2469,6 +2467,10 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             }
             return jobId;
         } finally {
+            // No matter the job succeeds or fails, removes it into the context.
+            if (ctx != null && clientContextId != null) {
+                ctx.removeJobIdFromClientContextId(clientContextId);
+            }
             locker.unlock();
         }
     }

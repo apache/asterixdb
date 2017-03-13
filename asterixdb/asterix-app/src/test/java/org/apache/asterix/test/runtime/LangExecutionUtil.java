@@ -19,6 +19,8 @@
 
 package org.apache.asterix.test.runtime;
 
+import static org.apache.hyracks.control.common.utils.ThreadDumpHelper.takeDumpJSON;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -35,7 +37,7 @@ import org.apache.asterix.test.common.TestExecutor;
 import org.apache.asterix.testframework.context.TestCaseContext;
 import org.apache.commons.lang.SystemUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.junit.Assert;
+import org.apache.hyracks.control.common.utils.ThreadDumpHelper;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
@@ -52,12 +54,13 @@ public class LangExecutionUtil {
     private static final boolean cleanupOnStart = true;
     private static final boolean cleanupOnStop = true;
     private static final List<String> badTestCases = new ArrayList<>();
-    private static final TestExecutor testExecutor = new TestExecutor();
+    private static TestExecutor testExecutor;
 
     private static TestLibrarian librarian;
     private static final int repeat = Integer.getInteger("test.repeat", 1);
 
-    public static void setUp(String configFile) throws Exception {
+    public static void setUp(String configFile, TestExecutor executor) throws Exception {
+        testExecutor = executor;
         File outdir = new File(PATH_ACTUAL);
         outdir.mkdirs();
         List<ILibraryManager> libraryManagers = ExecutionTestUtil.setUp(cleanupOnStart, configFile);
@@ -70,16 +73,20 @@ public class LangExecutionUtil {
     }
 
     public static void tearDown() throws Exception {
-        // Check whether there are leaked open run file handles.
-        checkRunFileLeaks();
-
-        TestLibrarian.removeLibraryDir();
-        ExecutionTestUtil.tearDown(cleanupOnStop);
-        ExecutionTestUtil.integrationUtil.removeTestStorageFiles();
-        if (!badTestCases.isEmpty()) {
-            System.out.println("The following test cases left some data");
-            for (String testCase : badTestCases) {
-                System.out.println(testCase);
+        try {
+            // Check whether there are leaked open run file handles.
+            checkOpenRunFileLeaks();
+            // Check whether there are leaked threads.
+            checkThreadLeaks();
+        } finally {
+            TestLibrarian.removeLibraryDir();
+            ExecutionTestUtil.tearDown(cleanupOnStop);
+            ExecutionTestUtil.integrationUtil.removeTestStorageFiles();
+            if (!badTestCases.isEmpty()) {
+                System.out.println("The following test cases left some data");
+                for (String testCase : badTestCases) {
+                    System.out.println(testCase);
+                }
             }
         }
     }
@@ -128,7 +135,18 @@ public class LangExecutionUtil {
         }
     }
 
-    private static void checkRunFileLeaks() throws IOException {
+    private static void checkThreadLeaks() throws IOException {
+        String threadDump = ThreadDumpHelper.takeDumpJSON(ManagementFactory.getThreadMXBean());
+        // Currently we only do sanity check for threads used in the execution engine.
+        // Later we should check if there are leaked storage threads as well.
+        if (threadDump.contains("Operator") || threadDump.contains("SuperActivity") || threadDump
+                .contains("PipelinedPartition")) {
+            System.out.print(threadDump);
+            throw new AssertionError("There are leaked threads in the execution engine.");
+        }
+    }
+
+    private static void checkOpenRunFileLeaks() throws IOException {
         if (SystemUtils.IS_OS_WINDOWS) {
             return;
         }
@@ -142,7 +160,22 @@ public class LangExecutionUtil {
                 .exec(new String[] { "bash", "-c", "lsof -p " + processId + "|grep waf|wc -l" });
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
             int runFileCount = Integer.parseInt(reader.readLine().trim());
-            Assert.assertTrue(runFileCount == 0);
+            if (runFileCount != 0) {
+                System.out.print(takeDumpJSON(ManagementFactory.getThreadMXBean()));
+                outputLeakedOpenFiles(processId);
+                throw new AssertionError("There are " + runFileCount + " leaked run files.");
+            }
+        }
+    }
+
+    private static void outputLeakedOpenFiles(String processId) throws IOException {
+        Process process = Runtime.getRuntime()
+                .exec(new String[] { "bash", "-c", "lsof -p " + processId + "|grep waf" });
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                System.err.println(line);
+            }
         }
     }
 }

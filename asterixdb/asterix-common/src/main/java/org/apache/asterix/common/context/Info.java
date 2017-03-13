@@ -39,10 +39,6 @@ public abstract class Info {
         return referenceCount;
     }
 
-    public void setReferenceCount(int referenceCount) {
-        this.referenceCount = referenceCount;
-    }
-
     public boolean isOpen() {
         return isOpen;
     }

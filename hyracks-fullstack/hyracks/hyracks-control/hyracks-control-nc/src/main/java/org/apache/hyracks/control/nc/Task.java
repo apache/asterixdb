@@ -259,7 +259,6 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
     public void run() {
         Thread ct = Thread.currentThread();
         String threadName = ct.getName();
-        ct.setName(displayName + ":" + taskAttemptId + ":" + 0);
         // Calls synchronized addPendingThread(..) to make sure that in the abort() method,
         // the thread is not escaped from interruption.
         if (!addPendingThread(ct)) {
@@ -268,6 +267,7 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
             ncs.getWorkQueue().schedule(new NotifyTaskFailureWork(ncs, this, exceptions));
             return;
         }
+        ct.setName(displayName + ":" + taskAttemptId + ":" + 0);
         try {
             try {
                 operator.initialize();

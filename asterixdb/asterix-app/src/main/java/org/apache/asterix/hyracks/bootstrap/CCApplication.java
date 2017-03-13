@@ -16,6 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.apache.asterix.hyracks.bootstrap;
 
 import static org.apache.asterix.api.http.servlet.ServletConstants.ASTERIX_APP_CONTEXT_INFO_ATTR;
@@ -38,6 +39,7 @@ import org.apache.asterix.api.http.server.FeedServlet;
 import org.apache.asterix.api.http.server.FullApiServlet;
 import org.apache.asterix.api.http.server.NodeControllerDetailsApiServlet;
 import org.apache.asterix.api.http.server.QueryApiServlet;
+import org.apache.asterix.api.http.server.QueryCancellationServlet;
 import org.apache.asterix.api.http.server.QueryResultApiServlet;
 import org.apache.asterix.api.http.server.QueryServiceServlet;
 import org.apache.asterix.api.http.server.QueryStatusApiServlet;
@@ -184,7 +186,7 @@ public class CCApplication extends BaseCCApplication {
         IHyracksClientConnection hcc = getHcc();
         jsonAPIServer.setAttribute(HYRACKS_CONNECTION_ATTR, hcc);
         jsonAPIServer.setAttribute(ASTERIX_APP_CONTEXT_INFO_ATTR, AppContextInfo.INSTANCE);
-        jsonAPIServer.setAttribute(ServletConstants.EXECUTOR_SERVICE,
+        jsonAPIServer.setAttribute(ServletConstants.EXECUTOR_SERVICE_ATTR,
                 ((ClusterControllerService) ccServiceCtx.getControllerService()).getExecutor());
 
         // AQL rest APIs.
@@ -203,6 +205,7 @@ public class CCApplication extends BaseCCApplication {
         addServlet(jsonAPIServer, Servlets.QUERY_STATUS);
         addServlet(jsonAPIServer, Servlets.QUERY_RESULT);
         addServlet(jsonAPIServer, Servlets.QUERY_SERVICE);
+        addServlet(jsonAPIServer, Servlets.RUNNING_REQUESTS);
         addServlet(jsonAPIServer, Servlets.CONNECTOR);
         addServlet(jsonAPIServer, Servlets.SHUTDOWN);
         addServlet(jsonAPIServer, Servlets.VERSION);
@@ -260,6 +263,8 @@ public class CCApplication extends BaseCCApplication {
             case Servlets.SQLPP_DDL:
                 return new DdlApiServlet(ctx, paths, ccExtensionManager.getSqlppCompilationProvider(),
                         getStatementExecutorFactory(), componentProvider);
+            case Servlets.RUNNING_REQUESTS:
+                return new QueryCancellationServlet(ctx, paths);
             case Servlets.QUERY_STATUS:
                 return new QueryStatusApiServlet(ctx, paths);
             case Servlets.QUERY_RESULT:

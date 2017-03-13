@@ -29,6 +29,8 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.asterix.api.http.ctx.StatementExecutorContext;
+import org.apache.asterix.api.http.servlet.ServletConstants;
 import org.apache.asterix.app.result.ResultUtil;
 import org.apache.asterix.common.api.IClusterManagementWork;
 import org.apache.asterix.common.config.GlobalConfig;
@@ -43,6 +45,7 @@ import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.runtime.utils.ClusterStateManager;
 import org.apache.asterix.translator.IStatementExecutor;
 import org.apache.asterix.translator.IStatementExecutor.Stats;
+import org.apache.asterix.translator.IStatementExecutorContext;
 import org.apache.asterix.translator.IStatementExecutorFactory;
 import org.apache.asterix.translator.SessionConfig;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -65,6 +68,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
     private final ILangCompilationProvider compilationProvider;
     private final IStatementExecutorFactory statementExecutorFactory;
     private final IStorageComponentProvider componentProvider;
+    private final IStatementExecutorContext queryCtx = new StatementExecutorContext();
 
     public QueryServiceServlet(ConcurrentMap<String, Object> ctx, String[] paths,
             ILangCompilationProvider compilationProvider, IStatementExecutorFactory statementExecutorFactory,
@@ -73,6 +77,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         this.compilationProvider = compilationProvider;
         this.statementExecutorFactory = statementExecutorFactory;
         this.componentProvider = componentProvider;
+        ctx.put(ServletConstants.RUNNING_QUERIES_ATTR, queryCtx);
     }
 
     @Override
@@ -425,7 +430,8 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
             IStatementExecutor translator =
                     statementExecutorFactory.create(statements, sessionConfig, compilationProvider, componentProvider);
             execStart = System.nanoTime();
-            translator.compileAndExecute(getHyracksClientConnection(), getHyracksDataset(), delivery, stats);
+            translator.compileAndExecute(getHyracksClientConnection(), getHyracksDataset(), delivery, stats,
+                    param.clientContextID, queryCtx);
             execEnd = System.nanoTime();
             printStatus(resultWriter, ResultDelivery.ASYNC == delivery ? ResultStatus.RUNNING : ResultStatus.SUCCESS);
         } catch (AsterixException | TokenMgrError | org.apache.asterix.aqlplus.parser.TokenMgrError pe) {

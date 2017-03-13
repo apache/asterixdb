@@ -94,8 +94,11 @@ public class TreeIndexStatsOperatorNodePushable extends AbstractUnaryOutputSourc
             writer.fail();
             throw new HyracksDataException(e);
         } finally {
-            writer.close();
-            treeIndexHelper.close();
+            try {
+                writer.close();
+            } finally {
+                treeIndexHelper.close();
+            }
         }
     }
 }

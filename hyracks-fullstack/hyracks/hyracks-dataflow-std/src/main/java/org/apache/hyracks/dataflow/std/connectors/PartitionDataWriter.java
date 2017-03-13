@@ -74,19 +74,34 @@ public class PartitionDataWriter implements IFrameWriter {
     @Override
     public void close() throws HyracksDataException {
         HyracksDataException closeException = null;
+        if (!failed) {
+            boolean newFailure = false;
+            for (int i = 0; i < pWriters.length; ++i) {
+                try {
+                    if (isOpen[i] && allocatedFrames[i] && appenders[i].getTupleCount() > 0) {
+                        appenders[i].write(pWriters[i], true);
+                    }
+                } catch (Exception e) {
+                    newFailure = true;
+                    closeException = wrapException(closeException, e);
+                    break;
+                }
+            }
+            if (newFailure) {
+                try {
+                    fail(); // Fail all writers if any new failure happens.
+                } catch (Exception e) {
+                    closeException = wrapException(closeException, e);
+                }
+            }
+        }
         for (int i = 0; i < pWriters.length; ++i) {
             if (isOpen[i]) {
-                if (allocatedFrames[i] && appenders[i].getTupleCount() > 0 && !failed) {
-                    try {
-                        appenders[i].write(pWriters[i], true);
-                    } catch (Throwable th) {
-                        closeException = HyracksDataException.suppress(closeException, th);
-                    }
-                }
+                // The try-block make sures that every writer is closed.
                 try {
                     pWriters[i].close();
-                } catch (Throwable th) {
-                    closeException = HyracksDataException.suppress(closeException, th);
+                } catch (Exception e) {
+                    closeException = wrapException(closeException, e);
                 }
             }
         }
@@ -129,8 +144,8 @@ public class PartitionDataWriter implements IFrameWriter {
             if (isOpen[i]) {
                 try {
                     pWriters[i].fail();
-                } catch (Throwable th) {
-                    failException = HyracksDataException.suppress(failException, th);
+                } catch (Exception e) {
+                    failException = wrapException(failException, e);
                 }
             }
         }
@@ -146,5 +161,14 @@ public class PartitionDataWriter implements IFrameWriter {
                 appenders[i].flush(pWriters[i]);
             }
         }
+    }
+
+    // Wraps the current encountered exception into the final exception.
+    private HyracksDataException wrapException(HyracksDataException finalException, Exception currentException) {
+        if (finalException == null) {
+            return HyracksDataException.create(currentException);
+        }
+        finalException.addSuppressed(currentException);
+        return finalException;
     }
 }

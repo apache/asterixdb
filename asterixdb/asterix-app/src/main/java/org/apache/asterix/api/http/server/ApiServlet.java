@@ -145,7 +145,8 @@ public class ApiServlet extends AbstractServlet {
                     compilationProvider, componentProvider);
             double duration;
             long startTime = System.currentTimeMillis();
-            translator.compileAndExecute(hcc, hds, IStatementExecutor.ResultDelivery.IMMEDIATE);
+            translator.compileAndExecute(hcc, hds, IStatementExecutor.ResultDelivery.IMMEDIATE,
+                    new IStatementExecutor.Stats());
             long endTime = System.currentTimeMillis();
             duration = (endTime - startTime) / 1000.00;
             out.println(HTML_STATEMENT_SEPARATOR);

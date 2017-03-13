@@ -224,7 +224,7 @@ public abstract class AbstractReplicateOperatorDescriptor extends AbstractOperat
                 public void initialize() throws HyracksDataException {
                     MaterializerTaskState state = (MaterializerTaskState) ctx.getStateObject(
                             new TaskId(new ActivityId(getOperatorId(), SPLITTER_MATERIALIZER_ACTIVITY_ID), partition));
-                    state.writeOut(writer, new VSizeFrame(ctx));
+                    state.writeOut(writer, new VSizeFrame(ctx), false);
                 }
 
             };

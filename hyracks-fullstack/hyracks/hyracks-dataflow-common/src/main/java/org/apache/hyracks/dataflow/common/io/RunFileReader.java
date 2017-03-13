@@ -84,6 +84,9 @@ public class RunFileReader implements IFrameReader {
 
     @Override
     public void close() throws HyracksDataException {
+        if (handle == null) {
+            return; // Makes sure the close operation is idempotent.
+        }
         if (deleteAfterClose) {
             try {
                 ioManager.close(handle);
@@ -94,6 +97,7 @@ public class RunFileReader implements IFrameReader {
         } else {
             ioManager.close(handle);
         }
+        handle = null;
     }
 
     public long getFileSize() {

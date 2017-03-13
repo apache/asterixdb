@@ -51,7 +51,7 @@ public class MaterializingPipelinedPartition implements IFrameWriter, IPartition
 
     private FileReference fRef;
 
-    private IFileHandle handle;
+    private IFileHandle writeHandle;
 
     private long size;
 
@@ -62,6 +62,8 @@ public class MaterializingPipelinedPartition implements IFrameWriter, IPartition
     protected boolean flushRequest;
 
     private Level openCloseLevel = Level.FINE;
+
+    private Thread dataConsumerThread;
 
     public MaterializingPipelinedPartition(IHyracksTaskContext ctx, PartitionManager manager, PartitionId pid,
             TaskAttemptId taId, Executor executor) {
@@ -79,9 +81,13 @@ public class MaterializingPipelinedPartition implements IFrameWriter, IPartition
     }
 
     @Override
-    public void deallocate() {
-        if (fRef != null) {
-            fRef.delete();
+    public synchronized void deallocate() {
+        // Makes sure that the data consumer thread will not wait for anything further. Since the receiver side could
+        // have be interrupted already, the data consumer thread can potentially hang on writer.nextFrame(...)
+        // or writer.close(...).  Note that Task.abort(...) cannot interrupt the dataConsumerThread.
+        // If the query runs successfully, the dataConsumer thread should have been completed by this time.
+        if (dataConsumerThread != null) {
+            dataConsumerThread.interrupt();
         }
     }
 
@@ -90,64 +96,84 @@ public class MaterializingPipelinedPartition implements IFrameWriter, IPartition
         executor.execute(new Runnable() {
             @Override
             public void run() {
+                Thread thread = Thread.currentThread();
+                setDataConsumerThread(thread); // Sets the data consumer thread to the current thread.
+                String oldName = thread.getName();
                 try {
+                    thread.setName(MaterializingPipelinedPartition.class.getName() + pid);
+                    FileReference fRefCopy;
                     synchronized (MaterializingPipelinedPartition.this) {
-                        while (fRef == null && eos == false) {
+                        while (fRef == null && !eos && !failed) {
                             MaterializingPipelinedPartition.this.wait();
                         }
+                        fRefCopy = fRef;
                     }
-                    IFileHandle fh = fRef == null ? null
-                            : ioManager.open(fRef, IIOManager.FileReadWriteMode.READ_ONLY,
-                                    IIOManager.FileSyncMode.METADATA_ASYNC_DATA_ASYNC);
+                    writer.open();
+                    IFileHandle readHandle = fRefCopy == null ? null
+                            : ioManager.open(fRefCopy, IIOManager.FileReadWriteMode.READ_ONLY,
+                                IIOManager.FileSyncMode.METADATA_ASYNC_DATA_ASYNC);
                     try {
-                        writer.open();
+                        if (readHandle == null) {
+                            // Either fail() is called or close() is called with 0 tuples coming in.
+                            return;
+                        }
+                        long offset = 0;
+                        ByteBuffer buffer = ctx.allocateFrame();
+                        boolean done = false;
+                        while (!done) {
+                            boolean flush;
+                            boolean fail;
+                            synchronized (MaterializingPipelinedPartition.this) {
+                                while (offset >= size && !eos && !failed) {
+                                    MaterializingPipelinedPartition.this.wait();
+                                }
+                                flush = flushRequest;
+                                flushRequest = false; // Clears the flush flag.
+                                fail = failed;
+                                done = eos && offset >= size;
+                            }
+                            if (fail) {
+                                writer.fail(); // Exits the loop and the try-block if fail() is called.
+                                break;
+                            }
+                            if (!done) {
+                                buffer.clear();
+                                long readLen = ioManager.syncRead(readHandle, offset, buffer);
+                                if (readLen < buffer.capacity()) {
+                                    throw new HyracksDataException("Premature end of file");
+                                }
+                                offset += readLen;
+                                buffer.flip();
+                                writer.nextFrame(buffer);
+                            }
+                            if (flush) {
+                                writer.flush(); // Flushes the writer if flush() is called.
+                            }
+                        }
+                    } catch (Exception e) {
+                        writer.fail();
+                        throw e;
+                    } finally {
                         try {
-                            if (fh != null) {
-                                long offset = 0;
-                                ByteBuffer buffer = ctx.allocateFrame();
-                                boolean fail = false;
-                                boolean done = false;
-                                while (!fail && !done) {
-                                    synchronized (MaterializingPipelinedPartition.this) {
-                                        while (offset >= size && !eos && !failed) {
-                                            if (flushRequest) {
-                                                flushRequest = false;
-                                                writer.flush();
-                                            }
-                                            try {
-                                                MaterializingPipelinedPartition.this.wait();
-                                            } catch (InterruptedException e) {
-                                                throw new HyracksDataException(e);
-                                            }
-                                        }
-                                        flushRequest = false;
-                                        fail = failed;
-                                        done = eos && offset >= size;
-                                    }
-                                    if (fail) {
-                                        writer.fail();
-                                    } else if (!done) {
-                                        buffer.clear();
-                                        long readLen = ioManager.syncRead(fh, offset, buffer);
-                                        if (readLen < buffer.capacity()) {
-                                            throw new HyracksDataException("Premature end of file");
-                                        }
-                                        offset += readLen;
-                                        buffer.flip();
-                                        writer.nextFrame(buffer);
-                                    }
+                            writer.close();
+                        } finally {
+                            // Makes sure that the reader is always closed and the temp file is always deleted.
+                            try {
+                                if (readHandle != null) {
+                                    ioManager.close(readHandle);
+                                }
+                            } finally {
+                                if (fRef != null) {
+                                    fRef.delete();
                                 }
                             }
-                        } finally {
-                            writer.close();
-                        }
-                    } finally {
-                        if (fh != null) {
-                            ioManager.close(fh);
                         }
                     }
                 } catch (Exception e) {
-                    throw new RuntimeException(e);
+                    LOGGER.log(Level.SEVERE, e.getMessage(), e);
+                } finally {
+                    thread.setName(oldName);
+                    setDataConsumerThread(null); // Sets back the data consumer thread to null.
                 }
             }
         });
@@ -172,7 +198,7 @@ public class MaterializingPipelinedPartition implements IFrameWriter, IPartition
     private void checkOrCreateFile() throws HyracksDataException {
         if (fRef == null) {
             fRef = manager.getFileFactory().createUnmanagedWorkspaceFile(pid.toString().replace(":", "$"));
-            handle = ctx.getIOManager().open(fRef, IIOManager.FileReadWriteMode.READ_WRITE,
+            writeHandle = ioManager.open(fRef, IIOManager.FileReadWriteMode.READ_WRITE,
                     IIOManager.FileSyncMode.METADATA_ASYNC_DATA_ASYNC);
         }
     }
@@ -180,7 +206,7 @@ public class MaterializingPipelinedPartition implements IFrameWriter, IPartition
     @Override
     public synchronized void nextFrame(ByteBuffer buffer) throws HyracksDataException {
         checkOrCreateFile();
-        size += ctx.getIOManager().syncWrite(handle, size, buffer);
+        size += ctx.getIOManager().syncWrite(writeHandle, size, buffer);
         notifyAll();
     }
 
@@ -195,12 +221,12 @@ public class MaterializingPipelinedPartition implements IFrameWriter, IPartition
         if (LOGGER.isLoggable(openCloseLevel)) {
             LOGGER.log(openCloseLevel, "close(" + pid + " by " + taId);
         }
+        if (writeHandle != null) {
+            ctx.getIOManager().close(writeHandle);
+        }
         synchronized (this) {
             eos = true;
-            if (handle != null) {
-                ctx.getIOManager().close(handle);
-            }
-            handle = null;
+            writeHandle = null;
             notifyAll();
         }
     }
@@ -210,4 +236,10 @@ public class MaterializingPipelinedPartition implements IFrameWriter, IPartition
         flushRequest = true;
         notifyAll();
     }
+
+    // Sets the data consumer thread.
+    private synchronized void setDataConsumerThread(Thread thread) {
+        dataConsumerThread = thread;
+    }
+
 }

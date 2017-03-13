@@ -19,7 +19,6 @@
 package org.apache.asterix.test.common;
 
 import java.io.InputStream;
-import java.io.StringWriter;
 import java.nio.charset.Charset;
 import java.util.Iterator;
 import java.util.logging.Logger;
@@ -59,6 +58,8 @@ public class ResultExtractor {
             field = sIter.next();
             switch (field) {
                 case "requestID":
+                    break;
+                case "clientContextID":
                     break;
                 case "signature":
                     break;
@@ -106,7 +107,7 @@ public class ResultExtractor {
                     }
                     break;
                 default:
-                    throw new AsterixException(field + "unanticipated field");
+                    throw new AsterixException(field + " unanticipated field");
             }
         }
 
