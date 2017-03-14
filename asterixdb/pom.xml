@@ -634,6 +634,39 @@
         </plugins>
       </build>
     </profile>
+    <profile>
+      <id>include-managix</id>
+      <activation>
+        <property>
+          <name>!skipManagix</name>
+        </property>
+      </activation>
+      <modules>
+        <module>asterix-installer</module>
+      </modules>
+    </profile>
+    <profile>
+      <id>include-yarn</id>
+      <activation>
+        <property>
+          <name>!skipYarn</name>
+        </property>
+      </activation>
+      <modules>
+        <module>asterix-yarn</module>
+      </modules>
+    </profile>
+    <profile>
+      <id>include-experiments</id>
+      <activation>
+        <property>
+          <name>!skipExperiments</name>
+        </property>
+      </activation>
+      <modules>
+        <module>asterix-experiments</module>
+      </modules>
+    </profile>
   </profiles>
 
   <modules>
@@ -654,13 +687,10 @@
     <module>asterix-test-framework</module>
     <module>asterix-maven-plugins</module>
     <module>asterix-server</module>
-    <module>asterix-installer</module>
     <module>asterix-events</module>
     <module>asterix-doc</module>
     <module>asterix-fuzzyjoin</module>
-    <module>asterix-yarn</module>
     <module>asterix-replication</module>
-    <module>asterix-experiments</module>
     <module>asterix-benchmark</module>
     <module>asterix-coverage</module>
     <module>asterix-active</module>
