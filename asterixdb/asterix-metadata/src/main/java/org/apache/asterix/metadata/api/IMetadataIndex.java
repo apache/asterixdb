@@ -75,9 +75,9 @@ public interface IMetadataIndex extends Serializable {
 
     public int getFileId();
 
-    public void setResourceID(long resourceID);
+    public void setResourceId(long resourceId);
 
-    public long getResourceID();
+    public long getResourceId();
 
     public DatasetId getDatasetId();
 

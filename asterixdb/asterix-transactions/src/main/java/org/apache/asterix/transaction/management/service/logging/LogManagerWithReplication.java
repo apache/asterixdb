@@ -48,7 +48,6 @@ public class LogManagerWithReplication extends LogManager {
         if (shouldReplicate) {
             switch (logRecord.getLogType()) {
                 case LogType.ENTITY_COMMIT:
-                case LogType.UPSERT_ENTITY_COMMIT:
                 case LogType.UPDATE:
                 case LogType.FLUSH:
                     shouldReplicate = replicationStrategy.isMatch(logRecord.getDatasetId());

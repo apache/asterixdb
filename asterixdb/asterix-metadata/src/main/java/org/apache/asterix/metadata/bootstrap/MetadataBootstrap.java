@@ -364,7 +364,7 @@ public class MetadataBootstrap {
                     ioOpCallbackFactory.createIoOpCallback(), index.isPrimaryIndex(), null, null, null, null, true,
                     appContext.getStorageComponentProvider().getMetadataPageManagerFactory());
             lsmBtree.create();
-            resourceID = index.getResourceID();
+            resourceID = index.getResourceId();
             Resource localResourceMetadata = new LSMBTreeLocalResourceMetadata(typeTraits, comparatorFactories,
                     bloomFilterKeyFields, index.isPrimaryIndex(), index.getDatasetId().getId(),
                     metadataPartition.getPartitionId(), appContext.getMetadataMergePolicyFactory(),
@@ -385,7 +385,7 @@ public class MetadataBootstrap {
                         + " to intialize as a new instance. (WARNING: all data will be lost.)");
             }
             resourceID = resource.getId();
-            if (index.getResourceID() != resource.getId()) {
+            if (index.getResourceId() != resource.getId()) {
                 throw new HyracksDataException("Resource Id doesn't match expected metadata index resource id");
             }
             lsmBtree = (LSMBTree) dataLifecycleManager.get(file.getRelativePath());
@@ -402,7 +402,7 @@ public class MetadataBootstrap {
                 dataLifecycleManager.register(file.getRelativePath(), lsmBtree);
             }
         }
-        index.setResourceID(resourceID);
+        index.setResourceId(resourceID);
         index.setFile(file);
     }
 

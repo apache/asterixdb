@@ -59,7 +59,7 @@ public class MultiTransactionJobletEventListenerFactory implements IJobletEventL
                     for (JobId jobId : jobIds) {
                         ITransactionContext txnContext = txnManager.getTransactionContext(jobId, false);
                         txnContext.setWriteTxn(transactionalWrite);
-                        txnManager.completedTransaction(txnContext, new DatasetId(-1), -1,
+                        txnManager.completedTransaction(txnContext, DatasetId.NULL, -1,
                                 !(jobStatus == JobStatus.FAILURE));
                     }
                 } catch (ACIDException e) {

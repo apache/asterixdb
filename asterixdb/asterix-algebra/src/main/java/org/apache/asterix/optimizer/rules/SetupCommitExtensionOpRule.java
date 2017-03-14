@@ -24,28 +24,21 @@ import java.util.List;
 import org.apache.asterix.algebra.operators.CommitOperator;
 import org.apache.asterix.algebra.operators.physical.CommitPOperator;
 import org.apache.asterix.common.transactions.JobId;
-import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.metadata.declared.DatasetDataSource;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
-import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.commons.lang3.mutable.Mutable;
-import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
-import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
-import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DelegateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IndexInsertDeleteUpsertOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InsertDeleteUpsertOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.InsertDeleteUpsertOperator.Kind;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
 public class SetupCommitExtensionOpRule implements IAlgebraicRewriteRule {
@@ -73,7 +66,6 @@ public class SetupCommitExtensionOpRule implements IAlgebraicRewriteRule {
         List<Mutable<ILogicalExpression>> primaryKeyExprs = null;
         Dataset dataset = null;
         AbstractLogicalOperator descendantOp = (AbstractLogicalOperator) eOp.getInputs().get(0).getValue();
-        LogicalVariable upsertVar = null;
         while (descendantOp != null) {
             if (descendantOp.getOperatorTag() == LogicalOperatorTag.INDEX_INSERT_DELETE_UPSERT) {
                 IndexInsertDeleteUpsertOperator operator = (IndexInsertDeleteUpsertOperator) descendantOp;
@@ -87,32 +79,6 @@ public class SetupCommitExtensionOpRule implements IAlgebraicRewriteRule {
                 if (!insertDeleteUpsertOperator.isBulkload()) {
                     primaryKeyExprs = insertDeleteUpsertOperator.getPrimaryKeyExpressions();
                     dataset = ((DatasetDataSource) insertDeleteUpsertOperator.getDataSource()).getDataset();
-                    if (insertDeleteUpsertOperator.getOperation() == Kind.UPSERT) {
-                        //we need to add a function that checks if previous record was found
-                        upsertVar = context.newVar();
-                        AbstractFunctionCallExpression orFunc =
-                                new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(BuiltinFunctions.OR));
-                        // is new value missing? -> this means that the expected operation is delete
-                        AbstractFunctionCallExpression isNewMissingFunc = new ScalarFunctionCallExpression(
-                                FunctionUtil.getFunctionInfo(BuiltinFunctions.IS_MISSING));
-                        isNewMissingFunc.getArguments().add(insertDeleteUpsertOperator.getPayloadExpression());
-                        AbstractFunctionCallExpression isPrevMissingFunc = new ScalarFunctionCallExpression(
-                                FunctionUtil.getFunctionInfo(BuiltinFunctions.IS_MISSING));
-                        // argument is the previous record
-                        isPrevMissingFunc.getArguments().add(new MutableObject<ILogicalExpression>(
-                                new VariableReferenceExpression(insertDeleteUpsertOperator.getBeforeOpRecordVar())));
-                        orFunc.getArguments().add(new MutableObject<ILogicalExpression>(isPrevMissingFunc));
-                        orFunc.getArguments().add(new MutableObject<ILogicalExpression>(isNewMissingFunc));
-
-                        // AssignOperator puts in the cast var the casted record
-                        AssignOperator upsertFlagAssign =
-                                new AssignOperator(upsertVar, new MutableObject<ILogicalExpression>(orFunc));
-                        // Connect the current top of the plan to the cast operator
-                        upsertFlagAssign.getInputs().add(new MutableObject<>(eOp.getInputs().get(0).getValue()));
-                        eOp.getInputs().clear();
-                        eOp.getInputs().add(new MutableObject<ILogicalOperator>(upsertFlagAssign));
-                        context.computeAndSetTypeEnvironmentForOperator(upsertFlagAssign);
-                    }
                     break;
                 }
             }
@@ -138,9 +104,9 @@ public class SetupCommitExtensionOpRule implements IAlgebraicRewriteRule {
         JobId jobId = mp.getJobId();
 
         //create the logical and physical operator
-        CommitOperator commitOperator = new CommitOperator(primaryKeyLogicalVars, upsertVar, isSink);
+        CommitOperator commitOperator = new CommitOperator(primaryKeyLogicalVars, isSink);
         CommitPOperator commitPOperator =
-                new CommitPOperator(jobId, dataset, primaryKeyLogicalVars, upsertVar, isSink);
+                new CommitPOperator(jobId, dataset, primaryKeyLogicalVars, isSink);
         commitOperator.setPhysicalOperator(commitPOperator);
 
         //create ExtensionOperator and put the commitOperator in it.

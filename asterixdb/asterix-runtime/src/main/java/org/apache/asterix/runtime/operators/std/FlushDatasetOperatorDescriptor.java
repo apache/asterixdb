@@ -27,6 +27,7 @@ import org.apache.asterix.common.transactions.DatasetId;
 import org.apache.asterix.common.transactions.ILockManager;
 import org.apache.asterix.common.transactions.ITransactionContext;
 import org.apache.asterix.common.transactions.ITransactionManager;
+import org.apache.asterix.common.transactions.ImmutableDatasetId;
 import org.apache.asterix.common.transactions.JobId;
 import org.apache.asterix.transaction.management.service.transaction.TransactionManagementConstants.LockManagerConstants.LockMode;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -45,7 +46,7 @@ public class FlushDatasetOperatorDescriptor extends AbstractSingleActivityOperat
     public FlushDatasetOperatorDescriptor(IOperatorDescriptorRegistry spec, JobId jobId, int datasetId) {
         super(spec, 1, 0);
         this.jobId = jobId;
-        this.datasetId = new DatasetId(datasetId);
+        this.datasetId = new ImmutableDatasetId(datasetId);
     }
 
     @Override

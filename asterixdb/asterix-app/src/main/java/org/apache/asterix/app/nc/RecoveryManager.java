@@ -57,6 +57,7 @@ import org.apache.asterix.common.transactions.ITransactionContext;
 import org.apache.asterix.common.transactions.ITransactionSubsystem;
 import org.apache.asterix.common.transactions.LogType;
 import org.apache.asterix.common.transactions.Resource;
+import org.apache.asterix.transaction.management.opcallbacks.AbstractIndexModificationOperationCallback;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepository;
 import org.apache.asterix.transaction.management.service.logging.LogManager;
 import org.apache.asterix.transaction.management.service.recovery.AbstractCheckpointManager;
@@ -68,7 +69,6 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.lifecycle.ILifeCycleComponent;
 import org.apache.hyracks.storage.am.common.api.IIndex;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
-import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndex;
@@ -239,7 +239,6 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
                     jobCommitLogCount++;
                     break;
                 case LogType.ENTITY_COMMIT:
-                case LogType.UPSERT_ENTITY_COMMIT:
                     if (partitions.contains(logRecord.getResourcePartition())) {
                         analyzeEntityCommitLog(logRecord);
                         entityCommitLogCount++;
@@ -405,7 +404,6 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
                     case LogType.ENTITY_COMMIT:
                     case LogType.ABORT:
                     case LogType.FLUSH:
-                    case LogType.UPSERT_ENTITY_COMMIT:
                     case LogType.WAIT:
                     case LogType.MARKER:
                         //do nothing
@@ -598,13 +596,12 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
                         }
                         break;
                     case LogType.ENTITY_COMMIT:
-                    case LogType.UPSERT_ENTITY_COMMIT:
                         if (activePartitions.contains(logRecord.getResourcePartition())) {
                             jobLoserEntity2LSNsMap.remove(tempKeyTxnId);
                             entityCommitLogCount++;
                             if (IS_DEBUG_MODE) {
-                                LOGGER.info(Thread.currentThread().getId() + "======> entity_commit[" + currentLSN
-                                        + "]" + tempKeyTxnId);
+                                LOGGER.info(Thread.currentThread().getId() + "======> entity_commit[" + currentLSN + "]"
+                                        + tempKeyTxnId);
                             }
                         }
                         break;
@@ -686,10 +683,17 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
                     (ILSMIndex) datasetLifecycleManager.getIndex(logRecord.getDatasetId(), logRecord.getResourceId());
             ILSMIndexAccessor indexAccessor =
                     index.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
-            if (logRecord.getNewOp() == IndexOperation.INSERT.ordinal()) {
+            if (logRecord.getNewOp() == AbstractIndexModificationOperationCallback.INSERT_BYTE) {
                 indexAccessor.forceDelete(logRecord.getNewValue());
-            } else if (logRecord.getNewOp() == IndexOperation.DELETE.ordinal()) {
-                indexAccessor.forceInsert(logRecord.getNewValue());
+            } else if (logRecord.getNewOp() == AbstractIndexModificationOperationCallback.DELETE_BYTE) {
+                indexAccessor.forceInsert(logRecord.getOldValue());
+            } else if (logRecord.getNewOp() == AbstractIndexModificationOperationCallback.UPSERT_BYTE) {
+                // undo, upsert the old value if found, otherwise, physical delete
+                if (logRecord.getOldValue() == null) {
+                    indexAccessor.forcePhysicalDelete(logRecord.getNewValue());
+                } else {
+                    indexAccessor.forceUpsert(logRecord.getOldValue());
+                }
             } else {
                 throw new IllegalStateException("Unsupported OperationType: " + logRecord.getNewOp());
             }
@@ -705,10 +709,13 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
             ILSMIndex index = (ILSMIndex) datasetLifecycleManager.getIndex(datasetId, resourceId);
             ILSMIndexAccessor indexAccessor =
                     index.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
-            if (logRecord.getNewOp() == IndexOperation.INSERT.ordinal()) {
+            if (logRecord.getNewOp() == AbstractIndexModificationOperationCallback.INSERT_BYTE) {
                 indexAccessor.forceInsert(logRecord.getNewValue());
-            } else if (logRecord.getNewOp() == IndexOperation.DELETE.ordinal()) {
+            } else if (logRecord.getNewOp() == AbstractIndexModificationOperationCallback.DELETE_BYTE) {
                 indexAccessor.forceDelete(logRecord.getNewValue());
+            } else if (logRecord.getNewOp() == AbstractIndexModificationOperationCallback.UPSERT_BYTE) {
+                // redo, upsert the new value
+                indexAccessor.forceUpsert(logRecord.getNewValue());
             } else {
                 throw new IllegalStateException("Unsupported OperationType: " + logRecord.getNewOp());
             }

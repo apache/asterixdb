@@ -20,6 +20,7 @@ package org.apache.asterix.transaction.management.opcallbacks;
 
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.transactions.AbstractOperationCallback;
+import org.apache.asterix.common.transactions.DatasetId;
 import org.apache.asterix.common.transactions.ILockManager;
 import org.apache.asterix.common.transactions.ILogRecord;
 import org.apache.asterix.common.transactions.ITransactionContext;
@@ -28,23 +29,54 @@ import org.apache.asterix.common.transactions.LogRecord;
 import org.apache.asterix.common.transactions.LogType;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
-import org.apache.hyracks.storage.am.common.api.IModificationOperationCallback.Operation;
+import org.apache.hyracks.storage.am.common.api.IModificationOperationCallback;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.am.common.tuples.SimpleTupleWriter;
 
-public abstract class AbstractIndexModificationOperationCallback extends AbstractOperationCallback {
+public abstract class AbstractIndexModificationOperationCallback extends AbstractOperationCallback
+        implements IModificationOperationCallback {
+    public static final byte INSERT_BYTE = 0x01;
+    public static final byte DELETE_BYTE = 0x02;
+    public static final byte UPSERT_BYTE = 0x03;
 
-    private static final byte INSERT_OP = (byte) IndexOperation.INSERT.ordinal();
-    private static final byte DELETE_OP = (byte) IndexOperation.DELETE.ordinal();
+    public enum Operation {
+        INSERT(INSERT_BYTE),
+        DELETE(DELETE_BYTE),
+        UPSERT(UPSERT_BYTE);
+        private byte value;
+
+        Operation(byte value) {
+            this.value = value;
+        }
+
+        byte value() {
+            return value;
+        }
+
+        public static Operation get(IndexOperation op) {
+            switch (op) {
+                case DELETE:
+                    return DELETE;
+                case INSERT:
+                    return INSERT;
+                case UPSERT:
+                    return UPSERT;
+                default:
+                    throw new IllegalArgumentException();
+
+            }
+        }
+    }
+
     protected final long resourceId;
     protected final byte resourceType;
-    protected final IndexOperation indexOp;
+    protected final Operation indexOp;
     protected final ITransactionSubsystem txnSubsystem;
     protected final ILogRecord logRecord;
 
-    protected AbstractIndexModificationOperationCallback(int datasetId, int[] primaryKeyFields,
+    protected AbstractIndexModificationOperationCallback(DatasetId datasetId, int[] primaryKeyFields,
             ITransactionContext txnCtx, ILockManager lockManager, ITransactionSubsystem txnSubsystem, long resourceId,
-            int resourcePartition, byte resourceType, IndexOperation indexOp) {
+            int resourcePartition, byte resourceType, Operation indexOp) {
         super(datasetId, primaryKeyFields, txnCtx, lockManager);
         this.resourceId = resourceId;
         this.resourceType = resourceType;
@@ -54,10 +86,10 @@ public abstract class AbstractIndexModificationOperationCallback extends Abstrac
         logRecord.setTxnCtx(txnCtx);
         logRecord.setLogType(LogType.UPDATE);
         logRecord.setJobId(txnCtx.getJobId().getId());
-        logRecord.setDatasetId(datasetId);
+        logRecord.setDatasetId(datasetId.getId());
         logRecord.setResourceId(resourceId);
         logRecord.setResourcePartition(resourcePartition);
-        logRecord.setNewOp((byte) (indexOp.ordinal()));
+        logRecord.setNewOp(indexOp.value());
     }
 
     protected void log(int PKHash, ITupleReference newValue, ITupleReference oldValue) throws ACIDException {
@@ -81,14 +113,14 @@ public abstract class AbstractIndexModificationOperationCallback extends Abstrac
         txnSubsystem.getLogManager().log(logRecord);
     }
 
+    /**
+     * This call specifies the next operation to be performed. It is used to allow
+     * a single operator to perform different operations per tuple
+     *
+     * @param op
+     * @throws HyracksDataException
+     */
     public void setOp(Operation op) throws HyracksDataException {
-        switch (op) {
-            case DELETE:
-                logRecord.setNewOp(DELETE_OP);
-                break;
-            case INSERT:
-                logRecord.setNewOp(INSERT_OP);
-                break;
-        }
+        logRecord.setNewOp(op.value());
     }
 }

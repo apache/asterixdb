@@ -47,7 +47,6 @@ public interface ILogRecord {
     public static final int SEQ_NUM_LEN = Long.BYTES;
     public static final int TYPE_LEN = Byte.BYTES;
     public static final int UUID_LEN = Long.BYTES;
-    public static final int VBUCKET_ID_LEN = Short.BYTES;
 
     public static final int ALL_RECORD_HEADER_LEN = LOG_SOURCE_LEN + TYPE_LEN + JobId.BYTES;
     public static final int ENTITYCOMMIT_UPDATE_HEADER_LEN = RS_PARTITION_LEN + DatasetId.BYTES + PKHASH_LEN + PKSZ_LEN;

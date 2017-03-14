@@ -62,8 +62,8 @@ public class LogBuffer implements ILogBuffer {
     private final LinkedBlockingQueue<ILogRecord> remoteJobsQ;
     private FileChannel fileChannel;
     private boolean stop;
-    private final DatasetId reusableDsId;
     private final JobId reusableJobId;
+    private final DatasetId reusableDatasetId;
 
     public LogBuffer(ITransactionSubsystem txnSubsystem, int logPageSize, MutableLong flushLSN) {
         this.txnSubsystem = txnSubsystem;
@@ -80,8 +80,8 @@ public class LogBuffer implements ILogBuffer {
         syncCommitQ = new LinkedBlockingQueue<>(logPageSize / ILogRecord.JOB_TERMINATE_LOG_SIZE);
         flushQ = new LinkedBlockingQueue<>();
         remoteJobsQ = new LinkedBlockingQueue<>();
-        reusableDsId = new DatasetId(-1);
         reusableJobId = new JobId(-1);
+        reusableDatasetId = new DatasetId(-1);
     }
 
     ////////////////////////////////////
@@ -255,18 +255,13 @@ public class LogBuffer implements ILogBuffer {
             LogRecord logRecord = logBufferTailReader.next();
             while (logRecord != null) {
                 if (logRecord.getLogSource() == LogSource.LOCAL) {
-                    if (logRecord.getLogType() == LogType.ENTITY_COMMIT
-                            || logRecord.getLogType() == LogType.UPSERT_ENTITY_COMMIT) {
+                    if (logRecord.getLogType() == LogType.ENTITY_COMMIT) {
                         reusableJobId.setId(logRecord.getJobId());
+                        reusableDatasetId.setId(logRecord.getDatasetId());
                         txnCtx = txnSubsystem.getTransactionManager().getTransactionContext(reusableJobId, false);
-                        reusableDsId.setId(logRecord.getDatasetId());
-                        txnSubsystem.getLockManager().unlock(reusableDsId, logRecord.getPKHashValue(), LockMode.ANY,
-                                txnCtx);
+                        txnSubsystem.getLockManager().unlock(reusableDatasetId, logRecord.getPKHashValue(),
+                                LockMode.ANY, txnCtx);
                         txnCtx.notifyOptracker(false);
-                        if (logRecord.getLogType() == LogType.UPSERT_ENTITY_COMMIT) {
-                            // since this operation consisted of delete and insert, we need to notify the optracker twice
-                            txnCtx.notifyOptracker(false);
-                        }
                         if (TransactionUtil.PROFILE_MODE) {
                             txnSubsystem.incrementEntityCommitCount();
                         }

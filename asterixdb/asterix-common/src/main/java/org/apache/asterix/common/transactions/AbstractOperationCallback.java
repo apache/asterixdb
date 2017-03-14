@@ -32,9 +32,9 @@ public abstract class AbstractOperationCallback {
     protected final ILockManager lockManager;
     protected final long[] longHashes;
 
-    public AbstractOperationCallback(int datasetId, int[] primaryKeyFields, ITransactionContext txnCtx,
+    public AbstractOperationCallback(DatasetId datasetId, int[] primaryKeyFields, ITransactionContext txnCtx,
             ILockManager lockManager) {
-        this.datasetId = new DatasetId(datasetId);
+        this.datasetId = datasetId;
         this.primaryKeyFields = primaryKeyFields;
         this.txnCtx = txnCtx;
         this.lockManager = lockManager;

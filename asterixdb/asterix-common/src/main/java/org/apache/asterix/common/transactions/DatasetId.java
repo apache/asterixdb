@@ -21,27 +21,22 @@ package org.apache.asterix.common.transactions;
 import java.io.Serializable;
 
 public class DatasetId implements Serializable {
-    /**
-     *
-     */
-    private static final long serialVersionUID = 1L;
-    /**
-     * The number of bytes used to represent {@link DatasetId} value.
-     */
-    public static final int BYTES = Integer.BYTES;
 
-    int id;
+    private static final long serialVersionUID = 1L;
+    public static final int BYTES = Integer.BYTES;
+    public static final DatasetId NULL = new ImmutableDatasetId(-1);
+    private int id;
 
     public DatasetId(int id) {
         this.id = id;
     }
 
-    public void setId(int id) {
-        this.id = id;
+    public final int getId() {
+        return id;
     }
 
-    public int getId() {
-        return id;
+    public void setId(int id) {
+        this.id = id;
     }
 
     @Override

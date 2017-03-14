@@ -70,53 +70,63 @@ abstract class Request {
         switch (kind) {
             case INSTANT_TRY_LOCK:
                 return new Request(kind, txnCtx) {
+                    @Override
                     boolean execute(ILockManager lockMgr) throws ACIDException {
                         return lockMgr.instantTryLock(dsId, hashValue, lockMode, txnCtx);
                     }
 
+                    @Override
                     public String toString() {
                         return asString(kind, txnCtx, dsId, hashValue, lockMode);
                     }
                 };
             case INSTANT_LOCK:
                 return new Request(kind, txnCtx) {
+                    @Override
                     boolean execute(ILockManager lockMgr) throws ACIDException {
                         lockMgr.instantLock(dsId, hashValue, lockMode, txnCtx);
                         return true;
                     }
 
+                    @Override
                     public String toString() {
                         return asString(kind, txnCtx, dsId, hashValue, lockMode);
                     }
                 };
             case LOCK:
                 return new Request(kind, txnCtx) {
+                    @Override
                     boolean execute(ILockManager lockMgr) throws ACIDException {
                         lockMgr.lock(dsId, hashValue, lockMode, txnCtx);
                         return true;
                     }
 
+                    @Override
                     public String toString() {
                         return asString(kind, txnCtx, dsId, hashValue, lockMode);
                     }
                 };
             case TRY_LOCK:
                 return new Request(kind, txnCtx) {
+                    @Override
                     boolean execute(ILockManager lockMgr) throws ACIDException {
                         return lockMgr.tryLock(dsId, hashValue, lockMode, txnCtx);
                     }
 
+                    @Override
                     public String toString() {
                         return asString(kind, txnCtx, dsId, hashValue, lockMode);
                     }
                 };
             case UNLOCK:
                 return new Request(kind, txnCtx) {
+                    @Override
                     boolean execute(ILockManager lockMgr) throws ACIDException {
                         lockMgr.unlock(dsId, hashValue, lockMode, txnCtx);
                         return true;
                     }
 
+                    @Override
                     public String toString() {
                         return asString(kind, txnCtx, dsId, hashValue, lockMode);
                     }
@@ -129,11 +139,13 @@ abstract class Request {
     static Request create(final Kind kind, final ITransactionContext txnCtx) {
         if (kind == Kind.RELEASE) {
             return new Request(kind, txnCtx) {
+                @Override
                 boolean execute(ILockManager lockMgr) throws ACIDException {
                     lockMgr.releaseLocks(txnCtx);
                     return true;
                 }
 
+                @Override
                 public String toString() {
                     return txnCtx.getJobId().toString() + ":" + kind.name();
                 }
@@ -145,6 +157,7 @@ abstract class Request {
     static Request create(final Kind kind, final PrintStream out) {
         if (kind == Kind.PRINT) {
             return new Request(kind, null) {
+                @Override
                 boolean execute(ILockManager lockMgr) throws ACIDException {
                     if (out == null) {
                         return false;
@@ -157,6 +170,7 @@ abstract class Request {
                     return true;
                 }
 
+                @Override
                 public String toString() {
                     return kind.name();
                 }

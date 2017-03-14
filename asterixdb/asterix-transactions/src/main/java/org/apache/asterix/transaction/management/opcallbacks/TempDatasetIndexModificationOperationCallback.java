@@ -19,13 +19,12 @@
 
 package org.apache.asterix.transaction.management.opcallbacks;
 
+import org.apache.asterix.common.transactions.DatasetId;
 import org.apache.asterix.common.transactions.ILockManager;
 import org.apache.asterix.common.transactions.ITransactionContext;
 import org.apache.asterix.common.transactions.ITransactionSubsystem;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
-import org.apache.hyracks.storage.am.common.api.IModificationOperationCallback;
-import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 
 /**
  * This class is the operation callback for temporary datasets.
@@ -34,12 +33,11 @@ import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
  * The "before" and "found" method in this callback is empty so that no locking is requested for accessing a temporary
  * dataset and no write-ahead log is written for update operations.
  */
-public class TempDatasetIndexModificationOperationCallback extends AbstractIndexModificationOperationCallback
-        implements IModificationOperationCallback {
+public class TempDatasetIndexModificationOperationCallback extends AbstractIndexModificationOperationCallback {
 
-    public TempDatasetIndexModificationOperationCallback(int datasetId, int[] primaryKeyFields,
+    public TempDatasetIndexModificationOperationCallback(DatasetId datasetId, int[] primaryKeyFields,
             ITransactionContext txnCtx, ILockManager lockManager, ITransactionSubsystem txnSubsystem, long resourceId,
-            int resourcePartition, byte resourceType, IndexOperation indexOp) {
+            int resourcePartition, byte resourceType, Operation indexOp) {
         super(datasetId, primaryKeyFields, txnCtx, lockManager, txnSubsystem, resourceId, resourcePartition,
                 resourceType, indexOp);
     }

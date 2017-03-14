@@ -23,17 +23,18 @@ import org.apache.asterix.common.context.ITransactionSubsystemProvider;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.transactions.AbstractOperationCallback;
 import org.apache.asterix.common.transactions.AbstractOperationCallbackFactory;
+import org.apache.asterix.common.transactions.DatasetId;
 import org.apache.asterix.common.transactions.ITransactionContext;
 import org.apache.asterix.common.transactions.ITransactionSubsystem;
 import org.apache.asterix.common.transactions.JobId;
 import org.apache.asterix.common.transactions.Resource;
+import org.apache.asterix.transaction.management.opcallbacks.AbstractIndexModificationOperationCallback.Operation;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.common.api.IModificationOperationCallback;
 import org.apache.hyracks.storage.am.common.api.IModificationOperationCallbackFactory;
 import org.apache.hyracks.storage.am.common.api.IResourceLifecycleManager;
-import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.common.file.LocalResource;
 
@@ -41,23 +42,20 @@ public class SecondaryIndexModificationOperationCallbackFactory extends Abstract
         implements IModificationOperationCallbackFactory {
 
     private static final long serialVersionUID = 1L;
-    private final IndexOperation indexOp;
-    private final boolean logBeforeImage;
+    private final Operation indexOp;
 
     public SecondaryIndexModificationOperationCallbackFactory(JobId jobId, int datasetId, int[] primaryKeyFields,
-            ITransactionSubsystemProvider txnSubsystemProvider, IndexOperation indexOp, byte resourceType,
-            boolean logBeforeImage) {
+            ITransactionSubsystemProvider txnSubsystemProvider, Operation indexOp, byte resourceType) {
         super(jobId, datasetId, primaryKeyFields, txnSubsystemProvider, resourceType);
         this.indexOp = indexOp;
-        this.logBeforeImage = logBeforeImage;
     }
 
     @Override
     public IModificationOperationCallback createModificationOperationCallback(LocalResource resource,
             IHyracksTaskContext ctx, IOperatorNodePushable operatorNodePushable) throws HyracksDataException {
         ITransactionSubsystem txnSubsystem = txnSubsystemProvider.getTransactionSubsystem(ctx);
-        IResourceLifecycleManager indexLifeCycleManager = txnSubsystem.getAsterixAppRuntimeContextProvider()
-                .getDatasetLifecycleManager();
+        IResourceLifecycleManager indexLifeCycleManager =
+                txnSubsystem.getAsterixAppRuntimeContextProvider().getDatasetLifecycleManager();
         ILSMIndex index = (ILSMIndex) indexLifeCycleManager.get(resource.getPath());
         if (index == null) {
             throw new HyracksDataException("Index(id:" + resource.getId() + ") is not registered.");
@@ -66,9 +64,9 @@ public class SecondaryIndexModificationOperationCallbackFactory extends Abstract
         try {
             ITransactionContext txnCtx = txnSubsystem.getTransactionManager().getTransactionContext(jobId, false);
             Resource aResource = (Resource) resource.getResource();
-            IModificationOperationCallback modCallback = new SecondaryIndexModificationOperationCallback(datasetId,
-                    primaryKeyFields, txnCtx, txnSubsystem.getLockManager(), txnSubsystem, resource.getId(),
-                    aResource.partition(), resourceType, indexOp, logBeforeImage);
+            IModificationOperationCallback modCallback = new SecondaryIndexModificationOperationCallback(
+                    new DatasetId(datasetId), primaryKeyFields, txnCtx, txnSubsystem.getLockManager(), txnSubsystem,
+                    resource.getId(), aResource.partition(), resourceType, indexOp);
             txnCtx.registerIndexAndCallback(resource.getId(), index, (AbstractOperationCallback) modCallback, false);
             return modCallback;
         } catch (ACIDException e) {

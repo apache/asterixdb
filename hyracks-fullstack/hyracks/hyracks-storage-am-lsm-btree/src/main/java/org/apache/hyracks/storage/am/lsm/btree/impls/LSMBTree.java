@@ -286,10 +286,10 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
             case PHYSICALDELETE:
             case FLUSH:
             case DELETE:
+            case UPSERT:
                 operationalComponents.add(memoryComponents.get(cmc));
                 break;
             case INSERT:
-            case UPSERT:
                 addOperationalMutableComponents(operationalComponents);
                 operationalComponents.addAll(immutableComponents);
                 break;

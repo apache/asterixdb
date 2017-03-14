@@ -98,11 +98,6 @@ public abstract class AbstractModificationOperationCallbackTest extends Abstract
             }
             Assert.assertEquals(0, cmp.compare(AbstractModificationOperationCallbackTest.this.tuple, after));
         }
-
-        @Override
-        public void setOp(Operation op) throws HyracksDataException {
-        }
-
     }
 
 }

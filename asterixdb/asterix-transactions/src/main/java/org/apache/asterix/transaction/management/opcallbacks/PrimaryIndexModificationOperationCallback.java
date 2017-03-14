@@ -21,6 +21,7 @@ package org.apache.asterix.transaction.management.opcallbacks;
 
 import org.apache.asterix.common.dataflow.LSMInsertDeleteOperatorNodePushable;
 import org.apache.asterix.common.exceptions.ACIDException;
+import org.apache.asterix.common.transactions.DatasetId;
 import org.apache.asterix.common.transactions.ILockManager;
 import org.apache.asterix.common.transactions.ITransactionContext;
 import org.apache.asterix.common.transactions.ITransactionSubsystem;
@@ -29,27 +30,21 @@ import org.apache.asterix.transaction.management.service.transaction.Transaction
 import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
-import org.apache.hyracks.storage.am.common.api.IModificationOperationCallback;
-import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 
 /**
  * Assumes LSM-BTrees as primary indexes.
  * Performs locking on primary keys, and also logs before/after images.
  */
-public class PrimaryIndexModificationOperationCallback extends AbstractIndexModificationOperationCallback
-        implements IModificationOperationCallback {
+public class PrimaryIndexModificationOperationCallback extends AbstractIndexModificationOperationCallback {
 
     private final LSMInsertDeleteOperatorNodePushable operatorNodePushable;
-    private final boolean logBeforeImage;
 
-    public PrimaryIndexModificationOperationCallback(int datasetId, int[] primaryKeyFields, ITransactionContext txnCtx,
-            ILockManager lockManager, ITransactionSubsystem txnSubsystem, long resourceId, int resourcePartition,
-            byte resourceType, IndexOperation indexOp, IOperatorNodePushable operatorNodePushable,
-            boolean logBeforeImage) {
+    public PrimaryIndexModificationOperationCallback(DatasetId datasetId, int[] primaryKeyFields,
+            ITransactionContext txnCtx, ILockManager lockManager, ITransactionSubsystem txnSubsystem, long resourceId,
+            int resourcePartition, byte resourceType, Operation indexOp, IOperatorNodePushable operatorNodePushable) {
         super(datasetId, primaryKeyFields, txnCtx, lockManager, txnSubsystem, resourceId, resourcePartition,
                 resourceType, indexOp);
         this.operatorNodePushable = (LSMInsertDeleteOperatorNodePushable) operatorNodePushable;
-        this.logBeforeImage = logBeforeImage;
     }
 
     @Override
@@ -102,11 +97,7 @@ public class PrimaryIndexModificationOperationCallback extends AbstractIndexModi
     public void found(ITupleReference before, ITupleReference after) throws HyracksDataException {
         try {
             int pkHash = computePrimaryKeyHashValue(after, primaryKeyFields);
-            if (logBeforeImage) {
-                log(pkHash, after, before);
-            } else {
-                log(pkHash, after, null);
-            }
+            log(pkHash, after, before);
         } catch (ACIDException e) {
             throw new HyracksDataException(e);
         }

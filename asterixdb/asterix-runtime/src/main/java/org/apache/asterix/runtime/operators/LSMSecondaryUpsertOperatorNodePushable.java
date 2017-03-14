@@ -20,11 +20,12 @@ package org.apache.asterix.runtime.operators;
 
 import java.nio.ByteBuffer;
 
+import org.apache.asterix.transaction.management.opcallbacks.AbstractIndexModificationOperationCallback;
+import org.apache.asterix.transaction.management.opcallbacks.AbstractIndexModificationOperationCallback.Operation;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.util.FrameUtils;
-import org.apache.hyracks.storage.am.common.api.IModificationOperationCallback.Operation;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexOperatorDescriptor;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.am.common.tuples.PermutingFrameTupleReference;
@@ -53,6 +54,7 @@ public class LSMSecondaryUpsertOperatorNodePushable extends LSMIndexInsertUpdate
     private int numberOfFields;
     private boolean isNewNull = false;
     private boolean isPrevValueNull = false;
+    private AbstractIndexModificationOperationCallback abstractModCallback;
 
     public LSMSecondaryUpsertOperatorNodePushable(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
             int partition, int[] fieldPermutation, IRecordDescriptorProvider recordDescProvider,
@@ -60,6 +62,12 @@ public class LSMSecondaryUpsertOperatorNodePushable extends LSMIndexInsertUpdate
         super(opDesc, ctx, partition, fieldPermutation, recordDescProvider, IndexOperation.UPSERT);
         this.prevValueTuple.setFieldPermutation(prevValuePermutation);
         this.numberOfFields = prevValuePermutation.length;
+    }
+
+    @Override
+    public void open() throws HyracksDataException {
+        super.open();
+        abstractModCallback = (AbstractIndexModificationOperationCallback) modCallback;
     }
 
     public static boolean equals(byte[] a, int aOffset, int aLength, byte[] b, int bOffset, int bLength) {
@@ -109,12 +117,12 @@ public class LSMSecondaryUpsertOperatorNodePushable extends LSMIndexInsertUpdate
                 }
                 if (!isPrevValueNull) {
                     // previous is not null, we need to delete previous
-                    modCallback.setOp(Operation.DELETE);
+                    abstractModCallback.setOp(Operation.DELETE);
                     lsmAccessor.forceDelete(prevValueTuple);
                 }
                 if (!isNewNull) {
                     // new is not null, we need to insert the new value
-                    modCallback.setOp(Operation.INSERT);
+                    abstractModCallback.setOp(Operation.INSERT);
                     lsmAccessor.forceInsert(tuple);
                 }
 

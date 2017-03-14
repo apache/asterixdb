@@ -133,7 +133,6 @@ public class LogRecord implements ILogRecord {
         buffer.putInt(jobId);
         switch (logType) {
             case LogType.ENTITY_COMMIT:
-            case LogType.UPSERT_ENTITY_COMMIT:
                 writeEntityInfo(buffer);
                 break;
             case LogType.UPDATE:
@@ -252,7 +251,7 @@ public class LogRecord implements ILogRecord {
         jobId = buffer.getInt();
         switch (logType) {
             case LogType.FLUSH:
-                if (buffer.remaining() < DatasetId.BYTES) {
+                if (buffer.remaining() < ILogRecord.DS_LEN) {
                     return RecordReadStatus.TRUNCATED;
                 }
                 datasetId = buffer.getInt();
@@ -268,7 +267,6 @@ public class LogRecord implements ILogRecord {
                 computeAndSetLogSize();
                 break;
             case LogType.ENTITY_COMMIT:
-            case LogType.UPSERT_ENTITY_COMMIT:
                 if (readEntityInfo(buffer)) {
                     computeAndSetLogSize();
                 } else {
@@ -308,6 +306,7 @@ public class LogRecord implements ILogRecord {
                         oldValue = readTuple(buffer, readOldValue, oldValueFieldCount, oldValueSize);
                     } else {
                         oldValueSize = 0;
+                        oldValue = null;
                     }
                 } else {
                     return RecordReadStatus.TRUNCATED;
@@ -428,7 +427,6 @@ public class LogRecord implements ILogRecord {
                 logSize = JOB_TERMINATE_LOG_SIZE;
                 break;
             case LogType.ENTITY_COMMIT:
-            case LogType.UPSERT_ENTITY_COMMIT:
                 logSize = ENTITY_COMMIT_LOG_BASE_SIZE + PKValueSize;
                 break;
             case LogType.FLUSH:
@@ -457,7 +455,7 @@ public class LogRecord implements ILogRecord {
         builder.append(" LogType : ").append(LogType.toString(logType));
         builder.append(" LogSize : ").append(logSize);
         builder.append(" JobId : ").append(jobId);
-        if (logType == LogType.ENTITY_COMMIT || logType == LogType.UPSERT_ENTITY_COMMIT || logType == LogType.UPDATE) {
+        if (logType == LogType.ENTITY_COMMIT || logType == LogType.UPDATE) {
             builder.append(" DatasetId : ").append(datasetId);
             builder.append(" ResourcePartition : ").append(resourcePartition);
             builder.append(" PKHashValue : ").append(PKHashValue);

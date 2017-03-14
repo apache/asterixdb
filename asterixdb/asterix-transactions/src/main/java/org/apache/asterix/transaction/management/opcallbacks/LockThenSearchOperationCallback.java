@@ -20,6 +20,7 @@ package org.apache.asterix.transaction.management.opcallbacks;
 
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.transactions.AbstractOperationCallback;
+import org.apache.asterix.common.transactions.DatasetId;
 import org.apache.asterix.common.transactions.ILogManager;
 import org.apache.asterix.common.transactions.ILogRecord;
 import org.apache.asterix.common.transactions.ITransactionContext;
@@ -44,7 +45,8 @@ public class LockThenSearchOperationCallback extends AbstractOperationCallback i
     private final ILogRecord logRecord;
     private int pkHash;
 
-    public LockThenSearchOperationCallback(int datasetId, int[] entityIdFields, ITransactionSubsystem txnSubsystem,
+    public LockThenSearchOperationCallback(DatasetId datasetId, int[] entityIdFields,
+            ITransactionSubsystem txnSubsystem,
             ITransactionContext txnCtx, IOperatorNodePushable operatorNodePushable) {
         super(datasetId, entityIdFields, txnCtx, txnSubsystem.getLockManager());
         this.operatorNodePushable = (LSMIndexInsertUpdateDeleteOperatorNodePushable) operatorNodePushable;

@@ -174,6 +174,15 @@ public interface ILSMIndexAccessor extends IIndexAccessor {
     void forceDelete(ITupleReference tuple) throws HyracksDataException, IndexException;
 
     /**
+     * Force upserting the tuple into the memory component even if it is full
+     *
+     * @param tuple
+     * @throws HyracksDataException
+     * @throws IndexException
+     */
+    void forceUpsert(ITupleReference tuple) throws HyracksDataException, IndexException;
+
+    /**
      * Schedule a replication for disk components
      *
      * @param diskComponents

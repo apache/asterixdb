@@ -62,14 +62,14 @@ public class CheckpointingTest {
 
     private static final String DEFAULT_TEST_CONFIG_FILE_NAME = "asterix-build-configuration.xml";
     private static final String TEST_CONFIG_FILE_NAME = "asterix-test-configuration.xml";
-    private static final String TEST_CONFIG_PATH = System.getProperty("user.dir") + File.separator + "target"
-            + File.separator + "config";
+    private static final String TEST_CONFIG_PATH =
+            System.getProperty("user.dir") + File.separator + "target" + File.separator + "config";
     private static final String TEST_CONFIG_FILE_PATH = TEST_CONFIG_PATH + File.separator + TEST_CONFIG_FILE_NAME;
     private static final IAType[] KEY_TYPES = { BuiltinType.AINT32 };
     private static final ARecordType RECORD_TYPE = new ARecordType("TestRecordType", new String[] { "key", "value" },
             new IAType[] { BuiltinType.AINT32, BuiltinType.AINT64 }, false);
-    private static final GenerationFunction[] RECORD_GEN_FUNCTION = { GenerationFunction.DETERMINISTIC,
-            GenerationFunction.DETERMINISTIC };
+    private static final GenerationFunction[] RECORD_GEN_FUNCTION =
+            { GenerationFunction.DETERMINISTIC, GenerationFunction.DETERMINISTIC };
     private static final boolean[] UNIQUE_RECORD_FIELDS = { true, false };
     private static final ARecordType META_TYPE = null;
     private static final GenerationFunction[] META_GEN_FUNCTION = null;
@@ -123,9 +123,10 @@ public class CheckpointingTest {
                 nc.newJobId();
                 ITransactionContext txnCtx = nc.getTransactionManager().getTransactionContext(nc.getTxnJobId(), true);
                 // Prepare insert operation
-                LSMInsertDeleteOperatorNodePushable insertOp = nc.getInsertPipeline(ctx, dataset, KEY_TYPES,
-                        RECORD_TYPE, META_TYPE, new NoMergePolicyFactory(), null, null, KEY_INDEXES, KEY_INDICATOR_LIST,
-                        storageManager);
+                LSMInsertDeleteOperatorNodePushable insertOp = nc
+                        .getInsertPipeline(ctx, dataset, KEY_TYPES, RECORD_TYPE, META_TYPE, new NoMergePolicyFactory(),
+                                null, null, KEY_INDEXES, KEY_INDICATOR_LIST, storageManager)
+                        .getLeft();
                 insertOp.open();
                 TupleGenerator tupleGenerator = new TupleGenerator(RECORD_TYPE, META_TYPE, KEY_INDEXES, KEY_INDICATOR,
                         RECORD_GEN_FUNCTION, UNIQUE_RECORD_FIELDS, META_GEN_FUNCTION, UNIQUE_META_FIELDS);
@@ -195,7 +196,7 @@ public class CheckpointingTest {
                     tupleAppender.write(insertOp, true);
                 }
                 insertOp.close();
-                nc.getTransactionManager().completedTransaction(txnCtx, new DatasetId(-1), -1, true);
+                nc.getTransactionManager().completedTransaction(txnCtx, DatasetId.NULL, -1, true);
             } finally {
                 nc.deInit();
             }

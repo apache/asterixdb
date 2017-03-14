@@ -21,6 +21,7 @@ package org.apache.asterix.transaction.management.opcallbacks;
 
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.transactions.AbstractOperationCallback;
+import org.apache.asterix.common.transactions.DatasetId;
 import org.apache.asterix.common.transactions.ILockManager;
 import org.apache.asterix.common.transactions.ITransactionContext;
 import org.apache.asterix.transaction.management.service.transaction.TransactionManagementConstants.LockManagerConstants.LockMode;
@@ -34,8 +35,8 @@ import org.apache.hyracks.storage.am.common.api.ISearchOperationCallback;
 public class PrimaryIndexInstantSearchOperationCallback extends AbstractOperationCallback
         implements ISearchOperationCallback {
 
-    public PrimaryIndexInstantSearchOperationCallback(int datasetId, int[] entityIdFields, ILockManager lockManager,
-            ITransactionContext txnCtx) {
+    public PrimaryIndexInstantSearchOperationCallback(DatasetId datasetId, int[] entityIdFields,
+            ILockManager lockManager, ITransactionContext txnCtx) {
         super(datasetId, entityIdFields, txnCtx, lockManager);
     }
 

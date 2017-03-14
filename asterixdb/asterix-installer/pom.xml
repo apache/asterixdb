@@ -106,7 +106,6 @@
             <dependencySet>
               <includes>
                 <!-- NOTE! Any changes here must be mirrored in src/main/assembly/binary-assembly.xml -->
-                <include>org.apache.hadoop:hadoop-core</include>
                 <include>commons-cli:commons-cli</include>
                 <include>commons-logging:commons-logging</include>
               </includes>

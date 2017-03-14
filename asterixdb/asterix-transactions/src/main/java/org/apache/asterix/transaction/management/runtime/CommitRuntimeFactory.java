@@ -34,18 +34,16 @@ public class CommitRuntimeFactory implements IPushRuntimeFactory {
     protected final int[] primaryKeyFields;
     protected final boolean isTemporaryDatasetWriteJob;
     protected final boolean isWriteTransaction;
-    protected final int upsertVarIdx;
     protected int[] datasetPartitions;
     protected final boolean isSink;
 
     public CommitRuntimeFactory(JobId jobId, int datasetId, int[] primaryKeyFields, boolean isTemporaryDatasetWriteJob,
-            boolean isWriteTransaction, int upsertVarIdx, int[] datasetPartitions, boolean isSink) {
+            boolean isWriteTransaction, int[] datasetPartitions, boolean isSink) {
         this.jobId = jobId;
         this.datasetId = datasetId;
         this.primaryKeyFields = primaryKeyFields;
         this.isTemporaryDatasetWriteJob = isTemporaryDatasetWriteJob;
         this.isWriteTransaction = isWriteTransaction;
-        this.upsertVarIdx = upsertVarIdx;
         this.datasetPartitions = datasetPartitions;
         this.isSink = isSink;
     }
@@ -57,13 +55,7 @@ public class CommitRuntimeFactory implements IPushRuntimeFactory {
 
     @Override
     public IPushRuntime createPushRuntime(IHyracksTaskContext ctx) throws HyracksDataException {
-        if (upsertVarIdx >= 0) {
-            return new UpsertCommitRuntime(ctx, jobId, datasetId, primaryKeyFields, isTemporaryDatasetWriteJob,
-                    isWriteTransaction, datasetPartitions[ctx.getTaskAttemptId().getTaskId().getPartition()],
-                    upsertVarIdx, isSink);
-        } else {
             return new CommitRuntime(ctx, jobId, datasetId, primaryKeyFields, isTemporaryDatasetWriteJob,
                     isWriteTransaction, datasetPartitions[ctx.getTaskAttemptId().getTaskId().getPartition()], isSink);
-        }
     }
 }

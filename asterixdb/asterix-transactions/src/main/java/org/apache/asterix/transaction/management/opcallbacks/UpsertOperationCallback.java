@@ -19,24 +19,20 @@
 package org.apache.asterix.transaction.management.opcallbacks;
 
 import org.apache.asterix.common.exceptions.ACIDException;
+import org.apache.asterix.common.transactions.DatasetId;
 import org.apache.asterix.common.transactions.ILockManager;
 import org.apache.asterix.common.transactions.ITransactionContext;
 import org.apache.asterix.common.transactions.ITransactionSubsystem;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
-import org.apache.hyracks.storage.am.common.api.IModificationOperationCallback;
-import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 
-public class UpsertOperationCallback extends AbstractIndexModificationOperationCallback
-        implements IModificationOperationCallback {
-    private final boolean logBeforeImage;
+public class UpsertOperationCallback extends AbstractIndexModificationOperationCallback {
 
-    public UpsertOperationCallback(int datasetId, int[] primaryKeyFields, ITransactionContext txnCtx,
+    public UpsertOperationCallback(DatasetId datasetId, int[] primaryKeyFields, ITransactionContext txnCtx,
             ILockManager lockManager, ITransactionSubsystem txnSubsystem, long resourceId, int resourcePartition,
-            byte resourceType, IndexOperation indexOp, boolean logBeforeImage) {
+            byte resourceType, Operation indexOp) {
         super(datasetId, primaryKeyFields, txnCtx, lockManager, txnSubsystem, resourceId, resourcePartition,
                 resourceType, indexOp);
-        this.logBeforeImage = logBeforeImage;
     }
 
     @Override
@@ -48,7 +44,7 @@ public class UpsertOperationCallback extends AbstractIndexModificationOperationC
     public void found(ITupleReference before, ITupleReference after) throws HyracksDataException {
         try {
             int pkHash = computePrimaryKeyHashValue(after, primaryKeyFields);
-            log(pkHash, after, logBeforeImage ? before : null);
+            log(pkHash, after, before);
         } catch (ACIDException e) {
             throw new HyracksDataException(e);
         }

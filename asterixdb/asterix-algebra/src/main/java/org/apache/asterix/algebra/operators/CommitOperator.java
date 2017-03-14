@@ -32,24 +32,20 @@ import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionRef
 public class CommitOperator extends AbstractDelegatedLogicalOperator {
 
     private List<LogicalVariable> primaryKeyLogicalVars;
-    private LogicalVariable upsertVar;
     private boolean isSink;
 
     public CommitOperator(boolean isSink) {
         this.isSink = isSink;
-        this.upsertVar = null;
         primaryKeyLogicalVars = new ArrayList<>();
     }
 
-    public CommitOperator(List<LogicalVariable> primaryKeyLogicalVars, LogicalVariable upsertVar, boolean isSink) {
+    public CommitOperator(List<LogicalVariable> primaryKeyLogicalVars, boolean isSink) {
         this.primaryKeyLogicalVars = primaryKeyLogicalVars;
-        this.upsertVar = upsertVar;
         this.isSink = isSink;
     }
 
     @Override
     public boolean isMap() {
-        // TODO Auto-generated method stub
         return false;
     }
 
@@ -62,20 +58,18 @@ public class CommitOperator extends AbstractDelegatedLogicalOperator {
     }
 
     //Provided for Extensions but not used by core
-    public void setVars(List<LogicalVariable> primaryKeyLogicalVars, LogicalVariable upsertVar) {
+    public void setVars(List<LogicalVariable> primaryKeyLogicalVars) {
         this.primaryKeyLogicalVars = primaryKeyLogicalVars;
-        this.upsertVar = upsertVar;
     }
 
     @Override
     public IOperatorDelegate newInstance() {
-        return new CommitOperator(primaryKeyLogicalVars, upsertVar, isSink);
+        return new CommitOperator(primaryKeyLogicalVars, isSink);
     }
 
     @Override
     public boolean acceptExpressionTransform(ILogicalExpressionReferenceTransform transform)
             throws AlgebricksException {
-        // TODO Auto-generated method stub
         return false;
     }
 
@@ -87,9 +81,6 @@ public class CommitOperator extends AbstractDelegatedLogicalOperator {
     @Override
     public void getUsedVariables(Collection<LogicalVariable> usedVars) {
         usedVars.addAll(primaryKeyLogicalVars);
-        if (upsertVar != null) {
-            usedVars.add(upsertVar);
-        }
     }
 
     @Override

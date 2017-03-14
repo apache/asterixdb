@@ -16,16 +16,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.algebricks.runtime.operators.base;
+package org.apache.asterix.common.transactions;
 
-import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
+public class ImmutableDatasetId extends DatasetId {
+    private static final long serialVersionUID = 1L;
 
-public abstract class AbstractOneInputOneOutputPushRuntime extends AbstractOneInputPushRuntime {
-
-    protected RecordDescriptor inputRecordDesc;
+    public ImmutableDatasetId(int datasetId) {
+        super(datasetId);
+    }
 
     @Override
-    public void setInputRecordDescriptor(int index, RecordDescriptor recordDescriptor) {
-        this.inputRecordDesc = recordDescriptor;
+    public void setId(int datasetId) {
+        throw new UnsupportedOperationException();
     }
+
 }

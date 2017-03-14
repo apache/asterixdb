@@ -20,7 +20,7 @@ package org.apache.asterix.transaction.management.service.recovery;
 
 import java.nio.ByteBuffer;
 
-import org.apache.asterix.common.transactions.DatasetId;
+import org.apache.asterix.common.transactions.ILogRecord;
 import org.apache.asterix.common.transactions.JobId;
 import org.apache.asterix.common.transactions.LogRecord;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
@@ -165,7 +165,7 @@ public class TxnId {
 
     public int getCurrentSize() {
         //job id, dataset id, pkHashValue, arraySize, isByteArrayPKValue
-        int size = JobId.BYTES + DatasetId.BYTES + LogRecord.PKHASH_LEN + LogRecord.PKSZ_LEN + Byte.BYTES;
+        int size = JobId.BYTES + ILogRecord.DS_LEN + LogRecord.PKHASH_LEN + LogRecord.PKSZ_LEN + Byte.BYTES;
         //byte arraySize
         if (isByteArrayPKValue && byteArrayPKValue != null) {
             size += byteArrayPKValue.length;

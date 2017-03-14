@@ -136,12 +136,10 @@
                 <include>org.apache.hadoop:hadoop-common</include>
                 <include>org.apache.hadoop:hadoop-hdfs</include>
                 <include>org.apache.hadoop:hadoop-auth</include>
-                <include>org.apache.hadoop:hadoop-yarn-client</include>
                 <include>org.apache.hadoop:hadoop-yarn-common</include>
                 <include>org.apache.hadoop:hadoop-yarn-api</include>
                 <include>org.apache.httpcomponents:httpcore</include>
                 <include>org.apache.httpcomponents:httpclient</include>
-                <include>org.htrace:htrace-core</include>
                 <include>commons-httpclient:commons-httpclient</include>
                 <include>com.google.protobuf:protobuf-java</include>
                 <include>com.google.guava:guava</include>

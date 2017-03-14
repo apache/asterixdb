@@ -53,11 +53,13 @@ import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.formats.NonTaggedDataFormat;
 import org.apache.asterix.runtime.utils.RuntimeComponentsProvider;
 import org.apache.asterix.test.runtime.ExecutionTestUtil;
+import org.apache.asterix.transaction.management.opcallbacks.AbstractIndexModificationOperationCallback.Operation;
 import org.apache.asterix.transaction.management.opcallbacks.PrimaryIndexModificationOperationCallbackFactory;
 import org.apache.asterix.transaction.management.resource.LSMBTreeLocalResourceMetadataFactory;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceFactoryProvider;
 import org.apache.asterix.transaction.management.runtime.CommitRuntime;
 import org.apache.asterix.transaction.management.service.logging.LogReader;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.runtime.base.IPushRuntime;
 import org.apache.hyracks.algebricks.runtime.operators.std.EmptyTupleSourceRuntimeFactory;
@@ -159,18 +161,20 @@ public class TestNodeController {
         return new org.apache.asterix.common.transactions.JobId((int) jobId.getId());
     }
 
-    public LSMInsertDeleteOperatorNodePushable getInsertPipeline(IHyracksTaskContext ctx, Dataset dataset,
-            IAType[] primaryKeyTypes, ARecordType recordType, ARecordType metaType,
-            ILSMMergePolicyFactory mergePolicyFactory, Map<String, String> mergePolicyProperties, int[] filterFields,
-            int[] primaryKeyIndexes, List<Integer> primaryKeyIndicators,
-            StorageComponentProvider storageComponentProvider) throws AlgebricksException, HyracksDataException {
+    public Pair<LSMInsertDeleteOperatorNodePushable, CommitRuntime> getInsertPipeline(IHyracksTaskContext ctx,
+            Dataset dataset, IAType[] primaryKeyTypes,
+            ARecordType recordType, ARecordType metaType, ILSMMergePolicyFactory mergePolicyFactory,
+            Map<String, String> mergePolicyProperties, int[] filterFields, int[] primaryKeyIndexes,
+            List<Integer> primaryKeyIndicators, StorageComponentProvider storageComponentProvider)
+            throws AlgebricksException, HyracksDataException {
         PrimaryIndexInfo primaryIndexInfo = new PrimaryIndexInfo(dataset, primaryKeyTypes, recordType, metaType,
                 mergePolicyFactory, mergePolicyProperties, filterFields, primaryKeyIndexes, primaryKeyIndicators,
                 storageComponentProvider);
         IndexOperation op = IndexOperation.INSERT;
         IModificationOperationCallbackFactory modOpCallbackFactory =
                 new PrimaryIndexModificationOperationCallbackFactory(getTxnJobId(), dataset.getDatasetId(),
-                        primaryIndexInfo.primaryKeyIndexes, TXN_SUBSYSTEM_PROVIDER, op, ResourceType.LSM_BTREE, true);
+                        primaryIndexInfo.primaryKeyIndexes, TXN_SUBSYSTEM_PROVIDER, Operation.get(op),
+                        ResourceType.LSM_BTREE);
         LSMTreeInsertDeleteOperatorDescriptor indexOpDesc =
                 getInsertOpratorDesc(primaryIndexInfo, modOpCallbackFactory);
         IIndexDataflowHelperFactory dataflowHelperFactory =
@@ -183,7 +187,7 @@ public class TestNodeController {
                 primaryIndexInfo.primaryKeyIndexes, false, true, PARTITION, true);
         insertOp.setOutputFrameWriter(0, commitOp, primaryIndexInfo.rDesc);
         commitOp.setInputRecordDescriptor(0, primaryIndexInfo.rDesc);
-        return insertOp;
+        return Pair.of(insertOp, commitOp);
     }
 
     public IPushRuntime getFullScanPipeline(IFrameWriter countOp, IHyracksTaskContext ctx, Dataset dataset,
@@ -298,8 +302,7 @@ public class TestNodeController {
         Index index = primaryIndexInfo.getIndex();
         MetadataProvider mdProvider = new MetadataProvider(dataverse, storageComponentProvider);
         return dataset.getIndexDataflowHelperFactory(mdProvider, index, primaryIndexInfo.recordType,
-                primaryIndexInfo.metaType, primaryIndexInfo.mergePolicyFactory,
-                primaryIndexInfo.mergePolicyProperties);
+                primaryIndexInfo.metaType, primaryIndexInfo.mergePolicyFactory, primaryIndexInfo.mergePolicyProperties);
     }
 
     public IIndexDataflowHelper getPrimaryIndexDataflowHelper(Dataset dataset, IAType[] primaryKeyTypes,
@@ -431,11 +434,10 @@ public class TestNodeController {
         private Index index;
         private IStorageComponentProvider storageComponentProvider;
 
-        public PrimaryIndexInfo(Dataset dataset, IAType[] primaryKeyTypes, ARecordType recordType,
-                ARecordType metaType, ILSMMergePolicyFactory mergePolicyFactory,
-                Map<String, String> mergePolicyProperties, int[] filterFields, int[] primaryKeyIndexes,
-                List<Integer> primaryKeyIndicators, IStorageComponentProvider storageComponentProvider)
-                throws AlgebricksException {
+        public PrimaryIndexInfo(Dataset dataset, IAType[] primaryKeyTypes, ARecordType recordType, ARecordType metaType,
+                ILSMMergePolicyFactory mergePolicyFactory, Map<String, String> mergePolicyProperties,
+                int[] filterFields, int[] primaryKeyIndexes, List<Integer> primaryKeyIndicators,
+                IStorageComponentProvider storageComponentProvider) throws AlgebricksException {
             this.storageComponentProvider = storageComponentProvider;
             this.dataset = dataset;
             this.primaryKeyTypes = primaryKeyTypes;
@@ -474,10 +476,10 @@ public class TestNodeController {
             index = new Index(dataset.getDataverseName(), dataset.getDatasetName(), dataset.getDatasetName(),
                     IndexType.BTREE, keyFieldNames, keyFieldSourceIndicators, keyFieldTypes, false, true,
                     MetadataUtil.PENDING_NO_OP);
-            localResourceFactoryProvider = getPrimaryIndexLocalResourceMetadataProvider(storageComponentProvider,
-                    index, dataset, primaryIndexTypeTraits, primaryIndexComparatorFactories,
-                    primaryIndexBloomFilterKeyFields, mergePolicyFactory, mergePolicyProperties, filterTypeTraits,
-                    filterCmpFactories, btreeFields, filterFields, dataset.getIndexOperationTrackerFactory(index));
+            localResourceFactoryProvider = getPrimaryIndexLocalResourceMetadataProvider(storageComponentProvider, index,
+                    dataset, primaryIndexTypeTraits, primaryIndexComparatorFactories, primaryIndexBloomFilterKeyFields,
+                    mergePolicyFactory, mergePolicyProperties, filterTypeTraits, filterCmpFactories, btreeFields,
+                    filterFields, dataset.getIndexOperationTrackerFactory(index));
         }
 
         public Index getIndex() {

@@ -20,32 +20,25 @@
 package org.apache.asterix.transaction.management.opcallbacks;
 
 import org.apache.asterix.common.exceptions.ACIDException;
+import org.apache.asterix.common.transactions.DatasetId;
 import org.apache.asterix.common.transactions.ILockManager;
 import org.apache.asterix.common.transactions.ITransactionContext;
 import org.apache.asterix.common.transactions.ITransactionSubsystem;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
-import org.apache.hyracks.storage.am.common.api.IModificationOperationCallback;
-import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 
 /**
  * Secondary-index modifications do not require any locking.
  * We assume that the modification of the corresponding primary index has already taken an appropriate lock.
  * This callback performs logging of the before and/or after images for secondary indexes.
  */
-public class SecondaryIndexModificationOperationCallback extends AbstractIndexModificationOperationCallback
-        implements IModificationOperationCallback {
+public class SecondaryIndexModificationOperationCallback extends AbstractIndexModificationOperationCallback {
 
-    protected final IndexOperation oldOp;
-    private final boolean logBeforeImage;
-
-    public SecondaryIndexModificationOperationCallback(int datasetId, int[] primaryKeyFields,
+    public SecondaryIndexModificationOperationCallback(DatasetId datasetId, int[] primaryKeyFields,
             ITransactionContext txnCtx, ILockManager lockManager, ITransactionSubsystem txnSubsystem, long resourceId,
-            int resourcePartition, byte resourceType, IndexOperation indexOp, boolean logBeforeImage) {
+            int resourcePartition, byte resourceType, Operation indexOp) {
         super(datasetId, primaryKeyFields, txnCtx, lockManager, txnSubsystem, resourceId, resourcePartition,
                 resourceType, indexOp);
-        oldOp = (indexOp == IndexOperation.DELETE) ? IndexOperation.INSERT : IndexOperation.DELETE;
-        this.logBeforeImage = logBeforeImage;
     }
 
     @Override
@@ -57,7 +50,7 @@ public class SecondaryIndexModificationOperationCallback extends AbstractIndexMo
     public void found(ITupleReference before, ITupleReference after) throws HyracksDataException {
         try {
             int pkHash = computePrimaryKeyHashValue(after, primaryKeyFields);
-            this.log(pkHash, after, logBeforeImage ? before : null);
+            this.log(pkHash, after, before);
         } catch (ACIDException e) {
             throw new HyracksDataException(e);
         }

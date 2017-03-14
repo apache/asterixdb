@@ -60,6 +60,7 @@ import org.apache.asterix.metadata.utils.MetadataUtil;
 import org.apache.asterix.metadata.utils.RTreeDataflowHelperFactoryProvider;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.utils.RecordUtil;
+import org.apache.asterix.transaction.management.opcallbacks.AbstractIndexModificationOperationCallback.Operation;
 import org.apache.asterix.transaction.management.opcallbacks.LockThenSearchOperationCallbackFactory;
 import org.apache.asterix.transaction.management.opcallbacks.PrimaryIndexInstantSearchOperationCallbackFactory;
 import org.apache.asterix.transaction.management.opcallbacks.PrimaryIndexModificationOperationCallbackFactory;
@@ -517,23 +518,26 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
             IStorageComponentProvider componentProvider, Index index, JobId jobId, IndexOperation op,
             int[] primaryKeyFields) throws AlgebricksException {
         if (getDatasetDetails().isTemp()) {
-            return new TempDatasetSecondaryIndexModificationOperationCallbackFactory(jobId, getDatasetId(),
-                    primaryKeyFields, componentProvider.getTransactionSubsystemProvider(), op, index.resourceType());
+            return op == IndexOperation.DELETE || op == IndexOperation.INSERT || op == IndexOperation.UPSERT
+                    ? new TempDatasetSecondaryIndexModificationOperationCallbackFactory(jobId, getDatasetId(),
+                            primaryKeyFields, componentProvider.getTransactionSubsystemProvider(), Operation.get(op),
+                            index.resourceType())
+                    : NoOpOperationCallbackFactory.INSTANCE;
         } else if (index.isPrimaryIndex()) {
             return op == IndexOperation.UPSERT
                     ? new UpsertOperationCallbackFactory(jobId, getDatasetId(), primaryKeyFields,
-                            componentProvider.getTransactionSubsystemProvider(), op, index.resourceType(),
-                            hasMetaPart())
+                            componentProvider.getTransactionSubsystemProvider(), Operation.get(op),
+                            index.resourceType())
                     : op == IndexOperation.DELETE || op == IndexOperation.INSERT
                             ? new PrimaryIndexModificationOperationCallbackFactory(jobId, getDatasetId(),
-                                    primaryKeyFields, componentProvider.getTransactionSubsystemProvider(), op,
-                                    index.resourceType(), hasMetaPart())
+                                    primaryKeyFields, componentProvider.getTransactionSubsystemProvider(),
+                                    Operation.get(op), index.resourceType())
                             : NoOpOperationCallbackFactory.INSTANCE;
         } else {
             return op == IndexOperation.DELETE || op == IndexOperation.INSERT || op == IndexOperation.UPSERT
                     ? new SecondaryIndexModificationOperationCallbackFactory(jobId, getDatasetId(), primaryKeyFields,
-                            componentProvider.getTransactionSubsystemProvider(), op, index.resourceType(),
-                            hasMetaPart())
+                            componentProvider.getTransactionSubsystemProvider(), Operation.get(op),
+                            index.resourceType())
                     : NoOpOperationCallbackFactory.INSTANCE;
         }
     }
@@ -574,10 +578,10 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
     }
 
     public IPushRuntimeFactory getCommitRuntimeFactory(JobId jobId, int[] primaryKeyFields,
-            MetadataProvider metadataProvider, int upsertVarIdx, int[] datasetPartitions, boolean isSink) {
+            MetadataProvider metadataProvider, int[] datasetPartitions, boolean isSink) {
         return new CommitRuntimeFactory(jobId, datasetId, primaryKeyFields,
-                metadataProvider.isTemporaryDatasetWriteJob(), metadataProvider.isWriteTransaction(), upsertVarIdx,
-                datasetPartitions, isSink);
+                metadataProvider.isTemporaryDatasetWriteJob(), metadataProvider.isWriteTransaction(), datasetPartitions,
+                isSink);
     }
 
     /**

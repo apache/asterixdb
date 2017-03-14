@@ -41,6 +41,7 @@ import org.apache.asterix.common.transactions.DatasetId;
 import org.apache.asterix.common.transactions.IRecoveryManager.ResourceType;
 import org.apache.asterix.common.transactions.ITransactionContext;
 import org.apache.asterix.common.transactions.ITransactionSubsystem;
+import org.apache.asterix.common.transactions.ImmutableDatasetId;
 import org.apache.asterix.common.transactions.JobId;
 import org.apache.asterix.external.indexing.ExternalFile;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
@@ -94,6 +95,7 @@ import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.AbstractComplexType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.transaction.management.opcallbacks.AbstractIndexModificationOperationCallback.Operation;
 import org.apache.asterix.transaction.management.opcallbacks.SecondaryIndexModificationOperationCallback;
 import org.apache.asterix.transaction.management.service.transaction.DatasetIdFactory;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
@@ -114,7 +116,6 @@ import org.apache.hyracks.storage.am.common.api.IndexException;
 import org.apache.hyracks.storage.am.common.api.TreeIndexException;
 import org.apache.hyracks.storage.am.common.exceptions.TreeIndexDuplicateKeyException;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
-import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.am.common.ophelpers.MultiComparator;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
@@ -123,8 +124,8 @@ import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndex;
 public class MetadataNode implements IMetadataNode {
     private static final long serialVersionUID = 1L;
 
-    private static final DatasetId METADATA_DATASET_ID = new DatasetId(
-            MetadataPrimaryIndexes.PROPERTIES_METADATA.getDatasetId());
+    private static final DatasetId METADATA_DATASET_ID =
+            new ImmutableDatasetId(MetadataPrimaryIndexes.PROPERTIES_METADATA.getDatasetId());
 
     // shared between core and extension
     private IDatasetLifecycleManager datasetLifecycleManager;
@@ -167,7 +168,7 @@ public class MetadataNode implements IMetadataNode {
     @Override
     public void commitTransaction(JobId jobId) throws RemoteException, ACIDException {
         ITransactionContext txnCtx = transactionSubsystem.getTransactionManager().getTransactionContext(jobId, false);
-        transactionSubsystem.getTransactionManager().commitTransaction(txnCtx, new DatasetId(-1), -1);
+        transactionSubsystem.getTransactionManager().commitTransaction(txnCtx, DatasetId.NULL, -1);
     }
 
     @Override
@@ -175,7 +176,7 @@ public class MetadataNode implements IMetadataNode {
         try {
             ITransactionContext txnCtx = transactionSubsystem.getTransactionManager().getTransactionContext(jobId,
                     false);
-            transactionSubsystem.getTransactionManager().abortTransaction(txnCtx, new DatasetId(-1), -1);
+            transactionSubsystem.getTransactionManager().abortTransaction(txnCtx, DatasetId.NULL, -1);
         } catch (ACIDException e) {
             e.printStackTrace();
             throw e;
@@ -407,7 +408,7 @@ public class MetadataNode implements IMetadataNode {
 
     private void insertTupleIntoIndex(JobId jobId, IMetadataIndex metadataIndex, ITupleReference tuple)
             throws ACIDException, HyracksDataException, IndexException {
-        long resourceID = metadataIndex.getResourceID();
+        long resourceID = metadataIndex.getResourceId();
         String resourceName = metadataIndex.getFile().getRelativePath();
         ILSMIndex lsmIndex = (ILSMIndex) datasetLifecycleManager.get(resourceName);
         try {
@@ -415,7 +416,7 @@ public class MetadataNode implements IMetadataNode {
 
             // prepare a Callback for logging
             IModificationOperationCallback modCallback = createIndexModificationCallback(jobId, resourceID,
-                    metadataIndex, lsmIndex, IndexOperation.INSERT);
+                    metadataIndex, lsmIndex, Operation.INSERT);
 
             ILSMIndexAccessor indexAccessor = lsmIndex.createAccessor(modCallback, NoOpOperationCallback.INSTANCE);
 
@@ -435,16 +436,16 @@ public class MetadataNode implements IMetadataNode {
     }
 
     private IModificationOperationCallback createIndexModificationCallback(JobId jobId, long resourceId,
-            IMetadataIndex metadataIndex, ILSMIndex lsmIndex, IndexOperation indexOp) throws ACIDException {
+            IMetadataIndex metadataIndex, ILSMIndex lsmIndex, Operation indexOp) throws ACIDException {
         ITransactionContext txnCtx = transactionSubsystem.getTransactionManager().getTransactionContext(jobId, false);
 
         // Regardless of the index type (primary or secondary index), secondary index modification callback is given
         // This is still correct since metadata index operation doesn't require any lock from ConcurrentLockMgr and
         // The difference between primaryIndexModCallback and secondaryIndexModCallback is that primary index requires
         // locks and secondary index doesn't.
-        return new SecondaryIndexModificationOperationCallback(metadataIndex.getDatasetId().getId(),
+        return new SecondaryIndexModificationOperationCallback(metadataIndex.getDatasetId(),
                 metadataIndex.getPrimaryKeyIndexes(), txnCtx, transactionSubsystem.getLockManager(),
-                transactionSubsystem, resourceId, metadataStoragePartition, ResourceType.LSM_BTREE, indexOp, false);
+                transactionSubsystem, resourceId, metadataStoragePartition, ResourceType.LSM_BTREE, indexOp);
     }
 
     @Override
@@ -679,14 +680,14 @@ public class MetadataNode implements IMetadataNode {
 
     private void deleteTupleFromIndex(JobId jobId, IMetadataIndex metadataIndex, ITupleReference tuple)
             throws ACIDException, HyracksDataException, IndexException {
-        long resourceID = metadataIndex.getResourceID();
+        long resourceID = metadataIndex.getResourceId();
         String resourceName = metadataIndex.getFile().getRelativePath();
         ILSMIndex lsmIndex = (ILSMIndex) datasetLifecycleManager.get(resourceName);
         try {
             datasetLifecycleManager.open(resourceName);
             // prepare a Callback for logging
             IModificationOperationCallback modCallback = createIndexModificationCallback(jobId, resourceID,
-                    metadataIndex, lsmIndex, IndexOperation.DELETE);
+                    metadataIndex, lsmIndex, Operation.DELETE);
             ILSMIndexAccessor indexAccessor = lsmIndex.createAccessor(modCallback, NoOpOperationCallback.INSTANCE);
 
             ITransactionContext txnCtx = transactionSubsystem.getTransactionManager().getTransactionContext(jobId,

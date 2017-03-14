@@ -70,13 +70,13 @@ public interface ITransactionManager {
      *            the transaction context associated with the transaction
      * @param datasetId
      *            TODO
-     * @param PKHashVal
+     * @param pkHash
      *            TODO
      * @throws ACIDException
      * @see ITransactionContextimport org.apache.hyracks.api.job.JobId;
      * @see ACIDException
      */
-    public void commitTransaction(ITransactionContext txnContext, DatasetId datasetId, int PKHashVal)
+    public void commitTransaction(ITransactionContext txnContext, DatasetId datasetId, int pkHash)
             throws ACIDException;
 
     /**
@@ -86,13 +86,13 @@ public interface ITransactionManager {
      *            the transaction context associated with the transaction
      * @param datasetId
      *            TODO
-     * @param PKHashVal
+     * @param pkHash
      *            TODO
      * @throws ACIDException
      * @see ITransactionContext
      * @see ACIDException
      */
-    public void abortTransaction(ITransactionContext txnContext, DatasetId datasetId, int PKHashVal)
+    public void abortTransaction(ITransactionContext txnContext, DatasetId datasetId, int pkHash)
             throws ACIDException;
 
     /**
@@ -104,15 +104,15 @@ public interface ITransactionManager {
      *            the transaction context associated with the transaction
      * @param datasetId
      *            TODO
-     * @param PKHashVal
+     * @param pkHash
      *            TODO
      * @param success
      *            indicates the success or failure. The transaction is committed
      *            or aborted accordingly.
      * @throws ACIDException
      */
-    public void completedTransaction(ITransactionContext txnContext, DatasetId datasetId, int PKHashVal, boolean success)
-            throws ACIDException;
+    public void completedTransaction(ITransactionContext txnContext, DatasetId datasetId, int pkHash,
+            boolean success) throws ACIDException;
 
     /**
      * Returns the Transaction Provider for the transaction eco-system. A
