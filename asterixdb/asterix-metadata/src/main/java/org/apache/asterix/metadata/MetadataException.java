@@ -21,6 +21,8 @@ package org.apache.asterix.metadata;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 
+import java.io.Serializable;
+
 public class MetadataException extends CompilationException {
     private static final long serialVersionUID = 1L;
 
@@ -34,5 +36,9 @@ public class MetadataException extends CompilationException {
 
     public MetadataException(String message, Throwable cause) {
         super(message, cause);
+    }
+
+    public MetadataException(int errorCode, Serializable... params) {
+        super(errorCode, params);
     }
 }

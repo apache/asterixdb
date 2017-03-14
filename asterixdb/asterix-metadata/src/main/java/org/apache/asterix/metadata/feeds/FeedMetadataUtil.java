@@ -25,6 +25,7 @@ import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.external.api.IAdapterFactory;
 import org.apache.asterix.external.api.IDataSourceAdapter;
@@ -154,7 +155,7 @@ public class FeedMetadataUtil {
                 }
             }
         } catch (Exception e) {
-            throw new AsterixException("Invalid feed parameters", e);
+            throw new AsterixException("Invalid feed parameters. Exception Message:" + e.getMessage() , e);
         }
     }
 
@@ -269,7 +270,7 @@ public class FeedMetadataUtil {
     }
 
     public static ARecordType getOutputType(IFeed feed, Map<String, String> configuration, String key)
-            throws RemoteException, ACIDException, MetadataException {
+            throws MetadataException {
         ARecordType outputType = null;
         String fqOutputType = configuration.get(key);
 
@@ -308,7 +309,7 @@ public class FeedMetadataUtil {
                 } catch (ACIDException | RemoteException e2) {
                     e.addSuppressed(e2);
                 }
-                throw e;
+                throw new MetadataException(ErrorCode.FEED_CREATE_FEED_DATATYPE_ERROR, e, datatypeName);
             }
         } finally {
             MetadataManager.INSTANCE.releaseReadLatch();

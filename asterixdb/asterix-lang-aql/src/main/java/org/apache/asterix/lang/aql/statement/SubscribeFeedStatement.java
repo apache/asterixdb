@@ -19,20 +19,16 @@
 package org.apache.asterix.lang.aql.statement;
 
 import java.io.StringReader;
-import java.rmi.RemoteException;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.active.EntityId;
-import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.external.feed.management.FeedConnectionRequest;
-import org.apache.asterix.external.feed.policy.FeedPolicyAccessor;
 import org.apache.asterix.external.feed.watch.FeedActivityDetails;
 import org.apache.asterix.external.util.ExternalDataConstants;
-import org.apache.asterix.external.util.FeedUtils;
 import org.apache.asterix.lang.aql.parser.AQLParserFactory;
 import org.apache.asterix.lang.common.base.IParser;
 import org.apache.asterix.lang.common.base.IParserFactory;
@@ -179,7 +175,7 @@ public class SubscribeFeedStatement implements Statement {
                     .getTypeName();
             return outputType;
 
-        } catch (AlgebricksException | RemoteException | ACIDException ae) {
+        } catch (MetadataException ae) {
             throw new MetadataException(ae);
         }
     }
