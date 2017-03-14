@@ -900,7 +900,7 @@ public class TestExecutor {
                 } catch (Exception e) {
                     // An exception is expected.
                     failed = true;
-                    e.printStackTrace();
+                    System.err.println("testFile " + testFile.toString() + " raised an exception: " + e);
                 }
                 if (!failed) {
                     throw new Exception("Test \"" + testFile + "\" FAILED!\n  An exception" + "is expected.");
@@ -928,7 +928,7 @@ public class TestExecutor {
                 } catch (Exception e) {
                     // expected error happens
                     failed = true;
-                    e.printStackTrace();
+                    System.err.println("testFile " + testFile.toString() + " raised an exception: " + e);
                 }
                 if (!failed) {
                     throw new Exception("Test \"" + testFile + "\" FAILED!\n  An exception is expected.");
@@ -1219,7 +1219,7 @@ public class TestExecutor {
                         System.err.println("...Unexpected!");
                         Exception e = new Exception(
                                 "Test \"" + cUnit.getName() + "\" FAILED!\nExpected error was not thrown...");
-                        e.printStackTrace();
+                        System.err.println(e);
                         throw e;
                     } else if (numOfFiles == testFileCtxs.size()) {
                         LOGGER.info("[TEST]: " + testCaseCtx.getTestCase().getFilePath() + "/" + cUnit.getName()

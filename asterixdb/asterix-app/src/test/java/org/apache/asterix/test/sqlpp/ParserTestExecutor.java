@@ -91,9 +91,9 @@ public class ParserTestExecutor extends TestExecutor {
                             "[TEST]: " + testCaseCtx.getTestCase().getFilePath() + "/" + cUnit.getName() + " PASSED ");
                     queryCount++;
                 } catch (Exception e) {
-                    System.err.println("testFile " + testFile.toString() + " raised an exception:");
-                    e.printStackTrace();
+                    System.err.println("testFile " + testFile.toString() + " raised an exception: " + e);
                     if (cUnit.getExpectedError().isEmpty()) {
+                        e.printStackTrace();
                         System.err.println("...Unexpected!");
                         if (failedGroup != null) {
                             failedGroup.getTestCase().add(testCaseCtx.getTestCase());
