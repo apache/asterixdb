@@ -38,7 +38,7 @@ directory, navigate to `opt/local/bin/`
 
 This folder should contain 4 scripts, two pairs of `.sh` and `.bat` files
 respectively. `start-sample-cluster.sh` will simply start a basic sample cluster
-using the coniguration files located in `samples/local/conf/`.
+using the configuration files located in `opt/local/conf/`.
 
     user@localhost:~/a/o/l/bin
     $./start-sample-cluster.sh
@@ -374,7 +374,7 @@ The following parameters are configured under the "[common]" section.
 | common  | txn.log.partitionsize                     | N/A     | 268435456 (256 MB) |
 
 
-# For the optional NCService process configuration file, the following parameters, under "[ncservice]" section.
+For the optional NCService process configuration file, the following parameters, under "[ncservice]" section.
 
 | Parameter | Meaning |  Default |
 |----------|--------|-------|
