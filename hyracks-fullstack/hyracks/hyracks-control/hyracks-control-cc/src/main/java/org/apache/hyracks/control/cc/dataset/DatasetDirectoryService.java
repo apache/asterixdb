@@ -159,9 +159,10 @@ public class DatasetDirectoryService implements IDatasetDirectoryService {
         if (djr != null) {
             djr.fail(exceptions);
         }
-        // TODO(tillw) throwing an NPE here hangs the system, why?
-        // TODO(tillw) still run into NPE here ..
-        jobResultLocations.get(jobId).setException(exceptions.isEmpty() ? null : exceptions.get(0));
+        final JobResultInfo jobResultInfo = jobResultLocations.get(jobId);
+        if (jobResultInfo != null) {
+            jobResultInfo.setException(exceptions.isEmpty() ? null : exceptions.get(0));
+        }
         notifyAll();
     }
 
