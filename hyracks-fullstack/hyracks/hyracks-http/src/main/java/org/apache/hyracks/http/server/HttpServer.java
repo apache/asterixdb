@@ -218,23 +218,23 @@ public class HttpServer {
         if (i >= 0) {
             uri = uri.substring(0, i);
         }
-        for (IServlet let : servlets) {
-            for (String path : let.getPaths()) {
+        for (IServlet servlet : servlets) {
+            for (String path : servlet.getPaths()) {
                 if (match(path, uri)) {
-                    return let;
+                    return servlet;
                 }
             }
         }
+        LOGGER.warning("No servlet for " + uri);
         return null;
     }
 
-    private static boolean match(String pathSpec, String path) {
+    static boolean match(String pathSpec, String path) {
         char c = pathSpec.charAt(0);
         if (c == '/') {
-            if (pathSpec.length() == 1 || pathSpec.equals(path)) {
+            if (pathSpec.equals(path) || (pathSpec.length() == 1 && path.isEmpty())) {
                 return true;
             }
-
             if (isPathWildcardMatch(pathSpec, path)) {
                 return true;
             }
@@ -244,10 +244,14 @@ public class HttpServer {
         return false;
     }
 
-    private static boolean isPathWildcardMatch(String pathSpec, String path) {
-        int cpl = pathSpec.length() - 2;
-        return (pathSpec.endsWith("/*") && path.regionMatches(0, pathSpec, 0, cpl))
-                && (path.length() == cpl || '/' == path.charAt(cpl));
+    static boolean isPathWildcardMatch(String pathSpec, String path) {
+        final int length = pathSpec.length();
+        if (length < 2) {
+            return false;
+        }
+        final int cpl = length - 2;
+        final boolean b = pathSpec.endsWith("/*") && path.regionMatches(0, pathSpec, 0, cpl);
+        return b && (path.length() == cpl || '/' == path.charAt(cpl));
     }
 
     public ExecutorService getExecutor() {
