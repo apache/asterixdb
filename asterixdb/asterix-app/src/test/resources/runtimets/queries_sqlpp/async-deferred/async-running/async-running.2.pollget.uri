@@ -17,4 +17,6 @@
  * under the License.
  */
 
-/query/result?handle=$handle
+#polltimeoutsecs=10
+
+$status

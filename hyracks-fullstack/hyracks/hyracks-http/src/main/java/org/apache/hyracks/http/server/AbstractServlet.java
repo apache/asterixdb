@@ -143,7 +143,7 @@ public abstract class AbstractServlet implements IServlet {
         int trim = -1;
         if (paths.length > 1) {
             for (int i = 0; i < paths.length; i++) {
-                String path = paths[i].indexOf('*') >= 0 ? paths[i].substring(0, paths[i].indexOf('*')) : paths[0];
+                String path = paths[i].indexOf('*') >= 0 ? paths[i].substring(0, paths[i].indexOf('*')) : paths[i];
                 if (uri.indexOf(path) == 0) {
                     trim = trims[i];
                     break;

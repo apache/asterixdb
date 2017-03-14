@@ -17,4 +17,4 @@
  * under the License.
  */
 
-/query/result?handle=$handle
+/query/service/result/$handle

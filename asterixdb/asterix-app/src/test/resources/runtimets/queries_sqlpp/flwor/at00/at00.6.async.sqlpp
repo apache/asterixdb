@@ -22,7 +22,7 @@
  * Date             :  09/17/2013
  */
 
-#handlevariable=handle
+#handlevariable=status
 
 use test;
 

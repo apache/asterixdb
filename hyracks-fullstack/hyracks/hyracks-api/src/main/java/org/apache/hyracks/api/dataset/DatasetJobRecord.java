@@ -18,6 +18,9 @@
  */
 package org.apache.hyracks.api.dataset;
 
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,11 +29,50 @@ import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class DatasetJobRecord implements IDatasetStateRecord {
-    public enum Status {
+    public enum State {
         IDLE,
         RUNNING,
         SUCCESS,
         FAILED
+    }
+
+    public static class Status implements Serializable {
+
+        private static final long serialVersionUID = 1L;
+
+        State state = State.IDLE;
+
+        private List<Exception> exceptions;
+
+        public State getState() {
+            return state;
+        }
+
+        void setState(State state) {
+            this.state = state;
+        }
+
+        public List<Exception> getExceptions() {
+            return exceptions;
+        }
+
+        void setExceptions(List<Exception> exceptions) {
+            this.exceptions = exceptions;
+        }
+
+        @Override
+        public String toString() {
+            StringBuilder sb = new StringBuilder();
+            sb.append("{ \"state\": \"").append(state.name()).append("\"");
+            if (exceptions != null && !exceptions.isEmpty()) {
+                sb.append(", \"exceptions\": ");
+                List<String> msgs = new ArrayList<>();
+                exceptions.forEach(e -> msgs.add("\"" + e.getMessage() + "\""));
+                sb.append(Arrays.toString(msgs.toArray()));
+            }
+            sb.append(" }");
+            return sb.toString();
+        }
     }
 
     private static final long serialVersionUID = 1L;
@@ -39,38 +81,35 @@ public class DatasetJobRecord implements IDatasetStateRecord {
 
     private Status status;
 
-    private List<Exception> exceptions;
-
     private Map<ResultSetId, ResultSetMetaData> resultSetMetadataMap = new HashMap<>();
 
     public DatasetJobRecord() {
         this.timestamp = System.currentTimeMillis();
-        this.status = Status.IDLE;
+        this.status = new Status();
     }
 
-    private void updateStatus(Status newStatus) {
+    private void updateState(State newStatus) {
         // FAILED is a stable status
-        if (status != Status.FAILED) {
-            status = newStatus;
+        if (status.state != State.FAILED) {
+            status.setState(newStatus);
         }
     }
 
     public void start() {
-        updateStatus(Status.RUNNING);
+        updateState(State.RUNNING);
     }
 
     public void success() {
-        updateStatus(Status.SUCCESS);
+        updateState(State.SUCCESS);
     }
 
     public void fail(ResultSetId rsId, int partition) {
         getOrCreateDirectoryRecord(rsId, partition).fail();
-        status = Status.FAILED;
     }
 
     public void fail(List<Exception> exceptions) {
-        status = Status.FAILED;
-        this.exceptions = exceptions;
+        updateState(State.FAILED);
+        status.setExceptions(exceptions);
     }
 
     @Override
@@ -84,15 +123,15 @@ public class DatasetJobRecord implements IDatasetStateRecord {
 
     @Override
     public String toString() {
-        return resultSetMetadataMap.toString();
+        StringBuilder sb = new StringBuilder();
+        sb.append("{ \"status\": ").append(status.toString()).append(", ");
+        sb.append("\"timestamp\": ").append(timestamp).append(", ");
+        sb.append("\"resultsets\": ").append(Arrays.toString(resultSetMetadataMap.entrySet().toArray())).append(" }");
+        return sb.toString();
     }
 
-    public List<Exception> getExceptions() {
-        return exceptions;
-    }
-
-    public void setResultSetMetaData(ResultSetId rsId, boolean orderedResult, int nPartitions) throws
-            HyracksDataException {
+    public void setResultSetMetaData(ResultSetId rsId, boolean orderedResult, int nPartitions)
+            throws HyracksDataException {
         ResultSetMetaData rsMd = resultSetMetadataMap.get(rsId);
         if (rsMd == null) {
             resultSetMetadataMap.put(rsId, new ResultSetMetaData(nPartitions, orderedResult));
@@ -114,16 +153,16 @@ public class DatasetJobRecord implements IDatasetStateRecord {
         return records[partition];
     }
 
-    public synchronized DatasetDirectoryRecord getDirectoryRecord(ResultSetId rsId, int partition) throws
-            HyracksDataException {
+    public synchronized DatasetDirectoryRecord getDirectoryRecord(ResultSetId rsId, int partition)
+            throws HyracksDataException {
         DatasetDirectoryRecord[] records = getResultSetMetaData(rsId).getRecords();
         if (records[partition] == null) {
-            throw new HyracksDataException("no record for partition " + partition + " of result set " + rsId);
+            throw HyracksDataException.create(ErrorCode.RESULT_NO_RECORD, partition, rsId);
         }
         return records[partition];
     }
 
-    public synchronized void updateStatus(ResultSetId rsId) {
+    public synchronized void updateState(ResultSetId rsId) {
         int successCount = 0;
         DatasetDirectoryRecord[] records = getResultSetMetaData(rsId).getRecords();
         for (DatasetDirectoryRecord record : records) {

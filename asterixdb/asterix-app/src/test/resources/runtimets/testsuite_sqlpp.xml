@@ -25,7 +25,7 @@
     <test-case FilePath="async-deferred">
       <compilation-unit name="async-failed">
         <output-dir compare="Text">async-failed</output-dir>
-        <expected-error>Error in processing tuple 0</expected-error>
+        <expected-error>Injected failure in asterix:inject-failure</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="async-deferred">
@@ -36,6 +36,11 @@
     <test-case FilePath="async-deferred">
       <compilation-unit name="async">
         <output-dir compare="Text">async</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="async-deferred">
+      <compilation-unit name="async-repeated">
+        <output-dir compare="Text">async-repeated</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="async-deferred">

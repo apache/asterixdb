@@ -65,6 +65,7 @@ public class ErrorCode {
     public static final int UNIDENTIFIED_IO_ERROR_READING_FILE = 29;
     public static final int FILE_DOES_NOT_EXISTS = 30;
     public static final int UNIDENTIFIED_IO_ERROR_DELETING_DIR = 31;
+    public static final int RESULT_NO_RECORD = 32;
 
     // Compilation error codes.
     public static final int RULECOLLECTION_NOT_INSTANCE_OF_LIST = 10001;

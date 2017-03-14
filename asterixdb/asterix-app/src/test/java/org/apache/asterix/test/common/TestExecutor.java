@@ -76,6 +76,7 @@ import org.apache.http.impl.client.StandardHttpRequestRetryHandler;
 import org.apache.http.util.EntityUtils;
 import org.apache.hyracks.util.StorageUtil;
 import org.junit.Assert;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -461,43 +462,44 @@ public class TestExecutor {
 
     protected InputStream executeQueryService(String str, OutputFormat fmt, URI uri,
             List<CompilationUnit.Parameter> params, boolean jsonEncoded, boolean cancellable) throws Exception {
-        setParam(params, "format", fmt.mimeType());
-        HttpUriRequest method = jsonEncoded ? constructPostMethodJson(str, uri, "statement", params)
-                : constructPostMethodUrl(str, uri, "statement", params);
+        final List<CompilationUnit.Parameter> newParams = upsertParam(params, "format", fmt.mimeType());
+        HttpUriRequest method = jsonEncoded ? constructPostMethodJson(str, uri, "statement", newParams)
+                : constructPostMethodUrl(str, uri, "statement", newParams);
         // Set accepted output response type
         method.setHeader("Accept", OutputFormat.CLEAN_JSON.mimeType());
         HttpResponse response = executeHttpRequest(method);
         return response.getEntity().getContent();
     }
 
-    protected void setParam(List<CompilationUnit.Parameter> params, String name, String value) {
+    protected List<CompilationUnit.Parameter> upsertParam(List<CompilationUnit.Parameter> params, String name,
+            String value) {
+        boolean replaced = false;
+        List<CompilationUnit.Parameter> result = new ArrayList<>();
         for (CompilationUnit.Parameter param : params) {
+            CompilationUnit.Parameter newParam = new CompilationUnit.Parameter();
+            newParam.setName(param.getName());
             if (name.equals(param.getName())) {
-                param.setValue(value);
-                return;
+                newParam.setValue(value);
+                replaced = true;
+            } else {
+                newParam.setValue(param.getValue());
             }
+            result.add(newParam);
         }
-        CompilationUnit.Parameter formatParam = new CompilationUnit.Parameter();
-        formatParam.setName(name);
-        formatParam.setValue(value);
-        params.add(formatParam);
-    }
-
-    private List<CompilationUnit.Parameter> injectStatement(String statement, String stmtParamName,
-            List<CompilationUnit.Parameter> otherParams) {
-        CompilationUnit.Parameter stmtParam = new CompilationUnit.Parameter();
-        stmtParam.setName(stmtParamName);
-        stmtParam.setValue(statement);
-        List<CompilationUnit.Parameter> params = new ArrayList<>(otherParams);
-        params.add(stmtParam);
-        return params;
+        if (!replaced) {
+            CompilationUnit.Parameter newParam = new CompilationUnit.Parameter();
+            newParam.setName(name);
+            newParam.setValue(value);
+            result.add(newParam);
+        }
+        return result;
     }
 
     private HttpUriRequest constructHttpMethod(String statement, URI uri, String stmtParam, boolean postStmtAsParam,
             List<CompilationUnit.Parameter> otherParams) throws URISyntaxException {
         if (statement.length() + uri.toString().length() < MAX_URL_LENGTH) {
             // Use GET for small-ish queries
-            return constructGetMethod(uri, injectStatement(statement, stmtParam, otherParams));
+            return constructGetMethod(uri, upsertParam(otherParams, stmtParam, statement));
         } else {
             // Use POST for bigger ones to avoid 413 FULL_HEAD
             String stmtParamName = (postStmtAsParam ? stmtParam : null);
@@ -541,7 +543,7 @@ public class TestExecutor {
             List<CompilationUnit.Parameter> otherParams) {
         RequestBuilder builder = RequestBuilder.post(uri);
         if (stmtParam != null) {
-            for (CompilationUnit.Parameter param : injectStatement(statement, stmtParam, otherParams)) {
+            for (CompilationUnit.Parameter param : upsertParam(otherParams, stmtParam, statement)) {
                 builder.addParameter(param.getName(), param.getValue());
             }
             builder.addParameter(stmtParam, statement);
@@ -561,7 +563,7 @@ public class TestExecutor {
         RequestBuilder builder = RequestBuilder.post(uri);
         ObjectMapper om = new ObjectMapper();
         ObjectNode content = om.createObjectNode();
-        for (CompilationUnit.Parameter param : injectStatement(statement, stmtParam, otherParams)) {
+        for (CompilationUnit.Parameter param : upsertParam(otherParams, stmtParam, statement)) {
             content.put(param.getName(), param.getValue());
         }
         try {
@@ -609,10 +611,13 @@ public class TestExecutor {
 
         HttpResponse response = executeAndCheckHttpRequest(request);
         InputStream resultStream = response.getEntity().getContent();
-        String handle = IOUtils.toString(resultStream, "UTF-8");
+        String resultStr = IOUtils.toString(resultStream, "UTF-8");
+        ObjectNode resultJson = new ObjectMapper().readValue(resultStr, ObjectNode.class);
+        final JsonNode jsonHandle = resultJson.get("handle");
+        final String strHandle = jsonHandle.asText();
 
         if (handleVar != null) {
-            variableCtx.put(handleVar, handle);
+            variableCtx.put(handleVar, strHandle);
             return resultStream;
         }
         return null;
@@ -776,6 +781,7 @@ public class TestExecutor {
                 long startTime = System.currentTimeMillis();
                 long limitTime = startTime + TimeUnit.SECONDS.toMillis(timeoutSecs);
                 ctx.setType(ctx.getType().substring("poll".length()));
+                boolean expectedException = false;
                 Exception finalException;
                 LOGGER.fine("polling for up to " + timeoutSecs + " seconds w/ " + retryDelaySecs + " second(s) delay");
                 while (true) {
@@ -785,6 +791,11 @@ public class TestExecutor {
                         finalException = null;
                         break;
                     } catch (Exception e) {
+                        if (isExpected(e, cUnit)) {
+                            expectedException = true;
+                            finalException = e;
+                            break;
+                        }
                         if ((System.currentTimeMillis() > limitTime)) {
                             finalException = e;
                             break;
@@ -793,7 +804,9 @@ public class TestExecutor {
                         Thread.sleep(TimeUnit.SECONDS.toMillis(retryDelaySecs));
                     }
                 }
-                if (finalException != null) {
+                if (expectedException) {
+                    throw finalException;
+                } else if (finalException != null){
                     throw new Exception("Poll limit (" + timeoutSecs + "s) exceeded without obtaining expected result",
                             finalException);
                 }
@@ -838,8 +851,8 @@ public class TestExecutor {
                         resultStream = ResultExtractor.extract(resultStream);
                     } else {
                         String handleVar = getHandleVariable(statement);
-                        setParam(params, "mode", delivery);
-                        resultStream = executeQueryService(statement, fmt, uri, params, true);
+                        resultStream =
+                                executeQueryService(statement, fmt, uri, upsertParam(params, "mode", delivery), true);
                         String handle = ResultExtractor.extractHandle(resultStream);
                         Assert.assertNotNull("no handle for " + reqType + " test " + testFile.toString(), handleVar);
                         variableCtx.put(handleVar, handle);
@@ -946,19 +959,32 @@ public class TestExecutor {
                 break;
             case "get":
             case "post":
-                if (!"http".equals(ctx.extension())) {
+                fmt = OutputFormat.forCompilationUnit(cUnit);
+                String handleVar = getHandleVariable(statement);
+                final String trimmedPathAndQuery = stripLineComments(stripJavaComments(statement)).trim();
+                final String variablesReplaced = replaceVarRef(trimmedPathAndQuery, variableCtx);
+                if ("http".equals(ctx.extension())) {
+                    resultStream = executeHttp(ctx.getType(), variablesReplaced, fmt);
+                } else if ("uri".equals(ctx.extension())) {
+                    resultStream = executeURI(ctx.getType(), URI.create(variablesReplaced), fmt);
+                } else {
                     throw new IllegalArgumentException(
                             "Unexpected format for method " + ctx.getType() + ": " + ctx.extension());
                 }
-                fmt = OutputFormat.forCompilationUnit(cUnit);
-                final String trimmedPathAndQuery = stripLineComments(stripJavaComments(statement)).trim();
-                final String variablesReplaced = replaceVarRef(trimmedPathAndQuery, variableCtx);
-                resultStream = executeHttp(ctx.getType(), variablesReplaced, fmt);
-                expectedResultFile = expectedResultFileCtxs.get(queryCount.intValue()).getFile();
-                actualResultFile = testCaseCtx.getActualResultFile(cUnit, expectedResultFile, new File(actualPath));
-                writeOutputToFile(actualResultFile, resultStream);
-                runScriptAndCompareWithResult(testFile, new PrintWriter(System.err), expectedResultFile,
-                        actualResultFile);
+                if (handleVar != null) {
+                    String handle = ResultExtractor.extractHandle(resultStream);
+                    if (handle != null) {
+                        variableCtx.put(handleVar, handle);
+                    } else {
+                        throw new Exception("no handle for test " + testFile.toString());
+                    }
+                } else {
+                    expectedResultFile = expectedResultFileCtxs.get(queryCount.intValue()).getFile();
+                    actualResultFile = testCaseCtx.getActualResultFile(cUnit, expectedResultFile, new File(actualPath));
+                    writeOutputToFile(actualResultFile, resultStream);
+                    runScriptAndCompareWithResult(testFile, new PrintWriter(System.err), expectedResultFile,
+                            actualResultFile);
+                }
                 queryCount.increment();
                 break;
             case "server": // (start <test server name> <port>
@@ -1052,6 +1078,16 @@ public class TestExecutor {
         }
     }
 
+    protected static boolean isExpected(Exception e, CompilationUnit cUnit) {
+        final List<String> expErrors = cUnit.getExpectedError();
+        for (String exp : expErrors) {
+            if (e.toString().contains(exp)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     protected int getTimeoutSecs(String statement) {
         final Matcher timeoutMatcher = POLL_TIMEOUT_PATTERN.matcher(statement);
         if (timeoutMatcher.find()) {
@@ -1087,6 +1123,10 @@ public class TestExecutor {
     protected InputStream executeHttp(String ctxType, String endpoint, OutputFormat fmt) throws Exception {
         String[] split = endpoint.split("\\?");
         URI uri = new URI("http", null, host, port, split[0], split.length > 1 ? split[1] : null, null);
+        return executeURI(ctxType, uri, fmt);
+    }
+
+    private InputStream executeURI(String ctxType, URI uri, OutputFormat fmt) throws Exception {
         switch (ctxType) {
             case "get":
                 return executeJSONGet(fmt, uri);

@@ -31,7 +31,6 @@ import java.util.logging.Logger;
 
 import org.apache.asterix.api.http.ctx.StatementExecutorContext;
 import org.apache.asterix.api.http.servlet.ServletConstants;
-import org.apache.asterix.app.result.ResultUtil;
 import org.apache.asterix.common.api.IClusterManagementWork;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.context.IStorageComponentProvider;
@@ -56,9 +55,11 @@ import org.apache.hyracks.http.server.utils.HttpUtil;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.util.MinimalPrettyPrinter;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpResponseStatus;
@@ -124,22 +125,6 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         }
     }
 
-    private enum ErrorField {
-        CODE("code"),
-        MSG("msg"),
-        STACK("stack");
-
-        private final String str;
-
-        ErrorField(String str) {
-            this.str = str;
-        }
-
-        public String str() {
-            return str;
-        }
-    }
-
     private enum Metrics {
         ELAPSED_TIME("elapsedTime"),
         EXECUTION_TIME("executionTime"),
@@ -186,28 +171,30 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
     }
 
     static class RequestParameters {
+        String host;
+        String path;
         String statement;
         String format;
         boolean pretty;
         String clientContextID;
         String mode;
 
+
         @Override
         public String toString() {
-            return append(new StringBuilder()).toString();
-        }
-
-        public StringBuilder append(final StringBuilder sb) {
-            sb.append("{ ");
-            sb.append("\"statement\": \"");
-            JSONUtil.escape(sb, statement);
-            sb.append("\", ");
-            sb.append("\"format\": \"").append(format).append("\", ");
-            sb.append("\"pretty\": ").append(pretty).append(", ");
-            sb.append("\"mode\": ").append(mode).append(", ");
-            sb.append("\"clientContextID\": \"").append(clientContextID).append("\" ");
-            sb.append('}');
-            return sb;
+            try {
+                ObjectMapper om = new ObjectMapper();
+                ObjectNode on = om.createObjectNode();
+                on.put("host", host);
+                on.put("path", path);
+                on.put("statement", JSONUtil.escape(new StringBuilder(), statement).toString());
+                on.put("pretty", pretty);
+                on.put("mode", mode);
+                on.put("clientContextID", clientContextID);
+                return om.writer(new MinimalPrettyPrinter()).writeValueAsString(on);
+            } catch (JsonProcessingException e) { // NOSONAR
+                return e.getMessage();
+            }
         }
     }
 
@@ -249,7 +236,8 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         return SessionConfig.OutputFormat.CLEAN_JSON;
     }
 
-    private static SessionConfig createSessionConfig(RequestParameters param, PrintWriter resultWriter) {
+    private static SessionConfig createSessionConfig(RequestParameters param, String handleUrl, PrintWriter
+            resultWriter) {
         SessionConfig.ResultDecorator resultPrefix = new SessionConfig.ResultDecorator() {
             int resultNo = -1;
 
@@ -268,8 +256,8 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
 
         SessionConfig.ResultDecorator resultPostfix = app -> app.append("\t,\n");
         SessionConfig.ResultDecorator handlePrefix =
-                app -> app.append("\t\"").append(ResultFields.HANDLE.str()).append("\": ");
-        SessionConfig.ResultDecorator handlePostfix = app -> app.append(",\n");
+                app -> app.append("\t\"").append(ResultFields.HANDLE.str()).append("\": \"").append(handleUrl);
+        SessionConfig.ResultDecorator handlePostfix = app -> app.append("\",\n");
 
         SessionConfig.OutputFormat format = getFormat(param.format);
         SessionConfig sessionConfig =
@@ -308,22 +296,6 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         }
     }
 
-    private static void printError(PrintWriter pw, Throwable e) throws JsonProcessingException {
-        Throwable rootCause = ResultUtil.getRootCause(e);
-        if (rootCause == null) {
-            rootCause = e;
-        }
-        final boolean addStack = false;
-        pw.print("\t\"");
-        pw.print(ResultFields.ERRORS.str());
-        pw.print("\": [{ \n");
-        printField(pw, ErrorField.CODE.str(), "1");
-        final String msg = rootCause.getMessage();
-        printField(pw, ErrorField.MSG.str(), JSONUtil.escape(msg != null ? msg : rootCause.getClass().getSimpleName()),
-                addStack);
-        pw.print("\t}],\n");
-    }
-
     private static void printMetrics(PrintWriter pw, long elapsedTime, long executionTime, long resultCount,
             long resultSize) {
         pw.print("\t\"");
@@ -355,6 +327,8 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         int sep = contentTypeParam.indexOf(';');
         final String contentType = sep < 0 ? contentTypeParam.trim() : contentTypeParam.substring(0, sep).trim();
         RequestParameters param = new RequestParameters();
+        param.host = host(request);
+        param.path = servletPath(request);
         if (HttpUtil.ContentType.APPLICATION_JSON.equals(contentType)) {
             try {
                 JsonNode jsonRequest = new ObjectMapper().readTree(getRequestBody(request));
@@ -394,6 +368,32 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         }
     }
 
+    private static String handlePath(ResultDelivery delivery) {
+        switch (delivery) {
+            case ASYNC:
+                return "/status/";
+            case DEFERRED:
+                return "/result/";
+            case IMMEDIATE:
+            default:
+                return "";
+        }
+    }
+
+    /**
+     * Determines the URL for a result handle based on the host and the path of the incoming request and the result
+     * delivery mode. Usually there will be a "status" endpoint for ASYNC requests that exposes the status of the
+     * execution and a "result" endpoint for DEFERRED requests that will deliver the result for a successful execution.
+     *
+     * @param host hostname used for this request
+     * @param path servlet path for this request
+     * @param delivery ResultDelivery mode for this request
+     * @return a handle (URL) that allows a client to access further information for this request
+     */
+    protected String getHandleUrl(String host, String path, ResultDelivery delivery) {
+        return "http://" + host + path + handlePath(delivery);
+    }
+
     private void handleRequest(RequestParameters param, IServletResponse response) throws IOException {
         LOGGER.info(param.toString());
         long elapsedStart = System.nanoTime();
@@ -402,7 +402,8 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
 
         ResultDelivery delivery = parseResultDelivery(param.mode);
 
-        SessionConfig sessionConfig = createSessionConfig(param, resultWriter);
+        String handleUrl = getHandleUrl(param.host, param.path, delivery);
+        SessionConfig sessionConfig = createSessionConfig(param, handleUrl, resultWriter);
         HttpUtil.setContentType(response, HttpUtil.ContentType.APPLICATION_JSON, HttpUtil.Encoding.UTF8);
 
         HttpResponseStatus status = HttpResponseStatus.OK;

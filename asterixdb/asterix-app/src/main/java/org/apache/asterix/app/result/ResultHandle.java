@@ -24,16 +24,51 @@ import org.apache.hyracks.api.dataset.ResultSetId;
 import org.apache.hyracks.api.job.JobId;
 
 public class ResultHandle {
-    private long jobId;
-    private long resultSetId;
+    private final JobId jobId;
+    private final ResultSetId resultSetId;
 
     public ResultHandle(JobId jobId, ResultSetId resultSetId) {
-        this.jobId = jobId.getId();
-        this.resultSetId = resultSetId.getId();
+        this.jobId = jobId;
+        this.resultSetId = resultSetId;
+    }
+
+    public ResultHandle(long jobId, long resultSetId) {
+        this(new JobId(jobId), new ResultSetId(resultSetId));
+    }
+
+    public static ResultHandle parse(String str) {
+        int dash = str.indexOf('-');
+        if (dash < 1) {
+            return null;
+        }
+        int start = 0;
+        while (str.charAt(start) == '/') {
+            ++start;
+        }
+        String jobIdStr = str.substring(start, dash);
+        String resIdStr = str.substring(dash + 1);
+        try {
+            return new ResultHandle(Long.parseLong(jobIdStr), Long.parseLong(resIdStr));
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    public JobId getJobId() {
+        return jobId;
+    }
+
+    public ResultSetId getResultSetId() {
+        return resultSetId;
+    }
+
+    @Override
+    public String toString() {
+        return Long.toString(jobId.getId()) + "-" + Long.toString(resultSetId.getId());
+
     }
 
     public AlgebricksAppendable append(AlgebricksAppendable app) throws AlgebricksException {
-        return app.append("[").append(String.valueOf(jobId)).append(", ").append(String.valueOf(resultSetId))
-                .append("]");
+        return app.append(toString());
     }
 }

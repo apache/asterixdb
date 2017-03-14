@@ -22,4 +22,4 @@
  * Expected Result : Negative
  * Date            : 7th September 2016
  */
-/query/status?handle
+/query/service/status/

@@ -124,29 +124,28 @@ public class DatasetPartitionManager implements IDatasetPartitionManager {
     @Override
     public void initializeDatasetPartitionReader(JobId jobId, ResultSetId resultSetId, int partition,
             IFrameWriter writer) throws HyracksException {
-        ResultState resultState;
-        synchronized (this) {
-            ResultSetMap rsIdMap = (ResultSetMap) partitionResultStateMap.get(jobId);
-
-            if (rsIdMap == null) {
-                throw new HyracksException("Unknown JobId " + jobId);
-            }
-
-            ResultState[] resultStates = rsIdMap.getResultStates(resultSetId);
-            if (resultStates == null) {
-                throw new HyracksException("Unknown JobId: " + jobId + " ResultSetId: " + resultSetId);
-            }
-
-            resultState = resultStates[partition];
-            if (resultState == null) {
-                throw new HyracksException("No DatasetPartitionWriter for partition " + partition);
-            }
-        }
-
+        ResultState resultState = getResultState(jobId, resultSetId, partition);
         DatasetPartitionReader dpr = new DatasetPartitionReader(this, datasetMemoryManager, executor, resultState);
         dpr.writeTo(writer);
         LOGGER.fine("Initialized partition reader: JobId: " + jobId + ":ResultSetId: " + resultSetId + ":partition: "
                 + partition);
+    }
+
+    protected synchronized ResultState getResultState(JobId jobId, ResultSetId resultSetId, int partition)
+            throws HyracksException {
+        ResultSetMap rsIdMap = (ResultSetMap) partitionResultStateMap.get(jobId);
+        if (rsIdMap == null) {
+            throw new HyracksException("Unknown JobId " + jobId);
+        }
+        ResultState[] resultStates = rsIdMap.getResultStates(resultSetId);
+        if (resultStates == null) {
+            throw new HyracksException("Unknown JobId: " + jobId + " ResultSetId: " + resultSetId);
+        }
+        ResultState resultState = resultStates[partition];
+        if (resultState == null) {
+            throw new HyracksException("No DatasetPartitionWriter for partition " + partition);
+        }
+        return resultState;
     }
 
     @Override
@@ -163,11 +162,6 @@ public class DatasetPartitionManager implements IDatasetPartitionManager {
         if (rsIdMap != null) {
             rsIdMap.abortAll();
         }
-    }
-
-    @Override
-    public IWorkspaceFileFactory getFileFactory() {
-        return fileFactory;
     }
 
     @Override

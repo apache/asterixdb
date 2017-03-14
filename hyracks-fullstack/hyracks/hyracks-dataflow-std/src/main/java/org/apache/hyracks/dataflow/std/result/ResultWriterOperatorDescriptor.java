@@ -21,6 +21,7 @@ package org.apache.hyracks.dataflow.std.result;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.ByteBuffer;
+import java.util.logging.Logger;
 
 import org.apache.hyracks.api.comm.IFrame;
 import org.apache.hyracks.api.comm.IFrameWriter;
@@ -91,7 +92,7 @@ public class ResultWriterOperatorDescriptor extends AbstractSingleActivityOperat
                     datasetPartitionWriter.open();
                     resultSerializer.init();
                 } catch (HyracksException e) {
-                    throw new HyracksDataException(e);
+                    throw HyracksDataException.create(e);
                 }
             }
 
@@ -127,6 +128,16 @@ public class ResultWriterOperatorDescriptor extends AbstractSingleActivityOperat
                 } finally {
                     datasetPartitionWriter.close();
                 }
+            }
+
+            @Override
+            public String toString() {
+                StringBuilder sb = new StringBuilder();
+                sb.append("{ ");
+                sb.append("\"rsId\": \"").append(rsId).append("\", ");
+                sb.append("\"ordered\": ").append(ordered).append(", ");
+                sb.append("\"asyncMode\": ").append(asyncMode).append(" }");
+                return sb.toString();
             }
         };
     }

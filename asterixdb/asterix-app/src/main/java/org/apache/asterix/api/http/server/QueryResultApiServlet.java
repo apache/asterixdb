@@ -23,10 +23,12 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.asterix.app.result.ResultHandle;
 import org.apache.asterix.app.result.ResultReader;
 import org.apache.asterix.app.result.ResultUtil;
 import org.apache.asterix.translator.IStatementExecutor.Stats;
 import org.apache.asterix.translator.SessionConfig;
+import org.apache.hyracks.api.dataset.DatasetJobRecord;
 import org.apache.hyracks.api.dataset.IHyracksDataset;
 import org.apache.hyracks.api.dataset.ResultSetId;
 import org.apache.hyracks.api.exceptions.ErrorCode;
@@ -50,23 +52,46 @@ public class QueryResultApiServlet extends AbstractQueryApiServlet {
 
     @Override
     protected void get(IServletRequest request, IServletResponse response) throws Exception {
-        response.setStatus(HttpResponseStatus.OK);
         // TODO this seems wrong ...
         HttpUtil.setContentType(response, HttpUtil.ContentType.TEXT_HTML, HttpUtil.Encoding.UTF8);
-        String strHandle = request.getParameter("handle");
         PrintWriter out = response.writer();
 
+        final String strHandle = localPath(request);
+        final ResultHandle handle = ResultHandle.parse(strHandle);
+        if (handle == null) {
+            response.setStatus(HttpResponseStatus.BAD_REQUEST);
+            return;
+        }
+
+        IHyracksDataset hds = getHyracksDataset();
+        ResultReader resultReader = new ResultReader(hds, handle.getJobId(), handle.getResultSetId());
+
+
         try {
-            JsonNode handle = parseHandle(new ObjectMapper(), strHandle, LOGGER);
-            if (handle == null) {
-                response.setStatus(HttpResponseStatus.BAD_REQUEST);
+            DatasetJobRecord.Status status = resultReader.getStatus();
+
+            final HttpResponseStatus httpStatus;
+            if (status == null) {
+                httpStatus = HttpResponseStatus.NOT_FOUND;
+            } else {
+                switch (status.getState()) {
+                    case SUCCESS:
+                        httpStatus = HttpResponseStatus.OK;
+                        break;
+                    case RUNNING:
+                    case IDLE:
+                    case FAILED:
+                        httpStatus = HttpResponseStatus.NOT_FOUND;
+                        break;
+                    default:
+                        httpStatus = HttpResponseStatus.INTERNAL_SERVER_ERROR;
+                        break;
+                }
+            }
+            response.setStatus(httpStatus);
+            if (httpStatus != HttpResponseStatus.OK) {
                 return;
             }
-            JobId jobId = new JobId(handle.get(0).asLong());
-            ResultSetId rsId = new ResultSetId(handle.get(1).asLong());
-
-            IHyracksDataset hds = getHyracksDataset();
-            ResultReader resultReader = new ResultReader(hds, jobId, rsId);
 
             // QQQ The output format is determined by the initial
             // query and cannot be modified here, so calling back to
@@ -94,4 +119,5 @@ public class QueryResultApiServlet extends AbstractQueryApiServlet {
             LOGGER.warning("Error flushing output writer for \"" + strHandle + "\"");
         }
     }
+
 }

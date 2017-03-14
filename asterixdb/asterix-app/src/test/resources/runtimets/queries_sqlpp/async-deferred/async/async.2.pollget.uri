@@ -18,5 +18,6 @@
  */
 
 #polltimeoutsecs=10
+#handlevariable=result
 
-/query/status?handle=$handle
+$status

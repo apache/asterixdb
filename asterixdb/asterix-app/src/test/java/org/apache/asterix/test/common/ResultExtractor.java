@@ -107,7 +107,7 @@ public class ResultExtractor {
                     }
                     break;
                 default:
-                    throw new AsterixException(field + " unanticipated field");
+                    throw new AsterixException("Unanticipated field \"" + field + "\"");
             }
         }
 
@@ -119,9 +119,16 @@ public class ResultExtractor {
         ObjectMapper om = new ObjectMapper();
         String result = IOUtils.toString(resultStream, utf8);
         ObjectNode resultJson = om.readValue(result, ObjectNode.class);
-        JsonNode handle = resultJson.get("handle");
-        ObjectNode res = om.createObjectNode();
-        res.set("handle", handle);
-        return om.writeValueAsString(res);
+        final JsonNode handle = resultJson.get("handle");
+        if (handle != null) {
+            return handle.asText();
+        } else {
+            JsonNode errors = resultJson.get("errors");
+            if (errors != null) {
+                JsonNode msg = errors.get(0).get("msg");
+                throw new AsterixException(msg.asText());
+            }
+        }
+        return null;
     }
 }

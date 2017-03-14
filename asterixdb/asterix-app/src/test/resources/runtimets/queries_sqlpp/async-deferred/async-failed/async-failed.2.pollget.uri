@@ -16,10 +16,8 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/*
- * Test case Name  : query_status_4
- * Description     : test query status for non-existent handle
- * Expected Result : Negative
- * Date            : 7th September 2016
- */
-/query/service/status
+
+#polltimeoutsecs=30
+#handlevariable=result
+
+$status

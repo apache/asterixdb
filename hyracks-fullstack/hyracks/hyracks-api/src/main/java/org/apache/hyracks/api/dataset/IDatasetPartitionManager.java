@@ -43,7 +43,5 @@ public interface IDatasetPartitionManager extends IDatasetManager {
 
     public void abortReader(JobId jobId);
 
-    public IWorkspaceFileFactory getFileFactory();
-
     public void close();
 }

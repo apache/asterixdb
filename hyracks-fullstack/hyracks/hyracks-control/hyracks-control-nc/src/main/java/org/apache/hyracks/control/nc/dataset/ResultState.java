@@ -35,6 +35,11 @@ import org.apache.hyracks.api.io.IWorkspaceFileFactory;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.partitions.ResultSetPartitionId;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.util.MinimalPrettyPrinter;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 public class ResultState implements IStateObject {
     private static final String FILE_PREFIX = "result_";
 
@@ -107,6 +112,7 @@ public class ResultState implements IStateObject {
             } catch (IOException e) {
                 // Since file handle could not be closed, just ignore.
             }
+            writeFileHandle = null;
         }
     }
 
@@ -152,6 +158,7 @@ public class ResultState implements IStateObject {
     public synchronized void readClose() throws HyracksDataException {
         if (readFileHandle != null) {
             ioManager.close(readFileHandle);
+            readFileHandle = null;
         }
     }
 
@@ -323,5 +330,21 @@ public class ResultState implements IStateObject {
 
         readFileHandle = ioManager.open(fileRef, IIOManager.FileReadWriteMode.READ_ONLY,
                 IIOManager.FileSyncMode.METADATA_ASYNC_DATA_ASYNC);
+    }
+
+    @Override
+    public String toString() {
+        try {
+            ObjectMapper om = new ObjectMapper();
+            ObjectNode on = om.createObjectNode();
+            on.put("rspid", resultSetPartitionId.toString());
+            on.put("async", asyncMode);
+            on.put("eos", eos.get());
+            on.put("failed", failed.get());
+            on.put("fileRef", String.valueOf(fileRef));
+            return om.writer(new MinimalPrettyPrinter()).writeValueAsString(on);
+        } catch (JsonProcessingException e) { // NOSONAR
+            return e.getMessage();
+        }
     }
 }

@@ -19,4 +19,4 @@
 
 //polltimeoutsecs=10
 
-/query/status?handle=$handle
+/query/service/status/$handle

@@ -20,25 +20,28 @@ package org.apache.hyracks.client.dataset;
 
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.comm.NetworkAddress;
+import org.apache.hyracks.api.context.IHyracksCommonContext;
 import org.apache.hyracks.api.dataset.IHyracksDataset;
 import org.apache.hyracks.api.dataset.IHyracksDatasetDirectoryServiceConnection;
 import org.apache.hyracks.api.dataset.IHyracksDatasetReader;
 import org.apache.hyracks.api.dataset.ResultSetId;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.client.net.ClientNetworkManager;
+import org.apache.hyracks.control.nc.resources.memory.FrameManager;
 
 public class HyracksDataset implements IHyracksDataset {
     private final IHyracksDatasetDirectoryServiceConnection datasetDirectoryServiceConnection;
 
     private final ClientNetworkManager netManager;
 
-    private final DatasetClientContext datasetClientCtx;
+    private final IHyracksCommonContext datasetClientCtx;
 
     public HyracksDataset(IHyracksClientConnection hcc, int frameSize, int nReaders) throws Exception {
         NetworkAddress ddsAddress = hcc.getDatasetDirectoryServiceInfo();
-        datasetDirectoryServiceConnection = new HyracksDatasetDirectoryServiceConnection
-            (ddsAddress.getAddress(), ddsAddress.getPort());
+        datasetDirectoryServiceConnection =
+                new HyracksDatasetDirectoryServiceConnection(ddsAddress.getAddress(), ddsAddress.getPort());
 
         netManager = new ClientNetworkManager(nReaders);
         netManager.start();
@@ -57,4 +60,17 @@ public class HyracksDataset implements IHyracksDataset {
         }
         return reader;
     }
+
+    static class DatasetClientContext extends FrameManager implements IHyracksCommonContext {
+
+        DatasetClientContext(int frameSize) {
+            super(frameSize);
+        }
+
+        @Override
+        public IIOManager getIOManager() {
+            return null;
+        }
+    }
+
 }

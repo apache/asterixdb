@@ -17,6 +17,6 @@
  * under the License.
  */
 
-#handlevariable=handle
+#handlevariable=status
 
-select value sleep("result", 3000);
+select value sleep("result", 5000);

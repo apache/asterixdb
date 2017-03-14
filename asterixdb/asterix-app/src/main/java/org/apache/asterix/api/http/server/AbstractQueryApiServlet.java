@@ -29,12 +29,13 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.app.result.ResultReader;
+import org.apache.asterix.app.result.ResultUtil;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
+import org.apache.asterix.common.utils.JSONUtil;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.dataset.IHyracksDataset;
 import org.apache.hyracks.client.dataset.HyracksDataset;
-import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.server.AbstractServlet;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -75,6 +76,22 @@ class AbstractQueryApiServlet extends AbstractServlet {
         private final String str;
 
         ResultStatus(String str) {
+            this.str = str;
+        }
+
+        public String str() {
+            return str;
+        }
+    }
+
+    public enum ErrorField {
+        CODE("code"),
+        MSG("msg"),
+        STACK("stack");
+
+        private final String str;
+
+        ErrorField(String str) {
             this.str = str;
         }
 
@@ -133,11 +150,40 @@ class AbstractQueryApiServlet extends AbstractServlet {
     }
 
     protected static void printStatus(PrintWriter pw, ResultStatus rs) {
-        printField(pw, ResultFields.STATUS.str(), rs.str());
+        printStatus(pw, rs, true);
+    }
+
+    protected static void printStatus(PrintWriter pw, ResultStatus rs, boolean comma) {
+        printField(pw, ResultFields.STATUS.str(), rs.str(), comma);
     }
 
     protected static void printHandle(PrintWriter pw, String handle) {
-        printField(pw, ResultFields.HANDLE.str(), handle);
+        printField(pw, ResultFields.HANDLE.str(), handle, true);
+    }
+
+    protected static void printHandle(PrintWriter pw, String handle, boolean comma) {
+        printField(pw, ResultFields.HANDLE.str(), handle, comma);
+    }
+
+    protected static void printError(PrintWriter pw, Throwable e) throws JsonProcessingException {
+        printError(pw, e, true);
+    }
+
+    protected static void printError(PrintWriter pw, Throwable e, boolean comma) throws JsonProcessingException {
+        Throwable rootCause = ResultUtil.getRootCause(e);
+        if (rootCause == null) {
+            rootCause = e;
+        }
+        final boolean addStack = false;
+        pw.print("\t\"");
+        pw.print(ResultFields.ERRORS.str());
+        pw.print("\": [{ \n");
+        printField(pw, QueryServiceServlet.ErrorField.CODE.str(), "1");
+        final String msg = rootCause.getMessage();
+        printField(pw, QueryServiceServlet.ErrorField.MSG.str(), JSONUtil
+                        .escape(msg != null ? msg : rootCause.getClass().getSimpleName()),
+                addStack);
+        pw.print(comma ? "\t}],\n" : "\t}]\n");
     }
 
     protected static void printField(PrintWriter pw, String name, String value) {

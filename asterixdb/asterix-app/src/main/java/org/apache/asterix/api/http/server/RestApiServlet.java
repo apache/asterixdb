@@ -114,8 +114,8 @@ public abstract class RestApiServlet extends AbstractServlet {
         }
 
         SessionConfig.ResultDecorator handlePrefix =
-                (AlgebricksAppendable app) -> app.append("{ \"").append("handle").append("\": ");
-        SessionConfig.ResultDecorator handlePostfix = (AlgebricksAppendable app) -> app.append(" }");
+                (AlgebricksAppendable app) -> app.append("{ \"").append("handle").append("\": \"");
+        SessionConfig.ResultDecorator handlePostfix = (AlgebricksAppendable app) -> app.append("\" }");
         SessionConfig sessionConfig =
                 new SessionConfig(response.writer(), format, null, null, handlePrefix, handlePostfix);
 

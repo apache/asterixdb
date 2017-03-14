@@ -32,6 +32,7 @@ import org.apache.hyracks.api.channels.IInputChannel;
 import org.apache.hyracks.api.comm.FrameHelper;
 import org.apache.hyracks.api.comm.IFrame;
 import org.apache.hyracks.api.comm.NetworkAddress;
+import org.apache.hyracks.api.context.IHyracksCommonContext;
 import org.apache.hyracks.api.dataset.DatasetDirectoryRecord;
 import org.apache.hyracks.api.dataset.DatasetJobRecord.Status;
 import org.apache.hyracks.api.dataset.IDatasetInputChannelMonitor;
@@ -53,7 +54,7 @@ public class HyracksDatasetReader implements IHyracksDatasetReader {
 
     private final ClientNetworkManager netManager;
 
-    private final DatasetClientContext datasetClientCtx;
+    private final IHyracksCommonContext datasetClientCtx;
 
     private JobId jobId;
 
@@ -72,7 +73,7 @@ public class HyracksDatasetReader implements IHyracksDatasetReader {
     private static int NUM_READ_BUFFERS = 1;
 
     public HyracksDatasetReader(IHyracksDatasetDirectoryServiceConnection datasetDirectoryServiceConnection,
-            ClientNetworkManager netManager, DatasetClientContext datasetClientCtx, JobId jobId,
+            ClientNetworkManager netManager, IHyracksCommonContext datasetClientCtx, JobId jobId,
             ResultSetId resultSetId)
             throws Exception {
         this.datasetDirectoryServiceConnection = datasetDirectoryServiceConnection;
@@ -125,10 +126,8 @@ public class HyracksDatasetReader implements IHyracksDatasetReader {
             resultChannel.registerMonitor(lastMonitor);
             resultChannel.open(datasetClientCtx);
             return true;
-        } catch (HyracksDataException e) {
-            throw e;
         } catch (Exception e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 
