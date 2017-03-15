@@ -70,7 +70,8 @@ public class SampleLocalClusterIT {
         }
         outDir.mkdirs();
 
-        String[] pathElements = new String[]{TARGET_DIR, new File(TARGET_DIR).list((dir, name) -> name.matches("asterix-server.*-binary-assembly.zip"))[0]};
+        String[] pathElements = new String[] { TARGET_DIR,
+                new File(TARGET_DIR).list((dir, name) -> name.matches("asterix-server.*-binary-assembly.zip"))[0] };
         String installerZip = FileUtil.joinPath(pathElements);
 
         TestHelper.unzip(installerZip, OUTPUT_DIR);
