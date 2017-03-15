@@ -73,14 +73,14 @@ public class QueryStatusApiServlet extends AbstractQueryApiServlet {
         HttpResponseStatus httpStatus = HttpResponseStatus.OK;
 
         resultWriter.print("{\n");
-        printStatus(resultWriter, resultStatus, (ex != null) || ResultStatus.SUCCESS == resultStatus);
+        ResultUtil.printStatus(resultWriter, resultStatus, (ex != null) || ResultStatus.SUCCESS == resultStatus);
 
         if (ResultStatus.SUCCESS == resultStatus) {
             String servletPath = servletPath(request).replace("status", "result");
             String resHandle = "http://" + host(request) + servletPath + strHandle;
             printHandle(resultWriter, resHandle, false);
         } else if (ex != null) {
-            printError(resultWriter, ex, false);
+            ResultUtil.printError(resultWriter, ex, false);
         }
 
         resultWriter.print("}\n");

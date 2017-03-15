@@ -29,6 +29,12 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="async-deferred">
+      <compilation-unit name="async-compilation-failed">
+        <output-dir compare="Text">async-compilation-failed</output-dir>
+        <expected-error>Cannot find dataset gargel</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="async-deferred">
       <compilation-unit name="deferred">
         <output-dir compare="Text">deferred</output-dir>
       </compilation-unit>

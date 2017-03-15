@@ -45,10 +45,11 @@ import org.apache.asterix.active.IActiveEntityEventsListener;
 import org.apache.asterix.active.IActiveEventSubscriber;
 import org.apache.asterix.algebra.extension.IExtensionStatement;
 import org.apache.asterix.api.common.APIFramework;
+import org.apache.asterix.api.http.server.AbstractQueryApiServlet;
 import org.apache.asterix.api.http.server.ApiServlet;
+import org.apache.asterix.api.http.server.ResultUtil;
 import org.apache.asterix.app.result.ResultHandle;
 import org.apache.asterix.app.result.ResultReader;
-import org.apache.asterix.app.result.ResultUtil;
 import org.apache.asterix.common.config.ClusterProperties;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.ExternalFilePendingOp;
@@ -2400,31 +2401,13 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
 
     private void deliverResult(IHyracksClientConnection hcc, IHyracksDataset hdc, IStatementCompiler compiler,
             MetadataProvider metadataProvider, IMetadataLocker locker, ResultDelivery resultDelivery, Stats stats,
-            String clientContextId, IStatementExecutorContext ctx)
-            throws Exception {
+            String clientContextId, IStatementExecutorContext ctx) throws Exception {
         final ResultSetId resultSetId = metadataProvider.getResultSetId();
         switch (resultDelivery) {
             case ASYNC:
                 MutableBoolean printed = new MutableBoolean(false);
-                Mutable<JobId> jobId = new MutableObject<>(JobId.INVALID);
-                executorService.submit(() -> {
-                    try {
-                        createAndRunJob(hcc, jobId, compiler, locker, resultDelivery, id -> {
-                            final ResultHandle handle = new ResultHandle(id, resultSetId);
-                            ResultUtil.printResultHandle(handle, sessionConfig);
-                            synchronized (printed) {
-                                printed.setTrue();
-                                printed.notify();
-                            }
-                        }, clientContextId, ctx);
-                    } catch (Exception e) {
-                        synchronized (jobId) {
-                            GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE,
-                                    resultDelivery.name() + " job " + "with id " + jobId.getValue() + " " + "failed",
-                                    e);
-                        }
-                    }
-                });
+                executorService.submit(() -> asyncCreateAndRunJob(hcc, compiler, locker, resultDelivery,
+                        clientContextId, ctx, resultSetId, printed));
                 synchronized (printed) {
                     while (!printed.booleanValue()) {
                         printed.wait();
@@ -2440,11 +2423,44 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 break;
             case DEFERRED:
                 createAndRunJob(hcc, null, compiler, locker, resultDelivery, id -> {
-                    ResultUtil.printResultHandle(new ResultHandle(id, resultSetId), sessionConfig);
+                    ResultUtil.printResultHandle(sessionConfig, new ResultHandle(id, resultSetId));
                 }, clientContextId, ctx);
                 break;
             default:
                 break;
+        }
+    }
+
+    private void asyncCreateAndRunJob(IHyracksClientConnection hcc, IStatementCompiler compiler, IMetadataLocker locker,
+            ResultDelivery resultDelivery, String clientContextId, IStatementExecutorContext ctx,
+            ResultSetId resultSetId, MutableBoolean printed) {
+        Mutable<JobId> jobId = new MutableObject<>(JobId.INVALID);
+        try {
+            createAndRunJob(hcc, jobId, compiler, locker, resultDelivery, id -> {
+                final ResultHandle handle = new ResultHandle(id, resultSetId);
+                ResultUtil.printStatus(sessionConfig, AbstractQueryApiServlet.ResultStatus.RUNNING);
+                ResultUtil.printResultHandle(sessionConfig, handle);
+                synchronized (printed) {
+                    printed.setTrue();
+                    printed.notify();
+                }
+            }, clientContextId, ctx);
+        } catch (Exception e) {
+            if (JobId.INVALID.equals(jobId.getValue())) {
+                // compilation failed
+                ResultUtil.printStatus(sessionConfig, AbstractQueryApiServlet.ResultStatus.FAILED);
+                ResultUtil.printError(sessionConfig.out(), e);
+            } else {
+                GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE,
+                        resultDelivery.name() + " job with id " + jobId.getValue() + " " + "failed", e);
+            }
+        } finally {
+            synchronized (printed) {
+                if (printed.isFalse()) {
+                    printed.setTrue();
+                    printed.notify();
+                }
+            }
         }
     }
 
@@ -2462,9 +2478,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 ctx.put(clientContextId, jobId); // Adds the running job into the context.
             }
             if (jId != null) {
-                synchronized (jId) {
-                    jId.setValue(jobId);
-                }
+                jId.setValue(jobId);
             }
             if (ResultDelivery.ASYNC == resultDelivery) {
                 printer.print(jobId);

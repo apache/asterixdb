@@ -18,8 +18,6 @@
  */
 package org.apache.asterix.app.result;
 
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.core.algebra.prettyprint.AlgebricksAppendable;
 import org.apache.hyracks.api.dataset.ResultSetId;
 import org.apache.hyracks.api.job.JobId;
 
@@ -65,10 +63,5 @@ public class ResultHandle {
     @Override
     public String toString() {
         return Long.toString(jobId.getId()) + "-" + Long.toString(resultSetId.getId());
-
-    }
-
-    public AlgebricksAppendable append(AlgebricksAppendable app) throws AlgebricksException {
-        return app.append(toString());
     }
 }

@@ -36,7 +36,6 @@ import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 
 import org.apache.asterix.app.result.ResultReader;
-import org.apache.asterix.app.result.ResultUtil;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.exceptions.AsterixException;

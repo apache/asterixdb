@@ -21,28 +21,19 @@ package org.apache.asterix.api.http.server;
 import static org.apache.asterix.api.http.servlet.ServletConstants.HYRACKS_CONNECTION_ATTR;
 import static org.apache.asterix.api.http.servlet.ServletConstants.HYRACKS_DATASET_ATTR;
 
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.asterix.app.result.ResultReader;
-import org.apache.asterix.app.result.ResultUtil;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
-import org.apache.asterix.common.utils.JSONUtil;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.dataset.IHyracksDataset;
 import org.apache.hyracks.client.dataset.HyracksDataset;
 import org.apache.hyracks.http.server.AbstractServlet;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-class AbstractQueryApiServlet extends AbstractServlet {
+public class AbstractQueryApiServlet extends AbstractServlet {
 
     public enum ResultFields {
         REQUEST_ID("requestID"),
@@ -129,84 +120,14 @@ class AbstractQueryApiServlet extends AbstractServlet {
         }
     }
 
-    protected static JsonNode parseHandle(ObjectMapper om, String strHandle, Logger logger) throws IOException {
-        if (strHandle == null) {
-            logger.log(Level.WARNING, "No handle provided");
-        } else {
-            try {
-                JsonNode handleObj = om.readTree(strHandle);
-                return handleObj.get("handle");
-            } catch (JsonProcessingException e) { // NOSONAR
-                logger.log(Level.WARNING, "Invalid handle: \"" + strHandle + "\"");
-            }
-        }
-        return null;
-    }
-
     protected static UUID printRequestId(PrintWriter pw) {
         UUID requestId = UUID.randomUUID();
-        printField(pw, ResultFields.REQUEST_ID.str(), requestId.toString());
+        ResultUtil.printField(pw, ResultFields.REQUEST_ID.str(), requestId.toString());
         return requestId;
     }
 
-    protected static void printStatus(PrintWriter pw, ResultStatus rs) {
-        printStatus(pw, rs, true);
-    }
-
-    protected static void printStatus(PrintWriter pw, ResultStatus rs, boolean comma) {
-        printField(pw, ResultFields.STATUS.str(), rs.str(), comma);
-    }
-
-    protected static void printHandle(PrintWriter pw, String handle) {
-        printField(pw, ResultFields.HANDLE.str(), handle, true);
-    }
-
     protected static void printHandle(PrintWriter pw, String handle, boolean comma) {
-        printField(pw, ResultFields.HANDLE.str(), handle, comma);
-    }
-
-    protected static void printError(PrintWriter pw, Throwable e) throws JsonProcessingException {
-        printError(pw, e, true);
-    }
-
-    protected static void printError(PrintWriter pw, Throwable e, boolean comma) throws JsonProcessingException {
-        Throwable rootCause = ResultUtil.getRootCause(e);
-        if (rootCause == null) {
-            rootCause = e;
-        }
-        final boolean addStack = false;
-        pw.print("\t\"");
-        pw.print(ResultFields.ERRORS.str());
-        pw.print("\": [{ \n");
-        printField(pw, QueryServiceServlet.ErrorField.CODE.str(), "1");
-        final String msg = rootCause.getMessage();
-        printField(pw, QueryServiceServlet.ErrorField.MSG.str(), JSONUtil
-                        .escape(msg != null ? msg : rootCause.getClass().getSimpleName()),
-                addStack);
-        pw.print(comma ? "\t}],\n" : "\t}]\n");
-    }
-
-    protected static void printField(PrintWriter pw, String name, String value) {
-        printField(pw, name, value, true);
-    }
-
-    protected static void printField(PrintWriter pw, String name, String value, boolean comma) {
-        printFieldInternal(pw, name, "\"" + value + "\"", comma);
-    }
-
-    protected static void printField(PrintWriter pw, String name, long value, boolean comma) {
-        printFieldInternal(pw, name, String.valueOf(value), comma);
-    }
-
-    protected static void printFieldInternal(PrintWriter pw, String name, String value, boolean comma) {
-        pw.print("\t\"");
-        pw.print(name);
-        pw.print("\": ");
-        pw.print(value);
-        if (comma) {
-            pw.print(',');
-        }
-        pw.print('\n');
+        ResultUtil.printField(pw, ResultFields.HANDLE.str(), handle, comma);
     }
 
 }

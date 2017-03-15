@@ -110,6 +110,11 @@ public class SessionConfig {
         AlgebricksAppendable append(AlgebricksAppendable app) throws AlgebricksException;
     }
 
+    @FunctionalInterface
+    public interface ResultAppender {
+        AlgebricksAppendable append(AlgebricksAppendable app, String str) throws AlgebricksException;
+    }
+
     // Standard execution flags.
     private final boolean executeQuery;
     private final boolean generateJobSpec;
@@ -123,34 +128,16 @@ public class SessionConfig {
 
     private final ResultDecorator preResultDecorator;
     private final ResultDecorator postResultDecorator;
-    private final ResultDecorator preHandleDecorator;
-    private final ResultDecorator postHandleDecorator;
+    private final ResultAppender handleAppender;
+    private final ResultAppender statusAppender;
 
     // Flags.
     private final Map<String, Boolean> flags;
 
-    /**
-     * Create a SessionConfig object with all default values:
-     * - All format flags set to "false".
-     * - All out-of-band outputs set to "null".
-     * - "Optimize" set to "true".
-     * - "Execute Query" set to "true".
-     * - "Generate Job Spec" set to "true".
-     *
-     * @param out
-     *            PrintWriter for execution output.
-     * @param fmt
-     *            Output format for execution output.
-     */
-    public SessionConfig(PrintWriter out, OutputFormat fmt) {
-        this(out, fmt, null, null, null, null, true, true, true);
-    }
-
     public SessionConfig(PrintWriter out, OutputFormat fmt, ResultDecorator preResultDecorator,
-            ResultDecorator postResultDecorator, ResultDecorator preHandleDecorator,
-            ResultDecorator postHandleDecorator) {
-        this(out, fmt, preResultDecorator, postResultDecorator, preHandleDecorator, postHandleDecorator, true, true,
-                true);
+            ResultDecorator postResultDecorator, ResultAppender handleAppender, ResultAppender statusAppender) {
+        this(out, fmt, preResultDecorator, postResultDecorator, handleAppender, statusAppender,
+                true, true, true);
     }
 
     public SessionConfig(PrintWriter out, OutputFormat fmt, boolean optimize, boolean executeQuery,
@@ -176,14 +163,14 @@ public class SessionConfig {
      *            false, job cannot be executed).
      */
     public SessionConfig(PrintWriter out, OutputFormat fmt, ResultDecorator preResultDecorator,
-            ResultDecorator postResultDecorator, ResultDecorator preHandleDecorator,
-            ResultDecorator postHandleDecorator, boolean optimize, boolean executeQuery, boolean generateJobSpec) {
+            ResultDecorator postResultDecorator, ResultAppender handleAppender, ResultAppender statusAppender,
+            boolean optimize, boolean executeQuery, boolean generateJobSpec) {
         this.out = out;
         this.fmt = fmt;
         this.preResultDecorator = preResultDecorator;
         this.postResultDecorator = postResultDecorator;
-        this.preHandleDecorator = preHandleDecorator;
-        this.postHandleDecorator = postHandleDecorator;
+        this.handleAppender = handleAppender;
+        this.statusAppender = statusAppender;
         this.optimize = optimize;
         this.executeQuery = executeQuery;
         this.generateJobSpec = generateJobSpec;
@@ -212,13 +199,14 @@ public class SessionConfig {
         return this.postResultDecorator != null ? this.postResultDecorator.append(app) : app;
     }
 
-    public AlgebricksAppendable handlePrefix(AlgebricksAppendable app) throws AlgebricksException {
-        return this.preHandleDecorator != null ? this.preHandleDecorator.append(app) : app;
+    public AlgebricksAppendable appendHandle(AlgebricksAppendable app, String handle) throws AlgebricksException {
+        return this.handleAppender != null ? this.handleAppender.append(app, handle) : app;
     }
 
-    public AlgebricksAppendable handlePostfix(AlgebricksAppendable app) throws AlgebricksException {
-        return this.postHandleDecorator != null ? this.postHandleDecorator.append(app) : app;
+    public AlgebricksAppendable appendStatus(AlgebricksAppendable app, String status) throws AlgebricksException {
+        return this.statusAppender != null ? this.statusAppender.append(app, status) : app;
     }
+
     /**
      * Retrieve the value of the "execute query" flag.
      */

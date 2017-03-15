@@ -255,13 +255,14 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         };
 
         SessionConfig.ResultDecorator resultPostfix = app -> app.append("\t,\n");
-        SessionConfig.ResultDecorator handlePrefix =
-                app -> app.append("\t\"").append(ResultFields.HANDLE.str()).append("\": \"").append(handleUrl);
-        SessionConfig.ResultDecorator handlePostfix = app -> app.append("\",\n");
+        SessionConfig.ResultAppender appendHandle = (app, handle) -> app.append("\t\"")
+                .append(ResultFields.HANDLE.str()).append("\": \"").append(handleUrl).append(handle).append("\",\n");
+        SessionConfig.ResultAppender appendStatus = (app, status) -> app.append("\t\"")
+                .append(ResultFields.STATUS.str()).append("\": \"").append(status).append("\",\n");
 
         SessionConfig.OutputFormat format = getFormat(param.format);
         SessionConfig sessionConfig =
-                new SessionConfig(resultWriter, format, resultPrefix, resultPostfix, handlePrefix, handlePostfix);
+                new SessionConfig(resultWriter, format, resultPrefix, resultPostfix, appendHandle, appendStatus);
         sessionConfig.set(SessionConfig.FORMAT_WRAPPER_ARRAY, true);
         sessionConfig.set(SessionConfig.FORMAT_INDENT_JSON, param.pretty);
         sessionConfig.set(SessionConfig.FORMAT_QUOTE_RECORD,
@@ -273,23 +274,23 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
 
     private static void printClientContextID(PrintWriter pw, RequestParameters params) {
         if (params.clientContextID != null && !params.clientContextID.isEmpty()) {
-            printField(pw, ResultFields.CLIENT_ID.str(), params.clientContextID);
+            ResultUtil.printField(pw, ResultFields.CLIENT_ID.str(), params.clientContextID);
         }
     }
 
     private static void printSignature(PrintWriter pw) {
-        printField(pw, ResultFields.SIGNATURE.str(), "*");
+        ResultUtil.printField(pw, ResultFields.SIGNATURE.str(), "*");
     }
 
     private static void printType(PrintWriter pw, SessionConfig sessionConfig) {
         switch (sessionConfig.fmt()) {
             case ADM:
-                printField(pw, ResultFields.TYPE.str(), HttpUtil.ContentType.APPLICATION_ADM);
+                ResultUtil.printField(pw, ResultFields.TYPE.str(), HttpUtil.ContentType.APPLICATION_ADM);
                 break;
             case CSV:
                 String contentType = HttpUtil.ContentType.CSV + "; header="
                         + (sessionConfig.is(SessionConfig.FORMAT_CSV_HEADER) ? "present" : "absent");
-                printField(pw, ResultFields.TYPE.str(), contentType);
+                ResultUtil.printField(pw, ResultFields.TYPE.str(), contentType);
                 break;
             default:
                 break;
@@ -302,13 +303,13 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         pw.print(ResultFields.METRICS.str());
         pw.print("\": {\n");
         pw.print("\t");
-        printField(pw, Metrics.ELAPSED_TIME.str(), TimeUnit.formatNanos(elapsedTime));
+        ResultUtil.printField(pw, Metrics.ELAPSED_TIME.str(), TimeUnit.formatNanos(elapsedTime));
         pw.print("\t");
-        printField(pw, Metrics.EXECUTION_TIME.str(), TimeUnit.formatNanos(executionTime));
+        ResultUtil.printField(pw, Metrics.EXECUTION_TIME.str(), TimeUnit.formatNanos(executionTime));
         pw.print("\t");
-        printField(pw, Metrics.RESULT_COUNT.str(), resultCount, true);
+        ResultUtil.printField(pw, Metrics.RESULT_COUNT.str(), resultCount, true);
         pw.print("\t");
-        printField(pw, Metrics.RESULT_SIZE.str(), resultSize, false);
+        ResultUtil.printField(pw, Metrics.RESULT_SIZE.str(), resultSize, false);
         pw.print("\t}\n");
     }
 
@@ -434,16 +435,18 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
             translator.compileAndExecute(getHyracksClientConnection(), getHyracksDataset(), delivery, stats,
                     param.clientContextID, queryCtx);
             execEnd = System.nanoTime();
-            printStatus(resultWriter, ResultDelivery.ASYNC == delivery ? ResultStatus.RUNNING : ResultStatus.SUCCESS);
+            if (ResultDelivery.IMMEDIATE == delivery || ResultDelivery.DEFERRED == delivery) {
+                ResultUtil.printStatus(sessionConfig, ResultStatus.SUCCESS);
+            }
         } catch (AsterixException | TokenMgrError | org.apache.asterix.aqlplus.parser.TokenMgrError pe) {
             GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, pe.getMessage(), pe);
-            printError(resultWriter, pe);
-            printStatus(resultWriter, ResultStatus.FATAL);
+            ResultUtil.printError(resultWriter, pe);
+            ResultUtil.printStatus(sessionConfig, ResultStatus.FATAL);
             status = HttpResponseStatus.BAD_REQUEST;
         } catch (Exception e) {
             GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, e.getMessage(), e);
-            printError(resultWriter, e);
-            printStatus(resultWriter, ResultStatus.FATAL);
+            ResultUtil.printError(resultWriter, e);
+            ResultUtil.printStatus(sessionConfig, ResultStatus.FATAL);
             status = HttpResponseStatus.INTERNAL_SERVER_ERROR;
         } finally {
             if (execStart == -1) {

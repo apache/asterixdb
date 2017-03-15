@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.app.result;
+package org.apache.asterix.api.http.server;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -33,6 +33,10 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.apache.asterix.app.result.ResultHandle;
+import org.apache.asterix.app.result.ResultPrinter;
+import org.apache.asterix.app.result.ResultReader;
+import org.apache.asterix.common.utils.JSONUtil;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.translator.IStatementExecutor.Stats;
 import org.apache.asterix.translator.SessionConfig;
@@ -54,7 +58,6 @@ public class ResultUtil {
             .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
 
     private ResultUtil() {
-
     }
 
     /**
@@ -83,15 +86,70 @@ public class ResultUtil {
         new ResultPrinter(conf, stats, recordType).print(record);
     }
 
-    public static void printResultHandle(ResultHandle handle, SessionConfig conf) throws HyracksDataException {
+    public static void printResultHandle(SessionConfig conf, ResultHandle handle) throws HyracksDataException {
         try {
             final AlgebricksAppendable app = new AlgebricksAppendable(conf.out());
-            conf.handlePrefix(app);
-            handle.append(app);
-            conf.handlePostfix(app);
+            conf.appendHandle(app, handle.toString());
         } catch (AlgebricksException e) {
-            throw new HyracksDataException(e);
+            LOGGER.warn("error printing handle", e);
         }
+    }
+
+    public static void printStatus(SessionConfig conf, AbstractQueryApiServlet.ResultStatus rs) {
+        try {
+            final AlgebricksAppendable app = new AlgebricksAppendable(conf.out());
+            conf.appendStatus(app, rs.str());
+        } catch (AlgebricksException e) {
+            LOGGER.warn("error printing status", e);
+        }
+    }
+
+    public static void printStatus(PrintWriter pw, AbstractQueryApiServlet.ResultStatus rs, boolean comma) {
+        printField(pw, AbstractQueryApiServlet.ResultFields.STATUS.str(), rs.str(), comma);
+    }
+
+    public static void printError(PrintWriter pw, Throwable e) {
+        printError(pw, e, true);
+    }
+
+    public static void printError(PrintWriter pw, Throwable e, boolean comma) {
+        Throwable rootCause = getRootCause(e);
+        if (rootCause == null) {
+            rootCause = e;
+        }
+        final boolean addStack = false;
+        pw.print("\t\"");
+        pw.print(AbstractQueryApiServlet.ResultFields.ERRORS.str());
+        pw.print("\": [{ \n");
+        printField(pw, QueryServiceServlet.ErrorField.CODE.str(), "1");
+        final String msg = rootCause.getMessage();
+        printField(pw, QueryServiceServlet.ErrorField.MSG.str(), JSONUtil
+                        .escape(msg != null ? msg : rootCause.getClass().getSimpleName()),
+                addStack);
+        pw.print(comma ? "\t}],\n" : "\t}]\n");
+    }
+
+    public static void printField(PrintWriter pw, String name, String value) {
+        printField(pw, name, value, true);
+    }
+
+    public static void printField(PrintWriter pw, String name, String value, boolean comma) {
+        printFieldInternal(pw, name, "\"" + value + "\"", comma);
+    }
+
+    public static void printField(PrintWriter pw, String name, long value, boolean comma) {
+        printFieldInternal(pw, name, String.valueOf(value), comma);
+    }
+
+    protected static void printFieldInternal(PrintWriter pw, String name, String value, boolean comma) {
+        pw.print("\t\"");
+        pw.print(name);
+        pw.print("\": ");
+        pw.print(value);
+        if (comma) {
+            pw.print(',');
+        }
+        pw.print('\n');
     }
 
     public static ObjectNode getErrorResponse(int errorCode, String errorMessage, String errorSummary,
@@ -259,4 +317,5 @@ public class ResultUtil {
         }
         return errorTemplate;
     }
+
 }

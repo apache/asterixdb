@@ -29,7 +29,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.app.result.ResultReader;
-import org.apache.asterix.app.result.ResultUtil;
 import org.apache.asterix.app.translator.QueryTranslator;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.context.IStorageComponentProvider;
@@ -45,7 +44,6 @@ import org.apache.asterix.translator.IStatementExecutor.ResultDelivery;
 import org.apache.asterix.translator.IStatementExecutorFactory;
 import org.apache.asterix.translator.SessionConfig;
 import org.apache.asterix.translator.SessionConfig.OutputFormat;
-import org.apache.hyracks.algebricks.core.algebra.prettyprint.AlgebricksAppendable;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.dataset.IHyracksDataset;
 import org.apache.hyracks.client.dataset.HyracksDataset;
@@ -113,11 +111,9 @@ public abstract class RestApiServlet extends AbstractServlet {
             format = OutputFormat.LOSSLESS_JSON;
         }
 
-        SessionConfig.ResultDecorator handlePrefix =
-                (AlgebricksAppendable app) -> app.append("{ \"").append("handle").append("\": \"");
-        SessionConfig.ResultDecorator handlePostfix = (AlgebricksAppendable app) -> app.append("\" }");
-        SessionConfig sessionConfig =
-                new SessionConfig(response.writer(), format, null, null, handlePrefix, handlePostfix);
+        SessionConfig.ResultAppender appendHandle = (app, handle) -> app.append("{ \"").append("handle")
+                .append("\":" + " \"").append(handle).append("\" }");
+        SessionConfig sessionConfig = new SessionConfig(response.writer(), format, null, null, appendHandle, null);
 
         // If it's JSON or ADM, check for the "wrapper-array" flag. Default is
         // "true" for JSON and "false" for ADM. (Not applicable for CSV.)
