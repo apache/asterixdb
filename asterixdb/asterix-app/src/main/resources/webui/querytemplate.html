@@ -35,8 +35,10 @@
 
 <link href="/webui/static/css/style.css" rel="stylesheet"
 	type="text/css" />
+<script src="/webui/static/js/jquery.json-viewer.js"></script>
+<link href="/webui/static/css/jquery.json-viewer.css" type="text/css" rel="stylesheet" />
 
-<script type="text/javascript">
+  <script type="text/javascript">
 $(document).ready(function() {
 
     var optionButtonSize = $('#checkboxes-on').width();
@@ -155,6 +157,28 @@ $(document).ready(function() {
                 }
             }
 
+            /* Handling Pretty JSON */
+            var resultFormat = $('#output-format option:checked').val();
+            var prettyJson = $('[name="pretty-json"]').is(':checked');
+            if ( prettyJson && (resultFormat == 'LOSSLESS_JSON' || resultFormat == 'CLEAN_JSON')) {
+              $('.result-content').each(
+                  function(idx) {
+                    var results = $(this).text().split('\n');
+                    $(this).css('padding-left', '20px');
+                    $(this).text('');
+                    for (var iter1 = 0; iter1 < results.length - 1; iter1++) {
+                      if (results[iter1].length < 1) {
+                        continue;
+                      }
+                      var resultJSON = $.parseJSON(results[iter1]);
+                            $(this).append($('<div/>').attr("id", "json-record"+idx+"-"+iter1));
+                            $('#json-record'+idx+"-"+iter1).jsonViewer(resultJSON);
+                    }
+                  }
+                );
+            }
+
+
             var contentString = data.toString();
             if (contentString.indexOf(durPattern) != -1) {
                 $('<div/>')
@@ -235,6 +259,7 @@ $(document).ready(function() {
                   <option value="LOSSLESS_JSON">JSON (lossless)</option>
                 </select>
               </label>
+              <label class="optlabel"><input type="checkbox" name="pretty-json" value="true" /> Format JSON</label>
               <label class="optlabel"><input type="checkbox" name="wrapper-array" value="true" /> Wrap results in outer array</label>
               <label class="checkbox optlabel"><input type="checkbox" name="print-expr-tree" value="true" /> Print parsed expressions</label>
               <label class="checkbox optlabel"><input type="checkbox" name="print-rewritten-expr-tree" value="true" /> Print rewritten expressions</label>

@@ -87,7 +87,7 @@ public class ResultPrinter {
         // output by displayCSVHeader(), so skip it here
         if (conf.is(SessionConfig.FORMAT_HTML)) {
             conf.out().println("<h4>Results:</h4>");
-            conf.out().println("<pre>");
+            conf.out().println("<pre class=\"result-content\">");
         }
 
         try {
