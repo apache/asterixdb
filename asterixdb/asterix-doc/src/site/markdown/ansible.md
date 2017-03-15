@@ -47,8 +47,6 @@ users to interact with each individual node in the cluster.
 
      **Make sure that the version of Ansible is no less than 2.2.1.0.**
 
-  *  Configure passwordless ssh from your current client that runs the scripts to all nodes listed in conf/inventory.
-
   *  Download a released [simple server package](http://asterixdb.apache.org/download.html).
 
      Alternatively, you can follow the [instruction](https://github.com/apache/asterixdb#build-from-source) to
@@ -65,6 +63,7 @@ users to interact with each individual node in the cluster.
      `bin` contains scripts that deploy, start, stop and erase a multi-node AsterixDB instance, according to
      the configuration specified in files under `conf/`. `yaml` contains internal Ansible scripts that the shell
      scripts in `bin` use.
+
 
 ## <a id="config">Configuration and parameters</a>
   *  **Parameters**. Edit the instance configuration file `conf/cc.conf` when necessary.
@@ -97,6 +96,8 @@ users to interact with each individual node in the cluster.
           172.0.1.11
           172.0.1.12
 
+     **Configure passwordless ssh from your current client that runs the scripts to all nodes listed
+     in `conf/inventory`.**
      If the ssh user account for target machines is different from your current username, please uncomment
      and edit the following two lines:
 
