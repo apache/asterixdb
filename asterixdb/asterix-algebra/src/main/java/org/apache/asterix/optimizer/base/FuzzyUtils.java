@@ -40,8 +40,8 @@ public class FuzzyUtils {
     private final static float JACCARD_DEFAULT_SIM_THRESHOLD = .8f;
     private final static int EDIT_DISTANCE_DEFAULT_SIM_THRESHOLD = 1;
 
-    private final static String SIM_FUNCTION_PROP_NAME = "simfunction";
-    private final static String SIM_THRESHOLD_PROP_NAME = "simthreshold";
+    public final static String SIM_FUNCTION_PROP_NAME = "simfunction";
+    public final static String SIM_THRESHOLD_PROP_NAME = "simthreshold";
 
     public final static String JACCARD_FUNCTION_NAME = "jaccard";
     public final static String EDIT_DISTANCE_FUNCTION_NAME = "edit-distance";

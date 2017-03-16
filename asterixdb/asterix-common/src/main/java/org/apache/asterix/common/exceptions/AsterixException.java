@@ -18,9 +18,9 @@
  */
 package org.apache.asterix.common.exceptions;
 
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-
 import java.io.Serializable;
+
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 
 public class AsterixException extends AlgebricksException {
     private static final long serialVersionUID = 1L;
@@ -32,6 +32,10 @@ public class AsterixException extends AlgebricksException {
     public AsterixException(int errorCode, Serializable... params) {
         super(ErrorCode.ASTERIX, errorCode, ErrorCode.getErrorMessage(errorCode), params);
 
+    }
+
+    public static AsterixException create(int errorCode, Serializable... params) {
+        return new AsterixException(errorCode, params);
     }
 
     public AsterixException(Throwable cause) {

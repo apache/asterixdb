@@ -3282,6 +3282,18 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="misc">
+      <compilation-unit name="unsupported_parameter">
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>Query parameter compiler.joinmem is not supported</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="misc">
+      <compilation-unit name="unsupported_parameter_value">
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>The given string: 4LS is not a byte unit string (e.g., 320KB or 1024)</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="misc">
       <compilation-unit name="uuid">
         <output-dir compare="Text">uuid</output-dir>
       </compilation-unit>
@@ -6864,6 +6876,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="tpch-sql-sugar">
+      <compilation-unit name="q17_large_gby_variant_parameter">
+        <output-dir compare="Text">q17_large_gby_variant</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpch-sql-sugar">
       <compilation-unit name="q18_large_volume_customer">
         <output-dir compare="Text">q18_large_volume_customer</output-dir>
       </compilation-unit>
@@ -6885,6 +6902,11 @@
     </test-case>
     <test-case FilePath="tpch-sql-sugar">
       <compilation-unit name="q01_pricing_summary_report_parallelism">
+        <output-dir compare="Text">q01_pricing_summary_report_nt</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpch-sql-sugar">
+      <compilation-unit name="q01_pricing_summary_report_parameter">
         <output-dir compare="Text">q01_pricing_summary_report_nt</output-dir>
       </compilation-unit>
     </test-case>
@@ -6940,6 +6962,11 @@
     </test-case>
     <test-case FilePath="tpch-sql-sugar">
       <compilation-unit name="q09_product_type_profit_nt">
+        <output-dir compare="Text">q09_product_type_profit_nt</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpch-sql-sugar">
+      <compilation-unit name="q09_product_type_profit_parameter">
         <output-dir compare="Text">q09_product_type_profit_nt</output-dir>
       </compilation-unit>
     </test-case>

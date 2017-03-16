@@ -85,6 +85,7 @@ public class ErrorCode {
     public static final int COMPILATION_AQLPLUS_NO_SUCH_JOIN_TYPE = 1025;
     public static final int COMPILATION_FUNC_EXPRESSION_CANNOT_UTILIZE_INDEX = 1026;
     public static final int COMPILATION_DATASET_TYPE_DOES_NOT_HAVE_PRIMARY_INDEX = 1027;
+    public static final int COMPILATION_UNSUPPORTED_QUERY_PARAMETER = 1028;
 
     // Feed errors
     public static final int DATAFLOW_ILLEGAL_STATE = 3001;
