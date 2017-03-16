@@ -354,7 +354,6 @@ The following parameters are configured under the "[common]" section.
 | common  | metadata.listen.port                      | IP port to bind metadata listener (0 = random port) | 0 |
 | common  | metadata.node                             | the node which should serve as the metadata node | &lt;undefined&gt; |
 | common  | metadata.registration.timeout.secs        | how long in seconds to wait for the metadata node to register with the CC | 60 |
-| common  | plot.activate                             | N/A | false |
 | common  | replication.log.batchsize                 | The size in bytes to replicate in each batch | 4096 (4 kB) |
 | common  | replication.log.buffer.numpages           | The number of log buffer pages | 8 |
 | common  | replication.log.buffer.pagesize           | The size in bytes of each log buffer page | 131072 (128 kB) |

@@ -34,7 +34,6 @@ public class ExternalProperties extends AbstractProperties {
         LOG_LEVEL(LEVEL, java.util.logging.Level.WARNING, "The logging level for master and slave processes"),
         MAX_WAIT_ACTIVE_CLUSTER(INTEGER, 60, "The max pending time (in seconds) for cluster startup. After the " +
                 "threshold, if the cluster still is not up and running, it is considered unavailable"),
-        PLOT_ACTIVATE(BOOLEAN, false, null),
         CC_JAVA_OPTS(STRING, "-Xmx1024m", "The JVM options passed to the cluster controller process by managix"),
         NC_JAVA_OPTS(STRING, "-Xmx1024m", "The JVM options passed to the node controller process(es) by managix");
 
@@ -58,7 +57,6 @@ public class ExternalProperties extends AbstractProperties {
                     return Section.CC;
                 case LOG_LEVEL:
                 case MAX_WAIT_ACTIVE_CLUSTER:
-                case PLOT_ACTIVATE:
                     return Section.COMMON;
                 case CC_JAVA_OPTS:
                 case NC_JAVA_OPTS:
@@ -110,10 +108,6 @@ public class ExternalProperties extends AbstractProperties {
 
     public int getMaxWaitClusterActive() {
         return accessor.getInt(Option.MAX_WAIT_ACTIVE_CLUSTER);
-    }
-
-    public boolean getIsPlottingEnabled() {
-        return accessor.getBoolean(Option.PLOT_ACTIVATE);
     }
 
     public String getNCJavaParams() {

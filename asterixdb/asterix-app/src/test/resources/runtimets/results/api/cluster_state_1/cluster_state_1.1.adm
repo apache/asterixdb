@@ -20,7 +20,6 @@
     "metadata.listen.port" : 0,
     "metadata.node" : "asterix_nc1",
     "metadata.registration.timeout.secs" : 60,
-    "plot.activate" : false,
     "replication.log.batchsize" : 4096,
     "replication.log.buffer.numpages" : 8,
     "replication.log.buffer.pagesize" : 131072,
