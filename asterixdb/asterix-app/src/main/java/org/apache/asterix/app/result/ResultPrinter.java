@@ -24,10 +24,6 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.ByteBuffer;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
 import org.apache.asterix.common.utils.JSONUtil;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.translator.IStatementExecutor.Stats;
@@ -39,6 +35,12 @@ import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.control.nc.resources.memory.FrameManager;
+
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.PrettyPrinter;
+import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 
 public class ResultPrinter {
 
@@ -57,12 +59,35 @@ public class ResultPrinter {
     // Whether this is the first instance being output
     private boolean notFirst = false;
 
+    private ObjectMapper om;
+    private ObjectWriter ow;
+
     public ResultPrinter(SessionConfig conf, Stats stats, ARecordType recordType) {
         this.conf = conf;
         this.stats = stats;
         this.recordType = recordType;
         this.indentJSON = conf.is(SessionConfig.FORMAT_INDENT_JSON);
         this.quoteRecord = conf.is(SessionConfig.FORMAT_QUOTE_RECORD);
+        if (indentJSON) {
+            this.om = new ObjectMapper();
+            DefaultPrettyPrinter.Indenter i = new DefaultPrettyPrinter.Indenter() {
+
+                @Override
+                public void writeIndentation(JsonGenerator jsonGenerator, int i) throws IOException {
+                    jsonGenerator.writeRaw('\n');
+                    for (int j = 0; j < i + 1; ++j) {
+                        jsonGenerator.writeRaw('\t');
+                    }
+                }
+
+                @Override
+                public boolean isInline() {
+                    return false;
+                }
+            };
+            PrettyPrinter pp = new DefaultPrettyPrinter().withObjectIndenter(i).withArrayIndenter(i);
+            this.ow = om.writer(pp);
+        }
     }
 
     private static void appendCSVHeader(Appendable app, ARecordType recordType) throws HyracksDataException {
@@ -134,13 +159,11 @@ public class ResultPrinter {
     }
 
     private void displayRecord(String result) throws HyracksDataException {
-        ObjectMapper om = new ObjectMapper();
-        om.enable(SerializationFeature.INDENT_OUTPUT);
         String record = result;
         if (indentJSON) {
             // TODO(tillw): this is inefficient - do this during record generation
             try {
-                record = om.writerWithDefaultPrettyPrinter().writeValueAsString(om.readValue(result, Object.class));
+                record = ow.writeValueAsString(om.readValue(result, Object.class));
             } catch (IOException e) {
                 throw new HyracksDataException(e);
             }
@@ -190,11 +213,7 @@ public class ResultPrinter {
                     conf.out().print(", ");
                 }
                 notFirst = true;
-                try {
-                    displayRecord(result);
-                } catch (IOException e) {
-                    throw new HyracksDataException(e);
-                }
+                displayRecord(result);
             }
             frameBuffer.clear();
         }
