@@ -169,7 +169,7 @@ public class RemoteRecoveryManager implements IRemoteRecoveryManager {
         PersistentLocalResourceRepository resourceRepository = (PersistentLocalResourceRepository) runtimeContext
                 .getLocalResourceRepository();
         IDatasetLifecycleManager datasetLifeCycleManager = runtimeContext.getDatasetLifecycleManager();
-        Map<String, ClusterPartition[]> nodePartitions = ((IPropertiesProvider) runtimeContext).getMetadataProperties()
+        Map<String, ClusterPartition[]> nodePartitions = runtimeContext.getMetadataProperties()
                 .getNodePartitions();
 
         while (true) {

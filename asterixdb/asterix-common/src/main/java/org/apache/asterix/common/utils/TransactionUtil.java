@@ -29,8 +29,6 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 
 public class TransactionUtil {
 
-    public static final boolean PROFILE_MODE = false;
-
     private TransactionUtil() {
     }
 

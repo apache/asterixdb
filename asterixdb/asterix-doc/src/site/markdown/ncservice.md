@@ -257,31 +257,31 @@ The following parameters are for the master process, under the "[cc]" section.
 
 | Section | Parameter                                 | Meaning | Default |
 |---------|-------------------------------------------|---|---|
-|   cc    | active.port                               | The listen port of the active server | 19003   |
+|   cc    | active.port                               | The listen port of the active server | 19003 |
 |   cc    | address                                   | Default bind address for all services on this cluster controller | 127.0.0.1 |
-|   cc    | api.port                                  | The listen port of the API server | 19002   |
-|   cc    | app.class                                 | Application CC main class | org.apache.asterix.hyracks.bootstrap.CCApplicationEntryPoint |
+|   cc    | api.port                                  | The listen port of the API server | 19002 |
+|   cc    | app.class                                 | Application CC main class | org.apache.asterix.hyracks.bootstrap.CCApplication |
 |   cc    | client.listen.address                     | Sets the IP Address to listen for connections from clients | same as address |
-|   cc    | client.listen.port                        | Sets the port to listen for connections from clients | 1098    |
+|   cc    | client.listen.port                        | Sets the port to listen for connections from clients | 1098 |
 |   cc    | cluster.listen.address                    | Sets the IP Address to listen for connections from NCs | same as address |
-|   cc    | cluster.listen.port                       | Sets the port to listen for connections from node controllers | 1099    |
+|   cc    | cluster.listen.port                       | Sets the port to listen for connections from node controllers | 1099 |
 |   cc    | cluster.public.address                    | Address that NCs should use to contact this CC | same as cluster.listen.address |
 |   cc    | cluster.public.port                       | Port that NCs should use to contact this CC | same as cluster.listen.port |
 |   cc    | cluster.topology                          | Sets the XML file that defines the cluster topology | &lt;undefined&gt; |
 |   cc    | console.listen.address                    | Sets the listen address for the Cluster Controller | same as address |
-|   cc    | console.listen.port                       | Sets the http port for the Cluster Controller) | 16001   |
-|   cc    | heartbeat.max.misses                      | Sets the maximum number of missed heartbeats before a node is marked as dead | 5       |
-|   cc    | heartbeat.period                          | Sets the time duration between two heartbeats from each node controller in milliseconds | 10000   |
-|   cc    | job.history.size                          | Limits the number of historical jobs remembered by the system to the specified value | 10      |
+|   cc    | console.listen.port                       | Sets the http port for the Cluster Controller) | 16001 |
+|   cc    | heartbeat.max.misses                      | Sets the maximum number of missed heartbeats before a node is marked as dead | 5 |
+|   cc    | heartbeat.period                          | Sets the time duration between two heartbeats from each node controller in milliseconds | 10000 |
+|   cc    | job.history.size                          | Limits the number of historical jobs remembered by the system to the specified value | 10 |
 |   cc    | job.manager.class                         | Specify the implementation class name for the job manager | org.apache.hyracks.control.cc.job.JobManager |
-|   cc    | job.queue.capacity                        | The maximum number of jobs to queue before rejecting new jobs | 4096    |
+|   cc    | job.queue.capacity                        | The maximum number of jobs to queue before rejecting new jobs | 4096 |
 |   cc    | job.queue.class                           | Specify the implementation class name for the job queue | org.apache.hyracks.control.cc.scheduler.FIFOJobQueue |
-|   cc    | profile.dump.period                       | Sets the time duration between two profile dumps from each node controller in milliseconds; 0 to disable | 0       |
-|   cc    | result.sweep.threshold                    | The duration within which an instance of the result cleanup should be invoked in milliseconds | 60000   |
+|   cc    | profile.dump.period                       | Sets the time duration between two profile dumps from each node controller in milliseconds; 0 to disable | 0 |
+|   cc    | result.sweep.threshold                    | The duration within which an instance of the result cleanup should be invoked in milliseconds | 60000 |
 |   cc    | result.ttl                                | Limits the amount of time results for asynchronous jobs should be retained by the system in milliseconds | 86400000 |
 |   cc    | root.dir                                  | Sets the root folder used for file operations | ${java.io.tmpdir}/asterixdb/ClusterControllerService |
-|   cc    | web.port                                  | The listen port of the legacy query interface | 19001   |
-|   cc    | web.queryinterface.port                   | The listen port of the query web interface | 19006   |
+|   cc    | web.port                                  | The listen port of the legacy query interface | 19001 |
+|   cc    | web.queryinterface.port                   | The listen port of the query web interface | 19006 |
 
 
 The following parameters for slave processes, under "[nc]" sections.
@@ -289,45 +289,45 @@ The following parameters for slave processes, under "[nc]" sections.
 | Section | Parameter                                 | Meaning | Default |
 |---------|-------------------------------------------|---|---|
 |   nc    | address                                   | Default IP Address to bind listeners on this NC.  All services will bind on this address unless a service-specific listen address is supplied. | 127.0.0.1 |
-|   nc    | app.class                                 | Application NC Main Class | org.apache.asterix.hyracks.bootstrap.NCApplicationEntryPoint |
+|   nc    | app.class                                 | Application NC Main Class | org.apache.asterix.hyracks.bootstrap.NCApplication |
 |   nc    | cluster.address                           | Cluster Controller address (required unless specified in config file) | &lt;undefined&gt; |
-|   nc    | cluster.connect.retries                   | Number of attempts to contact CC before giving up | 5       |
+|   nc    | cluster.connect.retries                   | Number of attempts to contact CC before giving up | 5 |
 |   nc    | cluster.listen.address                    | IP Address to bind cluster listener on this NC | same as address |
-|   nc    | cluster.listen.port                       | IP port to bind cluster listener | 0       |
-|   nc    | cluster.port                              | Cluster Controller port | 1099    |
+|   nc    | cluster.listen.port                       | IP port to bind cluster listener | 0 |
+|   nc    | cluster.port                              | Cluster Controller port | 1099 |
 |   nc    | cluster.public.address                    | Public IP Address to announce cluster listener | same as public.address |
 |   nc    | cluster.public.port                       | Public IP port to announce cluster listener | same as cluster.listen.port |
 |   nc    | command                                   | Command NCService should invoke to start the NCDriver | hyracksnc |
 |   nc    | core.dump.dir                             | The directory where node core dumps should be written | ${java.io.tmpdir}/asterixdb/coredump |
 |   nc    | data.listen.address                       | IP Address to bind data listener | same as address |
-|   nc    | data.listen.port                          | IP port to bind data listener | 0       |
+|   nc    | data.listen.port                          | IP port to bind data listener | 0 |
 |   nc    | data.public.address                       | Public IP Address to announce data listener | same as public.address |
 |   nc    | data.public.port                          | Public IP port to announce data listener | same as data.listen.port |
 |   nc    | iodevices                                 | Comma separated list of IO Device mount points | ${java.io.tmpdir}/asterixdb/iodevice |
 |   nc    | jvm.args                                  | JVM args to pass to the NCDriver | &lt;undefined&gt; |
 |   nc    | messaging.listen.address                  | IP Address to bind messaging listener | same as address |
-|   nc    | messaging.listen.port                     | IP port to bind messaging listener | 0       |
+|   nc    | messaging.listen.port                     | IP port to bind messaging listener | 0 |
 |   nc    | messaging.public.address                  | Public IP Address to announce messaging listener | same as public.address |
 |   nc    | messaging.public.port                     | Public IP port to announce messaging listener | same as messaging.listen.port |
 |   nc    | ncservice.address                         | Address the CC should use to contact the NCService associated with this NC | same as public.address |
-|   nc    | ncservice.pid                             | PID of the NCService which launched this NCDriver | -1      |
-|   nc    | ncservice.port                            | Port the CC should use to contact the NCService associated with this NC | 9090    |
-|   nc    | net.buffer.count                          | Number of network buffers per input/output channel | 1       |
-|   nc    | net.thread.count                          | Number of threads to use for Network I/O | 1       |
+|   nc    | ncservice.pid                             | PID of the NCService which launched this NCDriver | -1 |
+|   nc    | ncservice.port                            | Port the CC should use to contact the NCService associated with this NC | 9090 |
+|   nc    | net.buffer.count                          | Number of network buffers per input/output channel | 1 |
+|   nc    | net.thread.count                          | Number of threads to use for Network I/O | 1 |
 |   nc    | public.address                            | Default public address that other processes should use to contact this NC.  All services will advertise this address unless a service-specific public address is supplied. | same as address |
 |   nc    | result.listen.address                     | IP Address to bind dataset result distribution listener | same as address |
-|   nc    | result.listen.port                        | IP port to bind dataset result distribution listener | 0       |
+|   nc    | result.listen.port                        | IP port to bind dataset result distribution listener | 0 |
 |   nc    | result.manager.memory                     | Memory usable for result caching at this Node Controller in bytes | -1 (-1 B) |
 |   nc    | result.public.address                     | Public IP Address to announce dataset result distribution listener | same as public.address |
 |   nc    | result.public.port                        | Public IP port to announce dataset result distribution listener | same as result.listen.port |
-|   nc    | result.sweep.threshold                    | The duration within which an instance of the result cleanup should be invoked in milliseconds | 60000   |
+|   nc    | result.sweep.threshold                    | The duration within which an instance of the result cleanup should be invoked in milliseconds | 60000 |
 |   nc    | result.ttl                                | Limits the amount of time results for asynchronous jobs should be retained by the system in milliseconds | 86400000 |
 |   nc    | storage.buffercache.maxopenfiles          | The maximum number of open files in the buffer cache | 2147483647 |
 |   nc    | storage.buffercache.pagesize              | The page size in bytes for pages in the buffer cache | 131072 (128 kB) |
 |   nc    | storage.buffercache.size                  | The size of memory allocated to the disk buffer cache.  The value should be a multiple of the buffer cache page size. | 715915264 (682.75 MB) |
-|   nc    | storage.lsm.bloomfilter.falsepositiverate | The maximum acceptable false positive rate for bloom filters associated with LSM indexes | 0.01    |
+|   nc    | storage.lsm.bloomfilter.falsepositiverate | The maximum acceptable false positive rate for bloom filters associated with LSM indexes | 0.01 |
 |   nc    | storage.memorycomponent.globalbudget      | The size of memory allocated to the memory components.  The value should be a multiple of the memory component page size | 715915264 (682.75 MB) |
-|   nc    | storage.memorycomponent.numcomponents     | The number of memory components to be used per lsm index | 2       |
+|   nc    | storage.memorycomponent.numcomponents     | The number of memory components to be used per lsm index | 2 |
 |   nc    | storage.memorycomponent.numpages          | The number of pages to allocate for a memory component.  This budget is shared by all the memory components of the primary index and all its secondary indexes across all I/O devices on a node.  Note: in-memory components usually has fill factor of 75% since the pages are 75% full and the remaining 25% is un-utilized | 1/16th of the storage.memorycomponent.globalbudget value |
 |   nc    | storage.memorycomponent.pagesize          | The page size in bytes for pages allocated to memory components | 131072 (128 kB) |
 |   nc    | storage.metadata.memorycomponent.numpages | The number of pages to allocate for a metadata memory component | 1/64th of the storage.memorycomponent.globalbudget value or 256, whichever is larger |
@@ -343,35 +343,36 @@ The following parameters are configured under the "[common]" section.
 | common  | compiler.framesize                        | The page size (in bytes) for computation | 32768 (32 kB) |
 | common  | compiler.groupmemory                      | The memory budget (in bytes) for a group by operator instance in a partition | 33554432 (32 MB) |
 | common  | compiler.joinmemory                       | The memory budget (in bytes) for a join operator instance in a partition | 33554432 (32 MB) |
-| common  | compiler.parallelism                      | The degree of parallelism for query execution. Zero means to use the storage parallelism as the query execution parallelism, while other integer values dictate the number of query execution parallel partitions. The system will fall back to use the number of all available CPU cores in the cluster as the degree of parallelism if the number set by a user is too large or too small | 0       |
+| common  | compiler.parallelism                      | The degree of parallelism for query execution. Zero means to use the storage parallelism as the query execution parallelism, while other integer values dictate the number of query execution parallel partitions. The system will fall back to use the number of all available CPU cores in the cluster as the degree of parallelism if the number set by a user is too large or too small | 0 |
 | common  | compiler.sortmemory                       | The memory budget (in bytes) for a sort operator instance in a partition | 33554432 (32 MB) |
 | common  | instance.name                             | The name of this cluster instance | DEFAULT_INSTANCE |
 | common  | log.level                                 | The logging level for master and slave processes | WARNING |
-| common  | max.wait.active.cluster                   | The max pending time (in seconds) for cluster startup. After the threshold, if the cluster still is not up and running, it is considered unavailable | 60      |
-| common  | messaging.frame.count                     | N/A     | 512     |
-| common  | messaging.frame.size                      | N/A     | 4096 (4 kB) |
-| common  | metadata.callback.port                    | IP port to bind metadata callback listener (0 = random port) | 0       |
-| common  | metadata.listen.port                      | IP port to bind metadata listener (0 = random port) | 0       |
+| common  | max.wait.active.cluster                   | The max pending time (in seconds) for cluster startup. After the threshold, if the cluster still is not up and running, it is considered unavailable | 60 |
+| common  | messaging.frame.count                     | Number of reusable frames for NC to NC messaging | 512 |
+| common  | messaging.frame.size                      | The frame size to be used for NC to NC messaging | 4096 (4 kB) |
+| common  | metadata.callback.port                    | IP port to bind metadata callback listener (0 = random port) | 0 |
+| common  | metadata.listen.port                      | IP port to bind metadata listener (0 = random port) | 0 |
 | common  | metadata.node                             | the node which should serve as the metadata node | &lt;undefined&gt; |
-| common  | metadata.registration.timeout.secs        | how long in seconds to wait for the metadata node to register with the CC | 60      |
-| common  | plot.activate                             | N/A     | false   |
-| common  | replication.log.batchsize                 | N/A     | 4096 (4 kB) |
-| common  | replication.log.buffer.numpages           | N/A     | 8       |
-| common  | replication.log.buffer.pagesize           | N/A     | 131072 (128 kB) |
-| common  | replication.max.remote.recovery.attempts  | N/A     | 5       |
-| common  | replication.timeout                       | N/A     | 15      |
-| common  | txn.commitprofiler.reportinterval         | N/A     | 5       |
+| common  | metadata.registration.timeout.secs        | how long in seconds to wait for the metadata node to register with the CC | 60 |
+| common  | plot.activate                             | N/A | false |
+| common  | replication.log.batchsize                 | The size in bytes to replicate in each batch | 4096 (4 kB) |
+| common  | replication.log.buffer.numpages           | The number of log buffer pages | 8 |
+| common  | replication.log.buffer.pagesize           | The size in bytes of each log buffer page | 131072 (128 kB) |
+| common  | replication.max.remote.recovery.attempts  | The maximum number of times to attempt to recover from a replica on failure before giving up | 5 |
+| common  | replication.timeout                       | The time in seconds to timeout when trying to contact a replica, before assuming it is dead | 15 |
+| common  | txn.commitprofiler.enabled                | Enable output of commit profiler logs | false |
+| common  | txn.commitprofiler.reportinterval         | Interval (in seconds) to report commit profiler logs | 5 |
 | common  | txn.job.recovery.memorysize               | The memory budget (in bytes) used for recovery | 67108864 (64 MB) |
-| common  | txn.lock.escalationthreshold              | N/A     | 1000    |
-| common  | txn.lock.shrinktimer                      | N/A     | 5000    |
-| common  | txn.lock.timeout.sweepthreshold           | Interval (in milliseconds) for checking lock timeout | 10000   |
-| common  | txn.lock.timeout.waitthreshold            | Time out (in milliseconds) of waiting for a lock | 60000   |
-| common  | txn.log.buffer.numpages                   | The number of pages in the transaction log tail | 8       |
+| common  | txn.lock.escalationthreshold              | The maximum number of entity locks to obtain before upgrading to a dataset lock | 1000 |
+| common  | txn.lock.shrinktimer                      | The time (in milliseconds) where under utilization of resources will trigger a shrink phase | 5000 |
+| common  | txn.lock.timeout.sweepthreshold           | Interval (in milliseconds) for checking lock timeout | 10000 |
+| common  | txn.lock.timeout.waitthreshold            | Time out (in milliseconds) of waiting for a lock | 60000 |
+| common  | txn.log.buffer.numpages                   | The number of pages in the transaction log tail | 8 |
 | common  | txn.log.buffer.pagesize                   | The page size (in bytes) for transaction log buffer | 131072 (128 kB) |
-| common  | txn.log.checkpoint.history                | The number of checkpoints to keep in the transaction log | 0       |
+| common  | txn.log.checkpoint.history                | The number of checkpoints to keep in the transaction log | 0 |
 | common  | txn.log.checkpoint.lsnthreshold           | The checkpoint threshold (in terms of LSNs (log sequence numbers) that have been written to the transaction log, i.e., the length of the transaction log) for transaction logs | 67108864 (64 MB) |
-| common  | txn.log.checkpoint.pollfrequency          | N/A     | 120     |
-| common  | txn.log.partitionsize                     | N/A     | 268435456 (256 MB) |
+| common  | txn.log.checkpoint.pollfrequency          | The frequency (in seconds) the checkpoint thread should check to see if a checkpoint should be written | 120 |
+| common  | txn.log.partitionsize                     | The maximum size (in bytes) of each transaction log file | 268435456 (256 MB) |
 
 
 For the optional NCService process configuration file, the following parameters, under "[ncservice]" section.

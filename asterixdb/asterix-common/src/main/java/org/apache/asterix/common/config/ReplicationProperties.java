@@ -39,20 +39,25 @@ import org.apache.hyracks.util.StorageUtil.StorageUnit;
 public class ReplicationProperties extends AbstractProperties {
 
     public enum Option implements IOption {
-        REPLICATION_MAX_REMOTE_RECOVERY_ATTEMPTS(INTEGER, 5),
+        REPLICATION_MAX_REMOTE_RECOVERY_ATTEMPTS(INTEGER, 5,
+                "The maximum number of times to attempt to recover from a replica on failure before giving up"),
         REPLICATION_LOG_BUFFER_PAGESIZE(INTEGER_BYTE_UNIT, StorageUtil.getIntSizeInBytes(128,
-                StorageUnit.KILOBYTE)),
-        REPLICATION_LOG_BUFFER_NUMPAGES(INTEGER, 8),
-        REPLICATION_LOG_BATCHSIZE(INTEGER_BYTE_UNIT, StorageUtil.getIntSizeInBytes(4, StorageUnit.KILOBYTE)),
-        REPLICATION_TIMEOUT(INTEGER, REPLICATION_TIME_OUT_DEFAULT),
+                StorageUnit.KILOBYTE), "The size in bytes of each log buffer page"),
+        REPLICATION_LOG_BUFFER_NUMPAGES(INTEGER, 8, "The number of log buffer pages"),
+        REPLICATION_LOG_BATCHSIZE(INTEGER_BYTE_UNIT, StorageUtil.getIntSizeInBytes(4, StorageUnit.KILOBYTE),
+                "The size in bytes to replicate in each batch"),
+        REPLICATION_TIMEOUT(INTEGER, REPLICATION_TIME_OUT_DEFAULT,
+                "The time in seconds to timeout when trying to contact a replica, before assuming it is dead"),
         ;
 
         private final IOptionType type;
         private final Object defaultValue;
+        private final String description;
 
-        Option(IOptionType type, Object defaultValue) {
+        Option(IOptionType type, Object defaultValue, String description) {
             this.type = type;
             this.defaultValue = defaultValue;
+            this.description = description;
         }
 
         @Override
@@ -62,8 +67,7 @@ public class ReplicationProperties extends AbstractProperties {
 
         @Override
         public String description() {
-            // TODO(mblow): add missing descriptions
-            return null;
+            return description;
         }
 
         @Override

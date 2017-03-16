@@ -124,14 +124,15 @@ public class ConfigUsageTest {
         // output header
         for (Column column : columns) {
             buf.append(column.ordinal() == 0 ? startDelim : midDelim);
-            pad(buf, StringUtils.capitalize(column.name().toLowerCase()), calculateMaxWidth(column, column.name()));
+            pad(buf, StringUtils.capitalize(column.name().toLowerCase()),
+                    align.computeIfAbsent(column, c -> false) ? calculateMaxWidth(column, column.name()) : 0);
         }
         buf.append(endDelim).append('\n');
 
         StringBuilder sepLine = new StringBuilder();
         for (Column column : columns) {
             sepLine.append(column.ordinal() == 0 ? startDelim : midDelim);
-            pad(sepLine, "", maxWidths.get(column), '-');
+            pad(sepLine, "", maxWidths.getOrDefault(column, 0), '-');
         }
         sepLine.append(endDelim).append('\n');
         buf.append(sepLine.toString().replace(' ', '-'));
@@ -143,9 +144,9 @@ public class ConfigUsageTest {
                 for (Column column : columns) {
                     buf.append(column.ordinal() == 0 ? startDelim : midDelim);
                     if (column == Column.SECTION) {
-                        center(buf, extractValue(column, option), maxWidths.get(column));
+                        center(buf, extractValue(column, option), maxWidths.getOrDefault(column, 0));
                     } else {
-                        pad(buf, extractValue(column, option), maxWidths.get(column));
+                        pad(buf, extractValue(column, option), maxWidths.getOrDefault(column, 0));
                     }
                 }
                 buf.append(endDelim).append('\n');

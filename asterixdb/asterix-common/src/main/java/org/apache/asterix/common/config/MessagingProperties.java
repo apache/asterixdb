@@ -30,15 +30,18 @@ import org.apache.hyracks.util.StorageUtil;
 public class MessagingProperties extends AbstractProperties {
 
     public enum Option implements IOption {
-        MESSAGING_FRAME_SIZE(INTEGER_BYTE_UNIT, StorageUtil.getIntSizeInBytes(4, KILOBYTE)),
-        MESSAGING_FRAME_COUNT(INTEGER, 512);
+        MESSAGING_FRAME_SIZE(INTEGER_BYTE_UNIT, StorageUtil.getIntSizeInBytes(4, KILOBYTE),
+                "The frame size to be used for NC to NC messaging"),
+        MESSAGING_FRAME_COUNT(INTEGER, 512, "Number of reusable frames for NC to NC messaging");
 
         private final IOptionType type;
         private final Object defaultValue;
+        private final String description;
 
-        Option(IOptionType type, Object defaultValue) {
+        Option(IOptionType type, Object defaultValue, String description) {
             this.type = type;
             this.defaultValue = defaultValue;
+            this.description = description;
         }
 
         @Override
@@ -48,8 +51,7 @@ public class MessagingProperties extends AbstractProperties {
 
         @Override
         public String description() {
-            // TODO(mblow): add missing descriptions
-            return null;
+            return description;
         }
 
         @Override
