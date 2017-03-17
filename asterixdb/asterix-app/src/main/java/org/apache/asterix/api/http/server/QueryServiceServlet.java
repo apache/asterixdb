@@ -426,7 +426,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
             if (param.statement == null || param.statement.isEmpty()) {
                 throw new AsterixException("Empty request, no statement provided");
             }
-            IParser parser = compilationProvider.getParserFactory().createParser(param.statement);
+            IParser parser = compilationProvider.getParserFactory().createParser(param.statement + ";");
             List<Statement> statements = parser.parse();
             MetadataManager.INSTANCE.init();
             IStatementExecutor translator =

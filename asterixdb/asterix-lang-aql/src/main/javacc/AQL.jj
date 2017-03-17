@@ -288,6 +288,7 @@ List<Statement> Statement() throws ParseException:
       decls.add(stmt);
     }
   )*
+  (";") *
   <EOF>
   {
     return decls;
