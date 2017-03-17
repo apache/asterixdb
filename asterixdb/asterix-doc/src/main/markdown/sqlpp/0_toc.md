@@ -90,4 +90,7 @@
            * [Upserts](#Upserts)
            * [Deletes](#Deletes)
 * [Appendix 1. Reserved keywords](#Reserved_keywords)
+* [Appendix 2. Performance tuning](#Performance_tuning)
+      * [Parallelism parameter](#Parallelism_parameter)
+      * [Memory parameters](#Memory_parameters)
 

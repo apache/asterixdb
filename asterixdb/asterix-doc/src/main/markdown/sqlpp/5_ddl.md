@@ -17,7 +17,7 @@
  ! under the License.
  !-->
 
-# <a id="DDL_and_DML_statements">4. DDL and DML statements</a>
+# <a id="DDL_and_DML_statements">5. DDL and DML statements</a>
 
     Statement ::= ( SingleStatement ( ";" )? )* <EOF>
     SingleStatement ::= DatabaseDeclaration
