@@ -83,7 +83,7 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
         typeEnvironment = context.getOutputTypeEnvironment(op);
         ILogicalExpression condExpr = ((SelectOperator) op).getCondition().getValue();
         AccessMethodAnalysisContext analysisCtx = analyzeCondition(condExpr, context, typeEnvironment);
-        if (analysisCtx.matchedFuncExprs.isEmpty()) {
+        if (analysisCtx.getMatchedFuncExprs().isEmpty()) {
             return false;
         }
 
@@ -106,8 +106,8 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
 
         List<IOptimizableFuncExpr> optFuncExprs = new ArrayList<>();
 
-        for (int i = 0; i < analysisCtx.matchedFuncExprs.size(); i++) {
-            IOptimizableFuncExpr optFuncExpr = analysisCtx.matchedFuncExprs.get(i);
+        for (int i = 0; i < analysisCtx.getMatchedFuncExprs().size(); i++) {
+            IOptimizableFuncExpr optFuncExpr = analysisCtx.getMatchedFuncExpr(i);
             boolean found = findMacthedExprFieldName(optFuncExpr, op, dataset, recType, datasetIndexes, context);
             if (found && optFuncExpr.getFieldName(0).equals(filterFieldName)) {
                 optFuncExprs.add(optFuncExpr);
@@ -299,7 +299,8 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
         if (funcIdent == AlgebricksBuiltinFunctions.LE || funcIdent == AlgebricksBuiltinFunctions.GE
                 || funcIdent == AlgebricksBuiltinFunctions.LT || funcIdent == AlgebricksBuiltinFunctions.GT
                 || funcIdent == AlgebricksBuiltinFunctions.EQ) {
-            AccessMethodUtils.analyzeFuncExprArgsForOneConstAndVar(funcExpr, analysisCtx, context, typeEnvironment);
+            AccessMethodUtils.analyzeFuncExprArgsForOneConstAndVarAndUpdateAnalysisCtx(funcExpr, analysisCtx, context,
+                    typeEnvironment);
         }
     }
 

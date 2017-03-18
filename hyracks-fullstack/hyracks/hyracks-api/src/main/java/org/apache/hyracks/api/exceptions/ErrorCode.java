@@ -68,7 +68,7 @@ public class ErrorCode {
     public static final int RESULT_NO_RECORD = 32;
 
     // Compilation error codes.
-    public static final int RULECOLLECTION_NOT_INSTANCE_OF_LIST = 10001;
+    public static final int RULECOLLECTION_NOT_INSTANCE_OF_LIST = 10000;
 
     private static class Holder {
         private static final Map<Integer, String> errorMessageMap;

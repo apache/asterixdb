@@ -86,6 +86,14 @@ public class ErrorCode {
     public static final int COMPILATION_FUNC_EXPRESSION_CANNOT_UTILIZE_INDEX = 1026;
     public static final int COMPILATION_DATASET_TYPE_DOES_NOT_HAVE_PRIMARY_INDEX = 1027;
     public static final int COMPILATION_UNSUPPORTED_QUERY_PARAMETER = 1028;
+    public static final int NO_METADATA_FOR_DATASET = 1029;
+    public static final int SUBTREE_HAS_NO_DATA_SOURCE = 1030;
+    public static final int SUBTREE_HAS_NO_ADDTIONAL_DATA_SOURCE = 1031;
+    public static final int NO_INDEX_FIELD_NAME_FOR_GIVEN_FUNC_EXPR = 1032;
+    public static final int NO_SUPPORTED_TYPE = 1033;
+    public static final int NO_TOKENIZER_FOR_TYPE = 1034;
+    public static final int INCOMPATIBLE_SEARCH_MODIFIER = 1035;
+    public static final int UNKNOWN_SEARCH_MODIFIER = 1036;
 
     // Feed errors
     public static final int DATAFLOW_ILLEGAL_STATE = 3001;

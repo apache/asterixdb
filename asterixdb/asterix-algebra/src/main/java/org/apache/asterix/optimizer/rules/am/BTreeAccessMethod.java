@@ -99,14 +99,14 @@ public class BTreeAccessMethod implements IAccessMethod {
     }
 
     @Override
-    public boolean analyzeFuncExprArgs(AbstractFunctionCallExpression funcExpr,
+    public boolean analyzeFuncExprArgsAndUpdateAnalysisCtx(AbstractFunctionCallExpression funcExpr,
             List<AbstractLogicalOperator> assignsAndUnnests, AccessMethodAnalysisContext analysisCtx,
             IOptimizationContext context, IVariableTypeEnvironment typeEnvironment) throws AlgebricksException {
         boolean matches =
-                AccessMethodUtils.analyzeFuncExprArgsForOneConstAndVar(
+                AccessMethodUtils.analyzeFuncExprArgsForOneConstAndVarAndUpdateAnalysisCtx(
                         funcExpr, analysisCtx, context, typeEnvironment);
         if (!matches) {
-            matches = AccessMethodUtils.analyzeFuncExprArgsForTwoVars(funcExpr, analysisCtx);
+            matches = AccessMethodUtils.analyzeFuncExprArgsForTwoVarsAndUpdateAnalysisCtx(funcExpr, analysisCtx);
         }
         return matches;
     }
@@ -175,7 +175,7 @@ public class BTreeAccessMethod implements IAccessMethod {
         Mutable<ILogicalExpression> conditionRef = joinOp.getCondition();
         // Determine if the index is applicable on the left or right side
         // (if both, we arbitrarily prefer the left side).
-        Dataset dataset = analysisCtx.indexDatasetMap.get(chosenIndex);
+        Dataset dataset = analysisCtx.getDatasetFromIndexDatasetMap(chosenIndex);
         OptimizableOperatorSubTree indexSubTree;
         OptimizableOperatorSubTree probeSubTree;
         // We assume that the left subtree is the outer branch and the right subtree is the inner branch.
@@ -225,17 +225,16 @@ public class BTreeAccessMethod implements IAccessMethod {
     @Override
     public ILogicalOperator createSecondaryToPrimaryPlan(Mutable<ILogicalExpression> conditionRef,
             OptimizableOperatorSubTree indexSubTree, OptimizableOperatorSubTree probeSubTree, Index chosenIndex,
-            AccessMethodAnalysisContext analysisCtx, boolean retainInput, boolean retainNull,
-            boolean requiresBroadcast, IOptimizationContext context) throws AlgebricksException {
+            AccessMethodAnalysisContext analysisCtx, boolean retainInput, boolean retainNull, boolean requiresBroadcast,
+            IOptimizationContext context) throws AlgebricksException {
         Dataset dataset = indexSubTree.getDataset();
         ARecordType recordType = indexSubTree.getRecordType();
         ARecordType metaRecordType = indexSubTree.getMetaRecordType();
         // we made sure indexSubTree has datasource scan
         AbstractDataSourceOperator dataSourceOp =
                 (AbstractDataSourceOperator) indexSubTree.getDataSourceRef().getValue();
-        List<Pair<Integer, Integer>> exprAndVarList = analysisCtx.indexExprsAndVars.get(chosenIndex);
-        List<IOptimizableFuncExpr> matchedFuncExprs = analysisCtx.matchedFuncExprs;
-        int numSecondaryKeys = analysisCtx.indexNumMatchedKeys.get(chosenIndex);
+        List<Pair<Integer, Integer>> exprAndVarList = analysisCtx.getIndexExprsFromIndexExprsAndVars(chosenIndex);
+        int numSecondaryKeys = analysisCtx.getNumberOfMatchedKeys(chosenIndex);
         // List of function expressions that will be replaced by the secondary-index search.
         // These func exprs will be removed from the select condition at the very end of this method.
         Set<ILogicalExpression> replacedFuncExprs = new HashSet<>();
@@ -267,15 +266,14 @@ public class BTreeAccessMethod implements IAccessMethod {
 
         for (Pair<Integer, Integer> exprIndex : exprAndVarList) {
             // Position of the field of matchedFuncExprs.get(exprIndex) in the chosen index's indexed exprs.
-            IOptimizableFuncExpr optFuncExpr = matchedFuncExprs.get(exprIndex.first);
+            IOptimizableFuncExpr optFuncExpr = analysisCtx.getMatchedFuncExpr(exprIndex.first);
             int keyPos = indexOf(optFuncExpr.getFieldName(0), chosenIndex.getKeyFieldNames());
             if (keyPos < 0 && optFuncExpr.getNumLogicalVars() > 1) {
                 // If we are optimizing a join, the matching field may be the second field name.
                 keyPos = indexOf(optFuncExpr.getFieldName(1), chosenIndex.getKeyFieldNames());
             }
             if (keyPos < 0) {
-                throw new AlgebricksException(
-                        "Could not match optimizable function expression to any index field name.");
+                throw CompilationException.create(ErrorCode.NO_INDEX_FIELD_NAME_FOR_GIVEN_FUNC_EXPR);
             }
             Pair<ILogicalExpression, Boolean> returnedSearchKeyExpr =
                     AccessMethodUtils.createSearchKeyExpr(optFuncExpr, indexSubTree, probeSubTree);
@@ -420,7 +418,7 @@ public class BTreeAccessMethod implements IAccessMethod {
             }
             if (!couldntFigureOut) {
                 // Remember to remove this funcExpr later.
-                replacedFuncExprs.add(matchedFuncExprs.get(exprIndex.first).getFuncExpr());
+                replacedFuncExprs.add(analysisCtx.getMatchedFuncExpr(exprIndex.first).getFuncExpr());
             }
             if (doneWithExprs) {
                 break;

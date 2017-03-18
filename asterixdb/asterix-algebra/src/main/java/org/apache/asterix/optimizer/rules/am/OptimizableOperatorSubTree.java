@@ -21,6 +21,8 @@ package org.apache.asterix.optimizer.rules.am;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.metadata.declared.DataSource;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
@@ -43,6 +45,7 @@ import org.apache.hyracks.algebricks.core.algebra.metadata.IDataSource;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator.ExecutionMode;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractScanOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractUnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractUnnestOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOperator;
@@ -81,7 +84,8 @@ public class OptimizableOperatorSubTree {
     private List<Dataset> ixJoinOuterAdditionalDatasets = null;
     private List<ARecordType> ixJoinOuterAdditionalRecordTypes = null;
 
-    public boolean initFromSubTree(Mutable<ILogicalOperator> subTreeOpRef) throws AlgebricksException {
+    public boolean initFromSubTree(Mutable<ILogicalOperator> subTreeOpRef)
+            throws AlgebricksException {
         reset();
         rootRef = subTreeOpRef;
         root = subTreeOpRef.getValue();
@@ -96,7 +100,7 @@ public class OptimizableOperatorSubTree {
                 searchOpRef = subTreeOp.getInputs().get(0);
                 subTreeOp = (AbstractLogicalOperator) searchOpRef.getValue();
             }
-            // Check primary-index pattern.
+            // Match datasource information if there are no (assign | unnest)*
             if (subTreeOp.getOperatorTag() != LogicalOperatorTag.ASSIGN
                     && subTreeOp.getOperatorTag() != LogicalOperatorTag.UNNEST) {
                 // Pattern may still match if we are looking for primary index matches as well.
@@ -283,7 +287,7 @@ public class OptimizableOperatorSubTree {
             // Find the dataset corresponding to the datasource in the metadata.
             ds = metadataProvider.findDataset(dataverseName, datasetName);
             if (ds == null) {
-                throw new AlgebricksException("No metadata for dataset " + datasetName);
+                throw CompilationException.create(ErrorCode.NO_METADATA_FOR_DATASET, datasetName);
             }
             // Get the record type for that dataset.
             IAType itemType = metadataProvider.findType(ds.getItemTypeDataverseName(), ds.getItemTypeName());
@@ -367,8 +371,14 @@ public class OptimizableOperatorSubTree {
         setIxJoinOuterAdditionalRecordTypes(null);
     }
 
-    public void getPrimaryKeyVars(List<LogicalVariable> target) throws AlgebricksException {
-        switch (getDataSourceType()) {
+    /**
+     * Get primary key variables from the given data-source.
+     */
+    public void getPrimaryKeyVars(Mutable<ILogicalOperator> dataSourceRefToFetch, List<LogicalVariable> target)
+            throws AlgebricksException {
+        Mutable<ILogicalOperator> dataSourceRefToFetchKey = (dataSourceRefToFetch == null) ? dataSourceRef
+                : dataSourceRefToFetch;
+        switch (dataSourceType) {
             case DATASOURCE_SCAN:
                 DataSourceScanOperator dataSourceScan = (DataSourceScanOperator) getDataSourceRef().getValue();
                 int numPrimaryKeys = DatasetUtil.getPartitioningKeys(getDataset()).size();
@@ -377,17 +387,19 @@ public class OptimizableOperatorSubTree {
                 }
                 break;
             case PRIMARY_INDEX_LOOKUP:
-                UnnestMapOperator unnestMapOp = (UnnestMapOperator) getDataSourceRef().getValue();
+                AbstractUnnestMapOperator unnestMapOp = (AbstractUnnestMapOperator) dataSourceRefToFetchKey.getValue();
                 List<LogicalVariable> primaryKeys = null;
-                primaryKeys = AccessMethodUtils.getPrimaryKeyVarsFromPrimaryUnnestMap(getDataset(), unnestMapOp);
+                primaryKeys = AccessMethodUtils.getPrimaryKeyVarsFromPrimaryUnnestMap(dataset, unnestMapOp);
                 target.addAll(primaryKeys);
+                break;
+            case EXTERNAL_SCAN:
                 break;
             case NO_DATASOURCE:
             default:
-                throw new AlgebricksException("The subtree does not have any data source.");
+                throw CompilationException.create(ErrorCode.SUBTREE_HAS_NO_DATA_SOURCE);
+
         }
     }
-
     public List<LogicalVariable> getDataSourceVariables() throws AlgebricksException {
         switch (getDataSourceType()) {
             case DATASOURCE_SCAN:
@@ -399,7 +411,7 @@ public class OptimizableOperatorSubTree {
                 return new ArrayList<>();
             case NO_DATASOURCE:
             default:
-                throw new AlgebricksException("The subtree does not have any data source.");
+                throw CompilationException.create(ErrorCode.SUBTREE_HAS_NO_DATA_SOURCE);
         }
     }
 
@@ -416,7 +428,7 @@ public class OptimizableOperatorSubTree {
                     return new ArrayList<>();
                 case NO_DATASOURCE:
                 default:
-                    throw new AlgebricksException("The subtree does not have any additional data sources.");
+                    throw CompilationException.create(ErrorCode.SUBTREE_HAS_NO_ADDTIONAL_DATA_SOURCE);
             }
         } else {
             return null;

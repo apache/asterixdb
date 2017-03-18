@@ -57,7 +57,7 @@ public interface IAccessMethod extends Comparable<IAccessMethod> {
      *         otherwise
      * @throws AlgebricksException
      */
-    boolean analyzeFuncExprArgs(AbstractFunctionCallExpression funcExpr,
+    boolean analyzeFuncExprArgsAndUpdateAnalysisCtx(AbstractFunctionCallExpression funcExpr,
             List<AbstractLogicalOperator> assignsAndUnnests, AccessMethodAnalysisContext analysisCtx,
             IOptimizationContext context, IVariableTypeEnvironment typeEnvironment) throws AlgebricksException;
 

@@ -129,9 +129,9 @@ public class AccessMethodUtils {
         return ConstantExpressionUtil.getBooleanConstant(expr.getValue());
     }
 
-    public static boolean analyzeFuncExprArgsForOneConstAndVar(AbstractFunctionCallExpression funcExpr,
-            AccessMethodAnalysisContext analysisCtx, IOptimizationContext context,
-            IVariableTypeEnvironment typeEnvironment) throws AlgebricksException {
+    public static boolean analyzeFuncExprArgsForOneConstAndVarAndUpdateAnalysisCtx(
+            AbstractFunctionCallExpression funcExpr, AccessMethodAnalysisContext analysisCtx,
+            IOptimizationContext context, IVariableTypeEnvironment typeEnvironment) throws AlgebricksException {
         ILogicalExpression constExpression = null;
         IAType constantExpressionType = null;
         LogicalVariable fieldVar = null;
@@ -180,16 +180,38 @@ public class AccessMethodUtils {
         } else {
             return false;
         }
-        OptimizableFuncExpr newOptFuncExpr = new OptimizableFuncExpr(funcExpr, fieldVar, constExpression,
-                constantExpressionType);
-        for (IOptimizableFuncExpr optFuncExpr : analysisCtx.matchedFuncExprs) {
+
+        // Updates the given Analysis Context by adding a new optimizable function expression.
+        constructNewOptFuncExprAndAddToAnalysisCtx(funcExpr, fieldVar, constExpression, constantExpressionType,
+                analysisCtx);
+        return true;
+    }
+
+    private static void constructNewOptFuncExprAndAddToAnalysisCtx(AbstractFunctionCallExpression funcExpr,
+            LogicalVariable fieldVar, ILogicalExpression expression, IAType expressionType,
+            AccessMethodAnalysisContext analysisCtx) {
+        OptimizableFuncExpr newOptFuncExpr =
+                new OptimizableFuncExpr(funcExpr, fieldVar, expression, expressionType);
+        addNewOptFuncExprToAnalysisCtx(funcExpr, newOptFuncExpr, analysisCtx);
+    }
+
+    private static void constructNewOptFuncExprAndAddToAnalysisCtx(AbstractFunctionCallExpression funcExpr,
+            LogicalVariable[] fieldVars, ILogicalExpression[] expressions, IAType[] expressionTypes,
+            AccessMethodAnalysisContext analysisCtx) {
+        OptimizableFuncExpr newOptFuncExpr = new OptimizableFuncExpr(funcExpr, fieldVars, expressions, expressionTypes);
+        addNewOptFuncExprToAnalysisCtx(funcExpr, newOptFuncExpr, analysisCtx);
+
+    }
+
+    private static void addNewOptFuncExprToAnalysisCtx(AbstractFunctionCallExpression funcExpr,
+            OptimizableFuncExpr newOptFuncExpr, AccessMethodAnalysisContext analysisCtx) {
+        for (IOptimizableFuncExpr optFuncExpr : analysisCtx.getMatchedFuncExprs()) {
             //avoid additional optFuncExpressions in case of a join
             if (optFuncExpr.getFuncExpr().equals(funcExpr)) {
-                return true;
+                return;
             }
         }
-        analysisCtx.matchedFuncExprs.add(newOptFuncExpr);
-        return true;
+        analysisCtx.addMatchedFuncExpr(newOptFuncExpr);
     }
 
     /**
@@ -247,7 +269,7 @@ public class AccessMethodUtils {
         }
     }
 
-    public static boolean analyzeFuncExprArgsForTwoVars(AbstractFunctionCallExpression funcExpr,
+    public static boolean analyzeFuncExprArgsForTwoVarsAndUpdateAnalysisCtx(AbstractFunctionCallExpression funcExpr,
             AccessMethodAnalysisContext analysisCtx) {
         LogicalVariable fieldVar1 = null;
         LogicalVariable fieldVar2 = null;
@@ -260,15 +282,10 @@ public class AccessMethodUtils {
         } else {
             return false;
         }
-        OptimizableFuncExpr newOptFuncExpr = new OptimizableFuncExpr(funcExpr,
-                new LogicalVariable[] { fieldVar1, fieldVar2 }, new ILogicalExpression[0], new IAType[0]);
-        for (IOptimizableFuncExpr optFuncExpr : analysisCtx.matchedFuncExprs) {
-            //avoid additional optFuncExpressions in case of a join
-            if (optFuncExpr.getFuncExpr().equals(funcExpr)) {
-                return true;
-            }
-        }
-        analysisCtx.matchedFuncExprs.add(newOptFuncExpr);
+
+        // Updates the given Analysis Context by adding a new optimizable function expression.
+        constructNewOptFuncExprAndAddToAnalysisCtx(funcExpr, new LogicalVariable[] { fieldVar1, fieldVar2 },
+                new ILogicalExpression[0], new IAType[0], analysisCtx);
         return true;
     }
 
@@ -451,13 +468,13 @@ public class AccessMethodUtils {
      */
     public static IOptimizableFuncExpr chooseFirstOptFuncExpr(Index chosenIndex,
             AccessMethodAnalysisContext analysisCtx) {
-        List<Pair<Integer, Integer>> indexExprs = analysisCtx.getIndexExprs(chosenIndex);
+        List<Pair<Integer, Integer>> indexExprs = analysisCtx.getIndexExprsFromIndexExprsAndVars(chosenIndex);
         int firstExprIndex = indexExprs.get(0).first;
-        return analysisCtx.matchedFuncExprs.get(firstExprIndex);
+        return analysisCtx.getMatchedFuncExpr(firstExprIndex);
     }
 
     public static int chooseFirstOptFuncVar(Index chosenIndex, AccessMethodAnalysisContext analysisCtx) {
-        List<Pair<Integer, Integer>> indexExprs = analysisCtx.getIndexExprs(chosenIndex);
+        List<Pair<Integer, Integer>> indexExprs = analysisCtx.getIndexExprsFromIndexExprsAndVars(chosenIndex);
         return indexExprs.get(0).second;
     }
 
