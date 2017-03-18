@@ -150,6 +150,11 @@ public class NCApplication extends BaseNCApplication {
     }
 
     @Override
+    public void preStop() throws Exception {
+        runtimeContext.preStop();
+    }
+
+    @Override
     public void startupCompleted() throws Exception {
         // Since we don't pass initial run flag in AsterixHyracksIntegrationUtil, we use the virtualNC flag
         final NodeProperties nodeProperties = runtimeContext.getNodeProperties();

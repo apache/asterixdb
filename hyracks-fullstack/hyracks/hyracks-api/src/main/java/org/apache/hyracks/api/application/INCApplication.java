@@ -22,5 +22,7 @@ import org.apache.hyracks.api.job.resource.NodeCapacity;
 
 public interface INCApplication extends IApplication {
 
+    void preStop() throws Exception; //NOSONAR
+
     NodeCapacity getCapacity();
 }

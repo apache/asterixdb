@@ -18,11 +18,19 @@
  */
 package org.apache.asterix.active;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executor;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import org.apache.asterix.active.message.ActiveManagerMessage;
+import org.apache.asterix.common.api.ThreadExecutor;
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.common.memory.ConcurrentFramePool;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.log4j.Logger;
@@ -30,12 +38,15 @@ import org.apache.log4j.Logger;
 public class ActiveManager {
 
     private static final Logger LOGGER = Logger.getLogger(ActiveManager.class.getName());
-    private final Executor executor;
-    private final Map<ActiveRuntimeId, IActiveRuntime> runtimes;
+    private static final int SHUTDOWN_TIMEOUT_SECS = 60;
+
+    private final ThreadExecutor executor;
+    private final ConcurrentMap<ActiveRuntimeId, IActiveRuntime> runtimes;
     private final ConcurrentFramePool activeFramePool;
     private final String nodeId;
+    private volatile boolean shutdown;
 
-    public ActiveManager(Executor executor, String nodeId, long activeMemoryBudget, int frameSize)
+    public ActiveManager(ThreadExecutor executor, String nodeId, long activeMemoryBudget, int frameSize)
             throws HyracksDataException {
         this.executor = executor;
         this.nodeId = nodeId;
@@ -47,11 +58,11 @@ public class ActiveManager {
         return activeFramePool;
     }
 
-    public void registerRuntime(IActiveRuntime runtime) {
-        ActiveRuntimeId id = runtime.getRuntimeId();
-        if (!runtimes.containsKey(id)) {
-            runtimes.put(id, runtime);
+    public void registerRuntime(IActiveRuntime runtime) throws HyracksDataException {
+        if (shutdown) {
+            throw new RuntimeDataException(ErrorCode.ACTIVE_MANAGER_SHUTDOWN);
         }
+        runtimes.putIfAbsent(runtime.getRuntimeId(), runtime);
     }
 
     public void deregisterRuntime(ActiveRuntimeId id) {
@@ -77,6 +88,30 @@ public class ActiveManager {
         }
     }
 
+    public void shutdown() {
+        LOGGER.warn("Shutting down ActiveManager on node " + nodeId);
+        Map<ActiveRuntimeId, Future<Void>> stopFutures = new HashMap<>();
+        shutdown = true;
+        runtimes.forEach((runtimeId, runtime) -> stopFutures.put(runtimeId, executor.submit(() -> {
+            // we may already have been stopped- only stop once
+            stopIfRunning(runtimeId, runtime);
+            return null;
+        })));
+        stopFutures.entrySet().parallelStream().forEach(entry -> {
+            try {
+                entry.getValue().get(SHUTDOWN_TIMEOUT_SECS, TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+                LOGGER.warn("Interrupted waiting to stop runtime: " + entry.getKey());
+                Thread.currentThread().interrupt();
+            } catch (ExecutionException e) {
+                LOGGER.warn("Exception while stopping runtime: " + entry.getKey(), e);
+            } catch (TimeoutException e) {
+                LOGGER.warn("Timed out waiting to stop runtime: " + entry.getKey(), e);
+            }
+        });
+        LOGGER.warn("Shutdown ActiveManager on node " + nodeId + " complete");
+    }
+
     private void stopRuntime(ActiveManagerMessage message) {
         ActiveRuntimeId runtimeId = (ActiveRuntimeId) message.getPayload();
         IActiveRuntime runtime = runtimes.get(runtimeId);
@@ -85,7 +120,7 @@ public class ActiveManager {
         } else {
             executor.execute(() -> {
                 try {
-                    runtime.stop();
+                    stopIfRunning(runtimeId, runtime);
                 } catch (Exception e) {
                     // TODO(till) Figure out a better way to handle failure to stop a runtime
                     LOGGER.warn("Failed to stop runtime: " + runtimeId, e);
@@ -93,4 +128,14 @@ public class ActiveManager {
             });
         }
     }
+
+    private void stopIfRunning(ActiveRuntimeId runtimeId, IActiveRuntime runtime)
+            throws HyracksDataException, InterruptedException {
+        if (runtimes.remove(runtimeId) != null) {
+            runtime.stop();
+        } else {
+            LOGGER.info("Not stopping already stopped runtime " + runtimeId);
+        }
+    }
+
 }

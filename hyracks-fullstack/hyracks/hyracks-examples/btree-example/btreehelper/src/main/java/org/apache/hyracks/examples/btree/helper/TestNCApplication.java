@@ -44,6 +44,11 @@ public class TestNCApplication implements INCApplication {
     }
 
     @Override
+    public void preStop() throws Exception {
+        // No-op
+    }
+
+    @Override
     public NodeCapacity getCapacity() {
         return new NodeCapacity(Runtime.getRuntime().maxMemory(), Runtime.getRuntime().availableProcessors() - 1);
     }

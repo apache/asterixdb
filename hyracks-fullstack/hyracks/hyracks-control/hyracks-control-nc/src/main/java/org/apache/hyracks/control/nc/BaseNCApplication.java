@@ -54,6 +54,11 @@ public class BaseNCApplication implements INCApplication {
     }
 
     @Override
+    public void preStop() throws Exception {
+        // no-op
+    }
+
+    @Override
     public NodeCapacity getCapacity() {
         int allCores = ManagementFactory.getOperatingSystemMXBean().getAvailableProcessors();
         return new NodeCapacity(Runtime.getRuntime().maxMemory(), allCores > 1 ? allCores - 1 : allCores);

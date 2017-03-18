@@ -289,6 +289,7 @@ public class ClusterControllerService implements IControllerService {
     }
 
     private void stopApplication() throws Exception {
+
         application.stop();
     }
 

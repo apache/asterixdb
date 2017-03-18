@@ -70,7 +70,7 @@ public class HyracksException extends IOException {
      */
     @Deprecated
     public HyracksException(Throwable cause) {
-        this(ErrorMessageUtil.NONE, UNKNOWN, cause.getMessage(), cause, null);
+        this(ErrorMessageUtil.NONE, UNKNOWN, String.valueOf(cause), cause, null);
     }
 
     /**
@@ -78,7 +78,7 @@ public class HyracksException extends IOException {
      */
     @Deprecated
     public HyracksException(Throwable cause, String nodeId) {
-        this(ErrorMessageUtil.NONE, UNKNOWN, cause.getMessage(), cause, nodeId);
+        this(ErrorMessageUtil.NONE, UNKNOWN, String.valueOf(cause), cause, nodeId);
     }
 
     /**
@@ -102,7 +102,7 @@ public class HyracksException extends IOException {
     }
 
     public HyracksException(Throwable cause, int errorCode, Serializable... params) {
-        this(ErrorMessageUtil.NONE, errorCode, cause.getMessage(), cause, null, params);
+        this(ErrorMessageUtil.NONE, errorCode, String.valueOf(cause), cause, null, params);
     }
 
     public HyracksException(String component, int errorCode, String message, Serializable... params) {
@@ -110,7 +110,7 @@ public class HyracksException extends IOException {
     }
 
     public HyracksException(String component, int errorCode, Throwable cause, Serializable... params) {
-        this(component, errorCode, cause.getMessage(), cause, null, params);
+        this(component, errorCode, String.valueOf(cause), cause, null, params);
     }
 
     public HyracksException(String component, int errorCode, String message, Throwable cause, Serializable... params) {

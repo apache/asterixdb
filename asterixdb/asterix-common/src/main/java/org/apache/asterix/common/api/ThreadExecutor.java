@@ -37,7 +37,7 @@ public class ThreadExecutor implements Executor {
         executorService.execute(command);
     }
 
-    public Future<? extends Object> submit(Callable<? extends Object> command) {
+    public <T> Future<T> submit(Callable<T> command) {
         return executorService.submit(command);
     }
 }

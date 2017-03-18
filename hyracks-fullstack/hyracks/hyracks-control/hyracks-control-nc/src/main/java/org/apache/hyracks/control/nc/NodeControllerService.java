@@ -336,6 +336,7 @@ public class NodeControllerService implements IControllerService {
     public synchronized void stop() throws Exception {
         if (!shuttedDown) {
             LOGGER.log(Level.INFO, "Stopping NodeControllerService");
+            application.preStop();
             executor.shutdownNow();
             if (!executor.awaitTermination(10, TimeUnit.SECONDS)) {
                 LOGGER.log(Level.SEVERE, "Some jobs failed to exit, continuing with abnormal shutdown");

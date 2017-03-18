@@ -290,6 +290,11 @@ public class NCAppRuntimeContext implements IAppRuntimeContext {
     }
 
     @Override
+    public void preStop() throws Exception {
+        activeManager.shutdown();
+    }
+
+    @Override
     public void deinitialize() throws HyracksDataException {
     }
 

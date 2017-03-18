@@ -372,10 +372,8 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
             } finally {
                 collector.close();
             }
-        } catch (HyracksException e) {
-            throw new HyracksDataException(e);
         } catch (Exception e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 

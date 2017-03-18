@@ -50,6 +50,8 @@ public interface IAppRuntimeContext extends IPropertiesProvider {
 
     ITransactionSubsystem getTransactionSubsystem();
 
+    void preStop() throws Exception;
+
     boolean isShuttingdown();
 
     ILSMIOOperationScheduler getLSMIOScheduler();
