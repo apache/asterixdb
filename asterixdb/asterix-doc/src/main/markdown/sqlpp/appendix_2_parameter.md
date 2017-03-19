@@ -1,4 +1,4 @@
-## <a id="Performance_tuning">Appendix 2. Performance tuning</a>
+## <a id="Performance_tuning">Appendix 2. Performance Tuning</a>
 The SET statement can be used to override some cluster-wide configuration parameters for a specific request:
 
           SET <IDENTIFIER> <STRING_LITERAL>
@@ -7,7 +7,7 @@ As parameter identifiers are qualified names (containing a '.') they have to be 
 Note that changing query parameters will not affect query correctness but only impact performance
 characteristics, such as response time and throughput.
 
-## <a id="Parallelism_parameter">Parallelism parameter</a>
+## <a id="Parallelism_parameter">Parallelism Parameter</a>
 The system can execute each request using multiple cores on multiple machines (a.k.a., partitioned parallelism)
 in a cluster. A user can manually specify the maximum execution parallelism for a request to scale it up and down
 using the following parameter:
@@ -24,7 +24,7 @@ There are three cases of the value *p* for compiler.parallelism:
      - all other cases:  the system will use the user-specified number as the maximum number of CPU cores to use for
        executing the query.
 
-## <a id="Memory_parameters">Memory parameters</a>
+## <a id="Memory_parameters">Memory Parameters</a>
 In the system, each blocking runtime operator such as join, group-by and order-by
 works within a fixed memory budget, and can gracefully spill to disks if
 the memory budget is smaller than the amount of data they have to hold.
@@ -41,7 +41,7 @@ The supported configurable memory parameters are:
    32MB is the default budget.
 
 For each memory budget value, you can use a 64-bit integer value
-with a 1024-based binary unit suffix (e.g., B, KB, MB, GB).
+with a 1024-based binary unit suffix (for example, B, KB, MB, GB).
 If there is no user-provided suffix, "B" is the default suffix. See the following examples.
 
 ##### Example

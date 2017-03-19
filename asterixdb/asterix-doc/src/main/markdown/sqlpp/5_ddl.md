@@ -74,7 +74,7 @@ For our sample data set, this returns:
       { "id": 2, "name": "IsbelDull", "friendCount": 2 }
     ]
 
-## <a id="Lifecycle_management_statements">Lifecycle management statements</a>
+## <a id="Lifecycle_management_statements">Lifecycle Management Statements</a>
 
     CreateStatement ::= "CREATE" ( DatabaseSpecification
                                  | TypeSpecification
@@ -210,7 +210,7 @@ Filters allow some range queries to avoid searching all LSM components when the 
 An External dataset, in contrast to an Internal dataset, has data stored outside of the system's control.
 Files living in HDFS or in the local filesystem(s) of a cluster's nodes are currently supported.
 External dataset support allows SQL++ queries to treat foreign data as though it were stored in the system,
-making it possible to query "legacy" file data (e.g., Hive data) without having to physically import it.
+making it possible to query "legacy" file data (for example, Hive data) without having to physically import it.
 When defining an External dataset, an appropriate adapter type must be selected for the desired external data.
 (See the [Guide to External Data](externaldata.html) for more information on the available adapters.)
 

@@ -19,18 +19,18 @@
 
 # <a id="Expressions">2. Expressions</a>
 
-    Expression ::= OperatorExpression | CaseExpression | QuantifiedExpression
-
 SQL++ is a highly composable expression language. Each SQL++ expression returns zero or more data model instances.
 There are three major kinds of expressions in SQL++. At the topmost level, a SQL++ expression can be an
 OperatorExpression (similar to a mathematical expression), an ConditionalExpression (to choose between
 alternative values), or a QuantifiedExpression (which yields a boolean value). Each will be detailed as we
 explore the full SQL++ grammar.
 
+    Expression ::= OperatorExpression | CaseExpression | QuantifiedExpression
+
 Note that in the following text, words enclosed in angle brackets denote keywords that are not case-sensitive.
 
 
-## <a id="Operator_expressions">Operator expressions</a>
+## <a id="Operator_expressions">Operator Expressions</a>
 
 Operators perform a specific operation on the input values or expressions. The syntax of an operator expression is as follows:
 
@@ -41,34 +41,34 @@ Operators perform a specific operation on the input values or expressions. The s
 
 SQL++ provides a full set of operators that you can use within its statements. Here are the categories of operators:
 
-* [Arithmetic operators](#Arithmetic_operators), to perform basic mathematical operations;
-* [Collection operators](#Collection_operators), to evaluate expressions on collections or objects;
-* [Comparison operators](#Comparison_operators), to compare two expressions;
+* [Arithmetic Operators](#Arithmetic_operators), to perform basic mathematical operations;
+* [Collection Operators](#Collection_operators), to evaluate expressions on collections or objects;
+* [Comparison Operators](#Comparison_operators), to compare two expressions;
 * [Logical Operators](#Logical_operators), to combine operators using Boolean logic.
 
 The following table summarizes the precedence order (from higher to lower) of the major unary and binary operators:
 
 | Operator                                                                    | Operation |
 |-----------------------------------------------------------------------------|-----------|
-| EXISTS, NOT EXISTS                                                          |  collection emptiness testing |
-| ^                                                                           |  exponentiation  |
-| *, /, %                                                                     |  multiplication, division, modulo |
-| +, -                                                                        |  addition, subtraction  |
-| &#124;&#124;                                                                          |  string concatenation |
-| IS NULL, IS NOT NULL, IS MISSING, IS NOT MISSING, <br/>IS UNKNOWN, IS NOT UNKNOWN| unknown value comparison |
-| BETWEEN, NOT BETWEEN                                                        | range comparison (inclusive on both sides) |
-| =, !=, <, >, <=, >=, LIKE, NOT LIKE, IN, NOT IN                             | comparison  |
-| NOT                                                                         | logical negation |
-| AND                                                                         | conjunction |
-| OR                                                                          | disjunction |
+| EXISTS, NOT EXISTS                                                          |  Collection emptiness testing |
+| ^                                                                           |  Exponentiation  |
+| *, /, %                                                                     |  Multiplication, division, modulo |
+| +, -                                                                        |  Addition, subtraction  |
+| &#124;&#124;                                                                          |  String concatenation |
+| IS NULL, IS NOT NULL, IS MISSING, IS NOT MISSING, <br/>IS UNKNOWN, IS NOT UNKNOWN| Unknown value comparison |
+| BETWEEN, NOT BETWEEN                                                        | Range comparison (inclusive on both sides) |
+| =, !=, <, >, <=, >=, LIKE, NOT LIKE, IN, NOT IN                             | Comparison  |
+| NOT                                                                         | Logical negation |
+| AND                                                                         | Conjunction |
+| OR                                                                          | Disjunction |
 
 In general, if any operand evaluates to a `MISSING` value, the enclosing operator will return `MISSING`;
 if none of operands evaluates to a `MISSING` value but there is an operand evaluates to a `NULL` value,
 the encolosing operator will return `NULL`. However, there are a few exceptions listed in
 [comparison operators](#Comparison_operators) and [logical operators](#Logical_operators).
 
-### <a id="Arithmetic_operators">Arithmetic operators</a>
-Arithemtic operators are used to exponentiate, add, subtract, multiply, and divide numeric values, or concatenate string values.
+### <a id="Arithmetic_operators">Arithmetic Operators</a>
+Arithmetic operators are used to exponentiate, add, subtract, multiply, and divide numeric values, or concatenate string values.
 
 | Operator     |  Purpose                                                                | Example    |
 |--------------|-------------------------------------------------------------------------|------------|
@@ -78,7 +78,7 @@ Arithemtic operators are used to exponentiate, add, subtract, multiply, and divi
 | ^            |  Exponentiation                                                         | SELECT VALUE 2^3;       |
 | &#124;&#124; |  String concatenation                                                   | SELECT VALUE "ab"&#124;&#124;"c"&#124;&#124;"d";       |
 
-### <a id="Collection_operators">Collection operators</a>
+### <a id="Collection_operators">Collection Operators</a>
 Collection operators are used for membership tests (IN, NOT IN) or empty collection tests (EXISTS, NOT EXISTS).
 
 | Operator   |  Purpose                                     | Example    |
@@ -88,7 +88,7 @@ Collection operators are used for membership tests (IN, NOT IN) or empty collect
 | EXISTS     |  Check whether a collection is not empty     | SELECT * FROM ChirpMessages cm <br/>WHERE EXISTS cm.referredTopics; |
 | NOT EXISTS |  Check whether a collection is empty         | SELECT * FROM ChirpMessages cm <br/>WHERE NOT EXISTS cm.referredTopics; |
 
-### <a id="Comparison_operators">Comparison operators</a>
+### <a id="Comparison_operators">Comparison Operators</a>
 Comparison operators are used to compare values. The comparison operators fall into one of two sub-categories: missing value comparisons and regular value comparisons. SQL++ (and JSON) has two ways of representing missing information in a object - the presence of the field with a NULL for its value (as in SQL), and the absence of the field (which JSON permits). For example, the first of the following objects represents Jack, whose friend is Jill. In the other examples, Jake is friendless a la SQL, with a friend field that is NULL, while Joe is friendless in a more natural (for JSON) way, i.e., by not having a friend field.
 
 ##### Examples
@@ -129,7 +129,7 @@ The following table summarizes how the missing value comparison operators work.
 | IS UNKNOWN | FALSE | TRUE | TRUE |
 | IS NOT UNKNOWN | TRUE | FALSE | FALSE|
 
-### <a id="Logical_operators">Logical operators</a>
+### <a id="Logical_operators">Logical Operators</a>
 Logical operators perform logical `NOT`, `AND`, and `OR` operations over Boolean values (`TRUE` and `FALSE`) plus `NULL` and `MISSING`.
 
 | Operator |  Purpose                                   | Example    |
@@ -162,7 +162,7 @@ The following table demonstrates the results of `NOT` on all possible inputs.
 | NULL | NULL |
 | MISSING | MISSING |
 
-## <a id="Case_expressions">Case expressions</a>
+## <a id="Case_expressions">Case Expressions</a>
 
     CaseExpression ::= SimpleCaseExpression | SearchedCaseExpression
     SimpleCaseExpression ::= <CASE> Expression ( <WHEN> Expression <THEN> Expression )+ ( <ELSE> Expression )? <END>
@@ -177,7 +177,7 @@ The following example illustrates the form of a case expression.
 
     CASE (2 < 3) WHEN true THEN "yes" ELSE "no" END
 
-## <a id="Quantified_expressions">Quantified expressions</a>
+## <a id="Quantified_expressions">Quantified Expressions</a>
 
     QuantifiedExpression ::= ( (<ANY>|<SOME>) | <EVERY> ) Variable <IN> Expression ( "," Variable "in" Expression )*
                              <SATISFIES> Expression (<END>)?
@@ -201,14 +201,14 @@ A type error will be raised if the first expression in a quantified expression d
     SOME x IN [ 1, 2, 3 ] SATISFIES x < 3
 
 
-## <a id="Path_expressions">Path expressions</a>
+## <a id="Path_expressions">Path Expressions</a>
 
     PathExpression  ::= PrimaryExpression ( Field | Index )*
     Field           ::= "." Identifier
     Index           ::= "[" ( Expression | "?" ) "]"
 
 Components of complex types in the data model are accessed via path expressions. Path access can be applied to the result
-of a SQL++ expression that yields an instance of  a complex type, e.g., a object or array instance. For objects,
+of a SQL++ expression that yields an instance of  a complex type, for example, a object or array instance. For objects,
 path access is based on field names. For arrays, path access is based on (zero-based) array-style indexing.
 SQL++ also supports an "I'm feeling lucky" style index accessor, [?], for selecting an arbitrary element from an array.
 Attempts to access non-existent fields or out-of-bound array elements produce the special value `MISSING`.
@@ -239,7 +239,7 @@ The most basic building block for any SQL++ expression is PrimaryExpression. Thi
 value, a reference to a query variable that is in scope, a parenthesized expression, a function call, or a newly
 constructed instance of the data model (such as a newly constructed object, array, or multiset of data model instances).
 
-### <a id="Literals">Literals</a>
+## <a id="Literals">Literals</a>
 
     Literal        ::= StringLiteral
                        | IntegerLiteral
@@ -319,7 +319,7 @@ Different from standard SQL, double quotes play the same role as single quotes a
 
 A variable in SQL++ can be bound to any legal data model value. A variable reference refers to the value to which an in-scope variable is
 bound. (E.g., a variable binding may originate from one of the `FROM`, `WITH` or `LET` clauses of a `SELECT` statement or from an
-input parameter in the context of a function body.) Backticks, e.g., \`id\`, are used for delimited identifiers. Delimiting is needed when
+input parameter in the context of a function body.) Backticks, for example, \`id\`, are used for delimited identifiers. Delimiting is needed when
 a variable's desired name clashes with a SQL++ keyword or includes characters not allowed in regular identifiers.
 
 ##### Examples
@@ -329,7 +329,7 @@ a variable's desired name clashes with a SQL++ keyword or includes characters no
     `SELECT`
     `my-function`
 
-### <a id="Parenthesized_expressions">Parenthesized expressions</a>
+### <a id="Parenthesized_expressions">Parenthesized Expressions</a>
 
     ParenthesizedExpression ::= "(" Expression ")" | Subquery
 
@@ -341,7 +341,7 @@ The following expression evaluates to the value 2.
 
     ( 1 + 1 )
 
-### <a id="Function_call_expressions">Function call expressions</a>
+### <a id="Function_call_expressions">Function Call Expressions</a>
 
     FunctionCallExpression ::= FunctionName "(" ( Expression ( "," Expression )* )? ")"
 
@@ -386,4 +386,3 @@ duplicate field errors will be raised if they are not distinct.
       'project members': [ 'vinayakb', 'dtabass', 'chenli', 'tsotras', 'tillw' ]
     }
 
-    {{ 42, "forty-two!", { "rank": "Captain", "name": "America" }, 3.14159, 42 }}

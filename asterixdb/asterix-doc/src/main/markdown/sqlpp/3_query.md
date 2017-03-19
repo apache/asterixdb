@@ -23,7 +23,7 @@ A SQL++ query can be any legal SQL++ expression or `SELECT` statement. A SQL++ q
 
     Query ::= (Expression | SelectStatement) ";"
 
-##  <a id="SELECT_statements">SELECT statements</a>
+##  <a id="SELECT_statements">SELECT Statements</a>
 
 The following shows the (rich) grammar for the `SELECT` statement in SQL++.
 
@@ -76,24 +76,105 @@ In this section, we will make use of two stored collections of objects (datasets
 
 `GleambookUsers` collection (or, dataset):
 
-    {"id":1,"alias":"Margarita","name":"MargaritaStoddard","nickname":"Mags","userSince":"2012-08-20T10:10:00","friendIds":[2,3,6,10],"employment":[{"organizationName":"Codetechno","start-date":"2006-08-06"},{"organizationName":"geomedia","start-date":"2010-06-17","end-date":"2010-01-26"}],"gender":"F"}
-    {"id":2,"alias":"Isbel","name":"IsbelDull","nickname":"Izzy","userSince":"2011-01-22T10:10:00","friendIds":[1,4],"employment":[{"organizationName":"Hexviafind","startDate":"2010-04-27"}]}
-    {"id":3,"alias":"Emory","name":"EmoryUnk","userSince":"2012-07-10T10:10:00","friendIds":[1,5,8,9],"employment":[{"organizationName":"geomedia","startDate":"2010-06-17","endDate":"2010-01-26"}]}
+    [ {
+      "id":1,
+      "alias":"Margarita",
+      "name":"MargaritaStoddard",
+      "nickname":"Mags",
+      "userSince":"2012-08-20T10:10:00",
+      "friendIds":[2,3,6,10],
+      "employment":[{
+                      "organizationName":"Codetechno",
+                      "start-date":"2006-08-06"
+                    },
+                    {
+                      "organizationName":"geomedia",
+                      "start-date":"2010-06-17",
+                      "end-date":"2010-01-26"
+                    }],
+      "gender":"F"
+    },
+    {
+      "id":2,
+      "alias":"Isbel",
+      "name":"IsbelDull",
+      "nickname":"Izzy",
+      "userSince":"2011-01-22T10:10:00",
+      "friendIds":[1,4],
+      "employment":[{
+                      "organizationName":"Hexviafind",
+                      "startDate":"2010-04-27"
+                   }]
+    },
+    {
+      "id":3,
+      "alias":"Emory",
+      "name":"EmoryUnk",
+      "userSince":"2012-07-10T10:10:00",
+      "friendIds":[1,5,8,9],
+      "employment":[{
+                      "organizationName":"geomedia",
+                      "startDate":"2010-06-17",
+                      "endDate":"2010-01-26"
+                   }]
+    } ]
 
 `GleambookMessages` collection (or, dataset):
 
-    {"messageId":2,"authorId":1,"inResponseTo":4,"senderLocation":[41.66,80.87],"message":" dislike iphone its touch-screen is horrible"}
-    {"messageId":3,"authorId":2,"inResponseTo":4,"senderLocation":[48.09,81.01],"message":" like samsung the plan is amazing"}
-    {"messageId":4,"authorId":1,"inResponseTo":2,"senderLocation":[37.73,97.04],"message":" can't stand at&t the network is horrible:("}
-    {"messageId":6,"authorId":2,"inResponseTo":1,"senderLocation":[31.5,75.56],"message":" like t-mobile its platform is mind-blowing"}
-    {"messageId":8,"authorId":1,"inResponseTo":11,"senderLocation":[40.33,80.87],"message":" like verizon the 3G is awesome:)"}
-    {"messageId":10,"authorId":1,"inResponseTo":12,"senderLocation":[42.5,70.01],"message":" can't stand motorola the touch-screen is terrible"}
-    {"messageId":11,"authorId":1,"inResponseTo":1,"senderLocation":[38.97,77.49],"message":" can't stand at&t its plan is terrible"}
+    [ {
+      "messageId":2,
+      "authorId":1,
+      "inResponseTo":4,
+      "senderLocation":[41.66,80.87],
+      "message":" dislike iphone its touch-screen is horrible"
+    },
+    {
+      "messageId":3,
+      "authorId":2,
+      "inResponseTo":4,
+      "senderLocation":[48.09,81.01],
+      "message":" like samsung the plan is amazing"
+    },
+    {
+      "messageId":4,
+      "authorId":1,
+      "inResponseTo":2,
+      "senderLocation":[37.73,97.04],
+      "message":" can't stand at&t the network is horrible:("
+    },
+    {
+      "messageId":6,
+      "authorId":2,
+      "inResponseTo":1,
+      "senderLocation":[31.5,75.56],
+      "message":" like t-mobile its platform is mind-blowing"
+    }
+    {
+      "messageId":8,
+      "authorId":1,
+      "inResponseTo":11,
+      "senderLocation":[40.33,80.87],
+      "message":" like verizon the 3G is awesome:)"
+    },
+    {
+      "messageId":10,
+      "authorId":1,
+      "inResponseTo":12,
+      "senderLocation":[42.5,70.01],
+      "message":" can't stand motorola the touch-screen is terrible"
+    },
+    {
+      "messageId":11,
+      "authorId":1,
+      "inResponseTo":1,
+      "senderLocation":[38.97,77.49],
+      "message":" can't stand at&t its plan is terrible"
+    } ]
 
 ## <a id="Select_clauses">SELECT Clause</a>
 The SQL++ `SELECT` clause always returns a collection value as its result (even if the result is empty or a singleton).
 
-### <a id="Select_element">SELECT VALUE Clause</a>
+### <a id="Select_element">Select Element/Value/Raw</a>
 The `SELECT VALUE` clause in SQL++ returns a collection that contains the results of evaluating the `VALUE` expression, with one evaluation being performed per "binding tuple" (i.e., per `FROM` clause item) satisfying the statement's selection criteria.
 For historical reasons SQL++ also allows the keywords `ELEMENT` or `RAW` to be used in place of `VALUE` (not recommended).
 
@@ -338,7 +419,7 @@ This version of the query returns:
     , 3
      ]
 
-### <a id="Unnamed_projections">Unnamed projections</a>
+### <a id="Unnamed_projections">Unnamed Projections</a>
 Similar to standard SQL, SQL++ supports unnamed projections (a.k.a, unnamed `SELECT` clause items), for which names are generated.
 Name generation has three cases:
 
@@ -402,7 +483,7 @@ This query returns:
 
 Note that `UNNEST` has SQL's inner join semantics --- that is, if a user has no employment history, no tuple corresponding to that user will be emitted in the result.
 
-### <a id="Left_outer_unnests">Left outer UNNEST</a>
+### <a id="Left_outer_unnests">Left Outer UNNEST</a>
 As an alternative, the `LEFT OUTER UNNEST` clause offers SQL's left outer join semantics. For example, no collection-valued field named `hobbies` exists in the object for the user whose id is 1, but the following query's result still includes user 1.
 
 ##### Example
@@ -420,7 +501,7 @@ Returns:
 
 Note that if `u.hobbies` is an empty collection or leads to a `MISSING` (as above) or `NULL` value for a given input tuple, there is no corresponding binding value for variable `h` for an input tuple. A `MISSING` value will be generated for `h` so that the input tuple can still be propagated.
 
-### <a id="Expressing_joins_using_unnests">Expressing joins using UNNEST</a>
+### <a id="Expressing_joins_using_unnests">Expressing Joins Using UNNEST</a>
 The SQL++ `UNNEST` clause is similar to SQL's `JOIN` clause except that it allows its right argument to be correlated to its left argument, as in the examples above --- i.e., think "correlated cross-product".
 The next example shows this via a query that joins two data sets, GleambookUsers and GleambookMessages, returning user/message pairs. The results contain one object per pair, with result objects containing the user's name and an entire message. The query can be thought of as saying "for each Gleambook user, unnest the `GleambookMessages` collection and filter the output with the condition `message.authorId = user.id`".
 
@@ -487,7 +568,7 @@ Returns:
       3
     ]
 
-### <a id="Multiple_from_terms">Multiple FROM terms</a>
+### <a id="Multiple_from_terms">Multiple FROM Terms</a>
 SQL++ permits correlations among `FROM` terms. Specifically, a `FROM` binding expression can refer to variables defined to its left in the given `FROM` clause. Thus, the first unnesting example above could also be expressed as follows:
 
 ##### Example
@@ -497,7 +578,7 @@ SQL++ permits correlations among `FROM` terms. Specifically, a `FROM` binding ex
     WHERE u.id = 1;
 
 
-### <a id="Expressing_joins_using_from_terms">Expressing joins using FROM terms</a>
+### <a id="Expressing_joins_using_from_terms">Expressing Joins Using FROM Terms</a>
 Similarly, the join intentions of the other `UNNEST`-based join examples above could be expressed as:
 
 ##### Example
@@ -518,7 +599,7 @@ Similarly, the join intentions of the other `UNNEST`-based join examples above c
 
 Note that the first alternative is one of the SQL-92 approaches to expressing a join.
 
-### <a id="Implicit_binding_variables">Implicit binding variables</a>
+### <a id="Implicit_binding_variables">Implicit Binding Variables</a>
 
 Similar to standard SQL, SQL++ supports implicit `FROM` binding variables (i.e., aliases), for which a binding variable is generated. SQL++ variable generation falls into three cases:
 
@@ -575,7 +656,7 @@ Returns:
     Error: "Syntax error: Need an alias for the enclosed expression:\n(select element GleambookMessages\n    from GleambookMessages as GleambookMessages\n    where (GleambookMessages.authorId = GleambookUsers.id)\n )",
         "query_from_user": "use TinySocial;\n\nSELECT GleambookUsers.name, GleambookMessages.message\n    FROM GleambookUsers,\n      (\n        SELECT VALUE GleambookMessages\n        FROM GleambookMessages\n        WHERE GleambookMessages.authorId = GleambookUsers.id\n      );"
 
-## <a id="Join_clauses">JOIN clauses</a>
+## <a id="Join_clauses">JOIN Clauses</a>
 The join clause in SQL++ supports both inner joins and left outer joins from standard SQL.
 
 ### <a id="Inner_joins">Inner joins</a>
@@ -586,7 +667,7 @@ Using a `JOIN` clause, the inner join intent from the preceeding examples can al
     SELECT u.name AS uname, m.message AS message
     FROM GleambookUsers u JOIN GleambookMessages m ON m.authorId = u.id;
 
-### <a id="Left_outer_joins">Left outer joins</a>
+### <a id="Left_outer_joins">Left Outer Joins</a>
 SQL++ supports SQL's notion of left outer join. The following query is an example:
 
     SELECT u.name AS uname, m.message AS message
@@ -633,7 +714,7 @@ The left-outer join query can also be expressed using `LEFT OUTER UNNEST`:
 
 In general, in SQL++, SQL-style join queries can also be expressed by `UNNEST` clauses and left outer join queries can be expressed by `LEFT OUTER UNNESTs`.
 
-## <a id="Group_By_clauses">GROUP BY clauses</a>
+## <a id="Group_By_clauses">GROUP BY Clauses</a>
 The SQL++ `GROUP BY` clause generalizes standard SQL's grouping and aggregation semantics, but it also retains backward compatibility with the standard (relational) SQL `GROUP BY` and aggregation features.
 
 ### <a id="Group_variables">Group variables</a>
@@ -915,7 +996,7 @@ This example query returns:
         "uid": 2
     } ]
 
-### <a id="Implicit_group_key_variables">Implicit grouping key variables</a>
+### <a id="Implicit_group_key_variables">Implicit Grouping Key Variables</a>
 In the SQL++ syntax, providing named binding variables for `GROUP BY` key expressions is optional.
 If a grouping key is missing a user-provided binding variable, the underlying compiler will generate one.
 Automatic grouping key variable naming falls into three cases in SQL++, much like the treatment of unnamed projections:
@@ -983,7 +1064,7 @@ This query returns:
 Based on the three variable generation rules, the generated variable for the grouping key expression `message.authorId`
 is `authorId` (which is how it is referred to in the example's `SELECT` clause).
 
-### <a id="Implicit_group_variables">Implicit group variables</a>
+### <a id="Implicit_group_variables">Implicit Group Variables</a>
 The group variable itself is also optional in SQL++'s `GROUP BY` syntax.
 If a user's query does not declare the name and structure of the group variable using `GROUP AS`,
 the query compiler will generate a unique group variable whose fields include all of the
@@ -1035,11 +1116,11 @@ legal, executable, and returns the same result:
     FROM GleambookMessages gbm
     GROUP BY gbm.authorId AS uid GROUP AS g(gbm as msg);
 
-### <a id="Aggregation_functions">Aggregation functions</a>
-In traditional SQL, which doesn't support nested data, grouping always also involves the use of aggregation
-to compute properties of the groups (e.g., the average number of messages per user rather than the actual set
+### <a id="Aggregation_functions">Aggregation Functions</a>
+In the traditional SQL, which doesn't support nested data, grouping always also involves the use of aggregation
+to compute properties of the groups (for example, the average number of messages per user rather than the actual set
 of messages per user).
-Each aggregation function in SQL++ takes a collection (e.g., the group of messages) as its input and produces
+Each aggregation function in SQL++ takes a collection (for example, the group of messages) as its input and produces
 a scalar value as its output.
 These aggregation functions, being truly functional in nature (unlike in SQL), can be used anywhere in a
 query where an expression is allowed.
@@ -1097,7 +1178,7 @@ Notice how the query forms groups where each group involves a message author and
 The query then uses the collection aggregate function ARRAY_COUNT to get the cardinality of each
 group of messages.
 
-### <a id="SQL-92_aggregation_functions">SQL-92 aggregation functions</a>
+### <a id="SQL-92_aggregation_functions">SQL-92 Aggregation Functions</a>
 For compatibility with the traditional SQL aggregation functions, SQL++ also offers SQL-92's
 aggregation function symbols (`COUNT`, `SUM`, `MAX`, `MIN`, and `AVG`) as supported syntactic sugar.
 The SQL++ compiler rewrites queries that utilize these function symbols into SQL++ queries that only
@@ -1123,7 +1204,7 @@ The same sort of rewritings apply to the function symbols `SUM`, `MAX`, `MIN`, a
 In contrast to the SQL++ collection aggregate functions, these special SQL-92 function symbols
 can only be used in the same way they are in standard SQL (i.e., with the same restrictions).
 
-### <a id="SQL-92_compliant_gby">SQL-92 compliant GROUP BY aggregations</a>
+### <a id="SQL-92_compliant_gby">SQL-92 Compliant GROUP BY Aggregations</a>
 SQL++ provides full support for SQL-92 `GROUP BY` aggregation queries.
 The following query is such an example:
 
@@ -1144,7 +1225,7 @@ This query outputs:
     } ]
 
 In principle, a `msg` reference in the query's `SELECT` clause would be "sugarized" as a collection
-(as described in [Implicit group variables](#Implicit_group_variables)).
+(as described in [Implicit Group Variables](#Implicit_group_variables)).
 However, since the SELECT expression `msg.authorId` is syntactically identical to a GROUP BY key expression,
 it will be internally replaced by the generated group key variable.
 The following is the equivalent rewritten query that will be generated by the compiler for the query above:
@@ -1153,7 +1234,7 @@ The following is the equivalent rewritten query that will be generated by the co
     FROM GleambookMessages msg
     GROUP BY msg.authorId AS authorId GROUP AS `$1`(msg AS msg);
 
-### <a id="Column_aliases">Column aliases</a>
+### <a id="Column_aliases">Column Aliases</a>
 SQL++ also allows column aliases to be used as `GROUP BY` keys or `ORDER BY` keys.
 
 ##### Example
@@ -1172,12 +1253,12 @@ This query returns:
         "aid": 2
     } ]
 
-## <a id="Where_having_clauses">WHERE clauses and HAVING clauses</a>
+## <a id="Where_having_clauses">WHERE Clauses and HAVING clauses</a>
 Both `WHERE` clauses and `HAVING` clauses are used to filter input data based on a condition expression.
 Only tuples for which the condition expression evaluates to `TRUE` are propagated.
 Note that if the condition expression evaluates to `NULL` or `MISSING` the input tuple will be disgarded.
 
-## <a id="Order_By_clauses">ORDER BY clauses</a>
+## <a id="Order_By_clauses">ORDER BY Clauses</a>
 The `ORDER BY` clause is used to globally sort data in either ascending order (i.e., `ASC`) or descending order (i.e., `DESC`).
 During ordering, `MISSING` and `NULL` are treated as being smaller than any other value if they are encountered
 in the ordering key(s). `MISSING` is treated as smaller than `NULL` if both occur in the data being sorted.
@@ -1251,7 +1332,7 @@ This query returns:
           ]
       } ]
 
-## <a id="Limit_clauses">LIMIT clauses</a>
+## <a id="Limit_clauses">LIMIT Clauses</a>
 The `LIMIT` clause is used to limit the result set to a specified constant size.
 The use of the `LIMIT` clause is illustrated in the next example.
 
@@ -1290,7 +1371,7 @@ This query returns:
           ]
       } ]
 
-## <a id="With_clauses">WITH clauses</a>
+## <a id="With_clauses">WITH Clauses</a>
 As in standard SQL, `WITH` clauses are available to improve the modularity of a query.
 The next query shows an example.
 
@@ -1373,7 +1454,7 @@ not desirable. Thus, in the queries above, the use of "[0]" extracts the first (
 an array-valued query expression's result; this is needed above, even though the result is an array of one
 element, to extract the only element in the singleton array and obtain the desired scalar for the comparison.
 
-## <a id="Let_clauses">LET clauses</a>
+## <a id="Let_clauses">LET Clauses</a>
 Similar to `WITH` clauses, `LET` clauses can be useful when a (complex) expression is used several times within a query, allowing it to be written once to make the query more concise. The next query shows an example.
 
 ##### Example
