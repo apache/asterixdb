@@ -17,36 +17,12 @@
 # under the License.
 # ------------------------------------------------------------
 
-
-- hosts: [localhost,]
-  tasks:
-    - include: wait_ssh.yml
-
-- hosts: all
-  tasks:
-    - include_vars: ../conf/aws_settings.yml
-    - include_vars: ../conf/aws_types.yml
-
-    - name: Mount instance local stores
-      include: mount.yml
-
-- hosts: all
-  tasks:
-    - include: install_jdk.yml
-
-    - include_vars: ../conf/instance_settings.yml
-
-    - include: deploy.yml
-
-- hosts: ncs
-  tasks:
-    - include_vars: ../conf/instance_settings.yml
-
-    - include: start_ncservice.yml
-
-- hosts: cc
-  tasks:
-    - include_vars: ../conf/instance_settings.yml
-
-    - include: start_cc.yml
-
+- name:  Set up all instance storage devices
+  shell: |
+    sudo umount "{{ vol.1.device_name }}"
+    sudo mkdir "/data{{ vol.0 + 1 }}"
+    sudo mount "{{ vol.1.device_name }}" "/data{{ vol.0 + 1 }}"
+    sudo chown -R $USER "/data{{ vol.0 + 1 }}"
+  with_indexed_items: "{{ ephemeral_volumes[instance_type]|default([]) }}"
+  loop_control:
+    loop_var: vol

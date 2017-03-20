@@ -1,0 +1,37 @@
+one_ephemeral:
+  - { device_name: /dev/xvdb, ephemeral: ephemeral0 }
+two_ephemeral:
+  - { device_name: /dev/xvdb, ephemeral: ephemeral0 }
+  - { device_name: /dev/xvdc, ephemeral: ephemeral1 }
+three_ephemeral:
+  - { device_name: /dev/xvdb, ephemeral: ephemeral0 }
+  - { device_name: /dev/xvdc, ephemeral: ephemeral1 }
+  - { device_name: /dev/xvdd, ephemeral: ephemeral2 }
+four_ephemeral:
+  - { device_name: /dev/xvdb, ephemeral: ephemeral0 }
+  - { device_name: /dev/xvdc, ephemeral: ephemeral1 }
+  - { device_name: /dev/xvdd, ephemeral: ephemeral2 }
+  - { device_name: /dev/xvde, ephemeral: ephemeral3 }
+
+ephemeral_volumes:
+  c1.medium: "{{ one_ephemeral }}"
+  c1.xlarge: "{{ four_ephemeral }}"
+  c3.large: "{{ two_ephemeral }}"
+  c3.xlarge: "{{ two_ephemeral }}"
+  c3.2xlarge: "{{ two_ephemeral }}"
+  c3.4xlarge: "{{ two_ephemeral }}"
+  c3.8xlarge: "{{ two_ephemeral }}"
+  i2.xlarge: "{{ one_ephemeral }}"
+  i2.2xlarge: "{{ two_ephemeral }}"
+  i2.4xlarge: "{{ four_ephemeral }}"
+  m1.small: "{{ one_ephemeral }}"
+  m1.medium: "{{ one_ephemeral }}"
+  m1.large: "{{ two_ephemeral }}"
+  m1.xlarge: "{{ four_ephemeral }}"
+  m2.xlarge: "{{ one_ephemeral }}"
+  m2.2xlarge: "{{ one_ephemeral }}"
+  m2.4xlarge: "{{ two_ephemeral }}"
+  m3.medium: "{{ one_ephemeral }}"
+  m3.large: "{{ one_ephemeral }}"
+  m3.xlarge: "{{ two_ephemeral }}"
+  m3.2xlarge: "{{ two_ephemeral }}"
