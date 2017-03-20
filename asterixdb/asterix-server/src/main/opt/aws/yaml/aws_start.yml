@@ -29,8 +29,10 @@
   tasks:
     - include_vars: ../conf/aws_settings.yml
     - include_vars: ../conf/aws_types.yml
-    - debug:
-        msg: "{{ vols }}"
+
+    - name: Clean the temporary directory
+      shell: rm -rf "{{ temp_dir }}"
+
     - name: Launch all instances
       ec2:
         key_name: "{{ keypair }}"
@@ -110,7 +112,7 @@
 
     - name: Populate multiple iodevices
       shell: printf "  - /data{{ vol.0 + 1 }}/iodevice\n" >> "{{ temp_dir }}/devices"
-      with_indexed_items: vols
+      with_indexed_items: "{{ vols }}"
       loop_control:
         loop_var: vol
       when: vols|length > 0
