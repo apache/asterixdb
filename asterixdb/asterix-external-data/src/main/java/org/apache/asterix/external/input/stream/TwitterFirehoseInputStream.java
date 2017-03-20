@@ -41,7 +41,7 @@ public class TwitterFirehoseInputStream extends AsterixInputStream {
     private final DataProvider dataProvider;
     private boolean started;
 
-    public TwitterFirehoseInputStream(Map<String, String> configuration, IHyracksTaskContext ctx, int partition)
+    public TwitterFirehoseInputStream(Map<String, String> configuration, int partition)
             throws IOException {
         executorService = Executors.newCachedThreadPool();
         outputStream = new PipedOutputStream();
@@ -94,7 +94,7 @@ public class TwitterFirehoseInputStream extends AsterixInputStream {
         private final Mode mode;
         private final OutputStream os;
 
-        public static enum Mode {
+        public enum Mode {
             AGGRESSIVE,
             CONTROLLED
         }
@@ -144,9 +144,7 @@ public class TwitterFirehoseInputStream extends AsterixInputStream {
                     os.close();
                     break;
                 } catch (Exception e) {
-                    if (LOGGER.isLoggable(Level.WARNING)) {
-                        LOGGER.warning("Exception in adapter " + e.getMessage());
-                    }
+                    LOGGER.warning("Exception in adapter " + e.getMessage());
                 }
             }
         }

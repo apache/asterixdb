@@ -60,7 +60,7 @@ create index ngram_index on SyntheticTweets(message_text) type ngram(3);
 create feed  SyntheticTweetFeed
 using stream
 (("duration"="5"),
-("stream-source"="org.apache.asterix.external.input.stream.TwitterFirehoseStreamFactory"),
+("stream-source"="org.apache.asterix.external.input.stream.factory.TwitterFirehoseStreamFactory"),
 ("tps"="50"),
 ("type-name"="TweetMessageType"),
 ("tput-duration"="5"),

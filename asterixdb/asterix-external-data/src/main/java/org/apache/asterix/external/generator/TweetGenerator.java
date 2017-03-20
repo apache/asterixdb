@@ -27,7 +27,6 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.asterix.external.generator.DataGenerator.InitializationInfo;
 import org.apache.asterix.external.generator.DataGenerator.TweetMessage;
 import org.apache.asterix.external.generator.DataGenerator.TweetMessageIterator;
 
@@ -59,7 +58,7 @@ public class TweetGenerator {
         this.partition = partition;
         String value = configuration.get(KEY_DURATION);
         this.duration = value != null ? Integer.parseInt(value) : DEFAULT_DURATION;
-        dataGenerator = new DataGenerator(new InitializationInfo());
+        dataGenerator = new DataGenerator();
         tweetIterator = dataGenerator.new TweetMessageIterator(duration);
         this.fields = configuration.get(KEY_FIELDS) != null ? configuration.get(KEY_FIELDS).split(",") : null;
         this.subscribers = new ArrayList<OutputStream>();
@@ -87,6 +86,7 @@ public class TweetGenerator {
                 try {
                     os.write(outputBuffer.array(), 0, outputBuffer.limit());
                 } catch (Exception e) {
+                    LOGGER.info("OutputStream failed. Add it into the removal list.");
                     subscribersForRemoval.add(os);
                 }
             }
@@ -99,7 +99,7 @@ public class TweetGenerator {
         outputBuffer.limit(32 * 1024);
     }
 
-    public boolean generateNextBatch(int numTweets) throws Exception {
+    public boolean generateNextBatch(int numTweets) throws IOException{
         boolean moreData = tweetIterator.hasNext();
         if (!moreData) {
             if (outputBuffer.position() > 0) {

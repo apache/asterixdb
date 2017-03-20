@@ -63,5 +63,5 @@ using stream
 ("type-name"="TweetMessageType"),
 ("dataverse-dataset"="feeds:SyntheticTweets"),
 ("format"="adm"),
-("stream-source"="org.apache.asterix.external.input.stream.TwitterFirehoseStreamFactory"),
+("stream-source"="org.apache.asterix.external.input.stream.factory.TwitterFirehoseStreamFactory"),
 ("mode"="controlled"));
