@@ -102,9 +102,9 @@ if "%found%" == "1" (
 goto :post_timestamp
 
 :timestamp
-echo "--------------------------" >> %1
-echo "%date% %time%" >> %1
-echo "--------------------------" >> %1
+echo -------------------------- >> %1
+echo %date% %time% >> %1
+echo -------------------------- >> %1
 exit /B 0
 
 :post_timestamp
