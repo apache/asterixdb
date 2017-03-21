@@ -19,6 +19,8 @@
 package org.apache.hyracks.control.cc;
 
 import java.util.Arrays;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.apache.hyracks.api.application.ICCApplication;
 import org.apache.hyracks.api.application.IServiceContext;
@@ -31,6 +33,7 @@ import org.apache.hyracks.control.common.controllers.ControllerConfig;
 import org.apache.hyracks.control.common.controllers.NCConfig;
 
 public class BaseCCApplication implements ICCApplication {
+    private static final Logger LOGGER = Logger.getLogger(BaseCCApplication.class.getName());
     public static final ICCApplication INSTANCE = new BaseCCApplication();
 
     protected BaseCCApplication() {
@@ -70,4 +73,10 @@ public class BaseCCApplication implements ICCApplication {
     public Object getApplicationContext() {
         return null;
     }
+
+    protected void configureLoggingLevel(Level level) {
+        LOGGER.info("Setting Hyracks log level to " + level);
+        Logger.getLogger("org.apache.hyracks").setLevel(level);
+    }
+
 }

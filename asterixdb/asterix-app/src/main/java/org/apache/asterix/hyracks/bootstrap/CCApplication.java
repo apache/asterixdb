@@ -106,6 +106,8 @@ public class CCApplication extends BaseCCApplication {
         ICCMessageBroker messageBroker = new CCMessageBroker(controllerService);
         this.ccServiceCtx = (ICCServiceContext) serviceCtx;
 
+        configureLoggingLevel(ccServiceCtx.getAppConfig().getLoggingLevel(ExternalProperties.Option.LOG_LEVEL));
+
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Starting Asterix cluster controller");
         }
@@ -146,6 +148,13 @@ public class CCApplication extends BaseCCApplication {
         ccServiceCtx.setMessageBroker(messageBroker);
 
         jobCapacityController = new JobCapacityController(controllerService.getResourceManager());
+    }
+
+    @Override
+    protected void configureLoggingLevel(Level level) {
+        super.configureLoggingLevel(level);
+        LOGGER.info("Setting Asterix log level to " + level);
+        Logger.getLogger("org.apache.asterix").setLevel(level);
     }
 
     protected List<AsterixExtension> getExtensions() {

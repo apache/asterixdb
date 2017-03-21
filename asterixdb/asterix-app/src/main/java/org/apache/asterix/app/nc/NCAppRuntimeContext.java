@@ -165,9 +165,6 @@ public class NCAppRuntimeContext implements IAppRuntimeContext {
 
     @Override
     public void initialize(boolean initialRun) throws IOException, ACIDException {
-        Logger.getLogger("org.apache.asterix").setLevel(externalProperties.getLogLevel());
-        Logger.getLogger("org.apache.hyracks").setLevel(externalProperties.getLogLevel());
-
         ioManager = ncServiceContext.getIoManager();
         threadExecutor = new ThreadExecutor(ncServiceContext.getThreadFactory());
         fileMapManager = new FileMapManager(ioManager);

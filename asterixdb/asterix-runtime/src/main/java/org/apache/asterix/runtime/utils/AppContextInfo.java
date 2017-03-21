@@ -110,9 +110,6 @@ public class AppContextInfo implements IApplicationContextInfo, IPropertiesProvi
         INSTANCE.nodeProperties = new NodeProperties(propertiesAccessor);
         INSTANCE.metadataBootstrapSupplier = metadataBootstrapSupplier;
         INSTANCE.globalRecoveryManager = globalRecoveryManager;
-
-        Logger.getLogger("org.apache.asterix").setLevel(INSTANCE.externalProperties.getLogLevel());
-        Logger.getLogger("org.apache.hyracks").setLevel(INSTANCE.externalProperties.getLogLevel());
     }
 
     public boolean initialized() {

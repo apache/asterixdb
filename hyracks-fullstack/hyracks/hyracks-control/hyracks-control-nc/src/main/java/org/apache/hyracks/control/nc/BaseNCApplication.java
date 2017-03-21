@@ -20,6 +20,8 @@ package org.apache.hyracks.control.nc;
 
 import java.lang.management.ManagementFactory;
 import java.util.Arrays;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.apache.hyracks.api.application.INCApplication;
 import org.apache.hyracks.api.application.IServiceContext;
@@ -76,4 +78,9 @@ public class BaseNCApplication implements INCApplication {
     public Object getApplicationContext() {
         return null;
     }
+
+    protected void configureLoggingLevel(Level level) {
+        Logger.getLogger("org.apache.hyracks").setLevel(level);
+    }
+
 }

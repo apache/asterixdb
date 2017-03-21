@@ -31,6 +31,7 @@ import org.apache.asterix.common.api.AsterixThreadFactory;
 import org.apache.asterix.common.api.IAppRuntimeContext;
 import org.apache.asterix.common.config.AsterixExtension;
 import org.apache.asterix.common.config.ClusterProperties;
+import org.apache.asterix.common.config.ExternalProperties;
 import org.apache.asterix.common.config.IPropertiesProvider;
 import org.apache.asterix.common.config.MessagingProperties;
 import org.apache.asterix.common.config.MetadataProperties;
@@ -83,6 +84,7 @@ public class NCApplication extends BaseNCApplication {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Starting Asterix node controller: " + nodeId);
         }
+        configureLoggingLevel(ncServiceCtx.getAppConfig().getLoggingLevel(ExternalProperties.Option.LOG_LEVEL));
 
         final NodeControllerService controllerService = (NodeControllerService) ncServiceCtx.getControllerService();
 
@@ -122,6 +124,12 @@ public class NCApplication extends BaseNCApplication {
         }
 
         performLocalCleanUp();
+    }
+
+    @Override
+    protected void configureLoggingLevel(Level level) {
+        super.configureLoggingLevel(level);
+        Logger.getLogger("org.apache.asterix").setLevel(level);
     }
 
     protected List<AsterixExtension> getExtensions() {
