@@ -302,7 +302,7 @@ public class CCApplication extends BaseCCApplication {
 
     private IStatementExecutorFactory getStatementExecutorFactory() {
         return ccExtensionManager.getStatementExecutorFactory(
-                ((ClusterControllerService) ccServiceCtx.getControllerService()).getExecutorService());
+                ((ClusterControllerService) ccServiceCtx.getControllerService()).getExecutor());
     }
 
     @Override

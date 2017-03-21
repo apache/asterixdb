@@ -31,6 +31,7 @@ public class ActivePartitionMessage implements IApplicationMessage {
 
     public static final byte ACTIVE_RUNTIME_REGISTERED = 0x00;
     public static final byte ACTIVE_RUNTIME_DEREGISTERED = 0x01;
+    public static final byte GENERIC_EVENT = 0x02;
     private static final long serialVersionUID = 1L;
     private final ActiveRuntimeId activeRuntimeId;
     private final JobId jobId;

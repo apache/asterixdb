@@ -18,6 +18,8 @@
  */
 package org.apache.hyracks.api.service;
 
+import java.util.concurrent.ExecutorService;
+
 import org.apache.hyracks.api.application.IServiceContext;
 
 public interface IControllerService {
@@ -26,6 +28,8 @@ public interface IControllerService {
     void stop() throws Exception;
 
     IServiceContext getContext();
+
+    ExecutorService getExecutor();
 
     Object getApplicationContext();
 }

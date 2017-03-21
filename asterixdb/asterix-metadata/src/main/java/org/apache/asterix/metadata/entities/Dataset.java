@@ -609,4 +609,8 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
     public IFrameOperationCallbackFactory getFrameOpCallbackFactory() {
         return NoOpFrameOperationCallbackFactory.INSTANCE;
     }
+
+    public boolean isTemp() {
+        return getDatasetDetails().isTemp();
+    }
 }

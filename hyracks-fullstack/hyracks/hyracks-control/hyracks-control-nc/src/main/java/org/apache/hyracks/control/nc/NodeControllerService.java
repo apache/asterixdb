@@ -416,7 +416,8 @@ public class NodeControllerService implements IControllerService {
         return nodeParameters;
     }
 
-    public ExecutorService getExecutorService() {
+    @Override
+    public ExecutorService getExecutor() {
         return executor;
     }
 

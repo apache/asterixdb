@@ -22,14 +22,16 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.function.Function;
 
 import org.apache.asterix.metadata.entities.Dataverse;
-import org.apache.asterix.metadata.entities.Feed;
 import org.apache.asterix.metadata.entities.FeedConnection;
 
 public class MetadataLockManager {
 
     public static final MetadataLockManager INSTANCE = new MetadataLockManager();
+    private static final Function<String, ReentrantReadWriteLock> LOCK_FUNCTION = key -> new ReentrantReadWriteLock();
+    private static final Function<String, DatasetLock> DATASET_LOCK_FUNCTION = key -> new DatasetLock();
     private final ConcurrentHashMap<String, ReentrantReadWriteLock> dataversesLocks;
     private final ConcurrentHashMap<String, DatasetLock> datasetsLocks;
     private final ConcurrentHashMap<String, ReentrantReadWriteLock> functionsLocks;
@@ -38,6 +40,7 @@ public class MetadataLockManager {
     private final ConcurrentHashMap<String, ReentrantReadWriteLock> feedPolicyLocks;
     private final ConcurrentHashMap<String, ReentrantReadWriteLock> compactionPolicyLocks;
     private final ConcurrentHashMap<String, ReentrantReadWriteLock> dataTypeLocks;
+    private final ConcurrentHashMap<String, ReentrantReadWriteLock> extensionLocks;
 
     private MetadataLockManager() {
         dataversesLocks = new ConcurrentHashMap<>();
@@ -48,14 +51,11 @@ public class MetadataLockManager {
         feedPolicyLocks = new ConcurrentHashMap<>();
         compactionPolicyLocks = new ConcurrentHashMap<>();
         dataTypeLocks = new ConcurrentHashMap<>();
+        extensionLocks = new ConcurrentHashMap<>();
     }
 
     public void acquireDataverseReadLock(String dataverseName) {
-        ReentrantReadWriteLock dvLock = dataversesLocks.get(dataverseName);
-        if (dvLock == null) {
-            dataversesLocks.putIfAbsent(dataverseName, new ReentrantReadWriteLock());
-            dvLock = dataversesLocks.get(dataverseName);
-        }
+        ReentrantReadWriteLock dvLock = dataversesLocks.computeIfAbsent(dataverseName, LOCK_FUNCTION);
         dvLock.readLock().lock();
     }
 
@@ -64,11 +64,7 @@ public class MetadataLockManager {
     }
 
     public void acquireDataverseWriteLock(String dataverseName) {
-        ReentrantReadWriteLock dvLock = dataversesLocks.get(dataverseName);
-        if (dvLock == null) {
-            dataversesLocks.putIfAbsent(dataverseName, new ReentrantReadWriteLock());
-            dvLock = dataversesLocks.get(dataverseName);
-        }
+        ReentrantReadWriteLock dvLock = dataversesLocks.computeIfAbsent(dataverseName, LOCK_FUNCTION);
         dvLock.writeLock().lock();
     }
 
@@ -77,11 +73,7 @@ public class MetadataLockManager {
     }
 
     public void acquireDatasetReadLock(String datasetName) {
-        DatasetLock dsLock = datasetsLocks.get(datasetName);
-        if (dsLock == null) {
-            datasetsLocks.putIfAbsent(datasetName, new DatasetLock());
-            dsLock = datasetsLocks.get(datasetName);
-        }
+        DatasetLock dsLock = datasetsLocks.computeIfAbsent(datasetName, DATASET_LOCK_FUNCTION);
         dsLock.acquireReadLock();
     }
 
@@ -90,11 +82,7 @@ public class MetadataLockManager {
     }
 
     public void acquireDatasetWriteLock(String datasetName) {
-        DatasetLock dsLock = datasetsLocks.get(datasetName);
-        if (dsLock == null) {
-            datasetsLocks.putIfAbsent(datasetName, new DatasetLock());
-            dsLock = datasetsLocks.get(datasetName);
-        }
+        DatasetLock dsLock = datasetsLocks.computeIfAbsent(datasetName, DATASET_LOCK_FUNCTION);
         dsLock.acquireWriteLock();
     }
 
@@ -103,11 +91,7 @@ public class MetadataLockManager {
     }
 
     public void acquireDatasetModifyLock(String datasetName) {
-        DatasetLock dsLock = datasetsLocks.get(datasetName);
-        if (dsLock == null) {
-            datasetsLocks.putIfAbsent(datasetName, new DatasetLock());
-            dsLock = datasetsLocks.get(datasetName);
-        }
+        DatasetLock dsLock = datasetsLocks.computeIfAbsent(datasetName, DATASET_LOCK_FUNCTION);
         dsLock.acquireReadLock();
         dsLock.acquireReadModifyLock();
     }
@@ -119,11 +103,7 @@ public class MetadataLockManager {
     }
 
     public void acquireDatasetCreateIndexLock(String datasetName) {
-        DatasetLock dsLock = datasetsLocks.get(datasetName);
-        if (dsLock == null) {
-            datasetsLocks.putIfAbsent(datasetName, new DatasetLock());
-            dsLock = datasetsLocks.get(datasetName);
-        }
+        DatasetLock dsLock = datasetsLocks.computeIfAbsent(datasetName, DATASET_LOCK_FUNCTION);
         dsLock.acquireReadLock();
         dsLock.acquireWriteModifyLock();
     }
@@ -135,11 +115,7 @@ public class MetadataLockManager {
     }
 
     public void acquireExternalDatasetRefreshLock(String datasetName) {
-        DatasetLock dsLock = datasetsLocks.get(datasetName);
-        if (dsLock == null) {
-            datasetsLocks.putIfAbsent(datasetName, new DatasetLock());
-            dsLock = datasetsLocks.get(datasetName);
-        }
+        DatasetLock dsLock = datasetsLocks.computeIfAbsent(datasetName, DATASET_LOCK_FUNCTION);
         dsLock.acquireReadLock();
         dsLock.acquireRefreshLock();
     }
@@ -151,11 +127,7 @@ public class MetadataLockManager {
     }
 
     public void acquireFunctionReadLock(String functionName) {
-        ReentrantReadWriteLock fLock = functionsLocks.get(functionName);
-        if (fLock == null) {
-            functionsLocks.putIfAbsent(functionName, new ReentrantReadWriteLock());
-            fLock = functionsLocks.get(functionName);
-        }
+        ReentrantReadWriteLock fLock = functionsLocks.computeIfAbsent(functionName, LOCK_FUNCTION);
         fLock.readLock().lock();
     }
 
@@ -164,11 +136,7 @@ public class MetadataLockManager {
     }
 
     public void acquireFunctionWriteLock(String functionName) {
-        ReentrantReadWriteLock fLock = functionsLocks.get(functionName);
-        if (fLock == null) {
-            functionsLocks.putIfAbsent(functionName, new ReentrantReadWriteLock());
-            fLock = functionsLocks.get(functionName);
-        }
+        ReentrantReadWriteLock fLock = functionsLocks.computeIfAbsent(functionName, LOCK_FUNCTION);
         fLock.writeLock().lock();
     }
 
@@ -177,11 +145,7 @@ public class MetadataLockManager {
     }
 
     public void acquireNodeGroupReadLock(String nodeGroupName) {
-        ReentrantReadWriteLock ngLock = nodeGroupsLocks.get(nodeGroupName);
-        if (ngLock == null) {
-            nodeGroupsLocks.putIfAbsent(nodeGroupName, new ReentrantReadWriteLock());
-            ngLock = nodeGroupsLocks.get(nodeGroupName);
-        }
+        ReentrantReadWriteLock ngLock = nodeGroupsLocks.computeIfAbsent(nodeGroupName, LOCK_FUNCTION);
         ngLock.readLock().lock();
     }
 
@@ -190,11 +154,7 @@ public class MetadataLockManager {
     }
 
     public void acquireNodeGroupWriteLock(String nodeGroupName) {
-        ReentrantReadWriteLock ngLock = nodeGroupsLocks.get(nodeGroupName);
-        if (ngLock == null) {
-            nodeGroupsLocks.putIfAbsent(nodeGroupName, new ReentrantReadWriteLock());
-            ngLock = nodeGroupsLocks.get(nodeGroupName);
-        }
+        ReentrantReadWriteLock ngLock = nodeGroupsLocks.computeIfAbsent(nodeGroupName, LOCK_FUNCTION);
         ngLock.writeLock().lock();
     }
 
@@ -203,11 +163,7 @@ public class MetadataLockManager {
     }
 
     public void acquireFeedReadLock(String feedName) {
-        ReentrantReadWriteLock fLock = feedsLocks.get(feedName);
-        if (fLock == null) {
-            feedsLocks.putIfAbsent(feedName, new ReentrantReadWriteLock());
-            fLock = feedsLocks.get(feedName);
-        }
+        ReentrantReadWriteLock fLock = feedsLocks.computeIfAbsent(feedName, LOCK_FUNCTION);
         fLock.readLock().lock();
     }
 
@@ -216,11 +172,7 @@ public class MetadataLockManager {
     }
 
     public void acquireFeedWriteLock(String feedName) {
-        ReentrantReadWriteLock fLock = feedsLocks.get(feedName);
-        if (fLock == null) {
-            feedsLocks.putIfAbsent(feedName, new ReentrantReadWriteLock());
-            fLock = feedsLocks.get(feedName);
-        }
+        ReentrantReadWriteLock fLock = feedsLocks.computeIfAbsent(feedName, LOCK_FUNCTION);
         fLock.writeLock().lock();
     }
 
@@ -229,11 +181,7 @@ public class MetadataLockManager {
     }
 
     public void acquireFeedPolicyWriteLock(String policyName) {
-        ReentrantReadWriteLock fLock = feedPolicyLocks.get(policyName);
-        if (fLock == null) {
-            feedPolicyLocks.putIfAbsent(policyName, new ReentrantReadWriteLock());
-            fLock = feedPolicyLocks.get(policyName);
-        }
+        ReentrantReadWriteLock fLock = feedPolicyLocks.computeIfAbsent(policyName, LOCK_FUNCTION);
         fLock.writeLock().lock();
     }
 
@@ -242,11 +190,8 @@ public class MetadataLockManager {
     }
 
     public void acquireCompactionPolicyReadLock(String compactionPolicyName) {
-        ReentrantReadWriteLock compactionPolicyLock = compactionPolicyLocks.get(compactionPolicyName);
-        if (compactionPolicyLock == null) {
-            compactionPolicyLocks.putIfAbsent(compactionPolicyName, new ReentrantReadWriteLock());
-            compactionPolicyLock = compactionPolicyLocks.get(compactionPolicyName);
-        }
+        ReentrantReadWriteLock compactionPolicyLock =
+                compactionPolicyLocks.computeIfAbsent(compactionPolicyName, LOCK_FUNCTION);
         compactionPolicyLock.readLock().lock();
     }
 
@@ -255,11 +200,8 @@ public class MetadataLockManager {
     }
 
     public void acquireCompactionPolicyWriteLock(String compactionPolicyName) {
-        ReentrantReadWriteLock compactionPolicyLock = compactionPolicyLocks.get(compactionPolicyName);
-        if (compactionPolicyLock == null) {
-            compactionPolicyLocks.putIfAbsent(compactionPolicyName, new ReentrantReadWriteLock());
-            compactionPolicyLock = compactionPolicyLocks.get(compactionPolicyName);
-        }
+        ReentrantReadWriteLock compactionPolicyLock =
+                compactionPolicyLocks.computeIfAbsent(compactionPolicyName, LOCK_FUNCTION);
         compactionPolicyLock.writeLock().lock();
     }
 
@@ -268,11 +210,7 @@ public class MetadataLockManager {
     }
 
     public void acquireDataTypeReadLock(String dataTypeName) {
-        ReentrantReadWriteLock dataTypeLock = dataTypeLocks.get(dataTypeName);
-        if (dataTypeLock == null) {
-            dataTypeLocks.putIfAbsent(dataTypeName, new ReentrantReadWriteLock());
-            dataTypeLock = dataTypeLocks.get(dataTypeName);
-        }
+        ReentrantReadWriteLock dataTypeLock = dataTypeLocks.computeIfAbsent(dataTypeName, LOCK_FUNCTION);
         dataTypeLock.readLock().lock();
     }
 
@@ -281,11 +219,7 @@ public class MetadataLockManager {
     }
 
     public void acquireDataTypeWriteLock(String dataTypeName) {
-        ReentrantReadWriteLock dataTypeLock = dataTypeLocks.get(dataTypeName);
-        if (dataTypeLock == null) {
-            dataTypeLocks.putIfAbsent(dataTypeName, new ReentrantReadWriteLock());
-            dataTypeLock = dataTypeLocks.get(dataTypeName);
-        }
+        ReentrantReadWriteLock dataTypeLock = dataTypeLocks.computeIfAbsent(dataTypeName, LOCK_FUNCTION);
         dataTypeLock.writeLock().lock();
     }
 
@@ -410,8 +344,8 @@ public class MetadataLockManager {
         releaseDataverseReadLock(dataverseName);
     }
 
-    public void insertDeleteUpsertBegin(String dataverseName, String datasetFullyQualifiedName,
-            List<String> dataverses, List<String> datasets) {
+    public void insertDeleteUpsertBegin(String dataverseName, String datasetFullyQualifiedName, List<String> dataverses,
+            List<String> datasets) {
         dataverses.add(dataverseName);
         datasets.add(datasetFullyQualifiedName);
         Collections.sort(dataverses);
@@ -631,5 +565,23 @@ public class MetadataLockManager {
     public void refreshDatasetEnd(String dataverseName, String datasetFullyQualifiedName) {
         releaseExternalDatasetRefreshLock(datasetFullyQualifiedName);
         releaseDataverseReadLock(dataverseName);
+    }
+
+    public void acquireExtensionReadLock(String entityName) {
+        ReentrantReadWriteLock entityLock = extensionLocks.computeIfAbsent(entityName, LOCK_FUNCTION);
+        entityLock.readLock().lock();
+    }
+
+    public void releaseExtensionReadLock(String entityName) {
+        extensionLocks.get(entityName).readLock().unlock();
+    }
+
+    public void acquireExtensionWriteLock(String entityName) {
+        ReentrantReadWriteLock entityLock = extensionLocks.computeIfAbsent(entityName, LOCK_FUNCTION);
+        entityLock.writeLock().lock();
+    }
+
+    public void releaseExtensionWriteLock(String entityName) {
+        extensionLocks.get(entityName).writeLock().unlock();
     }
 }

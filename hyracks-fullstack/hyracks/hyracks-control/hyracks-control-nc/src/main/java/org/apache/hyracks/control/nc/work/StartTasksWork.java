@@ -131,7 +131,7 @@ public class StartTasksWork extends AbstractWork {
                 }
                 final int partition = tid.getPartition();
                 List<IConnectorDescriptor> inputs = ac.getActivityInputMap().get(aid);
-                task = new Task(joblet, taId, han.getClass().getName(), ncs.getExecutorService(), ncs,
+                task = new Task(joblet, taId, han.getClass().getName(), ncs.getExecutor(), ncs,
                         createInputChannels(td, inputs));
                 IOperatorNodePushable operator = han.createPushRuntime(task, rdp, partition, td.getPartitionCount());
 
@@ -207,7 +207,7 @@ public class StartTasksWork extends AbstractWork {
                 .getInputPartitionCounts()[i], td.getPartitionCount());
         if (cPolicy.materializeOnReceiveSide()) {
             return new ReceiveSideMaterializingCollector(task, ncs.getPartitionManager(), collector, task
-                    .getTaskAttemptId(), ncs.getExecutorService());
+                    .getTaskAttemptId(), ncs.getExecutor());
         } else {
             return collector;
         }
@@ -223,7 +223,7 @@ public class StartTasksWork extends AbstractWork {
                     @Override
                     public IFrameWriter createFrameWriter(int receiverIndex) throws HyracksDataException {
                         return new MaterializedPartitionWriter(ctx, ncs.getPartitionManager(), new PartitionId(jobId,
-                                conn.getConnectorId(), senderIndex, receiverIndex), taId, ncs.getExecutorService());
+                                conn.getConnectorId(), senderIndex, receiverIndex), taId, ncs.getExecutor());
                     }
                 };
             } else {
@@ -233,7 +233,7 @@ public class StartTasksWork extends AbstractWork {
                     public IFrameWriter createFrameWriter(int receiverIndex) throws HyracksDataException {
                         return new MaterializingPipelinedPartition(ctx, ncs.getPartitionManager(), new PartitionId(
                                 jobId, conn.getConnectorId(), senderIndex, receiverIndex), taId, ncs
-                                        .getExecutorService());
+                                        .getExecutor());
                     }
                 };
             }

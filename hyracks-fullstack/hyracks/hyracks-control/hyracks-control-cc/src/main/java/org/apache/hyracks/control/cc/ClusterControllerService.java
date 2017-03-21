@@ -34,7 +34,6 @@ import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.TreeMap;
-import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
@@ -325,12 +324,9 @@ public class ClusterControllerService implements IControllerService {
         return workQueue;
     }
 
-    public ExecutorService getExecutorService() {
+    @Override
+    public ExecutorService getExecutor() {
         return executor;
-    }
-
-    public Executor getExecutor() {
-        return getExecutorService();
     }
 
     public CCConfig getConfig() {

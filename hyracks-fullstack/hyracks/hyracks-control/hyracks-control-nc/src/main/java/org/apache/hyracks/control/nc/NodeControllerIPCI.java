@@ -118,12 +118,12 @@ final class NodeControllerIPCI implements IIPCI {
 
             case SHUTDOWN_REQUEST:
                 final CCNCFunctions.ShutdownRequestFunction sdrf = (CCNCFunctions.ShutdownRequestFunction) fn;
-                ncs.getExecutorService().submit(new ShutdownTask(ncs, sdrf.isTerminateNCService()));
+                ncs.getExecutor().submit(new ShutdownTask(ncs, sdrf.isTerminateNCService()));
                 return;
 
             case THREAD_DUMP_REQUEST:
                 final CCNCFunctions.ThreadDumpRequestFunction tdrf = (CCNCFunctions.ThreadDumpRequestFunction) fn;
-                ncs.getExecutorService().submit(new ThreadDumpTask(ncs, tdrf.getRequestId()));
+                ncs.getExecutor().submit(new ThreadDumpTask(ncs, tdrf.getRequestId()));
                 return;
 
             default:
