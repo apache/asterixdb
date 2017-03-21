@@ -19,7 +19,7 @@
 
 - hosts: [localhost,]
   vars:
-       temp_dir: "/tmp/asterixdb"
+       temp_dir: "{{ playbook_dir }}/../conf/instance"
        inventory: "{{ temp_dir }}/inventory"
        ccconf: "{{ temp_dir }}/cc.conf"
   tasks:

@@ -30,7 +30,7 @@ DIST_PATH=`dirname "${OPT_PATH}"`
 ansible-playbook -i "localhost," $AWS_PATH/yaml/aws_start.yml
 
 # Generates an Ansible inventory file and an AsterixDB configuration file.
-temp=/tmp/asterixdb
+temp=$AWS_PATH/conf/instance
 inventory=$temp/inventory
 
 # Installs asterixdb on all AWS instances.

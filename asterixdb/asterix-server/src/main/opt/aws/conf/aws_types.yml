@@ -1,37 +1,50 @@
-one_ephemeral:
-  - { device_name: /dev/xvdb, ephemeral: ephemeral0 }
-two_ephemeral:
-  - { device_name: /dev/xvdb, ephemeral: ephemeral0 }
-  - { device_name: /dev/xvdc, ephemeral: ephemeral1 }
-three_ephemeral:
-  - { device_name: /dev/xvdb, ephemeral: ephemeral0 }
-  - { device_name: /dev/xvdc, ephemeral: ephemeral1 }
-  - { device_name: /dev/xvdd, ephemeral: ephemeral2 }
-four_ephemeral:
-  - { device_name: /dev/xvdb, ephemeral: ephemeral0 }
-  - { device_name: /dev/xvdc, ephemeral: ephemeral1 }
-  - { device_name: /dev/xvdd, ephemeral: ephemeral2 }
-  - { device_name: /dev/xvde, ephemeral: ephemeral3 }
+# ------------------------------------------------------------
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+# ------------------------------------------------------------
 
 ephemeral_volumes:
-  c1.medium: "{{ one_ephemeral }}"
-  c1.xlarge: "{{ four_ephemeral }}"
-  c3.large: "{{ two_ephemeral }}"
-  c3.xlarge: "{{ two_ephemeral }}"
-  c3.2xlarge: "{{ two_ephemeral }}"
-  c3.4xlarge: "{{ two_ephemeral }}"
-  c3.8xlarge: "{{ two_ephemeral }}"
-  i2.xlarge: "{{ one_ephemeral }}"
-  i2.2xlarge: "{{ two_ephemeral }}"
-  i2.4xlarge: "{{ four_ephemeral }}"
-  m1.small: "{{ one_ephemeral }}"
-  m1.medium: "{{ one_ephemeral }}"
-  m1.large: "{{ two_ephemeral }}"
-  m1.xlarge: "{{ four_ephemeral }}"
-  m2.xlarge: "{{ one_ephemeral }}"
-  m2.2xlarge: "{{ one_ephemeral }}"
-  m2.4xlarge: "{{ two_ephemeral }}"
-  m3.medium: "{{ one_ephemeral }}"
-  m3.large: "{{ one_ephemeral }}"
-  m3.xlarge: "{{ two_ephemeral }}"
-  m3.2xlarge: "{{ two_ephemeral }}"
+  c3.large: 2
+  c3.xlarge: 2
+  c3.2xlarge: 2
+  c3.4xlarge: 2
+  c3.8xlarge: 2
+  d2.xlarge: 3
+  d2.2xlarge: 6
+  d2.4xlarge: 12
+  d2.8xlarge: 24
+  i3.large: 1
+  i3.xlarge: 1
+  i3.2xlarge: 1
+  i3.4xlarge: 2
+  i3.8xlarge: 4
+  i3.16xlarge: 8
+  f1.2xlarge: 1
+  f1.16xlarge: 4
+  g2.2xlarge: 1
+  g2.8xlarge: 2
+  m3.medium: 1
+  m3.large: 1
+  m3.xlarge: 2
+  m3.2xlarge: 2
+  r3.large: 1
+  r3.xlarge: 1
+  r3.2xlarge: 1
+  r3.4xlarge: 1
+  r3.8xlarge: 2
+  x1.16xlarge: 1
+  x1.32xlarge: 2

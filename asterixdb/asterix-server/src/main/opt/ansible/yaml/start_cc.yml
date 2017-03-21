@@ -19,7 +19,7 @@
 
 - name: Copy cluster config to CC
   synchronize:
-    src: /tmp/asterixdb/cc.conf
+    src: ../conf/instance/cc.conf
     dest: "{{ binarydir }}/cc.conf"
 
 - name: Update cluster config

@@ -21,17 +21,31 @@
   hosts: localhost
   gather_facts: false
   vars:
-     temp_dir: "/tmp/asterixdb"
+     temp_dir: "{{ playbook_dir }}/../conf/instance"
+     bin_dir: "{{ playbook_dir }}/../bin"
      inventory: "{{ temp_dir }}/inventory"
      ccconf: "{{ temp_dir }}/cc.conf"
      home_dir: "/home/{{ user }}"
-     vols: "{{ ephemeral_volumes[instance_type]|default([]) }}"
+     num_vols: "{{ ephemeral_volumes[instance_type]|default(0) }}"
   tasks:
     - include_vars: ../conf/aws_settings.yml
     - include_vars: ../conf/aws_types.yml
 
     - name: Clean the temporary directory
-      shell: rm -rf "{{ temp_dir }}"
+      file:
+        path: "{{ temp_dir }}"
+        state: absent
+
+    - name: Create local temporary directory
+      file:
+        path: "{{ temp_dir }}"
+        state: directory
+
+    - name: Generate instance-store volumes for AWS instances
+      shell: "{{ playbook_dir }}/../bin/gen_volumes.sh {{ num_vols }} {{ temp_dir }}/volumes.yml"
+
+    - name: Load generated volumes
+      include_vars: "{{ temp_dir }}/volumes.yml"
 
     - name: Launch all instances
       ec2:
@@ -48,11 +62,6 @@
             Name: "{{ tag }}"
         volumes: "{{ vols }}"
       register: ec2
-
-    - name: Create local temporary directory
-      file:
-        path: "{{ temp_dir }}"
-        state: directory
 
     - name: Set CC node
       set_fact:
@@ -107,7 +116,7 @@
       when: vols|length == 0
 
     - name: Generates multiple iodevice paths
-      shell: printf "devices:\n" >> "{{ temp_dir }}/devices"
+      shell: printf "devices:\n" > "{{ temp_dir }}/devices"
       when: vols|length > 0
 
     - name: Populate multiple iodevices
