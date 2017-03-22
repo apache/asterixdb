@@ -17,8 +17,6 @@
  ! under the License.
  !-->
 
-# <a id="Expressions">2. Expressions</a>
-
 SQL++ is a highly composable expression language. Each SQL++ expression returns zero or more data model instances.
 There are three major kinds of expressions in SQL++. At the topmost level, a SQL++ expression can be an
 OperatorExpression (similar to a mathematical expression), an ConditionalExpression (to choose between

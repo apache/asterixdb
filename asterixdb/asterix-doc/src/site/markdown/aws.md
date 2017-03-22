@@ -17,8 +17,6 @@
  ! under the License.
  !-->
 
-## <a id="toc">Table of Contents</a> ##
-
 * [Introduction](#Introduction)
 * [Prerequisites](#Prerequisites)
 * [Configuration](#config)

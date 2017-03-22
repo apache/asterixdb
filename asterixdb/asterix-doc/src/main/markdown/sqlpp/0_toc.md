@@ -19,8 +19,6 @@
 
 # The SQL++ Query Language
 
-## <a id="toc">Table of Contents</a> ##
-
 * [1. Introduction](#Introduction)
 * [2. Expressions](#Expressions)
       * [Operator Expressions](#Operator_expressions)
