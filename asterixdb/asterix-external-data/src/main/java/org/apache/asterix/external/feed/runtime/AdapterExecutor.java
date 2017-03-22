@@ -20,6 +20,7 @@ package org.apache.asterix.external.feed.runtime;
 
 import org.apache.asterix.external.dataset.adapter.FeedAdapter;
 import org.apache.hyracks.api.comm.IFrameWriter;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.log4j.Logger;
 
 /**
@@ -43,31 +44,45 @@ public class AdapterExecutor implements Runnable {
     @Override
     public void run() {
         // Start by getting the partition number from the manager
-        int partition = adapterManager.getPartition();
         if (LOGGER.isInfoEnabled()) {
-            LOGGER.info("Starting ingestion for partition:" + partition);
+            LOGGER.info("Starting ingestion for partition:" + adapterManager.getPartition());
         }
+        boolean failed = false;
+        try {
+            failed = doRun();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        } catch (Exception e) {
+            failed = true;
+            LOGGER.error("Unhandled Exception", e);
+        } finally {
+            // Done with the adapter. about to close, setting the stage based on the failed ingestion flag and notifying
+            // the runtime manager
+            adapterManager.setFailed(failed);
+            adapterManager.setDone(true);
+            synchronized (adapterManager) {
+                adapterManager.notifyAll();
+            }
+        }
+    }
+
+    private boolean doRun() throws HyracksDataException, InterruptedException {
         boolean continueIngestion = true;
         boolean failedIngestion = false;
         while (continueIngestion) {
             try {
                 // Start the adapter
-                adapter.start(partition, writer);
+                adapter.start(adapterManager.getPartition(), writer);
                 // Adapter has completed execution
                 continueIngestion = false;
+            } catch (InterruptedException e) {
+                throw e;
             } catch (Exception e) {
                 LOGGER.error("Exception during feed ingestion ", e);
                 continueIngestion = adapter.handleException(e);
                 failedIngestion = !continueIngestion;
             }
         }
-        // Done with the adapter. about to close, setting the stage based on the failed ingestion flag and notifying the
-        // runtime manager
-        adapterManager.setFailed(failedIngestion);
-        adapterManager.setDone(true);
-        synchronized (adapterManager) {
-            adapterManager.notifyAll();
-        }
+        return failedIngestion;
     }
-
 }

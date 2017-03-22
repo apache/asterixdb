@@ -51,8 +51,7 @@ public class FeedRecordDataFlowController<T> extends AbstractFeedDataFlowControl
     }
 
     @Override
-    public void start(IFrameWriter writer) throws HyracksDataException {
-        HyracksDataException hde = null;
+    public void start(IFrameWriter writer) throws HyracksDataException, InterruptedException {
         try {
             failed = false;
             tupleForwarder.initialize(ctx, writer);
@@ -69,13 +68,24 @@ public class FeedRecordDataFlowController<T> extends AbstractFeedDataFlowControl
         } catch (InterruptedException e) {
             //TODO: Find out what could cause an interrupted exception beside termination of a job/feed
             LOGGER.warn("Feed has been interrupted. Closing the feed", e);
-            Thread.currentThread().interrupt();
+            failed = true;
+            try {
+                finish();
+            } catch (HyracksDataException hde) {
+                e.addSuppressed(hde);
+            }
+            throw e;
         } catch (Exception e) {
             failed = true;
             tupleForwarder.flush();
             LOGGER.warn("Failure while operating a feed source", e);
             throw HyracksDataException.create(e);
         }
+        finish();
+    }
+
+    private void finish() throws HyracksDataException {
+        HyracksDataException hde = null;
         try {
             tupleForwarder.close();
         } catch (Throwable th) {
@@ -162,9 +172,12 @@ public class FeedRecordDataFlowController<T> extends AbstractFeedDataFlowControl
     }
 
     @Override
-    public boolean handleException(Throwable th) {
+    public boolean handleException(Throwable th) throws HyracksDataException {
         // This is not a parser record. most likely, this error happened in the record reader.
-        return recordReader.handleException(th);
+        if (!recordReader.handleException(th)) {
+            finish();
+        }
+        return closed.get();
     }
 
     public IRecordReader<T> getReader() {

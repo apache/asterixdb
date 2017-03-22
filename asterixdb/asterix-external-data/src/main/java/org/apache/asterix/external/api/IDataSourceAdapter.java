@@ -21,6 +21,7 @@ package org.apache.asterix.external.api;
 import java.io.Serializable;
 
 import org.apache.hyracks.api.comm.IFrameWriter;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 /**
  * A super interface implemented by a data source adapter. An adapter can be a
@@ -47,5 +48,5 @@ public interface IDataSourceAdapter extends Serializable {
      *            operator using the instance of IFrameWriter.
      * @throws Exception
      */
-    public void start(int partition, IFrameWriter writer) throws Exception;
+    public void start(int partition, IFrameWriter writer) throws HyracksDataException, InterruptedException;
 }

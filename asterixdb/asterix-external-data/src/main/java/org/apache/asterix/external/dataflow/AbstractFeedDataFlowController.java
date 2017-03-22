@@ -60,5 +60,5 @@ public abstract class AbstractFeedDataFlowController implements IDataFlowControl
     @Override
     public abstract boolean stop() throws HyracksDataException;
 
-    public abstract boolean handleException(Throwable th);
+    public abstract boolean handleException(Throwable th) throws HyracksDataException;
 }

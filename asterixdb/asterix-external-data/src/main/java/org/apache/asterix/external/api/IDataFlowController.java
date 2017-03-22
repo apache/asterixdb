@@ -24,7 +24,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 public interface IDataFlowController {
 
     //TODO: Refactor this interface. Remove writer from start() signature
-    public void start(IFrameWriter writer) throws HyracksDataException;
+    public void start(IFrameWriter writer) throws HyracksDataException, InterruptedException;
 
     public default boolean pause() throws HyracksDataException {
         throw new HyracksDataException("Method not implemented");

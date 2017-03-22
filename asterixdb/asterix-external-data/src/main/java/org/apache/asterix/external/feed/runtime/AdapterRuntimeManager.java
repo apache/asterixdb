@@ -19,12 +19,15 @@
 package org.apache.asterix.external.feed.runtime;
 
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.apache.asterix.active.EntityId;
 import org.apache.asterix.external.dataset.adapter.FeedAdapter;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
-import org.apache.log4j.Logger;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 /**
  * This class manages the execution of an adapter within a feed
@@ -43,15 +46,14 @@ public class AdapterRuntimeManager {
 
     private final IHyracksTaskContext ctx;
 
-    private IngestionRuntime ingestionRuntime; // Runtime representing the ingestion stage of a feed
-
     private Future<?> execution;
 
+    private boolean started = false;
     private volatile boolean done = false;
     private volatile boolean failed = false;
 
     public AdapterRuntimeManager(IHyracksTaskContext ctx, EntityId entityId, FeedAdapter feedAdapter,
-                                 IFrameWriter writer, int partition) {
+            IFrameWriter writer, int partition) {
         this.ctx = ctx;
         this.feedId = entityId;
         this.feedAdapter = feedAdapter;
@@ -60,23 +62,42 @@ public class AdapterRuntimeManager {
     }
 
     public void start() {
-        execution = ctx.getExecutorService().submit(adapterExecutor);
+        synchronized (adapterExecutor) {
+            started = true;
+            if (!done) {
+                execution = ctx.getExecutorService().submit(adapterExecutor);
+            } else {
+                LOGGER.log(Level.WARNING, "Someone stopped me before I even start. I will simply not start");
+            }
+        }
     }
 
-    public void stop() throws InterruptedException {
-        try {
-            if (feedAdapter.stop()) {
-                // stop() returned true, we wait for the process termination
-                execution.get();
-            } else {
-                // stop() returned false, we try to force shutdown
-                execution.cancel(true);
+    public void stop() throws HyracksDataException, InterruptedException {
+        synchronized (adapterExecutor) {
+            try {
+                if (started) {
+                    try {
+                        ctx.getExecutorService().submit(() -> {
+                            if (feedAdapter.stop()) {
+                                execution.get();
+                            }
+                            return null;
+                        }).get(30, TimeUnit.SECONDS);
+                    } catch (InterruptedException e) {
+                        LOGGER.log(Level.WARNING, "Interrupted while trying to stop an adapter runtime", e);
+                        throw e;
+                    } catch (Exception e) {
+                        LOGGER.log(Level.WARNING, "Exception while trying to stop an adapter runtime", e);
+                        throw HyracksDataException.create(e);
+                    } finally {
+                        execution.cancel(true);
+                    }
+                } else {
+                    LOGGER.log(Level.WARNING, "Adapter executor was stopped before it starts");
+                }
+            } finally {
+                done = true;
             }
-        } catch (InterruptedException e) {
-            LOGGER.error("Interrupted while waiting for feed adapter to finish its work", e);
-            throw e;
-        } catch (Exception exception) {
-            LOGGER.error("Unable to stop adapter " + feedAdapter, exception);
         }
     }
 
@@ -99,10 +120,6 @@ public class AdapterRuntimeManager {
 
     public int getPartition() {
         return partition;
-    }
-
-    public IngestionRuntime getIngestionRuntime() {
-        return ingestionRuntime;
     }
 
     public boolean isFailed() {

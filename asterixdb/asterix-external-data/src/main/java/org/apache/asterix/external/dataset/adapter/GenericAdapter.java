@@ -33,7 +33,7 @@ public class GenericAdapter implements IDataSourceAdapter {
     }
 
     @Override
-    public void start(int partition, IFrameWriter writer) throws HyracksDataException {
+    public void start(int partition, IFrameWriter writer) throws HyracksDataException, InterruptedException {
         controller.start(writer);
     }
 }

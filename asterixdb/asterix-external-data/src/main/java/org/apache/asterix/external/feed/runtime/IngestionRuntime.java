@@ -24,6 +24,7 @@ import java.util.logging.Logger;
 import org.apache.asterix.active.ActiveRuntimeId;
 import org.apache.asterix.active.EntityId;
 import org.apache.asterix.active.IActiveRuntime;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class IngestionRuntime implements IActiveRuntime {
 
@@ -50,7 +51,7 @@ public class IngestionRuntime implements IActiveRuntime {
     }
 
     @Override
-    public void stop() throws InterruptedException {
+    public void stop() throws InterruptedException, HyracksDataException {
         adapterRuntimeManager.stop();
         LOGGER.log(Level.INFO, "Feed " + feedId.getEntityName() + " stopped on partition " + runtimeId);
     }

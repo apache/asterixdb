@@ -32,7 +32,7 @@ public class FeedAdapter implements IDataSourceAdapter {
     }
 
     @Override
-    public void start(int partition, IFrameWriter writer) throws HyracksDataException {
+    public void start(int partition, IFrameWriter writer) throws HyracksDataException, InterruptedException {
         controller.start(writer);
     }
 
@@ -40,7 +40,7 @@ public class FeedAdapter implements IDataSourceAdapter {
         return controller.stop();
     }
 
-    public boolean handleException(Throwable e) {
+    public boolean handleException(Throwable e) throws HyracksDataException {
         return controller.handleException(e);
     }
 

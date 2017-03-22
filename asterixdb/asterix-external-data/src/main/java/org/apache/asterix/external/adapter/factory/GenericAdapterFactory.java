@@ -20,6 +20,8 @@ package org.apache.asterix.external.adapter.factory;
 
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.apache.asterix.common.api.IAppRuntimeContext;
 import org.apache.asterix.common.library.ILibraryManager;
@@ -52,6 +54,7 @@ import org.apache.hyracks.api.io.FileSplit;
 public class GenericAdapterFactory implements IIndexingAdapterFactory, IAdapterFactory {
 
     private static final long serialVersionUID = 1L;
+    private static final Logger LOGGER = Logger.getLogger(GenericAdapterFactory.class.getName());
     private IExternalDataSourceFactory dataSourceFactory;
     private IDataParserFactory dataParserFactory;
     private ARecordType recordType;
@@ -90,6 +93,7 @@ public class GenericAdapterFactory implements IIndexingAdapterFactory, IAdapterF
         try {
             restoreExternalObjects(appCtx.getLibraryManager());
         } catch (Exception e) {
+            LOGGER.log(Level.INFO, "Failure restoring external objects", e);
             throw HyracksDataException.create(e);
         }
         if (isFeed) {
