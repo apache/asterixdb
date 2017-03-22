@@ -291,6 +291,11 @@
         <expected-error>Feed TweetFeed is not started.</expected-error>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="feeds">
+      <compilation-unit name="push-socket-with-auuid">
+        <output-dir compare="Text">push-socket-with-auuid</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="upsert">
     <test-case FilePath="upsert">
