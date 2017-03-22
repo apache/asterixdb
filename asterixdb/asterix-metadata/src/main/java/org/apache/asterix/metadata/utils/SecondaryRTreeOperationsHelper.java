@@ -72,7 +72,7 @@ import org.apache.hyracks.storage.common.file.ILocalResourceFactoryProvider;
 import org.apache.hyracks.storage.common.file.LocalResource;
 
 @SuppressWarnings("rawtypes")
-public class SecondaryRTreeOperationsHelper extends SecondaryIndexOperationsHelper {
+public class SecondaryRTreeOperationsHelper extends SecondaryTreeIndexOperationsHelper {
 
     protected IPrimitiveValueProviderFactory[] valueProviderFactories;
     protected int numNestedSecondaryKeyFields;
@@ -429,26 +429,5 @@ public class SecondaryRTreeOperationsHelper extends SecondaryIndexOperationsHelp
             }
         }
         return fieldPermutation;
-    }
-
-    @Override
-    public JobSpecification buildCompactJobSpec() throws AsterixException, AlgebricksException {
-        JobSpecification spec = RuntimeUtils.createJobSpecification();
-        IIndexDataflowHelperFactory indexDataflowHelperFactory = dataset.getIndexDataflowHelperFactory(
-                metadataProvider, index, itemType, metaType, mergePolicyFactory, mergePolicyFactoryProperties);
-        LSMTreeIndexCompactOperatorDescriptor compactOp = new LSMTreeIndexCompactOperatorDescriptor(spec,
-                metadataProvider.getStorageComponentProvider().getStorageManager(),
-                metadataProvider.getStorageComponentProvider().getIndexLifecycleManagerProvider(),
-                secondaryFileSplitProvider, secondaryTypeTraits, secondaryComparatorFactories,
-                secondaryBloomFilterKeyFields, indexDataflowHelperFactory,
-                dataset.getModificationCallbackFactory(metadataProvider.getStorageComponentProvider(), index, null,
-                        IndexOperation.FULL_MERGE, null),
-                metadataProvider.getStorageComponentProvider().getMetadataPageManagerFactory());
-
-        AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, compactOp,
-                secondaryPartitionConstraint);
-        spec.addRoot(compactOp);
-        spec.setConnectorPolicyAssignmentPolicy(new ConnectorPolicyAssignmentPolicy());
-        return spec;
     }
 }

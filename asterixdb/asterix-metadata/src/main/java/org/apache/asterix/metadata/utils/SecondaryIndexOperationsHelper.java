@@ -185,6 +185,8 @@ public abstract class SecondaryIndexOperationsHelper {
 
     public abstract JobSpecification buildCompactJobSpec() throws AlgebricksException;
 
+    public abstract JobSpecification buildDropJobSpec() throws AlgebricksException;
+
     protected void init() throws AlgebricksException {
         payloadSerde = SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(itemType);
         metaSerde =

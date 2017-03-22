@@ -66,7 +66,7 @@ import org.apache.hyracks.storage.am.lsm.common.dataflow.LSMTreeIndexCompactOper
 import org.apache.hyracks.storage.common.file.ILocalResourceFactoryProvider;
 import org.apache.hyracks.storage.common.file.LocalResource;
 
-public class SecondaryBTreeOperationsHelper extends SecondaryIndexOperationsHelper {
+public class SecondaryBTreeOperationsHelper extends SecondaryTreeIndexOperationsHelper {
 
     protected SecondaryBTreeOperationsHelper(Dataset dataset, Index index, PhysicalOptimizationConfig physOptConf,
             IPropertiesProvider propertiesProvider, MetadataProvider metadataProvider, ARecordType recType,
@@ -234,28 +234,6 @@ public class SecondaryBTreeOperationsHelper extends SecondaryIndexOperationsHelp
     @Override
     protected int getNumSecondaryKeys() {
         return index.getKeyFieldNames().size();
-    }
-
-    @Override
-    public JobSpecification buildCompactJobSpec() throws AlgebricksException {
-        JobSpecification spec = RuntimeUtils.createJobSpecification();
-        LSMTreeIndexCompactOperatorDescriptor compactOp;
-        IIndexDataflowHelperFactory dataflowHelperFactory = dataset.getIndexDataflowHelperFactory(metadataProvider,
-                index, itemType, metaType, mergePolicyFactory, mergePolicyFactoryProperties);
-        IStorageComponentProvider storageComponentProvider = metadataProvider.getStorageComponentProvider();
-        compactOp =
-                new LSMTreeIndexCompactOperatorDescriptor(spec, storageComponentProvider.getStorageManager(),
-                        storageComponentProvider.getIndexLifecycleManagerProvider(), secondaryFileSplitProvider,
-                        secondaryTypeTraits, secondaryComparatorFactories, secondaryBloomFilterKeyFields,
-                        dataflowHelperFactory,
-                        dataset.getModificationCallbackFactory(storageComponentProvider, index, null,
-                                IndexOperation.FULL_MERGE, null),
-                        storageComponentProvider.getMetadataPageManagerFactory());
-        AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, compactOp,
-                secondaryPartitionConstraint);
-        spec.addRoot(compactOp);
-        spec.setConnectorPolicyAssignmentPolicy(new ConnectorPolicyAssignmentPolicy());
-        return spec;
     }
 
     @Override

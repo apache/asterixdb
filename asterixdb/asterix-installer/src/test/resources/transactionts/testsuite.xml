@@ -34,6 +34,13 @@
       </compilation-unit>
     </test-case>
   </test-group>
+  <test-group name="dml_after_restart">
+    <test-case FilePath="dml_after_restart">
+      <compilation-unit name="multiple_secondary_indices">
+        <output-dir compare="Text">multiple_secondary_indices</output-dir>
+      </compilation-unit>
+    </test-case>
+  </test-group>
   <test-group name="recover_after_abort">
 
     <test-case FilePath="recover_after_abort">
