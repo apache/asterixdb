@@ -24,6 +24,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.hyracks.http.api.IServlet;
+import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.server.utils.HttpUtil;
 
 import io.netty.channel.ChannelFutureListener;
@@ -60,21 +61,36 @@ public class HttpServerHandler extends SimpleChannelInboundHandler<Object> {
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, Object msg) {
+        FullHttpRequest request = (FullHttpRequest) msg;
         try {
-            FullHttpRequest request = (FullHttpRequest) msg;
             IServlet servlet = server.getServlet(request);
             if (servlet == null) {
-                DefaultHttpResponse notFound =
-                        new DefaultHttpResponse(request.protocolVersion(), HttpResponseStatus.NOT_FOUND);
-                ctx.write(notFound).addListener(ChannelFutureListener.CLOSE);
+                respond(ctx, request, HttpResponseStatus.NOT_FOUND);
             } else {
-                handler = new HttpRequestHandler(ctx, servlet, HttpUtil.toServletRequest(request), chunkSize);
-                submit();
+                submit(ctx, servlet, request);
             }
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Failure handling HTTP Request", e);
-            ctx.close();
+            LOGGER.log(Level.SEVERE, "Failure Submitting HTTP Request", e);
+            respond(ctx, request, HttpResponseStatus.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    private void respond(ChannelHandlerContext ctx, FullHttpRequest request, HttpResponseStatus status) {
+        DefaultHttpResponse response = new DefaultHttpResponse(request.protocolVersion(), status);
+        ctx.write(response).addListener(ChannelFutureListener.CLOSE);
+    }
+
+    private void submit(ChannelHandlerContext ctx, IServlet servlet, FullHttpRequest request) throws IOException {
+        IServletRequest servletRequest;
+        try {
+            servletRequest = HttpUtil.toServletRequest(request);
+        } catch (IllegalArgumentException e) {
+            LOGGER.log(Level.WARNING, "Failure Decoding Request", e);
+            respond(ctx, request, HttpResponseStatus.BAD_REQUEST);
+            return;
+        }
+        handler = new HttpRequestHandler(ctx, servlet, servletRequest, chunkSize);
+        submit();
     }
 
     private void submit() throws IOException {

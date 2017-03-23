@@ -18,7 +18,13 @@
  */
 package org.apache.hyracks.http.test;
 
+import java.io.BufferedReader;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.lang.reflect.Field;
+import java.net.InetAddress;
+import java.net.Socket;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
@@ -76,11 +82,51 @@ public class HttpServerTest {
         }
     }
 
+    @Test
+    public void testMalformedString() throws Exception {
+        WebManager webMgr = new WebManager();
+        HttpServer server =
+                new HttpServer(webMgr.getBosses(), webMgr.getWorkers(), PORT, NUM_EXECUTOR_THREADS, SERVER_QUEUE_SIZE);
+        SlowServlet servlet = new SlowServlet(server.ctx(), new String[] { PATH });
+        server.addServlet(servlet);
+        webMgr.add(server);
+        webMgr.start();
+        try {
+            StringBuilder response = new StringBuilder();
+            try (Socket s = new Socket(InetAddress.getLocalHost(), PORT)) {
+                PrintWriter pw = new PrintWriter(s.getOutputStream());
+                pw.println("GET /?handle=%7B%22handle%22%3A%5B0%2C%200%5D%7 HTTP/1.1");
+                pw.println("Host: 127.0.0.1");
+                pw.println();
+                pw.flush();
+                BufferedReader br = new BufferedReader(new InputStreamReader(s.getInputStream()));
+                String line;
+                while ((line = br.readLine()) != null) {
+                    response.append(line).append('\n');
+                }
+                br.close();
+            }
+            String output = response.toString();
+            Assert.assertTrue(output.contains(HttpResponseStatus.BAD_REQUEST.toString()));
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw e;
+        } finally {
+            webMgr.stop();
+        }
+    }
+
+    public static void setPrivateField(Object obj, String filedName, Object value) throws Exception {
+        Field f = obj.getClass().getDeclaredField(filedName);
+        f.setAccessible(true);
+        f.set(obj, value);
+    }
+
     private void request(int count) {
         for (int i = 0; i < count; i++) {
             Thread next = new Thread(() -> {
                 try {
-                    HttpUriRequest request = request();
+                    HttpUriRequest request = request(null);
                     HttpResponse response = executeHttpRequest(request);
                     if (response.getStatusLine().getStatusCode() == HttpResponseStatus.OK.code()) {
                         SUCCESS_COUNT.incrementAndGet();
@@ -111,8 +157,8 @@ public class HttpServerTest {
         }
     }
 
-    protected HttpUriRequest request() throws URISyntaxException {
-        URI uri = new URI(PROTOCOL, null, HOST, PORT, PATH, null, null);
+    protected HttpUriRequest request(String query) throws URISyntaxException {
+        URI uri = new URI(PROTOCOL, null, HOST, PORT, PATH, query, null);
         RequestBuilder builder = RequestBuilder.get(uri);
         builder.setCharset(StandardCharsets.UTF_8);
         return builder.build();
