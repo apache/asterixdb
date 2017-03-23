@@ -63,7 +63,7 @@
  * Note: an [n_gram index](similarity.html#UsingIndexesToSupportSimilarityQueries) can be utilized for this function.
  * Example:
 
-        { "v1": contains("I like iphone", "phone"), "v2": contains("one", "phone") };
+        { "v1": contains("I like x-phone", "phone"), "v2": contains("one", "phone") };
 
 
  * The expected result is:
@@ -90,7 +90,7 @@
  * Example:
 
         {
-          "v1": ends_with(" love sprint its shortcut_menu is awesome:)", ":)"),
+          "v1": ends_with(" love product-b its shortcut_menu is awesome:)", ":)"),
           "v2": ends_with(" awsome:)", ":-)")
         };
 
@@ -193,12 +193,12 @@
 
  * Example:
 
-        ltrim("me like iphone", "eml");
+        ltrim("me like x-phone", "eml");
 
 
  * The expected result is:
 
-        " like iphone"
+        " like x-phone"
 
 
 ### position ###
@@ -284,8 +284,8 @@
  * Example:
 
         {
-          "v1": regexp_like(" can't stand at&t the network is horrible:(", ".*at&t.*"),
-          "v2": regexp_like("at&t", ".*att.*")
+          "v1": regexp_like(" can't stand acast the network is horrible:(", ".*acast.*"),
+          "v2": regexp_like("acast", ".*acst.*")
         };
 
  * The expected result is:
@@ -347,12 +347,12 @@
 
  * Example:
 
-        regexp_replace(" like iphone the voicemail_service is awesome", " like iphone", "like android")
+        regexp_replace(" like x-phone the voicemail_service is awesome", " like x-phone", "like product-a")
 
 
  * The expected result is:
 
-        "like android the voicemail_service is awesome"
+        "like product-a the voicemail_service is awesome"
 
 
 ### repeat ###
@@ -402,8 +402,8 @@
  * Example:
 
         {
-          "v1": rtrim("i like iphone", "iphone"),
-          "v2": rtrim("i like iphone", "oneiph")
+          "v1": rtrim("i like x-phone", "x-phone"),
+          "v2": rtrim("i like x-phone", "onexph")
         };
 
  * The expected result is:
@@ -615,7 +615,7 @@
 
  * Example:
 
-        substring_before(" like iphone", "iphone");
+        substring_before(" like x-phone", "x-phone");
 
 
  * The expected result is:
@@ -641,7 +641,7 @@
 
  * Example:
 
-        substring_after(" like iphone", "iph");
+        substring_after(" like x-phone", "xph");
 
 
  * The expected result is:
@@ -668,7 +668,7 @@
 
  * Example:
 
-        trim("i like iphone", "iphoen");
+        trim("i like x-phone", "xphoen");
 
 
  * The expected result is:

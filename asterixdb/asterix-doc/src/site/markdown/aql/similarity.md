@@ -225,7 +225,7 @@ objects with this token.  The following two examples show how to create keyword 
         create index fbMessageIdx on FacebookMessages(message) type keyword;
 
         for $o in dataset('FacebookMessages')
-        let $jacc := similarity-jaccard-check(word-tokens($o.message), word-tokens("love like verizon"), 0.2f)
+        let $jacc := similarity-jaccard-check(word-tokens($o.message), word-tokens("love like ccast"), 0.2f)
         where $jacc[0]
         return $o
 

@@ -131,21 +131,21 @@ the equivalent javascript expression is shown below it, followed by the results 
 
 ###### Results
 
-	{ "uname": "MargaritaStoddard", "message": " dislike iphone its touch-screen is horrible" }
-	{ "uname": "MargaritaStoddard", "message": " like verizon the 3G is awesome:)" }
-	{ "uname": "MargaritaStoddard", "message": " can't stand motorola the touch-screen is terrible" }
-	{ "uname": "MargaritaStoddard", "message": " can't stand at&t the network is horrible:(" }
-	{ "uname": "MargaritaStoddard", "message": " can't stand at&t its plan is terrible" }
-	{ "uname": "IsbelDull", "message": " like samsung the plan is amazing" }
-	{ "uname": "IsbelDull", "message": " like t-mobile its platform is mind-blowing" }
-	{ "uname": "WoodrowNehling", "message": " love at&t its 3G is good:)" }
-	{ "uname": "BramHatch", "message": " dislike iphone the voice-command is bad:(" }
-	{ "uname": "BramHatch", "message": " can't stand t-mobile its voicemail-service is OMG:(" }
-	{ "uname": "EmoryUnk", "message": " love sprint its shortcut-menu is awesome:)" }
-	{ "uname": "EmoryUnk", "message": " love verizon its wireless is good" }
-	{ "uname": "WillisWynne", "message": " love sprint the customization is mind-blowing" }
-	{ "uname": "SuzannaTillson", "message": " like iphone the voicemail-service is awesome" }
-	{ "uname": "VonKemble", "message": " dislike sprint the speed is horrible" }
+	{ "uname": "MargaritaStoddard", "message": " dislike x-phone its touch-screen is horrible" }
+	{ "uname": "MargaritaStoddard", "message": " like ccast the 3G is awesome:)" }
+	{ "uname": "MargaritaStoddard", "message": " can't stand product-w the touch-screen is terrible" }
+	{ "uname": "MargaritaStoddard", "message": " can't stand acast the network is horrible:(" }
+	{ "uname": "MargaritaStoddard", "message": " can't stand acast its plan is terrible" }
+	{ "uname": "IsbelDull", "message": " like product-y the plan is amazing" }
+	{ "uname": "IsbelDull", "message": " like product-z its platform is mind-blowing" }
+	{ "uname": "WoodrowNehling", "message": " love acast its 3G is good:)" }
+	{ "uname": "BramHatch", "message": " dislike x-phone the voice-command is bad:(" }
+	{ "uname": "BramHatch", "message": " can't stand product-z its voicemail-service is OMG:(" }
+	{ "uname": "EmoryUnk", "message": " love product-b its shortcut-menu is awesome:)" }
+	{ "uname": "EmoryUnk", "message": " love ccast its wireless is good" }
+	{ "uname": "WillisWynne", "message": " love product-b the customization is mind-blowing" }
+	{ "uname": "SuzannaTillson", "message": " like x-phone the voicemail-service is awesome" }
+	{ "uname": "VonKemble", "message": " dislike product-b the speed is horrible" }
 
 ### Query 2-B - Index join ###
 ###### AQL
@@ -172,21 +172,21 @@ the equivalent javascript expression is shown below it, followed by the results 
 
 ###### Results
 
-	{ "uname": "MargaritaStoddard", "message": " dislike iphone its touch-screen is horrible" }
-	{ "uname": "MargaritaStoddard", "message": " like verizon the 3G is awesome:)" }
-	{ "uname": "MargaritaStoddard", "message": " can't stand motorola the touch-screen is terrible" }
-	{ "uname": "MargaritaStoddard", "message": " can't stand at&t the network is horrible:(" }
-	{ "uname": "MargaritaStoddard", "message": " can't stand at&t its plan is terrible" }
-	{ "uname": "IsbelDull", "message": " like samsung the plan is amazing" }
-	{ "uname": "IsbelDull", "message": " like t-mobile its platform is mind-blowing" }
-	{ "uname": "WoodrowNehling", "message": " love at&t its 3G is good:)" }
-	{ "uname": "BramHatch", "message": " dislike iphone the voice-command is bad:(" }
-	{ "uname": "BramHatch", "message": " can't stand t-mobile its voicemail-service is OMG:(" }
-	{ "uname": "EmoryUnk", "message": " love sprint its shortcut-menu is awesome:)" }
-	{ "uname": "EmoryUnk", "message": " love verizon its wireless is good" }
-	{ "uname": "WillisWynne", "message": " love sprint the customization is mind-blowing" }
-	{ "uname": "SuzannaTillson", "message": " like iphone the voicemail-service is awesome" }
-	{ "uname": "VonKemble", "message": " dislike sprint the speed is horrible" }
+	{ "uname": "MargaritaStoddard", "message": " dislike x-phone its touch-screen is horrible" }
+	{ "uname": "MargaritaStoddard", "message": " like ccast the 3G is awesome:)" }
+	{ "uname": "MargaritaStoddard", "message": " can't stand product-w the touch-screen is terrible" }
+	{ "uname": "MargaritaStoddard", "message": " can't stand acast the network is horrible:(" }
+	{ "uname": "MargaritaStoddard", "message": " can't stand acast its plan is terrible" }
+	{ "uname": "IsbelDull", "message": " like product-y the plan is amazing" }
+	{ "uname": "IsbelDull", "message": " like product-z its platform is mind-blowing" }
+	{ "uname": "WoodrowNehling", "message": " love acast its 3G is good:)" }
+	{ "uname": "BramHatch", "message": " dislike x-phone the voice-command is bad:(" }
+	{ "uname": "BramHatch", "message": " can't stand product-z its voicemail-service is OMG:(" }
+	{ "uname": "EmoryUnk", "message": " love product-b its shortcut-menu is awesome:)" }
+	{ "uname": "EmoryUnk", "message": " love ccast its wireless is good" }
+	{ "uname": "WillisWynne", "message": " love product-b the customization is mind-blowing" }
+	{ "uname": "SuzannaTillson", "message": " like x-phone the voicemail-service is awesome" }
+	{ "uname": "VonKemble", "message": " dislike product-b the speed is horrible" }
 
 ### Query 3 - Nested Outer Join ###
 ###### AQL
@@ -216,16 +216,16 @@ the equivalent javascript expression is shown below it, followed by the results 
 
 ###### Results
 
-	{ "uname": "MargaritaStoddard", "messages": { orderedlist: [" dislike iphone its touch-screen is horrible", " like verizon the 3G is awesome:)", " can't stand motorola the touch-screen is terrible", " can't stand at&t the network is horrible:(", " can't stand at&t its plan is terrible" ]} }
-	{ "uname": "IsbelDull", "messages": { orderedlist: [" like samsung the plan is amazing", " like t-mobile its platform is mind-blowing" ]} }
+	{ "uname": "MargaritaStoddard", "messages": { orderedlist: [" dislike x-phone its touch-screen is horrible", " like ccast the 3G is awesome:)", " can't stand product-w the touch-screen is terrible", " can't stand acast the network is horrible:(", " can't stand acast its plan is terrible" ]} }
+	{ "uname": "IsbelDull", "messages": { orderedlist: [" like product-y the plan is amazing", " like product-z its platform is mind-blowing" ]} }
 	{ "uname": "NilaMilliron", "messages": { orderedlist: [ ]} }
-	{ "uname": "WoodrowNehling", "messages": { orderedlist: [" love at&t its 3G is good:)" ]} }
-	{ "uname": "BramHatch", "messages": { orderedlist: [" dislike iphone the voice-command is bad:(", " can't stand t-mobile its voicemail-service is OMG:(" ]} }
-	{ "uname": "EmoryUnk", "messages": { orderedlist: [" love sprint its shortcut-menu is awesome:)", " love verizon its wireless is good" ]} }
-	{ "uname": "WillisWynne", "messages": { orderedlist: [" love sprint the customization is mind-blowing" ]} }
-	{ "uname": "SuzannaTillson", "messages": { orderedlist: [" like iphone the voicemail-service is awesome" ]} }
+	{ "uname": "WoodrowNehling", "messages": { orderedlist: [" love acast its 3G is good:)" ]} }
+	{ "uname": "BramHatch", "messages": { orderedlist: [" dislike x-phone the voice-command is bad:(", " can't stand product-z its voicemail-service is OMG:(" ]} }
+	{ "uname": "EmoryUnk", "messages": { orderedlist: [" love product-b its shortcut-menu is awesome:)", " love ccast its wireless is good" ]} }
+	{ "uname": "WillisWynne", "messages": { orderedlist: [" love product-b the customization is mind-blowing" ]} }
+	{ "uname": "SuzannaTillson", "messages": { orderedlist: [" like x-phone the voicemail-service is awesome" ]} }
 	{ "uname": "NicholasStroh", "messages": { orderedlist: [ ]} }
-	{ "uname": "VonKemble", "messages": { orderedlist: [" dislike sprint the speed is horrible" ]} }
+	{ "uname": "VonKemble", "messages": { orderedlist: [" dislike product-b the speed is horrible" ]} }
 
 ### Query 4 - Theta Join ###
 ###### AQL
@@ -255,18 +255,18 @@ the equivalent javascript expression is shown below it, followed by the results 
 
 ###### Results
 
-	{ "message": " hate verizon its voice-clarity is OMG:(", "nearby-messages": { orderedlist: [{ "msgtxt": " hate verizon its voice-clarity is OMG:(" }, { "msgtxt": " like motorola the speed is good:)" } ]} }
-	{ "message": " like iphone the voice-clarity is good:)", "nearby-messages": { orderedlist: [{ "msgtxt": " like iphone the voice-clarity is good:)" } ]} }
-	{ "message": " like samsung the platform is good", "nearby-messages": { orderedlist: [{ "msgtxt": " like samsung the platform is good" } ]} }
-	{ "message": " love t-mobile its customization is good:)", "nearby-messages": { orderedlist: [{ "msgtxt": " love t-mobile its customization is good:)" } ]} }
-	{ "message": " like samsung the voice-command is amazing:)", "nearby-messages": { orderedlist: [{ "msgtxt": " like samsung the voice-command is amazing:)" } ]} }
-	{ "message": " like motorola the speed is good:)", "nearby-messages": { orderedlist: [{ "msgtxt": " hate verizon its voice-clarity is OMG:(" }, { "msgtxt": " like motorola the speed is good:)" } ]} }
-	{ "message": " love verizon its voicemail-service is awesome", "nearby-messages": { orderedlist: [{ "msgtxt": " love verizon its voicemail-service is awesome" } ]} }
-	{ "message": " can't stand motorola its speed is terrible:(", "nearby-messages": { orderedlist: [{ "msgtxt": " can't stand motorola its speed is terrible:(" } ]} }
-	{ "message": " like t-mobile the shortcut-menu is awesome:)", "nearby-messages": { orderedlist: [{ "msgtxt": " like t-mobile the shortcut-menu is awesome:)" } ]} }
-	{ "message": " can't stand iphone its platform is terrible", "nearby-messages": { orderedlist: [{ "msgtxt": " can't stand iphone its platform is terrible" } ]} }
-	{ "message": " like verizon its shortcut-menu is awesome:)", "nearby-messages": { orderedlist: [{ "msgtxt": " like verizon its shortcut-menu is awesome:)" } ]} }
-	{ "message": " like sprint the voice-command is mind-blowing:)", "nearby-messages": { orderedlist: [{ "msgtxt": " like sprint the voice-command is mind-blowing:)" } ]} }
+	{ "message": " hate ccast its voice-clarity is OMG:(", "nearby-messages": { orderedlist: [{ "msgtxt": " hate ccast its voice-clarity is OMG:(" }, { "msgtxt": " like product-w the speed is good:)" } ]} }
+	{ "message": " like x-phone the voice-clarity is good:)", "nearby-messages": { orderedlist: [{ "msgtxt": " like x-phone the voice-clarity is good:)" } ]} }
+	{ "message": " like product-y the platform is good", "nearby-messages": { orderedlist: [{ "msgtxt": " like product-y the platform is good" } ]} }
+	{ "message": " love product-z its customization is good:)", "nearby-messages": { orderedlist: [{ "msgtxt": " love product-z its customization is good:)" } ]} }
+	{ "message": " like product-y the voice-command is amazing:)", "nearby-messages": { orderedlist: [{ "msgtxt": " like product-y the voice-command is amazing:)" } ]} }
+	{ "message": " like product-w the speed is good:)", "nearby-messages": { orderedlist: [{ "msgtxt": " hate ccast its voice-clarity is OMG:(" }, { "msgtxt": " like product-w the speed is good:)" } ]} }
+	{ "message": " love ccast its voicemail-service is awesome", "nearby-messages": { orderedlist: [{ "msgtxt": " love ccast its voicemail-service is awesome" } ]} }
+	{ "message": " can't stand product-w its speed is terrible:(", "nearby-messages": { orderedlist: [{ "msgtxt": " can't stand product-w its speed is terrible:(" } ]} }
+	{ "message": " like product-z the shortcut-menu is awesome:)", "nearby-messages": { orderedlist: [{ "msgtxt": " like product-z the shortcut-menu is awesome:)" } ]} }
+	{ "message": " can't stand x-phone its platform is terrible", "nearby-messages": { orderedlist: [{ "msgtxt": " can't stand x-phone its platform is terrible" } ]} }
+	{ "message": " like ccast its shortcut-menu is awesome:)", "nearby-messages": { orderedlist: [{ "msgtxt": " like ccast its shortcut-menu is awesome:)" } ]} }
+	{ "message": " like product-b the voice-command is mind-blowing:)", "nearby-messages": { orderedlist: [{ "msgtxt": " like product-b the voice-command is mind-blowing:)" } ]} }
 
 ### Query 5 - Fuzzy Join ###
 ###### AQL
@@ -539,15 +539,15 @@ use dataverse TinySocial;
 
 ###### Results
 
-	{ "tweet": { "tweetid": "10", "user": { "screen-name": "ColineGeyer@63", "lang": "en", "friends_count": { int32: 121 } , "statuses_count": { int32: 362 } , "name": "Coline Geyer", "followers_count": { int32: 17159 } }, "sender-location": { point: [29.15, 76.53]}, "send-time": { datetime: 1201342200000}, "referred-topics": { unorderedlist: ["verizon", "voice-clarity" ]}, "message-text": " hate verizon its voice-clarity is OMG:(" }, "similar-tweets": { orderedlist: [{ unorderedlist: ["iphone", "voice-clarity" ]}, { unorderedlist: ["verizon", "shortcut-menu" ]}, { unorderedlist: ["verizon", "voicemail-service" ]} ]} }
-	{ "tweet": { "tweetid": "6", "user": { "screen-name": "ColineGeyer@63", "lang": "en", "friends_count": { int32: 121 } , "statuses_count": { int32: 362 } , "name": "Coline Geyer", "followers_count": { int32: 17159 } }, "sender-location": { point: [47.51, 83.99]}, "send-time": { datetime: 1273227000000}, "referred-topics": { unorderedlist: ["iphone", "voice-clarity" ]}, "message-text": " like iphone the voice-clarity is good:)" }, "similar-tweets": { orderedlist: [{ unorderedlist: ["verizon", "voice-clarity" ]}, { unorderedlist: ["iphone", "platform" ]} ]} }
-	{ "tweet": { "tweetid": "7", "user": { "screen-name": "ChangEwing_573", "lang": "en", "friends_count": { int32: 182 } , "statuses_count": { int32: 394 } , "name": "Chang Ewing", "followers_count": { int32: 32136 } }, "sender-location": { point: [36.21, 72.6]}, "send-time": { datetime: 1314267000000}, "referred-topics": { unorderedlist: ["samsung", "platform" ]}, "message-text": " like samsung the platform is good" }, "similar-tweets": { orderedlist: [{ unorderedlist: ["iphone", "platform" ]}, { unorderedlist: ["samsung", "voice-command" ]} ]} }
-	{ "tweet": { "tweetid": "1", "user": { "screen-name": "NathanGiesen@211", "lang": "en", "friends_count": { int32: 39339 } , "statuses_count": { int32: 473 } , "name": "Nathan Giesen", "followers_count": { int32: 49416 } }, "sender-location": { point: [47.44, 80.65]}, "send-time": { datetime: 1209204600000}, "referred-topics": { unorderedlist: ["t-mobile", "customization" ]}, "message-text": " love t-mobile its customization is good:)" }, "similar-tweets": { orderedlist: [{ unorderedlist: ["t-mobile", "shortcut-menu" ]} ]} }
-	{ "tweet": { "tweetid": "12", "user": { "screen-name": "OliJackson_512", "lang": "en", "friends_count": { int32: 445 } , "statuses_count": { int32: 164 } , "name": "Oli Jackson", "followers_count": { int32: 22649 } }, "sender-location": { point: [24.82, 94.63]}, "send-time": { datetime: 1266055800000}, "referred-topics": { unorderedlist: ["samsung", "voice-command" ]}, "message-text": " like samsung the voice-command is amazing:)" }, "similar-tweets": { orderedlist: [{ unorderedlist: ["samsung", "platform" ]}, { unorderedlist: ["sprint", "voice-command" ]} ]} }
-	{ "tweet": { "tweetid": "3", "user": { "screen-name": "NathanGiesen@211", "lang": "en", "friends_count": { int32: 39339 } , "statuses_count": { int32: 473 } , "name": "Nathan Giesen", "followers_count": { int32: 49416 } }, "sender-location": { point: [29.72, 75.8]}, "send-time": { datetime: 1162635000000}, "referred-topics": { unorderedlist: ["motorola", "speed" ]}, "message-text": " like motorola the speed is good:)" }, "similar-tweets": { orderedlist: [{ unorderedlist: ["motorola", "speed" ]} ]} }
-	{ "tweet": { "tweetid": "9", "user": { "screen-name": "NathanGiesen@211", "lang": "en", "friends_count": { int32: 39339 } , "statuses_count": { int32: 473 } , "name": "Nathan Giesen", "followers_count": { int32: 49416 } }, "sender-location": { point: [36.86, 74.62]}, "send-time": { datetime: 1342865400000}, "referred-topics": { unorderedlist: ["verizon", "voicemail-service" ]}, "message-text": " love verizon its voicemail-service is awesome" }, "similar-tweets": { orderedlist: [{ unorderedlist: ["verizon", "voice-clarity" ]}, { unorderedlist: ["verizon", "shortcut-menu" ]} ]} }
-	{ "tweet": { "tweetid": "5", "user": { "screen-name": "NathanGiesen@211", "lang": "en", "friends_count": { int32: 39339 } , "statuses_count": { int32: 473 } , "name": "Nathan Giesen", "followers_count": { int32: 49416 } }, "sender-location": { point: [40.09, 92.69]}, "send-time": { datetime: 1154686200000}, "referred-topics": { unorderedlist: ["motorola", "speed" ]}, "message-text": " can't stand motorola its speed is terrible:(" }, "similar-tweets": { orderedlist: [{ unorderedlist: ["motorola", "speed" ]} ]} }
-	{ "tweet": { "tweetid": "8", "user": { "screen-name": "NathanGiesen@211", "lang": "en", "friends_count": { int32: 39339 } , "statuses_count": { int32: 473 } , "name": "Nathan Giesen", "followers_count": { int32: 49416 } }, "sender-location": { point: [46.05, 93.34]}, "send-time": { datetime: 1129284600000}, "referred-topics": { unorderedlist: ["t-mobile", "shortcut-menu" ]}, "message-text": " like t-mobile the shortcut-menu is awesome:)" }, "similar-tweets": { orderedlist: [{ unorderedlist: ["verizon", "shortcut-menu" ]}, { unorderedlist: ["t-mobile", "customization" ]} ]} }
-	{ "tweet": { "tweetid": "11", "user": { "screen-name": "NilaMilliron_tw", "lang": "en", "friends_count": { int32: 445 } , "statuses_count": { int32: 164 } , "name": "Nila Milliron", "followers_count": { int32: 22649 } }, "sender-location": { point: [37.59, 68.42]}, "send-time": { datetime: 1205057400000}, "referred-topics": { unorderedlist: ["iphone", "platform" ]}, "message-text": " can't stand iphone its platform is terrible" }, "similar-tweets": { orderedlist: [{ unorderedlist: ["iphone", "voice-clarity" ]}, { unorderedlist: ["samsung", "platform" ]} ]} }
-	{ "tweet": { "tweetid": "2", "user": { "screen-name": "ColineGeyer@63", "lang": "en", "friends_count": { int32: 121 } , "statuses_count": { int32: 362 } , "name": "Coline Geyer", "followers_count": { int32: 17159 } }, "sender-location": { point: [32.84, 67.14]}, "send-time": { datetime: 1273745400000}, "referred-topics": { unorderedlist: ["verizon", "shortcut-menu" ]}, "message-text": " like verizon its shortcut-menu is awesome:)" }, "similar-tweets": { orderedlist: [{ unorderedlist: ["t-mobile", "shortcut-menu" ]}, { unorderedlist: ["verizon", "voice-clarity" ]}, { unorderedlist: ["verizon", "voicemail-service" ]} ]} }
-	{ "tweet": { "tweetid": "4", "user": { "screen-name": "NathanGiesen@211", "lang": "en", "friends_count": { int32: 39339 } , "statuses_count": { int32: 473 } , "name": "Nathan Giesen", "followers_count": { int32: 49416 } }, "sender-location": { point: [39.28, 70.48]}, "send-time": { datetime: 1324894200000}, "referred-topics": { unorderedlist: ["sprint", "voice-command" ]}, "message-text": " like sprint the voice-command is mind-blowing:)" }, "similar-tweets": { orderedlist: [{ unorderedlist: ["samsung", "voice-command" ]} ]} }
+	{ "tweet": { "tweetid": "10", "user": { "screen-name": "ColineGeyer@63", "lang": "en", "friends_count": { int32: 121 } , "statuses_count": { int32: 362 } , "name": "Coline Geyer", "followers_count": { int32: 17159 } }, "sender-location": { point: [29.15, 76.53]}, "send-time": { datetime: 1201342200000}, "referred-topics": { unorderedlist: ["ccast", "voice-clarity" ]}, "message-text": " hate ccast its voice-clarity is OMG:(" }, "similar-tweets": { orderedlist: [{ unorderedlist: ["x-phone", "voice-clarity" ]}, { unorderedlist: ["ccast", "shortcut-menu" ]}, { unorderedlist: ["ccast", "voicemail-service" ]} ]} }
+	{ "tweet": { "tweetid": "6", "user": { "screen-name": "ColineGeyer@63", "lang": "en", "friends_count": { int32: 121 } , "statuses_count": { int32: 362 } , "name": "Coline Geyer", "followers_count": { int32: 17159 } }, "sender-location": { point: [47.51, 83.99]}, "send-time": { datetime: 1273227000000}, "referred-topics": { unorderedlist: ["x-phone", "voice-clarity" ]}, "message-text": " like x-phone the voice-clarity is good:)" }, "similar-tweets": { orderedlist: [{ unorderedlist: ["ccast", "voice-clarity" ]}, { unorderedlist: ["x-phone", "platform" ]} ]} }
+	{ "tweet": { "tweetid": "7", "user": { "screen-name": "ChangEwing_573", "lang": "en", "friends_count": { int32: 182 } , "statuses_count": { int32: 394 } , "name": "Chang Ewing", "followers_count": { int32: 32136 } }, "sender-location": { point: [36.21, 72.6]}, "send-time": { datetime: 1314267000000}, "referred-topics": { unorderedlist: ["product-y", "platform" ]}, "message-text": " like product-y the platform is good" }, "similar-tweets": { orderedlist: [{ unorderedlist: ["x-phone", "platform" ]}, { unorderedlist: ["product-y", "voice-command" ]} ]} }
+	{ "tweet": { "tweetid": "1", "user": { "screen-name": "NathanGiesen@211", "lang": "en", "friends_count": { int32: 39339 } , "statuses_count": { int32: 473 } , "name": "Nathan Giesen", "followers_count": { int32: 49416 } }, "sender-location": { point: [47.44, 80.65]}, "send-time": { datetime: 1209204600000}, "referred-topics": { unorderedlist: ["product-z", "customization" ]}, "message-text": " love product-z its customization is good:)" }, "similar-tweets": { orderedlist: [{ unorderedlist: ["product-z", "shortcut-menu" ]} ]} }
+	{ "tweet": { "tweetid": "12", "user": { "screen-name": "OliJackson_512", "lang": "en", "friends_count": { int32: 445 } , "statuses_count": { int32: 164 } , "name": "Oli Jackson", "followers_count": { int32: 22649 } }, "sender-location": { point: [24.82, 94.63]}, "send-time": { datetime: 1266055800000}, "referred-topics": { unorderedlist: ["product-y", "voice-command" ]}, "message-text": " like product-y the voice-command is amazing:)" }, "similar-tweets": { orderedlist: [{ unorderedlist: ["product-y", "platform" ]}, { unorderedlist: ["product-b", "voice-command" ]} ]} }
+	{ "tweet": { "tweetid": "3", "user": { "screen-name": "NathanGiesen@211", "lang": "en", "friends_count": { int32: 39339 } , "statuses_count": { int32: 473 } , "name": "Nathan Giesen", "followers_count": { int32: 49416 } }, "sender-location": { point: [29.72, 75.8]}, "send-time": { datetime: 1162635000000}, "referred-topics": { unorderedlist: ["product-w", "speed" ]}, "message-text": " like product-w the speed is good:)" }, "similar-tweets": { orderedlist: [{ unorderedlist: ["product-w", "speed" ]} ]} }
+	{ "tweet": { "tweetid": "9", "user": { "screen-name": "NathanGiesen@211", "lang": "en", "friends_count": { int32: 39339 } , "statuses_count": { int32: 473 } , "name": "Nathan Giesen", "followers_count": { int32: 49416 } }, "sender-location": { point: [36.86, 74.62]}, "send-time": { datetime: 1342865400000}, "referred-topics": { unorderedlist: ["ccast", "voicemail-service" ]}, "message-text": " love ccast its voicemail-service is awesome" }, "similar-tweets": { orderedlist: [{ unorderedlist: ["ccast", "voice-clarity" ]}, { unorderedlist: ["ccast", "shortcut-menu" ]} ]} }
+	{ "tweet": { "tweetid": "5", "user": { "screen-name": "NathanGiesen@211", "lang": "en", "friends_count": { int32: 39339 } , "statuses_count": { int32: 473 } , "name": "Nathan Giesen", "followers_count": { int32: 49416 } }, "sender-location": { point: [40.09, 92.69]}, "send-time": { datetime: 1154686200000}, "referred-topics": { unorderedlist: ["product-w", "speed" ]}, "message-text": " can't stand product-w its speed is terrible:(" }, "similar-tweets": { orderedlist: [{ unorderedlist: ["product-w", "speed" ]} ]} }
+	{ "tweet": { "tweetid": "8", "user": { "screen-name": "NathanGiesen@211", "lang": "en", "friends_count": { int32: 39339 } , "statuses_count": { int32: 473 } , "name": "Nathan Giesen", "followers_count": { int32: 49416 } }, "sender-location": { point: [46.05, 93.34]}, "send-time": { datetime: 1129284600000}, "referred-topics": { unorderedlist: ["product-z", "shortcut-menu" ]}, "message-text": " like product-z the shortcut-menu is awesome:)" }, "similar-tweets": { orderedlist: [{ unorderedlist: ["ccast", "shortcut-menu" ]}, { unorderedlist: ["product-z", "customization" ]} ]} }
+	{ "tweet": { "tweetid": "11", "user": { "screen-name": "NilaMilliron_tw", "lang": "en", "friends_count": { int32: 445 } , "statuses_count": { int32: 164 } , "name": "Nila Milliron", "followers_count": { int32: 22649 } }, "sender-location": { point: [37.59, 68.42]}, "send-time": { datetime: 1205057400000}, "referred-topics": { unorderedlist: ["x-phone", "platform" ]}, "message-text": " can't stand x-phone its platform is terrible" }, "similar-tweets": { orderedlist: [{ unorderedlist: ["x-phone", "voice-clarity" ]}, { unorderedlist: ["product-y", "platform" ]} ]} }
+	{ "tweet": { "tweetid": "2", "user": { "screen-name": "ColineGeyer@63", "lang": "en", "friends_count": { int32: 121 } , "statuses_count": { int32: 362 } , "name": "Coline Geyer", "followers_count": { int32: 17159 } }, "sender-location": { point: [32.84, 67.14]}, "send-time": { datetime: 1273745400000}, "referred-topics": { unorderedlist: ["ccast", "shortcut-menu" ]}, "message-text": " like ccast its shortcut-menu is awesome:)" }, "similar-tweets": { orderedlist: [{ unorderedlist: ["product-z", "shortcut-menu" ]}, { unorderedlist: ["ccast", "voice-clarity" ]}, { unorderedlist: ["ccast", "voicemail-service" ]} ]} }
+	{ "tweet": { "tweetid": "4", "user": { "screen-name": "NathanGiesen@211", "lang": "en", "friends_count": { int32: 39339 } , "statuses_count": { int32: 473 } , "name": "Nathan Giesen", "followers_count": { int32: 49416 } }, "sender-location": { point: [39.28, 70.48]}, "send-time": { datetime: 1324894200000}, "referred-topics": { unorderedlist: ["product-b", "voice-command" ]}, "message-text": " like product-b the voice-command is mind-blowing:)" }, "similar-tweets": { orderedlist: [{ unorderedlist: ["product-y", "voice-command" ]} ]} }

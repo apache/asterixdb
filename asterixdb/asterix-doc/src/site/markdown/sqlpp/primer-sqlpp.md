@@ -276,18 +276,18 @@ of the data instances will be stored separately from their associated field name
 
         INSERT INTO ChirpMessages
         ([
-        {"chirpId":"1","user":{"screenName":"NathanGiesen@211","lang":"en","friendsCount":39339,"statusesCount":473,"name":"Nathan Giesen","followersCount":49416},"senderLocation":point("47.44,80.65"),"sendTime":datetime("2008-04-26T10:10:00"),"referredTopics":{{"t-mobile","customization"}},"messageText":" love t-mobile its customization is good:)"},
-        {"chirpId":"2","user":{"screenName":"ColineGeyer@63","lang":"en","friendsCount":121,"statusesCount":362,"name":"Coline Geyer","followersCount":17159},"senderLocation":point("32.84,67.14"),"sendTime":datetime("2010-05-13T10:10:00"),"referredTopics":{{"verizon","shortcut-menu"}},"messageText":" like verizon its shortcut-menu is awesome:)"},
-        {"chirpId":"3","user":{"screenName":"NathanGiesen@211","lang":"en","friendsCount":39339,"statusesCount":473,"name":"Nathan Giesen","followersCount":49416},"senderLocation":point("29.72,75.8"),"sendTime":datetime("2006-11-04T10:10:00"),"referredTopics":{{"motorola","speed"}},"messageText":" like motorola the speed is good:)"},
-        {"chirpId":"4","user":{"screenName":"NathanGiesen@211","lang":"en","friendsCount":39339,"statusesCount":473,"name":"Nathan Giesen","followersCount":49416},"senderLocation":point("39.28,70.48"),"sendTime":datetime("2011-12-26T10:10:00"),"referredTopics":{{"sprint","voice-command"}},"messageText":" like sprint the voice-command is mind-blowing:)"},
-        {"chirpId":"5","user":{"screenName":"NathanGiesen@211","lang":"en","friendsCount":39339,"statusesCount":473,"name":"Nathan Giesen","followersCount":49416},"senderLocation":point("40.09,92.69"),"sendTime":datetime("2006-08-04T10:10:00"),"referredTopics":{{"motorola","speed"}},"messageText":" can't stand motorola its speed is terrible:("},
-        {"chirpId":"6","user":{"screenName":"ColineGeyer@63","lang":"en","friendsCount":121,"statusesCount":362,"name":"Coline Geyer","followersCount":17159},"senderLocation":point("47.51,83.99"),"sendTime":datetime("2010-05-07T10:10:00"),"referredTopics":{{"iphone","voice-clarity"}},"messageText":" like iphone the voice-clarity is good:)"},
-        {"chirpId":"7","user":{"screenName":"ChangEwing_573","lang":"en","friendsCount":182,"statusesCount":394,"name":"Chang Ewing","followersCount":32136},"senderLocation":point("36.21,72.6"),"sendTime":datetime("2011-08-25T10:10:00"),"referredTopics":{{"samsung","platform"}},"messageText":" like samsung the platform is good"},
-        {"chirpId":"8","user":{"screenName":"NathanGiesen@211","lang":"en","friendsCount":39339,"statusesCount":473,"name":"Nathan Giesen","followersCount":49416},"senderLocation":point("46.05,93.34"),"sendTime":datetime("2005-10-14T10:10:00"),"referredTopics":{{"t-mobile","shortcut-menu"}},"messageText":" like t-mobile the shortcut-menu is awesome:)"},
-        {"chirpId":"9","user":{"screenName":"NathanGiesen@211","lang":"en","friendsCount":39339,"statusesCount":473,"name":"Nathan Giesen","followersCount":49416},"senderLocation":point("36.86,74.62"),"sendTime":datetime("2012-07-21T10:10:00"),"referredTopics":{{"verizon","voicemail-service"}},"messageText":" love verizon its voicemail-service is awesome"},
-        {"chirpId":"10","user":{"screenName":"ColineGeyer@63","lang":"en","friendsCount":121,"statusesCount":362,"name":"Coline Geyer","followersCount":17159},"senderLocation":point("29.15,76.53"),"sendTime":datetime("2008-01-26T10:10:00"),"referredTopics":{{"verizon","voice-clarity"}},"messageText":" hate verizon its voice-clarity is OMG:("},
-        {"chirpId":"11","user":{"screenName":"NilaMilliron_tw","lang":"en","friendsCount":445,"statusesCount":164,"name":"Nila Milliron","followersCount":22649},"senderLocation":point("37.59,68.42"),"sendTime":datetime("2008-03-09T10:10:00"),"referredTopics":{{"iphone","platform"}},"messageText":" can't stand iphone its platform is terrible"},
-        {"chirpId":"12","user":{"screenName":"OliJackson_512","lang":"en","friendsCount":445,"statusesCount":164,"name":"Oli Jackson","followersCount":22649},"senderLocation":point("24.82,94.63"),"sendTime":datetime("2010-02-13T10:10:00"),"referredTopics":{{"samsung","voice-command"}},"messageText":" like samsung the voice-command is amazing:)"}
+        {"chirpId":"1","user":{"screenName":"NathanGiesen@211","lang":"en","friendsCount":39339,"statusesCount":473,"name":"Nathan Giesen","followersCount":49416},"senderLocation":point("47.44,80.65"),"sendTime":datetime("2008-04-26T10:10:00"),"referredTopics":{{"product-z","customization"}},"messageText":" love product-z its customization is good:)"},
+        {"chirpId":"2","user":{"screenName":"ColineGeyer@63","lang":"en","friendsCount":121,"statusesCount":362,"name":"Coline Geyer","followersCount":17159},"senderLocation":point("32.84,67.14"),"sendTime":datetime("2010-05-13T10:10:00"),"referredTopics":{{"ccast","shortcut-menu"}},"messageText":" like ccast its shortcut-menu is awesome:)"},
+        {"chirpId":"3","user":{"screenName":"NathanGiesen@211","lang":"en","friendsCount":39339,"statusesCount":473,"name":"Nathan Giesen","followersCount":49416},"senderLocation":point("29.72,75.8"),"sendTime":datetime("2006-11-04T10:10:00"),"referredTopics":{{"product-w","speed"}},"messageText":" like product-w the speed is good:)"},
+        {"chirpId":"4","user":{"screenName":"NathanGiesen@211","lang":"en","friendsCount":39339,"statusesCount":473,"name":"Nathan Giesen","followersCount":49416},"senderLocation":point("39.28,70.48"),"sendTime":datetime("2011-12-26T10:10:00"),"referredTopics":{{"product-b","voice-command"}},"messageText":" like product-b the voice-command is mind-blowing:)"},
+        {"chirpId":"5","user":{"screenName":"NathanGiesen@211","lang":"en","friendsCount":39339,"statusesCount":473,"name":"Nathan Giesen","followersCount":49416},"senderLocation":point("40.09,92.69"),"sendTime":datetime("2006-08-04T10:10:00"),"referredTopics":{{"product-w","speed"}},"messageText":" can't stand product-w its speed is terrible:("},
+        {"chirpId":"6","user":{"screenName":"ColineGeyer@63","lang":"en","friendsCount":121,"statusesCount":362,"name":"Coline Geyer","followersCount":17159},"senderLocation":point("47.51,83.99"),"sendTime":datetime("2010-05-07T10:10:00"),"referredTopics":{{"x-phone","voice-clarity"}},"messageText":" like x-phone the voice-clarity is good:)"},
+        {"chirpId":"7","user":{"screenName":"ChangEwing_573","lang":"en","friendsCount":182,"statusesCount":394,"name":"Chang Ewing","followersCount":32136},"senderLocation":point("36.21,72.6"),"sendTime":datetime("2011-08-25T10:10:00"),"referredTopics":{{"product-y","platform"}},"messageText":" like product-y the platform is good"},
+        {"chirpId":"8","user":{"screenName":"NathanGiesen@211","lang":"en","friendsCount":39339,"statusesCount":473,"name":"Nathan Giesen","followersCount":49416},"senderLocation":point("46.05,93.34"),"sendTime":datetime("2005-10-14T10:10:00"),"referredTopics":{{"product-z","shortcut-menu"}},"messageText":" like product-z the shortcut-menu is awesome:)"},
+        {"chirpId":"9","user":{"screenName":"NathanGiesen@211","lang":"en","friendsCount":39339,"statusesCount":473,"name":"Nathan Giesen","followersCount":49416},"senderLocation":point("36.86,74.62"),"sendTime":datetime("2012-07-21T10:10:00"),"referredTopics":{{"ccast","voicemail-service"}},"messageText":" love ccast its voicemail-service is awesome"},
+        {"chirpId":"10","user":{"screenName":"ColineGeyer@63","lang":"en","friendsCount":121,"statusesCount":362,"name":"Coline Geyer","followersCount":17159},"senderLocation":point("29.15,76.53"),"sendTime":datetime("2008-01-26T10:10:00"),"referredTopics":{{"ccast","voice-clarity"}},"messageText":" hate ccast its voice-clarity is OMG:("},
+        {"chirpId":"11","user":{"screenName":"NilaMilliron_tw","lang":"en","friendsCount":445,"statusesCount":164,"name":"Nila Milliron","followersCount":22649},"senderLocation":point("37.59,68.42"),"sendTime":datetime("2008-03-09T10:10:00"),"referredTopics":{{"x-phone","platform"}},"messageText":" can't stand x-phone its platform is terrible"},
+        {"chirpId":"12","user":{"screenName":"OliJackson_512","lang":"en","friendsCount":445,"statusesCount":164,"name":"Oli Jackson","followersCount":22649},"senderLocation":point("24.82,94.63"),"sendTime":datetime("2010-02-13T10:10:00"),"referredTopics":{{"product-y","voice-command"}},"messageText":" like product-y the voice-command is amazing:)"}
         ]);
 
 [Gleambook Users](../data/gbu.adm)
@@ -314,21 +314,21 @@ of the data instances will be stored separately from their associated field name
 
         INSERT INTO GleambookMessages
         ([
-        {"messageId":1,"authorId":3,"inResponseTo":2,"senderLocation":point("47.16,77.75"),"message":" love sprint its shortcut-menu is awesome:)"},
-        {"messageId":2,"authorId":1,"inResponseTo":4,"senderLocation":point("41.66,80.87"),"message":" dislike iphone its touch-screen is horrible"},
-        {"messageId":3,"authorId":2,"inResponseTo":4,"senderLocation":point("48.09,81.01"),"message":" like samsung the plan is amazing"},
-        {"messageId":4,"authorId":1,"inResponseTo":2,"senderLocation":point("37.73,97.04"),"message":" can't stand at&t the network is horrible:("},
-        {"messageId":5,"authorId":6,"inResponseTo":2,"senderLocation":point("34.7,90.76"),"message":" love sprint the customization is mind-blowing"},
-        {"messageId":6,"authorId":2,"inResponseTo":1,"senderLocation":point("31.5,75.56"),"message":" like t-mobile its platform is mind-blowing"},
-        {"messageId":7,"authorId":5,"inResponseTo":15,"senderLocation":point("32.91,85.05"),"message":" dislike sprint the speed is horrible"},
-        {"messageId":8,"authorId":1,"inResponseTo":11,"senderLocation":point("40.33,80.87"),"message":" like verizon the 3G is awesome:)"},
-        {"messageId":9,"authorId":3,"inResponseTo":12,"senderLocation":point("34.45,96.48"),"message":" love verizon its wireless is good"},
-        {"messageId":10,"authorId":1,"inResponseTo":12,"senderLocation":point("42.5,70.01"),"message":" can't stand motorola the touch-screen is terrible"},
-        {"messageId":11,"authorId":1,"inResponseTo":1,"senderLocation":point("38.97,77.49"),"message":" can't stand at&t its plan is terrible"},
-        {"messageId":12,"authorId":10,"inResponseTo":6,"senderLocation":point("42.26,77.76"),"message":" can't stand t-mobile its voicemail-service is OMG:("},
-        {"messageId":13,"authorId":10,"inResponseTo":4,"senderLocation":point("42.77,78.92"),"message":" dislike iphone the voice-command is bad:("},
-        {"messageId":14,"authorId":9,"inResponseTo":12,"senderLocation":point("41.33,85.28"),"message":" love at&t its 3G is good:)"},
-        {"messageId":15,"authorId":7,"inResponseTo":11,"senderLocation":point("44.47,67.11"),"message":" like iphone the voicemail-service is awesome"}
+        {"messageId":1,"authorId":3,"inResponseTo":2,"senderLocation":point("47.16,77.75"),"message":" love product-b its shortcut-menu is awesome:)"},
+        {"messageId":2,"authorId":1,"inResponseTo":4,"senderLocation":point("41.66,80.87"),"message":" dislike x-phone its touch-screen is horrible"},
+        {"messageId":3,"authorId":2,"inResponseTo":4,"senderLocation":point("48.09,81.01"),"message":" like product-y the plan is amazing"},
+        {"messageId":4,"authorId":1,"inResponseTo":2,"senderLocation":point("37.73,97.04"),"message":" can't stand acast the network is horrible:("},
+        {"messageId":5,"authorId":6,"inResponseTo":2,"senderLocation":point("34.7,90.76"),"message":" love product-b the customization is mind-blowing"},
+        {"messageId":6,"authorId":2,"inResponseTo":1,"senderLocation":point("31.5,75.56"),"message":" like product-z its platform is mind-blowing"},
+        {"messageId":7,"authorId":5,"inResponseTo":15,"senderLocation":point("32.91,85.05"),"message":" dislike product-b the speed is horrible"},
+        {"messageId":8,"authorId":1,"inResponseTo":11,"senderLocation":point("40.33,80.87"),"message":" like ccast the 3G is awesome:)"},
+        {"messageId":9,"authorId":3,"inResponseTo":12,"senderLocation":point("34.45,96.48"),"message":" love ccast its wireless is good"},
+        {"messageId":10,"authorId":1,"inResponseTo":12,"senderLocation":point("42.5,70.01"),"message":" can't stand product-w the touch-screen is terrible"},
+        {"messageId":11,"authorId":1,"inResponseTo":1,"senderLocation":point("38.97,77.49"),"message":" can't stand acast its plan is terrible"},
+        {"messageId":12,"authorId":10,"inResponseTo":6,"senderLocation":point("42.26,77.76"),"message":" can't stand product-z its voicemail-service is OMG:("},
+        {"messageId":13,"authorId":10,"inResponseTo":4,"senderLocation":point("42.77,78.92"),"message":" dislike x-phone the voice-command is bad:("},
+        {"messageId":14,"authorId":9,"inResponseTo":12,"senderLocation":point("41.33,85.28"),"message":" love acast its 3G is good:)"},
+        {"messageId":15,"authorId":7,"inResponseTo":11,"senderLocation":point("44.47,67.11"),"message":" like x-phone the voicemail-service is awesome"}
         ]);
 
 
@@ -444,21 +444,21 @@ clause, automatically results in the construction of a new object value for each
 
 The expected result of this example SQL++ join query for our sample data set is:
 
-        { "uname": "WillisWynne", "message": " love sprint the customization is mind-blowing" }
-        { "uname": "WoodrowNehling", "message": " love at&t its 3G is good:)" }
-        { "uname": "BramHatch", "message": " can't stand t-mobile its voicemail-service is OMG:(" }
-        { "uname": "BramHatch", "message": " dislike iphone the voice-command is bad:(" }
-        { "uname": "MargaritaStoddard", "message": " like verizon the 3G is awesome:)" }
-        { "uname": "MargaritaStoddard", "message": " can't stand motorola the touch-screen is terrible" }
-        { "uname": "MargaritaStoddard", "message": " can't stand at&t its plan is terrible" }
-        { "uname": "MargaritaStoddard", "message": " dislike iphone its touch-screen is horrible" }
-        { "uname": "MargaritaStoddard", "message": " can't stand at&t the network is horrible:(" }
-        { "uname": "IsbelDull", "message": " like t-mobile its platform is mind-blowing" }
-        { "uname": "IsbelDull", "message": " like samsung the plan is amazing" }
-        { "uname": "EmoryUnk", "message": " love verizon its wireless is good" }
-        { "uname": "EmoryUnk", "message": " love sprint its shortcut-menu is awesome:)" }
-        { "uname": "VonKemble", "message": " dislike sprint the speed is horrible" }
-        { "uname": "SuzannaTillson", "message": " like iphone the voicemail-service is awesome" }
+        { "uname": "WillisWynne", "message": " love product-b the customization is mind-blowing" }
+        { "uname": "WoodrowNehling", "message": " love acast its 3G is good:)" }
+        { "uname": "BramHatch", "message": " can't stand product-z its voicemail-service is OMG:(" }
+        { "uname": "BramHatch", "message": " dislike x-phone the voice-command is bad:(" }
+        { "uname": "MargaritaStoddard", "message": " like ccast the 3G is awesome:)" }
+        { "uname": "MargaritaStoddard", "message": " can't stand product-w the touch-screen is terrible" }
+        { "uname": "MargaritaStoddard", "message": " can't stand acast its plan is terrible" }
+        { "uname": "MargaritaStoddard", "message": " dislike x-phone its touch-screen is horrible" }
+        { "uname": "MargaritaStoddard", "message": " can't stand acast the network is horrible:(" }
+        { "uname": "IsbelDull", "message": " like product-z its platform is mind-blowing" }
+        { "uname": "IsbelDull", "message": " like product-y the plan is amazing" }
+        { "uname": "EmoryUnk", "message": " love ccast its wireless is good" }
+        { "uname": "EmoryUnk", "message": " love product-b its shortcut-menu is awesome:)" }
+        { "uname": "VonKemble", "message": " dislike product-b the speed is horrible" }
+        { "uname": "SuzannaTillson", "message": " like x-phone the voicemail-service is awesome" }
 
 If we were feeling lazy, we might use _SELECT *_ in SQL++ to return all of the matching user/message data:
 
@@ -476,21 +476,21 @@ as SQL was not designed to handle the richer, nested data model that underlies t
 
 The expected result of this version of the SQL++ join query for our sample data set is:
 
-        { "user": { "id": 6, "alias": "Willis", "name": "WillisWynne", "userSince": datetime("2005-01-17T10:10:00.000Z"), "friendIds": {{ 1, 3, 7 }}, "employment": [ { "organizationName": "jaydax", "startDate": date("2009-05-15") } ] }, "msg": { "messageId": 5, "authorId": 6, "inResponseTo": 2, "senderLocation": point("34.7,90.76"), "message": " love sprint the customization is mind-blowing" } }
-        { "user": { "id": 9, "alias": "Woodrow", "name": "WoodrowNehling", "userSince": datetime("2005-09-20T10:10:00.000Z"), "friendIds": {{ 3, 10 }}, "employment": [ { "organizationName": "Zuncan", "startDate": date("2003-04-22"), "endDate": date("2009-12-13") } ], "nickname": "Woody" }, "msg": { "messageId": 14, "authorId": 9, "inResponseTo": 12, "senderLocation": point("41.33,85.28"), "message": " love at&t its 3G is good:)" } }
-        { "user": { "id": 10, "alias": "Bram", "name": "BramHatch", "userSince": datetime("2010-10-16T10:10:00.000Z"), "friendIds": {{ 1, 5, 9 }}, "employment": [ { "organizationName": "physcane", "startDate": date("2007-06-05"), "endDate": date("2011-11-05") } ] }, "msg": { "messageId": 12, "authorId": 10, "inResponseTo": 6, "senderLocation": point("42.26,77.76"), "message": " can't stand t-mobile its voicemail-service is OMG:(" } }
-        { "user": { "id": 10, "alias": "Bram", "name": "BramHatch", "userSince": datetime("2010-10-16T10:10:00.000Z"), "friendIds": {{ 1, 5, 9 }}, "employment": [ { "organizationName": "physcane", "startDate": date("2007-06-05"), "endDate": date("2011-11-05") } ] }, "msg": { "messageId": 13, "authorId": 10, "inResponseTo": 4, "senderLocation": point("42.77,78.92"), "message": " dislike iphone the voice-command is bad:(" } }
-        { "user": { "id": 1, "alias": "Margarita", "name": "MargaritaStoddard", "userSince": datetime("2012-08-20T10:10:00.000Z"), "friendIds": {{ 2, 3, 6, 10 }}, "employment": [ { "organizationName": "Codetechno", "startDate": date("2006-08-06") }, { "organizationName": "geomedia", "startDate": date("2010-06-17"), "endDate": date("2010-01-26") } ], "nickname": "Mags", "gender": "F" }, "msg": { "messageId": 8, "authorId": 1, "inResponseTo": 11, "senderLocation": point("40.33,80.87"), "message": " like verizon the 3G is awesome:)" } }
-        { "user": { "id": 1, "alias": "Margarita", "name": "MargaritaStoddard", "userSince": datetime("2012-08-20T10:10:00.000Z"), "friendIds": {{ 2, 3, 6, 10 }}, "employment": [ { "organizationName": "Codetechno", "startDate": date("2006-08-06") }, { "organizationName": "geomedia", "startDate": date("2010-06-17"), "endDate": date("2010-01-26") } ], "nickname": "Mags", "gender": "F" }, "msg": { "messageId": 10, "authorId": 1, "inResponseTo": 12, "senderLocation": point("42.5,70.01"), "message": " can't stand motorola the touch-screen is terrible" } }
-        { "user": { "id": 1, "alias": "Margarita", "name": "MargaritaStoddard", "userSince": datetime("2012-08-20T10:10:00.000Z"), "friendIds": {{ 2, 3, 6, 10 }}, "employment": [ { "organizationName": "Codetechno", "startDate": date("2006-08-06") }, { "organizationName": "geomedia", "startDate": date("2010-06-17"), "endDate": date("2010-01-26") } ], "nickname": "Mags", "gender": "F" }, "msg": { "messageId": 11, "authorId": 1, "inResponseTo": 1, "senderLocation": point("38.97,77.49"), "message": " can't stand at&t its plan is terrible" } }
-        { "user": { "id": 1, "alias": "Margarita", "name": "MargaritaStoddard", "userSince": datetime("2012-08-20T10:10:00.000Z"), "friendIds": {{ 2, 3, 6, 10 }}, "employment": [ { "organizationName": "Codetechno", "startDate": date("2006-08-06") }, { "organizationName": "geomedia", "startDate": date("2010-06-17"), "endDate": date("2010-01-26") } ], "nickname": "Mags", "gender": "F" }, "msg": { "messageId": 2, "authorId": 1, "inResponseTo": 4, "senderLocation": point("41.66,80.87"), "message": " dislike iphone its touch-screen is horrible" } }
-        { "user": { "id": 1, "alias": "Margarita", "name": "MargaritaStoddard", "userSince": datetime("2012-08-20T10:10:00.000Z"), "friendIds": {{ 2, 3, 6, 10 }}, "employment": [ { "organizationName": "Codetechno", "startDate": date("2006-08-06") }, { "organizationName": "geomedia", "startDate": date("2010-06-17"), "endDate": date("2010-01-26") } ], "nickname": "Mags", "gender": "F" }, "msg": { "messageId": 4, "authorId": 1, "inResponseTo": 2, "senderLocation": point("37.73,97.04"), "message": " can't stand at&t the network is horrible:(" } }
-        { "user": { "id": 2, "alias": "Isbel", "name": "IsbelDull", "userSince": datetime("2011-01-22T10:10:00.000Z"), "friendIds": {{ 1, 4 }}, "employment": [ { "organizationName": "Hexviafind", "startDate": date("2010-04-27") } ], "nickname": "Izzy" }, "msg": { "messageId": 6, "authorId": 2, "inResponseTo": 1, "senderLocation": point("31.5,75.56"), "message": " like t-mobile its platform is mind-blowing" } }
-        { "user": { "id": 2, "alias": "Isbel", "name": "IsbelDull", "userSince": datetime("2011-01-22T10:10:00.000Z"), "friendIds": {{ 1, 4 }}, "employment": [ { "organizationName": "Hexviafind", "startDate": date("2010-04-27") } ], "nickname": "Izzy" }, "msg": { "messageId": 3, "authorId": 2, "inResponseTo": 4, "senderLocation": point("48.09,81.01"), "message": " like samsung the plan is amazing" } }
-        { "user": { "id": 3, "alias": "Emory", "name": "EmoryUnk", "userSince": datetime("2012-07-10T10:10:00.000Z"), "friendIds": {{ 1, 5, 8, 9 }}, "employment": [ { "organizationName": "geomedia", "startDate": date("2010-06-17"), "endDate": date("2010-01-26") } ] }, "msg": { "messageId": 9, "authorId": 3, "inResponseTo": 12, "senderLocation": point("34.45,96.48"), "message": " love verizon its wireless is good" } }
-        { "user": { "id": 3, "alias": "Emory", "name": "EmoryUnk", "userSince": datetime("2012-07-10T10:10:00.000Z"), "friendIds": {{ 1, 5, 8, 9 }}, "employment": [ { "organizationName": "geomedia", "startDate": date("2010-06-17"), "endDate": date("2010-01-26") } ] }, "msg": { "messageId": 1, "authorId": 3, "inResponseTo": 2, "senderLocation": point("47.16,77.75"), "message": " love sprint its shortcut-menu is awesome:)" } }
-        { "user": { "id": 5, "alias": "Von", "name": "VonKemble", "userSince": datetime("2010-01-05T10:10:00.000Z"), "friendIds": {{ 3, 6, 10 }}, "employment": [ { "organizationName": "Kongreen", "startDate": date("2010-11-27") } ] }, "msg": { "messageId": 7, "authorId": 5, "inResponseTo": 15, "senderLocation": point("32.91,85.05"), "message": " dislike sprint the speed is horrible" } }
-        { "user": { "id": 7, "alias": "Suzanna", "name": "SuzannaTillson", "userSince": datetime("2012-08-07T10:10:00.000Z"), "friendIds": {{ 6 }}, "employment": [ { "organizationName": "Labzatron", "startDate": date("2011-04-19") } ] }, "msg": { "messageId": 15, "authorId": 7, "inResponseTo": 11, "senderLocation": point("44.47,67.11"), "message": " like iphone the voicemail-service is awesome" } }
+        { "user": { "id": 6, "alias": "Willis", "name": "WillisWynne", "userSince": datetime("2005-01-17T10:10:00.000Z"), "friendIds": {{ 1, 3, 7 }}, "employment": [ { "organizationName": "jaydax", "startDate": date("2009-05-15") } ] }, "msg": { "messageId": 5, "authorId": 6, "inResponseTo": 2, "senderLocation": point("34.7,90.76"), "message": " love product-b the customization is mind-blowing" } }
+        { "user": { "id": 9, "alias": "Woodrow", "name": "WoodrowNehling", "userSince": datetime("2005-09-20T10:10:00.000Z"), "friendIds": {{ 3, 10 }}, "employment": [ { "organizationName": "Zuncan", "startDate": date("2003-04-22"), "endDate": date("2009-12-13") } ], "nickname": "Woody" }, "msg": { "messageId": 14, "authorId": 9, "inResponseTo": 12, "senderLocation": point("41.33,85.28"), "message": " love acast its 3G is good:)" } }
+        { "user": { "id": 10, "alias": "Bram", "name": "BramHatch", "userSince": datetime("2010-10-16T10:10:00.000Z"), "friendIds": {{ 1, 5, 9 }}, "employment": [ { "organizationName": "physcane", "startDate": date("2007-06-05"), "endDate": date("2011-11-05") } ] }, "msg": { "messageId": 12, "authorId": 10, "inResponseTo": 6, "senderLocation": point("42.26,77.76"), "message": " can't stand product-z its voicemail-service is OMG:(" } }
+        { "user": { "id": 10, "alias": "Bram", "name": "BramHatch", "userSince": datetime("2010-10-16T10:10:00.000Z"), "friendIds": {{ 1, 5, 9 }}, "employment": [ { "organizationName": "physcane", "startDate": date("2007-06-05"), "endDate": date("2011-11-05") } ] }, "msg": { "messageId": 13, "authorId": 10, "inResponseTo": 4, "senderLocation": point("42.77,78.92"), "message": " dislike x-phone the voice-command is bad:(" } }
+        { "user": { "id": 1, "alias": "Margarita", "name": "MargaritaStoddard", "userSince": datetime("2012-08-20T10:10:00.000Z"), "friendIds": {{ 2, 3, 6, 10 }}, "employment": [ { "organizationName": "Codetechno", "startDate": date("2006-08-06") }, { "organizationName": "geomedia", "startDate": date("2010-06-17"), "endDate": date("2010-01-26") } ], "nickname": "Mags", "gender": "F" }, "msg": { "messageId": 8, "authorId": 1, "inResponseTo": 11, "senderLocation": point("40.33,80.87"), "message": " like ccast the 3G is awesome:)" } }
+        { "user": { "id": 1, "alias": "Margarita", "name": "MargaritaStoddard", "userSince": datetime("2012-08-20T10:10:00.000Z"), "friendIds": {{ 2, 3, 6, 10 }}, "employment": [ { "organizationName": "Codetechno", "startDate": date("2006-08-06") }, { "organizationName": "geomedia", "startDate": date("2010-06-17"), "endDate": date("2010-01-26") } ], "nickname": "Mags", "gender": "F" }, "msg": { "messageId": 10, "authorId": 1, "inResponseTo": 12, "senderLocation": point("42.5,70.01"), "message": " can't stand product-w the touch-screen is terrible" } }
+        { "user": { "id": 1, "alias": "Margarita", "name": "MargaritaStoddard", "userSince": datetime("2012-08-20T10:10:00.000Z"), "friendIds": {{ 2, 3, 6, 10 }}, "employment": [ { "organizationName": "Codetechno", "startDate": date("2006-08-06") }, { "organizationName": "geomedia", "startDate": date("2010-06-17"), "endDate": date("2010-01-26") } ], "nickname": "Mags", "gender": "F" }, "msg": { "messageId": 11, "authorId": 1, "inResponseTo": 1, "senderLocation": point("38.97,77.49"), "message": " can't stand acast its plan is terrible" } }
+        { "user": { "id": 1, "alias": "Margarita", "name": "MargaritaStoddard", "userSince": datetime("2012-08-20T10:10:00.000Z"), "friendIds": {{ 2, 3, 6, 10 }}, "employment": [ { "organizationName": "Codetechno", "startDate": date("2006-08-06") }, { "organizationName": "geomedia", "startDate": date("2010-06-17"), "endDate": date("2010-01-26") } ], "nickname": "Mags", "gender": "F" }, "msg": { "messageId": 2, "authorId": 1, "inResponseTo": 4, "senderLocation": point("41.66,80.87"), "message": " dislike x-phone its touch-screen is horrible" } }
+        { "user": { "id": 1, "alias": "Margarita", "name": "MargaritaStoddard", "userSince": datetime("2012-08-20T10:10:00.000Z"), "friendIds": {{ 2, 3, 6, 10 }}, "employment": [ { "organizationName": "Codetechno", "startDate": date("2006-08-06") }, { "organizationName": "geomedia", "startDate": date("2010-06-17"), "endDate": date("2010-01-26") } ], "nickname": "Mags", "gender": "F" }, "msg": { "messageId": 4, "authorId": 1, "inResponseTo": 2, "senderLocation": point("37.73,97.04"), "message": " can't stand acast the network is horrible:(" } }
+        { "user": { "id": 2, "alias": "Isbel", "name": "IsbelDull", "userSince": datetime("2011-01-22T10:10:00.000Z"), "friendIds": {{ 1, 4 }}, "employment": [ { "organizationName": "Hexviafind", "startDate": date("2010-04-27") } ], "nickname": "Izzy" }, "msg": { "messageId": 6, "authorId": 2, "inResponseTo": 1, "senderLocation": point("31.5,75.56"), "message": " like product-z its platform is mind-blowing" } }
+        { "user": { "id": 2, "alias": "Isbel", "name": "IsbelDull", "userSince": datetime("2011-01-22T10:10:00.000Z"), "friendIds": {{ 1, 4 }}, "employment": [ { "organizationName": "Hexviafind", "startDate": date("2010-04-27") } ], "nickname": "Izzy" }, "msg": { "messageId": 3, "authorId": 2, "inResponseTo": 4, "senderLocation": point("48.09,81.01"), "message": " like product-y the plan is amazing" } }
+        { "user": { "id": 3, "alias": "Emory", "name": "EmoryUnk", "userSince": datetime("2012-07-10T10:10:00.000Z"), "friendIds": {{ 1, 5, 8, 9 }}, "employment": [ { "organizationName": "geomedia", "startDate": date("2010-06-17"), "endDate": date("2010-01-26") } ] }, "msg": { "messageId": 9, "authorId": 3, "inResponseTo": 12, "senderLocation": point("34.45,96.48"), "message": " love ccast its wireless is good" } }
+        { "user": { "id": 3, "alias": "Emory", "name": "EmoryUnk", "userSince": datetime("2012-07-10T10:10:00.000Z"), "friendIds": {{ 1, 5, 8, 9 }}, "employment": [ { "organizationName": "geomedia", "startDate": date("2010-06-17"), "endDate": date("2010-01-26") } ] }, "msg": { "messageId": 1, "authorId": 3, "inResponseTo": 2, "senderLocation": point("47.16,77.75"), "message": " love product-b its shortcut-menu is awesome:)" } }
+        { "user": { "id": 5, "alias": "Von", "name": "VonKemble", "userSince": datetime("2010-01-05T10:10:00.000Z"), "friendIds": {{ 3, 6, 10 }}, "employment": [ { "organizationName": "Kongreen", "startDate": date("2010-11-27") } ] }, "msg": { "messageId": 7, "authorId": 5, "inResponseTo": 15, "senderLocation": point("32.91,85.05"), "message": " dislike product-b the speed is horrible" } }
+        { "user": { "id": 7, "alias": "Suzanna", "name": "SuzannaTillson", "userSince": datetime("2012-08-07T10:10:00.000Z"), "friendIds": {{ 6 }}, "employment": [ { "organizationName": "Labzatron", "startDate": date("2011-04-19") } ] }, "msg": { "messageId": 15, "authorId": 7, "inResponseTo": 11, "senderLocation": point("44.47,67.11"), "message": " like x-phone the voicemail-service is awesome" } }
 
 Finally (for now :-)), another less lazy and more explicit SQL++ way of achieving the result shown above is:
 
@@ -532,21 +532,21 @@ The expected result is (of course) the same as before, modulo the order of the i
 Result ordering is (intentionally) undefined in SQL++ in the absence of an _ORDER BY_ clause.
 The query result for our sample data in this case is:
 
-        { "uname": "IsbelDull", "message": " like t-mobile its platform is mind-blowing" }
-        { "uname": "MargaritaStoddard", "message": " like verizon the 3G is awesome:)" }
-        { "uname": "EmoryUnk", "message": " love verizon its wireless is good" }
-        { "uname": "MargaritaStoddard", "message": " can't stand motorola the touch-screen is terrible" }
-        { "uname": "MargaritaStoddard", "message": " can't stand at&t its plan is terrible" }
-        { "uname": "BramHatch", "message": " can't stand t-mobile its voicemail-service is OMG:(" }
-        { "uname": "WoodrowNehling", "message": " love at&t its 3G is good:)" }
-        { "uname": "EmoryUnk", "message": " love sprint its shortcut-menu is awesome:)" }
-        { "uname": "MargaritaStoddard", "message": " dislike iphone its touch-screen is horrible" }
-        { "uname": "IsbelDull", "message": " like samsung the plan is amazing" }
-        { "uname": "MargaritaStoddard", "message": " can't stand at&t the network is horrible:(" }
-        { "uname": "WillisWynne", "message": " love sprint the customization is mind-blowing" }
-        { "uname": "VonKemble", "message": " dislike sprint the speed is horrible" }
-        { "uname": "BramHatch", "message": " dislike iphone the voice-command is bad:(" }
-        { "uname": "SuzannaTillson", "message": " like iphone the voicemail-service is awesome" }
+        { "uname": "IsbelDull", "message": " like product-z its platform is mind-blowing" }
+        { "uname": "MargaritaStoddard", "message": " like ccast the 3G is awesome:)" }
+        { "uname": "EmoryUnk", "message": " love ccast its wireless is good" }
+        { "uname": "MargaritaStoddard", "message": " can't stand product-w the touch-screen is terrible" }
+        { "uname": "MargaritaStoddard", "message": " can't stand acast its plan is terrible" }
+        { "uname": "BramHatch", "message": " can't stand product-z its voicemail-service is OMG:(" }
+        { "uname": "WoodrowNehling", "message": " love acast its 3G is good:)" }
+        { "uname": "EmoryUnk", "message": " love product-b its shortcut-menu is awesome:)" }
+        { "uname": "MargaritaStoddard", "message": " dislike x-phone its touch-screen is horrible" }
+        { "uname": "IsbelDull", "message": " like product-y the plan is amazing" }
+        { "uname": "MargaritaStoddard", "message": " can't stand acast the network is horrible:(" }
+        { "uname": "WillisWynne", "message": " love product-b the customization is mind-blowing" }
+        { "uname": "VonKemble", "message": " dislike product-b the speed is horrible" }
+        { "uname": "BramHatch", "message": " dislike x-phone the voice-command is bad:(" }
+        { "uname": "SuzannaTillson", "message": " like x-phone the voicemail-service is awesome" }
 
 (It is worth knowing, with respect to influencing AsterixDB's query evaluation,
 that _FROM_ clauses---*a.k.a.* joins--- are currently evaluated in order,
@@ -586,16 +586,16 @@ use an efficient hash-based strategy when actually computing the query's result.
 
 Here is this example query's expected output:
 
-        { "uname": "WillisWynne", "messages": [ " love sprint the customization is mind-blowing" ] }
+        { "uname": "WillisWynne", "messages": [ " love product-b the customization is mind-blowing" ] }
         { "uname": "NilaMilliron", "messages": [  ] }
-        { "uname": "WoodrowNehling", "messages": [ " love at&t its 3G is good:)" ] }
-        { "uname": "BramHatch", "messages": [ " dislike iphone the voice-command is bad:(", " can't stand t-mobile its voicemail-service is OMG:(" ] }
-        { "uname": "MargaritaStoddard", "messages": [ " dislike iphone its touch-screen is horrible", " can't stand at&t the network is horrible:(", " like verizon the 3G is awesome:)", " can't stand motorola the touch-screen is terrible", " can't stand at&t its plan is terrible" ] }
-        { "uname": "IsbelDull", "messages": [ " like samsung the plan is amazing", " like t-mobile its platform is mind-blowing" ] }
-        { "uname": "EmoryUnk", "messages": [ " love sprint its shortcut-menu is awesome:)", " love verizon its wireless is good" ] }
+        { "uname": "WoodrowNehling", "messages": [ " love acast its 3G is good:)" ] }
+        { "uname": "BramHatch", "messages": [ " dislike x-phone the voice-command is bad:(", " can't stand product-z its voicemail-service is OMG:(" ] }
+        { "uname": "MargaritaStoddard", "messages": [ " dislike x-phone its touch-screen is horrible", " can't stand acast the network is horrible:(", " like ccast the 3G is awesome:)", " can't stand product-w the touch-screen is terrible", " can't stand acast its plan is terrible" ] }
+        { "uname": "IsbelDull", "messages": [ " like product-y the plan is amazing", " like product-z its platform is mind-blowing" ] }
+        { "uname": "EmoryUnk", "messages": [ " love product-b its shortcut-menu is awesome:)", " love ccast its wireless is good" ] }
         { "uname": "NicholasStroh", "messages": [  ] }
-        { "uname": "VonKemble", "messages": [ " dislike sprint the speed is horrible" ] }
-        { "uname": "SuzannaTillson", "messages": [ " like iphone the voicemail-service is awesome" ] }
+        { "uname": "VonKemble", "messages": [ " dislike product-b the speed is horrible" ] }
+        { "uname": "SuzannaTillson", "messages": [ " like x-phone the voicemail-service is awesome" ] }
 
 ### Query 4 - Theta Join ###
 Not all joins are expressible as equijoins and computable using equijoin-oriented algorithms.
@@ -619,18 +619,18 @@ functions on the spatial data type instead of id equality in the correlated quer
 
 Here is the expected result for this query:
 
-        { "message": " can't stand iphone its platform is terrible", "nearbyMessages": [  ] }
-        { "message": " like verizon its shortcut-menu is awesome:)", "nearbyMessages": [  ] }
-        { "message": " like motorola the speed is good:)", "nearbyMessages": [ " hate verizon its voice-clarity is OMG:(" ] }
-        { "message": " like sprint the voice-command is mind-blowing:)", "nearbyMessages": [  ] }
-        { "message": " like iphone the voice-clarity is good:)", "nearbyMessages": [  ] }
-        { "message": " like samsung the platform is good", "nearbyMessages": [  ] }
-        { "message": " love verizon its voicemail-service is awesome", "nearbyMessages": [  ] }
-        { "message": " love t-mobile its customization is good:)", "nearbyMessages": [  ] }
-        { "message": " hate verizon its voice-clarity is OMG:(", "nearbyMessages": [  ] }
-        { "message": " like samsung the voice-command is amazing:)", "nearbyMessages": [  ] }
-        { "message": " can't stand motorola its speed is terrible:(", "nearbyMessages": [  ] }
-        { "message": " like t-mobile the shortcut-menu is awesome:)", "nearbyMessages": [  ] }
+        { "message": " can't stand x-phone its platform is terrible", "nearbyMessages": [  ] }
+        { "message": " like ccast its shortcut-menu is awesome:)", "nearbyMessages": [  ] }
+        { "message": " like product-w the speed is good:)", "nearbyMessages": [ " hate ccast its voice-clarity is OMG:(" ] }
+        { "message": " like product-b the voice-command is mind-blowing:)", "nearbyMessages": [  ] }
+        { "message": " like x-phone the voice-clarity is good:)", "nearbyMessages": [  ] }
+        { "message": " like product-y the platform is good", "nearbyMessages": [  ] }
+        { "message": " love ccast its voicemail-service is awesome", "nearbyMessages": [  ] }
+        { "message": " love product-z its customization is good:)", "nearbyMessages": [  ] }
+        { "message": " hate ccast its voice-clarity is OMG:(", "nearbyMessages": [  ] }
+        { "message": " like product-y the voice-command is amazing:)", "nearbyMessages": [  ] }
+        { "message": " can't stand product-w its speed is terrible:(", "nearbyMessages": [  ] }
+        { "message": " like product-z the shortcut-menu is awesome:)", "nearbyMessages": [  ] }
 
 ### Query 5 - Fuzzy Join ###
 As another example of a non-equijoin use case, we could ask AsterixDB to find, for each Gleambook user,
@@ -837,18 +837,18 @@ be used for the query's similarity operator and that a similarity index of 0.3 b
 
 The expected result for this fuzzy join query is:
 
-        { "chirp": { "chirpId": "11", "user": { "screenName": "NilaMilliron_tw", "lang": "en", "friendsCount": 445, "statusesCount": 164, "name": "Nila Milliron", "followersCount": 22649 }, "senderLocation": point("37.59,68.42"), "sendTime": datetime("2008-03-09T10:10:00.000Z"), "referredTopics": {{ "iphone", "platform" }}, "messageText": " can't stand iphone its platform is terrible" }, "similarChirps": [ "6", "7" ] }
-        { "chirp": { "chirpId": "2", "user": { "screenName": "ColineGeyer@63", "lang": "en", "friendsCount": 121, "statusesCount": 362, "name": "Coline Geyer", "followersCount": 17159 }, "senderLocation": point("32.84,67.14"), "sendTime": datetime("2010-05-13T10:10:00.000Z"), "referredTopics": {{ "verizon", "shortcut-menu" }}, "messageText": " like verizon its shortcut-menu is awesome:)" }, "similarChirps": [ "9", "8" ] }
-        { "chirp": { "chirpId": "3", "user": { "screenName": "NathanGiesen@211", "lang": "en", "friendsCount": 39339, "statusesCount": 473, "name": "Nathan Giesen", "followersCount": 49416 }, "senderLocation": point("29.72,75.8"), "sendTime": datetime("2006-11-04T10:10:00.000Z"), "referredTopics": {{ "motorola", "speed" }}, "messageText": " like motorola the speed is good:)" }, "similarChirps": [ "5" ] }
-        { "chirp": { "chirpId": "4", "user": { "screenName": "NathanGiesen@211", "lang": "en", "friendsCount": 39339, "statusesCount": 473, "name": "Nathan Giesen", "followersCount": 49416 }, "senderLocation": point("39.28,70.48"), "sendTime": datetime("2011-12-26T10:10:00.000Z"), "referredTopics": {{ "sprint", "voice-command" }}, "messageText": " like sprint the voice-command is mind-blowing:)" }, "similarChirps": [  ] }
-        { "chirp": { "chirpId": "6", "user": { "screenName": "ColineGeyer@63", "lang": "en", "friendsCount": 121, "statusesCount": 362, "name": "Coline Geyer", "followersCount": 17159 }, "senderLocation": point("47.51,83.99"), "sendTime": datetime("2010-05-07T10:10:00.000Z"), "referredTopics": {{ "iphone", "voice-clarity" }}, "messageText": " like iphone the voice-clarity is good:)" }, "similarChirps": [  ] }
-        { "chirp": { "chirpId": "7", "user": { "screenName": "ChangEwing_573", "lang": "en", "friendsCount": 182, "statusesCount": 394, "name": "Chang Ewing", "followersCount": 32136 }, "senderLocation": point("36.21,72.6"), "sendTime": datetime("2011-08-25T10:10:00.000Z"), "referredTopics": {{ "samsung", "platform" }}, "messageText": " like samsung the platform is good" }, "similarChirps": [  ] }
-        { "chirp": { "chirpId": "9", "user": { "screenName": "NathanGiesen@211", "lang": "en", "friendsCount": 39339, "statusesCount": 473, "name": "Nathan Giesen", "followersCount": 49416 }, "senderLocation": point("36.86,74.62"), "sendTime": datetime("2012-07-21T10:10:00.000Z"), "referredTopics": {{ "verizon", "voicemail-service" }}, "messageText": " love verizon its voicemail-service is awesome" }, "similarChirps": [  ] }
-        { "chirp": { "chirpId": "1", "user": { "screenName": "NathanGiesen@211", "lang": "en", "friendsCount": 39339, "statusesCount": 473, "name": "Nathan Giesen", "followersCount": 49416 }, "senderLocation": point("47.44,80.65"), "sendTime": datetime("2008-04-26T10:10:00.000Z"), "referredTopics": {{ "t-mobile", "customization" }}, "messageText": " love t-mobile its customization is good:)" }, "similarChirps": [ "8" ] }
-        { "chirp": { "chirpId": "10", "user": { "screenName": "ColineGeyer@63", "lang": "en", "friendsCount": 121, "statusesCount": 362, "name": "Coline Geyer", "followersCount": 17159 }, "senderLocation": point("29.15,76.53"), "sendTime": datetime("2008-01-26T10:10:00.000Z"), "referredTopics": {{ "verizon", "voice-clarity" }}, "messageText": " hate verizon its voice-clarity is OMG:(" }, "similarChirps": [ "2", "6", "9" ] }
-        { "chirp": { "chirpId": "12", "user": { "screenName": "OliJackson_512", "lang": "en", "friendsCount": 445, "statusesCount": 164, "name": "Oli Jackson", "followersCount": 22649 }, "senderLocation": point("24.82,94.63"), "sendTime": datetime("2010-02-13T10:10:00.000Z"), "referredTopics": {{ "samsung", "voice-command" }}, "messageText": " like samsung the voice-command is amazing:)" }, "similarChirps": [ "4", "7" ] }
-        { "chirp": { "chirpId": "5", "user": { "screenName": "NathanGiesen@211", "lang": "en", "friendsCount": 39339, "statusesCount": 473, "name": "Nathan Giesen", "followersCount": 49416 }, "senderLocation": point("40.09,92.69"), "sendTime": datetime("2006-08-04T10:10:00.000Z"), "referredTopics": {{ "motorola", "speed" }}, "messageText": " can't stand motorola its speed is terrible:(" }, "similarChirps": [  ] }
-        { "chirp": { "chirpId": "8", "user": { "screenName": "NathanGiesen@211", "lang": "en", "friendsCount": 39339, "statusesCount": 473, "name": "Nathan Giesen", "followersCount": 49416 }, "senderLocation": point("46.05,93.34"), "sendTime": datetime("2005-10-14T10:10:00.000Z"), "referredTopics": {{ "t-mobile", "shortcut-menu" }}, "messageText": " like t-mobile the shortcut-menu is awesome:)" }, "similarChirps": [  ] }
+        { "chirp": { "chirpId": "11", "user": { "screenName": "NilaMilliron_tw", "lang": "en", "friendsCount": 445, "statusesCount": 164, "name": "Nila Milliron", "followersCount": 22649 }, "senderLocation": point("37.59,68.42"), "sendTime": datetime("2008-03-09T10:10:00.000Z"), "referredTopics": {{ "x-phone", "platform" }}, "messageText": " can't stand x-phone its platform is terrible" }, "similarChirps": [ "6", "7" ] }
+        { "chirp": { "chirpId": "2", "user": { "screenName": "ColineGeyer@63", "lang": "en", "friendsCount": 121, "statusesCount": 362, "name": "Coline Geyer", "followersCount": 17159 }, "senderLocation": point("32.84,67.14"), "sendTime": datetime("2010-05-13T10:10:00.000Z"), "referredTopics": {{ "ccast", "shortcut-menu" }}, "messageText": " like ccast its shortcut-menu is awesome:)" }, "similarChirps": [ "9", "8" ] }
+        { "chirp": { "chirpId": "3", "user": { "screenName": "NathanGiesen@211", "lang": "en", "friendsCount": 39339, "statusesCount": 473, "name": "Nathan Giesen", "followersCount": 49416 }, "senderLocation": point("29.72,75.8"), "sendTime": datetime("2006-11-04T10:10:00.000Z"), "referredTopics": {{ "product-w", "speed" }}, "messageText": " like product-w the speed is good:)" }, "similarChirps": [ "5" ] }
+        { "chirp": { "chirpId": "4", "user": { "screenName": "NathanGiesen@211", "lang": "en", "friendsCount": 39339, "statusesCount": 473, "name": "Nathan Giesen", "followersCount": 49416 }, "senderLocation": point("39.28,70.48"), "sendTime": datetime("2011-12-26T10:10:00.000Z"), "referredTopics": {{ "product-b", "voice-command" }}, "messageText": " like product-b the voice-command is mind-blowing:)" }, "similarChirps": [  ] }
+        { "chirp": { "chirpId": "6", "user": { "screenName": "ColineGeyer@63", "lang": "en", "friendsCount": 121, "statusesCount": 362, "name": "Coline Geyer", "followersCount": 17159 }, "senderLocation": point("47.51,83.99"), "sendTime": datetime("2010-05-07T10:10:00.000Z"), "referredTopics": {{ "x-phone", "voice-clarity" }}, "messageText": " like x-phone the voice-clarity is good:)" }, "similarChirps": [  ] }
+        { "chirp": { "chirpId": "7", "user": { "screenName": "ChangEwing_573", "lang": "en", "friendsCount": 182, "statusesCount": 394, "name": "Chang Ewing", "followersCount": 32136 }, "senderLocation": point("36.21,72.6"), "sendTime": datetime("2011-08-25T10:10:00.000Z"), "referredTopics": {{ "product-y", "platform" }}, "messageText": " like product-y the platform is good" }, "similarChirps": [  ] }
+        { "chirp": { "chirpId": "9", "user": { "screenName": "NathanGiesen@211", "lang": "en", "friendsCount": 39339, "statusesCount": 473, "name": "Nathan Giesen", "followersCount": 49416 }, "senderLocation": point("36.86,74.62"), "sendTime": datetime("2012-07-21T10:10:00.000Z"), "referredTopics": {{ "ccast", "voicemail-service" }}, "messageText": " love ccast its voicemail-service is awesome" }, "similarChirps": [  ] }
+        { "chirp": { "chirpId": "1", "user": { "screenName": "NathanGiesen@211", "lang": "en", "friendsCount": 39339, "statusesCount": 473, "name": "Nathan Giesen", "followersCount": 49416 }, "senderLocation": point("47.44,80.65"), "sendTime": datetime("2008-04-26T10:10:00.000Z"), "referredTopics": {{ "product-z", "customization" }}, "messageText": " love product-z its customization is good:)" }, "similarChirps": [ "8" ] }
+        { "chirp": { "chirpId": "10", "user": { "screenName": "ColineGeyer@63", "lang": "en", "friendsCount": 121, "statusesCount": 362, "name": "Coline Geyer", "followersCount": 17159 }, "senderLocation": point("29.15,76.53"), "sendTime": datetime("2008-01-26T10:10:00.000Z"), "referredTopics": {{ "ccast", "voice-clarity" }}, "messageText": " hate ccast its voice-clarity is OMG:(" }, "similarChirps": [ "2", "6", "9" ] }
+        { "chirp": { "chirpId": "12", "user": { "screenName": "OliJackson_512", "lang": "en", "friendsCount": 445, "statusesCount": 164, "name": "Oli Jackson", "followersCount": 22649 }, "senderLocation": point("24.82,94.63"), "sendTime": datetime("2010-02-13T10:10:00.000Z"), "referredTopics": {{ "product-y", "voice-command" }}, "messageText": " like product-y the voice-command is amazing:)" }, "similarChirps": [ "4", "7" ] }
+        { "chirp": { "chirpId": "5", "user": { "screenName": "NathanGiesen@211", "lang": "en", "friendsCount": 39339, "statusesCount": 473, "name": "Nathan Giesen", "followersCount": 49416 }, "senderLocation": point("40.09,92.69"), "sendTime": datetime("2006-08-04T10:10:00.000Z"), "referredTopics": {{ "product-w", "speed" }}, "messageText": " can't stand product-w its speed is terrible:(" }, "similarChirps": [  ] }
+        { "chirp": { "chirpId": "8", "user": { "screenName": "NathanGiesen@211", "lang": "en", "friendsCount": 39339, "statusesCount": 473, "name": "Nathan Giesen", "followersCount": 49416 }, "senderLocation": point("46.05,93.34"), "sendTime": datetime("2005-10-14T10:10:00.000Z"), "referredTopics": {{ "product-z", "shortcut-menu" }}, "messageText": " like product-z the shortcut-menu is awesome:)" }, "similarChirps": [  ] }
 
 
 ### Deleting Existing Data  ###

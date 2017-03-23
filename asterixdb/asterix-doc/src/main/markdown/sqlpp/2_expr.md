@@ -55,14 +55,14 @@ The following table summarizes the precedence order (from higher to lower) of th
 | &#124;&#124;                                                                          |  String concatenation |
 | IS NULL, IS NOT NULL, IS MISSING, IS NOT MISSING, <br/>IS UNKNOWN, IS NOT UNKNOWN| Unknown value comparison |
 | BETWEEN, NOT BETWEEN                                                        | Range comparison (inclusive on both sides) |
-| =, !=, <, >, <=, >=, LIKE, NOT LIKE, IN, NOT IN                             | Comparison  |
+| =, !=, <>, <, >, <=, >=, LIKE, NOT LIKE, IN, NOT IN                             | Comparison  |
 | NOT                                                                         | Logical negation |
 | AND                                                                         | Conjunction |
 | OR                                                                          | Disjunction |
 
 In general, if any operand evaluates to a `MISSING` value, the enclosing operator will return `MISSING`;
 if none of operands evaluates to a `MISSING` value but there is an operand evaluates to a `NULL` value,
-the encolosing operator will return `NULL`. However, there are a few exceptions listed in
+the enclosing operator will return `NULL`. However, there are a few exceptions listed in
 [comparison operators](#Comparison_operators) and [logical operators](#Logical_operators).
 
 ### <a id="Arithmetic_operators">Arithmetic Operators</a>
@@ -72,7 +72,7 @@ Arithmetic operators are used to exponentiate, add, subtract, multiply, and divi
 |--------------|-------------------------------------------------------------------------|------------|
 | +, -         |  As unary operators, they denote a <br/>positive or negative expression | SELECT VALUE -1; |
 | +, -         |  As binary operators, they add or subtract                              | SELECT VALUE 1 + 2; |
-| *, /         |  Multiply, divide                                                       | SELECT VALUE 4 / 2.0; |
+| *, /, %      |  Multiply, divide, modulo                                               | SELECT VALUE 4 / 2.0; |
 | ^            |  Exponentiation                                                         | SELECT VALUE 2^3;       |
 | &#124;&#124; |  String concatenation                                                   | SELECT VALUE "ab"&#124;&#124;"c"&#124;&#124;"d";       |
 
@@ -87,7 +87,12 @@ Collection operators are used for membership tests (IN, NOT IN) or empty collect
 | NOT EXISTS |  Check whether a collection is empty         | SELECT * FROM ChirpMessages cm <br/>WHERE NOT EXISTS cm.referredTopics; |
 
 ### <a id="Comparison_operators">Comparison Operators</a>
-Comparison operators are used to compare values. The comparison operators fall into one of two sub-categories: missing value comparisons and regular value comparisons. SQL++ (and JSON) has two ways of representing missing information in a object - the presence of the field with a NULL for its value (as in SQL), and the absence of the field (which JSON permits). For example, the first of the following objects represents Jack, whose friend is Jill. In the other examples, Jake is friendless a la SQL, with a friend field that is NULL, while Joe is friendless in a more natural (for JSON) way, i.e., by not having a friend field.
+Comparison operators are used to compare values. The comparison operators fall into one of two sub-categories: missing
+value comparisons and regular value comparisons. SQL++ (and JSON) has two ways of representing missing information in
+a object - the presence of the field with a NULL for its value (as in SQL), and the absence of the field (which
+JSON permits). For example, the first of the following objects represents Jack, whose friend is Jill. In the other
+examples, Jake is friendless a la SQL, with a friend field that is NULL, while Joe is friendless in a more natural
+(for JSON) way, i.e., by not having a friend field.
 
 ##### Examples
 {"name": "Jack", "friend": "Jill"}
@@ -109,6 +114,7 @@ The following table enumerates all of SQL++'s comparison operators.
 | BETWEEN        |  Test if a value is between a start value and <br/>a end value. The comparison is inclusive <br/>to both start and end values. |  SELECT * FROM ChirpMessages cm <br/>WHERE cm.chirpId BETWEEN 10 AND 20;|
 | =              |  Equality test                                 | SELECT * FROM ChirpMessages cm <br/>WHERE cm.chirpId=10; |
 | !=             |  Inequality test                               | SELECT * FROM ChirpMessages cm <br/>WHERE cm.chirpId!=10;|
+| <>             |  Inequality test                               | SELECT * FROM ChirpMessages cm <br/>WHERE cm.chirpId<>10;|
 | <              |  Less than                                     | SELECT * FROM ChirpMessages cm <br/>WHERE cm.chirpId<10; |
 | >              |  Greater than                                  | SELECT * FROM ChirpMessages cm <br/>WHERE cm.chirpId>10; |
 | <=             |  Less than or equal to                         | SELECT * FROM ChirpMessages cm <br/>WHERE cm.chirpId<=10; |
@@ -365,19 +371,20 @@ its constructors for each of the model's complex object structures, namely array
 Arrays are like JSON arrays, while multisets have bag semantics.
 Objects are built from fields that are field-name/field-value pairs, again like JSON.
 
-The following examples illustrate how to construct a new array with 4 items, a new object with 2 fields,
-and a new multiset with 5 items, respectively. Array elements or multiset elements can be homogeneous (as in
-the first example),
-which is the common case, or they may be heterogeneous (as in the third example). The data values and field name values
+The following examples illustrate how to construct a new array with 4 items and a new object with 2 fields respectively.
+Array elements can be homogeneous (as in the first example),
+which is the common case, or they may be heterogeneous (as in the second example). The data values and field name values
 used to construct arrays, multisets, and objects in constructors are all simply SQL++ expressions. Thus, the collection
 elements, field names, and field values used in constructors can be simple literals or they can come from query variable
 references or even arbitrarily complex SQL++ expressions (subqueries).
-Type errors will be raised if the field names in a record must be strings, and
+Type errors will be raised if the field names in an object are not strings, and
 duplicate field errors will be raised if they are not distinct.
 
 ##### Examples
 
     [ 'a', 'b', 'c', 'c' ]
+
+    [ 42, "forty-two!", { "rank" : "Captain", "name": "America" }, 3.14159 ]
 
     {
       'project name': 'Hyracks',
