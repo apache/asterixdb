@@ -105,6 +105,9 @@ public class VirtualBufferCache implements IVirtualBufferCache {
                 VirtualPage curr = bucket.cachedPage;
                 while (curr != null) {
                     if (BufferedFileHandle.getFileId(curr.dpid()) == fileId) {
+                        if (curr.getFrameSizeMultiplier() > 1) {
+                            largePages.getAndAdd(-curr.getFrameSizeMultiplier());
+                        }
                         if (prev == null) {
                             bucket.cachedPage = curr.next();
                             curr.reset();
