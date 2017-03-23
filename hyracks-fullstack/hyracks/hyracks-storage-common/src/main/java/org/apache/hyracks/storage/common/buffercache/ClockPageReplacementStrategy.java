@@ -209,7 +209,7 @@ public class ClockPageReplacementStrategy implements IPageReplacementStrategy {
     }
 
     private void ensureBudgetForLargePages(int delta) {
-        while (numPages.get() + delta >= maxAllowedNumPages) {
+        while (numPages.get() + delta > maxAllowedNumPages) {
             ICachedPageInternal victim = findVictimByEviction();
             if (victim != null) {
                 final int victimMultiplier = victim.getFrameSizeMultiplier();
