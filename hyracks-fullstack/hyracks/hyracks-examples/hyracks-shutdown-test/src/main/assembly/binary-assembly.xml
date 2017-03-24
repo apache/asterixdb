@@ -20,7 +20,6 @@
 <assembly>
   <id>binary-assembly</id>
   <formats>
-    <format>zip</format>
     <format>dir</format>
   </formats>
   <includeBaseDirectory>false</includeBaseDirectory>
