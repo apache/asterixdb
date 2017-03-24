@@ -38,7 +38,6 @@ import org.apache.asterix.common.transactions.LogRecord;
 import org.apache.asterix.common.transactions.LogSource;
 import org.apache.asterix.common.transactions.LogType;
 import org.apache.asterix.common.transactions.MutableLong;
-import org.apache.asterix.common.utils.TransactionUtil;
 import org.apache.asterix.transaction.management.service.transaction.TransactionManagementConstants.LockManagerConstants.LockMode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
@@ -201,7 +200,7 @@ public class LogBuffer implements ILogBuffer {
                             }
                             if (stop) {
                                 fileChannel.close();
-                                break;
+                                return;
                             }
                             this.wait();
                         } catch (InterruptedException e) {

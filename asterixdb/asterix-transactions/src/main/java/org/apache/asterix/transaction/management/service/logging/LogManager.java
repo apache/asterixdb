@@ -215,6 +215,8 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
     }
 
     protected void prepareNextLogFile() {
+        // Mark the page as the last page so that it will close the output file channel.
+        appendPage.isLastPage(true);
         // Make sure to flush whatever left in the log tail.
         appendPage.isFull(true);
         //wait until all log records have been flushed in the current file
@@ -236,7 +238,6 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
             LOGGER.info("Created new txn log file with id(" + getLogFileId(appendLSN.get()) + ") starting with LSN = "
                     + appendLSN.get());
         }
-        appendPage.isLastPage(true);
         //[Notice]
         //the current log file channel is closed if
         //LogBuffer.flush() completely flush the last page of the file.
