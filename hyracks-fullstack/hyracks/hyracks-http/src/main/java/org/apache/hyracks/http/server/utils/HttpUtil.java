@@ -107,6 +107,8 @@ public class HttpUtil {
                 return "text/css";
             case ".txt":
                 return "text/plain";
+            case ".ico":
+                return "image/x-icon";
             case ".js":
                 return "application/javascript";
             default:
