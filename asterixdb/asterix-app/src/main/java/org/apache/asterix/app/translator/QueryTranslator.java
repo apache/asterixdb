@@ -2111,6 +2111,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
         // validation
+        FeedMetadataUtil.validateIfDatasetExists(dataverseName, datasetName, mdTxnCtx);
         Feed feed = FeedMetadataUtil.validateIfFeedExists(dataverseName, feedName,
                 metadataProvider.getMetadataTxnContext());
         ARecordType outputType = FeedMetadataUtil.getOutputType(feed, feed.getAdapterConfiguration(),
