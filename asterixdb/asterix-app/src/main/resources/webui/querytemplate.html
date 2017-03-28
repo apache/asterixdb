@@ -158,9 +158,8 @@ $(document).ready(function() {
             }
 
             /* Handling Pretty JSON */
-            var resultFormat = $('#output-format option:checked').val();
-            var prettyJson = $('[name="pretty-json"]').is(':checked');
-            if ( prettyJson && (resultFormat == 'LOSSLESS_JSON' || resultFormat == 'CLEAN_JSON')) {
+            var resultFormat = $('#output-format option:checked').text();
+            if ( resultFormat == 'JSON (formatted)') {
               $('.result-content').each(
                   function(idx) {
                     var results = $(this).text().split('\n');
@@ -171,8 +170,8 @@ $(document).ready(function() {
                         continue;
                       }
                       var resultJSON = $.parseJSON(results[iter1]);
-                            $(this).append($('<div/>').attr("id", "json-record"+idx+"-"+iter1));
-                            $('#json-record'+idx+"-"+iter1).jsonViewer(resultJSON);
+                      $(this).append($('<div/>').attr("id", "json-record"+idx+"-"+iter1));
+                      $('#json-record'+idx+"-"+iter1).jsonViewer(resultJSON, {collapsed: true, level: 1});
                     }
                   }
                 );
@@ -215,6 +214,8 @@ $(document).ready(function() {
                     Open source<img class="extarget" src="/webui/static/img/targetlink.png"/></a></li>
             <li><a href="https://issues.apache.org/jira/browse/ASTERIXDB" target="_blank">
                     File issues<img class="extarget" src="/webui/static/img/targetlink.png"/></a></li>
+            <li><a href="https://ci.apache.org/projects/asterixdb/index.html" target="_blank">
+                    Documentation<img class="extarget" src="/webui/static/img/targetlink.png"/></a></li>
             <li><a href="https://asterixdb.apache.org/community.html" target="_blank">
                     Contact<img class="extarget" src="/webui/static/img/targetlink.png"/></a></li>
           </ul>
@@ -253,13 +254,13 @@ $(document).ready(function() {
               <label id="output-format" class="optlabel"> Output Format:<br/>
                 <select name="output-format" class="btn">
                   <option selected value="CLEAN_JSON">JSON</option>
+                  <option value="CLEAN_JSON">JSON (formatted)</option>
                   <option value="ADM">ADM</option>
                   <option value="CSV">CSV (no header)</option>
                   <option value="CSV-Header">CSV (with header)</option>
                   <option value="LOSSLESS_JSON">JSON (lossless)</option>
                 </select>
               </label>
-              <label class="optlabel"><input type="checkbox" name="pretty-json" value="true" /> Format JSON</label>
               <label class="optlabel"><input type="checkbox" name="wrapper-array" value="true" /> Wrap results in outer array</label>
               <label class="checkbox optlabel"><input type="checkbox" name="print-expr-tree" value="true" /> Print parsed expressions</label>
               <label class="checkbox optlabel"><input type="checkbox" name="print-rewritten-expr-tree" value="true" /> Print rewritten expressions</label>

@@ -118,7 +118,7 @@
         }
         else {
           var count = target.children('li').length;
-          var placeholder = count + (count > 1 ? ' items' : ' item');
+          var placeholder = count + (count > 1 ? ' fields' : ' field');
           target.after('<a href class="json-placeholder">' + placeholder + '</a>');
         }
         return false;
@@ -131,6 +131,15 @@
 
       if (options.collapsed == true) {
         $(this).find('a.json-toggle').click();
+        var lvl = options.level;
+        $(this).each(function() {
+          lvl = lvl-1;
+          if (lvl >= 0) {
+          	$(this).children('a.json-toggle').click();
+          	$(this).children('ul.json-dict').children().each(cfun);
+          }
+          lvl = lvl+1;
+        });
       }
     });
   };
