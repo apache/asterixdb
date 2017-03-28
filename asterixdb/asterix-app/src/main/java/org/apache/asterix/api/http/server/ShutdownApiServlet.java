@@ -28,6 +28,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.common.config.GlobalConfig;
+import org.apache.asterix.common.utils.JSONUtil;
 import org.apache.asterix.runtime.utils.ClusterStateManager;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.http.api.IServletRequest;
@@ -76,7 +77,7 @@ public class ShutdownApiServlet extends AbstractServlet {
         ObjectNode jsonObject = om.createObjectNode();
         try {
             jsonObject.put("status", "SHUTTING_DOWN");
-            jsonObject.putPOJO("date", new Date());
+            jsonObject.put("date", new Date().toString());
             ObjectNode clusterState = ClusterStateManager.INSTANCE.getClusterStateDescription();
             ArrayNode ncs = (ArrayNode) clusterState.get("ncs");
             for (int i = 0; i < ncs.size(); i++) {
@@ -90,7 +91,7 @@ public class ShutdownApiServlet extends AbstractServlet {
             }
             jsonObject.set("cluster", clusterState);
             final PrintWriter writer = response.writer();
-            writer.print(om.writeValueAsString(jsonObject));
+            writer.print(JSONUtil.convertNode(jsonObject));
             writer.close();
         } catch (Exception e) {
             GlobalConfig.ASTERIX_LOGGER.log(Level.INFO, "Exception writing response", e);
