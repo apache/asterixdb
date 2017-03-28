@@ -18,6 +18,7 @@
  */
 package org.apache.hyracks.http.server;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.concurrent.ConcurrentMap;
 import java.util.logging.Level;
@@ -26,6 +27,7 @@ import java.util.logging.Logger;
 import org.apache.hyracks.http.api.IServlet;
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
+import org.apache.hyracks.http.server.utils.HttpUtil;
 
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpMethod;
@@ -81,7 +83,7 @@ public abstract class AbstractServlet implements IServlet {
             } else if (HttpMethod.OPTIONS.equals(method)) {
                 options(request, response);
             } else {
-                response.setStatus(HttpResponseStatus.METHOD_NOT_ALLOWED);
+                notAllowed(method, response);
             }
         } catch (Exception e) {
             LOGGER.log(Level.WARNING, "Unhandled exception", e);
@@ -89,40 +91,46 @@ public abstract class AbstractServlet implements IServlet {
         }
     }
 
+    protected void notAllowed(HttpMethod method, IServletResponse response) throws IOException {
+        response.setStatus(HttpResponseStatus.METHOD_NOT_ALLOWED);
+        HttpUtil.setContentType(response, HttpUtil.ContentType.TEXT_PLAIN, HttpUtil.Encoding.UTF8);
+        response.writer().write("Method " + method + " not allowed for the requested resource.\n");
+    }
+
     @SuppressWarnings("squid:S1172")
     protected void get(IServletRequest request, IServletResponse response) throws Exception {
         // designed to be extended but an error in standard case
-        response.setStatus(HttpResponseStatus.METHOD_NOT_ALLOWED);
+        notAllowed(HttpMethod.GET, response);
     }
 
     @SuppressWarnings("squid:S1172")
     protected void head(IServletRequest request, IServletResponse response) throws Exception {
         // designed to be extended but an error in standard case
-        response.setStatus(HttpResponseStatus.METHOD_NOT_ALLOWED);
+        notAllowed(HttpMethod.HEAD, response);
     }
 
     @SuppressWarnings("squid:S1172")
     protected void post(IServletRequest request, IServletResponse response) throws Exception {
         // designed to be extended but an error in standard case
-        response.setStatus(HttpResponseStatus.METHOD_NOT_ALLOWED);
+        notAllowed(HttpMethod.POST, response);
     }
 
     @SuppressWarnings("squid:S1172")
     protected void put(IServletRequest request, IServletResponse response) throws Exception {
         // designed to be extended but an error in standard case
-        response.setStatus(HttpResponseStatus.METHOD_NOT_ALLOWED);
+        notAllowed(HttpMethod.PUT, response);
     }
 
     @SuppressWarnings("squid:S1172")
     protected void delete(IServletRequest request, IServletResponse response) throws Exception {
         // designed to be extended but an error in standard case
-        response.setStatus(HttpResponseStatus.METHOD_NOT_ALLOWED);
+        notAllowed(HttpMethod.DELETE, response);
     }
 
     @SuppressWarnings("squid:S1172")
     protected void options(IServletRequest request, IServletResponse response) throws Exception {
         // designed to be extended but an error in standard case
-        response.setStatus(HttpResponseStatus.METHOD_NOT_ALLOWED);
+        notAllowed(HttpMethod.OPTIONS, response);
     }
 
     public String host(IServletRequest request) {
