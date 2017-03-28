@@ -20,6 +20,7 @@ package org.apache.asterix.app.external;
 
 import java.io.File;
 import java.io.FilenameFilter;
+import java.io.IOException;
 import java.net.URL;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
@@ -49,6 +50,7 @@ import org.apache.asterix.metadata.entities.Function;
 import org.apache.asterix.metadata.entities.Library;
 import org.apache.asterix.metadata.utils.MetadataUtil;
 import org.apache.asterix.runtime.formats.NonTaggedDataFormat;
+import org.apache.hyracks.control.common.controllers.ControllerConfig;
 
 public class ExternalLibraryUtils {
 
@@ -217,21 +219,21 @@ public class ExternalLibraryUtils {
             }
 
             // Get the descriptor
-            String[] libraryDescriptors = libraryDir.list(new FilenameFilter() {
-                @Override
-                public boolean accept(File dir, String name) {
-                    return name.endsWith(".xml");
-                }
-            });
-            ExternalLibrary library = getLibrary(new File(libraryDir + File.separator + libraryDescriptors[0]));
+            String[] libraryDescriptors = libraryDir.list((dir, name) -> name.endsWith(".xml"));
+
+            if (libraryDescriptors == null) {
+                throw new IOException("Unable to list files in directory " + libraryDir);
+            }
 
             if (libraryDescriptors.length == 0) {
                 // should be fine. library was installed but its content was not added to metadata
                 MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
                 return;
             } else if (libraryDescriptors.length > 1) {
-                throw new Exception("More than 1 library descriptors defined");
+                throw new IllegalStateException("More than 1 library descriptors defined");
             }
+
+            ExternalLibrary library = getLibrary(new File(libraryDir + File.separator + libraryDescriptors[0]));
 
             // Get the dataverse
             Dataverse dv = MetadataManager.INSTANCE.getDataverse(mdTxnCtx, dataverse);
@@ -281,9 +283,8 @@ public class ExternalLibraryUtils {
             }
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
         } catch (Exception e) {
-            e.printStackTrace();
             if (LOGGER.isLoggable(Level.SEVERE)) {
-                LOGGER.info("Exception in installing library " + libraryName);
+                LOGGER.log(Level.SEVERE, "Exception in installing library " + libraryName, e);
             }
             MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
         }
@@ -391,19 +392,19 @@ public class ExternalLibraryUtils {
     }
 
     /**
-     * @return the directory "$(pwd)/library": This needs to be improved
+     * @return the directory "$(ControllerConfig.defaultDir)/library": This needs to be improved
      */
     protected static File getLibraryInstallDir() {
         String workingDir = System.getProperty("user.dir");
-        return new File(workingDir + File.separator + "library");
+        return new File(workingDir, "library");
     }
 
     /**
-     * @return the directory "$(pwd)/uninstall": This needs to be improved
+     * @return the directory "$(ControllerConfig.defaultDir)/uninstall": This needs to be improved
      */
     protected static File getLibraryUninstallDir() {
         String workingDir = System.getProperty("user.dir");
-        return new File(workingDir + File.separator + "uninstall");
+        return new File(workingDir, "uninstall");
     }
 
 }

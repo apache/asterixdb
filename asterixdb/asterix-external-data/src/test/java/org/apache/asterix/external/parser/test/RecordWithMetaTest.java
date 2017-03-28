@@ -55,7 +55,7 @@ public class RecordWithMetaTest {
     @Test
     public void runTest() throws Exception {
         File file = new File("target/beer.adm");
-        File expected = new File(getClass().getResource("/results/beer.txt").toURI().getPath());
+        File expected = new File(getClass().getResource("/openbeerdb/beer.txt").toURI().getPath());
         try {
             FileUtils.deleteQuietly(file);
             PrintStream printStream = new PrintStream(Files.newOutputStream(Paths.get(file.toURI())));
@@ -80,7 +80,7 @@ public class RecordWithMetaTest {
             int[] pkIndicators = { 1 };
 
             List<Path> paths = new ArrayList<>();
-            paths.add(Paths.get(getClass().getResource("/beer.csv").toURI()));
+            paths.add(Paths.get(getClass().getResource("/openbeerdb/beer.csv").toURI()));
             FileSystemWatcher watcher = new FileSystemWatcher(paths, null, false);
             // create input stream
             LocalFSInputStream inputStream = new LocalFSInputStream(watcher);

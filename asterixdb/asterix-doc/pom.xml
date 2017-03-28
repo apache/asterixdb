@@ -92,6 +92,15 @@
           <skip>true</skip>
         </configuration>
       </plugin>
+      <plugin>
+        <groupId>org.apache.rat</groupId>
+        <artifactId>apache-rat-plugin</artifactId>
+        <configuration>
+          <excludes combine.children="append">
+            <exclude>src/site/resources/data/lineitem.tbl</exclude>
+          </excludes>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
 

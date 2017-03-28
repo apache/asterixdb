@@ -876,7 +876,7 @@ public class TestExecutor {
                 actualResultFile.getParentFile().delete();
                 break;
             case "mgx":
-                executeManagixCommand(statement);
+                executeManagixCommand(stripLineComments(statement).trim());
                 break;
             case "txnqbc": // qbc represents query before crash
                 resultStream = executeQuery(statement, OutputFormat.forCompilationUnit(cUnit),
@@ -910,7 +910,7 @@ public class TestExecutor {
             case "script":
                 try {
                     String output = executeScript(pb, getScriptPath(testFile.getAbsolutePath(),
-                            pb.environment().get("SCRIPT_HOME"), statement.trim()));
+                            pb.environment().get("SCRIPT_HOME"), stripLineComments(statement).trim()));
                     if (output.contains("ERROR")) {
                         throw new Exception(output);
                     }
@@ -919,7 +919,7 @@ public class TestExecutor {
                 }
                 break;
             case "sleep":
-                String[] lines = statement.split("\n");
+                String[] lines = stripLineComments(statement).trim().split("\n");
                 Thread.sleep(Long.parseLong(lines[lines.length - 1].trim()));
                 break;
             case "errddl": // a ddlquery that expects error
@@ -937,7 +937,7 @@ public class TestExecutor {
                 break;
             case "vscript": // a script that will be executed on a vagrant virtual node
                 try {
-                    String[] command = statement.trim().split(" ");
+                    String[] command = stripLineComments(statement).trim().split(" ");
                     if (command.length != 2) {
                         throw new Exception("invalid vagrant script format");
                     }
@@ -952,7 +952,7 @@ public class TestExecutor {
                 }
                 break;
             case "vmgx": // a managix command that will be executed on vagrant cc node
-                String output = executeVagrantManagix(pb, statement);
+                String output = executeVagrantManagix(pb, stripLineComments(statement).trim());
                 if (output.contains("ERROR")) {
                     throw new Exception(output);
                 }

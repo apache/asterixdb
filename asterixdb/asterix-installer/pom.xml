@@ -209,25 +209,6 @@
         <artifactId>maven-resources-plugin</artifactId>
         <executions>
           <execution>
-            <id>copy-external-library</id>
-            <phase>generate-resources</phase>
-            <goals>
-              <goal>copy-resources</goal>
-            </goals>
-            <configuration>
-              <outputDirectory>target/resources/externallib</outputDirectory>
-              <overwrite>true</overwrite>
-              <resources>
-                <resource>
-                  <directory>../asterix-external-data/target</directory>
-                  <includes>
-                    <include>testlib-zip-binary-assembly.zip</include>
-                  </includes>
-                </resource>
-              </resources>
-            </configuration>
-          </execution>
-          <execution>
             <id>copy-test-data</id>
             <phase>generate-resources</phase>
             <goals>
@@ -238,7 +219,7 @@
               <overwrite>true</overwrite>
               <resources>
                 <resource>
-                  <directory>../asterix-external-data/src/test/resources</directory>
+                  <directory>../asterix-external-data/src/test/resources/openbeerdb</directory>
                   <includes>
                     <include>beer.csv</include>
                   </includes>
@@ -258,6 +239,21 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>
         <version>2.10</version>
+        <executions>
+          <execution>
+            <id>copy-external-testlib</id>
+            <phase>pre-integration-test</phase>
+            <goals>
+              <goal>copy-dependencies</goal>
+            </goals>
+            <configuration>
+              <includeClassifiers>testlib</includeClassifiers>
+              <outputDirectory>target/resources/externallib</outputDirectory>
+              <stripVersion>true</stripVersion>
+              <overWriteIfNewer>true</overWriteIfNewer>
+            </configuration>
+          </execution>
+        </executions>
         <configuration>
           <usedDependencies combine.children="append">
             <usedDependency>org.apache.asterix:asterix-external-data</usedDependency>
@@ -267,6 +263,52 @@
             <usedDependency>org.apache.hadoop:hadoop-minicluster</usedDependency>
             <usedDependency>org.apache.zookeeper:zookeeper</usedDependency>
           </usedDependencies>
+          <ignoredUnusedDeclaredDependencies>
+            <ignoredUnusedDeclaredDependency>org.apache.asterix:asterix-external-data:zip:*</ignoredUnusedDeclaredDependency>
+          </ignoredUnusedDeclaredDependencies>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.rat</groupId>
+        <artifactId>apache-rat-plugin</artifactId>
+        <configuration>
+          <licenses combine.children="append">
+            <license implementation="org.apache.rat.analysis.license.MITLicense"/>
+            <license implementation="org.apache.rat.analysis.license.SimplePatternBasedLicense">
+              <licenseFamilyCategory>MIT</licenseFamilyCategory>
+              <licenseFamilyName>JQuery</licenseFamilyName>
+              <patterns>(c) jQuery Foundation | jquery.org/license</patterns>
+            </license>
+            <license implementation="org.apache.rat.analysis.license.SimplePatternBasedLicense">
+              <licenseFamilyCategory>MIT</licenseFamilyCategory>
+              <licenseFamilyName>Bootstrap</licenseFamilyName>
+              <patterns>Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)</patterns>
+            </license>
+            <license implementation="org.apache.rat.analysis.license.SimplePatternBasedLicense">
+              <licenseFamilyCategory>MIT</licenseFamilyCategory>
+              <licenseFamilyName>AngularJS</licenseFamilyName>
+              <patterns>http://angularjs.org | (c) 2010-2016 Google, Inc. | License: MIT</patterns>
+            </license>
+          </licenses>
+          <licenseFamilies combine.children="append">
+            <licenseFamily implementation="org.apache.rat.license.MITLicenseFamily"/>
+            <licenseFamily implementation="org.apache.rat.license.SimpleLicenseFamily">
+              <familyName>JQuery</familyName>
+            </licenseFamily>
+            <licenseFamily implementation="org.apache.rat.license.SimpleLicenseFamily">
+              <familyName>Bootstrap</familyName>
+            </licenseFamily>
+            <licenseFamily implementation="org.apache.rat.license.SimpleLicenseFamily">
+              <familyName>AngularJS</familyName>
+            </licenseFamily>
+          </licenseFamilies>
+          <excludes combine.children="append">
+            <exclude>src/test/resources/clusterts/id_rsa</exclude>
+            <exclude>src/test/resources/clusterts/id_rsa.pub</exclude>
+            <exclude>src/test/resources/clusterts/known_hosts</exclude>
+            <exclude>src/test/resources/transactionts/results/query_after_restart/big_object_20M/big_object_20M.1.adm.template</exclude>
+            <exclude>src/test/resources/integrationts/restart/tweets.json</exclude> <!-- https://issues.apache.org/jira/browse/ASTERIXDB-1850 -->
+          </excludes>
         </configuration>
       </plugin>
     </plugins>
@@ -417,8 +459,7 @@
       <groupId>org.apache.asterix</groupId>
       <artifactId>asterix-external-data</artifactId>
       <version>${project.version}</version>
-      <type>zip</type>
-      <classifier>binary-assembly</classifier>
+      <type>test-jar</type>
     </dependency>
     <dependency>
       <groupId>org.apache.asterix</groupId>
@@ -487,6 +528,14 @@
       <artifactId>asterix-server</artifactId>
       <type>test-jar</type>
       <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.asterix</groupId>
+      <artifactId>asterix-external-data</artifactId>
+      <version>${project.version}</version>
+      <type>zip</type>
+      <classifier>testlib</classifier>
       <scope>test</scope>
     </dependency>
   </dependencies>

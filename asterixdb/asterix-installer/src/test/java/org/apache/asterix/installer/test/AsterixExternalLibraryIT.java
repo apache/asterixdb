@@ -40,7 +40,7 @@ public class AsterixExternalLibraryIT {
     private static final String PATH_BASE = "src/test/resources/integrationts/library";
     private static final String PATH_ACTUAL = "target" + File.separator + "ittest" + File.separator;
     private static final String LIBRARY_PATH = "target" + File.separator + "resources" + File.separator + "externallib"
-            + File.separator + "testlib-zip-binary-assembly.zip";
+            + File.separator + "asterix-external-data-testlib.zip";
     private static final Logger LOGGER = Logger.getLogger(AsterixExternalLibraryIT.class.getName());
     private static List<TestCaseContext> testCaseCollection;
     private static String reportPath =

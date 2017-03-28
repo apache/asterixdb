@@ -52,8 +52,8 @@ public class AdmDataGenTest {
     private static final String PATH_EXPECTED = PATH_BASE + "results" + SEPARATOR;
     private static final String PATH_ACTUAL = "adgtest" + SEPARATOR;
 
-    private static final ArrayList<String> ignore = AsterixTestHelper.readFile(FILENAME_IGNORE, PATH_BASE);
-    private static final ArrayList<String> only = AsterixTestHelper.readFile(FILENAME_ONLY, PATH_BASE);
+    private static final ArrayList<String> ignore = AsterixTestHelper.readTestListFile(FILENAME_IGNORE, PATH_BASE);
+    private static final ArrayList<String> only = AsterixTestHelper.readTestListFile(FILENAME_ONLY, PATH_BASE);
 
     @BeforeClass
     public static void setUp() throws Exception {

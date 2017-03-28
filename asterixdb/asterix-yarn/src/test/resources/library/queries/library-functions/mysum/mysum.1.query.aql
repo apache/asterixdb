@@ -18,5 +18,5 @@
  */
 use dataverse externallibtest;
 
-let $x:=testlib-zip-binary-assembly#mysum(3,4)
+let $x:=asterix-external-data-testlib#mysum(3,4)
 return $x

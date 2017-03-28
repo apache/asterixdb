@@ -20,6 +20,6 @@ use dataverse externallibtest;
 
 insert into dataset Check (
   for $x in dataset Check
-  let $y:=testlib-zip-binary-assembly#toUpper($x)
+  let $y:=asterix-external-data-testlib#toUpper($x)
   return $y
 );

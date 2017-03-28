@@ -79,6 +79,18 @@
           </execution>
         </executions>
       </plugin>
+      <plugin>
+        <groupId>org.apache.rat</groupId>
+        <artifactId>apache-rat-plugin</artifactId>
+        <configuration>
+          <excludes combine.children="append">
+            <exclude>src/main/java/org/apache/asterix/transaction/management/service/locking/Job.json</exclude>
+            <exclude>src/main/java/org/apache/asterix/transaction/management/service/locking/Resource.json</exclude>
+            <exclude>src/main/java/org/apache/asterix/transaction/management/service/locking/Request.json</exclude>
+            <exclude>src/main/java/org/apache/asterix/transaction/management/service/locking/LockRequestFile</exclude>
+          </excludes>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
   <dependencies>

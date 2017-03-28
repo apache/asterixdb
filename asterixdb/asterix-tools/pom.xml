@@ -62,6 +62,25 @@
           </execution>
         </executions>
       </plugin>
+      <plugin>
+        <groupId>org.apache.rat</groupId>
+        <artifactId>apache-rat-plugin</artifactId>
+        <configuration>
+          <licenses combine.children="append">
+            <license implementation="org.apache.rat.analysis.license.SimplePatternBasedLicense">
+              <licenseFamilyCategory>USCensus</licenseFamilyCategory>
+              <licenseFamilyName>CensusBureau</licenseFamilyName>
+              <notes>https://www2.census.gov/topics/genealogy/1990surnames/</notes>
+              <patterns>source--United States Census Bureau</patterns>
+            </license>
+          </licenses>
+          <licenseFamilies combine.children="append">
+            <licenseFamily implementation="org.apache.rat.license.SimpleLicenseFamily">
+              <familyName>CensusBureau</familyName>
+            </licenseFamily>
+          </licenseFamilies>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
 

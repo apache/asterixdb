@@ -1,6 +1,5 @@
 /*
-RainbowVis-JS 
-Released under MIT License
+RainbowVis-JS | Released under MIT License
 
 Source: https://github.com/anomal/RainbowVis-JS/blob/e160e6db8be28f7de99ba17c6566007410ee1f98/rainbowvis.js
 */

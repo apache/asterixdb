@@ -68,6 +68,7 @@ import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.TypeSignature;
 import org.apache.asterix.om.utils.NonTaggedFormatUtil;
+import org.apache.asterix.test.base.AsterixTestHelper;
 import org.apache.asterix.tools.translator.ADGenDmlTranslator;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
@@ -993,16 +994,7 @@ public class AdmDataGen {
     }
 
     private static String[] readFileAsStringArray(File file) throws IOException {
-        List<String> tmp = new ArrayList<String>();
-        FileInputStream fstream = new FileInputStream(file);
-        DataInputStream in = new DataInputStream(fstream);
-        BufferedReader br = new BufferedReader(new InputStreamReader(in));
-        String strLine;
-        while ((strLine = br.readLine()) != null) {
-            tmp.add(strLine);
-        }
-        in.close();
-        return tmp.toArray(new String[0]);
+        return AsterixTestHelper.readTestListFile(file).toArray(new String[0]);
     }
 
     private static String getConstructor(IAType t) throws Exception {

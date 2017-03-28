@@ -82,25 +82,6 @@
         <artifactId>maven-resources-plugin</artifactId>
         <executions>
           <execution>
-            <id>copy-external-library</id>
-            <phase>generate-resources</phase>
-            <goals>
-              <goal>copy-resources</goal>
-            </goals>
-            <configuration>
-              <outputDirectory>src/test/resources/externallib</outputDirectory>
-              <overwrite>true</overwrite>
-              <resources>
-                <resource>
-                  <directory>../asterix-external-data/target</directory>
-                  <includes>
-                    <include>testlib-zip-binary-assembly.zip</include>
-                  </includes>
-                </resource>
-              </resources>
-            </configuration>
-          </execution>
-          <execution>
             <id>copy-external-data-resources</id>
             <phase>generate-resources</phase>
             <goals>
@@ -113,7 +94,7 @@
                 <resource>
                   <directory>../asterix-external-data/src/test/resources</directory>
                   <includes>
-                    <include>beer.csv</include>
+                    <include>openbeerdb/beer.csv</include>
                     <include>change_feed.csv</include>
                   </includes>
                 </resource>
@@ -148,6 +129,21 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>copy-external-testlib</id>
+            <phase>pre-integration-test</phase>
+            <goals>
+              <goal>copy-dependencies</goal>
+            </goals>
+            <configuration>
+              <includeClassifiers>testlib</includeClassifiers>
+              <outputDirectory>target/data/externallib</outputDirectory>
+              <overwrite>true</overwrite>
+              <stripVersion>true</stripVersion>
+            </configuration>
+          </execution>
+        </executions>
         <configuration>
           <ignoredUsedUndeclaredDependencies combine.children="append">
             <ignoredUsedUndeclaredDependency>commons-logging:commons-logging-api:*</ignoredUsedUndeclaredDependency>
@@ -157,7 +153,83 @@
             <usedDependency>org.apache.hadoop:hadoop-common</usedDependency>
             <usedDependency>org.apache.asterix:asterix-external-data</usedDependency>
           </usedDependencies>
+          <ignoredUnusedDeclaredDependencies>
+            <ignoredUnusedDeclaredDependency>org.apache.asterix:asterix-external-data:zip:*</ignoredUnusedDeclaredDependency>
+          </ignoredUnusedDeclaredDependencies>
         </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.rat</groupId>
+        <artifactId>apache-rat-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>default</id>
+            <phase>validate</phase>
+            <goals>
+              <goal>check</goal>
+            </goals>
+            <configuration>
+              <licenses combine.children="append">
+                <license implementation="org.apache.rat.analysis.license.MITLicense"/>
+              </licenses>
+              <excludes combine.children="append">
+                <exclude>src/test/resources/**/results_parser_sqlpp/**</exclude>
+                <exclude>src/test/resources/**/results/**</exclude>
+                <exclude>src/test/resources/fuzzyjoin/pub/fuzzy-join-aql*.dot</exclude>
+                <exclude>src/test/resources/fuzzyjoin/pub/fuzzy-join-aql*.json</exclude>
+                <exclude>data/**</exclude>
+                <exclude>src/main/resources/queryui/**</exclude>
+                <exclude>src/main/resources/webui/**</exclude>
+                <exclude>src/test/resources/**/only*.xml</exclude>
+              </excludes>
+            </configuration>
+          </execution>
+          <execution>
+            <id>webqueryui</id>
+            <phase>validate</phase>
+            <goals>
+              <goal>check</goal>
+            </goals>
+            <configuration>
+              <reportFile>${project.build.directory}/webqueryui-rat.txt</reportFile>
+              <licenses combine.children="append">
+                <license implementation="org.apache.rat.analysis.license.MITLicense"/>
+                <license implementation="org.apache.rat.analysis.license.SimplePatternBasedLicense">
+                  <licenseFamilyCategory>MIT</licenseFamilyCategory>
+                  <licenseFamilyName>JQuery</licenseFamilyName>
+                  <patterns>(c) jQuery Foundation | jquery.org/license</patterns>
+                </license>
+                <license implementation="org.apache.rat.analysis.license.SimplePatternBasedLicense">
+                  <licenseFamilyCategory>MIT</licenseFamilyCategory>
+                  <licenseFamilyName>Bootstrap</licenseFamilyName>
+                  <patterns>Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)</patterns>
+                </license>
+                <license implementation="org.apache.rat.analysis.license.SimplePatternBasedLicense">
+                  <licenseFamilyCategory>MIT</licenseFamilyCategory>
+                  <licenseFamilyName>AngularJS</licenseFamilyName>
+                  <patterns>http://angularjs.org | (c) 2010-2016 Google, Inc. | License: MIT</patterns>
+                </license>
+              </licenses>
+              <licenseFamilies combine.children="append">
+                <licenseFamily implementation="org.apache.rat.license.MITLicenseFamily"/>
+                <licenseFamily implementation="org.apache.rat.license.SimpleLicenseFamily">
+                  <familyName>JQuery</familyName>
+                </licenseFamily>
+                <licenseFamily implementation="org.apache.rat.license.SimpleLicenseFamily">
+                  <familyName>Bootstrap</familyName>
+                </licenseFamily>
+                <licenseFamily implementation="org.apache.rat.license.SimpleLicenseFamily">
+                  <familyName>AngularJS</familyName>
+                </licenseFamily>
+              </licenseFamilies>
+              <includes>
+                <include>src/main/resources/queryui/**</include>
+                <include>src/main/resources/webui/**</include>
+              </includes>
+              <excludes>src/main/resources/queryui/fonts/glyphicons-halflings-regular.svg</excludes>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
     <pluginManagement>
@@ -286,6 +358,14 @@
       <artifactId>asterix-external-data</artifactId>
       <version>${project.version}</version>
       <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.asterix</groupId>
+      <artifactId>asterix-external-data</artifactId>
+      <version>${project.version}</version>
+      <type>zip</type>
+      <classifier>testlib</classifier>
       <scope>test</scope>
     </dependency>
     <dependency>

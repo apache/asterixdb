@@ -25,6 +25,38 @@
   </parent>
   <artifactId>asterix-examples</artifactId>
 
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.rat</groupId>
+        <artifactId>apache-rat-plugin</artifactId>
+        <configuration>
+          <licenses combine.children="append">
+            <license implementation="org.apache.rat.analysis.license.MITLicense"/>
+            <license implementation="org.apache.rat.analysis.license.SimplePatternBasedLicense">
+              <licenseFamilyCategory>MIT</licenseFamilyCategory>
+              <licenseFamilyName>RainbowVis-JS</licenseFamilyName>
+              <patterns>RainbowVis-JS | Released under MIT License</patterns>
+            </license>
+            <license implementation="org.apache.rat.analysis.license.SimplePatternBasedLicense">
+              <licenseFamilyCategory>MIT</licenseFamilyCategory>
+              <licenseFamilyName>jquery.org</licenseFamilyName>
+              <patterns>jquery.org/license</patterns>
+            </license>
+          </licenses>
+          <licenseFamilies combine.children="append">
+            <licenseFamily implementation="org.apache.rat.license.MITLicenseFamily"/>
+            <licenseFamily implementation="org.apache.rat.license.SimpleLicenseFamily">
+              <familyName>RainbowVis-JS</familyName>
+            </licenseFamily>
+            <licenseFamily implementation="org.apache.rat.license.SimpleLicenseFamily">
+              <familyName>jquery.org</familyName>
+            </licenseFamily>
+          </licenseFamilies>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
   <licenses>
     <license>
       <name>Apache License, Version 2.0</name>

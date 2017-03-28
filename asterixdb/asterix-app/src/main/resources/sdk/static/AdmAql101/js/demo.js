@@ -17,9 +17,9 @@
  * under the License.
  */
 $(document).ready(function() {
-    
+
     var A = new AsterixDBConnection().dataverse("TinySocial");
-    
+
     function addResult(dom, res) {
         for (i in res) {
             $(dom).append(res[i] + "<br/>");
@@ -29,16 +29,16 @@ $(document).ready(function() {
     // 0A - Exact-Match Lookup
     $('#run0a').click(function () {
         $('#result0a').html('');
-        
+
         var expression0a = new FLWOGRExpression()
             .ForClause("$user", new AExpression("dataset FacebookUsers"))
             .WhereClause(new AExpression("$user.id = 8"))
             .ReturnClause("$user");
-        
+
         var success0a = function(res) {
             addResult('#result0a', res["results"]);
         };
-        
+
         A.query(expression0a.val(), success0a);
     });
 
@@ -50,11 +50,11 @@ $(document).ready(function() {
             .ForClause("$user", new AExpression("dataset FacebookUsers"))
             .WhereClause().and(new AExpression("$user.id >= 2"), new AExpression("$user.id <= 4"))
             .ReturnClause("$user");
-            
+
         var success0b = function(res) {
             addResult('#result0b', res["results"]);
         };
-        
+
         A.query(expression0b.val(), success0b);
     });
 
@@ -65,17 +65,17 @@ $(document).ready(function() {
         var expression1 = new FLWOGRExpression()
             .ForClause("$user", new AExpression("dataset FacebookUsers"))
             .WhereClause().and(
-                new AExpression("$user.user-since >= datetime('2010-07-22T00:00:00')"), 
+                new AExpression("$user.user-since >= datetime('2010-07-22T00:00:00')"),
                 new AExpression("$user.user-since <= datetime('2012-07-29T23:59:59')")
             )
             .ReturnClause("$user");
-        
+
         var success1 = function(res) {
             addResult('#result1', res["results"]);
         };
         A.query(expression1.val(), success1);
     });
-        
+
     // 2A - Equijoin
     $("#run2a").click(function() {
         $('#result2a').html('');
@@ -88,7 +88,7 @@ $(document).ready(function() {
                 "uname" : "$user.name",
                 "message" : "$message.message"
             });
-        
+
         var success2a = function(res) {
             addResult('#result2a', res["results"]);
         };
@@ -107,7 +107,7 @@ $(document).ready(function() {
                     "uname" : "$user.name",
                     "message" : "$message.message"
             });
-        
+
         var success2b = function(res) {
             addResult('#result2b', res["results"]);
         };
@@ -129,13 +129,13 @@ $(document).ready(function() {
                 "uname": "$user.name",
                 "messages" : expression3messages
             });
-            
+
         var success3 = function(res) {
             addResult('#result3', res["results"]);
         };
         A.query(expression3.val(), success3);
     });
-    
+
     // 4 - Theta Join
     $("#run4").click(function() {
         $('#result4').html('');
@@ -144,14 +144,14 @@ $(document).ready(function() {
             .ForClause( "$t2", new AExpression("dataset TweetMessages"))
             .WhereClause( new AExpression("spatial-distance($t.sender-location, $t2.sender-location) <= 1"))
             .ReturnClause({ "msgtxt" : "$t2.message-text" });
-            
+
         var expression4 = new FLWOGRExpression()
             .ForClause( "$t", new AExpression("dataset TweetMessages"))
             .ReturnClause({
                 "message" : "$t.message-text",
                 "nearby-messages" : expression4messages
             });
-        
+
         var success4 = function(res) {
             addResult('#result4', res["results"]);
         };
@@ -170,7 +170,7 @@ $(document).ready(function() {
                 "twitter-screenname": "$tu.screen-name",
                 "twitter-name": "$tu.name"
             });
-        
+
         var expression5 = new FLWOGRExpression()
             .ForClause ("$fbu", new AExpression("dataset FacebookUsers"))
             .ReturnClause(
@@ -180,16 +180,16 @@ $(document).ready(function() {
                     "similar-users" : similarUsersExpression
                 }
             );
-        
+
         var success5 = function (res) {
             addResult('#result5', res["results"]);
         };
-        
+
         var simfunction = new SetStatement( "simfunction", "edit-distance" );
         var simthreshold = new SetStatement( "simthreshold", "3");
 
         A.query(
-            [ simfunction.val() , simthreshold.val() , expression5.val() ], 
+            [ simfunction.val() , simthreshold.val() , expression5.val() ],
             success5
         );
     });
@@ -200,19 +200,19 @@ $(document).ready(function() {
 
         var expression6 = new FLWOGRExpression()
             .ForClause ("$fbu", new AQLClause().set("dataset FacebookUsers"))
-            .WhereClause( 
+            .WhereClause(
                 new QuantifiedExpression (
-                    "some" , 
+                    "some" ,
                     {"$e" : new AExpression("$fbu.employment") },
                     new FunctionExpression("is-null", new AExpression("$e.end-date"))
                 )
             )
             .ReturnClause("$fbu");
-        
+
         var success6 = function(res) {
             addResult('#result6',res["results"]);
         };
-        
+
         A.query(expression6.val(), success6);
     });
 
@@ -222,15 +222,15 @@ $(document).ready(function() {
 
         var expression7 = new FLWOGRExpression()
             .ForClause("$fbu", new AExpression("dataset FacebookUsers"))
-            .WhereClause( 
+            .WhereClause(
                 new QuantifiedExpression (
-                    "every" , 
+                    "every" ,
                     {"$e" : new AExpression("$fbu.employment") },
                     new FunctionExpression("not", new FunctionExpression("is-null", new AExpression("$e.end-date")))
                 )
             )
             .ReturnClause("$fbu");
-        
+
         var success7 = function(res) {
             addResult('#result7', res["results"]);
         };
@@ -239,8 +239,8 @@ $(document).ready(function() {
 
     // 8 - Simple Aggregation
     $('#run8').click(function () {
-    
-        $('#result8').html('');   
+
+        $('#result8').html('');
 
         var expression8 = new FunctionExpression(
             "count",
@@ -248,7 +248,7 @@ $(document).ready(function() {
                 .ForClause("$fbu", new AExpression("dataset FacebookUsers"))
                 .ReturnClause("$fbu")
         );
-        
+
         var success8 = function(res) {
             addResult('#result8', res["results"]);
         };
@@ -289,13 +289,13 @@ $(document).ready(function() {
                     "count" : new FunctionExpression("count", new AExpression("$t"))
                 }
             );
-        
+
         var success9b = function(res) {
             addResult('#result9b', res["results"]);
         };
         A.query(expression9b.val(), success9b);
     });
-    
+
     // 10 - Grouping and Limits
     $("#run10").click(function() {
         $('#result10').html('');
@@ -310,7 +310,7 @@ $(document).ready(function() {
                 {
                     "user" : "$uid",
                     "count" : "$c"
-                } 
+                }
             );
 
         var success10 = function(res) {
@@ -326,27 +326,27 @@ $(document).ready(function() {
     var expression11 = new FLWOGRExpression()
         .ForClause( "$t", new AExpression("dataset TweetMessages"))
         .ReturnClause({
-            "tweet"         : new AExpression("$t"),       
+            "tweet"         : new AExpression("$t"),
             "similar-tweets": new FLWOGRExpression()
                                 .ForClause( "$t2", new AExpression("dataset TweetMessages"))
                                 .WhereClause().and(
-                                    new AExpression("$t2.referred-topics ~= $t.referred-topics"), 
+                                    new AExpression("$t2.referred-topics ~= $t.referred-topics"),
                                     new AExpression("$t2.tweetid != $t.tweetid")
                                  )
                                 .ReturnClause("$t2.referred-topics")
-        }); 
-        
+        });
+
         var success11 = function(res) {
             addResult('#result11', res["results"]);
         };
-        
+
         var simfunction = new SetStatement( "simfunction", "jaccard" );
         var simthreshold = new SetStatement( "simthreshold", "0.3");
         A.query(
-            [ simfunction.val(), simthreshold.val(), expression11.val()], 
+            [ simfunction.val(), simthreshold.val(), expression11.val()],
             success11
         );
-        
+
     });
 
     $('#run0a').trigger('click');

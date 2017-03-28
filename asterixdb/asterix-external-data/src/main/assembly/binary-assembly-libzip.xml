@@ -17,7 +17,7 @@
  ! under the License.
  !-->
 <assembly>
-  <id>binary-assembly</id>
+  <id>testlib</id>
   <formats>
     <format>zip</format>
   </formats>
@@ -25,16 +25,18 @@
   <fileSets>
     <fileSet>
       <directory>target</directory>
-      <outputDirectory></outputDirectory>
+      <outputDirectory/>
       <includes>
         <include>*test*.jar</include>
       </includes>
     </fileSet>
     <fileSet>
       <directory>src/test/resources</directory>
-      <outputDirectory></outputDirectory>
+      <outputDirectory/>
       <includes>
         <include>*.xml</include>
+        <include>change_feed.csv</include>
+        <include>openbeerdb/beer.csv</include>
       </includes>
     </fileSet>
     <fileSet>

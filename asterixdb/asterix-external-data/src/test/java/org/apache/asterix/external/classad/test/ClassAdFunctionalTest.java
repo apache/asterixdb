@@ -51,7 +51,7 @@ public class ClassAdFunctionalTest extends TestCase {
 
         try {
             String[] args = { "", "-d", "-v",
-                    URLDecoder.decode(getClass().getResource("/functional_tests.txt").getPath(), "UTF-8") };
+                    URLDecoder.decode(getClass().getResource("/classad/functional_tests.txt").getPath(), "UTF-8") };
             FunctionalTester.test(args.length, args, new ClassAdObjectPool());
         } catch (Throwable e) {
             e.printStackTrace();

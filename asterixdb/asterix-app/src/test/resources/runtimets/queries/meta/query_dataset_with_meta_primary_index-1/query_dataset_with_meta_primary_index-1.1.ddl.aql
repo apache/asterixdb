@@ -41,7 +41,7 @@ create feed KVStream using adapter(
  ("parser"="record-with-metadata"),
  ("type-name"="DocumentType"),
  ("meta-type-name"="KVMetaType"),
- ("path"="asterix_nc1://target/data/csv/beer.csv"),
+ ("path"="asterix_nc1://target/data/csv/openbeerdb/beer.csv"),
  ("format"="csv"),
  ("delimiter"=","),
  ("record-format"="adm"),

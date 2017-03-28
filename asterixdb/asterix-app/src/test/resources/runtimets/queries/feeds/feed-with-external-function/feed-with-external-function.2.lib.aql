@@ -17,4 +17,4 @@
  * under the License.
  */
 /*
-install externallibtest testlib src/test/resources/externallib/testlib-zip-binary-assembly.zip
+install externallibtest testlib target/data/externallib/asterix-external-data-testlib.zip

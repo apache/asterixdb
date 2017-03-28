@@ -21,7 +21,6 @@ package org.apache.asterix.test.base;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileFilter;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -35,17 +34,22 @@ public class AsterixTestHelper {
         return fname.substring(0, dot + 1) + resultExt;
     }
 
-    public static ArrayList<String> readFile(String fileName, String basePath) {
-        ArrayList<String> list = new ArrayList<String>();
+    public static ArrayList<String> readTestListFile(String fileName, String basePath) {
+        return readTestListFile(new File(basePath, fileName));
+    }
+
+    public static ArrayList<String> readTestListFile(File file) {
+        ArrayList<String> list = new ArrayList<>();
         BufferedReader result;
         try {
-            result = new BufferedReader(new FileReader(basePath + fileName));
+            result = new BufferedReader(new FileReader(file));
             while (true) {
                 String line = result.readLine();
                 if (line == null) {
                     break;
                 }
-                if (line.length() != 0) {
+                line = line.replaceAll("#.*", "");
+                if (line.trim().length() != 0) {
                     list.add(line);
                 }
             }

@@ -83,30 +83,19 @@
    own licenses; we recommend you read them, as their terms may differ from
    the terms above.
 </@license>
-<@license files=["webui/static/js/bootstrap.min.js", "webui/static/css/bootstrap-responsive.min.css", "webui/static/css/bootstrap.min.css"]>
+<@license files=["webui/static/js/bootstrap.min.js", "webui/static/css/bootstrap-responsive.min.css", "webui/static/css/bootstrap.min.css", "webui/static/img/glyphicons-halflings-white.png", "webui/static/img/glyphicons-halflings.png"]>
    Copyright 2012 Twitter, Inc.
    http://www.apache.org/licenses/LICENSE-2.0.txt
-</@license>
-<@license files=["webui/static/js/smoothie.js", "feed/smoothie.js"] licenseName="The MIT License">
-Copyright (c) 2010-2013, Joe Walnes
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+   Credit for webui/static/img/glyphicons-halflings-white.png,
+          and webui/static/img/glyphicons-halflings.png
 
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
+   GLYPHICONS Halflings font is also released as an extension of a Bootstrap
+   (www.getbootstrap.com) for free and it is released under the same license as
+   Bootstrap. While you are not required to include attribution on your
+   Bootstrap-based projects, I would certainly appreciate any form of support,
+   even a nice Tweet is enough. Of course if you want, you can say thank you and
+   support me by buying more icons on GLYPHICONS.com.
 </@license>
 <@license component="AsterixDB QueryUI" files=["queryui/js/json-formatter.min.js", "queryui/css/json-formatter.min.css"]>
     Copyright 2014 Mohsen Azimi
@@ -123,7 +112,11 @@ THE SOFTWARE.
     See the License for the specific language governing permissions and
     limitations under the License.
 </@license>
-<@license component="AsterixDB QueryUI" files=["queryui/js/bootstrap.min.js", "queryui/css/bootstrap.min.css", "queryui/css/bootstrap-theme.min.css"]>
+<@license component="AsterixDB QueryUI"
+          files=["queryui/js/bootstrap.min.js", "queryui/css/bootstrap.min.css", "queryui/css/bootstrap-theme.min.css",
+                 "queryui/css/bootstrap-theme.min.css", "queryui/fonts/glyphicons-halflings-regular.eot",
+                 "queryui/fonts/glyphicons-halflings-regular.svg", "queryui/fonts/glyphicons-halflings-regular.ttf",
+                 "queryui/fonts/glyphicons-halflings-regular.woff", "queryui/fonts/glyphicons-halflings-regular.woff2"]>
 The MIT License (MIT)
 
 Copyright (c) 2011-2015 Twitter, Inc
@@ -147,7 +140,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 
 queryui/css/bootstrap.min.css also contains normalize.css v3.0.3 (http://github.com/necolas/normalize.css), having the following copyright:
-
+--
 Copyright © Nicolas Gallagher and Jonathan Neal
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
@@ -155,7 +148,20 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+--
+Credit for font files: queryui/fonts/glyphicons-halflings-regular.eot,
+                       queryui/fonts/glyphicons-halflings-regular.svg,
+                       queryui/fonts/glyphicons-halflings-regular.ttf,
+                       queryui/fonts/glyphicons-halflings-regular.woff,
+                     and
+                       queryui/fonts/glyphicons-halflings-regular.woff2
 
+GLYPHICONS Halflings font is also released as an extension of a Bootstrap
+(www.getbootstrap.com) for free and it is released under the same license as
+Bootstrap. While you are not required to include attribution on your
+Bootstrap-based projects, I would certainly appreciate any form of support,
+even a nice Tweet is enough. Of course if you want, you can say thank you and
+support me by buying more icons on GLYPHICONS.com.
 </@license>
 
 <@license component="AsterixDB QueryUI" files="queryui/js/angular.min.js" licenseName="The MIT License">

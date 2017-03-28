@@ -49,7 +49,14 @@ public class AqlExecutionLessParallelismIT {
 
     @Parameters(name = "AqlExecutionLessParallelismIT {index}: {0}")
     public static Collection<Object[]> tests() throws Exception {
-        return LangExecutionUtil.tests("only.xml", "testsuite.xml");
+        Collection<Object[]> tests = LangExecutionUtil.buildTestsInXml("only_it.xml");
+        if (!tests.isEmpty()) {
+            tests.addAll(LangExecutionUtil.buildTestsInXml("only.xml"));
+        } else {
+            tests = LangExecutionUtil.buildTestsInXml("testsuite_it.xml");
+            tests.addAll(LangExecutionUtil.tests("only.xml", "testsuite.xml"));
+        }
+        return tests;
     }
 
     protected TestCaseContext tcCtx;

@@ -42,8 +42,8 @@ public class AsterixYARNLibraryTestIT {
     private static AsterixYARNInstanceUtil instance;
     private static YarnConfiguration appConf;
     private static List<TestCaseContext> testCaseCollection;
-    private static final String LIBRARY_PATH = "asterix-external-data" + File.separator + "target" + File.separator
-            + "testlib-zip-binary-assembly.zip";
+    private static final String LIBRARY_PATH = "target" + File.separator + "resources" + File.separator + "externallib"
+            + File.separator + "asterix-external-data-testlib.zip";
     private static final TestExecutor testExecutor = new TestExecutor();
 
     @BeforeClass
@@ -62,7 +62,7 @@ public class AsterixYARNLibraryTestIT {
         command = "-n " + INSTANCE_NAME + " -bc " + parameterPath + " stop";
         executeAoyaCommand(command);
 
-        String asterixExternalLibraryPath = new File(System.getProperty("user.dir")).getParentFile().getAbsolutePath()
+        String asterixExternalLibraryPath = new File(System.getProperty("user.dir")).getAbsolutePath()
                 + File.separator + LIBRARY_PATH;
         command = "-n " + INSTANCE_NAME + " -l " + asterixExternalLibraryPath + " -ld " + LIBRARY_DATAVERSE + " -bc "
                 + parameterPath + " libinstall";

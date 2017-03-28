@@ -225,10 +225,6 @@
             <licenseFamily implementation="org.apache.rat.license.Apache20LicenseFamily"/>
           </licenseFamilies>
           <excludeSubProjects>true</excludeSubProjects>
-          <excludes combine.children="append">
-            <!-- TODO (mblow): ClusterControllerService should not get written outside of **/target/; remove once fixed -->
-            <exclude>**/ClusterControllerService/**</exclude>
-          </excludes>
         </configuration>
       </plugin>
       <plugin>

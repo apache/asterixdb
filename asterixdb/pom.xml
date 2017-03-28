@@ -136,59 +136,32 @@
       <plugin>
         <groupId>org.apache.rat</groupId>
         <artifactId>apache-rat-plugin</artifactId>
-        <version>0.11</version>
         <executions>
           <execution>
-            <phase>verify</phase>
+            <phase>validate</phase>
             <goals>
               <goal>check</goal>
             </goals>
           </execution>
         </executions>
         <configuration>
-          <excludeSubProjects>true</excludeSubProjects>
+          <addDefaultLicenseMatchers>false</addDefaultLicenseMatchers>
+          <consoleOutput>true</consoleOutput>
           <licenses>
-            <license implementation="org.apache.rat.analysis.license.SimplePatternBasedLicense">
-              <licenseFamilyCategory>MIT</licenseFamilyCategory>
-              <licenseFamilyName>The MIT License</licenseFamilyName>
-              <notes>For JQuery MIT/GPL2 Dual License</notes>
-              <patterns>
-                <pattern>Dual licensed under the MIT or GPL Version 2 licenses.</pattern>
-                <pattern>Dual licensed under the MIT and GPL2 licenses.</pattern>
-                <pattern>http://jquery.org/license</pattern>
-                <pattern>Dual licensed under the MIT</pattern>
-                <pattern>Released under the MIT license by IOLA, December 2007.</pattern>
-              </patterns>
-            </license>
+            <license implementation="org.apache.rat.analysis.license.ApacheSoftwareLicense20"/>
           </licenses>
           <licenseFamilies>
-            <licenseFamily implementation="org.apache.rat.license.SimpleLicenseFamily">
-              <familyName>The MIT License</familyName>
-            </licenseFamily>
-            <licenseFamily implementation="org.apache.rat.license.SimpleLicenseFamily">
-              <familyName>Apache License Version 2.0</familyName>
-            </licenseFamily>
+            <licenseFamily implementation="org.apache.rat.license.Apache20LicenseFamily"/>
           </licenseFamilies>
-          <excludes>
-            <exclude>**/*.adm</exclude>
-            <exclude>**/*.aql</exclude>
-            <exclude>**/*.dgen</exclude>
-            <exclude>**/*.dqgen</exclude>
-            <exclude>**/*.ast</exclude>
-            <exclude>**/*.csv</exclude>
-            <exclude>**/*.ddl</exclude>
+          <excludeSubProjects>true</excludeSubProjects>
+          <excludes combine.children="append">
+            <exclude>src/main/licenses/**</exclude>
             <exclude>**/*.iml</exclude>
-            <exclude>**/*.out</exclude>
-            <exclude>**/*.tbl</exclude>
-            <exclude>**/*.tsv</exclude>
-            <exclude>**/*.txt</exclude>
-            <exclude>**/*.xsd</exclude>
-            <exclude>**/target/**</exclude>
+            <exclude>**/*.adm</exclude>
+            <exclude>asterix-experiments/**</exclude> <!-- in case -DskipExperiments -->
+            <exclude>asterix-installer/**</exclude> <!-- in case -DskipInstaller -->
+            <exclude>asterix-yarn/**</exclude> <!-- in case -DskipYarn -->
           </excludes>
-          <includes>
-            <include>**/asterix-*</include>
-            <include>**/*.java</include>
-          </includes>
         </configuration>
       </plugin>
       <plugin>
@@ -425,6 +398,11 @@
           <groupId>org.codehaus.mojo</groupId>
           <artifactId>appassembler-maven-plugin</artifactId>
           <version>2.0.0</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.rat</groupId>
+          <artifactId>apache-rat-plugin</artifactId>
+          <version>0.12</version>
         </plugin>
       </plugins>
     </pluginManagement>

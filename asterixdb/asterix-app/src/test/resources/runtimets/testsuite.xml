@@ -31,28 +31,6 @@
              ResultOffsetPath="results"
              QueryOffsetPath="queries"
              QueryFileExtension=".aql">
-  <test-group name="external-library">
-    <test-case FilePath="external-library">
-      <compilation-unit name="typed_adapter">
-        <output-dir compare="Text">typed_adapter</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="external-library">
-      <compilation-unit name="classad-parser-new">
-        <output-dir compare="Text">classad-parser-new</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="external-library">
-      <compilation-unit name="classad-parser-old">
-        <output-dir compare="Text">classad-parser-old</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="external-library">
-      <compilation-unit name="getCapital">
-        <output-dir compare="Text">getCapital</output-dir>
-      </compilation-unit>
-    </test-case>
-  </test-group>
   <test-group name="external">
     <test-case FilePath="external">
       <compilation-unit name="invalid-format">
@@ -146,11 +124,6 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="feeds">
-      <compilation-unit name="feed-with-multiple-indexes">
-        <output-dir compare="Text">feed-with-multiple-indexes</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="feeds">
       <compilation-unit name="twitter-feed">
         <output-dir compare="Text">twitter-feed</output-dir>
         <expected-error>Twitter4J library not found!</expected-error>
@@ -167,26 +140,6 @@
     <test-case FilePath="feeds">
       <compilation-unit name="connect-feed">
         <output-dir compare="Text">connect-feed</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="feeds">
-      <compilation-unit name="feed-with-external-parser">
-        <output-dir compare="Text">feed-with-external-parser</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="feeds">
-      <compilation-unit name="feed-with-external-parser-with-open-index">
-        <output-dir compare="Text">feed-with-external-parser-with-open-index</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="feeds">
-      <compilation-unit name="feed-with-external-parser-with-two-open-indexes">
-        <output-dir compare="Text">feed-with-external-parser-with-two-open-indexes</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="feeds">
-      <compilation-unit name="feed-with-external-function">
-        <output-dir compare="Text">feed-with-external-function</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="feeds">

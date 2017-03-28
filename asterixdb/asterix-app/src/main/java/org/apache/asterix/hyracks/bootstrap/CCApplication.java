@@ -35,7 +35,6 @@ import org.apache.asterix.api.http.server.ClusterControllerDetailsApiServlet;
 import org.apache.asterix.api.http.server.ConnectorApiServlet;
 import org.apache.asterix.api.http.server.DdlApiServlet;
 import org.apache.asterix.api.http.server.DiagnosticsApiServlet;
-import org.apache.asterix.api.http.server.FeedServlet;
 import org.apache.asterix.api.http.server.FullApiServlet;
 import org.apache.asterix.api.http.server.NodeControllerDetailsApiServlet;
 import org.apache.asterix.api.http.server.QueryApiServlet;
@@ -164,7 +163,6 @@ public class CCApplication extends BaseCCApplication {
     protected void configureServers() throws Exception {
         webManager.add(setupWebServer(AppContextInfo.INSTANCE.getExternalProperties()));
         webManager.add(setupJSONAPIServer(AppContextInfo.INSTANCE.getExternalProperties()));
-        webManager.add(setupFeedServer(AppContextInfo.INSTANCE.getExternalProperties()));
         webManager.add(setupQueryWebServer(AppContextInfo.INSTANCE.getExternalProperties()));
     }
 
@@ -236,14 +234,6 @@ public class CCApplication extends BaseCCApplication {
         queryWebServer.setAttribute(HYRACKS_CONNECTION_ATTR, hcc);
         queryWebServer.addServlet(new QueryWebInterfaceServlet(queryWebServer.ctx(), new String[] { "/*" }));
         return queryWebServer;
-    }
-
-    protected HttpServer setupFeedServer(ExternalProperties externalProperties) throws Exception {
-        HttpServer feedServer = new HttpServer(webManager.getBosses(), webManager.getWorkers(),
-                externalProperties.getActiveServerPort());
-        feedServer.setAttribute(HYRACKS_CONNECTION_ATTR, getHcc());
-        feedServer.addServlet(new FeedServlet(feedServer.ctx(), new String[] { "/" }));
-        return feedServer;
     }
 
     protected IServlet createServlet(ConcurrentMap<String, Object> ctx, String key, String... paths) {

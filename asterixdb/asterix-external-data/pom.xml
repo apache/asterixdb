@@ -106,7 +106,7 @@
             <include>**/*.txt</include>
             <include>**/NOTICE</include>
             <include>**/LICENSE</include>
-            <include>**/DEPENDENCIES</include>
+            <include>**/*.properties</include>
             <include>**/services/**</include>
           </includes>
         </configuration>
@@ -121,16 +121,15 @@
       </plugin>
       <plugin>
         <artifactId>maven-assembly-plugin</artifactId>
-        <version>2.2-beta-5</version>
+        <version>3.0.0</version>
         <executions>
           <execution>
             <configuration>
-              <descriptor>src/main/assembly/binary-assembly-libzip.xml</descriptor>
-              <finalName>testlib-zip</finalName>
+              <descriptors>src/main/assembly/binary-assembly-libzip.xml</descriptors>
             </configuration>
             <phase>package</phase>
             <goals>
-              <goal>attached</goal>
+              <goal>single</goal>
             </goals>
           </execution>
         </executions>
@@ -148,6 +147,31 @@
           <ignoredUnusedDeclaredDependencies>
             <ignoredUnusedDeclaredDependency>xml-apis:xml-apis:*</ignoredUnusedDeclaredDependency>
           </ignoredUnusedDeclaredDependencies>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.rat</groupId>
+        <artifactId>apache-rat-plugin</artifactId>
+        <configuration>
+          <licenses combine.children="append">
+            <license implementation="org.apache.rat.analysis.license.SimplePatternBasedLicense">
+              <licenseFamilyCategory>Kermit</licenseFamilyCategory>
+              <licenseFamilyName>Kermit Project</licenseFamilyName>
+              <notes>The UTF-8 sample "I Can Eat Glass" from The Kermit Project</notes>
+              <patterns>"I Can Eat Glass" -- taken from http://kermitproject.org/utf8.html</patterns>
+            </license>
+          </licenses>
+          <licenseFamilies combine.children="append">
+            <licenseFamily implementation="org.apache.rat.license.SimpleLicenseFamily">
+              <familyName>Kermit Project</familyName>
+            </licenseFamily>
+          </licenseFamilies>
+          <excludes combine.children="append">
+            <exclude>src/test/resources/openbeerdb/**</exclude> <!-- OpenBeerDB (license in LICENSE file) -->
+            <exclude>src/test/resources/classad/**</exclude> <!-- HTCondor (license in LICENSE file) -->
+            <exclude>src/test/resources/record.json</exclude> <!-- https://issues.apache.org/jira/browse/ASTERIXDB-1850 -->
+            <exclude>src/test/resources/change_feed.csv</exclude>
+          </excludes>
         </configuration>
       </plugin>
     </plugins>

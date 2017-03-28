@@ -31,22 +31,6 @@
     <root.dir>${basedir}/../../..</root.dir>
     <sonar.sources>pom.xml,src/main/java,src/main/resources</sonar.sources>
   </properties>
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.rat</groupId>
-        <artifactId>apache-rat-plugin</artifactId>
-        <executions>
-          <execution>
-            <phase>validate</phase>
-            <goals>
-              <goal>check</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-    </plugins>
-  </build>
   <dependencies>
     <dependency>
       <groupId>org.apache.hyracks</groupId>

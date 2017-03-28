@@ -46,8 +46,8 @@ public class SmokeParserTest {
     private static final String PATH_EXPECTED = FileUtil.joinPath(PATH_BASE, "results_parser_sqlpp");
     private static final String PATH_ACTUAL = FileUtil.joinPath("target", "parserts");
 
-    private static final ArrayList<String> ignore = AsterixTestHelper.readFile(FILENAME_IGNORE, PATH_BASE);
-    private static final ArrayList<String> only = AsterixTestHelper.readFile(FILENAME_ONLY, PATH_BASE);
+    private static final ArrayList<String> ignore = AsterixTestHelper.readTestListFile(FILENAME_IGNORE, PATH_BASE);
+    private static final ArrayList<String> only = AsterixTestHelper.readTestListFile(FILENAME_ONLY, PATH_BASE);
 
     @BeforeClass
     public static void setUp() throws Exception {

@@ -89,7 +89,7 @@ public class ClassAdToADMTest extends TestCase {
     public void testSchemaful() {
         try {
             File file = new File("target/classad-wtih-temporals.adm");
-            File expected = new File(getClass().getResource("/results/classad-with-temporals.adm").toURI().getPath());
+            File expected = new File(getClass().getResource("/classad/results/classad-with-temporals.adm").toURI().getPath());
             FileUtils.deleteQuietly(file);
             PrintStream printStream = new PrintStream(Files.newOutputStream(Paths.get(file.toURI())));
             String[] recordFieldNames = { "GlobalJobId", "Owner", "ClusterId", "ProcId", "RemoteWallClockTime",
@@ -109,7 +109,7 @@ public class ClassAdToADMTest extends TestCase {
                 printers[i] = printerFactories[i].createPrinter();
             }
             ClassAdObjectPool objectPool = new ClassAdObjectPool();
-            String[] files = new String[] { "/classad-with-temporals.classads" };
+            String[] files = new String[] {"/classad/classad-with-temporals.classads"};
             ClassAdParser parser = new ClassAdParser(recordType, false, false, false, null, null, null, objectPool);
             ArrayTupleBuilder tb = new ArrayTupleBuilder(numOfTupleFields);
             for (String path : files) {
@@ -144,7 +144,7 @@ public class ClassAdToADMTest extends TestCase {
         try {
             ClassAdObjectPool objectPool = new ClassAdObjectPool();
             ClassAd pAd = new ClassAd(objectPool);
-            String[] files = new String[] { "/escapes.txt" };
+            String[] files = new String[] {"/classad/escapes.txt"};
             ClassAdParser parser = new ClassAdParser(objectPool);
             CharArrayLexerSource lexerSource = new CharArrayLexerSource();
             for (String path : files) {
@@ -182,7 +182,7 @@ public class ClassAdToADMTest extends TestCase {
         try {
             ClassAdObjectPool objectPool = new ClassAdObjectPool();
             ClassAd pAd = new ClassAd(objectPool);
-            String[] files = new String[] { "/jobads.txt" };
+            String[] files = new String[] {"/classad/jobads.txt"};
             ClassAdParser parser = new ClassAdParser(objectPool);
             CharArrayLexerSource lexerSource = new CharArrayLexerSource();
             for (String path : files) {

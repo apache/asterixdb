@@ -27,10 +27,11 @@ import org.apache.hyracks.api.config.IOptionType;
 import org.apache.hyracks.api.config.Section;
 import org.apache.hyracks.control.common.config.ConfigManager;
 import org.apache.hyracks.control.common.config.OptionTypes;
+import org.apache.hyracks.util.file.FileUtil;
 
 public class ControllerConfig implements Serializable {
 
-    public static String defaultDir = System.getProperty("java.io.tmpdir");
+    public static String defaultDir = FileUtil.joinPath(System.getProperty("java.io.tmpdir"), "hyracks");
 
     public enum Option implements IOption {
         CONFIG_FILE(OptionTypes.STRING, "Specify path to master configuration file"),
