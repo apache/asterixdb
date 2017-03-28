@@ -446,7 +446,7 @@ This query outputs:
 
 In the result, `$1` is the generated name for `substr(user.name, 1)`, while `alias` is the generated name for `user.alias`.
 
-### <a id="Abbreviatory_field_access_expressions">Abbreviated Field Access Expressions</a>
+### <a id="Abbreviated_field_access_expressions">Abbreviated Field Access Expressions</a>
 As in standard SQL, SQL++ field access expressions can be abbreviated (not recommended) when there is no ambiguity. In the next example, the variable `user` is the only possible variable reference for fields `id`, `name` and `alias` and thus could be omitted in the query.
 
 ##### Example

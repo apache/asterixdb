@@ -43,7 +43,7 @@
            * [Select *](#Select_star)
            * [Select Distinct](#Select_distinct)
            * [Unnamed Projections](#Unnamed_projections)
-           * [Abbreviatory Field Access Expressions](#Abbreviatory_field_access_expressions)
+           * [Abbreviated Field Access Expressions](#Abbreviated_field_access_expressions)
       * [UNNEST Clauses](#Unnest_clauses)
            * [Inner Unnests](#Inner_unnests)
            * [Left Outer Unnests](#Left_outer_unnests)
