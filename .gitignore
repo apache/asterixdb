@@ -13,7 +13,6 @@ asterixdb/asterix-app/library
 .idea
 *.ipr
 *.iws
-git.properties
 exception
 dev1
 dev2
