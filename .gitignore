@@ -4,10 +4,8 @@ target
 .classpath
 .settings
 .project
-ClusterControllerService
 asterixdb/asterix-opt
 asterixdb/asterix-app/library
-*-coredump
 *.pyc
 *.iml
 .idea
