@@ -296,13 +296,12 @@ public class FeedMetadataUtil {
         try {
             ctx = MetadataManager.INSTANCE.beginTransaction();
             Datatype t = MetadataManager.INSTANCE.getDatatype(ctx, dataverseName, datatypeName);
-            IAType type = t.getDatatype();
-            if (type.getTypeTag() != ATypeTag.RECORD) {
-                throw new IllegalStateException();
+            if (t == null || t.getDatatype().getTypeTag() != ATypeTag.RECORD) {
+                throw new MetadataException(ErrorCode.FEED_METADATA_UTIL_UNEXPECTED_FEED_DATATYPE, datatypeName);
             }
             outputType = (ARecordType) t.getDatatype();
             MetadataManager.INSTANCE.commitTransaction(ctx);
-        } catch (ACIDException | RemoteException | MetadataException e) {
+        } catch (ACIDException | RemoteException e) {
             if (ctx != null) {
                 try {
                     MetadataManager.INSTANCE.abortTransaction(ctx);
