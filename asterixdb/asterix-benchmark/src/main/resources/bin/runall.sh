@@ -32,6 +32,9 @@ BENCHMARK_PATH=$DIST_PATH/benchmarks
 # Gets the inventory file path.
 INVENTORY=$1
 
+# Gets the system name.
+SYSTEM_NAME=$2
+
 # Checks the existence of the inventory file.
 if [ ! -f "$INVENTORY" ];
 then
@@ -69,7 +72,7 @@ for benchmark in $BENCHMARK_PATH/*; do
     for number in 1 2 3
     do
         for query in $queries/*.sqlpp; do
-           ansible-playbook -i $INVENTORY --extra-vars="query_file=${query} report=true metric=\"AsterixDB\"" \
+           ansible-playbook -i $INVENTORY --extra-vars="query_file=${query} report=true metric=${SYSTEM_NAME}" \
                  $ANSIBLE_PATH/runquery.yml
         done
     done
