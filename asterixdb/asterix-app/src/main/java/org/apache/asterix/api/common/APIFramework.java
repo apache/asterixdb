@@ -226,11 +226,14 @@ public class APIFramework {
         int frameSize = compilerProperties.getFrameSize();
         Map<String, String> querySpecificConfig = metadataProvider.getConfig();
         validateConfig(querySpecificConfig); // Validates the user-overridden query parameters.
-        int sortFrameLimit = getFrameLimit(querySpecificConfig.get(CompilerProperties.COMPILER_SORTMEMORY_KEY),
+        int sortFrameLimit = getFrameLimit(CompilerProperties.COMPILER_SORTMEMORY_KEY,
+                querySpecificConfig.get(CompilerProperties.COMPILER_SORTMEMORY_KEY),
                 compilerProperties.getSortMemorySize(), frameSize, MIN_FRAME_LIMIT_FOR_SORT);
-        int groupFrameLimit = getFrameLimit(querySpecificConfig.get(CompilerProperties.COMPILER_GROUPMEMORY_KEY),
+        int groupFrameLimit = getFrameLimit(CompilerProperties.COMPILER_GROUPMEMORY_KEY,
+                querySpecificConfig.get(CompilerProperties.COMPILER_GROUPMEMORY_KEY),
                 compilerProperties.getGroupMemorySize(), frameSize, MIN_FRAME_LIMIT_FOR_GROUP_BY);
-        int joinFrameLimit = getFrameLimit(querySpecificConfig.get(CompilerProperties.COMPILER_JOINMEMORY_KEY),
+        int joinFrameLimit = getFrameLimit(CompilerProperties.COMPILER_JOINMEMORY_KEY,
+                querySpecificConfig.get(CompilerProperties.COMPILER_JOINMEMORY_KEY),
                 compilerProperties.getJoinMemorySize(), frameSize, MIN_FRAME_LIMIT_FOR_JOIN);
         OptimizationConfUtil.getPhysicalOptimizationConfig().setFrameSize(frameSize);
         OptimizationConfUtil.getPhysicalOptimizationConfig().setMaxFramesExternalSort(sortFrameLimit);
@@ -386,7 +389,7 @@ public class APIFramework {
 
     // Chooses the location constraints, i.e., whether to use storage parallelism or use a user-sepcified number
     // of cores.
-    private AlgebricksAbsolutePartitionConstraint chooseLocations(IClusterInfoCollector clusterInfoCollector,
+    private static AlgebricksAbsolutePartitionConstraint chooseLocations(IClusterInfoCollector clusterInfoCollector,
             int parallelismHint, AlgebricksAbsolutePartitionConstraint storageLocations) throws AlgebricksException {
         try {
             Map<String, NodeControllerInfo> ncMap = clusterInfoCollector.getNodeControllerInfos();
@@ -408,7 +411,7 @@ public class APIFramework {
 
     // Computes the location constraints based on user-configured parallelism parameter.
     // Note that the parallelism parameter is only a hint -- it will not be respected if it is too small or too large.
-    private AlgebricksAbsolutePartitionConstraint getComputationLocations(Map<String, NodeControllerInfo> ncMap,
+    private static AlgebricksAbsolutePartitionConstraint getComputationLocations(Map<String, NodeControllerInfo> ncMap,
             int parallelismHint) {
         // Unifies the handling of non-positive parallelism.
         int parallelism = parallelismHint <= 0 ? -2 * ncMap.size() : parallelismHint;
@@ -448,7 +451,7 @@ public class APIFramework {
     }
 
     // Gets the total number of available cores in the cluster.
-    private int getTotalNumCores(Map<String, NodeControllerInfo> ncMap) {
+    private static int getTotalNumCores(Map<String, NodeControllerInfo> ncMap) {
         int sum = 0;
         for (Map.Entry<String, NodeControllerInfo> entry : ncMap.entrySet()) {
             sum += entry.getValue().getNumAvailableCores();
@@ -457,24 +460,30 @@ public class APIFramework {
     }
 
     // Gets the frame limit.
-    private int getFrameLimit(String parameter, long memBudgetInConfiguration, int frameSize, int minFrameLimit)
+    private static int getFrameLimit(String parameterName, String parameter, long memBudgetInConfiguration,
+            int frameSize,
+            int minFrameLimit)
             throws AlgebricksException {
         IOptionType<Long> longBytePropertyInterpreter = OptionTypes.LONG_BYTE_UNIT;
         long memBudget =
                 parameter == null ? memBudgetInConfiguration : longBytePropertyInterpreter.parse(parameter);
         int frameLimit = (int) (memBudget / frameSize);
+        if (frameLimit < minFrameLimit) {
+            throw AsterixException.create(ErrorCode.COMPILATION_BAD_QUERY_PARAMETER_VALUE, parameterName,
+                    frameSize * minFrameLimit);
+        }
         // Sets the frame limit to the minimum frame limit if the caculated frame limit is too small.
         return Math.max(frameLimit, minFrameLimit);
     }
 
     // Gets the parallelism parameter.
-    private int getParallelism(String parameter, int parallelismInConfiguration) {
+    private static int getParallelism(String parameter, int parallelismInConfiguration) {
         IOptionType<Integer> integerIPropertyInterpreter = OptionTypes.INTEGER;
         return parameter == null ? parallelismInConfiguration : integerIPropertyInterpreter.parse(parameter);
     }
 
     // Validates if the query contains unsupported query parameters.
-    private void validateConfig(Map<String, String> config) throws AlgebricksException {
+    private static void validateConfig(Map<String, String> config) throws AlgebricksException {
         for (String parameterName : config.keySet()) {
             if (!CONFIGURABLE_PARAMETER_NAMES.contains(parameterName)) {
                 throw AsterixException.create(ErrorCode.COMPILATION_UNSUPPORTED_QUERY_PARAMETER, parameterName);
