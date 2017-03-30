@@ -168,6 +168,7 @@ public class FeedConnectionTupleTranslator extends AbstractTupleTranslator<FeedC
         if (fc.getAppliedFunctions() != null) {
             List<FunctionSignature> appliedFunctions = fc.getAppliedFunctions();
             for (FunctionSignature af : appliedFunctions) {
+                listEleBuffer.reset();
                 aString.setValue(af.getName());
                 stringSerde.serialize(aString, listEleBuffer.getDataOutput());
                 listBuilder.addItem(listEleBuffer);

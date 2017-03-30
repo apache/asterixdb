@@ -249,6 +249,11 @@
         <output-dir compare="Text">push-socket-with-auuid</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="feeds">
+      <compilation-unit name="connect-feed-with-aql-function">
+        <output-dir compare="Text">connect-feed-with-aql-function</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="upsert">
     <test-case FilePath="upsert">
