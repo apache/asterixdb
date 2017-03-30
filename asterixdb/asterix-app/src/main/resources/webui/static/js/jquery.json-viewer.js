@@ -154,11 +154,11 @@
       if (options.collapsed == true) {
         $(this).find('a.json-toggle').click();
         var lvl = options.level;
-        $(this).each(function() {
+        $(this).each(function collapse_func() {
           lvl = lvl-1;
           if (lvl >= 0) {
-          	$(this).children('a.json-toggle').click();
-          	$(this).children('ul.json-dict').children().each(cfun);
+            $(this).children('a.json-toggle').click();
+            $(this).children('ul.json-dict').children().each(collapse_func);
           }
           lvl = lvl+1;
         });
