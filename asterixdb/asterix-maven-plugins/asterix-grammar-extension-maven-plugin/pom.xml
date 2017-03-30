@@ -94,7 +94,7 @@
             <goals>
               <goal>javacc</goal>
             </goals>
-            <phase>verify</phase>
+            <phase>generate-test-sources</phase>
             <configuration>
               <isStatic>false</isStatic>
               <javaUnicodeEscape>true</javaUnicodeEscape>
@@ -107,7 +107,7 @@
             <goals>
               <goal>jjdoc</goal>
             </goals>
-            <phase>verify</phase>
+            <phase>generate-test-sources</phase>
           </execution>
         </executions>
       </plugin>
