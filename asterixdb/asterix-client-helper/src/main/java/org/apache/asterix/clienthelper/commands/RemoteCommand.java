@@ -73,6 +73,7 @@ public abstract class RemoteCommand extends ClientCommand {
         conn.setConnectTimeout(timeoutMillis);
         conn.setReadTimeout(timeoutMillis);
         conn.setRequestMethod(method.name());
+        conn.setRequestProperty("Connection", "close");
         return conn;
     }
 }
