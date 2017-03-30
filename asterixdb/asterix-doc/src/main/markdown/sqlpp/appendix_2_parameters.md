@@ -42,6 +42,13 @@ There are three cases of the value *p* for compiler.parallelism:
      - all other cases:  the system will use the user-specified number as the maximum number of CPU cores to use for
        executing the query.
 
+##### Example
+
+    SET `compiler.parallelism` "16"
+
+    SELECT u.name AS uname, m.message AS message
+    FROM GleambookUsers u JOIN GleambookMessages m ON m.authorId = u.id;
+
 ## <a id="Memory_parameters">Memory Parameters</a>
 In the system, each blocking runtime operator such as join, group-by and order-by
 works within a fixed memory budget, and can gracefully spill to disks if
