@@ -62,4 +62,6 @@ public interface IConfigManager {
     void addCmdLineSections(Section... sections);
 
     void setUsageFilter(OptionHandlerFilter usageFilter);
+
+    void setVersionString(String versionString);
 }

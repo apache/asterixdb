@@ -16,16 +16,16 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.common.utils;
+package org.apache.hyracks.util;
+
+import java.io.IOException;
+import java.util.Iterator;
+import java.util.logging.Logger;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-
-import java.io.IOException;
-import java.util.Iterator;
-import java.util.logging.Logger;
 
 public class JSONUtil {
 
@@ -44,8 +44,7 @@ public class JSONUtil {
 
     public static String convertNode(final JsonNode node) throws JsonProcessingException {
         final Object obj = SORTED_MAPPER.treeToValue(node, Object.class);
-        final String json = SORTED_MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(obj);
-        return json;
+        return SORTED_MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(obj);
     }
 
     public static String indent(String str, int initialIndent) {

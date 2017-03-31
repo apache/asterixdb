@@ -82,6 +82,7 @@ public class ConfigManager implements IConfigManager, Serializable {
     private transient OptionHandlerFilter usageFilter;
     private transient SortedMap<Integer, List<IConfigurator>> configurators = new TreeMap<>();
     private boolean configured;
+    private String versionString = "version undefined";
 
     public ConfigManager() {
         this(null);
@@ -173,6 +174,11 @@ public class ConfigManager implements IConfigManager, Serializable {
         }
     }
 
+    @Override
+    public void setVersionString(String versionString) {
+        this.versionString = versionString;
+    }
+
     public IOption lookupOption(String section, String key) {
         Map<String, IOption> map = getSectionOptionMap(Section.parseSectionName(section));
         return map == null ? null : map.get(key);
@@ -242,24 +248,26 @@ public class ConfigManager implements IConfigManager, Serializable {
                     new Args4jArgument());
         }
         LOGGER.fine("parsing cmdline: " + Arrays.toString(args));
+        if (args == null || args.length == 0) {
+            LOGGER.info("no command line args supplied");
+            return appArgs;
+        }
         try {
-            if (args == null || args.length == 0) {
-                LOGGER.info("no command line args supplied");
-                return appArgs;
-            }
             cmdLineParser.parseArgument(args);
-            if (bean.help) {
-                ConfigUtils.printUsage(cmdLineParser, usageFilter, System.err);
-                System.exit(0);
-            }
         } catch (CmdLineException e) {
-            if (bean.help) {
-                ConfigUtils.printUsage(cmdLineParser, usageFilter, System.err);
-                System.exit(0);
-            } else {
+            if (!bean.help) {
                 ConfigUtils.printUsage(e, usageFilter, System.err);
                 throw e;
+            } else {
+                LOGGER.log(Level.FINE, "Ignoring parse exception due to -help", e);
             }
+        }
+        if (bean.help) {
+            ConfigUtils.printUsage(cmdLineParser, usageFilter, System.err);
+            System.exit(0);
+        } else if (bean.version) {
+            System.err.println(versionString);
+            System.exit(0);
         }
         return appArgs;
     }
@@ -549,5 +557,8 @@ public class ConfigManager implements IConfigManager, Serializable {
     private static class Args4jBean {
         @Option(name = "-help", help = true)
         boolean help;
+
+        @Option(name = "-version", help = true)
+        boolean version;
     }
 }

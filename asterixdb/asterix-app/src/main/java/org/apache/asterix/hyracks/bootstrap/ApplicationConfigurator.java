@@ -18,6 +18,11 @@
  */
 package org.apache.asterix.hyracks.bootstrap;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringWriter;
+import java.util.Properties;
+
 import org.apache.asterix.common.config.AsterixProperties;
 import org.apache.hyracks.api.config.IConfigManager;
 import org.apache.hyracks.control.common.controllers.CCConfig;
@@ -34,5 +39,19 @@ class ApplicationConfigurator {
         ControllerConfig.defaultDir = FileUtil.joinPath(System.getProperty("java.io.tmpdir"), "asterixdb");
         NCConfig.defaultAppClass = NCApplication.class.getName();
         CCConfig.defaultAppClass = CCApplication.class.getName();
+        try {
+            InputStream propertyStream = ApplicationConfigurator.class.getClassLoader()
+                    .getResourceAsStream("git.properties");
+            if (propertyStream != null) {
+                Properties gitProperties = new Properties();
+                gitProperties.load(propertyStream);
+                StringWriter sw = new StringWriter();
+                gitProperties.store(sw, null);
+                configManager.setVersionString(sw.toString());
+            }
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
+
     }
 }
