@@ -37,15 +37,15 @@
 
   *  Install pip on your client machine:
 
-            CentOS: sudo yum install python-pip
-            Ubuntu: sudo apt-get install python-pip
-            MacOS:  brew install pip
+        CentOS: sudo yum install python-pip
+        Ubuntu: sudo apt-get install python-pip
+        MacOS:  brew install pip
 
   *  Install Ansible, boto, and boto3 on your client machine:
 
-            pip install ansible
-            pip install boto
-            pip install boto3
+        pip install ansible
+        pip install boto
+        pip install boto3
 
      **Make sure that the version of Ansible is no less than 2.2.1.0.**
 
@@ -56,11 +56,11 @@
 
   *  In the extracted directory from the `simple server package`, navigate to `opt/aws/`
 
-            $cd opt/aws
+        $cd opt/aws
 
      The following files and directories are in the directory `opt/aws`:
 
-            README  bin  conf  yaml
+        README  bin  conf  yaml
 
      `bin` contains scripts that start and terminate an AWS-based cluster instance, according to the configuration
      specified in files under `conf/`. `yaml` contains internal Ansible scripts that the shell scripts in `bin` use.
@@ -82,87 +82,87 @@
 
   *  Configure your ssh setting by editing `~/.ssh/config` and adding the following entry:
 
-            Host *.amazonaws.com
-                  IdentityFile <path_of_private_key>
+        Host *.amazonaws.com
+              IdentityFile <path_of_private_key>
 
      Note that \<path_of_private_key\> should be replaced by the path to the file that stores the private key for the
      key pair that you uploaded to AWS and used in `conf/aws_settings`. For example:
 
-            Host *.amazonaws.com
-                  IdentityFile ~/.ssh/id_rsa
+        Host *.amazonaws.com
+              IdentityFile ~/.ssh/id_rsa
 
 ### <a id="config">Configuration</a>
   * **AWS settings**.  Edit conf/instance_settings.yml. The meaning of each parameter is listed as follows:
 
-            # The OS image id for ec2 instances.
-            image: ami-76fa4116
+        # The OS image id for ec2 instances.
+        image: ami-76fa4116
 
-            # The data center region for ec2 instances.
-            region: us-west-2
+        # The data center region for ec2 instances.
+        region: us-west-2
 
-            # The tag for each ec2 machine.
-            tag: scale_test
+        # The tag for each ec2 machine.
+        tag: scale_test
 
-            # The name of a security group that appears in your AWS console.
-            group: default
+        # The name of a security group that appears in your AWS console.
+        group: default
 
-            # The name of a key pair that appears in your AWS console.
-            keypair: <to be filled>
+        # The name of a key pair that appears in your AWS console.
+        keypair: <to be filled>
 
-            # The AWS access key id for your IAM user.
-            access_key_id: <to be filled>
+        # The AWS access key id for your IAM user.
+        access_key_id: <to be filled>
 
-            # The AWS secrety key for your IAM user.
-            secret_access_key: <to be filled>
+        # The AWS secrety key for your IAM user.
+        secret_access_key: <to be filled>
 
-            # The AWS instance type. A full list of available types are listed at:
-            # https://aws.amazon.com/ec2/instance-types/
-            instance_type: t2.micro
+        # The AWS instance type. A full list of available types are listed at:
+        # https://aws.amazon.com/ec2/instance-types/
+        instance_type: t2.micro
 
-            # The number of ec2 instances that construct a cluster.
-            count: 3
+        # The number of ec2 instances that construct a cluster.
+        count: 3
 
-            # The user name.
-            user: ec2-user
+        # The user name.
+        user: ec2-user
 
-            # Whether to reuse one nc machine to host cc.
-            cc_on_nc: false
+        # Whether to reuse one nc machine to host cc.
+        cc_on_nc: false
 
       **As described in [prerequisites](#Prerequisites), the following parameters must be customized:**
 
-            # The name of a security group that appears in your AWS console.
-            group: default
+        # The name of a security group that appears in your AWS console.
+        group: default
 
-            # The name of a key pair that appears in your AWS console.
-            keypair: <to be filled>
+        # The name of a key pair that appears in your AWS console.
+        keypair: <to be filled>
 
-            # The AWS access key id for your IAM user.
-            access_key_id: <to be filled>
+        # The AWS access key id for your IAM user.
+        access_key_id: <to be filled>
 
-            # The AWS secrety key for your IAM user.
-            secret_access_key: <to be filled>
+        # The AWS secrety key for your IAM user.
+        secret_access_key: <to be filled>
 
   *  **Remote working directories**. Edit conf/instance_settings.yml to change the instance binary directories
      when necessary. By default, the binary directory will be under the home directory (as the value of
      Ansible builtin variable ansible_env.HOME) of the ssh user account on each node.
 
-            # The parent directory for the working directory.
-            basedir: "{{ ansible_env.HOME }}"
+        # The parent directory for the working directory.
+        basedir: "{{ ansible_env.HOME }}"
 
-            # The working directory.
-            binarydir: "{{ basedir }}/{{ product }}"
+        # The working directory.
+        binarydir: "{{ basedir }}/{{ product }}"
 
 
 ### <a id="lifecycle">Manage the lifecycle of your instance</a>
-  *  Start an AWS-based AsterixDB cluster:
+  * Start an AWS-based AsterixDB cluster:
 
-            bin/start.sh
+        bin/start.sh
 
      Now you can use the cluster instance through the public IP or DNS name of the master node.
 
   * If you want to terminate the AsterixDB instance, run the following script:
 
-            bin/stop.sh
+        bin/stop.sh
 
     **Note that it will destroy everything in the AsterixDB instance you installed and terminate all AWS nodes
     for the cluster.**

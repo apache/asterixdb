@@ -33,15 +33,15 @@ users to interact with each individual node in the cluster.
 
   *  Install pip on your client machine:
 
-          CentOS: sudo yum install python-pip
-          Ubuntu: sudo apt-get install python-pip
-          MacOS:  brew install pip
+         CentOS: sudo yum install python-pip
+         Ubuntu: sudo apt-get install python-pip
+         MacOS:  brew install pip
 
   *  Install Ansible, boto, and boto3 on your client machine:
 
-          pip install ansible
-          pip install boto
-          pip install boto3
+         pip install ansible
+         pip install boto
+         pip install boto3
 
      **Make sure that the version of Ansible is no less than 2.2.1.0.**
 
@@ -68,13 +68,13 @@ users to interact with each individual node in the cluster.
      You can add/update whatever parameters in the **[common]** and **[nc]** sections (except IPs and ports).
      For example:
 
-           [common]
-           log.level=INFO
+         [common]
+         log.level=INFO
 
-           [nc]
-           txn.log.dir=txnlog
-           iodevices=iodevice
-           command=asterixnc
+         [nc]
+         txn.log.dir=txnlog
+         iodevices=iodevice
+         command=asterixnc
 
      More parameters and their usage can be found [here](ncservice.html#Parameters).
      Note that with this installation option, all parameters in the **[cc]** and **[ncservice]**
@@ -87,20 +87,20 @@ users to interact with each individual node in the cluster.
      The following example configures a cluster with two slave nodes (172.0.1.11 and 172.0.1.12) and
      one master node (172.0.1.10).
 
-          [cc]
-          172.0.1.10
+         [cc]
+         172.0.1.10
 
-          [ncs]
-          172.0.1.11
-          172.0.1.12
+         [ncs]
+         172.0.1.11
+         172.0.1.12
 
      **Configure passwordless ssh from your current client that runs the scripts to all nodes listed
      in `conf/inventory`.**
      If the ssh user account for target machines is different from your current username, please uncomment
      and edit the following two lines:
 
-           ;[all:vars]
-           ;ansible_ssh_user=<fill with your ssh account username>
+         ;[all:vars]
+         ;ansible_ssh_user=<fill with your ssh account username>
 
      If you want to specify advanced Ansible builtin variables, please refer to the
      [Ansible documentation](http://docs.ansible.com/ansible/intro_inventory.html).
@@ -109,11 +109,11 @@ users to interact with each individual node in the cluster.
      when necessary. By default, the binary directory will be under the home directory (as the value of
      Ansible builtin variable ansible_env.HOME) of the ssh user account on each node.
 
-            # The parent directory for the working directory.
-            basedir: "{{ ansible_env.HOME }}"
+         # The parent directory for the working directory.
+         basedir: "{{ ansible_env.HOME }}"
 
-            # The working directory.
-            binarydir: "{{ basedir }}/{{ product }}"
+         # The working directory.
+         binarydir: "{{ basedir }}/{{ product }}"
 
 
 ## <a id="lifecycle">Manage the lifecycle of your instance</a>

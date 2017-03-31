@@ -73,7 +73,7 @@
       * [SQL++ Vs. SQL-92](#Vs_SQL-92)
 * [4. Errors](#Errors)
       * [Syntax Errors](#Syntax_errors)
-      * [Identifier Resolution Errors](#Parsing_errors)
+      * [Identifier Resolution Errors](#Identifier_resolution_errors)
       * [Type Errors](#Type_errors)
       * [Resource Errors](#Resource_errors)
 * [5. DDL and DML Statements](#DDL_and_DML_statements)
