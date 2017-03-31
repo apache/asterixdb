@@ -18,25 +18,8 @@
 # ------------------------------------------------------------
 
 - hosts: [localhost,]
-  vars:
-       temp_dir: "{{ playbook_dir }}/../conf/instance"
-       inventory: "{{ temp_dir }}/inventory"
-       ccconf: "{{ temp_dir }}/cc.conf"
   tasks:
     - include: wait_ssh.yml
-
-    - include_vars: ../conf/instance_settings.yml
-
-    - include: gen_conf.yml
-
-- hosts: all
-  tasks:
-    - include_vars: ../conf/instance_settings.yml
-
-    - name: Ensure the log directory exists
-      file:
-        path: "{{ binarydir }}/logs"
-        state: directory
 
 - hosts: ncs
   tasks:
@@ -49,4 +32,3 @@
     - include_vars: ../conf/instance_settings.yml
 
     - include: start_cc.yml
-

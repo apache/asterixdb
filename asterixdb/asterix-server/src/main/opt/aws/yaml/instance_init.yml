@@ -17,21 +17,25 @@
 # under the License.
 # ------------------------------------------------------------
 
-- name: Stop AWS cluster
-  hosts: localhost
-  gather_facts: false
+
+- hosts: [localhost,]
+  tasks:
+    - include: wait_ssh.yml
+
+- hosts: all
   tasks:
     - include_vars: ../conf/aws_settings.yml
-    - name: Stop all instance
-      ec2:
-        key_name: "{{ keypair }}"
-        group: "{{ group }}"
-        instance_type: "{{ instance_type }}"
-        image: "{{ image }}"
-        wait: true
-        region: "{{ region }}"
-        aws_access_key: "{{ access_key_id }}"
-        aws_secret_key: "{{ secret_access_key }}"
-        exact_count: 0
-        count_tag:
-          Name: "{{ tag }}"
+    - include_vars: ../conf/instance/volumes.yml
+
+    - name: Mount instance local stores
+      include: mount.yml
+
+- hosts: all
+  tasks:
+    - include: install_jdk.yml
+
+    - include_vars: ../conf/instance_settings.yml
+
+    - include: deploy.yml
+
+

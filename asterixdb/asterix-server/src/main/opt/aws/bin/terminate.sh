@@ -1,3 +1,4 @@
+#!/bin/bash
 # ------------------------------------------------------------
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
@@ -17,36 +18,11 @@
 # under the License.
 # ------------------------------------------------------------
 
+# Gets the absolute path so that the script can work no matter where it is invoked.
+pushd `dirname $0` > /dev/null
+SCRIPT_PATH=`pwd -P`
+popd > /dev/null
+AWS_PATH=`dirname "${SCRIPT_PATH}"`
 
-- hosts: [localhost,]
-  tasks:
-    - include: wait_ssh.yml
-
-- hosts: all
-  tasks:
-    - include_vars: ../conf/aws_settings.yml
-    - include_vars: ../conf/instance/volumes.yml
-
-    - name: Mount instance local stores
-      include: mount.yml
-
-- hosts: all
-  tasks:
-    - include: install_jdk.yml
-
-    - include_vars: ../conf/instance_settings.yml
-
-    - include: deploy.yml
-
-- hosts: ncs
-  tasks:
-    - include_vars: ../conf/instance_settings.yml
-
-    - include: start_ncservice.yml
-
-- hosts: cc
-  tasks:
-    - include_vars: ../conf/instance_settings.yml
-
-    - include: start_cc.yml
-
+# Terminates an AWS cluster.
+ansible-playbook -i "localhost," $AWS_PATH/yaml/aws_terminate.yml

@@ -57,10 +57,6 @@
       <includes>
         <include>**/*.yml</include>
       </includes>
-      <excludes>
-        <exclude>**/instance_start.yml</exclude>
-        <exclude>**/gen_conf.yml</exclude>
-      </excludes>
       <filtered>true</filtered>
     </fileSet>
     <fileSet>

@@ -22,18 +22,10 @@
 pushd `dirname $0` > /dev/null
 SCRIPT_PATH=`pwd -P`
 popd > /dev/null
-AWS_PATH=`dirname "${SCRIPT_PATH}"`
-OPT_PATH=`dirname "${AWS_PATH}"`
-DIST_PATH=`dirname "${OPT_PATH}"`
+ANSB_PATH=`dirname "${SCRIPT_PATH}"`
 
-# Starts an AWS cluster.
-ansible-playbook -i "localhost," $AWS_PATH/yaml/aws_start.yml
+INVENTORY=$ANSB_PATH/conf/instance/inventory
 
-# Generates an Ansible inventory file and an AsterixDB configuration file.
-temp=$AWS_PATH/conf/instance
-inventory=$temp/inventory
-
-# Installs asterixdb on all AWS instances.
+# Starts the cluster
 export ANSIBLE_HOST_KEY_CHECKING=false
-ansible-playbook -i $inventory $AWS_PATH/yaml/instance_start.yml
-
+ansible-playbook -i $INVENTORY $ANSB_PATH/yaml/instance_start.yml
