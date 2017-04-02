@@ -66,7 +66,7 @@ public abstract class AbstractRuleController {
     }
 
     private String getPlanString(Mutable<ILogicalOperator> opRef) throws AlgebricksException {
-        if (AlgebricksConfig.ALGEBRICKS_LOGGER.isLoggable(Level.FINE)) {
+        if (AlgebricksConfig.ALGEBRICKS_LOGGER.isLoggable(Level.FINE) && context != null) {
             LogicalOperatorPrettyPrintVisitor pvisitor = context.getPrettyPrintVisitor();
             pvisitor.reset(new AlgebricksAppendable());
             PlanPrettyPrinter.printOperator((AbstractLogicalOperator) opRef.getValue(), pvisitor, 0);
