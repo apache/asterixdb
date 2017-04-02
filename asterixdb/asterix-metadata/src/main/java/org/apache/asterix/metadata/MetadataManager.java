@@ -400,7 +400,7 @@ public class MetadataManager implements IMetadataManager {
             ARecordType aRecType = (ARecordType) datatype.getDatatype();
             return new Datatype(
                     datatype.getDataverseName(), datatype.getDatatypeName(), new ARecordType(aRecType.getTypeName(),
-                    aRecType.getFieldNames(), aRecType.getFieldTypes(), aRecType.isOpen()),
+                            aRecType.getFieldNames(), aRecType.getFieldTypes(), aRecType.isOpen()),
                     datatype.getIsAnonymous());
         }
         try {
@@ -917,7 +917,7 @@ public class MetadataManager implements IMetadataManager {
 
     @Override
     public ExternalFile getExternalFile(MetadataTransactionContext ctx, String dataverseName, String datasetName,
-                                        Integer fileNumber) throws MetadataException {
+            Integer fileNumber) throws MetadataException {
         ExternalFile file;
         try {
             file = metadataNode.getExternalFile(ctx.getJobId(), dataverseName, datasetName, fileNumber);
@@ -985,8 +985,7 @@ public class MetadataManager implements IMetadataManager {
 
     @Override
     public <T extends IExtensionMetadataEntity> List<T> getEntities(MetadataTransactionContext mdTxnCtx,
-                                                                    IExtensionMetadataSearchKey searchKey)
-            throws MetadataException {
+            IExtensionMetadataSearchKey searchKey) throws MetadataException {
         try {
             return metadataNode.getEntities(mdTxnCtx.getJobId(), searchKey);
         } catch (RemoteException e) {
@@ -1021,14 +1020,14 @@ public class MetadataManager implements IMetadataManager {
                 return;
             }
             try {
-                metadataNode = proxy.waitForMetadataNode(metadataProperties.getRegistrationTimeoutSecs(),
-                        TimeUnit.SECONDS);
+                metadataNode =
+                        proxy.waitForMetadataNode(metadataProperties.getRegistrationTimeoutSecs(), TimeUnit.SECONDS);
                 if (metadataNode != null) {
                     rebindMetadataNode = false;
                 } else {
                     throw new HyracksDataException("The MetadataNode failed to bind before the configured timeout ("
-                            + metadataProperties.getRegistrationTimeoutSecs() + " seconds); the MetadataNode was " +
-                            "configured to run on NC: " + metadataProperties.getMetadataNodeName());
+                            + metadataProperties.getRegistrationTimeoutSecs() + " seconds); the MetadataNode was "
+                            + "configured to run on NC: " + metadataProperties.getMetadataNodeName());
                 }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();

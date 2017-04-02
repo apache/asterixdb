@@ -86,8 +86,8 @@ public class SqlppCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteV
             VariableSubstitutionEnvironment env) throws CompilationException {
         VariableExpr leftVar = fromTerm.getLeftVariable();
         VariableExpr newLeftVar = generateNewVariable(context, leftVar);
-        VariableExpr newLeftPosVar = fromTerm.hasPositionalVariable() ? generateNewVariable(context,
-                fromTerm.getPositionalVariable()) : null;
+        VariableExpr newLeftPosVar = fromTerm.hasPositionalVariable()
+                ? generateNewVariable(context, fromTerm.getPositionalVariable()) : null;
         Expression newLeftExpr = (Expression) visitUnnesBindingExpression(fromTerm.getLeftExpression(), env).first;
         List<AbstractBinaryCorrelateClause> newCorrelateClauses = new ArrayList<>();
 
@@ -123,8 +123,8 @@ public class SqlppCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteV
             VariableSubstitutionEnvironment env) throws CompilationException {
         VariableExpr rightVar = joinClause.getRightVariable();
         VariableExpr newRightVar = generateNewVariable(context, rightVar);
-        VariableExpr newRightPosVar = joinClause.hasPositionalVariable() ? generateNewVariable(context,
-                joinClause.getPositionalVariable()) : null;
+        VariableExpr newRightPosVar = joinClause.hasPositionalVariable()
+                ? generateNewVariable(context, joinClause.getPositionalVariable()) : null;
 
         // Visits the right expression.
         Expression newRightExpr = (Expression) visitUnnesBindingExpression(joinClause.getRightExpression(), env).first;
@@ -138,8 +138,8 @@ public class SqlppCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteV
         // The condition can refer to the newRightVar and newRightPosVar.
         Expression conditionExpr = (Expression) joinClause.getConditionExpression().accept(this, currentEnv).first;
 
-        JoinClause newJoinClause = new JoinClause(joinClause.getJoinType(), newRightExpr, newRightVar, newRightPosVar,
-                conditionExpr);
+        JoinClause newJoinClause =
+                new JoinClause(joinClause.getJoinType(), newRightExpr, newRightVar, newRightPosVar, conditionExpr);
         return new Pair<>(newJoinClause, currentEnv);
     }
 
@@ -148,8 +148,8 @@ public class SqlppCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteV
             VariableSubstitutionEnvironment env) throws CompilationException {
         VariableExpr rightVar = nestClause.getRightVariable();
         VariableExpr newRightVar = generateNewVariable(context, rightVar);
-        VariableExpr newRightPosVar = nestClause.hasPositionalVariable() ? generateNewVariable(context,
-                nestClause.getPositionalVariable()) : null;
+        VariableExpr newRightPosVar = nestClause.hasPositionalVariable()
+                ? generateNewVariable(context, nestClause.getPositionalVariable()) : null;
 
         // Visits the right expression.
         Expression rightExpr = (Expression) nestClause.getRightExpression().accept(this, env).first;
@@ -163,8 +163,8 @@ public class SqlppCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteV
         // The condition can refer to the newRightVar and newRightPosVar.
         Expression conditionExpr = (Expression) nestClause.getConditionExpression().accept(this, currentEnv).first;
 
-        NestClause newJoinClause = new NestClause(nestClause.getJoinType(), rightExpr, newRightVar, newRightPosVar,
-                conditionExpr);
+        NestClause newJoinClause =
+                new NestClause(nestClause.getJoinType(), rightExpr, newRightVar, newRightPosVar, conditionExpr);
         return new Pair<>(newJoinClause, currentEnv);
     }
 
@@ -173,8 +173,8 @@ public class SqlppCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteV
             VariableSubstitutionEnvironment env) throws CompilationException {
         VariableExpr rightVar = unnestClause.getRightVariable();
         VariableExpr newRightVar = generateNewVariable(context, rightVar);
-        VariableExpr newRightPosVar = unnestClause.hasPositionalVariable() ? generateNewVariable(context,
-                unnestClause.getPositionalVariable()) : null;
+        VariableExpr newRightPosVar = unnestClause.hasPositionalVariable()
+                ? generateNewVariable(context, unnestClause.getPositionalVariable()) : null;
 
         // Visits the right expression.
         Expression rightExpr = (Expression) visitUnnesBindingExpression(unnestClause.getRightExpression(), env).first;
@@ -186,8 +186,8 @@ public class SqlppCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteV
             currentEnv.removeSubstitution(newRightPosVar);
         }
         // The condition can refer to the newRightVar and newRightPosVar.
-        UnnestClause newJoinClause = new UnnestClause(unnestClause.getJoinType(), rightExpr, newRightVar,
-                newRightPosVar);
+        UnnestClause newJoinClause =
+                new UnnestClause(unnestClause.getJoinType(), rightExpr, newRightVar, newRightPosVar);
         return new Pair<>(newJoinClause, currentEnv);
     }
 
@@ -265,13 +265,13 @@ public class SqlppCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteV
             VariableSubstitutionEnvironment env) throws CompilationException {
         boolean distinct = selectClause.distinct();
         if (selectClause.selectElement()) {
-            Pair<ILangExpression, VariableSubstitutionEnvironment> newSelectElement = selectClause.getSelectElement()
-                    .accept(this, env);
+            Pair<ILangExpression, VariableSubstitutionEnvironment> newSelectElement =
+                    selectClause.getSelectElement().accept(this, env);
             return new Pair<>(new SelectClause((SelectElement) newSelectElement.first, null, distinct),
                     newSelectElement.second);
         } else {
-            Pair<ILangExpression, VariableSubstitutionEnvironment> newSelectRegular = selectClause.getSelectRegular()
-                    .accept(this, env);
+            Pair<ILangExpression, VariableSubstitutionEnvironment> newSelectRegular =
+                    selectClause.getSelectRegular().accept(this, env);
             return new Pair<>(new SelectClause(null, (SelectRegular) newSelectRegular.first, distinct),
                     newSelectRegular.second);
         }
@@ -280,8 +280,8 @@ public class SqlppCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteV
     @Override
     public Pair<ILangExpression, VariableSubstitutionEnvironment> visit(SelectElement selectElement,
             VariableSubstitutionEnvironment env) throws CompilationException {
-        Pair<ILangExpression, VariableSubstitutionEnvironment> newExpr = selectElement.getExpression()
-                .accept(this, env);
+        Pair<ILangExpression, VariableSubstitutionEnvironment> newExpr =
+                selectElement.getExpression().accept(this, env);
         return new Pair<>(new SelectElement((Expression) newExpr.first), newExpr.second);
     }
 
@@ -318,12 +318,12 @@ public class SqlppCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteV
                 SetOperationInput newRightInput;
                 SetOperationInput rightInput = right.getSetOperationRightInput();
                 if (rightInput.selectBlock()) {
-                    Pair<ILangExpression, VariableSubstitutionEnvironment> rightResult = rightInput.getSelectBlock()
-                            .accept(this, env);
+                    Pair<ILangExpression, VariableSubstitutionEnvironment> rightResult =
+                            rightInput.getSelectBlock().accept(this, env);
                     newRightInput = new SetOperationInput((SelectBlock) rightResult.first, null);
                 } else {
-                    Pair<ILangExpression, VariableSubstitutionEnvironment> rightResult = rightInput.getSubquery()
-                            .accept(this, env);
+                    Pair<ILangExpression, VariableSubstitutionEnvironment> rightResult =
+                            rightInput.getSubquery().accept(this, env);
                     newRightInput = new SetOperationInput(null, (SelectExpression) rightResult.first);
                 }
                 newRightInputs.add(new SetOperationRight(right.getSetOpType(), right.isSetSemantics(), newRightInput));
@@ -392,10 +392,10 @@ public class SqlppCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteV
     public Pair<ILangExpression, VariableSubstitutionEnvironment> visit(CaseExpression caseExpr,
             VariableSubstitutionEnvironment env) throws CompilationException {
         Expression conditionExpr = (Expression) caseExpr.getConditionExpr().accept(this, env).first;
-        List<Expression> whenExprList = VariableCloneAndSubstitutionUtil.visitAndCloneExprList(caseExpr.getWhenExprs(),
-                env, this);
-        List<Expression> thenExprList = VariableCloneAndSubstitutionUtil.visitAndCloneExprList(caseExpr.getThenExprs(),
-                env, this);
+        List<Expression> whenExprList =
+                VariableCloneAndSubstitutionUtil.visitAndCloneExprList(caseExpr.getWhenExprs(), env, this);
+        List<Expression> thenExprList =
+                VariableCloneAndSubstitutionUtil.visitAndCloneExprList(caseExpr.getThenExprs(), env, this);
         Expression elseExpr = (Expression) caseExpr.getElseExpr().accept(this, env).first;
         CaseExpression newCaseExpr = new CaseExpression(conditionExpr, whenExprList, thenExprList, elseExpr);
         return new Pair<>(newCaseExpr, env);

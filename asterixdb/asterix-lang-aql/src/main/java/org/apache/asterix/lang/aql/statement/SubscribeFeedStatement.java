@@ -41,10 +41,8 @@ import org.apache.asterix.metadata.MetadataException;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.entities.Feed;
-import org.apache.asterix.metadata.entities.FeedConnection;
 import org.apache.asterix.metadata.entities.Function;
 import org.apache.asterix.metadata.feeds.FeedMetadataUtil;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 
 /**
  * Represents the AQL statement for subscribing to a feed.
@@ -70,9 +68,9 @@ public class SubscribeFeedStatement implements Statement {
     public void initialize(MetadataTransactionContext mdTxnCtx) throws MetadataException {
         this.query = new Query(false);
         EntityId sourceFeedId = connectionRequest.getReceivingFeedId();
-        Feed subscriberFeed = MetadataManager.INSTANCE.getFeed(mdTxnCtx,
-                connectionRequest.getReceivingFeedId().getDataverse(),
-                connectionRequest.getReceivingFeedId().getEntityName());
+        Feed subscriberFeed =
+                MetadataManager.INSTANCE.getFeed(mdTxnCtx, connectionRequest.getReceivingFeedId().getDataverse(),
+                        connectionRequest.getReceivingFeedId().getEntityName());
         if (subscriberFeed == null) {
             throw new IllegalStateException(" Subscriber feed " + subscriberFeed + " not found.");
         }

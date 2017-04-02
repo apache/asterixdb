@@ -58,8 +58,8 @@ public class SqlppDeleteRewriteVisitor extends AbstractSqlppAstVisitor<Void, Voi
                 : dataverseName.getValue() + "." + datasetName.getValue();
         LiteralExpr argumentLiteral = new LiteralExpr(new StringLiteral(arg));
         arguments.add(argumentLiteral);
-        CallExpr callExpression = new CallExpr(new FunctionSignature(FunctionConstants.ASTERIX_NS, "dataset", 1),
-                arguments);
+        CallExpr callExpression =
+                new CallExpr(new FunctionSignature(FunctionConstants.ASTERIX_NS, "dataset", 1), arguments);
 
         // From clause.
         VariableExpr var = deleteStmt.getVariableExpr();
@@ -84,7 +84,7 @@ public class SqlppDeleteRewriteVisitor extends AbstractSqlppAstVisitor<Void, Voi
         SelectBlock selectBlock = new SelectBlock(selectClause, fromClause, null, whereClause, null, null, null);
         SelectSetOperation selectSetOperation = new SelectSetOperation(new SetOperationInput(selectBlock, null), null);
         SelectExpression selectExpression = new SelectExpression(null, selectSetOperation, null, null, false);
-        Query query = new Query(false, false, selectExpression, 0, new ArrayList<>(), new ArrayList<>());
+        Query query = new Query(false, false, selectExpression, 0);
         query.setBody(selectExpression);
 
         // return the delete statement.

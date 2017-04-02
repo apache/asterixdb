@@ -18,7 +18,6 @@
  */
 package org.apache.asterix.lang.common.statement;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -34,21 +33,16 @@ public class Query implements IReturningStatement {
     private boolean topLevel = true;
     private Expression body;
     private int varCounter;
-    private List<String> dataverses = new ArrayList<>();
-    private List<String> datasets = new ArrayList<>();
 
     public Query(boolean explain) {
         this.explain = explain;
     }
 
-    public Query(boolean explain, boolean topLevel, Expression body, int varCounter, List<String> dataverses,
-            List<String> datasets) {
+    public Query(boolean explain, boolean topLevel, Expression body, int varCounter) {
         this.explain = explain;
         this.topLevel = topLevel;
         this.body = body;
         this.varCounter = varCounter;
-        this.dataverses.addAll(dataverses);
-        this.datasets.addAll(datasets);
     }
 
     @Override
@@ -99,25 +93,9 @@ public class Query implements IReturningStatement {
         return visitor.visit(this, arg);
     }
 
-    public void setDataverses(List<String> dataverses) {
-        this.dataverses = dataverses;
-    }
-
-    public void setDatasets(List<String> datasets) {
-        this.datasets = datasets;
-    }
-
-    public List<String> getDataverses() {
-        return dataverses;
-    }
-
-    public List<String> getDatasets() {
-        return datasets;
-    }
-
     @Override
     public int hashCode() {
-        return ObjectUtils.hashCodeMulti(body, datasets, dataverses, topLevel, explain);
+        return ObjectUtils.hashCodeMulti(body, topLevel, explain);
     }
 
     @Override
@@ -129,9 +107,7 @@ public class Query implements IReturningStatement {
             return false;
         }
         Query target = (Query) object;
-        return explain == target.explain && ObjectUtils.equals(body, target.body)
-                && ObjectUtils.equals(datasets, target.datasets) && ObjectUtils.equals(dataverses, target.dataverses)
-                && topLevel == target.topLevel;
+        return explain == target.explain && ObjectUtils.equals(body, target.body) && topLevel == target.topLevel;
     }
 
     @Override

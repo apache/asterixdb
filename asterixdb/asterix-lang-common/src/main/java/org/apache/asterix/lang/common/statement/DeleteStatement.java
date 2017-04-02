@@ -18,8 +18,6 @@
  */
 package org.apache.asterix.lang.common.statement;
 
-import java.util.List;
-
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.Statement;
@@ -35,19 +33,15 @@ public class DeleteStatement implements Statement {
     private Identifier datasetName;
     private Expression condition;
     private int varCounter;
-    private List<String> dataverses;
-    private List<String> datasets;
     private Query rewrittenQuery;
 
     public DeleteStatement(VariableExpr vars, Identifier dataverseName, Identifier datasetName, Expression condition,
-            int varCounter, List<String> dataverses, List<String> datasets) {
+            int varCounter) {
         this.vars = vars;
         this.dataverseName = dataverseName;
         this.datasetName = datasetName;
         this.condition = condition;
         this.varCounter = varCounter;
-        this.dataverses = dataverses;
-        this.datasets = datasets;
     }
 
     @Override
@@ -88,18 +82,9 @@ public class DeleteStatement implements Statement {
         return visitor.visit(this, arg);
     }
 
-    public List<String> getDataverses() {
-        return dataverses;
-    }
-
-    public List<String> getDatasets() {
-        return datasets;
-    }
-
     @Override
     public int hashCode() {
-        return ObjectUtils.hashCodeMulti(condition, datasetName, datasets, dataverseName, dataverses, rewrittenQuery,
-                vars);
+        return ObjectUtils.hashCodeMulti(condition, datasetName, dataverseName, rewrittenQuery, vars);
     }
 
     @Override
@@ -111,11 +96,11 @@ public class DeleteStatement implements Statement {
             return false;
         }
         DeleteStatement target = (DeleteStatement) object;
-        boolean equals = ObjectUtils.equals(condition, target.condition)
-                && ObjectUtils.equals(datasetName, target.datasetName) && ObjectUtils.equals(datasets, target.datasets)
-                && ObjectUtils.equals(dataverseName, target.dataverseName);
-        return equals && ObjectUtils.equals(dataverses, target.dataverses)
-                && ObjectUtils.equals(rewrittenQuery, target.rewrittenQuery) && ObjectUtils.equals(vars, target.vars);
+        boolean equals =
+                ObjectUtils.equals(condition, target.condition) && ObjectUtils.equals(datasetName, target.datasetName)
+                        && ObjectUtils.equals(dataverseName, target.dataverseName);
+        return equals && ObjectUtils.equals(rewrittenQuery, target.rewrittenQuery)
+                && ObjectUtils.equals(vars, target.vars);
     }
 
     @Override

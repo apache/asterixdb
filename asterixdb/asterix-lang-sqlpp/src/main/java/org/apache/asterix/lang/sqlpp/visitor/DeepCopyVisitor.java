@@ -132,8 +132,7 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
     @Override
     public Projection visit(Projection projection, Void arg) throws CompilationException {
         return new Projection(projection.star() ? null : (Expression) projection.getExpression().accept(this, arg),
-                projection.getName(),
-                projection.star(), projection.exprStar());
+                projection.getName(), projection.star(), projection.exprStar());
     }
 
     @Override
@@ -233,8 +232,7 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
 
     @Override
     public Query visit(Query q, Void arg) throws CompilationException {
-        return new Query(q.isExplain(), q.isTopLevel(), (Expression) q.getBody().accept(this, arg), q.getVarCounter(),
-                q.getDataverses(), q.getDatasets());
+        return new Query(q.isExplain(), q.isTopLevel(), (Expression) q.getBody().accept(this, arg), q.getVarCounter());
     }
 
     @Override

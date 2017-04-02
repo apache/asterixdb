@@ -18,7 +18,6 @@
  */
 package org.apache.asterix.lang.common.parser;
 
-import java.util.List;
 import java.util.Stack;
 
 import org.apache.asterix.common.functions.FunctionSignature;
@@ -35,16 +34,13 @@ public class ScopeChecker {
 
     protected Counter varCounter = new Counter(-1);
 
-    protected Stack<Scope> scopeStack = new Stack<Scope>();
+    protected Stack<Scope> scopeStack = new Stack<>();
 
-    protected Stack<Scope> forbiddenScopeStack = new Stack<Scope>();
+    protected Stack<Scope> forbiddenScopeStack = new Stack<>();
 
     protected String[] inputLines;
 
     protected String defaultDataverse;
-
-    private List<String> dataverses;
-    private List<String> datasets;
 
     public ScopeChecker() {
         scopeStack.push(RootScopeFactory.createRootScope(this));
@@ -322,33 +318,5 @@ public class ScopeChecker {
         extract.append("\n");
         extract.append(inputLines[endLine - 1].substring(0, endColumn - 1));
         return extract.toString().trim();
-    }
-
-    public void addDataverse(String dataverseName) {
-        if (dataverses != null) {
-            dataverses.add(dataverseName);
-        }
-    }
-
-    public void addDataset(String datasetName) {
-        if (datasets != null) {
-            datasets.add(datasetName);
-        }
-    }
-
-    public void setDataverses(List<String> dataverses) {
-        this.dataverses = dataverses;
-    }
-
-    public void setDatasets(List<String> datasets) {
-        this.datasets = datasets;
-    }
-
-    public List<String> getDataverses() {
-        return dataverses;
-    }
-
-    public List<String> getDatasets() {
-        return datasets;
     }
 }

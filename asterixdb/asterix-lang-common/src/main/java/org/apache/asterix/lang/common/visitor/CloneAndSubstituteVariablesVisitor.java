@@ -102,7 +102,7 @@ public class CloneAndSubstituteVariablesVisitor extends
         if (gc.hasGroupFieldList()) {
             for (Pair<Expression, Identifier> varId : gc.getGroupFieldList()) {
                 Expression newExpr = (Expression) varId.first.accept(this, env).first;
-                newGroupFieldList.add(new Pair<Expression, Identifier>(newExpr, varId.second));
+                newGroupFieldList.add(new Pair<>(newExpr, varId.second));
             }
         }
         GroupbyClause newGroup = new GroupbyClause(newGbyList, newDecorList, newWithMap, newGroupVar, newGroupFieldList,

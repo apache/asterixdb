@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.metadata.utils;
+package org.apache.asterix.metadata.lock;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -26,6 +26,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
+import org.apache.asterix.metadata.utils.ExternalDatasetAccessManager;
 
 /**
  * This is a singelton class used to maintain the version of each external dataset with indexes
@@ -62,10 +63,10 @@ public class ExternalDatasetsRegistry {
         Map<String, Integer> locks;
         String lockKey = dataset.getDataverseName() + "." + dataset.getDatasetName();
         // check first if the lock was aquired already
-        locks = metadataProvider.getLocks();
+        locks = metadataProvider.getExternalDataLocks();
         if (locks == null) {
             locks = new HashMap<>();
-            metadataProvider.setLocks(locks);
+            metadataProvider.setExternalDataLocks(locks);
         } else {
             // if dataset was accessed already by this job, return the registered version
             Integer version = locks.get(lockKey);
@@ -123,7 +124,7 @@ public class ExternalDatasetsRegistry {
     }
 
     public void releaseAcquiredLocks(MetadataProvider metadataProvider) {
-        Map<String, Integer> locks = metadataProvider.getLocks();
+        Map<String, Integer> locks = metadataProvider.getExternalDataLocks();
         if (locks == null) {
             return;
         } else {

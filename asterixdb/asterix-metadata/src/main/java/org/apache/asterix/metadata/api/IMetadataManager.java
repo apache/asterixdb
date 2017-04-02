@@ -695,11 +695,10 @@ public interface IMetadataManager extends IMetadataBootstrap {
     /**
      * Feed Connection Related Metadata operations
      */
-    void addFeedConnection(MetadataTransactionContext ctx, FeedConnection feedConnection)
-            throws MetadataException;
+    void addFeedConnection(MetadataTransactionContext ctx, FeedConnection feedConnection) throws MetadataException;
 
-    void dropFeedConnection(MetadataTransactionContext ctx, String dataverseName, String feedName,
-            String datasetName) throws MetadataException;
+    void dropFeedConnection(MetadataTransactionContext ctx, String dataverseName, String feedName, String datasetName)
+            throws MetadataException;
 
     FeedConnection getFeedConnection(MetadataTransactionContext ctx, String dataverseName, String feedName,
             String datasetName) throws MetadataException;

@@ -71,6 +71,8 @@ import org.apache.asterix.metadata.entities.FeedPolicyEntity;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails;
 import org.apache.asterix.metadata.feeds.FeedMetadataUtil;
+import org.apache.asterix.metadata.lock.LockList;
+import org.apache.asterix.metadata.lock.MetadataLockManager;
 import org.apache.asterix.metadata.utils.DatasetUtil;
 import org.apache.asterix.metadata.utils.MetadataConstants;
 import org.apache.asterix.metadata.utils.SplitsAndConstraintsUtil;
@@ -150,6 +152,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
     private final StorageProperties storageProperties;
     private final ILibraryManager libraryManager;
     private final Dataverse defaultDataverse;
+    private final LockList locks;
 
     private MetadataTransactionContext mdTxnCtx;
     private boolean isWriteTransaction;
@@ -160,7 +163,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
     private ResultSetId resultSetId;
     private IResultSerializerFactoryProvider resultSerializerFactoryProvider;
     private JobId jobId;
-    private Map<String, Integer> locks;
+    private Map<String, Integer> externalDataLocks;
     private boolean isTemporaryDatasetWriteJob = true;
     private boolean blockingOperatorDisabled = false;
 
@@ -171,6 +174,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         libraryManager = AppContextInfo.INSTANCE.getLibraryManager();
         metadataPageManagerFactory = componentProvider.getMetadataPageManagerFactory();
         primitiveValueProviderFactory = componentProvider.getPrimitiveValueProviderFactory();
+        locks = new LockList();
     }
 
     public String getPropertyValue(String propertyName) {
@@ -280,12 +284,12 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         return storageProperties;
     }
 
-    public Map<String, Integer> getLocks() {
-        return locks;
+    public Map<String, Integer> getExternalDataLocks() {
+        return externalDataLocks;
     }
 
-    public void setLocks(Map<String, Integer> locks) {
-        this.locks = locks;
+    public void setExternalDataLocks(Map<String, Integer> locks) {
+        this.externalDataLocks = locks;
     }
 
     /**
@@ -302,6 +306,9 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         if (dv == null) {
             return null;
         }
+        String fqName = dv + '.' + dataset;
+        MetadataLockManager.INSTANCE.acquireDataverseReadLock(locks, dv);
+        MetadataLockManager.INSTANCE.acquireDatasetReadLock(locks, fqName);
         return MetadataManagerUtil.findDataset(mdTxnCtx, dv, dataset);
     }
 
@@ -917,7 +924,8 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
 
     public FileSplit[] splitsForDataset(MetadataTransactionContext mdTxnCtx, String dataverseName, String datasetName,
             String targetIdxName, boolean temp) throws AlgebricksException {
-        return SplitsAndConstraintsUtil.getDatasetSplits(mdTxnCtx, dataverseName, datasetName, targetIdxName, temp);
+        return SplitsAndConstraintsUtil.getDatasetSplits(findDataset(dataverseName, datasetName), mdTxnCtx,
+                targetIdxName, temp);
     }
 
     public DatasourceAdapter getAdapter(MetadataTransactionContext mdTxnCtx, String dataverseName, String adapterName)
@@ -939,8 +947,8 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
 
     public Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitProviderAndPartitionConstraintsForFilesIndex(
             String dataverseName, String datasetName, String targetIdxName, boolean create) throws AlgebricksException {
-        return SplitsAndConstraintsUtil.getFilesIndexSplitProviderAndConstraints(mdTxnCtx, dataverseName, datasetName,
-                targetIdxName, create);
+        return SplitsAndConstraintsUtil.getFilesIndexSplitProviderAndConstraints(
+                findDataset(dataverseName, datasetName), mdTxnCtx, targetIdxName, create);
     }
 
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> buildExternalDataLookupRuntime(
@@ -1827,16 +1835,14 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
                         splitsAndConstraint.first, appContext.getIndexLifecycleManagerProvider(), tokenTypeTraits,
                         tokenComparatorFactories, invListsTypeTraits, invListComparatorFactories, tokenizerFactory,
                         fieldPermutation, indexDataFlowFactory, filterFactory, modificationCallbackFactory,
-                        searchCallbackFactory, indexName,
-                        prevFieldPermutation, metadataPageManagerFactory);
+                        searchCallbackFactory, indexName, prevFieldPermutation, metadataPageManagerFactory);
             } else {
                 op = new LSMInvertedIndexInsertDeleteOperatorDescriptor(spec, recordDesc,
                         appContext.getStorageManager(), splitsAndConstraint.first,
                         appContext.getIndexLifecycleManagerProvider(), tokenTypeTraits, tokenComparatorFactories,
                         invListsTypeTraits, invListComparatorFactories, tokenizerFactory, fieldPermutation, indexOp,
                         indexDataFlowFactory, filterFactory, modificationCallbackFactory, searchCallbackFactory,
-                        indexName,
-                        metadataPageManagerFactory);
+                        indexName, metadataPageManagerFactory);
             }
             return new Pair<>(op, splitsAndConstraint.second);
         } catch (Exception e) {
@@ -2063,5 +2069,9 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         FileSplit[] splits = splitsForDataset(mdTxnCtx, ds.getDataverseName(), ds.getDatasetName(), indexName,
                 ds.getDatasetDetails().isTemp());
         return StoragePathUtil.splitProviderAndPartitionConstraints(splits);
+    }
+
+    public LockList getLocks() {
+        return locks;
     }
 }

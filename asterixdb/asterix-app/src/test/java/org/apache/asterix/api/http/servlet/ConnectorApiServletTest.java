@@ -169,12 +169,16 @@ public class ConnectorApiServletTest {
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         // Retrieves file splits of the dataset.
         MetadataProvider metadataProvider = new MetadataProvider(null, new StorageComponentProvider());
-        metadataProvider.setMetadataTxnContext(mdTxnCtx);
-        Dataset dataset = metadataProvider.findDataset(dataverseName, datasetName);
-        ARecordType recordType =
-                (ARecordType) metadataProvider.findType(dataset.getItemTypeDataverseName(), dataset.getItemTypeName());
-        // Metadata transaction commits.
-        MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
-        return recordType;
+        try {
+            metadataProvider.setMetadataTxnContext(mdTxnCtx);
+            Dataset dataset = metadataProvider.findDataset(dataverseName, datasetName);
+            ARecordType recordType = (ARecordType) metadataProvider.findType(dataset.getItemTypeDataverseName(),
+                    dataset.getItemTypeName());
+            // Metadata transaction commits.
+            MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+            return recordType;
+        } finally {
+            metadataProvider.getLocks().unlock();
+        }
     }
 }

@@ -16,13 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.metadata.utils;
+package org.apache.asterix.metadata.lock;
 
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import org.apache.asterix.metadata.lock.IMetadataLock.Mode;
 import org.apache.asterix.om.base.AMutableInt32;
 
-public class DatasetLock {
+public class DatasetLock implements IMetadataLock {
 
     private ReentrantReadWriteLock dsLock;
     private ReentrantReadWriteLock dsModifyLock;
@@ -34,45 +35,45 @@ public class DatasetLock {
         indexBuildCounter = new AMutableInt32(0);
     }
 
-    public void acquireReadLock() {
+    private void acquireReadLock() {
         // query
         // build index
         // insert
         dsLock.readLock().lock();
     }
 
-    public void releaseReadLock() {
+    private void releaseReadLock() {
         // query
         // build index
         // insert
         dsLock.readLock().unlock();
     }
 
-    public void acquireWriteLock() {
+    private void acquireWriteLock() {
         // create ds
         // delete ds
         // drop index
         dsLock.writeLock().lock();
     }
 
-    public void releaseWriteLock() {
+    private void releaseWriteLock() {
         // create ds
         // delete ds
         // drop index
         dsLock.writeLock().unlock();
     }
 
-    public void acquireReadModifyLock() {
+    private void acquireReadModifyLock() {
         // insert
         dsModifyLock.readLock().lock();
     }
 
-    public void releaseReadModifyLock() {
+    private void releaseReadModifyLock() {
         // insert
         dsModifyLock.readLock().unlock();
     }
 
-    public void acquireWriteModifyLock() {
+    private void acquireWriteModifyLock() {
         // Build index statement
         synchronized (indexBuildCounter) {
             if (indexBuildCounter.getIntegerValue() > 0) {
@@ -84,7 +85,7 @@ public class DatasetLock {
         }
     }
 
-    public void releaseWriteModifyLock() {
+    private void releaseWriteModifyLock() {
         // Build index statement
         synchronized (indexBuildCounter) {
             if (indexBuildCounter.getIntegerValue() == 1) {
@@ -94,13 +95,63 @@ public class DatasetLock {
         }
     }
 
-    public void acquireRefreshLock() {
+    private void acquireRefreshLock() {
         // Refresh External Dataset statement
         dsModifyLock.writeLock().lock();
     }
 
-    public void releaseRefreshLock() {
+    private void releaseRefreshLock() {
         // Refresh External Dataset statement
         dsModifyLock.writeLock().unlock();
+    }
+
+    @Override
+    public void acquire(IMetadataLock.Mode mode) {
+        switch (mode) {
+            case INDEX_BUILD:
+                acquireReadLock();
+                acquireWriteModifyLock();
+                break;
+            case MODIFY:
+                acquireReadLock();
+                acquireReadModifyLock();
+                break;
+            case REFRESH:
+                acquireReadLock();
+                acquireRefreshLock();
+                break;
+            case INDEX_DROP:
+            case WRITE:
+                acquireWriteLock();
+                break;
+            default:
+                acquireReadLock();
+                break;
+        }
+    }
+
+    @Override
+    public void release(IMetadataLock.Mode mode) {
+        switch (mode) {
+            case INDEX_BUILD:
+                releaseWriteModifyLock();
+                releaseReadLock();
+                break;
+            case MODIFY:
+                releaseReadModifyLock();
+                releaseReadLock();
+                break;
+            case REFRESH:
+                releaseRefreshLock();
+                releaseReadLock();
+                break;
+            case INDEX_DROP:
+            case WRITE:
+                releaseWriteLock();
+                break;
+            default:
+                releaseReadLock();
+                break;
+        }
     }
 }

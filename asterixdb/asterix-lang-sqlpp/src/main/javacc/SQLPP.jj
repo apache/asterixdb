@@ -1029,10 +1029,6 @@ DeleteStatement DeleteStatement() throws ParseException:
   VariableExpr varExpr = null;
   Expression condition = null;
   Pair<Identifier, Identifier> nameComponents;
-  // This is related to the new metadata lock management
-  setDataverses(new ArrayList<String>());
-  setDatasets(new ArrayList<String>());
-
 }
 {
   <DELETE>
@@ -1040,20 +1036,13 @@ DeleteStatement DeleteStatement() throws ParseException:
          ((<AS>)? varExpr = Variable())?
   (<WHERE> condition = Expression())?
   {
-      // First we get the dataverses and datasets that we want to lock
-      List<String> dataverses = getDataverses();
-      List<String> datasets = getDatasets();
-      // we remove the pointer to the dataverses and datasets
-      setDataverses(null);
-      setDatasets(null);
-
       if(varExpr == null){
         varExpr = new VariableExpr();
         VarIdentifier var = SqlppVariableUtil.toInternalVariableIdentifier(nameComponents.second.getValue());
         varExpr.setVar(var);
       }
       return new DeleteStatement(varExpr, nameComponents.first, nameComponents.second,
-          condition, getVarCounter(), dataverses, datasets);
+          condition, getVarCounter());
   }
 }
 
@@ -1738,9 +1727,6 @@ Query ExplainStatement() throws ParseException:
 Query Query(boolean explain) throws ParseException:
 {
   Query query = new Query(explain);
-  // we set the pointers to the dataverses and datasets lists to fill them with entities to be locked
-  setDataverses(query.getDataverses());
-  setDatasets(query.getDatasets());
   Expression expr;
 }
 {
@@ -1751,9 +1737,6 @@ Query Query(boolean explain) throws ParseException:
   )
   {
     query.setBody(expr);
-    // we remove the pointers to the locked entities before we return the query object
-    setDataverses(null);
-    setDatasets(null);
     return query;
   }
 }

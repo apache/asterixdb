@@ -1015,10 +1015,6 @@ DeleteStatement DeleteStatement() throws ParseException:
   VariableExpr var = null;
   Expression condition = null;
   Pair<Identifier, Identifier> nameComponents;
-  // This is related to the new metadata lock management
-  setDataverses(new ArrayList<String>());
-  setDatasets(new ArrayList<String>());
-
 }
 {
   <DELETE> var = Variable()
@@ -1029,13 +1025,8 @@ DeleteStatement DeleteStatement() throws ParseException:
   (<WHERE> condition = Expression())?
     {
       // First we get the dataverses and datasets that we want to lock
-      List<String> dataverses = getDataverses();
-      List<String> datasets = getDatasets();
-      // we remove the pointer to the dataverses and datasets
-      setDataverses(null);
-      setDatasets(null);
       return new DeleteStatement(var, nameComponents.first, nameComponents.second,
-          condition, getVarCounter(), dataverses, datasets);
+          condition, getVarCounter());
     }
 }
 
@@ -1621,9 +1612,6 @@ FunctionDecl FunctionDeclaration() throws ParseException:
 Query Query() throws ParseException:
 {
   Query query = new Query(false);
-  // we set the pointers to the dataverses and datasets lists to fill them with entities to be locked
-  setDataverses(query.getDataverses());
-  setDatasets(query.getDatasets());
   Expression expr;
 }
 {
@@ -1631,9 +1619,6 @@ Query Query() throws ParseException:
     {
       query.setBody(expr);
       query.setVarCounter(getVarCounter());
-      // we remove the pointers to the locked entities before we return the query object
-      setDataverses(null);
-      setDatasets(null);
       return query;
     }
 }
@@ -2282,12 +2267,6 @@ Expression DatasetAccessExpression() throws ParseException:
       LiteralExpr ds = new LiteralExpr();
       ds.setValue( new StringLiteral(name) );
       nameArg = ds;
-      if(arg2 != null){
-          addDataverse(arg1.toString());
-          addDataset(name);
-      } else {
-          addDataset(defaultDataverse + "." + name);
-      }
     }
   | ( <LEFTPAREN> nameArg = Expression() <RIGHTPAREN> ) )
     {

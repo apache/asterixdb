@@ -123,15 +123,14 @@ public class SqlppGroupBySugarVisitor extends AbstractSqlppExpressionScopingVisi
             // Reference to a field in the group variable.
             if (fieldVars.contains(usedVar)) {
                 // Rewrites to a reference to a field in the group variable.
-                varExprMap.put(usedVar,
-                                new FieldAccessor(fromBindingVar, SqlppVariableUtil.toUserDefinedVariableName(usedVar
-                                        .getVar())));
+                varExprMap.put(usedVar, new FieldAccessor(fromBindingVar,
+                        SqlppVariableUtil.toUserDefinedVariableName(usedVar.getVar())));
             }
         }
 
         // Select clause.
-        SelectElement selectElement = new SelectElement(
-                SqlppRewriteUtil.substituteExpression(expr, varExprMap, context));
+        SelectElement selectElement =
+                new SelectElement(SqlppRewriteUtil.substituteExpression(expr, varExprMap, context));
         SelectClause selectClause = new SelectClause(selectElement, null, false);
 
         // Construct the select expression.

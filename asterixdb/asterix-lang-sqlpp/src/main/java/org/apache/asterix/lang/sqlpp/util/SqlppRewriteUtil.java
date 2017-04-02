@@ -42,8 +42,8 @@ public class SqlppRewriteUtil {
 
     // Applying sugar rewriting for group-by.
     public static Expression rewriteExpressionUsingGroupVariable(VariableExpr groupVar,
-            Collection<VariableExpr> fieldVars, ILangExpression expr,
-            LangRewritingContext context) throws CompilationException {
+            Collection<VariableExpr> fieldVars, ILangExpression expr, LangRewritingContext context)
+            throws CompilationException {
         SqlppGroupBySugarVisitor visitor = new SqlppGroupBySugarVisitor(context, groupVar, fieldVars);
         return expr.accept(visitor, null);
     }

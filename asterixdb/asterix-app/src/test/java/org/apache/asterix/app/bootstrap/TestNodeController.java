@@ -162,11 +162,10 @@ public class TestNodeController {
     }
 
     public Pair<LSMInsertDeleteOperatorNodePushable, CommitRuntime> getInsertPipeline(IHyracksTaskContext ctx,
-            Dataset dataset, IAType[] primaryKeyTypes,
-            ARecordType recordType, ARecordType metaType, ILSMMergePolicyFactory mergePolicyFactory,
-            Map<String, String> mergePolicyProperties, int[] filterFields, int[] primaryKeyIndexes,
-            List<Integer> primaryKeyIndicators, StorageComponentProvider storageComponentProvider)
-            throws AlgebricksException, HyracksDataException {
+            Dataset dataset, IAType[] primaryKeyTypes, ARecordType recordType, ARecordType metaType,
+            ILSMMergePolicyFactory mergePolicyFactory, Map<String, String> mergePolicyProperties, int[] filterFields,
+            int[] primaryKeyIndexes, List<Integer> primaryKeyIndicators,
+            StorageComponentProvider storageComponentProvider) throws AlgebricksException, HyracksDataException {
         PrimaryIndexInfo primaryIndexInfo = new PrimaryIndexInfo(dataset, primaryKeyTypes, recordType, metaType,
                 mergePolicyFactory, mergePolicyProperties, filterFields, primaryKeyIndexes, primaryKeyIndicators,
                 storageComponentProvider);
@@ -301,8 +300,13 @@ public class TestNodeController {
                 MetadataUtil.PENDING_NO_OP);
         Index index = primaryIndexInfo.getIndex();
         MetadataProvider mdProvider = new MetadataProvider(dataverse, storageComponentProvider);
-        return dataset.getIndexDataflowHelperFactory(mdProvider, index, primaryIndexInfo.recordType,
-                primaryIndexInfo.metaType, primaryIndexInfo.mergePolicyFactory, primaryIndexInfo.mergePolicyProperties);
+        try {
+            return dataset.getIndexDataflowHelperFactory(mdProvider, index, primaryIndexInfo.recordType,
+                    primaryIndexInfo.metaType, primaryIndexInfo.mergePolicyFactory,
+                    primaryIndexInfo.mergePolicyProperties);
+        } finally {
+            mdProvider.getLocks().unlock();
+        }
     }
 
     public IIndexDataflowHelper getPrimaryIndexDataflowHelper(Dataset dataset, IAType[] primaryKeyTypes,

@@ -39,6 +39,7 @@ import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.metadata.MetadataException;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
+import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.DatasourceAdapter;
 import org.apache.asterix.metadata.entities.Datatype;
@@ -47,7 +48,6 @@ import org.apache.asterix.metadata.entities.FeedPolicyEntity;
 import org.apache.asterix.metadata.utils.MetadataConstants;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -59,17 +59,16 @@ import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
  */
 public class FeedMetadataUtil {
 
-    public static Dataset validateIfDatasetExists(String dataverse, String datasetName, MetadataTransactionContext ctx)
-            throws CompilationException {
-        Dataset dataset = MetadataManager.INSTANCE.getDataset(ctx, dataverse, datasetName);
+    public static Dataset validateIfDatasetExists(MetadataProvider metadataProvider, String dataverse,
+            String datasetName, MetadataTransactionContext ctx) throws AlgebricksException {
+        Dataset dataset = metadataProvider.findDataset(dataverse, datasetName);
         if (dataset == null) {
             throw new CompilationException("Unknown target dataset :" + datasetName);
         }
 
         if (!dataset.getDatasetType().equals(DatasetType.INTERNAL)) {
             throw new CompilationException("Statement not applicable. Dataset " + datasetName
-                    + " is not of required type "
-                    + DatasetType.INTERNAL);
+                    + " is not of required type " + DatasetType.INTERNAL);
         }
         return dataset;
     }
@@ -87,8 +86,8 @@ public class FeedMetadataUtil {
             MetadataTransactionContext ctx) throws CompilationException {
         FeedPolicyEntity feedPolicy = MetadataManager.INSTANCE.getFeedPolicy(ctx, dataverse, policyName);
         if (feedPolicy == null) {
-            feedPolicy = MetadataManager.INSTANCE.getFeedPolicy(ctx, MetadataConstants.METADATA_DATAVERSE_NAME,
-                    policyName);
+            feedPolicy =
+                    MetadataManager.INSTANCE.getFeedPolicy(ctx, MetadataConstants.METADATA_DATAVERSE_NAME, policyName);
             if (feedPolicy == null) {
                 throw new CompilationException("Unknown feed policy" + policyName);
             }
@@ -155,7 +154,7 @@ public class FeedMetadataUtil {
                 }
             }
         } catch (Exception e) {
-            throw new AsterixException("Invalid feed parameters. Exception Message:" + e.getMessage() , e);
+            throw new AsterixException("Invalid feed parameters. Exception Message:" + e.getMessage(), e);
         }
     }
 
