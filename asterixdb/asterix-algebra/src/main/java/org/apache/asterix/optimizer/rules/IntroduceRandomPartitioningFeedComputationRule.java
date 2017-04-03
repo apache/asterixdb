@@ -61,7 +61,7 @@ public class IntroduceRandomPartitioningFeedComputationRule implements IAlgebrai
 
         final FeedDataSource feedDataSource = (FeedDataSource) dataSource;
         FeedConnection feedConnection = feedDataSource.getFeedConnection();
-        if (feedConnection.getAppliedFunctions() == null) {
+        if (feedConnection.getAppliedFunctions() == null || feedConnection.getAppliedFunctions().size() == 0) {
             return false;
         }
 

@@ -76,7 +76,7 @@ public class FeedMetaOperatorDescriptor extends AbstractSingleActivityOperatorDe
 
     public FeedMetaOperatorDescriptor(final JobSpecification spec, final FeedConnectionId feedConnectionId,
             final IOperatorDescriptor coreOperatorDescriptor, final Map<String, String> feedPolicyProperties,
-            final FeedRuntimeType runtimeType, final boolean enableSubscriptionMode, final String operandId) {
+            final FeedRuntimeType runtimeType, final String operandId) {
         super(spec, coreOperatorDescriptor.getInputArity(), coreOperatorDescriptor.getOutputArity());
         this.feedConnectionId = feedConnectionId;
         this.feedPolicyProperties = feedPolicyProperties;
