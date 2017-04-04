@@ -30,18 +30,8 @@
       <useDefaultExcludes>true</useDefaultExcludes>
       <excludes>
         <exclude>**/${project.build.directory}/**</exclude>
-        <exclude>**/git.properties</exclude>
         <exclude>release.properties</exclude>
-        <exclude>asterix-app/src/test/resources/externallib/**</exclude>
-        <exclude>asterix-installer/src/test/resources/clusterts/asterix-installer-*-binary-assembly/**</exclude>
       </excludes>
-    </fileSet>
-    <fileSet>
-      <directory>asterix-app/target/classes</directory>
-      <outputDirectory>./asterix-app/src/main/resources/</outputDirectory>
-      <includes>
-        <include>git.properties</include>
-      </includes>
     </fileSet>
   </fileSets>
 </assembly>
