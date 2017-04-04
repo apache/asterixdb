@@ -1,1 +1,1 @@
-/"git.build.version"/
+/(^\{\}$|"git.build.version")/
