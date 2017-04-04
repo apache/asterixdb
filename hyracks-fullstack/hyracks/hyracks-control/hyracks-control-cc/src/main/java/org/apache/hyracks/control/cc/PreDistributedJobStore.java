@@ -62,6 +62,10 @@ public class PreDistributedJobStore {
         return descriptor;
     }
 
+    public boolean jobIsPredistributed(JobId jobId) {
+        return preDistributedJobDescriptorMap.get(jobId) != null;
+    }
+
     public void removeDistributedJobDescriptor(JobId jobId) throws HyracksException {
         PreDistributedJobDescriptor descriptor = preDistributedJobDescriptorMap.get(jobId);
         if (descriptor == null) {

@@ -29,4 +29,6 @@ public interface IDatasetManager {
     public IDatasetStateRecord getState(JobId jobId);
 
     public void deinitState(JobId jobId);
+
+    public long getResultTimestamp(JobId jobId);
 }

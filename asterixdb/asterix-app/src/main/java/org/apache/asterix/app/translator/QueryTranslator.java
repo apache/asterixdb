@@ -1735,7 +1735,12 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             }
         };
         if (compileOnly) {
-            return compiler.compile();
+            locker.lock();
+            try {
+                return compiler.compile();
+            } finally {
+                locker.unlock();
+            }
         }
 
         if (stmtInsertUpsert.getReturnExpression() != null) {

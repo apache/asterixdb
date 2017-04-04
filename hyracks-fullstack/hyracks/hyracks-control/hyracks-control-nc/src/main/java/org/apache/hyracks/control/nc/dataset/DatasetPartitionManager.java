@@ -178,8 +178,17 @@ public class DatasetPartitionManager implements IDatasetPartitionManager {
     }
 
     @Override
-    public synchronized IDatasetStateRecord getState(JobId jobId) {
+    public IDatasetStateRecord getState(JobId jobId) {
         return partitionResultStateMap.get(jobId);
+    }
+
+    @Override
+    public synchronized long getResultTimestamp(JobId jobId) {
+        IDatasetStateRecord r = getState(jobId);
+        if (r == null) {
+            return -1;
+        }
+        return r.getTimestamp();
     }
 
     @Override

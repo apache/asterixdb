@@ -25,7 +25,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.hyracks.api.dataset.IDatasetManager;
-import org.apache.hyracks.api.dataset.IDatasetStateRecord;
 import org.apache.hyracks.api.job.JobId;
 
 /**
@@ -70,8 +69,8 @@ public class ResultStateSweeper implements Runnable {
         synchronized (datasetManager) {
             toBeCollected.clear();
             for (JobId jobId : datasetManager.getJobIds()) {
-                final IDatasetStateRecord state = datasetManager.getState(jobId);
-                if (state != null && System.currentTimeMillis() > state.getTimestamp() + resultTTL) {
+                final long timestamp = datasetManager.getResultTimestamp(jobId);
+                if (timestamp != -1 && System.currentTimeMillis() > timestamp + resultTTL) {
                     toBeCollected.add(jobId);
                 }
             }

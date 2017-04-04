@@ -78,6 +78,7 @@ public class PredistributedJobsTest {
         ncConfig1.setClusterListenAddress("127.0.0.1");
         ncConfig1.setDataListenAddress("127.0.0.1");
         ncConfig1.setResultListenAddress("127.0.0.1");
+        ncConfig1.setResultSweepThreshold(5000);
         ncConfig1.setIODevices(new String [] { joinPath(System.getProperty("user.dir"), "target", "data", "device0") });
         NodeControllerService nc1Base = new NodeControllerService(ncConfig1);
         nc1 = Mockito.spy(nc1Base);
@@ -89,6 +90,7 @@ public class PredistributedJobsTest {
         ncConfig2.setClusterListenAddress("127.0.0.1");
         ncConfig2.setDataListenAddress("127.0.0.1");
         ncConfig2.setResultListenAddress("127.0.0.1");
+        ncConfig2.setResultSweepThreshold(5000);
         ncConfig2.setIODevices(new String [] { joinPath(System.getProperty("user.dir"), "target", "data", "device1") });
         NodeControllerService nc2Base = new NodeControllerService(ncConfig2);
         nc2 = Mockito.spy(nc2Base);
@@ -142,6 +144,10 @@ public class PredistributedJobsTest {
         //run the second job
         hcc.startJob(jobId2);
         hcc.waitForCompletion(jobId2);
+
+        //wait ten seconds to ensure the result sweeper does not break the job
+        //The result sweeper runs every 5 seconds during the tests
+        Thread.sleep(10000);
 
         //run the second job again
         hcc.startJob(jobId2);
