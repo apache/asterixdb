@@ -69,8 +69,4 @@ public class FeedConstants {
     public static final class NamingConstants {
         public static final String LIBRARY_NAME_SEPARATOR = "#";
     }
-
-    public static class JobConstants {
-        public static final int DEFAULT_FRAME_SIZE = 8192;
-    }
 }

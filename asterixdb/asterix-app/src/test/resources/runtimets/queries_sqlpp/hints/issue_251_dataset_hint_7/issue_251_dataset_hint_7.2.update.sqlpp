@@ -29,6 +29,6 @@ use feeds;
 
 set `wait-for-completion-feed` `true`;
 
-connect  feed TweetFeed to  dataset Tweets using policy `BasicFT`;
+connect  feed TweetFeed to  dataset Tweets using policy `Basic`;
 
 start feed TweetFeed;

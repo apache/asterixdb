@@ -18,7 +18,11 @@
  */
 package org.apache.asterix.external.feed.test;
 
+import java.io.File;
+import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.file.Files;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
@@ -33,6 +37,8 @@ import org.apache.asterix.external.feed.management.FeedConnectionId;
 import org.apache.asterix.external.feed.policy.FeedPolicyAccessor;
 import org.apache.asterix.external.util.FeedUtils;
 import org.apache.asterix.external.util.FeedUtils.FeedRuntimeType;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.filefilter.WildcardFileFilter;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -100,12 +106,30 @@ public class InputHandlerTest extends TestCase {
     private static FeedPolicyAccessor createFeedPolicyAccessor(boolean spill, boolean discard, long spillBudget,
             float discardFraction) {
         FeedPolicyAccessor fpa = Mockito.mock(FeedPolicyAccessor.class);
-        Mockito.when(fpa.bufferingEnabled()).thenReturn(true);
+        Mockito.when(fpa.flowControlEnabled()).thenReturn(true);
         Mockito.when(fpa.spillToDiskOnCongestion()).thenReturn(spill);
         Mockito.when(fpa.getMaxSpillOnDisk()).thenReturn(spillBudget);
         Mockito.when(fpa.discardOnCongestion()).thenReturn(discard);
         Mockito.when(fpa.getMaxFractionDiscard()).thenReturn(discardFraction);
         return fpa;
+    }
+
+    private void cleanDiskFiles() throws IOException {
+        String filePrefix = "dataverse.feed(Feed)_dataset*";
+        Collection<File> files = FileUtils.listFiles(new File("."), new WildcardFileFilter(filePrefix), null);
+        for (File ifile : files) {
+            Files.deleteIfExists(ifile.toPath());
+        }
+    }
+
+    @org.junit.Before
+    public void testCleanBefore() throws IOException {
+        cleanDiskFiles();
+    }
+
+    @org.junit.After
+    public void testCleanAfter() throws IOException {
+        cleanDiskFiles();
     }
 
     @org.junit.Test

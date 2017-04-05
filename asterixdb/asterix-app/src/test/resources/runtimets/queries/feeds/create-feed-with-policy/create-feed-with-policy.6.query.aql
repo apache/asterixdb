@@ -16,8 +16,16 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+/*
+ * Description  : Create a socket feed with a client that pushes
+ * 10 records. The feed is connected to a dataset that is then
+ * queried for the data.
+ * Expected Res : Success
+ * Date         : 16th Mar 2017
+ */
 
-use feeds_10;
-set `wait-for-completion-feed` `true`;
-connect  feed TweetFeed to  dataset Tweets using policy `Basic`;
-start feed TweetFeed;
+use dataverse experiments;
+
+for $x in dataset Tweets
+order by $x.tweetid
+return $x;

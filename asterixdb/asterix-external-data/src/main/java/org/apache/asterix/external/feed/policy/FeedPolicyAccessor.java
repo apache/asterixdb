@@ -30,33 +30,12 @@ public class FeedPolicyAccessor implements Serializable {
 
     /**
      * --------------------------
-     * failure configuration
-     * --------------------------
-     **/
-
-    /** continue feed ingestion after a soft (runtime) failure **/
-    public static final String SOFT_FAILURE_CONTINUE = "soft.failure.continue";
-
-    /** log failed tuple to an asterixdb dataset for future reference **/
-    public static final String SOFT_FAILURE_LOG_DATA = "soft.failure.log.data";
-
-    /** continue feed ingestion after loss of one or more machines (hardware failure) **/
-    public static final String HARDWARE_FAILURE_CONTINUE = "hardware.failure.continue";
-
-    /** auto-start a loser feed when the asterixdb instance is restarted **/
-    public static final String CLUSTER_REBOOT_AUTO_RESTART = "cluster.reboot.auto.restart";
-
-    /** framework provides guarantee that each received feed record will be processed through the ingestion pipeline at least once **/
-    public static final String AT_LEAST_ONE_SEMANTICS = "atleast.once.semantics";
-
-    /**
-     * --------------------------
      * flow control configuration
      * --------------------------
      **/
 
     /** enable buffering in feeds **/
-    public static final String BUFFERING_ENABLED = "buffering.enabled";
+    public static final String FLOWCONTROL_ENABLED = "flowcontrol.enabled";
 
     /** spill excess tuples to disk if an operator cannot process incoming data at its arrival rate **/
     public static final String SPILL_TO_DISK_ON_CONGESTION = "spill.to.disk.on.congestion";
@@ -70,17 +49,8 @@ public class FeedPolicyAccessor implements Serializable {
     /** maximum fraction of ingested data that can be discarded **/
     public static final String MAX_FRACTION_DISCARD = "max.fraction.discard";
 
-    /** maximum end-to-end delay/latency in persisting a tuple through the feed ingestion pipeline **/
-    public static final String MAX_DELAY_RECORD_PERSISTENCE = "max.delay.record.persistence";
-
-    /** rate limit the inflow of tuples in accordance with the maximum capacity of the pipeline **/
-    public static final String THROTTLING_ENABLED = "throttling.enabled";
-
     /** elasticity **/
     public static final String ELASTIC = "elastic";
-
-    /** statistics **/
-    public static final String TIME_TRACKING = "time.tracking";
 
     /** logging of statistics **/
     public static final String LOGGING_STATISTICS = "logging.statistics";
@@ -101,31 +71,9 @@ public class FeedPolicyAccessor implements Serializable {
         this.feedPolicy = feedPolicy;
     }
 
-    /** Failure recover/reporting **/
-
-    public boolean logDataOnSoftFailure() {
-        return getBooleanPropertyValue(SOFT_FAILURE_LOG_DATA, false);
-    }
-
-    public boolean continueOnSoftFailure() {
-        return getBooleanPropertyValue(SOFT_FAILURE_CONTINUE, false);
-    }
-
-    public boolean continueOnHardwareFailure() {
-        return getBooleanPropertyValue(HARDWARE_FAILURE_CONTINUE, false);
-    }
-
-    public boolean autoRestartOnClusterReboot() {
-        return getBooleanPropertyValue(CLUSTER_REBOOT_AUTO_RESTART, false);
-    }
-
-    public boolean atleastOnceSemantics() {
-        return getBooleanPropertyValue(AT_LEAST_ONE_SEMANTICS, false);
-    }
-
     /** flow control **/
-    public boolean bufferingEnabled() {
-        return getBooleanPropertyValue(BUFFERING_ENABLED, false);
+    public boolean flowControlEnabled() {
+        return getBooleanPropertyValue(FLOWCONTROL_ENABLED, false);
     }
 
     public boolean spillToDiskOnCongestion() {
@@ -136,10 +84,6 @@ public class FeedPolicyAccessor implements Serializable {
         return getMaxFractionDiscard() > 0;
     }
 
-    public boolean throttlingEnabled() {
-        return getBooleanPropertyValue(THROTTLING_ENABLED, false);
-    }
-
     public long getMaxSpillOnDisk() {
         return getLongPropertyValue(MAX_SPILL_SIZE_ON_DISK, NO_LIMIT);
     }
@@ -148,28 +92,9 @@ public class FeedPolicyAccessor implements Serializable {
         return getFloatPropertyValue(MAX_FRACTION_DISCARD, 0);
     }
 
-    public long getMaxDelayRecordPersistence() {
-        return getLongPropertyValue(MAX_DELAY_RECORD_PERSISTENCE, Long.MAX_VALUE);
-    }
-
-    /** Elasticity **/
-    public boolean isElastic() {
-        return getBooleanPropertyValue(ELASTIC, false);
-    }
-
-    /** Statistics **/
-    public boolean isTimeTrackingEnabled() {
-        return getBooleanPropertyValue(TIME_TRACKING, false);
-    }
-
-    /** Logging of statistics **/
-    public boolean isLoggingStatisticsEnabled() {
-        return getBooleanPropertyValue(LOGGING_STATISTICS, false);
-    }
-
     private boolean getBooleanPropertyValue(String key, boolean defValue) {
         String v = feedPolicy.get(key);
-        return v == null ? false : Boolean.valueOf(v);
+        return v == null ? defValue : Boolean.valueOf(v);
     }
 
     private long getLongPropertyValue(String key, long defValue) {

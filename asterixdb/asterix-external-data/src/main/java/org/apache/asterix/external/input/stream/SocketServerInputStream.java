@@ -71,7 +71,8 @@ public class SocketServerInputStream extends AsterixInputStream {
             }
             read = connectionStream.read(b, off, len);
         } catch (IOException e) {
-            e.printStackTrace();
+            // exception is expected when no connection available
+            LOGGER.info("Exhausted all pending connections. Waiting for new ones to come.");
             read = -1;
         }
         while (read < 0) {
@@ -155,11 +156,10 @@ public class SocketServerInputStream extends AsterixInputStream {
     @Override
     public boolean handleException(Throwable th) {
         try {
-            accept();
+            return accept();
         } catch (IOException e) {
             LOGGER.warn("Failed accepting more connections", e);
             return false;
         }
-        return true;
     }
 }

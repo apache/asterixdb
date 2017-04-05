@@ -30,7 +30,7 @@ import org.apache.asterix.common.dataflow.LSMInsertDeleteOperatorNodePushable;
 import org.apache.asterix.external.feed.dataflow.FeedRuntimeInputHandler;
 import org.apache.asterix.external.feed.dataflow.SyncFeedRuntimeInputHandler;
 import org.apache.asterix.external.feed.management.FeedConnectionId;
-import org.apache.asterix.external.feed.policy.FeedPolicyEnforcer;
+import org.apache.asterix.external.feed.policy.FeedPolicyAccessor;
 import org.apache.asterix.external.util.FeedUtils;
 import org.apache.asterix.external.util.FeedUtils.FeedRuntimeType;
 import org.apache.hyracks.api.comm.VSizeFrame;
@@ -52,10 +52,10 @@ public class FeedMetaStoreNodePushable extends AbstractUnaryInputUnaryOutputOper
     private AbstractUnaryInputUnaryOutputOperatorNodePushable insertOperator;
 
     /**
-     * A policy enforcer that ensures dyanmic decisions for a feed are taken
+     * A policy accessor that ensures dyanmic decisions for a feed are taken
      * in accordance with the associated ingestion policy
      **/
-    private final FeedPolicyEnforcer policyEnforcer;
+    private final FeedPolicyAccessor policyAccessor;
 
     /**
      * A unique identifier for the feed instance. A feed instance represents
@@ -94,7 +94,7 @@ public class FeedMetaStoreNodePushable extends AbstractUnaryInputUnaryOutputOper
         this.ctx = ctx;
         this.insertOperator = (AbstractUnaryInputUnaryOutputOperatorNodePushable) ((IActivity) coreOperator)
                 .createPushRuntime(ctx, recordDescProvider, partition, nPartitions);
-        this.policyEnforcer = new FeedPolicyEnforcer(feedConnectionId, feedPolicyProperties);
+        this.policyAccessor = new FeedPolicyAccessor(feedPolicyProperties);
         this.partition = partition;
         this.connectionId = feedConnectionId;
         this.feedManager = (ActiveManager) ((IAppRuntimeContext) ctx.getJobletContext().getServiceContext()
@@ -130,9 +130,9 @@ public class FeedMetaStoreNodePushable extends AbstractUnaryInputUnaryOutputOper
                 return;
             }
         }
-        if (policyEnforcer.getFeedPolicyAccessor().bufferingEnabled()) {
+        if (policyAccessor.flowControlEnabled()) {
             writer = new FeedRuntimeInputHandler(ctx, connectionId, runtimeId, insertOperator,
-                    policyEnforcer.getFeedPolicyAccessor(), fta, feedManager.getFramePool());
+                    policyAccessor, fta, feedManager.getFramePool());
         } else {
             writer = new SyncFeedRuntimeInputHandler(ctx, insertOperator, fta);
         }

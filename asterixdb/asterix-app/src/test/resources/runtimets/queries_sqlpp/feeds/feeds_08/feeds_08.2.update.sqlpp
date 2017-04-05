@@ -21,6 +21,6 @@ use feeds;
 
 set `wait-for-completion-feed` `true`;
 
-connect  feed SyntheticTweetFeed to  dataset SyntheticTweets using policy `BasicFT`;
+connect  feed SyntheticTweetFeed to  dataset SyntheticTweets using policy `Basic`;
 
 start feed SyntheticTweetFeed;

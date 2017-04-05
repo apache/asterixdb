@@ -32,6 +32,7 @@ import org.apache.asterix.active.ActiveRuntimeId;
 import org.apache.asterix.active.EntityId;
 import org.apache.asterix.active.message.ActiveManagerMessage;
 import org.apache.asterix.app.translator.DefaultStatementExecutorFactory;
+import org.apache.asterix.common.config.CompilerProperties;
 import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.dataflow.LSMTreeInsertDeleteOperatorDescriptor;
 import org.apache.asterix.common.exceptions.ACIDException;
@@ -110,13 +111,15 @@ import org.apache.hyracks.dataflow.std.misc.ReplicateOperatorDescriptor;
  */
 public class FeedOperations {
 
+    private static final CompilerProperties compilerProperties = AppContextInfo.INSTANCE.getCompilerProperties();
+
     private FeedOperations() {
     }
 
     private static Pair<JobSpecification, IAdapterFactory> buildFeedIntakeJobSpec(Feed feed,
             MetadataProvider metadataProvider, FeedPolicyAccessor policyAccessor) throws Exception {
         JobSpecification spec = RuntimeUtils.createJobSpecification();
-        spec.setFrameSize(FeedConstants.JobConstants.DEFAULT_FRAME_SIZE);
+        spec.setFrameSize(compilerProperties.getFrameSize());
         IAdapterFactory adapterFactory;
         IOperatorDescriptor feedIngestor;
         AlgebricksPartitionConstraint ingesterPc;

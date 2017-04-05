@@ -61,7 +61,7 @@ public class FeedCollectOperatorNodePushable extends AbstractUnaryInputUnaryOutp
             ActiveRuntimeId runtimeId =
                     new ActiveRuntimeId(connectionId.getFeedId(), FeedRuntimeType.COLLECT.toString(), partition);
             FrameTupleAccessor tAccessor = new FrameTupleAccessor(recordDesc);
-            if (policyAccessor.bufferingEnabled()) {
+            if (policyAccessor.flowControlEnabled()) {
                 writer = new FeedRuntimeInputHandler(ctx, connectionId, runtimeId, writer, policyAccessor, tAccessor,
                         activeManager.getFramePool());
             } else {

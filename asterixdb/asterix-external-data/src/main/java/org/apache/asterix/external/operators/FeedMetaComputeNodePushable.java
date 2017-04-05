@@ -30,7 +30,6 @@ import org.apache.asterix.external.feed.dataflow.FeedRuntimeInputHandler;
 import org.apache.asterix.external.feed.dataflow.SyncFeedRuntimeInputHandler;
 import org.apache.asterix.external.feed.management.FeedConnectionId;
 import org.apache.asterix.external.feed.policy.FeedPolicyAccessor;
-import org.apache.asterix.external.feed.policy.FeedPolicyEnforcer;
 import org.apache.asterix.external.util.FeedUtils;
 import org.apache.asterix.external.util.FeedUtils.FeedRuntimeType;
 import org.apache.hyracks.api.comm.VSizeFrame;
@@ -55,10 +54,10 @@ public class FeedMetaComputeNodePushable extends AbstractUnaryInputUnaryOutputOp
     private AbstractUnaryInputUnaryOutputOperatorNodePushable coreOperator;
 
     /**
-     * A policy enforcer that ensures dynamic decisions for a feed are taken
+     * A policy accessor that ensures dynamic decisions for a feed are taken
      * in accordance with the associated ingestion policy
      **/
-    private FeedPolicyEnforcer policyEnforcer;
+    private FeedPolicyAccessor policyAccessor;
 
     /**
      * A unique identifier for the feed instance. A feed instance represents
@@ -101,7 +100,7 @@ public class FeedMetaComputeNodePushable extends AbstractUnaryInputUnaryOutputOp
         this.ctx = ctx;
         this.coreOperator = (AbstractUnaryInputUnaryOutputOperatorNodePushable) ((IActivity) coreOperator)
                 .createPushRuntime(ctx, recordDescProvider, partition, nPartitions);
-        this.policyEnforcer = new FeedPolicyEnforcer(feedConnectionId, feedPolicyProperties);
+        this.policyAccessor = new FeedPolicyAccessor(feedPolicyProperties);
         this.partition = partition;
         this.connectionId = feedConnectionId;
         this.feedManager = (ActiveManager) ((IAppRuntimeContext) ctx.getJobletContext().getServiceContext()
@@ -127,9 +126,9 @@ public class FeedMetaComputeNodePushable extends AbstractUnaryInputUnaryOutputOp
 
     private void initializeNewFeedRuntime(ActiveRuntimeId runtimeId) throws Exception {
         fta = new FrameTupleAccessor(recordDescProvider.getInputRecordDescriptor(opDesc.getActivityId(), 0));
-        FeedPolicyAccessor fpa = policyEnforcer.getFeedPolicyAccessor();
+        FeedPolicyAccessor fpa = policyAccessor;
         coreOperator.setOutputFrameWriter(0, writer, recordDesc);
-        if (fpa.bufferingEnabled()) {
+        if (fpa.flowControlEnabled()) {
             writer = new FeedRuntimeInputHandler(ctx, connectionId, runtimeId, coreOperator, fpa, fta,
                     feedManager.getFramePool());
         } else {
