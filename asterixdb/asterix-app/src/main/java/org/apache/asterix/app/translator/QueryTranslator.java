@@ -60,6 +60,7 @@ import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.metadata.IDataset;
 import org.apache.asterix.common.utils.JobUtils;
@@ -2104,6 +2105,11 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         String policyName = cfs.getPolicy();
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
+        // Check whether feed is alive
+        if (ActiveJobNotificationHandler.INSTANCE
+                .getActiveEntityListener(new EntityId(Feed.EXTENSION_NAME, dataverseName, feedName)) != null) {
+            throw new CompilationException(ErrorCode.FEED_CHANGE_FEED_CONNECTIVITY_ON_ALIVE_FEED, feedName);
+        }
         // Transaction handling
         MetadataLockManager.INSTANCE.connectFeedBegin(metadataProvider.getLocks(), dataverseName,
                 dataverseName + "." + datasetName, dataverseName + "." + feedName);
@@ -2139,6 +2145,11 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         String feedName = cfs.getFeedName().getValue();
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
+        // Check whether feed is alive
+        if (ActiveJobNotificationHandler.INSTANCE
+                .getActiveEntityListener(new EntityId(Feed.EXTENSION_NAME, dataverseName, feedName)) != null) {
+            throw new CompilationException(ErrorCode.FEED_CHANGE_FEED_CONNECTIVITY_ON_ALIVE_FEED, feedName);
+        }
         MetadataLockManager.INSTANCE.disconnectFeedBegin(metadataProvider.getLocks(), dataverseName,
                 dataverseName + "." + datasetName, dataverseName + "." + cfs.getFeedName());
         try {

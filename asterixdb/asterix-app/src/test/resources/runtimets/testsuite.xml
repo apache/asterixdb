@@ -254,6 +254,18 @@
         <output-dir compare="Text">connect-feed-with-aql-function</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="feeds">
+      <compilation-unit name="disconnect-live-feed">
+        <output-dir compare="Text">disconnect-live-feed</output-dir>
+        <expected-error>This operation cannot be done when Feed</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="feeds">
+      <compilation-unit name="connect-live-feed">
+        <output-dir compare="Text">connect-live-feed</output-dir>
+        <expected-error>This operation cannot be done when Feed</expected-error>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="upsert">
     <test-case FilePath="upsert">
