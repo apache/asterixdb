@@ -1257,7 +1257,7 @@ This query returns:
         "aid": 2
     } ]
 
-## <a id="Where_having_clauses">WHERE Clauses and HAVING clauses</a>
+## <a id="Where_having_clauses">WHERE Clauses and HAVING Clauses</a>
 Both `WHERE` clauses and `HAVING` clauses are used to filter input data based on a condition expression.
 Only tuples for which the condition expression evaluates to `TRUE` are propagated.
 Note that if the condition expression evaluates to `NULL` or `MISSING` the input tuple will be disgarded.
