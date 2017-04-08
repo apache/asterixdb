@@ -152,22 +152,22 @@ public class SelectBlock implements Clause {
         StringBuilder sb = new StringBuilder();
         sb.append(selectClause);
         if (hasFromClause()) {
-            sb.append(fromClause);
+            sb.append(" " + fromClause);
         }
         if (hasLetClauses()) {
-            sb.append(letClauses);
+            sb.append(" " + letClauses);
         }
         if (hasWhereClause()) {
-            sb.append(whereClause);
+            sb.append(" " + whereClause);
         }
         if (hasGroupbyClause()) {
-            sb.append(groupbyClause);
+            sb.append(" " + groupbyClause);
         }
         if (hasLetClausesAfterGroupby()) {
-            sb.append(letClausesAfterGby);
+            sb.append(" " + letClausesAfterGby);
         }
         if (hasHavingClause()) {
-            sb.append(havingClause);
+            sb.append(" " + havingClause);
         }
         return sb.toString();
     }
