@@ -56,6 +56,14 @@ Thus, "Voice" or "voice" will be evaluated as the same word.
 
 The DDL and DML of TinySocial can be found in [ADM: Modeling Semistructed Data in AsterixDB](primer.html#ADM:_Modeling_Semistructed_Data_in_AsterixDB).
 
+The same query can be also expressed in the SQL++.
+
+        use TinySocial;
+
+        select element {"id":msg.id}
+        from TweetMessages as msg
+        where TinySocial.ftcontains(msg.`message-text`, "voice", {"mode":"any"})
+
 The `Expression1` is an expression that should be evaluable as a string at runtime as in the above example
 where `$msg.message-text` is a string field. The `Expression2` can be a string, an (un)ordered list
 of string value(s), or an expression. In the last case, the given expression should be evaluable
@@ -103,3 +111,13 @@ or “sound is not clear. You may need to install a new system.”
 
        ... where ftcontains($msg.message-text, ["sound", "system"], {"mode":"all"})
        ... where ftcontains($msg.message-text, ["sound", "system"])
+
+
+## <a id="FulltextIndex">Creating and utilizing a Full-text index</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
+
+When there is a full-text index on the field that is being searched, rather than scanning all records,
+AsterixDB can utilize that index to expedite the execution of a FTS query. To create a full-text index,
+you need to specify the index type as `fulltext` in your DDL statement. For instance, the following DDL
+statement create a full-text index on the TweetMessages.message-text attribute.
+
+    create index messageFTSIdx on TweetMessages(message-text) type fulltext;

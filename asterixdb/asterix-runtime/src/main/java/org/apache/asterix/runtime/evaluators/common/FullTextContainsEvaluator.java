@@ -244,7 +244,16 @@ public class FullTextContainsEvaluator implements IScalarEvaluator {
         int queryTokenCount = 0;
         int uniqueQueryTokenCount = 0;
 
+        int numBytesToStoreLength;
+
         // Reset the tokenizer for the given keywords in the given query
+        if (typeTag2 == ATypeTag.STRING) {
+            // How many bytes are required to store the length of the given token?
+            numBytesToStoreLength = UTF8StringUtil
+                    .getNumBytesToStoreLength(UTF8StringUtil.getUTFLength(queryArray, queryArrayStartOffset));
+            queryArrayStartOffset = queryArrayStartOffset + numBytesToStoreLength;
+            queryArrayLength = queryArrayLength - numBytesToStoreLength;
+        }
         tokenizerForRightArray.reset(queryArray, queryArrayStartOffset, queryArrayLength);
 
         // Create tokens from the given query predicate
@@ -256,7 +265,6 @@ public class FullTextContainsEvaluator implements IScalarEvaluator {
             // We don't store the actual value of this token since we can access it via offset and length.
             int tokenOffset = tokenizerForRightArray.getToken().getStartOffset();
             int tokenLength = tokenizerForRightArray.getToken().getTokenLength();
-            int numBytesToStoreLength;
 
             // If a token comes from a string tokenizer, each token doesn't have the length data
             // in the beginning. Instead, if a token comes from an (un)ordered list, each token has
@@ -352,7 +360,14 @@ public class FullTextContainsEvaluator implements IScalarEvaluator {
 
         // The left side: field (document)
         // Resets the tokenizer for the given keywords in a document.
-        tokenizerForLeftArray.reset(arg1.getByteArray(), arg1.getStartOffset(), arg1.getLength());
+
+        // How many bytes are required to store the length of the given string?
+        int numBytesToStoreLength = UTF8StringUtil
+                .getNumBytesToStoreLength(UTF8StringUtil.getUTFLength(arg1.getByteArray(), arg1.getStartOffset()));
+        int startOffset = arg1.getStartOffset() + numBytesToStoreLength;
+        int length = arg1.getLength() - numBytesToStoreLength;
+
+        tokenizerForLeftArray.reset(arg1.getByteArray(), startOffset, length);
 
         // Creates tokens from a field in the left side (document)
         while (tokenizerForLeftArray.hasNext()) {

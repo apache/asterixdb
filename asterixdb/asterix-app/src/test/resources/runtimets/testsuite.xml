@@ -421,6 +421,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="fulltext">
+      <compilation-unit name="fulltext-08">
+        <output-dir compare="Text">fulltext-08</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fulltext">
       <compilation-unit name="fulltext-index-01">
         <output-dir compare="Text">fulltext-index-01</output-dir>
       </compilation-unit>
