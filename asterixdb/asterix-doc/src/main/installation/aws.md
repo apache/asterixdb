@@ -58,6 +58,15 @@
          $ ansible --version
          ansible 2.2.1.0
 
+     **For users with macOS 10.11+**, please create a user-level Ansible configuration file at:
+
+         ~/.ansible.cfg
+
+     and add the following configuration:
+
+         [ssh_connection]
+         control_path = %(directory)s/%%C
+
   *  Download the AsterixDB distribution package, unzip it, navigate to `opt/aws/`
 
          $ cd opt/aws
