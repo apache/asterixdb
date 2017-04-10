@@ -120,6 +120,10 @@ class SqlppQueryRewriter implements IQueryRewriter {
         // Generate ids for variables (considering scopes) and replace global variable access with the dataset function.
         variableCheckAndRewrite(true);
 
+        // Inlines WITH expressions after variableCheckAndRewrite(...) so that the variable scoping for WITH
+        // expression is correct.
+        inlineWithExpressions();
+
         // Rewrites several variable-arg functions into their corresponding internal list-input functions.
         rewriteListInputFunctions();
 
@@ -138,10 +142,6 @@ class SqlppQueryRewriter implements IQueryRewriter {
 
         // Replace global variable access with the dataset function for inlined expressions.
         variableCheckAndRewrite(true);
-
-        // Inlines WITH expressions after variableCheckAndRewrite(...) so that the variable scoping for WITH
-        // expression is correct.
-        inlineWithExpressions();
 
         // Sets the var counter of the query.
         topStatement.setVarCounter(context.getVarCounter());

@@ -216,6 +216,9 @@ public class AbstractSqlppSimpleExpressionVisitor
         for (GbyVariableExpressionPair gbyVarExpr : gc.getGbyPairList()) {
             gbyVarExpr.setExpr(visit(gbyVarExpr.getExpr(), gc));
         }
+        for (GbyVariableExpressionPair decVarExpr : gc.getDecorPairList()) {
+            decVarExpr.setExpr(visit(decVarExpr.getExpr(), gc));
+        }
         return null;
     }
 
