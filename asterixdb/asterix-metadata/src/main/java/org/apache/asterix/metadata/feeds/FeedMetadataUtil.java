@@ -103,7 +103,6 @@ public class FeedMetadataUtil {
             ARecordType adapterOutputType = getOutputType(feed, configuration, ExternalDataConstants.KEY_TYPE_NAME);
             ARecordType metaType = getOutputType(feed, configuration, ExternalDataConstants.KEY_META_TYPE_NAME);
             ExternalDataUtils.prepareFeed(configuration, feed.getDataverseName(), feed.getFeedName());
-            ExternalDataUtils.prepareFeed(configuration, feed.getDataverseName(), feed.getFeedName());
             // Get adapter from metadata dataset <Metadata dataverse>
             DatasourceAdapter adapterEntity = MetadataManager.INSTANCE.getAdapter(mdTxnCtx,
                     MetadataConstants.METADATA_DATAVERSE_NAME, adapterName);
