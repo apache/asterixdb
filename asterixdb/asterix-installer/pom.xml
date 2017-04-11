@@ -256,7 +256,6 @@
         </executions>
         <configuration>
           <usedDependencies combine.children="append">
-            <usedDependency>org.apache.asterix:asterix-external-data</usedDependency>
             <usedDependency>org.apache.asterix:asterix-server</usedDependency>
             <usedDependency>org.apache.hadoop:hadoop-common</usedDependency>
             <usedDependency>org.apache.hadoop:hadoop-hdfs</usedDependency>
@@ -265,6 +264,7 @@
           </usedDependencies>
           <ignoredUnusedDeclaredDependencies>
             <ignoredUnusedDeclaredDependency>org.apache.asterix:asterix-external-data:zip:*</ignoredUnusedDeclaredDependency>
+            <ignoredUnusedDeclaredDependency>org.apache.asterix:asterix-external-data:test-jar:*</ignoredUnusedDeclaredDependency>
           </ignoredUnusedDeclaredDependencies>
         </configuration>
       </plugin>
