@@ -313,15 +313,31 @@ public class LogicalOperatorPrettyPrintVisitor implements ILogicalOperatorVisito
 
     private Void printAbstractUnnestMapOperator(AbstractUnnestMapOperator op, Integer indent, String opSignature)
             throws AlgebricksException {
-        addIndent(indent).append(opSignature + " " + op.getVariables() + " <- "
+        AlgebricksAppendable plan = addIndent(indent).append(opSignature + " " + op.getVariables() + " <- "
                 + op.getExpressionRef().getValue().accept(exprVisitor, indent));
+        appendFilterInformation(plan, op.getMinFilterVars(), op.getMaxFilterVars());
         return null;
     }
 
     @Override
     public Void visitDataScanOperator(DataSourceScanOperator op, Integer indent) throws AlgebricksException {
-        addIndent(indent).append(
+        AlgebricksAppendable plan = addIndent(indent).append(
                 "data-scan " + op.getProjectVariables() + "<-" + op.getVariables() + " <- " + op.getDataSource());
+        appendFilterInformation(plan, op.getMinFilterVars(), op.getMaxFilterVars());
+        return null;
+    }
+
+    private Void appendFilterInformation(AlgebricksAppendable plan, List<LogicalVariable> minFilterVars,
+            List<LogicalVariable> maxFilterVars) throws AlgebricksException {
+        if (minFilterVars != null || maxFilterVars != null) {
+            plan.append(" with filter on");
+        }
+        if (minFilterVars != null) {
+            plan.append(" min:" + minFilterVars);
+        }
+        if (maxFilterVars != null) {
+            plan.append(" max:" + maxFilterVars);
+        }
         return null;
     }
 
