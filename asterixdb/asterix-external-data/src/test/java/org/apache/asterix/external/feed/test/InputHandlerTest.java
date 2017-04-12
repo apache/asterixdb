@@ -48,14 +48,13 @@ import org.apache.hyracks.api.test.TestControlledFrameWriter;
 import org.apache.hyracks.api.test.TestFrameWriter;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.test.support.TestUtils;
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 import org.mockito.Mockito;
 
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
-
-public class InputHandlerTest extends TestCase {
+public class InputHandlerTest {
 
     private static final int DEFAULT_FRAME_SIZE = 32768;
     private static final int NUM_FRAMES = 128;
@@ -67,14 +66,6 @@ public class InputHandlerTest extends TestCase {
     private static final float DISCARD_ALLOWANCE = 0.15f;
     private static final ExecutorService EXECUTOR = Executors.newFixedThreadPool(1);
     private volatile static HyracksDataException cause = null;
-
-    public InputHandlerTest(String testName) {
-        super(testName);
-    }
-
-    public static Test suite() {
-        return new TestSuite(InputHandlerTest.class);
-    }
 
     private FeedRuntimeInputHandler createInputHandler(IHyracksTaskContext ctx, IFrameWriter writer,
             FeedPolicyAccessor fpa, ConcurrentFramePool framePool) throws HyracksDataException {
@@ -122,12 +113,12 @@ public class InputHandlerTest extends TestCase {
         }
     }
 
-    @org.junit.Before
+    @Before
     public void testCleanBefore() throws IOException {
         cleanDiskFiles();
     }
 
-    @org.junit.After
+    @After
     public void testCleanAfter() throws IOException {
         cleanDiskFiles();
     }
@@ -139,11 +130,11 @@ public class InputHandlerTest extends TestCase {
             Random random = new Random();
             IHyracksTaskContext ctx = TestUtils.create(DEFAULT_FRAME_SIZE);
             // No spill, No discard
-            FeedPolicyAccessor fpa = createFeedPolicyAccessor(true, false, NUM_FRAMES * DEFAULT_FRAME_SIZE,
-                    DISCARD_ALLOWANCE);
+            FeedPolicyAccessor fpa =
+                    createFeedPolicyAccessor(true, false, NUM_FRAMES * DEFAULT_FRAME_SIZE, DISCARD_ALLOWANCE);
             // Non-Active Writer
-            TestFrameWriter writer = FrameWriterTestUtils.create(Collections.emptyList(), Collections.emptyList(),
-                    false);
+            TestFrameWriter writer =
+                    FrameWriterTestUtils.create(Collections.emptyList(), Collections.emptyList(), false);
             // FramePool
             ConcurrentFramePool framePool = new ConcurrentFramePool(NODE_ID, 0, DEFAULT_FRAME_SIZE);
             FeedRuntimeInputHandler handler = createInputHandler(ctx, writer, fpa, framePool);
@@ -175,17 +166,17 @@ public class InputHandlerTest extends TestCase {
         }
     }
 
-    @org.junit.Test
+    @Test
     public void testZeroMemoryFixedSizeFrameWithDiskNoDiscard() {
         try {
             int numRounds = 10;
             IHyracksTaskContext ctx = TestUtils.create(DEFAULT_FRAME_SIZE);
             // No spill, No discard
-            FeedPolicyAccessor fpa = createFeedPolicyAccessor(true, false, NUM_FRAMES * DEFAULT_FRAME_SIZE,
-                    DISCARD_ALLOWANCE);
+            FeedPolicyAccessor fpa =
+                    createFeedPolicyAccessor(true, false, NUM_FRAMES * DEFAULT_FRAME_SIZE, DISCARD_ALLOWANCE);
             // Non-Active Writer
-            TestFrameWriter writer = FrameWriterTestUtils.create(Collections.emptyList(), Collections.emptyList(),
-                    false);
+            TestFrameWriter writer =
+                    FrameWriterTestUtils.create(Collections.emptyList(), Collections.emptyList(), false);
             // FramePool
             ConcurrentFramePool framePool = new ConcurrentFramePool(NODE_ID, 0, DEFAULT_FRAME_SIZE);
             FeedRuntimeInputHandler handler = createInputHandler(ctx, writer, fpa, framePool);
@@ -213,7 +204,6 @@ public class InputHandlerTest extends TestCase {
         } finally {
             Assert.assertNull(cause);
         }
-
     }
 
     /*
@@ -221,7 +211,7 @@ public class InputHandlerTest extends TestCase {
      * Discard = true; discard only 5%
      * Fixed size frames
      */
-    @org.junit.Test
+    @Test
     public void testMemoryVarSizeFrameWithSpillWithDiscard() {
         try {
             int numberOfMemoryFrames = 50;
@@ -230,14 +220,14 @@ public class InputHandlerTest extends TestCase {
             int totalMinFrames = 0;
             IHyracksTaskContext ctx = TestUtils.create(DEFAULT_FRAME_SIZE);
             // Spill budget = Memory budget, No discard
-            FeedPolicyAccessor fpa = createFeedPolicyAccessor(true, true, DEFAULT_FRAME_SIZE * numberOfSpillFrames,
-                    DISCARD_ALLOWANCE);
+            FeedPolicyAccessor fpa =
+                    createFeedPolicyAccessor(true, true, DEFAULT_FRAME_SIZE * numberOfSpillFrames, DISCARD_ALLOWANCE);
             // Non-Active Writer
             TestControlledFrameWriter writer = FrameWriterTestUtils.create(DEFAULT_FRAME_SIZE, false);
             writer.freeze();
             // FramePool
-            ConcurrentFramePool framePool = new ConcurrentFramePool(NODE_ID, numberOfMemoryFrames * DEFAULT_FRAME_SIZE,
-                    DEFAULT_FRAME_SIZE);
+            ConcurrentFramePool framePool =
+                    new ConcurrentFramePool(NODE_ID, numberOfMemoryFrames * DEFAULT_FRAME_SIZE, DEFAULT_FRAME_SIZE);
             FeedRuntimeInputHandler handler = createInputHandler(ctx, writer, fpa, framePool);
             handler.open();
             ByteBuffer buffer1 = ByteBuffer.allocate(DEFAULT_FRAME_SIZE);
@@ -300,8 +290,8 @@ public class InputHandlerTest extends TestCase {
             Assert.assertEquals(0, handler.getNumDiscarded());
             // We can only discard one frame
             double numDiscarded = 0;
-            boolean nextShouldDiscard = ((numDiscarded + 1.0) / (handler.getTotal() + 1.0)) <= fpa
-                    .getMaxFractionDiscard();
+            boolean nextShouldDiscard =
+                    ((numDiscarded + 1.0) / (handler.getTotal() + 1.0)) <= fpa.getMaxFractionDiscard();
             while (nextShouldDiscard) {
                 handler.nextFrame(buffer5);
                 numDiscarded++;
@@ -333,21 +323,21 @@ public class InputHandlerTest extends TestCase {
      * Discard = true
      * Fixed size frames
      */
-    @org.junit.Test
+    @Test
     public void testMemoryFixedSizeFrameWithSpillWithDiscard() {
         try {
             int numberOfMemoryFrames = 50;
             int numberOfSpillFrames = 50;
             IHyracksTaskContext ctx = TestUtils.create(DEFAULT_FRAME_SIZE);
             // Spill budget = Memory budget, No discard
-            FeedPolicyAccessor fpa = createFeedPolicyAccessor(true, true, DEFAULT_FRAME_SIZE * numberOfSpillFrames,
-                    DISCARD_ALLOWANCE);
+            FeedPolicyAccessor fpa =
+                    createFeedPolicyAccessor(true, true, DEFAULT_FRAME_SIZE * numberOfSpillFrames, DISCARD_ALLOWANCE);
             // Non-Active Writer
             TestControlledFrameWriter writer = FrameWriterTestUtils.create(DEFAULT_FRAME_SIZE, false);
             writer.freeze();
             // FramePool
-            ConcurrentFramePool framePool = new ConcurrentFramePool(NODE_ID, numberOfMemoryFrames * DEFAULT_FRAME_SIZE,
-                    DEFAULT_FRAME_SIZE);
+            ConcurrentFramePool framePool =
+                    new ConcurrentFramePool(NODE_ID, numberOfMemoryFrames * DEFAULT_FRAME_SIZE, DEFAULT_FRAME_SIZE);
             FeedRuntimeInputHandler handler = createInputHandler(ctx, writer, fpa, framePool);
             handler.open();
             VSizeFrame frame = new VSizeFrame(ctx);
@@ -370,8 +360,8 @@ public class InputHandlerTest extends TestCase {
             Assert.assertEquals(0, handler.getNumDiscarded());
             // We can only discard one frame
             double numDiscarded = 0;
-            boolean nextShouldDiscard = ((numDiscarded + 1.0) / (handler.getTotal() + 1.0)) <= fpa
-                    .getMaxFractionDiscard();
+            boolean nextShouldDiscard =
+                    ((numDiscarded + 1.0) / (handler.getTotal() + 1.0)) <= fpa.getMaxFractionDiscard();
             while (nextShouldDiscard) {
                 handler.nextFrame(frame.getBuffer());
                 numDiscarded++;
@@ -407,7 +397,7 @@ public class InputHandlerTest extends TestCase {
      * Discard = true; discard only 5%
      * Fixed size frames
      */
-    @org.junit.Test
+    @Test
     public void testMemoryVariableSizeFrameNoSpillWithDiscard() {
         try {
             int discardTestFrames = 100;
@@ -419,8 +409,8 @@ public class InputHandlerTest extends TestCase {
             TestControlledFrameWriter writer = FrameWriterTestUtils.create(DEFAULT_FRAME_SIZE, false);
             writer.freeze();
             // FramePool
-            ConcurrentFramePool framePool = new ConcurrentFramePool(NODE_ID, discardTestFrames * DEFAULT_FRAME_SIZE,
-                    DEFAULT_FRAME_SIZE);
+            ConcurrentFramePool framePool =
+                    new ConcurrentFramePool(NODE_ID, discardTestFrames * DEFAULT_FRAME_SIZE, DEFAULT_FRAME_SIZE);
             FeedRuntimeInputHandler handler = createInputHandler(ctx, writer, fpa, framePool);
             handler.open();
             // add NUM_FRAMES times
@@ -436,8 +426,8 @@ public class InputHandlerTest extends TestCase {
             }
             // Next call should NOT block but should discard.
             double numDiscarded = 0.0;
-            boolean nextShouldDiscard = ((numDiscarded + 1.0) / (handler.getTotal() + 1.0)) <= fpa
-                    .getMaxFractionDiscard();
+            boolean nextShouldDiscard =
+                    ((numDiscarded + 1.0) / (handler.getTotal() + 1.0)) <= fpa.getMaxFractionDiscard();
             while (nextShouldDiscard) {
                 handler.nextFrame(buffer);
                 numDiscarded++;
@@ -448,9 +438,9 @@ public class InputHandlerTest extends TestCase {
                 Assert.fail("The producer should switch to stall mode since it is exceeding the discard allowance");
             } else {
                 // Check that no records were discarded
-                assertEquals((int) numDiscarded, handler.getNumDiscarded());
+                Assert.assertEquals((int) numDiscarded, handler.getNumDiscarded());
                 // Check that one frame is spilled
-                assertEquals(handler.getNumSpilled(), 0);
+                Assert.assertEquals(handler.getNumSpilled(), 0);
             }
             // consume memory frames
             writer.unfreeze();
@@ -470,7 +460,7 @@ public class InputHandlerTest extends TestCase {
      * Discard = true; discard only 5%
      * Fixed size frames
      */
-    @org.junit.Test
+    @Test
     public void testMemoryFixedSizeFrameNoSpillWithDiscard() {
         try {
             int discardTestFrames = 100;
@@ -481,8 +471,8 @@ public class InputHandlerTest extends TestCase {
             TestControlledFrameWriter writer = FrameWriterTestUtils.create(DEFAULT_FRAME_SIZE, false);
             writer.freeze();
             // FramePool
-            ConcurrentFramePool framePool = new ConcurrentFramePool(NODE_ID, discardTestFrames * DEFAULT_FRAME_SIZE,
-                    DEFAULT_FRAME_SIZE);
+            ConcurrentFramePool framePool =
+                    new ConcurrentFramePool(NODE_ID, discardTestFrames * DEFAULT_FRAME_SIZE, DEFAULT_FRAME_SIZE);
             FeedRuntimeInputHandler handler = createInputHandler(ctx, writer, fpa, framePool);
             handler.open();
             VSizeFrame frame = new VSizeFrame(ctx);
@@ -492,8 +482,8 @@ public class InputHandlerTest extends TestCase {
             }
             // Next 5 calls call should NOT block but should discard.
             double numDiscarded = 0.0;
-            boolean nextShouldDiscard = ((numDiscarded + 1.0) / (handler.getTotal() + 1.0)) <= fpa
-                    .getMaxFractionDiscard();
+            boolean nextShouldDiscard =
+                    ((numDiscarded + 1.0) / (handler.getTotal() + 1.0)) <= fpa.getMaxFractionDiscard();
             while (nextShouldDiscard) {
                 handler.nextFrame(frame.getBuffer());
                 numDiscarded++;
@@ -505,9 +495,9 @@ public class InputHandlerTest extends TestCase {
                 Assert.fail("The producer should switch to stall mode since it is exceeding the discard allowance");
             } else {
                 // Check that no records were discarded
-                assertEquals((int) numDiscarded, handler.getNumDiscarded());
+                Assert.assertEquals((int) numDiscarded, handler.getNumDiscarded());
                 // Check that one frame is spilled
-                assertEquals(handler.getNumSpilled(), 0);
+                Assert.assertEquals(handler.getNumSpilled(), 0);
             }
             // consume memory frames
             writer.unfreeze();
@@ -527,13 +517,13 @@ public class InputHandlerTest extends TestCase {
      * Discard = false;
      * Fixed size frames
      */
-    @org.junit.Test
+    @Test
     public void testMemoryFixedSizeFrameWithSpillNoDiscard() {
         try {
             IHyracksTaskContext ctx = TestUtils.create(DEFAULT_FRAME_SIZE);
             // Spill budget = Memory budget, No discard
-            FeedPolicyAccessor fpa = createFeedPolicyAccessor(true, false, DEFAULT_FRAME_SIZE * NUM_FRAMES,
-                    DISCARD_ALLOWANCE);
+            FeedPolicyAccessor fpa =
+                    createFeedPolicyAccessor(true, false, DEFAULT_FRAME_SIZE * NUM_FRAMES, DISCARD_ALLOWANCE);
             // Non-Active Writer
             TestControlledFrameWriter writer = FrameWriterTestUtils.create(DEFAULT_FRAME_SIZE, false);
             writer.freeze();
@@ -550,9 +540,9 @@ public class InputHandlerTest extends TestCase {
             Future<?> result = EXECUTOR.submit(new Pusher(frame.getBuffer(), handler));
             result.get();
             // Check that no records were discarded
-            assertEquals(handler.getNumDiscarded(), 0);
+            Assert.assertEquals(handler.getNumDiscarded(), 0);
             // Check that one frame is spilled
-            assertEquals(handler.getNumSpilled(), 1);
+            Assert.assertEquals(handler.getNumSpilled(), 1);
             // consume memory frames
             writer.unfreeze();
             handler.close();
@@ -571,7 +561,7 @@ public class InputHandlerTest extends TestCase {
      * Fixed size frames
      * Very fast next operator
      */
-    @org.junit.Test
+    @Test
     public void testMemoryFixedSizeFrameNoDiskNoDiscardFastConsumer() {
         try {
             int numRounds = 10;
@@ -579,8 +569,8 @@ public class InputHandlerTest extends TestCase {
             // No spill, No discard
             FeedPolicyAccessor fpa = createFeedPolicyAccessor(false, false, 0L, DISCARD_ALLOWANCE);
             // Non-Active Writer
-            TestFrameWriter writer = FrameWriterTestUtils.create(Collections.emptyList(), Collections.emptyList(),
-                    false);
+            TestFrameWriter writer =
+                    FrameWriterTestUtils.create(Collections.emptyList(), Collections.emptyList(), false);
             // FramePool
             ConcurrentFramePool framePool = new ConcurrentFramePool(NODE_ID, FEED_MEM_BUDGET, DEFAULT_FRAME_SIZE);
             FeedRuntimeInputHandler handler = createInputHandler(ctx, writer, fpa, framePool);
@@ -612,7 +602,7 @@ public class InputHandlerTest extends TestCase {
      * Fixed size frames
      * Slow next operator
      */
-    @org.junit.Test
+    @Test
     public void testMemoryFixedSizeFrameNoDiskNoDiscardSlowConsumer() {
         try {
             int numRounds = 10;
@@ -620,8 +610,8 @@ public class InputHandlerTest extends TestCase {
             // No spill, No discard
             FeedPolicyAccessor fpa = createFeedPolicyAccessor(false, false, 0L, DISCARD_ALLOWANCE);
             // Non-Active Writer
-            TestFrameWriter writer = FrameWriterTestUtils.create(Collections.emptyList(), Collections.emptyList(),
-                    false);
+            TestFrameWriter writer =
+                    FrameWriterTestUtils.create(Collections.emptyList(), Collections.emptyList(), false);
             // FramePool
             ConcurrentFramePool framePool = new ConcurrentFramePool(NODE_ID, FEED_MEM_BUDGET, DEFAULT_FRAME_SIZE);
             FeedRuntimeInputHandler handler = createInputHandler(ctx, writer, fpa, framePool);
@@ -653,6 +643,7 @@ public class InputHandlerTest extends TestCase {
      * Discard = false
      * VarSizeFrame
      */
+    @Test
     public void testMemoryVarSizeFrameNoDiskNoDiscard() {
         try {
             Random random = new Random();
@@ -682,12 +673,13 @@ public class InputHandlerTest extends TestCase {
                 Assert.fail();
             }
             // Check that no records were discarded
-            assertEquals(handler.getNumDiscarded(), 0);
+            Assert.assertEquals(handler.getNumDiscarded(), 0);
             // Check that no records were spilled
-            assertEquals(handler.getNumSpilled(), 0);
+            Assert.assertEquals(handler.getNumSpilled(), 0);
             // Check that number of stalled is not greater than 1
             Assert.assertTrue(handler.getNumStalled() <= 1);
             writer.unfreeze();
+            handler.close();
             result.get();
         } catch (Throwable th) {
             th.printStackTrace();
@@ -701,15 +693,15 @@ public class InputHandlerTest extends TestCase {
      * Discard = false;
      * Variable size frames
      */
-    @org.junit.Test
+    @Test
     public void testMemoryVarSizeFrameWithSpillNoDiscard() {
         for (int k = 0; k < 1000; k++) {
             try {
                 Random random = new Random();
                 IHyracksTaskContext ctx = TestUtils.create(DEFAULT_FRAME_SIZE);
                 // Spill budget = Memory budget, No discard
-                FeedPolicyAccessor fpa = createFeedPolicyAccessor(true, false, DEFAULT_FRAME_SIZE * NUM_FRAMES,
-                        DISCARD_ALLOWANCE);
+                FeedPolicyAccessor fpa =
+                        createFeedPolicyAccessor(true, false, DEFAULT_FRAME_SIZE * NUM_FRAMES, DISCARD_ALLOWANCE);
                 // Non-Active Writer
                 TestControlledFrameWriter writer = FrameWriterTestUtils.create(DEFAULT_FRAME_SIZE, false);
                 writer.freeze();
@@ -719,8 +711,10 @@ public class InputHandlerTest extends TestCase {
                 handler.open();
                 ByteBuffer buffer = ByteBuffer.allocate(DEFAULT_FRAME_SIZE);
                 int multiplier = 1;
+                int numOfBuffersInMemory = 0;
                 // add NUM_FRAMES times
                 while ((multiplier <= framePool.remaining())) {
+                    numOfBuffersInMemory++;
                     handler.nextFrame(buffer);
                     multiplier = random.nextInt(10) + 1;
                     buffer = ByteBuffer.allocate(DEFAULT_FRAME_SIZE * multiplier);
@@ -729,12 +723,11 @@ public class InputHandlerTest extends TestCase {
                 Future<?> result = EXECUTOR.submit(new Pusher(buffer, handler));
                 result.get();
                 // Check that no records were discarded
-                assertEquals(handler.getNumDiscarded(), 0);
+                Assert.assertEquals(handler.getNumDiscarded(), 0);
                 // Check that one frame is spilled
-                assertEquals(handler.getNumSpilled(), 1);
-                int numOfBuffersInMemory = handler.getInternalBuffer().size();
+                Assert.assertEquals(handler.getNumSpilled(), 1);
                 // consume memory frames
-                while (numOfBuffersInMemory > 0) {
+                while (numOfBuffersInMemory > 1) {
                     writer.kick();
                     numOfBuffersInMemory--;
                 }
@@ -756,7 +749,7 @@ public class InputHandlerTest extends TestCase {
      * Discard = false;
      * Fixed size frames
      */
-    @org.junit.Test
+    @Test
     public void testMemoryFixedSizeFrameNoDiskNoDiscard() {
         try {
             IHyracksTaskContext ctx = TestUtils.create(DEFAULT_FRAME_SIZE);
