@@ -1,0 +1,76 @@
+<!--
+ ! Licensed to the Apache Software Foundation (ASF) under one
+ ! or more contributor license agreements.  See the NOTICE file
+ ! distributed with this work for additional information
+ ! regarding copyright ownership.  The ASF licenses this file
+ ! to you under the Apache License, Version 2.0 (the
+ ! "License"); you may not use this file except in compliance
+ ! with the License.  You may obtain a copy of the License at
+ !
+ !   http://www.apache.org/licenses/LICENSE-2.0
+ !
+ ! Unless required by applicable law or agreed to in writing,
+ ! software distributed under the License is distributed on an
+ ! "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ ! KIND, either express or implied.  See the License for the
+ ! specific language governing permissions and limitations
+ ! under the License.
+ !-->
+<cluster xmlns="cluster">
+
+  <name>asterix</name>
+
+  <username>root</username>
+
+  <working_dir>
+    <dir>/asterixdb/asterix/managix-working</dir>
+    <NFS>false</NFS>
+  </working_dir>
+
+  <log_dir>/asterixdb/data/logs/</log_dir>
+  <txn_log_dir>/asterixdb/data/tx_logs</txn_log_dir>
+  <iodevices>/asterixdb/data/p1,/asterixdb/data/p2</iodevices>
+
+  <store>storage</store>
+
+  <java_home>/usr/lib/jvm/jre-1.8.0</java_home>
+  <metadata_node>nc1</metadata_node>
+
+  <high_availability>
+    <enabled>true</enabled>
+    <data_replication>
+      <strategy>chained_declustering</strategy>
+      <replication_port>2016</replication_port>
+      <replication_time_out>30</replication_time_out>
+      <replication_factor>2</replication_factor>
+    </data_replication>
+    <fault_tolerance>
+       <strategy>auto</strategy>
+    </fault_tolerance>
+  </high_availability>
+
+  <master_node>
+    <id>cc</id>
+    <client_ip>172.20.0.2</client_ip>
+    <cluster_ip>172.20.0.2</cluster_ip>
+    <client_port>1098</client_port>
+    <cluster_port>1099</cluster_port>
+    <http_port>8888</http_port>
+  </master_node>
+  <node>
+    <id>nc1</id>
+    <cluster_ip>172.20.0.3</cluster_ip>
+  </node>
+  <node>
+    <id>nc2</id>
+    <cluster_ip>172.20.0.4</cluster_ip>
+  </node>
+  <node>
+    <id>nc3</id>
+    <cluster_ip>172.20.0.5</cluster_ip>
+  </node>
+  <node>
+    <id>nc4</id>
+    <cluster_ip>172.20.0.6</cluster_ip>
+  </node>
+</cluster>

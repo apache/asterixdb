@@ -300,6 +300,8 @@
             <exclude>src/test/resources/clusterts/id_rsa</exclude>
             <exclude>src/test/resources/clusterts/id_rsa.pub</exclude>
             <exclude>src/test/resources/clusterts/known_hosts</exclude>
+            <exclude>src/test/resources/docker/id_rsa</exclude>
+            <exclude>src/test/resources/docker/id_rsa.pub</exclude>
             <exclude>src/test/resources/transactionts/results/query_after_restart/big_object_20M/big_object_20M.1.adm.template</exclude>
             <exclude>src/test/resources/integrationts/restart/tweets.json</exclude> <!-- https://issues.apache.org/jira/browse/ASTERIXDB-1850 -->
           </excludes>

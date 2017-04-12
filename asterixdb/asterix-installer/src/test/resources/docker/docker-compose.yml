@@ -1,0 +1,116 @@
+#/*
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
+version: "3.1"
+
+services:
+  cc:
+    image: asterix-test
+    container_name: cc
+    stdin_open: true
+    tty: true
+    volumes:
+        - ./asterix:/asterix
+    deploy:
+      resources:
+        limits:
+          memory: 1024M
+    networks:
+      asterix_net:
+        ipv4_address: 172.20.0.2
+    ports:
+      - "19001:19001"
+
+  nc1:
+    image: asterix-test
+    container_name: nc1
+    stdin_open: true
+    tty: true
+    volumes:
+        - ./asterix:/asterix
+    deploy:
+      resources:
+        limits:
+          memory: 2560M
+    networks:
+      asterix_net:
+        ipv4_address: 172.20.0.3
+    ports:
+      - "6001:15001"
+
+  nc2:
+    image: asterix-test
+    container_name: nc2
+    stdin_open: true
+    tty: true
+    volumes:
+      - ./asterix:/asterix
+    deploy:
+      resources:
+        limits:
+          memory: 2560M
+    networks:
+      asterix_net:
+        ipv4_address: 172.20.0.4
+    ports:
+      - "6002:15001"
+
+  nc3:
+    image: asterix-test
+    container_name: nc3
+    stdin_open: true
+    tty: true
+    volumes:
+      - ./asterix:/asterix
+    deploy:
+      resources:
+        limits:
+          memory: 2560M
+    networks:
+      asterix_net:
+        ipv4_address: 172.20.0.5
+    ports:
+        - "6003:15001"
+
+  nc4:
+    image: asterix-test
+    container_name: nc4
+    stdin_open: true
+    tty: true
+    volumes:
+      - ./asterix:/asterix
+    deploy:
+      resources:
+        limits:
+          memory: 2560M
+    networks:
+      asterix_net:
+        ipv4_address: 172.20.0.6
+    ports:
+        - "6004:15001"
+
+
+networks:
+  asterix_net:
+    driver: bridge
+    driver_opts:
+      com.docker.network.enable_ipv6: "false"
+    ipam:
+      driver: default
+      config:
+      - subnet: 172.20.0.0/24
