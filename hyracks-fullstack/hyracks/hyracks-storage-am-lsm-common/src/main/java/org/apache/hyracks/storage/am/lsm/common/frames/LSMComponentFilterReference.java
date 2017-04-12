@@ -103,13 +103,14 @@ public class LSMComponentFilterReference implements ILSMComponentFilterReference
             }
             binaryFilter.setSize(binarySize);
             byte[] buf = binaryFilter.getByteArray();
-            BooleanPointable.setBoolean(buf, MIN_SET_INDICATOR_OFFSET, min.getLength() == 0);
-            BooleanPointable.setBoolean(buf, MAX_SET_INDICATOR_OFFSET, max.getLength() == 0);
+            BooleanPointable.setBoolean(buf, MIN_SET_INDICATOR_OFFSET, min.getLength() > 0);
+            BooleanPointable.setBoolean(buf, MAX_SET_INDICATOR_OFFSET, max.getLength() > 0);
             int offset = 2;
             if (min.getLength() > 0) {
                 IntegerPointable.setInteger(buf, offset, min.getLength());
                 offset += Integer.BYTES;
                 System.arraycopy(min.getByteArray(), 0, buf, offset, min.getLength());
+                offset += min.getLength();
             }
             if (max.getLength() > 0) {
                 IntegerPointable.setInteger(buf, offset, max.getLength());
@@ -127,6 +128,9 @@ public class LSMComponentFilterReference implements ILSMComponentFilterReference
 
     @Override
     public int getLength() {
+        if (binaryFilter.getLength() <= 0 && (isMinTupleSet() || isMaxTupleSet())) {
+            getByteArray();
+        }
         return binaryFilter.getLength();
     }
 
