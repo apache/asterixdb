@@ -157,11 +157,13 @@
         <output-dir compare="Text">change-feed</output-dir>
       </compilation-unit>
     </test-case>
+    <!-- see ASTERIXDB-1881
     <test-case FilePath="feeds">
       <compilation-unit name="feed-with-meta-pk-in-meta">
         <output-dir compare="Text">feed-with-meta-pk-in-meta</output-dir>
       </compilation-unit>
     </test-case>
+    -->
     <test-case FilePath="feeds">
       <compilation-unit name="feeds_07">
         <output-dir compare="Text">feeds_07</output-dir>
@@ -3306,11 +3308,13 @@
         <output-dir compare="Text">query_dataset_with_meta-2</output-dir>
       </compilation-unit>
     </test-case>
+    <!-- see ASTERIXDB-1881
     <test-case FilePath="meta">
       <compilation-unit name="query_dataset_with_meta_primary_index-1">
         <output-dir compare="Text">query_dataset_with_meta_primary_index-1</output-dir>
       </compilation-unit>
     </test-case>
+    -->
     <test-case FilePath="meta">
       <compilation-unit name="query_dataset_with_meta_failure">
         <output-dir compare="Text">query_dataset_with_meta_failure</output-dir>

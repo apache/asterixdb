@@ -46,13 +46,12 @@ import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.junit.Assert;
-import org.junit.Test;
 
 public class RecordWithMetaTest {
     private static ARecordType recordType;
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    @Test
+    // @Test commented out due to ASTERIXDB-1881
     public void runTest() throws Exception {
         File file = new File("target/beer.adm");
         File expected = new File(getClass().getResource("/openbeerdb/beer.txt").toURI().getPath());

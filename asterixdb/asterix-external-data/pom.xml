@@ -157,8 +157,8 @@
             <license implementation="org.apache.rat.analysis.license.SimplePatternBasedLicense">
               <licenseFamilyCategory>Kermit</licenseFamilyCategory>
               <licenseFamilyName>Kermit Project</licenseFamilyName>
-              <notes>The UTF-8 sample "I Can Eat Glass" from The Kermit Project</notes>
-              <patterns>"I Can Eat Glass" -- taken from http://kermitproject.org/utf8.html</patterns>
+              <notes>The UTF-8 sample "I Can Eat Glass" from The Kermit Project (license in LICENSE file)</notes>
+              <patterns>Copyright © 1981-2011, Trustees of Columbia University in the City of New York. All rights reserved.</patterns>
             </license>
           </licenses>
           <licenseFamilies combine.children="append">
@@ -167,7 +167,6 @@
             </licenseFamily>
           </licenseFamilies>
           <excludes combine.children="append">
-            <exclude>src/test/resources/openbeerdb/**</exclude> <!-- OpenBeerDB (license in LICENSE file) -->
             <exclude>src/test/resources/classad/**</exclude> <!-- HTCondor (license in LICENSE file) -->
             <exclude>src/test/resources/record.json</exclude> <!-- https://issues.apache.org/jira/browse/ASTERIXDB-1850 -->
             <exclude>src/test/resources/change_feed.csv</exclude>

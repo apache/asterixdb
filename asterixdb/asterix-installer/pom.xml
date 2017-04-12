@@ -219,12 +219,6 @@
               <overwrite>true</overwrite>
               <resources>
                 <resource>
-                  <directory>../asterix-external-data/src/test/resources/openbeerdb</directory>
-                  <includes>
-                    <include>beer.csv</include>
-                  </includes>
-                </resource>
-                <resource>
                   <directory>../asterix-app/data/external-parser</directory>
                   <includes>
                     <include>jobads.new</include>

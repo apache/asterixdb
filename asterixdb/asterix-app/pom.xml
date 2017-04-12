@@ -94,7 +94,6 @@
                 <resource>
                   <directory>../asterix-external-data/src/test/resources</directory>
                   <includes>
-                    <include>openbeerdb/beer.csv</include>
                     <include>change_feed.csv</include>
                   </includes>
                 </resource>

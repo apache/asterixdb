@@ -1,6 +1,8 @@
 #
 # "I Can Eat Glass" -- taken from http://kermitproject.org/utf8.html (Wed Mar 15 10:28:55 2017)
 #
+# Copyright © 1981-2011, Trustees of Columbia University in the City of New York. All rights reserved.
+#
 Sanskrit: ﻿काचं शक्नोम्यत्तुम् । नोपहिनस्ति माम् ॥
 Sanskrit (standard transcription): kācaṃ śaknomyattum; nopahinasti mām.
 Classical Greek: ὕαλον ϕαγεῖν δύναμαι· τοῦτο οὔ με βλάπτει.

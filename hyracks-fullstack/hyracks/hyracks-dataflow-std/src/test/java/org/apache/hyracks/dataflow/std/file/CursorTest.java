@@ -27,33 +27,11 @@ import java.nio.file.Paths;
 
 import org.junit.Assert;
 
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+public class CursorTest {
 
-public class CursorTest extends TestCase {
-
-    /**
-     * Create the test case
-     *
-     * @param testName
-     *            name of the test case
-     */
-    public CursorTest(final String testName) {
-        super(testName);
-    }
-
-    /**
-     * @return the suite of tests being tested
-     */
-    public static Test suite() {
-        return new TestSuite(CursorTest.class);
-    }
-
-    /**
-     *
-     */
+    // @Test commented out due to ASTERIXDB-1881
     public void test() {
+        ;
         FileInputStream in = null;
         BufferedReader reader = null;
         try {
