@@ -24,6 +24,7 @@ import static org.apache.asterix.api.http.servlet.ServletConstants.HYRACKS_CONNE
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -52,6 +53,7 @@ import org.apache.asterix.app.cc.ResourceIdManager;
 import org.apache.asterix.app.external.ExternalLibraryUtils;
 import org.apache.asterix.app.replication.FaultToleranceStrategyFactory;
 import org.apache.asterix.common.api.AsterixThreadFactory;
+import org.apache.asterix.common.api.IClusterManagementWork.ClusterState;
 import org.apache.asterix.common.config.AsterixExtension;
 import org.apache.asterix.common.config.ClusterProperties;
 import org.apache.asterix.common.config.ExternalProperties;
@@ -71,6 +73,7 @@ import org.apache.asterix.metadata.bootstrap.AsterixStateProxy;
 import org.apache.asterix.metadata.cluster.ClusterManagerProvider;
 import org.apache.asterix.runtime.job.resource.JobCapacityController;
 import org.apache.asterix.runtime.utils.AppContextInfo;
+import org.apache.asterix.runtime.utils.ClusterStateManager;
 import org.apache.asterix.translator.IStatementExecutorFactory;
 import org.apache.hyracks.api.application.ICCServiceContext;
 import org.apache.hyracks.api.application.IServiceContext;
@@ -194,7 +197,7 @@ public class CCApplication extends BaseCCApplication {
         jsonAPIServer.setAttribute(HYRACKS_CONNECTION_ATTR, hcc);
         jsonAPIServer.setAttribute(ASTERIX_APP_CONTEXT_INFO_ATTR, AppContextInfo.INSTANCE);
         jsonAPIServer.setAttribute(ServletConstants.EXECUTOR_SERVICE_ATTR,
-                ((ClusterControllerService) ccServiceCtx.getControllerService()).getExecutor());
+                ccServiceCtx.getControllerService().getExecutor());
 
         // AQL rest APIs.
         addServlet(jsonAPIServer, Servlets.AQL_QUERY);
@@ -291,13 +294,16 @@ public class CCApplication extends BaseCCApplication {
     }
 
     private IStatementExecutorFactory getStatementExecutorFactory() {
-        return ccExtensionManager.getStatementExecutorFactory(
-                ((ClusterControllerService) ccServiceCtx.getControllerService()).getExecutor());
+        return ccExtensionManager.getStatementExecutorFactory(ccServiceCtx.getControllerService().getExecutor());
     }
 
     @Override
     public void startupCompleted() throws Exception {
-        ClusterManagerProvider.getClusterManager().notifyStartupCompleted();
+        ccServiceCtx.getControllerService().getExecutor().submit((Callable)() -> {
+            ClusterStateManager.INSTANCE.waitForState(ClusterState.ACTIVE);
+            ClusterManagerProvider.getClusterManager().notifyStartupCompleted();
+            return null;
+        });
     }
 
     @Override

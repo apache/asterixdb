@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -40,11 +41,11 @@ import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartit
 import org.apache.hyracks.api.config.IOption;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.HyracksException;
+import org.apache.hyracks.control.common.controllers.NCConfig;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.apache.hyracks.control.common.controllers.NCConfig;
 
 /**
  * A holder class for properties related to the Asterix cluster.
@@ -110,6 +111,8 @@ public class ClusterStateManager implements IClusterStateManager {
     public synchronized void setState(ClusterState state) {
         this.state = state;
         LOGGER.info("Cluster State is now " + state.name());
+        // Notify any waiting threads for the cluster state to change.
+        notifyAll();
     }
 
     @Override
@@ -149,25 +152,46 @@ public class ClusterStateManager implements IClusterStateManager {
         resetClusterPartitionConstraint();
         for (ClusterPartition p : clusterPartitions.values()) {
             if (!p.isActive()) {
-                state = ClusterState.UNUSABLE;
-                LOGGER.info("Cluster is in UNUSABLE state");
+                setState(ClusterState.UNUSABLE);
                 return;
             }
         }
 
-        state = ClusterState.PENDING;
+        setState(ClusterState.PENDING);
         LOGGER.info("Cluster is now " + state);
 
         // if all storage partitions are active as well as the metadata node, then the cluster is active
         if (metadataNodeActive) {
             AppContextInfo.INSTANCE.getMetadataBootstrap().init();
-            state = ClusterState.ACTIVE;
+            setState(ClusterState.ACTIVE);
             LOGGER.info("Cluster is now " + state);
-            // Notify any waiting threads for the cluster to be active.
             notifyAll();
             // start global recovery
             AppContextInfo.INSTANCE.getGlobalRecoveryManager().startGlobalRecovery();
         }
+    }
+
+    @Override
+    public synchronized void waitForState(ClusterState waitForState) throws HyracksDataException, InterruptedException {
+        while (state != waitForState) {
+            wait();
+        }
+    }
+
+    @Override
+    public synchronized boolean waitForState(ClusterState waitForState, long timeout, TimeUnit unit)
+            throws HyracksDataException, InterruptedException {
+        final long startMillis = System.currentTimeMillis();
+        final long endMillis = startMillis + unit.toMillis(timeout);
+        while (state != waitForState) {
+            long millisToSleep = endMillis - System.currentTimeMillis();
+            if (millisToSleep > 0) {
+                wait(millisToSleep);
+            } else {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**

@@ -121,11 +121,7 @@ public class AsterixHyracksIntegrationUtil {
             }
         }
         // Wait until cluster becomes active
-        synchronized (ClusterStateManager.INSTANCE) {
-            while (ClusterStateManager.INSTANCE.getState() != ClusterState.ACTIVE) {
-                ClusterStateManager.INSTANCE.wait();
-            }
-        }
+        ClusterStateManager.INSTANCE.waitForState(ClusterState.ACTIVE);
         hcc = new HyracksConnection(cc.getConfig().getClientListenAddress(), cc.getConfig().getClientListenPort());
         ncs = nodeControllers.toArray(new NodeControllerService[nodeControllers.size()]);
     }

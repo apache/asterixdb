@@ -20,6 +20,7 @@ package org.apache.asterix.translator;
 
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -38,6 +39,7 @@ import org.apache.asterix.metadata.utils.MetadataConstants;
 import org.apache.asterix.runtime.utils.AppContextInfo;
 import org.apache.asterix.runtime.utils.ClusterStateManager;
 import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 /**
  * Base class for language translators. Contains the common validation logic for language
@@ -52,17 +54,15 @@ public abstract class AbstractLangTranslator {
         if (!(ClusterStateManager.INSTANCE.getState().equals(ClusterState.ACTIVE)
                 && ClusterStateManager.INSTANCE.isGlobalRecoveryCompleted())) {
             int maxWaitCycles = AppContextInfo.INSTANCE.getExternalProperties().getMaxWaitClusterActive();
-            int waitCycleCount = 0;
             try {
-                while (!ClusterStateManager.INSTANCE.getState().equals(ClusterState.ACTIVE)
-                        && waitCycleCount < maxWaitCycles) {
-                    Thread.sleep(1000);
-                    waitCycleCount++;
-                }
+                ClusterStateManager.INSTANCE.waitForState(ClusterState.ACTIVE, maxWaitCycles, TimeUnit.SECONDS);
+            } catch (HyracksDataException e) {
+                throw new AsterixException(e);
             } catch (InterruptedException e) {
                 if (LOGGER.isLoggable(Level.WARNING)) {
                     LOGGER.warning("Thread interrupted while waiting for cluster to be " + ClusterState.ACTIVE);
                 }
+                Thread.currentThread().interrupt();
             }
             if (!ClusterStateManager.INSTANCE.getState().equals(ClusterState.ACTIVE)) {
                 throw new AsterixException("Cluster is in " + ClusterState.UNUSABLE + " state."
@@ -91,6 +91,7 @@ public abstract class AbstractLangTranslator {
                 if (LOGGER.isLoggable(Level.WARNING)) {
                     LOGGER.warning("Thread interrupted while waiting for cluster to complete global recovery ");
                 }
+                Thread.currentThread().interrupt();
             }
             if (!ClusterStateManager.INSTANCE.isGlobalRecoveryCompleted()) {
                 throw new AsterixException("Cluster Global recovery is not yet complete and the system is in "

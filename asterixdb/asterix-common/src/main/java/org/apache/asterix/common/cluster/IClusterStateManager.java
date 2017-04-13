@@ -19,6 +19,7 @@
 package org.apache.asterix.common.cluster;
 
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.asterix.common.api.IClusterManagementWork.ClusterState;
 import org.apache.hyracks.api.config.IOption;
@@ -83,4 +84,17 @@ public interface IClusterStateManager {
      * @return A copy of the current state of the cluster partitions.
      */
     ClusterPartition[] getClusterPartitons();
+
+    /**
+     * Blocks until the cluster state becomes {@code state}
+     */
+    void waitForState(ClusterState state) throws HyracksDataException, InterruptedException;
+
+    /**
+     * Blocks until the cluster state becomes {@code state}, or timeout is exhausted.
+     * @return true if the desired state was reached before timeout occurred
+     */
+    boolean waitForState(ClusterState waitForState, long timeout, TimeUnit unit)
+            throws HyracksDataException, InterruptedException;
+
 }
