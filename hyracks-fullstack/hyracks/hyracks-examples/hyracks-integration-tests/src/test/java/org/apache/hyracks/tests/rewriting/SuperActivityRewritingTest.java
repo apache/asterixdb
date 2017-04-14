@@ -21,6 +21,7 @@ package org.apache.hyracks.tests.rewriting;
 import java.nio.ByteBuffer;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.CountDownLatch;
 
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.constraints.PartitionConstraintHelper;
@@ -124,7 +125,8 @@ class ThreadCountingOperatorDescriptor extends AbstractOperatorDescriptor {
                 IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions)
                         throws HyracksDataException {
             return new IOperatorNodePushable() {
-                private Set<Long> threads = new HashSet<Long>();
+                private CountDownLatch allOpenedSignal = new CountDownLatch(3);
+                private Set<Long> threads = new HashSet<>();
 
                 @Override
                 public void initialize() throws HyracksDataException {
@@ -154,6 +156,7 @@ class ThreadCountingOperatorDescriptor extends AbstractOperatorDescriptor {
                     return new IFrameWriter() {
                         @Override
                         public void open() throws HyracksDataException {
+                            allOpenedSignal.countDown();
                             synchronized (threads) {
                                 threads.add(Thread.currentThread().getId());
                             }
@@ -171,7 +174,11 @@ class ThreadCountingOperatorDescriptor extends AbstractOperatorDescriptor {
 
                         @Override
                         public void close() throws HyracksDataException {
-
+                            try {
+                                allOpenedSignal.await();
+                            } catch (InterruptedException e) {
+                                // This test should not be interrupted
+                            }
                         }
 
                         @Override
