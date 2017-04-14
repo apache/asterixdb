@@ -20,6 +20,8 @@
 package org.apache.hyracks.api.exceptions;
 
 import java.io.Serializable;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.apache.hyracks.api.util.ErrorMessageUtil;
 
@@ -29,10 +31,16 @@ import org.apache.hyracks.api.util.ErrorMessageUtil;
 public class HyracksDataException extends HyracksException {
 
     private static final long serialVersionUID = 1L;
+    private static final Logger LOGGER = Logger.getLogger(HyracksDataException.class.getName());
 
     public static HyracksDataException create(Throwable cause) {
         if (cause instanceof HyracksDataException || cause == null) {
             return (HyracksDataException) cause;
+        }
+        if (cause instanceof InterruptedException && !Thread.currentThread().isInterrupted()) {
+            LOGGER.log(Level.WARNING,
+                    "Wrapping an InterruptedException in HyracksDataException and current thread is not interrupted",
+                    cause);
         }
         return new HyracksDataException(cause);
     }
@@ -46,8 +54,8 @@ public class HyracksDataException extends HyracksException {
     }
 
     public static HyracksDataException create(HyracksDataException e, String nodeId) {
-        return new HyracksDataException(e.getComponent(), e.getErrorCode(), e.getMessage(), e.getCause(), nodeId, e
-                .getParams());
+        return new HyracksDataException(e.getComponent(), e.getErrorCode(), e.getMessage(), e.getCause(), nodeId,
+                e.getParams());
     }
 
     public static HyracksDataException suppress(HyracksDataException root, Throwable th) {
