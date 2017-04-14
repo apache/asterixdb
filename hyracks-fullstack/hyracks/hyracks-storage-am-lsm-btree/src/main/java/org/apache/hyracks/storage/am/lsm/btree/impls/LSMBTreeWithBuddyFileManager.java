@@ -33,7 +33,6 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.storage.am.common.api.ITreeIndex;
-import org.apache.hyracks.storage.am.common.api.IndexException;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexFileManager;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
 import org.apache.hyracks.storage.am.lsm.common.impls.TreeIndexFactory;
@@ -74,8 +73,8 @@ public class LSMBTreeWithBuddyFileManager extends AbstractLSMIndexFileManager {
         String baseName = baseDir + ts + SPLIT_STRING + ts;
         // Begin timestamp and end timestamp are identical since it is a flush
         return new LSMComponentFileReferences(createFlushFile(baseName + SPLIT_STRING + BTREE_STRING),
-                createFlushFile(baseName + SPLIT_STRING + BUDDY_BTREE_STRING), createFlushFile(baseName
-                        + SPLIT_STRING + BLOOM_FILTER_STRING));
+                createFlushFile(baseName + SPLIT_STRING + BUDDY_BTREE_STRING),
+                createFlushFile(baseName + SPLIT_STRING + BLOOM_FILTER_STRING));
     }
 
     @Override
@@ -88,12 +87,12 @@ public class LSMBTreeWithBuddyFileManager extends AbstractLSMIndexFileManager {
         // Get the range of timestamps by taking the earliest and the latest
         // timestamps
         return new LSMComponentFileReferences(createMergeFile(baseName + SPLIT_STRING + BTREE_STRING),
-                createMergeFile(baseName + SPLIT_STRING + BUDDY_BTREE_STRING), createMergeFile(baseName
-                        + SPLIT_STRING + BLOOM_FILTER_STRING));
+                createMergeFile(baseName + SPLIT_STRING + BUDDY_BTREE_STRING),
+                createMergeFile(baseName + SPLIT_STRING + BLOOM_FILTER_STRING));
     }
 
     @Override
-    public List<LSMComponentFileReferences> cleanupAndGetValidFiles() throws HyracksDataException, IndexException {
+    public List<LSMComponentFileReferences> cleanupAndGetValidFiles() throws HyracksDataException {
         List<LSMComponentFileReferences> validFiles = new ArrayList<>();
         ArrayList<ComparableFileName> allBTreeFiles = new ArrayList<>();
         ArrayList<ComparableFileName> allBuddyBTreeFiles = new ArrayList<>();
@@ -178,7 +177,8 @@ public class LSMBTreeWithBuddyFileManager extends AbstractLSMIndexFileManager {
                 invalidBloomFilterFile.delete();
             } else {
                 // This scenario should not be possible.
-                throw new HyracksDataException("Found LSM files with overlapping but not contained timetamp intervals.");
+                throw new HyracksDataException(
+                        "Found LSM files with overlapping but not contained timetamp intervals.");
             }
         }
 
@@ -210,8 +210,8 @@ public class LSMBTreeWithBuddyFileManager extends AbstractLSMIndexFileManager {
 
         String baseName = baseDir + ts + SPLIT_STRING + ts;
         return new LSMComponentFileReferences(createFlushFile(baseName + SPLIT_STRING + BTREE_STRING),
-                createFlushFile(baseName + SPLIT_STRING + BUDDY_BTREE_STRING), createFlushFile(baseName
-                        + SPLIT_STRING + BLOOM_FILTER_STRING));
+                createFlushFile(baseName + SPLIT_STRING + BUDDY_BTREE_STRING),
+                createFlushFile(baseName + SPLIT_STRING + BLOOM_FILTER_STRING));
     }
 
     @Override
@@ -230,8 +230,8 @@ public class LSMBTreeWithBuddyFileManager extends AbstractLSMIndexFileManager {
             // get the actual transaction files
             files = dir.list(transactionFilter);
             if (files.length < 3) {
-                throw new HyracksDataException("LSM Btree with buddy transaction has less than 3 files :"
-                        + files.length);
+                throw new HyracksDataException(
+                        "LSM Btree with buddy transaction has less than 3 files :" + files.length);
             }
             try {
                 Files.delete(Paths.get(txnFileName));

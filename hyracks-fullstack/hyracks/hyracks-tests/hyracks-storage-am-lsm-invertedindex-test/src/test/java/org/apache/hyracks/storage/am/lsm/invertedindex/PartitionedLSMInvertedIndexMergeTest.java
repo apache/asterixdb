@@ -21,8 +21,8 @@ package org.apache.hyracks.storage.am.lsm.invertedindex;
 
 import java.io.IOException;
 
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.common.api.IIndex;
-import org.apache.hyracks.storage.am.common.api.IndexException;
 import org.apache.hyracks.storage.am.common.datagen.TupleGenerator;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import org.apache.hyracks.storage.am.config.AccessMethodTestsConfig;
@@ -43,13 +43,13 @@ public class PartitionedLSMInvertedIndexMergeTest extends AbstractInvertedIndexL
     }
 
     @Override
-    protected void runTest(LSMInvertedIndexTestContext testCtx, TupleGenerator tupleGen) throws IOException,
-            IndexException {
+    protected void runTest(LSMInvertedIndexTestContext testCtx, TupleGenerator tupleGen)
+            throws IOException, HyracksDataException {
         IIndex invIndex = testCtx.getIndex();
         invIndex.create();
         invIndex.activate();
-        ILSMIndexAccessor invIndexAccessor = (ILSMIndexAccessor) invIndex.createAccessor(
-                NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+        ILSMIndexAccessor invIndexAccessor = (ILSMIndexAccessor) invIndex.createAccessor(NoOpOperationCallback.INSTANCE,
+                NoOpOperationCallback.INSTANCE);
 
         for (int i = 0; i < maxTreesToMerge; i++) {
             for (int j = 0; j < i; j++) {

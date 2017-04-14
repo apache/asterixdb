@@ -19,7 +19,7 @@
 
 package org.apache.hyracks.storage.am.lsm.invertedindex.ondisk;
 
-import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
@@ -32,7 +32,6 @@ import org.apache.hyracks.storage.am.common.api.IIndexOperationContext;
 import org.apache.hyracks.storage.am.common.api.IModificationOperationCallback;
 import org.apache.hyracks.storage.am.common.api.IPageManagerFactory;
 import org.apache.hyracks.storage.am.common.api.ISearchOperationCallback;
-import org.apache.hyracks.storage.am.common.api.IndexException;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexSearcher;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedListBuilder;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedListCursor;
@@ -70,7 +69,7 @@ public class PartitionedOnDiskInvertedIndex extends OnDiskInvertedIndex implemen
     @Override
     public boolean openInvertedListPartitionCursors(IInvertedIndexSearcher searcher, IIndexOperationContext ictx,
             short numTokensLowerBound, short numTokensUpperBound, InvertedListPartitions invListPartitions,
-            ArrayList<IInvertedListCursor> cursorsOrderedByTokens) throws HyracksDataException, IndexException {
+            List<IInvertedListCursor> cursorsOrderedByTokens) throws HyracksDataException {
         PartitionedTOccurrenceSearcher partSearcher = (PartitionedTOccurrenceSearcher) searcher;
         OnDiskInvertedIndexOpContext ctx = (OnDiskInvertedIndexOpContext) ictx;
         ITupleReference lowSearchKey = null;

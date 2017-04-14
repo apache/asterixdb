@@ -33,7 +33,6 @@ import org.apache.hyracks.storage.am.common.api.ISplitKey;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
-import org.apache.hyracks.storage.am.common.api.TreeIndexException;
 import org.apache.hyracks.storage.am.common.frames.FrameOpSpaceStatus;
 import org.apache.hyracks.storage.am.common.frames.TreeIndexNSMFrame;
 import org.apache.hyracks.storage.am.common.ophelpers.FindTupleMode;
@@ -71,13 +70,9 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
     }
 
     @Override
-    public int findInsertTupleIndex(ITupleReference tuple) throws TreeIndexException {
-        try {
-            return slotManager.findTupleIndex(tuple, frameTuple, cmp, FindTupleMode.INCLUSIVE,
-                    FindTupleNoExactMatchPolicy.HIGHER_KEY);
-        } catch (HyracksDataException e) {
-            throw new TreeIndexException(e);
-        }
+    public int findInsertTupleIndex(ITupleReference tuple) throws HyracksDataException {
+        return slotManager.findTupleIndex(tuple, frameTuple, cmp, FindTupleMode.INCLUSIVE,
+                FindTupleNoExactMatchPolicy.HIGHER_KEY);
     }
 
     @Override
@@ -107,8 +102,8 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
         int tupleSize = bytesWritten + CHILD_PTR_SIZE;
         buf.putInt(Constants.TUPLE_COUNT_OFFSET, buf.getInt(Constants.TUPLE_COUNT_OFFSET) + 1);
         buf.putInt(Constants.FREE_SPACE_OFFSET, buf.getInt(Constants.FREE_SPACE_OFFSET) + tupleSize);
-        buf.putInt(TOTAL_FREE_SPACE_OFFSET, buf.getInt(TOTAL_FREE_SPACE_OFFSET) - tupleSize - slotManager
-                .getSlotSize());
+        buf.putInt(TOTAL_FREE_SPACE_OFFSET,
+                buf.getInt(TOTAL_FREE_SPACE_OFFSET) - tupleSize - slotManager.getSlotSize());
         // Did we insert into the rightmost slot?
         if (slotOff == slotManager.getSlotEndOff()) {
             System.arraycopy(tuple.getFieldData(tuple.getFieldCount() - 1), getLeftChildPageOff(tuple) + CHILD_PTR_SIZE,
@@ -127,13 +122,9 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
     }
 
     @Override
-    public int findDeleteTupleIndex(ITupleReference tuple) throws TreeIndexException {
-        try {
-            return slotManager.findTupleIndex(tuple, frameTuple, cmp, FindTupleMode.INCLUSIVE,
-                    FindTupleNoExactMatchPolicy.HIGHER_KEY);
-        } catch (HyracksDataException e) {
-            throw new TreeIndexException(e);
-        }
+    public int findDeleteTupleIndex(ITupleReference tuple) throws HyracksDataException {
+        return slotManager.findTupleIndex(tuple, frameTuple, cmp, FindTupleMode.INCLUSIVE,
+                FindTupleNoExactMatchPolicy.HIGHER_KEY);
     }
 
     @Override
@@ -194,17 +185,15 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
         int tupleSize = bytesWritten + CHILD_PTR_SIZE;
         buf.putInt(Constants.TUPLE_COUNT_OFFSET, buf.getInt(Constants.TUPLE_COUNT_OFFSET) + 1);
         buf.putInt(Constants.FREE_SPACE_OFFSET, buf.getInt(Constants.FREE_SPACE_OFFSET) + tupleSize);
-        buf.putInt(TOTAL_FREE_SPACE_OFFSET, buf.getInt(TOTAL_FREE_SPACE_OFFSET) - tupleSize - slotManager
-                .getSlotSize());
+        buf.putInt(TOTAL_FREE_SPACE_OFFSET,
+                buf.getInt(TOTAL_FREE_SPACE_OFFSET) - tupleSize - slotManager.getSlotSize());
         System.arraycopy(tuple.getFieldData(0), getLeftChildPageOff(tuple) + CHILD_PTR_SIZE, buf.array(),
-                RIGHT_LEAF_OFFSET,
-                CHILD_PTR_SIZE);
+                RIGHT_LEAF_OFFSET, CHILD_PTR_SIZE);
     }
 
     @Override
     public void split(ITreeIndexFrame rightFrame, ITupleReference tuple, ISplitKey splitKey,
-                      IExtraPageBlockHelper extraPageBlockHelper, IBufferCache bufferCache)
-                    throws HyracksDataException, TreeIndexException {
+            IExtraPageBlockHelper extraPageBlockHelper, IBufferCache bufferCache) throws HyracksDataException {
         ByteBuffer right = rightFrame.getBuffer();
         int tupleCount = getTupleCount();
 
@@ -276,11 +265,7 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
         // Insert the saved split key.
         int targetTupleIndex;
         // it's safe to catch this exception since it will have been caught before reaching here
-        try {
-            targetTupleIndex = ((BTreeNSMInteriorFrame) targetFrame).findInsertTupleIndex(savedSplitKey.getTuple());
-        } catch (TreeIndexException e) {
-            throw new IllegalStateException(e);
-        }
+        targetTupleIndex = ((BTreeNSMInteriorFrame) targetFrame).findInsertTupleIndex(savedSplitKey.getTuple());
         targetFrame.insert(savedSplitKey.getTuple(), targetTupleIndex);
     }
 
@@ -338,8 +323,8 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
             fsm = FindTupleMode.EXCLUSIVE;
         }
         // Search for a matching key.
-        int tupleIndex = slotManager.findTupleIndex(tuple, frameTuple, targetCmp, fsm,
-                FindTupleNoExactMatchPolicy.HIGHER_KEY);
+        int tupleIndex =
+                slotManager.findTupleIndex(tuple, frameTuple, targetCmp, fsm, FindTupleNoExactMatchPolicy.HIGHER_KEY);
         int slotOff = slotManager.getSlotOff(tupleIndex);
         // Follow the rightmost (greatest) child pointer.
         if (tupleIndex == slotManager.getGreatestKeyIndicator()) {
@@ -423,8 +408,8 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
         for (int i = 0; i < tupleCount; i++) {
             int tupleOff = slotManager.getTupleOff(slotManager.getSlotOff(i));
             frameTuple.resetByTupleOffset(buf.array(), tupleOff);
-            int intVal = IntegerPointable.getInteger(buf.array(),
-                    frameTuple.getFieldStart(frameTuple.getFieldCount() - 1)
+            int intVal =
+                    IntegerPointable.getInteger(buf.array(), frameTuple.getFieldStart(frameTuple.getFieldCount() - 1)
                             + frameTuple.getFieldLength(frameTuple.getFieldCount() - 1));
             ret.add(intVal);
         }

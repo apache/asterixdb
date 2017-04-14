@@ -32,7 +32,6 @@ import org.apache.hyracks.storage.am.common.api.ICursorInitialState;
 import org.apache.hyracks.storage.am.common.api.ISearchOperationCallback;
 import org.apache.hyracks.storage.am.common.api.ISearchPredicate;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexCursor;
-import org.apache.hyracks.storage.am.common.api.IndexException;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent.LSMComponentType;
@@ -63,7 +62,7 @@ public class LSMBTreePointSearchCursor implements ITreeIndexCursor {
     }
 
     @Override
-    public boolean hasNext() throws HyracksDataException, IndexException {
+    public boolean hasNext() throws HyracksDataException {
         if (nextHasBeenCalled) {
             return false;
         } else if (foundTuple) {
@@ -125,7 +124,7 @@ public class LSMBTreePointSearchCursor implements ITreeIndexCursor {
     }
 
     @Override
-    public void reset() throws HyracksDataException, IndexException {
+    public void reset() throws HyracksDataException {
         try {
             if (rangeCursors != null) {
                 for (int i = 0; i < rangeCursors.length; ++i) {

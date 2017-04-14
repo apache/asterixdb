@@ -29,7 +29,6 @@ import org.apache.hyracks.storage.am.common.TestOperationSelector.TestOperation;
 import org.apache.hyracks.storage.am.common.api.IIndex;
 import org.apache.hyracks.storage.am.common.api.IIndexCursor;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexCursor;
-import org.apache.hyracks.storage.am.common.api.IndexException;
 import org.apache.hyracks.storage.am.common.datagen.DataGenThread;
 import org.apache.hyracks.storage.am.common.ophelpers.MultiComparator;
 import org.apache.hyracks.storage.am.rtree.impls.RTree;
@@ -51,7 +50,7 @@ public class RTreeTestWorker extends AbstractIndexTestWorker {
     }
 
     @Override
-    public void performOp(ITupleReference tuple, TestOperation op) throws HyracksDataException, IndexException {
+    public void performOp(ITupleReference tuple, TestOperation op) throws HyracksDataException {
         RTree.RTreeAccessor accessor = (RTree.RTreeAccessor) indexAccessor;
         IIndexCursor searchCursor = accessor.createSearchCursor(false);
         ITreeIndexCursor diskOrderScanCursor = accessor.createDiskOrderScanCursor();

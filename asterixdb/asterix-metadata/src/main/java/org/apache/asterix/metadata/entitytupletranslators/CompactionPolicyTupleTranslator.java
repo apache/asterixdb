@@ -22,7 +22,6 @@ package org.apache.asterix.metadata.entitytupletranslators;
 import java.io.ByteArrayInputStream;
 import java.io.DataInput;
 import java.io.DataInputStream;
-import java.io.IOException;
 
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.metadata.MetadataException;
@@ -32,6 +31,7 @@ import org.apache.asterix.metadata.entities.CompactionPolicy;
 import org.apache.asterix.om.base.ARecord;
 import org.apache.asterix.om.base.AString;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 
 /**
@@ -56,7 +56,7 @@ public class CompactionPolicyTupleTranslator extends AbstractTupleTranslator<Com
     }
 
     @Override
-    public CompactionPolicy getMetadataEntityFromTuple(ITupleReference tuple) throws IOException {
+    public CompactionPolicy getMetadataEntityFromTuple(ITupleReference tuple) throws HyracksDataException {
         byte[] serRecord = tuple.getFieldData(COMPACTION_POLICY_PAYLOAD_TUPLE_FIELD_INDEX);
         int recordStartOffset = tuple.getFieldStart(COMPACTION_POLICY_PAYLOAD_TUPLE_FIELD_INDEX);
         int recordLength = tuple.getFieldLength(COMPACTION_POLICY_PAYLOAD_TUPLE_FIELD_INDEX);
@@ -82,7 +82,7 @@ public class CompactionPolicyTupleTranslator extends AbstractTupleTranslator<Com
 
     @Override
     public ITupleReference getTupleFromMetadataEntity(CompactionPolicy compactionPolicy)
-            throws IOException, MetadataException {
+            throws HyracksDataException, MetadataException {
 
         tupleBuilder.reset();
         aString.setValue(compactionPolicy.getDataverseName());

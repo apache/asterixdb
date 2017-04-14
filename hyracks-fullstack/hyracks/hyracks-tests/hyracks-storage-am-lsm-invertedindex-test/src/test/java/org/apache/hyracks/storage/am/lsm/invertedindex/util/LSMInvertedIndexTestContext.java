@@ -30,6 +30,7 @@ import java.util.List;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.control.nc.io.IOManager;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
@@ -38,11 +39,9 @@ import org.apache.hyracks.dataflow.common.utils.TupleUtils;
 import org.apache.hyracks.storage.am.btree.OrderedIndexTestContext;
 import org.apache.hyracks.storage.am.common.CheckTuple;
 import org.apache.hyracks.storage.am.common.api.IIndex;
-import org.apache.hyracks.storage.am.common.api.IndexException;
 import org.apache.hyracks.storage.am.lsm.common.freepage.VirtualFreePageManager;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndex;
 import org.apache.hyracks.storage.am.lsm.invertedindex.common.LSMInvertedIndexTestHarness;
-import org.apache.hyracks.storage.am.lsm.invertedindex.exceptions.InvertedIndexException;
 import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizerFactory;
 
 @SuppressWarnings("rawtypes")
@@ -103,11 +102,11 @@ public class LSMInvertedIndexTestContext extends OrderedIndexTestContext {
             ISerializerDeserializer[] fieldSerdes, int tokenFieldCount, IBinaryTokenizerFactory tokenizerFactory,
             InvertedIndexType invIndexType, int[] invertedIndexFields, ITypeTraits[] filterTypeTraits,
             IBinaryComparatorFactory[] filterCmpFactories, int[] filterFields, int[] filterFieldsForNonBulkLoadOps,
-            int[] invertedIndexFieldsForNonBulkLoadOps) throws IndexException, HyracksDataException {
+            int[] invertedIndexFieldsForNonBulkLoadOps) throws HyracksDataException {
         ITypeTraits[] allTypeTraits = SerdeUtils.serdesToTypeTraits(fieldSerdes);
         IOManager ioManager = harness.getIOManager();
-        IBinaryComparatorFactory[] allCmpFactories = SerdeUtils.serdesToComparatorFactories(fieldSerdes,
-                fieldSerdes.length);
+        IBinaryComparatorFactory[] allCmpFactories =
+                SerdeUtils.serdesToComparatorFactories(fieldSerdes, fieldSerdes.length);
         // Set token type traits and comparators.
         ITypeTraits[] tokenTypeTraits = new ITypeTraits[tokenFieldCount];
         IBinaryComparatorFactory[] tokenCmpFactories = new IBinaryComparatorFactory[tokenFieldCount];
@@ -129,17 +128,17 @@ public class LSMInvertedIndexTestContext extends OrderedIndexTestContext {
         switch (invIndexType) {
             case INMEMORY: {
                 invIndex = InvertedIndexUtils.createInMemoryBTreeInvertedindex(harness.getVirtualBufferCaches().get(0),
-                        new VirtualFreePageManager(harness.getVirtualBufferCaches().get(0)),
-                        invListTypeTraits, invListCmpFactories, tokenTypeTraits, tokenCmpFactories, tokenizerFactory,
+                        new VirtualFreePageManager(harness.getVirtualBufferCaches().get(0)), invListTypeTraits,
+                        invListCmpFactories, tokenTypeTraits, tokenCmpFactories, tokenizerFactory,
                         ioManager.resolveAbsolutePath(harness.getOnDiskDir()));
                 break;
             }
             case PARTITIONED_INMEMORY: {
-                invIndex = InvertedIndexUtils.createPartitionedInMemoryBTreeInvertedindex(harness
-                        .getVirtualBufferCaches().get(0), new VirtualFreePageManager(harness.getVirtualBufferCaches()
-                                .get(0)), invListTypeTraits,
-                        invListCmpFactories, tokenTypeTraits,
-                        tokenCmpFactories, tokenizerFactory, ioManager.resolveAbsolutePath(harness.getOnDiskDir()));
+                invIndex = InvertedIndexUtils.createPartitionedInMemoryBTreeInvertedindex(
+                        harness.getVirtualBufferCaches().get(0),
+                        new VirtualFreePageManager(harness.getVirtualBufferCaches().get(0)), invListTypeTraits,
+                        invListCmpFactories, tokenTypeTraits, tokenCmpFactories, tokenizerFactory,
+                        ioManager.resolveAbsolutePath(harness.getOnDiskDir()));
                 break;
             }
             case ONDISK: {
@@ -149,10 +148,10 @@ public class LSMInvertedIndexTestContext extends OrderedIndexTestContext {
                 break;
             }
             case PARTITIONED_ONDISK: {
-                invIndex = InvertedIndexUtils.createPartitionedOnDiskInvertedIndex(ioManager, harness
-                        .getDiskBufferCache(),
-                        harness.getDiskFileMapProvider(), invListTypeTraits, invListCmpFactories, tokenTypeTraits,
-                        tokenCmpFactories, harness.getInvListsFileRef(), harness.getMetadataPageManagerFactory());
+                invIndex = InvertedIndexUtils.createPartitionedOnDiskInvertedIndex(ioManager,
+                        harness.getDiskBufferCache(), harness.getDiskFileMapProvider(), invListTypeTraits,
+                        invListCmpFactories, tokenTypeTraits, tokenCmpFactories, harness.getInvListsFileRef(),
+                        harness.getMetadataPageManagerFactory());
                 break;
             }
             case LSM: {
@@ -162,24 +161,23 @@ public class LSMInvertedIndexTestContext extends OrderedIndexTestContext {
                         harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(),
                         harness.getOperationTracker(), harness.getIOScheduler(), harness.getIOOperationCallback(),
                         invertedIndexFields, filterTypeTraits, filterCmpFactories, filterFields,
-                        filterFieldsForNonBulkLoadOps, invertedIndexFieldsForNonBulkLoadOps, true, harness
-                                .getMetadataPageManagerFactory());
+                        filterFieldsForNonBulkLoadOps, invertedIndexFieldsForNonBulkLoadOps, true,
+                        harness.getMetadataPageManagerFactory());
                 break;
             }
             case PARTITIONED_LSM: {
-                invIndex = InvertedIndexUtils.createPartitionedLSMInvertedIndex(ioManager, harness
-                        .getVirtualBufferCaches(),
-                        harness.getDiskFileMapProvider(), invListTypeTraits, invListCmpFactories, tokenTypeTraits,
-                        tokenCmpFactories, tokenizerFactory, harness.getDiskBufferCache(), harness.getOnDiskDir(),
-                        harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(),
-                        harness.getOperationTracker(), harness.getIOScheduler(), harness.getIOOperationCallback(),
-                        invertedIndexFields, filterTypeTraits, filterCmpFactories, filterFields,
-                        filterFieldsForNonBulkLoadOps, invertedIndexFieldsForNonBulkLoadOps, true, harness
-                                .getMetadataPageManagerFactory());
+                invIndex = InvertedIndexUtils.createPartitionedLSMInvertedIndex(ioManager,
+                        harness.getVirtualBufferCaches(), harness.getDiskFileMapProvider(), invListTypeTraits,
+                        invListCmpFactories, tokenTypeTraits, tokenCmpFactories, tokenizerFactory,
+                        harness.getDiskBufferCache(), harness.getOnDiskDir(), harness.getBoomFilterFalsePositiveRate(),
+                        harness.getMergePolicy(), harness.getOperationTracker(), harness.getIOScheduler(),
+                        harness.getIOOperationCallback(), invertedIndexFields, filterTypeTraits, filterCmpFactories,
+                        filterFields, filterFieldsForNonBulkLoadOps, invertedIndexFieldsForNonBulkLoadOps, true,
+                        harness.getMetadataPageManagerFactory());
                 break;
             }
             default: {
-                throw new InvertedIndexException("Unknow inverted-index type '" + invIndexType + "'.");
+                throw HyracksDataException.create(ErrorCode.UNKNOWN_INVERTED_INDEX_TYPE, invIndexType);
             }
         }
         InvertedIndexTokenizingTupleIterator indexTupleIter = null;
@@ -194,17 +192,17 @@ public class LSMInvertedIndexTestContext extends OrderedIndexTestContext {
             case PARTITIONED_INMEMORY:
             case PARTITIONED_ONDISK:
             case PARTITIONED_LSM: {
-                indexTupleIter = new PartitionedInvertedIndexTokenizingTupleIterator(
-                        invIndex.getTokenTypeTraits().length, invIndex.getInvListTypeTraits().length,
-                        tokenizerFactory.createTokenizer());
+                indexTupleIter =
+                        new PartitionedInvertedIndexTokenizingTupleIterator(invIndex.getTokenTypeTraits().length,
+                                invIndex.getInvListTypeTraits().length, tokenizerFactory.createTokenizer());
                 break;
             }
             default: {
-                throw new InvertedIndexException("Unknow inverted-index type '" + invIndexType + "'.");
+                throw HyracksDataException.create(ErrorCode.UNKNOWN_INVERTED_INDEX_TYPE, invIndexType);
             }
         }
-        LSMInvertedIndexTestContext testCtx = new LSMInvertedIndexTestContext(fieldSerdes, invIndex, tokenizerFactory,
-                invIndexType, indexTupleIter);
+        LSMInvertedIndexTestContext testCtx =
+                new LSMInvertedIndexTestContext(fieldSerdes, invIndex, tokenizerFactory, invIndexType, indexTupleIter);
         return testCtx;
     }
 
@@ -240,8 +238,8 @@ public class LSMInvertedIndexTestContext extends OrderedIndexTestContext {
     public CheckTuple createCheckTuple(ITupleReference tuple) throws HyracksDataException {
         CheckTuple checkTuple = new CheckTuple(fieldSerdes.length, fieldSerdes.length);
         for (int i = 0; i < fieldSerdes.length; i++) {
-            ByteArrayInputStream bains = new ByteArrayInputStream(tuple.getFieldData(i), tuple.getFieldStart(i),
-                    tuple.getFieldLength(i));
+            ByteArrayInputStream bains =
+                    new ByteArrayInputStream(tuple.getFieldData(i), tuple.getFieldStart(i), tuple.getFieldLength(i));
             DataInput in = new DataInputStream(bains);
             Comparable field = (Comparable) fieldSerdes[i].deserialize(in);
             checkTuple.appendField(field);

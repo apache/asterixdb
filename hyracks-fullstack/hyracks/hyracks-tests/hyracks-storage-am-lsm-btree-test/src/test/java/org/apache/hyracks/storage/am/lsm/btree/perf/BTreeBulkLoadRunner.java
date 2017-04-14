@@ -22,7 +22,6 @@ package org.apache.hyracks.storage.am.lsm.btree.perf;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.storage.am.btree.exceptions.BTreeException;
 import org.apache.hyracks.storage.am.common.api.IIndexBulkLoader;
 import org.apache.hyracks.storage.am.common.datagen.DataGenThread;
 import org.apache.hyracks.storage.am.common.datagen.TupleBatch;
@@ -32,7 +31,7 @@ public class BTreeBulkLoadRunner extends BTreeRunner {
     protected final float fillFactor;
 
     public BTreeBulkLoadRunner(int numBatches, int pageSize, int numPages, ITypeTraits[] typeTraits,
-            IBinaryComparatorFactory[] cmpFactories, float fillFactor) throws BTreeException, HyracksDataException {
+            IBinaryComparatorFactory[] cmpFactories, float fillFactor) throws HyracksDataException {
         super(numBatches, pageSize, numPages, typeTraits, cmpFactories);
         this.fillFactor = fillFactor;
     }

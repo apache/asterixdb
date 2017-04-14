@@ -22,7 +22,6 @@ package org.apache.hyracks.storage.am.btree.api;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleReference;
-import org.apache.hyracks.storage.am.common.api.TreeIndexException;
 import org.apache.hyracks.storage.am.common.ophelpers.FindTupleMode;
 import org.apache.hyracks.storage.am.common.ophelpers.FindTupleNoExactMatchPolicy;
 import org.apache.hyracks.storage.am.common.ophelpers.MultiComparator;
@@ -33,9 +32,9 @@ public interface IBTreeLeafFrame extends IBTreeFrame {
     public int findTupleIndex(ITupleReference searchKey, ITreeIndexTupleReference pageTuple, MultiComparator cmp,
                               FindTupleMode ftm, FindTupleNoExactMatchPolicy ftp) throws HyracksDataException;
 
-    public int findUpdateTupleIndex(ITupleReference tuple) throws TreeIndexException;
+    public int findUpdateTupleIndex(ITupleReference tuple) throws HyracksDataException;
 
-    public int findUpsertTupleIndex(ITupleReference tuple) throws TreeIndexException;
+    public int findUpsertTupleIndex(ITupleReference tuple) throws HyracksDataException;
 
     /**
      * @param searchTuple

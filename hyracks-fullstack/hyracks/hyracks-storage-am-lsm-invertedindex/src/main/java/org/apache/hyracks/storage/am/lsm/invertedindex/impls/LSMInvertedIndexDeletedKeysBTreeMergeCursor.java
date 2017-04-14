@@ -27,7 +27,6 @@ import org.apache.hyracks.storage.am.common.api.ICursorInitialState;
 import org.apache.hyracks.storage.am.common.api.IIndexAccessor;
 import org.apache.hyracks.storage.am.common.api.IIndexCursor;
 import org.apache.hyracks.storage.am.common.api.ISearchPredicate;
-import org.apache.hyracks.storage.am.common.api.IndexException;
 import org.apache.hyracks.storage.am.common.ophelpers.MultiComparator;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMIndexSearchCursor;
@@ -39,14 +38,14 @@ public class LSMInvertedIndexDeletedKeysBTreeMergeCursor extends LSMIndexSearchC
     }
 
     @Override
-    protected boolean isDeleted(PriorityQueueElement checkElement) throws HyracksDataException, IndexException {
+    protected boolean isDeleted(PriorityQueueElement checkElement) throws HyracksDataException {
         return false;
     }
 
     @Override
-    public void open(ICursorInitialState initialState, ISearchPredicate searchPred) throws HyracksDataException,
-            IndexException {
-        LSMInvertedIndexRangeSearchCursorInitialState lsmInitialState = (LSMInvertedIndexRangeSearchCursorInitialState) initialState;
+    public void open(ICursorInitialState initialState, ISearchPredicate searchPred) throws HyracksDataException {
+        LSMInvertedIndexRangeSearchCursorInitialState lsmInitialState =
+                (LSMInvertedIndexRangeSearchCursorInitialState) initialState;
         cmp = lsmInitialState.getOriginalKeyComparator();
         operationalComponents = lsmInitialState.getOperationalComponents();
         // We intentionally set the lsmHarness to null so that we don't call lsmHarness.endSearch() because we already do that when we merge the inverted indexes.

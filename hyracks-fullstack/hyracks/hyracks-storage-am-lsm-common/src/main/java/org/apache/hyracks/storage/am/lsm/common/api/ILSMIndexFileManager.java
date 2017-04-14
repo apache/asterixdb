@@ -24,7 +24,6 @@ import java.util.Comparator;
 import java.util.List;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.storage.am.common.api.IndexException;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
 
 /**
@@ -48,7 +47,7 @@ public interface ILSMIndexFileManager {
 
     // Deletes invalid files, and returns list of valid files from baseDir.
     // The returned valid files are correctly sorted (based on the recency of data).
-    public List<LSMComponentFileReferences> cleanupAndGetValidFiles() throws HyracksDataException, IndexException;
+    public List<LSMComponentFileReferences> cleanupAndGetValidFiles() throws HyracksDataException;
 
     public Comparator<String> getFileNameComparator();
 

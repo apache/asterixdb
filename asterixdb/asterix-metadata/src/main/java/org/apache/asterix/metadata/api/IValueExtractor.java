@@ -20,6 +20,7 @@
 package org.apache.asterix.metadata.api;
 
 import java.io.IOException;
+import java.rmi.RemoteException;
 
 import org.apache.asterix.common.transactions.JobId;
 import org.apache.asterix.metadata.MetadataException;
@@ -46,5 +47,6 @@ public interface IValueExtractor<T> {
      * @throws HyracksDataException
      * @throws IOException
      */
-    public T getValue(JobId jobId, ITupleReference tuple) throws MetadataException, IOException;
+    public T getValue(JobId jobId, ITupleReference tuple)
+            throws MetadataException, HyracksDataException, RemoteException;
 }

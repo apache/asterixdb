@@ -22,25 +22,25 @@ package org.apache.hyracks.storage.am.lsm.invertedindex.search;
 import java.util.ArrayList;
 
 import org.apache.hyracks.api.context.IHyracksCommonContext;
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.common.api.IIndexOperationContext;
-import org.apache.hyracks.storage.am.common.api.IndexException;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndex;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexSearchModifier;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedListCursor;
-import org.apache.hyracks.storage.am.lsm.invertedindex.exceptions.OccurrenceThresholdPanicException;
 import org.apache.hyracks.storage.am.lsm.invertedindex.ondisk.OnDiskInvertedIndexSearchCursor;
 
 public class TOccurrenceSearcher extends AbstractTOccurrenceSearcher {
 
-    protected final ArrayList<IInvertedListCursor> invListCursors = new ArrayList<IInvertedListCursor>();
+    protected final ArrayList<IInvertedListCursor> invListCursors = new ArrayList<>();
 
     public TOccurrenceSearcher(IHyracksCommonContext ctx, IInvertedIndex invIndex) throws HyracksDataException {
         super(ctx, invIndex);
     }
 
+    @Override
     public void search(OnDiskInvertedIndexSearchCursor resultCursor, InvertedIndexSearchPredicate searchPred,
-            IIndexOperationContext ictx) throws HyracksDataException, IndexException {
+            IIndexOperationContext ictx) throws HyracksDataException {
         tokenizeQuery(searchPred);
         int numQueryTokens = queryTokenAppender.getTupleCount();
 
@@ -56,7 +56,7 @@ public class TOccurrenceSearcher extends AbstractTOccurrenceSearcher {
         IInvertedIndexSearchModifier searchModifier = searchPred.getSearchModifier();
         occurrenceThreshold = searchModifier.getOccurrenceThreshold(numQueryTokens);
         if (occurrenceThreshold <= 0) {
-            throw new OccurrenceThresholdPanicException("Merge threshold is <= 0. Failing Search.");
+            throw HyracksDataException.create(ErrorCode.OCCURRENCE_THRESHOLD_PANIC_EXCEPTION);
         }
         int numPrefixLists = searchModifier.getNumPrefixLists(occurrenceThreshold, invListCursors.size());
 

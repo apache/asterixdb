@@ -23,11 +23,10 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.storage.am.common.api.IndexException;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent.ComponentState;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
@@ -36,8 +35,7 @@ public class ConstantMergePolicy implements ILSMMergePolicy {
     private int numComponents;
 
     @Override
-    public void diskComponentAdded(final ILSMIndex index, boolean fullMergeIsRequested)
-            throws HyracksDataException, IndexException {
+    public void diskComponentAdded(final ILSMIndex index, boolean fullMergeIsRequested) throws HyracksDataException {
         List<ILSMDiskComponent> immutableComponents = index.getImmutableComponents();
 
         if (!areComponentsMergable(immutableComponents)) {
@@ -61,7 +59,7 @@ public class ConstantMergePolicy implements ILSMMergePolicy {
     }
 
     @Override
-    public boolean isMergeLagging(ILSMIndex index) throws HyracksDataException, IndexException {
+    public boolean isMergeLagging(ILSMIndex index) throws HyracksDataException {
         // see PrefixMergePolicy.isMergeLagging() for the rationale behind this code.
 
         /**

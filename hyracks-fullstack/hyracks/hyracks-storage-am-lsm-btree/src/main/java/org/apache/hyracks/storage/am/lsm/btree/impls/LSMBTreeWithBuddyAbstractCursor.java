@@ -30,7 +30,6 @@ import org.apache.hyracks.storage.am.btree.impls.RangePredicate;
 import org.apache.hyracks.storage.am.common.api.ICursorInitialState;
 import org.apache.hyracks.storage.am.common.api.ISearchPredicate;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexCursor;
-import org.apache.hyracks.storage.am.common.api.IndexException;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import org.apache.hyracks.storage.am.common.ophelpers.MultiComparator;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
@@ -72,8 +71,7 @@ public abstract class LSMBTreeWithBuddyAbstractCursor implements ITreeIndexCurso
     }
 
     @Override
-    public void open(ICursorInitialState initialState, ISearchPredicate searchPred)
-            throws IndexException, HyracksDataException {
+    public void open(ICursorInitialState initialState, ISearchPredicate searchPred) throws HyracksDataException {
 
         LSMBTreeWithBuddyCursorInitialState lsmInitialState = (LSMBTreeWithBuddyCursorInitialState) initialState;
         btreeCmp = lsmInitialState.getBTreeCmp();

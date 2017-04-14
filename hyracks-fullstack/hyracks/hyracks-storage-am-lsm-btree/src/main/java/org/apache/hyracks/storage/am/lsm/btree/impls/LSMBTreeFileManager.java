@@ -34,7 +34,6 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.storage.am.common.api.ITreeIndex;
-import org.apache.hyracks.storage.am.common.api.IndexException;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexFileManager;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
 import org.apache.hyracks.storage.am.lsm.common.impls.TreeIndexFactory;
@@ -82,7 +81,7 @@ public class LSMBTreeFileManager extends AbstractLSMIndexFileManager {
     };
 
     @Override
-    public List<LSMComponentFileReferences> cleanupAndGetValidFiles() throws HyracksDataException, IndexException {
+    public List<LSMComponentFileReferences> cleanupAndGetValidFiles() throws HyracksDataException {
         List<LSMComponentFileReferences> validFiles = new ArrayList<>();
         ArrayList<ComparableFileName> allBTreeFiles = new ArrayList<>();
         ArrayList<ComparableFileName> allBloomFilterFiles = new ArrayList<>();

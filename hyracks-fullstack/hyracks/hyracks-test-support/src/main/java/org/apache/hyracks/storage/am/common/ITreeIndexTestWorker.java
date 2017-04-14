@@ -22,8 +22,8 @@ package org.apache.hyracks.storage.am.common;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.common.TestOperationSelector.TestOperation;
-import org.apache.hyracks.storage.am.common.api.IndexException;
 
+@FunctionalInterface
 public interface ITreeIndexTestWorker {
-    void performOp(ITupleReference tuple, TestOperation op) throws HyracksDataException, IndexException;
+    void performOp(ITupleReference tuple, TestOperation op) throws HyracksDataException;
 }

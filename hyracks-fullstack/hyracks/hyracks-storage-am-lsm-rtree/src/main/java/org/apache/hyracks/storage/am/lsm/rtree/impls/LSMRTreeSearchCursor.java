@@ -23,7 +23,6 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.common.api.ICursorInitialState;
 import org.apache.hyracks.storage.am.common.api.ISearchPredicate;
-import org.apache.hyracks.storage.am.common.api.IndexException;
 import org.apache.hyracks.storage.am.common.tuples.PermutingTupleReference;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 
@@ -67,16 +66,12 @@ public class LSMRTreeSearchCursor extends LSMRTreeAbstractCursor {
     private void searchNextCursor() throws HyracksDataException {
         if (currentCursor < numberOfTrees) {
             rtreeCursors[currentCursor].reset();
-            try {
-                rtreeAccessors[currentCursor].search(rtreeCursors[currentCursor], rtreeSearchPredicate);
-            } catch (IndexException e) {
-                throw new HyracksDataException(e);
-            }
+            rtreeAccessors[currentCursor].search(rtreeCursors[currentCursor], rtreeSearchPredicate);
         }
     }
 
     @Override
-    public boolean hasNext() throws HyracksDataException, IndexException {
+    public boolean hasNext() throws HyracksDataException {
         if (foundNext) {
             return true;
         }

@@ -52,7 +52,6 @@ import org.apache.hyracks.storage.am.btree.impls.RangePredicate;
 import org.apache.hyracks.storage.am.btree.util.BTreeUtils;
 import org.apache.hyracks.storage.am.common.api.IIndexCursor;
 import org.apache.hyracks.storage.am.common.api.ITreeIndex;
-import org.apache.hyracks.storage.am.common.api.IndexException;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexOperatorDescriptor;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.am.common.ophelpers.MultiComparator;
@@ -275,8 +274,8 @@ public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDe
             // callback here before calling nextFrame on the next operator
             frameOpCallback.frameCompleted(!firstModification);
             appender.write(writer, true);
-        } catch (IndexException | IOException | AsterixException e) {
-            throw new HyracksDataException(e);
+        } catch (Exception e) {
+            throw HyracksDataException.create(e);
         }
     }
 

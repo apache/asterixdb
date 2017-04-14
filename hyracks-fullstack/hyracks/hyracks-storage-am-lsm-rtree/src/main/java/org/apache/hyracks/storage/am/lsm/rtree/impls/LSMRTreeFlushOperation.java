@@ -25,7 +25,6 @@ import java.util.Set;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IODeviceHandle;
-import org.apache.hyracks.storage.am.common.api.IndexException;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
@@ -70,7 +69,7 @@ public class LSMRTreeFlushOperation implements ILSMIOOperation, Comparable<LSMRT
     }
 
     @Override
-    public Boolean call() throws HyracksDataException, IndexException {
+    public Boolean call() throws HyracksDataException {
         accessor.flush(this);
         return true;
     }

@@ -22,7 +22,7 @@ package org.apache.asterix.metadata.entitytupletranslators;
 import java.io.ByteArrayInputStream;
 import java.io.DataInput;
 import java.io.DataInputStream;
-import java.io.IOException;
+import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -54,6 +54,7 @@ import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 
@@ -103,7 +104,7 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
     }
 
     @Override
-    public Index getMetadataEntityFromTuple(ITupleReference frameTuple) throws MetadataException, IOException {
+    public Index getMetadataEntityFromTuple(ITupleReference frameTuple) throws MetadataException, HyracksDataException {
         byte[] serRecord = frameTuple.getFieldData(INDEX_PAYLOAD_TUPLE_FIELD_INDEX);
         int recordStartOffset = frameTuple.getFieldStart(INDEX_PAYLOAD_TUPLE_FIELD_INDEX);
         int recordLength = frameTuple.getFieldLength(INDEX_PAYLOAD_TUPLE_FIELD_INDEX);
@@ -114,14 +115,13 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
                 .getStringValue();
         String dsName = ((AString) rec.getValueByPos(MetadataRecordTypes.INDEX_ARECORD_DATASETNAME_FIELD_INDEX))
                 .getStringValue();
-        String indexName = ((AString) rec.getValueByPos(MetadataRecordTypes.INDEX_ARECORD_INDEXNAME_FIELD_INDEX))
-                .getStringValue();
+        String indexName =
+                ((AString) rec.getValueByPos(MetadataRecordTypes.INDEX_ARECORD_INDEXNAME_FIELD_INDEX)).getStringValue();
         IndexType indexStructure = IndexType
                 .valueOf(((AString) rec.getValueByPos(MetadataRecordTypes.INDEX_ARECORD_INDEXSTRUCTURE_FIELD_INDEX))
                         .getStringValue());
         IACursor fieldNameCursor =
-                ((AOrderedList) rec.getValueByPos(MetadataRecordTypes.INDEX_ARECORD_SEARCHKEY_FIELD_INDEX))
-                        .getCursor();
+                ((AOrderedList) rec.getValueByPos(MetadataRecordTypes.INDEX_ARECORD_SEARCHKEY_FIELD_INDEX)).getCursor();
         List<List<String>> searchKey = new ArrayList<>();
         AOrderedList fieldNameList;
         while (fieldNameCursor.next()) {
@@ -152,8 +152,8 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
         }
         Boolean isPrimaryIndex =
                 ((ABoolean) rec.getValueByPos(MetadataRecordTypes.INDEX_ARECORD_ISPRIMARY_FIELD_INDEX)).getBoolean();
-        int pendingOp = ((AInt32) rec.getValueByPos(MetadataRecordTypes.INDEX_ARECORD_PENDINGOP_FIELD_INDEX))
-                .getIntegerValue();
+        int pendingOp =
+                ((AInt32) rec.getValueByPos(MetadataRecordTypes.INDEX_ARECORD_PENDINGOP_FIELD_INDEX)).getIntegerValue();
         // Check if there is a gram length as well.
         int gramLength = -1;
         int gramLenPos = rec.getType().getFieldIndex(GRAM_LENGTH_FIELD_NAME);
@@ -177,22 +177,26 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
 
         // index key type information is not persisted, thus we extract type information from the record metadata
         if (searchKeyType.isEmpty()) {
-            Dataset dSet = metadataNode.getDataset(jobId, dvName, dsName);
-            String datatypeName = dSet.getItemTypeName();
-            String datatypeDataverseName = dSet.getItemTypeDataverseName();
-            ARecordType recordDt =
-                    (ARecordType) metadataNode.getDatatype(jobId, datatypeDataverseName, datatypeName).getDatatype();
-            String metatypeName = dSet.getMetaItemTypeName();
-            String metatypeDataverseName = dSet.getMetaItemTypeDataverseName();
-            ARecordType metaDt = null;
-            if (metatypeName != null && metatypeDataverseName != null) {
-                metaDt = (ARecordType) metadataNode.getDatatype(jobId, metatypeDataverseName, metatypeName)
-                        .getDatatype();
-            }
             try {
-                searchKeyType = KeyFieldTypeUtil.getKeyTypes(recordDt, metaDt, searchKey, keyFieldSourceIndicator);
-            } catch (AlgebricksException e) {
-                throw new MetadataException(e);
+                Dataset dSet = metadataNode.getDataset(jobId, dvName, dsName);
+                String datatypeName = dSet.getItemTypeName();
+                String datatypeDataverseName = dSet.getItemTypeDataverseName();
+                ARecordType recordDt = (ARecordType) metadataNode
+                        .getDatatype(jobId, datatypeDataverseName, datatypeName).getDatatype();
+                String metatypeName = dSet.getMetaItemTypeName();
+                String metatypeDataverseName = dSet.getMetaItemTypeDataverseName();
+                ARecordType metaDt = null;
+                if (metatypeName != null && metatypeDataverseName != null) {
+                    metaDt = (ARecordType) metadataNode.getDatatype(jobId, metatypeDataverseName, metatypeName)
+                            .getDatatype();
+                }
+                try {
+                    searchKeyType = KeyFieldTypeUtil.getKeyTypes(recordDt, metaDt, searchKey, keyFieldSourceIndicator);
+                } catch (AlgebricksException e) {
+                    throw new MetadataException(e);
+                }
+            } catch (RemoteException re) {
+                throw HyracksDataException.create(re);
             }
         }
         return new Index(dvName, dsName, indexName, indexStructure, searchKey, keyFieldSourceIndicator, searchKeyType,
@@ -200,7 +204,7 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
     }
 
     @Override
-    public ITupleReference getTupleFromMetadataEntity(Index instance) throws IOException {
+    public ITupleReference getTupleFromMetadataEntity(Index instance) throws HyracksDataException {
         // write the key in the first 3 fields of the tuple
         tupleBuilder.reset();
         aString.setValue(instance.getDataverseName());

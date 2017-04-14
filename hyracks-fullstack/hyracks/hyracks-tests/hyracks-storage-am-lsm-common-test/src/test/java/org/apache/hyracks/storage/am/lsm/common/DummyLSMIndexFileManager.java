@@ -27,7 +27,6 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.storage.am.common.api.ITreeIndex;
-import org.apache.hyracks.storage.am.common.api.IndexException;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexFileManager;
 import org.apache.hyracks.storage.am.lsm.common.impls.TreeIndexFactory;
 import org.apache.hyracks.storage.common.file.IFileMapProvider;
@@ -42,7 +41,7 @@ public class DummyLSMIndexFileManager extends AbstractLSMIndexFileManager {
     @Override
     protected void cleanupAndGetValidFilesInternal(FilenameFilter filter,
             TreeIndexFactory<? extends ITreeIndex> treeFactory, ArrayList<ComparableFileName> allFiles)
-            throws HyracksDataException, IndexException {
+            throws HyracksDataException {
         File dir = new File(baseDir);
         String[] files = dir.list(filter);
         for (String fileName : files) {

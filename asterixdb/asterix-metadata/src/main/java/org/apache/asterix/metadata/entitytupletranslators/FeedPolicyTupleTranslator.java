@@ -23,7 +23,6 @@ import java.io.ByteArrayInputStream;
 import java.io.DataInput;
 import java.io.DataInputStream;
 import java.io.DataOutput;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -73,7 +72,7 @@ public class FeedPolicyTupleTranslator extends AbstractTupleTranslator<FeedPolic
     }
 
     @Override
-    public FeedPolicyEntity getMetadataEntityFromTuple(ITupleReference frameTuple) throws IOException {
+    public FeedPolicyEntity getMetadataEntityFromTuple(ITupleReference frameTuple) throws HyracksDataException {
         byte[] serRecord = frameTuple.getFieldData(FEED_POLICY_PAYLOAD_TUPLE_FIELD_INDEX);
         int recordStartOffset = frameTuple.getFieldStart(FEED_POLICY_PAYLOAD_TUPLE_FIELD_INDEX);
         int recordLength = frameTuple.getFieldLength(FEED_POLICY_PAYLOAD_TUPLE_FIELD_INDEX);
@@ -95,7 +94,7 @@ public class FeedPolicyTupleTranslator extends AbstractTupleTranslator<FeedPolic
 
         IACursor cursor = ((AUnorderedList) feedPolicyRecord
                 .getValueByPos(MetadataRecordTypes.FEED_POLICY_ARECORD_PROPERTIES_FIELD_INDEX)).getCursor();
-        Map<String, String> policyParamters = new HashMap<String, String>();
+        Map<String, String> policyParamters = new HashMap<>();
         String key;
         String value;
         while (cursor.next()) {
@@ -111,7 +110,7 @@ public class FeedPolicyTupleTranslator extends AbstractTupleTranslator<FeedPolic
 
     @Override
     public ITupleReference getTupleFromMetadataEntity(FeedPolicyEntity feedPolicy)
-            throws IOException, MetadataException {
+            throws HyracksDataException, MetadataException {
         // write the key in the first three fields of the tuple
         ArrayBackedValueStorage itemValue = new ArrayBackedValueStorage();
 

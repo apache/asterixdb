@@ -19,6 +19,7 @@
 
 package org.apache.hyracks.storage.am.btree.impls;
 
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.common.impls.AbstractSearchPredicate;
 import org.apache.hyracks.storage.am.common.ophelpers.MultiComparator;
@@ -129,5 +130,28 @@ public class RangePredicate extends AbstractSearchPredicate {
 
     public void setHighKeyCmp(MultiComparator highKeyCmp) {
         this.highKeyCmp = highKeyCmp;
+    }
+
+    public boolean isPointPredicate(MultiComparator originalKeyComparator) throws HyracksDataException {
+        if (getLowKey() == null) {
+            return false;
+        }
+        if (getHighKey() == null) {
+            return false;
+        }
+        if (!isLowKeyInclusive()) {
+            return false;
+        }
+        if (!isHighKeyInclusive()) {
+            return false;
+        }
+        if (getLowKeyComparator().getKeyFieldCount() != getHighKeyComparator().getKeyFieldCount()) {
+            return false;
+        }
+        if (getLowKeyComparator().getKeyFieldCount() != originalKeyComparator.getKeyFieldCount()) {
+            return false;
+        }
+        return originalKeyComparator.compare(getLowKey(), getHighKey()) == 0;
+
     }
 }

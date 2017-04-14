@@ -21,6 +21,7 @@ package org.apache.hyracks.storage.am.btree.frames;
 
 import java.nio.ByteBuffer;
 
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.btree.api.IBTreeLeafFrame;
@@ -29,9 +30,6 @@ import org.apache.hyracks.storage.am.common.api.ISplitKey;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
-import org.apache.hyracks.storage.am.common.api.TreeIndexException;
-import org.apache.hyracks.storage.am.common.exceptions.TreeIndexDuplicateKeyException;
-import org.apache.hyracks.storage.am.common.exceptions.TreeIndexNonExistentKeyException;
 import org.apache.hyracks.storage.am.common.frames.FrameOpSpaceStatus;
 import org.apache.hyracks.storage.am.common.frames.TreeIndexNSMFrame;
 import org.apache.hyracks.storage.am.common.ophelpers.FindTupleMode;
@@ -79,46 +77,34 @@ public class BTreeNSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFr
     }
 
     @Override
-    public int findInsertTupleIndex(ITupleReference tuple) throws TreeIndexException {
+    public int findInsertTupleIndex(ITupleReference tuple) throws HyracksDataException {
         int tupleIndex;
-        try {
-            tupleIndex = slotManager.findTupleIndex(tuple, frameTuple, cmp, FindTupleMode.EXCLUSIVE_ERROR_IF_EXISTS,
-                    FindTupleNoExactMatchPolicy.HIGHER_KEY);
-        } catch (HyracksDataException e) {
-            throw new TreeIndexException(e);
-        }
+        tupleIndex = slotManager.findTupleIndex(tuple, frameTuple, cmp, FindTupleMode.EXCLUSIVE_ERROR_IF_EXISTS,
+                FindTupleNoExactMatchPolicy.HIGHER_KEY);
         // Error indicator is set if there is an exact match.
         if (tupleIndex == slotManager.getErrorIndicator()) {
-            throw new TreeIndexDuplicateKeyException("Trying to insert duplicate key into leaf node.");
+            throw HyracksDataException.create(ErrorCode.DUPLICATE_KEY);
         }
         return tupleIndex;
     }
 
     @Override
-    public int findUpdateTupleIndex(ITupleReference tuple) throws TreeIndexException {
+    public int findUpdateTupleIndex(ITupleReference tuple) throws HyracksDataException {
         int tupleIndex;
-        try {
-            tupleIndex = slotManager.findTupleIndex(tuple, frameTuple, cmp, FindTupleMode.EXACT,
-                    FindTupleNoExactMatchPolicy.HIGHER_KEY);
-        } catch (HyracksDataException e) {
-            throw new TreeIndexException(e);
-        }
+        tupleIndex = slotManager.findTupleIndex(tuple, frameTuple, cmp, FindTupleMode.EXACT,
+                FindTupleNoExactMatchPolicy.HIGHER_KEY);
         // Error indicator is set if there is no exact match.
         if (tupleIndex == slotManager.getErrorIndicator() || tupleIndex == slotManager.getGreatestKeyIndicator()) {
-            throw new TreeIndexNonExistentKeyException("Trying to update a tuple with a nonexistent key in leaf node.");
+            throw HyracksDataException.create(ErrorCode.UPDATE_OR_DELETE_NON_EXISTENT_KEY);
         }
         return tupleIndex;
     }
 
     @Override
-    public int findUpsertTupleIndex(ITupleReference tuple) throws TreeIndexException {
+    public int findUpsertTupleIndex(ITupleReference tuple) throws HyracksDataException {
         int tupleIndex;
-        try {
-            tupleIndex = slotManager.findTupleIndex(tuple, frameTuple, cmp, FindTupleMode.INCLUSIVE,
-                    FindTupleNoExactMatchPolicy.HIGHER_KEY);
-        } catch (HyracksDataException e) {
-            throw new TreeIndexException(e);
-        }
+        tupleIndex = slotManager.findTupleIndex(tuple, frameTuple, cmp, FindTupleMode.INCLUSIVE,
+                FindTupleNoExactMatchPolicy.HIGHER_KEY);
         // Just return the found tupleIndex. The caller will make the final
         // decision whether to insert or update.
         return tupleIndex;
@@ -144,17 +130,13 @@ public class BTreeNSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFr
     }
 
     @Override
-    public int findDeleteTupleIndex(ITupleReference tuple) throws TreeIndexException {
+    public int findDeleteTupleIndex(ITupleReference tuple) throws HyracksDataException {
         int tupleIndex;
-        try {
-            tupleIndex = slotManager.findTupleIndex(tuple, frameTuple, cmp, FindTupleMode.EXACT,
-                    FindTupleNoExactMatchPolicy.HIGHER_KEY);
-        } catch (HyracksDataException e) {
-            throw new TreeIndexException(e);
-        }
+        tupleIndex = slotManager.findTupleIndex(tuple, frameTuple, cmp, FindTupleMode.EXACT,
+                FindTupleNoExactMatchPolicy.HIGHER_KEY);
         // Error indicator is set if there is no exact match.
         if (tupleIndex == slotManager.getErrorIndicator() || tupleIndex == slotManager.getGreatestKeyIndicator()) {
-            throw new TreeIndexNonExistentKeyException("Trying to delete a tuple with a nonexistent key in leaf node.");
+            throw HyracksDataException.create(ErrorCode.UPDATE_OR_DELETE_NON_EXISTENT_KEY);
         }
         return tupleIndex;
     }
@@ -166,8 +148,8 @@ public class BTreeNSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFr
         int bytesWritten = tupleWriter.writeTuple(tuple, buf.array(), freeSpace);
         buf.putInt(Constants.TUPLE_COUNT_OFFSET, buf.getInt(Constants.TUPLE_COUNT_OFFSET) + 1);
         buf.putInt(Constants.FREE_SPACE_OFFSET, buf.getInt(Constants.FREE_SPACE_OFFSET) + bytesWritten);
-        buf.putInt(TOTAL_FREE_SPACE_OFFSET, buf.getInt(TOTAL_FREE_SPACE_OFFSET) - bytesWritten - slotManager
-                .getSlotSize());
+        buf.putInt(TOTAL_FREE_SPACE_OFFSET,
+                buf.getInt(TOTAL_FREE_SPACE_OFFSET) - bytesWritten - slotManager.getSlotSize());
     }
 
     @Override
@@ -207,8 +189,7 @@ public class BTreeNSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFr
 
     @Override
     public void split(ITreeIndexFrame rightFrame, ITupleReference tuple, ISplitKey splitKey,
-                      IExtraPageBlockHelper extraPageBlockHelper, IBufferCache bufferCache)
-            throws HyracksDataException {
+            IExtraPageBlockHelper extraPageBlockHelper, IBufferCache bufferCache) throws HyracksDataException {
 
         int tupleSize = getBytesRequiredToWriteTuple(tuple);
 
@@ -280,11 +261,7 @@ public class BTreeNSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFr
         int targetTupleIndex;
         // it's safe to catch this exception since it will have been caught
         // before reaching here
-        try {
-            targetTupleIndex = targetFrame.findInsertTupleIndex(tuple);
-        } catch (TreeIndexException e) {
-            throw new IllegalStateException(e);
-        }
+        targetTupleIndex = targetFrame.findInsertTupleIndex(tuple);
         targetFrame.insert(tuple, targetTupleIndex);
 
         // Set the split key to be highest key in the left page.
@@ -298,7 +275,7 @@ public class BTreeNSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFr
 
     @Override
     public void ensureCapacity(IBufferCache bufferCache, ITupleReference tuple,
-                               IExtraPageBlockHelper extraPageBlockHelper) throws HyracksDataException {
+            IExtraPageBlockHelper extraPageBlockHelper) throws HyracksDataException {
         // we call ensureCapacity() for large tuples- ensure large flag is set
         setLargeFlag(true);
         int gapBytes = getBytesRequiredToWriteTuple(tuple) - getFreeContiguousSpace();
@@ -308,8 +285,8 @@ public class BTreeNSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFr
         }
     }
 
-    private void growCapacity(IExtraPageBlockHelper extraPageBlockHelper,
-            IBufferCache bufferCache, int deltaPages) throws HyracksDataException {
+    private void growCapacity(IExtraPageBlockHelper extraPageBlockHelper, IBufferCache bufferCache, int deltaPages)
+            throws HyracksDataException {
         int framePagesOld = page.getFrameSizeMultiplier();
         int newMultiplier = framePagesOld + deltaPages;
 
@@ -325,8 +302,8 @@ public class BTreeNSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFr
         System.arraycopy(buf.array(), oldSlotEnd, buf.array(), slotManager.getSlotEndOff(), oldSlotStart - oldSlotEnd);
 
         // fixup total free space counter
-        buf.putInt(TOTAL_FREE_SPACE_OFFSET, buf.getInt(TOTAL_FREE_SPACE_OFFSET) + (bufferCache.getPageSize()
-                * deltaPages));
+        buf.putInt(TOTAL_FREE_SPACE_OFFSET,
+                buf.getInt(TOTAL_FREE_SPACE_OFFSET) + (bufferCache.getPageSize() * deltaPages));
     }
 
     @Override

@@ -21,11 +21,11 @@ package org.apache.hyracks.storage.am.lsm.rtree;
 
 import java.util.logging.Level;
 
-import org.junit.Test;
-
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
+import org.apache.hyracks.api.exceptions.ErrorCode;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
@@ -35,11 +35,11 @@ import org.apache.hyracks.dataflow.common.utils.TupleUtils;
 import org.apache.hyracks.storage.am.common.api.IIndexAccessor;
 import org.apache.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import org.apache.hyracks.storage.am.common.api.ITreeIndex;
-import org.apache.hyracks.storage.am.common.api.TreeIndexException;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import org.apache.hyracks.storage.am.rtree.AbstractRTreeExamplesTest;
 import org.apache.hyracks.storage.am.rtree.frames.RTreePolicyType;
 import org.apache.hyracks.storage.am.rtree.util.RTreeUtils;
+import org.junit.Test;
 
 public abstract class AbstractLSMRTreeExamplesTest extends AbstractRTreeExamplesTest {
 
@@ -62,10 +62,10 @@ public abstract class AbstractLSMRTreeExamplesTest extends AbstractRTreeExamples
         typeTraits[4] = IntegerPointable.TYPE_TRAITS;
         typeTraits[5] = IntegerPointable.TYPE_TRAITS;
         // Declare field serdes.
-        ISerializerDeserializer[] fieldSerdes = { IntegerSerializerDeserializer.INSTANCE,
-                IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE,
-                IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE,
-                IntegerSerializerDeserializer.INSTANCE };
+        ISerializerDeserializer[] fieldSerdes =
+                { IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE,
+                        IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE,
+                        IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE };
 
         // Declare RTree keys.
         int rtreeKeyFieldCount = 4;
@@ -101,17 +101,17 @@ public abstract class AbstractLSMRTreeExamplesTest extends AbstractRTreeExamples
         }
 
         // create value providers
-        IPrimitiveValueProviderFactory[] valueProviderFactories = RTreeUtils.createPrimitiveValueProviderFactories(
-                rtreeCmpFactories.length, IntegerPointable.FACTORY);
+        IPrimitiveValueProviderFactory[] valueProviderFactories =
+                RTreeUtils.createPrimitiveValueProviderFactories(rtreeCmpFactories.length, IntegerPointable.FACTORY);
 
         int[] rtreeFields = { 0, 1, 2, 3, 4 };
         ITypeTraits[] filterTypeTraits = { IntegerPointable.TYPE_TRAITS };
-        IBinaryComparatorFactory[] filterCmpFactories = { PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY) };
+        IBinaryComparatorFactory[] filterCmpFactories =
+                { PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY) };
         int[] filterFields = { 5 };
 
-        ITreeIndex treeIndex = createTreeIndex(typeTraits, rtreeCmpFactories, btreeCmpFactories,
-                valueProviderFactories, RTreePolicyType.RTREE, rtreeFields, btreeFields, filterTypeTraits,
-                filterCmpFactories, filterFields);
+        ITreeIndex treeIndex = createTreeIndex(typeTraits, rtreeCmpFactories, btreeCmpFactories, valueProviderFactories,
+                RTreePolicyType.RTREE, rtreeFields, btreeFields, filterTypeTraits, filterCmpFactories, filterFields);
         treeIndex.create();
         treeIndex.activate();
 
@@ -121,8 +121,8 @@ public abstract class AbstractLSMRTreeExamplesTest extends AbstractRTreeExamples
         }
         ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
-        IIndexAccessor indexAccessor = (IIndexAccessor) treeIndex.createAccessor(NoOpOperationCallback.INSTANCE,
-                NoOpOperationCallback.INSTANCE);
+        IIndexAccessor indexAccessor =
+                treeIndex.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
         int numInserts = 10000;
         for (int i = 0; i < numInserts; i++) {
             int p1x = rnd.nextInt();
@@ -137,7 +137,10 @@ public abstract class AbstractLSMRTreeExamplesTest extends AbstractRTreeExamples
                     Math.max(p1y, p2y), pk, filter);
             try {
                 indexAccessor.insert(tuple);
-            } catch (TreeIndexException e) {
+            } catch (HyracksDataException e) {
+                if (e.getErrorCode() != ErrorCode.DUPLICATE_KEY) {
+                    throw e;
+                }
             }
         }
         long end = System.currentTimeMillis();

@@ -28,7 +28,6 @@ import org.apache.hyracks.storage.am.common.TestOperationSelector;
 import org.apache.hyracks.storage.am.common.TestOperationSelector.TestOperation;
 import org.apache.hyracks.storage.am.common.api.IIndex;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexCursor;
-import org.apache.hyracks.storage.am.common.api.IndexException;
 import org.apache.hyracks.storage.am.common.datagen.DataGenThread;
 import org.apache.hyracks.storage.am.common.ophelpers.MultiComparator;
 import org.apache.hyracks.storage.am.lsm.common.impls.NoOpIOOperationCallback;
@@ -52,7 +51,7 @@ public class LSMRTreeTestWorker extends AbstractIndexTestWorker {
     }
 
     @Override
-    public void performOp(ITupleReference tuple, TestOperation op) throws HyracksDataException, IndexException {
+    public void performOp(ITupleReference tuple, TestOperation op) throws HyracksDataException {
         LSMRTreeAccessor accessor = (LSMRTreeAccessor) indexAccessor;
         ITreeIndexCursor searchCursor = accessor.createSearchCursor(false);
         MultiComparator cmp = accessor.getMultiComparator();
@@ -116,7 +115,7 @@ public class LSMRTreeTestWorker extends AbstractIndexTestWorker {
         rearrangedTuple.reset(rearrangedTb.getFieldEndOffsets(), rearrangedTb.getByteArray());
     }
 
-    private void consumeCursorTuples(ITreeIndexCursor cursor) throws HyracksDataException, IndexException {
+    private void consumeCursorTuples(ITreeIndexCursor cursor) throws HyracksDataException {
         try {
             while (cursor.hasNext()) {
                 cursor.next();

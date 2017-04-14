@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.dataflow.common.utils.TupleUtils;
@@ -32,11 +33,9 @@ import org.apache.hyracks.storage.am.common.TestOperationSelector;
 import org.apache.hyracks.storage.am.common.TestOperationSelector.TestOperation;
 import org.apache.hyracks.storage.am.common.api.IIndex;
 import org.apache.hyracks.storage.am.common.api.IIndexCursor;
-import org.apache.hyracks.storage.am.common.api.IndexException;
 import org.apache.hyracks.storage.am.common.datagen.DataGenThread;
 import org.apache.hyracks.storage.am.lsm.common.impls.NoOpIOOperationCallback;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexSearchModifier;
-import org.apache.hyracks.storage.am.lsm.invertedindex.exceptions.OccurrenceThresholdPanicException;
 import org.apache.hyracks.storage.am.lsm.invertedindex.impls.LSMInvertedIndex;
 import org.apache.hyracks.storage.am.lsm.invertedindex.impls.LSMInvertedIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.invertedindex.search.ConjunctiveSearchModifier;
@@ -47,7 +46,7 @@ import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokeniz
 public class LSMInvertedIndexTestWorker extends AbstractIndexTestWorker {
 
     protected final LSMInvertedIndex invIndex;
-    protected final List<ITupleReference> documentCorpus = new ArrayList<ITupleReference>();
+    protected final List<ITupleReference> documentCorpus = new ArrayList<>();
     protected final Random rnd = new Random(50);
 
     protected final IInvertedIndexSearchModifier[] TEST_SEARCH_MODIFIERS = new IInvertedIndexSearchModifier[] {
@@ -60,7 +59,7 @@ public class LSMInvertedIndexTestWorker extends AbstractIndexTestWorker {
     }
 
     @Override
-    public void performOp(ITupleReference tuple, TestOperation op) throws HyracksDataException, IndexException {
+    public void performOp(ITupleReference tuple, TestOperation op) throws HyracksDataException {
         LSMInvertedIndexAccessor accessor = (LSMInvertedIndexAccessor) indexAccessor;
         IIndexCursor searchCursor = accessor.createSearchCursor(false);
         IIndexCursor rangeSearchCursor = accessor.createRangeSearchCursor();
@@ -99,8 +98,11 @@ public class LSMInvertedIndexTestWorker extends AbstractIndexTestWorker {
                 try {
                     accessor.search(searchCursor, searchPred);
                     consumeCursorTuples(searchCursor);
-                } catch (OccurrenceThresholdPanicException e) {
+                } catch (HyracksDataException e) {
                     // Ignore.
+                    if (e.getErrorCode() != ErrorCode.OCCURRENCE_THRESHOLD_PANIC_EXCEPTION) {
+                        throw e;
+                    }
                 }
                 break;
             }
@@ -122,8 +124,7 @@ public class LSMInvertedIndexTestWorker extends AbstractIndexTestWorker {
         }
     }
 
-    private void insert(LSMInvertedIndexAccessor accessor, ITupleReference tuple) throws HyracksDataException,
-            IndexException {
+    private void insert(LSMInvertedIndexAccessor accessor, ITupleReference tuple) throws HyracksDataException {
         // Ignore ongoing merges. Do an insert instead.
         accessor.insert(tuple);
         // Add tuple to document corpus so we can delete it.

@@ -32,6 +32,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleReference;
@@ -41,8 +42,6 @@ import org.apache.hyracks.storage.am.common.api.IIndexBulkLoader;
 import org.apache.hyracks.storage.am.common.api.ISearchPredicate;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexAccessor;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexCursor;
-import org.apache.hyracks.storage.am.common.api.IndexException;
-import org.apache.hyracks.storage.am.common.api.TreeIndexException;
 
 @SuppressWarnings("rawtypes")
 public abstract class TreeIndexTestUtils {
@@ -88,8 +87,8 @@ public abstract class TreeIndexTestUtils {
         CheckTuple checkTuple = createCheckTuple(fieldSerdes.length, numKeys);
         int fieldCount = Math.min(fieldSerdes.length, tuple.getFieldCount());
         for (int i = 0; i < fieldCount; i++) {
-            ByteArrayInputStream inStream = new ByteArrayInputStream(tuple.getFieldData(i), tuple.getFieldStart(i),
-                    tuple.getFieldLength(i));
+            ByteArrayInputStream inStream =
+                    new ByteArrayInputStream(tuple.getFieldData(i), tuple.getFieldStart(i), tuple.getFieldLength(i));
             DataInput dataIn = new DataInputStream(inStream);
             Comparable fieldObj = (Comparable) fieldSerdes[i].deserialize(dataIn);
             checkTuple.appendField(fieldObj);
@@ -122,8 +121,8 @@ public abstract class TreeIndexTestUtils {
                 while (diskOrderCursor.hasNext()) {
                     diskOrderCursor.next();
                     ITupleReference tuple = diskOrderCursor.getTuple();
-                    CheckTuple checkTuple = createCheckTupleFromTuple(tuple, ctx.getFieldSerdes(),
-                            ctx.getKeyFieldCount());
+                    CheckTuple checkTuple =
+                            createCheckTupleFromTuple(tuple, ctx.getFieldSerdes(), ctx.getKeyFieldCount());
                     if (!checkDiskOrderScanResult(tuple, checkTuple, ctx)) {
                         fail("Disk-order scan returned unexpected answer: " + checkTuple.toString());
                     }
@@ -140,9 +139,8 @@ public abstract class TreeIndexTestUtils {
             } finally {
                 try {
                     diskOrderCursor.close();
-                }
-                catch(Exception ex){
-                    LOGGER.log(Level.WARNING,"Error during scan cursor close",ex);
+                } catch (Exception ex) {
+                    LOGGER.log(Level.WARNING, "Error during scan cursor close", ex);
                 }
             }
         } catch (UnsupportedOperationException e) {
@@ -168,7 +166,7 @@ public abstract class TreeIndexTestUtils {
         // Scale range of values according to number of keys.
         // For example, for 2 keys we want the square root of numTuples, for 3
         // keys the cube root of numTuples, etc.
-        int maxValue = (int) Math.ceil(Math.pow(numTuples, 1.0 / (double) numKeyFields));
+        int maxValue = (int) Math.ceil(Math.pow(numTuples, 1.0 / numKeyFields));
         for (int i = 0; i < numTuples; i++) {
             // Set keys.
             setIntKeyFields(fieldValues, numKeyFields, maxValue, rnd);
@@ -183,9 +181,12 @@ public abstract class TreeIndexTestUtils {
             try {
                 ctx.getIndexAccessor().insert(ctx.getTuple());
                 ctx.insertCheckTuple(createIntCheckTuple(fieldValues, ctx.getKeyFieldCount()), ctx.getCheckTuples());
-            } catch (TreeIndexException e) {
+            } catch (HyracksDataException e) {
                 // We set expected values only after insertion succeeds because
                 // we ignore duplicate keys.
+                if (e.getErrorCode() != ErrorCode.DUPLICATE_KEY) {
+                    throw e;
+                }
             }
         }
     }
@@ -198,7 +199,7 @@ public abstract class TreeIndexTestUtils {
         // Scale range of values according to number of keys.
         // For example, for 2 keys we want the square root of numTuples, for 3
         // keys the cube root of numTuples, etc.
-        int maxValue = (int) Math.ceil(Math.pow(numTuples, 1.0 / (double) numKeyFields));
+        int maxValue = (int) Math.ceil(Math.pow(numTuples, 1.0 / numKeyFields));
         for (int i = 0; i < numTuples; i++) {
             // Set keys.
             setIntKeyFields(fieldValues, numKeyFields, maxValue, rnd);
@@ -213,9 +214,12 @@ public abstract class TreeIndexTestUtils {
             try {
                 ctx.getIndexAccessor().upsert(ctx.getTuple());
                 ctx.insertCheckTuple(createIntCheckTuple(fieldValues, ctx.getKeyFieldCount()), ctx.getCheckTuples());
-            } catch (TreeIndexException e) {
+            } catch (HyracksDataException e) {
                 // We set expected values only after insertion succeeds because
                 // we ignore duplicate keys.
+                if (e.getErrorCode() != ErrorCode.DUPLICATE_KEY) {
+                    throw e;
+                }
             }
         }
     }
@@ -225,7 +229,7 @@ public abstract class TreeIndexTestUtils {
         int fieldCount = ctx.getFieldCount();
         int numKeyFields = ctx.getKeyFieldCount();
         int[] fieldValues = new int[ctx.getFieldCount()];
-        int maxValue = (int) Math.ceil(Math.pow(numTuples, 1.0 / (double) numKeyFields));
+        int maxValue = (int) Math.ceil(Math.pow(numTuples, 1.0 / numKeyFields));
         Collection<CheckTuple> tmpCheckTuples = createCheckTuplesCollection();
         for (int i = 0; i < numTuples; i++) {
             // Set keys.
@@ -246,7 +250,7 @@ public abstract class TreeIndexTestUtils {
     }
 
     public static void bulkLoadCheckTuples(IIndexTestContext ctx, Collection<CheckTuple> checkTuples)
-            throws HyracksDataException, IndexException {
+            throws HyracksDataException {
         int fieldCount = ctx.getFieldCount();
         int numTuples = checkTuples.size();
         ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(fieldCount);
@@ -257,7 +261,7 @@ public abstract class TreeIndexTestUtils {
         for (CheckTuple checkTuple : checkTuples) {
             if (LOGGER.isLoggable(Level.INFO)) {
                 //if (c % (numTuples / 10) == 0) {
-                    LOGGER.info("Bulk Loading Tuple " + c + "/" + numTuples);
+                LOGGER.info("Bulk Loading Tuple " + c + "/" + numTuples);
                 //}
             }
             createTupleFromCheckTuple(checkTuple, tupleBuilder, tuple, ctx.getFieldSerdes());

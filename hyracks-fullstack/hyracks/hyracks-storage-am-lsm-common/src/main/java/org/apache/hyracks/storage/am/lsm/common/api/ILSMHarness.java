@@ -25,7 +25,6 @@ import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.common.api.IIndexCursor;
 import org.apache.hyracks.storage.am.common.api.ISearchPredicate;
-import org.apache.hyracks.storage.am.common.api.IndexException;
 
 public interface ILSMHarness {
 
@@ -39,7 +38,7 @@ public interface ILSMHarness {
      * @throws HyracksDataException
      * @throws IndexException
      */
-    void forceModify(ILSMIndexOperationContext ctx, ITupleReference tuple) throws HyracksDataException, IndexException;
+    void forceModify(ILSMIndexOperationContext ctx, ITupleReference tuple) throws HyracksDataException;
 
     /**
      * Modify the index if the memory component is not full, wait for a new memory component if the current one is full
@@ -55,7 +54,7 @@ public interface ILSMHarness {
      * @throws IndexException
      */
     boolean modify(ILSMIndexOperationContext ctx, boolean tryOperation, ITupleReference tuple)
-            throws HyracksDataException, IndexException;
+            throws HyracksDataException;
 
     /**
      * Search the index
@@ -70,7 +69,7 @@ public interface ILSMHarness {
      * @throws IndexException
      */
     void search(ILSMIndexOperationContext ctx, IIndexCursor cursor, ISearchPredicate pred)
-            throws HyracksDataException, IndexException;
+            throws HyracksDataException;
 
     /**
      * End the search
@@ -89,7 +88,7 @@ public interface ILSMHarness {
      * @throws IndexException
      */
     void scheduleMerge(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
-            throws HyracksDataException, IndexException;
+            throws HyracksDataException;
 
     /**
      * Schedule full merge
@@ -100,7 +99,7 @@ public interface ILSMHarness {
      * @throws IndexException
      */
     void scheduleFullMerge(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
-            throws HyracksDataException, IndexException;
+            throws HyracksDataException;
 
     /**
      * Perform a merge operation
@@ -110,7 +109,7 @@ public interface ILSMHarness {
      * @throws HyracksDataException
      * @throws IndexException
      */
-    void merge(ILSMIndexOperationContext ctx, ILSMIOOperation operation) throws HyracksDataException, IndexException;
+    void merge(ILSMIndexOperationContext ctx, ILSMIOOperation operation) throws HyracksDataException;
 
     /**
      * Schedule a flush
@@ -129,7 +128,7 @@ public interface ILSMHarness {
      * @throws HyracksDataException
      * @throws IndexException
      */
-    void flush(ILSMIndexOperationContext ctx, ILSMIOOperation operation) throws HyracksDataException, IndexException;
+    void flush(ILSMIndexOperationContext ctx, ILSMIOOperation operation) throws HyracksDataException;
 
     /**
      * Add bulk loaded component
@@ -139,7 +138,7 @@ public interface ILSMHarness {
      * @throws HyracksDataException
      * @throws IndexException
      */
-    void addBulkLoadedComponent(ILSMDiskComponent index) throws HyracksDataException, IndexException;
+    void addBulkLoadedComponent(ILSMDiskComponent index) throws HyracksDataException;
 
     /**
      * Get index operation tracker

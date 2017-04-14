@@ -34,7 +34,6 @@ import org.apache.hyracks.storage.am.common.api.ICursorInitialState;
 import org.apache.hyracks.storage.am.common.api.IIndexCursor;
 import org.apache.hyracks.storage.am.common.api.ISearchOperationCallback;
 import org.apache.hyracks.storage.am.common.api.ISearchPredicate;
-import org.apache.hyracks.storage.am.common.api.IndexException;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent.LSMComponentType;
@@ -62,7 +61,7 @@ public class LSMBTreeRangeSearchCursor extends LSMIndexSearchCursor {
     }
 
     @Override
-    public void reset() throws HyracksDataException, IndexException {
+    public void reset() throws HyracksDataException {
         super.reset();
         proceed = true;
     }
@@ -75,7 +74,7 @@ public class LSMBTreeRangeSearchCursor extends LSMIndexSearchCursor {
     }
 
     @Override
-    protected void checkPriorityQueue() throws HyracksDataException, IndexException {
+    protected void checkPriorityQueue() throws HyracksDataException {
         while (!outputPriorityQueue.isEmpty() || needPush == true) {
             if (!outputPriorityQueue.isEmpty()) {
                 PriorityQueueElement checkElement = outputPriorityQueue.peek();
@@ -178,8 +177,7 @@ public class LSMBTreeRangeSearchCursor extends LSMIndexSearchCursor {
     }
 
     @Override
-    public void open(ICursorInitialState initialState, ISearchPredicate searchPred)
-            throws HyracksDataException, IndexException {
+    public void open(ICursorInitialState initialState, ISearchPredicate searchPred) throws HyracksDataException {
         LSMBTreeCursorInitialState lsmInitialState = (LSMBTreeCursorInitialState) initialState;
         cmp = lsmInitialState.getOriginalKeyComparator();
         operationalComponents = lsmInitialState.getOperationalComponents();

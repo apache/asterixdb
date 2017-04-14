@@ -42,6 +42,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class BufferCacheRegressionTest {
+    protected String dirName = "target";
     protected String fileName = "flushTestFile";
     private static final int PAGE_SIZE = 256;
     private static final int HYRACKS_FRAME_SIZE = PAGE_SIZE;
@@ -53,19 +54,22 @@ public class BufferCacheRegressionTest {
     // invalidated, but most not be flushed.
     // 2. If the file was not deleted, then we must flush its dirty pages.
     @Before
-    public void setUp() throws IOException{
+    public void setUp() throws IOException {
         resetState();
     }
+
     @After
-    public void tearDown() throws IOException{
+    public void tearDown() throws IOException {
         resetState();
     }
-    private void resetState() throws IOException{
-        File f = new File(fileName);
+
+    private void resetState() throws IOException {
+        File f = new File(dirName, fileName);
         if (f.exists()) {
             f.delete();
         }
     }
+
     @Test
     public void testFlushBehaviorOnFileEviction() throws IOException {
         flushBehaviorTest(true);
@@ -120,8 +124,8 @@ public class BufferCacheRegressionTest {
         // physical memory again, and for performance reasons pages are never
         // reset with 0's.
         FileReference testFileRef = ioManager.resolve(fileName);
-        IFileHandle testFileHandle = ioManager.open(testFileRef, FileReadWriteMode.READ_ONLY,
-                FileSyncMode.METADATA_SYNC_DATA_SYNC);
+        IFileHandle testFileHandle =
+                ioManager.open(testFileRef, FileReadWriteMode.READ_ONLY, FileSyncMode.METADATA_SYNC_DATA_SYNC);
         ByteBuffer testBuffer = ByteBuffer.allocate(PAGE_SIZE + BufferCache.RESERVED_HEADER_BYTES);
         ioManager.syncRead(testFileHandle, 0, testBuffer);
         for (int i = BufferCache.RESERVED_HEADER_BYTES; i < testBuffer.capacity(); i++) {

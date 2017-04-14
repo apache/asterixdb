@@ -28,6 +28,7 @@ import java.util.logging.Logger;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
@@ -47,9 +48,6 @@ import org.apache.hyracks.storage.am.common.api.IIndexCursor;
 import org.apache.hyracks.storage.am.common.api.ITreeIndex;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexAccessor;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexCursor;
-import org.apache.hyracks.storage.am.common.api.TreeIndexException;
-import org.apache.hyracks.storage.am.common.api.UnsortedInputException;
-import org.apache.hyracks.storage.am.common.exceptions.TreeIndexDuplicateKeyException;
 import org.apache.hyracks.storage.am.common.impls.TreeIndexDiskOrderScanCursor;
 import org.apache.hyracks.storage.am.common.ophelpers.MultiComparator;
 import org.junit.Test;
@@ -61,7 +59,7 @@ public abstract class OrderedIndexExamplesTest {
 
     protected abstract ITreeIndex createTreeIndex(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories,
             int[] bloomFilterKeyFields, ITypeTraits[] filterTypeTraits, IBinaryComparatorFactory[] filterCmpFactories,
-            int[] btreeFields, int[] filterFields) throws TreeIndexException, HyracksDataException;
+            int[] btreeFields, int[] filterFields) throws HyracksDataException;
 
     /**
      * Fixed-Length Key,Value Example. Create a tree index with one fixed-length
@@ -80,8 +78,8 @@ public abstract class OrderedIndexExamplesTest {
         typeTraits[0] = IntegerPointable.TYPE_TRAITS;
         typeTraits[1] = IntegerPointable.TYPE_TRAITS;
         // Declare field serdes.
-        ISerializerDeserializer[] fieldSerdes = { IntegerSerializerDeserializer.INSTANCE,
-                IntegerSerializerDeserializer.INSTANCE };
+        ISerializerDeserializer[] fieldSerdes =
+                { IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE };
 
         // Declare keys.
         int keyFieldCount = 1;
@@ -102,8 +100,8 @@ public abstract class OrderedIndexExamplesTest {
         }
         ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
-        IIndexAccessor indexAccessor = treeIndex.createAccessor(TestOperationCallback.INSTANCE,
-                TestOperationCallback.INSTANCE);
+        IIndexAccessor indexAccessor =
+                treeIndex.createAccessor(TestOperationCallback.INSTANCE, TestOperationCallback.INSTANCE);
         int numInserts = 10000;
         for (int i = 0; i < numInserts; i++) {
             int f0 = rnd.nextInt() % numInserts;
@@ -116,7 +114,10 @@ public abstract class OrderedIndexExamplesTest {
             }
             try {
                 indexAccessor.insert(tuple);
-            } catch (TreeIndexException e) {
+            } catch (HyracksDataException e) {
+                if (e.getErrorCode() != ErrorCode.DUPLICATE_KEY) {
+                    throw e;
+                }
             }
         }
         long end = System.currentTimeMillis();
@@ -164,8 +165,8 @@ public abstract class OrderedIndexExamplesTest {
         typeTraits[0] = UTF8StringPointable.TYPE_TRAITS;
         typeTraits[1] = UTF8StringPointable.TYPE_TRAITS;
         // Declare field serdes.
-        ISerializerDeserializer[] fieldSerdes = { new UTF8StringSerializerDeserializer(),
-                new UTF8StringSerializerDeserializer() };
+        ISerializerDeserializer[] fieldSerdes =
+                { new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer() };
 
         // Declare keys.
         int keyFieldCount = 1;
@@ -182,8 +183,8 @@ public abstract class OrderedIndexExamplesTest {
 
         ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
-        IIndexAccessor indexAccessor = treeIndex.createAccessor(TestOperationCallback.INSTANCE,
-                TestOperationCallback.INSTANCE);
+        IIndexAccessor indexAccessor =
+                treeIndex.createAccessor(TestOperationCallback.INSTANCE, TestOperationCallback.INSTANCE);
 
         String key = "111";
         String data = "XXX";
@@ -263,8 +264,8 @@ public abstract class OrderedIndexExamplesTest {
         }
         ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
-        IIndexAccessor indexAccessor = treeIndex.createAccessor(TestOperationCallback.INSTANCE,
-                TestOperationCallback.INSTANCE);
+        IIndexAccessor indexAccessor =
+                treeIndex.createAccessor(TestOperationCallback.INSTANCE, TestOperationCallback.INSTANCE);
         int numInserts = 10000;
         for (int i = 0; i < 10000; i++) {
             int f0 = rnd.nextInt() % 2000;
@@ -278,7 +279,10 @@ public abstract class OrderedIndexExamplesTest {
             }
             try {
                 indexAccessor.insert(tuple);
-            } catch (TreeIndexException e) {
+            } catch (HyracksDataException e) {
+                if (e.getErrorCode() != ErrorCode.DUPLICATE_KEY) {
+                    throw e;
+                }
             }
         }
         long end = System.currentTimeMillis();
@@ -324,8 +328,8 @@ public abstract class OrderedIndexExamplesTest {
         typeTraits[0] = UTF8StringPointable.TYPE_TRAITS;
         typeTraits[1] = UTF8StringPointable.TYPE_TRAITS;
         // Declare field serdes.
-        ISerializerDeserializer[] fieldSerdes = { new UTF8StringSerializerDeserializer(),
-                new UTF8StringSerializerDeserializer() };
+        ISerializerDeserializer[] fieldSerdes =
+                { new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer() };
 
         // Declare keys.
         int keyFieldCount = 1;
@@ -346,8 +350,8 @@ public abstract class OrderedIndexExamplesTest {
         }
         ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
-        IIndexAccessor indexAccessor = treeIndex.createAccessor(TestOperationCallback.INSTANCE,
-                TestOperationCallback.INSTANCE);
+        IIndexAccessor indexAccessor =
+                treeIndex.createAccessor(TestOperationCallback.INSTANCE, TestOperationCallback.INSTANCE);
         // Max string length to be generated.
         int maxLength = 10;
         int numInserts = 10000;
@@ -362,7 +366,10 @@ public abstract class OrderedIndexExamplesTest {
             }
             try {
                 indexAccessor.insert(tuple);
-            } catch (TreeIndexException e) {
+            } catch (HyracksDataException e) {
+                if (e.getErrorCode() != ErrorCode.DUPLICATE_KEY) {
+                    throw e;
+                }
             }
         }
         long end = System.currentTimeMillis();
@@ -408,8 +415,8 @@ public abstract class OrderedIndexExamplesTest {
         typeTraits[0] = UTF8StringPointable.TYPE_TRAITS;
         typeTraits[1] = UTF8StringPointable.TYPE_TRAITS;
         // Declare field serdes.
-        ISerializerDeserializer[] fieldSerdes = { new UTF8StringSerializerDeserializer(),
-                new UTF8StringSerializerDeserializer() };
+        ISerializerDeserializer[] fieldSerdes =
+                { new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer() };
 
         // Declare keys.
         int keyFieldCount = 1;
@@ -426,8 +433,8 @@ public abstract class OrderedIndexExamplesTest {
 
         ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
-        IIndexAccessor indexAccessor = treeIndex.createAccessor(TestOperationCallback.INSTANCE,
-                TestOperationCallback.INSTANCE);
+        IIndexAccessor indexAccessor =
+                treeIndex.createAccessor(TestOperationCallback.INSTANCE, TestOperationCallback.INSTANCE);
         // Max string length to be generated.
         int runs = 3;
         for (int run = 0; run < runs; run++) {
@@ -455,7 +462,10 @@ public abstract class OrderedIndexExamplesTest {
                 try {
                     indexAccessor.insert(tuple);
                     insDone++;
-                } catch (TreeIndexException e) {
+                } catch (HyracksDataException e) {
+                    if (e.getErrorCode() != ErrorCode.DUPLICATE_KEY) {
+                        throw e;
+                    }
                 }
                 insDoneCmp[i] = insDone;
             }
@@ -474,7 +484,10 @@ public abstract class OrderedIndexExamplesTest {
                 try {
                     indexAccessor.delete(tuple);
                     delDone++;
-                } catch (TreeIndexException e) {
+                } catch (HyracksDataException e) {
+                    if (e.getErrorCode() != ErrorCode.UPDATE_OR_DELETE_NON_EXISTENT_KEY) {
+                        throw e;
+                    }
                 }
                 if (insDoneCmp[i] != delDone) {
                     if (LOGGER.isLoggable(Level.INFO)) {
@@ -514,8 +527,8 @@ public abstract class OrderedIndexExamplesTest {
         typeTraits[0] = UTF8StringPointable.TYPE_TRAITS;
         typeTraits[1] = UTF8StringPointable.TYPE_TRAITS;
         // Declare field serdes.
-        ISerializerDeserializer[] fieldSerdes = { new UTF8StringSerializerDeserializer(),
-                new UTF8StringSerializerDeserializer() };
+        ISerializerDeserializer[] fieldSerdes =
+                { new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer() };
 
         // Declare keys.
         int keyFieldCount = 1;
@@ -533,8 +546,8 @@ public abstract class OrderedIndexExamplesTest {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Inserting into tree...");
         }
-        IIndexAccessor indexAccessor = treeIndex.createAccessor(TestOperationCallback.INSTANCE,
-                TestOperationCallback.INSTANCE);
+        IIndexAccessor indexAccessor =
+                treeIndex.createAccessor(TestOperationCallback.INSTANCE, TestOperationCallback.INSTANCE);
         ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
         int maxLength = 10;
@@ -552,7 +565,10 @@ public abstract class OrderedIndexExamplesTest {
             }
             try {
                 indexAccessor.insert(tuple);
-            } catch (TreeIndexException e) {
+            } catch (HyracksDataException e) {
+                if (e.getErrorCode() != ErrorCode.DUPLICATE_KEY) {
+                    throw e;
+                }
             }
         }
         // Print before doing any updates.
@@ -573,11 +589,7 @@ public abstract class OrderedIndexExamplesTest {
                         LOGGER.info("Updating " + i);
                     }
                 }
-                try {
-                    indexAccessor.update(tuple);
-                } catch (TreeIndexException e) {
-                } catch (UnsupportedOperationException e) {
-                }
+                indexAccessor.update(tuple);
             }
             // Do another scan after a round of updates.
             orderedScan(indexAccessor, fieldSerdes);
@@ -640,8 +652,8 @@ public abstract class OrderedIndexExamplesTest {
             LOGGER.info(ins + " tuples loaded in " + (end - start) + "ms");
         }
 
-        IIndexAccessor indexAccessor = treeIndex.createAccessor(TestOperationCallback.INSTANCE,
-                TestOperationCallback.INSTANCE);
+        IIndexAccessor indexAccessor =
+                treeIndex.createAccessor(TestOperationCallback.INSTANCE, TestOperationCallback.INSTANCE);
 
         // Build low key.
         ArrayTupleBuilder lowKeyTb = new ArrayTupleBuilder(1);
@@ -693,8 +705,8 @@ public abstract class OrderedIndexExamplesTest {
         int ins = 1000;
         for (int i = 1; i < ins; i++) {
 
-            ITreeIndex treeIndex = createTreeIndex(typeTraits, cmpFactories, bloomFilterKeyFields, null, null, null,
-                    null);
+            ITreeIndex treeIndex =
+                    createTreeIndex(typeTraits, cmpFactories, bloomFilterKeyFields, null, null, null, null);
             treeIndex.create();
             treeIndex.activate();
 
@@ -718,19 +730,17 @@ public abstract class OrderedIndexExamplesTest {
                 TupleUtils.createIntegerTuple(tb, tuple, key, 5);
                 try {
                     bulkLoader.add(tuple);
-                } catch (UnsortedInputException e) {
-                    if (j != i) {
-                        fail("Unexpected exception: " + e.getMessage());
+                } catch (HyracksDataException e) {
+                    if (e.getErrorCode() == ErrorCode.UNSORTED_LOAD_INPUT || e.getErrorCode() == ErrorCode.DUPLICATE_KEY
+                            || e.getErrorCode() == ErrorCode.DUPLICATE_LOAD_INPUT) {
+                        if (j != i) {
+                            fail("Unexpected exception: " + e.getMessage());
+                        }
+                        // Success.
+                        break;
+                    } else {
+                        throw e;
                     }
-                    // Success.
-
-                    break;
-                } catch (TreeIndexDuplicateKeyException e2) {
-                    if (j != i) {
-                        fail("Unexpected exception: " + e2.getMessage());
-                    }
-                    // Success.
-                    break;
                 }
             }
             treeIndex.deactivate();
@@ -765,8 +775,8 @@ public abstract class OrderedIndexExamplesTest {
                 LOGGER.info("Disk-Order Scan:");
             }
             ITreeIndexAccessor treeIndexAccessor = (ITreeIndexAccessor) indexAccessor;
-            TreeIndexDiskOrderScanCursor diskOrderCursor = (TreeIndexDiskOrderScanCursor) treeIndexAccessor
-                    .createDiskOrderScanCursor();
+            TreeIndexDiskOrderScanCursor diskOrderCursor =
+                    (TreeIndexDiskOrderScanCursor) treeIndexAccessor.createDiskOrderScanCursor();
             treeIndexAccessor.diskOrderScan(diskOrderCursor);
             try {
                 while (diskOrderCursor.hasNext()) {

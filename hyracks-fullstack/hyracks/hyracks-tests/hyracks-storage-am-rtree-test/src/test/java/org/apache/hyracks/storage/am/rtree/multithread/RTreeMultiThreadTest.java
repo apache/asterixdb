@@ -29,7 +29,6 @@ import org.apache.hyracks.storage.am.common.TestOperationSelector.TestOperation;
 import org.apache.hyracks.storage.am.common.TestWorkloadConf;
 import org.apache.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import org.apache.hyracks.storage.am.common.api.ITreeIndex;
-import org.apache.hyracks.storage.am.common.api.TreeIndexException;
 import org.apache.hyracks.storage.am.common.datagen.ProbabilityHelper;
 import org.apache.hyracks.storage.am.rtree.AbstractRTreeExamplesTest.RTreeType;
 import org.apache.hyracks.storage.am.rtree.AbstractRTreeMultiThreadTest;
@@ -60,7 +59,7 @@ public class RTreeMultiThreadTest extends AbstractRTreeMultiThreadTest {
     @Override
     protected ITreeIndex createTreeIndex(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] rtreeCmpFactories,
             IBinaryComparatorFactory[] btreeCmpFactories, IPrimitiveValueProviderFactory[] valueProviderFactories,
-            RTreePolicyType rtreePolicyType, int[] btreeFields) throws TreeIndexException {
+            RTreePolicyType rtreePolicyType, int[] btreeFields) throws HyracksDataException {
         return RTreeUtils.createRTree(harness.getBufferCache(), harness.getFileMapProvider(), typeTraits,
                 valueProviderFactories, rtreeCmpFactories, rtreePolicyType, harness.getFileReference(), false,
                 harness.getMetadataManagerFactory());
@@ -82,8 +81,8 @@ public class RTreeMultiThreadTest extends AbstractRTreeMultiThreadTest {
                 .add(new TestWorkloadConf(insertOnlyOps, ProbabilityHelper.getUniformProbDist(insertOnlyOps.length)));
 
         // Inserts mixed with scans.
-        TestOperation[] insertSearchOnlyOps = new TestOperation[] { TestOperation.INSERT, TestOperation.SCAN,
-                TestOperation.DISKORDER_SCAN };
+        TestOperation[] insertSearchOnlyOps =
+                new TestOperation[] { TestOperation.INSERT, TestOperation.SCAN, TestOperation.DISKORDER_SCAN };
         workloadConfs.add(new TestWorkloadConf(insertSearchOnlyOps,
                 ProbabilityHelper.getUniformProbDist(insertSearchOnlyOps.length)));
 

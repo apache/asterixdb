@@ -1650,7 +1650,7 @@
     <test-case FilePath="dml">
       <compilation-unit name="insert-duplicated-keys-from-query">
         <output-dir compare="Text">insert-duplicated-keys-from-query</output-dir>
-        <expected-error>Failed to insert key since key already exists</expected-error>
+        <expected-error>Inserting duplicate keys into the primary storage</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="dml">
@@ -1833,7 +1833,7 @@
     <test-case FilePath="dml">
       <compilation-unit name="insert-duplicated-keys">
         <output-dir compare="Text">insert-duplicated-keys</output-dir>
-        <expected-error>org.apache.hyracks.storage.am.common.exceptions.TreeIndexDuplicateKeyException: Failed to insert key since key already exists</expected-error>
+        <expected-error>Inserting duplicate keys into the primary storage</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="dml">
@@ -6742,7 +6742,7 @@
     <test-case FilePath="load">
       <compilation-unit name="duplicate-key-error">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>Input stream given to BTree bulk load has duplicates</expected-error>
+        <expected-error>Loading duplicate keys into the primary storage</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="load">

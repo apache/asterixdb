@@ -42,7 +42,6 @@ import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndex;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexSearcher;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedListCursor;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IObjectFactory;
-import org.apache.hyracks.storage.am.lsm.invertedindex.exceptions.OccurrenceThresholdPanicException;
 import org.apache.hyracks.storage.am.lsm.invertedindex.ondisk.FixedSizeFrameTupleAccessor;
 import org.apache.hyracks.storage.am.lsm.invertedindex.ondisk.FixedSizeTupleReference;
 import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.DelimitedUTF8StringBinaryTokenizer;
@@ -52,8 +51,8 @@ import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.TokenizerInfo.
 import org.apache.hyracks.storage.am.lsm.invertedindex.util.ObjectCache;
 
 public abstract class AbstractTOccurrenceSearcher implements IInvertedIndexSearcher {
-    protected static final RecordDescriptor QUERY_TOKEN_REC_DESC = new RecordDescriptor(
-            new ISerializerDeserializer[] { new UTF8StringSerializerDeserializer() });
+    protected static final RecordDescriptor QUERY_TOKEN_REC_DESC =
+            new RecordDescriptor(new ISerializerDeserializer[] { new UTF8StringSerializerDeserializer() });
 
     protected final int OBJECT_CACHE_INIT_SIZE = 10;
     protected final int OBJECT_CACHE_EXPAND_SIZE = 10;
@@ -82,20 +81,20 @@ public abstract class AbstractTOccurrenceSearcher implements IInvertedIndexSearc
         this.invIndex = invIndex;
         this.invListCmp = MultiComparator.create(invIndex.getInvListCmpFactories());
         this.invListCursorFactory = new InvertedListCursorFactory(invIndex);
-        this.invListCursorCache = new ObjectCache<IInvertedListCursor>(invListCursorFactory, OBJECT_CACHE_INIT_SIZE,
+        this.invListCursorCache = new ObjectCache<>(invListCursorFactory, OBJECT_CACHE_INIT_SIZE,
                 OBJECT_CACHE_EXPAND_SIZE);
-        this.queryTokenFrame =  new VSizeFrame(ctx);
+        this.queryTokenFrame = new VSizeFrame(ctx);
         this.queryTokenAppender = new FrameTupleAppenderAccessor(QUERY_TOKEN_REC_DESC);
         this.queryTokenAppender.reset(queryTokenFrame, true);
     }
 
+    @Override
     public void reset() {
         searchResult.clear();
         invListMerger.reset();
     }
 
-    protected void tokenizeQuery(InvertedIndexSearchPredicate searchPred) throws HyracksDataException,
-            OccurrenceThresholdPanicException {
+    protected void tokenizeQuery(InvertedIndexSearchPredicate searchPred) throws HyracksDataException {
         ITupleReference queryTuple = searchPred.getQueryTuple();
         int queryFieldIndex = searchPred.getQueryFieldIndex();
         IBinaryTokenizer queryTokenizer = searchPred.getQueryTokenizer();
@@ -144,10 +143,12 @@ public abstract class AbstractTOccurrenceSearcher implements IInvertedIndexSearc
         }
     }
 
+    @Override
     public IFrameTupleAccessor createResultFrameTupleAccessor() {
         return new FixedSizeFrameTupleAccessor(ctx.getInitialFrameSize(), searchResult.getTypeTraits());
     }
 
+    @Override
     public ITupleReference createResultFrameTupleReference() {
         return new FixedSizeTupleReference(searchResult.getTypeTraits());
     }

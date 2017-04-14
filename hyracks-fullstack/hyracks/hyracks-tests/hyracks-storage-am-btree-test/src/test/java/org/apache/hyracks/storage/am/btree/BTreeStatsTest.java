@@ -22,9 +22,6 @@ import java.io.DataOutput;
 import java.util.Random;
 import java.util.logging.Level;
 
-import org.apache.hyracks.storage.am.common.api.*;
-import org.junit.Test;
-
 import org.apache.hyracks.api.comm.IFrame;
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 import org.apache.hyracks.api.comm.VSizeFrame;
@@ -33,6 +30,8 @@ import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
+import org.apache.hyracks.api.exceptions.ErrorCode;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
@@ -48,6 +47,10 @@ import org.apache.hyracks.storage.am.btree.impls.BTree;
 import org.apache.hyracks.storage.am.btree.util.AbstractBTreeTest;
 import org.apache.hyracks.storage.am.common.TestOperationCallback;
 import org.apache.hyracks.storage.am.common.api.IMetadataPageManager;
+import org.apache.hyracks.storage.am.common.api.ITreeIndexAccessor;
+import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
+import org.apache.hyracks.storage.am.common.api.ITreeIndexMetadataFrame;
+import org.apache.hyracks.storage.am.common.api.ITreeIndexMetadataFrameFactory;
 import org.apache.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
 import org.apache.hyracks.storage.am.common.freepage.LinkedMetaDataPageManager;
 import org.apache.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
@@ -58,6 +61,7 @@ import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.file.IFileMapProvider;
 import org.apache.hyracks.test.support.TestStorageManagerComponentHolder;
 import org.apache.hyracks.test.support.TestUtils;
+import org.junit.Test;
 
 @SuppressWarnings("rawtypes")
 public class BTreeStatsTest extends AbstractBTreeTest {
@@ -97,8 +101,8 @@ public class BTreeStatsTest extends AbstractBTreeTest {
 
         IMetadataPageManager freePageManager = new LinkedMetaDataPageManager(bufferCache, metaFrameFactory);
 
-        BTree btree = new BTree(bufferCache, fmp, freePageManager, interiorFrameFactory, leafFrameFactory,
-                cmpFactories, fieldCount, harness.getFileReference());
+        BTree btree = new BTree(bufferCache, fmp, freePageManager, interiorFrameFactory, leafFrameFactory, cmpFactories,
+                fieldCount, harness.getFileReference());
         btree.create();
         btree.activate();
 
@@ -116,15 +120,15 @@ public class BTreeStatsTest extends AbstractBTreeTest {
         ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
         DataOutput dos = tb.getDataOutput();
 
-        ISerializerDeserializer[] recDescSers = { IntegerSerializerDeserializer.INSTANCE,
-                IntegerSerializerDeserializer.INSTANCE };
+        ISerializerDeserializer[] recDescSers =
+                { IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE };
         RecordDescriptor recDesc = new RecordDescriptor(recDescSers);
         IFrameTupleAccessor accessor = new FrameTupleAccessor(recDesc);
         accessor.reset(frame.getBuffer());
         FrameTupleReference tuple = new FrameTupleReference();
 
-        ITreeIndexAccessor indexAccessor = btree.createAccessor(TestOperationCallback.INSTANCE,
-                TestOperationCallback.INSTANCE);
+        ITreeIndexAccessor indexAccessor =
+                btree.createAccessor(TestOperationCallback.INSTANCE, TestOperationCallback.INSTANCE);
         // 10000
         for (int i = 0; i < 100000; i++) {
 
@@ -151,22 +155,24 @@ public class BTreeStatsTest extends AbstractBTreeTest {
 
             try {
                 indexAccessor.insert(tuple);
-            } catch (TreeIndexException e) {
-            } catch (Exception e) {
-                e.printStackTrace();
+            } catch (HyracksDataException e) {
+                if (e.getErrorCode() != ErrorCode.DUPLICATE_KEY) {
+                    e.printStackTrace();
+                    throw e;
+                }
             }
         }
 
         int fileId = fmp.lookupFileId(harness.getFileReference());
-        TreeIndexStatsGatherer statsGatherer = new TreeIndexStatsGatherer(bufferCache, freePageManager, fileId,
-                btree.getRootPageId());
+        TreeIndexStatsGatherer statsGatherer =
+                new TreeIndexStatsGatherer(bufferCache, freePageManager, fileId, btree.getRootPageId());
         TreeIndexStats stats = statsGatherer.gatherStats(leafFrame, interiorFrame, metaFrame);
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("\n" + stats.toString());
         }
 
-        TreeIndexBufferCacheWarmup bufferCacheWarmup = new TreeIndexBufferCacheWarmup(bufferCache, freePageManager,
-                fileId);
+        TreeIndexBufferCacheWarmup bufferCacheWarmup =
+                new TreeIndexBufferCacheWarmup(bufferCache, freePageManager, fileId);
         bufferCacheWarmup.warmup(leafFrame, metaFrame, new int[] { 1, 2 }, new int[] { 2, 5 });
 
         btree.deactivate();

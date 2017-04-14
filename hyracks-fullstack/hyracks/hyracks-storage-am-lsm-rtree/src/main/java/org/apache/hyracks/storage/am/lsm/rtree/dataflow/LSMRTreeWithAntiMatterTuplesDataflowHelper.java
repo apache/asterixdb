@@ -30,7 +30,6 @@ import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.storage.am.common.api.IMetadataPageManagerFactory;
 import org.apache.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import org.apache.hyracks.storage.am.common.api.ITreeIndex;
-import org.apache.hyracks.storage.am.common.api.TreeIndexException;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexOperatorDescriptor;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
@@ -66,15 +65,11 @@ public class LSMRTreeWithAntiMatterTuplesDataflowHelper extends AbstractLSMRTree
             RTreePolicyType rtreePolicyType, ILinearizeComparatorFactory linearizeCmpFactory, int[] rtreeFields,
             ITypeTraits[] filterTypeTraits, IBinaryComparatorFactory[] filterCmpFactories, int[] filterFields)
             throws HyracksDataException {
-        try {
-            return LSMRTreeUtils.createLSMTreeWithAntiMatterTuples(ctx.getIOManager(), virtualBufferCaches, file,
-                    diskBufferCache, diskFileMapProvider, typeTraits, rtreeCmpFactories, btreeCmpFactories,
-                    valueProviderFactories, rtreePolicyType, mergePolicy, opTracker, ioScheduler, ioOpCallbackFactory
-                            .createIoOpCallback(), linearizeCmpFactory, rtreeFields, filterTypeTraits,
-                    filterCmpFactories, filterFields, durable, isPointMBR, (IMetadataPageManagerFactory) opDesc
-                            .getPageManagerFactory());
-        } catch (TreeIndexException e) {
-            throw new HyracksDataException(e);
-        }
+        return LSMRTreeUtils.createLSMTreeWithAntiMatterTuples(ctx.getIOManager(), virtualBufferCaches, file,
+                diskBufferCache, diskFileMapProvider, typeTraits, rtreeCmpFactories, btreeCmpFactories,
+                valueProviderFactories, rtreePolicyType, mergePolicy, opTracker, ioScheduler,
+                ioOpCallbackFactory.createIoOpCallback(), linearizeCmpFactory, rtreeFields, filterTypeTraits,
+                filterCmpFactories, filterFields, durable, isPointMBR,
+                (IMetadataPageManagerFactory) opDesc.getPageManagerFactory());
     }
 }

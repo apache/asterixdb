@@ -32,7 +32,6 @@ import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.storage.am.common.api.IMetadataPageManagerFactory;
 import org.apache.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
-import org.apache.hyracks.storage.am.common.api.TreeIndexException;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
@@ -90,17 +89,12 @@ public class LSMRTreeLocalResourceMetadata extends Resource {
         int ioDeviceNum = Resource.getIoDeviceNum(ioManager, file.getDeviceHandle());
         List<IVirtualBufferCache> virtualBufferCaches =
                 appCtx.getDatasetLifecycleManager().getVirtualBufferCaches(datasetId(), ioDeviceNum);
-        try {
-            return LSMRTreeUtils.createLSMTreeWithAntiMatterTuples(ioManager, virtualBufferCaches, file,
-                    appCtx.getBufferCache(), appCtx.getFileMapManager(), typeTraits,
-                    rtreeCmpFactories, btreeCmpFactories, valueProviderFactories, rtreePolicyType,
-                    mergePolicyFactory.createMergePolicy(mergePolicyProperties,
-                            appCtx.getDatasetLifecycleManager()),
-                    opTrackerProvider.getOperationTracker(serviceCtx), appCtx.getLSMIOScheduler(),
-                    ioOpCallbackFactory.createIoOpCallback(), linearizeCmpFactory, rtreeFields, filterTypeTraits,
-                    filterCmpFactories, filterFields, true, isPointMBR, metadataPageManagerFactory);
-        } catch (TreeIndexException e) {
-            throw new HyracksDataException(e);
-        }
+        return LSMRTreeUtils.createLSMTreeWithAntiMatterTuples(ioManager, virtualBufferCaches, file,
+                appCtx.getBufferCache(), appCtx.getFileMapManager(), typeTraits, rtreeCmpFactories, btreeCmpFactories,
+                valueProviderFactories, rtreePolicyType,
+                mergePolicyFactory.createMergePolicy(mergePolicyProperties, appCtx.getDatasetLifecycleManager()),
+                opTrackerProvider.getOperationTracker(serviceCtx), appCtx.getLSMIOScheduler(),
+                ioOpCallbackFactory.createIoOpCallback(), linearizeCmpFactory, rtreeFields, filterTypeTraits,
+                filterCmpFactories, filterFields, true, isPointMBR, metadataPageManagerFactory);
     }
 }

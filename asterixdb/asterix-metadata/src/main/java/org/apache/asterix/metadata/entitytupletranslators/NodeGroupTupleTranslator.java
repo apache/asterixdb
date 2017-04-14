@@ -22,7 +22,6 @@ package org.apache.asterix.metadata.entitytupletranslators;
 import java.io.ByteArrayInputStream;
 import java.io.DataInput;
 import java.io.DataInputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -39,6 +38,7 @@ import org.apache.asterix.om.base.AUnorderedList;
 import org.apache.asterix.om.base.IACursor;
 import org.apache.asterix.om.types.AUnorderedListType;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 
@@ -56,28 +56,28 @@ public class NodeGroupTupleTranslator extends AbstractTupleTranslator<NodeGroup>
 
     private transient UnorderedListBuilder listBuilder = new UnorderedListBuilder();
     private transient ArrayBackedValueStorage itemValue = new ArrayBackedValueStorage();
-    private List<String> nodeNames;
     @SuppressWarnings("unchecked")
-    private ISerializerDeserializer<ARecord> recordSerDes = SerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(MetadataRecordTypes.NODEGROUP_RECORDTYPE);
+    private ISerializerDeserializer<ARecord> recordSerDes =
+            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(MetadataRecordTypes.NODEGROUP_RECORDTYPE);
 
     protected NodeGroupTupleTranslator(boolean getTuple) {
         super(getTuple, MetadataPrimaryIndexes.NODEGROUP_DATASET.getFieldCount());
     }
 
     @Override
-    public NodeGroup getMetadataEntityFromTuple(ITupleReference frameTuple) throws IOException {
+    public NodeGroup getMetadataEntityFromTuple(ITupleReference frameTuple) throws HyracksDataException {
         byte[] serRecord = frameTuple.getFieldData(NODEGROUP_PAYLOAD_TUPLE_FIELD_INDEX);
         int recordStartOffset = frameTuple.getFieldStart(NODEGROUP_PAYLOAD_TUPLE_FIELD_INDEX);
         int recordLength = frameTuple.getFieldLength(NODEGROUP_PAYLOAD_TUPLE_FIELD_INDEX);
         ByteArrayInputStream stream = new ByteArrayInputStream(serRecord, recordStartOffset, recordLength);
         DataInput in = new DataInputStream(stream);
         ARecord nodeGroupRecord = recordSerDes.deserialize(in);
-        String gpName = ((AString) nodeGroupRecord
-                .getValueByPos(MetadataRecordTypes.NODEGROUP_ARECORD_GROUPNAME_FIELD_INDEX)).getStringValue();
+        String gpName =
+                ((AString) nodeGroupRecord.getValueByPos(MetadataRecordTypes.NODEGROUP_ARECORD_GROUPNAME_FIELD_INDEX))
+                        .getStringValue();
         IACursor cursor = ((AUnorderedList) nodeGroupRecord
                 .getValueByPos(MetadataRecordTypes.NODEGROUP_ARECORD_NODENAMES_FIELD_INDEX)).getCursor();
-        List<String> nodeNames = new ArrayList<String>();
+        List<String> nodeNames = new ArrayList<>();
         while (cursor.next()) {
             nodeNames.add(((AString) cursor.get()).getStringValue());
         }
@@ -85,7 +85,8 @@ public class NodeGroupTupleTranslator extends AbstractTupleTranslator<NodeGroup>
     }
 
     @Override
-    public ITupleReference getTupleFromMetadataEntity(NodeGroup instance) throws IOException, MetadataException {
+    public ITupleReference getTupleFromMetadataEntity(NodeGroup instance)
+            throws HyracksDataException, MetadataException {
         // write the key in the first field of the tuple
         tupleBuilder.reset();
         aString.setValue(instance.getNodeGroupName());
@@ -103,8 +104,8 @@ public class NodeGroupTupleTranslator extends AbstractTupleTranslator<NodeGroup>
         // write field 1
         listBuilder.reset((AUnorderedListType) MetadataRecordTypes.NODEGROUP_RECORDTYPE
                 .getFieldTypes()[MetadataRecordTypes.NODEGROUP_ARECORD_NODENAMES_FIELD_INDEX]);
-        this.nodeNames = instance.getNodeNames();
-        for (String nodeName : this.nodeNames) {
+        List<String> nodeNames = instance.getNodeNames();
+        for (String nodeName : nodeNames) {
             itemValue.reset();
             aString.setValue(nodeName);
             stringSerde.serialize(aString, itemValue.getDataOutput());

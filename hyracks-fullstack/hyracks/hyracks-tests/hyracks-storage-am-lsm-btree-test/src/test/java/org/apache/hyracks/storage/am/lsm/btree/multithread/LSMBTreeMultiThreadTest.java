@@ -29,7 +29,6 @@ import org.apache.hyracks.storage.am.common.IIndexTestWorkerFactory;
 import org.apache.hyracks.storage.am.common.TestOperationSelector.TestOperation;
 import org.apache.hyracks.storage.am.common.TestWorkloadConf;
 import org.apache.hyracks.storage.am.common.api.ITreeIndex;
-import org.apache.hyracks.storage.am.common.api.TreeIndexException;
 import org.apache.hyracks.storage.am.common.datagen.ProbabilityHelper;
 import org.apache.hyracks.storage.am.lsm.btree.util.LSMBTreeTestHarness;
 import org.apache.hyracks.storage.am.lsm.btree.utils.LSMBTreeUtil;
@@ -52,9 +51,9 @@ public class LSMBTreeMultiThreadTest extends OrderedIndexMultiThreadTest {
 
     @Override
     protected ITreeIndex createIndex(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories,
-            int[] bloomFilterKeyFields) throws TreeIndexException, HyracksDataException {
-        return LSMBTreeUtil.createLSMTree(harness.getIOManager(), harness.getVirtualBufferCaches(), harness
-                .getFileReference(), harness.getDiskBufferCache(), harness.getDiskFileMapProvider(), typeTraits,
+            int[] bloomFilterKeyFields) throws HyracksDataException {
+        return LSMBTreeUtil.createLSMTree(harness.getIOManager(), harness.getVirtualBufferCaches(),
+                harness.getFileReference(), harness.getDiskBufferCache(), harness.getDiskFileMapProvider(), typeTraits,
                 cmpFactories, bloomFilterKeyFields, harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(),
                 harness.getOperationTracker(), harness.getIOScheduler(), harness.getIOOperationCallback(), true, null,
                 null, null, null, true, harness.getMetadataPageManagerFactory());
@@ -71,41 +70,41 @@ public class LSMBTreeMultiThreadTest extends OrderedIndexMultiThreadTest {
 
         // Insert only workload.
         TestOperation[] insertOnlyOps = new TestOperation[] { TestOperation.INSERT };
-        workloadConfs.add(new TestWorkloadConf(insertOnlyOps, ProbabilityHelper
-                .getUniformProbDist(insertOnlyOps.length)));
+        workloadConfs
+                .add(new TestWorkloadConf(insertOnlyOps, ProbabilityHelper.getUniformProbDist(insertOnlyOps.length)));
 
         // Insert and merge workload.
         TestOperation[] insertMergeOps = new TestOperation[] { TestOperation.INSERT, TestOperation.MERGE };
-        workloadConfs.add(new TestWorkloadConf(insertMergeOps, ProbabilityHelper
-                .getUniformProbDist(insertMergeOps.length)));
+        workloadConfs
+                .add(new TestWorkloadConf(insertMergeOps, ProbabilityHelper.getUniformProbDist(insertMergeOps.length)));
 
         // Inserts mixed with point searches and scans.
-        TestOperation[] insertSearchOnlyOps = new TestOperation[] { TestOperation.INSERT, TestOperation.POINT_SEARCH,
-                TestOperation.SCAN };
-        workloadConfs.add(new TestWorkloadConf(insertSearchOnlyOps, ProbabilityHelper
-                .getUniformProbDist(insertSearchOnlyOps.length)));
+        TestOperation[] insertSearchOnlyOps =
+                new TestOperation[] { TestOperation.INSERT, TestOperation.POINT_SEARCH, TestOperation.SCAN };
+        workloadConfs.add(new TestWorkloadConf(insertSearchOnlyOps,
+                ProbabilityHelper.getUniformProbDist(insertSearchOnlyOps.length)));
 
         // Inserts, updates, and deletes.
-        TestOperation[] insertDeleteUpdateOps = new TestOperation[] { TestOperation.INSERT, TestOperation.DELETE,
-                TestOperation.UPDATE };
-        workloadConfs.add(new TestWorkloadConf(insertDeleteUpdateOps, ProbabilityHelper
-                .getUniformProbDist(insertDeleteUpdateOps.length)));
+        TestOperation[] insertDeleteUpdateOps =
+                new TestOperation[] { TestOperation.INSERT, TestOperation.DELETE, TestOperation.UPDATE };
+        workloadConfs.add(new TestWorkloadConf(insertDeleteUpdateOps,
+                ProbabilityHelper.getUniformProbDist(insertDeleteUpdateOps.length)));
 
         // Inserts, updates, deletes and merges.
         TestOperation[] insertDeleteUpdateMergeOps = new TestOperation[] { TestOperation.INSERT, TestOperation.DELETE,
                 TestOperation.UPDATE, TestOperation.MERGE };
-        workloadConfs.add(new TestWorkloadConf(insertDeleteUpdateMergeOps, ProbabilityHelper
-                .getUniformProbDist(insertDeleteUpdateMergeOps.length)));
+        workloadConfs.add(new TestWorkloadConf(insertDeleteUpdateMergeOps,
+                ProbabilityHelper.getUniformProbDist(insertDeleteUpdateMergeOps.length)));
 
         // All operations except merge.
         TestOperation[] allNoMergeOps = new TestOperation[] { TestOperation.INSERT, TestOperation.DELETE,
                 TestOperation.UPDATE, TestOperation.POINT_SEARCH, TestOperation.SCAN };
-        workloadConfs.add(new TestWorkloadConf(allNoMergeOps, ProbabilityHelper
-                .getUniformProbDist(allNoMergeOps.length)));
+        workloadConfs
+                .add(new TestWorkloadConf(allNoMergeOps, ProbabilityHelper.getUniformProbDist(allNoMergeOps.length)));
 
         // All operations.
-        TestOperation[] allOps = new TestOperation[] { TestOperation.INSERT, TestOperation.DELETE,
-                TestOperation.UPDATE, TestOperation.POINT_SEARCH, TestOperation.SCAN, TestOperation.MERGE };
+        TestOperation[] allOps = new TestOperation[] { TestOperation.INSERT, TestOperation.DELETE, TestOperation.UPDATE,
+                TestOperation.POINT_SEARCH, TestOperation.SCAN, TestOperation.MERGE };
         workloadConfs.add(new TestWorkloadConf(allOps, ProbabilityHelper.getUniformProbDist(allOps.length)));
 
         return workloadConfs;

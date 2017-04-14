@@ -30,7 +30,6 @@ import java.util.List;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
-import org.apache.hyracks.storage.am.common.api.IndexException;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexFileManager;
 import org.apache.hyracks.storage.am.lsm.common.impls.BTreeFactory;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
@@ -79,8 +78,8 @@ public class LSMInvertedIndexFileManager extends AbstractLSMIndexFileManager imp
         String baseName = baseDir + ts + SPLIT_STRING + ts;
         // Begin timestamp and end timestamp are identical since it is a flush
         return new LSMComponentFileReferences(createFlushFile(baseName + SPLIT_STRING + DICT_BTREE_SUFFIX),
-                createFlushFile(baseName + SPLIT_STRING + DELETED_KEYS_BTREE_SUFFIX), createFlushFile(baseName
-                        + SPLIT_STRING + BLOOM_FILTER_STRING));
+                createFlushFile(baseName + SPLIT_STRING + DELETED_KEYS_BTREE_SUFFIX),
+                createFlushFile(baseName + SPLIT_STRING + BLOOM_FILTER_STRING));
     }
 
     @Override
@@ -92,12 +91,12 @@ public class LSMInvertedIndexFileManager extends AbstractLSMIndexFileManager imp
         String baseName = baseDir + firstTimestampRange[0] + SPLIT_STRING + lastTimestampRange[1];
         // Get the range of timestamps by taking the earliest and the latest timestamps
         return new LSMComponentFileReferences(createMergeFile(baseName + SPLIT_STRING + DICT_BTREE_SUFFIX),
-                createMergeFile(baseName + SPLIT_STRING + DELETED_KEYS_BTREE_SUFFIX), createMergeFile(baseName
-                        + SPLIT_STRING + BLOOM_FILTER_STRING));
+                createMergeFile(baseName + SPLIT_STRING + DELETED_KEYS_BTREE_SUFFIX),
+                createMergeFile(baseName + SPLIT_STRING + BLOOM_FILTER_STRING));
     }
 
     @Override
-    public List<LSMComponentFileReferences> cleanupAndGetValidFiles() throws HyracksDataException, IndexException {
+    public List<LSMComponentFileReferences> cleanupAndGetValidFiles() throws HyracksDataException {
         List<LSMComponentFileReferences> validFiles = new ArrayList<>();
         ArrayList<ComparableFileName> allDictBTreeFiles = new ArrayList<>();
         ArrayList<ComparableFileName> allInvListsFiles = new ArrayList<>();
@@ -133,8 +132,8 @@ public class LSMInvertedIndexFileManager extends AbstractLSMIndexFileManager imp
 
         if (allDictBTreeFiles.size() == 1 && allInvListsFiles.size() == 1 && allDeletedKeysBTreeFiles.size() == 1
                 && allBloomFilterFiles.size() == 1) {
-            validFiles.add(new LSMComponentFileReferences(allDictBTreeFiles.get(0).fileRef, allDeletedKeysBTreeFiles
-                    .get(0).fileRef, allBloomFilterFiles.get(0).fileRef));
+            validFiles.add(new LSMComponentFileReferences(allDictBTreeFiles.get(0).fileRef,
+                    allDeletedKeysBTreeFiles.get(0).fileRef, allBloomFilterFiles.get(0).fileRef));
             return validFiles;
         }
 
@@ -184,7 +183,8 @@ public class LSMInvertedIndexFileManager extends AbstractLSMIndexFileManager imp
                 invalidBloomFilterFile.delete();
             } else {
                 // This scenario should not be possible.
-                throw new HyracksDataException("Found LSM files with overlapping but not contained timetamp intervals.");
+                throw new HyracksDataException(
+                        "Found LSM files with overlapping but not contained timetamp intervals.");
             }
         }
 

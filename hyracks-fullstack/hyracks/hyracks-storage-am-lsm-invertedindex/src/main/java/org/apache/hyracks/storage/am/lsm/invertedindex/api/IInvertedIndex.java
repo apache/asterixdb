@@ -25,13 +25,12 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.common.api.IIndex;
 import org.apache.hyracks.storage.am.common.api.IIndexOperationContext;
-import org.apache.hyracks.storage.am.common.api.IndexException;
 
 public interface IInvertedIndex extends IIndex {
     IInvertedListCursor createInvertedListCursor();
 
     void openInvertedListCursor(IInvertedListCursor listCursor, ITupleReference searchKey, IIndexOperationContext ictx)
-            throws HyracksDataException, IndexException;
+            throws HyracksDataException;
 
     ITypeTraits[] getInvListTypeTraits();
 

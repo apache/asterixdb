@@ -30,7 +30,6 @@ import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.storage.am.common.api.IMetadataPageManagerFactory;
 import org.apache.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
-import org.apache.hyracks.storage.am.common.api.TreeIndexException;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
@@ -64,17 +63,12 @@ public class ExternalRTreeLocalResourceMetadata extends LSMRTreeLocalResourceMet
         IAppRuntimeContext appCtx = (IAppRuntimeContext) serviceCtx.getApplicationContext();
         IIOManager ioManager = appCtx.getIOManager();
         FileReference file = ioManager.resolve(resource.getPath());
-        try {
-            return LSMRTreeUtils.createExternalRTree(ioManager, file, appCtx.getBufferCache(),
-                    appCtx.getFileMapManager(), typeTraits, rtreeCmpFactories, btreeCmpFactories,
-                    valueProviderFactories, rtreePolicyType, appCtx.getBloomFilterFalsePositiveRate(),
-                    mergePolicyFactory.createMergePolicy(mergePolicyProperties,
-                            appCtx.getDatasetLifecycleManager()),
-                    opTrackerProvider.getOperationTracker(serviceCtx), appCtx.getLSMIOScheduler(),
-                    ioOpCallbackFactory.createIoOpCallback(), linearizeCmpFactory, btreeFields, -1, true, isPointMBR,
-                    metadataPageManagerFactory);
-        } catch (TreeIndexException e) {
-            throw new HyracksDataException(e);
-        }
+        return LSMRTreeUtils.createExternalRTree(ioManager, file, appCtx.getBufferCache(), appCtx.getFileMapManager(),
+                typeTraits, rtreeCmpFactories, btreeCmpFactories, valueProviderFactories, rtreePolicyType,
+                appCtx.getBloomFilterFalsePositiveRate(),
+                mergePolicyFactory.createMergePolicy(mergePolicyProperties, appCtx.getDatasetLifecycleManager()),
+                opTrackerProvider.getOperationTracker(serviceCtx), appCtx.getLSMIOScheduler(),
+                ioOpCallbackFactory.createIoOpCallback(), linearizeCmpFactory, btreeFields, -1, true, isPointMBR,
+                metadataPageManagerFactory);
     }
 }

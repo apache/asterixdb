@@ -125,7 +125,7 @@ public interface IIndex {
      * @throws IndexException
      */
     public IIndexBulkLoader createBulkLoader(float fillFactor, boolean verifyInput, long numElementsHint,
-            boolean checkIfEmptyIndex) throws IndexException;
+            boolean checkIfEmptyIndex) throws HyracksDataException;
 
     /**
      * @return true if the index needs memory components

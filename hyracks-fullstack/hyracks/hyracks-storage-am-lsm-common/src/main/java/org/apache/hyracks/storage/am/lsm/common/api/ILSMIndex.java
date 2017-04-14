@@ -30,7 +30,6 @@ import org.apache.hyracks.storage.am.common.api.IIndexOperationContext;
 import org.apache.hyracks.storage.am.common.api.IModificationOperationCallback;
 import org.apache.hyracks.storage.am.common.api.ISearchOperationCallback;
 import org.apache.hyracks.storage.am.common.api.ISearchPredicate;
-import org.apache.hyracks.storage.am.common.api.IndexException;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMHarness;
 
 /**
@@ -62,19 +61,17 @@ public interface ILSMIndex extends IIndex {
 
     boolean isPrimaryIndex();
 
-    void modify(IIndexOperationContext ictx, ITupleReference tuple) throws HyracksDataException, IndexException;
+    void modify(IIndexOperationContext ictx, ITupleReference tuple) throws HyracksDataException;
 
-    void search(ILSMIndexOperationContext ictx, IIndexCursor cursor, ISearchPredicate pred)
-            throws HyracksDataException, IndexException;
+    void search(ILSMIndexOperationContext ictx, IIndexCursor cursor, ISearchPredicate pred) throws HyracksDataException;
 
     void scheduleFlush(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback) throws HyracksDataException;
 
-    ILSMDiskComponent flush(ILSMIOOperation operation) throws HyracksDataException, IndexException;
+    ILSMDiskComponent flush(ILSMIOOperation operation) throws HyracksDataException;
 
-    void scheduleMerge(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
-            throws HyracksDataException, IndexException;
+    void scheduleMerge(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback) throws HyracksDataException;
 
-    ILSMDiskComponent merge(ILSMIOOperation operation) throws HyracksDataException, IndexException;
+    ILSMDiskComponent merge(ILSMIOOperation operation) throws HyracksDataException;
 
     void addDiskComponent(ILSMDiskComponent index) throws HyracksDataException;
 

@@ -54,7 +54,6 @@ import org.apache.hyracks.storage.am.btree.dataflow.BTreeSearchOperatorDescripto
 import org.apache.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
 import org.apache.hyracks.storage.am.common.api.IPageManagerFactory;
 import org.apache.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
-import org.apache.hyracks.storage.am.common.api.TreeIndexException;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IndexDropOperatorDescriptor;
 import org.apache.hyracks.storage.am.common.dataflow.TreeIndexBulkLoadOperatorDescriptor;
@@ -69,8 +68,8 @@ import org.apache.hyracks.storage.am.rtree.util.RTreeUtils;
 import org.apache.hyracks.storage.common.IStorageManager;
 import org.apache.hyracks.storage.common.file.TransientLocalResourceFactoryProvider;
 import org.apache.hyracks.test.support.TestIndexLifecycleManagerProvider;
-import org.apache.hyracks.test.support.TestStorageManagerComponentHolder;
 import org.apache.hyracks.test.support.TestStorageManager;
+import org.apache.hyracks.test.support.TestStorageManagerComponentHolder;
 import org.apache.hyracks.tests.am.common.ITreeIndexOperatorTestHelper;
 import org.apache.hyracks.tests.integration.AbstractIntegrationTest;
 import org.junit.After;
@@ -202,7 +201,7 @@ public abstract class AbstractRTreeOperatorTest extends AbstractIntegrationTest 
     protected abstract IIndexDataflowHelperFactory createDataFlowHelperFactory(
             IPrimitiveValueProviderFactory[] secondaryValueProviderFactories, RTreePolicyType rtreePolicyType,
             IBinaryComparatorFactory[] btreeComparatorFactories, ILinearizeComparatorFactory linearizerCmpFactory,
-            int[] btreeFields) throws TreeIndexException;
+            int[] btreeFields) throws HyracksDataException;
 
     protected void createPrimaryIndex() throws Exception {
         JobSpecification spec = new JobSpecification();

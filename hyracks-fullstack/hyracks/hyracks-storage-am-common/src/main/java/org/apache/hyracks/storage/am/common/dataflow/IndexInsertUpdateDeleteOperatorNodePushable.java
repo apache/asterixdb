@@ -25,6 +25,7 @@ import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.dataflow.common.comm.util.FrameUtils;
@@ -36,8 +37,6 @@ import org.apache.hyracks.storage.am.common.api.IIndexDataflowHelper;
 import org.apache.hyracks.storage.am.common.api.IModificationOperationCallback;
 import org.apache.hyracks.storage.am.common.api.ITupleFilter;
 import org.apache.hyracks.storage.am.common.api.ITupleFilterFactory;
-import org.apache.hyracks.storage.am.common.exceptions.TreeIndexDuplicateKeyException;
-import org.apache.hyracks.storage.am.common.exceptions.TreeIndexNonExistentKeyException;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.am.common.tuples.PermutingFrameTupleReference;
@@ -79,8 +78,8 @@ public class IndexInsertUpdateDeleteOperatorNodePushable extends AbstractUnaryIn
         try {
             writer.open();
             LocalResource resource = indexHelper.getResource();
-            modCallback = opDesc.getModificationOpCallbackFactory().createModificationOperationCallback(resource, ctx,
-                    this);
+            modCallback =
+                    opDesc.getModificationOpCallbackFactory().createModificationOperationCallback(resource, ctx, this);
             indexAccessor = index.createAccessor(modCallback, NoOpOperationCallback.INSTANCE);
             ITupleFilterFactory tupleFilterFactory = opDesc.getTupleFilterFactory();
             if (tupleFilterFactory != null) {
@@ -110,8 +109,11 @@ public class IndexInsertUpdateDeleteOperatorNodePushable extends AbstractUnaryIn
                     case INSERT: {
                         try {
                             indexAccessor.insert(tuple);
-                        } catch (TreeIndexDuplicateKeyException e) {
-                            // ingnore that exception to allow inserting existing keys which becomes an NoOp
+                        } catch (HyracksDataException e) {
+                            // ignore that exception to allow inserting existing keys which becomes an NoOp
+                            if (e.getErrorCode() != ErrorCode.DUPLICATE_KEY) {
+                                throw e;
+                            }
                         }
                         break;
                     }
@@ -126,8 +128,11 @@ public class IndexInsertUpdateDeleteOperatorNodePushable extends AbstractUnaryIn
                     case DELETE: {
                         try {
                             indexAccessor.delete(tuple);
-                        } catch (TreeIndexNonExistentKeyException e) {
+                        } catch (HyracksDataException e) {
                             // ingnore that exception to allow deletions of non-existing keys
+                            if (e.getErrorCode() != ErrorCode.UPDATE_OR_DELETE_NON_EXISTENT_KEY) {
+                                throw e;
+                            }
                         }
                         break;
                     }

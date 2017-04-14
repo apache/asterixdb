@@ -30,7 +30,6 @@ import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleReference;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.storage.am.common.api.ITwoPCIndexBulkLoader;
-import org.apache.hyracks.storage.am.common.api.IndexException;
 import org.apache.hyracks.storage.am.common.dataflow.IndexBulkLoadOperatorNodePushable;
 import org.apache.hyracks.storage.am.lsm.common.api.ITwoPCIndex;
 
@@ -38,8 +37,8 @@ public class ExternalIndexBulkModifyOperatorNodePushable extends IndexBulkLoadOp
 
     private final FilesIndexDescription filesIndexDescription = new FilesIndexDescription();
     private final int[] deletedFiles;
-    private ArrayTupleBuilder buddyBTreeTupleBuilder = new ArrayTupleBuilder(
-            filesIndexDescription.FILE_BUDDY_BTREE_RECORD_DESCRIPTOR.getFieldCount());
+    private ArrayTupleBuilder buddyBTreeTupleBuilder =
+            new ArrayTupleBuilder(filesIndexDescription.FILE_BUDDY_BTREE_RECORD_DESCRIPTOR.getFieldCount());
     private AMutableInt32 fileNumber = new AMutableInt32(0);
     private ArrayTupleReference deleteTuple = new ArrayTupleReference();
 
@@ -81,11 +80,7 @@ public class ExternalIndexBulkModifyOperatorNodePushable extends IndexBulkLoadOp
         int tupleCount = accessor.getTupleCount();
         for (int i = 0; i < tupleCount; i++) {
             tuple.reset(accessor, i);
-            try {
-                bulkLoader.add(tuple);
-            } catch (IndexException e) {
-                throw new HyracksDataException(e);
-            }
+            bulkLoader.add(tuple);
         }
     }
 

@@ -27,7 +27,6 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.storage.am.common.api.IIndex;
 import org.apache.hyracks.storage.am.common.api.IMetadataPageManagerFactory;
-import org.apache.hyracks.storage.am.common.api.IndexException;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexOperatorDescriptor;
 import org.apache.hyracks.storage.am.common.util.IndexFileNameUtil;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
@@ -78,25 +77,19 @@ public final class LSMInvertedIndexDataflowHelper extends AbstractLSMIndexDatafl
     @Override
     public IIndex createIndexInstance() throws HyracksDataException {
         IInvertedIndexOperatorDescriptor invIndexOpDesc = (IInvertedIndexOperatorDescriptor) opDesc;
-        try {
-            IBufferCache diskBufferCache = opDesc.getStorageManager().getBufferCache(ctx);
-            IFileMapProvider diskFileMapProvider = opDesc.getStorageManager().getFileMapProvider(ctx);
-            FileReference fileRef = IndexFileNameUtil.getIndexAbsoluteFileRef(invIndexOpDesc, ctx.getTaskAttemptId()
-                    .getTaskId().getPartition(), ctx.getIOManager());
-            LSMInvertedIndex invIndex = InvertedIndexUtils.createLSMInvertedIndex(ctx.getIOManager(),
-                    virtualBufferCaches,
-                    diskFileMapProvider, invIndexOpDesc.getInvListsTypeTraits(),
-                    invIndexOpDesc.getInvListsComparatorFactories(), invIndexOpDesc.getTokenTypeTraits(),
-                    invIndexOpDesc.getTokenComparatorFactories(), invIndexOpDesc.getTokenizerFactory(),
-                    diskBufferCache, fileRef.getFile().getAbsolutePath(), bloomFilterFalsePositiveRate, mergePolicy,
-                    opTrackerFactory.getOperationTracker(ctx.getJobletContext().getServiceContext()), ioScheduler,
-                    ioOpCallbackFactory.createIoOpCallback(), invertedIndexFields, filterTypeTraits,
-                    filterCmpFactories, filterFields, filterFieldsForNonBulkLoadOps,
-                    invertedIndexFieldsForNonBulkLoadOps, durable, (IMetadataPageManagerFactory) opDesc
-                            .getPageManagerFactory());
-            return invIndex;
-        } catch (IndexException e) {
-            throw new HyracksDataException(e);
-        }
+        IBufferCache diskBufferCache = opDesc.getStorageManager().getBufferCache(ctx);
+        IFileMapProvider diskFileMapProvider = opDesc.getStorageManager().getFileMapProvider(ctx);
+        FileReference fileRef = IndexFileNameUtil.getIndexAbsoluteFileRef(invIndexOpDesc,
+                ctx.getTaskAttemptId().getTaskId().getPartition(), ctx.getIOManager());
+        LSMInvertedIndex invIndex = InvertedIndexUtils.createLSMInvertedIndex(ctx.getIOManager(), virtualBufferCaches,
+                diskFileMapProvider, invIndexOpDesc.getInvListsTypeTraits(),
+                invIndexOpDesc.getInvListsComparatorFactories(), invIndexOpDesc.getTokenTypeTraits(),
+                invIndexOpDesc.getTokenComparatorFactories(), invIndexOpDesc.getTokenizerFactory(), diskBufferCache,
+                fileRef.getFile().getAbsolutePath(), bloomFilterFalsePositiveRate, mergePolicy,
+                opTrackerFactory.getOperationTracker(ctx.getJobletContext().getServiceContext()), ioScheduler,
+                ioOpCallbackFactory.createIoOpCallback(), invertedIndexFields, filterTypeTraits, filterCmpFactories,
+                filterFields, filterFieldsForNonBulkLoadOps, invertedIndexFieldsForNonBulkLoadOps, durable,
+                (IMetadataPageManagerFactory) opDesc.getPageManagerFactory());
+        return invIndex;
     }
 }

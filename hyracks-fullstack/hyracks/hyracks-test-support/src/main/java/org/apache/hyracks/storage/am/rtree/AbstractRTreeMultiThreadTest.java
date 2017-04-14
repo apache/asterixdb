@@ -37,7 +37,6 @@ import org.apache.hyracks.storage.am.common.IndexMultiThreadTestDriver;
 import org.apache.hyracks.storage.am.common.TestWorkloadConf;
 import org.apache.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import org.apache.hyracks.storage.am.common.api.ITreeIndex;
-import org.apache.hyracks.storage.am.common.api.TreeIndexException;
 import org.apache.hyracks.storage.am.config.AccessMethodTestsConfig;
 import org.apache.hyracks.storage.am.rtree.AbstractRTreeExamplesTest.RTreeType;
 import org.apache.hyracks.storage.am.rtree.frames.RTreePolicyType;
@@ -72,7 +71,7 @@ public abstract class AbstractRTreeMultiThreadTest {
     protected abstract ITreeIndex createTreeIndex(ITypeTraits[] typeTraits,
             IBinaryComparatorFactory[] rtreeCmpFactories, IBinaryComparatorFactory[] btreeCmpFactories,
             IPrimitiveValueProviderFactory[] valueProviderFactories, RTreePolicyType rtreePolicyType, int[] btreeFields)
-            throws TreeIndexException, HyracksDataException;
+            throws HyracksDataException;
 
     protected abstract IIndexTestWorkerFactory getWorkerFactory();
 
@@ -82,8 +81,7 @@ public abstract class AbstractRTreeMultiThreadTest {
 
     protected void runTest(ISerializerDeserializer[] fieldSerdes,
             IPrimitiveValueProviderFactory[] valueProviderFactories, int numKeys, RTreePolicyType rtreePolicyType,
-            int numThreads, TestWorkloadConf conf, String dataMsg) throws HyracksDataException, InterruptedException,
-            TreeIndexException {
+            int numThreads, TestWorkloadConf conf, String dataMsg) throws HyracksDataException, InterruptedException {
         setUp();
 
         if (LOGGER.isLoggable(Level.INFO)) {
@@ -116,8 +114,8 @@ public abstract class AbstractRTreeMultiThreadTest {
         // 4 batches per thread.
         int batchSize = (NUM_OPERATIONS / numThreads) / 4;
 
-        IndexMultiThreadTestDriver driver = new IndexMultiThreadTestDriver(index, workerFactory, fieldSerdes, conf.ops,
-                conf.opProbs);
+        IndexMultiThreadTestDriver driver =
+                new IndexMultiThreadTestDriver(index, workerFactory, fieldSerdes, conf.ops, conf.opProbs);
         driver.init();
         long[] times = driver.run(numThreads, 1, NUM_OPERATIONS, batchSize);
         driver.deinit();
@@ -130,14 +128,14 @@ public abstract class AbstractRTreeMultiThreadTest {
     }
 
     @Test
-    public void rtreeTwoDimensionsInt() throws InterruptedException, HyracksDataException, TreeIndexException {
+    public void rtreeTwoDimensionsInt() throws InterruptedException, HyracksDataException {
         ISerializerDeserializer[] fieldSerdes = { IntegerSerializerDeserializer.INSTANCE,
                 IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE,
                 IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE };
 
         int numKeys = 4;
-        IPrimitiveValueProviderFactory[] valueProviderFactories = RTreeUtils.createPrimitiveValueProviderFactories(
-                numKeys, IntegerPointable.FACTORY);
+        IPrimitiveValueProviderFactory[] valueProviderFactories =
+                RTreeUtils.createPrimitiveValueProviderFactories(numKeys, IntegerPointable.FACTORY);
 
         String dataMsg = "Two Dimensions Of Integer Values";
 
@@ -156,8 +154,8 @@ public abstract class AbstractRTreeMultiThreadTest {
                 DoubleSerializerDeserializer.INSTANCE, DoubleSerializerDeserializer.INSTANCE };
 
         int numKeys = 4;
-        IPrimitiveValueProviderFactory[] valueProviderFactories = RTreeUtils.createPrimitiveValueProviderFactories(
-                numKeys, DoublePointable.FACTORY);
+        IPrimitiveValueProviderFactory[] valueProviderFactories =
+                RTreeUtils.createPrimitiveValueProviderFactories(numKeys, DoublePointable.FACTORY);
 
         String dataMsg = "Two Dimensions Of Double Values";
 
@@ -171,7 +169,7 @@ public abstract class AbstractRTreeMultiThreadTest {
     }
 
     @Test
-    public void rtreeFourDimensionsDouble() throws InterruptedException, HyracksDataException, TreeIndexException {
+    public void rtreeFourDimensionsDouble() throws InterruptedException, HyracksDataException {
         ISerializerDeserializer[] fieldSerdes = { DoubleSerializerDeserializer.INSTANCE,
                 DoubleSerializerDeserializer.INSTANCE, DoubleSerializerDeserializer.INSTANCE,
                 DoubleSerializerDeserializer.INSTANCE, DoubleSerializerDeserializer.INSTANCE,
@@ -179,8 +177,8 @@ public abstract class AbstractRTreeMultiThreadTest {
                 DoubleSerializerDeserializer.INSTANCE, DoubleSerializerDeserializer.INSTANCE };
 
         int numKeys = 8;
-        IPrimitiveValueProviderFactory[] valueProviderFactories = RTreeUtils.createPrimitiveValueProviderFactories(
-                numKeys, DoublePointable.FACTORY);
+        IPrimitiveValueProviderFactory[] valueProviderFactories =
+                RTreeUtils.createPrimitiveValueProviderFactories(numKeys, DoublePointable.FACTORY);
 
         String dataMsg = "Four Dimensions Of Double Values";
 
@@ -193,7 +191,7 @@ public abstract class AbstractRTreeMultiThreadTest {
     }
 
     @Test
-    public void rstartreeTwoDimensionsInt() throws InterruptedException, HyracksDataException, TreeIndexException {
+    public void rstartreeTwoDimensionsInt() throws InterruptedException, HyracksDataException {
         if (!testRstarPolicy) {
             if (LOGGER.isLoggable(Level.INFO)) {
                 LOGGER.info("Ignoring RTree Multithread Test With Two Dimensions With Integer Keys.");
@@ -206,8 +204,8 @@ public abstract class AbstractRTreeMultiThreadTest {
                 IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE };
 
         int numKeys = 4;
-        IPrimitiveValueProviderFactory[] valueProviderFactories = RTreeUtils.createPrimitiveValueProviderFactories(
-                numKeys, IntegerPointable.FACTORY);
+        IPrimitiveValueProviderFactory[] valueProviderFactories =
+                RTreeUtils.createPrimitiveValueProviderFactories(numKeys, IntegerPointable.FACTORY);
 
         String dataMsg = "Two Dimensions Of Integer Values";
 
@@ -233,8 +231,8 @@ public abstract class AbstractRTreeMultiThreadTest {
                 DoubleSerializerDeserializer.INSTANCE, DoubleSerializerDeserializer.INSTANCE };
 
         int numKeys = 4;
-        IPrimitiveValueProviderFactory[] valueProviderFactories = RTreeUtils.createPrimitiveValueProviderFactories(
-                numKeys, DoublePointable.FACTORY);
+        IPrimitiveValueProviderFactory[] valueProviderFactories =
+                RTreeUtils.createPrimitiveValueProviderFactories(numKeys, DoublePointable.FACTORY);
 
         String dataMsg = "Two Dimensions Of Double Values";
 
@@ -248,7 +246,7 @@ public abstract class AbstractRTreeMultiThreadTest {
     }
 
     @Test
-    public void rstartreeFourDimensionsDouble() throws InterruptedException, HyracksDataException, TreeIndexException {
+    public void rstartreeFourDimensionsDouble() throws InterruptedException, HyracksDataException {
         if (!testRstarPolicy) {
             if (LOGGER.isLoggable(Level.INFO)) {
                 LOGGER.info("Ignoring RTree Multithread Test With Four Dimensions With Double Keys.");
@@ -263,8 +261,8 @@ public abstract class AbstractRTreeMultiThreadTest {
                 DoubleSerializerDeserializer.INSTANCE, DoubleSerializerDeserializer.INSTANCE };
 
         int numKeys = 8;
-        IPrimitiveValueProviderFactory[] valueProviderFactories = RTreeUtils.createPrimitiveValueProviderFactories(
-                numKeys, DoublePointable.FACTORY);
+        IPrimitiveValueProviderFactory[] valueProviderFactories =
+                RTreeUtils.createPrimitiveValueProviderFactories(numKeys, DoublePointable.FACTORY);
 
         String dataMsg = "Four Dimensions Of Double Values";
 

@@ -32,7 +32,7 @@ public interface IIndexBulkLoader {
      * @throws HyracksDataException
      *             If the BufferCache throws while un/pinning or un/latching.
      */
-    public void add(ITupleReference tuple) throws IndexException, HyracksDataException;
+    public void add(ITupleReference tuple) throws HyracksDataException;
 
     /**
      * Finalize the bulk loading operation in the given context.
@@ -41,7 +41,7 @@ public interface IIndexBulkLoader {
      * @throws HyracksDataException
      *             If the BufferCache throws while un/pinning or un/latching.
      */
-    public void end() throws IndexException, HyracksDataException;
+    public void end() throws HyracksDataException;
 
     /**
      * Release all resources held by this bulkloader, with no guarantee of

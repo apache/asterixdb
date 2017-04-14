@@ -34,7 +34,7 @@ public interface ITwoPCIndexBulkLoader {
      * @throws HyracksDataException
      *             If the BufferCache throws while un/pinning or un/latching.
      */
-    public void delete(ITupleReference tuple) throws IndexException, HyracksDataException;
+    public void delete(ITupleReference tuple) throws HyracksDataException;
 
     /**
      * Abort the bulk modify op

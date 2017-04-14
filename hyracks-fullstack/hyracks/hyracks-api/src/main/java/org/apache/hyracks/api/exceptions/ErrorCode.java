@@ -66,6 +66,22 @@ public class ErrorCode {
     public static final int FILE_DOES_NOT_EXISTS = 30;
     public static final int UNIDENTIFIED_IO_ERROR_DELETING_DIR = 31;
     public static final int RESULT_NO_RECORD = 32;
+    public static final int DUPLICATE_KEY = 33;
+    public static final int LOAD_NON_EMPTY_INDEX = 34;
+    public static final int MODIFY_NOT_SUPPORTED_IN_EXTERNAL_INDEX = 35;
+    public static final int FLUSH_NOT_SUPPORTED_IN_EXTERNAL_INDEX = 36;
+    public static final int UPDATE_OR_DELETE_NON_EXISTENT_KEY = 37;
+    public static final int INDEX_NOT_UPDATABLE = 38;
+    public static final int OCCURRENCE_THRESHOLD_PANIC_EXCEPTION = 39;
+    public static final int UNKNOWN_INVERTED_INDEX_TYPE = 40;
+    public static final int CANNOT_PROPOSE_LINEARIZER_DIFF_DIMENSIONS = 41;
+    public static final int CANNOT_PROPOSE_LINEARIZER_FOR_TYPE = 42;
+    public static final int RECORD_IS_TOO_LARGE = 43;
+    public static final int FAILED_TO_RE_FIND_PARENT = 44;
+    public static final int FAILED_TO_FIND_TUPLE = 45;
+    public static final int UNSORTED_LOAD_INPUT = 46;
+    public static final int OPERATION_EXCEEDED_MAX_RESTARTS = 47;
+    public static final int DUPLICATE_LOAD_INPUT = 48;
 
     // Compilation error codes.
     public static final int RULECOLLECTION_NOT_INSTANCE_OF_LIST = 10000;

@@ -34,7 +34,6 @@ import org.apache.hyracks.storage.am.common.IIndexTestWorkerFactory;
 import org.apache.hyracks.storage.am.common.IndexMultiThreadTestDriver;
 import org.apache.hyracks.storage.am.common.TestWorkloadConf;
 import org.apache.hyracks.storage.am.common.api.IIndex;
-import org.apache.hyracks.storage.am.common.api.TreeIndexException;
 import org.apache.hyracks.storage.am.config.AccessMethodTestsConfig;
 import org.junit.Test;
 
@@ -56,7 +55,7 @@ public abstract class OrderedIndexMultiThreadTest {
     protected abstract void tearDown() throws HyracksDataException;
 
     protected abstract IIndex createIndex(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories,
-            int[] bloomFilterKeyFields) throws TreeIndexException, HyracksDataException;
+            int[] bloomFilterKeyFields) throws HyracksDataException;
 
     protected abstract IIndexTestWorkerFactory getWorkerFactory();
 
@@ -65,7 +64,7 @@ public abstract class OrderedIndexMultiThreadTest {
     protected abstract String getIndexTypeName();
 
     protected void runTest(ISerializerDeserializer[] fieldSerdes, int numKeys, int numThreads, TestWorkloadConf conf,
-            String dataMsg) throws InterruptedException, TreeIndexException, HyracksDataException {
+            String dataMsg) throws InterruptedException, HyracksDataException {
         setUp();
 
         if (LOGGER.isLoggable(Level.INFO)) {
@@ -88,8 +87,8 @@ public abstract class OrderedIndexMultiThreadTest {
 
         // 4 batches per thread.
         int batchSize = (NUM_OPERATIONS / numThreads) / 4;
-        IndexMultiThreadTestDriver driver = new IndexMultiThreadTestDriver(index, workerFactory, fieldSerdes, conf.ops,
-                conf.opProbs);
+        IndexMultiThreadTestDriver driver =
+                new IndexMultiThreadTestDriver(index, workerFactory, fieldSerdes, conf.ops, conf.opProbs);
         driver.init();
         long[] times = driver.run(numThreads, 1, NUM_OPERATIONS, batchSize);
         index.validate();
@@ -103,7 +102,7 @@ public abstract class OrderedIndexMultiThreadTest {
     }
 
     @Test
-    public void oneIntKeyAndValue() throws InterruptedException, TreeIndexException, HyracksDataException {
+    public void oneIntKeyAndValue() throws InterruptedException, HyracksDataException {
         ISerializerDeserializer[] fieldSerdes = new ISerializerDeserializer[] { IntegerSerializerDeserializer.INSTANCE,
                 IntegerSerializerDeserializer.INSTANCE };
         int numKeys = 1;
@@ -116,9 +115,9 @@ public abstract class OrderedIndexMultiThreadTest {
     }
 
     @Test
-    public void oneStringKeyAndValue() throws InterruptedException, TreeIndexException, HyracksDataException {
-        ISerializerDeserializer[] fieldSerdes = new ISerializerDeserializer[] {
-                new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer() };
+    public void oneStringKeyAndValue() throws InterruptedException, HyracksDataException {
+        ISerializerDeserializer[] fieldSerdes = new ISerializerDeserializer[] { new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer() };
         int numKeys = 1;
         String dataMsg = "One String Key And Value";
 

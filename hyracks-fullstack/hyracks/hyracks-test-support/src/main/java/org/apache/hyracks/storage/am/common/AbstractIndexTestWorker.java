@@ -27,7 +27,6 @@ import org.apache.hyracks.storage.am.common.TestOperationSelector.TestOperation;
 import org.apache.hyracks.storage.am.common.api.IIndex;
 import org.apache.hyracks.storage.am.common.api.IIndexAccessor;
 import org.apache.hyracks.storage.am.common.api.IIndexCursor;
-import org.apache.hyracks.storage.am.common.api.IndexException;
 import org.apache.hyracks.storage.am.common.datagen.DataGenThread;
 import org.apache.hyracks.storage.am.common.datagen.TupleBatch;
 
@@ -39,8 +38,8 @@ public abstract class AbstractIndexTestWorker extends Thread implements ITreeInd
 
     protected final IIndexAccessor indexAccessor;
 
-    public AbstractIndexTestWorker(DataGenThread dataGen, TestOperationSelector opSelector, IIndex index, int numBatches)
-            throws HyracksDataException {
+    public AbstractIndexTestWorker(DataGenThread dataGen, TestOperationSelector opSelector, IIndex index,
+            int numBatches) throws HyracksDataException {
         this.dataGen = dataGen;
         this.opSelector = opSelector;
         this.numBatches = numBatches;
@@ -65,7 +64,7 @@ public abstract class AbstractIndexTestWorker extends Thread implements ITreeInd
         }
     }
 
-    protected void consumeCursorTuples(IIndexCursor cursor) throws HyracksDataException, IndexException {
+    protected void consumeCursorTuples(IIndexCursor cursor) throws HyracksDataException {
         try {
             while (cursor.hasNext()) {
                 cursor.next();

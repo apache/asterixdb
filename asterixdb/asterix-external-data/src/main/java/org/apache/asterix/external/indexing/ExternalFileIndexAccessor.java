@@ -43,7 +43,6 @@ import org.apache.hyracks.storage.am.btree.impls.RangePredicate;
 import org.apache.hyracks.storage.am.btree.util.BTreeUtils;
 import org.apache.hyracks.storage.am.common.api.IIndexCursor;
 import org.apache.hyracks.storage.am.common.api.ISearchOperationCallback;
-import org.apache.hyracks.storage.am.common.api.IndexException;
 import org.apache.hyracks.storage.am.common.ophelpers.MultiComparator;
 import org.apache.hyracks.storage.am.lsm.btree.dataflow.ExternalBTreeDataflowHelper;
 import org.apache.hyracks.storage.am.lsm.btree.impls.ExternalBTree;
@@ -97,7 +96,7 @@ public class ExternalFileIndexAccessor {
         fileIndexSearchCursor = fileIndexAccessor.createSearchCursor(false);
     }
 
-    public void lookup(int fileId, ExternalFile file) throws HyracksDataException, IndexException {
+    public void lookup(int fileId, ExternalFile file) throws HyracksDataException {
         // Set search parameters
         currentFileNumber.setValue(fileId);
         searchKeyTupleBuilder.reset();
@@ -130,8 +129,9 @@ public class ExternalFileIndexAccessor {
                         .getStringValue());
         file.setSize(((AInt64) externalFileRecord.getValueByPos(FilesIndexDescription.EXTERNAL_FILE_SIZE_FIELD_INDEX))
                 .getLongValue());
-        file.setLastModefiedTime(new Date(((ADateTime) externalFileRecord
-                .getValueByPos(FilesIndexDescription.EXTERNAL_FILE_MOD_DATE_FIELD_INDEX)).getChrononTime()));
+        file.setLastModefiedTime(new Date(
+                ((ADateTime) externalFileRecord.getValueByPos(FilesIndexDescription.EXTERNAL_FILE_MOD_DATE_FIELD_INDEX))
+                        .getChrononTime()));
     }
 
     public void close() throws HyracksDataException {

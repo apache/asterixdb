@@ -28,11 +28,10 @@ import java.util.Set;
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.common.api.IResourceLifecycleManager;
-import org.apache.hyracks.storage.am.common.api.IndexException;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent.ComponentState;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
@@ -51,8 +50,7 @@ public class CorrelatedPrefixMergePolicy implements ILSMMergePolicy {
     }
 
     @Override
-    public void diskComponentAdded(final ILSMIndex index, boolean fullMergeIsRequested)
-            throws HyracksDataException, IndexException {
+    public void diskComponentAdded(final ILSMIndex index, boolean fullMergeIsRequested) throws HyracksDataException {
         // This merge policy will only look at primary indexes in order to evaluate if a merge operation is needed. If it decides that
         // a merge operation is needed, then it will merge *all* the indexes that belong to the dataset. The criteria to decide if a merge
         // is needed is the same as the one that is used in the prefix merge policy:

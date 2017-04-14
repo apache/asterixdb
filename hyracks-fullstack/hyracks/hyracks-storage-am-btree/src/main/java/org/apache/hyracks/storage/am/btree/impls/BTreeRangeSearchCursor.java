@@ -31,7 +31,6 @@ import org.apache.hyracks.storage.am.common.api.ISearchOperationCallback;
 import org.apache.hyracks.storage.am.common.api.ISearchPredicate;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexCursor;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleReference;
-import org.apache.hyracks.storage.am.common.api.IndexException;
 import org.apache.hyracks.storage.am.common.ophelpers.FindTupleMode;
 import org.apache.hyracks.storage.am.common.ophelpers.FindTupleNoExactMatchPolicy;
 import org.apache.hyracks.storage.am.common.ophelpers.MultiComparator;
@@ -98,6 +97,7 @@ public class BTreeRangeSearchCursor implements ITreeIndexCursor {
         pred = null;
     }
 
+    @Override
     public ITupleReference getTuple() {
         return frameTuple;
     }
@@ -183,11 +183,7 @@ public class BTreeRangeSearchCursor implements ITreeIndexCursor {
 
                 // retraverse the index looking for the reconciled key
                 reusablePredicate.setLowKey(reconciliationTuple, true);
-                try {
-                    accessor.search(this, reusablePredicate);
-                } catch (IndexException e) {
-                    throw new HyracksDataException(e);
-                }
+                accessor.search(this, reusablePredicate);
 
                 if (stopTupleIndex < 0 || tupleIndex > stopTupleIndex) {
                     return false;
@@ -319,7 +315,7 @@ public class BTreeRangeSearchCursor implements ITreeIndexCursor {
         }
     }
 
-    public boolean isBloomFilterAware(){
+    public boolean isBloomFilterAware() {
         return false;
     }
 }

@@ -19,11 +19,11 @@
 
 package org.apache.hyracks.storage.am.btree.multithread;
 
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleReference;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
-import org.apache.hyracks.storage.am.btree.exceptions.BTreeNotUpdateableException;
 import org.apache.hyracks.storage.am.btree.impls.BTree;
 import org.apache.hyracks.storage.am.btree.impls.RangePredicate;
 import org.apache.hyracks.storage.am.common.AbstractIndexTestWorker;
@@ -31,10 +31,7 @@ import org.apache.hyracks.storage.am.common.TestOperationSelector;
 import org.apache.hyracks.storage.am.common.TestOperationSelector.TestOperation;
 import org.apache.hyracks.storage.am.common.api.IIndex;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexCursor;
-import org.apache.hyracks.storage.am.common.api.IndexException;
 import org.apache.hyracks.storage.am.common.datagen.DataGenThread;
-import org.apache.hyracks.storage.am.common.exceptions.TreeIndexDuplicateKeyException;
-import org.apache.hyracks.storage.am.common.exceptions.TreeIndexNonExistentKeyException;
 import org.apache.hyracks.storage.am.common.ophelpers.MultiComparator;
 
 public class BTreeTestWorker extends AbstractIndexTestWorker {
@@ -53,7 +50,7 @@ public class BTreeTestWorker extends AbstractIndexTestWorker {
     }
 
     @Override
-    public void performOp(ITupleReference tuple, TestOperation op) throws HyracksDataException, IndexException {
+    public void performOp(ITupleReference tuple, TestOperation op) throws HyracksDataException {
         BTree.BTreeAccessor accessor = (BTree.BTreeAccessor) indexAccessor;
         ITreeIndexCursor searchCursor = accessor.createSearchCursor(false);
         ITreeIndexCursor diskOrderScanCursor = accessor.createDiskOrderScanCursor();
@@ -64,8 +61,11 @@ public class BTreeTestWorker extends AbstractIndexTestWorker {
             case INSERT:
                 try {
                     accessor.insert(tuple);
-                } catch (TreeIndexDuplicateKeyException e) {
-                    // Ignore duplicate keys, since we get random tuples.
+                } catch (HyracksDataException e) {
+                    if (e.getErrorCode() != ErrorCode.DUPLICATE_KEY) {
+                        // Ignore duplicate keys, since we get random tuples.
+                        throw e;
+                    }
                 }
                 break;
 
@@ -78,18 +78,25 @@ public class BTreeTestWorker extends AbstractIndexTestWorker {
                 deleteTuple.reset(deleteTb.getFieldEndOffsets(), deleteTb.getByteArray());
                 try {
                     accessor.delete(deleteTuple);
-                } catch (TreeIndexNonExistentKeyException e) {
-                    // Ignore non-existant keys, since we get random tuples.
+                } catch (HyracksDataException e) {
+                    if (e.getErrorCode() != ErrorCode.UPDATE_OR_DELETE_NON_EXISTENT_KEY) {
+                        // Ignore non-existant keys, since we get random tuples.
+                        throw e;
+                    }
                 }
                 break;
 
             case UPDATE:
                 try {
                     accessor.update(tuple);
-                } catch (TreeIndexNonExistentKeyException e) {
+                } catch (HyracksDataException e) {
                     // Ignore non-existant keys, since we get random tuples.
-                } catch (BTreeNotUpdateableException e) {
-                    // Ignore not updateable exception due to numKeys == numFields.
+                    if (e.getErrorCode() != ErrorCode.UPDATE_OR_DELETE_NON_EXISTENT_KEY
+                            && e.getErrorCode() != ErrorCode.INDEX_NOT_UPDATABLE) {
+                        // Ignore non-existant keys, since we get random tuples.
+                        // Ignore not updateable exception due to numKeys == numFields.
+                        throw e;
+                    }
                 }
                 break;
 
@@ -126,7 +133,7 @@ public class BTreeTestWorker extends AbstractIndexTestWorker {
         }
     }
 
-    private void consumeCursorTuples(ITreeIndexCursor cursor) throws HyracksDataException, IndexException {
+    private void consumeCursorTuples(ITreeIndexCursor cursor) throws HyracksDataException {
         try {
             while (cursor.hasNext()) {
                 cursor.next();

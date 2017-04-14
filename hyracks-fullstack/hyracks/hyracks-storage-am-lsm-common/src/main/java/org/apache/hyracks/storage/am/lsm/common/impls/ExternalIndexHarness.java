@@ -22,15 +22,15 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.replication.IReplicationJob.ReplicationOperation;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.common.api.IIndexCursor;
 import org.apache.hyracks.storage.am.common.api.ISearchPredicate;
-import org.apache.hyracks.storage.am.common.api.IndexException;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
@@ -114,7 +114,7 @@ public class ExternalIndexHarness extends LSMHarness {
     }
 
     private void exitComponents(ILSMIndexOperationContext ctx, LSMOperationType opType, ILSMDiskComponent newComponent,
-            boolean failedOperation) throws HyracksDataException, IndexException {
+            boolean failedOperation) throws HyracksDataException {
         /**
          * FLUSH and MERGE operations should always exit the components
          * to notify waiting threads.
@@ -168,25 +168,24 @@ public class ExternalIndexHarness extends LSMHarness {
     }
 
     @Override
-    public void forceModify(ILSMIndexOperationContext ctx, ITupleReference tuple)
-            throws HyracksDataException, IndexException {
-        throw new IndexException("2PC LSM Inedx doesn't support modify");
+    public void forceModify(ILSMIndexOperationContext ctx, ITupleReference tuple) throws HyracksDataException {
+        throw HyracksDataException.create(ErrorCode.MODIFY_NOT_SUPPORTED_IN_EXTERNAL_INDEX);
     }
 
     @Override
     public boolean modify(ILSMIndexOperationContext ctx, boolean tryOperation, ITupleReference tuple)
-            throws HyracksDataException, IndexException {
-        throw new IndexException("2PC LSM Inedx doesn't support modify");
+            throws HyracksDataException {
+        throw HyracksDataException.create(ErrorCode.MODIFY_NOT_SUPPORTED_IN_EXTERNAL_INDEX);
     }
 
     @Override
     public void search(ILSMIndexOperationContext ctx, IIndexCursor cursor, ISearchPredicate pred)
-            throws HyracksDataException, IndexException {
+            throws HyracksDataException {
         LSMOperationType opType = LSMOperationType.SEARCH;
         getAndEnterComponents(ctx, opType, false);
         try {
             lsmIndex.search(ctx, cursor, pred);
-        } catch (HyracksDataException | IndexException e) {
+        } catch (Exception e) {
             exitComponents(ctx, opType, null, true);
             throw e;
         }
@@ -197,7 +196,7 @@ public class ExternalIndexHarness extends LSMHarness {
         if (ctx.getOperation() == IndexOperation.SEARCH) {
             try {
                 exitComponents(ctx, LSMOperationType.SEARCH, null, false);
-            } catch (IndexException e) {
+            } catch (Exception e) {
                 throw new HyracksDataException(e);
             }
         }
@@ -205,7 +204,7 @@ public class ExternalIndexHarness extends LSMHarness {
 
     @Override
     public void scheduleMerge(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
-            throws HyracksDataException, IndexException {
+            throws HyracksDataException {
         if (!getAndEnterComponents(ctx, LSMOperationType.MERGE, true)) {
             callback.afterFinalize(LSMOperationType.MERGE, null);
             return;
@@ -215,7 +214,7 @@ public class ExternalIndexHarness extends LSMHarness {
 
     @Override
     public void scheduleFullMerge(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
-            throws HyracksDataException, IndexException {
+            throws HyracksDataException {
         fullMergeIsRequested.set(true);
         if (!getAndEnterComponents(ctx, LSMOperationType.MERGE, true)) {
             // If the merge cannot be scheduled because there is already an ongoing merge on subset/all of the components, then
@@ -228,8 +227,7 @@ public class ExternalIndexHarness extends LSMHarness {
     }
 
     @Override
-    public void merge(ILSMIndexOperationContext ctx, ILSMIOOperation operation)
-            throws HyracksDataException, IndexException {
+    public void merge(ILSMIndexOperationContext ctx, ILSMIOOperation operation) throws HyracksDataException {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Started a merge operation for index: " + lsmIndex + " ...");
         }
@@ -249,7 +247,7 @@ public class ExternalIndexHarness extends LSMHarness {
     }
 
     @Override
-    public void addBulkLoadedComponent(ILSMDiskComponent c) throws HyracksDataException, IndexException {
+    public void addBulkLoadedComponent(ILSMDiskComponent c) throws HyracksDataException {
         lsmIndex.markAsValid(c);
         synchronized (opTracker) {
             lsmIndex.addDiskComponent(c);
@@ -268,7 +266,7 @@ public class ExternalIndexHarness extends LSMHarness {
     // 1. this needs synchronization since others might be accessing the index (specifically merge operations that might change the lists of components)
     // 2. the actions taken by the index itself are different
     // 3. the component has already been marked valid by the bulk update operation
-    public void addTransactionComponents(ILSMDiskComponent newComponent) throws HyracksDataException, IndexException {
+    public void addTransactionComponents(ILSMDiskComponent newComponent) throws HyracksDataException {
         ITwoPCIndex index = (ITwoPCIndex) lsmIndex;
         synchronized (opTracker) {
             List<ILSMDiskComponent> newerList;
@@ -305,8 +303,7 @@ public class ExternalIndexHarness extends LSMHarness {
     }
 
     @Override
-    public void flush(ILSMIndexOperationContext ctx, ILSMIOOperation operation)
-            throws HyracksDataException, IndexException {
+    public void flush(ILSMIndexOperationContext ctx, ILSMIOOperation operation) throws HyracksDataException {
     }
 
     @Override

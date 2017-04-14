@@ -31,9 +31,7 @@ import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.control.nc.io.IOManager;
-import org.apache.hyracks.storage.am.btree.exceptions.BTreeException;
 import org.apache.hyracks.storage.am.common.api.IIndexAccessor;
-import org.apache.hyracks.storage.am.common.api.TreeIndexException;
 import org.apache.hyracks.storage.am.common.datagen.DataGenThread;
 import org.apache.hyracks.storage.am.common.datagen.TupleBatch;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
@@ -84,7 +82,7 @@ public class LSMTreeRunner implements IExperimentRunner {
 
     public LSMTreeRunner(int numBatches, int inMemPageSize, int inMemNumPages, int onDiskPageSize, int onDiskNumPages,
             ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories, int[] bloomFilterKeyFields,
-            double bloomFilterFalsePositiveRate) throws BTreeException, HyracksDataException {
+            double bloomFilterFalsePositiveRate) throws HyracksDataException {
         this.numBatches = numBatches;
 
         this.onDiskPageSize = onDiskPageSize;
@@ -101,8 +99,8 @@ public class LSMTreeRunner implements IExperimentRunner {
 
         List<IVirtualBufferCache> virtualBufferCaches = new ArrayList<>();
         for (int i = 0; i < 2; i++) {
-            IVirtualBufferCache virtualBufferCache = new VirtualBufferCache(new HeapBufferAllocator(), inMemPageSize,
-                    inMemNumPages / 2);
+            IVirtualBufferCache virtualBufferCache =
+                    new VirtualBufferCache(new HeapBufferAllocator(), inMemPageSize, inMemNumPages / 2);
             virtualBufferCaches.add(virtualBufferCache);
         }
 
@@ -110,10 +108,9 @@ public class LSMTreeRunner implements IExperimentRunner {
         AsynchronousScheduler.INSTANCE.init(threadFactory);
 
         lsmtree = LSMBTreeUtil.createLSMTree(ioManager, virtualBufferCaches, file, bufferCache, fmp, typeTraits,
-                cmpFactories,
-                bloomFilterKeyFields, bloomFilterFalsePositiveRate, new NoMergePolicy(), new ThreadCountingTracker(),
-                ioScheduler, NoOpIOOperationCallback.INSTANCE, true, null, null, null, null, true,
-                TestStorageManagerComponentHolder.getMetadataPageManagerFactory());
+                cmpFactories, bloomFilterKeyFields, bloomFilterFalsePositiveRate, new NoMergePolicy(),
+                new ThreadCountingTracker(), ioScheduler, NoOpIOOperationCallback.INSTANCE, true, null, null, null,
+                null, true, TestStorageManagerComponentHolder.getMetadataPageManagerFactory());
     }
 
     @Override
@@ -184,7 +181,8 @@ public class LSMTreeRunner implements IExperimentRunner {
                     for (int j = 0; j < batch.size(); j++) {
                         try {
                             lsmTreeAccessor.insert(batch.get(j));
-                        } catch (TreeIndexException e) {
+                        } catch (Exception e) {
+                            throw e;
                         }
                     }
                     dataGen.releaseBatch(batch);

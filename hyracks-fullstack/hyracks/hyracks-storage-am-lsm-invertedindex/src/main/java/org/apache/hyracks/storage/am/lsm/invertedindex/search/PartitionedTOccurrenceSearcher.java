@@ -23,19 +23,18 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import org.apache.hyracks.api.context.IHyracksCommonContext;
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.primitive.ShortPointable;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleReference;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.common.api.IIndexOperationContext;
-import org.apache.hyracks.storage.am.common.api.IndexException;
 import org.apache.hyracks.storage.am.common.tuples.ConcatenatingTupleReference;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndex;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexSearchModifier;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedListCursor;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IPartitionedInvertedIndex;
-import org.apache.hyracks.storage.am.lsm.invertedindex.exceptions.OccurrenceThresholdPanicException;
 import org.apache.hyracks.storage.am.lsm.invertedindex.ondisk.OnDiskInvertedIndexSearchCursor;
 
 public class PartitionedTOccurrenceSearcher extends AbstractTOccurrenceSearcher {
@@ -50,7 +49,7 @@ public class PartitionedTOccurrenceSearcher extends AbstractTOccurrenceSearcher 
     // Inverted list cursors ordered by token. Used to read relevant inverted-list partitions of one token one after
     // the other for better I/O performance (because the partitions of one inverted list are stored contiguously in a file).
     // The above implies that we currently require holding all inverted list for a query in memory.
-    protected final ArrayList<IInvertedListCursor> cursorsOrderedByTokens = new ArrayList<IInvertedListCursor>();
+    protected final ArrayList<IInvertedListCursor> cursorsOrderedByTokens = new ArrayList<>();
     protected final InvertedListPartitions partitions = new InvertedListPartitions();
 
     public PartitionedTOccurrenceSearcher(IHyracksCommonContext ctx, IInvertedIndex invIndex)
@@ -87,8 +86,9 @@ public class PartitionedTOccurrenceSearcher extends AbstractTOccurrenceSearcher 
         }
     }
 
+    @Override
     public void search(OnDiskInvertedIndexSearchCursor resultCursor, InvertedIndexSearchPredicate searchPred,
-            IIndexOperationContext ictx) throws HyracksDataException, IndexException {
+            IIndexOperationContext ictx) throws HyracksDataException {
         IPartitionedInvertedIndex partInvIndex = (IPartitionedInvertedIndex) invIndex;
         searchResult.reset();
         if (partInvIndex.isEmpty()) {
@@ -104,7 +104,7 @@ public class PartitionedTOccurrenceSearcher extends AbstractTOccurrenceSearcher 
 
         occurrenceThreshold = searchModifier.getOccurrenceThreshold(numQueryTokens);
         if (occurrenceThreshold <= 0) {
-            throw new OccurrenceThresholdPanicException("Merge Threshold is <= 0. Failing Search.");
+            throw HyracksDataException.create(ErrorCode.OCCURRENCE_THRESHOLD_PANIC_EXCEPTION);
         }
 
         short maxCountPossible = numQueryTokens;

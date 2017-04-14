@@ -24,16 +24,14 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.common.api.IIndexAccessor;
 import org.apache.hyracks.storage.am.common.api.IIndexCursor;
 import org.apache.hyracks.storage.am.common.api.ISearchPredicate;
-import org.apache.hyracks.storage.am.common.api.IndexException;
 
 public interface IInvertedIndexAccessor extends IIndexAccessor {
     public IInvertedListCursor createInvertedListCursor();
 
     public void openInvertedListCursor(IInvertedListCursor listCursor, ITupleReference searchKey)
-            throws HyracksDataException, IndexException;
+            throws HyracksDataException;
 
     public IIndexCursor createRangeSearchCursor();
 
-    public void rangeSearch(IIndexCursor cursor, ISearchPredicate searchPred) throws IndexException,
-            HyracksDataException;
+    public void rangeSearch(IIndexCursor cursor, ISearchPredicate searchPred) throws HyracksDataException;
 }

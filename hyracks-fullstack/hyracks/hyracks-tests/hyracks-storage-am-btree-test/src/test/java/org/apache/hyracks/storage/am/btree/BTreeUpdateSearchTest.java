@@ -21,13 +21,11 @@ package org.apache.hyracks.storage.am.btree;
 import java.util.Random;
 import java.util.logging.Level;
 
-import org.apache.hyracks.storage.am.common.api.*;
-import org.apache.hyracks.storage.am.common.freepage.LinkedMetaDataPageManager;
-import org.junit.Test;
-
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
+import org.apache.hyracks.api.exceptions.ErrorCode;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
@@ -44,9 +42,15 @@ import org.apache.hyracks.storage.am.btree.impls.RangePredicate;
 import org.apache.hyracks.storage.am.btree.util.AbstractBTreeTest;
 import org.apache.hyracks.storage.am.common.TestOperationCallback;
 import org.apache.hyracks.storage.am.common.api.IMetadataPageManager;
+import org.apache.hyracks.storage.am.common.api.ITreeIndexAccessor;
+import org.apache.hyracks.storage.am.common.api.ITreeIndexCursor;
+import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
+import org.apache.hyracks.storage.am.common.api.ITreeIndexMetadataFrameFactory;
 import org.apache.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
+import org.apache.hyracks.storage.am.common.freepage.LinkedMetaDataPageManager;
 import org.apache.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
+import org.junit.Test;
 
 public class BTreeUpdateSearchTest extends AbstractBTreeTest {
 
@@ -67,8 +71,8 @@ public class BTreeUpdateSearchTest extends AbstractBTreeTest {
         cmpFactories[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
 
         @SuppressWarnings("rawtypes")
-        ISerializerDeserializer[] recDescSers = { IntegerSerializerDeserializer.INSTANCE,
-                IntegerSerializerDeserializer.INSTANCE };
+        ISerializerDeserializer[] recDescSers =
+                { IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE };
 
         TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(typeTraits);
         ITreeIndexFrameFactory leafFrameFactory = new BTreeNSMLeafFrameFactory(tupleWriterFactory);
@@ -94,8 +98,8 @@ public class BTreeUpdateSearchTest extends AbstractBTreeTest {
 
         ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference insertTuple = new ArrayTupleReference();
-        ITreeIndexAccessor indexAccessor = btree.createAccessor(TestOperationCallback.INSTANCE,
-                TestOperationCallback.INSTANCE);
+        ITreeIndexAccessor indexAccessor =
+                btree.createAccessor(TestOperationCallback.INSTANCE, TestOperationCallback.INSTANCE);
 
         int numInserts = 10000;
         for (int i = 0; i < numInserts; i++) {
@@ -111,9 +115,11 @@ public class BTreeUpdateSearchTest extends AbstractBTreeTest {
 
             try {
                 indexAccessor.insert(insertTuple);
-            } catch (TreeIndexException e) {
-            } catch (Exception e) {
-                e.printStackTrace();
+            } catch (HyracksDataException hde) {
+                if (hde.getErrorCode() != ErrorCode.DUPLICATE_KEY) {
+                    hde.printStackTrace();
+                    throw hde;
+                }
             }
         }
         long end = System.currentTimeMillis();

@@ -27,14 +27,12 @@ import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
-import org.apache.hyracks.storage.am.btree.exceptions.BTreeException;
 import org.apache.hyracks.storage.am.btree.frames.BTreeNSMInteriorFrameFactory;
 import org.apache.hyracks.storage.am.btree.frames.BTreeNSMLeafFrameFactory;
 import org.apache.hyracks.storage.am.btree.impls.BTree;
 import org.apache.hyracks.storage.am.common.api.IPageManager;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexAccessor;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
-import org.apache.hyracks.storage.am.common.api.TreeIndexException;
 import org.apache.hyracks.storage.am.common.datagen.DataGenThread;
 import org.apache.hyracks.storage.am.common.datagen.TupleBatch;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
@@ -59,7 +57,7 @@ public class InMemoryBTreeRunner extends Thread implements IExperimentRunner {
     protected BTree btree;
 
     public InMemoryBTreeRunner(int numBatches, int pageSize, int numPages, ITypeTraits[] typeTraits,
-            IBinaryComparatorFactory[] cmpFactories) throws BTreeException, HyracksDataException {
+            IBinaryComparatorFactory[] cmpFactories) throws HyracksDataException {
         this.numBatches = numBatches;
         TestStorageManagerComponentHolder.init(pageSize, numPages, numPages);
         IIOManager ioManager = TestStorageManagerComponentHolder.getIOManager();
@@ -69,7 +67,7 @@ public class InMemoryBTreeRunner extends Thread implements IExperimentRunner {
     }
 
     protected void init(int pageSize, int numPages, ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories)
-            throws HyracksDataException, BTreeException {
+            throws HyracksDataException {
         bufferCache = new VirtualBufferCache(new HeapBufferAllocator(), pageSize, numPages);
         TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(typeTraits);
         ITreeIndexFrameFactory leafFrameFactory = new BTreeNSMLeafFrameFactory(tupleWriterFactory);
@@ -136,7 +134,9 @@ public class InMemoryBTreeRunner extends Thread implements IExperimentRunner {
                     for (int j = 0; j < batch.size(); j++) {
                         try {
                             indexAccessor.insert(batch.get(j));
-                        } catch (TreeIndexException e) {
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            throw e;
                         }
                     }
                 }

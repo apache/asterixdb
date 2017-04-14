@@ -34,8 +34,6 @@ import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexMetadataFrame;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
-import org.apache.hyracks.storage.am.common.api.IndexException;
-import org.apache.hyracks.storage.am.common.api.TreeIndexException;
 import org.apache.hyracks.storage.am.common.ophelpers.MultiComparator;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
@@ -70,10 +68,9 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
 
     protected int bulkloadLeafStart = 0;
 
-    public AbstractTreeIndex(IBufferCache bufferCache, IFileMapProvider fileMapProvider,
-            IPageManager freePageManager, ITreeIndexFrameFactory interiorFrameFactory,
-            ITreeIndexFrameFactory leafFrameFactory, IBinaryComparatorFactory[] cmpFactories, int fieldCount,
-            FileReference file) {
+    public AbstractTreeIndex(IBufferCache bufferCache, IFileMapProvider fileMapProvider, IPageManager freePageManager,
+            ITreeIndexFrameFactory interiorFrameFactory, ITreeIndexFrameFactory leafFrameFactory,
+            IBinaryComparatorFactory[] cmpFactories, int fieldCount, FileReference file) {
         this.bufferCache = bufferCache;
         this.fileMapProvider = fileMapProvider;
         this.freePageManager = freePageManager;
@@ -272,8 +269,7 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
         protected final IFIFOPageQueue queue;
         protected List<ICachedPage> pagesToWrite;
 
-        public AbstractTreeIndexBulkLoader(float fillFactor)
-                throws TreeIndexException, HyracksDataException {
+        public AbstractTreeIndexBulkLoader(float fillFactor) throws HyracksDataException {
             leafFrame = leafFrameFactory.createFrame();
             interiorFrame = interiorFrameFactory.createFrame();
             metaFrame = freePageManager.createMetadataFrame();
@@ -281,7 +277,7 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
             queue = bufferCache.createFIFOQueue();
 
             if (!isEmptyTree(leafFrame)) {
-                throw new TreeIndexException("Cannot bulk-load a non-empty tree.");
+                throw new HyracksDataException("Cannot bulk-load a non-empty tree.");
             }
 
             this.cmp = MultiComparator.create(cmpFactories);
@@ -293,8 +289,8 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
 
             NodeFrontier leafFrontier = new NodeFrontier(leafFrame.createTupleReference());
             leafFrontier.pageId = freePageManager.takePage(metaFrame);
-            leafFrontier.page = bufferCache
-                    .confiscatePage(BufferedFileHandle.getDiskPageId(fileId, leafFrontier.pageId));
+            leafFrontier.page =
+                    bufferCache.confiscatePage(BufferedFileHandle.getDiskPageId(fileId, leafFrontier.pageId));
 
             interiorFrame.setPage(leafFrontier.page);
             interiorFrame.initBuffer((byte) 0);
@@ -310,7 +306,7 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
         }
 
         @Override
-        public abstract void add(ITupleReference tuple) throws IndexException, HyracksDataException;
+        public abstract void add(ITupleReference tuple) throws HyracksDataException;
 
         protected void handleException() throws HyracksDataException {
             // Unlatch and unpin pages that weren't in the queue to avoid leaking memory.
@@ -356,17 +352,13 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
         ITreeIndexAccessor accessor;
 
         public TreeIndexInsertBulkLoader() throws HyracksDataException {
-            accessor = (ITreeIndexAccessor) createAccessor(NoOpOperationCallback.INSTANCE,
-                    NoOpOperationCallback.INSTANCE);
+            accessor =
+                    (ITreeIndexAccessor) createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
         }
 
         @Override
         public void add(ITupleReference tuple) throws HyracksDataException {
-            try {
-                accessor.insert(tuple);
-            } catch (IndexException e) {
-                throw new HyracksDataException(e);
-            }
+            accessor.insert(tuple);
         }
 
         @Override

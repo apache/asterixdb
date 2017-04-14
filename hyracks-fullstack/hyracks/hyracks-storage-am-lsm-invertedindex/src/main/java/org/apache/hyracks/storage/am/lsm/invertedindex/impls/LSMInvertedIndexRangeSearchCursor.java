@@ -28,7 +28,6 @@ import org.apache.hyracks.storage.am.common.api.ICursorInitialState;
 import org.apache.hyracks.storage.am.common.api.IIndexAccessor;
 import org.apache.hyracks.storage.am.common.api.IIndexCursor;
 import org.apache.hyracks.storage.am.common.api.ISearchPredicate;
-import org.apache.hyracks.storage.am.common.api.IndexException;
 import org.apache.hyracks.storage.am.common.ophelpers.MultiComparator;
 import org.apache.hyracks.storage.am.common.tuples.PermutingTupleReference;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
@@ -56,9 +55,9 @@ public class LSMInvertedIndexRangeSearchCursor extends LSMIndexSearchCursor {
     }
 
     @Override
-    public void open(ICursorInitialState initState, ISearchPredicate searchPred) throws IndexException,
-            HyracksDataException {
-        LSMInvertedIndexRangeSearchCursorInitialState lsmInitState = (LSMInvertedIndexRangeSearchCursorInitialState) initState;
+    public void open(ICursorInitialState initState, ISearchPredicate searchPred) throws HyracksDataException {
+        LSMInvertedIndexRangeSearchCursorInitialState lsmInitState =
+                (LSMInvertedIndexRangeSearchCursorInitialState) initState;
         cmp = lsmInitState.getOriginalKeyComparator();
         int numComponents = lsmInitState.getNumComponents();
         rangeCursors = new IIndexCursor[numComponents];
@@ -100,7 +99,7 @@ public class LSMInvertedIndexRangeSearchCursor extends LSMIndexSearchCursor {
      * Check deleted-keys BTrees whether they contain the key in the checkElement's tuple.
      */
     @Override
-    protected boolean isDeleted(PriorityQueueElement checkElement) throws HyracksDataException, IndexException {
+    protected boolean isDeleted(PriorityQueueElement checkElement) throws HyracksDataException {
         keysOnlyTuple.reset(checkElement.getTuple());
         int end = checkElement.getCursorIndex();
         for (int i = 0; i < end; i++) {
@@ -110,8 +109,6 @@ public class LSMInvertedIndexRangeSearchCursor extends LSMIndexSearchCursor {
                 if (deletedKeysBTreeCursors[i].hasNext()) {
                     return true;
                 }
-            } catch (IndexException e) {
-                throw new HyracksDataException(e);
             } finally {
                 deletedKeysBTreeCursors[i].close();
             }

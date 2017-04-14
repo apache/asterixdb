@@ -32,7 +32,6 @@ import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.common.api.IIndexCursor;
 import org.apache.hyracks.storage.am.common.api.ISearchPredicate;
-import org.apache.hyracks.storage.am.common.api.IndexException;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
@@ -189,7 +188,7 @@ public class LSMHarness implements ILSMHarness {
     }
 
     private void exitComponents(ILSMIndexOperationContext ctx, LSMOperationType opType, ILSMDiskComponent newComponent,
-            boolean failedOperation) throws HyracksDataException, IndexException {
+            boolean failedOperation) throws HyracksDataException {
         /**
          * FLUSH and MERGE operations should always exit the components
          * to notify waiting threads.
@@ -348,15 +347,14 @@ public class LSMHarness implements ILSMHarness {
     }
 
     @Override
-    public void forceModify(ILSMIndexOperationContext ctx, ITupleReference tuple)
-            throws HyracksDataException, IndexException {
+    public void forceModify(ILSMIndexOperationContext ctx, ITupleReference tuple) throws HyracksDataException {
         LSMOperationType opType = LSMOperationType.FORCE_MODIFICATION;
         modify(ctx, false, tuple, opType);
     }
 
     @Override
     public boolean modify(ILSMIndexOperationContext ctx, boolean tryOperation, ITupleReference tuple)
-            throws HyracksDataException, IndexException {
+            throws HyracksDataException {
         LSMOperationType opType = LSMOperationType.MODIFICATION;
         return modify(ctx, tryOperation, tuple, opType);
     }
@@ -378,8 +376,6 @@ public class LSMHarness implements ILSMHarness {
     private void exitAndComplete(ILSMIndexOperationContext ctx, LSMOperationType op) throws HyracksDataException {
         try {
             exitComponents(ctx, op, null, false);
-        } catch (IndexException e) {
-            throw new HyracksDataException(e);
         } finally {
             opTracker.completeOperation(null, op, null, ctx.getModificationCallback());
         }
@@ -400,7 +396,7 @@ public class LSMHarness implements ILSMHarness {
     }
 
     private boolean modify(ILSMIndexOperationContext ctx, boolean tryOperation, ITupleReference tuple,
-            LSMOperationType opType) throws HyracksDataException, IndexException {
+            LSMOperationType opType) throws HyracksDataException {
         if (!lsmIndex.isMemoryComponentsAllocated()) {
             lsmIndex.allocateMemoryComponents();
         }
@@ -424,14 +420,14 @@ public class LSMHarness implements ILSMHarness {
 
     @Override
     public void search(ILSMIndexOperationContext ctx, IIndexCursor cursor, ISearchPredicate pred)
-            throws HyracksDataException, IndexException {
+            throws HyracksDataException {
         LSMOperationType opType = LSMOperationType.SEARCH;
         ctx.setSearchPredicate(pred);
         getAndEnterComponents(ctx, opType, false);
         try {
             ctx.getSearchOperationCallback().before(pred.getLowKey());
             lsmIndex.search(ctx, cursor, pred);
-        } catch (HyracksDataException | IndexException e) {
+        } catch (Exception e) {
             exitComponents(ctx, opType, null, true);
             throw e;
         }
@@ -442,7 +438,7 @@ public class LSMHarness implements ILSMHarness {
         if (ctx.getOperation() == IndexOperation.SEARCH) {
             try {
                 exitComponents(ctx, LSMOperationType.SEARCH, null, false);
-            } catch (IndexException e) {
+            } catch (Exception e) {
                 throw new HyracksDataException(e);
             }
         }
@@ -459,8 +455,7 @@ public class LSMHarness implements ILSMHarness {
     }
 
     @Override
-    public void flush(ILSMIndexOperationContext ctx, ILSMIOOperation operation)
-            throws HyracksDataException, IndexException {
+    public void flush(ILSMIndexOperationContext ctx, ILSMIOOperation operation) throws HyracksDataException {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Started a flush operation for index: " + lsmIndex + " ...");
         }
@@ -484,7 +479,7 @@ public class LSMHarness implements ILSMHarness {
 
     @Override
     public void scheduleMerge(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
-            throws HyracksDataException, IndexException {
+            throws HyracksDataException {
         if (!getAndEnterComponents(ctx, LSMOperationType.MERGE, true)) {
             callback.afterFinalize(LSMOperationType.MERGE, null);
             return;
@@ -494,7 +489,7 @@ public class LSMHarness implements ILSMHarness {
 
     @Override
     public void scheduleFullMerge(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
-            throws HyracksDataException, IndexException {
+            throws HyracksDataException {
         fullMergeIsRequested.set(true);
         if (!getAndEnterComponents(ctx, LSMOperationType.MERGE, true)) {
             // If the merge cannot be scheduled because there is already an ongoing merge on subset/all of the components, then
@@ -507,8 +502,7 @@ public class LSMHarness implements ILSMHarness {
     }
 
     @Override
-    public void merge(ILSMIndexOperationContext ctx, ILSMIOOperation operation)
-            throws HyracksDataException, IndexException {
+    public void merge(ILSMIndexOperationContext ctx, ILSMIOOperation operation) throws HyracksDataException {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Started a merge operation for index: " + lsmIndex + " ...");
         }
@@ -531,7 +525,7 @@ public class LSMHarness implements ILSMHarness {
     }
 
     @Override
-    public void addBulkLoadedComponent(ILSMDiskComponent c) throws HyracksDataException, IndexException {
+    public void addBulkLoadedComponent(ILSMDiskComponent c) throws HyracksDataException {
         lsmIndex.markAsValid(c);
         synchronized (opTracker) {
             lsmIndex.addDiskComponent(c);
@@ -570,11 +564,7 @@ public class LSMHarness implements ILSMHarness {
 
     @Override
     public void endReplication(ILSMIndexOperationContext ctx) throws HyracksDataException {
-        try {
-            exitComponents(ctx, LSMOperationType.REPLICATE, null, false);
-        } catch (IndexException e) {
-            throw new HyracksDataException(e);
-        }
+        exitComponents(ctx, LSMOperationType.REPLICATE, null, false);
     }
 
     protected void validateOperationEnterComponentsState(ILSMIndexOperationContext ctx) throws HyracksDataException {

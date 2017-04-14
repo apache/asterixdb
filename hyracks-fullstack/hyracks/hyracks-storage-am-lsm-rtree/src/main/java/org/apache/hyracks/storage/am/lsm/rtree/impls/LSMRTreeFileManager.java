@@ -34,7 +34,6 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.storage.am.common.api.ITreeIndex;
-import org.apache.hyracks.storage.am.common.api.IndexException;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexFileManager;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
 import org.apache.hyracks.storage.am.lsm.common.impls.TreeIndexFactory;
@@ -74,8 +73,8 @@ public class LSMRTreeFileManager extends AbstractLSMIndexFileManager {
         String baseName = baseDir + ts + SPLIT_STRING + ts;
         // Begin timestamp and end timestamp are identical since it is a flush
         return new LSMComponentFileReferences(createFlushFile(baseName + SPLIT_STRING + RTREE_STRING),
-                createFlushFile(baseName + SPLIT_STRING + BTREE_STRING), createFlushFile(baseName + SPLIT_STRING
-                        + BLOOM_FILTER_STRING));
+                createFlushFile(baseName + SPLIT_STRING + BTREE_STRING),
+                createFlushFile(baseName + SPLIT_STRING + BLOOM_FILTER_STRING));
     }
 
     @Override
@@ -88,12 +87,12 @@ public class LSMRTreeFileManager extends AbstractLSMIndexFileManager {
         // Get the range of timestamps by taking the earliest and the latest
         // timestamps
         return new LSMComponentFileReferences(createMergeFile(baseName + SPLIT_STRING + RTREE_STRING),
-                createMergeFile(baseName + SPLIT_STRING + BTREE_STRING), createMergeFile(baseName + SPLIT_STRING
-                        + BLOOM_FILTER_STRING));
+                createMergeFile(baseName + SPLIT_STRING + BTREE_STRING),
+                createMergeFile(baseName + SPLIT_STRING + BLOOM_FILTER_STRING));
     }
 
     @Override
-    public List<LSMComponentFileReferences> cleanupAndGetValidFiles() throws HyracksDataException, IndexException {
+    public List<LSMComponentFileReferences> cleanupAndGetValidFiles() throws HyracksDataException {
         List<LSMComponentFileReferences> validFiles = new ArrayList<>();
         ArrayList<ComparableFileName> allRTreeFiles = new ArrayList<>();
         ArrayList<ComparableFileName> allBTreeFiles = new ArrayList<>();
@@ -110,7 +109,8 @@ public class LSMRTreeFileManager extends AbstractLSMIndexFileManager {
             btreeFilesSet.add(cmpFileName.fileName.substring(0, index));
         }
         validateFiles(btreeFilesSet, allRTreeFiles, getCompoundFilter(transactionFilter, rtreeFilter), rtreeFactory);
-        validateFiles(btreeFilesSet, allBloomFilterFiles, getCompoundFilter(transactionFilter, bloomFilterFilter), null);
+        validateFiles(btreeFilesSet, allBloomFilterFiles, getCompoundFilter(transactionFilter, bloomFilterFilter),
+                null);
 
         // Sanity check.
         if (allRTreeFiles.size() != allBTreeFiles.size() || allBTreeFiles.size() != allBloomFilterFiles.size()) {
@@ -175,7 +175,8 @@ public class LSMRTreeFileManager extends AbstractLSMIndexFileManager {
                 invalidBloomFilterFile.delete();
             } else {
                 // This scenario should not be possible.
-                throw new HyracksDataException("Found LSM files with overlapping but not contained timetamp intervals.");
+                throw new HyracksDataException(
+                        "Found LSM files with overlapping but not contained timetamp intervals.");
             }
         }
 
@@ -206,8 +207,8 @@ public class LSMRTreeFileManager extends AbstractLSMIndexFileManager {
 
         String baseName = baseDir + ts + SPLIT_STRING + ts;
         return new LSMComponentFileReferences(createFlushFile(baseName + SPLIT_STRING + RTREE_STRING),
-                createFlushFile(baseName + SPLIT_STRING + BTREE_STRING), createFlushFile(baseName + SPLIT_STRING
-                        + BLOOM_FILTER_STRING));
+                createFlushFile(baseName + SPLIT_STRING + BTREE_STRING),
+                createFlushFile(baseName + SPLIT_STRING + BLOOM_FILTER_STRING));
     }
 
     @Override

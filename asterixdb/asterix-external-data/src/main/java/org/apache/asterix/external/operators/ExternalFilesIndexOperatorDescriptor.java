@@ -18,7 +18,6 @@
  */
 package org.apache.asterix.external.operators;
 
-import java.io.IOException;
 import java.util.List;
 
 import org.apache.asterix.external.indexing.ExternalFile;
@@ -39,7 +38,6 @@ import org.apache.hyracks.storage.am.common.api.IIndexBulkLoader;
 import org.apache.hyracks.storage.am.common.api.IIndexDataflowHelper;
 import org.apache.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
 import org.apache.hyracks.storage.am.common.api.IMetadataPageManagerFactory;
-import org.apache.hyracks.storage.am.common.api.IndexException;
 import org.apache.hyracks.storage.am.common.dataflow.AbstractTreeIndexOperatorDescriptor;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallbackFactory;
@@ -61,9 +59,9 @@ public class ExternalFilesIndexOperatorDescriptor extends AbstractTreeIndexOpera
     private boolean createNewIndex;
     private List<ExternalFile> files;
 
-    public ExternalFilesIndexOperatorDescriptor(IOperatorDescriptorRegistry spec,
-            IStorageManager storageManager, IIndexLifecycleManagerProvider lifecycleManagerProvider,
-            IFileSplitProvider fileSplitProvider, IIndexDataflowHelperFactory dataflowHelperFactory,
+    public ExternalFilesIndexOperatorDescriptor(IOperatorDescriptorRegistry spec, IStorageManager storageManager,
+            IIndexLifecycleManagerProvider lifecycleManagerProvider, IFileSplitProvider fileSplitProvider,
+            IIndexDataflowHelperFactory dataflowHelperFactory,
             ILocalResourceFactoryProvider localResourceFactoryProvider, List<ExternalFile> files,
             boolean createNewIndex, IMetadataPageManagerFactory metadataPageManagerFactory) {
         super(spec, 0, 0, null, storageManager, lifecycleManagerProvider, fileSplitProvider,
@@ -79,8 +77,8 @@ public class ExternalFilesIndexOperatorDescriptor extends AbstractTreeIndexOpera
     @Override
     public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) throws HyracksDataException {
-        final IIndexDataflowHelper indexHelper = getIndexDataflowHelperFactory().createIndexDataflowHelper(this, ctx,
-                partition);
+        final IIndexDataflowHelper indexHelper =
+                getIndexDataflowHelperFactory().createIndexDataflowHelper(this, ctx, partition);
         return new AbstractOperatorNodePushable() {
 
             @SuppressWarnings("incomplete-switch")
@@ -95,15 +93,13 @@ public class ExternalFilesIndexOperatorDescriptor extends AbstractTreeIndexOpera
                     try {
                         IIndex index = indexHelper.getIndexInstance();
                         // Create bulk loader
-                        IIndexBulkLoader bulkLoader = index.createBulkLoader(BTree.DEFAULT_FILL_FACTOR, false,
-                                files.size(), false);
+                        IIndexBulkLoader bulkLoader =
+                                index.createBulkLoader(BTree.DEFAULT_FILL_FACTOR, false, files.size(), false);
                         // Load files
                         for (ExternalFile file : files) {
                             bulkLoader.add(filesTupleTranslator.getTupleFromFile(file));
                         }
                         bulkLoader.end();
-                    } catch (IndexException | IOException e) {
-                        throw new HyracksDataException(e);
                     } finally {
                         indexHelper.close();
                     }
@@ -114,8 +110,8 @@ public class ExternalFilesIndexOperatorDescriptor extends AbstractTreeIndexOpera
                     IIndex index = indexHelper.getIndexInstance();
                     LSMTwoPCBTreeBulkLoader bulkLoader = null;
                     try {
-                        bulkLoader = (LSMTwoPCBTreeBulkLoader) ((ExternalBTree) index).createTransactionBulkLoader(
-                                BTree.DEFAULT_FILL_FACTOR, false, files.size(), false);
+                        bulkLoader = (LSMTwoPCBTreeBulkLoader) ((ExternalBTree) index)
+                                .createTransactionBulkLoader(BTree.DEFAULT_FILL_FACTOR, false, files.size(), false);
                         // Load files
                         // The files must be ordered according to their numbers
                         for (ExternalFile file : files) {
@@ -130,11 +126,11 @@ public class ExternalFilesIndexOperatorDescriptor extends AbstractTreeIndexOpera
                             }
                         }
                         bulkLoader.end();
-                    } catch (IndexException | IOException e) {
+                    } catch (Exception e) {
                         if (bulkLoader != null) {
                             bulkLoader.abort();
                         }
-                        throw new HyracksDataException(e);
+                        throw HyracksDataException.create(e);
                     } finally {
                         indexHelper.close();
                     }

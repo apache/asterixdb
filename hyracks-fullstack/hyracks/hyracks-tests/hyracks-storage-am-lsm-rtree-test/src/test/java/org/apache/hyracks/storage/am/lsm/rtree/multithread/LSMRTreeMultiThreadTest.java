@@ -29,7 +29,6 @@ import org.apache.hyracks.storage.am.common.TestOperationSelector.TestOperation;
 import org.apache.hyracks.storage.am.common.TestWorkloadConf;
 import org.apache.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import org.apache.hyracks.storage.am.common.api.ITreeIndex;
-import org.apache.hyracks.storage.am.common.api.TreeIndexException;
 import org.apache.hyracks.storage.am.common.datagen.ProbabilityHelper;
 import org.apache.hyracks.storage.am.lsm.rtree.util.LSMRTreeTestHarness;
 import org.apache.hyracks.storage.am.lsm.rtree.utils.LSMRTreeUtils;
@@ -60,14 +59,13 @@ public class LSMRTreeMultiThreadTest extends AbstractRTreeMultiThreadTest {
     @Override
     protected ITreeIndex createTreeIndex(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] rtreeCmpFactories,
             IBinaryComparatorFactory[] btreeCmpFactories, IPrimitiveValueProviderFactory[] valueProviderFactories,
-            RTreePolicyType rtreePolicyType, int[] btreeFields) throws TreeIndexException, HyracksDataException {
-        return LSMRTreeUtils.createLSMTree(harness.getIOManager(), harness.getVirtualBufferCaches(), harness
-                .getFileReference(),
-                harness.getDiskBufferCache(), harness.getDiskFileMapProvider(), typeTraits, rtreeCmpFactories,
-                btreeCmpFactories, valueProviderFactories, rtreePolicyType, harness.getBoomFilterFalsePositiveRate(),
-                harness.getMergePolicy(), harness.getOperationTracker(), harness.getIOScheduler(),
-                harness.getIOOperationCallback(), LSMRTreeUtils.proposeBestLinearizer(typeTraits,
-                        rtreeCmpFactories.length), null, btreeFields, null,
+            RTreePolicyType rtreePolicyType, int[] btreeFields) throws HyracksDataException {
+        return LSMRTreeUtils.createLSMTree(harness.getIOManager(), harness.getVirtualBufferCaches(),
+                harness.getFileReference(), harness.getDiskBufferCache(), harness.getDiskFileMapProvider(), typeTraits,
+                rtreeCmpFactories, btreeCmpFactories, valueProviderFactories, rtreePolicyType,
+                harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(), harness.getOperationTracker(),
+                harness.getIOScheduler(), harness.getIOOperationCallback(),
+                LSMRTreeUtils.proposeBestLinearizer(typeTraits, rtreeCmpFactories.length), null, btreeFields, null,
                 null, null, true, false, harness.getMetadataPageManagerFactory());
     }
 
@@ -101,14 +99,14 @@ public class LSMRTreeMultiThreadTest extends AbstractRTreeMultiThreadTest {
                 new TestWorkloadConf(insertDeleteOps, ProbabilityHelper.getUniformProbDist(insertDeleteOps.length)));
 
         // Inserts, deletes and merges.
-        TestOperation[] insertDeleteMergeOps = new TestOperation[] { TestOperation.INSERT, TestOperation.DELETE,
-                TestOperation.MERGE };
+        TestOperation[] insertDeleteMergeOps =
+                new TestOperation[] { TestOperation.INSERT, TestOperation.DELETE, TestOperation.MERGE };
         workloadConfs.add(new TestWorkloadConf(insertDeleteMergeOps,
                 ProbabilityHelper.getUniformProbDist(insertDeleteMergeOps.length)));
 
         // All operations except merge.
-        TestOperation[] allNoMergeOps = new TestOperation[] { TestOperation.INSERT, TestOperation.DELETE,
-                TestOperation.SCAN };
+        TestOperation[] allNoMergeOps =
+                new TestOperation[] { TestOperation.INSERT, TestOperation.DELETE, TestOperation.SCAN };
         workloadConfs
                 .add(new TestWorkloadConf(allNoMergeOps, ProbabilityHelper.getUniformProbDist(allNoMergeOps.length)));
 

@@ -30,7 +30,6 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.storage.am.common.api.IMetadataPageManagerFactory;
-import org.apache.hyracks.storage.am.common.api.IndexException;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
@@ -89,32 +88,25 @@ public class LSMInvertedIndexLocalResourceMetadata extends Resource {
         int ioDeviceNum = Resource.getIoDeviceNum(ioManager, file.getDeviceHandle());
         List<IVirtualBufferCache> virtualBufferCaches =
                 appCtx.getDatasetLifecycleManager().getVirtualBufferCaches(datasetId(), ioDeviceNum);
-        try {
-            if (isPartitioned) {
-                return InvertedIndexUtils.createPartitionedLSMInvertedIndex(ioManager, virtualBufferCaches,
-                        appCtx.getFileMapManager(), invListTypeTraits, invListCmpFactories,
-                        tokenTypeTraits, tokenCmpFactories, tokenizerFactory, appCtx.getBufferCache(),
-                        file.getAbsolutePath(), appCtx.getBloomFilterFalsePositiveRate(),
-                        mergePolicyFactory.createMergePolicy(mergePolicyProperties,
-                                appCtx.getDatasetLifecycleManager()),
-                        opTrackerProvider.getOperationTracker(serviceCtx), appCtx.getLSMIOScheduler(),
-                        ioOpCallbackFactory.createIoOpCallback(), invertedIndexFields, filterTypeTraits,
-                        filterCmpFactories, filterFields, filterFieldsForNonBulkLoadOps,
-                        invertedIndexFieldsForNonBulkLoadOps, true, metadataPageManagerFactory);
-            } else {
-                return InvertedIndexUtils.createLSMInvertedIndex(ioManager, virtualBufferCaches,
-                        appCtx.getFileMapManager(), invListTypeTraits, invListCmpFactories,
-                        tokenTypeTraits, tokenCmpFactories, tokenizerFactory, appCtx.getBufferCache(),
-                        file.getAbsolutePath(), appCtx.getBloomFilterFalsePositiveRate(),
-                        mergePolicyFactory.createMergePolicy(mergePolicyProperties,
-                                appCtx.getDatasetLifecycleManager()),
-                        opTrackerProvider.getOperationTracker(serviceCtx), appCtx.getLSMIOScheduler(),
-                        ioOpCallbackFactory.createIoOpCallback(), invertedIndexFields, filterTypeTraits,
-                        filterCmpFactories, filterFields, filterFieldsForNonBulkLoadOps,
-                        invertedIndexFieldsForNonBulkLoadOps, true, metadataPageManagerFactory);
-            }
-        } catch (IndexException e) {
-            throw new HyracksDataException(e);
+        if (isPartitioned) {
+            return InvertedIndexUtils.createPartitionedLSMInvertedIndex(ioManager, virtualBufferCaches,
+                    appCtx.getFileMapManager(), invListTypeTraits, invListCmpFactories, tokenTypeTraits,
+                    tokenCmpFactories, tokenizerFactory, appCtx.getBufferCache(), file.getAbsolutePath(),
+                    appCtx.getBloomFilterFalsePositiveRate(),
+                    mergePolicyFactory.createMergePolicy(mergePolicyProperties, appCtx.getDatasetLifecycleManager()),
+                    opTrackerProvider.getOperationTracker(serviceCtx), appCtx.getLSMIOScheduler(),
+                    ioOpCallbackFactory.createIoOpCallback(), invertedIndexFields, filterTypeTraits, filterCmpFactories,
+                    filterFields, filterFieldsForNonBulkLoadOps, invertedIndexFieldsForNonBulkLoadOps, true,
+                    metadataPageManagerFactory);
+        } else {
+            return InvertedIndexUtils.createLSMInvertedIndex(ioManager, virtualBufferCaches, appCtx.getFileMapManager(),
+                    invListTypeTraits, invListCmpFactories, tokenTypeTraits, tokenCmpFactories, tokenizerFactory,
+                    appCtx.getBufferCache(), file.getAbsolutePath(), appCtx.getBloomFilterFalsePositiveRate(),
+                    mergePolicyFactory.createMergePolicy(mergePolicyProperties, appCtx.getDatasetLifecycleManager()),
+                    opTrackerProvider.getOperationTracker(serviceCtx), appCtx.getLSMIOScheduler(),
+                    ioOpCallbackFactory.createIoOpCallback(), invertedIndexFields, filterTypeTraits, filterCmpFactories,
+                    filterFields, filterFieldsForNonBulkLoadOps, invertedIndexFieldsForNonBulkLoadOps, true,
+                    metadataPageManagerFactory);
         }
     }
 }

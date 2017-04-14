@@ -30,7 +30,6 @@ import org.apache.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperato
 import org.apache.hyracks.storage.am.common.api.IIndex;
 import org.apache.hyracks.storage.am.common.api.IIndexBulkLoader;
 import org.apache.hyracks.storage.am.common.api.IIndexDataflowHelper;
-import org.apache.hyracks.storage.am.common.api.IndexException;
 import org.apache.hyracks.storage.am.common.tuples.PermutingFrameTupleReference;
 
 public class IndexBulkLoadOperatorNodePushable extends AbstractUnaryInputUnaryOutputOperatorNodePushable {
@@ -83,12 +82,7 @@ public class IndexBulkLoadOperatorNodePushable extends AbstractUnaryInputUnaryOu
 
         for (int i = 0; i < tupleCount; i++) {
             tuple.reset(accessor, i);
-
-            try {
-                bulkLoader.add(tuple);
-            } catch (IndexException e) {
-                throw new HyracksDataException(e);
-            }
+            bulkLoader.add(tuple);
         }
 
         FrameUtils.flushFrame(buffer, writer);

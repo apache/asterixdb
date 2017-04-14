@@ -23,9 +23,6 @@ import java.io.DataOutput;
 import java.util.Random;
 import java.util.logging.Level;
 
-import org.junit.Assert;
-import org.junit.Test;
-
 import org.apache.hyracks.api.comm.IFrame;
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 import org.apache.hyracks.api.comm.VSizeFrame;
@@ -43,7 +40,6 @@ import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import org.apache.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
-import org.apache.hyracks.storage.am.btree.exceptions.BTreeException;
 import org.apache.hyracks.storage.am.btree.frames.BTreeFieldPrefixNSMLeafFrame;
 import org.apache.hyracks.storage.am.btree.util.AbstractBTreeTest;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
@@ -54,6 +50,8 @@ import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
 import org.apache.hyracks.storage.common.file.IFileMapProvider;
+import org.junit.Assert;
+import org.junit.Test;
 
 public class FieldPrefixNSMTest extends AbstractBTreeTest {
 
@@ -172,8 +170,6 @@ public class FieldPrefixNSMTest extends AbstractBTreeTest {
                 try {
                     int targetTupleIndex = frame.findInsertTupleIndex(tuple);
                     frame.insert(tuple, targetTupleIndex);
-                } catch (BTreeException e) {
-                    e.printStackTrace();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -206,8 +202,8 @@ public class FieldPrefixNSMTest extends AbstractBTreeTest {
                     }
                 }
 
-                ITupleReference tuple = createTuple(ctx, savedFields[i][0], savedFields[i][1], savedFields[i][2],
-                        false);
+                ITupleReference tuple =
+                        createTuple(ctx, savedFields[i][0], savedFields[i][1], savedFields[i][2], false);
                 try {
                     int tupleIndex = frame.findDeleteTupleIndex(tuple);
                     frame.delete(tuple, tupleIndex);

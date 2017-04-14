@@ -48,7 +48,6 @@ import org.apache.hyracks.storage.am.common.api.IIndexDataflowHelper;
 import org.apache.hyracks.storage.am.common.api.ISearchOperationCallback;
 import org.apache.hyracks.storage.am.common.api.ISearchOperationCallbackFactory;
 import org.apache.hyracks.storage.am.common.api.ITreeIndex;
-import org.apache.hyracks.storage.am.common.api.IndexException;
 import org.apache.hyracks.storage.am.common.dataflow.AbstractTreeIndexOperatorDescriptor;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IndexSearchOperatorNodePushable;
@@ -273,8 +272,8 @@ public class FramewriterTest {
      * @throws HyracksDataException
      * @throws IndexException
      */
-    public IFrameWriter[] createWriters() throws HyracksDataException, IndexException {
-        ArrayList<BTreeSearchOperatorNodePushable> writers = new ArrayList<BTreeSearchOperatorNodePushable>();
+    public IFrameWriter[] createWriters() throws HyracksDataException {
+        ArrayList<BTreeSearchOperatorNodePushable> writers = new ArrayList<>();
         AbstractTreeIndexOperatorDescriptor[] opDescs = mockIndexOpDesc();
         IRecordDescriptorProvider[] recordDescProviders = mockRecDescProviders();
         int partition = 0;
@@ -320,7 +319,7 @@ public class FramewriterTest {
         return rDesc;
     }
 
-    public ITreeIndex[] mockIndexes() throws HyracksDataException, IndexException {
+    public ITreeIndex[] mockIndexes() throws HyracksDataException {
         IIndexAccessor[] indexAccessors = mockIndexAccessors();
         ITreeIndex[] indexes = new ITreeIndex[indexAccessors.length * 2];
         int j = 0;
@@ -336,7 +335,7 @@ public class FramewriterTest {
         return indexes;
     }
 
-    private IIndexAccessor[] mockIndexAccessors() throws HyracksDataException, IndexException {
+    private IIndexAccessor[] mockIndexAccessors() throws HyracksDataException {
         IIndexCursor[] cursors = mockIndexCursors();
         IIndexAccessor[] accessors = new IIndexAccessor[cursors.length * 2];
         int j = 0;
@@ -367,7 +366,7 @@ public class FramewriterTest {
         return accessors;
     }
 
-    private IIndexCursor[] mockIndexCursors() throws HyracksDataException, IndexException {
+    private IIndexCursor[] mockIndexCursors() throws HyracksDataException {
         ITupleReference[] tuples = mockTuples();
         IIndexCursor[] cursors = new IIndexCursor[tuples.length * 2];
         int j = 0;
@@ -392,7 +391,7 @@ public class FramewriterTest {
         return new ITupleReference[] { tuple };
     }
 
-    public IIndexDataflowHelper[] mockIndexHelpers() throws HyracksDataException, IndexException {
+    public IIndexDataflowHelper[] mockIndexHelpers() throws HyracksDataException {
         ITreeIndex[] indexes = mockIndexes();
         IIndexDataflowHelper[] indexHelpers = new IIndexDataflowHelper[indexes.length * 2];
         int j = 0;
@@ -412,7 +411,7 @@ public class FramewriterTest {
         return indexHelpers;
     }
 
-    public IIndexDataflowHelperFactory[] mockIndexHelperFactories() throws HyracksDataException, IndexException {
+    public IIndexDataflowHelperFactory[] mockIndexHelperFactories() throws HyracksDataException {
         IIndexDataflowHelper[] helpers = mockIndexHelpers();
         IIndexDataflowHelperFactory[] indexHelperFactories = new IIndexDataflowHelperFactory[helpers.length];
         for (int i = 0; i < helpers.length; i++) {
@@ -424,7 +423,7 @@ public class FramewriterTest {
         return indexHelperFactories;
     }
 
-    public AbstractTreeIndexOperatorDescriptor[] mockIndexOpDesc() throws HyracksDataException, IndexException {
+    public AbstractTreeIndexOperatorDescriptor[] mockIndexOpDesc() throws HyracksDataException {
         IIndexDataflowHelperFactory[] indexDataflowHelperFactories = mockIndexHelperFactories();
         ISearchOperationCallbackFactory[] searchOpCallbackFactories = mockSearchOpCallbackFactories();
         AbstractTreeIndexOperatorDescriptor[] opDescs =
@@ -464,7 +463,7 @@ public class FramewriterTest {
         CountAnswer[] nextFrames = new CountAnswer[] { nextFrameNormal, nextFrameException, nextFrameError };
         CountAnswer[] fails = new CountAnswer[] { failNormal, failException, failError };
         CountAnswer[] closes = new CountAnswer[] { closeNormal, closeException, closeError };
-        List<IFrameWriter> outputWriters = new ArrayList<IFrameWriter>();
+        List<IFrameWriter> outputWriters = new ArrayList<>();
         for (CountAnswer openAnswer : opens) {
             for (CountAnswer nextFrameAnswer : nextFrames) {
                 for (CountAnswer failAnswer : fails) {

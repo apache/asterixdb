@@ -18,7 +18,7 @@
  */
 package org.apache.hyracks.storage.am.lsm.invertedindex.inmemory;
 
-import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
@@ -32,7 +32,6 @@ import org.apache.hyracks.storage.am.common.api.IIndexOperationContext;
 import org.apache.hyracks.storage.am.common.api.IModificationOperationCallback;
 import org.apache.hyracks.storage.am.common.api.IPageManager;
 import org.apache.hyracks.storage.am.common.api.ISearchOperationCallback;
-import org.apache.hyracks.storage.am.common.api.IndexException;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexSearcher;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedListCursor;
@@ -59,7 +58,7 @@ public class PartitionedInMemoryInvertedIndex extends InMemoryInvertedIndex impl
 
     @Override
     public void insert(ITupleReference tuple, BTreeAccessor btreeAccessor, IIndexOperationContext ictx)
-            throws HyracksDataException, IndexException {
+            throws HyracksDataException {
         super.insert(tuple, btreeAccessor, ictx);
         PartitionedInMemoryInvertedIndexOpContext ctx = (PartitionedInMemoryInvertedIndexOpContext) ictx;
         PartitionedInvertedIndexTokenizingTupleIterator tupleIter =
@@ -98,7 +97,7 @@ public class PartitionedInMemoryInvertedIndex extends InMemoryInvertedIndex impl
     @Override
     public boolean openInvertedListPartitionCursors(IInvertedIndexSearcher searcher, IIndexOperationContext ictx,
             short numTokensLowerBound, short numTokensUpperBound, InvertedListPartitions invListPartitions,
-            ArrayList<IInvertedListCursor> cursorsOrderedByTokens) throws HyracksDataException, IndexException {
+            List<IInvertedListCursor> cursorsOrderedByTokens) throws HyracksDataException {
         short minPartitionIndex;
         short maxPartitionIndex;
         partitionIndexLock.readLock().lock();

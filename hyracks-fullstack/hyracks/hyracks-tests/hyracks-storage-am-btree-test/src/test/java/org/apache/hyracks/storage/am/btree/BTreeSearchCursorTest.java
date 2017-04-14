@@ -28,12 +28,6 @@ import java.util.Random;
 import java.util.TreeSet;
 import java.util.logging.Level;
 
-import org.apache.hyracks.storage.am.common.api.*;
-import org.apache.hyracks.storage.am.common.freepage.LinkedMetaDataPageManager;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
@@ -47,7 +41,6 @@ import org.apache.hyracks.dataflow.common.data.marshalling.IntegerSerializerDese
 import org.apache.hyracks.dataflow.common.utils.TupleUtils;
 import org.apache.hyracks.storage.am.btree.api.IBTreeInteriorFrame;
 import org.apache.hyracks.storage.am.btree.api.IBTreeLeafFrame;
-import org.apache.hyracks.storage.am.btree.exceptions.BTreeException;
 import org.apache.hyracks.storage.am.btree.frames.BTreeNSMInteriorFrameFactory;
 import org.apache.hyracks.storage.am.btree.frames.BTreeNSMLeafFrameFactory;
 import org.apache.hyracks.storage.am.btree.impls.BTree;
@@ -56,10 +49,18 @@ import org.apache.hyracks.storage.am.btree.impls.RangePredicate;
 import org.apache.hyracks.storage.am.btree.util.AbstractBTreeTest;
 import org.apache.hyracks.storage.am.common.TestOperationCallback;
 import org.apache.hyracks.storage.am.common.api.IMetadataPageManager;
+import org.apache.hyracks.storage.am.common.api.ITreeIndexAccessor;
+import org.apache.hyracks.storage.am.common.api.ITreeIndexCursor;
+import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
+import org.apache.hyracks.storage.am.common.api.ITreeIndexMetadataFrameFactory;
 import org.apache.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
+import org.apache.hyracks.storage.am.common.freepage.LinkedMetaDataPageManager;
 import org.apache.hyracks.storage.am.common.ophelpers.MultiComparator;
 import org.apache.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 
 public class BTreeSearchCursorTest extends AbstractBTreeTest {
     private final int fieldCount = 2;
@@ -68,6 +69,7 @@ public class BTreeSearchCursorTest extends AbstractBTreeTest {
     private final ITreeIndexMetadataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
     private final Random rnd = new Random(50);
 
+    @Override
     @Before
     public void setUp() throws HyracksDataException {
         super.setUp();
@@ -104,14 +106,14 @@ public class BTreeSearchCursorTest extends AbstractBTreeTest {
         ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
 
-        ITreeIndexAccessor indexAccessor = btree.createAccessor(TestOperationCallback.INSTANCE,
-                TestOperationCallback.INSTANCE);
+        ITreeIndexAccessor indexAccessor =
+                btree.createAccessor(TestOperationCallback.INSTANCE, TestOperationCallback.INSTANCE);
 
         // generate keys
         int numKeys = 50;
         int maxKey = 1000;
-        TreeSet<Integer> uniqueKeys = new TreeSet<Integer>();
-        ArrayList<Integer> keys = new ArrayList<Integer>();
+        TreeSet<Integer> uniqueKeys = new TreeSet<>();
+        ArrayList<Integer> keys = new ArrayList<>();
         while (uniqueKeys.size() < numKeys) {
             int key = rnd.nextInt() % maxKey;
             uniqueKeys.add(key);
@@ -128,7 +130,6 @@ public class BTreeSearchCursorTest extends AbstractBTreeTest {
 
             try {
                 indexAccessor.insert(tuple);
-            } catch (BTreeException e) {
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -138,14 +139,14 @@ public class BTreeSearchCursorTest extends AbstractBTreeTest {
         int maxSearchKey = 100;
 
         // forward searches
-        Assert.assertTrue(performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, true,
-                true, false));
-        Assert.assertTrue(performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, false,
-                true, false));
-        Assert.assertTrue(performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, true,
-                false, false));
-        Assert.assertTrue(performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, true,
-                true, false));
+        Assert.assertTrue(
+                performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, true, true, false));
+        Assert.assertTrue(
+                performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, false, true, false));
+        Assert.assertTrue(
+                performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, true, false, false));
+        Assert.assertTrue(
+                performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, true, true, false));
 
         btree.deactivate();
         btree.destroy();
@@ -181,13 +182,13 @@ public class BTreeSearchCursorTest extends AbstractBTreeTest {
         ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
 
-        ITreeIndexAccessor indexAccessor = btree.createAccessor(TestOperationCallback.INSTANCE,
-                TestOperationCallback.INSTANCE);
+        ITreeIndexAccessor indexAccessor =
+                btree.createAccessor(TestOperationCallback.INSTANCE, TestOperationCallback.INSTANCE);
 
         // generate keys
         int numKeys = 50;
         int maxKey = 10;
-        ArrayList<Integer> keys = new ArrayList<Integer>();
+        ArrayList<Integer> keys = new ArrayList<>();
         for (int i = 0; i < numKeys; i++) {
             int k = rnd.nextInt() % maxKey;
             keys.add(k);
@@ -202,7 +203,6 @@ public class BTreeSearchCursorTest extends AbstractBTreeTest {
 
             try {
                 indexAccessor.insert(tuple);
-            } catch (BTreeException e) {
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -212,14 +212,14 @@ public class BTreeSearchCursorTest extends AbstractBTreeTest {
         int maxSearchKey = 100;
 
         // forward searches
-        Assert.assertTrue(performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, true,
-                true, false));
-        Assert.assertTrue(performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, false,
-                true, false));
-        Assert.assertTrue(performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, true,
-                false, false));
-        Assert.assertTrue(performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, true,
-                true, false));
+        Assert.assertTrue(
+                performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, true, true, false));
+        Assert.assertTrue(
+                performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, false, true, false));
+        Assert.assertTrue(
+                performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, true, false, false));
+        Assert.assertTrue(
+                performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, true, true, false));
 
         btree.deactivate();
         btree.destroy();
@@ -255,13 +255,13 @@ public class BTreeSearchCursorTest extends AbstractBTreeTest {
         ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
 
-        ITreeIndexAccessor indexAccessor = btree.createAccessor(TestOperationCallback.INSTANCE,
-                TestOperationCallback.INSTANCE);
+        ITreeIndexAccessor indexAccessor =
+                btree.createAccessor(TestOperationCallback.INSTANCE, TestOperationCallback.INSTANCE);
 
         // generate keys
         int numKeys = 50;
         int maxKey = 10;
-        ArrayList<Integer> keys = new ArrayList<Integer>();
+        ArrayList<Integer> keys = new ArrayList<>();
         for (int i = 0; i < numKeys; i++) {
             int k = rnd.nextInt() % maxKey;
             keys.add(k);
@@ -276,7 +276,6 @@ public class BTreeSearchCursorTest extends AbstractBTreeTest {
 
             try {
                 indexAccessor.insert(tuple);
-            } catch (BTreeException e) {
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -286,14 +285,14 @@ public class BTreeSearchCursorTest extends AbstractBTreeTest {
         int maxSearchKey = 100;
 
         // forward searches
-        Assert.assertTrue(performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, true,
-                true, false));
-        Assert.assertTrue(performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, false,
-                true, false));
-        Assert.assertTrue(performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, true,
-                false, false));
-        Assert.assertTrue(performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, true,
-                true, false));
+        Assert.assertTrue(
+                performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, true, true, false));
+        Assert.assertTrue(
+                performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, false, true, false));
+        Assert.assertTrue(
+                performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, true, false, false));
+        Assert.assertTrue(
+                performSearches(keys, btree, leafFrame, interiorFrame, minSearchKey, maxSearchKey, true, true, false));
 
         btree.deactivate();
         btree.destroy();
@@ -310,8 +309,8 @@ public class BTreeSearchCursorTest extends AbstractBTreeTest {
         searchCmps[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY).createBinaryComparator();
         MultiComparator searchCmp = new MultiComparator(searchCmps);
 
-        RangePredicate rangePred = new RangePredicate(lowKey, highKey, lowKeyInclusive, highKeyInclusive, searchCmp,
-                searchCmp);
+        RangePredicate rangePred =
+                new RangePredicate(lowKey, highKey, lowKeyInclusive, highKeyInclusive, searchCmp, searchCmp);
         return rangePred;
     }
 
@@ -319,10 +318,12 @@ public class BTreeSearchCursorTest extends AbstractBTreeTest {
             boolean lowKeyInclusive, boolean highKeyInclusive) {
 
         // special cases
-        if (lk == hk && (!lowKeyInclusive || !highKeyInclusive))
+        if (lk == hk && (!lowKeyInclusive || !highKeyInclusive)) {
             return;
-        if (lk > hk)
+        }
+        if (lk > hk) {
             return;
+        }
 
         for (int i = 0; i < keys.size(); i++) {
             if ((lk == keys.get(i) && lowKeyInclusive) || (hk == keys.get(i) && highKeyInclusive)) {
@@ -341,8 +342,8 @@ public class BTreeSearchCursorTest extends AbstractBTreeTest {
             IBTreeInteriorFrame interiorFrame, int minKey, int maxKey, boolean lowKeyInclusive,
             boolean highKeyInclusive, boolean printExpectedResults) throws Exception {
 
-        ArrayList<Integer> results = new ArrayList<Integer>();
-        ArrayList<Integer> expectedResults = new ArrayList<Integer>();
+        ArrayList<Integer> results = new ArrayList<>();
+        ArrayList<Integer> expectedResults = new ArrayList<>();
 
         for (int i = minKey; i < maxKey; i++) {
             for (int j = minKey; j < maxKey; j++) {
@@ -355,8 +356,8 @@ public class BTreeSearchCursorTest extends AbstractBTreeTest {
 
                 ITreeIndexCursor rangeCursor = new BTreeRangeSearchCursor(leafFrame, false);
                 RangePredicate rangePred = createRangePredicate(lowKey, highKey, lowKeyInclusive, highKeyInclusive);
-                ITreeIndexAccessor indexAccessor = btree.createAccessor(TestOperationCallback.INSTANCE,
-                        TestOperationCallback.INSTANCE);
+                ITreeIndexAccessor indexAccessor =
+                        btree.createAccessor(TestOperationCallback.INSTANCE, TestOperationCallback.INSTANCE);
                 indexAccessor.search(rangeCursor, rangePred);
 
                 try {
@@ -381,15 +382,17 @@ public class BTreeSearchCursorTest extends AbstractBTreeTest {
                     if (expectedResults.size() > 0) {
                         char l, u;
 
-                        if (lowKeyInclusive)
+                        if (lowKeyInclusive) {
                             l = '[';
-                        else
+                        } else {
                             l = '(';
+                        }
 
-                        if (highKeyInclusive)
+                        if (highKeyInclusive) {
                             u = ']';
-                        else
+                        } else {
                             u = ')';
+                        }
 
                         if (LOGGER.isLoggable(Level.INFO)) {
                             LOGGER.info("RANGE: " + l + " " + lowKey + " , " + highKey + " " + u);

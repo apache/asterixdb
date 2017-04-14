@@ -21,7 +21,6 @@ package org.apache.asterix.metadata.entitytupletranslators;
 import java.io.ByteArrayInputStream;
 import java.io.DataInput;
 import java.io.DataInputStream;
-import java.io.IOException;
 import java.util.Date;
 
 import org.apache.asterix.common.config.DatasetConfig.ExternalFilePendingOp;
@@ -40,6 +39,7 @@ import org.apache.asterix.om.base.ARecord;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 
 public class ExternalFileTupleTranslator extends AbstractTupleTranslator<ExternalFile> {
@@ -58,14 +58,14 @@ public class ExternalFileTupleTranslator extends AbstractTupleTranslator<Externa
     protected transient AMutableInt64 aInt64 = new AMutableInt64(0);
 
     @SuppressWarnings("unchecked")
-    protected ISerializerDeserializer<AInt32> intSerde = SerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.AINT32);
+    protected ISerializerDeserializer<AInt32> intSerde =
+            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT32);
     @SuppressWarnings("unchecked")
-    protected ISerializerDeserializer<ADateTime> dateTimeSerde = SerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.ADATETIME);
+    protected ISerializerDeserializer<ADateTime> dateTimeSerde =
+            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ADATETIME);
     @SuppressWarnings("unchecked")
-    protected ISerializerDeserializer<AInt64> longSerde = SerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.AINT64);
+    protected ISerializerDeserializer<AInt64> longSerde =
+            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT64);
     @SuppressWarnings("unchecked")
     private ISerializerDeserializer<ARecord> recordSerDes = SerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(MetadataRecordTypes.EXTERNAL_FILE_RECORDTYPE);
@@ -75,7 +75,8 @@ public class ExternalFileTupleTranslator extends AbstractTupleTranslator<Externa
     }
 
     @Override
-    public ExternalFile getMetadataEntityFromTuple(ITupleReference tuple) throws MetadataException, IOException {
+    public ExternalFile getMetadataEntityFromTuple(ITupleReference tuple)
+            throws MetadataException, HyracksDataException {
         byte[] serRecord = tuple.getFieldData(EXTERNAL_FILE_PAYLOAD_TUPLE_FIELD_INDEX);
         int recordStartOffset = tuple.getFieldStart(EXTERNAL_FILE_PAYLOAD_TUPLE_FIELD_INDEX);
         int recordLength = tuple.getFieldLength(EXTERNAL_FILE_PAYLOAD_TUPLE_FIELD_INDEX);
@@ -106,7 +107,8 @@ public class ExternalFileTupleTranslator extends AbstractTupleTranslator<Externa
     }
 
     @Override
-    public ITupleReference getTupleFromMetadataEntity(ExternalFile externalFile) throws MetadataException, IOException {
+    public ITupleReference getTupleFromMetadataEntity(ExternalFile externalFile)
+            throws MetadataException, HyracksDataException {
         // write the key in the first 3 fields of the tuple
         tupleBuilder.reset();
         // dataverse name

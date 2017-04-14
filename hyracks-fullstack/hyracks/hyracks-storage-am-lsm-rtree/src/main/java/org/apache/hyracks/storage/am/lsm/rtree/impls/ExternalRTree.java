@@ -24,6 +24,7 @@ import java.util.List;
 
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ILinearizeComparatorFactory;
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
@@ -42,12 +43,10 @@ import org.apache.hyracks.storage.am.common.api.ISearchPredicate;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexCursor;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import org.apache.hyracks.storage.am.common.api.ITwoPCIndexBulkLoader;
-import org.apache.hyracks.storage.am.common.api.IndexException;
-import org.apache.hyracks.storage.am.common.api.TreeIndexException;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
@@ -198,21 +197,13 @@ public class ExternalRTree extends LSMRTree implements ITwoPCIndex {
         if (diskComponents.size() == 0 && secondDiskComponents.size() == 0) {
             //First time activation
             List<LSMComponentFileReferences> validFileReferences;
-            try {
-                validFileReferences = fileManager.cleanupAndGetValidFiles();
-            } catch (IndexException e) {
-                throw new HyracksDataException(e);
-            }
+            validFileReferences = fileManager.cleanupAndGetValidFiles();
             for (LSMComponentFileReferences lsmComonentFileReference : validFileReferences) {
                 LSMRTreeDiskComponent component;
-                try {
-                    component = createDiskComponent(componentFactory,
-                            lsmComonentFileReference.getInsertIndexFileReference(),
-                            lsmComonentFileReference.getDeleteIndexFileReference(),
-                            lsmComonentFileReference.getBloomFilterFileReference(), false);
-                } catch (IndexException e) {
-                    throw new HyracksDataException(e);
-                }
+                component =
+                        createDiskComponent(componentFactory, lsmComonentFileReference.getInsertIndexFileReference(),
+                                lsmComonentFileReference.getDeleteIndexFileReference(),
+                                lsmComonentFileReference.getBloomFilterFileReference(), false);
                 diskComponents.add(component);
                 secondDiskComponents.add(component);
             }
@@ -254,7 +245,7 @@ public class ExternalRTree extends LSMRTree implements ITwoPCIndex {
     // we override this method because this index uses a different opcontext
     @Override
     public void search(ILSMIndexOperationContext ictx, IIndexCursor cursor, ISearchPredicate pred)
-            throws HyracksDataException, IndexException {
+            throws HyracksDataException {
         ExternalRTreeOpContext ctx = (ExternalRTreeOpContext) ictx;
         List<ILSMComponent> operationalComponents = ictx.getComponentHolder();
         ctx.initialState.setOperationalComponents(operationalComponents);
@@ -267,7 +258,7 @@ public class ExternalRTree extends LSMRTree implements ITwoPCIndex {
     // This can be done in a better way by creating a method boolean
     // keepDeletedTuples(mergedComponents);
     @Override
-    public ILSMDiskComponent merge(ILSMIOOperation operation) throws HyracksDataException, IndexException {
+    public ILSMDiskComponent merge(ILSMIOOperation operation) throws HyracksDataException {
         LSMRTreeMergeOperation mergeOp = (LSMRTreeMergeOperation) operation;
         ITreeIndexCursor cursor = mergeOp.getCursor();
         ISearchPredicate rtreeSearchPred = new SearchPredicate(null, null);
@@ -430,8 +421,7 @@ public class ExternalRTree extends LSMRTree implements ITwoPCIndex {
 
     // Not supported
     @Override
-    public void modify(IIndexOperationContext ictx, ITupleReference tuple)
-            throws HyracksDataException, IndexException {
+    public void modify(IIndexOperationContext ictx, ITupleReference tuple) throws HyracksDataException {
         throw new UnsupportedOperationException("tuple modify not supported in LSM-Disk-Only-RTree");
     }
 
@@ -444,7 +434,7 @@ public class ExternalRTree extends LSMRTree implements ITwoPCIndex {
 
     // Not supported
     @Override
-    public ILSMDiskComponent flush(ILSMIOOperation operation) throws HyracksDataException, IndexException {
+    public ILSMDiskComponent flush(ILSMIOOperation operation) throws HyracksDataException {
         throw new UnsupportedOperationException("flush not supported in LSM-Disk-Only-RTree");
     }
 
@@ -492,23 +482,15 @@ public class ExternalRTree extends LSMRTree implements ITwoPCIndex {
     // For initial load
     @Override
     public IIndexBulkLoader createBulkLoader(float fillLevel, boolean verifyInput, long numElementsHint,
-            boolean checkIfEmptyIndex) throws TreeIndexException {
-        try {
-            return new LSMTwoPCRTreeBulkLoader(fillLevel, verifyInput, 0, checkIfEmptyIndex, false);
-        } catch (HyracksDataException e) {
-            throw new TreeIndexException(e);
-        }
+            boolean checkIfEmptyIndex) throws HyracksDataException {
+        return new LSMTwoPCRTreeBulkLoader(fillLevel, verifyInput, 0, checkIfEmptyIndex, false);
     }
 
     // For transaction bulk load <- could consolidate with the above method ->
     @Override
     public IIndexBulkLoader createTransactionBulkLoader(float fillLevel, boolean verifyInput, long numElementsHint,
-            boolean checkIfEmptyIndex) throws TreeIndexException {
-        try {
-            return new LSMTwoPCRTreeBulkLoader(fillLevel, verifyInput, numElementsHint, checkIfEmptyIndex, true);
-        } catch (HyracksDataException e) {
-            throw new TreeIndexException(e);
-        }
+            boolean checkIfEmptyIndex) throws HyracksDataException {
+        return new LSMTwoPCRTreeBulkLoader(fillLevel, verifyInput, numElementsHint, checkIfEmptyIndex, true);
     }
 
     // The bulk loader used for both initial loading and transaction
@@ -524,24 +506,16 @@ public class ExternalRTree extends LSMRTree implements ITwoPCIndex {
         private final boolean isTransaction;
 
         public LSMTwoPCRTreeBulkLoader(float fillFactor, boolean verifyInput, long numElementsHint,
-                boolean checkIfEmptyIndex, boolean isTransaction) throws TreeIndexException, HyracksDataException {
+                boolean checkIfEmptyIndex, boolean isTransaction) throws HyracksDataException {
             this.isTransaction = isTransaction;
             // Create the appropriate target
             if (isTransaction) {
-                try {
-                    component = createTransactionTarget();
-                } catch (HyracksDataException | IndexException e) {
-                    throw new TreeIndexException(e);
-                }
+                component = createTransactionTarget();
             } else {
                 if (checkIfEmptyIndex && !isEmptyIndex()) {
-                    throw new TreeIndexException("Cannot load an index that is not empty");
+                    throw HyracksDataException.create(ErrorCode.LOAD_NON_EMPTY_INDEX);
                 }
-                try {
-                    component = createBulkLoadTarget();
-                } catch (HyracksDataException | IndexException e) {
-                    throw new TreeIndexException(e);
-                }
+                component = createBulkLoadTarget();
             }
 
             // Create the three loaders
@@ -557,10 +531,10 @@ public class ExternalRTree extends LSMRTree implements ITwoPCIndex {
         }
 
         @Override
-        public void add(ITupleReference tuple) throws IndexException, HyracksDataException {
+        public void add(ITupleReference tuple) throws HyracksDataException {
             try {
                 rtreeBulkLoader.add(tuple);
-            } catch (IndexException | HyracksDataException | RuntimeException e) {
+            } catch (Exception e) {
                 cleanupArtifacts();
                 throw e;
             }
@@ -596,7 +570,7 @@ public class ExternalRTree extends LSMRTree implements ITwoPCIndex {
         }
 
         @Override
-        public void end() throws HyracksDataException, IndexException {
+        public void end() throws HyracksDataException {
             if (!cleanedUpArtifacts) {
                 if (!endedBloomFilterLoad) {
                     builder.end();
@@ -623,11 +597,11 @@ public class ExternalRTree extends LSMRTree implements ITwoPCIndex {
         }
 
         @Override
-        public void delete(ITupleReference tuple) throws IndexException, HyracksDataException {
+        public void delete(ITupleReference tuple) throws HyracksDataException {
             try {
                 btreeBulkLoader.add(tuple);
                 builder.add(tuple);
-            } catch (IndexException | HyracksDataException | RuntimeException e) {
+            } catch (Exception e) {
                 cleanupArtifacts();
                 throw e;
             }
@@ -647,12 +621,12 @@ public class ExternalRTree extends LSMRTree implements ITwoPCIndex {
 
         // This method is used to create a target for a bulk modify operation. This
         // component must then eventually be either committed or deleted
-        private ILSMDiskComponent createTransactionTarget() throws HyracksDataException, IndexException {
+        private ILSMDiskComponent createTransactionTarget() throws HyracksDataException {
             LSMComponentFileReferences componentFileRefs;
             try {
                 componentFileRefs = fileManager.getNewTransactionFileReference();
             } catch (IOException e) {
-                throw new HyracksDataException("Failed to create transaction components", e);
+                throw HyracksDataException.create(e);
             }
             return createDiskComponent(componentFactory, componentFileRefs.getInsertIndexFileReference(),
                     componentFileRefs.getDeleteIndexFileReference(), componentFileRefs.getBloomFilterFileReference(),
@@ -669,7 +643,7 @@ public class ExternalRTree extends LSMRTree implements ITwoPCIndex {
     // opCtx. first line <- in schedule merge, we->
     @Override
     public void scheduleMerge(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
-            throws HyracksDataException, IndexException {
+            throws HyracksDataException {
         ILSMIndexOperationContext rctx = createOpContext(NoOpOperationCallback.INSTANCE, -1);
         rctx.setOperation(IndexOperation.MERGE);
         List<ILSMComponent> mergingComponents = ctx.getComponentHolder();
@@ -732,7 +706,7 @@ public class ExternalRTree extends LSMRTree implements ITwoPCIndex {
     }
 
     @Override
-    public void commitTransaction() throws TreeIndexException, HyracksDataException, IndexException {
+    public void commitTransaction() throws HyracksDataException {
         LSMComponentFileReferences componentFileRefrences = fileManager.getTransactionFileReferenceForCommit();
         LSMRTreeDiskComponent component = null;
         if (componentFileRefrences != null) {
@@ -744,21 +718,13 @@ public class ExternalRTree extends LSMRTree implements ITwoPCIndex {
     }
 
     @Override
-    public void abortTransaction() throws TreeIndexException {
-        try {
-            fileManager.deleteTransactionFiles();
-        } catch (HyracksDataException e) {
-            throw new TreeIndexException(e);
-        }
+    public void abortTransaction() throws HyracksDataException {
+        fileManager.deleteTransactionFiles();
     }
 
     @Override
-    public void recoverTransaction() throws TreeIndexException {
-        try {
-            fileManager.recoverTransaction();
-        } catch (HyracksDataException e) {
-            throw new TreeIndexException(e);
-        }
+    public void recoverTransaction() throws HyracksDataException {
+        fileManager.recoverTransaction();
     }
 
     @Override

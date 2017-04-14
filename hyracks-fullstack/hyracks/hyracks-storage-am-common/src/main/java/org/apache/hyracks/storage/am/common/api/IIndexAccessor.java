@@ -40,7 +40,7 @@ public interface IIndexAccessor {
      *             If an index-specific constraint is violated, e.g., the key
      *             already exists.
      */
-    public void insert(ITupleReference tuple) throws HyracksDataException, IndexException;
+    public void insert(ITupleReference tuple) throws HyracksDataException;
 
     /**
      * Updates the tuple in the index matching the given tuple with the new
@@ -54,7 +54,7 @@ public interface IIndexAccessor {
      * @throws IndexException
      *             If there is no matching tuple in the index.
      */
-    public void update(ITupleReference tuple) throws HyracksDataException, IndexException;
+    public void update(ITupleReference tuple) throws HyracksDataException;
 
     /**
      * Deletes the tuple in the index matching the given tuple.
@@ -66,7 +66,7 @@ public interface IIndexAccessor {
      * @throws IndexException
      *             If there is no matching tuple in the index.
      */
-    public void delete(ITupleReference tuple) throws HyracksDataException, IndexException;
+    public void delete(ITupleReference tuple) throws HyracksDataException;
 
     /**
      * This operation is only supported by indexes with the notion of a unique key.
@@ -81,7 +81,7 @@ public interface IIndexAccessor {
      *             If there is no matching tuple in the index.
      *
      */
-    public void upsert(ITupleReference tuple) throws HyracksDataException, IndexException;
+    public void upsert(ITupleReference tuple) throws HyracksDataException;
 
     /**
      * Creates a cursor appropriate for passing into search().
@@ -101,5 +101,5 @@ public interface IIndexAccessor {
      *             If the BufferCache throws while un/pinning or un/latching.
      * @throws IndexException
      */
-    public void search(IIndexCursor cursor, ISearchPredicate searchPred) throws HyracksDataException, IndexException;
+    public void search(IIndexCursor cursor, ISearchPredicate searchPred) throws HyracksDataException;
 }

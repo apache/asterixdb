@@ -26,6 +26,7 @@ import java.util.logging.Logger;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
 import org.apache.hyracks.data.std.primitive.DoublePointable;
@@ -45,7 +46,6 @@ import org.apache.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import org.apache.hyracks.storage.am.common.api.ITreeIndex;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexAccessor;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexCursor;
-import org.apache.hyracks.storage.am.common.api.TreeIndexException;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import org.apache.hyracks.storage.am.common.impls.TreeIndexDiskOrderScanCursor;
 import org.apache.hyracks.storage.am.common.ophelpers.MultiComparator;
@@ -69,10 +69,9 @@ public abstract class AbstractRTreeExamplesTest {
 
     protected abstract ITreeIndex createTreeIndex(ITypeTraits[] typeTraits,
             IBinaryComparatorFactory[] rtreeCmpFactories, IBinaryComparatorFactory[] btreeCmpFactories,
-            IPrimitiveValueProviderFactory[] valueProviderFactories, RTreePolicyType rtreePolicyType,
-            int[] rtreeFields, int[] btreeFields, ITypeTraits[] filterTypeTraits,
-            IBinaryComparatorFactory[] filterCmpFactories, int[] filterFields) throws TreeIndexException,
-            HyracksDataException;
+            IPrimitiveValueProviderFactory[] valueProviderFactories, RTreePolicyType rtreePolicyType, int[] rtreeFields,
+            int[] btreeFields, ITypeTraits[] filterTypeTraits, IBinaryComparatorFactory[] filterCmpFactories,
+            int[] filterFields) throws HyracksDataException;
 
     /**
      * Two Dimensions Example. Create an RTree index of two dimensions, where
@@ -96,10 +95,10 @@ public abstract class AbstractRTreeExamplesTest {
         typeTraits[4] = IntegerPointable.TYPE_TRAITS;
         typeTraits[5] = IntegerPointable.TYPE_TRAITS;
         // Declare field serdes.
-        ISerializerDeserializer[] fieldSerdes = { IntegerSerializerDeserializer.INSTANCE,
-                IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE,
-                IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE,
-                IntegerSerializerDeserializer.INSTANCE };
+        ISerializerDeserializer[] fieldSerdes =
+                { IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE,
+                        IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE,
+                        IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE };
 
         // Declare RTree keys.
         int rtreeKeyFieldCount = 4;
@@ -136,11 +135,11 @@ public abstract class AbstractRTreeExamplesTest {
         }
 
         // create value providers
-        IPrimitiveValueProviderFactory[] valueProviderFactories = RTreeUtils.createPrimitiveValueProviderFactories(
-                rtreeCmpFactories.length, IntegerPointable.FACTORY);
+        IPrimitiveValueProviderFactory[] valueProviderFactories =
+                RTreeUtils.createPrimitiveValueProviderFactories(rtreeCmpFactories.length, IntegerPointable.FACTORY);
 
-        ITreeIndex treeIndex = createTreeIndex(typeTraits, rtreeCmpFactories, btreeCmpFactories,
-                valueProviderFactories, RTreePolicyType.RTREE, null, btreeFields, null, null, null);
+        ITreeIndex treeIndex = createTreeIndex(typeTraits, rtreeCmpFactories, btreeCmpFactories, valueProviderFactories,
+                RTreePolicyType.RTREE, null, btreeFields, null, null, null);
         treeIndex.create();
         treeIndex.activate();
 
@@ -150,8 +149,8 @@ public abstract class AbstractRTreeExamplesTest {
         }
         ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
-        IIndexAccessor indexAccessor = treeIndex.createAccessor(NoOpOperationCallback.INSTANCE,
-                NoOpOperationCallback.INSTANCE);
+        IIndexAccessor indexAccessor =
+                treeIndex.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
         int numInserts = 10000;
         for (int i = 0; i < numInserts; i++) {
             int p1x = rnd.nextInt();
@@ -166,7 +165,10 @@ public abstract class AbstractRTreeExamplesTest {
                     Math.max(p1y, p2y), pk1, pk2);
             try {
                 indexAccessor.insert(tuple);
-            } catch (TreeIndexException e) {
+            } catch (HyracksDataException e) {
+                if (e.getErrorCode() != ErrorCode.DUPLICATE_KEY) {
+                    throw e;
+                }
             }
         }
         long end = System.currentTimeMillis();
@@ -246,20 +248,20 @@ public abstract class AbstractRTreeExamplesTest {
         }
 
         // create value providers
-        IPrimitiveValueProviderFactory[] valueProviderFactories = RTreeUtils.createPrimitiveValueProviderFactories(
-                rtreeCmpFactories.length, IntegerPointable.FACTORY);
+        IPrimitiveValueProviderFactory[] valueProviderFactories =
+                RTreeUtils.createPrimitiveValueProviderFactories(rtreeCmpFactories.length, IntegerPointable.FACTORY);
 
         //2
-        ITreeIndex treeIndex = createTreeIndex(typeTraits, rtreeCmpFactories, btreeCmpFactories,
-                valueProviderFactories, RTreePolicyType.RTREE, null, btreeFields, null, null, null);
+        ITreeIndex treeIndex = createTreeIndex(typeTraits, rtreeCmpFactories, btreeCmpFactories, valueProviderFactories,
+                RTreePolicyType.RTREE, null, btreeFields, null, null, null);
 
         treeIndex.create();
         treeIndex.activate();
 
         ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
-        IIndexAccessor indexAccessor = treeIndex.createAccessor(TestOperationCallback.INSTANCE,
-                TestOperationCallback.INSTANCE);
+        IIndexAccessor indexAccessor =
+                treeIndex.createAccessor(TestOperationCallback.INSTANCE, TestOperationCallback.INSTANCE);
 
         int p1x = rnd.nextInt();
         int p1y = rnd.nextInt();
@@ -386,19 +388,19 @@ public abstract class AbstractRTreeExamplesTest {
         }
 
         // create value providers
-        IPrimitiveValueProviderFactory[] valueProviderFactories = RTreeUtils.createPrimitiveValueProviderFactories(
-                rtreeCmpFactories.length, IntegerPointable.FACTORY);
+        IPrimitiveValueProviderFactory[] valueProviderFactories =
+                RTreeUtils.createPrimitiveValueProviderFactories(rtreeCmpFactories.length, IntegerPointable.FACTORY);
 
-        ITreeIndex treeIndex = createTreeIndex(typeTraits, rtreeCmpFactories, btreeCmpFactories,
-                valueProviderFactories, RTreePolicyType.RSTARTREE, null, btreeFields, null, null, null);
+        ITreeIndex treeIndex = createTreeIndex(typeTraits, rtreeCmpFactories, btreeCmpFactories, valueProviderFactories,
+                RTreePolicyType.RSTARTREE, null, btreeFields, null, null, null);
 
         treeIndex.create();
         treeIndex.activate();
 
         ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
-        IIndexAccessor indexAccessor = treeIndex.createAccessor(TestOperationCallback.INSTANCE,
-                TestOperationCallback.INSTANCE);
+        IIndexAccessor indexAccessor =
+                treeIndex.createAccessor(TestOperationCallback.INSTANCE, TestOperationCallback.INSTANCE);
 
         int p1x = rnd.nextInt();
         int p1y = rnd.nextInt();
@@ -535,12 +537,12 @@ public abstract class AbstractRTreeExamplesTest {
         }
 
         // create value providers
-        IPrimitiveValueProviderFactory[] valueProviderFactories = RTreeUtils.createPrimitiveValueProviderFactories(
-                rtreeCmpFactories.length, DoublePointable.FACTORY);
+        IPrimitiveValueProviderFactory[] valueProviderFactories =
+                RTreeUtils.createPrimitiveValueProviderFactories(rtreeCmpFactories.length, DoublePointable.FACTORY);
 
         //4
-        ITreeIndex treeIndex = createTreeIndex(typeTraits, rtreeCmpFactories, btreeCmpFactories,
-                valueProviderFactories, RTreePolicyType.RTREE, null, btreeFields, null, null, null);
+        ITreeIndex treeIndex = createTreeIndex(typeTraits, rtreeCmpFactories, btreeCmpFactories, valueProviderFactories,
+                RTreePolicyType.RTREE, null, btreeFields, null, null, null);
         treeIndex.create();
         treeIndex.activate();
 
@@ -550,8 +552,8 @@ public abstract class AbstractRTreeExamplesTest {
         }
         ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
-        IIndexAccessor indexAccessor = treeIndex.createAccessor(NoOpOperationCallback.INSTANCE,
-                NoOpOperationCallback.INSTANCE);
+        IIndexAccessor indexAccessor =
+                treeIndex.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
         int numInserts = 10000;
         for (int i = 0; i < numInserts; i++) {
             double p1x = rnd.nextDouble();
@@ -567,7 +569,10 @@ public abstract class AbstractRTreeExamplesTest {
                     Math.max(p1x, p2x), Math.max(p1y, p2y), Math.max(p1z, p2z), pk);
             try {
                 indexAccessor.insert(tuple);
-            } catch (TreeIndexException e) {
+            } catch (HyracksDataException e) {
+                if (e.getErrorCode() != ErrorCode.DUPLICATE_KEY) {
+                    throw e;
+                }
             }
         }
         long end = System.currentTimeMillis();
@@ -643,18 +648,18 @@ public abstract class AbstractRTreeExamplesTest {
         }
 
         // create value providers
-        IPrimitiveValueProviderFactory[] valueProviderFactories = RTreeUtils.createPrimitiveValueProviderFactories(
-                rtreeCmpFactories.length, IntegerPointable.FACTORY);
+        IPrimitiveValueProviderFactory[] valueProviderFactories =
+                RTreeUtils.createPrimitiveValueProviderFactories(rtreeCmpFactories.length, IntegerPointable.FACTORY);
 
-        ITreeIndex treeIndex = createTreeIndex(typeTraits, rtreeCmpFactories, btreeCmpFactories,
-                valueProviderFactories, RTreePolicyType.RTREE, null, btreeFields, null, null, null);
+        ITreeIndex treeIndex = createTreeIndex(typeTraits, rtreeCmpFactories, btreeCmpFactories, valueProviderFactories,
+                RTreePolicyType.RTREE, null, btreeFields, null, null, null);
         treeIndex.create();
         treeIndex.activate();
 
         ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
-        IIndexAccessor indexAccessor = treeIndex.createAccessor(NoOpOperationCallback.INSTANCE,
-                NoOpOperationCallback.INSTANCE);
+        IIndexAccessor indexAccessor =
+                treeIndex.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
 
         int runs = 3;
         for (int run = 0; run < runs; run++) {
@@ -689,7 +694,10 @@ public abstract class AbstractRTreeExamplesTest {
                         Math.max(p1y, p2y), pk);
                 try {
                     indexAccessor.insert(tuple);
-                } catch (TreeIndexException e) {
+                } catch (HyracksDataException e) {
+                    if (e.getErrorCode() != ErrorCode.DUPLICATE_KEY) {
+                        throw e;
+                    }
                 }
                 insDoneCmp[i] = insDone;
             }
@@ -703,7 +711,10 @@ public abstract class AbstractRTreeExamplesTest {
                 try {
                     indexAccessor.delete(tuple);
                     delDone++;
-                } catch (TreeIndexException e) {
+                } catch (HyracksDataException e) {
+                    if (e.getErrorCode() != ErrorCode.UPDATE_OR_DELETE_NON_EXISTENT_KEY) {
+                        throw e;
+                    }
                 }
                 if (insDoneCmp[i] != delDone) {
                     if (LOGGER.isLoggable(Level.INFO)) {
@@ -779,12 +790,12 @@ public abstract class AbstractRTreeExamplesTest {
         }
 
         // create value providers
-        IPrimitiveValueProviderFactory[] valueProviderFactories = RTreeUtils.createPrimitiveValueProviderFactories(
-                rtreeCmpFactories.length, IntegerPointable.FACTORY);
+        IPrimitiveValueProviderFactory[] valueProviderFactories =
+                RTreeUtils.createPrimitiveValueProviderFactories(rtreeCmpFactories.length, IntegerPointable.FACTORY);
 
         //6
-        ITreeIndex treeIndex = createTreeIndex(typeTraits, rtreeCmpFactories, btreeCmpFactories,
-                valueProviderFactories, RTreePolicyType.RTREE, null, btreeFields, null, null, null);
+        ITreeIndex treeIndex = createTreeIndex(typeTraits, rtreeCmpFactories, btreeCmpFactories, valueProviderFactories,
+                RTreePolicyType.RTREE, null, btreeFields, null, null, null);
         treeIndex.create();
         treeIndex.activate();
 
@@ -817,8 +828,8 @@ public abstract class AbstractRTreeExamplesTest {
             LOGGER.info(numInserts + " tuples loaded in " + (end - start) + "ms");
         }
 
-        IIndexAccessor indexAccessor = treeIndex.createAccessor(NoOpOperationCallback.INSTANCE,
-                NoOpOperationCallback.INSTANCE);
+        IIndexAccessor indexAccessor =
+                treeIndex.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
 
         // Build key.
         ArrayTupleBuilder keyTb = new ArrayTupleBuilder(rtreeKeyFieldCount);
@@ -858,8 +869,8 @@ public abstract class AbstractRTreeExamplesTest {
                 LOGGER.info("Disk-Order Scan:");
             }
             ITreeIndexAccessor treeIndexAccessor = (ITreeIndexAccessor) indexAccessor;
-            TreeIndexDiskOrderScanCursor diskOrderCursor = (TreeIndexDiskOrderScanCursor) treeIndexAccessor
-                    .createDiskOrderScanCursor();
+            TreeIndexDiskOrderScanCursor diskOrderCursor =
+                    (TreeIndexDiskOrderScanCursor) treeIndexAccessor.createDiskOrderScanCursor();
             treeIndexAccessor.diskOrderScan(diskOrderCursor);
             try {
                 while (diskOrderCursor.hasNext()) {

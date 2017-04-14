@@ -25,7 +25,6 @@ import org.apache.hyracks.storage.am.common.TestOperationSelector;
 import org.apache.hyracks.storage.am.common.TestOperationSelector.TestOperation;
 import org.apache.hyracks.storage.am.common.api.IIndex;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexCursor;
-import org.apache.hyracks.storage.am.common.api.IndexException;
 import org.apache.hyracks.storage.am.common.datagen.DataGenThread;
 import org.apache.hyracks.storage.am.common.ophelpers.MultiComparator;
 import org.apache.hyracks.storage.am.lsm.common.impls.NoOpIOOperationCallback;
@@ -35,13 +34,13 @@ import org.apache.hyracks.storage.am.rtree.impls.SearchPredicate;
 
 public class LSMRTreeWithAntiMatterTuplesTestWorker extends AbstractLSMRTreeTestWorker {
 
-    public LSMRTreeWithAntiMatterTuplesTestWorker(DataGenThread dataGen, TestOperationSelector opSelector,
-            IIndex index, int numBatches) throws HyracksDataException {
+    public LSMRTreeWithAntiMatterTuplesTestWorker(DataGenThread dataGen, TestOperationSelector opSelector, IIndex index,
+            int numBatches) throws HyracksDataException {
         super(dataGen, opSelector, index, numBatches);
     }
 
     @Override
-    public void performOp(ITupleReference tuple, TestOperation op) throws HyracksDataException, IndexException {
+    public void performOp(ITupleReference tuple, TestOperation op) throws HyracksDataException {
         LSMRTreeWithAntiMatterTuplesAccessor accessor = (LSMRTreeWithAntiMatterTuplesAccessor) indexAccessor;
         ITreeIndexCursor searchCursor = accessor.createSearchCursor(false);
         MultiComparator cmp = accessor.getMultiComparator();

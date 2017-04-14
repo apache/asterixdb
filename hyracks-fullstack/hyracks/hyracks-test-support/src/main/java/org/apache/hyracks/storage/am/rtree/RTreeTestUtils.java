@@ -28,6 +28,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
@@ -37,7 +38,6 @@ import org.apache.hyracks.storage.am.common.IIndexTestContext;
 import org.apache.hyracks.storage.am.common.TreeIndexTestUtils;
 import org.apache.hyracks.storage.am.common.api.ISearchPredicate;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexCursor;
-import org.apache.hyracks.storage.am.common.api.TreeIndexException;
 import org.apache.hyracks.storage.am.common.ophelpers.MultiComparator;
 import org.apache.hyracks.storage.am.common.util.HashMultiSet;
 import org.apache.hyracks.storage.am.rtree.impls.SearchPredicate;
@@ -53,7 +53,7 @@ public class RTreeTestUtils extends TreeIndexTestUtils {
     // Create a new ArrayList containing the elements satisfying the search key
     public HashMultiSet<RTreeCheckTuple> getRangeSearchExpectedResults(Collection<RTreeCheckTuple> checkTuples,
             RTreeCheckTuple key) {
-        HashMultiSet<RTreeCheckTuple> expectedResult = new HashMultiSet<RTreeCheckTuple>();
+        HashMultiSet<RTreeCheckTuple> expectedResult = new HashMultiSet<>();
         Iterator<RTreeCheckTuple> iter = checkTuples.iterator();
         while (iter.hasNext()) {
             RTreeCheckTuple t = iter.next();
@@ -77,8 +77,8 @@ public class RTreeTestUtils extends TreeIndexTestUtils {
 
         // Get the subset of elements from the expected set within given key
         // range.
-        RTreeCheckTuple keyCheck = (RTreeCheckTuple) createCheckTupleFromTuple(key, ctx.getFieldSerdes(),
-                cmp.getKeyFieldCount());
+        RTreeCheckTuple keyCheck =
+                (RTreeCheckTuple) createCheckTupleFromTuple(key, ctx.getFieldSerdes(), cmp.getKeyFieldCount());
 
         HashMultiSet<RTreeCheckTuple> expectedResult = null;
 
@@ -94,7 +94,7 @@ public class RTreeTestUtils extends TreeIndexTestUtils {
         // Scale range of values according to number of keys.
         // For example, for 2 keys we want the square root of numTuples, for 3
         // keys the cube root of numTuples, etc.
-        double maxValue = Math.ceil(Math.pow(numTuples, 1.0 / (double) numKeyFields));
+        double maxValue = Math.ceil(Math.pow(numTuples, 1.0 / numKeyFields));
         for (int i = 0; i < numTuples; i++) {
             // Set keys.
             setDoubleKeyFields(fieldValues, numKeyFields, maxValue, rnd);
@@ -109,10 +109,12 @@ public class RTreeTestUtils extends TreeIndexTestUtils {
             try {
                 ctx.getIndexAccessor().insert(ctx.getTuple());
                 ctx.insertCheckTuple(createDoubleCheckTuple(fieldValues, ctx.getKeyFieldCount()), ctx.getCheckTuples());
-            } catch (TreeIndexException e) {
+            } catch (HyracksDataException e) {
                 // We set expected values only after insertion succeeds because
-                // we
-                // ignore duplicate keys.
+                // we ignore duplicate keys.
+                if (e.getErrorCode() != ErrorCode.DUPLICATE_KEY) {
+                    throw e;
+                }
             }
         }
     }
@@ -139,7 +141,7 @@ public class RTreeTestUtils extends TreeIndexTestUtils {
 
     @SuppressWarnings("unchecked")
     protected CheckTuple createDoubleCheckTuple(double[] fieldValues, int numKeyFields) {
-        RTreeCheckTuple<Double> checkTuple = new RTreeCheckTuple<Double>(fieldValues.length, numKeyFields);
+        RTreeCheckTuple<Double> checkTuple = new RTreeCheckTuple<>(fieldValues.length, numKeyFields);
         for (double v : fieldValues) {
             checkTuple.appendField(v);
         }
@@ -151,7 +153,7 @@ public class RTreeTestUtils extends TreeIndexTestUtils {
         int fieldCount = ctx.getFieldCount();
         int numKeyFields = ctx.getKeyFieldCount();
         double[] fieldValues = new double[ctx.getFieldCount()];
-        double maxValue = Math.ceil(Math.pow(numTuples, 1.0 / (double) numKeyFields));
+        double maxValue = Math.ceil(Math.pow(numTuples, 1.0 / numKeyFields));
         Collection<CheckTuple> tmpCheckTuples = createCheckTuplesCollection();
         for (int i = 0; i < numTuples; i++) {
             // Set keys.
@@ -178,8 +180,8 @@ public class RTreeTestUtils extends TreeIndexTestUtils {
             while (cursor.hasNext()) {
                 cursor.next();
                 ITupleReference tuple = cursor.getTuple();
-                RTreeCheckTuple checkTuple = (RTreeCheckTuple) createCheckTupleFromTuple(tuple, fieldSerdes,
-                        keyFieldCount);
+                RTreeCheckTuple checkTuple =
+                        (RTreeCheckTuple) createCheckTupleFromTuple(tuple, fieldSerdes, keyFieldCount);
                 if (!checkTuples.contains(checkTuple)) {
                     fail("Scan or range search returned unexpected answer: " + checkTuple.toString());
                 }
@@ -211,7 +213,7 @@ public class RTreeTestUtils extends TreeIndexTestUtils {
     @SuppressWarnings("unchecked")
     @Override
     protected CheckTuple createIntCheckTuple(int[] fieldValues, int numKeyFields) {
-        RTreeCheckTuple<Integer> checkTuple = new RTreeCheckTuple<Integer>(fieldValues.length, numKeyFields);
+        RTreeCheckTuple<Integer> checkTuple = new RTreeCheckTuple<>(fieldValues.length, numKeyFields);
         for (int v : fieldValues) {
             checkTuple.appendField(v);
         }

@@ -24,7 +24,6 @@ import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import org.apache.hyracks.storage.am.common.api.ITreeIndex;
-import org.apache.hyracks.storage.am.common.api.TreeIndexException;
 import org.apache.hyracks.storage.am.lsm.rtree.util.LSMRTreeTestHarness;
 import org.apache.hyracks.storage.am.lsm.rtree.utils.LSMRTreeUtils;
 import org.apache.hyracks.storage.am.rtree.frames.RTreePolicyType;
@@ -43,15 +42,14 @@ public class LSMRTreeWithAntiMatterTuplesExamplesTest extends AbstractLSMRTreeEx
     protected ITreeIndex createTreeIndex(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] rtreeCmpFactories,
             IBinaryComparatorFactory[] btreeCmpFactories, IPrimitiveValueProviderFactory[] valueProviderFactories,
             RTreePolicyType rtreePolicyType, int[] rtreeFields, int[] btreeFields, ITypeTraits[] filterTypeTraits,
-            IBinaryComparatorFactory[] filterCmpFactories, int[] filterFields) throws TreeIndexException,
-            HyracksDataException {
+            IBinaryComparatorFactory[] filterCmpFactories, int[] filterFields) throws HyracksDataException {
         return LSMRTreeUtils.createLSMTreeWithAntiMatterTuples(harness.getIOManager(), harness.getVirtualBufferCaches(),
                 harness.getFileReference(), harness.getDiskBufferCache(), harness.getDiskFileMapProvider(), typeTraits,
                 rtreeCmpFactories, btreeCmpFactories, valueProviderFactories, rtreePolicyType, harness.getMergePolicy(),
                 harness.getOperationTracker(), harness.getIOScheduler(), harness.getIOOperationCallback(),
                 LSMRTreeUtils.proposeBestLinearizer(typeTraits, rtreeCmpFactories.length), rtreeFields,
-                filterTypeTraits, filterCmpFactories, filterFields, true, false, harness
-                        .getMetadataPageManagerFactory());
+                filterTypeTraits, filterCmpFactories, filterFields, true, false,
+                harness.getMetadataPageManagerFactory());
     }
 
     @Before

@@ -24,8 +24,6 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.common.api.IIndexAccessor;
-import org.apache.hyracks.storage.am.common.api.IndexException;
-import org.apache.hyracks.storage.am.common.api.TreeIndexException;
 
 /**
  * Client handle for performing operations
@@ -55,7 +53,7 @@ public interface ILSMIndexAccessor extends IIndexAccessor {
      * @throws IndexException
      */
     void scheduleMerge(ILSMIOOperationCallback callback, List<ILSMDiskComponent> components)
-            throws HyracksDataException, IndexException;
+            throws HyracksDataException;
 
     /**
      * Schedule a full merge
@@ -65,7 +63,7 @@ public interface ILSMIndexAccessor extends IIndexAccessor {
      * @throws HyracksDataException
      * @throws IndexException
      */
-    void scheduleFullMerge(ILSMIOOperationCallback callback) throws HyracksDataException, IndexException;
+    void scheduleFullMerge(ILSMIOOperationCallback callback) throws HyracksDataException;
 
     /**
      * Delete the tuple from the memory component only. Don't replace with antimatter tuple
@@ -75,7 +73,7 @@ public interface ILSMIndexAccessor extends IIndexAccessor {
      * @throws HyracksDataException
      * @throws IndexException
      */
-    void physicalDelete(ITupleReference tuple) throws HyracksDataException, IndexException;
+    void physicalDelete(ITupleReference tuple) throws HyracksDataException;
 
     /**
      * Attempts to insert the given tuple.
@@ -91,7 +89,7 @@ public interface ILSMIndexAccessor extends IIndexAccessor {
      *             If an index-specific constraint is violated, e.g., the key
      *             already exists.
      */
-    boolean tryInsert(ITupleReference tuple) throws HyracksDataException, IndexException;
+    boolean tryInsert(ITupleReference tuple) throws HyracksDataException;
 
     /**
      * Attempts to delete the given tuple.
@@ -106,7 +104,7 @@ public interface ILSMIndexAccessor extends IIndexAccessor {
      * @throws IndexException
      *             If there is no matching tuple in the index.
      */
-    boolean tryDelete(ITupleReference tuple) throws HyracksDataException, IndexException;
+    boolean tryDelete(ITupleReference tuple) throws HyracksDataException;
 
     /**
      * Attempts to update the given tuple.
@@ -122,7 +120,7 @@ public interface ILSMIndexAccessor extends IIndexAccessor {
      * @throws IndexException
      *             If there is no matching tuple in the index.
      */
-    boolean tryUpdate(ITupleReference tuple) throws HyracksDataException, IndexException;
+    boolean tryUpdate(ITupleReference tuple) throws HyracksDataException;
 
     /**
      * This operation is only supported by indexes with the notion of a unique key.
@@ -139,7 +137,7 @@ public interface ILSMIndexAccessor extends IIndexAccessor {
      * @throws IndexException
      *             If there is no matching tuple in the index.
      */
-    boolean tryUpsert(ITupleReference tuple) throws HyracksDataException, IndexException;
+    boolean tryUpsert(ITupleReference tuple) throws HyracksDataException;
 
     /**
      * Delete the tuple from the memory component only. Don't replace with antimatter tuple
@@ -150,7 +148,7 @@ public interface ILSMIndexAccessor extends IIndexAccessor {
      * @throws HyracksDataException
      * @throws IndexException
      */
-    void forcePhysicalDelete(ITupleReference tuple) throws HyracksDataException, IndexException;
+    void forcePhysicalDelete(ITupleReference tuple) throws HyracksDataException;
 
     /**
      * Insert a new tuple (failing if duplicate key entry is found)
@@ -160,7 +158,7 @@ public interface ILSMIndexAccessor extends IIndexAccessor {
      * @throws HyracksDataException
      * @throws IndexException
      */
-    void forceInsert(ITupleReference tuple) throws HyracksDataException, IndexException;
+    void forceInsert(ITupleReference tuple) throws HyracksDataException;
 
     /**
      * Force deleting an index entry even if the memory component is full
@@ -171,7 +169,7 @@ public interface ILSMIndexAccessor extends IIndexAccessor {
      * @throws HyracksDataException
      * @throws IndexException
      */
-    void forceDelete(ITupleReference tuple) throws HyracksDataException, IndexException;
+    void forceDelete(ITupleReference tuple) throws HyracksDataException;
 
     /**
      * Force upserting the tuple into the memory component even if it is full
@@ -180,7 +178,7 @@ public interface ILSMIndexAccessor extends IIndexAccessor {
      * @throws HyracksDataException
      * @throws IndexException
      */
-    void forceUpsert(ITupleReference tuple) throws HyracksDataException, IndexException;
+    void forceUpsert(ITupleReference tuple) throws HyracksDataException;
 
     /**
      * Schedule a replication for disk components
@@ -202,7 +200,7 @@ public interface ILSMIndexAccessor extends IIndexAccessor {
      * @throws HyracksDataException
      * @throws TreeIndexException
      */
-    void flush(ILSMIOOperation operation) throws HyracksDataException, IndexException;
+    void flush(ILSMIOOperation operation) throws HyracksDataException;
 
     /**
      * Merge all on-disk components.
@@ -210,7 +208,7 @@ public interface ILSMIndexAccessor extends IIndexAccessor {
      * @throws HyracksDataException
      * @throws TreeIndexException
      */
-    void merge(ILSMIOOperation operation) throws HyracksDataException, IndexException;
+    void merge(ILSMIOOperation operation) throws HyracksDataException;
 
     /**
      * Update the metadata of the memory component, wait for the new component if the current one is UNWRITABLE

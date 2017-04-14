@@ -78,12 +78,7 @@ public class BTreeCountingSearchCursor implements ITreeIndexCursor {
     public void open(ICursorInitialState initialState, ISearchPredicate searchPred) throws HyracksDataException {
         // in case open is called multiple times without closing
         if (page != null) {
-            if (exclusiveLatchNodes) {
-                page.releaseWriteLatch(isPageDirty);
-            } else {
-                page.releaseReadLatch();
-            }
-            bufferCache.unpin(page);
+            releasePage();
         }
 
         page = ((BTreeCursorInitialState) initialState).getPage();
@@ -114,6 +109,15 @@ public class BTreeCountingSearchCursor implements ITreeIndexCursor {
 
         tupleIndex = getLowKeyIndex();
         stopTupleIndex = getHighKeyIndex();
+    }
+
+    private void releasePage() throws HyracksDataException {
+        if (exclusiveLatchNodes) {
+            page.releaseWriteLatch(isPageDirty);
+        } else {
+            page.releaseReadLatch();
+        }
+        bufferCache.unpin(page);
     }
 
     private void fetchNextLeafPage(int nextLeafPage) throws HyracksDataException {
@@ -205,12 +209,7 @@ public class BTreeCountingSearchCursor implements ITreeIndexCursor {
     @Override
     public void close() throws HyracksDataException {
         if (page != null) {
-            if (exclusiveLatchNodes) {
-                page.releaseWriteLatch(isPageDirty);
-            } else {
-                page.releaseReadLatch();
-            }
-            bufferCache.unpin(page);
+            releasePage();
         }
         tupleBuilder.reset();
         tupleIndex = 0;

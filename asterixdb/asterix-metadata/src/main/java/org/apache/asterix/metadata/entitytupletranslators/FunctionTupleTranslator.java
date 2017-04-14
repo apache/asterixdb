@@ -22,7 +22,6 @@ package org.apache.asterix.metadata.entitytupletranslators;
 import java.io.ByteArrayInputStream;
 import java.io.DataInput;
 import java.io.DataInputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -38,6 +37,7 @@ import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.base.IACursor;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 
@@ -57,15 +57,15 @@ public class FunctionTupleTranslator extends AbstractTupleTranslator<Function> {
     public static final int FUNCTION_PAYLOAD_TUPLE_FIELD_INDEX = 3;
 
     @SuppressWarnings("unchecked")
-    private ISerializerDeserializer<ARecord> recordSerDes = SerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(MetadataRecordTypes.FUNCTION_RECORDTYPE);
+    private ISerializerDeserializer<ARecord> recordSerDes =
+            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(MetadataRecordTypes.FUNCTION_RECORDTYPE);
 
     protected FunctionTupleTranslator(boolean getTuple) {
         super(getTuple, MetadataPrimaryIndexes.FUNCTION_DATASET.getFieldCount());
     }
 
     @Override
-    public Function getMetadataEntityFromTuple(ITupleReference frameTuple) throws IOException {
+    public Function getMetadataEntityFromTuple(ITupleReference frameTuple) throws HyracksDataException {
         byte[] serRecord = frameTuple.getFieldData(FUNCTION_PAYLOAD_TUPLE_FIELD_INDEX);
         int recordStartOffset = frameTuple.getFieldStart(FUNCTION_PAYLOAD_TUPLE_FIELD_INDEX);
         int recordLength = frameTuple.getFieldLength(FUNCTION_PAYLOAD_TUPLE_FIELD_INDEX);
@@ -87,7 +87,7 @@ public class FunctionTupleTranslator extends AbstractTupleTranslator<Function> {
 
         IACursor cursor = ((AOrderedList) functionRecord
                 .getValueByPos(MetadataRecordTypes.FUNCTION_ARECORD_FUNCTION_PARAM_LIST_FIELD_INDEX)).getCursor();
-        List<String> params = new ArrayList<String>();
+        List<String> params = new ArrayList<>();
         while (cursor.next()) {
             params.add(((AString) cursor.get()).getStringValue());
         }
@@ -110,7 +110,8 @@ public class FunctionTupleTranslator extends AbstractTupleTranslator<Function> {
     }
 
     @Override
-    public ITupleReference getTupleFromMetadataEntity(Function function) throws IOException, MetadataException {
+    public ITupleReference getTupleFromMetadataEntity(Function function)
+            throws HyracksDataException, MetadataException {
         // write the key in the first 2 fields of the tuple
         tupleBuilder.reset();
         aString.setValue(function.getDataverseName());

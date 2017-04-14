@@ -41,7 +41,6 @@ import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.storage.am.common.api.ITreeIndex;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexMetadataFrame;
-import org.apache.hyracks.storage.am.common.api.IndexException;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexFileManager;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
@@ -121,7 +120,7 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
 
     protected void cleanupAndGetValidFilesInternal(FilenameFilter filter,
             TreeIndexFactory<? extends ITreeIndex> treeFactory, ArrayList<ComparableFileName> allFiles)
-            throws HyracksDataException, IndexException {
+            throws HyracksDataException {
         String[] files = listDirFiles(baseDir, filter);
         File dir = new File(baseDir);
         for (String fileName : files) {
@@ -159,8 +158,7 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
     }
 
     protected void validateFiles(HashSet<String> groundTruth, ArrayList<ComparableFileName> validFiles,
-            FilenameFilter filter, TreeIndexFactory<? extends ITreeIndex> treeFactory)
-            throws HyracksDataException, IndexException {
+            FilenameFilter filter, TreeIndexFactory<? extends ITreeIndex> treeFactory) throws HyracksDataException {
         ArrayList<ComparableFileName> tmpAllInvListsFiles = new ArrayList<>();
         cleanupAndGetValidFilesInternal(filter, treeFactory, tmpAllInvListsFiles);
         for (ComparableFileName cmpFileName : tmpAllInvListsFiles) {
@@ -228,7 +226,7 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
     }
 
     @Override
-    public List<LSMComponentFileReferences> cleanupAndGetValidFiles() throws HyracksDataException, IndexException {
+    public List<LSMComponentFileReferences> cleanupAndGetValidFiles() throws HyracksDataException {
         List<LSMComponentFileReferences> validFiles = new ArrayList<>();
         ArrayList<ComparableFileName> allFiles = new ArrayList<>();
 

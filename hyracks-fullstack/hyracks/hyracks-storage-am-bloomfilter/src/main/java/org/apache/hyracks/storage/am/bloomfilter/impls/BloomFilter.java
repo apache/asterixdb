@@ -25,7 +25,6 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.common.api.IIndexBulkLoader;
-import org.apache.hyracks.storage.am.common.api.IndexException;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.storage.common.buffercache.IFIFOPageQueue;
@@ -34,11 +33,11 @@ import org.apache.hyracks.storage.common.file.IFileMapProvider;
 
 public class BloomFilter {
 
-    private final static int METADATA_PAGE_ID = 0;
-    private final static int NUM_PAGES_OFFSET = 0; // 0
-    private final static int NUM_HASHES_USED_OFFSET = NUM_PAGES_OFFSET + 4; // 4
-    private final static int NUM_ELEMENTS_OFFSET = NUM_HASHES_USED_OFFSET + 4; // 8
-    private final static int NUM_BITS_OFFSET = NUM_ELEMENTS_OFFSET + 8; // 12
+    private static final int METADATA_PAGE_ID = 0;
+    private static final int NUM_PAGES_OFFSET = 0; // 0
+    private static final int NUM_HASHES_USED_OFFSET = NUM_PAGES_OFFSET + 4; // 4
+    private static final int NUM_ELEMENTS_OFFSET = NUM_HASHES_USED_OFFSET + 4; // 8
+    private static final int NUM_BITS_OFFSET = NUM_ELEMENTS_OFFSET + 8; // 12
 
     private final IBufferCache bufferCache;
     private final IFileMapProvider fileMapProvider;
@@ -258,7 +257,7 @@ public class BloomFilter {
         }
 
         @Override
-        public void add(ITupleReference tuple) throws IndexException, HyracksDataException {
+        public void add(ITupleReference tuple) throws HyracksDataException {
             if (numPages == 0) {
                 throw new HyracksDataException(
                         "Cannot add elements to this filter since it is supposed to be empty (number of elements hint passed to the filter during construction was 0).");
@@ -278,7 +277,7 @@ public class BloomFilter {
         }
 
         @Override
-        public void end() throws HyracksDataException, IndexException {
+        public void end() throws HyracksDataException {
             allocateAndInitMetaDataPage();
             queue.put(metaDataPage);
             for (ICachedPage p : pages) {

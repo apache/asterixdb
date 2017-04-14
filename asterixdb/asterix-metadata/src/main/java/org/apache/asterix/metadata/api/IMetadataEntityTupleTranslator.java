@@ -21,8 +21,10 @@ package org.apache.asterix.metadata.api;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.rmi.RemoteException;
 
 import org.apache.asterix.metadata.MetadataException;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 
 /**
@@ -45,7 +47,8 @@ public interface IMetadataEntityTupleTranslator<T> extends Serializable {
      * @throws MetadataException
      * @throws IOException
      */
-    public T getMetadataEntityFromTuple(ITupleReference tuple) throws MetadataException, IOException;
+    public T getMetadataEntityFromTuple(ITupleReference tuple)
+            throws MetadataException, HyracksDataException, RemoteException;
 
     /**
      * Serializes the given metadata entity of type T into an appropriate tuple
@@ -53,7 +56,7 @@ public interface IMetadataEntityTupleTranslator<T> extends Serializable {
      *
      * @param metadataEntity
      *            Metadata entity to be written into a tuple.
-     * @throws IOException
+     * @throws HyracksDataException
      */
-    public ITupleReference getTupleFromMetadataEntity(T metadataEntity) throws MetadataException, IOException;
+    public ITupleReference getTupleFromMetadataEntity(T metadataEntity) throws MetadataException, HyracksDataException;
 }

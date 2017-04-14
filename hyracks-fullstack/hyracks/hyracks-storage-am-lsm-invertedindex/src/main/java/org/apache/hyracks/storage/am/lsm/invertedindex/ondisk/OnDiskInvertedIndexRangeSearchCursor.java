@@ -27,7 +27,6 @@ import org.apache.hyracks.storage.am.common.api.IIndexAccessor;
 import org.apache.hyracks.storage.am.common.api.IIndexCursor;
 import org.apache.hyracks.storage.am.common.api.IIndexOperationContext;
 import org.apache.hyracks.storage.am.common.api.ISearchPredicate;
-import org.apache.hyracks.storage.am.common.api.IndexException;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import org.apache.hyracks.storage.am.common.tuples.ConcatenatingTupleReference;
 import org.apache.hyracks.storage.am.common.tuples.PermutingTupleReference;
@@ -70,19 +69,15 @@ public class OnDiskInvertedIndexRangeSearchCursor implements IIndexCursor {
     }
 
     @Override
-    public void open(ICursorInitialState initialState, ISearchPredicate searchPred) throws HyracksDataException, IndexException {
+    public void open(ICursorInitialState initialState, ISearchPredicate searchPred) throws HyracksDataException {
         this.btreePred = (RangePredicate) searchPred;
-        try {
-            btreeAccessor.search(btreeCursor, btreePred);
-        } catch (IndexException e) {
-            throw new HyracksDataException(e);
-        }
+        btreeAccessor.search(btreeCursor, btreePred);
         invListCursor.pinPages();
         unpinNeeded = true;
     }
 
     @Override
-    public boolean hasNext() throws HyracksDataException, IndexException {
+    public boolean hasNext() throws HyracksDataException {
         if (invListCursor.hasNext()) {
             return true;
         }
@@ -95,11 +90,7 @@ public class OnDiskInvertedIndexRangeSearchCursor implements IIndexCursor {
         }
         btreeCursor.next();
         tokenTuple.reset(btreeCursor.getTuple());
-        try {
-            invIndex.openInvertedListCursor(invListCursor, tokenTuple, opCtx);
-        } catch (IndexException e) {
-            throw new HyracksDataException(e);
-        }
+        invIndex.openInvertedListCursor(invListCursor, tokenTuple, opCtx);
         invListCursor.pinPages();
         invListCursor.hasNext();
         unpinNeeded = true;
@@ -127,7 +118,7 @@ public class OnDiskInvertedIndexRangeSearchCursor implements IIndexCursor {
     }
 
     @Override
-    public void reset() throws HyracksDataException, IndexException {
+    public void reset() throws HyracksDataException {
         if (unpinNeeded) {
             invListCursor.unpinPages();
             unpinNeeded = false;

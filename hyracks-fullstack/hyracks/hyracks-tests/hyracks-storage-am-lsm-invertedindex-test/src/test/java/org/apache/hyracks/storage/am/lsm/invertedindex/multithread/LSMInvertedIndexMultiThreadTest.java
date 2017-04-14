@@ -27,8 +27,6 @@ import java.util.logging.Logger;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.common.TestOperationSelector.TestOperation;
 import org.apache.hyracks.storage.am.common.TestWorkloadConf;
-import org.apache.hyracks.storage.am.common.api.IndexException;
-import org.apache.hyracks.storage.am.common.api.TreeIndexException;
 import org.apache.hyracks.storage.am.common.datagen.ProbabilityHelper;
 import org.apache.hyracks.storage.am.common.datagen.TupleGenerator;
 import org.apache.hyracks.storage.am.config.AccessMethodTestsConfig;
@@ -61,8 +59,7 @@ public class LSMInvertedIndexMultiThreadTest {
     }
 
     protected void runTest(LSMInvertedIndexTestContext testCtx, TupleGenerator tupleGen, int numThreads,
-            TestWorkloadConf conf, String dataMsg) throws InterruptedException, TreeIndexException,
-            HyracksDataException {
+            TestWorkloadConf conf, String dataMsg) throws InterruptedException, HyracksDataException {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("LSMInvertedIndex MultiThread Test:\nData: " + dataMsg + "; Threads: " + numThreads
                     + "; Workload: " + conf.toString() + ".");
@@ -88,36 +85,36 @@ public class LSMInvertedIndexMultiThreadTest {
 
         // Insert only workload.
         TestOperation[] insertOnlyOps = new TestOperation[] { TestOperation.INSERT };
-        workloadConfs.add(new TestWorkloadConf(insertOnlyOps, ProbabilityHelper
-                .getUniformProbDist(insertOnlyOps.length)));
+        workloadConfs
+                .add(new TestWorkloadConf(insertOnlyOps, ProbabilityHelper.getUniformProbDist(insertOnlyOps.length)));
 
         // Insert and merge workload.
         TestOperation[] insertMergeOps = new TestOperation[] { TestOperation.INSERT, TestOperation.MERGE };
-        workloadConfs.add(new TestWorkloadConf(insertMergeOps, ProbabilityHelper
-                .getUniformProbDist(insertMergeOps.length)));
+        workloadConfs
+                .add(new TestWorkloadConf(insertMergeOps, ProbabilityHelper.getUniformProbDist(insertMergeOps.length)));
 
         // Inserts mixed with point searches and scans.
-        TestOperation[] insertSearchOnlyOps = new TestOperation[] { TestOperation.INSERT, TestOperation.POINT_SEARCH,
-                TestOperation.SCAN };
-        workloadConfs.add(new TestWorkloadConf(insertSearchOnlyOps, ProbabilityHelper
-                .getUniformProbDist(insertSearchOnlyOps.length)));
+        TestOperation[] insertSearchOnlyOps =
+                new TestOperation[] { TestOperation.INSERT, TestOperation.POINT_SEARCH, TestOperation.SCAN };
+        workloadConfs.add(new TestWorkloadConf(insertSearchOnlyOps,
+                ProbabilityHelper.getUniformProbDist(insertSearchOnlyOps.length)));
 
         // Inserts, and deletes.
         TestOperation[] insertDeleteUpdateOps = new TestOperation[] { TestOperation.INSERT, TestOperation.DELETE };
-        workloadConfs.add(new TestWorkloadConf(insertDeleteUpdateOps, ProbabilityHelper
-                .getUniformProbDist(insertDeleteUpdateOps.length)));
+        workloadConfs.add(new TestWorkloadConf(insertDeleteUpdateOps,
+                ProbabilityHelper.getUniformProbDist(insertDeleteUpdateOps.length)));
 
         // Inserts, deletes and merges.
-        TestOperation[] insertDeleteUpdateMergeOps = new TestOperation[] { TestOperation.INSERT, TestOperation.DELETE,
-                TestOperation.MERGE };
-        workloadConfs.add(new TestWorkloadConf(insertDeleteUpdateMergeOps, ProbabilityHelper
-                .getUniformProbDist(insertDeleteUpdateMergeOps.length)));
+        TestOperation[] insertDeleteUpdateMergeOps =
+                new TestOperation[] { TestOperation.INSERT, TestOperation.DELETE, TestOperation.MERGE };
+        workloadConfs.add(new TestWorkloadConf(insertDeleteUpdateMergeOps,
+                ProbabilityHelper.getUniformProbDist(insertDeleteUpdateMergeOps.length)));
 
         // All operations except merge.
         TestOperation[] allNoMergeOps = new TestOperation[] { TestOperation.INSERT, TestOperation.DELETE,
                 TestOperation.POINT_SEARCH, TestOperation.SCAN };
-        workloadConfs.add(new TestWorkloadConf(allNoMergeOps, ProbabilityHelper
-                .getUniformProbDist(allNoMergeOps.length)));
+        workloadConfs
+                .add(new TestWorkloadConf(allNoMergeOps, ProbabilityHelper.getUniformProbDist(allNoMergeOps.length)));
 
         // All operations.
         TestOperation[] allOps = new TestOperation[] { TestOperation.INSERT, TestOperation.DELETE,
@@ -128,14 +125,14 @@ public class LSMInvertedIndexMultiThreadTest {
     }
 
     @Test
-    public void wordTokensInvIndexTest() throws IOException, IndexException, InterruptedException {
+    public void wordTokensInvIndexTest() throws IOException, InterruptedException {
         String dataMsg = "Documents";
         int[] numThreads = new int[] { REGULAR_NUM_THREADS, EXCESSIVE_NUM_THREADS };
         for (int i = 0; i < numThreads.length; i++) {
             for (TestWorkloadConf conf : workloadConfs) {
                 setUp();
-                LSMInvertedIndexTestContext testCtx = LSMInvertedIndexTestUtils.createWordInvIndexTestContext(harness,
-                        getIndexType());
+                LSMInvertedIndexTestContext testCtx =
+                        LSMInvertedIndexTestUtils.createWordInvIndexTestContext(harness, getIndexType());
                 TupleGenerator tupleGen = LSMInvertedIndexTestUtils.createStringDocumentTupleGen(harness.getRandom());
                 runTest(testCtx, tupleGen, numThreads[i], conf, dataMsg);
                 tearDown();
@@ -144,14 +141,14 @@ public class LSMInvertedIndexMultiThreadTest {
     }
 
     @Test
-    public void hashedNGramTokensInvIndexTest() throws IOException, IndexException, InterruptedException {
+    public void hashedNGramTokensInvIndexTest() throws IOException, InterruptedException {
         String dataMsg = "Person Names";
         int[] numThreads = new int[] { REGULAR_NUM_THREADS, EXCESSIVE_NUM_THREADS };
         for (int i = 0; i < numThreads.length; i++) {
             for (TestWorkloadConf conf : workloadConfs) {
                 setUp();
-                LSMInvertedIndexTestContext testCtx = LSMInvertedIndexTestUtils.createHashedNGramInvIndexTestContext(
-                        harness, getIndexType());
+                LSMInvertedIndexTestContext testCtx =
+                        LSMInvertedIndexTestUtils.createHashedNGramInvIndexTestContext(harness, getIndexType());
                 TupleGenerator tupleGen = LSMInvertedIndexTestUtils.createPersonNamesTupleGen(harness.getRandom());
                 runTest(testCtx, tupleGen, numThreads[i], conf, dataMsg);
                 tearDown();

@@ -23,7 +23,6 @@ import java.util.concurrent.Callable;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.IODeviceHandle;
-import org.apache.hyracks.storage.am.common.api.IndexException;
 
 public interface ILSMIOOperation extends Callable<Boolean> {
 
@@ -37,7 +36,7 @@ public interface ILSMIOOperation extends Callable<Boolean> {
     Set<IODeviceHandle> getWriteDevices();
 
     @Override
-    Boolean call() throws HyracksDataException, IndexException;
+    Boolean call() throws HyracksDataException;
 
     ILSMIOOperationCallback getCallback();
 

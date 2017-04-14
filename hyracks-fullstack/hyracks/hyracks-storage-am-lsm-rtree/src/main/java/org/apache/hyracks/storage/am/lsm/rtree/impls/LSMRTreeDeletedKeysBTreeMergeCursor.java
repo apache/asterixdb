@@ -29,7 +29,6 @@ import org.apache.hyracks.storage.am.common.api.IIndexAccessor;
 import org.apache.hyracks.storage.am.common.api.IIndexCursor;
 import org.apache.hyracks.storage.am.common.api.ISearchPredicate;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexAccessor;
-import org.apache.hyracks.storage.am.common.api.IndexException;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
@@ -42,13 +41,12 @@ public class LSMRTreeDeletedKeysBTreeMergeCursor extends LSMIndexSearchCursor {
     }
 
     @Override
-    protected boolean isDeleted(PriorityQueueElement checkElement) throws HyracksDataException, IndexException {
+    protected boolean isDeleted(PriorityQueueElement checkElement) throws HyracksDataException {
         return false;
     }
 
     @Override
-    public void open(ICursorInitialState initialState, ISearchPredicate searchPred) throws HyracksDataException,
-            IndexException {
+    public void open(ICursorInitialState initialState, ISearchPredicate searchPred) throws HyracksDataException {
         LSMRTreeCursorInitialState lsmInitialState = (LSMRTreeCursorInitialState) initialState;
         cmp = lsmInitialState.getBTreeCmp();
         operationalComponents = lsmInitialState.getOperationalComponents();
@@ -63,7 +61,7 @@ public class LSMRTreeDeletedKeysBTreeMergeCursor extends LSMIndexSearchCursor {
             ILSMComponent component = operationalComponents.get(i);
             IBTreeLeafFrame leafFrame = (IBTreeLeafFrame) lsmInitialState.getBTreeLeafFrameFactory().createFrame();
             rangeCursors[i] = new BTreeRangeSearchCursor(leafFrame, false);
-            BTree btree = (BTree) ((LSMRTreeDiskComponent) component).getBTree();
+            BTree btree = ((LSMRTreeDiskComponent) component).getBTree();
             btreeAccessors[i] = btree.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
             btreeAccessors[i].search(rangeCursors[i], btreePredicate);
         }

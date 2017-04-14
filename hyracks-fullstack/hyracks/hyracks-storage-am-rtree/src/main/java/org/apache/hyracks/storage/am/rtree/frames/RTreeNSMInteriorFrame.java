@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
@@ -30,7 +31,6 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.common.api.IPrimitiveValueProvider;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
-import org.apache.hyracks.storage.am.common.api.TreeIndexException;
 import org.apache.hyracks.storage.am.common.frames.AbstractSlotManager;
 import org.apache.hyracks.storage.am.common.frames.FrameOpSpaceStatus;
 import org.apache.hyracks.storage.am.common.ophelpers.MultiComparator;
@@ -41,12 +41,12 @@ import org.apache.hyracks.storage.am.rtree.impls.PathList;
 public class RTreeNSMInteriorFrame extends RTreeNSMFrame implements IRTreeInteriorFrame {
 
     public static final int childPtrSize = 4;
-    private IBinaryComparator childPtrCmp = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY)
-            .createBinaryComparator();
+    private IBinaryComparator childPtrCmp =
+            PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY).createBinaryComparator();
     private final int keyFieldCount;
 
     public RTreeNSMInteriorFrame(ITreeIndexTupleWriter tupleWriter, IPrimitiveValueProvider[] keyValueProviders,
-                                 RTreePolicyType rtreePolicyType, boolean isPointMBR) {
+            RTreePolicyType rtreePolicyType, boolean isPointMBR) {
         super(tupleWriter, keyValueProviders, rtreePolicyType, isPointMBR);
         keyFieldCount = keyValueProviders.length;
         frameTuple.setFieldCount(keyFieldCount);
@@ -130,7 +130,8 @@ public class RTreeNSMInteriorFrame extends RTreeNSMFrame implements IRTreeInteri
             if (c == 0) {
                 return i;
             } else {
-                int pageId = IntegerPointable.getInteger(frameTuple.getFieldData(cmp.getKeyFieldCount() - 1), getChildPointerOff(frameTuple));
+                int pageId = IntegerPointable.getInteger(frameTuple.getFieldData(cmp.getKeyFieldCount() - 1),
+                        getChildPointerOff(frameTuple));
                 traverseList.add(pageId, -1, parentIndex);
             }
         }
@@ -197,19 +198,15 @@ public class RTreeNSMInteriorFrame extends RTreeNSMFrame implements IRTreeInteri
     }
 
     @Override
-    public void adjustKey(ITupleReference tuple, int tupleIndex, MultiComparator cmp) throws TreeIndexException {
+    public void adjustKey(ITupleReference tuple, int tupleIndex, MultiComparator cmp) throws HyracksDataException {
         frameTuple.setFieldCount(cmp.getKeyFieldCount());
         if (tupleIndex == -1) {
-            try {
-                tupleIndex = findTupleByPointer(tuple, cmp);
-            } catch (HyracksDataException e) {
-                throw new TreeIndexException(e);
-            }
+            tupleIndex = findTupleByPointer(tuple, cmp);
         }
         if (tupleIndex != -1) {
             tupleWriter.writeTuple(tuple, buf.array(), getTupleOffset(tupleIndex));
         } else {
-            throw new TreeIndexException("Error: Faild to find a tuple in a page");
+            throw HyracksDataException.create(ErrorCode.FAILED_TO_FIND_TUPLE);
 
         }
 
@@ -217,9 +214,9 @@ public class RTreeNSMInteriorFrame extends RTreeNSMFrame implements IRTreeInteri
 
     protected int pointerCmp(ITupleReference tupleA, ITupleReference tupleB, MultiComparator cmp)
             throws HyracksDataException {
-        return childPtrCmp
-                .compare(tupleA.getFieldData(cmp.getKeyFieldCount() - 1), getChildPointerOff(tupleA), childPtrSize,
-                        tupleB.getFieldData(cmp.getKeyFieldCount() - 1), getChildPointerOff(tupleB), childPtrSize);
+        return childPtrCmp.compare(tupleA.getFieldData(cmp.getKeyFieldCount() - 1), getChildPointerOff(tupleA),
+                childPtrSize, tupleB.getFieldData(cmp.getKeyFieldCount() - 1), getChildPointerOff(tupleB),
+                childPtrSize);
     }
 
     @Override
@@ -243,8 +240,8 @@ public class RTreeNSMInteriorFrame extends RTreeNSMFrame implements IRTreeInteri
 
         buf.putInt(Constants.TUPLE_COUNT_OFFSET, buf.getInt(Constants.TUPLE_COUNT_OFFSET) + 1);
         buf.putInt(Constants.FREE_SPACE_OFFSET, buf.getInt(Constants.FREE_SPACE_OFFSET) + tupleSize);
-        buf.putInt(TOTAL_FREE_SPACE_OFFSET, buf.getInt(TOTAL_FREE_SPACE_OFFSET) - tupleSize - slotManager
-                .getSlotSize());
+        buf.putInt(TOTAL_FREE_SPACE_OFFSET,
+                buf.getInt(TOTAL_FREE_SPACE_OFFSET) - tupleSize - slotManager.getSlotSize());
 
     }
 
@@ -298,8 +295,9 @@ public class RTreeNSMInteriorFrame extends RTreeNSMFrame implements IRTreeInteri
         for (int i = 0; i < tupleCount; i++) {
             int tupleOff = slotManager.getTupleOff(slotManager.getSlotOff(i));
             frameTuple.resetByTupleOffset(buf.array(), tupleOff);
-            int intVal = IntegerPointable.getInteger(buf.array(), frameTuple.getFieldStart(frameTuple.getFieldCount() - 1)
-            + frameTuple.getFieldLength(frameTuple.getFieldCount() - 1));
+            int intVal =
+                    IntegerPointable.getInteger(buf.array(), frameTuple.getFieldStart(frameTuple.getFieldCount() - 1)
+                            + frameTuple.getFieldLength(frameTuple.getFieldCount() - 1));
             ret.add(intVal);
         }
         return ret;

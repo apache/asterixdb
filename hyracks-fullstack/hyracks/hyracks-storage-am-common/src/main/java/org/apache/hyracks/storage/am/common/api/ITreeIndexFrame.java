@@ -89,7 +89,7 @@ public interface ITreeIndexFrame {
 
     public void split(ITreeIndexFrame rightFrame, ITupleReference tuple, ISplitKey splitKey,
             IExtraPageBlockHelper extraPageBlockHelper, IBufferCache bufferCache)
-            throws HyracksDataException, TreeIndexException;
+            throws HyracksDataException;
 
     public ISlotManager getSlotManager();
 

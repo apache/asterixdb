@@ -27,6 +27,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
@@ -36,8 +37,6 @@ import org.apache.hyracks.storage.am.btree.api.IBTreeFrame;
 import org.apache.hyracks.storage.am.btree.api.IBTreeInteriorFrame;
 import org.apache.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import org.apache.hyracks.storage.am.btree.api.ITupleAcceptor;
-import org.apache.hyracks.storage.am.btree.exceptions.BTreeException;
-import org.apache.hyracks.storage.am.btree.exceptions.BTreeNotUpdateableException;
 import org.apache.hyracks.storage.am.btree.frames.BTreeNSMInteriorFrame;
 import org.apache.hyracks.storage.am.btree.impls.BTreeOpContext.PageValidationInfo;
 import org.apache.hyracks.storage.am.common.api.IIndexAccessor;
@@ -53,11 +52,6 @@ import org.apache.hyracks.storage.am.common.api.ITreeIndexCursor;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleReference;
-import org.apache.hyracks.storage.am.common.api.IndexException;
-import org.apache.hyracks.storage.am.common.api.TreeIndexException;
-import org.apache.hyracks.storage.am.common.api.UnsortedInputException;
-import org.apache.hyracks.storage.am.common.exceptions.TreeIndexDuplicateKeyException;
-import org.apache.hyracks.storage.am.common.exceptions.TreeIndexNonExistentKeyException;
 import org.apache.hyracks.storage.am.common.frames.FrameOpSpaceStatus;
 import org.apache.hyracks.storage.am.common.impls.AbstractTreeIndex;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
@@ -75,9 +69,9 @@ public class BTree extends AbstractTreeIndex {
 
     public static final float DEFAULT_FILL_FACTOR = 0.7f;
 
-    private final static long RESTART_OP = Long.MIN_VALUE;
-    private final static long FULL_RESTART_OP = Long.MIN_VALUE + 1;
-    private final static int MAX_RESTARTS = 10;
+    private static final long RESTART_OP = Long.MIN_VALUE;
+    private static final long FULL_RESTART_OP = Long.MIN_VALUE + 1;
+    private static final int MAX_RESTARTS = 10;
 
     private final AtomicInteger smoCounter;
     private final ReadWriteLock treeLatch;
@@ -116,7 +110,7 @@ public class BTree extends AbstractTreeIndex {
         } catch (Exception e) {
             page.releaseReadLatch();
             bufferCache.unpin(page);
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 
@@ -125,8 +119,8 @@ public class BTree extends AbstractTreeIndex {
         // Stack validation protocol:
         //      * parent pushes the validation information onto the stack before validation
         //      * child pops the validation information off of the stack after validating
-        BTreeAccessor accessor = (BTreeAccessor) createAccessor(NoOpOperationCallback.INSTANCE,
-                NoOpOperationCallback.INSTANCE);
+        BTreeAccessor accessor =
+                (BTreeAccessor) createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
         PageValidationInfo pvi = accessor.ctx.createPageValidationInfo(null);
         accessor.ctx.validationInfos.addFirst(pvi);
         if (isActive) {
@@ -187,7 +181,7 @@ public class BTree extends AbstractTreeIndex {
     }
 
     private void search(ITreeIndexCursor cursor, ISearchPredicate searchPred, BTreeOpContext ctx)
-            throws TreeIndexException, HyracksDataException {
+            throws HyracksDataException {
         ctx.reset();
         ctx.pred = (RangePredicate) searchPred;
         ctx.cursor = cursor;
@@ -241,10 +235,10 @@ public class BTree extends AbstractTreeIndex {
         ctx.interiorFrame.setPage(originalPage);
     }
 
-    private void createNewRoot(BTreeOpContext ctx) throws HyracksDataException, TreeIndexException {
+    private void createNewRoot(BTreeOpContext ctx) throws HyracksDataException {
         // Make sure the root is always in the same page.
-        ICachedPage leftNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, ctx.splitKey.getLeftPage()),
-                false);
+        ICachedPage leftNode =
+                bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, ctx.splitKey.getLeftPage()), false);
         leftNode.acquireWriteLatch();
         try {
             int newLeftId = freePageManager.takePage(ctx.metaFrame);
@@ -282,8 +276,7 @@ public class BTree extends AbstractTreeIndex {
                 int targetTupleIndex = ctx.interiorFrame.findInsertTupleIndex(ctx.splitKey.getTuple());
                 int tupleSize = ctx.interiorFrame.getBytesRequiredToWriteTuple(ctx.splitKey.getTuple());
                 if (tupleSize > maxTupleSize) {
-                    throw new TreeIndexException("Space required for record (" + tupleSize
-                            + ") larger than maximum acceptable size (" + maxTupleSize + ")");
+                    throw HyracksDataException.create(ErrorCode.RECORD_IS_TOO_LARGE, tupleSize, maxTupleSize);
                 }
                 ctx.interiorFrame.insert(ctx.splitKey.getTuple(), targetTupleIndex);
             } finally {
@@ -294,72 +287,6 @@ public class BTree extends AbstractTreeIndex {
             leftNode.releaseWriteLatch(true);
             bufferCache.unpin(leftNode);
         }
-    }
-
-    private void insertUpdateOrDelete(ITupleReference tuple, BTreeOpContext ctx)
-            throws HyracksDataException, TreeIndexException {
-        ctx.reset();
-        ctx.pred.setLowKeyComparator(ctx.cmp);
-        ctx.pred.setHighKeyComparator(ctx.cmp);
-        ctx.pred.setLowKey(tuple, true);
-        ctx.pred.setHighKey(tuple, true);
-        ctx.splitKey.reset();
-        ctx.splitKey.getTuple().setFieldCount(ctx.cmp.getKeyFieldCount());
-        // We use this loop to deal with possibly multiple operation restarts
-        // due to ongoing structure modifications during the descent.
-        boolean repeatOp = true;
-        while (repeatOp && ctx.opRestarts < MAX_RESTARTS) {
-            ctx.smoCount = smoCounter.get();
-            performOp(rootPage, null, true, ctx);
-            // Do we need to restart from the (possibly new) root?
-            if (!ctx.pageLsns.isEmpty()) {
-                if (ctx.pageLsns.getLast() == FULL_RESTART_OP) {
-                    ctx.pageLsns.clear();
-                    continue;
-                } else if (ctx.pageLsns.getLast() == RESTART_OP) {
-                    ctx.pageLsns.removeLast(); // pop the restart op indicator
-                    continue;
-                }
-
-            }
-            // Split key propagated?
-            if (ctx.splitKey.getBuffer() != null) {
-                // Insert or update op. Create a new root.
-                createNewRoot(ctx);
-            }
-            unsetSmPages(ctx);
-            repeatOp = false;
-        }
-
-        if (ctx.opRestarts >= MAX_RESTARTS) {
-            throw new BTreeException("Operation exceeded the maximum number of restarts");
-        }
-    }
-
-    private void insert(ITupleReference tuple, BTreeOpContext ctx) throws HyracksDataException, TreeIndexException {
-        ctx.modificationCallback.before(tuple);
-        insertUpdateOrDelete(tuple, ctx);
-    }
-
-    private void upsert(ITupleReference tuple, BTreeOpContext ctx) throws HyracksDataException, TreeIndexException {
-        ctx.modificationCallback.before(tuple);
-        insertUpdateOrDelete(tuple, ctx);
-    }
-
-    private void update(ITupleReference tuple, BTreeOpContext ctx) throws HyracksDataException, TreeIndexException {
-        // This call only allows updating of non-key fields.
-        // Updating a tuple's key necessitates deleting the old entry, and inserting the new entry.
-        // The user of the BTree is responsible for dealing with non-key updates (i.e., doing a delete + insert).
-        if (fieldCount == ctx.cmp.getKeyFieldCount()) {
-            throw new BTreeNotUpdateableException("Cannot perform updates when the entire tuple forms the key.");
-        }
-        ctx.modificationCallback.before(tuple);
-        insertUpdateOrDelete(tuple, ctx);
-    }
-
-    private void delete(ITupleReference tuple, BTreeOpContext ctx) throws HyracksDataException, TreeIndexException {
-        ctx.modificationCallback.before(tuple);
-        insertUpdateOrDelete(tuple, ctx);
     }
 
     private boolean insertLeaf(ITupleReference tuple, int targetTupleIndex, int pageId, BTreeOpContext ctx)
@@ -590,8 +517,7 @@ public class BTree extends AbstractTreeIndex {
 
             case TOO_LARGE: {
                 int tupleSize = ctx.interiorFrame.getBytesRequiredToWriteTuple(tuple);
-                throw new TreeIndexException("Space required for record (" + tupleSize
-                        + ") larger than maximum acceptable size (" + maxTupleSize + ")");
+                throw HyracksDataException.create(ErrorCode.RECORD_IS_TOO_LARGE, tupleSize, maxTupleSize);
             }
 
             default: {
@@ -606,7 +532,7 @@ public class BTree extends AbstractTreeIndex {
         // This means that there could be underflow, even an empty page that is
         // pointed to by an interior node.
         if (ctx.leafFrame.getTupleCount() == 0) {
-            throw new TreeIndexNonExistentKeyException("Trying to delete a tuple with a nonexistent key in leaf node.");
+            throw HyracksDataException.create(ErrorCode.UPDATE_OR_DELETE_NON_EXISTENT_KEY);
         }
         int tupleIndex = ctx.leafFrame.findDeleteTupleIndex(tuple);
         ITupleReference beforeTuple = ctx.leafFrame.getMatchingKeyTuple(tuple, tupleIndex);
@@ -639,7 +565,7 @@ public class BTree extends AbstractTreeIndex {
     }
 
     private void performOp(int pageId, ICachedPage parent, boolean parentIsReadLatched, BTreeOpContext ctx)
-            throws HyracksDataException, TreeIndexException {
+            throws HyracksDataException {
         ICachedPage node = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, pageId), false);
         ctx.interiorFrame.setPage(node);
         // this check performs an unprotected read in the page
@@ -701,8 +627,8 @@ public class BTree extends AbstractTreeIndex {
                             case UPDATE: {
                                 // Is there a propagated split key?
                                 if (ctx.splitKey.getBuffer() != null) {
-                                    ICachedPage interiorNode = bufferCache.pin(
-                                            BufferedFileHandle.getDiskPageId(fileId, pageId), false);
+                                    ICachedPage interiorNode =
+                                            bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, pageId), false);
                                     interiorNode.acquireWriteLatch();
                                     try {
                                         // Insert or update op. Both can cause split keys to propagate upwards.
@@ -719,7 +645,7 @@ public class BTree extends AbstractTreeIndex {
 
                             case DELETE: {
                                 if (ctx.splitKey.getBuffer() != null) {
-                                    throw new BTreeException(
+                                    throw new HyracksDataException(
                                             "Split key was propagated during delete. Delete allows empty leaf pages.");
                                 }
                                 break;
@@ -802,7 +728,7 @@ public class BTree extends AbstractTreeIndex {
                     ctx.pageLsns.add(FULL_RESTART_OP);
                 }
             }
-        } catch (TreeIndexException e) {
+        } catch (HyracksDataException e) {
             if (!ctx.exceptionHandled) {
                 if (node != null) {
                     if (isReadLatched) {
@@ -824,7 +750,7 @@ public class BTree extends AbstractTreeIndex {
                 }
                 bufferCache.unpin(node);
             }
-            BTreeException wrappedException = new BTreeException(e);
+            HyracksDataException wrappedException = HyracksDataException.create(e);
             ctx.exceptionHandled = true;
             throw wrappedException;
         }
@@ -832,8 +758,8 @@ public class BTree extends AbstractTreeIndex {
 
     private BTreeOpContext createOpContext(IIndexAccessor accessor, IModificationOperationCallback modificationCallback,
             ISearchOperationCallback searchCallback) {
-        return new BTreeOpContext(accessor, leafFrameFactory, interiorFrameFactory,
-                freePageManager, cmpFactories, modificationCallback, searchCallback);
+        return new BTreeOpContext(accessor, leafFrameFactory, interiorFrameFactory, freePageManager, cmpFactories,
+                modificationCallback, searchCallback);
     }
 
     @SuppressWarnings("rawtypes")
@@ -923,33 +849,33 @@ public class BTree extends AbstractTreeIndex {
         }
 
         @Override
-        public void insert(ITupleReference tuple) throws HyracksDataException, TreeIndexException {
+        public void insert(ITupleReference tuple) throws HyracksDataException {
             ctx.setOperation(IndexOperation.INSERT);
-            btree.insert(tuple, ctx);
+            insert(tuple, ctx);
         }
 
         @Override
-        public void update(ITupleReference tuple) throws HyracksDataException, TreeIndexException {
+        public void update(ITupleReference tuple) throws HyracksDataException {
             ctx.setOperation(IndexOperation.UPDATE);
-            btree.update(tuple, ctx);
+            update(tuple, ctx);
         }
 
         @Override
-        public void delete(ITupleReference tuple) throws HyracksDataException, TreeIndexException {
+        public void delete(ITupleReference tuple) throws HyracksDataException {
             ctx.setOperation(IndexOperation.DELETE);
-            btree.delete(tuple, ctx);
+            delete(tuple, ctx);
         }
 
         @Override
-        public void upsert(ITupleReference tuple) throws HyracksDataException, TreeIndexException {
+        public void upsert(ITupleReference tuple) throws HyracksDataException {
             upsertIfConditionElseInsert(tuple, UnconditionalTupleAcceptor.INSTANCE);
         }
 
         public void upsertIfConditionElseInsert(ITupleReference tuple, ITupleAcceptor acceptor)
-                throws HyracksDataException, TreeIndexException {
+                throws HyracksDataException {
             ctx.setOperation(IndexOperation.UPSERT);
             ctx.acceptor = acceptor;
-            btree.upsert(tuple, ctx);
+            upsert(tuple, ctx);
         }
 
         @Override
@@ -959,8 +885,7 @@ public class BTree extends AbstractTreeIndex {
         }
 
         @Override
-        public void search(IIndexCursor cursor, ISearchPredicate searchPred)
-                throws HyracksDataException, TreeIndexException {
+        public void search(IIndexCursor cursor, ISearchPredicate searchPred) throws HyracksDataException {
             ctx.setOperation(IndexOperation.SEARCH);
             btree.search((ITreeIndexCursor) cursor, searchPred, ctx);
         }
@@ -988,24 +913,84 @@ public class BTree extends AbstractTreeIndex {
             IBTreeLeafFrame leafFrame = (IBTreeLeafFrame) btree.getLeafFrameFactory().createFrame();
             return new BTreeCountingSearchCursor(leafFrame, false);
         }
+
+        private void insert(ITupleReference tuple, BTreeOpContext ctx) throws HyracksDataException {
+            ctx.modificationCallback.before(tuple);
+            insertUpdateOrDelete(tuple, ctx);
+        }
+
+        private void upsert(ITupleReference tuple, BTreeOpContext ctx) throws HyracksDataException {
+            ctx.modificationCallback.before(tuple);
+            insertUpdateOrDelete(tuple, ctx);
+        }
+
+        private void update(ITupleReference tuple, BTreeOpContext ctx) throws HyracksDataException {
+            // This call only allows updating of non-key fields.
+            // Updating a tuple's key necessitates deleting the old entry, and inserting the new entry.
+            // The user of the BTree is responsible for dealing with non-key updates (i.e., doing a delete + insert).
+            if (fieldCount == ctx.cmp.getKeyFieldCount()) {
+                HyracksDataException.create(ErrorCode.INDEX_NOT_UPDATABLE);
+            }
+            ctx.modificationCallback.before(tuple);
+            insertUpdateOrDelete(tuple, ctx);
+        }
+
+        private void delete(ITupleReference tuple, BTreeOpContext ctx) throws HyracksDataException {
+            ctx.modificationCallback.before(tuple);
+            insertUpdateOrDelete(tuple, ctx);
+        }
+
+        private void insertUpdateOrDelete(ITupleReference tuple, BTreeOpContext ctx) throws HyracksDataException {
+            ctx.reset();
+            ctx.pred.setLowKeyComparator(ctx.cmp);
+            ctx.pred.setHighKeyComparator(ctx.cmp);
+            ctx.pred.setLowKey(tuple, true);
+            ctx.pred.setHighKey(tuple, true);
+            ctx.splitKey.reset();
+            ctx.splitKey.getTuple().setFieldCount(ctx.cmp.getKeyFieldCount());
+            // We use this loop to deal with possibly multiple operation restarts
+            // due to ongoing structure modifications during the descent.
+            boolean repeatOp = true;
+            while (repeatOp && ctx.opRestarts < MAX_RESTARTS) {
+                ctx.smoCount = smoCounter.get();
+                performOp(rootPage, null, true, ctx);
+                // Do we need to restart from the (possibly new) root?
+                if (!ctx.pageLsns.isEmpty()) {
+                    if (ctx.pageLsns.getLast() == FULL_RESTART_OP) {
+                        ctx.pageLsns.clear();
+                        continue;
+                    } else if (ctx.pageLsns.getLast() == RESTART_OP) {
+                        ctx.pageLsns.removeLast(); // pop the restart op indicator
+                        continue;
+                    }
+
+                }
+                // Split key propagated?
+                if (ctx.splitKey.getBuffer() != null) {
+                    // Insert or update op. Create a new root.
+                    createNewRoot(ctx);
+                }
+                unsetSmPages(ctx);
+                repeatOp = false;
+            }
+
+            if (ctx.opRestarts >= MAX_RESTARTS) {
+                throw HyracksDataException.create(ErrorCode.OPERATION_EXCEEDED_MAX_RESTARTS, MAX_RESTARTS);
+            }
+        }
     }
 
     @Override
     public IIndexBulkLoader createBulkLoader(float fillFactor, boolean verifyInput, long numElementsHint,
-            boolean checkIfEmptyIndex) throws TreeIndexException {
-        try {
-            return new BTreeBulkLoader(fillFactor, verifyInput);
-        } catch (HyracksDataException e) {
-            throw new TreeIndexException(e);
-        }
+            boolean checkIfEmptyIndex) throws HyracksDataException {
+        return new BTreeBulkLoader(fillFactor, verifyInput);
     }
 
     public class BTreeBulkLoader extends AbstractTreeIndex.AbstractTreeIndexBulkLoader {
         protected final ISplitKey splitKey;
         protected final boolean verifyInput;
 
-        public BTreeBulkLoader(float fillFactor, boolean verifyInput)
-                throws TreeIndexException, HyracksDataException {
+        public BTreeBulkLoader(float fillFactor, boolean verifyInput) throws HyracksDataException {
             super(fillFactor);
             this.verifyInput = verifyInput;
             splitKey = new BTreeSplitKey(leafFrame.getTupleWriter().createTupleReference());
@@ -1013,7 +998,7 @@ public class BTree extends AbstractTreeIndex {
         }
 
         @Override
-        public void add(ITupleReference tuple) throws IndexException, HyracksDataException {
+        public void add(ITupleReference tuple) throws HyracksDataException {
             try {
                 int tupleSize = Math.max(leafFrame.getBytesRequiredToWriteTuple(tuple),
                         interiorFrame.getBytesRequiredToWriteTuple(tuple));
@@ -1062,8 +1047,8 @@ public class BTree extends AbstractTreeIndex {
                         final long dpid = BufferedFileHandle.getDiskPageId(fileId, leafFrontier.pageId);
                         // calculate required number of pages.
                         int headerSize = Math.max(leafFrame.getPageHeaderSize(), interiorFrame.getPageHeaderSize());
-                        final int multiplier = (int) Math
-                                .ceil((double) tupleSize / (bufferCache.getPageSize() - headerSize));
+                        final int multiplier =
+                                (int) Math.ceil((double) tupleSize / (bufferCache.getPageSize() - headerSize));
                         if (multiplier > 1) {
                             leafFrontier.page = bufferCache.confiscateLargePage(dpid, multiplier,
                                     freePageManager.takeBlock(metaFrame, multiplier - 1));
@@ -1086,26 +1071,24 @@ public class BTree extends AbstractTreeIndex {
                     }
                 }
                 ((IBTreeLeafFrame) leafFrame).insertSorted(tuple);
-            } catch (IndexException | HyracksDataException | RuntimeException e) {
+            } catch (HyracksDataException | RuntimeException e) {
                 handleException();
                 throw e;
             }
         }
 
-        protected void verifyInputTuple(ITupleReference tuple, ITupleReference prevTuple)
-                throws IndexException, HyracksDataException {
+        protected void verifyInputTuple(ITupleReference tuple, ITupleReference prevTuple) throws HyracksDataException {
             // New tuple should be strictly greater than last tuple.
             int cmpResult = cmp.compare(tuple, prevTuple);
             if (cmpResult < 0) {
-                throw new UnsortedInputException("Input stream given to BTree bulk load is not sorted.");
+                throw HyracksDataException.create(ErrorCode.UNSORTED_LOAD_INPUT);
             }
             if (cmpResult == 0) {
-                throw new TreeIndexDuplicateKeyException("Input stream given to BTree bulk load has duplicates.");
+                throw HyracksDataException.create(ErrorCode.DUPLICATE_LOAD_INPUT);
             }
         }
 
-        protected void propagateBulk(int level, List<ICachedPage> pagesToWrite)
-                throws HyracksDataException, TreeIndexException {
+        protected void propagateBulk(int level, List<ICachedPage> pagesToWrite) throws HyracksDataException {
             if (splitKey.getBuffer() == null) {
                 return;
             }
@@ -1121,9 +1104,8 @@ public class BTree extends AbstractTreeIndex {
             int tupleBytes = tupleWriter.bytesRequired(tuple, 0, cmp.getKeyFieldCount());
             int spaceNeeded = tupleBytes + slotSize + 4;
             if (tupleBytes > interiorFrame.getMaxTupleSize(BTree.this.bufferCache.getPageSize())) {
-                throw new TreeIndexException(
-                        "Space required for record (" + tupleBytes + ") larger than maximum acceptable size ("
-                                + interiorFrame.getMaxTupleSize(BTree.this.bufferCache.getPageSize()) + ")");
+                throw HyracksDataException.create(ErrorCode.RECORD_IS_TOO_LARGE, tupleBytes,
+                        interiorFrame.getMaxTupleSize(BTree.this.bufferCache.getPageSize()));
             }
 
             int spaceUsed = interiorFrame.getBuffer().capacity() - interiorFrame.getTotalFreeSpace();
