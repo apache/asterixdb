@@ -50,11 +50,11 @@ import org.apache.asterix.metadata.entities.Function;
 import org.apache.asterix.metadata.entities.Library;
 import org.apache.asterix.metadata.utils.MetadataUtil;
 import org.apache.asterix.runtime.formats.NonTaggedDataFormat;
-import org.apache.hyracks.control.common.controllers.ControllerConfig;
 
 public class ExternalLibraryUtils {
 
     private static final Logger LOGGER = Logger.getLogger(ExternalLibraryUtils.class.getName());
+    private static final FilenameFilter nonHiddenFileNameFilter = (dir, name) -> !name.startsWith(".");
 
     private ExternalLibraryUtils() {
     }
@@ -72,19 +72,15 @@ public class ExternalLibraryUtils {
         // directory exists?
         if (installLibDir.exists()) {
             // get the list of files in the directory
-            for (String dataverse : installLibDir.list()) {
-                File dataverseDir = new File(installLibDir, dataverse);
-                String[] libraries = dataverseDir.list();
-                for (String library : libraries) {
+            for (File dataverseDir : installLibDir.listFiles(File::isDirectory)) {
+                for (File libraryDir : dataverseDir.listFiles(File::isDirectory)) {
                     // for each file (library), register library
-                    registerLibrary(externalLibraryManager, dataverse, library);
+                    registerLibrary(externalLibraryManager, dataverseDir.getName(), libraryDir.getName());
                     // is metadata node?
                     if (isMetadataNode) {
                         // get library file
-                        File libraryDir = new File(installLibDir.getAbsolutePath() + File.separator + dataverse
-                                + File.separator + library);
                         // install if needed (i,e, add the functions, adapters, datasources, parsers to the metadata)
-                        installLibraryIfNeeded(dataverse, libraryDir, uninstalledLibs);
+                        installLibraryIfNeeded(dataverseDir.getName(), libraryDir, uninstalledLibs);
                     }
                 }
             }
@@ -105,7 +101,7 @@ public class ExternalLibraryUtils {
         // directory exists?
         if (uninstallLibDir.exists()) {
             // list files
-            uninstallLibNames = uninstallLibDir.list();
+            uninstallLibNames = uninstallLibDir.list(nonHiddenFileNameFilter);
             for (String uninstallLibName : uninstallLibNames) {
                 // Get the <dataverse name - library name> pair
                 String[] components = uninstallLibName.split("\\.");
@@ -295,7 +291,6 @@ public class ExternalLibraryUtils {
      *
      * @param dataverse
      * @param libraryName
-     * @param installLibDir
      * @throws Exception
      */
     protected static void registerLibrary(ILibraryManager externalLibraryManager, String dataverse, String libraryName)
@@ -395,16 +390,26 @@ public class ExternalLibraryUtils {
      * @return the directory "$(ControllerConfig.defaultDir)/library": This needs to be improved
      */
     protected static File getLibraryInstallDir() {
-        String workingDir = System.getProperty("user.dir");
-        return new File(workingDir, "library");
+        // Check managix directory first. If not exists, check app home.
+        File installDir = new File(System.getProperty("user.dir"), "library");
+        if (!installDir.exists()) {
+            installDir = new File(System.getProperty("app.home", System.getProperty("user.home"))
+                    + File.separator + "lib" + File.separator + "udfs");
+        }
+        return installDir;
     }
 
     /**
      * @return the directory "$(ControllerConfig.defaultDir)/uninstall": This needs to be improved
      */
     protected static File getLibraryUninstallDir() {
-        String workingDir = System.getProperty("user.dir");
-        return new File(workingDir, "uninstall");
+        // Check managix directory first. If not exists, check app home.
+        File uninstallDir = new File(System.getProperty("user.dir"), "uninstall");
+        if (!uninstallDir.exists()) {
+            uninstallDir = new File(System.getProperty("app.home", System.getProperty("user.home"))
+                    + File.separator + "lib" + File.separator + "udfs" + File.separator + "uninstall");
+        }
+        return uninstallDir;
     }
 
 }

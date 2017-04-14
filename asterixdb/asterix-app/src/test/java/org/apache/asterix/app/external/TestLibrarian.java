@@ -35,8 +35,6 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class TestLibrarian implements ITestLibrarian {
 
-    public static final String LIBRARY_DIR_NAME = "library";
-
     // The following list includes a library manager for the CC
     // and library managers for NCs (one-per-NC).
     private final List<ILibraryManager> libraryManagers;
@@ -84,9 +82,6 @@ public class TestLibrarian implements ITestLibrarian {
 
     public static void removeLibraryDir() throws IOException {
         File installLibDir = ExternalLibraryUtils.getLibraryInstallDir();
-        if (!installLibDir.getAbsolutePath().endsWith(LIBRARY_DIR_NAME)) {
-            throw new HyracksDataException("Invalid library directory");
-        }
         FileUtils.deleteQuietly(installLibDir);
     }
 
