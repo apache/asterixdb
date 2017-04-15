@@ -131,6 +131,12 @@
         <output-dir compare="Text">explain_simple</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="explain">
+      <compilation-unit name="explain_pretty">
+        <parameter name="pretty" value="true" />
+        <output-dir compare="Text">explain_simple</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-case FilePath="flwor">
     <compilation-unit name="let33">

@@ -164,8 +164,8 @@ public class ResultPrinter {
             // TODO(tillw): this is inefficient - do this during record generation
             try {
                 record = ow.writeValueAsString(om.readValue(result, Object.class));
-            } catch (IOException e) {
-                throw new HyracksDataException(e);
+            } catch (IOException e) { // NOSONAR if JSON parsing fails, just use the original string
+                record = result;
             }
         }
         if (conf.fmt() == SessionConfig.OutputFormat.CSV) {
