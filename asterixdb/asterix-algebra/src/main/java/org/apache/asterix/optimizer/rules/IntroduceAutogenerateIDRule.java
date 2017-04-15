@@ -99,7 +99,7 @@ public class IntroduceAutogenerateIDRule implements IAlgebraicRewriteRule {
         }
 
         InsertDeleteUpsertOperator insertOp = (InsertDeleteUpsertOperator) currentOp;
-        if (insertOp.getOperation() != Kind.INSERT) {
+        if (insertOp.getOperation() != Kind.INSERT && insertOp.getOperation() != Kind.UPSERT) {
             return false;
         }
 
