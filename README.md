@@ -23,10 +23,13 @@
 AsterixDB is a BDMS (Big Data Management System) with a rich feature set that sets it apart from other Big Data platforms.  Its feature set makes it well-suited to modern needs such as web data warehousing and social data storage and analysis. AsterixDB has:
 
 - __Data model__<br/>
-A semistructured NoSQL style data model (ADM) resulting from extending JSON with object database ideas
+A semistructured NoSQL style data model ([ADM](https://ci.apache.org/projects/asterixdb/datamodel.html)) resulting from
+extending JSON with object database ideas
 
 - __Query languages__<br/>
-Two expressive and declarative query languages (SQL++ and AQL) that support a broad range of queries and analysis over semistructured data
+Two expressive and declarative query languages ([SQL++](http://asterixdb.apache.org/docs/0.9.0/sqlpp/manual.html)
+and [AQL](http://asterixdb.apache.org/docs/0.9.0/aql/manual.html)) that support a broad range of queries and analysis
+over semistructured data
 
 - __Scalability__<br/>
 A parallel runtime query execution engine, Apache Hyracks, that has been scale-tested on up to 1000+ cores and 500+ disks
