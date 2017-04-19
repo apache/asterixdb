@@ -451,8 +451,8 @@ public class TestExecutor {
         return response.getEntity().getContent();
     }
 
-    public InputStream executeQueryService(String str, URI uri) throws Exception {
-        return executeQueryService(str, OutputFormat.CLEAN_JSON, uri, new ArrayList<>(), false);
+    public InputStream executeQueryService(String str, URI uri, OutputFormat fmt) throws Exception {
+        return executeQueryService(str, fmt, uri, new ArrayList<>(), false);
     }
 
     public InputStream executeQueryService(String str, OutputFormat fmt, URI uri,
@@ -755,8 +755,8 @@ public class TestExecutor {
                 if (ctx.getFile().getName().endsWith("aql")) {
                     executeDDL(statement, getEndpoint(Servlets.AQL_DDL));
                 } else {
-                    InputStream resultStream =
-                            executeQueryService(statement, getEndpoint(Servlets.QUERY_SERVICE));
+                    InputStream resultStream = executeQueryService(statement, getEndpoint(Servlets.QUERY_SERVICE),
+                            OutputFormat.CLEAN_JSON);
                     ResultExtractor.extract(resultStream);
                 }
                 break;
@@ -768,8 +768,8 @@ public class TestExecutor {
                 if (ctx.getFile().getName().endsWith("aql")) {
                     executeUpdate(statement, getEndpoint(Servlets.AQL_UPDATE));
                 } else {
-                    InputStream resultStream =
-                            executeQueryService(statement, getEndpoint(Servlets.QUERY_SERVICE));
+                    InputStream resultStream = executeQueryService(statement, getEndpoint(Servlets.QUERY_SERVICE),
+                            OutputFormat.forCompilationUnit(cUnit));
                     ResultExtractor.extract(resultStream);
                 }
                 break;
@@ -1254,7 +1254,7 @@ public class TestExecutor {
         try {
             ArrayList<String> toBeDropped = new ArrayList<>();
             InputStream resultStream = executeQueryService("select dv.DataverseName from Metadata.`Dataverse` as dv;",
-                    getEndpoint(Servlets.QUERY_SERVICE));
+                    getEndpoint(Servlets.QUERY_SERVICE), OutputFormat.CLEAN_JSON);
             String out = IOUtils.toString(resultStream);
             ObjectMapper om = new ObjectMapper();
             om.setConfig(
@@ -1284,8 +1284,8 @@ public class TestExecutor {
                     dropStatement.append(dv);
                     dropStatement.append(";\n");
                 }
-                resultStream =
-                        executeQueryService(dropStatement.toString(), getEndpoint(Servlets.QUERY_SERVICE));
+                resultStream = executeQueryService(dropStatement.toString(), getEndpoint(Servlets.QUERY_SERVICE),
+                        OutputFormat.CLEAN_JSON);
                 ResultExtractor.extract(resultStream);
             }
         } catch (Throwable th) {
