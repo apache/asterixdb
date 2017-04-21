@@ -24,6 +24,7 @@ import java.nio.ByteBuffer;
 import java.util.List;
 
 import org.apache.asterix.common.config.GlobalConfig;
+import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.dataflow.data.common.ExpressionTypeComputer;
 import org.apache.asterix.dataflow.data.nontagged.MissingWriterFactory;
 import org.apache.asterix.formats.nontagged.ADMPrinterFactoryProvider;
@@ -55,8 +56,8 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCa
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractLogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AggregateFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
-import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ExpressionRuntimeProvider;
+import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.StatefulFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.UnnestingFunctionCallExpression;
@@ -80,16 +81,16 @@ import com.google.common.collect.ImmutableSet;
 public class ConstantFoldingRule implements IAlgebraicRewriteRule {
 
     private final ConstantFoldingVisitor cfv = new ConstantFoldingVisitor();
+    private final JobGenContext jobGenCtx;
 
     // Function Identifier sets that the ConstantFolding rule should skip to apply.
     // Most of them are record-related functions.
     private static final ImmutableSet<FunctionIdentifier> FUNC_ID_SET_THAT_SHOULD_NOT_BE_APPLIED =
-            ImmutableSet.of(BuiltinFunctions.RECORD_MERGE, BuiltinFunctions.ADD_FIELDS,
-                    BuiltinFunctions.REMOVE_FIELDS, BuiltinFunctions.GET_RECORD_FIELDS,
-                    BuiltinFunctions.GET_RECORD_FIELD_VALUE, BuiltinFunctions.FIELD_ACCESS_NESTED,
-                    BuiltinFunctions.GET_ITEM, BuiltinFunctions.OPEN_RECORD_CONSTRUCTOR,
-                    BuiltinFunctions.FIELD_ACCESS_BY_INDEX, BuiltinFunctions.CAST_TYPE,
-                    BuiltinFunctions.META, BuiltinFunctions.META_KEY);
+            ImmutableSet.of(BuiltinFunctions.RECORD_MERGE, BuiltinFunctions.ADD_FIELDS, BuiltinFunctions.REMOVE_FIELDS,
+                    BuiltinFunctions.GET_RECORD_FIELDS, BuiltinFunctions.GET_RECORD_FIELD_VALUE,
+                    BuiltinFunctions.FIELD_ACCESS_NESTED, BuiltinFunctions.GET_ITEM,
+                    BuiltinFunctions.OPEN_RECORD_CONSTRUCTOR, BuiltinFunctions.FIELD_ACCESS_BY_INDEX,
+                    BuiltinFunctions.CAST_TYPE, BuiltinFunctions.META, BuiltinFunctions.META_KEY);
 
     /** Throws exceptions in substituiteProducedVariable, setVarType, and one getVarType method. */
     private static final IVariableTypeEnvironment _emptyTypeEnv = new IVariableTypeEnvironment() {
@@ -121,15 +122,16 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
         }
     };
 
-    private static final JobGenContext _jobGenCtx = new JobGenContext(null, null, null,
-            SerializerDeserializerProvider.INSTANCE, BinaryHashFunctionFactoryProvider.INSTANCE,
-            BinaryHashFunctionFamilyProvider.INSTANCE, BinaryComparatorFactoryProvider.INSTANCE,
-            TypeTraitProvider.INSTANCE, BinaryBooleanInspector.FACTORY, BinaryIntegerInspector.FACTORY,
-            ADMPrinterFactoryProvider.INSTANCE, MissingWriterFactory.INSTANCE, null,
-            new ExpressionRuntimeProvider(QueryLogicalExpressionJobGen.INSTANCE),
-            ExpressionTypeComputer.INSTANCE, null, null, null, null, GlobalConfig.DEFAULT_FRAME_SIZE, null);
-
     private static final IOperatorSchema[] _emptySchemas = new IOperatorSchema[] {};
+
+    public ConstantFoldingRule(ICcApplicationContext appCtx) {
+        jobGenCtx = new JobGenContext(null, null, appCtx, SerializerDeserializerProvider.INSTANCE,
+                BinaryHashFunctionFactoryProvider.INSTANCE, BinaryHashFunctionFamilyProvider.INSTANCE,
+                BinaryComparatorFactoryProvider.INSTANCE, TypeTraitProvider.INSTANCE, BinaryBooleanInspector.FACTORY,
+                BinaryIntegerInspector.FACTORY, ADMPrinterFactoryProvider.INSTANCE, MissingWriterFactory.INSTANCE, null,
+                new ExpressionRuntimeProvider(QueryLogicalExpressionJobGen.INSTANCE), ExpressionTypeComputer.INSTANCE,
+                null, null, null, null, GlobalConfig.DEFAULT_FRAME_SIZE, null);
+    }
 
     @Override
     public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
@@ -168,13 +170,13 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
         @Override
         public Pair<Boolean, ILogicalExpression> visitConstantExpression(ConstantExpression expr, Void arg)
                 throws AlgebricksException {
-            return new Pair<Boolean, ILogicalExpression>(false, expr);
+            return new Pair<>(false, expr);
         }
 
         @Override
         public Pair<Boolean, ILogicalExpression> visitVariableReferenceExpression(VariableReferenceExpression expr,
                 Void arg) throws AlgebricksException {
-            return new Pair<Boolean, ILogicalExpression>(false, expr);
+            return new Pair<>(false, expr);
         }
 
         @Override
@@ -182,12 +184,12 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
                 Void arg) throws AlgebricksException {
             boolean changed = changeRec(expr, arg);
             if (!checkArgs(expr) || !expr.isFunctional()) {
-                return new Pair<Boolean, ILogicalExpression>(changed, expr);
+                return new Pair<>(changed, expr);
             }
 
             // Skip Constant Folding for the record-related functions.
             if (FUNC_ID_SET_THAT_SHOULD_NOT_BE_APPLIED.contains(expr.getFunctionIdentifier())) {
-                return new Pair<Boolean, ILogicalExpression>(false, null);
+                return new Pair<>(false, null);
             }
 
             //Current List SerDe assumes a strongly typed list, so we do not constant fold the list constructors if they are not strongly typed
@@ -199,7 +201,7 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
                     //case1: listType == null,  could be a nested list inside a list<ANY>
                     //case2: itemType = ANY
                     //case3: itemType = a nested list
-                    return new Pair<Boolean, ILogicalExpression>(false, null);
+                    return new Pair<>(false, null);
                 }
             }
             if (expr.getFunctionIdentifier().equals(BuiltinFunctions.FIELD_ACCESS_BY_NAME)) {
@@ -208,20 +210,20 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
                 int k = rt.getFieldIndex(str);
                 if (k >= 0) {
                     // wait for the ByNameToByIndex rule to apply
-                    return new Pair<Boolean, ILogicalExpression>(changed, expr);
+                    return new Pair<>(changed, expr);
                 }
             }
 
-            IScalarEvaluatorFactory fact = _jobGenCtx.getExpressionRuntimeProvider().createEvaluatorFactory(expr,
-                    _emptyTypeEnv, _emptySchemas, _jobGenCtx);
+            IScalarEvaluatorFactory fact = jobGenCtx.getExpressionRuntimeProvider().createEvaluatorFactory(expr,
+                    _emptyTypeEnv, _emptySchemas, jobGenCtx);
             try {
                 IScalarEvaluator eval = fact.createScalarEvaluator(null);
                 eval.evaluate(null, p);
                 Object t = _emptyTypeEnv.getType(expr);
 
                 @SuppressWarnings("rawtypes")
-                ISerializerDeserializer serde = _jobGenCtx.getSerializerDeserializerProvider()
-                        .getSerializerDeserializer(t);
+                ISerializerDeserializer serde =
+                        jobGenCtx.getSerializerDeserializerProvider().getSerializerDeserializer(t);
                 bbis.setByteBuffer(ByteBuffer.wrap(p.getByteArray(), p.getStartOffset(), p.getLength()), 0);
                 IAObject o = (IAObject) serde.deserialize(dis);
                 return new Pair<>(true, new ConstantExpression(new AsterixConstantValue(o)));
@@ -234,21 +236,21 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
         public Pair<Boolean, ILogicalExpression> visitAggregateFunctionCallExpression(
                 AggregateFunctionCallExpression expr, Void arg) throws AlgebricksException {
             boolean changed = changeRec(expr, arg);
-            return new Pair<Boolean, ILogicalExpression>(changed, expr);
+            return new Pair<>(changed, expr);
         }
 
         @Override
         public Pair<Boolean, ILogicalExpression> visitStatefulFunctionCallExpression(
                 StatefulFunctionCallExpression expr, Void arg) throws AlgebricksException {
             boolean changed = changeRec(expr, arg);
-            return new Pair<Boolean, ILogicalExpression>(changed, expr);
+            return new Pair<>(changed, expr);
         }
 
         @Override
         public Pair<Boolean, ILogicalExpression> visitUnnestingFunctionCallExpression(
                 UnnestingFunctionCallExpression expr, Void arg) throws AlgebricksException {
             boolean changed = changeRec(expr, arg);
-            return new Pair<Boolean, ILogicalExpression>(changed, expr);
+            return new Pair<>(changed, expr);
         }
 
         private boolean changeRec(AbstractFunctionCallExpression expr, Void arg) throws AlgebricksException {

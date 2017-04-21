@@ -18,14 +18,15 @@
  */
 package org.apache.asterix.app.replication.message;
 
-import org.apache.asterix.common.replication.INCLifecycleMessage;
-import org.apache.asterix.runtime.utils.AppContextInfo;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.service.IControllerService;
-
 import java.util.Set;
 
-public class ReplayPartitionLogsResponseMessage implements INCLifecycleMessage {
+import org.apache.asterix.common.dataflow.ICcApplicationContext;
+import org.apache.asterix.common.messaging.api.ICcAddressedMessage;
+import org.apache.asterix.common.replication.INCLifecycleMessage;
+import org.apache.asterix.runtime.utils.CcApplicationContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+
+public class ReplayPartitionLogsResponseMessage implements INCLifecycleMessage, ICcAddressedMessage {
 
     private static final long serialVersionUID = 1L;
     private final Set<Integer> partitions;
@@ -37,8 +38,8 @@ public class ReplayPartitionLogsResponseMessage implements INCLifecycleMessage {
     }
 
     @Override
-    public void handle(IControllerService cs) throws HyracksDataException, InterruptedException {
-        AppContextInfo.INSTANCE.getFaultToleranceStrategy().process(this);
+    public void handle(ICcApplicationContext appCtx) throws HyracksDataException, InterruptedException {
+        ((CcApplicationContext) appCtx).getFaultToleranceStrategy().process(this);
     }
 
     public Set<Integer> getPartitions() {

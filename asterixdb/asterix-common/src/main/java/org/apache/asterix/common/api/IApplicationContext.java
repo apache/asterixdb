@@ -16,9 +16,23 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.common.config;
+package org.apache.asterix.common.api;
 
-public interface IPropertiesProvider {
+import org.apache.asterix.common.config.ActiveProperties;
+import org.apache.asterix.common.config.BuildProperties;
+import org.apache.asterix.common.config.CompilerProperties;
+import org.apache.asterix.common.config.ExternalProperties;
+import org.apache.asterix.common.config.MessagingProperties;
+import org.apache.asterix.common.config.MetadataProperties;
+import org.apache.asterix.common.config.NodeProperties;
+import org.apache.asterix.common.config.ReplicationProperties;
+import org.apache.asterix.common.config.StorageProperties;
+import org.apache.asterix.common.config.TransactionProperties;
+import org.apache.asterix.common.library.ILibraryManager;
+import org.apache.hyracks.api.application.IServiceContext;
+
+public interface IApplicationContext {
+
     StorageProperties getStorageProperties();
 
     TransactionProperties getTransactionProperties();
@@ -38,4 +52,12 @@ public interface IPropertiesProvider {
     MessagingProperties getMessagingProperties();
 
     NodeProperties getNodeProperties();
+
+    /**
+     * @return the library manager which implements {@link org.apache.asterix.common.library.ILibraryManager}
+     */
+    public ILibraryManager getLibraryManager();
+
+    IServiceContext getServiceContext();
+
 }

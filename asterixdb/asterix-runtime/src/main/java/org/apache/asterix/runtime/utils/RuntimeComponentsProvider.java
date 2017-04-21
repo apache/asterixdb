@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.runtime.utils;
 
-import org.apache.asterix.common.api.IAppRuntimeContext;
+import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
@@ -42,37 +42,37 @@ public class RuntimeComponentsProvider implements IIndexLifecycleManagerProvider
 
     @Override
     public ILSMIOOperationScheduler getIOScheduler(IHyracksTaskContext ctx) {
-        return ((IAppRuntimeContext) ctx.getJobletContext().getServiceContext().getApplicationContext())
+        return ((INcApplicationContext) ctx.getJobletContext().getServiceContext().getApplicationContext())
                 .getLSMIOScheduler();
     }
 
     @Override
     public IBufferCache getBufferCache(IHyracksTaskContext ctx) {
-        return ((IAppRuntimeContext) ctx.getJobletContext().getServiceContext().getApplicationContext())
+        return ((INcApplicationContext) ctx.getJobletContext().getServiceContext().getApplicationContext())
                 .getBufferCache();
     }
 
     @Override
     public IFileMapProvider getFileMapProvider(IHyracksTaskContext ctx) {
-        return ((IAppRuntimeContext) ctx.getJobletContext().getServiceContext().getApplicationContext())
+        return ((INcApplicationContext) ctx.getJobletContext().getServiceContext().getApplicationContext())
                 .getFileMapManager();
     }
 
     @Override
     public ILocalResourceRepository getLocalResourceRepository(IHyracksTaskContext ctx) {
-        return ((IAppRuntimeContext) ctx.getJobletContext().getServiceContext().getApplicationContext())
+        return ((INcApplicationContext) ctx.getJobletContext().getServiceContext().getApplicationContext())
                 .getLocalResourceRepository();
     }
 
     @Override
     public IDatasetLifecycleManager getLifecycleManager(IHyracksTaskContext ctx) {
-        return ((IAppRuntimeContext) ctx.getJobletContext().getServiceContext().getApplicationContext())
+        return ((INcApplicationContext) ctx.getJobletContext().getServiceContext().getApplicationContext())
                 .getDatasetLifecycleManager();
     }
 
     @Override
     public IResourceIdFactory getResourceIdFactory(IHyracksTaskContext ctx) {
-        return ((IAppRuntimeContext) ctx.getJobletContext().getServiceContext().getApplicationContext())
+        return ((INcApplicationContext) ctx.getJobletContext().getServiceContext().getApplicationContext())
                 .getResourceIdFactory();
     }
 

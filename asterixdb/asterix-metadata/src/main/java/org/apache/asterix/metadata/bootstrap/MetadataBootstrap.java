@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.asterix.common.api.IAppRuntimeContext;
+import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.cluster.ClusterPartition;
 import org.apache.asterix.common.config.ClusterProperties;
@@ -106,7 +106,7 @@ import org.apache.hyracks.storage.common.file.LocalResource;
 public class MetadataBootstrap {
     public static final boolean IS_DEBUG_MODE = false;
     private static final Logger LOGGER = Logger.getLogger(MetadataBootstrap.class.getName());
-    private static IAppRuntimeContext appContext;
+    private static INcApplicationContext appContext;
     private static IBufferCache bufferCache;
     private static IFileMapProvider fileMapProvider;
     private static IDatasetLifecycleManager dataLifecycleManager;
@@ -142,7 +142,7 @@ public class MetadataBootstrap {
     public static void startUniverse(INCServiceContext ncServiceContext, boolean isNewUniverse)
             throws RemoteException, ACIDException, MetadataException {
         MetadataBootstrap.setNewUniverse(isNewUniverse);
-        appContext = (IAppRuntimeContext) ncServiceContext.getApplicationContext();
+        appContext = (INcApplicationContext) ncServiceContext.getApplicationContext();
 
         MetadataProperties metadataProperties = appContext.getMetadataProperties();
         metadataNodeName = metadataProperties.getMetadataNodeName();

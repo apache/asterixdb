@@ -18,16 +18,15 @@
  */
 package org.apache.asterix.runtime.message;
 
-import org.apache.asterix.common.api.IAppRuntimeContext;
-import org.apache.asterix.common.messaging.api.IApplicationMessage;
+import org.apache.asterix.common.api.INcApplicationContext;
+import org.apache.asterix.common.messaging.api.INcAddressedMessage;
 import org.apache.asterix.common.replication.Replica;
 import org.apache.asterix.common.replication.ReplicaEvent;
 import org.apache.asterix.event.schema.cluster.Node;
 import org.apache.hyracks.api.application.IClusterLifecycleListener.ClusterEventType;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.service.IControllerService;
 
-public class ReplicaEventMessage implements IApplicationMessage {
+public class ReplicaEventMessage implements INcAddressedMessage {
 
     private static final long serialVersionUID = 1L;
     private final String nodeId;
@@ -53,8 +52,7 @@ public class ReplicaEventMessage implements IApplicationMessage {
     }
 
     @Override
-    public void handle(IControllerService cs) throws HyracksDataException, InterruptedException {
-        IAppRuntimeContext appContext = (IAppRuntimeContext) cs.getApplicationContext();
+    public void handle(INcApplicationContext appContext) throws HyracksDataException, InterruptedException {
         Node node = new Node();
         node.setId(nodeId);
         node.setClusterIp(nodeIPAddress);

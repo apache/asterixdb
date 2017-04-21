@@ -18,7 +18,6 @@
  */
 package org.apache.asterix.app.result;
 
-import org.apache.asterix.runtime.utils.AppContextInfo;
 import org.apache.hyracks.api.comm.IFrame;
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 import org.apache.hyracks.api.dataset.DatasetJobRecord.Status;
@@ -36,8 +35,6 @@ public class ResultReader {
 
     // Number of parallel result reader buffers
     public static final int NUM_READERS = 1;
-
-    public static final int FRAME_SIZE = AppContextInfo.INSTANCE.getCompilerProperties().getFrameSize();
 
     public ResultReader(IHyracksDataset hdc, JobId jobId, ResultSetId resultSetId) throws HyracksDataException {
         reader = hdc.createReader(jobId, resultSetId);

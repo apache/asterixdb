@@ -29,11 +29,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-import org.apache.asterix.common.api.IAppRuntimeContext;
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
+import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.cluster.ClusterPartition;
 import org.apache.asterix.common.config.ClusterProperties;
-import org.apache.asterix.common.config.IPropertiesProvider;
 import org.apache.asterix.common.config.ReplicationProperties;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.replication.IRemoteRecoveryManager;
@@ -48,11 +47,11 @@ public class RemoteRecoveryManager implements IRemoteRecoveryManager {
 
     private final IReplicationManager replicationManager;
     private static final Logger LOGGER = Logger.getLogger(RemoteRecoveryManager.class.getName());
-    private final IAppRuntimeContext runtimeContext;
+    private final INcApplicationContext runtimeContext;
     private final ReplicationProperties replicationProperties;
     private Map<String, Set<String>> failbackRecoveryReplicas;
 
-    public RemoteRecoveryManager(IReplicationManager replicationManager, IAppRuntimeContext runtimeContext,
+    public RemoteRecoveryManager(IReplicationManager replicationManager, INcApplicationContext runtimeContext,
             ReplicationProperties replicationProperties) {
         this.replicationManager = replicationManager;
         this.runtimeContext = runtimeContext;
@@ -156,8 +155,8 @@ public class RemoteRecoveryManager implements IRemoteRecoveryManager {
         replayReplicaPartitionLogs(partitionsToTakeover, false);
 
         //mark these partitions as active in this node
-        PersistentLocalResourceRepository resourceRepository = (PersistentLocalResourceRepository) runtimeContext
-                .getLocalResourceRepository();
+        PersistentLocalResourceRepository resourceRepository =
+                (PersistentLocalResourceRepository) runtimeContext.getLocalResourceRepository();
         for (Integer patitionId : partitions) {
             resourceRepository.addActivePartition(patitionId);
         }
@@ -166,11 +165,10 @@ public class RemoteRecoveryManager implements IRemoteRecoveryManager {
     @Override
     public void startFailbackProcess() {
         int maxRecoveryAttempts = replicationProperties.getMaxRemoteRecoveryAttempts();
-        PersistentLocalResourceRepository resourceRepository = (PersistentLocalResourceRepository) runtimeContext
-                .getLocalResourceRepository();
+        PersistentLocalResourceRepository resourceRepository =
+                (PersistentLocalResourceRepository) runtimeContext.getLocalResourceRepository();
         IDatasetLifecycleManager datasetLifeCycleManager = runtimeContext.getDatasetLifecycleManager();
-        Map<String, ClusterPartition[]> nodePartitions = runtimeContext.getMetadataProperties()
-                .getNodePartitions();
+        Map<String, ClusterPartition[]> nodePartitions = runtimeContext.getMetadataProperties().getNodePartitions();
 
         while (true) {
             //start recovery steps
@@ -225,10 +223,9 @@ public class RemoteRecoveryManager implements IRemoteRecoveryManager {
     @Override
     public void completeFailbackProcess() throws IOException, InterruptedException {
         ILogManager logManager = runtimeContext.getTransactionSubsystem().getLogManager();
-        ReplicaResourcesManager replicaResourcesManager = (ReplicaResourcesManager) runtimeContext
-                .getReplicaResourcesManager();
-        Map<String, ClusterPartition[]> nodePartitions = ((IPropertiesProvider) runtimeContext).getMetadataProperties()
-                .getNodePartitions();
+        ReplicaResourcesManager replicaResourcesManager =
+                (ReplicaResourcesManager) runtimeContext.getReplicaResourcesManager();
+        Map<String, ClusterPartition[]> nodePartitions = runtimeContext.getMetadataProperties().getNodePartitions();
 
         /**
          * for each lost partition, get the remaining files from replicas
@@ -281,8 +278,8 @@ public class RemoteRecoveryManager implements IRemoteRecoveryManager {
     @Override
     public void doRemoteRecoveryPlan(Map<String, Set<Integer>> recoveryPlan) throws HyracksDataException {
         int maxRecoveryAttempts = replicationProperties.getMaxRemoteRecoveryAttempts();
-        PersistentLocalResourceRepository resourceRepository = (PersistentLocalResourceRepository) runtimeContext
-                .getLocalResourceRepository();
+        PersistentLocalResourceRepository resourceRepository =
+                (PersistentLocalResourceRepository) runtimeContext.getLocalResourceRepository();
         IDatasetLifecycleManager datasetLifeCycleManager = runtimeContext.getDatasetLifecycleManager();
         ILogManager logManager = runtimeContext.getTransactionSubsystem().getLogManager();
         while (true) {

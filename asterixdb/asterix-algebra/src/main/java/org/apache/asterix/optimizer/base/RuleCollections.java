@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.optimizer.rules.AddEquivalenceClassForRecordConstructorRule;
 import org.apache.asterix.optimizer.rules.AsterixExtractFunctionsFromJoinConditionRule;
 import org.apache.asterix.optimizer.rules.AsterixInlineVariablesRule;
@@ -161,7 +162,7 @@ public final class RuleCollections {
         return Collections.singletonList(new FullTextContainsParameterCheckRule());
     }
 
-    public static final List<IAlgebraicRewriteRule> buildNormalizationRuleCollection() {
+    public static final List<IAlgebraicRewriteRule> buildNormalizationRuleCollection(ICcApplicationContext appCtx) {
         List<IAlgebraicRewriteRule> normalization = new LinkedList<>();
         normalization.add(new ResolveVariableRule());
         normalization.add(new CheckInsertUpsertReturningRule());
@@ -186,7 +187,7 @@ public final class RuleCollections {
         // so that PushAggFunc can happen in fewer places.
         normalization.add(new PushAggFuncIntoStandaloneAggregateRule());
         normalization.add(new ListifyUnnestingFunctionRule());
-        normalization.add(new ConstantFoldingRule());
+        normalization.add(new ConstantFoldingRule(appCtx));
         normalization.add(new RemoveRedundantSelectRule());
         normalization.add(new UnnestToDataScanRule());
         normalization.add(new MetaFunctionToMetaVariableRule());
@@ -236,7 +237,7 @@ public final class RuleCollections {
         return condPushDownAndJoinInference;
     }
 
-    public static final List<IAlgebraicRewriteRule> buildLoadFieldsRuleCollection() {
+    public static final List<IAlgebraicRewriteRule> buildLoadFieldsRuleCollection(ICcApplicationContext appCtx) {
         List<IAlgebraicRewriteRule> fieldLoads = new LinkedList<>();
         fieldLoads.add(new LoadRecordFieldsRule());
         fieldLoads.add(new PushFieldAccessRule());
@@ -245,7 +246,7 @@ public final class RuleCollections {
         fieldLoads.add(new RemoveRedundantVariablesRule());
         fieldLoads.add(new AsterixInlineVariablesRule());
         fieldLoads.add(new RemoveUnusedAssignAndAggregateRule());
-        fieldLoads.add(new ConstantFoldingRule());
+        fieldLoads.add(new ConstantFoldingRule(appCtx));
         fieldLoads.add(new RemoveRedundantSelectRule());
         fieldLoads.add(new FeedScanCollectionToUnnest());
         fieldLoads.add(new NestedSubplanToJoinRule());
@@ -340,13 +341,14 @@ public final class RuleCollections {
         return physicalRewritesAllLevels;
     }
 
-    public static final List<IAlgebraicRewriteRule> buildPhysicalRewritesTopLevelRuleCollection() {
+    public static final List<IAlgebraicRewriteRule> buildPhysicalRewritesTopLevelRuleCollection(
+            ICcApplicationContext appCtx) {
         List<IAlgebraicRewriteRule> physicalRewritesTopLevel = new LinkedList<>();
         physicalRewritesTopLevel.add(new PushNestedOrderByUnderPreSortedGroupByRule());
         physicalRewritesTopLevel.add(new CopyLimitDownRule());
         // CopyLimitDownRule may generates non-topmost limits with numeric_adds functions.
         // We are going to apply a constant folding rule again for this case.
-        physicalRewritesTopLevel.add(new ConstantFoldingRule());
+        physicalRewritesTopLevel.add(new ConstantFoldingRule(appCtx));
         physicalRewritesTopLevel.add(new PushLimitIntoOrderByRule());
         physicalRewritesTopLevel.add(new IntroduceProjectsRule());
         physicalRewritesTopLevel.add(new SetAlgebricksPhysicalOperatorsRule());

@@ -20,7 +20,7 @@ package org.apache.asterix.runtime.operators.std;
 
 import java.nio.ByteBuffer;
 
-import org.apache.asterix.common.api.IAppRuntimeContext;
+import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.transactions.DatasetId;
@@ -72,7 +72,7 @@ public class FlushDatasetOperatorDescriptor extends AbstractSingleActivityOperat
             @Override
             public void close() throws HyracksDataException {
                 try {
-                    IAppRuntimeContext appCtx = (IAppRuntimeContext) ctx.getJobletContext()
+                    INcApplicationContext appCtx = (INcApplicationContext) ctx.getJobletContext()
                             .getServiceContext().getApplicationContext();
                     IDatasetLifecycleManager datasetLifeCycleManager = appCtx.getDatasetLifecycleManager();
                     ILockManager lockManager = appCtx.getTransactionSubsystem().getLockManager();

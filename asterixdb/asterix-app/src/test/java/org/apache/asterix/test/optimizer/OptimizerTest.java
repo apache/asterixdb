@@ -33,6 +33,7 @@ import org.apache.asterix.api.java.AsterixJavaClient;
 import org.apache.asterix.app.translator.DefaultStatementExecutorFactory;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.context.IStorageComponentProvider;
+import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.compiler.provider.AqlCompilationProvider;
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
@@ -65,8 +66,8 @@ public class OptimizerTest {
     private static final String EXTENSION_RESULT = "plan";
     private static final String FILENAME_IGNORE = "ignore.txt";
     private static final String FILENAME_ONLY = "only.txt";
-    private static final String PATH_BASE = "src" + SEPARATOR + "test" + SEPARATOR + "resources" + SEPARATOR
-            + "optimizerts" + SEPARATOR;
+    private static final String PATH_BASE =
+            "src" + SEPARATOR + "test" + SEPARATOR + "resources" + SEPARATOR + "optimizerts" + SEPARATOR;
     private static final String PATH_QUERIES = PATH_BASE + "queries" + SEPARATOR;
     private static final String PATH_EXPECTED = PATH_BASE + "results" + SEPARATOR;
     protected static final String PATH_ACTUAL = "target" + File.separator + "opttest" + SEPARATOR;
@@ -152,8 +153,8 @@ public class OptimizerTest {
     @Test
     public void test() throws Exception {
         try {
-            String queryFileShort = queryFile.getPath().substring(PATH_QUERIES.length()).replace(SEPARATOR.charAt(0),
-                    '/');
+            String queryFileShort =
+                    queryFile.getPath().substring(PATH_QUERIES.length()).replace(SEPARATOR.charAt(0), '/');
             if (!only.isEmpty()) {
                 boolean toRun = TestHelper.isInPrefixList(only, queryFileShort);
                 if (!toRun) {
@@ -175,14 +176,15 @@ public class OptimizerTest {
             actualFile.getParentFile().mkdirs();
 
             PrintWriter plan = new PrintWriter(actualFile);
-            ILangCompilationProvider provider = queryFile.getName().endsWith("aql") ? aqlCompilationProvider
-                    : sqlppCompilationProvider;
+            ILangCompilationProvider provider =
+                    queryFile.getName().endsWith("aql") ? aqlCompilationProvider : sqlppCompilationProvider;
             if (extensionLangCompilationProvider != null) {
                 provider = extensionLangCompilationProvider;
             }
             IHyracksClientConnection hcc = integrationUtil.getHyracksClientConnection();
-            AsterixJavaClient asterix = new AsterixJavaClient(hcc, query, plan, provider, statementExecutorFactory,
-                    storageComponentProvider);
+            AsterixJavaClient asterix =
+                    new AsterixJavaClient((ICcApplicationContext) integrationUtil.cc.getApplicationContext(), hcc,
+                            query, plan, provider, statementExecutorFactory, storageComponentProvider);
             try {
                 asterix.compile(true, false, false, true, true, false, false);
             } catch (AsterixException e) {
@@ -193,10 +195,10 @@ public class OptimizerTest {
             plan.close();
             query.close();
 
-            BufferedReader readerExpected = new BufferedReader(
-                    new InputStreamReader(new FileInputStream(expectedFile), "UTF-8"));
-            BufferedReader readerActual = new BufferedReader(
-                    new InputStreamReader(new FileInputStream(actualFile), "UTF-8"));
+            BufferedReader readerExpected =
+                    new BufferedReader(new InputStreamReader(new FileInputStream(expectedFile), "UTF-8"));
+            BufferedReader readerActual =
+                    new BufferedReader(new InputStreamReader(new FileInputStream(actualFile), "UTF-8"));
 
             String lineExpected, lineActual;
             int num = 1;

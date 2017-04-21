@@ -25,6 +25,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.common.api.IClusterManagementWork;
+import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.event.schema.cluster.Node;
 import org.apache.asterix.metadata.cluster.AddNodeWork;
@@ -36,9 +37,11 @@ public class ClusterWorkExecutor implements Runnable {
 
     private static final Logger LOGGER = Logger.getLogger(ClusterWorkExecutor.class.getName());
 
+    private final ICcApplicationContext appCtx;
     private final LinkedBlockingQueue<Set<IClusterManagementWork>> inbox;
 
-    public ClusterWorkExecutor(LinkedBlockingQueue<Set<IClusterManagementWork>> inbox) {
+    public ClusterWorkExecutor(ICcApplicationContext appCtx, LinkedBlockingQueue<Set<IClusterManagementWork>> inbox) {
+        this.appCtx = appCtx;
         this.inbox = inbox;
     }
 
@@ -48,9 +51,9 @@ public class ClusterWorkExecutor implements Runnable {
             try {
                 Set<IClusterManagementWork> workSet = inbox.take();
                 int nodesToAdd = 0;
-                Set<String> nodesToRemove = new HashSet<String>();
-                Set<IClusterManagementWork> nodeAdditionRequests = new HashSet<IClusterManagementWork>();
-                Set<IClusterManagementWork> nodeRemovalRequests = new HashSet<IClusterManagementWork>();
+                Set<String> nodesToRemove = new HashSet<>();
+                Set<IClusterManagementWork> nodeAdditionRequests = new HashSet<>();
+                Set<IClusterManagementWork> nodeRemovalRequests = new HashSet<>();
                 for (IClusterManagementWork w : workSet) {
                     switch (w.getClusterManagementWorkType()) {
                         case ADD_NODE:
@@ -66,12 +69,12 @@ public class ClusterWorkExecutor implements Runnable {
                     }
                 }
 
-                Set<Node> addedNodes = new HashSet<Node>();
+                Set<Node> addedNodes = new HashSet<>();
                 for (int i = 0; i < nodesToAdd; i++) {
                     Node node = ClusterStateManager.INSTANCE.getAvailableSubstitutionNode();
                     if (node != null) {
                         try {
-                            ClusterManagerProvider.getClusterManager().addNode(node);
+                            ClusterManagerProvider.getClusterManager().addNode(appCtx, node);
                             addedNodes.add(node);
                             if (LOGGER.isLoggable(Level.INFO)) {
                                 LOGGER.info("Added NC at:" + node.getId());

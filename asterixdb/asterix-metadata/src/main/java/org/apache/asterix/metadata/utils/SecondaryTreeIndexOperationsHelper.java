@@ -19,7 +19,8 @@
 
 package org.apache.asterix.metadata.utils;
 
-import org.apache.asterix.common.config.IPropertiesProvider;
+import java.util.Map;
+
 import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
@@ -40,25 +41,17 @@ import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
 import org.apache.hyracks.storage.am.lsm.common.dataflow.LSMTreeIndexCompactOperatorDescriptor;
 
-import java.util.Map;
-
 public abstract class SecondaryTreeIndexOperationsHelper extends SecondaryIndexOperationsHelper {
 
-    protected SecondaryTreeIndexOperationsHelper(Dataset dataset,
-            Index index,
-            PhysicalOptimizationConfig physOptConf,
-            IPropertiesProvider propertiesProvider,
-            MetadataProvider metadataProvider,
-            ARecordType recType, ARecordType metaType,
-            ARecordType enforcedType,
+    protected SecondaryTreeIndexOperationsHelper(Dataset dataset, Index index, PhysicalOptimizationConfig physOptConf,
+            MetadataProvider metadataProvider, ARecordType recType, ARecordType metaType, ARecordType enforcedType,
             ARecordType enforcedMetaType) {
-        super(dataset, index, physOptConf, propertiesProvider, metadataProvider, recType, metaType, enforcedType,
-                enforcedMetaType);
+        super(dataset, index, physOptConf, metadataProvider, recType, metaType, enforcedType, enforcedMetaType);
     }
 
     @Override
     public JobSpecification buildDropJobSpec() throws AlgebricksException {
-        JobSpecification spec = RuntimeUtils.createJobSpecification();
+        JobSpecification spec = RuntimeUtils.createJobSpecification(metadataProvider.getApplicationContext());
         IStorageComponentProvider storageComponentProvider = metadataProvider.getStorageComponentProvider();
         Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint =
                 metadataProvider.getSplitProviderAndConstraints(dataset, index.getIndexName());
@@ -82,9 +75,9 @@ public abstract class SecondaryTreeIndexOperationsHelper extends SecondaryIndexO
 
     @Override
     public JobSpecification buildCompactJobSpec() throws AlgebricksException {
-        JobSpecification spec = RuntimeUtils.createJobSpecification();
-        IIndexDataflowHelperFactory indexDataflowHelperFactory = dataset.getIndexDataflowHelperFactory(
-                metadataProvider, index, itemType, metaType, mergePolicyFactory, mergePolicyFactoryProperties);
+        JobSpecification spec = RuntimeUtils.createJobSpecification(metadataProvider.getApplicationContext());
+        IIndexDataflowHelperFactory indexDataflowHelperFactory = dataset.getIndexDataflowHelperFactory(metadataProvider,
+                index, itemType, metaType, mergePolicyFactory, mergePolicyFactoryProperties);
         LSMTreeIndexCompactOperatorDescriptor compactOp = new LSMTreeIndexCompactOperatorDescriptor(spec,
                 metadataProvider.getStorageComponentProvider().getStorageManager(),
                 metadataProvider.getStorageComponentProvider().getIndexLifecycleManagerProvider(),

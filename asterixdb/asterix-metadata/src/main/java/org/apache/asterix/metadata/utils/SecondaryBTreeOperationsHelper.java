@@ -22,7 +22,6 @@ import java.util.List;
 
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.GlobalConfig;
-import org.apache.asterix.common.config.IPropertiesProvider;
 import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.external.indexing.IndexingConstants;
 import org.apache.asterix.external.operators.ExternalScanOperatorDescriptor;
@@ -62,25 +61,23 @@ import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory
 import org.apache.hyracks.storage.am.common.dataflow.TreeIndexBulkLoadOperatorDescriptor;
 import org.apache.hyracks.storage.am.common.dataflow.TreeIndexCreateOperatorDescriptor;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
-import org.apache.hyracks.storage.am.lsm.common.dataflow.LSMTreeIndexCompactOperatorDescriptor;
 import org.apache.hyracks.storage.common.file.ILocalResourceFactoryProvider;
 import org.apache.hyracks.storage.common.file.LocalResource;
 
 public class SecondaryBTreeOperationsHelper extends SecondaryTreeIndexOperationsHelper {
 
     protected SecondaryBTreeOperationsHelper(Dataset dataset, Index index, PhysicalOptimizationConfig physOptConf,
-            IPropertiesProvider propertiesProvider, MetadataProvider metadataProvider, ARecordType recType,
-            ARecordType metaType, ARecordType enforcedType, ARecordType enforcedMetaType) {
-        super(dataset, index, physOptConf, propertiesProvider, metadataProvider, recType, metaType, enforcedType,
-                enforcedMetaType);
+            MetadataProvider metadataProvider, ARecordType recType, ARecordType metaType, ARecordType enforcedType,
+            ARecordType enforcedMetaType) {
+        super(dataset, index, physOptConf, metadataProvider, recType, metaType, enforcedType, enforcedMetaType);
     }
 
     @Override
     public JobSpecification buildCreationJobSpec() throws AlgebricksException {
-        JobSpecification spec = RuntimeUtils.createJobSpecification();
+        JobSpecification spec = RuntimeUtils.createJobSpecification(metadataProvider.getApplicationContext());
         ILocalResourceFactoryProvider localResourceFactoryProvider;
-        IIndexDataflowHelperFactory indexDataflowHelperFactory = dataset.getIndexDataflowHelperFactory(
-                metadataProvider, index, itemType, metaType, mergePolicyFactory, mergePolicyFactoryProperties);
+        IIndexDataflowHelperFactory indexDataflowHelperFactory = dataset.getIndexDataflowHelperFactory(metadataProvider,
+                index, itemType, metaType, mergePolicyFactory, mergePolicyFactoryProperties);
         IStorageComponentProvider storageComponentProvider = metadataProvider.getStorageComponentProvider();
         if (dataset.getDatasetType() == DatasetType.INTERNAL) {
             //prepare a LocalResourceMetadata which will be stored in NC's local resource repository
@@ -109,9 +106,9 @@ public class SecondaryBTreeOperationsHelper extends SecondaryTreeIndexOperations
                 new TreeIndexCreateOperatorDescriptor(spec, storageComponentProvider.getStorageManager(),
                         storageComponentProvider.getIndexLifecycleManagerProvider(), secondaryFileSplitProvider,
                         secondaryTypeTraits, secondaryComparatorFactories, secondaryBloomFilterKeyFields,
-                        indexDataflowHelperFactory, localResourceFactoryProvider,
-                        dataset.getModificationCallbackFactory(storageComponentProvider, index, null,
-                                IndexOperation.CREATE, null),
+                        indexDataflowHelperFactory,
+                        localResourceFactoryProvider, dataset.getModificationCallbackFactory(storageComponentProvider,
+                                index, null, IndexOperation.CREATE, null),
                         storageComponentProvider.getMetadataPageManagerFactory());
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, secondaryIndexCreateOp,
                 secondaryPartitionConstraint);
@@ -122,7 +119,7 @@ public class SecondaryBTreeOperationsHelper extends SecondaryTreeIndexOperations
 
     @Override
     public JobSpecification buildLoadingJobSpec() throws AlgebricksException {
-        JobSpecification spec = RuntimeUtils.createJobSpecification();
+        JobSpecification spec = RuntimeUtils.createJobSpecification(metadataProvider.getApplicationContext());
         boolean isEnforcingKeyTypes = index.isEnforcingKeyFileds();
         int[] fieldPermutation = createFieldPermutationForBulkLoadOp(index.getKeyFieldNames().size());
         IIndexDataflowHelperFactory dataflowHelperFactory = dataset.getIndexDataflowHelperFactory(metadataProvider,
@@ -269,8 +266,7 @@ public class SecondaryBTreeOperationsHelper extends SecondaryTreeIndexOperations
                 sourceColumn = recordColumn + 1;
             }
             secondaryFieldAccessEvalFactories[i] = metadataProvider.getFormat().getFieldAccessEvaluatorFactory(
-                    isEnforcingKeyTypes ? enforcedItemType : sourceType, index.getKeyFieldNames().get(i),
-                    sourceColumn);
+                    isEnforcingKeyTypes ? enforcedItemType : sourceType, index.getKeyFieldNames().get(i), sourceColumn);
             Pair<IAType, Boolean> keyTypePair = Index.getNonNullableOpenFieldType(index.getKeyFieldTypes().get(i),
                     index.getKeyFieldNames().get(i), sourceType);
             IAType keyType = keyTypePair.first;

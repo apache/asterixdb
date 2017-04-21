@@ -21,8 +21,10 @@ package org.apache.asterix.messaging;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.asterix.common.messaging.api.IApplicationMessage;
+import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.messaging.api.ICCMessageBroker;
+import org.apache.asterix.common.messaging.api.ICcAddressedMessage;
+import org.apache.asterix.common.messaging.api.INcAddressedMessage;
 import org.apache.hyracks.api.messages.IMessage;
 import org.apache.hyracks.api.util.JavaSerializationUtils;
 import org.apache.hyracks.control.cc.ClusterControllerService;
@@ -40,15 +42,16 @@ public class CCMessageBroker implements ICCMessageBroker {
 
     @Override
     public void receivedMessage(IMessage message, String nodeId) throws Exception {
-        IApplicationMessage absMessage = (IApplicationMessage) message;
+        ICcAddressedMessage msg = (ICcAddressedMessage) message;
         if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("Received message: " + absMessage);
+            LOGGER.info("Received message: " + msg);
         }
-        absMessage.handle(ccs);
+        ICcApplicationContext appCtx = (ICcApplicationContext) ccs.getApplicationContext();
+        msg.handle(appCtx);
     }
 
     @Override
-    public void sendApplicationMessageToNC(IApplicationMessage msg, String nodeId) throws Exception {
+    public void sendApplicationMessageToNC(INcAddressedMessage msg, String nodeId) throws Exception {
         INodeManager nodeManager = ccs.getNodeManager();
         NodeControllerState state = nodeManager.getNodeControllerState(nodeId);
         state.getNodeController().sendApplicationMessageToNC(JavaSerializationUtils.serialize(msg), null, nodeId);

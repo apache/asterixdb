@@ -25,15 +25,15 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.active.ActiveEvent;
-import org.apache.asterix.active.ActiveJobNotificationHandler;
+import org.apache.asterix.active.ActiveLifecycleListener;
 import org.apache.asterix.active.ActivityState;
 import org.apache.asterix.active.EntityId;
 import org.apache.asterix.active.IActiveEventSubscriber;
 import org.apache.asterix.active.message.ActivePartitionMessage;
+import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.metadata.IDataset;
 import org.apache.asterix.external.feed.watch.FeedEventSubscriber;
 import org.apache.asterix.external.feed.watch.NoOpSubscriber;
-import org.apache.asterix.runtime.utils.AppContextInfo;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.JobStatus;
@@ -42,11 +42,14 @@ public class FeedEventsListener extends ActiveEntityEventsListener {
     // constants
     private static final Logger LOGGER = Logger.getLogger(FeedEventsListener.class.getName());
     // members
+    private final ICcApplicationContext appCtx;
     private final String[] sources;
     private final List<IActiveEventSubscriber> subscribers;
     private int numRegistered;
 
-    public FeedEventsListener(EntityId entityId, List<IDataset> datasets, String[] sources) {
+    public FeedEventsListener(ICcApplicationContext appCtx, EntityId entityId, List<IDataset> datasets,
+            String[] sources) {
+        this.appCtx = appCtx;
         this.entityId = entityId;
         this.datasets = datasets;
         this.sources = sources;
@@ -103,10 +106,11 @@ public class FeedEventsListener extends ActiveEntityEventsListener {
     }
 
     private void finish() throws Exception {
-        IHyracksClientConnection hcc = AppContextInfo.INSTANCE.getHcc();
+        IHyracksClientConnection hcc = appCtx.getHcc();
         JobStatus status = hcc.getJobStatus(jobId);
         state = status.equals(JobStatus.FAILURE) ? ActivityState.FAILED : ActivityState.STOPPED;
-        ActiveJobNotificationHandler.INSTANCE.removeListener(this);
+        ActiveLifecycleListener activeLcListener = (ActiveLifecycleListener) appCtx.getActiveLifecycleListener();
+        activeLcListener.getNotificationHandler().removeListener(this);
     }
 
     private void start(ActiveEvent event) {

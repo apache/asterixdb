@@ -39,6 +39,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.active.ActiveJobNotificationHandler;
+import org.apache.asterix.active.ActiveLifecycleListener;
 import org.apache.asterix.active.ActivityState;
 import org.apache.asterix.active.EntityId;
 import org.apache.asterix.active.IActiveEntityEventsListener;
@@ -58,6 +59,7 @@ import org.apache.asterix.common.config.DatasetConfig.TransactionState;
 import org.apache.asterix.common.config.ExternalProperties;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.context.IStorageComponentProvider;
+import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
@@ -149,7 +151,6 @@ import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.TypeSignature;
-import org.apache.asterix.runtime.utils.AppContextInfo;
 import org.apache.asterix.transaction.management.service.transaction.DatasetIdFactory;
 import org.apache.asterix.translator.AbstractLangTranslator;
 import org.apache.asterix.translator.CompiledStatements.CompiledDeleteStatement;
@@ -201,6 +202,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
 
     public static final boolean IS_DEBUG_MODE = false;// true
     protected final List<Statement> statements;
+    protected final ICcApplicationContext appCtx;
     protected final SessionConfig sessionConfig;
     protected Dataverse activeDataverse;
     protected final List<FunctionDecl> declaredFunctions;
@@ -209,8 +211,10 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     protected final IStorageComponentProvider componentProvider;
     protected final ExecutorService executorService;
 
-    public QueryTranslator(List<Statement> statements, SessionConfig conf, ILangCompilationProvider compliationProvider,
-            IStorageComponentProvider componentProvider, ExecutorService executorService) {
+    public QueryTranslator(ICcApplicationContext appCtx, List<Statement> statements, SessionConfig conf,
+            ILangCompilationProvider compliationProvider, IStorageComponentProvider componentProvider,
+            ExecutorService executorService) {
+        this.appCtx = appCtx;
         this.statements = statements;
         this.sessionConfig = conf;
         this.componentProvider = componentProvider;
@@ -260,9 +264,9 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 if (sessionConfig.is(SessionConfig.FORMAT_HTML)) {
                     sessionConfig.out().println(ApiServlet.HTML_STATEMENT_SEPARATOR);
                 }
-                validateOperation(activeDataverse, stmt);
+                validateOperation(appCtx, activeDataverse, stmt);
                 rewriteStatement(stmt); // Rewrite the statement's AST.
-                MetadataProvider metadataProvider = new MetadataProvider(activeDataverse, componentProvider);
+                MetadataProvider metadataProvider = new MetadataProvider(appCtx, activeDataverse, componentProvider);
                 metadataProvider.setWriterFactory(writerFactory);
                 metadataProvider.setResultSerializerFactoryProvider(resultSerializerFactoryProvider);
                 metadataProvider.setOutputFile(outputFile);
@@ -533,7 +537,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 throw new AlgebricksException(": type " + itemTypeName + " could not be found.");
             }
             String ngName = ngNameId != null ? ngNameId.getValue()
-                    : configureNodegroupForDataset(dataverseName, datasetName, dd.getHints(), mdTxnCtx);
+                    : configureNodegroupForDataset(appCtx, dd.getHints(), dataverseName, datasetName, mdTxnCtx);
 
             if (compactionPolicy == null) {
                 compactionPolicy = GlobalConfig.DEFAULT_COMPACTION_POLICY_NAME;
@@ -677,7 +681,9 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
 
     protected void validateIfResourceIsActiveInFeed(Dataset dataset) throws CompilationException {
         StringBuilder builder = null;
-        IActiveEntityEventsListener[] listeners = ActiveJobNotificationHandler.INSTANCE.getEventListeners();
+        ActiveLifecycleListener activeListener = (ActiveLifecycleListener) appCtx.getActiveLifecycleListener();
+        ActiveJobNotificationHandler activeEventHandler = activeListener.getNotificationHandler();
+        IActiveEntityEventsListener[] listeners = activeEventHandler.getEventListeners();
         for (IActiveEntityEventsListener listener : listeners) {
             if (listener.isEntityUsingDataset(dataset)) {
                 if (builder == null) {
@@ -704,8 +710,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
     }
 
-    protected static String configureNodegroupForDataset(String dataverseName, String datasetName,
-            Map<String, String> hints, MetadataTransactionContext mdTxnCtx) throws CompilationException {
+    protected static String configureNodegroupForDataset(ICcApplicationContext appCtx, Map<String, String> hints,
+            String dataverseName, String datasetName, MetadataTransactionContext mdTxnCtx) throws CompilationException {
         int nodegroupCardinality;
         String nodegroupName;
         String hintValue = hints.get(DatasetNodegroupCardinalityHint.NAME);
@@ -714,16 +720,16 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             return nodegroupName;
         } else {
             int numChosen = 0;
-            boolean valid = DatasetHints.validate(DatasetNodegroupCardinalityHint.NAME,
+            boolean valid = DatasetHints.validate(appCtx, DatasetNodegroupCardinalityHint.NAME,
                     hints.get(DatasetNodegroupCardinalityHint.NAME)).first;
             if (!valid) {
                 throw new CompilationException("Incorrect use of hint:" + DatasetNodegroupCardinalityHint.NAME);
             } else {
                 nodegroupCardinality = Integer.parseInt(hints.get(DatasetNodegroupCardinalityHint.NAME));
             }
-            List<String> nodeNames = AppContextInfo.INSTANCE.getMetadataProperties().getNodeNames();
+            List<String> nodeNames = appCtx.getMetadataProperties().getNodeNames();
             List<String> nodeNamesClone = new ArrayList<>(nodeNames);
-            String metadataNodeName = AppContextInfo.INSTANCE.getMetadataProperties().getMetadataNodeName();
+            String metadataNodeName = appCtx.getMetadataProperties().getMetadataNodeName();
             List<String> selectedNodes = new ArrayList<>();
             selectedNodes.add(metadataNodeName);
             numChosen++;
@@ -1168,9 +1174,11 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 }
             }
             // # disconnect all feeds from any datasets in the dataverse.
-            IActiveEntityEventsListener[] activeListeners = ActiveJobNotificationHandler.INSTANCE.getEventListeners();
+            ActiveLifecycleListener activeListener = (ActiveLifecycleListener) appCtx.getActiveLifecycleListener();
+            ActiveJobNotificationHandler activeEventHandler = activeListener.getNotificationHandler();
+            IActiveEntityEventsListener[] activeListeners = activeEventHandler.getEventListeners();
             Identifier dvId = new Identifier(dataverseName);
-            MetadataProvider tempMdProvider = new MetadataProvider(metadataProvider.getDefaultDataverse(),
+            MetadataProvider tempMdProvider = new MetadataProvider(appCtx, metadataProvider.getDefaultDataverse(),
                     metadataProvider.getStorageComponentProvider());
             tempMdProvider.setConfig(metadataProvider.getConfig());
             for (IActiveEntityEventsListener listener : activeListeners) {
@@ -1181,7 +1189,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     stopFeedBeforeDelete(new Pair<>(dvId, new Identifier(activeEntityId.getEntityName())),
                             tempMdProvider);
                     // prepare job to remove feed log storage
-                    jobsToExecute.add(FeedOperations.buildRemoveFeedStorageJob(
+                    jobsToExecute.add(FeedOperations.buildRemoveFeedStorageJob(metadataProvider,
                             MetadataManager.INSTANCE.getFeed(mdTxnCtx, dataverseName, activeEntityId.getEntityName())));
                 }
             }
@@ -1395,7 +1403,9 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 throw new AlgebricksException(
                         "There is no dataset with this name " + datasetName + " in dataverse " + dataverseName);
             }
-            IActiveEntityEventsListener[] listeners = ActiveJobNotificationHandler.INSTANCE.getEventListeners();
+            ActiveLifecycleListener activeListener = (ActiveLifecycleListener) appCtx.getActiveLifecycleListener();
+            ActiveJobNotificationHandler activeEventHandler = activeListener.getNotificationHandler();
+            IActiveEntityEventsListener[] listeners = activeEventHandler.getEventListeners();
             StringBuilder builder = null;
             for (IActiveEntityEventsListener listener : listeners) {
                 if (listener.isEntityUsingDataset(ds)) {
@@ -1860,7 +1870,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             }
             String adaptorName = cfs.getAdaptorName();
             feed = new Feed(dataverseName, feedName, adaptorName, cfs.getAdaptorConfiguration());
-            FeedMetadataUtil.validateFeed(feed, mdTxnCtx, metadataProvider.getLibraryManager());
+            FeedMetadataUtil.validateFeed(feed, mdTxnCtx, appCtx);
             MetadataManager.INSTANCE.addFeed(metadataProvider.getMetadataTxnContext(), feed);
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
         } catch (Exception e) {
@@ -1954,13 +1964,14 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             }
 
             EntityId feedId = new EntityId(Feed.EXTENSION_NAME, dataverseName, feedName);
-            FeedEventsListener listener =
-                    (FeedEventsListener) ActiveJobNotificationHandler.INSTANCE.getActiveEntityListener(feedId);
+            ActiveLifecycleListener activeListener = (ActiveLifecycleListener) appCtx.getActiveLifecycleListener();
+            ActiveJobNotificationHandler activeEventHandler = activeListener.getNotificationHandler();
+            FeedEventsListener listener = (FeedEventsListener) activeEventHandler.getActiveEntityListener(feedId);
             if (listener != null) {
                 throw new AlgebricksException("Feed " + feedId
                         + " is currently active and connected to the following dataset(s) \n" + listener.toString());
             } else {
-                JobSpecification spec = FeedOperations.buildRemoveFeedStorageJob(
+                JobSpecification spec = FeedOperations.buildRemoveFeedStorageJob(metadataProvider,
                         MetadataManager.INSTANCE.getFeed(mdTxnCtx, feedId.getDataverse(), feedId.getEntityName()));
                 JobUtils.runJob(hcc, spec, true);
                 MetadataManager.INSTANCE.dropFeed(mdTxnCtx, dataverseName, feedName);
@@ -2024,8 +2035,9 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         ILangCompilationProvider compilationProvider = new AqlCompilationProvider();
         IStorageComponentProvider storageComponentProvider = new StorageComponentProvider();
         DefaultStatementExecutorFactory qtFactory = new DefaultStatementExecutorFactory();
-        FeedEventsListener listener =
-                (FeedEventsListener) ActiveJobNotificationHandler.INSTANCE.getActiveEntityListener(entityId);
+        ActiveLifecycleListener activeListener = (ActiveLifecycleListener) appCtx.getActiveLifecycleListener();
+        ActiveJobNotificationHandler activeEventHandler = activeListener.getNotificationHandler();
+        FeedEventsListener listener = (FeedEventsListener) activeEventHandler.getActiveEntityListener(entityId);
         if (listener != null) {
             throw new AlgebricksException("Feed " + feedName + " is started already.");
         }
@@ -2044,8 +2056,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                             compilationProvider, storageComponentProvider, qtFactory, hcc);
 
             JobSpecification feedJob = jobInfo.getLeft();
-            listener = new FeedEventsListener(entityId, datasets, jobInfo.getRight().getLocations());
-            ActiveJobNotificationHandler.INSTANCE.registerListener(listener);
+            listener = new FeedEventsListener(appCtx, entityId, datasets, jobInfo.getRight().getLocations());
+            activeEventHandler.registerListener(listener);
             IActiveEventSubscriber eventSubscriber = listener.subscribe(ActivityState.STARTED);
             feedJob.setProperty(ActiveJobNotificationHandler.ACTIVE_ENTITY_PROPERTY_NAME, entityId);
             JobUtils.runJob(hcc, feedJob,
@@ -2055,7 +2067,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         } catch (Exception e) {
             abort(e, e, mdTxnCtx);
             if (listener != null) {
-                ActiveJobNotificationHandler.INSTANCE.unregisterListener(listener);
+                activeEventHandler.unregisterListener(listener);
             }
             throw e;
         } finally {
@@ -2068,9 +2080,10 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         String dataverseName = getActiveDataverse(sfst.getDataverseName());
         String feedName = sfst.getFeedName().getValue();
         EntityId feedId = new EntityId(Feed.EXTENSION_NAME, dataverseName, feedName);
+        ActiveLifecycleListener activeListener = (ActiveLifecycleListener) appCtx.getActiveLifecycleListener();
+        ActiveJobNotificationHandler activeEventHandler = activeListener.getNotificationHandler();
         // Obtain runtime info from ActiveListener
-        FeedEventsListener listener =
-                (FeedEventsListener) ActiveJobNotificationHandler.INSTANCE.getActiveEntityListener(feedId);
+        FeedEventsListener listener = (FeedEventsListener) activeEventHandler.getActiveEntityListener(feedId);
         if (listener == null) {
             throw new AlgebricksException("Feed " + feedName + " is not started.");
         }
@@ -2085,7 +2098,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             // Construct ActiveMessage
             for (int i = 0; i < listener.getSources().length; i++) {
                 String intakeLocation = listener.getSources()[i];
-                FeedOperations.SendStopMessageToNode(feedId, intakeLocation, i);
+                FeedOperations.SendStopMessageToNode(appCtx, feedId, intakeLocation, i);
             }
             eventSubscriber.sync();
         } catch (Exception e) {
@@ -2106,7 +2119,9 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
         // Check whether feed is alive
-        if (ActiveJobNotificationHandler.INSTANCE
+        ActiveLifecycleListener activeListener = (ActiveLifecycleListener) appCtx.getActiveLifecycleListener();
+        ActiveJobNotificationHandler activeEventHandler = activeListener.getNotificationHandler();
+        if (activeEventHandler
                 .getActiveEntityListener(new EntityId(Feed.EXTENSION_NAME, dataverseName, feedName)) != null) {
             throw new CompilationException(ErrorCode.FEED_CHANGE_FEED_CONNECTIVITY_ON_ALIVE_FEED, feedName);
         }
@@ -2145,8 +2160,10 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         String feedName = cfs.getFeedName().getValue();
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
+        ActiveLifecycleListener activeListener = (ActiveLifecycleListener) appCtx.getActiveLifecycleListener();
+        ActiveJobNotificationHandler activeEventHandler = activeListener.getNotificationHandler();
         // Check whether feed is alive
-        if (ActiveJobNotificationHandler.INSTANCE
+        if (activeEventHandler
                 .getActiveEntityListener(new EntityId(Feed.EXTENSION_NAME, dataverseName, feedName)) != null) {
             throw new CompilationException(ErrorCode.FEED_CHANGE_FEED_CONNECTIVITY_ON_ALIVE_FEED, feedName);
         }
@@ -2322,7 +2339,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             case IMMEDIATE:
                 createAndRunJob(hcc, null, compiler, locker, resultDelivery, id -> {
                     final ResultReader resultReader = new ResultReader(hdc, id, resultSetId);
-                    ResultUtil.printResults(resultReader, sessionConfig, stats,
+                    ResultUtil.printResults(appCtx, resultReader, sessionConfig, stats,
                             metadataProvider.findOutputRecordType());
                 }, clientContextId, ctx);
                 break;
@@ -2698,7 +2715,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             if (pregelixHome == null) {
                 // Since there is a default value for PREGELIX_HOME in CompilerProperties,
                 // pregelixHome can never be null.
-                pregelixHome = AppContextInfo.INSTANCE.getCompilerProperties().getPregelixHome();
+                pregelixHome = appCtx.getCompilerProperties().getPregelixHome();
             }
 
             // Constructs the pregelix command line.
@@ -2819,7 +2836,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     protected List<String> constructPregelixCommand(RunStatement pregelixStmt, String fromDataverseName,
             String fromDatasetName, String toDataverseName, String toDatasetName) {
         // Constructs AsterixDB parameters, e.g., URL, source dataset and sink dataset.
-        ExternalProperties externalProperties = AppContextInfo.INSTANCE.getExternalProperties();
+        ExternalProperties externalProperties = appCtx.getExternalProperties();
         String clientIP = ClusterProperties.INSTANCE.getCluster().getMasterNode().getClientIp();
         StringBuilder asterixdbParameterBuilder = new StringBuilder();
         asterixdbParameterBuilder.append(

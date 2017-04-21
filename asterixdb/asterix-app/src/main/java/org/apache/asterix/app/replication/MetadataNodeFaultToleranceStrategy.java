@@ -46,6 +46,7 @@ import org.apache.asterix.app.replication.message.StartupTaskResponseMessage;
 import org.apache.asterix.common.api.INCLifecycleTask;
 import org.apache.asterix.common.cluster.ClusterPartition;
 import org.apache.asterix.common.cluster.IClusterStateManager;
+import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.common.messaging.api.ICCMessageBroker;
@@ -54,8 +55,8 @@ import org.apache.asterix.common.replication.INCLifecycleMessage;
 import org.apache.asterix.common.replication.IReplicationStrategy;
 import org.apache.asterix.common.replication.Replica;
 import org.apache.asterix.common.transactions.IRecoveryManager.SystemState;
-import org.apache.asterix.runtime.utils.AppContextInfo;
 import org.apache.asterix.util.FaultToleranceUtil;
+import org.apache.hyracks.api.application.ICCServiceContext;
 import org.apache.hyracks.api.application.IClusterLifecycleListener.ClusterEventType;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
@@ -66,6 +67,7 @@ public class MetadataNodeFaultToleranceStrategy implements IFaultToleranceStrate
     private String metadataNodeId;
     private IReplicationStrategy replicationStrategy;
     private ICCMessageBroker messageBroker;
+    private ICCServiceContext serviceCtx;
     private final Set<String> hotStandbyMetadataReplica = new HashSet<>();
     private final Set<String> failedNodes = new HashSet<>();
     private Set<String> pendingStartupCompletionNodes = new HashSet<>();
@@ -91,8 +93,8 @@ public class MetadataNodeFaultToleranceStrategy implements IFaultToleranceStrate
         }
         // If the failed node is the metadata node, ask its replicas to replay any committed jobs
         if (nodeId.equals(metadataNodeId)) {
-            int metadataPartitionId = AppContextInfo.INSTANCE.getMetadataProperties().getMetadataPartition()
-                    .getPartitionId();
+            ICcApplicationContext appCtx = (ICcApplicationContext) serviceCtx.getApplicationContext();
+            int metadataPartitionId = appCtx.getMetadataProperties().getMetadataPartition().getPartitionId();
             Set<Integer> metadataPartition = new HashSet<>(Arrays.asList(metadataPartitionId));
             Set<Replica> activeRemoteReplicas = replicationStrategy.getRemoteReplicas(metadataNodeId).stream()
                     .filter(replica -> !failedNodes.contains(replica.getId())).collect(Collectors.toSet());
@@ -110,10 +112,11 @@ public class MetadataNodeFaultToleranceStrategy implements IFaultToleranceStrate
     }
 
     @Override
-    public IFaultToleranceStrategy from(IReplicationStrategy replicationStrategy, ICCMessageBroker messageBroker) {
+    public IFaultToleranceStrategy from(ICCServiceContext serviceCtx, IReplicationStrategy replicationStrategy) {
         MetadataNodeFaultToleranceStrategy ft = new MetadataNodeFaultToleranceStrategy();
         ft.replicationStrategy = replicationStrategy;
-        ft.messageBroker = messageBroker;
+        ft.messageBroker = (ICCMessageBroker) serviceCtx.getMessageBroker();
+        ft.serviceCtx = serviceCtx;
         return ft;
     }
 
@@ -247,8 +250,8 @@ public class MetadataNodeFaultToleranceStrategy implements IFaultToleranceStrate
         // Construct recovery plan: Node => Set of partitions to recover from it
         Map<String, Set<Integer>> recoveryPlan = new HashMap<>();
         // Recover metadata partition from any metadata hot standby replica
-        int metadataPartitionId = AppContextInfo.INSTANCE.getMetadataProperties().getMetadataPartition()
-                .getPartitionId();
+        ICcApplicationContext appCtx = (ICcApplicationContext) serviceCtx.getApplicationContext();
+        int metadataPartitionId = appCtx.getMetadataProperties().getMetadataPartition().getPartitionId();
         Set<Integer> metadataPartition = new HashSet<>(Arrays.asList(metadataPartitionId));
         recoveryPlan.put(hotStandbyMetadataReplica.iterator().next(), metadataPartition);
         return new RemoteRecoveryTask(recoveryPlan);

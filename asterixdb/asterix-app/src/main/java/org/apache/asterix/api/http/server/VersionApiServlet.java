@@ -27,14 +27,16 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import io.netty.handler.codec.http.HttpResponseStatus;
-import org.apache.asterix.common.config.IPropertiesProvider;
+import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
 import org.apache.hyracks.http.server.AbstractServlet;
 import org.apache.hyracks.http.server.utils.HttpUtil;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
+import io.netty.handler.codec.http.HttpResponseStatus;
 
 public class VersionApiServlet extends AbstractServlet {
     private static final Logger LOGGER = Logger.getLogger(VersionApiServlet.class.getName());
@@ -46,7 +48,7 @@ public class VersionApiServlet extends AbstractServlet {
     @Override
     protected void get(IServletRequest request, IServletResponse response) {
         response.setStatus(HttpResponseStatus.OK);
-        IPropertiesProvider props = (IPropertiesProvider) ctx.get(ASTERIX_APP_CONTEXT_INFO_ATTR);
+        ICcApplicationContext props = (ICcApplicationContext) ctx.get(ASTERIX_APP_CONTEXT_INFO_ATTR);
         Map<String, String> buildProperties = props.getBuildProperties().getAllProps();
         ObjectMapper om = new ObjectMapper();
         ObjectNode responseObject = om.createObjectNode();

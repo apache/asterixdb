@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.asterix.common.config.CompilerProperties;
+import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.control.cc.ClusterControllerService;
@@ -37,13 +38,14 @@ public class RuntimeUtils {
     private RuntimeUtils() {
     }
 
-    public static Set<String> getNodeControllersOnIP(InetAddress ipAddress) throws HyracksDataException {
-        Map<InetAddress, Set<String>> nodeControllerInfo = getNodeControllerMap();
+    public static Set<String> getNodeControllersOnIP(ICcApplicationContext appCtx, InetAddress ipAddress)
+            throws HyracksDataException {
+        Map<InetAddress, Set<String>> nodeControllerInfo = getNodeControllerMap(appCtx);
         return nodeControllerInfo.get(ipAddress);
     }
 
-    public static List<String> getAllNodeControllers() throws HyracksDataException {
-        Collection<Set<String>> nodeControllersCollection = getNodeControllerMap().values();
+    public static List<String> getAllNodeControllers(ICcApplicationContext appCtx) throws HyracksDataException {
+        Collection<Set<String>> nodeControllersCollection = getNodeControllerMap(appCtx).values();
         List<String> nodeControllers = new ArrayList<>();
         for (Set<String> ncCollection : nodeControllersCollection) {
             nodeControllers.addAll(ncCollection);
@@ -51,21 +53,21 @@ public class RuntimeUtils {
         return nodeControllers;
     }
 
-    public static Map<InetAddress, Set<String>> getNodeControllerMap() throws HyracksDataException {
+    public static Map<InetAddress, Set<String>> getNodeControllerMap(ICcApplicationContext appCtx)
+            throws HyracksDataException {
         Map<InetAddress, Set<String>> map = new HashMap<>();
-        AppContextInfo.INSTANCE.getCCServiceContext().getCCContext().getIPAddressNodeMap(map);
+        appCtx.getServiceContext().getCCContext().getIPAddressNodeMap(map);
         return map;
     }
 
-    public static void getNodeControllerMap(Map<InetAddress, Set<String>> map) {
-        ClusterControllerService ccs =
-                (ClusterControllerService) AppContextInfo.INSTANCE.getCCServiceContext().getControllerService();
+    public static void getNodeControllerMap(ICcApplicationContext appCtx, Map<InetAddress, Set<String>> map) {
+        ClusterControllerService ccs = (ClusterControllerService) appCtx.getServiceContext().getControllerService();
         INodeManager nodeManager = ccs.getNodeManager();
         map.putAll(nodeManager.getIpAddressNodeNameMap());
     }
 
-    public static JobSpecification createJobSpecification() {
-        CompilerProperties compilerProperties = AppContextInfo.INSTANCE.getCompilerProperties();
+    public static JobSpecification createJobSpecification(ICcApplicationContext appCtx) {
+        CompilerProperties compilerProperties = appCtx.getCompilerProperties();
         int frameSize = compilerProperties.getFrameSize();
         return new JobSpecification(frameSize);
     }

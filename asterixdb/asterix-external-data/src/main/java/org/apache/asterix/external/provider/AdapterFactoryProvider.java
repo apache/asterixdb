@@ -21,7 +21,6 @@ package org.apache.asterix.external.provider;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.external.adapter.factory.GenericAdapterFactory;
 import org.apache.asterix.external.adapter.factory.LookupAdapterFactory;
 import org.apache.asterix.external.api.IAdapterFactory;
@@ -30,6 +29,7 @@ import org.apache.asterix.external.indexing.ExternalFile;
 import org.apache.asterix.external.util.ExternalDataCompatibilityUtils;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
@@ -39,19 +39,19 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 public class AdapterFactoryProvider {
 
     // Adapters
-    public static IAdapterFactory getAdapterFactory(ILibraryManager libraryManager, String adapterName,
+    public static IAdapterFactory getAdapterFactory(IServiceContext serviceCtx, String adapterName,
             Map<String, String> configuration, ARecordType itemType, ARecordType metaType)
             throws HyracksDataException, AlgebricksException {
         ExternalDataCompatibilityUtils.prepare(adapterName, configuration);
         GenericAdapterFactory adapterFactory = new GenericAdapterFactory();
         adapterFactory.setOutputType(itemType);
         adapterFactory.setMetaType(metaType);
-        adapterFactory.configure(libraryManager, configuration);
+        adapterFactory.configure(serviceCtx, configuration);
         return adapterFactory;
     }
 
     // Indexing Adapters
-    public static IIndexingAdapterFactory getIndexingAdapterFactory(ILibraryManager libraryManager, String adapterName,
+    public static IIndexingAdapterFactory getIndexingAdapterFactory(IServiceContext serviceCtx, String adapterName,
             Map<String, String> configuration, ARecordType itemType, List<ExternalFile> snapshot, boolean indexingOp,
             ARecordType metaType) throws HyracksDataException, AlgebricksException {
         ExternalDataCompatibilityUtils.prepare(adapterName, configuration);
@@ -59,18 +59,18 @@ public class AdapterFactoryProvider {
         adapterFactory.setOutputType(itemType);
         adapterFactory.setMetaType(metaType);
         adapterFactory.setSnapshot(snapshot, indexingOp);
-        adapterFactory.configure(libraryManager, configuration);
+        adapterFactory.configure(serviceCtx, configuration);
         return adapterFactory;
     }
 
     // Lookup Adapters
-    public static LookupAdapterFactory<?> getLookupAdapterFactory(ILibraryManager libraryManager,
+    public static LookupAdapterFactory<?> getLookupAdapterFactory(IServiceContext serviceCtx,
             Map<String, String> configuration, ARecordType recordType, int[] ridFields, boolean retainInput,
             boolean retainMissing, IMissingWriterFactory missingWriterFactory)
             throws HyracksDataException, AlgebricksException {
         LookupAdapterFactory<?> adapterFactory = new LookupAdapterFactory<>(recordType, ridFields, retainInput,
                 retainMissing, missingWriterFactory);
-        adapterFactory.configure(libraryManager, configuration);
+        adapterFactory.configure(serviceCtx, configuration);
         return adapterFactory;
     }
 }

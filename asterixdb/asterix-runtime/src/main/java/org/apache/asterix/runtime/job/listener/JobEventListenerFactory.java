@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.runtime.job.listener;
 
-import org.apache.asterix.common.api.IAppRuntimeContext;
+import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.transactions.DatasetId;
 import org.apache.asterix.common.transactions.ITransactionContext;
@@ -51,7 +51,7 @@ public class JobEventListenerFactory implements IJobletEventListenerFactory {
             @Override
             public void jobletFinish(JobStatus jobStatus) {
                 try {
-                    ITransactionManager txnManager = ((IAppRuntimeContext) jobletContext.getServiceContext()
+                    ITransactionManager txnManager = ((INcApplicationContext) jobletContext.getServiceContext()
                             .getApplicationContext()).getTransactionSubsystem().getTransactionManager();
                     ITransactionContext txnContext = txnManager.getTransactionContext(jobId, false);
                     txnContext.setWriteTxn(transactionalWrite);
@@ -65,7 +65,7 @@ public class JobEventListenerFactory implements IJobletEventListenerFactory {
             @Override
             public void jobletStart() {
                 try {
-                    ((IAppRuntimeContext) jobletContext.getServiceContext().getApplicationContext())
+                    ((INcApplicationContext) jobletContext.getServiceContext().getApplicationContext())
                             .getTransactionSubsystem().getTransactionManager().getTransactionContext(jobId, true);
                 } catch (ACIDException e) {
                     throw new Error(e);

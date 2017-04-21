@@ -18,12 +18,13 @@
  */
 package org.apache.asterix.app.replication.message;
 
+import org.apache.asterix.common.dataflow.ICcApplicationContext;
+import org.apache.asterix.common.messaging.api.ICcAddressedMessage;
 import org.apache.asterix.common.replication.INCLifecycleMessage;
-import org.apache.asterix.runtime.utils.AppContextInfo;
+import org.apache.asterix.runtime.utils.CcApplicationContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.service.IControllerService;
 
-public class TakeoverPartitionsResponseMessage implements INCLifecycleMessage {
+public class TakeoverPartitionsResponseMessage implements INCLifecycleMessage, ICcAddressedMessage {
 
     private static final long serialVersionUID = 1L;
     private final Integer[] partitions;
@@ -49,8 +50,8 @@ public class TakeoverPartitionsResponseMessage implements INCLifecycleMessage {
     }
 
     @Override
-    public void handle(IControllerService cs) throws HyracksDataException, InterruptedException {
-        AppContextInfo.INSTANCE.getFaultToleranceStrategy().process(this);
+    public void handle(ICcApplicationContext appCtx) throws HyracksDataException, InterruptedException {
+        ((CcApplicationContext) appCtx).getFaultToleranceStrategy().process(this);
     }
 
     @Override

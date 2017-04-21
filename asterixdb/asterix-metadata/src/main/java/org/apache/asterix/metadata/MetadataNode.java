@@ -28,11 +28,10 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.asterix.common.api.IAppRuntimeContext;
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
+import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
-import org.apache.asterix.common.config.IPropertiesProvider;
 import org.apache.asterix.common.dataflow.LSMIndexUtil;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.functions.FunctionSignature;
@@ -141,13 +140,12 @@ public class MetadataNode implements IMetadataNode {
         super();
     }
 
-    public void initialize(IAppRuntimeContext runtimeContext, MetadataTupleTranslatorProvider tupleTranslatorProvider,
-            List<IMetadataExtension> metadataExtensions) {
+    public void initialize(INcApplicationContext runtimeContext,
+            MetadataTupleTranslatorProvider tupleTranslatorProvider, List<IMetadataExtension> metadataExtensions) {
         this.tupleTranslatorProvider = tupleTranslatorProvider;
         this.transactionSubsystem = runtimeContext.getTransactionSubsystem();
         this.datasetLifecycleManager = runtimeContext.getDatasetLifecycleManager();
-        this.metadataStoragePartition =
-                ((IPropertiesProvider) runtimeContext).getMetadataProperties().getMetadataPartition().getPartitionId();
+        this.metadataStoragePartition = runtimeContext.getMetadataProperties().getMetadataPartition().getPartitionId();
         if (metadataExtensions != null) {
             extensionDatasets = new HashMap<>();
             for (IMetadataExtension metadataExtension : metadataExtensions) {

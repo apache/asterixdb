@@ -60,7 +60,6 @@ import org.apache.asterix.common.config.ExternalProperties;
 import org.apache.asterix.common.config.MetadataProperties;
 import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.library.ILibraryManager;
-import org.apache.asterix.common.messaging.api.ICCMessageBroker;
 import org.apache.asterix.common.replication.IFaultToleranceStrategy;
 import org.apache.asterix.common.replication.IReplicationStrategy;
 import org.apache.asterix.common.utils.Servlets;
@@ -72,7 +71,7 @@ import org.apache.asterix.metadata.api.IAsterixStateProxy;
 import org.apache.asterix.metadata.bootstrap.AsterixStateProxy;
 import org.apache.asterix.metadata.cluster.ClusterManagerProvider;
 import org.apache.asterix.runtime.job.resource.JobCapacityController;
-import org.apache.asterix.runtime.utils.AppContextInfo;
+import org.apache.asterix.runtime.utils.CcApplicationContext;
 import org.apache.asterix.runtime.utils.ClusterStateManager;
 import org.apache.asterix.translator.IStatementExecutorFactory;
 import org.apache.hyracks.api.application.ICCServiceContext;
@@ -96,8 +95,9 @@ public class CCApplication extends BaseCCApplication {
     protected ICCServiceContext ccServiceCtx;
     protected CCExtensionManager ccExtensionManager;
     protected IStorageComponentProvider componentProvider;
-    private IJobCapacityController jobCapacityController;
     protected WebManager webManager;
+    protected CcApplicationContext appCtx;
+    private IJobCapacityController jobCapacityController;
 
     @Override
     public void start(IServiceContext serviceCtx, String[] args) throws Exception {
@@ -105,8 +105,8 @@ public class CCApplication extends BaseCCApplication {
             throw new IllegalArgumentException("Unrecognized argument(s): " + Arrays.toString(args));
         }
         final ClusterControllerService controllerService = (ClusterControllerService) serviceCtx.getControllerService();
-        ICCMessageBroker messageBroker = new CCMessageBroker(controllerService);
         this.ccServiceCtx = (ICCServiceContext) serviceCtx;
+        ccServiceCtx.setMessageBroker(new CCMessageBroker(controllerService));
 
         configureLoggingLevel(ccServiceCtx.getAppConfig().getLoggingLevel(ExternalProperties.Option.LOG_LEVEL));
 
@@ -120,34 +120,33 @@ public class CCApplication extends BaseCCApplication {
         ResourceIdManager resourceIdManager = new ResourceIdManager();
         IReplicationStrategy repStrategy = ClusterProperties.INSTANCE.getReplicationStrategy();
         IFaultToleranceStrategy ftStrategy = FaultToleranceStrategyFactory
-                .create(ClusterProperties.INSTANCE.getCluster(), repStrategy, messageBroker);
+                .create(ClusterProperties.INSTANCE.getCluster(), repStrategy, ccServiceCtx);
         ExternalLibraryUtils.setUpExternaLibraries(libraryManager, false);
         componentProvider = new StorageComponentProvider();
         GlobalRecoveryManager.instantiate((HyracksConnection) getHcc(), componentProvider);
-        AppContextInfo.initialize(ccServiceCtx, getHcc(), libraryManager, resourceIdManager,
-                () -> MetadataManager.INSTANCE, GlobalRecoveryManager.instance(), ftStrategy);
+        appCtx = new CcApplicationContext(ccServiceCtx, getHcc(), libraryManager, resourceIdManager,
+                () -> MetadataManager.INSTANCE, GlobalRecoveryManager.instance(), ftStrategy,
+                new ActiveLifecycleListener());
+        ClusterStateManager.INSTANCE.setCcAppCtx(appCtx);
         ccExtensionManager = new CCExtensionManager(getExtensions());
-        AppContextInfo.INSTANCE.setExtensionManager(ccExtensionManager);
+        appCtx.setExtensionManager(ccExtensionManager);
         final CCConfig ccConfig = controllerService.getCCConfig();
         if (System.getProperty("java.rmi.server.hostname") == null) {
             System.setProperty("java.rmi.server.hostname", ccConfig.getClusterListenAddress());
         }
-        MetadataProperties metadataProperties = AppContextInfo.INSTANCE.getMetadataProperties();
+        MetadataProperties metadataProperties = appCtx.getMetadataProperties();
 
         setAsterixStateProxy(AsterixStateProxy.registerRemoteObject(metadataProperties.getMetadataCallbackPort()));
         ccServiceCtx.setDistributedState(proxy);
-
         MetadataManager.initialize(proxy, metadataProperties);
-
-        AppContextInfo.INSTANCE.getCCServiceContext().addJobLifecycleListener(ActiveLifecycleListener.INSTANCE);
+        ccServiceCtx.addJobLifecycleListener(appCtx.getActiveLifecycleListener());
 
         // create event loop groups
         webManager = new WebManager();
         configureServers();
         webManager.start();
         ClusterManagerProvider.getClusterManager().registerSubscriber(GlobalRecoveryManager.instance());
-        ccServiceCtx.addClusterLifecycleListener(ClusterLifecycleListener.INSTANCE);
-        ccServiceCtx.setMessageBroker(messageBroker);
+        ccServiceCtx.addClusterLifecycleListener(new ClusterLifecycleListener(appCtx));
 
         jobCapacityController = new JobCapacityController(controllerService.getResourceManager());
     }
@@ -160,18 +159,18 @@ public class CCApplication extends BaseCCApplication {
     }
 
     protected List<AsterixExtension> getExtensions() {
-        return AppContextInfo.INSTANCE.getExtensionProperties().getExtensions();
+        return appCtx.getExtensionProperties().getExtensions();
     }
 
     protected void configureServers() throws Exception {
-        webManager.add(setupWebServer(AppContextInfo.INSTANCE.getExternalProperties()));
-        webManager.add(setupJSONAPIServer(AppContextInfo.INSTANCE.getExternalProperties()));
-        webManager.add(setupQueryWebServer(AppContextInfo.INSTANCE.getExternalProperties()));
+        webManager.add(setupWebServer(appCtx.getExternalProperties()));
+        webManager.add(setupJSONAPIServer(appCtx.getExternalProperties()));
+        webManager.add(setupQueryWebServer(appCtx.getExternalProperties()));
     }
 
     @Override
     public void stop() throws Exception {
-        ActiveLifecycleListener.INSTANCE.stop();
+        ((ActiveLifecycleListener) appCtx.getActiveLifecycleListener()).stop();
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Stopping Asterix cluster controller");
         }
@@ -184,7 +183,7 @@ public class CCApplication extends BaseCCApplication {
                 externalProperties.getWebInterfacePort());
         IHyracksClientConnection hcc = getHcc();
         webServer.setAttribute(HYRACKS_CONNECTION_ATTR, hcc);
-        webServer.addServlet(new ApiServlet(webServer.ctx(), new String[] { "/*" },
+        webServer.addServlet(new ApiServlet(webServer.ctx(), new String[] { "/*" }, appCtx,
                 ccExtensionManager.getAqlCompilationProvider(), ccExtensionManager.getSqlppCompilationProvider(),
                 getStatementExecutorFactory(), componentProvider));
         return webServer;
@@ -195,7 +194,7 @@ public class CCApplication extends BaseCCApplication {
                 new HttpServer(webManager.getBosses(), webManager.getWorkers(), externalProperties.getAPIServerPort());
         IHyracksClientConnection hcc = getHcc();
         jsonAPIServer.setAttribute(HYRACKS_CONNECTION_ATTR, hcc);
-        jsonAPIServer.setAttribute(ASTERIX_APP_CONTEXT_INFO_ATTR, AppContextInfo.INSTANCE);
+        jsonAPIServer.setAttribute(ASTERIX_APP_CONTEXT_INFO_ATTR, appCtx);
         jsonAPIServer.setAttribute(ServletConstants.EXECUTOR_SERVICE_ATTR,
                 ccServiceCtx.getControllerService().getExecutor());
 
@@ -235,47 +234,47 @@ public class CCApplication extends BaseCCApplication {
                 externalProperties.getQueryWebInterfacePort());
         IHyracksClientConnection hcc = getHcc();
         queryWebServer.setAttribute(HYRACKS_CONNECTION_ATTR, hcc);
-        queryWebServer.addServlet(new QueryWebInterfaceServlet(queryWebServer.ctx(), new String[] { "/*" }));
+        queryWebServer.addServlet(new QueryWebInterfaceServlet(appCtx, queryWebServer.ctx(), new String[] { "/*" }));
         return queryWebServer;
     }
 
     protected IServlet createServlet(ConcurrentMap<String, Object> ctx, String key, String... paths) {
         switch (key) {
             case Servlets.AQL:
-                return new FullApiServlet(ctx, paths, ccExtensionManager.getAqlCompilationProvider(),
+                return new FullApiServlet(ctx, paths, appCtx, ccExtensionManager.getAqlCompilationProvider(),
                         getStatementExecutorFactory(), componentProvider);
             case Servlets.AQL_QUERY:
-                return new QueryApiServlet(ctx, paths, ccExtensionManager.getAqlCompilationProvider(),
+                return new QueryApiServlet(ctx, paths, appCtx, ccExtensionManager.getAqlCompilationProvider(),
                         getStatementExecutorFactory(), componentProvider);
             case Servlets.AQL_UPDATE:
-                return new UpdateApiServlet(ctx, paths, ccExtensionManager.getAqlCompilationProvider(),
+                return new UpdateApiServlet(ctx, paths, appCtx, ccExtensionManager.getAqlCompilationProvider(),
                         getStatementExecutorFactory(), componentProvider);
             case Servlets.AQL_DDL:
-                return new DdlApiServlet(ctx, paths, ccExtensionManager.getAqlCompilationProvider(),
+                return new DdlApiServlet(ctx, paths, appCtx, ccExtensionManager.getAqlCompilationProvider(),
                         getStatementExecutorFactory(), componentProvider);
             case Servlets.SQLPP:
-                return new FullApiServlet(ctx, paths, ccExtensionManager.getSqlppCompilationProvider(),
+                return new FullApiServlet(ctx, paths, appCtx, ccExtensionManager.getSqlppCompilationProvider(),
                         getStatementExecutorFactory(), componentProvider);
             case Servlets.SQLPP_QUERY:
-                return new QueryApiServlet(ctx, paths, ccExtensionManager.getSqlppCompilationProvider(),
+                return new QueryApiServlet(ctx, paths, appCtx, ccExtensionManager.getSqlppCompilationProvider(),
                         getStatementExecutorFactory(), componentProvider);
             case Servlets.SQLPP_UPDATE:
-                return new UpdateApiServlet(ctx, paths, ccExtensionManager.getSqlppCompilationProvider(),
+                return new UpdateApiServlet(ctx, paths, appCtx, ccExtensionManager.getSqlppCompilationProvider(),
                         getStatementExecutorFactory(), componentProvider);
             case Servlets.SQLPP_DDL:
-                return new DdlApiServlet(ctx, paths, ccExtensionManager.getSqlppCompilationProvider(),
+                return new DdlApiServlet(ctx, paths, appCtx, ccExtensionManager.getSqlppCompilationProvider(),
                         getStatementExecutorFactory(), componentProvider);
             case Servlets.RUNNING_REQUESTS:
                 return new QueryCancellationServlet(ctx, paths);
             case Servlets.QUERY_STATUS:
-                return new QueryStatusApiServlet(ctx, paths);
+                return new QueryStatusApiServlet(ctx, paths, appCtx);
             case Servlets.QUERY_RESULT:
-                return new QueryResultApiServlet(ctx, paths);
+                return new QueryResultApiServlet(ctx, paths, appCtx);
             case Servlets.QUERY_SERVICE:
-                return new QueryServiceServlet(ctx, paths, ccExtensionManager.getSqlppCompilationProvider(),
+                return new QueryServiceServlet(ctx, paths, appCtx, ccExtensionManager.getSqlppCompilationProvider(),
                         getStatementExecutorFactory(), componentProvider);
             case Servlets.CONNECTOR:
-                return new ConnectorApiServlet(ctx, paths);
+                return new ConnectorApiServlet(ctx, paths, appCtx);
             case Servlets.SHUTDOWN:
                 return new ShutdownApiServlet(ctx, paths);
             case Servlets.VERSION:
@@ -287,7 +286,7 @@ public class CCApplication extends BaseCCApplication {
             case Servlets.CLUSTER_STATE_CC_DETAIL:
                 return new ClusterControllerDetailsApiServlet(ctx, paths);
             case Servlets.DIAGNOSTICS:
-                return new DiagnosticsApiServlet(ctx, paths);
+                return new DiagnosticsApiServlet(ctx, paths, appCtx);
             default:
                 throw new IllegalStateException(String.valueOf(key));
         }
@@ -299,7 +298,7 @@ public class CCApplication extends BaseCCApplication {
 
     @Override
     public void startupCompleted() throws Exception {
-        ccServiceCtx.getControllerService().getExecutor().submit((Callable)() -> {
+        ccServiceCtx.getControllerService().getExecutor().submit((Callable) () -> {
             ClusterStateManager.INSTANCE.waitForState(ClusterState.ACTIVE);
             ClusterManagerProvider.getClusterManager().notifyStartupCompleted();
             return null;
@@ -322,8 +321,8 @@ public class CCApplication extends BaseCCApplication {
     }
 
     @Override
-    public AppContextInfo getApplicationContext() {
-        return AppContextInfo.INSTANCE;
+    public CcApplicationContext getApplicationContext() {
+        return appCtx;
     }
 
     protected IHyracksClientConnection getHcc() throws Exception {

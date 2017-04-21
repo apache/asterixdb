@@ -38,6 +38,7 @@ import javax.imageio.ImageIO;
 import org.apache.asterix.app.result.ResultReader;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.context.IStorageComponentProvider;
+import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.asterix.lang.aql.parser.TokenMgrError;
@@ -67,15 +68,17 @@ public class ApiServlet extends AbstractServlet {
     private static final Logger LOGGER = Logger.getLogger(ApiServlet.class.getName());
     public static final String HTML_STATEMENT_SEPARATOR = "<!-- BEGIN -->";
 
+    private final ICcApplicationContext appCtx;
     private final ILangCompilationProvider aqlCompilationProvider;
     private final ILangCompilationProvider sqlppCompilationProvider;
     private final IStatementExecutorFactory statementExectorFactory;
     private final IStorageComponentProvider componentProvider;
 
-    public ApiServlet(ConcurrentMap<String, Object> ctx, String[] paths,
+    public ApiServlet(ConcurrentMap<String, Object> ctx, String[] paths, ICcApplicationContext appCtx,
             ILangCompilationProvider aqlCompilationProvider, ILangCompilationProvider sqlppCompilationProvider,
             IStatementExecutorFactory statementExecutorFactory, IStorageComponentProvider componentProvider) {
         super(ctx, paths);
+        this.appCtx = appCtx;
         this.aqlCompilationProvider = aqlCompilationProvider;
         this.sqlppCompilationProvider = sqlppCompilationProvider;
         this.statementExectorFactory = statementExecutorFactory;
@@ -126,7 +129,8 @@ public class ApiServlet extends AbstractServlet {
                 synchronized (ctx) {
                     hds = (IHyracksDataset) ctx.get(HYRACKS_DATASET_ATTR);
                     if (hds == null) {
-                        hds = new HyracksDataset(hcc, ResultReader.FRAME_SIZE, ResultReader.NUM_READERS);
+                        hds = new HyracksDataset(hcc, appCtx.getCompilerProperties().getFrameSize(),
+                                ResultReader.NUM_READERS);
                         ctx.put(HYRACKS_DATASET_ATTR, hds);
                     }
                 }
@@ -140,7 +144,7 @@ public class ApiServlet extends AbstractServlet {
             sessionConfig.setOOBData(isSet(printExprParam), isSet(printRewrittenExprParam),
                     isSet(printLogicalPlanParam), isSet(printOptimizedLogicalPlanParam), isSet(printJob));
             MetadataManager.INSTANCE.init();
-            IStatementExecutor translator = statementExectorFactory.create(aqlStatements, sessionConfig,
+            IStatementExecutor translator = statementExectorFactory.create(appCtx, aqlStatements, sessionConfig,
                     compilationProvider, componentProvider);
             double duration;
             long startTime = System.currentTimeMillis();

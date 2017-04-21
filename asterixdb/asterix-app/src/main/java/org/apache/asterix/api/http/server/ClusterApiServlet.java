@@ -28,7 +28,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
-import org.apache.asterix.runtime.utils.AppContextInfo;
+import org.apache.asterix.runtime.utils.CcApplicationContext;
 import org.apache.asterix.runtime.utils.ClusterStateManager;
 import org.apache.hyracks.api.config.IOption;
 import org.apache.hyracks.api.config.Section;
@@ -99,8 +99,8 @@ public class ClusterApiServlet extends AbstractServlet {
 
     protected ObjectNode getClusterStateJSON(IServletRequest request, String pathToNode) {
         ObjectNode json = ClusterStateManager.INSTANCE.getClusterStateDescription();
-        AppContextInfo appConfig = (AppContextInfo) ctx.get(ASTERIX_APP_CONTEXT_INFO_ATTR);
-        json.putPOJO("config", ConfigUtils.getSectionOptionsForJSON(appConfig.getCCServiceContext().getAppConfig(),
+        CcApplicationContext appConfig = (CcApplicationContext) ctx.get(ASTERIX_APP_CONTEXT_INFO_ATTR);
+        json.putPOJO("config", ConfigUtils.getSectionOptionsForJSON(appConfig.getServiceContext().getAppConfig(),
                 Section.COMMON, getConfigSelector()));
 
         ArrayNode ncs = (ArrayNode) json.get("ncs");

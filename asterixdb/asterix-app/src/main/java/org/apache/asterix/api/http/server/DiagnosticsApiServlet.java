@@ -35,7 +35,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.api.http.servlet.ServletConstants;
-import org.apache.asterix.runtime.utils.AppContextInfo;
+import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
@@ -49,9 +49,11 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 
 public class DiagnosticsApiServlet extends NodeControllerDetailsApiServlet {
     private static final Logger LOGGER = Logger.getLogger(DiagnosticsApiServlet.class.getName());
+    private final ICcApplicationContext appCtx;
 
-    public DiagnosticsApiServlet(ConcurrentMap<String, Object> ctx, String... paths) {
+    public DiagnosticsApiServlet(ConcurrentMap<String, Object> ctx, String[] paths, ICcApplicationContext appCtx) {
         super(ctx, paths);
+        this.appCtx = appCtx;
     }
 
     @Override
@@ -93,10 +95,9 @@ public class DiagnosticsApiServlet extends NodeControllerDetailsApiServlet {
                 executor.submit(() -> fixupKeys((ObjectNode) om.readTree(hcc.getNodeDetailsJSON(null, true, false)))));
 
         Map<String, Map<String, Future<ObjectNode>>> ncDataMap = new HashMap<>();
-        for (String nc : AppContextInfo.INSTANCE.getMetadataProperties().getNodeNames()) {
+        for (String nc : appCtx.getMetadataProperties().getNodeNames()) {
             Map<String, Future<ObjectNode>> ncData = new HashMap<>();
-            ncData.put("threaddump",
-                    executor.submit(() -> fixupKeys((ObjectNode) om.readTree(hcc.getThreadDump(nc)))));
+            ncData.put("threaddump", executor.submit(() -> fixupKeys((ObjectNode) om.readTree(hcc.getThreadDump(nc)))));
             ncData.put("config", executor
                     .submit(() -> fixupKeys((ObjectNode) om.readTree(hcc.getNodeDetailsJSON(nc, false, true)))));
             ncData.put("stats", executor.submit(() -> fixupKeys(processNodeStats(hcc, nc))));

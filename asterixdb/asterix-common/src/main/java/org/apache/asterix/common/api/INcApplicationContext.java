@@ -22,16 +22,15 @@ import java.io.IOException;
 import java.rmi.RemoteException;
 import java.util.concurrent.Executor;
 
-import org.apache.asterix.common.config.IPropertiesProvider;
 import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.common.replication.IRemoteRecoveryManager;
 import org.apache.asterix.common.replication.IReplicaResourcesManager;
 import org.apache.asterix.common.replication.IReplicationChannel;
 import org.apache.asterix.common.replication.IReplicationManager;
 import org.apache.asterix.common.transactions.ITransactionSubsystem;
+import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
@@ -42,7 +41,7 @@ import org.apache.hyracks.storage.common.file.IFileMapProvider;
 import org.apache.hyracks.storage.common.file.ILocalResourceRepository;
 import org.apache.hyracks.storage.common.file.IResourceIdFactory;
 
-public interface IAppRuntimeContext extends IPropertiesProvider {
+public interface INcApplicationContext extends IApplicationContext {
 
     IIOManager getIOManager();
 
@@ -88,8 +87,6 @@ public interface IAppRuntimeContext extends IPropertiesProvider {
 
     IReplicationChannel getReplicationChannel();
 
-    ILibraryManager getLibraryManager();
-
     /**
      * Exports the metadata node to the metadata RMI port.
      *
@@ -116,4 +113,7 @@ public interface IAppRuntimeContext extends IPropertiesProvider {
      * @return instance of {@link org.apache.asterix.common.context.IStorageComponentProvider}
      */
     IStorageComponentProvider getStorageComponentProvider();
+
+    @Override
+    INCServiceContext getServiceContext();
 }

@@ -19,7 +19,7 @@
 package org.apache.asterix.common.transactions;
 
 import org.apache.asterix.common.api.ThreadExecutor;
-import org.apache.asterix.common.api.IAppRuntimeContext;
+import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
@@ -50,5 +50,5 @@ public interface IAppRuntimeContextProvider {
 
     public IIOManager getIOManager();
 
-    public IAppRuntimeContext getAppContext();
+    public INcApplicationContext getAppContext();
 }

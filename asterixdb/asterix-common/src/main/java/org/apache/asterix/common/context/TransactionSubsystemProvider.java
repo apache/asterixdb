@@ -19,7 +19,7 @@
 
 package org.apache.asterix.common.context;
 
-import org.apache.asterix.common.api.IAppRuntimeContext;
+import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.transactions.ITransactionSubsystem;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 
@@ -37,8 +37,8 @@ public class TransactionSubsystemProvider implements ITransactionSubsystemProvid
 
     @Override
     public ITransactionSubsystem getTransactionSubsystem(IHyracksTaskContext ctx) {
-        IAppRuntimeContext appCtx =
-                (IAppRuntimeContext) ctx.getJobletContext().getServiceContext().getApplicationContext();
+        INcApplicationContext appCtx =
+                (INcApplicationContext) ctx.getJobletContext().getServiceContext().getApplicationContext();
         return appCtx.getTransactionSubsystem();
     }
 }

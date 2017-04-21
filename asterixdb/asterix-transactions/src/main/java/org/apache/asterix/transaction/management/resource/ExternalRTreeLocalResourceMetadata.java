@@ -20,7 +20,7 @@ package org.apache.asterix.transaction.management.resource;
 
 import java.util.Map;
 
-import org.apache.asterix.common.api.IAppRuntimeContext;
+import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ILinearizeComparatorFactory;
@@ -60,7 +60,7 @@ public class ExternalRTreeLocalResourceMetadata extends LSMRTreeLocalResourceMet
     @Override
     public ILSMIndex createIndexInstance(INCServiceContext serviceCtx, LocalResource resource)
             throws HyracksDataException {
-        IAppRuntimeContext appCtx = (IAppRuntimeContext) serviceCtx.getApplicationContext();
+        INcApplicationContext appCtx = (INcApplicationContext) serviceCtx.getApplicationContext();
         IIOManager ioManager = appCtx.getIOManager();
         FileReference file = ioManager.resolve(resource.getPath());
         return LSMRTreeUtils.createExternalRTree(ioManager, file, appCtx.getBufferCache(), appCtx.getFileMapManager(),

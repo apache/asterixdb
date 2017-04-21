@@ -41,6 +41,7 @@ import org.apache.asterix.metadata.cluster.AddNodeWorkResponse;
 import org.apache.asterix.metadata.cluster.ClusterManagerProvider;
 import org.apache.asterix.metadata.cluster.RemoveNodeWork;
 import org.apache.asterix.metadata.cluster.RemoveNodeWorkResponse;
+import org.apache.asterix.runtime.utils.CcApplicationContext;
 import org.apache.asterix.runtime.utils.ClusterStateManager;
 import org.apache.hyracks.api.application.IClusterLifecycleListener;
 import org.apache.hyracks.api.config.IOption;
@@ -49,16 +50,14 @@ import org.apache.hyracks.api.exceptions.HyracksException;
 public class ClusterLifecycleListener implements IClusterLifecycleListener {
 
     private static final Logger LOGGER = Logger.getLogger(ClusterLifecycleListener.class.getName());
+    private final CcApplicationContext appCtx;
+    private final LinkedBlockingQueue<Set<IClusterManagementWork>> workRequestQueue = new LinkedBlockingQueue<>();
+    private final ClusterWorkExecutor eventHandler;
+    private final List<IClusterManagementWorkResponse> pendingWorkResponses = new ArrayList<>();
 
-    private static final LinkedBlockingQueue<Set<IClusterManagementWork>> workRequestQueue = new LinkedBlockingQueue<Set<IClusterManagementWork>>();
-
-    private static ClusterWorkExecutor eventHandler = new ClusterWorkExecutor(workRequestQueue);
-
-    private static List<IClusterManagementWorkResponse> pendingWorkResponses = new ArrayList<IClusterManagementWorkResponse>();
-
-    public static ClusterLifecycleListener INSTANCE = new ClusterLifecycleListener();
-
-    private ClusterLifecycleListener() {
+    public ClusterLifecycleListener(CcApplicationContext appCtx) {
+        this.appCtx = appCtx;
+        eventHandler = new ClusterWorkExecutor(appCtx, workRequestQueue);
         Thread t = new Thread(eventHandler);
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Starting cluster event handler");
@@ -78,12 +77,12 @@ public class ClusterLifecycleListener implements IClusterLifecycleListener {
             MetadataManager.INSTANCE.rebindMetadataNode();
         }
 
-        Set<String> nodeAddition = new HashSet<String>();
+        Set<String> nodeAddition = new HashSet<>();
         nodeAddition.add(nodeId);
         updateProgress(ClusterEventType.NODE_JOIN, nodeAddition);
         Set<IClusterEventsSubscriber> subscribers =
                 ClusterManagerProvider.getClusterManager().getRegisteredClusterEventSubscribers();
-        Set<IClusterManagementWork> work = new HashSet<IClusterManagementWork>();
+        Set<IClusterManagementWork> work = new HashSet<>();
         for (IClusterEventsSubscriber sub : subscribers) {
             Set<IClusterManagementWork> workRequest = sub.notifyNodeJoin(nodeId);
             work.addAll(workRequest);
@@ -110,7 +109,7 @@ public class ClusterLifecycleListener implements IClusterLifecycleListener {
         updateProgress(ClusterEventType.NODE_FAILURE, deadNodeIds);
         Set<IClusterEventsSubscriber> subscribers =
                 ClusterManagerProvider.getClusterManager().getRegisteredClusterEventSubscribers();
-        Set<IClusterManagementWork> work = new HashSet<IClusterManagementWork>();
+        Set<IClusterManagementWork> work = new HashSet<>();
         for (IClusterEventsSubscriber sub : subscribers) {
             Set<IClusterManagementWork> workRequest = sub.notifyNodeFailure(deadNodeIds);
             work.addAll(workRequest);
@@ -121,7 +120,7 @@ public class ClusterLifecycleListener implements IClusterLifecycleListener {
     }
 
     private void updateProgress(ClusterEventType eventType, Collection<String> nodeIds) {
-        List<IClusterManagementWorkResponse> completedResponses = new ArrayList<IClusterManagementWorkResponse>();
+        List<IClusterManagementWorkResponse> completedResponses = new ArrayList<>();
         boolean isComplete = false;
         for (IClusterManagementWorkResponse resp : pendingWorkResponses) {
             switch (eventType) {
@@ -149,9 +148,9 @@ public class ClusterLifecycleListener implements IClusterLifecycleListener {
 
     private void executeWorkSet(Set<IClusterManagementWork> workSet) {
         int nodesToAdd = 0;
-        Set<String> nodesToRemove = new HashSet<String>();
-        Set<AddNodeWork> nodeAdditionRequests = new HashSet<AddNodeWork>();
-        Set<IClusterManagementWork> nodeRemovalRequests = new HashSet<IClusterManagementWork>();
+        Set<String> nodesToRemove = new HashSet<>();
+        Set<AddNodeWork> nodeAdditionRequests = new HashSet<>();
+        Set<IClusterManagementWork> nodeRemovalRequests = new HashSet<>();
         for (IClusterManagementWork w : workSet) {
             switch (w.getClusterManagementWorkType()) {
                 case ADD_NODE:
@@ -163,20 +162,20 @@ public class ClusterLifecycleListener implements IClusterLifecycleListener {
                 case REMOVE_NODE:
                     nodesToRemove.addAll(((RemoveNodeWork) w).getNodesToBeRemoved());
                     nodeRemovalRequests.add(w);
-                    RemoveNodeWorkResponse response = new RemoveNodeWorkResponse((RemoveNodeWork) w,
-                            Status.IN_PROGRESS);
+                    RemoveNodeWorkResponse response =
+                            new RemoveNodeWorkResponse((RemoveNodeWork) w, Status.IN_PROGRESS);
                     pendingWorkResponses.add(response);
                     break;
             }
         }
 
-        List<String> addedNodes = new ArrayList<String>();
+        List<String> addedNodes = new ArrayList<>();
         String asterixInstanceName = ClusterProperties.INSTANCE.getCluster().getInstanceName();
         for (int i = 0; i < nodesToAdd; i++) {
             Node node = ClusterStateManager.INSTANCE.getAvailableSubstitutionNode();
             if (node != null) {
                 try {
-                    ClusterManagerProvider.getClusterManager().addNode(node);
+                    ClusterManagerProvider.getClusterManager().addNode(appCtx, node);
                     addedNodes.add(asterixInstanceName + "_" + node.getId());
                     if (LOGGER.isLoggable(Level.INFO)) {
                         LOGGER.info("Added NC at:" + node.getId());
@@ -197,7 +196,7 @@ public class ClusterLifecycleListener implements IClusterLifecycleListener {
 
         for (AddNodeWork w : nodeAdditionRequests) {
             int n = w.getNumberOfNodesRequested();
-            List<String> nodesToBeAddedForWork = new ArrayList<String>();
+            List<String> nodesToBeAddedForWork = new ArrayList<>();
             for (int i = 0; i < n && i < addedNodes.size(); i++) {
                 nodesToBeAddedForWork.add(addedNodes.get(i));
             }

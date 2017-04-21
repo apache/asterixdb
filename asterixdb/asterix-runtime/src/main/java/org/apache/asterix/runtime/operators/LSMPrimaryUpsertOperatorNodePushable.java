@@ -22,7 +22,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-import org.apache.asterix.common.api.IAppRuntimeContext;
+import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.dataflow.LSMIndexUtil;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.AsterixException;
@@ -157,8 +157,8 @@ public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDe
 
             cursor = indexAccessor.createSearchCursor(false);
             frameTuple = new FrameTupleReference();
-            IAppRuntimeContext appCtx =
-                    (IAppRuntimeContext) ctx.getJobletContext().getServiceContext().getApplicationContext();
+            INcApplicationContext appCtx =
+                    (INcApplicationContext) ctx.getJobletContext().getServiceContext().getApplicationContext();
             LSMIndexUtil.checkAndSetFirstLSN((AbstractLSMIndex) index,
                     appCtx.getTransactionSubsystem().getLogManager());
             frameOpCallback =

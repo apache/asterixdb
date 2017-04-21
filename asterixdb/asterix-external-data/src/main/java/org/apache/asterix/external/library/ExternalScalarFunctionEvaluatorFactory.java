@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.external.library;
 
+import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.om.functions.IExternalFunctionInfo;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
@@ -30,16 +31,21 @@ public class ExternalScalarFunctionEvaluatorFactory implements IScalarEvaluatorF
     private static final long serialVersionUID = 1L;
     private final IExternalFunctionInfo finfo;
     private final IScalarEvaluatorFactory[] args;
+    private final transient IApplicationContext appCtx;
 
-    public ExternalScalarFunctionEvaluatorFactory(IExternalFunctionInfo finfo, IScalarEvaluatorFactory[] args)
-            throws AlgebricksException {
+    public ExternalScalarFunctionEvaluatorFactory(IExternalFunctionInfo finfo, IScalarEvaluatorFactory[] args,
+            IApplicationContext appCtx) throws AlgebricksException {
         this.finfo = finfo;
         this.args = args;
+        this.appCtx = appCtx;
     }
 
     @Override
     public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
-        return (ExternalScalarFunction) ExternalFunctionProvider.getExternalFunctionEvaluator(finfo, args, ctx);
+        return (ExternalScalarFunction) ExternalFunctionProvider.getExternalFunctionEvaluator(finfo, args, ctx,
+                appCtx == null
+                        ? (IApplicationContext) ctx.getJobletContext().getServiceContext().getApplicationContext()
+                        : appCtx);
     }
 
 }

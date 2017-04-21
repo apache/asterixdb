@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.external.library;
 
+import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.external.api.IExternalFunction;
@@ -35,14 +36,14 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public class ExternalFunctionProvider {
 
     public static IExternalFunction getExternalFunctionEvaluator(IExternalFunctionInfo finfo,
-            IScalarEvaluatorFactory args[], IHyracksTaskContext context) throws HyracksDataException {
+            IScalarEvaluatorFactory args[], IHyracksTaskContext context, IApplicationContext appCtx)
+            throws HyracksDataException {
         switch (finfo.getKind()) {
             case SCALAR:
-                return new ExternalScalarFunction(finfo, args, context);
+                return new ExternalScalarFunction(finfo, args, context, appCtx);
             case AGGREGATE:
             case UNNEST:
-                throw new RuntimeDataException(ErrorCode.LIBRARY_EXTERNAL_FUNCTION_UNSUPPORTED_KIND,
-                        finfo.getKind());
+                throw new RuntimeDataException(ErrorCode.LIBRARY_EXTERNAL_FUNCTION_UNSUPPORTED_KIND, finfo.getKind());
             default:
                 throw new RuntimeDataException(ErrorCode.LIBRARY_EXTERNAL_FUNCTION_UNKNOWN_KIND, finfo.getKind());
         }
@@ -52,8 +53,8 @@ public class ExternalFunctionProvider {
 class ExternalScalarFunction extends ExternalFunction implements IExternalScalarFunction, IScalarEvaluator {
 
     public ExternalScalarFunction(IExternalFunctionInfo finfo, IScalarEvaluatorFactory args[],
-            IHyracksTaskContext context) throws HyracksDataException {
-        super(finfo, args, context);
+            IHyracksTaskContext context, IApplicationContext appCtx) throws HyracksDataException {
+        super(finfo, args, context, appCtx);
         try {
             initialize(functionHelper);
         } catch (Exception e) {
@@ -78,11 +79,11 @@ class ExternalScalarFunction extends ExternalFunction implements IExternalScalar
         try {
             resultBuffer.reset();
             ((IExternalScalarFunction) externalFunction).evaluate(argumentProvider);
-        /*
-         * Make sure that if "setResult" is not called,
-         * or the result object is missing we let Hyracks storage manager know
-         * we want to discard a missing object
-         */
+            /*
+             * Make sure that if "setResult" is not called,
+             * or the result object is missing we let Hyracks storage manager know
+             * we want to discard a missing object
+             */
             byte byteOutput = resultBuffer.getByteArray()[0];
             if (!argumentProvider.isValidResult() || byteOutput == ATypeTag.SERIALIZED_MISSING_TYPE_TAG) {
                 resultBuffer.getDataOutput().writeByte(ATypeTag.SERIALIZED_MISSING_TYPE_TAG);

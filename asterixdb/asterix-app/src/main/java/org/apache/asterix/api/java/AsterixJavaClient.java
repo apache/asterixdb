@@ -25,6 +25,7 @@ import java.util.List;
 import org.apache.asterix.api.common.APIFramework;
 import org.apache.asterix.app.translator.QueryTranslator;
 import org.apache.asterix.common.context.IStorageComponentProvider;
+import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.utils.Job;
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.asterix.lang.common.base.IParser;
@@ -51,10 +52,12 @@ public class AsterixJavaClient {
     private final APIFramework apiFramework;
     private final IStatementExecutorFactory statementExecutorFactory;
     private final IStorageComponentProvider storageComponentProvider;
+    private ICcApplicationContext appCtx;
 
-    public AsterixJavaClient(IHyracksClientConnection hcc, Reader queryText, PrintWriter writer,
-            ILangCompilationProvider compilationProvider, IStatementExecutorFactory statementExecutorFactory,
-            IStorageComponentProvider storageComponentProvider) {
+    public AsterixJavaClient(ICcApplicationContext appCtx, IHyracksClientConnection hcc, Reader queryText,
+            PrintWriter writer, ILangCompilationProvider compilationProvider,
+            IStatementExecutorFactory statementExecutorFactory, IStorageComponentProvider storageComponentProvider) {
+        this.appCtx = appCtx;
         this.hcc = hcc;
         this.queryText = queryText;
         this.writer = writer;
@@ -65,10 +68,10 @@ public class AsterixJavaClient {
         parserFactory = compilationProvider.getParserFactory();
     }
 
-    public AsterixJavaClient(IHyracksClientConnection hcc, Reader queryText,
+    public AsterixJavaClient(ICcApplicationContext appCtx, IHyracksClientConnection hcc, Reader queryText,
             ILangCompilationProvider compilationProvider, IStatementExecutorFactory statementExecutorFactory,
             IStorageComponentProvider storageComponentProvider) {
-        this(hcc, queryText,
+        this(appCtx, hcc, queryText,
                 // This is a commandline client and so System.out is appropriate
                 new PrintWriter(System.out, true), // NOSONAR
                 compilationProvider, statementExecutorFactory, storageComponentProvider);
@@ -102,8 +105,8 @@ public class AsterixJavaClient {
             conf.set(SessionConfig.FORMAT_ONLY_PHYSICAL_OPS, true);
         }
 
-        IStatementExecutor translator =
-                statementExecutorFactory.create(statements, conf, compilationProvider, storageComponentProvider);
+        IStatementExecutor translator = statementExecutorFactory.create(appCtx, statements, conf, compilationProvider,
+                storageComponentProvider);
         translator.compileAndExecute(hcc, null, QueryTranslator.ResultDelivery.IMMEDIATE,
                 new IStatementExecutor.Stats());
         writer.flush();

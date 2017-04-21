@@ -22,7 +22,7 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import org.apache.asterix.active.EntityId;
-import org.apache.asterix.common.api.IAppRuntimeContext;
+import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.common.library.ILibraryManager;
@@ -102,22 +102,22 @@ public class FeedIntakeOperatorDescriptor extends AbstractSingleActivityOperator
 
     private IAdapterFactory createExternalAdapterFactory(IHyracksTaskContext ctx) throws HyracksDataException {
         IAdapterFactory adapterFactory;
-        IAppRuntimeContext runtimeCtx = (IAppRuntimeContext) ctx.getJobletContext()
-                .getServiceContext().getApplicationContext();
+        INcApplicationContext runtimeCtx =
+                (INcApplicationContext) ctx.getJobletContext().getServiceContext().getApplicationContext();
         ILibraryManager libraryManager = runtimeCtx.getLibraryManager();
         ClassLoader classLoader = libraryManager.getLibraryClassLoader(feedId.getDataverse(), adaptorLibraryName);
         if (classLoader != null) {
             try {
                 adapterFactory = (IAdapterFactory) (classLoader.loadClass(adaptorFactoryClassName).newInstance());
                 adapterFactory.setOutputType(adapterOutputType);
-                adapterFactory.configure(libraryManager, adaptorConfiguration);
+                adapterFactory.configure(ctx.getJobletContext().getServiceContext(), adaptorConfiguration);
             } catch (Exception e) {
                 throw new HyracksDataException(e);
             }
         } else {
             RuntimeDataException err = new RuntimeDataException(
-                    ErrorCode.OPERATORS_FEED_INTAKE_OPERATOR_DESCRIPTOR_CLASSLOADER_NOT_CONFIGURED,
-                    adaptorLibraryName, feedId.getDataverse());
+                    ErrorCode.OPERATORS_FEED_INTAKE_OPERATOR_DESCRIPTOR_CLASSLOADER_NOT_CONFIGURED, adaptorLibraryName,
+                    feedId.getDataverse());
             LOGGER.severe(err.getMessage());
             throw err;
         }

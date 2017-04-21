@@ -20,7 +20,7 @@ package org.apache.asterix.common.dataflow;
 
 import java.nio.ByteBuffer;
 
-import org.apache.asterix.common.api.IAppRuntimeContext;
+import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.transactions.ILogMarkerCallback;
 import org.apache.asterix.common.transactions.PrimaryIndexLogMarkerCallback;
 import org.apache.hyracks.api.comm.VSizeFrame;
@@ -93,8 +93,8 @@ public class LSMInsertDeleteOperatorNodePushable extends LSMIndexInsertUpdateDel
                 tupleFilter = tupleFilterFactory.createTupleFilter(ctx);
                 frameTuple = new FrameTupleReference();
             }
-            IAppRuntimeContext runtimeCtx =
-                    (IAppRuntimeContext) ctx.getJobletContext().getServiceContext().getApplicationContext();
+            INcApplicationContext runtimeCtx =
+                    (INcApplicationContext) ctx.getJobletContext().getServiceContext().getApplicationContext();
             LSMIndexUtil.checkAndSetFirstLSN(lsmIndex, runtimeCtx.getTransactionSubsystem().getLogManager());
         } catch (Throwable th) {
             throw new HyracksDataException(th);

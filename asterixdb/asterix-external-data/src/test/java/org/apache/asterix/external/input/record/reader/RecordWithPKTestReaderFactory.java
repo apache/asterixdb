@@ -20,27 +20,32 @@ package org.apache.asterix.external.input.record.reader;
 
 import java.util.Map;
 
+import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.external.api.IExternalDataSourceFactory;
 import org.apache.asterix.external.api.IRecordReader;
 import org.apache.asterix.external.api.IRecordReaderFactory;
 import org.apache.asterix.external.input.record.RecordWithPK;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 
 public class RecordWithPKTestReaderFactory implements IRecordReaderFactory<RecordWithPK<char[]>> {
 
     private static final long serialVersionUID = 1L;
     private transient AlgebricksAbsolutePartitionConstraint clusterLocations;
+    private transient IServiceContext serviceCtx;
 
     @Override
     public AlgebricksAbsolutePartitionConstraint getPartitionConstraint() throws AlgebricksException {
-        clusterLocations = IExternalDataSourceFactory.getPartitionConstraints(clusterLocations, 1);
+        clusterLocations = IExternalDataSourceFactory
+                .getPartitionConstraints((IApplicationContext) serviceCtx.getApplicationContext(), clusterLocations, 1);
         return clusterLocations;
     }
 
     @Override
-    public void configure(final Map<String, String> configuration) {
+    public void configure(IServiceContext serviceCtx, final Map<String, String> configuration) {
+        this.serviceCtx = serviceCtx;
     }
 
     @Override

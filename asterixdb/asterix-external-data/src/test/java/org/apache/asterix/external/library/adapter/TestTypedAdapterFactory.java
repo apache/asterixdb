@@ -22,9 +22,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
 
+import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.cluster.ClusterPartition;
-import org.apache.asterix.common.config.IPropertiesProvider;
-import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.external.api.IAdapterFactory;
 import org.apache.asterix.external.api.IDataSourceAdapter;
 import org.apache.asterix.external.api.IExternalDataSourceFactory;
@@ -36,6 +35,7 @@ import org.apache.asterix.external.util.FeedUtils;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -55,6 +55,8 @@ public class TestTypedAdapterFactory implements IAdapterFactory {
 
     private transient AlgebricksAbsolutePartitionConstraint clusterLocations;
 
+    private transient IServiceContext serviceContext;
+
     @Override
     public String getAlias() {
         return "test_typed";
@@ -62,7 +64,8 @@ public class TestTypedAdapterFactory implements IAdapterFactory {
 
     @Override
     public AlgebricksAbsolutePartitionConstraint getPartitionConstraint() throws AlgebricksException {
-        clusterLocations = IExternalDataSourceFactory.getPartitionConstraints(clusterLocations, 1);
+        clusterLocations = IExternalDataSourceFactory.getPartitionConstraints(
+                (IApplicationContext) serviceContext.getApplicationContext(), clusterLocations, 1);
         return clusterLocations;
     }
 
@@ -77,10 +80,9 @@ public class TestTypedAdapterFactory implements IAdapterFactory {
                 ADMDataParser parser;
                 ITupleForwarder forwarder;
                 ArrayTupleBuilder tb;
-                IPropertiesProvider propertiesProvider =
-                        (IPropertiesProvider) ctx.getJobletContext().getServiceContext().getApplicationContext();
-                ClusterPartition nodePartition =
-                        propertiesProvider.getMetadataProperties().getNodePartitions().get(nodeId)[0];
+                IApplicationContext appCtx =
+                        (IApplicationContext) ctx.getJobletContext().getServiceContext().getApplicationContext();
+                ClusterPartition nodePartition = appCtx.getMetadataProperties().getNodePartitions().get(nodeId)[0];
                 parser = new ADMDataParser(outputType, true);
                 forwarder = DataflowUtils.getTupleForwarder(configuration,
                         FeedUtils.getFeedLogManager(ctx,
@@ -118,7 +120,8 @@ public class TestTypedAdapterFactory implements IAdapterFactory {
     }
 
     @Override
-    public void configure(ILibraryManager context, Map<String, String> configuration) {
+    public void configure(IServiceContext serviceContext, Map<String, String> configuration) {
+        this.serviceContext = serviceContext;
         this.configuration = configuration;
     }
 

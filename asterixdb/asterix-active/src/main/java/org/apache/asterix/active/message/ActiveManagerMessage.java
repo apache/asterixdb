@@ -21,12 +21,11 @@ package org.apache.asterix.active.message;
 import java.io.Serializable;
 
 import org.apache.asterix.active.ActiveManager;
-import org.apache.asterix.common.api.IAppRuntimeContext;
-import org.apache.asterix.common.messaging.api.IApplicationMessage;
+import org.apache.asterix.common.api.INcApplicationContext;
+import org.apache.asterix.common.messaging.api.INcAddressedMessage;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.service.IControllerService;
 
-public class ActiveManagerMessage implements IApplicationMessage {
+public class ActiveManagerMessage implements INcAddressedMessage {
     public static final byte STOP_ACTIVITY = 0x00;
 
     private static final long serialVersionUID = 1L;
@@ -53,9 +52,8 @@ public class ActiveManagerMessage implements IApplicationMessage {
     }
 
     @Override
-    public void handle(IControllerService cs) throws HyracksDataException, InterruptedException {
-        IAppRuntimeContext appContext = (IAppRuntimeContext) cs.getApplicationContext();
-        ((ActiveManager) appContext.getActiveManager()).submit(this);
+    public void handle(INcApplicationContext appCtx) throws HyracksDataException, InterruptedException {
+        ((ActiveManager) appCtx.getActiveManager()).submit(this);
     }
 
     @Override

@@ -22,14 +22,14 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.asterix.common.api.IAppRuntimeContext;
+import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.messaging.api.INCMessageBroker;
+import org.apache.asterix.common.messaging.api.INcAddressedMessage;
 import org.apache.asterix.common.replication.INCLifecycleMessage;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.service.IControllerService;
 import org.apache.hyracks.control.nc.NodeControllerService;
 
-public class ReplayPartitionLogsRequestMessage implements INCLifecycleMessage {
+public class ReplayPartitionLogsRequestMessage implements INCLifecycleMessage, INcAddressedMessage {
 
     private static final Logger LOGGER = Logger.getLogger(ReplayPartitionLogsRequestMessage.class.getName());
     private static final long serialVersionUID = 1L;
@@ -40,9 +40,8 @@ public class ReplayPartitionLogsRequestMessage implements INCLifecycleMessage {
     }
 
     @Override
-    public void handle(IControllerService cs) throws HyracksDataException, InterruptedException {
-        NodeControllerService ncs = (NodeControllerService) cs;
-        IAppRuntimeContext appContext = (IAppRuntimeContext) ncs.getApplicationContext();
+    public void handle(INcApplicationContext appContext) throws HyracksDataException, InterruptedException {
+        NodeControllerService ncs = (NodeControllerService) appContext.getServiceContext().getControllerService();
         // Replay the logs for these partitions and flush any impacted dataset
         appContext.getRemoteRecoveryManager().replayReplicaPartitionLogs(partitions, true);
 

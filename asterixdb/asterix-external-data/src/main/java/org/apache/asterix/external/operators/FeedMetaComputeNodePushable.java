@@ -25,7 +25,7 @@ import java.util.logging.Logger;
 
 import org.apache.asterix.active.ActiveManager;
 import org.apache.asterix.active.ActiveRuntimeId;
-import org.apache.asterix.common.api.IAppRuntimeContext;
+import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.external.feed.dataflow.FeedRuntimeInputHandler;
 import org.apache.asterix.external.feed.dataflow.SyncFeedRuntimeInputHandler;
 import org.apache.asterix.external.feed.management.FeedConnectionId;
@@ -103,7 +103,7 @@ public class FeedMetaComputeNodePushable extends AbstractUnaryInputUnaryOutputOp
         this.policyAccessor = new FeedPolicyAccessor(feedPolicyProperties);
         this.partition = partition;
         this.connectionId = feedConnectionId;
-        this.feedManager = (ActiveManager) ((IAppRuntimeContext) ctx.getJobletContext().getServiceContext()
+        this.feedManager = (ActiveManager) ((INcApplicationContext) ctx.getJobletContext().getServiceContext()
                 .getApplicationContext()).getActiveManager();
         this.message = new VSizeFrame(ctx);
         TaskUtil.putInSharedMap(HyracksConstants.KEY_MESSAGE, message, ctx);

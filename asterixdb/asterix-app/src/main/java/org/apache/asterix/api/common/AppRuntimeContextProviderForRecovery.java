@@ -20,7 +20,7 @@ package org.apache.asterix.api.common;
 
 import org.apache.asterix.app.nc.NCAppRuntimeContext;
 import org.apache.asterix.common.api.ThreadExecutor;
-import org.apache.asterix.common.api.IAppRuntimeContext;
+import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.transactions.IAppRuntimeContextProvider;
 import org.apache.asterix.common.transactions.ITransactionSubsystem;
@@ -85,7 +85,7 @@ public class AppRuntimeContextProviderForRecovery implements IAppRuntimeContextP
     }
 
     @Override
-    public IAppRuntimeContext getAppContext() {
+    public INcApplicationContext getAppContext() {
         return asterixAppRuntimeContext;
     }
 

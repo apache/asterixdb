@@ -26,6 +26,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentMap;
 
 import org.apache.asterix.app.result.ResultReader;
+import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
@@ -34,6 +35,7 @@ import org.apache.hyracks.client.dataset.HyracksDataset;
 import org.apache.hyracks.http.server.AbstractServlet;
 
 public class AbstractQueryApiServlet extends AbstractServlet {
+    protected final ICcApplicationContext appCtx;
 
     public enum ResultFields {
         REQUEST_ID("requestID"),
@@ -91,8 +93,9 @@ public class AbstractQueryApiServlet extends AbstractServlet {
         }
     }
 
-    AbstractQueryApiServlet(ConcurrentMap<String, Object> ctx, String[] paths) {
+    AbstractQueryApiServlet(ICcApplicationContext appCtx, ConcurrentMap<String, Object> ctx, String[] paths) {
         super(ctx, paths);
+        this.appCtx = appCtx;
     }
 
     protected IHyracksDataset getHyracksDataset() throws Exception { // NOSONAR
@@ -101,8 +104,8 @@ public class AbstractQueryApiServlet extends AbstractServlet {
             if (hds == null) {
                 hds = (IHyracksDataset) ctx.get(HYRACKS_DATASET_ATTR);
                 if (hds == null) {
-                    hds = new HyracksDataset(getHyracksClientConnection(), ResultReader.FRAME_SIZE,
-                            ResultReader.NUM_READERS);
+                    hds = new HyracksDataset(getHyracksClientConnection(),
+                            appCtx.getCompilerProperties().getFrameSize(), ResultReader.NUM_READERS);
                     ctx.put(HYRACKS_DATASET_ATTR, hds);
                 }
             }

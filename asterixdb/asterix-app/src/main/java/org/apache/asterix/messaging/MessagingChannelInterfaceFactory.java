@@ -26,7 +26,7 @@ import java.util.logging.Logger;
 import org.apache.asterix.common.config.MessagingProperties;
 import org.apache.asterix.common.memory.ConcurrentFramePool;
 import org.apache.asterix.common.memory.FrameAction;
-import org.apache.asterix.common.messaging.api.IApplicationMessage;
+import org.apache.asterix.common.messaging.api.INcAddressedMessage;
 import org.apache.hyracks.api.comm.IBufferAcceptor;
 import org.apache.hyracks.api.comm.IBufferFactory;
 import org.apache.hyracks.api.comm.IChannelControlBlock;
@@ -108,8 +108,8 @@ public class MessagingChannelInterfaceFactory implements IChannelInterfaceFactor
         @Override
         public void accept(ByteBuffer buffer) {
             try {
-                IApplicationMessage receivedMsg = (IApplicationMessage) JavaSerializationUtils
-                        .deserialize(buffer.array());
+                INcAddressedMessage receivedMsg =
+                        (INcAddressedMessage) JavaSerializationUtils.deserialize(buffer.array());
                 // Queue the received message and free the network IO thread
                 messageBroker.queueReceivedMessage(receivedMsg);
             } catch (ClassNotFoundException | IOException e) {

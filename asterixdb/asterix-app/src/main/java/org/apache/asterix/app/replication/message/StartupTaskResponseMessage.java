@@ -23,12 +23,14 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.common.api.INCLifecycleTask;
+import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.messaging.api.INCMessageBroker;
+import org.apache.asterix.common.messaging.api.INcAddressedMessage;
 import org.apache.asterix.common.replication.INCLifecycleMessage;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.service.IControllerService;
 
-public class StartupTaskResponseMessage implements INCLifecycleMessage {
+public class StartupTaskResponseMessage implements INCLifecycleMessage, INcAddressedMessage {
 
     private static final Logger LOGGER = Logger.getLogger(StartupTaskResponseMessage.class.getName());
     private static final long serialVersionUID = 1L;
@@ -41,8 +43,9 @@ public class StartupTaskResponseMessage implements INCLifecycleMessage {
     }
 
     @Override
-    public void handle(IControllerService cs) throws HyracksDataException, InterruptedException {
-        INCMessageBroker broker = (INCMessageBroker) cs.getContext().getMessageBroker();
+    public void handle(INcApplicationContext appCtx) throws HyracksDataException, InterruptedException {
+        INCMessageBroker broker = (INCMessageBroker) appCtx.getServiceContext().getMessageBroker();
+        IControllerService cs = appCtx.getServiceContext().getControllerService();
         boolean success = true;
         HyracksDataException exception = null;
         try {

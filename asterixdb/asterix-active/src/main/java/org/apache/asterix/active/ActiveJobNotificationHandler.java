@@ -30,7 +30,6 @@ import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
 
 public class ActiveJobNotificationHandler implements Runnable {
-    public static final ActiveJobNotificationHandler INSTANCE = new ActiveJobNotificationHandler();
     public static final String ACTIVE_ENTITY_PROPERTY_NAME = "ActiveJob";
     private static final Logger LOGGER = Logger.getLogger(ActiveJobNotificationHandler.class.getName());
     private static final boolean DEBUG = false;
@@ -38,7 +37,7 @@ public class ActiveJobNotificationHandler implements Runnable {
     private final Map<EntityId, IActiveEntityEventsListener> entityEventListeners;
     private final Map<JobId, EntityId> jobId2ActiveJobInfos;
 
-    private ActiveJobNotificationHandler() {
+    public ActiveJobNotificationHandler() {
         this.eventInbox = new LinkedBlockingQueue<>();
         this.jobId2ActiveJobInfos = new HashMap<>();
         this.entityEventListeners = new HashMap<>();

@@ -21,7 +21,7 @@ package org.apache.asterix.transaction.management.runtime;
 
 import java.nio.ByteBuffer;
 
-import org.apache.asterix.common.api.IAppRuntimeContext;
+import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.transactions.ILogManager;
 import org.apache.asterix.common.transactions.ILogMarkerCallback;
@@ -65,8 +65,8 @@ public class CommitRuntime extends AbstractOneInputOneOutputOneFramePushRuntime 
     public CommitRuntime(IHyracksTaskContext ctx, JobId jobId, int datasetId, int[] primaryKeyFields,
             boolean isTemporaryDatasetWriteJob, boolean isWriteTransaction, int resourcePartition, boolean isSink) {
         this.ctx = ctx;
-        IAppRuntimeContext appCtx =
-                (IAppRuntimeContext) ctx.getJobletContext().getServiceContext().getApplicationContext();
+        INcApplicationContext appCtx =
+                (INcApplicationContext) ctx.getJobletContext().getServiceContext().getApplicationContext();
         this.transactionManager = appCtx.getTransactionSubsystem().getTransactionManager();
         this.logMgr = appCtx.getTransactionSubsystem().getLogManager();
         this.jobId = jobId;

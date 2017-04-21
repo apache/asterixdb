@@ -23,7 +23,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.asterix.common.api.IAppRuntimeContext;
+import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.api.INCLifecycleTask;
 import org.apache.asterix.common.config.MetadataProperties;
 import org.apache.asterix.hyracks.bootstrap.AsterixStateDumpHandler;
@@ -40,7 +40,7 @@ public class StartLifecycleComponentsTask implements INCLifecycleTask {
 
     @Override
     public void perform(IControllerService cs) throws HyracksDataException {
-        IAppRuntimeContext applicationContext = (IAppRuntimeContext) cs.getApplicationContext();
+        INcApplicationContext applicationContext = (INcApplicationContext) cs.getApplicationContext();
         NCServiceContext serviceCtx = (NCServiceContext) cs.getContext();
         MetadataProperties metadataProperties = applicationContext.getMetadataProperties();
         if (LOGGER.isLoggable(Level.INFO)) {

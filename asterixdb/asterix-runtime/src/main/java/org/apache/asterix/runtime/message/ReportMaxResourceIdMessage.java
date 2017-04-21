@@ -21,17 +21,16 @@ package org.apache.asterix.runtime.message;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.asterix.common.api.IAppRuntimeContext;
-import org.apache.asterix.common.messaging.api.IApplicationMessage;
+import org.apache.asterix.common.api.INcApplicationContext;
+import org.apache.asterix.common.dataflow.ICcApplicationContext;
+import org.apache.asterix.common.messaging.api.ICcAddressedMessage;
 import org.apache.asterix.common.messaging.api.INCMessageBroker;
 import org.apache.asterix.common.metadata.MetadataIndexImmutableProperties;
 import org.apache.asterix.common.transactions.IResourceIdManager;
-import org.apache.asterix.runtime.utils.AppContextInfo;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.service.IControllerService;
 import org.apache.hyracks.control.nc.NodeControllerService;
 
-public class ReportMaxResourceIdMessage implements IApplicationMessage {
+public class ReportMaxResourceIdMessage implements ICcAddressedMessage {
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = Logger.getLogger(ReportMaxResourceIdMessage.class.getName());
     private final long maxResourceId;
@@ -47,15 +46,14 @@ public class ReportMaxResourceIdMessage implements IApplicationMessage {
     }
 
     @Override
-    public void handle(IControllerService cs) throws HyracksDataException, InterruptedException {
-        IResourceIdManager resourceIdManager =
-                AppContextInfo.INSTANCE.getResourceIdManager();
+    public void handle(ICcApplicationContext appCtx) throws HyracksDataException, InterruptedException {
+        IResourceIdManager resourceIdManager = appCtx.getResourceIdManager();
         resourceIdManager.report(src, maxResourceId);
     }
 
     public static void send(NodeControllerService cs) throws HyracksDataException {
         NodeControllerService ncs = cs;
-        IAppRuntimeContext appContext = (IAppRuntimeContext) ncs.getApplicationContext();
+        INcApplicationContext appContext = (INcApplicationContext) ncs.getApplicationContext();
         long maxResourceId = Math.max(appContext.getLocalResourceRepository().maxId(),
                 MetadataIndexImmutableProperties.FIRST_AVAILABLE_USER_DATASET_ID);
         ReportMaxResourceIdMessage maxResourceIdMsg = new ReportMaxResourceIdMessage(ncs.getId(), maxResourceId);

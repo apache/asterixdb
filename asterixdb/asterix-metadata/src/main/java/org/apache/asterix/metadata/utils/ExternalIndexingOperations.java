@@ -191,7 +191,7 @@ public class ExternalIndexingOperations {
             List<ExternalFile> externalFilesSnapshot, MetadataProvider metadataProvider, boolean createIndex)
             throws AlgebricksException {
         IStorageComponentProvider storageComponentProvider = metadataProvider.getStorageComponentProvider();
-        JobSpecification spec = RuntimeUtils.createJobSpecification();
+        JobSpecification spec = RuntimeUtils.createJobSpecification(metadataProvider.getApplicationContext());
         Pair<ILSMMergePolicyFactory, Map<String, String>> compactionInfo =
                 DatasetUtil.getMergePolicyFactory(dataset, metadataProvider.getMetadataTxnContext());
         ILSMMergePolicyFactory mergePolicyFactory = compactionInfo.first;
@@ -205,10 +205,9 @@ public class ExternalIndexingOperations {
         Index fileIndex = MetadataManager.INSTANCE.getIndex(metadataProvider.getMetadataTxnContext(),
                 dataset.getDataverseName(), dataset.getDatasetName(), fileIndexName);
         IResourceFactory localResourceMetadata = new ExternalBTreeLocalResourceMetadataFactory(
-                filesIndexDescription.EXTERNAL_FILE_INDEX_TYPE_TRAITS,
-                FilesIndexDescription.FILES_INDEX_COMP_FACTORIES, new int[] { 0 }, false, dataset.getDatasetId(),
-                mergePolicyFactory, mergePolicyFactoryProperties, dataset.getIndexOperationTrackerFactory(fileIndex),
-                dataset.getIoOperationCallbackFactory(fileIndex),
+                filesIndexDescription.EXTERNAL_FILE_INDEX_TYPE_TRAITS, FilesIndexDescription.FILES_INDEX_COMP_FACTORIES,
+                new int[] { 0 }, false, dataset.getDatasetId(), mergePolicyFactory, mergePolicyFactoryProperties,
+                dataset.getIndexOperationTrackerFactory(fileIndex), dataset.getIoOperationCallbackFactory(fileIndex),
                 storageComponentProvider.getMetadataPageManagerFactory());
         PersistentLocalResourceFactoryProvider localResourceFactoryProvider =
                 new PersistentLocalResourceFactoryProvider(localResourceMetadata, LocalResource.ExternalBTreeResource);
@@ -244,9 +243,9 @@ public class ExternalIndexingOperations {
             List<ExternalFile> files, RecordDescriptor indexerDesc) throws HyracksDataException, AlgebricksException {
         ExternalDatasetDetails externalDatasetDetails = (ExternalDatasetDetails) dataset.getDatasetDetails();
         Map<String, String> configuration = externalDatasetDetails.getProperties();
-        IAdapterFactory adapterFactory =
-                AdapterFactoryProvider.getIndexingAdapterFactory(metadataProvider.getLibraryManager(),
-                        externalDatasetDetails.getAdapter(), configuration, (ARecordType) itemType, files, true, null);
+        IAdapterFactory adapterFactory = AdapterFactoryProvider.getIndexingAdapterFactory(
+                metadataProvider.getApplicationContext().getServiceContext(), externalDatasetDetails.getAdapter(),
+                configuration, (ARecordType) itemType, files, true, null);
         return new Pair<>(new ExternalScanOperatorDescriptor(jobSpec, indexerDesc, adapterFactory),
                 adapterFactory.getPartitionConstraint());
     }
@@ -311,8 +310,8 @@ public class ExternalIndexingOperations {
                 } else {
                     // Same file name, Different file mod date -> delete and add
                     metadataFile.setPendingOp(ExternalFilePendingOp.DROP_OP);
-                    deletedFiles.add(new ExternalFile(metadataFile.getDataverseName(), metadataFile.getDatasetName(),
-                            0, metadataFile.getFileName(), metadataFile.getLastModefiedTime(), metadataFile.getSize(),
+                    deletedFiles.add(new ExternalFile(metadataFile.getDataverseName(), metadataFile.getDatasetName(), 0,
+                            metadataFile.getFileName(), metadataFile.getLastModefiedTime(), metadataFile.getSize(),
                             ExternalFilePendingOp.DROP_OP));
                     fileSystemFile.setPendingOp(ExternalFilePendingOp.ADD_OP);
                     fileSystemFile.setFileNumber(newFileNumber);
@@ -375,7 +374,7 @@ public class ExternalIndexingOperations {
     public static JobSpecification buildDropFilesIndexJobSpec(MetadataProvider metadataProvider, Dataset dataset)
             throws AlgebricksException {
         String indexName = IndexingConstants.getFilesIndexName(dataset.getDatasetName());
-        JobSpecification spec = RuntimeUtils.createJobSpecification();
+        JobSpecification spec = RuntimeUtils.createJobSpecification(metadataProvider.getApplicationContext());
         Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint =
                 metadataProvider.splitProviderAndPartitionConstraintsForFilesIndex(dataset.getDataverseName(),
                         dataset.getDatasetName(), indexName, true);
@@ -408,9 +407,9 @@ public class ExternalIndexingOperations {
             } else if (file.getPendingOp() == ExternalFilePendingOp.APPEND_OP) {
                 for (ExternalFile appendedFile : appendedFiles) {
                     if (appendedFile.getFileName().equals(file.getFileName())) {
-                        files.add(new ExternalFile(file.getDataverseName(), file.getDatasetName(),
-                                file.getFileNumber(), file.getFileName(), file.getLastModefiedTime(),
-                                appendedFile.getSize(), ExternalFilePendingOp.NO_OP));
+                        files.add(new ExternalFile(file.getDataverseName(), file.getDatasetName(), file.getFileNumber(),
+                                file.getFileName(), file.getLastModefiedTime(), appendedFile.getSize(),
+                                ExternalFilePendingOp.NO_OP));
                     }
                 }
             }
@@ -449,20 +448,19 @@ public class ExternalIndexingOperations {
 
     public static JobSpecification buildCommitJob(Dataset ds, List<Index> indexes, MetadataProvider metadataProvider)
             throws AlgebricksException {
-        JobSpecification spec = RuntimeUtils.createJobSpecification();
+        JobSpecification spec = RuntimeUtils.createJobSpecification(metadataProvider.getApplicationContext());
         Pair<ILSMMergePolicyFactory, Map<String, String>> compactionInfo =
                 DatasetUtil.getMergePolicyFactory(ds, metadataProvider.getMetadataTxnContext());
         ILSMMergePolicyFactory mergePolicyFactory = compactionInfo.first;
         Map<String, String> mergePolicyFactoryProperties = compactionInfo.second;
-        Pair<IFileSplitProvider, AlgebricksPartitionConstraint> filesIndexSplitsAndConstraint =
-                metadataProvider.getSplitProviderAndConstraints(ds,
-                        IndexingConstants.getFilesIndexName(ds.getDatasetName()));
+        Pair<IFileSplitProvider, AlgebricksPartitionConstraint> filesIndexSplitsAndConstraint = metadataProvider
+                .getSplitProviderAndConstraints(ds, IndexingConstants.getFilesIndexName(ds.getDatasetName()));
         IFileSplitProvider filesIndexSplitProvider = filesIndexSplitsAndConstraint.first;
         String fileIndexName = BTreeDataflowHelperFactoryProvider.externalFileIndexName(ds);
         Index fileIndex = MetadataManager.INSTANCE.getIndex(metadataProvider.getMetadataTxnContext(),
                 ds.getDataverseName(), ds.getDatasetName(), fileIndexName);
-        IIndexDataflowHelperFactory filesIndexDataflowHelperFactory = ds.getIndexDataflowHelperFactory(
-                metadataProvider, fileIndex, null, null, mergePolicyFactory, mergePolicyFactoryProperties);
+        IIndexDataflowHelperFactory filesIndexDataflowHelperFactory = ds.getIndexDataflowHelperFactory(metadataProvider,
+                fileIndex, null, null, mergePolicyFactory, mergePolicyFactoryProperties);
         IndexInfoOperatorDescriptor filesIndexInfo = new IndexInfoOperatorDescriptor(filesIndexSplitProvider,
                 RuntimeComponentsProvider.RUNTIME_PROVIDER, RuntimeComponentsProvider.RUNTIME_PROVIDER);
 
@@ -492,20 +490,19 @@ public class ExternalIndexingOperations {
 
     public static JobSpecification buildAbortOp(Dataset ds, List<Index> indexes, MetadataProvider metadataProvider)
             throws AlgebricksException {
-        JobSpecification spec = RuntimeUtils.createJobSpecification();
+        JobSpecification spec = RuntimeUtils.createJobSpecification(metadataProvider.getApplicationContext());
         Pair<ILSMMergePolicyFactory, Map<String, String>> compactionInfo =
                 DatasetUtil.getMergePolicyFactory(ds, metadataProvider.getMetadataTxnContext());
         ILSMMergePolicyFactory mergePolicyFactory = compactionInfo.first;
         Map<String, String> mergePolicyFactoryProperties = compactionInfo.second;
-        Pair<IFileSplitProvider, AlgebricksPartitionConstraint> filesIndexSplitsAndConstraint =
-                metadataProvider.getSplitProviderAndConstraints(ds,
-                        IndexingConstants.getFilesIndexName(ds.getDatasetName()));
+        Pair<IFileSplitProvider, AlgebricksPartitionConstraint> filesIndexSplitsAndConstraint = metadataProvider
+                .getSplitProviderAndConstraints(ds, IndexingConstants.getFilesIndexName(ds.getDatasetName()));
         IFileSplitProvider filesIndexSplitProvider = filesIndexSplitsAndConstraint.first;
         String fileIndexName = BTreeDataflowHelperFactoryProvider.externalFileIndexName(ds);
         Index fileIndex = MetadataManager.INSTANCE.getIndex(metadataProvider.getMetadataTxnContext(),
                 ds.getDataverseName(), ds.getDatasetName(), fileIndexName);
-        IIndexDataflowHelperFactory filesIndexDataflowHelperFactory = ds.getIndexDataflowHelperFactory(
-                metadataProvider, fileIndex, null, null, mergePolicyFactory, mergePolicyFactoryProperties);
+        IIndexDataflowHelperFactory filesIndexDataflowHelperFactory = ds.getIndexDataflowHelperFactory(metadataProvider,
+                fileIndex, null, null, mergePolicyFactory, mergePolicyFactoryProperties);
         IndexInfoOperatorDescriptor filesIndexInfo = new IndexInfoOperatorDescriptor(filesIndexSplitProvider,
                 RuntimeComponentsProvider.RUNTIME_PROVIDER, RuntimeComponentsProvider.RUNTIME_PROVIDER);
 
@@ -536,20 +533,19 @@ public class ExternalIndexingOperations {
 
     public static JobSpecification buildRecoverOp(Dataset ds, List<Index> indexes, MetadataProvider metadataProvider)
             throws AlgebricksException {
-        JobSpecification spec = RuntimeUtils.createJobSpecification();
+        JobSpecification spec = RuntimeUtils.createJobSpecification(metadataProvider.getApplicationContext());
         Pair<ILSMMergePolicyFactory, Map<String, String>> compactionInfo =
                 DatasetUtil.getMergePolicyFactory(ds, metadataProvider.getMetadataTxnContext());
         ILSMMergePolicyFactory mergePolicyFactory = compactionInfo.first;
         Map<String, String> mergePolicyFactoryProperties = compactionInfo.second;
-        Pair<IFileSplitProvider, AlgebricksPartitionConstraint> filesIndexSplitsAndConstraint =
-                metadataProvider.getSplitProviderAndConstraints(ds,
-                        IndexingConstants.getFilesIndexName(ds.getDatasetName()));
+        Pair<IFileSplitProvider, AlgebricksPartitionConstraint> filesIndexSplitsAndConstraint = metadataProvider
+                .getSplitProviderAndConstraints(ds, IndexingConstants.getFilesIndexName(ds.getDatasetName()));
         IFileSplitProvider filesIndexSplitProvider = filesIndexSplitsAndConstraint.first;
         String fileIndexName = BTreeDataflowHelperFactoryProvider.externalFileIndexName(ds);
         Index fileIndex = MetadataManager.INSTANCE.getIndex(metadataProvider.getMetadataTxnContext(),
                 ds.getDataverseName(), ds.getDatasetName(), fileIndexName);
-        IIndexDataflowHelperFactory filesIndexDataflowHelperFactory = ds.getIndexDataflowHelperFactory(
-                metadataProvider, fileIndex, null, null, mergePolicyFactory, mergePolicyFactoryProperties);
+        IIndexDataflowHelperFactory filesIndexDataflowHelperFactory = ds.getIndexDataflowHelperFactory(metadataProvider,
+                fileIndex, null, null, mergePolicyFactory, mergePolicyFactoryProperties);
         IndexInfoOperatorDescriptor filesIndexInfo = new IndexInfoOperatorDescriptor(filesIndexSplitProvider,
                 RuntimeComponentsProvider.RUNTIME_PROVIDER, RuntimeComponentsProvider.RUNTIME_PROVIDER);
 
@@ -579,7 +575,7 @@ public class ExternalIndexingOperations {
 
     public static JobSpecification compactFilesIndexJobSpec(Dataset dataset, MetadataProvider metadataProvider,
             IStorageComponentProvider storageComponentProvider) throws AlgebricksException {
-        JobSpecification spec = RuntimeUtils.createJobSpecification();
+        JobSpecification spec = RuntimeUtils.createJobSpecification(metadataProvider.getApplicationContext());
         Pair<ILSMMergePolicyFactory, Map<String, String>> compactionInfo =
                 DatasetUtil.getMergePolicyFactory(dataset, metadataProvider.getMetadataTxnContext());
         ILSMMergePolicyFactory mergePolicyFactory = compactionInfo.first;

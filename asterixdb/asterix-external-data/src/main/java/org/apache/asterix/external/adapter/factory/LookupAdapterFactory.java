@@ -21,7 +21,7 @@ package org.apache.asterix.external.adapter.factory;
 import java.io.Serializable;
 import java.util.Map;
 
-import org.apache.asterix.common.library.ILibraryManager;
+import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.external.api.ILookupReaderFactory;
 import org.apache.asterix.external.api.ILookupRecordReader;
 import org.apache.asterix.external.api.IRecordDataParser;
@@ -34,6 +34,7 @@ import org.apache.asterix.external.provider.LookupReaderFactoryProvider;
 import org.apache.asterix.external.provider.ParserFactoryProvider;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
@@ -66,8 +67,8 @@ public class LookupAdapterFactory<T> implements Serializable {
             ExternalFileIndexAccessor snapshotAccessor, IFrameWriter writer) throws HyracksDataException {
         try {
             IRecordDataParser<T> dataParser = dataParserFactory.createRecordParser(ctx);
-            ILookupRecordReader<? extends T> reader = readerFactory.createRecordReader(ctx, partition,
-                    snapshotAccessor);
+            ILookupRecordReader<? extends T> reader =
+                    readerFactory.createRecordReader(ctx, partition, snapshotAccessor);
             reader.configure(configuration);
             RecordIdReader ridReader = RecordIdReaderFactory.create(configuration, ridFields);
             return new LookupAdapter<>(dataParser, reader, inRecDesc, ridReader, retainInput, retainMissing,
@@ -77,14 +78,15 @@ public class LookupAdapterFactory<T> implements Serializable {
         }
     }
 
-    public void configure(ILibraryManager libraryManager, Map<String, String> configuration)
+    public void configure(IServiceContext serviceContext, Map<String, String> configuration)
             throws HyracksDataException, AlgebricksException {
         this.configuration = configuration;
-        readerFactory = LookupReaderFactoryProvider.getLookupReaderFactory(configuration);
-        dataParserFactory = (IRecordDataParserFactory<T>) ParserFactoryProvider.getDataParserFactory(libraryManager,
-                configuration);
+        IApplicationContext appCtx = (IApplicationContext) serviceContext.getApplicationContext();
+        readerFactory = LookupReaderFactoryProvider.getLookupReaderFactory(serviceContext, configuration);
+        dataParserFactory = (IRecordDataParserFactory<T>) ParserFactoryProvider
+                .getDataParserFactory(appCtx.getLibraryManager(), configuration);
         dataParserFactory.setRecordType(recordType);
-        readerFactory.configure(configuration);
+        readerFactory.configure(serviceContext, configuration);
         dataParserFactory.configure(configuration);
     }
 

@@ -23,9 +23,9 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.cluster.ClusterPartition;
-import org.apache.asterix.common.config.IPropertiesProvider;
 import org.apache.asterix.common.config.MetadataProperties;
 import org.apache.asterix.common.replication.IReplicaResourcesManager;
 import org.apache.asterix.common.replication.IReplicationManager;
@@ -54,8 +54,8 @@ public class ReplicationCheckpointManager extends AbstractCheckpointManager {
     @Override
     public synchronized void doSharpCheckpoint() throws HyracksDataException {
         LOGGER.info("Starting sharp checkpoint...");
-        final IDatasetLifecycleManager datasetLifecycleManager = txnSubsystem.getAsterixAppRuntimeContextProvider()
-                .getDatasetLifecycleManager();
+        final IDatasetLifecycleManager datasetLifecycleManager =
+                txnSubsystem.getAsterixAppRuntimeContextProvider().getDatasetLifecycleManager();
         datasetLifecycleManager.flushAllDatasets();
         long minFirstLSN;
         // If shutting down, need to check if we need to keep any remote logs for dead replicas
@@ -99,12 +99,12 @@ public class ReplicationCheckpointManager extends AbstractCheckpointManager {
         boolean checkpointSucceeded = minFirstLSN >= checkpointTargetLSN;
         if (!checkpointSucceeded) {
             // Flush datasets with indexes behind target checkpoint LSN
-            final IDatasetLifecycleManager datasetLifecycleManager = txnSubsystem.getAsterixAppRuntimeContextProvider()
-                    .getDatasetLifecycleManager();
+            final IDatasetLifecycleManager datasetLifecycleManager =
+                    txnSubsystem.getAsterixAppRuntimeContextProvider().getDatasetLifecycleManager();
             datasetLifecycleManager.scheduleAsyncFlushForLaggingDatasets(checkpointTargetLSN);
             // Request remote replicas to flush lagging indexes
-            final IReplicationManager replicationManager = txnSubsystem.getAsterixAppRuntimeContextProvider()
-                    .getAppContext().getReplicationManager();
+            final IReplicationManager replicationManager =
+                    txnSubsystem.getAsterixAppRuntimeContextProvider().getAppContext().getReplicationManager();
             try {
                 replicationManager.requestFlushLaggingReplicaIndexes(checkpointTargetLSN);
             } catch (IOException e) {
@@ -120,14 +120,14 @@ public class ReplicationCheckpointManager extends AbstractCheckpointManager {
     }
 
     private long getDeadReplicasMinFirstLSN(Set<String> deadReplicaIds) {
-        final IReplicaResourcesManager remoteResourcesManager = txnSubsystem.getAsterixAppRuntimeContextProvider()
-                .getAppContext().getReplicaResourcesManager();
-        final IPropertiesProvider propertiesProvider = (IPropertiesProvider) txnSubsystem
-                .getAsterixAppRuntimeContextProvider().getAppContext();
+        final IReplicaResourcesManager remoteResourcesManager =
+                txnSubsystem.getAsterixAppRuntimeContextProvider().getAppContext().getReplicaResourcesManager();
+        final IApplicationContext propertiesProvider =
+                txnSubsystem.getAsterixAppRuntimeContextProvider().getAppContext();
         final MetadataProperties metadataProperties = propertiesProvider.getMetadataProperties();
         final PersistentLocalResourceRepository localResourceRepository =
-                (PersistentLocalResourceRepository) txnSubsystem
-                .getAsterixAppRuntimeContextProvider().getLocalResourceRepository();
+                (PersistentLocalResourceRepository) txnSubsystem.getAsterixAppRuntimeContextProvider()
+                        .getLocalResourceRepository();
         // Get partitions of the dead replicas that are not active on this node
         final Set<Integer> deadReplicasPartitions = new HashSet<>();
         for (String deadReplicaId : deadReplicaIds) {

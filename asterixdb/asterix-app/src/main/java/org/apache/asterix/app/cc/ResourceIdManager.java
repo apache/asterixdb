@@ -36,7 +36,7 @@ public class ResourceIdManager implements IResourceIdManager {
         if (!allReported) {
             synchronized (this) {
                 if (!allReported) {
-                    if (reportedNodes.size() < ClusterStateManager.getNumberOfNodes()) {
+                    if (reportedNodes.size() < ClusterStateManager.INSTANCE.getNumberOfNodes()) {
                         return -1;
                     } else {
                         reportedNodes = null;
@@ -58,7 +58,7 @@ public class ResourceIdManager implements IResourceIdManager {
         if (!allReported) {
             globalResourceId.set(Math.max(maxResourceId, globalResourceId.get()));
             reportedNodes.add(nodeId);
-            if (reportedNodes.size() == ClusterStateManager.getNumberOfNodes()) {
+            if (reportedNodes.size() == ClusterStateManager.INSTANCE.getNumberOfNodes()) {
                 reportedNodes = null;
                 allReported = true;
             }

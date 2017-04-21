@@ -29,5 +29,5 @@ public interface ICCMessageBroker extends IMessageBroker {
      * @param nodeId
      * @throws Exception
      */
-    public void sendApplicationMessageToNC(IApplicationMessage msg, String nodeId) throws Exception;
+    public void sendApplicationMessageToNC(INcAddressedMessage msg, String nodeId) throws Exception;
 }

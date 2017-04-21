@@ -21,15 +21,15 @@ package org.apache.asterix.app.replication;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.asterix.common.messaging.api.ICCMessageBroker;
 import org.apache.asterix.common.replication.IFaultToleranceStrategy;
 import org.apache.asterix.common.replication.IReplicationStrategy;
 import org.apache.asterix.event.schema.cluster.Cluster;
+import org.apache.hyracks.api.application.ICCServiceContext;
 
 public class FaultToleranceStrategyFactory {
 
-    private static final Map<String, Class<? extends IFaultToleranceStrategy>>
-    BUILT_IN_FAULT_TOLERANCE_STRATEGY = new HashMap<>();
+    private static final Map<String, Class<? extends IFaultToleranceStrategy>> BUILT_IN_FAULT_TOLERANCE_STRATEGY =
+            new HashMap<>();
 
     static {
         BUILT_IN_FAULT_TOLERANCE_STRATEGY.put("no_fault_tolerance", NoFaultToleranceStrategy.class);
@@ -42,14 +42,14 @@ public class FaultToleranceStrategyFactory {
     }
 
     public static IFaultToleranceStrategy create(Cluster cluster, IReplicationStrategy repStrategy,
-            ICCMessageBroker messageBroker) {
-        boolean highAvailabilityEnabled = cluster.getHighAvailability() != null
-                && cluster.getHighAvailability().getEnabled() != null
-                && Boolean.valueOf(cluster.getHighAvailability().getEnabled());
+            ICCServiceContext serviceCtx) {
+        boolean highAvailabilityEnabled =
+                cluster.getHighAvailability() != null && cluster.getHighAvailability().getEnabled() != null
+                        && Boolean.valueOf(cluster.getHighAvailability().getEnabled());
 
         if (!highAvailabilityEnabled || cluster.getHighAvailability().getFaultTolerance() == null
                 || cluster.getHighAvailability().getFaultTolerance().getStrategy() == null) {
-            return new NoFaultToleranceStrategy().from(repStrategy, messageBroker);
+            return new NoFaultToleranceStrategy().from(serviceCtx, repStrategy);
         }
         String strategyName = cluster.getHighAvailability().getFaultTolerance().getStrategy().toLowerCase();
         if (!BUILT_IN_FAULT_TOLERANCE_STRATEGY.containsKey(strategyName)) {
@@ -58,7 +58,7 @@ public class FaultToleranceStrategyFactory {
         }
         Class<? extends IFaultToleranceStrategy> clazz = BUILT_IN_FAULT_TOLERANCE_STRATEGY.get(strategyName);
         try {
-            return clazz.newInstance().from(repStrategy, messageBroker);
+            return clazz.newInstance().from(serviceCtx, repStrategy);
         } catch (InstantiationException | IllegalAccessException e) {
             throw new IllegalStateException(e);
         }

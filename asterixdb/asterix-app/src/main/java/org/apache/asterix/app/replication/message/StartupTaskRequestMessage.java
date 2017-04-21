@@ -21,15 +21,16 @@ package org.apache.asterix.app.replication.message;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.asterix.common.dataflow.ICcApplicationContext;
+import org.apache.asterix.common.messaging.api.ICcAddressedMessage;
 import org.apache.asterix.common.messaging.api.INCMessageBroker;
 import org.apache.asterix.common.replication.INCLifecycleMessage;
 import org.apache.asterix.common.transactions.IRecoveryManager.SystemState;
-import org.apache.asterix.runtime.utils.AppContextInfo;
+import org.apache.asterix.runtime.utils.CcApplicationContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.service.IControllerService;
 import org.apache.hyracks.control.nc.NodeControllerService;
 
-public class StartupTaskRequestMessage implements INCLifecycleMessage {
+public class StartupTaskRequestMessage implements INCLifecycleMessage, ICcAddressedMessage {
 
     private static final Logger LOGGER = Logger.getLogger(StartupTaskRequestMessage.class.getName());
     private static final long serialVersionUID = 1L;
@@ -52,8 +53,8 @@ public class StartupTaskRequestMessage implements INCLifecycleMessage {
     }
 
     @Override
-    public void handle(IControllerService cs) throws HyracksDataException, InterruptedException {
-        AppContextInfo.INSTANCE.getFaultToleranceStrategy().process(this);
+    public void handle(ICcApplicationContext appCtx) throws HyracksDataException, InterruptedException {
+        ((CcApplicationContext) appCtx).getFaultToleranceStrategy().process(this);
     }
 
     public SystemState getState() {

@@ -21,6 +21,7 @@ package org.apache.asterix.metadata.api;
 import java.util.Set;
 
 import org.apache.asterix.common.api.IClusterEventsSubscriber;
+import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.event.schema.cluster.Node;
 
@@ -30,7 +31,7 @@ public interface IClusterManager {
      * @param node
      * @throws AsterixException
      */
-    public void addNode(Node node) throws AsterixException;
+    public void addNode(ICcApplicationContext appCtx, Node node) throws AsterixException;
 
     /**
      * @param node

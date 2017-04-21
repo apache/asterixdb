@@ -25,7 +25,6 @@ import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.runtime.job.listener.JobEventListenerFactory;
 import org.apache.asterix.runtime.operators.std.FlushDatasetOperatorDescriptor;
-import org.apache.asterix.runtime.utils.AppContextInfo;
 import org.apache.asterix.transaction.management.service.transaction.JobIdFactory;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraintHelper;
@@ -46,7 +45,7 @@ public class FlushDatasetUtil {
 
     public static void flushDataset(IHyracksClientConnection hcc, MetadataProvider metadataProvider,
             String dataverseName, String datasetName, String indexName) throws Exception {
-        CompilerProperties compilerProperties = AppContextInfo.INSTANCE.getCompilerProperties();
+        CompilerProperties compilerProperties = metadataProvider.getApplicationContext().getCompilerProperties();
         int frameSize = compilerProperties.getFrameSize();
         JobSpecification spec = new JobSpecification(frameSize);
 

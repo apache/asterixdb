@@ -23,6 +23,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import org.apache.asterix.common.context.IStorageComponentProvider;
+import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.translator.IStatementExecutor;
@@ -47,8 +48,9 @@ public class DefaultStatementExecutorFactory implements IStatementExecutorFactor
     }
 
     @Override
-    public IStatementExecutor create(List<Statement> statements, SessionConfig conf,
+    public IStatementExecutor create(ICcApplicationContext appCtx, List<Statement> statements, SessionConfig conf,
             ILangCompilationProvider compilationProvider, IStorageComponentProvider storageComponentProvider) {
-        return new QueryTranslator(statements, conf, compilationProvider, storageComponentProvider, executorService);
+        return new QueryTranslator(appCtx, statements, conf, compilationProvider, storageComponentProvider,
+                executorService);
     }
 }

@@ -26,6 +26,7 @@ import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.external.api.AsterixInputStream;
 import org.apache.asterix.external.api.IInputStreamFactory;
@@ -37,6 +38,7 @@ import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.external.util.FileSystemWatcher;
 import org.apache.asterix.external.util.NodeResolverFactory;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
+import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.UnmanagedFileSplit;
@@ -83,10 +85,12 @@ public class LocalFSInputStreamFactory implements IInputStreamFactory {
     }
 
     @Override
-    public void configure(Map<String, String> configuration) throws AsterixException {
+    public void configure(IServiceContext serviceCtx, Map<String, String> configuration) throws AsterixException {
         this.configuration = configuration;
         String[] splits = configuration.get(ExternalDataConstants.KEY_PATH).split(",");
-        configureFileSplits(splits);
+        if (inputFileSplits == null) {
+            configureFileSplits((ICcApplicationContext) serviceCtx.getApplicationContext(), splits);
+        }
         configurePartitionConstraint();
         this.isFeed = ExternalDataUtils.isFeed(configuration) && ExternalDataUtils.keepDataSourceOpen(configuration);
         this.expression = configuration.get(ExternalDataConstants.KEY_EXPRESSION);
@@ -97,25 +101,24 @@ public class LocalFSInputStreamFactory implements IInputStreamFactory {
         return constraints;
     }
 
-    private void configureFileSplits(String[] splits) throws AsterixException {
+    private void configureFileSplits(ICcApplicationContext appCtx, String[] splits) throws AsterixException {
         INodeResolver resolver = getNodeResolver();
-        if (inputFileSplits == null) {
-            inputFileSplits = new UnmanagedFileSplit[splits.length];
-            String node;
-            String path;
-            int count = 0;
-            String trimmedValue;
-            for (String splitPath : splits) {
-                trimmedValue = splitPath.trim();
-                if (!trimmedValue.contains("://")) {
-                    throw new AsterixException(
-                            "Invalid path: " + splitPath + "\nUsage- path=\"Host://Absolute File Path\"");
-                }
-                node = resolver.resolveNode(trimmedValue.split(":")[0]);
-                path = trimmedValue.split("://")[1];
-                inputFileSplits[count++] = new UnmanagedFileSplit(node, path);
+        inputFileSplits = new UnmanagedFileSplit[splits.length];
+        String node;
+        String path;
+        int count = 0;
+        String trimmedValue;
+        for (String splitPath : splits) {
+            trimmedValue = splitPath.trim();
+            if (!trimmedValue.contains("://")) {
+                throw new AsterixException(
+                        "Invalid path: " + splitPath + "\nUsage- path=\"Host://Absolute File Path\"");
             }
+            node = resolver.resolveNode(appCtx, trimmedValue.split(":")[0]);
+            path = trimmedValue.split("://")[1];
+            inputFileSplits[count++] = new UnmanagedFileSplit(node, path);
         }
+
     }
 
     private void configurePartitionConstraint() throws AsterixException {

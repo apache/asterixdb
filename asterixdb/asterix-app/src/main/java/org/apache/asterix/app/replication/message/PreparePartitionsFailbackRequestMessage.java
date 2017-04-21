@@ -23,14 +23,15 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.asterix.common.api.IAppRuntimeContext;
+import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.messaging.api.INCMessageBroker;
+import org.apache.asterix.common.messaging.api.INcAddressedMessage;
 import org.apache.asterix.runtime.message.AbstractFailbackPlanMessage;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepository;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.service.IControllerService;
 
-public class PreparePartitionsFailbackRequestMessage extends AbstractFailbackPlanMessage {
+public class PreparePartitionsFailbackRequestMessage extends AbstractFailbackPlanMessage
+        implements INcAddressedMessage {
 
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = Logger.getLogger(PreparePartitionsFailbackRequestMessage.class.getName());
@@ -71,9 +72,8 @@ public class PreparePartitionsFailbackRequestMessage extends AbstractFailbackPla
     }
 
     @Override
-    public void handle(IControllerService cs) throws HyracksDataException, InterruptedException {
-        IAppRuntimeContext appContext = (IAppRuntimeContext) cs.getApplicationContext();
-        INCMessageBroker broker = (INCMessageBroker) cs.getContext().getMessageBroker();
+    public void handle(INcApplicationContext appContext) throws HyracksDataException, InterruptedException {
+        INCMessageBroker broker = (INCMessageBroker) appContext.getServiceContext().getMessageBroker();
         /**
          * if the metadata partition will be failed back
          * we need to flush and close all datasets including metadata datasets

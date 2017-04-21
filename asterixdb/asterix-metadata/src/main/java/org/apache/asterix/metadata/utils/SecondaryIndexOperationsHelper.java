@@ -25,7 +25,6 @@ import java.util.Map;
 
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.ExternalFilePendingOp;
-import org.apache.asterix.common.config.IPropertiesProvider;
 import org.apache.asterix.common.context.ITransactionSubsystemProvider;
 import org.apache.asterix.common.context.TransactionSubsystemProvider;
 import org.apache.asterix.common.exceptions.AsterixException;
@@ -53,7 +52,6 @@ import org.apache.asterix.runtime.evaluators.functions.CastTypeDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.IsUnknownDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.NotDescriptor;
 import org.apache.asterix.runtime.job.listener.JobEventListenerFactory;
-import org.apache.asterix.runtime.utils.AppContextInfo;
 import org.apache.asterix.runtime.utils.RuntimeComponentsProvider;
 import org.apache.asterix.transaction.management.opcallbacks.PrimaryIndexInstantSearchOperationCallbackFactory;
 import org.apache.asterix.transaction.management.service.transaction.JobIdFactory;
@@ -118,7 +116,6 @@ public abstract class SecondaryIndexOperationsHelper {
     protected int[] secondaryBloomFilterKeyFields;
     protected RecordDescriptor secondaryRecDesc;
     protected IScalarEvaluatorFactory[] secondaryFieldAccessEvalFactories;
-    protected IPropertiesProvider propertiesProvider;
     protected ILSMMergePolicyFactory mergePolicyFactory;
     protected Map<String, String> mergePolicyFactoryProperties;
     protected RecordDescriptor enforcedRecDesc;
@@ -135,12 +132,11 @@ public abstract class SecondaryIndexOperationsHelper {
 
     // Prevent public construction. Should be created via createIndexCreator().
     protected SecondaryIndexOperationsHelper(Dataset dataset, Index index, PhysicalOptimizationConfig physOptConf,
-            IPropertiesProvider propertiesProvider, MetadataProvider metadataProvider, ARecordType recType,
+            MetadataProvider metadataProvider, ARecordType recType,
             ARecordType metaType, ARecordType enforcedType, ARecordType enforcedMetaType) {
         this.dataset = dataset;
         this.index = index;
         this.physOptConf = physOptConf;
-        this.propertiesProvider = propertiesProvider;
         this.metadataProvider = metadataProvider;
         this.itemType = recType;
         this.metaType = metaType;
@@ -151,17 +147,16 @@ public abstract class SecondaryIndexOperationsHelper {
     public static SecondaryIndexOperationsHelper createIndexOperationsHelper(Dataset dataset, Index index,
             MetadataProvider metadataProvider, PhysicalOptimizationConfig physOptConf, ARecordType recType,
             ARecordType metaType, ARecordType enforcedType, ARecordType enforcedMetaType) throws AlgebricksException {
-        IPropertiesProvider asterixPropertiesProvider = AppContextInfo.INSTANCE;
         SecondaryIndexOperationsHelper indexOperationsHelper;
         switch (index.getIndexType()) {
             case BTREE:
                 indexOperationsHelper =
-                        new SecondaryBTreeOperationsHelper(dataset, index, physOptConf, asterixPropertiesProvider,
+                        new SecondaryBTreeOperationsHelper(dataset, index, physOptConf,
                                 metadataProvider, recType, metaType, enforcedType, enforcedMetaType);
                 break;
             case RTREE:
                 indexOperationsHelper =
-                        new SecondaryRTreeOperationsHelper(dataset, index, physOptConf, asterixPropertiesProvider,
+                        new SecondaryRTreeOperationsHelper(dataset, index, physOptConf,
                                 metadataProvider, recType, metaType, enforcedType, enforcedMetaType);
                 break;
             case SINGLE_PARTITION_WORD_INVIX:
@@ -169,8 +164,7 @@ public abstract class SecondaryIndexOperationsHelper {
             case LENGTH_PARTITIONED_WORD_INVIX:
             case LENGTH_PARTITIONED_NGRAM_INVIX:
                 indexOperationsHelper = new SecondaryInvertedIndexOperationsHelper(dataset, index, physOptConf,
-                        asterixPropertiesProvider, metadataProvider, recType, metaType, enforcedType,
-                        enforcedMetaType);
+                        metadataProvider, recType, metaType, enforcedType, enforcedMetaType);
                 break;
             default:
                 throw new CompilationException(ErrorCode.COMPILATION_UNKNOWN_INDEX_TYPE, index.getIndexType());

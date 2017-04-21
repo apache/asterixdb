@@ -21,7 +21,7 @@ package org.apache.asterix.metadata.dataset.hints;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.apache.asterix.runtime.utils.AppContextInfo;
+import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 
 /**
@@ -42,19 +42,19 @@ public class DatasetHints {
      *         first element as a boolean that represents the validation result.
      *         second element as the error message if the validation result is false
      */
-    public static Pair<Boolean, String> validate(String hintName, String value) {
+    public static Pair<Boolean, String> validate(ICcApplicationContext appCtx, String hintName, String value) {
         for (IHint h : hints) {
             if (h.getName().equalsIgnoreCase(hintName.trim())) {
-                return h.validateValue(value);
+                return h.validateValue(appCtx, value);
             }
         }
-        return new Pair<Boolean, String>(false, "Unknown hint :" + hintName);
+        return new Pair<>(false, "Unknown hint :" + hintName);
     }
 
     private static Set<IHint> hints = initHints();
 
     private static Set<IHint> initHints() {
-        Set<IHint> hints = new HashSet<IHint>();
+        Set<IHint> hints = new HashSet<>();
         hints.add(new DatasetCardinalityHint());
         hints.add(new DatasetNodegroupCardinalityHint());
         return hints;
@@ -74,19 +74,19 @@ public class DatasetHints {
         }
 
         @Override
-        public Pair<Boolean, String> validateValue(String value) {
+        public Pair<Boolean, String> validateValue(ICcApplicationContext appCtx, String value) {
             boolean valid = true;
             long longValue;
             try {
                 longValue = Long.parseLong(value);
                 if (longValue < 0) {
-                    return new Pair<Boolean, String>(false, "Value must be >= 0");
+                    return new Pair<>(false, "Value must be >= 0");
                 }
             } catch (NumberFormatException nfe) {
                 valid = false;
-                return new Pair<Boolean, String>(valid, "Inappropriate value");
+                return new Pair<>(valid, "Inappropriate value");
             }
-            return new Pair<Boolean, String>(true, null);
+            return new Pair<>(true, null);
         }
 
     }
@@ -105,26 +105,25 @@ public class DatasetHints {
         }
 
         @Override
-        public Pair<Boolean, String> validateValue(String value) {
+        public Pair<Boolean, String> validateValue(ICcApplicationContext appCtx, String value) {
             boolean valid = true;
             int intValue;
             try {
                 intValue = Integer.parseInt(value);
                 if (intValue < 0) {
-                    return new Pair<Boolean, String>(false, "Value must be >= 0");
+                    return new Pair<>(false, "Value must be >= 0");
                 }
-                int numNodesInCluster = AppContextInfo.INSTANCE.getMetadataProperties().getNodeNames()
-                        .size();
+                int numNodesInCluster = appCtx.getMetadataProperties().getNodeNames().size();
                 if (numNodesInCluster < intValue) {
-                    return new Pair<Boolean, String>(false,
+                    return new Pair<>(false,
                             "Value must be greater or equal to the existing number of nodes in cluster ("
                                     + numNodesInCluster + ")");
                 }
             } catch (NumberFormatException nfe) {
                 valid = false;
-                return new Pair<Boolean, String>(valid, "Inappropriate value");
+                return new Pair<>(valid, "Inappropriate value");
             }
-            return new Pair<Boolean, String>(true, null);
+            return new Pair<>(true, null);
         }
 
     }

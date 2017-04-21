@@ -18,9 +18,12 @@
  */
 package org.apache.asterix.common.dataflow;
 
+import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.cluster.IGlobalRecoveryManager;
-import org.apache.asterix.common.library.ILibraryManager;
+import org.apache.asterix.common.transactions.IResourceIdManager;
 import org.apache.hyracks.api.application.ICCServiceContext;
+import org.apache.hyracks.api.client.IHyracksClientConnection;
+import org.apache.hyracks.api.job.IJobLifecycleListener;
 import org.apache.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
 import org.apache.hyracks.storage.common.IStorageManager;
 
@@ -33,7 +36,7 @@ import org.apache.hyracks.storage.common.IStorageManager;
  * and {@link org.apache.asterix.common.library.ILibraryManager}
  * at the cluster controller side.
  */
-public interface IApplicationContextInfo {
+public interface ICcApplicationContext extends IApplicationContext {
 
     /**
      * Returns an instance of the implementation for IIndexLifecycleManagerProvider.
@@ -50,7 +53,8 @@ public interface IApplicationContextInfo {
     /**
      * @return an instance which implements {@link org.apache.hyracks.api.application.ICCServiceContext}
      */
-    public ICCServiceContext getCCServiceContext();
+    @Override
+    public ICCServiceContext getServiceContext();
 
     /**
      * @return the global recovery manager which implements
@@ -59,7 +63,14 @@ public interface IApplicationContextInfo {
     public IGlobalRecoveryManager getGlobalRecoveryManager();
 
     /**
-     * @return the library manager which implements {@link org.apache.asterix.common.library.ILibraryManager}
+     * @return the active lifecycle listener at Cluster controller
      */
-    public ILibraryManager getLibraryManager();
+    public IJobLifecycleListener getActiveLifecycleListener();
+
+    /**
+     * @return a new instance of {@link IHyracksClientConnection}
+     */
+    public IHyracksClientConnection getHcc();
+
+    public IResourceIdManager getResourceIdManager();
 }

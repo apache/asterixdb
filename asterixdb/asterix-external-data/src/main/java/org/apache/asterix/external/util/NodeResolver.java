@@ -27,6 +27,7 @@ import java.util.Map.Entry;
 import java.util.Random;
 import java.util.Set;
 
+import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.external.api.INodeResolver;
@@ -42,15 +43,15 @@ public class NodeResolver implements INodeResolver {
     private static final Set<String> ncs = new HashSet<>();
 
     @Override
-    public String resolveNode(String value) throws AsterixException {
+    public String resolveNode(ICcApplicationContext appCtx, String value) throws AsterixException {
         try {
             if (ncMap.isEmpty()) {
-                NodeResolver.updateNCs();
+                NodeResolver.updateNCs(appCtx);
             }
             if (ncs.contains(value)) {
                 return value;
             } else {
-                NodeResolver.updateNCs();
+                NodeResolver.updateNCs(appCtx);
                 if (ncs.contains(value)) {
                     return value;
                 }
@@ -71,10 +72,10 @@ public class NodeResolver implements INodeResolver {
         }
     }
 
-    private static void updateNCs() throws Exception {
+    private static void updateNCs(ICcApplicationContext appCtx) throws Exception {
         synchronized (ncMap) {
             ncMap.clear();
-            RuntimeUtils.getNodeControllerMap(ncMap);
+            RuntimeUtils.getNodeControllerMap(appCtx, ncMap);
             synchronized (ncs) {
                 ncs.clear();
                 for (Entry<InetAddress, Set<String>> entry : ncMap.entrySet()) {

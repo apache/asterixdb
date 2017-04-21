@@ -27,6 +27,7 @@ import org.apache.asterix.external.provider.StreamRecordReaderProvider;
 import org.apache.asterix.external.provider.StreamRecordReaderProvider.Format;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
@@ -57,9 +58,10 @@ public class StreamRecordReaderFactory implements IRecordReaderFactory<char[]> {
     }
 
     @Override
-    public void configure(Map<String, String> configuration) throws HyracksDataException, AlgebricksException {
+    public void configure(IServiceContext serviceCtx, Map<String, String> configuration)
+            throws HyracksDataException, AlgebricksException {
         this.configuration = configuration;
-        streamFactory.configure(configuration);
+        streamFactory.configure(serviceCtx, configuration);
         format = StreamRecordReaderProvider.getReaderFormat(configuration);
     }
 

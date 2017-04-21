@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
+import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
@@ -39,8 +40,8 @@ import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.runtime.utils.RuntimeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
@@ -56,9 +57,10 @@ public class SocketServerInputStreamFactory implements IInputStreamFactory {
     }
 
     @Override
-    public void configure(Map<String, String> configuration) throws AlgebricksException {
+    public void configure(IServiceContext serviceCtx, Map<String, String> configuration)
+            throws AsterixException, CompilationException {
         try {
-            sockets = new ArrayList<Pair<String, Integer>>();
+            sockets = new ArrayList<>();
             String modeValue = configuration.get(ExternalDataConstants.KEY_MODE);
             if (modeValue != null) {
                 mode = Mode.valueOf(modeValue.trim().toUpperCase());
@@ -68,8 +70,9 @@ public class SocketServerInputStreamFactory implements IInputStreamFactory {
                 throw new CompilationException(ErrorCode.FEED_METADATA_SOCKET_ADAPTOR_SOCKET_NOT_PROPERLY_CONFIGURED);
             }
             Map<InetAddress, Set<String>> ncMap;
-            ncMap = RuntimeUtils.getNodeControllerMap();
-            List<String> ncs = RuntimeUtils.getAllNodeControllers();
+            ncMap = RuntimeUtils.getNodeControllerMap((ICcApplicationContext) serviceCtx.getApplicationContext());
+            List<String> ncs =
+                    RuntimeUtils.getAllNodeControllers((ICcApplicationContext) serviceCtx.getApplicationContext());
             String[] socketsArray = socketsValue.split(",");
             Random random = new Random();
             for (String socket : socketsArray) {
@@ -87,11 +90,11 @@ public class SocketServerInputStreamFactory implements IInputStreamFactory {
                         }
                         String[] ncArray = ncsOnIp.toArray(new String[] {});
                         String nc = ncArray[random.nextInt(ncArray.length)];
-                        p = new Pair<String, Integer>(nc, port);
+                        p = new Pair<>(nc, port);
                         break;
 
                     case NC:
-                        p = new Pair<String, Integer>(host, port);
+                        p = new Pair<>(host, port);
                         if (!ncs.contains(host)) {
                             throw new CompilationException(
                                     ErrorCode.FEED_METADATA_SOCKET_ADAPTOR_SOCKET_INVALID_HOST_NC, "NC", host,
@@ -127,7 +130,7 @@ public class SocketServerInputStreamFactory implements IInputStreamFactory {
 
     @Override
     public AlgebricksAbsolutePartitionConstraint getPartitionConstraint() {
-        List<String> locations = new ArrayList<String>();
+        List<String> locations = new ArrayList<>();
         for (Pair<String, Integer> socket : sockets) {
             locations.add(socket.first);
         }

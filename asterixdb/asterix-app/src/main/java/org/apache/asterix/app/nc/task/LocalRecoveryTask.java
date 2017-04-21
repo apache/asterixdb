@@ -21,7 +21,7 @@ package org.apache.asterix.app.nc.task;
 import java.io.IOException;
 import java.util.Set;
 
-import org.apache.asterix.common.api.IAppRuntimeContext;
+import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.api.INCLifecycleTask;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -38,7 +38,7 @@ public class LocalRecoveryTask implements INCLifecycleTask {
 
     @Override
     public void perform(IControllerService cs) throws HyracksDataException {
-        IAppRuntimeContext appContext = (IAppRuntimeContext) cs.getApplicationContext();
+        INcApplicationContext appContext = (INcApplicationContext) cs.getApplicationContext();
         try {
             appContext.getTransactionSubsystem().getRecoveryManager().startLocalRecovery(partitions);
         } catch (IOException | ACIDException e) {

@@ -53,7 +53,6 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import org.apache.asterix.common.cluster.ClusterPartition;
-import org.apache.asterix.common.config.IPropertiesProvider;
 import org.apache.asterix.common.config.ReplicationProperties;
 import org.apache.asterix.common.dataflow.LSMIndexUtil;
 import org.apache.asterix.common.replication.IReplicaResourcesManager;
@@ -149,8 +148,8 @@ public class ReplicationManager implements IReplicationManager {
         this.replicaResourcesManager = (ReplicaResourcesManager) remoteResoucesManager;
         this.asterixAppRuntimeContextProvider = asterixAppRuntimeContextProvider;
         this.logManager = logManager;
-        localResourceRepo = (PersistentLocalResourceRepository) asterixAppRuntimeContextProvider
-                .getLocalResourceRepository();
+        localResourceRepo =
+                (PersistentLocalResourceRepository) asterixAppRuntimeContextProvider.getLocalResourceRepository();
         this.hostIPAddressFirstOctet = replicationProperties.getReplicaIPAddress(nodeId).substring(0, 3);
         replicas = new HashMap<>();
         replicationJobsQ = new LinkedBlockingQueue<>();
@@ -170,8 +169,8 @@ public class ReplicationManager implements IReplicationManager {
         replicationListenerThreads = Executors.newCachedThreadPool();
         replicationJobsProcessor = new ReplicationJobsProccessor();
 
-        Map<String, ClusterPartition[]> nodePartitions = ((IPropertiesProvider) asterixAppRuntimeContextProvider
-                .getAppContext()).getMetadataProperties().getNodePartitions();
+        Map<String, ClusterPartition[]> nodePartitions =
+                asterixAppRuntimeContextProvider.getAppContext().getMetadataProperties().getNodePartitions();
         replica2PartitionsMap = new HashMap<>(replicaNodes.size());
         for (Replica replica : replicaNodes) {
             replicas.put(replica.getId(), replica);
@@ -347,8 +346,7 @@ public class ReplicationManager implements IReplicationManager {
                             requestBuffer = ReplicationProtocol.writeFileReplicationRequest(requestBuffer,
                                     asterixFileProperties, ReplicationRequestType.REPLICATE_FILE);
 
-                            Iterator<Map.Entry<String, SocketChannel>> iterator =
-                                    replicasSockets.entrySet().iterator();
+                            Iterator<Map.Entry<String, SocketChannel>> iterator = replicasSockets.entrySet().iterator();
                             while (iterator.hasNext()) {
                                 Map.Entry<String, SocketChannel> entry = iterator.next();
                                 //if the remote replica is not interested in this partition, skip it.
@@ -798,8 +796,7 @@ public class ReplicationManager implements IReplicationManager {
 
             //if got ACKs from all remote replicas, notify pending jobs if any
 
-            if (jobCommitAcks.get(jobId).size() == replicationFactor
-                    && replicationJobsPendingAcks.containsKey(jobId)) {
+            if (jobCommitAcks.get(jobId).size() == replicationFactor && replicationJobsPendingAcks.containsKey(jobId)) {
                 ILogRecord pendingLog = replicationJobsPendingAcks.get(jobId);
                 synchronized (pendingLog) {
                     pendingLog.notifyAll();

@@ -34,6 +34,7 @@ import org.apache.asterix.algebra.base.ILangExpressionToPlanTranslator;
 import org.apache.asterix.algebra.operators.CommitOperator;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.MetadataProperties;
+import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.functions.FunctionConstants;
 import org.apache.asterix.common.functions.FunctionSignature;
@@ -94,7 +95,6 @@ import org.apache.asterix.om.functions.FunctionInfo;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.formats.FormatUtils;
-import org.apache.asterix.runtime.utils.AppContextInfo;
 import org.apache.asterix.translator.CompiledStatements.CompiledInsertStatement;
 import org.apache.asterix.translator.CompiledStatements.CompiledLoadFromFileStatement;
 import org.apache.asterix.translator.CompiledStatements.CompiledSubscribeFeedStatement;
@@ -316,7 +316,7 @@ class LangExpressionToPlanTranslator
         if (outputDatasetName == null) {
             FileSplit outputFileSplit = metadataProvider.getOutputFile();
             if (outputFileSplit == null) {
-                outputFileSplit = getDefaultOutputFileLocation();
+                outputFileSplit = getDefaultOutputFileLocation(metadataProvider.getApplicationContext());
             }
             metadataProvider.setOutputFile(outputFileSplit);
 
@@ -606,8 +606,8 @@ class LangExpressionToPlanTranslator
                 }
             }
             // A change feed, we don't need the assign to access PKs
-            upsertOp = new InsertDeleteUpsertOperator(targetDatasource, varRef, varRefsForLoading,
-                    metaExpSingletonList, InsertDeleteUpsertOperator.Kind.UPSERT, false);
+            upsertOp = new InsertDeleteUpsertOperator(targetDatasource, varRef, varRefsForLoading, metaExpSingletonList,
+                    InsertDeleteUpsertOperator.Kind.UPSERT, false);
             // Create and add a new variable used for representing the original record
             upsertOp.setPrevRecordVar(context.newVar());
             upsertOp.setPrevRecordType(targetDatasource.getItemType());
@@ -730,11 +730,11 @@ class LangExpressionToPlanTranslator
                 dataset.getDatasetDetails(), domain);
     }
 
-    private FileSplit getDefaultOutputFileLocation() throws MetadataException {
+    private FileSplit getDefaultOutputFileLocation(ICcApplicationContext appCtx) throws MetadataException {
         String outputDir = System.getProperty("java.io.tmpDir");
         String filePath =
                 outputDir + System.getProperty("file.separator") + OUTPUT_FILE_PREFIX + outputFileID.incrementAndGet();
-        MetadataProperties metadataProperties = AppContextInfo.INSTANCE.getMetadataProperties();
+        MetadataProperties metadataProperties = appCtx.getMetadataProperties();
         return new ManagedFileSplit(metadataProperties.getMetadataNodeName(), filePath);
     }
 
@@ -1005,8 +1005,8 @@ class LangExpressionToPlanTranslator
         arguments.add(new MutableObject<>(ConstantExpression.TRUE));
         arguments.add(new MutableObject<>(new VariableReferenceExpression(opAndVarForThen.second)));
         arguments.add(new MutableObject<>(new VariableReferenceExpression(opAndVarForElse.second)));
-        AbstractFunctionCallExpression swithCaseExpr = new ScalarFunctionCallExpression(
-                FunctionUtil.getFunctionInfo(BuiltinFunctions.SWITCH_CASE), arguments);
+        AbstractFunctionCallExpression swithCaseExpr =
+                new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(BuiltinFunctions.SWITCH_CASE), arguments);
         AssignOperator assignOp = new AssignOperator(selectVar, new MutableObject<>(swithCaseExpr));
         assignOp.getInputs().add(new MutableObject<>(opAndVarForElse.first));
 
@@ -1176,8 +1176,7 @@ class LangExpressionToPlanTranslator
         firstOp.getInputs().add(topOp);
         topOp = lastOp;
 
-        Pair<ILogicalExpression, Mutable<ILogicalOperator>> eo2 =
-                langExprToAlgExpression(qe.getSatisfiesExpr(), topOp);
+        Pair<ILogicalExpression, Mutable<ILogicalOperator>> eo2 = langExprToAlgExpression(qe.getSatisfiesExpr(), topOp);
 
         AggregateFunctionCallExpression fAgg;
         SelectOperator s;
@@ -1219,8 +1218,7 @@ class LangExpressionToPlanTranslator
             Pair<ILogicalExpression, Mutable<ILogicalOperator>> eo1 = langExprToAlgExpression(fb.getLeftExpr(), topOp);
             f.getArguments().add(new MutableObject<>(eo1.first));
             topOp = eo1.second;
-            Pair<ILogicalExpression, Mutable<ILogicalOperator>> eo2 =
-                    langExprToAlgExpression(fb.getRightExpr(), topOp);
+            Pair<ILogicalExpression, Mutable<ILogicalOperator>> eo2 = langExprToAlgExpression(fb.getRightExpr(), topOp);
             f.getArguments().add(new MutableObject<>(eo2.first));
             topOp = eo2.second;
         }
@@ -1699,9 +1697,8 @@ class LangExpressionToPlanTranslator
         Mutable<ILogicalExpression> expr = new MutableObject<>(
                 new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(BuiltinFunctions.IS_UNKOWN),
                         new ArrayList<>(Collections.singletonList(new MutableObject<>(logicalExpr)))));
-        arguments.add(new MutableObject<>(
-                new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(BuiltinFunctions.NOT),
-                        new ArrayList<>(Collections.singletonList(expr)))));
+        arguments.add(new MutableObject<>(new ScalarFunctionCallExpression(
+                FunctionUtil.getFunctionInfo(BuiltinFunctions.NOT), new ArrayList<>(Collections.singletonList(expr)))));
         return new MutableObject<>(
                 new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(BuiltinFunctions.AND), arguments));
     }

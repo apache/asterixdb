@@ -24,11 +24,12 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.runtime.utils.AppContextInfo;
 import org.apache.asterix.runtime.utils.ClusterStateManager;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public interface IExternalDataSourceFactory extends Serializable {
@@ -62,7 +63,8 @@ public interface IExternalDataSourceFactory extends Serializable {
      * @param configuration
      * @throws AsterixException
      */
-    public void configure(Map<String, String> configuration) throws AlgebricksException, HyracksDataException;
+    public void configure(IServiceContext ctx, Map<String, String> configuration)
+            throws AlgebricksException, HyracksDataException;
 
     /**
      * Specify whether the external data source can be indexed
@@ -82,11 +84,11 @@ public interface IExternalDataSourceFactory extends Serializable {
      * @return
      * @throws AlgebricksException
      */
-    public static AlgebricksAbsolutePartitionConstraint getPartitionConstraints(
+    public static AlgebricksAbsolutePartitionConstraint getPartitionConstraints(IApplicationContext appCtx,
             AlgebricksAbsolutePartitionConstraint constraints, int count) throws AlgebricksException {
         if (constraints == null) {
             ArrayList<String> locs = new ArrayList<>();
-            Set<String> stores = AppContextInfo.INSTANCE.getMetadataProperties().getStores().keySet();
+            Set<String> stores = appCtx.getMetadataProperties().getStores().keySet();
             if (stores.isEmpty()) {
                 throw new AlgebricksException("Configurations don't have any stores");
             }

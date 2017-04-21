@@ -20,7 +20,6 @@ package org.apache.asterix.runtime.utils;
 
 import java.io.IOException;
 import java.util.function.Supplier;
-import java.util.logging.Logger;
 
 import org.apache.asterix.common.cluster.IGlobalRecoveryManager;
 import org.apache.asterix.common.config.ActiveProperties;
@@ -28,7 +27,6 @@ import org.apache.asterix.common.config.BuildProperties;
 import org.apache.asterix.common.config.CompilerProperties;
 import org.apache.asterix.common.config.ExtensionProperties;
 import org.apache.asterix.common.config.ExternalProperties;
-import org.apache.asterix.common.config.IPropertiesProvider;
 import org.apache.asterix.common.config.MessagingProperties;
 import org.apache.asterix.common.config.MetadataProperties;
 import org.apache.asterix.common.config.NodeProperties;
@@ -36,7 +34,7 @@ import org.apache.asterix.common.config.PropertiesAccessor;
 import org.apache.asterix.common.config.ReplicationProperties;
 import org.apache.asterix.common.config.StorageProperties;
 import org.apache.asterix.common.config.TransactionProperties;
-import org.apache.asterix.common.dataflow.IApplicationContextInfo;
+import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.common.metadata.IMetadataBootstrap;
@@ -44,6 +42,7 @@ import org.apache.asterix.common.replication.IFaultToleranceStrategy;
 import org.apache.asterix.common.transactions.IResourceIdManager;
 import org.apache.hyracks.api.application.ICCServiceContext;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
+import org.apache.hyracks.api.job.IJobLifecycleListener;
 import org.apache.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
 import org.apache.hyracks.storage.common.IStorageManager;
 
@@ -52,9 +51,8 @@ import org.apache.hyracks.storage.common.IStorageManager;
  * instances that are accessed from the NCs. In addition an instance of ICCApplicationContext
  * is stored for access by the CC.
  */
-public class AppContextInfo implements IApplicationContextInfo, IPropertiesProvider {
+public class CcApplicationContext implements ICcApplicationContext {
 
-    public static final AppContextInfo INSTANCE = new AppContextInfo();
     private ICCServiceContext ccServiceCtx;
     private IGlobalRecoveryManager globalRecoveryManager;
     private ILibraryManager libraryManager;
@@ -73,51 +71,41 @@ public class AppContextInfo implements IApplicationContextInfo, IPropertiesProvi
     private Supplier<IMetadataBootstrap> metadataBootstrapSupplier;
     private IHyracksClientConnection hcc;
     private Object extensionManager;
-    private volatile boolean initialized = false;
     private IFaultToleranceStrategy ftStrategy;
+    private IJobLifecycleListener activeLifeCycleListener;
 
-    private AppContextInfo() {
-    }
-
-    public static synchronized void initialize(ICCServiceContext ccServiceCtx, IHyracksClientConnection hcc,
+    public CcApplicationContext(ICCServiceContext ccServiceCtx, IHyracksClientConnection hcc,
             ILibraryManager libraryManager, IResourceIdManager resourceIdManager,
             Supplier<IMetadataBootstrap> metadataBootstrapSupplier, IGlobalRecoveryManager globalRecoveryManager,
-            IFaultToleranceStrategy ftStrategy)
+            IFaultToleranceStrategy ftStrategy, IJobLifecycleListener activeLifeCycleListener)
             throws AsterixException, IOException {
-        if (INSTANCE.initialized) {
-            throw new AsterixException(AppContextInfo.class.getSimpleName() + " has been initialized already");
-        }
-        INSTANCE.initialized = true;
-        INSTANCE.ccServiceCtx = ccServiceCtx;
-        INSTANCE.hcc = hcc;
-        INSTANCE.libraryManager = libraryManager;
-        INSTANCE.resourceIdManager = resourceIdManager;
+        this.ccServiceCtx = ccServiceCtx;
+        this.hcc = hcc;
+        this.libraryManager = libraryManager;
+        this.resourceIdManager = resourceIdManager;
+        this.activeLifeCycleListener = activeLifeCycleListener;
         // Determine whether to use old-style asterix-configuration.xml or new-style configuration.
         // QQQ strip this out eventually
         PropertiesAccessor propertiesAccessor = PropertiesAccessor.getInstance(ccServiceCtx.getAppConfig());
-        INSTANCE.compilerProperties = new CompilerProperties(propertiesAccessor);
-        INSTANCE.externalProperties = new ExternalProperties(propertiesAccessor);
-        INSTANCE.metadataProperties = new MetadataProperties(propertiesAccessor);
-        INSTANCE.storageProperties = new StorageProperties(propertiesAccessor);
-        INSTANCE.txnProperties = new TransactionProperties(propertiesAccessor);
-        INSTANCE.activeProperties = new ActiveProperties(propertiesAccessor);
-        INSTANCE.extensionProperties = new ExtensionProperties(propertiesAccessor);
-        INSTANCE.replicationProperties = new ReplicationProperties(propertiesAccessor);
-        INSTANCE.ftStrategy = ftStrategy;
-        INSTANCE.hcc = hcc;
-        INSTANCE.buildProperties = new BuildProperties(propertiesAccessor);
-        INSTANCE.messagingProperties = new MessagingProperties(propertiesAccessor);
-        INSTANCE.nodeProperties = new NodeProperties(propertiesAccessor);
-        INSTANCE.metadataBootstrapSupplier = metadataBootstrapSupplier;
-        INSTANCE.globalRecoveryManager = globalRecoveryManager;
-    }
-
-    public boolean initialized() {
-        return initialized;
+        compilerProperties = new CompilerProperties(propertiesAccessor);
+        externalProperties = new ExternalProperties(propertiesAccessor);
+        metadataProperties = new MetadataProperties(propertiesAccessor);
+        storageProperties = new StorageProperties(propertiesAccessor);
+        txnProperties = new TransactionProperties(propertiesAccessor);
+        activeProperties = new ActiveProperties(propertiesAccessor);
+        extensionProperties = new ExtensionProperties(propertiesAccessor);
+        replicationProperties = new ReplicationProperties(propertiesAccessor);
+        this.ftStrategy = ftStrategy;
+        this.hcc = hcc;
+        this.buildProperties = new BuildProperties(propertiesAccessor);
+        this.messagingProperties = new MessagingProperties(propertiesAccessor);
+        this.nodeProperties = new NodeProperties(propertiesAccessor);
+        this.metadataBootstrapSupplier = metadataBootstrapSupplier;
+        this.globalRecoveryManager = globalRecoveryManager;
     }
 
     @Override
-    public ICCServiceContext getCCServiceContext() {
+    public ICCServiceContext getServiceContext() {
         return ccServiceCtx;
     }
 
@@ -156,6 +144,7 @@ public class AppContextInfo implements IApplicationContextInfo, IPropertiesProvi
         return buildProperties;
     }
 
+    @Override
     public IHyracksClientConnection getHcc() {
         return hcc;
     }
@@ -207,6 +196,7 @@ public class AppContextInfo implements IApplicationContextInfo, IPropertiesProvi
         return nodeProperties;
     }
 
+    @Override
     public IResourceIdManager getResourceIdManager() {
         return resourceIdManager;
     }
@@ -217,5 +207,10 @@ public class AppContextInfo implements IApplicationContextInfo, IPropertiesProvi
 
     public IFaultToleranceStrategy getFaultToleranceStrategy() {
         return ftStrategy;
+    }
+
+    @Override
+    public IJobLifecycleListener getActiveLifecycleListener() {
+        return activeLifeCycleListener;
     }
 }

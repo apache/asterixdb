@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.config.DatasetConfig.ExternalFilePendingOp;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
@@ -31,19 +32,19 @@ import org.apache.asterix.external.indexing.ExternalFile;
 import org.apache.asterix.external.indexing.IndexingScheduler;
 import org.apache.asterix.external.indexing.RecordId.RecordIdType;
 import org.apache.asterix.external.input.stream.HDFSInputStream;
+import org.apache.asterix.hivecompat.io.RCFileInputFormat;
+import org.apache.asterix.runtime.utils.ClusterStateManager;
 import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.asterix.hivecompat.io.RCFileInputFormat;
-import org.apache.asterix.runtime.utils.AppContextInfo;
-import org.apache.asterix.runtime.utils.ClusterStateManager;
 import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.SequenceFileInputFormat;
 import org.apache.hadoop.mapred.TextInputFormat;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
+import org.apache.hyracks.api.application.ICCServiceContext;
 import org.apache.hyracks.api.context.ICCContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.HyracksException;
@@ -51,8 +52,8 @@ import org.apache.hyracks.hdfs.scheduler.Scheduler;
 
 public class HDFSUtils {
 
-    public static Scheduler initializeHDFSScheduler() throws  HyracksDataException {
-        ICCContext ccContext = AppContextInfo.INSTANCE.getCCServiceContext().getCCContext();
+    public static Scheduler initializeHDFSScheduler(ICCServiceContext serviceCtx) throws HyracksDataException {
+        ICCContext ccContext = serviceCtx.getCCContext();
         Scheduler scheduler = null;
         try {
             scheduler = new Scheduler(ccContext.getClusterControllerInfo().getClientNetAddress(),
@@ -63,8 +64,9 @@ public class HDFSUtils {
         return scheduler;
     }
 
-    public static IndexingScheduler initializeIndexingHDFSScheduler() throws HyracksDataException {
-        ICCContext ccContext = AppContextInfo.INSTANCE.getCCServiceContext().getCCContext();
+    public static IndexingScheduler initializeIndexingHDFSScheduler(ICCServiceContext serviceCtx)
+            throws HyracksDataException {
+        ICCContext ccContext = serviceCtx.getCCContext();
         IndexingScheduler scheduler = null;
         try {
             scheduler = new IndexingScheduler(ccContext.getClusterControllerInfo().getClientNetAddress(),
@@ -90,8 +92,8 @@ public class HDFSUtils {
     public static InputSplit[] getSplits(JobConf conf, List<ExternalFile> files) throws IOException {
         // Create file system object
         FileSystem fs = FileSystem.get(conf);
-        ArrayList<FileSplit> fileSplits = new ArrayList<FileSplit>();
-        ArrayList<ExternalFile> orderedExternalFiles = new ArrayList<ExternalFile>();
+        ArrayList<FileSplit> fileSplits = new ArrayList<>();
+        ArrayList<ExternalFile> orderedExternalFiles = new ArrayList<>();
         // Create files splits
         for (ExternalFile file : files) {
             Path filePath = new Path(file.getFileName());
@@ -202,11 +204,11 @@ public class HDFSUtils {
         return conf;
     }
 
-    public static AlgebricksAbsolutePartitionConstraint getPartitionConstraints(
+    public static AlgebricksAbsolutePartitionConstraint getPartitionConstraints(IApplicationContext appCtx,
             AlgebricksAbsolutePartitionConstraint clusterLocations) {
         if (clusterLocations == null) {
             ArrayList<String> locs = new ArrayList<>();
-            Map<String, String[]> stores = AppContextInfo.INSTANCE.getMetadataProperties().getStores();
+            Map<String, String[]> stores = appCtx.getMetadataProperties().getStores();
             for (String node : stores.keySet()) {
                 int numIODevices = ClusterStateManager.INSTANCE.getIODevices(node).length;
                 for (int k = 0; k < numIODevices; k++) {

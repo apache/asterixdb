@@ -23,14 +23,14 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.asterix.common.api.IAppRuntimeContext;
+import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.messaging.api.INCMessageBroker;
+import org.apache.asterix.common.messaging.api.INcAddressedMessage;
 import org.apache.asterix.common.replication.IRemoteRecoveryManager;
 import org.apache.asterix.runtime.message.AbstractFailbackPlanMessage;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.service.IControllerService;
 
-public class CompleteFailbackRequestMessage extends AbstractFailbackPlanMessage {
+public class CompleteFailbackRequestMessage extends AbstractFailbackPlanMessage implements INcAddressedMessage {
 
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = Logger.getLogger(CompleteFailbackRequestMessage.class.getName());
@@ -62,9 +62,8 @@ public class CompleteFailbackRequestMessage extends AbstractFailbackPlanMessage 
     }
 
     @Override
-    public void handle(IControllerService cs) throws HyracksDataException, InterruptedException {
-        IAppRuntimeContext appContext = (IAppRuntimeContext) cs.getApplicationContext();
-        INCMessageBroker broker = (INCMessageBroker) cs.getContext().getMessageBroker();
+    public void handle(INcApplicationContext appContext) throws HyracksDataException, InterruptedException {
+        INCMessageBroker broker = (INCMessageBroker) appContext.getServiceContext().getMessageBroker();
         HyracksDataException hde = null;
         try {
             IRemoteRecoveryManager remoteRecoeryManager = appContext.getRemoteRecoveryManager();
@@ -73,8 +72,8 @@ public class CompleteFailbackRequestMessage extends AbstractFailbackPlanMessage 
             LOGGER.log(Level.SEVERE, "Failure during completion of failback process", e);
             hde = HyracksDataException.create(e);
         } finally {
-            CompleteFailbackResponseMessage reponse = new CompleteFailbackResponseMessage(planId,
-                    requestId, partitions);
+            CompleteFailbackResponseMessage reponse =
+                    new CompleteFailbackResponseMessage(planId, requestId, partitions);
             try {
                 broker.sendMessageToCC(reponse);
             } catch (Exception e) {

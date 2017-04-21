@@ -28,6 +28,7 @@ import org.apache.asterix.external.api.IInputStreamFactory;
 import org.apache.asterix.external.input.stream.TwitterFirehoseInputStream;
 import org.apache.asterix.runtime.utils.ClusterStateManager;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
+import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
@@ -82,7 +83,7 @@ public class TwitterFirehoseStreamFactory implements IInputStreamFactory {
     }
 
     @Override
-    public void configure(Map<String, String> configuration) {
+    public void configure(IServiceContext serviceCtx, Map<String, String> configuration) {
         this.configuration = configuration;
     }
 

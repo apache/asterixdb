@@ -55,6 +55,7 @@ import org.apache.asterix.common.api.INCLifecycleTask;
 import org.apache.asterix.common.cluster.ClusterPartition;
 import org.apache.asterix.common.cluster.IClusterStateManager;
 import org.apache.asterix.common.config.ReplicationProperties;
+import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.common.messaging.api.ICCMessageBroker;
@@ -63,8 +64,8 @@ import org.apache.asterix.common.replication.INCLifecycleMessage;
 import org.apache.asterix.common.replication.IReplicationStrategy;
 import org.apache.asterix.common.transactions.IRecoveryManager.SystemState;
 import org.apache.asterix.metadata.MetadataManager;
-import org.apache.asterix.runtime.utils.AppContextInfo;
 import org.apache.asterix.util.FaultToleranceUtil;
+import org.apache.hyracks.api.application.ICCServiceContext;
 import org.apache.hyracks.api.application.IClusterLifecycleListener.ClusterEventType;
 import org.apache.hyracks.api.config.IOption;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -83,6 +84,7 @@ public class AutoFaultToleranceStrategy implements IFaultToleranceStrategy {
     private IClusterStateManager clusterManager;
     private ICCMessageBroker messageBroker;
     private IReplicationStrategy replicationStrategy;
+    private ICCServiceContext serviceCtx;
     private Set<String> pendingStartupCompletionNodes = new HashSet<>();
 
     @Override
@@ -135,8 +137,8 @@ public class AutoFaultToleranceStrategy implements IFaultToleranceStrategy {
     private synchronized void requestPartitionsTakeover(String failedNodeId) {
         //replica -> list of partitions to takeover
         Map<String, List<Integer>> partitionRecoveryPlan = new HashMap<>();
-        ReplicationProperties replicationProperties = AppContextInfo.INSTANCE.getReplicationProperties();
-
+        ICcApplicationContext appCtx = (ICcApplicationContext) serviceCtx.getApplicationContext();
+        ReplicationProperties replicationProperties = appCtx.getReplicationProperties();
         //collect the partitions of the failed NC
         List<ClusterPartition> lostPartitions = getNodeAssignedPartitions(failedNodeId);
         if (!lostPartitions.isEmpty()) {
@@ -204,7 +206,8 @@ public class AutoFaultToleranceStrategy implements IFaultToleranceStrategy {
         planId2FailbackPlanMap.put(plan.getPlanId(), plan);
 
         //get all partitions this node requires to resync
-        ReplicationProperties replicationProperties = AppContextInfo.INSTANCE.getReplicationProperties();
+        ICcApplicationContext appCtx = (ICcApplicationContext) serviceCtx.getApplicationContext();
+        ReplicationProperties replicationProperties = appCtx.getReplicationProperties();
         Set<String> nodeReplicas = replicationProperties.getNodeReplicasIds(failingBackNodeId);
         clusterManager.getClusterPartitons();
         for (String replicaId : nodeReplicas) {
@@ -255,7 +258,8 @@ public class AutoFaultToleranceStrategy implements IFaultToleranceStrategy {
                      * if the returning node is the original metadata node,
                      * then metadata node will change after the failback completes
                      */
-                    String originalMetadataNode = AppContextInfo.INSTANCE.getMetadataProperties().getMetadataNodeName();
+                    ICcApplicationContext appCtx = (ICcApplicationContext) serviceCtx.getApplicationContext();
+                    String originalMetadataNode = appCtx.getMetadataProperties().getMetadataNodeName();
                     if (originalMetadataNode.equals(failbackNode)) {
                         plan.setNodeToReleaseMetadataManager(currentMetadataNode);
                         currentMetadataNode = "";
@@ -399,7 +403,8 @@ public class AutoFaultToleranceStrategy implements IFaultToleranceStrategy {
 
     private synchronized void requestMetadataNodeTakeover() {
         //need a new node to takeover metadata node
-        ClusterPartition metadataPartiton = AppContextInfo.INSTANCE.getMetadataProperties().getMetadataPartition();
+        ICcApplicationContext appCtx = (ICcApplicationContext) serviceCtx.getApplicationContext();
+        ClusterPartition metadataPartiton = appCtx.getMetadataProperties().getMetadataPartition();
         //request the metadataPartition node to register itself as the metadata node
         TakeoverMetadataNodeRequestMessage takeoverRequest = new TakeoverMetadataNodeRequestMessage();
         try {
@@ -418,10 +423,11 @@ public class AutoFaultToleranceStrategy implements IFaultToleranceStrategy {
     }
 
     @Override
-    public IFaultToleranceStrategy from(IReplicationStrategy replicationStrategy, ICCMessageBroker messageBroker) {
+    public IFaultToleranceStrategy from(ICCServiceContext serviceCtx, IReplicationStrategy replicationStrategy) {
         AutoFaultToleranceStrategy ft = new AutoFaultToleranceStrategy();
-        ft.messageBroker = messageBroker;
+        ft.messageBroker = (ICCMessageBroker) serviceCtx.getMessageBroker();
         ft.replicationStrategy = replicationStrategy;
+        ft.serviceCtx = serviceCtx;
         return ft;
     }
 

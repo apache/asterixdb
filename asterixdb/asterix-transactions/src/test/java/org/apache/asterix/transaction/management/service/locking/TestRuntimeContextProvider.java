@@ -23,7 +23,7 @@ import static org.mockito.Mockito.mock;
 import java.util.concurrent.Executors;
 
 import org.apache.asterix.common.api.ThreadExecutor;
-import org.apache.asterix.common.api.IAppRuntimeContext;
+import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.transactions.IAppRuntimeContextProvider;
 import org.apache.asterix.common.transactions.ITransactionSubsystem;
@@ -90,7 +90,7 @@ class TestRuntimeContextProvider implements IAppRuntimeContextProvider {
     }
 
     @Override
-    public IAppRuntimeContext getAppContext() {
+    public INcApplicationContext getAppContext() {
         throw new UnsupportedOperationException();
     }
 }

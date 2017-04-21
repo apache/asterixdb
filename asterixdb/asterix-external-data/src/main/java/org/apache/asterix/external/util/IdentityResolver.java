@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.external.util;
 
+import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.external.api.INodeResolver;
 
 /**
@@ -27,7 +28,7 @@ import org.apache.asterix.external.api.INodeResolver;
 public class IdentityResolver implements INodeResolver {
 
     @Override
-    public String resolveNode(String value) {
+    public String resolveNode(ICcApplicationContext appCtx, String value) {
         return value;
     }
 

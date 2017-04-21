@@ -24,11 +24,12 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.asterix.common.api.IAppRuntimeContext;
+import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.config.MessagingProperties;
 import org.apache.asterix.common.memory.ConcurrentFramePool;
-import org.apache.asterix.common.messaging.api.IApplicationMessage;
+import org.apache.asterix.common.messaging.api.ICcAddressedMessage;
 import org.apache.asterix.common.messaging.api.INCMessageBroker;
+import org.apache.asterix.common.messaging.api.INcAddressedMessage;
 import org.apache.hyracks.api.comm.IChannelControlBlock;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.messages.IMessage;
@@ -39,14 +40,14 @@ public class NCMessageBroker implements INCMessageBroker {
     private static final Logger LOGGER = Logger.getLogger(NCMessageBroker.class.getName());
 
     private final NodeControllerService ncs;
-    private final IAppRuntimeContext appContext;
-    private final LinkedBlockingQueue<IApplicationMessage> receivedMsgsQ;
+    private final INcApplicationContext appContext;
+    private final LinkedBlockingQueue<INcAddressedMessage> receivedMsgsQ;
     private final ConcurrentFramePool messagingFramePool;
     private final int maxMsgSize;
 
     public NCMessageBroker(NodeControllerService ncs, MessagingProperties messagingProperties) {
         this.ncs = ncs;
-        appContext = (IAppRuntimeContext) ncs.getApplicationContext();
+        appContext = (INcApplicationContext) ncs.getApplicationContext();
         maxMsgSize = messagingProperties.getFrameSize();
         int messagingMemoryBudget = messagingProperties.getFrameSize() * messagingProperties.getFrameCount();
         messagingFramePool = new ConcurrentFramePool(ncs.getId(), messagingMemoryBudget,
@@ -57,36 +58,36 @@ public class NCMessageBroker implements INCMessageBroker {
     }
 
     @Override
-    public void sendMessageToCC(IApplicationMessage message) throws Exception {
+    public void sendMessageToCC(ICcAddressedMessage message) throws Exception {
         ncs.sendApplicationMessageToCC(JavaSerializationUtils.serialize(message), null);
     }
 
     @Override
-    public void sendMessageToNC(String nodeId, IApplicationMessage message)
+    public void sendMessageToNC(String nodeId, INcAddressedMessage message)
             throws Exception {
         IChannelControlBlock messagingChannel = ncs.getMessagingNetworkManager().getMessagingChannel(nodeId);
         sendMessageToChannel(messagingChannel, message);
     }
 
     @Override
-    public void queueReceivedMessage(IApplicationMessage msg) {
+    public void queueReceivedMessage(INcAddressedMessage msg) {
         receivedMsgsQ.offer(msg);
     }
 
     @Override
     public void receivedMessage(IMessage message, String nodeId) throws Exception {
-        IApplicationMessage absMessage = (IApplicationMessage) message;
+        INcAddressedMessage absMessage = (INcAddressedMessage) message;
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Received message: " + absMessage);
         }
-        absMessage.handle(ncs);
+        absMessage.handle(appContext);
     }
 
     public ConcurrentFramePool getMessagingFramePool() {
         return messagingFramePool;
     }
 
-    private void sendMessageToChannel(IChannelControlBlock ccb, IApplicationMessage msg) throws IOException {
+    private void sendMessageToChannel(IChannelControlBlock ccb, INcAddressedMessage msg) throws IOException {
         byte[] serializedMsg = JavaSerializationUtils.serialize(msg);
         if (serializedMsg.length > maxMsgSize) {
             throw new HyracksDataException("Message exceded maximum size");
@@ -115,7 +116,7 @@ public class NCMessageBroker implements INCMessageBroker {
         @Override
         public void run() {
             while (true) {
-                IApplicationMessage msg = null;
+                INcAddressedMessage msg = null;
                 try {
                     msg = receivedMsgsQ.take();
                     //TODO add nodeId to IApplicationMessage and pass it

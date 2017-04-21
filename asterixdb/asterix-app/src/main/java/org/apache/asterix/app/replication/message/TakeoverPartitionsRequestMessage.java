@@ -22,15 +22,15 @@ import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.asterix.common.api.IAppRuntimeContext;
+import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.messaging.api.INCMessageBroker;
+import org.apache.asterix.common.messaging.api.INcAddressedMessage;
 import org.apache.asterix.common.replication.INCLifecycleMessage;
 import org.apache.asterix.common.replication.IRemoteRecoveryManager;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.service.IControllerService;
 
-public class TakeoverPartitionsRequestMessage implements INCLifecycleMessage {
+public class TakeoverPartitionsRequestMessage implements INCLifecycleMessage, INcAddressedMessage {
 
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = Logger.getLogger(TakeoverPartitionsRequestMessage.class.getName());
@@ -72,9 +72,8 @@ public class TakeoverPartitionsRequestMessage implements INCLifecycleMessage {
     }
 
     @Override
-    public void handle(IControllerService cs) throws HyracksDataException, InterruptedException {
-        IAppRuntimeContext appContext = (IAppRuntimeContext) cs.getApplicationContext();
-        INCMessageBroker broker = (INCMessageBroker) cs.getContext().getMessageBroker();
+    public void handle(INcApplicationContext appContext) throws HyracksDataException, InterruptedException {
+        INCMessageBroker broker = (INCMessageBroker) appContext.getServiceContext().getMessageBroker();
         //if the NC is shutting down, it should ignore takeover partitions request
         if (!appContext.isShuttingdown()) {
             HyracksDataException hde = null;

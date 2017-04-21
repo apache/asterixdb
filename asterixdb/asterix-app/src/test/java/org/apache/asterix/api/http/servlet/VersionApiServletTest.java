@@ -32,7 +32,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.asterix.api.http.server.VersionApiServlet;
 import org.apache.asterix.common.config.BuildProperties;
-import org.apache.asterix.runtime.utils.AppContextInfo;
+import org.apache.asterix.runtime.utils.CcApplicationContext;
 import org.apache.asterix.test.runtime.SqlppExecutionTest;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.http.api.IServletRequest;
@@ -60,7 +60,7 @@ public class VersionApiServletTest {
         PrintWriter outputWriter = new PrintWriter(outputStream);
 
         // Creates mocks.
-        AppContextInfo mockCtx = mock(AppContextInfo.class);
+        CcApplicationContext mockCtx = mock(CcApplicationContext.class);
         IServletRequest mockRequest = mock(IServletRequest.class);
         IHyracksClientConnection mockHcc = mock(IHyracksClientConnection.class);
         IServletResponse mockResponse = mock(IServletResponse.class);

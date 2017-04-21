@@ -28,6 +28,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.file.StorageComponentProvider;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
@@ -58,9 +59,11 @@ import io.netty.handler.codec.http.HttpResponseStatus;
  */
 public class ConnectorApiServlet extends AbstractServlet {
     private static final Logger LOGGER = Logger.getLogger(ConnectorApiServlet.class.getName());
+    private ICcApplicationContext appCtx;
 
-    public ConnectorApiServlet(ConcurrentMap<String, Object> ctx, String[] paths) {
+    public ConnectorApiServlet(ConcurrentMap<String, Object> ctx, String[] paths, ICcApplicationContext appCtx) {
         super(ctx, paths);
+        this.appCtx = appCtx;
     }
 
     @Override
@@ -91,7 +94,7 @@ public class ConnectorApiServlet extends AbstractServlet {
             MetadataManager.INSTANCE.init();
             MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
             // Retrieves file splits of the dataset.
-            MetadataProvider metadataProvider = new MetadataProvider(null, new StorageComponentProvider());
+            MetadataProvider metadataProvider = new MetadataProvider(appCtx, null, new StorageComponentProvider());
             try {
                 metadataProvider.setMetadataTxnContext(mdTxnCtx);
                 Dataset dataset = metadataProvider.findDataset(dataverseName, datasetName);

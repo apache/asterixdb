@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.app.nc.task;
 
-import org.apache.asterix.common.api.IAppRuntimeContext;
+import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.api.INCLifecycleTask;
 import org.apache.asterix.common.transactions.IRecoveryManager.SystemState;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -30,7 +30,7 @@ public class MetadataBootstrapTask implements INCLifecycleTask {
 
     @Override
     public void perform(IControllerService cs) throws HyracksDataException {
-        IAppRuntimeContext appContext = (IAppRuntimeContext) cs.getApplicationContext();
+        INcApplicationContext appContext = (INcApplicationContext) cs.getApplicationContext();
         try {
             SystemState state = appContext.getTransactionSubsystem().getRecoveryManager().getSystemState();
             appContext.initializeMetadata(state == SystemState.PERMANENT_DATA_LOSS);

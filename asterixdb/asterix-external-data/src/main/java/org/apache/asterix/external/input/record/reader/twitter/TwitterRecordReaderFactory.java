@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.external.api.IExternalDataSourceFactory;
 import org.apache.asterix.external.api.IRecordReader;
@@ -32,6 +33,7 @@ import org.apache.asterix.external.util.TwitterUtil.AuthenticationConstants;
 import org.apache.asterix.external.util.TwitterUtil.SearchAPIConstants;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
@@ -47,6 +49,7 @@ public class TwitterRecordReaderFactory implements IRecordReaderFactory<String> 
 
     private Map<String, String> configuration;
     private transient AlgebricksAbsolutePartitionConstraint clusterLocations;
+    private transient IServiceContext serviceCtx;
 
     public static boolean isTwitterPull(Map<String, String> configuration) {
         String reader = configuration.get(ExternalDataConstants.KEY_READER);
@@ -64,13 +67,16 @@ public class TwitterRecordReaderFactory implements IRecordReaderFactory<String> 
 
     @Override
     public AlgebricksAbsolutePartitionConstraint getPartitionConstraint() throws AlgebricksException {
-        clusterLocations = IExternalDataSourceFactory.getPartitionConstraints(clusterLocations, INTAKE_CARDINALITY);
+        clusterLocations = IExternalDataSourceFactory.getPartitionConstraints(
+                (IApplicationContext) serviceCtx.getApplicationContext(),
+                clusterLocations, INTAKE_CARDINALITY);
         return clusterLocations;
     }
 
     @Override
-    public void configure(Map<String, String> configuration) throws AsterixException {
+    public void configure(IServiceContext serviceCtx, Map<String, String> configuration) throws AsterixException {
         this.configuration = configuration;
+        this.serviceCtx = serviceCtx;
         TwitterUtil.initializeConfigurationWithAuthInfo(configuration);
         if (!validateConfiguration(configuration)) {
             StringBuilder builder = new StringBuilder();

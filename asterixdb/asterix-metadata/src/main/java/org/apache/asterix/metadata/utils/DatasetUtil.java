@@ -320,18 +320,18 @@ public class DatasetUtil {
         return null;
     }
 
-    public static JobSpecification createDropDatasetJobSpec(Dataset dataset, Index primaryIndex,
-            MetadataProvider metadataProvider)
+    public static JobSpecification createDropDatasetJobSpec(Dataset dataset,
+            Index primaryIndex, MetadataProvider metadataProvider)
             throws AlgebricksException, HyracksDataException, RemoteException, ACIDException {
         String datasetPath = dataset.getDataverseName() + File.separator + dataset.getDatasetName();
         LOGGER.info("DROP DATASETPATH: " + datasetPath);
         if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
-            return RuntimeUtils.createJobSpecification();
+            return RuntimeUtils.createJobSpecification(metadataProvider.getApplicationContext());
         }
         ARecordType itemType =
                 (ARecordType) metadataProvider.findType(dataset.getItemTypeDataverseName(), dataset.getItemTypeName());
         ARecordType metaType = DatasetUtil.getMetaType(metadataProvider, dataset);
-        JobSpecification specPrimary = RuntimeUtils.createJobSpecification();
+        JobSpecification specPrimary = RuntimeUtils.createJobSpecification(metadataProvider.getApplicationContext());
         Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint =
                 metadataProvider.getSplitProviderAndConstraints(dataset);
         Pair<ILSMMergePolicyFactory, Map<String, String>> compactionInfo =
@@ -352,7 +352,7 @@ public class DatasetUtil {
     public static JobSpecification buildDropFilesIndexJobSpec(MetadataProvider metadataProvider, Dataset dataset)
             throws AlgebricksException {
         String indexName = IndexingConstants.getFilesIndexName(dataset.getDatasetName());
-        JobSpecification spec = RuntimeUtils.createJobSpecification();
+        JobSpecification spec = RuntimeUtils.createJobSpecification(metadataProvider.getApplicationContext());
         IStorageComponentProvider storageComponentProvider = metadataProvider.getStorageComponentProvider();
         Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint =
                 metadataProvider.splitProviderAndPartitionConstraintsForFilesIndex(dataset.getDataverseName(),
@@ -380,12 +380,12 @@ public class DatasetUtil {
         String datasetPath = dataset.getDataverseName() + File.separator + dataset.getDatasetName();
         LOGGER.info("DROP DATASETPATH: " + datasetPath);
         if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
-            return RuntimeUtils.createJobSpecification();
+            return RuntimeUtils.createJobSpecification(metadataProvider.getApplicationContext());
         }
         ARecordType itemType =
                 (ARecordType) metadataProvider.findType(dataset.getItemTypeDataverseName(), dataset.getItemTypeName());
         ARecordType metaType = DatasetUtil.getMetaType(metadataProvider, dataset);
-        JobSpecification specPrimary = RuntimeUtils.createJobSpecification();
+        JobSpecification specPrimary = RuntimeUtils.createJobSpecification(metadataProvider.getApplicationContext());
         Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint =
                 metadataProvider.getSplitProviderAndConstraints(dataset);
         Pair<ILSMMergePolicyFactory, Map<String, String>> compactionInfo =
@@ -406,8 +406,8 @@ public class DatasetUtil {
         return specPrimary;
     }
 
-    public static JobSpecification createDatasetJobSpec(Dataverse dataverse, String datasetName,
-            MetadataProvider metadataProvider) throws AsterixException, AlgebricksException {
+    public static JobSpecification createDatasetJobSpec(Dataverse dataverse,
+            String datasetName, MetadataProvider metadataProvider) throws AsterixException, AlgebricksException {
         IStorageComponentProvider storageComponentProvider = metadataProvider.getStorageComponentProvider();
         String dataverseName = dataverse.getDataverseName();
         IDataFormat format;
@@ -430,7 +430,7 @@ public class DatasetUtil {
             metaItemType = (ARecordType) metadataProvider.findType(dataset.getMetaItemTypeDataverseName(),
                     dataset.getMetaItemTypeName());
         }
-        JobSpecification spec = RuntimeUtils.createJobSpecification();
+        JobSpecification spec = RuntimeUtils.createJobSpecification(metadataProvider.getApplicationContext());
         IBinaryComparatorFactory[] comparatorFactories = DatasetUtil.computeKeysBinaryComparatorFactories(dataset,
                 itemType, metaItemType, format.getBinaryComparatorFactoryProvider());
         ITypeTraits[] typeTraits = DatasetUtil.computeTupleTypeTraits(dataset, itemType, metaItemType);
@@ -474,8 +474,8 @@ public class DatasetUtil {
         return spec;
     }
 
-    public static JobSpecification compactDatasetJobSpec(Dataverse dataverse, String datasetName,
-            MetadataProvider metadataProvider) throws AsterixException, AlgebricksException {
+    public static JobSpecification compactDatasetJobSpec(Dataverse dataverse,
+            String datasetName, MetadataProvider metadataProvider) throws AsterixException, AlgebricksException {
         String dataverseName = dataverse.getDataverseName();
         IDataFormat format;
         try {
@@ -490,7 +490,7 @@ public class DatasetUtil {
         ARecordType itemType =
                 (ARecordType) metadataProvider.findType(dataset.getItemTypeDataverseName(), dataset.getItemTypeName());
         ARecordType metaItemType = DatasetUtil.getMetaType(metadataProvider, dataset);
-        JobSpecification spec = RuntimeUtils.createJobSpecification();
+        JobSpecification spec = RuntimeUtils.createJobSpecification(metadataProvider.getApplicationContext());
         IBinaryComparatorFactory[] comparatorFactories = DatasetUtil.computeKeysBinaryComparatorFactories(dataset,
                 itemType, metaItemType, format.getBinaryComparatorFactoryProvider());
         ITypeTraits[] typeTraits = DatasetUtil.computeTupleTypeTraits(dataset, itemType, metaItemType);

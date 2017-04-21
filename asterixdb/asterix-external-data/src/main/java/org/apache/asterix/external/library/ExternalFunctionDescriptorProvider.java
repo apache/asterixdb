@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.external.library;
 
+import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.om.functions.IExternalFunctionInfo;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
@@ -28,11 +29,11 @@ import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 
 public class ExternalFunctionDescriptorProvider {
 
-    public static IFunctionDescriptor getExternalFunctionDescriptor(IExternalFunctionInfo finfo)
-            throws AlgebricksException {
+    public static IFunctionDescriptor getExternalFunctionDescriptor(IExternalFunctionInfo finfo,
+            IApplicationContext appCtx) throws AlgebricksException {
         switch (finfo.getKind()) {
             case SCALAR:
-                return new ExternalScalarFunctionDescriptor(finfo);
+                return new ExternalScalarFunctionDescriptor(finfo, appCtx);
             case AGGREGATE:
             case UNNEST:
                 throw new AlgebricksException("Unsupported function kind :" + finfo.getKind());
@@ -48,20 +49,22 @@ class ExternalScalarFunctionDescriptor extends AbstractScalarFunctionDynamicDesc
     private static final long serialVersionUID = 1L;
     private final IFunctionInfo finfo;
     private IScalarEvaluatorFactory evaluatorFactory;
+    private final transient IApplicationContext appCtx;
+
+    public ExternalScalarFunctionDescriptor(IFunctionInfo finfo, IApplicationContext appCtx) {
+        this.finfo = finfo;
+        this.appCtx = appCtx;
+    }
 
     @Override
     public IScalarEvaluatorFactory createEvaluatorFactory(IScalarEvaluatorFactory[] args) throws AlgebricksException {
-        evaluatorFactory = new ExternalScalarFunctionEvaluatorFactory((IExternalFunctionInfo) finfo, args);
+        evaluatorFactory = new ExternalScalarFunctionEvaluatorFactory((IExternalFunctionInfo) finfo, args, appCtx);
         return evaluatorFactory;
     }
 
     @Override
     public FunctionIdentifier getIdentifier() {
         return finfo.getFunctionIdentifier();
-    }
-
-    public ExternalScalarFunctionDescriptor(IFunctionInfo finfo) {
-        this.finfo = finfo;
     }
 
 }

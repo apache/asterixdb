@@ -21,6 +21,7 @@ package org.apache.asterix.external.input.record.reader.hdfs;
 import java.io.IOException;
 import java.util.Map;
 
+import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.external.api.ILookupReaderFactory;
 import org.apache.asterix.external.api.ILookupRecordReader;
@@ -30,6 +31,7 @@ import org.apache.asterix.external.util.HDFSUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
+import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.hdfs.dataflow.ConfFactory;
@@ -40,6 +42,7 @@ public class HDFSLookupReaderFactory<T> implements ILookupReaderFactory<T> {
     protected ConfFactory confFactory;
     protected Map<String, String> configuration;
     protected transient AlgebricksAbsolutePartitionConstraint clusterLocations;
+    protected transient IServiceContext serviceCtx;
 
     public HDFSLookupReaderFactory() {
     }
@@ -51,12 +54,14 @@ public class HDFSLookupReaderFactory<T> implements ILookupReaderFactory<T> {
 
     @Override
     public AlgebricksAbsolutePartitionConstraint getPartitionConstraint() throws AsterixException {
-        clusterLocations = HDFSUtils.getPartitionConstraints(clusterLocations);
+        clusterLocations = HDFSUtils.getPartitionConstraints((IApplicationContext) serviceCtx.getApplicationContext(),
+                clusterLocations);
         return clusterLocations;
     }
 
     @Override
-    public void configure(Map<String, String> configuration) throws AsterixException {
+    public void configure(IServiceContext serviceCtx, Map<String, String> configuration) throws AsterixException {
+        this.serviceCtx = serviceCtx;
         this.configuration = configuration;
         JobConf conf = HDFSUtils.configureHDFSJobConf(configuration);
         try {

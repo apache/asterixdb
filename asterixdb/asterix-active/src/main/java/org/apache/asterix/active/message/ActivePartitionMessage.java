@@ -22,12 +22,12 @@ import java.io.Serializable;
 
 import org.apache.asterix.active.ActiveLifecycleListener;
 import org.apache.asterix.active.ActiveRuntimeId;
-import org.apache.asterix.common.messaging.api.IApplicationMessage;
+import org.apache.asterix.common.dataflow.ICcApplicationContext;
+import org.apache.asterix.common.messaging.api.ICcAddressedMessage;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.JobId;
-import org.apache.hyracks.api.service.IControllerService;
 
-public class ActivePartitionMessage implements IApplicationMessage {
+public class ActivePartitionMessage implements ICcAddressedMessage {
 
     public static final byte ACTIVE_RUNTIME_REGISTERED = 0x00;
     public static final byte ACTIVE_RUNTIME_DEREGISTERED = 0x01;
@@ -66,8 +66,9 @@ public class ActivePartitionMessage implements IApplicationMessage {
     }
 
     @Override
-    public void handle(IControllerService cs) throws HyracksDataException, InterruptedException {
-        ActiveLifecycleListener.INSTANCE.receive(this);
+    public void handle(ICcApplicationContext appCtx) throws HyracksDataException, InterruptedException {
+        ActiveLifecycleListener activeListener = (ActiveLifecycleListener) appCtx.getActiveLifecycleListener();
+        activeListener.receive(this);
     }
 
     @Override

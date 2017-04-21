@@ -23,12 +23,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.external.api.IExternalDataSourceFactory;
 import org.apache.asterix.external.api.IRecordReader;
 import org.apache.asterix.external.api.IRecordReaderFactory;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
@@ -37,8 +39,9 @@ import com.sun.syndication.feed.synd.SyndEntryImpl;
 public class RSSRecordReaderFactory implements IRecordReaderFactory<SyndEntryImpl> {
 
     private static final long serialVersionUID = 1L;
-    private final List<String> urls = new ArrayList<String>();
+    private final List<String> urls = new ArrayList<>();
     private transient AlgebricksAbsolutePartitionConstraint clusterLocations;
+    private transient IServiceContext serviceContext;
 
     @Override
     public DataSourceType getDataSourceType() {
@@ -48,12 +51,14 @@ public class RSSRecordReaderFactory implements IRecordReaderFactory<SyndEntryImp
     @Override
     public AlgebricksAbsolutePartitionConstraint getPartitionConstraint() throws AlgebricksException {
         int count = urls.size();
-        clusterLocations = IExternalDataSourceFactory.getPartitionConstraints(clusterLocations, count);
+        clusterLocations = IExternalDataSourceFactory.getPartitionConstraints(
+                (IApplicationContext) serviceContext.getApplicationContext(), clusterLocations, count);
         return clusterLocations;
     }
 
     @Override
-    public void configure(Map<String, String> configuration) {
+    public void configure(IServiceContext serviceContext, Map<String, String> configuration) {
+        this.serviceContext = serviceContext;
         String url = configuration.get(ExternalDataConstants.KEY_RSS_URL);
         if (url == null) {
             throw new IllegalArgumentException("no RSS URL provided");

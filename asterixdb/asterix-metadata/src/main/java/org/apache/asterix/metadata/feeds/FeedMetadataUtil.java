@@ -22,11 +22,11 @@ import java.rmi.RemoteException;
 import java.util.Map;
 
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
+import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
-import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.external.api.IAdapterFactory;
 import org.apache.asterix.external.api.IDataSourceAdapter;
 import org.apache.asterix.external.api.IDataSourceAdapter.AdapterType;
@@ -95,7 +95,7 @@ public class FeedMetadataUtil {
         return feedPolicy;
     }
 
-    public static void validateFeed(Feed feed, MetadataTransactionContext mdTxnCtx, ILibraryManager libraryManager)
+    public static void validateFeed(Feed feed, MetadataTransactionContext mdTxnCtx, ICcApplicationContext appCtx)
             throws AsterixException {
         try {
             String adapterName = feed.getAdapterName();
@@ -122,7 +122,8 @@ public class FeedMetadataUtil {
                     case EXTERNAL:
                         String[] anameComponents = adapterName.split("#");
                         String libraryName = anameComponents[0];
-                        ClassLoader cl = libraryManager.getLibraryClassLoader(feed.getDataverseName(), libraryName);
+                        ClassLoader cl =
+                                appCtx.getLibraryManager().getLibraryClassLoader(feed.getDataverseName(), libraryName);
                         adapterFactory = (IAdapterFactory) cl.loadClass(adapterFactoryClassname).newInstance();
                         break;
                     default:
@@ -130,10 +131,10 @@ public class FeedMetadataUtil {
                 }
                 adapterFactory.setOutputType(adapterOutputType);
                 adapterFactory.setMetaType(metaType);
-                adapterFactory.configure(null, configuration);
+                adapterFactory.configure(appCtx.getServiceContext(), configuration);
             } else {
-                AdapterFactoryProvider.getAdapterFactory(libraryManager, adapterName, configuration, adapterOutputType,
-                        metaType);
+                AdapterFactoryProvider.getAdapterFactory(appCtx.getServiceContext(), adapterName, configuration,
+                        adapterOutputType, metaType);
             }
             if (metaType == null && configuration.containsKey(ExternalDataConstants.KEY_META_TYPE_NAME)) {
                 metaType = getOutputType(feed, configuration, ExternalDataConstants.KEY_META_TYPE_NAME);
@@ -159,7 +160,7 @@ public class FeedMetadataUtil {
 
     @SuppressWarnings("rawtypes")
     public static Triple<IAdapterFactory, RecordDescriptor, AdapterType> getPrimaryFeedFactoryAndOutput(Feed feed,
-            FeedPolicyAccessor policyAccessor, MetadataTransactionContext mdTxnCtx, ILibraryManager libraryManager)
+            FeedPolicyAccessor policyAccessor, MetadataTransactionContext mdTxnCtx, ICcApplicationContext appCtx)
             throws AlgebricksException {
         // This method needs to be re-visited
         String adapterName = null;
@@ -194,7 +195,8 @@ public class FeedMetadataUtil {
                     case EXTERNAL:
                         String[] anameComponents = adapterName.split("#");
                         String libraryName = anameComponents[0];
-                        ClassLoader cl = libraryManager.getLibraryClassLoader(feed.getDataverseName(), libraryName);
+                        ClassLoader cl =
+                                appCtx.getLibraryManager().getLibraryClassLoader(feed.getDataverseName(), libraryName);
                         adapterFactory = (IAdapterFactory) cl.loadClass(adapterFactoryClassname).newInstance();
                         break;
                     default:
@@ -202,10 +204,10 @@ public class FeedMetadataUtil {
                 }
                 adapterFactory.setOutputType(adapterOutputType);
                 adapterFactory.setMetaType(metaType);
-                adapterFactory.configure(null, configuration);
+                adapterFactory.configure(appCtx.getServiceContext(), configuration);
             } else {
-                adapterFactory = AdapterFactoryProvider.getAdapterFactory(libraryManager, adapterName, configuration,
-                        adapterOutputType, metaType);
+                adapterFactory = AdapterFactoryProvider.getAdapterFactory(appCtx.getServiceContext(), adapterName,
+                        configuration, adapterOutputType, metaType);
                 adapterType = IDataSourceAdapter.AdapterType.INTERNAL;
             }
             if (metaType == null) {

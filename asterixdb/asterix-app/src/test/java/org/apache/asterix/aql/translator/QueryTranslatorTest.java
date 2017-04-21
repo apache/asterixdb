@@ -37,7 +37,7 @@ import org.apache.asterix.event.schema.cluster.MasterNode;
 import org.apache.asterix.file.StorageComponentProvider;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.statement.RunStatement;
-import org.apache.asterix.runtime.utils.AppContextInfo;
+import org.apache.asterix.runtime.utils.CcApplicationContext;
 import org.apache.asterix.translator.IStatementExecutor;
 import org.apache.asterix.translator.SessionConfig;
 import org.junit.Assert;
@@ -55,8 +55,7 @@ public class QueryTranslatorTest {
         RunStatement mockRunStatement = mock(RunStatement.class);
 
         // Mocks AppContextInfo.
-        AppContextInfo mockAsterixAppContextInfo = mock(AppContextInfo.class);
-        setFinalStaticField(AppContextInfo.class.getDeclaredField("INSTANCE"), mockAsterixAppContextInfo);
+        CcApplicationContext mockAsterixAppContextInfo = mock(CcApplicationContext.class);
         ExternalProperties mockAsterixExternalProperties = mock(ExternalProperties.class);
         when(mockAsterixAppContextInfo.getExternalProperties()).thenReturn(mockAsterixExternalProperties);
         when(mockAsterixExternalProperties.getAPIServerPort()).thenReturn(19002);
@@ -70,8 +69,8 @@ public class QueryTranslatorTest {
         when(mockCluster.getMasterNode()).thenReturn(mockMasterNode);
         when(mockMasterNode.getClientIp()).thenReturn("127.0.0.1");
 
-        IStatementExecutor aqlTranslator = new DefaultStatementExecutorFactory().create(statements, mockSessionConfig,
-                new AqlCompilationProvider(), new StorageComponentProvider());
+        IStatementExecutor aqlTranslator = new DefaultStatementExecutorFactory().create(mockAsterixAppContextInfo,
+                statements, mockSessionConfig, new AqlCompilationProvider(), new StorageComponentProvider());
         List<String> parameters = new ArrayList<>();
         parameters.add("examples/pregelix-example-jar-with-dependencies.jar");
         parameters.add("org.apache.pregelix.example.PageRankVertex");

@@ -16,15 +16,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.common.cluster;
+package org.apache.asterix.common.messaging.api;
 
-import org.apache.asterix.common.api.IClusterEventsSubscriber;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.messages.IMessage;
 
-public interface IGlobalRecoveryManager extends IClusterEventsSubscriber {
+@FunctionalInterface
+public interface ICcAddressedMessage extends IMessage {
 
     /**
-     * Starts the global recovery process if the cluster state changed to ACTIVE.
+     * handle the message upon delivery
      */
-    public void startGlobalRecovery(ICcApplicationContext appCtx);
+    void handle(ICcApplicationContext appCtx) throws HyracksDataException, InterruptedException;
+
 }

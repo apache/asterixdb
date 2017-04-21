@@ -36,6 +36,7 @@ import java.util.stream.Stream;
 import org.apache.asterix.app.result.ResultHandle;
 import org.apache.asterix.app.result.ResultPrinter;
 import org.apache.asterix.app.result.ResultReader;
+import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.translator.IStatementExecutor.Stats;
 import org.apache.asterix.translator.SessionConfig;
@@ -76,14 +77,14 @@ public class ResultUtil {
         return escaped;
     }
 
-    public static void printResults(ResultReader resultReader, SessionConfig conf, Stats stats,
-            ARecordType recordType) throws HyracksDataException {
-        new ResultPrinter(conf, stats, recordType).print(resultReader);
+    public static void printResults(ICcApplicationContext appCtx, ResultReader resultReader, SessionConfig conf,
+            Stats stats, ARecordType recordType) throws HyracksDataException {
+        new ResultPrinter(appCtx, conf, stats, recordType).print(resultReader);
     }
 
-    public static void printResults(String record, SessionConfig conf, Stats stats, ARecordType recordType)
-            throws HyracksDataException {
-        new ResultPrinter(conf, stats, recordType).print(record);
+    public static void printResults(ICcApplicationContext appCtx, String record, SessionConfig conf, Stats stats,
+            ARecordType recordType) throws HyracksDataException {
+        new ResultPrinter(appCtx, conf, stats, recordType).print(record);
     }
 
     public static void printResultHandle(SessionConfig conf, ResultHandle handle) throws HyracksDataException {
@@ -123,9 +124,8 @@ public class ResultUtil {
         pw.print("\": [{ \n");
         printField(pw, QueryServiceServlet.ErrorField.CODE.str(), "1");
         final String msg = rootCause.getMessage();
-        printField(pw, QueryServiceServlet.ErrorField.MSG.str(), JSONUtil
-                        .escape(msg != null ? msg : rootCause.getClass().getSimpleName()),
-                addStack);
+        printField(pw, QueryServiceServlet.ErrorField.MSG.str(),
+                JSONUtil.escape(msg != null ? msg : rootCause.getClass().getSimpleName()), addStack);
         pw.print(comma ? "\t}],\n" : "\t}]\n");
     }
 

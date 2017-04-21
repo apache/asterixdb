@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.ByteBuffer;
 
+import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.translator.IStatementExecutor.Stats;
 import org.apache.asterix.translator.SessionConfig;
@@ -44,8 +45,7 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 
 public class ResultPrinter {
 
-    // TODO(tillw): Should this be static?
-    private static FrameManager resultDisplayFrameMgr = new FrameManager(ResultReader.FRAME_SIZE);
+    private final FrameManager resultDisplayFrameMgr;
 
     private final SessionConfig conf;
     private final Stats stats;
@@ -62,12 +62,13 @@ public class ResultPrinter {
     private ObjectMapper om;
     private ObjectWriter ow;
 
-    public ResultPrinter(SessionConfig conf, Stats stats, ARecordType recordType) {
+    public ResultPrinter(ICcApplicationContext appCtx, SessionConfig conf, Stats stats, ARecordType recordType) {
         this.conf = conf;
         this.stats = stats;
         this.recordType = recordType;
         this.indentJSON = conf.is(SessionConfig.FORMAT_INDENT_JSON);
         this.quoteRecord = conf.is(SessionConfig.FORMAT_QUOTE_RECORD);
+        this.resultDisplayFrameMgr = new FrameManager(appCtx.getCompilerProperties().getFrameSize());
         if (indentJSON) {
             this.om = new ObjectMapper();
             DefaultPrettyPrinter.Indenter i = new DefaultPrettyPrinter.Indenter() {

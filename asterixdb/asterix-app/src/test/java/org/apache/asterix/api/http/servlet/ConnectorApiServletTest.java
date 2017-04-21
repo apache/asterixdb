@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.asterix.api.http.server.ConnectorApiServlet;
+import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.file.StorageComponentProvider;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
@@ -38,6 +39,7 @@ import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.utils.JSONDeserializerForTypes;
+import org.apache.asterix.test.runtime.ExecutionTestUtil;
 import org.apache.asterix.test.runtime.SqlppExecutionTest;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.client.NodeControllerInfo;
@@ -63,9 +65,9 @@ public class ConnectorApiServletTest {
     public void testGet() throws Exception {
         // Starts test asterixdb cluster.
         SqlppExecutionTest.setUp();
-
         // Configures a test connector api servlet.
-        ConnectorApiServlet let = new ConnectorApiServlet(new ConcurrentHashMap<>(), new String[] { "/" });
+        ConnectorApiServlet let = new ConnectorApiServlet(new ConcurrentHashMap<>(), new String[] { "/" },
+                (ICcApplicationContext) ExecutionTestUtil.integrationUtil.cc.getApplicationContext());
         Map<String, NodeControllerInfo> nodeMap = new HashMap<>();
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         PrintWriter outputWriter = new PrintWriter(outputStream);
@@ -118,7 +120,8 @@ public class ConnectorApiServletTest {
 
     @Test
     public void testFormResponseObject() throws Exception {
-        ConnectorApiServlet let = new ConnectorApiServlet(new ConcurrentHashMap<>(), new String[] { "/" });
+        ConnectorApiServlet let = new ConnectorApiServlet(new ConcurrentHashMap<>(), new String[] { "/" },
+                (ICcApplicationContext) ExecutionTestUtil.integrationUtil.cc.getApplicationContext());
         ObjectMapper om = new ObjectMapper();
         ObjectNode actualResponse = om.createObjectNode();
         FileSplit[] splits = new FileSplit[2];
@@ -168,7 +171,9 @@ public class ConnectorApiServletTest {
     private ARecordType getMetadataRecordType(String dataverseName, String datasetName) throws Exception {
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         // Retrieves file splits of the dataset.
-        MetadataProvider metadataProvider = new MetadataProvider(null, new StorageComponentProvider());
+        MetadataProvider metadataProvider = new MetadataProvider(
+                (ICcApplicationContext) ExecutionTestUtil.integrationUtil.cc.getApplicationContext(), null,
+                new StorageComponentProvider());
         try {
             metadataProvider.setMetadataTxnContext(mdTxnCtx);
             Dataset dataset = metadataProvider.findDataset(dataverseName, datasetName);

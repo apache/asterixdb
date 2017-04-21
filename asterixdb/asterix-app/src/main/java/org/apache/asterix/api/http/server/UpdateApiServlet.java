@@ -21,6 +21,7 @@ package org.apache.asterix.api.http.server;
 import java.util.concurrent.ConcurrentMap;
 
 import org.apache.asterix.common.context.IStorageComponentProvider;
+import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.translator.IStatementExecutorFactory;
@@ -29,10 +30,10 @@ import org.apache.hyracks.http.api.IServletRequest;
 public class UpdateApiServlet extends RestApiServlet {
     private static final byte ALLOWED_CATEGORIES = Statement.Category.QUERY | Statement.Category.UPDATE;
 
-    public UpdateApiServlet(ConcurrentMap<String, Object> ctx, String[] paths,
+    public UpdateApiServlet(ConcurrentMap<String, Object> ctx, String[] paths, ICcApplicationContext appCtx,
             ILangCompilationProvider compilationProvider, IStatementExecutorFactory statementExecutorFactory,
             IStorageComponentProvider componentProvider) {
-        super(ctx, paths, compilationProvider, statementExecutorFactory, componentProvider);
+        super(ctx, paths, appCtx, compilationProvider, statementExecutorFactory, componentProvider);
     }
 
     @Override

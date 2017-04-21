@@ -28,11 +28,10 @@ import java.util.logging.Logger;
 import org.apache.asterix.app.nc.NCAppRuntimeContext;
 import org.apache.asterix.app.replication.message.StartupTaskRequestMessage;
 import org.apache.asterix.common.api.AsterixThreadFactory;
-import org.apache.asterix.common.api.IAppRuntimeContext;
+import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.config.AsterixExtension;
 import org.apache.asterix.common.config.ClusterProperties;
 import org.apache.asterix.common.config.ExternalProperties;
-import org.apache.asterix.common.config.IPropertiesProvider;
 import org.apache.asterix.common.config.MessagingProperties;
 import org.apache.asterix.common.config.MetadataProperties;
 import org.apache.asterix.common.config.NodeProperties;
@@ -61,7 +60,7 @@ public class NCApplication extends BaseNCApplication {
     private static final Logger LOGGER = Logger.getLogger(NCApplication.class.getName());
 
     private INCServiceContext ncServiceCtx;
-    private IAppRuntimeContext runtimeContext;
+    private INcApplicationContext runtimeContext;
     private String nodeId;
     private boolean stopInitiated = false;
     private SystemState systemState;
@@ -176,8 +175,7 @@ public class NCApplication extends BaseNCApplication {
 
     @Override
     public NodeCapacity getCapacity() {
-        IPropertiesProvider propertiesProvider = runtimeContext;
-        StorageProperties storageProperties = propertiesProvider.getStorageProperties();
+        StorageProperties storageProperties = runtimeContext.getStorageProperties();
         // Deducts the reserved buffer cache size and memory component size from the maxium heap size,
         // and deducts one core for processing heartbeats.
         long memorySize = Runtime.getRuntime().maxMemory() - storageProperties.getBufferCacheSize()
@@ -261,7 +259,7 @@ public class NCApplication extends BaseNCApplication {
     }
 
     @Override
-    public IAppRuntimeContext getApplicationContext() {
+    public INcApplicationContext getApplicationContext() {
         return runtimeContext;
     }
 }

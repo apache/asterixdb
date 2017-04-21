@@ -21,21 +21,20 @@ package org.apache.asterix.app.replication.message;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.asterix.common.api.IAppRuntimeContext;
+import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.messaging.api.INCMessageBroker;
+import org.apache.asterix.common.messaging.api.INcAddressedMessage;
 import org.apache.asterix.common.replication.INCLifecycleMessage;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.service.IControllerService;
 
-public class TakeoverMetadataNodeRequestMessage implements INCLifecycleMessage {
+public class TakeoverMetadataNodeRequestMessage implements INCLifecycleMessage, INcAddressedMessage {
 
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = Logger.getLogger(TakeoverMetadataNodeRequestMessage.class.getName());
 
     @Override
-    public void handle(IControllerService cs) throws HyracksDataException, InterruptedException {
-        IAppRuntimeContext appContext = (IAppRuntimeContext) cs.getApplicationContext();
-        INCMessageBroker broker = (INCMessageBroker) cs.getContext().getMessageBroker();
+    public void handle(INcApplicationContext appContext) throws HyracksDataException, InterruptedException {
+        INCMessageBroker broker = (INCMessageBroker) appContext.getServiceContext().getMessageBroker();
         HyracksDataException hde = null;
         try {
             appContext.initializeMetadata(false);

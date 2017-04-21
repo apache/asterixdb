@@ -63,7 +63,6 @@ import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.optimizer.base.FuzzyUtils;
 import org.apache.asterix.runtime.job.listener.JobEventListenerFactory;
-import org.apache.asterix.runtime.utils.AppContextInfo;
 import org.apache.asterix.transaction.management.service.transaction.JobIdFactory;
 import org.apache.asterix.translator.CompiledStatements.ICompiledDmlStatement;
 import org.apache.asterix.translator.IStatementExecutor.Stats;
@@ -113,13 +112,13 @@ public class APIFramework {
     private static final int MIN_FRAME_LIMIT_FOR_JOIN = 5;
 
     // A white list of supported configurable parameters.
-    private static final Set<String> CONFIGURABLE_PARAMETER_NAMES = ImmutableSet.of(
-            CompilerProperties.COMPILER_JOINMEMORY_KEY, CompilerProperties.COMPILER_GROUPMEMORY_KEY,
-            CompilerProperties.COMPILER_SORTMEMORY_KEY, CompilerProperties.COMPILER_PARALLELISM_KEY,
-            FunctionUtil.IMPORT_PRIVATE_FUNCTIONS, FuzzyUtils.SIM_FUNCTION_PROP_NAME,
-            FuzzyUtils.SIM_THRESHOLD_PROP_NAME, SubscribeFeedStatement.WAIT_FOR_COMPLETION,
-            FeedActivityDetails.FEED_POLICY_NAME, FeedActivityDetails.COLLECT_LOCATIONS, "inline_with", "hash_merge",
-            "output-record-type");
+    private static final Set<String> CONFIGURABLE_PARAMETER_NAMES =
+            ImmutableSet.of(CompilerProperties.COMPILER_JOINMEMORY_KEY, CompilerProperties.COMPILER_GROUPMEMORY_KEY,
+                    CompilerProperties.COMPILER_SORTMEMORY_KEY, CompilerProperties.COMPILER_PARALLELISM_KEY,
+                    FunctionUtil.IMPORT_PRIVATE_FUNCTIONS, FuzzyUtils.SIM_FUNCTION_PROP_NAME,
+                    FuzzyUtils.SIM_THRESHOLD_PROP_NAME, SubscribeFeedStatement.WAIT_FOR_COMPLETION,
+                    FeedActivityDetails.FEED_POLICY_NAME, FeedActivityDetails.COLLECT_LOCATIONS, "inline_with",
+                    "hash_merge", "output-record-type");
 
     private final IRewriterFactory rewriterFactory;
     private final IAstPrintVisitorFactory astPrintVisitorFactory;
@@ -145,8 +144,7 @@ public class APIFramework {
                 IExpressionEvalSizeComputer expressionEvalSizeComputer,
                 IMergeAggregationExpressionFactory mergeAggregationExpressionFactory,
                 IExpressionTypeComputer expressionTypeComputer, IMissableTypeComputer missableTypeComputer,
-                IConflictingTypeResolver conflictingTypeResolver,
-                PhysicalOptimizationConfig physicalOptimizationConfig,
+                IConflictingTypeResolver conflictingTypeResolver, PhysicalOptimizationConfig physicalOptimizationConfig,
                 AlgebricksPartitionConstraint clusterLocations) {
             return new AlgebricksOptimizationContext(varCounter, expressionEvalSizeComputer,
                     mergeAggregationExpressionFactory, expressionTypeComputer, missableTypeComputer,
@@ -222,7 +220,7 @@ public class APIFramework {
             }
             printPlanPostfix(conf);
         }
-        CompilerProperties compilerProperties = AppContextInfo.INSTANCE.getCompilerProperties();
+        CompilerProperties compilerProperties = metadataProvider.getApplicationContext().getCompilerProperties();
         int frameSize = compilerProperties.getFrameSize();
         Map<String, String> querySpecificConfig = metadataProvider.getConfig();
         validateConfig(querySpecificConfig); // Validates the user-overridden query parameters.
@@ -243,8 +241,8 @@ public class APIFramework {
         HeuristicCompilerFactoryBuilder builder =
                 new HeuristicCompilerFactoryBuilder(OptimizationContextFactory.INSTANCE);
         builder.setPhysicalOptimizationConfig(OptimizationConfUtil.getPhysicalOptimizationConfig());
-        builder.setLogicalRewrites(ruleSetFactory.getLogicalRewrites());
-        builder.setPhysicalRewrites(ruleSetFactory.getPhysicalRewrites());
+        builder.setLogicalRewrites(ruleSetFactory.getLogicalRewrites(metadataProvider.getApplicationContext()));
+        builder.setPhysicalRewrites(ruleSetFactory.getPhysicalRewrites(metadataProvider.getApplicationContext()));
         IDataFormat format = metadataProvider.getFormat();
         ICompilerFactory compilerFactory = builder.create();
         builder.setExpressionEvalSizeComputer(format.getExpressionEvalSizeComputer());
@@ -282,7 +280,8 @@ public class APIFramework {
             try {
                 LogicalOperatorPrettyPrintVisitor pvisitor = new LogicalOperatorPrettyPrintVisitor();
                 PlanPrettyPrinter.printPlan(plan, pvisitor, 0);
-                ResultUtil.printResults(pvisitor.get().toString(), conf, new Stats(), null);
+                ResultUtil.printResults(metadataProvider.getApplicationContext(), pvisitor.get().toString(), conf,
+                        new Stats(), null);
                 return null;
             } catch (IOException e) {
                 throw new AlgebricksException(e);
@@ -296,8 +295,7 @@ public class APIFramework {
         builder.setBinaryBooleanInspectorFactory(format.getBinaryBooleanInspectorFactory());
         builder.setBinaryIntegerInspectorFactory(format.getBinaryIntegerInspectorFactory());
         builder.setComparatorFactoryProvider(format.getBinaryComparatorFactoryProvider());
-        builder.setExpressionRuntimeProvider(
-                new ExpressionRuntimeProvider(QueryLogicalExpressionJobGen.INSTANCE));
+        builder.setExpressionRuntimeProvider(new ExpressionRuntimeProvider(QueryLogicalExpressionJobGen.INSTANCE));
         builder.setHashFunctionFactoryProvider(format.getBinaryHashFunctionFactoryProvider());
         builder.setHashFunctionFamilyProvider(format.getBinaryHashFunctionFamilyProvider());
         builder.setMissingWriterFactory(format.getMissingWriterFactory());
@@ -327,7 +325,7 @@ public class APIFramework {
 
         JobEventListenerFactory jobEventListenerFactory =
                 new JobEventListenerFactory(asterixJobId, metadataProvider.isWriteTransaction());
-        JobSpecification spec = compiler.createJob(AppContextInfo.INSTANCE, jobEventListenerFactory);
+        JobSpecification spec = compiler.createJob(metadataProvider.getApplicationContext(), jobEventListenerFactory);
 
         // When the top-level statement is a query, the statement parameter is null.
         if (statement == null) {
@@ -465,8 +463,7 @@ public class APIFramework {
             int minFrameLimit)
             throws AlgebricksException {
         IOptionType<Long> longBytePropertyInterpreter = OptionTypes.LONG_BYTE_UNIT;
-        long memBudget =
-                parameter == null ? memBudgetInConfiguration : longBytePropertyInterpreter.parse(parameter);
+        long memBudget = parameter == null ? memBudgetInConfiguration : longBytePropertyInterpreter.parse(parameter);
         int frameLimit = (int) (memBudget / frameSize);
         if (frameLimit < minFrameLimit) {
             throw AsterixException.create(ErrorCode.COMPILATION_BAD_QUERY_PARAMETER_VALUE, parameterName,

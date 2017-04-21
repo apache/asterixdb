@@ -18,8 +18,6 @@
  */
 package org.apache.asterix.api.http.server;
 
-import static org.apache.asterix.translator.IStatementExecutor.ResultDelivery;
-
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -34,6 +32,7 @@ import org.apache.asterix.api.http.servlet.ServletConstants;
 import org.apache.asterix.common.api.IClusterManagementWork;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.context.IStorageComponentProvider;
+import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.asterix.lang.aql.parser.TokenMgrError;
@@ -42,6 +41,7 @@ import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.runtime.utils.ClusterStateManager;
 import org.apache.asterix.translator.IStatementExecutor;
+import org.apache.asterix.translator.IStatementExecutor.ResultDelivery;
 import org.apache.asterix.translator.IStatementExecutor.Stats;
 import org.apache.asterix.translator.IStatementExecutorContext;
 import org.apache.asterix.translator.IStatementExecutorFactory;
@@ -71,10 +71,10 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
     private final IStorageComponentProvider componentProvider;
     private final IStatementExecutorContext queryCtx = new StatementExecutorContext();
 
-    public QueryServiceServlet(ConcurrentMap<String, Object> ctx, String[] paths,
+    public QueryServiceServlet(ConcurrentMap<String, Object> ctx, String[] paths, ICcApplicationContext appCtx,
             ILangCompilationProvider compilationProvider, IStatementExecutorFactory statementExecutorFactory,
             IStorageComponentProvider componentProvider) {
-        super(ctx, paths);
+        super(appCtx, ctx, paths);
         this.compilationProvider = compilationProvider;
         this.statementExecutorFactory = statementExecutorFactory;
         this.componentProvider = componentProvider;
@@ -179,7 +179,6 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         String clientContextID;
         String mode;
 
-
         @Override
         public String toString() {
             try {
@@ -236,8 +235,8 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         return SessionConfig.OutputFormat.CLEAN_JSON;
     }
 
-    private static SessionConfig createSessionConfig(RequestParameters param, String handleUrl, PrintWriter
-            resultWriter) {
+    private static SessionConfig createSessionConfig(RequestParameters param, String handleUrl,
+            PrintWriter resultWriter) {
         SessionConfig.ResultDecorator resultPrefix = new SessionConfig.ResultDecorator() {
             int resultNo = -1;
 
@@ -386,9 +385,12 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
      * delivery mode. Usually there will be a "status" endpoint for ASYNC requests that exposes the status of the
      * execution and a "result" endpoint for DEFERRED requests that will deliver the result for a successful execution.
      *
-     * @param host hostname used for this request
-     * @param path servlet path for this request
-     * @param delivery ResultDelivery mode for this request
+     * @param host
+     *            hostname used for this request
+     * @param path
+     *            servlet path for this request
+     * @param delivery
+     *            ResultDelivery mode for this request
      * @return a handle (URL) that allows a client to access further information for this request
      */
     protected String getHandleUrl(String host, String path, ResultDelivery delivery) {
@@ -430,7 +432,8 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
             List<Statement> statements = parser.parse();
             MetadataManager.INSTANCE.init();
             IStatementExecutor translator =
-                    statementExecutorFactory.create(statements, sessionConfig, compilationProvider, componentProvider);
+                    statementExecutorFactory.create(appCtx, statements, sessionConfig, compilationProvider,
+                            componentProvider);
             execStart = System.nanoTime();
             translator.compileAndExecute(getHyracksClientConnection(), getHyracksDataset(), delivery, stats,
                     param.clientContextID, queryCtx);

@@ -20,7 +20,7 @@ package org.apache.asterix.external.library;
 
 import java.io.IOException;
 
-import org.apache.asterix.common.api.IAppRuntimeContext;
+import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.common.library.ILibraryManager;
@@ -32,7 +32,6 @@ import org.apache.asterix.om.functions.IExternalFunctionInfo;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
-import org.apache.asterix.runtime.utils.AppContextInfo;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
@@ -56,7 +55,8 @@ public abstract class ExternalFunction implements IExternalFunction {
     protected final IScalarEvaluator[] argumentEvaluators;
     protected final JavaFunctionHelper functionHelper;
 
-    public ExternalFunction(IExternalFunctionInfo finfo, IScalarEvaluatorFactory args[], IHyracksTaskContext context)
+    public ExternalFunction(IExternalFunctionInfo finfo, IScalarEvaluatorFactory args[], IHyracksTaskContext context,
+            IApplicationContext appCtx)
             throws HyracksDataException {
         this.finfo = finfo;
         this.evaluatorFactories = args;
@@ -69,16 +69,7 @@ public abstract class ExternalFunction implements IExternalFunction {
         String[] fnameComponents = finfo.getFunctionIdentifier().getName().split("#");
         String functionLibary = fnameComponents[0];
         String dataverse = finfo.getFunctionIdentifier().getNamespace();
-        ILibraryManager libraryManager;
-        if (context == null) {
-            // Gets the library manager for compile-time constant folding.
-            libraryManager = AppContextInfo.INSTANCE.getLibraryManager();
-        } else {
-            // Gets the library manager for real runtime evaluation.
-            IAppRuntimeContext runtimeCtx = (IAppRuntimeContext) context.getJobletContext()
-                    .getServiceContext().getApplicationContext();
-            libraryManager = runtimeCtx.getLibraryManager();
-        }
+        ILibraryManager libraryManager = appCtx.getLibraryManager();
         ClassLoader libraryClassLoader = libraryManager.getLibraryClassLoader(dataverse, functionLibary);
         String classname = finfo.getFunctionBody().trim();
         Class<?> clazz;

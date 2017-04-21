@@ -18,13 +18,12 @@
  */
 package org.apache.asterix.runtime.message;
 
-import org.apache.asterix.common.api.IAppRuntimeContext;
-import org.apache.asterix.common.messaging.api.IApplicationMessage;
+import org.apache.asterix.common.api.INcApplicationContext;
+import org.apache.asterix.common.messaging.api.INcAddressedMessage;
 import org.apache.asterix.runtime.transaction.GlobalResourceIdFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.service.IControllerService;
 
-public class ResourceIdRequestResponseMessage implements IApplicationMessage {
+public class ResourceIdRequestResponseMessage implements INcAddressedMessage {
     private static final long serialVersionUID = 1L;
 
     private long resourceId;
@@ -47,8 +46,7 @@ public class ResourceIdRequestResponseMessage implements IApplicationMessage {
     }
 
     @Override
-    public void handle(IControllerService cs) throws HyracksDataException, InterruptedException {
-        IAppRuntimeContext appCtx = (IAppRuntimeContext) cs.getApplicationContext();
+    public void handle(INcApplicationContext appCtx) throws HyracksDataException, InterruptedException {
         ((GlobalResourceIdFactory) appCtx.getResourceIdFactory()).addNewIds(this);
     }
 

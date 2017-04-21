@@ -18,15 +18,16 @@
  */
 package org.apache.asterix.common.messaging.api;
 
+import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.messages.IMessage;
-import org.apache.hyracks.api.service.IControllerService;
 
 @FunctionalInterface
-public interface IApplicationMessage extends IMessage {
+public interface INcAddressedMessage extends IMessage {
 
     /**
      * handle the message upon delivery
      */
-    void handle(IControllerService cs) throws HyracksDataException, InterruptedException;
+    void handle(INcApplicationContext appCtx) throws HyracksDataException, InterruptedException;
+
 }

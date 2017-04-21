@@ -18,9 +18,9 @@
  */
 package org.apache.asterix.common.replication;
 
-import org.apache.asterix.common.messaging.api.IApplicationMessage;
+import org.apache.hyracks.api.messages.IMessage;
 
-public interface INCLifecycleMessage extends IApplicationMessage {
+public interface INCLifecycleMessage extends IMessage {
 
     public enum MessageType {
         REPLAY_LOGS_REQUEST,

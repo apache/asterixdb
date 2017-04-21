@@ -47,6 +47,7 @@ import org.apache.asterix.common.replication.IFaultToleranceStrategy;
 import org.apache.asterix.common.replication.INCLifecycleMessage;
 import org.apache.asterix.common.replication.IReplicationStrategy;
 import org.apache.asterix.common.transactions.IRecoveryManager.SystemState;
+import org.apache.hyracks.api.application.ICCServiceContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class NoFaultToleranceStrategy implements IFaultToleranceStrategy {
@@ -54,8 +55,8 @@ public class NoFaultToleranceStrategy implements IFaultToleranceStrategy {
     private static final Logger LOGGER = Logger.getLogger(NoFaultToleranceStrategy.class.getName());
     IClusterStateManager clusterManager;
     private String metadataNodeId;
-    private ICCMessageBroker messageBroker;
     private Set<String> pendingStartupCompletionNodes = new HashSet<>();
+    private ICCMessageBroker messageBroker;
 
     @Override
     public void notifyNodeJoin(String nodeId) throws HyracksDataException {
@@ -87,9 +88,9 @@ public class NoFaultToleranceStrategy implements IFaultToleranceStrategy {
     }
 
     @Override
-    public IFaultToleranceStrategy from(IReplicationStrategy replicationStrategy, ICCMessageBroker messageBroker) {
+    public IFaultToleranceStrategy from(ICCServiceContext serviceCtx, IReplicationStrategy replicationStrategy) {
         NoFaultToleranceStrategy ft = new NoFaultToleranceStrategy();
-        ft.messageBroker = messageBroker;
+        ft.messageBroker = (ICCMessageBroker) serviceCtx.getMessageBroker();
         return ft;
     }
 

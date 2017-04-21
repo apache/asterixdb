@@ -19,7 +19,7 @@
 package org.apache.asterix.common.replication;
 
 import org.apache.asterix.common.cluster.IClusterStateManager;
-import org.apache.asterix.common.messaging.api.ICCMessageBroker;
+import org.apache.hyracks.api.application.ICCServiceContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public interface IFaultToleranceStrategy {
@@ -62,6 +62,6 @@ public interface IFaultToleranceStrategy {
      * @param messageBroker
      * @return
      */
-    IFaultToleranceStrategy from(IReplicationStrategy replicationStrategy, ICCMessageBroker messageBroker);
+    IFaultToleranceStrategy from(ICCServiceContext serviceCtx, IReplicationStrategy replicationStrategy);
 
 }

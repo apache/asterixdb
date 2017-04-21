@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.metadata.dataset.hints;
 
+import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 
 /**
@@ -41,6 +42,6 @@ public interface IHint {
      *         first element as a boolean that represents the validation result.
      *         second element as the error message if the validation result is false
      */
-    public Pair<Boolean, String> validateValue(String value);
+    public Pair<Boolean, String> validateValue(ICcApplicationContext appCtx, String value);
 
 }

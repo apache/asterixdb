@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.external.api.AsterixInputStream;
 import org.apache.asterix.external.api.IExternalIndexer;
@@ -46,6 +47,8 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.RecordReader;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
+import org.apache.hyracks.api.application.ICCServiceContext;
+import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.hdfs.dataflow.ConfFactory;
@@ -56,6 +59,7 @@ public class HDFSDataSourceFactory implements IRecordReaderFactory<Object>, IInd
 
     protected static final long serialVersionUID = 1L;
     protected transient AlgebricksAbsolutePartitionConstraint clusterLocations;
+    protected transient IServiceContext serviceCtx;
     protected String[] readSchedule;
     protected boolean read[];
     protected InputSplitsFactory inputSplitsFactory;
@@ -75,10 +79,11 @@ public class HDFSDataSourceFactory implements IRecordReaderFactory<Object>, IInd
     private Format format;
 
     @Override
-    public void configure(Map<String, String> configuration) throws AsterixException {
+    public void configure(IServiceContext serviceCtx, Map<String, String> configuration) throws AsterixException {
         try {
-            init();
+            this.serviceCtx = serviceCtx;
             this.configuration = configuration;
+            init((ICCServiceContext) serviceCtx);
             JobConf conf = HDFSUtils.configureHDFSJobConf(configuration);
             confFactory = new ConfFactory(conf);
             clusterLocations = getPartitionConstraint();
@@ -153,7 +158,8 @@ public class HDFSDataSourceFactory implements IRecordReaderFactory<Object>, IInd
      */
     @Override
     public AlgebricksAbsolutePartitionConstraint getPartitionConstraint() {
-        clusterLocations = HDFSUtils.getPartitionConstraints(clusterLocations);
+        clusterLocations = HDFSUtils.getPartitionConstraints((IApplicationContext) serviceCtx.getApplicationContext(),
+                clusterLocations);
         return clusterLocations;
     }
 
@@ -161,12 +167,12 @@ public class HDFSDataSourceFactory implements IRecordReaderFactory<Object>, IInd
      * This method initialize the scheduler which assigns responsibility of reading different logical input splits from
      * HDFS
      */
-    private static void init() throws HyracksDataException {
+    private static void init(ICCServiceContext serviceCtx) throws HyracksDataException {
         if (!initialized) {
             synchronized (initLock) {
                 if (!initialized) {
-                    hdfsScheduler = HDFSUtils.initializeHDFSScheduler();
-                    indexingScheduler = HDFSUtils.initializeIndexingHDFSScheduler();
+                    hdfsScheduler = HDFSUtils.initializeHDFSScheduler(serviceCtx);
+                    indexingScheduler = HDFSUtils.initializeIndexingHDFSScheduler(serviceCtx);
                     initialized = true;
                 }
             }

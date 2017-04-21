@@ -26,7 +26,7 @@ import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.asterix.active.ActiveJobNotificationHandler;
+import org.apache.asterix.active.ActiveLifecycleListener;
 import org.apache.asterix.active.IActiveEntityEventsListener;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.context.IStorageComponentProvider;
@@ -275,13 +275,16 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
      * @throws Exception
      *             if an error occur during the drop process or if the dataset can't be dropped for any reason
      */
-    public void drop(MetadataProvider metadataProvider, MutableObject<MetadataTransactionContext> mdTxnCtx,
-            List<JobSpecification> jobsToExecute, MutableBoolean bActiveTxn, MutableObject<ProgressState> progress,
-            IHyracksClientConnection hcc) throws Exception {
+    public void drop(MetadataProvider metadataProvider,
+            MutableObject<MetadataTransactionContext> mdTxnCtx, List<JobSpecification> jobsToExecute,
+            MutableBoolean bActiveTxn, MutableObject<ProgressState> progress, IHyracksClientConnection hcc)
+            throws Exception {
         Map<FeedConnectionId, Pair<JobSpecification, Boolean>> disconnectJobList = new HashMap<>();
         if (getDatasetType() == DatasetType.INTERNAL) {
             // prepare job spec(s) that would disconnect any active feeds involving the dataset.
-            IActiveEntityEventsListener[] activeListeners = ActiveJobNotificationHandler.INSTANCE.getEventListeners();
+            ActiveLifecycleListener activeListener =
+                    (ActiveLifecycleListener) metadataProvider.getApplicationContext().getActiveLifecycleListener();
+            IActiveEntityEventsListener[] activeListeners = activeListener.getNotificationHandler().getEventListeners();
             for (IActiveEntityEventsListener listener : activeListeners) {
                 if (listener.isEntityUsingDataset(this)) {
                     throw new CompilationException(ErrorCode.COMPILATION_CANT_DROP_ACTIVE_DATASET,

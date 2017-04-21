@@ -26,12 +26,12 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.api.common.AsterixHyracksIntegrationUtil;
-import org.apache.asterix.common.api.IAppRuntimeContext;
+import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.config.GlobalConfig;
+import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.IdentitiyResolverFactory;
-import org.apache.asterix.runtime.utils.AppContextInfo;
 import org.apache.asterix.testframework.xml.TestGroup;
 import org.apache.asterix.testframework.xml.TestSuite;
 import org.apache.hyracks.control.nc.NodeControllerService;
@@ -89,10 +89,10 @@ public class ExecutionTestUtil {
 
         List<ILibraryManager> libraryManagers = new ArrayList<>();
         // Adds the library manager for CC.
-        libraryManagers.add(AppContextInfo.INSTANCE.getLibraryManager());
+        libraryManagers.add(((ICcApplicationContext) integrationUtil.cc.getApplicationContext()).getLibraryManager());
         // Adds library managers for NCs, one-per-NC.
         for (NodeControllerService nc : integrationUtil.ncs) {
-            IAppRuntimeContext runtimeCtx = (IAppRuntimeContext) nc.getApplicationContext();
+            INcApplicationContext runtimeCtx = (INcApplicationContext) nc.getApplicationContext();
             libraryManagers.add(runtimeCtx.getLibraryManager());
         }
         return libraryManagers;

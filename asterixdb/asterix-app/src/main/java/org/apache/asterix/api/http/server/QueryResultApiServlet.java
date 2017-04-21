@@ -25,6 +25,7 @@ import java.util.logging.Logger;
 
 import org.apache.asterix.app.result.ResultHandle;
 import org.apache.asterix.app.result.ResultReader;
+import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.translator.IStatementExecutor.Stats;
 import org.apache.asterix.translator.SessionConfig;
 import org.apache.hyracks.api.dataset.DatasetJobRecord;
@@ -40,8 +41,8 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 public class QueryResultApiServlet extends AbstractQueryApiServlet {
     private static final Logger LOGGER = Logger.getLogger(QueryResultApiServlet.class.getName());
 
-    public QueryResultApiServlet(ConcurrentMap<String, Object> ctx, String[] paths) {
-        super(ctx, paths);
+    public QueryResultApiServlet(ConcurrentMap<String, Object> ctx, String[] paths, ICcApplicationContext appCtx) {
+        super(appCtx, ctx, paths);
     }
 
     @Override
@@ -94,7 +95,7 @@ public class QueryResultApiServlet extends AbstractQueryApiServlet {
             // originally determined there. Need to save this value on
             // some object that we can obtain here.
             SessionConfig sessionConfig = RestApiServlet.initResponse(request, response);
-            ResultUtil.printResults(resultReader, sessionConfig, new Stats(), null);
+            ResultUtil.printResults(appCtx, resultReader, sessionConfig, new Stats(), null);
         } catch (HyracksDataException e) {
             final int errorCode = e.getErrorCode();
             if (ErrorCode.NO_RESULTSET == errorCode) {

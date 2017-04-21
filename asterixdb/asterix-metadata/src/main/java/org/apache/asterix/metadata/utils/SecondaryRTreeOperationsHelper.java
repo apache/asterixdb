@@ -22,7 +22,6 @@ import java.util.List;
 
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.GlobalConfig;
-import org.apache.asterix.common.config.IPropertiesProvider;
 import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.transactions.IResourceFactory;
@@ -83,15 +82,15 @@ public class SecondaryRTreeOperationsHelper extends SecondaryTreeIndexOperations
     protected RecordDescriptor secondaryRecDescForPointMBR = null;
 
     protected SecondaryRTreeOperationsHelper(Dataset dataset, Index index, PhysicalOptimizationConfig physOptConf,
-            IPropertiesProvider propertiesProvider, MetadataProvider metadataProvider, ARecordType recType,
+            MetadataProvider metadataProvider, ARecordType recType,
             ARecordType metaType, ARecordType enforcedType, ARecordType enforcedMetaType) {
-        super(dataset, index, physOptConf, propertiesProvider, metadataProvider, recType, metaType, enforcedType,
+        super(dataset, index, physOptConf, metadataProvider, recType, metaType, enforcedType,
                 enforcedMetaType);
     }
 
     @Override
     public JobSpecification buildCreationJobSpec() throws AlgebricksException {
-        JobSpecification spec = RuntimeUtils.createJobSpecification();
+        JobSpecification spec = RuntimeUtils.createJobSpecification(metadataProvider.getApplicationContext());
         IIndexDataflowHelperFactory indexDataflowHelperFactory = dataset.getIndexDataflowHelperFactory(
                 metadataProvider, index, itemType, metaType, mergePolicyFactory, mergePolicyFactoryProperties);
         IStorageComponentProvider storageComponentProvider = metadataProvider.getStorageComponentProvider();
@@ -267,7 +266,7 @@ public class SecondaryRTreeOperationsHelper extends SecondaryTreeIndexOperations
          * 3) Bulk-loading in RTree takes 4 doubles by reading 2 doubles twice and then,
          * do the same work as non-point MBR cases.
          ***************************************************/
-        JobSpecification spec = RuntimeUtils.createJobSpecification();
+        JobSpecification spec = RuntimeUtils.createJobSpecification(metadataProvider.getApplicationContext());
         int[] fieldPermutation = createFieldPermutationForBulkLoadOp(numNestedSecondaryKeyFields);
         int numNestedSecondaryKeFieldsConsideringPointMBR =
                 isPointMBR ? numNestedSecondaryKeyFields / 2 : numNestedSecondaryKeyFields;

@@ -51,6 +51,7 @@ import org.apache.asterix.metadata.utils.MetadataUtil;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.formats.NonTaggedDataFormat;
+import org.apache.asterix.runtime.utils.CcApplicationContext;
 import org.apache.asterix.runtime.utils.RuntimeComponentsProvider;
 import org.apache.asterix.test.runtime.ExecutionTestUtil;
 import org.apache.asterix.transaction.management.opcallbacks.AbstractIndexModificationOperationCallback.Operation;
@@ -299,7 +300,9 @@ public class TestNodeController {
         Dataverse dataverse = new Dataverse(dataset.getDataverseName(), NonTaggedDataFormat.class.getName(),
                 MetadataUtil.PENDING_NO_OP);
         Index index = primaryIndexInfo.getIndex();
-        MetadataProvider mdProvider = new MetadataProvider(dataverse, storageComponentProvider);
+        CcApplicationContext appCtx =
+                (CcApplicationContext) ExecutionTestUtil.integrationUtil.cc.getApplicationContext();
+        MetadataProvider mdProvider = new MetadataProvider(appCtx, dataverse, storageComponentProvider);
         try {
             return dataset.getIndexDataflowHelperFactory(mdProvider, index, primaryIndexInfo.recordType,
                     primaryIndexInfo.metaType, primaryIndexInfo.mergePolicyFactory,
