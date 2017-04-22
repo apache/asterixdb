@@ -21,7 +21,7 @@
   <parent>
     <groupId>org.apache.hyracks</groupId>
     <artifactId>hyracks</artifactId>
-    <version>0.3.1-SNAPSHOT</version>
+    <version>0.3.2-SNAPSHOT</version>
   </parent>
   <artifactId>hyracks-http</artifactId>
   <dependencies>
