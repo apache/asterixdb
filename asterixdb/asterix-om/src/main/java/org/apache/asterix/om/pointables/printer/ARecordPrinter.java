@@ -52,36 +52,34 @@ public class ARecordPrinter {
 
     public void printRecord(ARecordVisitablePointable recordAccessor, PrintStream ps, IPrintVisitor visitor)
             throws IOException, AsterixException {
-        List<IVisitablePointable> fieldNames = recordAccessor.getFieldNames();
-        List<IVisitablePointable> fieldValues = recordAccessor.getFieldValues();
+        final List<IVisitablePointable> fieldNames = recordAccessor.getFieldNames();
+        final List<IVisitablePointable> fieldValues = recordAccessor.getFieldValues();
 
         nameVisitorArg.first = ps;
         itemVisitorArg.first = ps;
 
         ps.print(startRecord);
+
         final int size = fieldNames.size();
-        IVisitablePointable fieldValue = size > 0 ? fieldValues.get(0) : null;
-        ATypeTag typeTag = fieldValue != null ? EnumDeserializer.ATYPETAGDESERIALIZER
-                .deserialize(fieldValue.getByteArray()[fieldValue.getStartOffset()]) : null;
+        boolean first = true;
         for (int i = 0; i < size; ++i) {
-            IVisitablePointable fieldName = fieldNames.get(i);
+            final IVisitablePointable fieldName = fieldNames.get(i);
+            final IVisitablePointable fieldValue = fieldValues.get(i);
+            final ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER
+                    .deserialize(fieldValue.getByteArray()[fieldValue.getStartOffset()]);
 
             // Prints the current field.
             if (typeTag != ATypeTag.MISSING) {
-                printField(ps, visitor, fieldName, fieldValue, typeTag);
-            }
-
-            // Prints the field separator.
-            if (i < size - 1) {
-                fieldValue = fieldValues.get(i + 1);
-                ATypeTag nextTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER
-                        .deserialize(fieldValue.getByteArray()[fieldValue.getStartOffset()]);
-                if (!(i == 0 && typeTag == ATypeTag.MISSING) && nextTypeTag != ATypeTag.MISSING) {
+                if (first) {
+                    //Skip printing field separator for the first field.
+                    first = false;
+                } else {
                     ps.print(fieldSeparator);
                 }
-                typeTag = nextTypeTag;
+                printField(ps, visitor, fieldName, fieldValue, typeTag);
             }
         }
+
         ps.print(endRecord);
     }
 

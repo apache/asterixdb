@@ -4176,6 +4176,11 @@
         <output-dir compare="Text">query-ASTERIXDB-1689</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="null-missing">
+      <compilation-unit name="print-ASTERIXDB-1885">
+        <output-dir compare="Text">print-ASTERIXDB-1885</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="numeric">
     <test-case FilePath="numeric">
