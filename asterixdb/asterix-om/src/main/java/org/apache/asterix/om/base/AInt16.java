@@ -22,10 +22,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
-import org.apache.asterix.om.visitors.IOMVisitor;
 
 public class AInt16 implements IAObject {
 
@@ -33,11 +31,6 @@ public class AInt16 implements IAObject {
 
     public AInt16(short value) {
         this.value = value;
-    }
-
-    @Override
-    public void accept(IOMVisitor visitor) throws AsterixException {
-        visitor.visitAInt16(this);
     }
 
     @Override

@@ -29,7 +29,6 @@ import java.util.Set;
 import org.apache.asterix.common.annotations.IRecordTypeAnnotation;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.base.IAObject;
-import org.apache.asterix.om.visitors.IOMVisitor;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -277,11 +276,6 @@ public class ARecordType extends AbstractComplexType {
     @Override
     public String getDisplayName() {
         return "ARecord";
-    }
-
-    @Override
-    public void accept(IOMVisitor visitor) throws AsterixException {
-        visitor.visitAType(this);
     }
 
     @Override

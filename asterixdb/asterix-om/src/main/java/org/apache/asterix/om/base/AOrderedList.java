@@ -22,11 +22,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
-import org.apache.asterix.om.visitors.IOMVisitor;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -91,11 +89,6 @@ public class AOrderedList implements IACollection {
 
     public IAObject getItem(int index) {
         return values.get(index);
-    }
-
-    @Override
-    public void accept(IOMVisitor visitor) throws AsterixException {
-        visitor.visitAOrderedList(this);
     }
 
     @Override

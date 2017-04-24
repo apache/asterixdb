@@ -22,10 +22,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
-import org.apache.asterix.om.visitors.IOMVisitor;
 
 public final class ABitArray implements IAObject {
 
@@ -96,10 +94,6 @@ public final class ABitArray implements IAObject {
             h = h * 31 + intArray[i];
         }
         return h;
-    }
-
-    public void accept(IOMVisitor visitor) throws AsterixException {
-        visitor.visitABitArray(this);
     }
 
     @Override

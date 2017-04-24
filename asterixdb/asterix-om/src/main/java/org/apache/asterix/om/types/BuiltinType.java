@@ -19,9 +19,7 @@
 package org.apache.asterix.om.types;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.base.IAObject;
-import org.apache.asterix.om.visitors.IOMVisitor;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public abstract class BuiltinType implements IAType {
@@ -862,11 +860,6 @@ public abstract class BuiltinType implements IAType {
     };
 
     public abstract String getConstructor();
-
-    @Override
-    public void accept(IOMVisitor visitor) throws AsterixException {
-        visitor.visitAType(this);
-    }
 
     @Override
     public IAType getType() {

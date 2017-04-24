@@ -19,10 +19,8 @@
 package org.apache.asterix.om.base;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
-import org.apache.asterix.om.visitors.IOMVisitor;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -56,11 +54,6 @@ public class ABinary implements IAObject {
 
     public int getLength() {
         return length;
-    }
-
-    @Override
-    public void accept(IOMVisitor visitor) throws AsterixException {
-        visitor.visitABinary(this);
     }
 
     @Override

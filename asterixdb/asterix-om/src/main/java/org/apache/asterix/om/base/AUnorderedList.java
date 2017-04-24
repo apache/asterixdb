@@ -22,10 +22,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.types.AUnorderedListType;
 import org.apache.asterix.om.types.IAType;
-import org.apache.asterix.om.visitors.IOMVisitor;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -82,11 +80,6 @@ public class AUnorderedList implements IACollection {
         } else {
             return values.get(0);
         }
-    }
-
-    @Override
-    public void accept(IOMVisitor visitor) throws AsterixException {
-        visitor.visitAUnorderedList(this);
     }
 
     @Override

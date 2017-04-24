@@ -22,12 +22,10 @@ import java.io.IOException;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.base.temporal.GregorianCalendarSystem;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
-import org.apache.asterix.om.visitors.IOMVisitor;
 
 public class AInterval implements IAObject {
 
@@ -75,14 +73,6 @@ public class AInterval implements IAObject {
     public int hashCode() {
         return (int) (((int) (this.intervalStart ^ (this.intervalStart >>> 32))) * 31 + (int) (this.intervalEnd ^ (this.intervalEnd >>> 32)))
                 * 31 + (int) this.typetag;
-    }
-
-    /* (non-Javadoc)
-     * @see org.apache.asterix.om.base.IAObject#accept(org.apache.asterix.om.visitors.IOMVisitor)
-     */
-    @Override
-    public void accept(IOMVisitor visitor) throws AsterixException {
-        visitor.visitAInterval(this);
     }
 
     /* (non-Javadoc)

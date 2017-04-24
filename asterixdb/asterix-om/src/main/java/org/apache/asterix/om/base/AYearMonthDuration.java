@@ -22,10 +22,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
-import org.apache.asterix.om.visitors.IOMVisitor;
 
 /**
  * AYearMonthDuration represents the duration in the unit of months.
@@ -68,14 +66,6 @@ public class AYearMonthDuration implements IAObject {
     @Override
     public IAType getType() {
         return BuiltinType.AYEARMONTHDURATION;
-    }
-
-    /* (non-Javadoc)
-     * @see org.apache.asterix.om.base.IAObject#accept(org.apache.asterix.om.visitors.IOMVisitor)
-     */
-    @Override
-    public void accept(IOMVisitor visitor) throws AsterixException {
-        visitor.visitAYearMonthDuration(this);
     }
 
     /* (non-Javadoc)

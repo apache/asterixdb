@@ -25,10 +25,8 @@ import java.io.IOException;
 import java.util.Arrays;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
-import org.apache.asterix.om.visitors.IOMVisitor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -67,11 +65,6 @@ public class AUUID implements IAObject {
     @Override
     public IAType getType() {
         return BuiltinType.AUUID;
-    }
-
-    @Override
-    public void accept(IOMVisitor visitor) throws AsterixException {
-        visitor.visitAUUID(this);
     }
 
     @Override

@@ -23,9 +23,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.base.IAObject;
-import org.apache.asterix.om.visitors.IOMVisitor;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -151,11 +149,6 @@ public class AUnionType extends AbstractComplexType {
         }
         sb.append(")");
         return sb.toString();
-    }
-
-    @Override
-    public void accept(IOMVisitor visitor) throws AsterixException {
-        visitor.visitAType(this);
     }
 
     @Override

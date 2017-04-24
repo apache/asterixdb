@@ -21,11 +21,9 @@ package org.apache.asterix.om.base;
 import java.io.IOException;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.base.temporal.GregorianCalendarSystem;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
-import org.apache.asterix.om.visitors.IOMVisitor;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 /**
@@ -93,11 +91,6 @@ public class ADateTime implements IAObject {
     @Override
     public int hashCode() {
         return (int) (chrononTime ^ (chrononTime >>> 32));
-    }
-
-    @Override
-    public void accept(IOMVisitor visitor) throws AsterixException {
-        visitor.visitADateTime(this);
     }
 
     @Override

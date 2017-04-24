@@ -21,10 +21,8 @@ package org.apache.asterix.om.base;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
-import org.apache.asterix.om.visitors.IOMVisitor;
 
 public class APoint implements IAObject {
 
@@ -42,11 +40,6 @@ public class APoint implements IAObject {
 
     public double getY() {
         return y;
-    }
-
-    @Override
-    public void accept(IOMVisitor visitor) throws AsterixException {
-        visitor.visitAPoint(this);
     }
 
     @Override

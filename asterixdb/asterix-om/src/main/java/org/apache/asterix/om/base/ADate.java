@@ -23,11 +23,9 @@ import java.io.IOException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.base.temporal.GregorianCalendarSystem;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
-import org.apache.asterix.om.visitors.IOMVisitor;
 
 /**
  * ADate type represents dates in a gregorian calendar system.
@@ -60,11 +58,6 @@ public class ADate implements IAObject {
     @Override
     public int hashCode() {
         return chrononTimeInDay;
-    }
-
-    @Override
-    public void accept(IOMVisitor visitor) throws AsterixException {
-        visitor.visitADate(this);
     }
 
     @Override

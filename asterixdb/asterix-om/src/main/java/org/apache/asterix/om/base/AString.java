@@ -21,10 +21,8 @@ package org.apache.asterix.om.base;
 import java.io.Serializable;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
-import org.apache.asterix.om.visitors.IOMVisitor;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -61,11 +59,6 @@ public class AString implements IAObject, Serializable {
     @Override
     public int hashCode() {
         return value.hashCode();
-    }
-
-    @Override
-    public void accept(IOMVisitor visitor) throws AsterixException {
-        visitor.visitAString(this);
     }
 
     @Override

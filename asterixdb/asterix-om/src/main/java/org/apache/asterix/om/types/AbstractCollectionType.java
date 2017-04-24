@@ -18,9 +18,6 @@
  */
 package org.apache.asterix.om.types;
 
-import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.om.visitors.IOMVisitor;
-
 public abstract class AbstractCollectionType extends AbstractComplexType {
 
     private static final long serialVersionUID = 1L;
@@ -47,11 +44,6 @@ public abstract class AbstractCollectionType extends AbstractComplexType {
     @Override
     public IAType getType() {
         return BuiltinType.ASTERIX_TYPE;
-    }
-
-    @Override
-    public void accept(IOMVisitor visitor) throws AsterixException {
-        visitor.visitAType(this);
     }
 
     @Override

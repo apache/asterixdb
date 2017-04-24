@@ -19,10 +19,8 @@
 package org.apache.asterix.om.base;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
-import org.apache.asterix.om.visitors.IOMVisitor;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public final class ABoolean implements IAObject {
@@ -62,11 +60,6 @@ public final class ABoolean implements IAObject {
     @Override
     public int hashCode() {
         return bVal.hashCode();
-    }
-
-    @Override
-    public void accept(IOMVisitor visitor) throws AsterixException {
-        visitor.visitABoolean(this);
     }
 
     @Override

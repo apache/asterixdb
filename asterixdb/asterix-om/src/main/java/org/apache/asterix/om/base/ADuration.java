@@ -22,11 +22,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.base.temporal.GregorianCalendarSystem;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
-import org.apache.asterix.om.visitors.IOMVisitor;
 
 /**
  * ADuration type represents time duration (unanchored time length) values.
@@ -90,11 +88,6 @@ public class ADuration implements IAObject {
     @Override
     public int hashCode() {
         return (int) (chrononInMonth ^ (chrononInMillisecond) ^ (chrononInMillisecond >>> 32));
-    }
-
-    @Override
-    public void accept(IOMVisitor visitor) throws AsterixException {
-        visitor.visitADuration(this);
     }
 
     @Override

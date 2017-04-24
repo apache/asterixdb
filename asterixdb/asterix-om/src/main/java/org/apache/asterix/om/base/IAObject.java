@@ -18,9 +18,7 @@
  */
 package org.apache.asterix.om.base;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.types.IAType;
-import org.apache.asterix.om.visitors.IOMVisitor;
 import org.apache.hyracks.api.dataflow.value.JSONSerializable;
 
 /**
@@ -28,8 +26,6 @@ import org.apache.hyracks.api.dataflow.value.JSONSerializable;
  */
 public interface IAObject extends JSONSerializable {
     public IAType getType();
-
-    public void accept(IOMVisitor visitor) throws AsterixException;
 
     public boolean deepEqual(IAObject obj);
 
