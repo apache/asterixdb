@@ -29,5 +29,5 @@
 - hosts: all
   tasks:
     - include_vars: ../conf/instance_settings.yml
-    - include: deploy.yml
 
+    - include: deploy.yml

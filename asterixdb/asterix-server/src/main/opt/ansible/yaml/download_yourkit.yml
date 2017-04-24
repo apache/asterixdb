@@ -17,16 +17,8 @@
 # under the License.
 # ------------------------------------------------------------
 
-- name: Deploy binaries
-  synchronize:
-    src: "{{ dist }}"
+- name: Download and unzip Yourkit
+  unarchive:
+    src: https://www.yourkit.com/download/yjp-2016.02-b46.zip
     dest: "{{ binarydir }}"
-    archive: true
-
-- name: Ensure the log directory exists
-  file:
-    path: "{{ binarydir }}/logs"
-    state: directory
-
-- include: download_yourkit.yml
-  when: debug
+    remote_src: true

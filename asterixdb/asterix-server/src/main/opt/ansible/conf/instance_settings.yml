@@ -43,3 +43,14 @@ ncservice: "{{ binarydir}}/bin/{{ ncsbin }}"
 
 # The cc service command (script).
 cc: "{{ binarydir}}/bin/{{ ccbin }}"
+
+# Whether in debug mode or not.
+# If it is true, there is a debugger port open at {{ debug_port }} and there is a profiler port open
+# at {{ profiler_port }}.  Note that debug mode only works if the cluster is on Linux machines.
+debug: false
+
+# The port for debugging
+debug_port: 20001
+
+# The port for Yourkit profiling
+profiler_port: 20002
