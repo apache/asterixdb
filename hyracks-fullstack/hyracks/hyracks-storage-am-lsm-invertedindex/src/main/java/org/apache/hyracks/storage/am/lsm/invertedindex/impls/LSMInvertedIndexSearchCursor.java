@@ -58,6 +58,8 @@ public class LSMInvertedIndexSearchCursor implements IIndexCursor {
     private ILSMIndexOperationContext opCtx;
 
     private List<ILSMComponent> operationalComponents;
+    private ITupleReference currentTuple = null;
+    private boolean resultOfSearchCallBackProceed = false;
 
     @Override
     public void open(ICursorInitialState initialState, ISearchPredicate searchPred) throws HyracksDataException {
@@ -111,9 +113,21 @@ public class LSMInvertedIndexSearchCursor implements IIndexCursor {
     private boolean nextValidTuple() throws HyracksDataException {
         while (currentCursor.hasNext()) {
             currentCursor.next();
-            if (!isDeleted(currentCursor.getTuple())) {
+            currentTuple = currentCursor.getTuple();
+            resultOfSearchCallBackProceed = searchCallback.proceed(currentTuple);
+
+            if (!resultOfSearchCallBackProceed) {
+                // We assume that the underlying cursors materialize their results such that
+                // there is no need to reposition the result cursor after reconciliation.
+                searchCallback.reconcile(currentTuple);
+            }
+
+            if (!isDeleted(currentTuple)) {
                 tupleConsumed = false;
                 return true;
+            } else if (!resultOfSearchCallBackProceed) {
+                // reconcile & tuple deleted case: needs to cancel the effect of reconcile().
+                searchCallback.cancel(currentTuple);
             }
         }
         return false;
@@ -150,11 +164,6 @@ public class LSMInvertedIndexSearchCursor implements IIndexCursor {
     public void next() throws HyracksDataException {
         // Mark the tuple as consumed, so hasNext() can move on.
         tupleConsumed = true;
-        // We assume that the underlying cursors materialize their results such that
-        // there is no need to reposition the result cursor after reconciliation.
-        if (!searchCallback.proceed(currentCursor.getTuple())) {
-            searchCallback.reconcile(currentCursor.getTuple());
-        }
     }
 
     @Override

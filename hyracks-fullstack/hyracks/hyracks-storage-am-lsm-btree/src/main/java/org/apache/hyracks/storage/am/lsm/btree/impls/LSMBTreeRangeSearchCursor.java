@@ -48,7 +48,8 @@ public class LSMBTreeRangeSearchCursor extends LSMIndexSearchCursor {
     private RangePredicate predicate;
     private BTreeAccessor[] btreeAccessors;
     private ArrayTupleBuilder tupleBuilder;
-    private boolean proceed = true;
+    private boolean canCallProceed = true;
+    private boolean resultOfSearchCallBackProceed = false;
 
     public LSMBTreeRangeSearchCursor(ILSMIndexOperationContext opCtx) {
         this(opCtx, false);
@@ -63,84 +64,115 @@ public class LSMBTreeRangeSearchCursor extends LSMIndexSearchCursor {
     @Override
     public void reset() throws HyracksDataException {
         super.reset();
-        proceed = true;
+        canCallProceed = true;
     }
 
     @Override
     public void next() throws HyracksDataException {
         outputElement = outputPriorityQueue.poll();
-        needPush = true;
-        proceed = false;
+        needPushElementIntoQueue = true;
+        canCallProceed = false;
     }
 
+    /**
+     * Checks the priority queue and resets and the top element if required.
+     * PriorityQueue can hold one element from each cursor.
+     * The boolean variable canCallProceedMethod controls whether we can call proceed() method for this element.
+     * i.e. it can return this element if proceed() succeeds.
+     * If proceed fails, that is most-likely that there is ongoing operations in the in-memory component.
+     * After resolving in-memory component issue, it progresses again.
+     * Also, in order to not release the same element again, it keeps the previous output and checks it
+     * against the current head in the queue.
+     */
     @Override
     protected void checkPriorityQueue() throws HyracksDataException {
-        while (!outputPriorityQueue.isEmpty() || needPush == true) {
+        while (!outputPriorityQueue.isEmpty() || needPushElementIntoQueue == true) {
             if (!outputPriorityQueue.isEmpty()) {
                 PriorityQueueElement checkElement = outputPriorityQueue.peek();
-                if (proceed && !searchCallback.proceed(checkElement.getTuple())) {
-                    if (includeMutableComponent) {
-                        PriorityQueueElement mutableElement = null;
-                        boolean mutableElementFound = false;
-                        // scan the PQ for the mutable component's element
-                        Iterator<PriorityQueueElement> it = outputPriorityQueue.iterator();
-                        while (it.hasNext()) {
-                            mutableElement = it.next();
-                            if (mutableElement.getCursorIndex() == 0) {
-                                mutableElementFound = true;
-                                it.remove();
-                                break;
-                            }
-                        }
-                        if (mutableElementFound) {
-                            // copy the in-mem tuple
-                            if (tupleBuilder == null) {
-                                tupleBuilder = new ArrayTupleBuilder(cmp.getKeyFieldCount());
-                            }
-                            TupleUtils.copyTuple(tupleBuilder, mutableElement.getTuple(), cmp.getKeyFieldCount());
-                            copyTuple.reset(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray());
-
-                            // unlatch/unpin
-                            rangeCursors[0].reset();
-
-                            // reconcile
-                            if (checkElement.getCursorIndex() == 0) {
-                                searchCallback.reconcile(copyTuple);
-                            } else {
-                                searchCallback.reconcile(checkElement.getTuple());
-                                searchCallback.complete(checkElement.getTuple());
-                            }
-                            // retraverse
-                            reusablePred.setLowKey(copyTuple, true);
-                            btreeAccessors[0].search(rangeCursors[0], reusablePred);
-                            boolean isNotExhaustedCursor = pushIntoPriorityQueue(mutableElement);
-
-                            if (checkElement.getCursorIndex() == 0) {
-                                if (!isNotExhaustedCursor || cmp.compare(copyTuple, mutableElement.getTuple()) != 0) {
-                                    searchCallback.complete(copyTuple);
-                                    searchCallback.cancel(copyTuple);
-                                    continue;
+                if (canCallProceed) {
+                    resultOfSearchCallBackProceed = searchCallback.proceed(checkElement.getTuple());
+                    if (!resultOfSearchCallBackProceed) {
+                        // In case proceed() fails and there is an in-memory component,
+                        // we can't simply use this element since there might be a change.
+                        if (includeMutableComponent) {
+                            PriorityQueueElement mutableElement = null;
+                            boolean mutableElementFound = false;
+                            // Scans the PQ for the mutable component's element and delete it
+                            // since it can be changed.
+                            // (i.e. we can't ensure that the element is the most current one.)
+                            Iterator<PriorityQueueElement> it = outputPriorityQueue.iterator();
+                            while (it.hasNext()) {
+                                mutableElement = it.next();
+                                if (mutableElement.getCursorIndex() == 0) {
+                                    mutableElementFound = true;
+                                    it.remove();
+                                    break;
                                 }
-                                searchCallback.complete(copyTuple);
+                            }
+                            if (mutableElementFound) {
+                                // Copies the in-memory tuple.
+                                if (tupleBuilder == null) {
+                                    tupleBuilder = new ArrayTupleBuilder(cmp.getKeyFieldCount());
+                                }
+                                TupleUtils.copyTuple(tupleBuilder, mutableElement.getTuple(), cmp.getKeyFieldCount());
+                                copyTuple.reset(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray());
+
+                                // Unlatches/unpins the leaf page of the index.
+                                rangeCursors[0].reset();
+
+                                // Tries to reconcile.
+                                if (checkElement.getCursorIndex() == 0) {
+                                    searchCallback.reconcile(copyTuple);
+                                } else {
+                                    // If this element is from the disk component, we can call complete()
+                                    // after reconcile() since we can guarantee that there is no change.
+                                    searchCallback.reconcile(checkElement.getTuple());
+                                    searchCallback.complete(checkElement.getTuple());
+                                }
+                                // Re-traverses the index.
+                                reusablePred.setLowKey(copyTuple, true);
+                                btreeAccessors[0].search(rangeCursors[0], reusablePred);
+                                boolean isNotExhaustedCursor =
+                                        pushIntoQueueFromCursorAndReplaceThisElement(mutableElement);
+
+                                if (checkElement.getCursorIndex() == 0) {
+                                    if (!isNotExhaustedCursor
+                                            || cmp.compare(copyTuple, mutableElement.getTuple()) != 0) {
+                                        // The searched key no longer exists. We call cancel() to
+                                        // reverse the effect of reconcile() method.
+                                        searchCallback.cancel(copyTuple);
+                                        continue;
+                                    }
+                                    // The searched key is still there.
+                                    // TODO: do we need to call or not call complete() in this case?
+                                    searchCallback.complete(copyTuple);
+                                }
+                            } else {
+                                // The mutable cursor is exhausted and it couldn't find the element.
+                                // The failed element did not come from the in-memory component.
+                                searchCallback.reconcile(checkElement.getTuple());
                             }
                         } else {
-                            // the mutable cursor is exhausted
+                            // proceed() failed. However, there is no in-memory component.
+                            // So just call reconcile.
                             searchCallback.reconcile(checkElement.getTuple());
                         }
-                    } else {
-                        searchCallback.reconcile(checkElement.getTuple());
                     }
                 }
-                // If there is no previous tuple or the previous tuple can be ignored
+
+                // If there is no previous tuple or the previous tuple can be ignored.
+                // This check is needed not to release the same tuple again.
                 if (outputElement == null) {
                     if (isDeleted(checkElement) && !returnDeletedTuples) {
                         // If the key has been deleted then pop it and set needPush to true.
                         // We cannot push immediately because the tuple may be
                         // modified if hasNext() is called
                         outputElement = outputPriorityQueue.poll();
-                        searchCallback.cancel(checkElement.getTuple());
-                        needPush = true;
-                        proceed = false;
+                        if (!resultOfSearchCallBackProceed) {
+                            searchCallback.cancel(checkElement.getTuple());
+                        }
+                        needPushElementIntoQueue = true;
+                        canCallProceed = false;
                     } else {
                         break;
                     }
@@ -154,24 +186,24 @@ public class LSMBTreeRangeSearchCursor extends LSMIndexSearchCursor {
 
                         // the head element of PQ is useless now
                         PriorityQueueElement e = outputPriorityQueue.poll();
-                        pushIntoPriorityQueue(e);
+                        pushIntoQueueFromCursorAndReplaceThisElement(e);
                     } else {
                         // If the previous tuple and the head tuple are different
                         // the info of previous tuple is useless
-                        if (needPush == true) {
-                            pushIntoPriorityQueue(outputElement);
-                            needPush = false;
+                        if (needPushElementIntoQueue == true) {
+                            pushIntoQueueFromCursorAndReplaceThisElement(outputElement);
+                            needPushElementIntoQueue = false;
                         }
-                        proceed = true;
+                        canCallProceed = true;
                         outputElement = null;
                     }
                 }
             } else {
                 // the priority queue is empty and needPush
-                pushIntoPriorityQueue(outputElement);
-                needPush = false;
+                pushIntoQueueFromCursorAndReplaceThisElement(outputElement);
+                needPushElementIntoQueue = false;
                 outputElement = null;
-                proceed = true;
+                canCallProceed = true;
             }
         }
     }
@@ -224,6 +256,6 @@ public class LSMBTreeRangeSearchCursor extends LSMIndexSearchCursor {
         }
         setPriorityQueueComparator();
         initPriorityQueue();
-        proceed = true;
+        canCallProceed = true;
     }
 }

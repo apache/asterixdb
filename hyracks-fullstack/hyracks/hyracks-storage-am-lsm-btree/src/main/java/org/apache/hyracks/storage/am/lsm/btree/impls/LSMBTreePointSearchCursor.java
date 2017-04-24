@@ -73,11 +73,14 @@ public class LSMBTreePointSearchCursor implements ITreeIndexCursor {
             btreeAccessors[i].search(rangeCursors[i], predicate);
             if (rangeCursors[i].hasNext()) {
                 rangeCursors[i].next();
-                // We use the predicate's to lock the key instead of the tuple that we get from cursor to avoid copying the tuple when we do the "unlatch dance"
+                // We use the predicate's to lock the key instead of the tuple that we get from cursor
+                // to avoid copying the tuple when we do the "unlatch dance".
                 if (reconciled || searchCallback.proceed(predicate.getLowKey())) {
                     // if proceed is successful, then there's no need for doing the "unlatch dance"
                     if (((ILSMTreeTupleReference) rangeCursors[i].getTuple()).isAntimatter()) {
-                        searchCallback.cancel(predicate.getLowKey());
+                        if (reconciled) {
+                            searchCallback.cancel(predicate.getLowKey());
+                        }
                         rangeCursors[i].close();
                         return false;
                     } else {
@@ -94,7 +97,6 @@ public class LSMBTreePointSearchCursor implements ITreeIndexCursor {
 
                     // retraverse
                     btreeAccessors[0].search(rangeCursors[i], predicate);
-                    searchCallback.complete(predicate.getLowKey());
                     if (rangeCursors[i].hasNext()) {
                         rangeCursors[i].next();
                         if (((ILSMTreeTupleReference) rangeCursors[i].getTuple()).isAntimatter()) {
@@ -104,9 +106,11 @@ public class LSMBTreePointSearchCursor implements ITreeIndexCursor {
                         } else {
                             frameTuple = rangeCursors[i].getTuple();
                             foundTuple = true;
+                            searchCallback.complete(predicate.getLowKey());
                             return true;
                         }
                     } else {
+                        searchCallback.cancel(predicate.getLowKey());
                         rangeCursors[i].close();
                     }
                 } else {

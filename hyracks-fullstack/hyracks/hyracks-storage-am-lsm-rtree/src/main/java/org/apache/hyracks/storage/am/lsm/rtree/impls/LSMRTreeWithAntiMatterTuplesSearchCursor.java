@@ -26,6 +26,7 @@ import org.apache.hyracks.storage.am.btree.impls.BTree;
 import org.apache.hyracks.storage.am.btree.impls.BTreeRangeSearchCursor;
 import org.apache.hyracks.storage.am.btree.impls.RangePredicate;
 import org.apache.hyracks.storage.am.common.api.ICursorInitialState;
+import org.apache.hyracks.storage.am.common.api.ISearchOperationCallback;
 import org.apache.hyracks.storage.am.common.api.ISearchPredicate;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexAccessor;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexCursor;
@@ -56,6 +57,7 @@ public class LSMRTreeWithAntiMatterTuplesSearchCursor extends LSMIndexSearchCurs
     private SearchPredicate rtreeSearchPredicate;
     private int numMutableComponents;
     private boolean open;
+    protected ISearchOperationCallback searchCallback;
 
     public LSMRTreeWithAntiMatterTuplesSearchCursor(ILSMIndexOperationContext opCtx) {
         this(opCtx, false);
@@ -75,6 +77,7 @@ public class LSMRTreeWithAntiMatterTuplesSearchCursor extends LSMIndexSearchCurs
         comparatorFields = lsmInitialState.getComparatorFields();
         operationalComponents = lsmInitialState.getOperationalComponents();
         rtreeSearchPredicate = (SearchPredicate) searchPred;
+        searchCallback = lsmInitialState.getSearchOperationCallback();
 
         includeMutableComponent = false;
         numMutableComponents = 0;
@@ -147,7 +150,13 @@ public class LSMRTreeWithAntiMatterTuplesSearchCursor extends LSMIndexSearchCurs
                 while (mutableRTreeCursors[currentCursor].hasNext()) {
                     mutableRTreeCursors[currentCursor].next();
                     ITupleReference currentTuple = mutableRTreeCursors[currentCursor].getTuple();
+                    // TODO: at this time, we only add proceed() part.
+                    // reconcile() and complete() can be added later after considering the semantics.
+
+                    // Call proceed() to do necessary operations before returning this tuple.
+                    searchCallback.proceed(currentTuple);
                     if (searchMemBTrees(currentTuple, currentCursor)) {
+                        // anti-matter tuple is NOT found
                         foundNext = true;
                         frameTuple = currentTuple;
                         return true;
@@ -160,14 +169,33 @@ public class LSMRTreeWithAntiMatterTuplesSearchCursor extends LSMIndexSearchCurs
             while (super.hasNext()) {
                 super.next();
                 ITupleReference diskRTreeTuple = super.getTuple();
+                // TODO: at this time, we only add proceed().
+                // reconcile() and complete() can be added later after considering the semantics.
+
+                // Call proceed() to do necessary operations before returning this tuple.
+                searchCallback.proceed(diskRTreeTuple);
                 if (searchMemBTrees(diskRTreeTuple, numMutableComponents)) {
+                    // anti-matter tuple is NOT found
                     foundNext = true;
                     frameTuple = diskRTreeTuple;
                     return true;
                 }
             }
         } else {
-            return super.hasNext();
+            if (super.hasNext()) {
+                super.next();
+                ITupleReference diskRTreeTuple = super.getTuple();
+
+                // TODO: at this time, we only add proceed() part.
+                // reconcile() and complete() can be added later after considering the semantics.
+
+                // Call proceed() to do necessary operations before returning this tuple.
+                // Since in-memory components don't exist, we can skip searching in-memory B-Trees.
+                searchCallback.proceed(diskRTreeTuple);
+                foundNext = true;
+                frameTuple = diskRTreeTuple;
+                return true;
+            }
         }
 
         return false;
@@ -175,22 +203,12 @@ public class LSMRTreeWithAntiMatterTuplesSearchCursor extends LSMIndexSearchCurs
 
     @Override
     public void next() throws HyracksDataException {
-        if (includeMutableComponent) {
-            foundNext = false;
-        } else {
-            super.next();
-        }
-
+        foundNext = false;
     }
 
     @Override
     public ITupleReference getTuple() {
-        if (includeMutableComponent) {
-            return frameTuple;
-        } else {
-            return super.getTuple();
-        }
-
+        return frameTuple;
     }
 
     @Override

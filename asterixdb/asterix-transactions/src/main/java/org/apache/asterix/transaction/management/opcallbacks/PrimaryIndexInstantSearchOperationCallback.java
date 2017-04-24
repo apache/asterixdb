@@ -60,9 +60,18 @@ public class PrimaryIndexInstantSearchOperationCallback extends AbstractOperatio
         }
     }
 
+    /**
+     * Cancels the reconcile() operation. Since reconcile() gets a lock, this lock
+     * needs to be unlocked to reverse the effect of reconcile().
+     */
     @Override
     public void cancel(ITupleReference tuple) throws HyracksDataException {
-        //no op
+        int pkHash = computePrimaryKeyHashValue(tuple, primaryKeyFields);
+        try {
+            lockManager.unlock(datasetId, pkHash, LockMode.S, txnCtx);
+        } catch (ACIDException e) {
+            throw new HyracksDataException(e);
+        }
     }
 
     @Override
