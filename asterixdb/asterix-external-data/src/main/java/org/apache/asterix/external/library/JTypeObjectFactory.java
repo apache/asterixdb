@@ -19,6 +19,7 @@
 package org.apache.asterix.external.library;
 
 import org.apache.asterix.external.api.IJObject;
+import org.apache.asterix.external.library.java.JObjects;
 import org.apache.asterix.external.library.java.JObjects.JBoolean;
 import org.apache.asterix.external.library.java.JObjects.JCircle;
 import org.apache.asterix.external.library.java.JObjects.JDate;
@@ -45,6 +46,7 @@ import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.AUnorderedListType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.util.container.IObjectFactory;
+
 
 public class JTypeObjectFactory implements IObjectFactory<IJObject, IAType> {
 
@@ -107,6 +109,12 @@ public class JTypeObjectFactory implements IObjectFactory<IJObject, IAType> {
                 break;
             case INT64:
                 retValue = new JLong(0);
+                break;
+            case NULL:
+                retValue = JObjects.JNull.INSTANCE;
+                break;
+            case MISSING:
+                retValue = JObjects.JMissing.INSTANCE;
                 break;
             case ORDEREDLIST:
                 AOrderedListType ot = (AOrderedListType) type;

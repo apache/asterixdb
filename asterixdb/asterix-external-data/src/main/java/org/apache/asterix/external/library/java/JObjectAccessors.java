@@ -140,6 +140,12 @@ public class JObjectAccessors {
             case DURATION:
                 accessor = new JDurationAccessor();
                 break;
+            case NULL:
+                accessor = new JNullAccessor();
+                break;
+            case MISSING:
+                accessor = new JMissingAccessor();
+                break;
             default:
                 break;
         }
@@ -185,6 +191,26 @@ public class JObjectAccessors {
             int i = AInt32SerializerDeserializer.getInt(b, s + 1);
             IJObject jObject = objectPool.allocate(BuiltinType.AINT32);
             ((JInt) jObject).setValue(i);
+            return jObject;
+        }
+    }
+
+    public static class JNullAccessor implements IJObjectAccessor {
+
+        @Override
+        public IJObject access(IVisitablePointable pointable, IObjectPool<IJObject, IAType> objPool)
+                throws HyracksDataException {
+            IJObject jObject = objPool.allocate(BuiltinType.ANULL);
+            return jObject;
+        }
+    }
+
+    public static class JMissingAccessor implements  IJObjectAccessor {
+
+        @Override
+        public IJObject access(IVisitablePointable pointable, IObjectPool<IJObject, IAType> objPool)
+                throws HyracksDataException {
+            IJObject jObject = objPool.allocate(BuiltinType.AMISSING);
             return jObject;
         }
     }
