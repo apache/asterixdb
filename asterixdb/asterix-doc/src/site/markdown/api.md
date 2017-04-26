@@ -21,324 +21,195 @@
 
 ## <a id="toc">Table of Contents</a>
 
-* [DDL API](#DdlApi)
-* [Update API](#UpdateApi)
-* [Query API](#QueryApi)
-* [Mixed API](#AnyApi)
-* [Asynchronous Result API](#AsynchronousResultApi)
-* [Query Status API](#QueryStatusApi)
-* [Error Codes](#ErrorCodes)
+* [Query Service API](#queryservice)
+* [Query Status API](#querystatus)
+* [Query Result API](#queryresult)
 
+## <a id="queryservice">POST /query/service</a><font size="4"> <a href="#toc">[Back to TOC]</a></font>
 
-## <a id="DdlApi">DDL API</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
+__Description__ Returns result for query as JSON.
+  The response is a JSON object that contains some result metadata along with either an embedded result or an opaque
+  handle that can be used to navigate to the result (see the decription of the `mode` parameter for more details).
 
-*End point for the data definition statements*
+__Parameters__
 
-Endpoint: _/ddl_
+* `statement` - Specifies at least one valid SQL++ statement to run. The statements need to be urlencoded. Required.
+* `pretty` - If the parameter `pretty` is given with the value `true`, the result will be indented. (Optional)
+* `client_context_id` - A user-defined sequence of characters that the API receives and returns unchanged. This can be
+  used e.g. to match individual requests, jobs, and responses. Another option could be to use it for groups of requests
+  if an application decides to put e.g. an group identifier into that field to route groups of responses to a
+  particular response processor.
+* `mode` - Result delivery mode. Possible values are `immediate`, `deferred`, `async` (default: `immediate`).
+  If the delivery mode is `immediate` the query result is returned with the response.
+  If the delivery mode is `deferred` the response contains a handle to the <a href="#queryresult">result</a>.
+  If the delivery mode is `async` the response contains a handle to the query's <a href="#querystatus">status</a>.
 
-Parameters:
+__Command (immediate result delivery)__
 
-<table>
-<tr>
-  <td>Parameter</td>
-  <td>Description</td>
-  <td>Required?</td>
-</tr>
-<tr>
-  <td>ddl</td>
-  <td>String containing DDL statements to modify Metadata</td>
-  <td>Yes</td>
-</tr>
-</table>
+    $ curl -v --data-urlencode "statement=select 1;" \
+              --data pretty=true                     \
+              --data client_context_id=xyz           \
+              http://localhost:19002/query/service
 
-This call does not return any result. If the operations were successful, HTTP OK status code is returned.
+__Sample response__
 
-### Example ###
-
-#### DDL Statements ####
-
-
-        drop dataverse company if exists;
-        create dataverse company;
-        use dataverse company;
-        
-        create type Emp as open {
-          id : int32,
-          name : string
-        };
-        
-        create dataset Employee(Emp) primary key id;
-
-
-API call for the above DDL statements in the URL-encoded form.
-
-[http://localhost:19002/ddl?ddl=drop%20dataverse%20company%20if%20exists;create%20dataverse%20company;use%20dataverse%20company;create%20type%20Emp%20as%20open%20{id%20:%20int32,name%20:%20string};create%20dataset%20Employee(Emp)%20primary%20key%20id;](http://localhost:19002/ddl?ddl=drop%20dataverse%20company%20if%20exists;create%20dataverse%20company;use%20dataverse%20company;create%20type%20Emp%20as%20open%20{id%20:%20int32,name%20:%20string};create%20dataset%20Employee(Emp)%20primary%20key%20id;)
-
-#### Response ####
-*HTTP OK 200*  
-`<NO PAYLOAD>`
-
-## <a id="UpdateApi">Update API</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
-
-*End point for update statements (INSERT, DELETE and LOAD)*
-
-Endpoint: _/update_
-
-Parameters:
-
-<table>
-<tr>
-  <td>Parameter</td>
-  <td>Description</td>
-  <td>Required?</td>
-</tr>
-<tr>
-  <td>statements</td>
-  <td>String containing update (insert/delete) statements to execute</td>
-  <td>Yes</td>
-</tr>
-</table>
-
-This call does not return any result. If the operations were successful, HTTP OK status code is returned.
-
-### Example ###
-
-#### Update Statements ####
-
-
-        use dataverse company;
-        
-        insert into dataset Employee({ "id":123,"name":"John Doe"});
-
-
-API call for the above update statement in the URL-encoded form.
-
-[http://localhost:19002/update?statements=use%20dataverse%20company;insert%20into%20dataset%20Employee({%20%22id%22:123,%22name%22:%22John%20Doe%22});](http://localhost:19002/update?statements=use%20dataverse%20company;insert%20into%20dataset%20Employee({%20%22id%22:123,%22name%22:%22John%20Doe%22});)
-
-#### Response ####
-*HTTP OK 200*  
-`<NO PAYLOAD>`
-
-## <a id="QueryApi">Query API</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
-
-*End point for query statements*
-
-Endpoint: _/query_
-
-Parameters:
-
-<table>
-<tr>
-  <td>Parameter</td>
-  <td>Description</td>
-  <td>Required?</td>
-</tr>
-<tr>
-  <td>query</td>
-  <td>Query string to pass to ASTERIX for execution</td>
-  <td>Yes</td>
-</tr>
-<tr>
-  <td>mode</td>
-  <td>Indicate if call should be synchronous or asynchronous. mode = synchronous blocks the call until results are available; mode = asynchronous returns immediately with a handle that can be used later to check the query’s status and to fetch results when available</td>
-  <td>No. default mode = synchronous</td>
-</tr>
-</table>
-
-Result: The result is returned as a JSON object as follows
-
-
-        {
-           results: <result as a string, if mode = synchronous>
-           error-code: [<code>, <message>] (if an error occurs)
-           handle: <opaque result handle, if mode = asynchronous>
+    > POST /query/service HTTP/1.1
+    > Host: localhost:19002
+    > User-Agent: curl/7.43.0
+    > Accept: */*
+    > Content-Length: 57
+    > Content-Type: application/x-www-form-urlencoded
+    >
+    < HTTP/1.1 200 OK
+    < transfer-encoding: chunked
+    < connection: keep-alive
+    < content-type: application/json; charset=utf-8
+    <
+    {
+        "requestID": "5f72e78c-482a-45bf-b174-6443c8273025",
+        "clientContextID": "xyz",
+        "signature": "*",
+        "results": [ {
+            "$1" : 1
+        } ]
+        ,
+        "status": "success",
+        "metrics": {
+            "elapsedTime": "20.263371ms",
+            "executionTime": "19.889389ms",
+            "resultCount": 1,
+            "resultSize": 15
         }
+    }
 
+__Command (<a id="deferred">deferred result delivery</a>)__
 
-### Example ###
+    $ curl -v --data-urlencode "statement=select 1;" \
+              --data mode=deferred                   \
+              http://localhost:19002/query/service
 
-#### Select query with synchronous result delivery ####
+__Sample response__
 
-
-        use dataverse company;
-        
-        for $l in dataset('Employee') return $l;
-
-
-API call for the above query statement in the URL-encoded form.
-
-[http://localhost:19002/query?query=use%20dataverse%20company;for%20$l%20in%20dataset('Employee')%20return%20$l;](http://localhost:19002/query?query=use%20dataverse%20company;for%20$l%20in%20dataset('Employee')%20return%20$l;)
-
-#### Response ####
-*HTTP OK 200*  
-Payload
-
-
-        {
-          "results": [
-              [
-                  "{ "id": 123, "name": "John Doe" }"
-              ]
-          ]
+    > POST /query/service HTTP/1.1
+    > Host: localhost:19002
+    > User-Agent: curl/7.43.0
+    > Accept: */*
+    > Content-Length: 37
+    > Content-Type: application/x-www-form-urlencoded
+    >
+    < HTTP/1.1 200 OK
+    < transfer-encoding: chunked
+    < connection: keep-alive
+    < content-type: application/json; charset=utf-8
+    <
+    {
+        "requestID": "6df7afb4-5f83-49b6-8c4b-f11ec84c4d7e",
+        "signature": "*",
+        "handle": "http://localhost:19002/query/service/result/7-0",
+        "status": "success",
+        "metrics": {
+            "elapsedTime": "12.270570ms",
+            "executionTime": "11.948343ms",
+            "resultCount": 0,
+            "resultSize": 0
         }
+    }
 
+__Command (<a id="async>">async result delivery</a>)__
 
-#### Same select query with asynchronous result delivery ####
+    $ curl -v --data-urlencode "statement=select 1;" \
+              --data mode=async                      \
+              http://localhost:19002/query/service
 
-API call for the above query statement in the URL-encoded form with mode=asynchronous
+__Sample response__
 
-[http://localhost:19002/query?query=use%20dataverse%20company;for%20$l%20in%20dataset('Employee')%20return%20$l;&amp;mode=asynchronous](http://localhost:19002/query?query=use%20dataverse%20company;for%20$l%20in%20dataset('Employee')%20return%20$l;&amp;mode=asynchronous)
-
-#### Response ####
-*HTTP OK 200*  
-Payload
-
-
-        {
-            "handle": [45,0]
+    > POST /query/service HTTP/1.1
+    > Host: localhost:19002
+    > User-Agent: curl/7.43.0
+    > Accept: */*
+    > Content-Length: 34
+    > Content-Type: application/x-www-form-urlencoded
+    >
+    < HTTP/1.1 200 OK
+    < transfer-encoding: chunked
+    < connection: keep-alive
+    < content-type: application/json; charset=utf-8
+    <
+    {
+        "requestID": "c5858420-d821-4c0c-81a4-2364386827c2",
+        "signature": "*",
+        "status": "running",
+        "handle": "http://localhost:19002/query/service/status/9-0",
+        "metrics": {
+            "elapsedTime": "9.727006ms",
+            "executionTime": "9.402282ms",
+            "resultCount": 0,
+            "resultSize": 0
         }
+    }
 
 
-## <a id="AnyApi">Mixed API</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
+## <a id="querystatus">GET /query/service/status</a><font size="4"> <a href="#toc">[Back to TOC]</a></font>
 
-*End point for any/mixed statement*
+__Description__ Returns status of an `async` query request.
+  The response is a JSON object that has a similar structure to the responses for the <a
+  href="#queryservice">/query/service</a> endpoint.
+  Possible status values for the status are `running`, `success`, `timeout`, `failed`, and `fatal`.
+  If the status value is `success`, the response also contains a handle to the <a href="#queryresult">result</a>.
+  URLs for this endpoint are usually not constructed by the application, they are simply extracted from the `handle`
+  field of the response to a request to the <a href="#queryservice">/query/service</a> endpoint.
 
-Endpoint: _/aql_
+__Command__
 
-Parameters:
+  This example shows a request/reponse for the (opaque) status handle that was returned by the <a href="#async">async
+  result delivery</a> example.
 
-<table>
-<tr>
-  <td>Parameter</td>
-  <td>Description</td>
-  <td>Required?</td>
-</tr>
-<tr>
-  <td>query</td>
-  <td>Query string to pass to ASTERIX for execution</td>
-  <td>Yes</td>
-</tr>
-<tr>
-  <td>mode</td>
-  <td>Indicate if call should be synchronous or asynchronous. mode = synchronous blocks the call until results are available; mode = asynchronous returns immediately with a handle that can be used later to check the query’s status and to fetch results when available</td>
-  <td>No. default mode = synchronous</td>
-</tr>
-</table>
+    $ curl -v http://localhost:19002/query/service/status/9-0
 
-Similar to *_/update_* but allows any arbitrary AQL statement rather than only modifications.
+__Sample response__
 
+    > GET /query/service/status/9-0 HTTP/1.1
+    > Host: localhost:19002
+    > User-Agent: curl/7.43.0
+    > Accept: */*
+    >
+    < HTTP/1.1 200 OK
+    < transfer-encoding: chunked
+    < connection: keep-alive
+    < content-type: application/json; charset=utf-8
+    <
+    {
+        "status": "success",
+        "handle": "http://localhost:19002/query/service/result/9-0"
+    }
 
-## <a id="AsynchronousResultApi">Asynchronous Result API</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
+## <a id="queryresult">GET /query/service/result</a><font size="4"> <a href="#toc">[Back to TOC]</a></font>
 
-*End point to fetch the results of an asynchronous query*
+__Description__ Returns result set for an `async` or `deferred` query request.
+  The response is a plain result without a wrapping JSON object.
+  URLs for this endpoint are usually not constructed by the application, they are simply extracted from the `handle`
+  field of the response to a request to the <a href="#queryservice">/query/service</a> or the <a
+  href="#querystatus">/query/service/status</a> endpoint.
 
-Endpoint: _/query/result_
+__Command__
 
-Parameters:
+  This example shows a request/reponse for the (opaque) result handle that was returned by the <a
+  href="#deferred">deferred result delivery</a> example.
 
-<table>
-<tr>
-  <td>Parameter</td>
-  <td>Description</td>
-  <td>Required?</td>
-</tr>
-<tr>
-  <td>handle</td>
-  <td>Result handle that was returned by a previous call to a /query call with mode = asynchronous</td>
-  <td>Yes</td>
-</tr>
-</table>
+    $ curl -v http://localhost:19002/query/service/result/7-0
 
-Result: The result is returned as a JSON object as follows:
+__Sample response__
 
+    > GET /query/service/result/7-0 HTTP/1.1
+    > Host: localhost:19002
+    > User-Agent: curl/7.43.0
+    > Accept: */*
+    >
+    < HTTP/1.1 200 OK
+    < transfer-encoding: chunked
+    < connection: keep-alive
+    < content-type: application/json
+    <
+    [ { "$1": 1 }
+     ]
 
-        {
-           results: <result as a string, if mode = synchronous, or mode = asynchronous and results are available>
-           error-code: [<code>, <message>] (if an error occurs)
-        }
-
-
-If mode = asynchronous and results are not available, the returned JSON object is empty: { }
-
-### Example ###
-
-#### Fetching results for asynchronous query ####
-
-We use the handle returned by the asynchronous query to get the results for the query. The handle returned was:
-
-
-        {
-            "handle": [45,0]
-        }
-
-
-API call for reading results from the previous asynchronous query in the URL-encoded form.
-
-[http://localhost:19002/query/result?handle=%7B%22handle%22%3A+%5B45%2C+0%5D%7D](http://localhost:19002/query/result?handle=%7B%22handle%22%3A+%5B45%2C+0%5D%7D)
-
-#### Response ####
-*HTTP OK 200*  
-Payload
-
-
-        {
-          "results": [
-              [
-                  "{ "id": 123, "name": "John Doe" }"
-              ]
-          ]
-        }
-
-
-## <a id="QueryStatusApi">Query Status API</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
-
-*End point to check the status of the query asynchronous*
-
-Endpoint: _/query/status_
-
-Parameters:
-
-<table>
-<tr>
-  <td>Parameter</td>
-  <td>Description</td>
-  <td>Required?</td>
-</tr>
-<tr>
-  <td>handle</td>
-  <td>Result handle that was returned by a previous call to a /query call with mode = asynchronous</td>
-  <td>Yes</td>
-</tr>
-</table>
-
-Result: The result is returned as a JSON object as follows:
-
-
-        {
-           status: ("RUNNING" | "SUCCESS" | "ERROR")
-        }
-
-
-
-## <a id="ErrorCodes">Error Codes</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
-
-Table of error codes and their types:
-
-<table>
-<tr>
-  <td>Code</td>
-  <td>Type</td>
-</tr>
-<tr>
-  <td>1</td>
-  <td>Invalid statement</td>
-</tr>
-<tr>
-  <td>2</td>
-  <td>Parse failures</td>
-</tr>
-<tr>
-  <td>99</td>
-  <td>Uncategorized error</td>
-</tr>
-</table>
