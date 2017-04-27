@@ -43,7 +43,7 @@ public class LifeCycleComponentManager implements ILifeCycleComponentManager {
     private boolean configured;
 
     public LifeCycleComponentManager() {
-        components = new ArrayList<ILifeCycleComponent>();
+        components = new ArrayList<>();
         stopInitiated = false;
         configured = false;
         stopped = false;
@@ -51,16 +51,11 @@ public class LifeCycleComponentManager implements ILifeCycleComponentManager {
 
     @Override
     public void uncaughtException(Thread t, Throwable e) {
-        if (LOGGER.isLoggable(Level.SEVERE)) {
-            LOGGER.severe("Uncaught Exception from thread " + t.getName() + " message: " + e.getMessage());
-            e.printStackTrace();
-        }
+        LOGGER.log(Level.SEVERE, "Uncaught Exception from thread " + t.getName(), e);
         try {
             stopAll(true);
         } catch (IOException e1) {
-            if (LOGGER.isLoggable(Level.SEVERE)) {
-                LOGGER.severe("Exception in stopping Asterix. " + e1.getMessage());
-            }
+            LOGGER.log(Level.SEVERE, "Exception in stopping instance", e1);
         }
     }
 
@@ -79,31 +74,25 @@ public class LifeCycleComponentManager implements ILifeCycleComponentManager {
     @Override
     public synchronized void stopAll(boolean dumpState) throws IOException {
         if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.severe("Attempting to stop " + this);
+            LOGGER.info("Attempting to stop " + this);
         }
         if (stopped) {
-            if (LOGGER.isLoggable(Level.INFO)) {
-                LOGGER.severe("Lifecycle management was already stopped");
-            }
+            LOGGER.info("Lifecycle management was already stopped");
             return;
         }
         if (stopInitiated) {
-            if (LOGGER.isLoggable(Level.INFO)) {
-                LOGGER.severe("Stop already in progress");
-            }
+            LOGGER.info("Stop already in progress");
             return;
         }
         if (!configured) {
             if (LOGGER.isLoggable(Level.SEVERE)) {
-                LOGGER.severe("Lifecycle management not configured" + this);
+                LOGGER.severe("Lifecycle management not configured " + this);
             }
             return;
         }
 
         stopInitiated = true;
-        if (LOGGER.isLoggable(Level.SEVERE)) {
-            LOGGER.severe("Stopping Asterix instance");
-        }
+        LOGGER.severe("Stopping instance");
 
         FileOutputStream componentDumpStream = null;
         String componentDumpPath = null;
@@ -120,14 +109,12 @@ public class LifeCycleComponentManager implements ILifeCycleComponentManager {
                     componentDumpStream = new FileOutputStream(f);
                 }
                 if (LOGGER.isLoggable(Level.INFO)) {
-                    LOGGER.info("Stopping component instance " + component.getClass().getName() + " dump state "
-                            + dumpState + " dump path " + componentDumpPath);
+                    LOGGER.info("Stopping component instance " + component.getClass().getName() + "; dump state: "
+                            + dumpState + ", dump path: " + componentDumpPath);
                 }
                 component.stop(dumpState, componentDumpStream);
             } catch (Exception e) {
-                if (LOGGER.isLoggable(Level.SEVERE)) {
-                    LOGGER.severe("Exception in stopping component " + component.getClass().getName() + e.getMessage());
-                }
+                LOGGER.log(Level.SEVERE, "Exception in stopping component " + component.getClass().getName(), e);
             } finally {
                 if (componentDumpStream != null) {
                     componentDumpStream.close();

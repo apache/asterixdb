@@ -123,7 +123,7 @@ public class CCApplication extends BaseCCApplication {
                 .create(ClusterProperties.INSTANCE.getCluster(), repStrategy, ccServiceCtx);
         ExternalLibraryUtils.setUpExternaLibraries(libraryManager, false);
         componentProvider = new StorageComponentProvider();
-        GlobalRecoveryManager.instantiate((HyracksConnection) getHcc(), componentProvider);
+        GlobalRecoveryManager.instantiate(ccServiceCtx, getHcc(), componentProvider);
         appCtx = new CcApplicationContext(ccServiceCtx, getHcc(), libraryManager, resourceIdManager,
                 () -> MetadataManager.INSTANCE, GlobalRecoveryManager.instance(), ftStrategy,
                 new ActiveLifecycleListener());

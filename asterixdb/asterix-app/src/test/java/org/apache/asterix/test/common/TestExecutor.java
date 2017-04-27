@@ -45,6 +45,7 @@ import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -404,7 +405,12 @@ public class TestExecutor {
     }
 
     protected HttpResponse executeAndCheckHttpRequest(HttpUriRequest method) throws Exception {
-        return checkResponse(executeHttpRequest(method));
+        return checkResponse(executeHttpRequest(method), code -> code == HttpStatus.SC_OK);
+    }
+
+    protected HttpResponse executeAndCheckHttpRequest(HttpUriRequest method, Predicate<Integer> responseCodeValidator)
+            throws Exception {
+        return checkResponse(executeHttpRequest(method), responseCodeValidator);
     }
 
     protected HttpResponse executeHttpRequest(HttpUriRequest method) throws Exception {
@@ -418,8 +424,9 @@ public class TestExecutor {
         }
     }
 
-    protected HttpResponse checkResponse(HttpResponse httpResponse) throws Exception {
-        if (httpResponse.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
+    protected HttpResponse checkResponse(HttpResponse httpResponse, Predicate<Integer> responseCodeValidator)
+            throws Exception {
+        if (!responseCodeValidator.test(httpResponse.getStatusLine().getStatusCode())) {
             String errorBody = EntityUtils.toString(httpResponse.getEntity());
             String exceptionMsg;
             try {
@@ -582,8 +589,13 @@ public class TestExecutor {
     }
 
     public InputStream executeJSONPost(OutputFormat fmt, URI uri) throws Exception {
+        return executeJSONPost(fmt, uri, code -> code == HttpStatus.SC_OK);
+    }
+
+    public InputStream executeJSONPost(OutputFormat fmt, URI uri, Predicate<Integer> responseCodeValidator)
+            throws Exception {
         HttpUriRequest request = constructPostMethod(uri, fmt, new ArrayList<>());
-        HttpResponse response = executeAndCheckHttpRequest(request);
+        HttpResponse response = executeAndCheckHttpRequest(request, responseCodeValidator);
         return response.getEntity().getContent();
     }
 

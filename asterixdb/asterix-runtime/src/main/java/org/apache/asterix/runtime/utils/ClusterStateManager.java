@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
+import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -41,6 +42,7 @@ import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartit
 import org.apache.hyracks.api.config.IOption;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.HyracksException;
+import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.common.controllers.NCConfig;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -303,24 +305,27 @@ public class ClusterStateManager implements IClusterStateManager {
         stateDescription.put("metadata_node", currentMetadataNode);
         ArrayNode ncs = om.createArrayNode();
         stateDescription.set("ncs", ncs);
-        for (Map.Entry<String, ClusterPartition[]> entry : node2PartitionsMap.entrySet()) {
+        for (String node : new TreeSet<>(((ClusterControllerService) appCtx.getServiceContext().getControllerService())
+                .getNodeManager().getAllNodeIds())) {
             ObjectNode nodeJSON = om.createObjectNode();
-            nodeJSON.put("node_id", entry.getKey());
+            nodeJSON.put("node_id", node);
             boolean allActive = true;
             boolean anyActive = false;
             Set<Map<String, Object>> partitions = new HashSet<>();
-            for (ClusterPartition part : entry.getValue()) {
-                HashMap<String, Object> partition = new HashMap<>();
-                partition.put("partition_id", "partition_" + part.getPartitionId());
-                partition.put("active", part.isActive());
-                partitions.add(partition);
-                allActive = allActive && part.isActive();
-                if (allActive) {
-                    anyActive = true;
+            if (node2PartitionsMap.containsKey(node)) {
+                for (ClusterPartition part : node2PartitionsMap.get(node)) {
+                    HashMap<String, Object> partition = new HashMap<>();
+                    partition.put("partition_id", "partition_" + part.getPartitionId());
+                    partition.put("active", part.isActive());
+                    partitions.add(partition);
+                    allActive = allActive && part.isActive();
+                    if (allActive) {
+                        anyActive = true;
+                    }
                 }
             }
-            nodeJSON.put("state", failedNodes.contains(entry.getKey()) ? "FAILED"
-                    : allActive ? "ACTIVE" : anyActive ? "PARTIALLY_ACTIVE" : "INACTIVE");
+            nodeJSON.put("state", failedNodes.contains(node) ? "FAILED"
+                    : allActive && anyActive ? "ACTIVE" : anyActive ? "PARTIALLY_ACTIVE" : "INACTIVE");
             nodeJSON.putPOJO("partitions", partitions);
             ncs.add(nodeJSON);
         }

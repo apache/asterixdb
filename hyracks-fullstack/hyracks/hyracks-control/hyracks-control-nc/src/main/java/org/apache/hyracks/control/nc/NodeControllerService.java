@@ -256,6 +256,11 @@ public class NodeControllerService implements IControllerService {
     @Override
     public void start() throws Exception {
         LOGGER.log(Level.INFO, "Starting NodeControllerService");
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("Setting uncaught exception handler " + getLifeCycleComponentManager());
+        }
+        Thread.currentThread().setUncaughtExceptionHandler(getLifeCycleComponentManager());
+        Runtime.getRuntime().addShutdownHook(new NCShutdownHook(this));
         ipc = new IPCSystem(new InetSocketAddress(ncConfig.getClusterListenAddress(), ncConfig.getClusterListenPort()),
                 new NodeControllerIPCI(this), new CCNCFunctions.SerializerDeserializer());
         ipc.start();

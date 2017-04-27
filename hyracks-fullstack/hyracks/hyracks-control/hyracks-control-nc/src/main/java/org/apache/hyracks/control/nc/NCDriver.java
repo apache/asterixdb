@@ -44,12 +44,7 @@ public class NCDriver {
             application.registerConfig(configManager);
             NCConfig ncConfig = new NCConfig(nodeId, configManager);
             final NodeControllerService ncService = new NodeControllerService(ncConfig, application);
-            if (LOGGER.isLoggable(Level.INFO)) {
-                LOGGER.info("Setting uncaught exception handler " + ncService.getLifeCycleComponentManager());
-            }
-            Thread.currentThread().setUncaughtExceptionHandler(ncService.getLifeCycleComponentManager());
             ncService.start();
-            Runtime.getRuntime().addShutdownHook(new NCShutdownHook(ncService));
             while (true) {
                 Thread.sleep(10000);
             }
