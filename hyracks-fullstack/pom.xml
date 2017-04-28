@@ -225,6 +225,9 @@
             <licenseFamily implementation="org.apache.rat.license.Apache20LicenseFamily"/>
           </licenseFamilies>
           <excludeSubProjects>true</excludeSubProjects>
+          <excludes combine.children="append">
+            <exclude>**/*.iml</exclude>
+          </excludes>
         </configuration>
       </plugin>
       <plugin>

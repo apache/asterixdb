@@ -19,16 +19,20 @@
 
 NC_ID=$1
 
-INFO=`ps -ef | grep nc_join | grep -v grep | grep -v ssh| grep $NC_ID | head -n 1`
-PARENT_ID=`echo  $INFO | cut -d " "  -f2`
-PID_INFO=`ps -ef |  grep asterix | grep -v grep | grep -v nc_join |  grep $PARENT_ID`
-PID=`echo $PID_INFO | cut -d " " -f2`
+PARENT_ID=`ps -ef | grep nc_join | grep -v grep | grep -v ssh| grep $NC_ID | head -n 1 | awk '{ print $2 }'`
+PID=`ps -ef |  grep asterix | awk "\\\$3 == $PARENT_ID { print \\\$2 }"`
 kill -15 $PID
 
-cmd_output=$(ps -ef | awk '{print $2}' |grep "^$PID$")
-while [ ${#cmd_output} -ne 0 ]
+cmd_output=$(ps -ef | awk "\\\$3 == $PID {print \\\$2}")
+tries=0
+while [ ${#cmd_output} -ne 0 -a $tries -lt 15 ]
 do
   sleep 1
   kill -15 $PID
-  cmd_output=$(ps -ef | awk '{print $2}' |grep "^$PID$")
+  tries=`expr $tries + 1`
+  cmd_output=$(ps -ef | awk "\\\$3 == $PID {print \\\$2}")
 done
+if [ ${#cmd_output} -ne 0 ];
+then
+  kill -9 $PID
+fi

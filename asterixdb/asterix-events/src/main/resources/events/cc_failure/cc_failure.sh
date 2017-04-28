@@ -17,8 +17,6 @@
 # specific language governing permissions and limitations
 # under the License.
 
-CC_PARENT_ID_INFO=`ps -ef  | grep asterix | grep cc_start | grep -v ssh`
-CC_PARENT_ID=`echo $CC_PARENT_ID_INFO | tr -s " " | cut -d " " -f2`
-CC_ID_INFO=`ps -ef | grep asterix | grep $CC_PARENT_ID | grep -v bash`
-CC_ID=`echo $CC_ID_INFO |  tr -s " " | cut -d " " -f2`
+CC_PARENT_ID=`ps -ef  | grep asterix | grep cc_start | grep -v ssh | awk '{ print $2 }'`
+CC_ID=`ps -ef | grep asterix | grep $CC_PARENT_ID | grep -v bash | awk "\\\$3 == $CC_PARENT_ID { print \\\$2 }"`
 kill -9 $CC_ID

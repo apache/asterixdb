@@ -24,15 +24,15 @@ SLEEP_TIME=$3
 if [ $NC_ID == 'ANY' ]
 then
   NC_ID="."
-  PARENT_ID=`ps -ej | tr -s " " | grep nc_join | grep -v grep | grep -v ssh |  cut -d " " -f2 | head -n 1`
+  PARENT_ID=`ps -ej | tr -s " " | grep nc_join | grep -v grep | grep -v ssh | awk '{ print $2 }' | head -n 1`
   PARENT_PROCESS_ENTRY=`ps -ef | grep $PARENT_ID | grep -v grep   | head -n 1`
   NC_ID=`echo ${PARENT_PROCESS_ENTRY##* }`
   echo "NCid is $NC_ID" >> ~/try.txt
 else
-  PARENT_ID=`ps -ej | tr -s " " | grep nc_join | grep -v grep | grep -v ssh | grep $NC_ID | cut -d " " -f2 | head -n 1`
+  PARENT_ID=`ps -ej | tr -s " " | grep nc_join | grep -v grep | grep -v ssh | grep $NC_ID | awk '{ print $2 }' | head -n 1`
 fi
 
-PID=`ps -ej | tr -s " " | grep hyracks | grep -v grep | grep -v nc_join |  grep $PARENT_ID | cut -d " " -f2 | head -n 1`
+PID=`ps -ej | tr -s " " | grep hyracks | grep -v grep | grep -v nc_join | awk "\\\$3 == $PARENT_ID { print \\\$2 }" | head -n 1`
 kill -9 $PID
 
 sleep $3
