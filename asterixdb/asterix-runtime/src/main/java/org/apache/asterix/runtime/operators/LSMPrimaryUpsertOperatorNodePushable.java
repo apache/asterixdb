@@ -89,11 +89,12 @@ public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDe
     private IFrameOperationCallback frameOpCallback;
     private final IFrameOperationCallbackFactory frameOpCallbackFactory;
     private AbstractIndexModificationOperationCallback abstractModCallback;
+    private final boolean hasSecondaries;
 
     public LSMPrimaryUpsertOperatorNodePushable(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx, int partition,
             int[] fieldPermutation, IRecordDescriptorProvider recordDescProvider, int numOfPrimaryKeys,
-            ARecordType recordType, int filterFieldIndex, IFrameOperationCallbackFactory frameOpCallbackFactory)
-            throws HyracksDataException {
+            ARecordType recordType, int filterFieldIndex, IFrameOperationCallbackFactory frameOpCallbackFactory,
+            boolean hasSecondaries) throws HyracksDataException {
         super(opDesc, ctx, partition, fieldPermutation, recordDescProvider, IndexOperation.UPSERT);
         this.key = new PermutingFrameTupleReference();
         this.numOfPrimaryKeys = numOfPrimaryKeys;
@@ -116,6 +117,7 @@ public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDe
             this.prevRecWithPKWithFilterValue = new ArrayTupleBuilder(fieldPermutation.length + (hasMeta ? 1 : 0));
             this.prevDos = prevRecWithPKWithFilterValue.getDataOutput();
         }
+        this.hasSecondaries = hasSecondaries;
     }
 
     // we have the permutation which has [pk locations, record location, optional:filter-location]
@@ -213,50 +215,47 @@ public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDe
                 boolean recordWasInserted = false;
                 tuple.reset(accessor, i);
                 resetSearchPredicate(i);
-                lsmAccessor.search(cursor, searchPred);
-                if (cursor.hasNext()) {
-                    cursor.next();
-                    prevTuple = cursor.getTuple();
-                    cursor.reset();
-                    if (isFiltered) {
-                        prevTuple = getPrevTupleWithFilter(prevTuple);
-                    }
-                    dos.write(prevTuple.getFieldData(numOfPrimaryKeys), prevTuple.getFieldStart(numOfPrimaryKeys),
-                            prevTuple.getFieldLength(numOfPrimaryKeys));
-                    tb.addFieldEndOffset();
-                    // if has meta, then append meta
-                    if (hasMeta) {
-                        dos.write(prevTuple.getFieldData(metaFieldIndex), prevTuple.getFieldStart(metaFieldIndex),
-                                prevTuple.getFieldLength(metaFieldIndex));
-                        tb.addFieldEndOffset();
-                    }
-                    // if with filters, append the filter
-                    if (isFiltered) {
-                        dos.write(prevTuple.getFieldData(filterFieldIndex), prevTuple.getFieldStart(filterFieldIndex),
-                                prevTuple.getFieldLength(filterFieldIndex));
-                        tb.addFieldEndOffset();
-                    }
-                    if (isNull(tuple, numOfPrimaryKeys)) {
-                        // Only delete if it is a delete and not upsert
-                        abstractModCallback.setOp(Operation.DELETE);
-                        if (firstModification) {
-                            lsmAccessor.delete(prevTuple);
-                            firstModification = false;
-                        } else {
-                            lsmAccessor.forceDelete(prevTuple);
+                if (hasSecondaries || isNull(tuple, numOfPrimaryKeys)) {
+                    lsmAccessor.search(cursor, searchPred);
+                    if (cursor.hasNext()) {
+                        cursor.next();
+                        prevTuple = cursor.getTuple();
+                        cursor.reset();
+                        if (isFiltered) {
+                            prevTuple = getPrevTupleWithFilter(prevTuple);
                         }
+                        dos.write(prevTuple.getFieldData(numOfPrimaryKeys), prevTuple.getFieldStart(numOfPrimaryKeys),
+                                prevTuple.getFieldLength(numOfPrimaryKeys));
+                        tb.addFieldEndOffset();
+                        // if has meta, then append meta
+                        if (hasMeta) {
+                            dos.write(prevTuple.getFieldData(metaFieldIndex), prevTuple.getFieldStart(metaFieldIndex),
+                                    prevTuple.getFieldLength(metaFieldIndex));
+                            tb.addFieldEndOffset();
+                        }
+                        // if with filters, append the filter
+                        if (isFiltered) {
+                            dos.write(prevTuple.getFieldData(filterFieldIndex),
+                                    prevTuple.getFieldStart(filterFieldIndex),
+                                    prevTuple.getFieldLength(filterFieldIndex));
+                            tb.addFieldEndOffset();
+                        }
+                        if (isNull(tuple, numOfPrimaryKeys)) {
+                            // Only delete if it is a delete and not upsert
+                            abstractModCallback.setOp(Operation.DELETE);
+                            if (firstModification) {
+                                lsmAccessor.delete(prevTuple);
+                                firstModification = false;
+                            } else {
+                                lsmAccessor.forceDelete(prevTuple);
+                            }
+                        }
+                    } else {
+                        appendNullPreviousTuple();
                     }
                 } else {
-                    prevTuple = null;
-                    addNullField();
-                    if (hasMeta) {
-                        addNullField();
-                    }
-                    // if with filters, append null
-                    if (isFiltered) {
-                        addNullField();
-                    }
-                    cursor.reset();
+                    searchCallback.before(key);
+                    appendNullPreviousTuple();
                 }
                 if (!isNull(tuple, numOfPrimaryKeys)) {
                     abstractModCallback.setOp(Operation.UPSERT);
@@ -277,6 +276,19 @@ public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDe
         } catch (Exception e) {
             throw HyracksDataException.create(e);
         }
+    }
+
+    private void appendNullPreviousTuple() throws IOException {
+        prevTuple = null;
+        addNullField();
+        if (hasMeta) {
+            addNullField();
+        }
+        // if with filters, append null
+        if (isFiltered) {
+            addNullField();
+        }
+        cursor.reset();
     }
 
     /**

@@ -47,6 +47,7 @@ public class LSMTreeUpsertOperatorDescriptor extends LSMTreeInsertDeleteOperator
     private final IFrameOperationCallbackFactory frameOpCallbackFactory;
     private ARecordType type;
     private int filterIndex = -1;
+    private final boolean hasSecondaries;
 
     public LSMTreeUpsertOperatorDescriptor(IOperatorDescriptorRegistry spec, RecordDescriptor recDesc,
             IStorageManager storageManager, IIndexLifecycleManagerProvider lifecycleManagerProvider,
@@ -56,23 +57,25 @@ public class LSMTreeUpsertOperatorDescriptor extends LSMTreeInsertDeleteOperator
             boolean isPrimary, String indexName, IMissingWriterFactory missingWriterFactory,
             IModificationOperationCallbackFactory modificationOpCallbackFactory,
             ISearchOperationCallbackFactory searchOpCallbackProvider, int[] prevValuePermutation,
-            IPageManagerFactory pageManagerFactory, IFrameOperationCallbackFactory frameOpCallbackFactory) {
+            IPageManagerFactory pageManagerFactory, IFrameOperationCallbackFactory frameOpCallbackFactory,
+            boolean hasSecondaries) {
         super(spec, recDesc, storageManager, lifecycleManagerProvider, fileSplitProvider, typeTraits,
                 comparatorFactories, bloomFilterKeyFields, fieldPermutation, IndexOperation.UPSERT,
                 dataflowHelperFactory, tupleFilterFactory, isPrimary, indexName, missingWriterFactory,
                 modificationOpCallbackFactory, searchOpCallbackProvider, pageManagerFactory);
         this.prevValuePermutation = prevValuePermutation;
         this.frameOpCallbackFactory = frameOpCallbackFactory;
+        this.hasSecondaries = hasSecondaries;
     }
 
     @Override
     public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) throws HyracksDataException {
         return isPrimary()
-                ? new LSMPrimaryUpsertOperatorNodePushable(this, ctx, partition, fieldPermutation,
-                        recordDescProvider, comparatorFactories.length, type, filterIndex, frameOpCallbackFactory)
-                : new LSMSecondaryUpsertOperatorNodePushable(this, ctx, partition, fieldPermutation,
-                        recordDescProvider, prevValuePermutation);
+                ? new LSMPrimaryUpsertOperatorNodePushable(this, ctx, partition, fieldPermutation, recordDescProvider,
+                        comparatorFactories.length, type, filterIndex, frameOpCallbackFactory, hasSecondaries)
+                : new LSMSecondaryUpsertOperatorNodePushable(this, ctx, partition, fieldPermutation, recordDescProvider,
+                        prevValuePermutation);
     }
 
     public void setType(ARecordType type) {

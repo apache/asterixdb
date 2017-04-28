@@ -1073,6 +1073,9 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
                 primaryKeyFields[i] = i;
             }
 
+            boolean hasSecondaries = MetadataManager.INSTANCE
+                    .getDatasetIndexes(mdTxnCtx, dataset.getDataverseName(), dataset.getDatasetName()).size() > 1;
+
             IModificationOperationCallbackFactory modificationCallbackFactory = dataset.getModificationCallbackFactory(
                     storaegComponentProvider, primaryIndex, jobId, IndexOperation.UPSERT, primaryKeyFields);
 
@@ -1127,7 +1130,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
                     appContext.getIndexLifecycleManagerProvider(), splitsAndConstraint.first, typeTraits,
                     comparatorFactories, bloomFilterKeyFields, fieldPermutation, idfh, null, true, indexName,
                     context.getMissingWriterFactory(), modificationCallbackFactory, searchCallbackFactory, null,
-                    metadataPageManagerFactory, dataset.getFrameOpCallbackFactory());
+                    metadataPageManagerFactory, dataset.getFrameOpCallbackFactory(), hasSecondaries);
             op.setType(itemType);
             op.setFilterIndex(fieldIdx);
             return new Pair<>(op, splitsAndConstraint.second);
@@ -1479,7 +1482,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
                         appContext.getIndexLifecycleManagerProvider(), splitsAndConstraint.first, typeTraits,
                         comparatorFactories, bloomFilterKeyFields, fieldPermutation, idfh, filterFactory, false,
                         indexName, null, modificationCallbackFactory, searchOpCallbackFactory, prevFieldPermutation,
-                        metadataPageManagerFactory, dataset.getFrameOpCallbackFactory());
+                        metadataPageManagerFactory, dataset.getFrameOpCallbackFactory(), true);
             } else {
                 op = new LSMTreeInsertDeleteOperatorDescriptor(spec, recordDesc, appContext.getStorageManager(),
                         appContext.getIndexLifecycleManagerProvider(), splitsAndConstraint.first, typeTraits,
@@ -1632,7 +1635,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
                         appContext.getIndexLifecycleManagerProvider(), splitsAndConstraint.first, typeTraits,
                         comparatorFactories, null, fieldPermutation, indexDataflowHelperFactory, filterFactory, false,
                         indexName, null, modificationCallbackFactory, searchCallbackFactory, prevFieldPermutation,
-                        metadataPageManagerFactory, dataset.getFrameOpCallbackFactory());
+                        metadataPageManagerFactory, dataset.getFrameOpCallbackFactory(), true);
             } else {
                 op = new LSMTreeInsertDeleteOperatorDescriptor(spec, recordDesc, appContext.getStorageManager(),
                         appContext.getIndexLifecycleManagerProvider(), splitsAndConstraint.first, typeTraits,
