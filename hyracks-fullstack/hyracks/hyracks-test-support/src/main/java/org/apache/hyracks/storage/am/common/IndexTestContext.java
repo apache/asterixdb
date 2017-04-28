@@ -36,12 +36,14 @@ public abstract class IndexTestContext<T extends CheckTuple> implements IIndexTe
     protected final ArrayTupleReference tuple = new ArrayTupleReference();
     protected final IIndexAccessor indexAccessor;
 
-    public IndexTestContext(ISerializerDeserializer[] fieldSerdes, IIndex index) throws HyracksDataException {
+    public IndexTestContext(ISerializerDeserializer[] fieldSerdes, IIndex index, boolean filtered)
+            throws HyracksDataException {
         this.fieldSerdes = fieldSerdes;
         this.index = index;
         this.indexAccessor = (IIndexAccessor) index.createAccessor(TestOperationCallback.INSTANCE,
                 TestOperationCallback.INSTANCE);
-        this.tupleBuilder = new ArrayTupleBuilder(fieldSerdes.length);
+        this.tupleBuilder = filtered ? new ArrayTupleBuilder(fieldSerdes.length + 1)
+                : new ArrayTupleBuilder(fieldSerdes.length);
     }
 
     @Override

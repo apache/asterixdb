@@ -33,7 +33,7 @@ public abstract class AbstractRTreeTestContext extends IndexTestContext<RTreeChe
 
     public AbstractRTreeTestContext(ISerializerDeserializer[] fieldSerdes, ITreeIndex treeIndex)
             throws HyracksDataException {
-        super(fieldSerdes, treeIndex);
+        super(fieldSerdes, treeIndex, false);
     }
 
     @Override

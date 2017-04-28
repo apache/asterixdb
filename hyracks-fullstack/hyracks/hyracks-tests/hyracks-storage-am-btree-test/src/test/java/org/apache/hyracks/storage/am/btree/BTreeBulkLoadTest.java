@@ -50,7 +50,7 @@ public class BTreeBulkLoadTest extends OrderedIndexBulkLoadTest {
     @SuppressWarnings("rawtypes")
     @Override
     protected OrderedIndexTestContext createTestContext(ISerializerDeserializer[] fieldSerdes, int numKeys,
-            BTreeLeafFrameType leafType) throws Exception {
+                                                        BTreeLeafFrameType leafType, boolean filtered) throws Exception {
         return BTreeTestContext.create(harness.getBufferCache(), harness.getFileMapProvider(),
                 harness.getFileReference(), fieldSerdes, numKeys, leafType, harness.getPageManagerFactory()
                         .createPageManager(harness.getBufferCache()));

@@ -39,11 +39,11 @@ public class LSMComponentFilterReferenceTest {
                 new TypeAwareTupleWriter(new ITypeTraits[] { IntegerPointable.TYPE_TRAITS }));
         Assert.assertEquals(filter.getLength(), 0);
         Assert.assertFalse(filter.isMaxTupleSet() || filter.isMinTupleSet());
-        filter.writeMaxTuple(TupleUtils.createIntegerTuple(Integer.MAX_VALUE));
+        filter.writeMaxTuple(TupleUtils.createIntegerTuple(false, Integer.MAX_VALUE));
         Assert.assertFalse(filter.isMinTupleSet());
         Assert.assertTrue(filter.isMaxTupleSet());
         Assert.assertTrue(filter.getLength() == 11);
-        filter.writeMinTuple(TupleUtils.createIntegerTuple(Integer.MIN_VALUE));
+        filter.writeMinTuple(TupleUtils.createIntegerTuple(false, Integer.MIN_VALUE));
         Assert.assertTrue(filter.isMinTupleSet() && filter.isMaxTupleSet());
         Assert.assertTrue(filter.getLength() == 20);
         byte[] serFilter = filter.getByteArray();

@@ -37,7 +37,7 @@ import org.apache.hyracks.storage.common.file.IFileMapProvider;
 public class BTreeTestContext extends OrderedIndexTestContext {
 
     public BTreeTestContext(ISerializerDeserializer[] fieldSerdes, ITreeIndex treeIndex) throws HyracksDataException {
-        super(fieldSerdes, treeIndex);
+        super(fieldSerdes, treeIndex, false);
     }
 
     @Override

@@ -23,7 +23,6 @@ import java.util.Random;
 
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.storage.am.btree.OrderedIndexDeleteTest;
 import org.apache.hyracks.storage.am.btree.OrderedIndexTestContext;
 import org.apache.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
 import org.apache.hyracks.storage.am.lsm.btree.util.LSMBTreeTestContext;
@@ -32,9 +31,9 @@ import org.junit.After;
 import org.junit.Before;
 
 @SuppressWarnings("rawtypes")
-public class LSMBTreeDeleteTest extends OrderedIndexDeleteTest {
+public class LSMBTreeFilterMergeTest extends LSMBTreeFilterMergeTestDriver {
 
-    public LSMBTreeDeleteTest() {
+    public LSMBTreeFilterMergeTest() {
         super(LSMBTreeTestHarness.LEAF_FRAMES_TO_TEST);
     }
 
@@ -57,7 +56,7 @@ public class LSMBTreeDeleteTest extends OrderedIndexDeleteTest {
                 .getFileReference(),
                 harness.getDiskBufferCache(), harness.getDiskFileMapProvider(), fieldSerdes, numKeys,
                 harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(), harness.getOperationTracker(),
-                harness.getIOScheduler(), harness.getIOOperationCallback(), harness.getMetadataPageManagerFactory(), false);
+                harness.getIOScheduler(), harness.getIOOperationCallback(), harness.getMetadataPageManagerFactory(), filtered);
     }
 
     @Override

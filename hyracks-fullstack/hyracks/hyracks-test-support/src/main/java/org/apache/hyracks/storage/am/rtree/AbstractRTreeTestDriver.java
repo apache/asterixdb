@@ -72,8 +72,8 @@ public abstract class AbstractRTreeTestDriver {
                 IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE };
 
         int numKeys = 4;
-        IPrimitiveValueProviderFactory[] valueProviderFactories = RTreeUtils.createPrimitiveValueProviderFactories(
-                numKeys, IntegerPointable.FACTORY);
+        IPrimitiveValueProviderFactory[] valueProviderFactories = RTreeUtils
+                .createPrimitiveValueProviderFactories(numKeys, IntegerPointable.FACTORY);
         // Range search, the rectangle bottom left coordinates are -1000, -1000
         // and the top right coordinates are 1000, 1000
         ITupleReference key = TupleUtils.createIntegerTuple(-1000, -1000, 1000, 1000);
@@ -93,8 +93,8 @@ public abstract class AbstractRTreeTestDriver {
                 DoubleSerializerDeserializer.INSTANCE, DoubleSerializerDeserializer.INSTANCE };
 
         int numKeys = 4;
-        IPrimitiveValueProviderFactory[] valueProviderFactories = RTreeUtils.createPrimitiveValueProviderFactories(
-                numKeys, DoublePointable.FACTORY);
+        IPrimitiveValueProviderFactory[] valueProviderFactories = RTreeUtils
+                .createPrimitiveValueProviderFactories(numKeys, DoublePointable.FACTORY);
         // Range search, the rectangle bottom left coordinates are -1000.0,
         // -1000.0 and the top right coordinates are 1000.0, 1000.0
         ITupleReference key = TupleUtils.createDoubleTuple(-1000.0, -1000.0, 1000.0, 1000.0);
@@ -116,8 +116,8 @@ public abstract class AbstractRTreeTestDriver {
                 DoubleSerializerDeserializer.INSTANCE, DoubleSerializerDeserializer.INSTANCE };
 
         int numKeys = 8;
-        IPrimitiveValueProviderFactory[] valueProviderFactories = RTreeUtils.createPrimitiveValueProviderFactories(
-                numKeys, DoublePointable.FACTORY);
+        IPrimitiveValueProviderFactory[] valueProviderFactories = RTreeUtils
+                .createPrimitiveValueProviderFactories(numKeys, DoublePointable.FACTORY);
         // Range search, the rectangle bottom left coordinates are -1000.0,
         // -1000.0, -1000.0, -1000.0 and the top right coordinates are 1000.0,
         // 1000.0, 1000.0, 1000.0
@@ -144,8 +144,8 @@ public abstract class AbstractRTreeTestDriver {
                 IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE };
 
         int numKeys = 4;
-        IPrimitiveValueProviderFactory[] valueProviderFactories = RTreeUtils.createPrimitiveValueProviderFactories(
-                numKeys, IntegerPointable.FACTORY);
+        IPrimitiveValueProviderFactory[] valueProviderFactories = RTreeUtils
+                .createPrimitiveValueProviderFactories(numKeys, IntegerPointable.FACTORY);
         // Range search, the rectangle bottom left coordinates are -1000, -1000
         // and the top right coordinates are 1000, 1000
         ITupleReference key = TupleUtils.createIntegerTuple(-1000, -1000, 1000, 1000);
@@ -171,8 +171,8 @@ public abstract class AbstractRTreeTestDriver {
                 DoubleSerializerDeserializer.INSTANCE, DoubleSerializerDeserializer.INSTANCE };
 
         int numKeys = 4;
-        IPrimitiveValueProviderFactory[] valueProviderFactories = RTreeUtils.createPrimitiveValueProviderFactories(
-                numKeys, DoublePointable.FACTORY);
+        IPrimitiveValueProviderFactory[] valueProviderFactories = RTreeUtils
+                .createPrimitiveValueProviderFactories(numKeys, DoublePointable.FACTORY);
         // Range search, the rectangle bottom left coordinates are -1000.0,
         // -1000.0 and the top right coordinates are 1000.0, 1000.0
         ITupleReference key = TupleUtils.createDoubleTuple(-1000.0, -1000.0, 1000.0, 1000.0);
@@ -200,8 +200,8 @@ public abstract class AbstractRTreeTestDriver {
                 DoubleSerializerDeserializer.INSTANCE, DoubleSerializerDeserializer.INSTANCE };
 
         int numKeys = 8;
-        IPrimitiveValueProviderFactory[] valueProviderFactories = RTreeUtils.createPrimitiveValueProviderFactories(
-                numKeys, DoublePointable.FACTORY);
+        IPrimitiveValueProviderFactory[] valueProviderFactories = RTreeUtils
+                .createPrimitiveValueProviderFactories(numKeys, DoublePointable.FACTORY);
         // Range search, the rectangle bottom left coordinates are -1000.0,
         // -1000.0, -1000.0, -1000.0 and the top right coordinates are 1000.0,
         // 1000.0, 1000.0, 1000.0
