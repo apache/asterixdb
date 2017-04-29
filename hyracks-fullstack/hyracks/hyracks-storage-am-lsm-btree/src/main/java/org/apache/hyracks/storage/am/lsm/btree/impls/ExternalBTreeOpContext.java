@@ -29,26 +29,24 @@ import org.apache.hyracks.storage.am.common.api.ISearchPredicate;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.am.common.ophelpers.MultiComparator;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMHarness;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexOperationContext;
 
 public class ExternalBTreeOpContext extends AbstractLSMIndexOperationContext {
-    public ITreeIndexFrameFactory insertLeafFrameFactory;
-    public ITreeIndexFrameFactory deleteLeafFrameFactory;
-    public IBTreeLeafFrame insertLeafFrame;
-    public IBTreeLeafFrame deleteLeafFrame;
-    public IndexOperation op;
-    public final MultiComparator cmp;
-    public final MultiComparator bloomFilterCmp;
-    public final ISearchOperationCallback searchCallback;
+    private IBTreeLeafFrame insertLeafFrame;
+    private IBTreeLeafFrame deleteLeafFrame;
+    private IndexOperation op;
+    private final MultiComparator cmp;
+    private final MultiComparator bloomFilterCmp;
+    private final ISearchOperationCallback searchCallback;
     private final List<ILSMComponent> componentHolder;
     private final List<ILSMDiskComponent> componentsToBeMerged;
     private final List<ILSMDiskComponent> componentsToBeReplicated;
     private final int targetIndexVersion;
-    public ISearchPredicate searchPredicate;
-    public LSMBTreeCursorInitialState searchInitialState;
+    private ISearchPredicate searchPredicate;
+    private LSMBTreeCursorInitialState searchInitialState;
 
     public ExternalBTreeOpContext(ITreeIndexFrameFactory insertLeafFrameFactory,
             ITreeIndexFrameFactory deleteLeafFrameFactory, ISearchOperationCallback searchCallback,
@@ -60,8 +58,6 @@ public class ExternalBTreeOpContext extends AbstractLSMIndexOperationContext {
             this.cmp = null;
         }
         bloomFilterCmp = MultiComparator.create(cmpFactories, 0, numBloomFilterKeyFields);
-        this.insertLeafFrameFactory = insertLeafFrameFactory;
-        this.deleteLeafFrameFactory = deleteLeafFrameFactory;
         this.insertLeafFrame = (IBTreeLeafFrame) insertLeafFrameFactory.createFrame();
         this.deleteLeafFrame = (IBTreeLeafFrame) deleteLeafFrameFactory.createFrame();
         if (insertLeafFrame != null && this.cmp != null) {
@@ -144,4 +140,7 @@ public class ExternalBTreeOpContext extends AbstractLSMIndexOperationContext {
         return componentsToBeReplicated;
     }
 
+    public LSMBTreeCursorInitialState getSearchInitialState() {
+        return searchInitialState;
+    }
 }

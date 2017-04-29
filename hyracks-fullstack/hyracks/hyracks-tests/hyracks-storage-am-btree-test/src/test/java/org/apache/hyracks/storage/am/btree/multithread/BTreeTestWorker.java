@@ -54,7 +54,7 @@ public class BTreeTestWorker extends AbstractIndexTestWorker {
         BTree.BTreeAccessor accessor = (BTree.BTreeAccessor) indexAccessor;
         ITreeIndexCursor searchCursor = accessor.createSearchCursor(false);
         ITreeIndexCursor diskOrderScanCursor = accessor.createDiskOrderScanCursor();
-        MultiComparator cmp = accessor.getOpContext().cmp;
+        MultiComparator cmp = accessor.getOpContext().getCmp();
         RangePredicate rangePred = new RangePredicate(tuple, tuple, true, true, cmp, cmp);
 
         switch (op) {

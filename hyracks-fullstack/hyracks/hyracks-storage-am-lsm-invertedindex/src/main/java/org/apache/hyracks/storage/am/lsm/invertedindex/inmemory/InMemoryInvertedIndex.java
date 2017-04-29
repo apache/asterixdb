@@ -112,10 +112,10 @@ public class InMemoryInvertedIndex implements IInvertedIndex {
     public void insert(ITupleReference tuple, BTreeAccessor btreeAccessor, IIndexOperationContext ictx)
             throws HyracksDataException {
         InMemoryInvertedIndexOpContext ctx = (InMemoryInvertedIndexOpContext) ictx;
-        ctx.tupleIter.reset(tuple);
-        while (ctx.tupleIter.hasNext()) {
-            ctx.tupleIter.next();
-            ITupleReference insertTuple = ctx.tupleIter.getTuple();
+        ctx.getTupleIter().reset(tuple);
+        while (ctx.getTupleIter().hasNext()) {
+            ctx.getTupleIter().next();
+            ITupleReference insertTuple = ctx.getTupleIter().getTuple();
             try {
                 btreeAccessor.insert(insertTuple);
             } catch (HyracksDataException e) {
@@ -132,10 +132,10 @@ public class InMemoryInvertedIndex implements IInvertedIndex {
     public void delete(ITupleReference tuple, BTreeAccessor btreeAccessor, IIndexOperationContext ictx)
             throws HyracksDataException {
         InMemoryInvertedIndexOpContext ctx = (InMemoryInvertedIndexOpContext) ictx;
-        ctx.tupleIter.reset(tuple);
-        while (ctx.tupleIter.hasNext()) {
-            ctx.tupleIter.next();
-            ITupleReference deleteTuple = ctx.tupleIter.getTuple();
+        ctx.getTupleIter().reset(tuple);
+        while (ctx.getTupleIter().hasNext()) {
+            ctx.getTupleIter().next();
+            ITupleReference deleteTuple = ctx.getTupleIter().getTuple();
             try {
                 btreeAccessor.delete(deleteTuple);
             } catch (HyracksDataException e) {
@@ -164,7 +164,7 @@ public class InMemoryInvertedIndex implements IInvertedIndex {
         InMemoryInvertedIndexOpContext ctx = (InMemoryInvertedIndexOpContext) ictx;
         ctx.setOperation(IndexOperation.SEARCH);
         InMemoryInvertedListCursor inMemListCursor = (InMemoryInvertedListCursor) listCursor;
-        inMemListCursor.prepare(ctx.btreeAccessor, ctx.btreePred, ctx.tokenFieldsCmp, ctx.btreeCmp);
+        inMemListCursor.prepare(ctx.getBtreeAccessor(), ctx.getBtreePred(), ctx.getTokenFieldsCmp(), ctx.getBtreeCmp());
         inMemListCursor.reset(searchKey);
     }
 

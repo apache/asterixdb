@@ -33,8 +33,8 @@ import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.am.common.ophelpers.MultiComparator;
 import org.apache.hyracks.storage.am.common.tuples.PermutingTupleReference;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMHarness;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMemoryComponent;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexOperationContext;
@@ -43,27 +43,27 @@ import org.apache.hyracks.storage.am.rtree.impls.RTreeOpContext;
 
 public final class LSMRTreeOpContext extends AbstractLSMIndexOperationContext {
 
-    public RTree.RTreeAccessor[] mutableRTreeAccessors;
-    public RTree.RTreeAccessor currentMutableRTreeAccessor;
-    public BTree.BTreeAccessor[] mutableBTreeAccessors;
-    public BTree.BTreeAccessor currentMutableBTreeAccessor;
+    private RTree.RTreeAccessor[] mutableRTreeAccessors;
+    private RTree.RTreeAccessor currentMutableRTreeAccessor;
+    private BTree.BTreeAccessor[] mutableBTreeAccessors;
+    private BTree.BTreeAccessor currentMutableBTreeAccessor;
 
-    public RTreeOpContext[] rtreeOpContexts;
-    public BTreeOpContext[] btreeOpContexts;
-    public RTreeOpContext currentRTreeOpContext;
-    public BTreeOpContext currentBTreeOpContext;
+    private RTreeOpContext[] rtreeOpContexts;
+    private BTreeOpContext[] btreeOpContexts;
+    private RTreeOpContext currentRTreeOpContext;
+    private BTreeOpContext currentBTreeOpContext;
 
     private IndexOperation op;
-    public final List<ILSMComponent> componentHolder;
+    private final List<ILSMComponent> componentHolder;
     private final List<ILSMDiskComponent> componentsToBeMerged;
     private final List<ILSMDiskComponent> componentsToBeReplicated;
     private IModificationOperationCallback modificationCallback;
     private ISearchOperationCallback searchCallback;
-    public final PermutingTupleReference indexTuple;
-    public final MultiComparator filterCmp;
-    public final PermutingTupleReference filterTuple;
-    public ISearchPredicate searchPredicate;
-    public LSMRTreeCursorInitialState searchInitialState;
+    private final PermutingTupleReference indexTuple;
+    private final MultiComparator filterCmp;
+    private final PermutingTupleReference filterTuple;
+    private ISearchPredicate searchPredicate;
+    private LSMRTreeCursorInitialState searchInitialState;
 
     public LSMRTreeOpContext(List<ILSMMemoryComponent> mutableComponents, ITreeIndexFrameFactory rtreeLeafFrameFactory,
             ITreeIndexFrameFactory rtreeInteriorFrameFactory, ITreeIndexFrameFactory btreeLeafFrameFactory,
@@ -143,7 +143,7 @@ public final class LSMRTreeOpContext extends AbstractLSMIndexOperationContext {
     }
 
     public MultiComparator getBTreeMultiComparator() {
-        return currentBTreeOpContext.cmp;
+        return currentBTreeOpContext.getCmp();
     }
 
     @Override
@@ -179,5 +179,33 @@ public final class LSMRTreeOpContext extends AbstractLSMIndexOperationContext {
     @Override
     public List<ILSMDiskComponent> getComponentsToBeReplicated() {
         return componentsToBeReplicated;
+    }
+
+    public MultiComparator getFilterCmp() {
+        return filterCmp;
+    }
+
+    public LSMRTreeCursorInitialState getSearchInitialState() {
+        return searchInitialState;
+    }
+
+    public PermutingTupleReference getIndexTuple() {
+        return indexTuple;
+    }
+
+    public RTree.RTreeAccessor getCurrentMutableRTreeAccessor() {
+        return currentMutableRTreeAccessor;
+    }
+
+    public BTree.BTreeAccessor getCurrentMutableBTreeAccessor() {
+        return currentMutableBTreeAccessor;
+    }
+
+    public PermutingTupleReference getFilterTuple() {
+        return filterTuple;
+    }
+
+    public RTreeOpContext getCurrentRTreeOpContext() {
+        return currentRTreeOpContext;
     }
 }

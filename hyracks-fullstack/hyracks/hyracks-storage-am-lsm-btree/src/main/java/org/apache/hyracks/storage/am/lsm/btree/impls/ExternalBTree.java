@@ -154,8 +154,8 @@ public class ExternalBTree extends LSMBTree implements ITwoPCIndex {
             throws HyracksDataException {
         ExternalBTreeOpContext ctx = (ExternalBTreeOpContext) ictx;
         List<ILSMComponent> operationalComponents = ctx.getComponentHolder();
-        ctx.searchInitialState.reset(pred, operationalComponents);
-        cursor.open(ctx.searchInitialState, pred);
+        ctx.getSearchInitialState().reset(pred, operationalComponents);
+        cursor.open(ctx.getSearchInitialState(), pred);
     }
 
     // This method creates the appropriate opContext for the targeted version

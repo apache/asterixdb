@@ -36,43 +36,49 @@ import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.am.common.ophelpers.MultiComparator;
 import org.apache.hyracks.storage.am.common.tuples.PermutingTupleReference;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMHarness;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMemoryComponent;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexOperationContext;
 
 public final class LSMBTreeOpContext extends AbstractLSMIndexOperationContext {
 
-    public ITreeIndexFrameFactory insertLeafFrameFactory;
-    public ITreeIndexFrameFactory deleteLeafFrameFactory;
-    public IBTreeLeafFrame insertLeafFrame;
-    public IBTreeLeafFrame deleteLeafFrame;
-    public final BTree[] mutableBTrees;
-    public BTree.BTreeAccessor[] mutableBTreeAccessors;
-    public BTreeOpContext[] mutableBTreeOpCtxs;
-    public BTree.BTreeAccessor currentMutableBTreeAccessor;
-    public BTreeOpContext currentMutableBTreeOpCtx;
-    public IndexOperation op;
-    public final MultiComparator cmp;
-    public final MultiComparator bloomFilterCmp;
-    public IModificationOperationCallback modificationCallback;
-    public ISearchOperationCallback searchCallback;
+    /*
+     * Finals
+     */
+    private final ITreeIndexFrameFactory insertLeafFrameFactory;
+    private final ITreeIndexFrameFactory deleteLeafFrameFactory;
+    private final IBTreeLeafFrame insertLeafFrame;
+    private final IBTreeLeafFrame deleteLeafFrame;
+    private final BTree[] mutableBTrees;
+    private final BTree.BTreeAccessor[] mutableBTreeAccessors;
+    private final BTreeOpContext[] mutableBTreeOpCtxs;
+    private final MultiComparator cmp;
+    private final MultiComparator bloomFilterCmp;
+    private final IModificationOperationCallback modificationCallback;
+    private final ISearchOperationCallback searchCallback;
     private final List<ILSMComponent> componentHolder;
     private final List<ILSMDiskComponent> componentsToBeMerged;
     private final List<ILSMDiskComponent> componentsToBeReplicated;
-    public final PermutingTupleReference indexTuple;
-    public final MultiComparator filterCmp;
-    public final PermutingTupleReference filterTuple;
-    public ISearchPredicate searchPredicate;
-    public BTreeRangeSearchCursor memCursor;
-    public LSMBTreeCursorInitialState searchInitialState;
-    public LSMBTreePointSearchCursor insertSearchCursor;
+    private final PermutingTupleReference indexTuple;
+    private final MultiComparator filterCmp;
+    private final PermutingTupleReference filterTuple;
+    private final BTreeRangeSearchCursor memCursor;
+    private final LSMBTreeCursorInitialState searchInitialState;
+    private final LSMBTreePointSearchCursor insertSearchCursor;
+    /*
+     * Mutables
+     */
+    private BTree.BTreeAccessor currentMutableBTreeAccessor;
+    private BTreeOpContext currentMutableBTreeOpCtx;
+    private IndexOperation op;
+    private ISearchPredicate searchPredicate;
 
     public LSMBTreeOpContext(List<ILSMMemoryComponent> mutableComponents, ITreeIndexFrameFactory insertLeafFrameFactory,
             ITreeIndexFrameFactory deleteLeafFrameFactory, IModificationOperationCallback modificationCallback,
-            ISearchOperationCallback searchCallback, int numBloomFilterKeyFields, int[] btreeFields,
-            int[] filterFields, ILSMHarness lsmHarness) {
+            ISearchOperationCallback searchCallback, int numBloomFilterKeyFields, int[] btreeFields, int[] filterFields,
+            ILSMHarness lsmHarness) {
         LSMBTreeMemoryComponent c = (LSMBTreeMemoryComponent) mutableComponents.get(0);
         IBinaryComparatorFactory cmpFactories[] = c.getBTree().getComparatorFactories();
         if (cmpFactories[0] != null) {
@@ -99,11 +105,11 @@ public final class LSMBTreeOpContext extends AbstractLSMIndexOperationContext {
         this.deleteLeafFrameFactory = deleteLeafFrameFactory;
         this.insertLeafFrame = (IBTreeLeafFrame) insertLeafFrameFactory.createFrame();
         this.deleteLeafFrame = (IBTreeLeafFrame) deleteLeafFrameFactory.createFrame();
-        if (insertLeafFrame != null && this.cmp != null) {
-            insertLeafFrame.setMultiComparator(cmp);
+        if (insertLeafFrame != null && this.getCmp() != null) {
+            insertLeafFrame.setMultiComparator(getCmp());
         }
-        if (deleteLeafFrame != null && this.cmp != null) {
-            deleteLeafFrame.setMultiComparator(cmp);
+        if (deleteLeafFrame != null && this.getCmp() != null) {
+            deleteLeafFrame.setMultiComparator(getCmp());
         }
         this.componentHolder = new LinkedList<>();
         this.componentsToBeMerged = new LinkedList<>();
@@ -120,13 +126,10 @@ public final class LSMBTreeOpContext extends AbstractLSMIndexOperationContext {
             filterCmp = null;
             filterTuple = null;
         }
-        searchPredicate = new RangePredicate(null, null, true, true, cmp, cmp);
-        if (insertLeafFrame != null) {
-            memCursor = new BTreeRangeSearchCursor(insertLeafFrame, false);
-        }
-
-        searchInitialState = new LSMBTreeCursorInitialState(insertLeafFrameFactory, cmp, bloomFilterCmp, lsmHarness,
-                null, searchCallback, null);
+        searchPredicate = new RangePredicate(null, null, true, true, getCmp(), getCmp());
+        memCursor = (insertLeafFrame != null) ? new BTreeRangeSearchCursor(insertLeafFrame, false) : null;
+        searchInitialState = new LSMBTreeCursorInitialState(insertLeafFrameFactory, getCmp(), bloomFilterCmp,
+                lsmHarness, null, searchCallback, null);
         insertSearchCursor = new LSMBTreePointSearchCursor(this);
     }
 
@@ -137,13 +140,13 @@ public final class LSMBTreeOpContext extends AbstractLSMIndexOperationContext {
     }
 
     public void setInsertMode() {
-        currentMutableBTreeOpCtx.leafFrame = insertLeafFrame;
-        currentMutableBTreeOpCtx.leafFrameFactory = insertLeafFrameFactory;
+        currentMutableBTreeOpCtx.setLeafFrame(insertLeafFrame);
+        currentMutableBTreeOpCtx.setLeafFrameFactory(insertLeafFrameFactory);
     }
 
     public void setDeleteMode() {
-        currentMutableBTreeOpCtx.leafFrame = deleteLeafFrame;
-        currentMutableBTreeOpCtx.leafFrameFactory = deleteLeafFrameFactory;
+        currentMutableBTreeOpCtx.setLeafFrame(deleteLeafFrame);
+        currentMutableBTreeOpCtx.setLeafFrameFactory(deleteLeafFrameFactory);
     }
 
     @Override
@@ -176,18 +179,15 @@ public final class LSMBTreeOpContext extends AbstractLSMIndexOperationContext {
 
     @Override
     public void setCurrentMutableComponentId(int currentMutableComponentId) {
-        currentMutableBTreeAccessor = mutableBTreeAccessors[currentMutableComponentId];
+        setCurrentMutableBTreeAccessor(mutableBTreeAccessors[currentMutableComponentId]);
         currentMutableBTreeOpCtx = mutableBTreeOpCtxs[currentMutableComponentId];
         switch (op) {
             case SEARCH:
-                break;
             case DISKORDERSCAN:
             case UPDATE:
-                // Attention: It is important to leave the leafFrame and
-                // leafFrameFactory of the mutableBTree as is when doing an update.
-                // Update will only be set if a previous attempt to delete or
-                // insert failed, so we must preserve the semantics of the
-                // previously requested operation.
+                // Attention: It is important to leave the leafFrame and leafFrameFactory of the mutableBTree as is
+                // when doing an update. Update will only be set if a previous attempt to delete or insert failed,
+                // so we must preserve the semantics of the previously requested operation.
                 break;
             case UPSERT:
             case INSERT:
@@ -218,5 +218,41 @@ public final class LSMBTreeOpContext extends AbstractLSMIndexOperationContext {
     @Override
     public List<ILSMDiskComponent> getComponentsToBeReplicated() {
         return componentsToBeReplicated;
+    }
+
+    public MultiComparator getFilterCmp() {
+        return filterCmp;
+    }
+
+    public PermutingTupleReference getIndexTuple() {
+        return indexTuple;
+    }
+
+    public BTree.BTreeAccessor getCurrentMutableBTreeAccessor() {
+        return currentMutableBTreeAccessor;
+    }
+
+    public void setCurrentMutableBTreeAccessor(BTree.BTreeAccessor currentMutableBTreeAccessor) {
+        this.currentMutableBTreeAccessor = currentMutableBTreeAccessor;
+    }
+
+    public PermutingTupleReference getFilterTuple() {
+        return filterTuple;
+    }
+
+    public LSMBTreePointSearchCursor getInsertSearchCursor() {
+        return insertSearchCursor;
+    }
+
+    public BTreeRangeSearchCursor getMemCursor() {
+        return memCursor;
+    }
+
+    public LSMBTreeCursorInitialState getSearchInitialState() {
+        return searchInitialState;
+    }
+
+    public MultiComparator getCmp() {
+        return cmp;
     }
 }

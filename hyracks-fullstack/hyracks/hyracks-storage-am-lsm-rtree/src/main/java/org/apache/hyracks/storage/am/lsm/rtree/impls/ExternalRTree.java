@@ -248,9 +248,8 @@ public class ExternalRTree extends LSMRTree implements ITwoPCIndex {
             throws HyracksDataException {
         ExternalRTreeOpContext ctx = (ExternalRTreeOpContext) ictx;
         List<ILSMComponent> operationalComponents = ictx.getComponentHolder();
-        ctx.initialState.setOperationalComponents(operationalComponents);
-
-        cursor.open(ctx.initialState, pred);
+        ctx.getInitialState().setOperationalComponents(operationalComponents);
+        cursor.open(ctx.getInitialState(), pred);
     }
 
     // The only reason for overriding the merge method is the way to determine

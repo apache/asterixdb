@@ -276,7 +276,7 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
                         if (c.getLSMComponentFilter().satisfy(
                                 ((AbstractSearchPredicate) ctx.getSearchPredicate()).getMinFilterTuple(),
                                 ((AbstractSearchPredicate) ctx.getSearchPredicate()).getMaxFilterTuple(),
-                                ((LSMInvertedIndexOpContext) ctx).filterCmp)) {
+                                ((LSMInvertedIndexOpContext) ctx).getFilterCmp())) {
                             operationalComponents.add(c);
                         }
                     }
@@ -323,9 +323,9 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
         // what they should be for an inverted index).
 
         ITupleReference indexTuple;
-        if (ctx.indexTuple != null) {
-            ctx.indexTuple.reset(tuple);
-            indexTuple = ctx.indexTuple;
+        if (ctx.getIndexTuple() != null) {
+            ctx.getIndexTuple().reset(tuple);
+            indexTuple = ctx.getIndexTuple();
         } else {
             indexTuple = tuple;
         }
@@ -335,16 +335,16 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
         switch (ctx.getOperation()) {
             case INSERT: {
                 // Insert into the in-memory inverted index.
-                ctx.currentMutableInvIndexAccessors.insert(indexTuple);
+                ctx.getCurrentMutableInvIndexAccessors().insert(indexTuple);
                 break;
             }
             case DELETE: {
                 // First remove all entries in the in-memory inverted index (if any).
-                ctx.currentMutableInvIndexAccessors.delete(indexTuple);
+                ctx.getCurrentMutableInvIndexAccessors().delete(indexTuple);
                 // Insert key into the deleted-keys BTree.
-                ctx.keysOnlyTuple.reset(indexTuple);
+                ctx.getKeysOnlyTuple().reset(indexTuple);
                 try {
-                    ctx.currentDeletedKeysBTreeAccessors.insert(ctx.keysOnlyTuple);
+                    ctx.getCurrentDeletedKeysBTreeAccessors().insert(ctx.getKeysOnlyTuple());
                 } catch (HyracksDataException e) {
                     if (e.getErrorCode() != ErrorCode.DUPLICATE_KEY) {
                         // Key has already been deleted.
@@ -358,10 +358,10 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
                 throw new UnsupportedOperationException("Operation " + ctx.getOperation() + " not supported.");
             }
         }
-        if (ctx.filterTuple != null) {
-            ctx.filterTuple.reset(tuple);
-            memoryComponents.get(currentMutableComponentId.get()).getLSMComponentFilter().update(ctx.filterTuple,
-                    ctx.filterCmp);
+        if (ctx.getFilterTuple() != null) {
+            ctx.getFilterTuple().reset(tuple);
+            memoryComponents.get(currentMutableComponentId.get()).getLSMComponentFilter().update(ctx.getFilterTuple(),
+                    ctx.getFilterCmp());
         }
     }
 

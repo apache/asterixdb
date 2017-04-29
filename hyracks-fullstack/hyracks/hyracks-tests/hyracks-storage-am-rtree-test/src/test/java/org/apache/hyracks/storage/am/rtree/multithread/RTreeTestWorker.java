@@ -54,7 +54,7 @@ public class RTreeTestWorker extends AbstractIndexTestWorker {
         RTree.RTreeAccessor accessor = (RTree.RTreeAccessor) indexAccessor;
         IIndexCursor searchCursor = accessor.createSearchCursor(false);
         ITreeIndexCursor diskOrderScanCursor = accessor.createDiskOrderScanCursor();
-        MultiComparator cmp = accessor.getOpContext().cmp;
+        MultiComparator cmp = accessor.getOpContext().getCmp();
         SearchPredicate rangePred = new SearchPredicate(tuple, cmp);
 
         switch (op) {

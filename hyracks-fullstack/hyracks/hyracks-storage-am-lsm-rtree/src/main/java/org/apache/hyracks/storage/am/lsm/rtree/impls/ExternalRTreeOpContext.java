@@ -28,8 +28,8 @@ import org.apache.hyracks.storage.am.common.api.ISearchPredicate;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.am.common.ophelpers.MultiComparator;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMHarness;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexOperationContext;
 
@@ -37,13 +37,13 @@ public class ExternalRTreeOpContext extends AbstractLSMIndexOperationContext {
     private IndexOperation op;
     private MultiComparator bTreeCmp;
     private MultiComparator rTreeCmp;
-    public final List<ILSMComponent> componentHolder;
+    private final List<ILSMComponent> componentHolder;
     private final List<ILSMDiskComponent> componentsToBeMerged;
     private final List<ILSMDiskComponent> componentsToBeReplicated;
-    public final ISearchOperationCallback searchCallback;
+    private final ISearchOperationCallback searchCallback;
     private final int targetIndexVersion;
-    public ISearchPredicate searchPredicate;
-    public LSMRTreeCursorInitialState initialState;
+    private ISearchPredicate searchPredicate;
+    private LSMRTreeCursorInitialState initialState;
 
     public ExternalRTreeOpContext(IBinaryComparatorFactory[] rtreeCmpFactories,
             IBinaryComparatorFactory[] btreeCmpFactories, ISearchOperationCallback searchCallback,
@@ -132,5 +132,9 @@ public class ExternalRTreeOpContext extends AbstractLSMIndexOperationContext {
     @Override
     public List<ILSMDiskComponent> getComponentsToBeReplicated() {
         return componentsToBeReplicated;
+    }
+
+    public LSMRTreeCursorInitialState getInitialState() {
+        return initialState;
     }
 }

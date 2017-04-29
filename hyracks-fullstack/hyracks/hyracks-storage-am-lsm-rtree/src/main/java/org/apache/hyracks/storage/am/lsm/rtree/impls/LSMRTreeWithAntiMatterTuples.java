@@ -331,7 +331,7 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
 
         public MultiComparator getMultiComparator() {
             LSMRTreeOpContext concreteCtx = (LSMRTreeOpContext) ctx;
-            return concreteCtx.currentRTreeOpContext.cmp;
+            return concreteCtx.getCurrentRTreeOpContext().getCmp();
         }
     }
 

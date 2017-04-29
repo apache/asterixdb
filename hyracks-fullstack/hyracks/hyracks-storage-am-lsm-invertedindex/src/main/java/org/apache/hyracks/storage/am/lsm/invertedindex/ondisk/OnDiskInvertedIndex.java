@@ -256,21 +256,21 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
     public void openInvertedListCursor(IInvertedListCursor listCursor, ITupleReference searchKey,
             IIndexOperationContext ictx) throws HyracksDataException {
         OnDiskInvertedIndexOpContext ctx = (OnDiskInvertedIndexOpContext) ictx;
-        ctx.btreePred.setLowKeyComparator(ctx.searchCmp);
-        ctx.btreePred.setHighKeyComparator(ctx.searchCmp);
-        ctx.btreePred.setLowKey(searchKey, true);
-        ctx.btreePred.setHighKey(searchKey, true);
-        ctx.btreeAccessor.search(ctx.btreeCursor, ctx.btreePred);
+        ctx.getBtreePred().setLowKeyComparator(ctx.getSearchCmp());
+        ctx.getBtreePred().setHighKeyComparator(ctx.getSearchCmp());
+        ctx.getBtreePred().setLowKey(searchKey, true);
+        ctx.getBtreePred().setHighKey(searchKey, true);
+        ctx.getBtreeAccessor().search(ctx.getBtreeCursor(), ctx.getBtreePred());
         try {
-            if (ctx.btreeCursor.hasNext()) {
-                ctx.btreeCursor.next();
-                resetInvertedListCursor(ctx.btreeCursor.getTuple(), listCursor);
+            if (ctx.getBtreeCursor().hasNext()) {
+                ctx.getBtreeCursor().next();
+                resetInvertedListCursor(ctx.getBtreeCursor().getTuple(), listCursor);
             } else {
                 listCursor.reset(0, 0, 0, 0);
             }
         } finally {
-            ctx.btreeCursor.close();
-            ctx.btreeCursor.reset();
+            ctx.getBtreeCursor().close();
+            ctx.getBtreeCursor().reset();
         }
     }
 

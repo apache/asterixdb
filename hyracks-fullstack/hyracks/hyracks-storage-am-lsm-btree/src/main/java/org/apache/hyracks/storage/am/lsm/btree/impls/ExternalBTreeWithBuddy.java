@@ -311,8 +311,8 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
             throws HyracksDataException {
         ExternalBTreeWithBuddyOpContext ctx = (ExternalBTreeWithBuddyOpContext) ictx;
         List<ILSMComponent> operationalComponents = ictx.getComponentHolder();
-        ctx.searchInitialState.setOperationalComponents(operationalComponents);
-        cursor.open(ctx.searchInitialState, pred);
+        ctx.getSearchInitialState().setOperationalComponents(operationalComponents);
+        cursor.open(ctx.getSearchInitialState(), pred);
     }
 
     @Override

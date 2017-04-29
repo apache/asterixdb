@@ -32,21 +32,22 @@ import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokeniz
 import org.apache.hyracks.storage.am.lsm.invertedindex.util.InvertedIndexTokenizingTupleIterator;
 
 public class InMemoryInvertedIndexOpContext implements IIndexOperationContext {
-    public IndexOperation op;
-    public final BTree btree;
+    protected final BTree btree;
+    protected final IBinaryComparatorFactory[] tokenCmpFactories;
+    private IndexOperation op;
 
     // Needed for search operations,
-    public RangePredicate btreePred;
-    public BTreeAccessor btreeAccessor;
-    public MultiComparator btreeCmp;
-    public IBinaryComparatorFactory[] tokenCmpFactories;
-    public MultiComparator tokenFieldsCmp;
+    private RangePredicate btreePred;
+    private BTreeAccessor btreeAccessor;
+    private MultiComparator btreeCmp;
+
+    private MultiComparator tokenFieldsCmp;
 
     // To generate in-memory BTree tuples for insertions.
-    protected final IBinaryTokenizerFactory tokenizerFactory;
-    public InvertedIndexTokenizingTupleIterator tupleIter;
+    private final IBinaryTokenizerFactory tokenizerFactory;
+    private InvertedIndexTokenizingTupleIterator tupleIter;
 
-    public InMemoryInvertedIndexOpContext(BTree btree, IBinaryComparatorFactory[] tokenCmpFactories,
+    InMemoryInvertedIndexOpContext(BTree btree, IBinaryComparatorFactory[] tokenCmpFactories,
             IBinaryTokenizerFactory tokenizerFactory) {
         this.btree = btree;
         this.tokenCmpFactories = tokenCmpFactories;
@@ -58,13 +59,13 @@ public class InMemoryInvertedIndexOpContext implements IIndexOperationContext {
         switch (newOp) {
             case INSERT:
             case DELETE: {
-                if (tupleIter == null) {
+                if (getTupleIter() == null) {
                     setTokenizingTupleIterator();
                 }
                 break;
             }
             case SEARCH: {
-                if (btreePred == null) {
+                if (getBtreePred() == null) {
                     btreePred = new RangePredicate(null, null, true, true, null, null);
                     btreeAccessor = (BTreeAccessor) btree.createAccessor(NoOpOperationCallback.INSTANCE,
                             NoOpOperationCallback.INSTANCE);
@@ -91,8 +92,36 @@ public class InMemoryInvertedIndexOpContext implements IIndexOperationContext {
     }
 
     protected void setTokenizingTupleIterator() {
-        IBinaryTokenizer tokenizer = tokenizerFactory.createTokenizer();
-        tupleIter = new InvertedIndexTokenizingTupleIterator(tokenCmpFactories.length, btree.getFieldCount()
-                - tokenCmpFactories.length, tokenizer);
+        IBinaryTokenizer tokenizer = getTokenizerFactory().createTokenizer();
+        tupleIter = new InvertedIndexTokenizingTupleIterator(tokenCmpFactories.length,
+                btree.getFieldCount() - tokenCmpFactories.length, tokenizer);
+    }
+
+    public InvertedIndexTokenizingTupleIterator getTupleIter() {
+        return tupleIter;
+    }
+
+    public BTreeAccessor getBtreeAccessor() {
+        return btreeAccessor;
+    }
+
+    public RangePredicate getBtreePred() {
+        return btreePred;
+    }
+
+    public MultiComparator getTokenFieldsCmp() {
+        return tokenFieldsCmp;
+    }
+
+    public MultiComparator getBtreeCmp() {
+        return btreeCmp;
+    }
+
+    public IBinaryTokenizerFactory getTokenizerFactory() {
+        return tokenizerFactory;
+    }
+
+    public void setTupleIter(InvertedIndexTokenizingTupleIterator tupleIter) {
+        this.tupleIter = tupleIter;
     }
 }

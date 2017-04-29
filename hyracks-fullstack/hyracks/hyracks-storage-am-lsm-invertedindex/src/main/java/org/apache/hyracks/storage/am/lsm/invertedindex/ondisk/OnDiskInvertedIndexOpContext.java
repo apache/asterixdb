@@ -30,12 +30,12 @@ import org.apache.hyracks.storage.am.common.ophelpers.MultiComparator;
 
 public class OnDiskInvertedIndexOpContext implements IIndexOperationContext {
 
-    public final RangePredicate btreePred = new RangePredicate(null, null, true, true, null, null);
-    public IIndexAccessor btreeAccessor;
-    public IIndexCursor btreeCursor;
-    public MultiComparator searchCmp;
+    private final RangePredicate btreePred = new RangePredicate(null, null, true, true, null, null);
+    private IIndexAccessor btreeAccessor;
+    private IIndexCursor btreeCursor;
+    private MultiComparator searchCmp;
     // For prefix search on partitioned indexes.
-    public MultiComparator prefixSearchCmp;
+    private MultiComparator prefixSearchCmp;
 
     public OnDiskInvertedIndexOpContext(BTree btree) {
         // TODO: Ignore opcallbacks for now.
@@ -60,5 +60,25 @@ public class OnDiskInvertedIndexOpContext implements IIndexOperationContext {
     @Override
     public IndexOperation getOperation() {
         return IndexOperation.SEARCH;
+    }
+
+    public RangePredicate getBtreePred() {
+        return btreePred;
+    }
+
+    public MultiComparator getSearchCmp() {
+        return searchCmp;
+    }
+
+    public IIndexAccessor getBtreeAccessor() {
+        return btreeAccessor;
+    }
+
+    public IIndexCursor getBtreeCursor() {
+        return btreeCursor;
+    }
+
+    public MultiComparator getPrefixSearchCmp() {
+        return prefixSearchCmp;
     }
 }

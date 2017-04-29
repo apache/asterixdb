@@ -31,8 +31,8 @@ import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.am.common.ophelpers.MultiComparator;
 import org.apache.hyracks.storage.am.common.tuples.PermutingTupleReference;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMemoryComponent;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexOperationContext;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexAccessor;
@@ -50,21 +50,21 @@ public class LSMInvertedIndexOpContext extends AbstractLSMIndexOperationContext 
     private ISearchOperationCallback searchCallback;
 
     // Tuple that only has the inverted-index elements (aka keys), projecting away the document fields.
-    public PermutingTupleReference keysOnlyTuple;
+    private PermutingTupleReference keysOnlyTuple;
 
     // Accessor to the in-memory inverted indexes.
-    public IInvertedIndexAccessor[] mutableInvIndexAccessors;
+    private IInvertedIndexAccessor[] mutableInvIndexAccessors;
     // Accessor to the deleted-keys BTrees.
-    public IIndexAccessor[] deletedKeysBTreeAccessors;
+    private IIndexAccessor[] deletedKeysBTreeAccessors;
 
-    public IInvertedIndexAccessor currentMutableInvIndexAccessors;
-    public IIndexAccessor currentDeletedKeysBTreeAccessors;
+    private IInvertedIndexAccessor currentMutableInvIndexAccessors;
+    private IIndexAccessor currentDeletedKeysBTreeAccessors;
 
-    public final PermutingTupleReference indexTuple;
-    public final MultiComparator filterCmp;
-    public final PermutingTupleReference filterTuple;
+    private final PermutingTupleReference indexTuple;
+    private final MultiComparator filterCmp;
+    private final PermutingTupleReference filterTuple;
 
-    public ISearchPredicate searchPredicate;
+    private ISearchPredicate searchPredicate;
 
     public LSMInvertedIndexOpContext(List<ILSMMemoryComponent> mutableComponents,
             IModificationOperationCallback modificationCallback, ISearchOperationCallback searchCallback,
@@ -168,5 +168,29 @@ public class LSMInvertedIndexOpContext extends AbstractLSMIndexOperationContext 
     @Override
     public List<ILSMDiskComponent> getComponentsToBeReplicated() {
         return componentsToBeReplicated;
+    }
+
+    public MultiComparator getFilterCmp() {
+        return filterCmp;
+    }
+
+    public PermutingTupleReference getIndexTuple() {
+        return indexTuple;
+    }
+
+    public IInvertedIndexAccessor getCurrentMutableInvIndexAccessors() {
+        return currentMutableInvIndexAccessors;
+    }
+
+    public PermutingTupleReference getKeysOnlyTuple() {
+        return keysOnlyTuple;
+    }
+
+    public IIndexAccessor getCurrentDeletedKeysBTreeAccessors() {
+        return currentDeletedKeysBTreeAccessors;
+    }
+
+    public PermutingTupleReference getFilterTuple() {
+        return filterTuple;
     }
 }

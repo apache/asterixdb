@@ -76,27 +76,27 @@ public class PartitionedOnDiskInvertedIndex extends OnDiskInvertedIndex implemen
         ITupleReference highSearchKey = null;
         partSearcher.setNumTokensBoundsInSearchKeys(numTokensLowerBound, numTokensUpperBound);
         if (numTokensLowerBound < 0) {
-            ctx.btreePred.setLowKeyComparator(ctx.prefixSearchCmp);
+            ctx.getBtreePred().setLowKeyComparator(ctx.getPrefixSearchCmp());
             lowSearchKey = partSearcher.getPrefixSearchKey();
         } else {
-            ctx.btreePred.setLowKeyComparator(ctx.searchCmp);
+            ctx.getBtreePred().setLowKeyComparator(ctx.getSearchCmp());
             lowSearchKey = partSearcher.getFullLowSearchKey();
         }
         if (numTokensUpperBound < 0) {
-            ctx.btreePred.setHighKeyComparator(ctx.prefixSearchCmp);
+            ctx.getBtreePred().setHighKeyComparator(ctx.getPrefixSearchCmp());
             highSearchKey = partSearcher.getPrefixSearchKey();
         } else {
-            ctx.btreePred.setHighKeyComparator(ctx.searchCmp);
+            ctx.getBtreePred().setHighKeyComparator(ctx.getSearchCmp());
             highSearchKey = partSearcher.getFullHighSearchKey();
         }
-        ctx.btreePred.setLowKey(lowSearchKey, true);
-        ctx.btreePred.setHighKey(highSearchKey, true);
-        ctx.btreeAccessor.search(ctx.btreeCursor, ctx.btreePred);
+        ctx.getBtreePred().setLowKey(lowSearchKey, true);
+        ctx.getBtreePred().setHighKey(highSearchKey, true);
+        ctx.getBtreeAccessor().search(ctx.getBtreeCursor(), ctx.getBtreePred());
         boolean tokenExists = false;
         try {
-            while (ctx.btreeCursor.hasNext()) {
-                ctx.btreeCursor.next();
-                ITupleReference btreeTuple = ctx.btreeCursor.getTuple();
+            while (ctx.getBtreeCursor().hasNext()) {
+                ctx.getBtreeCursor().next();
+                ITupleReference btreeTuple = ctx.getBtreeCursor().getTuple();
                 short numTokens = ShortPointable.getShort(btreeTuple.getFieldData(PARTITIONING_NUM_TOKENS_FIELD),
                         btreeTuple.getFieldStart(PARTITIONING_NUM_TOKENS_FIELD));
                 IInvertedListCursor invListCursor = partSearcher.getCachedInvertedListCursor();
@@ -106,8 +106,8 @@ public class PartitionedOnDiskInvertedIndex extends OnDiskInvertedIndex implemen
                 tokenExists = true;
             }
         } finally {
-            ctx.btreeCursor.close();
-            ctx.btreeCursor.reset();
+            ctx.getBtreeCursor().close();
+            ctx.getBtreeCursor().reset();
         }
         return tokenExists;
     }

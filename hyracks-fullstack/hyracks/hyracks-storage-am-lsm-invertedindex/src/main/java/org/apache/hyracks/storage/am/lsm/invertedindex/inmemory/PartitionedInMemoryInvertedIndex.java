@@ -62,7 +62,7 @@ public class PartitionedInMemoryInvertedIndex extends InMemoryInvertedIndex impl
         super.insert(tuple, btreeAccessor, ictx);
         PartitionedInMemoryInvertedIndexOpContext ctx = (PartitionedInMemoryInvertedIndexOpContext) ictx;
         PartitionedInvertedIndexTokenizingTupleIterator tupleIter =
-                (PartitionedInvertedIndexTokenizingTupleIterator) ctx.tupleIter;
+                (PartitionedInvertedIndexTokenizingTupleIterator) ctx.getTupleIter();
         updatePartitionIndexes(tupleIter.getNumTokens());
     }
 
@@ -123,8 +123,8 @@ public class PartitionedInMemoryInvertedIndex extends InMemoryInvertedIndex impl
         ctx.setOperation(IndexOperation.SEARCH);
         // We can pick either of the full low or high search key, since they should be identical here.
         ITupleReference searchKey = partSearcher.getFullLowSearchKey();
-        ctx.btreePred.setLowKey(searchKey, true);
-        ctx.btreePred.setHighKey(searchKey, true);
+        ctx.getBtreePred().setLowKey(searchKey, true);
+        ctx.getBtreePred().setHighKey(searchKey, true);
         // Go through all possibly partitions and see if the token matches.
         // TODO: This procedure could be made more efficient by determining the next partition to search
         // using the last existing partition and re-searching the BTree with an open interval as low key.
@@ -132,7 +132,8 @@ public class PartitionedInMemoryInvertedIndex extends InMemoryInvertedIndex impl
             partSearcher.setNumTokensBoundsInSearchKeys(i, i);
             InMemoryInvertedListCursor inMemListCursor =
                     (InMemoryInvertedListCursor) partSearcher.getCachedInvertedListCursor();
-            inMemListCursor.prepare(ctx.btreeAccessor, ctx.btreePred, ctx.tokenFieldsCmp, ctx.btreeCmp);
+            inMemListCursor.prepare(ctx.getBtreeAccessor(), ctx.getBtreePred(), ctx.getTokenFieldsCmp(),
+                    ctx.getBtreeCmp());
             inMemListCursor.reset(searchKey);
             invListPartitions.addInvertedListCursor(inMemListCursor, i);
         }

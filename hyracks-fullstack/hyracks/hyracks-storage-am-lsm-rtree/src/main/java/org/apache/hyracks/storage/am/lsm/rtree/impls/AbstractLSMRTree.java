@@ -232,7 +232,7 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
                         if (c.getLSMComponentFilter().satisfy(
                                 ((AbstractSearchPredicate) ctx.getSearchPredicate()).getMinFilterTuple(),
                                 ((AbstractSearchPredicate) ctx.getSearchPredicate()).getMaxFilterTuple(),
-                                ((LSMRTreeOpContext) ctx).filterCmp)) {
+                                ((LSMRTreeOpContext) ctx).getFilterCmp())) {
                             operationalComponents.add(c);
                         }
                     }
@@ -258,7 +258,7 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
     public void search(ILSMIndexOperationContext ictx, IIndexCursor cursor, ISearchPredicate pred)
             throws HyracksDataException {
         LSMRTreeOpContext ctx = (LSMRTreeOpContext) ictx;
-        cursor.open(ctx.searchInitialState, pred);
+        cursor.open(ctx.getSearchInitialState(), pred);
     }
 
     protected LSMComponentFileReferences getMergeTargetFileName(List<ILSMComponent> mergingDiskComponents)
@@ -348,9 +348,9 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
         }
 
         ITupleReference indexTuple;
-        if (ctx.indexTuple != null) {
-            ctx.indexTuple.reset(tuple);
-            indexTuple = ctx.indexTuple;
+        if (ctx.getIndexTuple() != null) {
+            ctx.getIndexTuple().reset(tuple);
+            indexTuple = ctx.getIndexTuple();
         } else {
             indexTuple = tuple;
         }
@@ -358,13 +358,13 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
         ctx.getModificationCallback().before(indexTuple);
         ctx.getModificationCallback().found(null, indexTuple);
         if (ctx.getOperation() == IndexOperation.INSERT) {
-            ctx.currentMutableRTreeAccessor.insert(indexTuple);
+            ctx.getCurrentMutableRTreeAccessor().insert(indexTuple);
         } else {
             // First remove all entries in the in-memory rtree (if any).
-            ctx.currentMutableRTreeAccessor.delete(indexTuple);
+            ctx.getCurrentMutableRTreeAccessor().delete(indexTuple);
             // Insert key into the deleted-keys BTree.
             try {
-                ctx.currentMutableBTreeAccessor.insert(indexTuple);
+                ctx.getCurrentMutableBTreeAccessor().insert(indexTuple);
             } catch (HyracksDataException e) {
                 if (e.getErrorCode() != ErrorCode.DUPLICATE_KEY) {
                     // Do nothing, because one delete tuple is enough to indicate
@@ -373,10 +373,10 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
                 }
             }
         }
-        if (ctx.filterTuple != null) {
-            ctx.filterTuple.reset(tuple);
-            memoryComponents.get(currentMutableComponentId.get()).getLSMComponentFilter().update(ctx.filterTuple,
-                    ctx.filterCmp);
+        if (ctx.getFilterTuple() != null) {
+            ctx.getFilterTuple().reset(tuple);
+            memoryComponents.get(currentMutableComponentId.get()).getLSMComponentFilter().update(ctx.getFilterTuple(),
+                    ctx.getFilterCmp());
         }
     }
 

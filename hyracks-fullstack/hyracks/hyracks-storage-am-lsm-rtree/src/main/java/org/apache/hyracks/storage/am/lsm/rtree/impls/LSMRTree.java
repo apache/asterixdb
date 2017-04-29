@@ -454,7 +454,7 @@ public class LSMRTree extends AbstractLSMRTree {
 
         public MultiComparator getMultiComparator() {
             LSMRTreeOpContext concreteCtx = (LSMRTreeOpContext) ctx;
-            return concreteCtx.currentRTreeOpContext.cmp;
+            return concreteCtx.getCurrentRTreeOpContext().getCmp();
         }
     }
 
@@ -479,9 +479,9 @@ public class LSMRTree extends AbstractLSMRTree {
         }
 
         ITupleReference indexTuple;
-        if (ctx.indexTuple != null) {
-            ctx.indexTuple.reset(tuple);
-            indexTuple = ctx.indexTuple;
+        if (ctx.getIndexTuple() != null) {
+            ctx.getIndexTuple().reset(tuple);
+            indexTuple = ctx.getIndexTuple();
         } else {
             indexTuple = tuple;
         }
@@ -489,12 +489,12 @@ public class LSMRTree extends AbstractLSMRTree {
         ctx.getModificationCallback().before(indexTuple);
         ctx.getModificationCallback().found(null, indexTuple);
         if (ctx.getOperation() == IndexOperation.INSERT) {
-            ctx.currentMutableRTreeAccessor.insert(indexTuple);
+            ctx.getCurrentMutableRTreeAccessor().insert(indexTuple);
         } else {
             // First remove all entries in the in-memory rtree (if any).
-            ctx.currentMutableRTreeAccessor.delete(indexTuple);
+            ctx.getCurrentMutableRTreeAccessor().delete(indexTuple);
             try {
-                ctx.currentMutableBTreeAccessor.insert(((DualTupleReference) tuple).getPermutingTuple());
+                ctx.getCurrentMutableBTreeAccessor().insert(((DualTupleReference) tuple).getPermutingTuple());
             } catch (HyracksDataException e) {
                 // Do nothing, because one delete tuple is enough to indicate
                 // that all the corresponding insert tuples are deleted
@@ -503,10 +503,10 @@ public class LSMRTree extends AbstractLSMRTree {
                 }
             }
         }
-        if (ctx.filterTuple != null) {
-            ctx.filterTuple.reset(tuple);
-            memoryComponents.get(currentMutableComponentId.get()).getLSMComponentFilter().update(ctx.filterTuple,
-                    ctx.filterCmp);
+        if (ctx.getFilterTuple() != null) {
+            ctx.getFilterTuple().reset(tuple);
+            memoryComponents.get(currentMutableComponentId.get()).getLSMComponentFilter().update(ctx.getFilterTuple(),
+                    ctx.getFilterCmp());
         }
     }
 

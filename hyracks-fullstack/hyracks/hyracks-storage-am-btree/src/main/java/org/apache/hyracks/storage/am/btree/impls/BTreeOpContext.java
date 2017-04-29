@@ -31,10 +31,10 @@ import org.apache.hyracks.dataflow.common.utils.TupleUtils;
 import org.apache.hyracks.storage.am.btree.api.IBTreeInteriorFrame;
 import org.apache.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import org.apache.hyracks.storage.am.btree.api.ITupleAcceptor;
-import org.apache.hyracks.storage.am.common.api.IPageManager;
 import org.apache.hyracks.storage.am.common.api.IIndexAccessor;
 import org.apache.hyracks.storage.am.common.api.IIndexOperationContext;
 import org.apache.hyracks.storage.am.common.api.IModificationOperationCallback;
+import org.apache.hyracks.storage.am.common.api.IPageManager;
 import org.apache.hyracks.storage.am.common.api.ISearchOperationCallback;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexCursor;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
@@ -47,40 +47,39 @@ import org.apache.hyracks.storage.common.arraylist.LongArrayList;
 import org.apache.hyracks.storage.common.buffercache.IExtraPageBlockHelper;
 
 public class BTreeOpContext implements IIndexOperationContext, IExtraPageBlockHelper {
-    private final int INIT_ARRAYLIST_SIZE = 6;
+    private static final int INIT_ARRAYLIST_SIZE = 6;
 
-    public IIndexAccessor accessor;
-    public MultiComparator cmp;
-    public ITreeIndexFrameFactory leafFrameFactory;
-    public ITreeIndexFrameFactory interiorFrameFactory;
-    public IBTreeLeafFrame leafFrame;
-    public IBTreeInteriorFrame interiorFrame;
-    public final IPageManager freePageManager;
-    public final ITreeIndexMetadataFrame metaFrame;
-    public IndexOperation op;
-    public ITreeIndexCursor cursor;
-    public BTreeCursorInitialState cursorInitialState;
-    public RangePredicate pred;
-    public BTreeSplitKey splitKey;
-    public LongArrayList pageLsns;
-    public IntArrayList smPages;
-    public IntArrayList freePages;
-    public int opRestarts = 0;
-    public boolean exceptionHandled;
-    public IModificationOperationCallback modificationCallback;
-    public ISearchOperationCallback searchCallback;
-    public ITupleAcceptor acceptor;
-    public int smoCount;
+    private final IIndexAccessor accessor;
+    private final MultiComparator cmp;
+    private final ITreeIndexFrameFactory interiorFrameFactory;
+    private final IBTreeInteriorFrame interiorFrame;
+    private final IPageManager freePageManager;
+    private final ITreeIndexMetadataFrame metaFrame;
+    private ITreeIndexFrameFactory leafFrameFactory;
+    private IBTreeLeafFrame leafFrame;
+    private IndexOperation op;
+    private ITreeIndexCursor cursor;
+    private BTreeCursorInitialState cursorInitialState;
+    private RangePredicate pred;
+    private BTreeSplitKey splitKey;
+    private LongArrayList pageLsns;
+    private IntArrayList smPages;
+    private IntArrayList freePages;
+    private int opRestarts = 0;
+    private boolean exceptionHandled;
+    private IModificationOperationCallback modificationCallback;
+    private ISearchOperationCallback searchCallback;
+    private ITupleAcceptor acceptor;
+    private int smoCount;
 
     // Debug
-    public final Deque<PageValidationInfo> validationInfos;
-    public final ITreeIndexTupleReference interiorFrameTuple;
-    public final ITreeIndexTupleReference leafFrameTuple;
+    private final Deque<PageValidationInfo> validationInfos;
+    private final ITreeIndexTupleReference interiorFrameTuple;
 
     public BTreeOpContext(IIndexAccessor accessor, ITreeIndexFrameFactory leafFrameFactory,
             ITreeIndexFrameFactory interiorFrameFactory, IPageManager freePageManager,
-                          IBinaryComparatorFactory[] cmpFactories, IModificationOperationCallback modificationCallback,
-                          ISearchOperationCallback searchCallback) {
+            IBinaryComparatorFactory[] cmpFactories, IModificationOperationCallback modificationCallback,
+            ISearchOperationCallback searchCallback) {
         this.accessor = accessor;
 
         if (cmpFactories[0] != null) {
@@ -90,15 +89,15 @@ public class BTreeOpContext implements IIndexOperationContext, IExtraPageBlockHe
             this.cmp = null;
         }
 
-        this.leafFrameFactory = leafFrameFactory;
+        this.setLeafFrameFactory(leafFrameFactory);
         this.leafFrame = (IBTreeLeafFrame) leafFrameFactory.createFrame();
-        if (leafFrame != null && this.cmp != null) {
-            leafFrame.setMultiComparator(cmp);
+        if (getLeafFrame() != null && this.getCmp() != null) {
+            getLeafFrame().setMultiComparator(getCmp());
         }
         this.interiorFrameFactory = interiorFrameFactory;
         this.interiorFrame = (IBTreeInteriorFrame) interiorFrameFactory.createFrame();
-        if (interiorFrame != null && this.cmp != null) {
-            interiorFrame.setMultiComparator(cmp);
+        if (getInteriorFrame() != null && this.getCmp() != null) {
+            getInteriorFrame().setMultiComparator(getCmp());
         }
         this.freePageManager = freePageManager;
         this.metaFrame = freePageManager.createMetadataFrame();
@@ -109,8 +108,7 @@ public class BTreeOpContext implements IIndexOperationContext, IExtraPageBlockHe
 
         // Debug
         this.validationInfos = new ArrayDeque<>(INIT_ARRAYLIST_SIZE);
-        this.interiorFrameTuple = interiorFrame.createTupleReference();
-        this.leafFrameTuple = leafFrame.createTupleReference();
+        this.interiorFrameTuple = getInteriorFrame().createTupleReference();
     }
 
     @Override
@@ -143,11 +141,11 @@ public class BTreeOpContext implements IIndexOperationContext, IExtraPageBlockHe
             if (freePages == null) {
                 freePages = new IntArrayList(INIT_ARRAYLIST_SIZE, INIT_ARRAYLIST_SIZE);
             }
-            if (pred == null) {
-                pred = new RangePredicate(null, null, true, true, null, null);
+            if (getPred() == null) {
+                setPred(new RangePredicate(null, null, true, true, null, null));
             }
             if (splitKey == null) {
-                splitKey = new BTreeSplitKey(leafFrame.getTupleWriter().createTupleReference());
+                splitKey = new BTreeSplitKey(getLeafFrame().getTupleWriter().createTupleReference());
             }
         }
         op = newOp;
@@ -156,7 +154,7 @@ public class BTreeOpContext implements IIndexOperationContext, IExtraPageBlockHe
     }
 
     public IBTreeLeafFrame createLeafFrame() {
-        return (IBTreeLeafFrame) leafFrameFactory.createFrame();
+        return (IBTreeLeafFrame) getLeafFrameFactory().createFrame();
     }
 
     public IBTreeInteriorFrame createInteriorFrame() {
@@ -179,7 +177,7 @@ public class BTreeOpContext implements IIndexOperationContext, IExtraPageBlockHe
         public boolean isHighRangeNull;
 
         public PageValidationInfo() {
-            this.numKeyFields = cmp.getKeyFieldCount();
+            this.numKeyFields = getCmp().getKeyFieldCount();
             this.lowRangeBuilder = new ArrayTupleBuilder(numKeyFields);
             this.highRangeBuilder = new ArrayTupleBuilder(numKeyFields);
             this.lowRangeTuple = new ArrayTupleReference();
@@ -240,15 +238,130 @@ public class BTreeOpContext implements IIndexOperationContext, IExtraPageBlockHe
             ISearchOperationCallback searchCallback) {
         this.modificationCallback = modificationCallback;
         this.searchCallback = searchCallback;
+        if (cursorInitialState != null) {
+            cursorInitialState.setSearchOperationCallback(searchCallback);
+        }
     }
 
     @Override
     public int getFreeBlock(int size) throws HyracksDataException {
-        return freePageManager.takeBlock(metaFrame, size);
+        return freePageManager.takeBlock(getMetaFrame(), size);
     }
 
     @Override
     public void returnFreePageBlock(int blockPageId, int size) throws HyracksDataException {
-        freePageManager.releaseBlock(metaFrame, blockPageId, size);
+        freePageManager.releaseBlock(getMetaFrame(), blockPageId, size);
+    }
+
+    public ITreeIndexMetadataFrame getMetaFrame() {
+        return metaFrame;
+    }
+
+    public ISearchOperationCallback getSearchCallback() {
+        return searchCallback;
+    }
+
+    public Deque<PageValidationInfo> getValidationInfos() {
+        return validationInfos;
+    }
+
+    public IBTreeLeafFrame getLeafFrame() {
+        return leafFrame;
+    }
+
+    public ITreeIndexTupleReference getInteriorFrameTuple() {
+        return interiorFrameTuple;
+    }
+
+    public RangePredicate getPred() {
+        return pred;
+    }
+
+    public void setPred(RangePredicate pred) {
+        this.pred = pred;
+    }
+
+    public ITreeIndexCursor getCursor() {
+        return cursor;
+    }
+
+    public void setCursor(ITreeIndexCursor cursor) {
+        this.cursor = cursor;
+    }
+
+    public int getOpRestarts() {
+        return opRestarts;
+    }
+
+    public LongArrayList getPageLsns() {
+        return pageLsns;
+    }
+
+    public void setPageLsns(LongArrayList pageLsns) {
+        this.pageLsns = pageLsns;
+    }
+
+    public IntArrayList getSmPages() {
+        return smPages;
+    }
+
+    public IBTreeInteriorFrame getInteriorFrame() {
+        return interiorFrame;
+    }
+
+    public int getSmoCount() {
+        return smoCount;
+    }
+
+    public BTreeSplitKey getSplitKey() {
+        return splitKey;
+    }
+
+    public IModificationOperationCallback getModificationCallback() {
+        return modificationCallback;
+    }
+
+    public MultiComparator getCmp() {
+        return cmp;
+    }
+
+    public ITupleAcceptor getAcceptor() {
+        return acceptor;
+    }
+
+    public void setOpRestarts(int opRestarts) {
+        this.opRestarts = opRestarts;
+    }
+
+    public BTreeCursorInitialState getCursorInitialState() {
+        return cursorInitialState;
+    }
+
+    public boolean isExceptionHandled() {
+        return exceptionHandled;
+    }
+
+    public void setExceptionHandled(boolean exceptionHandled) {
+        this.exceptionHandled = exceptionHandled;
+    }
+
+    public void setAcceptor(ITupleAcceptor acceptor) {
+        this.acceptor = acceptor;
+    }
+
+    public void setSmoCount(int smoCount) {
+        this.smoCount = smoCount;
+    }
+
+    public void setLeafFrame(IBTreeLeafFrame leafFrame) {
+        this.leafFrame = leafFrame;
+    }
+
+    public ITreeIndexFrameFactory getLeafFrameFactory() {
+        return leafFrameFactory;
+    }
+
+    public void setLeafFrameFactory(ITreeIndexFrameFactory leafFrameFactory) {
+        this.leafFrameFactory = leafFrameFactory;
     }
 }
