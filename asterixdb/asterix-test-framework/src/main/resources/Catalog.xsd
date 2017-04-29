@@ -212,6 +212,7 @@
       <xs:restriction base="xs:string">
          <xs:enumeration value="XML"/>
          <xs:enumeration value="Text"/>
+         <xs:enumeration value="Binary"/>
          <xs:enumeration value="Inspect"/>
          <xs:enumeration value="Ignore"/>
          <xs:enumeration value="Clean-JSON"/>

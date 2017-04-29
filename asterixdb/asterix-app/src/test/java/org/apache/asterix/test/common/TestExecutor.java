@@ -58,6 +58,7 @@ import org.apache.asterix.test.server.TestServerProvider;
 import org.apache.asterix.testframework.context.TestCaseContext;
 import org.apache.asterix.testframework.context.TestCaseContext.OutputFormat;
 import org.apache.asterix.testframework.context.TestFileContext;
+import org.apache.asterix.testframework.xml.ComparisonEnum;
 import org.apache.asterix.testframework.xml.TestCase.CompilationUnit;
 import org.apache.asterix.testframework.xml.TestGroup;
 import org.apache.commons.io.FileUtils;
@@ -149,7 +150,8 @@ public class TestExecutor {
         return path.delete();
     }
 
-    public void runScriptAndCompareWithResult(File scriptFile, PrintWriter print, File expectedFile, File actualFile)
+    public void runScriptAndCompareWithResult(File scriptFile, PrintWriter print, File expectedFile, File actualFile,
+            ComparisonEnum compare)
             throws Exception {
         System.err.println("Expected results file: " + expectedFile.toString());
         BufferedReader readerExpected =
@@ -158,7 +160,12 @@ public class TestExecutor {
                 new BufferedReader(new InputStreamReader(new FileInputStream(actualFile), "UTF-8"));
         boolean regex = false;
         try {
-            if (actualFile.toString().endsWith(".regex")) {
+            if (ComparisonEnum.BINARY.equals(compare)) {
+                if (!IOUtils.contentEquals(new FileInputStream(actualFile), new FileInputStream(expectedFile))) {
+                    throw new Exception("Result for " + scriptFile + ": actual file did not match expected result");
+                }
+                return;
+            } else if (actualFile.toString().endsWith(".regex")) {
                 runScriptAndCompareWithResultRegex(scriptFile, expectedFile, actualFile);
                 return;
             } else if (actualFile.toString().endsWith(".regexadm")) {
@@ -881,7 +888,7 @@ public class TestExecutor {
                 writeOutputToFile(actualResultFile, resultStream);
 
                 runScriptAndCompareWithResult(testFile, new PrintWriter(System.err), expectedResultFile,
-                        actualResultFile);
+                        actualResultFile, ComparisonEnum.TEXT);
                 queryCount.increment();
 
                 // Deletes the matched result file.
@@ -904,7 +911,8 @@ public class TestExecutor {
                         + "_qar.adm");
                 writeOutputToFile(qarFile, resultStream);
                 qbcFile = getTestCaseQueryBeforeCrashFile(actualPath, testCaseCtx, cUnit);
-                runScriptAndCompareWithResult(testFile, new PrintWriter(System.err), qbcFile, qarFile);
+                runScriptAndCompareWithResult(testFile, new PrintWriter(System.err), qbcFile, qarFile,
+                        ComparisonEnum.TEXT);
                 break;
             case "txneu": // eu represents erroneous update
                 try {
@@ -995,7 +1003,7 @@ public class TestExecutor {
                     actualResultFile = testCaseCtx.getActualResultFile(cUnit, expectedResultFile, new File(actualPath));
                     writeOutputToFile(actualResultFile, resultStream);
                     runScriptAndCompareWithResult(testFile, new PrintWriter(System.err), expectedResultFile,
-                            actualResultFile);
+                            actualResultFile, cUnit.getOutputDir().getCompare());
                 }
                 queryCount.increment();
                 break;
