@@ -28,7 +28,7 @@ public class ExternalFunctionInfo extends FunctionInfo implements IExternalFunct
 
     private static final long serialVersionUID = 1L;
 
-    private final IResultTypeComputer rtc;
+    private final transient IResultTypeComputer rtc;
     private final List<IAType> argumentTypes;
     private final String body;
     private final String language;
