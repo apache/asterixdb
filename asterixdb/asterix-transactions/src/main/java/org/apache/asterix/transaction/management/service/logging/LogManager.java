@@ -40,6 +40,8 @@ import java.util.logging.Logger;
 
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.replication.IReplicationManager;
+import org.apache.asterix.common.transactions.ILogBuffer;
+import org.apache.asterix.common.transactions.ILogBufferFactory;
 import org.apache.asterix.common.transactions.ILogManager;
 import org.apache.asterix.common.transactions.ILogReader;
 import org.apache.asterix.common.transactions.ILogRecord;
@@ -54,36 +56,46 @@ import org.apache.hyracks.api.lifecycle.ILifeCycleComponent;
 
 public class LogManager implements ILogManager, ILifeCycleComponent {
 
-    public static final boolean IS_DEBUG_MODE = false;// true
+    /*
+     * Constants
+     */
     private static final Logger LOGGER = Logger.getLogger(LogManager.class.getName());
+    private static final long SMALLEST_LOG_FILE_ID = 0;
+    private static final int INITIAL_LOG_SIZE = 0;
+    public static final boolean IS_DEBUG_MODE = false;// true
+    /*
+     * Finals
+     */
     private final ITransactionSubsystem txnSubsystem;
-
+    private final ILogBufferFactory logBufferFactory;
     private final LogManagerProperties logManagerProperties;
-    protected final long logFileSize;
-    protected final int logPageSize;
     private final int numLogPages;
     private final String logDir;
     private final String logFilePrefix;
     private final MutableLong flushLSN;
-    private LinkedBlockingQueue<LogBuffer> emptyQ;
-    private LinkedBlockingQueue<LogBuffer> flushQ;
-    private LinkedBlockingQueue<LogBuffer> stashQ;
-    protected final AtomicLong appendLSN;
-    private FileChannel appendChannel;
-    protected LogBuffer appendPage;
-    private LogFlusher logFlusher;
-    private Future<? extends Object> futureLogFlusher;
-    private static final long SMALLEST_LOG_FILE_ID = 0;
-    private static final int INITIAL_LOG_SIZE = 0;
     private final String nodeId;
-    protected LinkedBlockingQueue<ILogRecord> flushLogsQ;
     private final FlushLogsLogger flushLogsLogger;
     private final HashMap<Long, Integer> txnLogFileId2ReaderCount = new HashMap<>();
+    protected final long logFileSize;
+    protected final int logPageSize;
+    protected final AtomicLong appendLSN;
+    /*
+     * Mutables
+     */
+    private LinkedBlockingQueue<ILogBuffer> emptyQ;
+    private LinkedBlockingQueue<ILogBuffer> flushQ;
+    private LinkedBlockingQueue<ILogBuffer> stashQ;
+    private FileChannel appendChannel;
+    protected ILogBuffer appendPage;
+    private LogFlusher logFlusher;
+    private Future<? extends Object> futureLogFlusher;
+    protected LinkedBlockingQueue<ILogRecord> flushLogsQ;
 
-    public LogManager(ITransactionSubsystem txnSubsystem) {
+    public LogManager(ITransactionSubsystem txnSubsystem, ILogBufferFactory logBufferFactory) {
         this.txnSubsystem = txnSubsystem;
-        logManagerProperties = new LogManagerProperties(this.txnSubsystem.getTransactionProperties(),
-                this.txnSubsystem.getId());
+        this.logBufferFactory = logBufferFactory;
+        logManagerProperties =
+                new LogManagerProperties(this.txnSubsystem.getTransactionProperties(), this.txnSubsystem.getId());
         logFileSize = logManagerProperties.getLogPartitionSize();
         logPageSize = logManagerProperties.getLogPageSize();
         numLogPages = logManagerProperties.getNumLogPages();
@@ -102,7 +114,7 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
         flushQ = new LinkedBlockingQueue<>(numLogPages);
         stashQ = new LinkedBlockingQueue<>(numLogPages);
         for (int i = 0; i < numLogPages; i++) {
-            emptyQ.offer(new LogBuffer(txnSubsystem, logPageSize, flushLSN));
+            emptyQ.offer(logBufferFactory.create(txnSubsystem, logPageSize, flushLSN));
         }
         appendLSN.set(initializeLogAnchor(nextLogFileId));
         flushLSN.set(appendLSN.get());
@@ -178,7 +190,7 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
     }
 
     protected void prepareNextPage(int logSize) {
-        appendPage.isFull(true);
+        appendPage.setFull();
         getAndInitNewPage(logSize);
     }
 
@@ -196,7 +208,7 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
             }
             // for now, alloc a new buffer for each large page
             // TODO: pool large pages??
-            appendPage = new LogBuffer(txnSubsystem, logSize, flushLSN);
+            appendPage = logBufferFactory.create(txnSubsystem, logSize, flushLSN);
             appendPage.setFileChannel(appendChannel);
             flushQ.offer(appendPage);
         } else {
@@ -216,9 +228,9 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
 
     protected void prepareNextLogFile() {
         // Mark the page as the last page so that it will close the output file channel.
-        appendPage.isLastPage(true);
+        appendPage.setLastPage();
         // Make sure to flush whatever left in the log tail.
-        appendPage.isFull(true);
+        appendPage.setFull();
         //wait until all log records have been flushed in the current file
         synchronized (flushLSN) {
             try {
@@ -627,17 +639,18 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
 
 class LogFlusher implements Callable<Boolean> {
     private static final Logger LOGGER = Logger.getLogger(LogFlusher.class.getName());
-    private final static LogBuffer POISON_PILL = new LogBuffer(null, ILogRecord.JOB_TERMINATE_LOG_SIZE, null);
+    private static final ILogBuffer POISON_PILL =
+            LogBufferFactory.INSTANCE.create(null, ILogRecord.JOB_TERMINATE_LOG_SIZE, null);
     private final LogManager logMgr;//for debugging
-    private final LinkedBlockingQueue<LogBuffer> emptyQ;
-    private final LinkedBlockingQueue<LogBuffer> flushQ;
-    private final LinkedBlockingQueue<LogBuffer> stashQ;
-    private LogBuffer flushPage;
+    private final LinkedBlockingQueue<ILogBuffer> emptyQ;
+    private final LinkedBlockingQueue<ILogBuffer> flushQ;
+    private final LinkedBlockingQueue<ILogBuffer> stashQ;
+    private ILogBuffer flushPage;
     private final AtomicBoolean isStarted;
     private final AtomicBoolean terminateFlag;
 
-    public LogFlusher(LogManager logMgr, LinkedBlockingQueue<LogBuffer> emptyQ, LinkedBlockingQueue<LogBuffer> flushQ,
-            LinkedBlockingQueue<LogBuffer> stashQ) {
+    public LogFlusher(LogManager logMgr, LinkedBlockingQueue<ILogBuffer> emptyQ, LinkedBlockingQueue<ILogBuffer> flushQ,
+            LinkedBlockingQueue<ILogBuffer> stashQ) {
         this.logMgr = logMgr;
         this.emptyQ = emptyQ;
         this.flushQ = flushQ;
@@ -663,7 +676,7 @@ class LogFlusher implements Callable<Boolean> {
         terminateFlag.set(true);
         if (flushPage != null) {
             synchronized (flushPage) {
-                flushPage.isStop(true);
+                flushPage.stop();
                 flushPage.notify();
             }
         }

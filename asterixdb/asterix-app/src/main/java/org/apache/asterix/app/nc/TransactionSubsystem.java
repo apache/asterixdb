@@ -36,8 +36,10 @@ import org.apache.asterix.common.transactions.ITransactionManager;
 import org.apache.asterix.common.transactions.ITransactionSubsystem;
 import org.apache.asterix.common.utils.StorageConstants;
 import org.apache.asterix.transaction.management.service.locking.ConcurrentLockManager;
+import org.apache.asterix.transaction.management.service.logging.LogBufferFactory;
 import org.apache.asterix.transaction.management.service.logging.LogManager;
 import org.apache.asterix.transaction.management.service.logging.LogManagerWithReplication;
+import org.apache.asterix.transaction.management.service.logging.ReplicatingLogBufferFactory;
 import org.apache.asterix.transaction.management.service.recovery.CheckpointManagerFactory;
 import org.apache.asterix.transaction.management.service.transaction.TransactionManager;
 import org.apache.hyracks.api.application.INCServiceContext;
@@ -68,8 +70,8 @@ public class TransactionSubsystem implements ITransactionSubsystem {
         this.txnProperties = txnProperties;
         this.transactionManager = new TransactionManager(this);
         this.lockManager = new ConcurrentLockManager(txnProperties.getLockManagerShrinkTimer());
-        ReplicationProperties repProperties = asterixAppRuntimeContextProvider.getAppContext()
-                .getReplicationProperties();
+        ReplicationProperties repProperties =
+                asterixAppRuntimeContextProvider.getAppContext().getReplicationProperties();
         IReplicationStrategy replicationStrategy = repProperties.getReplicationStrategy();
         final boolean replicationEnabled = repProperties.isParticipant(id);
 
@@ -83,9 +85,10 @@ public class TransactionSubsystem implements ITransactionSubsystem {
         }
 
         if (replicationEnabled) {
-            this.logManager = new LogManagerWithReplication(this, replicationStrategy);
+            this.logManager =
+                    new LogManagerWithReplication(this, ReplicatingLogBufferFactory.INSTANCE, replicationStrategy);
         } else {
-            this.logManager = new LogManager(this);
+            this.logManager = new LogManager(this, LogBufferFactory.INSTANCE);
         }
         this.recoveryManager = new RecoveryManager(this, serviceCtx);
 
@@ -183,8 +186,8 @@ public class TransactionSubsystem implements ITransactionSubsystem {
             long currentTimeStamp = System.currentTimeMillis();
             long currentEntityCommitCount = txnSubsystem.profilerEntityCommitLogCount;
 
-            LOGGER.severe("EntityCommitProfiler ReportRound[" + reportRound + "], AbsoluteTimeStamp["
-                    + currentTimeStamp + "], ActualRelativeTimeStamp[" + (currentTimeStamp - startTimeStamp)
+            LOGGER.severe("EntityCommitProfiler ReportRound[" + reportRound + "], AbsoluteTimeStamp[" + currentTimeStamp
+                    + "], ActualRelativeTimeStamp[" + (currentTimeStamp - startTimeStamp)
                     + "], ExpectedRelativeTimeStamp[" + (reportIntervalInSeconds * reportRound) + "], IIPS["
                     + ((currentEntityCommitCount - lastEntityCommitCount) / reportIntervalInSeconds) + "], IPS["
                     + (currentEntityCommitCount / (reportRound * reportIntervalInSeconds)) + "]");

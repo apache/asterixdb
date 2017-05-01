@@ -18,12 +18,60 @@
  */
 package org.apache.asterix.common.transactions;
 
+import java.nio.channels.FileChannel;
+
 public interface ILogBuffer {
 
-    public void append(ILogRecord logRecord, long appendLsn);
+    /**
+     * append a log record
+     *
+     * @param logRecord
+     *            the log record to be appended
+     * @param appendLsn
+     *            the lsn for the record in the log file
+     */
+    void append(ILogRecord logRecord, long appendLsn);
 
-    public void flush();
+    /**
+     * flush content of buffer to disk
+     */
+    void flush();
 
-    public void appendWithReplication(ILogRecord logRecord, long appendLSN);
+    /**
+     * @param logSize
+     * @return true if buffer has enough space to append log of size logSize, false otherwise
+     */
+    boolean hasSpace(int logSize);
 
+    /**
+     * Set buffer to be full
+     */
+    void setFull();
+
+    /**
+     * Associate the buffer with a file channel
+     *
+     * @param fileChannel
+     */
+    void setFileChannel(FileChannel fileChannel);
+
+    /**
+     * reset the buffer for re-use
+     */
+    void reset();
+
+    /**
+     * Set current page to be the last page of the associated file
+     */
+    void setLastPage();
+
+    /**
+     * stops the log buffer
+     */
+    void stop();
+
+    /**
+     * @return the default log page size in this buffer
+     */
+    int getLogPageSize();
 }
