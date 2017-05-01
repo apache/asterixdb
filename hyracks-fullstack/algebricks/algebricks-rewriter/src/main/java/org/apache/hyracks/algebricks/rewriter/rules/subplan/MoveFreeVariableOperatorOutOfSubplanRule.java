@@ -19,11 +19,9 @@
 package org.apache.hyracks.algebricks.rewriter.rules.subplan;
 
 import java.util.HashSet;
-import java.util.ListIterator;
 import java.util.Set;
 
 import org.apache.commons.lang3.mutable.Mutable;
-
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
@@ -31,9 +29,9 @@ import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.ProjectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SubplanOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
-import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 import org.apache.hyracks.algebricks.rewriter.rules.AbstractDecorrelationRule;
 
 /**
@@ -71,114 +69,87 @@ public class MoveFreeVariableOperatorOutOfSubplanRule extends AbstractDecorrelat
     @Override
     public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
             throws AlgebricksException {
-        AbstractLogicalOperator op0 = (AbstractLogicalOperator) opRef.getValue();
-        if (op0.getOperatorTag() != LogicalOperatorTag.SUBPLAN) {
+        AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
+        if (op.getOperatorTag() != LogicalOperatorTag.SUBPLAN) {
             return false;
         }
-        SubplanOperator subplan = (SubplanOperator) op0;
+        SubplanOperator subplanOp = (SubplanOperator) op;
+        ILogicalOperator inputOp = subplanOp.getInputs().get(0).getValue();
+        Set<LogicalVariable> liveVarsBeforeSubplan = new HashSet<>();
+        VariableUtilities.getLiveVariables(inputOp, liveVarsBeforeSubplan);
 
-        Mutable<ILogicalOperator> leftRef = subplan.getInputs().get(0);
-        if (((AbstractLogicalOperator) leftRef.getValue()).getOperatorTag() == LogicalOperatorTag.EMPTYTUPLESOURCE) {
-            return false;
-        }
-
-        ListIterator<ILogicalPlan> plansIter = subplan.getNestedPlans().listIterator();
-        ILogicalPlan p = null;
-        while (plansIter.hasNext()) {
-            p = plansIter.next();
-        }
-        if (p == null) {
-            return false;
-        }
-        if (p.getRoots().size() != 1) {
-            return false;
-        }
-        Mutable<ILogicalOperator> opRef1 = p.getRoots().get(0);
-
-        //The root operator will not be movable. Start with the second op
-        AbstractLogicalOperator op1 = (AbstractLogicalOperator) opRef1.getValue();
-        if (op1.getInputs().size() != 1) {
-            return false;
-        }
-        Mutable<ILogicalOperator> op2Ref = op1.getInputs().get(0);
-
-        //Get all variables that come from outside of the loop
-        Set<LogicalVariable> free = new HashSet<LogicalVariable>();
-        OperatorPropertiesUtil.getFreeVariablesInSelfOrDesc(op1, free);
-
-        while (op2Ref != null) {
-            //Get the operator that we want to look at
-            AbstractLogicalOperator op2 = (AbstractLogicalOperator) op2Ref.getValue();
-
-            //Make sure we are looking at subplan with a scan/join
-            if (op2.getInputs().size() != 1 || !descOrSelfIsScanOrJoin(op2)) {
-                return false;
-            }
-            boolean notApplicable = false;
-
-            //Get its used variables
-            Set<LogicalVariable> used = new HashSet<LogicalVariable>();
-
-            //not movable if the operator is not an assign or subplan
-            //Might be helpful in the future for other operations in the future
-            if (movableOperator(op2.getOperatorTag())) {
-                if (op2.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
-                    VariableUtilities.getUsedVariables(op2, used);
-                } else if (op2.getOperatorTag() == LogicalOperatorTag.SUBPLAN) {
-                    // Nested plan must have an aggregate root.
-                    ListIterator<ILogicalPlan> subplansIter = ((SubplanOperator) op2).getNestedPlans().listIterator();
-                    ILogicalPlan plan = null;
-                    while (subplansIter.hasNext()) {
-                        plan = subplansIter.next();
-                    }
-                    if (plan == null) {
-                        return false;
-                    }
-                    if (plan.getRoots().size() != 1) {
-                        return false;
-                    }
-                    ILogicalOperator op3 = plan.getRoots().get(0).getValue();
-                    if (op3.getOperatorTag() != LogicalOperatorTag.AGGREGATE) {
-                        return false;
-                    }
-                    // Used variables do not include ones created in the subplan.
-                    VariableUtilities.getUsedVariables(op2, used);
-                    Set<LogicalVariable> subplanProducedAndDown = new HashSet<LogicalVariable>();
-                    VariableUtilities.getProducedVariablesInDescendantsAndSelf(op3, subplanProducedAndDown);
-                    used.removeAll(subplanProducedAndDown);
-                } else {
-                    notApplicable = true;
+        boolean changed = false;
+        for (ILogicalPlan plan : subplanOp.getNestedPlans()) {
+            for (Mutable<ILogicalOperator> rootRef : plan.getRoots()) {
+                //Make sure we are looking at subplan with a scan/join
+                if (!descOrSelfIsScanOrJoin(rootRef.getValue())) {
+                    continue;
                 }
-            } else {
-                notApplicable = true;
-            }
+                Mutable<ILogicalOperator> currentOpRef = rootRef;
+                ILogicalOperator currentOp = rootRef.getValue();
+                while (currentOp.getInputs().size() == 1) {
+                    Mutable<ILogicalOperator> childOpRef = currentOp.getInputs().get(0);
+                    ILogicalOperator childOp = childOpRef.getValue();
 
-            //Make sure that all of its used variables come from outside
-            for (LogicalVariable var : used) {
-                if (!free.contains(var)) {
-                    notApplicable = true;
+                    // Try to move operators that only uses free variables out of the subplan.
+                    if (movableOperator(currentOp.getOperatorTag())
+                            && independentOperator(currentOp, liveVarsBeforeSubplan)
+                            && producedVariablesCanbePropagated(currentOp)) {
+                        extractOperator(subplanOp, inputOp, currentOpRef);
+                        inputOp = currentOp;
+                        changed = true;
+                    } else {
+                        // in the case the operator is not moved, move currentOpRef to childOpRef.
+                        currentOpRef = childOpRef;
+                    }
+                    currentOp = childOp;
                 }
             }
-
-            if (notApplicable) {
-                op2Ref = op2.getInputs().get(0);
-            } else {
-                //Make the input of op2 be the input of op1
-                op2Ref.setValue(op2.getInputs().get(0).getValue());
-
-                //Make the outside of the subplan the input of op2
-                Mutable<ILogicalOperator> outsideRef = op2.getInputs().get(0);
-                outsideRef.setValue(op0.getInputs().get(0).getValue());
-
-                //Make op2 the input of the subplan
-                Mutable<ILogicalOperator> op2OutsideRef = op0.getInputs().get(0);
-                op2OutsideRef.setValue(op2);
-
-                return true;
-            }
-
         }
-        return false;
+        return changed;
+    }
+
+    // Checks whether the current operator is independent of the nested input pipeline in the subplan.
+    private boolean independentOperator(ILogicalOperator op, Set<LogicalVariable> liveVarsBeforeSubplan)
+            throws AlgebricksException {
+        Set<LogicalVariable> usedVars = new HashSet<>();
+        VariableUtilities.getUsedVariables(op, usedVars);
+        return liveVarsBeforeSubplan.containsAll(usedVars);
+    }
+
+    // Checks whether there is a variable killing operator in the nested pipeline
+    private boolean producedVariablesCanbePropagated(ILogicalOperator operator) throws AlgebricksException {
+        ILogicalOperator currentOperator = operator;
+        // Makes sure the produced variables by operator are not killed in the nested pipeline below it.
+        while (!currentOperator.getInputs().isEmpty()) {
+            LogicalOperatorTag operatorTag = currentOperator.getOperatorTag();
+            if (operatorTag == LogicalOperatorTag.AGGREGATE || operatorTag == LogicalOperatorTag.RUNNINGAGGREGATE
+                    || operatorTag == LogicalOperatorTag.GROUP) {
+                        return false;
+            }
+            if (operatorTag == LogicalOperatorTag.PROJECT) {
+                Set<LogicalVariable> producedVars = new HashSet<>();
+                VariableUtilities.getProducedVariables(currentOperator, producedVars);
+                ProjectOperator projectOperator = (ProjectOperator) currentOperator;
+                if (!projectOperator.getVariables().containsAll(producedVars)) {
+                    return false;
+                }
+            }
+            currentOperator = currentOperator.getInputs().get(0).getValue();
+        }
+        return true;
+    }
+
+    // Extracts the current operator out of the subplan.
+    private void extractOperator(ILogicalOperator subplan, ILogicalOperator inputOp,
+            Mutable<ILogicalOperator> currentOpRef) {
+        // Removes currentOp from the nested pipeline inside subplan.
+        ILogicalOperator currentOp = currentOpRef.getValue();
+        currentOpRef.setValue(currentOp.getInputs().get(0).getValue());
+
+        // Inserts currentOp between subplanOp and inputOp.
+        subplan.getInputs().get(0).setValue(currentOp);
+        currentOp.getInputs().get(0).setValue(inputOp);
     }
 
     protected boolean movableOperator(LogicalOperatorTag operatorTag) {

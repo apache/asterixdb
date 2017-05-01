@@ -6,32 +6,33 @@
           -- UNNEST  |PARTITIONED|
             -- STREAM_PROJECT  |PARTITIONED|
               -- ASSIGN  |PARTITIONED|
-                -- SUBPLAN  |PARTITIONED|
-                        {
-                          -- AGGREGATE  |LOCAL|
-                            -- AGGREGATE  |LOCAL|
-                              -- STREAM_SELECT  |LOCAL|
-                                -- ASSIGN  |LOCAL|
-                                  -- UNNEST  |LOCAL|
-                                    -- ASSIGN  |LOCAL|
-                                      -- ASSIGN  |LOCAL|
-                                        -- STREAM_SELECT  |LOCAL|
-                                          -- ASSIGN  |LOCAL|
-                                            -- NESTED_TUPLE_SOURCE  |LOCAL|
-                        }
+                -- STREAM_PROJECT  |PARTITIONED|
                   -- SUBPLAN  |PARTITIONED|
                           {
                             -- AGGREGATE  |LOCAL|
-                              -- ASSIGN  |LOCAL|
+                              -- AGGREGATE  |LOCAL|
+                                -- STREAM_SELECT  |LOCAL|
+                                  -- ASSIGN  |LOCAL|
+                                    -- UNNEST  |LOCAL|
+                                      -- STREAM_SELECT  |LOCAL|
+                                        -- ASSIGN  |LOCAL|
+                                          -- NESTED_TUPLE_SOURCE  |LOCAL|
+                          }
+                    -- SUBPLAN  |PARTITIONED|
+                            {
+                              -- AGGREGATE  |LOCAL|
                                 -- ASSIGN  |LOCAL|
                                   -- ASSIGN  |LOCAL|
                                     -- ASSIGN  |LOCAL|
-                                      -- STREAM_SELECT  |LOCAL|
-                                        -- NESTED_TUPLE_SOURCE  |LOCAL|
-                          }
-                    -- ASSIGN  |PARTITIONED|
+                                      -- ASSIGN  |LOCAL|
+                                        -- STREAM_SELECT  |LOCAL|
+                                          -- NESTED_TUPLE_SOURCE  |LOCAL|
+                            }
                       -- STREAM_PROJECT  |PARTITIONED|
-                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                          -- DATASOURCE_SCAN  |PARTITIONED|
-                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                        -- ASSIGN  |PARTITIONED|
+                          -- ASSIGN  |PARTITIONED|
+                            -- STREAM_PROJECT  |PARTITIONED|
+                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                -- DATASOURCE_SCAN  |PARTITIONED|
+                                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                    -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

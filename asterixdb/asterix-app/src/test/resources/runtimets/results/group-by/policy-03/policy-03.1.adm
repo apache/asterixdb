@@ -1,0 +1,3 @@
+{ "num_policies": 2, "state": "AZ", "risk": 2.0 }
+{ "num_policies": 2, "state": "CA", "risk": 1.5 }
+{ "num_policies": 3, "state": "UT", "risk": 0.6666666666666666 }

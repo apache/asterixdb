@@ -2736,6 +2736,26 @@
         <output-dir compare="Text">core-02</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="group-by">
+      <compilation-unit name="policy">
+        <output-dir compare="Text">policy</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="group-by">
+      <compilation-unit name="policy-02">
+        <output-dir compare="Text">policy-02</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="group-by">
+      <compilation-unit name="policy-03">
+        <output-dir compare="Text">policy-03</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="group-by">
+      <compilation-unit name="policy-04">
+        <output-dir compare="Text">policy-04</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="index-join">
     <test-case FilePath="index-join">
