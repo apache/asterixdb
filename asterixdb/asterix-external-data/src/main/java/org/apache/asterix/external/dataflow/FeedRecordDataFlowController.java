@@ -177,7 +177,7 @@ public class FeedRecordDataFlowController<T> extends AbstractFeedDataFlowControl
         if (!recordReader.handleException(th)) {
             finish();
         }
-        return closed.get();
+        return !closed.get();
     }
 
     public IRecordReader<T> getReader() {

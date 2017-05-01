@@ -20,7 +20,9 @@ package org.apache.asterix.external.input.record.reader.stream;
 
 import java.io.IOException;
 
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.ExceptionUtils;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.external.api.AsterixInputStream;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -101,7 +103,7 @@ public class SemiStructuredRecordReader extends StreamRecordReader {
                         // corrupted file. clear the buffer and stop reading
                         reader.reset();
                         bufferPosn = bufferLength = 0;
-                        throw new IOException("Malformed input stream");
+                        throw new RuntimeDataException(ErrorCode.RECORD_READER_MALFORMED_INPUT_STREAM);
                     }
                 }
             }
@@ -141,7 +143,7 @@ public class SemiStructuredRecordReader extends StreamRecordReader {
                 } catch (IOException e) {
                     reader.reset();
                     bufferPosn = bufferLength = 0;
-                    throw new IOException("Malformed input stream");
+                    throw new RuntimeDataException(ErrorCode.RECORD_READER_MALFORMED_INPUT_STREAM);
                 }
             }
         } while (!hasFinished);

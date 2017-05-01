@@ -22,6 +22,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.external.api.AsterixInputStream;
 import org.apache.asterix.external.dataflow.AbstractFeedDataFlowController;
 import org.apache.asterix.external.util.ExternalDataConstants;
@@ -153,23 +155,21 @@ public class LocalFSInputStream extends AsterixInputStream {
         if (in == null) {
             return false;
         }
-        if (th instanceof IOException) {
-            // TODO: Change from string check to exception type
-            if (th.getCause().getMessage().contains("Malformed input stream")) {
-                if (currentFile != null) {
-                    try {
-                        logManager.logRecord(currentFile.getAbsolutePath(), "Corrupted input file");
-                    } catch (IOException e) {
-                        LOGGER.warn("Filed to write to feed log file", e);
-                    }
-                    LOGGER.warn("Corrupted input file: " + currentFile.getAbsolutePath());
-                }
+        if (th instanceof HyracksDataException
+                && ((HyracksDataException) th).getErrorCode() == ErrorCode.RECORD_READER_MALFORMED_INPUT_STREAM) {
+            if (currentFile != null) {
                 try {
-                    advance();
-                    return true;
-                } catch (Exception e) {
-                    LOGGER.warn("An exception was thrown while trying to skip a file", e);
+                    logManager.logRecord(currentFile.getAbsolutePath(), "Corrupted input file");
+                } catch (IOException e) {
+                    LOGGER.warn("Filed to write to feed log file", e);
                 }
+                LOGGER.warn("Corrupted input file: " + currentFile.getAbsolutePath());
+            }
+            try {
+                advance();
+                return true;
+            } catch (Exception e) {
+                LOGGER.warn("An exception was thrown while trying to skip a file", e);
             }
         }
         LOGGER.warn("Failed to recover from failure", th);
