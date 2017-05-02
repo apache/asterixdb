@@ -120,7 +120,13 @@ public class ExternalGroupWriteOperatorNodePushable extends AbstractUnaryOutputS
 
         for (int i = 0; i < runs.length; i++) {
             if (runs[i] != null) {
-                ISpillableTable partitionTable = spillableTableFactory.buildSpillableTable(ctx, numOfTuples[i],
+                // Calculates the hash table size (# of unique hash values) based on the budget and a tuple size.
+                int memoryBudgetInBytes = ctx.getInitialFrameSize() * frameLimit;
+                int groupByColumnsCount = mergeGroupFields.length;
+                int hashTableCardinality = ExternalGroupOperatorDescriptor.calculateGroupByTableCardinality(
+                        memoryBudgetInBytes, groupByColumnsCount, ctx.getInitialFrameSize());
+                hashTableCardinality = (int) Math.min(hashTableCardinality, numOfTuples[i]);
+                ISpillableTable partitionTable = spillableTableFactory.buildSpillableTable(ctx, hashTableCardinality,
                         runs[i].getFileSize(), mergeGroupFields, groupByComparators, nmkComputer,
                         mergeAggregatorFactory, partialAggRecordDesc, outRecordDesc, frameLimit, level);
                 RunFileWriter[] runFileWriters = new RunFileWriter[partitionTable.getNumPartitions()];

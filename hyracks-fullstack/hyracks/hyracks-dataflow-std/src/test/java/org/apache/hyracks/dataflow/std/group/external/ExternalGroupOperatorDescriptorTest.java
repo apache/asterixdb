@@ -17,33 +17,24 @@
  *  under the License.
  */
 
-package org.apache.hyracks.algebricks.core.algebra.operators.physical;
+package org.apache.hyracks.dataflow.std.group.external;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.apache.commons.lang3.mutable.Mutable;
-import org.apache.commons.lang3.mutable.MutableObject;
-import org.apache.hyracks.algebricks.common.utils.Pair;
-import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
-import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
-import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
+import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
+import org.apache.hyracks.api.job.JobSpecification;
 import org.junit.Assert;
 import org.junit.Test;
 
 import junit.extensions.PA;
 
-public class ExternalGroupByPOperatorTest {
+public class ExternalGroupOperatorDescriptorTest {
 
     @Test
     public void testCalculateGroupByTableCardinality() throws Exception {
 
-        // Creates a dummy variable and an expression that are needed by the operator. They are not used by this test.
-        LogicalVariable v = new LogicalVariable(0);
-        MutableObject<ILogicalExpression> e = new MutableObject<ILogicalExpression>(new VariableReferenceExpression(v));
-        List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> gbyList = new ArrayList<>();
-        gbyList.add(new Pair<>(v, e));
-        ExternalGroupByPOperator eGByOp = new ExternalGroupByPOperator(gbyList, 0, 0);
+        // Sets a dummy variable.
+        IOperatorDescriptorRegistry spec = new JobSpecification(32768);
+        ExternalGroupOperatorDescriptor eGByOp =
+                new ExternalGroupOperatorDescriptor(spec, 0, 0, null, 4, null, null, null, null, null, null, null);
 
         // Test 1: compiler.groupmemory: 512 bytes, frame size: 256 bytes, with 1 column group-by
         long memoryBudgetInBytes = 512;
