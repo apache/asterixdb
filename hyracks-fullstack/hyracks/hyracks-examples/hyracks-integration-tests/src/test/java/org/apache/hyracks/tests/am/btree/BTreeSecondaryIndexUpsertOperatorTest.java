@@ -40,6 +40,8 @@ import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallbackFactory;
 import org.junit.Before;
 import org.junit.Test;
 
+import static org.apache.hyracks.tests.am.btree.DataSetConstants.*;
+
 public class BTreeSecondaryIndexUpsertOperatorTest extends AbstractBTreeOperatorTest {
 
     @Override
@@ -85,7 +87,7 @@ public class BTreeSecondaryIndexUpsertOperatorTest extends AbstractBTreeOperator
         BTreeSearchOperatorDescriptor secondaryBtreeSearchOp = new BTreeSearchOperatorDescriptor(spec,
                 secondaryRecDesc, storageManager, lcManagerProvider, secondarySplitProvider, secondaryTypeTraits,
                 secondaryComparatorFactories, secondaryBloomFilterKeyFields, secondaryLowKeyFields,
-                secondaryHighKeyFields, true, true, dataflowHelperFactory, false, false, null,
+                secondaryHighKeyFields, true, true, primaryDataflowHelperFactory, false, false, null,
                 NoOpOperationCallbackFactory.INSTANCE, null, null, new LinkedMetadataPageManagerFactory());
 
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, secondaryBtreeSearchOp, NC1_ID);
@@ -99,7 +101,7 @@ public class BTreeSecondaryIndexUpsertOperatorTest extends AbstractBTreeOperator
         BTreeSearchOperatorDescriptor primaryBtreeSearchOp = new BTreeSearchOperatorDescriptor(spec, primaryRecDesc,
                 storageManager, lcManagerProvider, primarySplitProvider, primaryTypeTraits, primaryComparatorFactories,
                 primaryBloomFilterKeyFields, primaryLowKeyFields, primaryHighKeyFields, true, true,
-                dataflowHelperFactory, false, false, null, NoOpOperationCallbackFactory.INSTANCE, null, null,
+                primaryDataflowHelperFactory, false, false, null, NoOpOperationCallbackFactory.INSTANCE, null, null,
                 new LinkedMetadataPageManagerFactory());
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, primaryBtreeSearchOp, NC1_ID);
 
@@ -116,7 +118,7 @@ public class BTreeSecondaryIndexUpsertOperatorTest extends AbstractBTreeOperator
     }
 
     @Override
-    protected IIndexDataflowHelperFactory createDataFlowHelperFactory() {
+    protected IIndexDataflowHelperFactory createDataFlowHelperFactory(int[] btreeFields, int[] filterFields) {
         return ((BTreeOperatorTestHelper) testHelper).createDataFlowHelperFactory();
     }
 

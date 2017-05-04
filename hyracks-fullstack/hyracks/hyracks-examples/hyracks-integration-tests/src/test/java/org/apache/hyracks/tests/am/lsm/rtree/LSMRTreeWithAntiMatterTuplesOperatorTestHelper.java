@@ -24,6 +24,7 @@ import java.util.Map;
 
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ILinearizeComparatorFactory;
+import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.control.nc.io.IOManager;
 import org.apache.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
@@ -38,6 +39,7 @@ import org.apache.hyracks.tests.am.common.LSMTreeOperatorTestHelper;
 public class LSMRTreeWithAntiMatterTuplesOperatorTestHelper extends LSMTreeOperatorTestHelper {
 
     private static final Map<String, String> MERGE_POLICY_PROPERTIES;
+
     static {
         MERGE_POLICY_PROPERTIES = new HashMap<String, String>();
         MERGE_POLICY_PROPERTIES.put("num-components", "3");
@@ -49,11 +51,13 @@ public class LSMRTreeWithAntiMatterTuplesOperatorTestHelper extends LSMTreeOpera
 
     public IIndexDataflowHelperFactory createDataFlowHelperFactory(
             IPrimitiveValueProviderFactory[] valueProviderFactories, RTreePolicyType rtreePolicyType,
-            IBinaryComparatorFactory[] btreeComparatorFactories, ILinearizeComparatorFactory linearizerCmpFactory) {
+            IBinaryComparatorFactory[] btreeComparatorFactories, ILinearizeComparatorFactory linearizerCmpFactory,
+            int[] rtreeFields, ITypeTraits[] filterTypeTraits, IBinaryComparatorFactory[] filterCmpFactories,
+            int[] filterFields) {
         return new LSMRTreeWithAntiMatterTuplesDataflowHelperFactory(valueProviderFactories, rtreePolicyType,
                 btreeComparatorFactories, virtualBufferCacheProvider, new ConstantMergePolicyFactory(),
                 MERGE_POLICY_PROPERTIES, ThreadCountingOperationTrackerFactory.INSTANCE,
-                SynchronousSchedulerProvider.INSTANCE, NoOpIOOperationCallback.INSTANCE, linearizerCmpFactory, null,
-                null, null, null, true, false);
+                SynchronousSchedulerProvider.INSTANCE, NoOpIOOperationCallback.INSTANCE, linearizerCmpFactory,
+                rtreeFields, filterTypeTraits, filterCmpFactories, filterFields, true, false);
     }
 }

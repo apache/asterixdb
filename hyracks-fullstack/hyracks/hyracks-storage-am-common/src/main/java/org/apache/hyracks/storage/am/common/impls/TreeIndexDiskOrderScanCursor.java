@@ -20,6 +20,7 @@
 package org.apache.hyracks.storage.am.common.impls;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.common.api.ICursorInitialState;
 import org.apache.hyracks.storage.am.common.api.ISearchPredicate;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexCursor;
@@ -56,6 +57,16 @@ public class TreeIndexDiskOrderScanCursor implements ITreeIndexCursor {
     @Override
     public ITreeIndexTupleReference getTuple() {
         return frameTuple;
+    }
+
+    @Override
+    public ITupleReference getFilterMinTuple() {
+        return null;
+    }
+
+    @Override
+    public ITupleReference getFilterMaxTuple() {
+        return null;
     }
 
     @Override

@@ -21,6 +21,7 @@ package org.apache.hyracks.tests.am.lsm.rtree;
 
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ILinearizeComparatorFactory;
+import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
@@ -29,7 +30,8 @@ import org.apache.hyracks.test.support.TestStorageManagerComponentHolder;
 import org.apache.hyracks.tests.am.common.ITreeIndexOperatorTestHelper;
 import org.apache.hyracks.tests.am.rtree.RTreeSecondaryIndexInsertOperatorTest;
 
-public class LSMRTreeWithAntiMatterTuplesSecondaryIndexInsertOperatorTest extends RTreeSecondaryIndexInsertOperatorTest {
+public class LSMRTreeWithAntiMatterTuplesSecondaryIndexInsertOperatorTest
+        extends RTreeSecondaryIndexInsertOperatorTest {
     public LSMRTreeWithAntiMatterTuplesSecondaryIndexInsertOperatorTest() {
         this.rTreeType = RTreeType.LSMRTREE_WITH_ANTIMATTER;
     }
@@ -43,8 +45,10 @@ public class LSMRTreeWithAntiMatterTuplesSecondaryIndexInsertOperatorTest extend
     protected IIndexDataflowHelperFactory createDataFlowHelperFactory(
             IPrimitiveValueProviderFactory[] secondaryValueProviderFactories, RTreePolicyType rtreePolicyType,
             IBinaryComparatorFactory[] btreeComparatorFactories, ILinearizeComparatorFactory linearizerCmpFactory,
-            int[] btreeFields) {
-        return ((LSMRTreeWithAntiMatterTuplesOperatorTestHelper) testHelper).createDataFlowHelperFactory(
-                secondaryValueProviderFactories, rtreePolicyType, btreeComparatorFactories, linearizerCmpFactory);
+            int[] btreeFields, int[] rtreeFields, ITypeTraits[] filterTypeTraits,
+            IBinaryComparatorFactory[] filterCmpFactories, int[] filterFields) {
+        return ((LSMRTreeWithAntiMatterTuplesOperatorTestHelper) testHelper)
+                .createDataFlowHelperFactory(secondaryValueProviderFactories, rtreePolicyType, btreeComparatorFactories,
+                        linearizerCmpFactory, rtreeFields, filterTypeTraits, filterCmpFactories, filterFields);
     }
 }

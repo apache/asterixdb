@@ -19,9 +19,6 @@
 
 package org.apache.hyracks.tests.am.rtree;
 
-import java.io.DataOutput;
-import java.io.File;
-
 import org.apache.hyracks.api.constraints.PartitionConstraintHelper;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ILinearizeComparatorFactory;
@@ -59,6 +56,7 @@ import org.apache.hyracks.storage.am.common.dataflow.IndexDropOperatorDescriptor
 import org.apache.hyracks.storage.am.common.dataflow.TreeIndexBulkLoadOperatorDescriptor;
 import org.apache.hyracks.storage.am.common.dataflow.TreeIndexCreateOperatorDescriptor;
 import org.apache.hyracks.storage.am.common.dataflow.TreeIndexInsertUpdateDeleteOperatorDescriptor;
+import org.apache.hyracks.storage.am.common.freepage.AppendOnlyLinkedMetadataPageManagerFactory;
 import org.apache.hyracks.storage.am.common.freepage.LinkedMetadataPageManagerFactory;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallbackFactory;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
@@ -75,6 +73,9 @@ import org.apache.hyracks.tests.integration.AbstractIntegrationTest;
 import org.junit.After;
 import org.junit.Before;
 
+import java.io.DataOutput;
+import java.io.File;
+
 public abstract class AbstractRTreeOperatorTest extends AbstractIntegrationTest {
     static {
         TestStorageManagerComponentHolder.init(8192, 20, 20);
@@ -90,7 +91,7 @@ public abstract class AbstractRTreeOperatorTest extends AbstractIntegrationTest 
 
     protected final IStorageManager storageManager = new TestStorageManager();
     protected final IIndexLifecycleManagerProvider lcManagerProvider = new TestIndexLifecycleManagerProvider();
-    protected final IPageManagerFactory pageManagerFactory = new LinkedMetadataPageManagerFactory();
+    protected final IPageManagerFactory pageManagerFactory = AppendOnlyLinkedMetadataPageManagerFactory.INSTANCE;
     protected IIndexDataflowHelperFactory rtreeDataflowHelperFactory;
     protected IIndexDataflowHelperFactory btreeDataflowHelperFactory = new BTreeDataflowHelperFactory(true);
 
@@ -122,6 +123,12 @@ public abstract class AbstractRTreeOperatorTest extends AbstractIntegrationTest 
             DoubleSerializerDeserializer.INSTANCE, DoubleSerializerDeserializer.INSTANCE,
             new UTF8StringSerializerDeserializer() });
 
+    protected final RecordDescriptor secondaryWithFilterRecDesc = new RecordDescriptor(new ISerializerDeserializer[] {
+            DoubleSerializerDeserializer.INSTANCE, DoubleSerializerDeserializer.INSTANCE,
+            DoubleSerializerDeserializer.INSTANCE, DoubleSerializerDeserializer.INSTANCE,
+            new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+            new UTF8StringSerializerDeserializer() });
+
     // This is only used for the LSMRTree. We need a comparator Factories for
     // the BTree component of the LSMRTree.
     protected int btreeKeyFieldCount = 5;
@@ -141,11 +148,11 @@ public abstract class AbstractRTreeOperatorTest extends AbstractIntegrationTest 
         testHelper = createTestHelper();
 
         primaryFileName = testHelper.getPrimaryIndexName();
-        primarySplitProvider = new ConstantFileSplitProvider(new FileSplit[] { new ManagedFileSplit(NC1_ID,
-                primaryFileName) });
+        primarySplitProvider =
+                new ConstantFileSplitProvider(new FileSplit[] { new ManagedFileSplit(NC1_ID, primaryFileName) });
         secondaryFileName = testHelper.getSecondaryIndexName();
-        secondarySplitProvider = new ConstantFileSplitProvider(new FileSplit[] { new ManagedFileSplit(NC1_ID,
-                secondaryFileName) });
+        secondarySplitProvider =
+                new ConstantFileSplitProvider(new FileSplit[] { new ManagedFileSplit(NC1_ID, secondaryFileName) });
 
         // field, type and key declarations for primary index
         primaryTypeTraits[0] = UTF8StringPointable.TYPE_TRAITS;
@@ -172,14 +179,24 @@ public abstract class AbstractRTreeOperatorTest extends AbstractIntegrationTest 
         secondaryComparatorFactories[3] = PointableBinaryComparatorFactory.of(DoublePointable.FACTORY);
 
         // This only used for LSMRTree
+        int[] rtreeFields = null;
+        int[] filterFields = null;
+        ITypeTraits[] filterTypes = null;
+        IBinaryComparatorFactory[] filterCmpFactories = null;
+        if (rTreeType == RTreeType.LSMRTREE || rTreeType == RTreeType.LSMRTREE_WITH_ANTIMATTER) {
+            rtreeFields = new int[] { 0, 1, 2, 3, 4 };
+            filterFields = new int[] { 4 };
+            filterTypes = new ITypeTraits[] { UTF8StringPointable.TYPE_TRAITS };
+            filterCmpFactories =
+                    new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) };
+        }
+
         int[] btreeFields = null;
         if (rTreeType == RTreeType.LSMRTREE) {
             btreeKeyFieldCount = 1;
             btreeComparatorFactories = new IBinaryComparatorFactory[btreeKeyFieldCount];
             btreeComparatorFactories[0] = PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY);
-            btreeFields = new int[1];
-            btreeFields[0] = 4;
-
+            btreeFields = new int[] { 4 };
         } else {
             btreeComparatorFactories[0] = PointableBinaryComparatorFactory.of(DoublePointable.FACTORY);
             btreeComparatorFactories[1] = PointableBinaryComparatorFactory.of(DoublePointable.FACTORY);
@@ -191,17 +208,19 @@ public abstract class AbstractRTreeOperatorTest extends AbstractIntegrationTest 
         IPrimitiveValueProviderFactory[] secondaryValueProviderFactories = RTreeUtils
                 .createPrimitiveValueProviderFactories(secondaryComparatorFactories.length, DoublePointable.FACTORY);
 
-        rtreeDataflowHelperFactory = createDataFlowHelperFactory(secondaryValueProviderFactories,
-                RTreePolicyType.RSTARTREE, btreeComparatorFactories,
-                LSMRTreeUtils.proposeBestLinearizer(secondaryTypeTraits, secondaryComparatorFactories.length),
-                btreeFields);
+        rtreeDataflowHelperFactory =
+                createDataFlowHelperFactory(secondaryValueProviderFactories, RTreePolicyType.RSTARTREE,
+                        btreeComparatorFactories,
+                        LSMRTreeUtils.proposeBestLinearizer(secondaryTypeTraits, secondaryComparatorFactories.length),
+                        btreeFields, rtreeFields, filterTypes, filterCmpFactories, filterFields);
 
     }
 
     protected abstract IIndexDataflowHelperFactory createDataFlowHelperFactory(
             IPrimitiveValueProviderFactory[] secondaryValueProviderFactories, RTreePolicyType rtreePolicyType,
             IBinaryComparatorFactory[] btreeComparatorFactories, ILinearizeComparatorFactory linearizerCmpFactory,
-            int[] btreeFields) throws HyracksDataException;
+            int[] btreeFields, int[] rtree, ITypeTraits[] filterTypeTraits, IBinaryComparatorFactory[] filterCmpFactories,
+            int[] filterFields) throws HyracksDataException;
 
     protected void createPrimaryIndex() throws Exception {
         JobSpecification spec = new JobSpecification();

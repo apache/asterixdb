@@ -33,6 +33,10 @@ import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallbackFactory;
 import org.junit.Before;
 import org.junit.Test;
 
+import static org.apache.hyracks.tests.am.btree.DataSetConstants.primaryBloomFilterKeyFields;
+import static org.apache.hyracks.tests.am.btree.DataSetConstants.primaryComparatorFactories;
+import static org.apache.hyracks.tests.am.btree.DataSetConstants.primaryTypeTraits;
+
 public class BTreePrimaryIndexStatsOperatorTest extends AbstractBTreeOperatorTest {
 
     @Override
@@ -49,7 +53,7 @@ public class BTreePrimaryIndexStatsOperatorTest extends AbstractBTreeOperatorTes
 
         TreeIndexStatsOperatorDescriptor primaryStatsOp = new TreeIndexStatsOperatorDescriptor(spec, storageManager,
                 lcManagerProvider, primarySplitProvider, primaryTypeTraits, primaryComparatorFactories,
-                primaryBloomFilterKeyFields, dataflowHelperFactory, NoOpOperationCallbackFactory.INSTANCE,
+                primaryBloomFilterKeyFields, primaryDataflowHelperFactory, NoOpOperationCallbackFactory.INSTANCE,
                 pageManagerFactory);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, primaryStatsOp, NC1_ID);
         IFileSplitProvider outSplits = new ConstantFileSplitProvider(new FileSplit[] { createFile(nc1) });
@@ -62,7 +66,7 @@ public class BTreePrimaryIndexStatsOperatorTest extends AbstractBTreeOperatorTes
     }
 
     @Override
-    protected IIndexDataflowHelperFactory createDataFlowHelperFactory() {
+    protected IIndexDataflowHelperFactory createDataFlowHelperFactory(int[] btreeFields, int[] filterFields) {
         return ((BTreeOperatorTestHelper) testHelper).createDataFlowHelperFactory();
     }
 

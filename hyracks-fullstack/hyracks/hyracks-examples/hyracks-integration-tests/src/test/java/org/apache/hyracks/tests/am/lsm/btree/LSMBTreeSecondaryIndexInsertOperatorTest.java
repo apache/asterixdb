@@ -32,7 +32,8 @@ public class LSMBTreeSecondaryIndexInsertOperatorTest extends BTreeSecondaryInde
     }
 
     @Override
-    protected IIndexDataflowHelperFactory createDataFlowHelperFactory() {
-        return ((LSMBTreeOperatorTestHelper) testHelper).createDataFlowHelperFactory();
+    protected IIndexDataflowHelperFactory createDataFlowHelperFactory(int[] btreeFields, int[] filterFields) {
+        return ((LSMBTreeOperatorTestHelper) testHelper).createDataFlowHelperFactory(btreeFields, filterFields);
     }
+
 }

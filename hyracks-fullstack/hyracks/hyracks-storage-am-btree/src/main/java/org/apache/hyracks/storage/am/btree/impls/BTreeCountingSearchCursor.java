@@ -234,6 +234,16 @@ public class BTreeCountingSearchCursor implements ITreeIndexCursor {
     }
 
     @Override
+    public ITupleReference getFilterMinTuple() {
+        return null;
+    }
+
+    @Override
+    public ITupleReference getFilterMaxTuple() {
+        return null;
+    }
+
+    @Override
     public ICachedPage getPage() {
         return page;
     }

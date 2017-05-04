@@ -94,6 +94,16 @@ public class OnDiskInvertedIndexSearchCursor implements IIndexCursor {
     }
 
     @Override
+    public ITupleReference getFilterMinTuple() {
+        return null;
+    }
+
+    @Override
+    public ITupleReference getFilterMaxTuple() {
+        return null;
+    }
+
+    @Override
     public void reset() {
         currentBufferIndex = 0;
         tupleIndex = 0;

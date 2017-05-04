@@ -86,6 +86,16 @@ public class LSMBTreeSearchCursor implements ITreeIndexCursor {
     }
 
     @Override
+    public ITupleReference getFilterMinTuple() {
+        return currentCursor.getFilterMinTuple();
+    }
+
+    @Override
+    public ITupleReference getFilterMaxTuple() {
+        return currentCursor.getFilterMaxTuple();
+    }
+
+    @Override
     public ICachedPage getPage() {
         return currentCursor.getPage();
     }

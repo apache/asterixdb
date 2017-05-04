@@ -40,7 +40,7 @@ public class ExternalBTreeSearchOperatorNodePushable extends BTreeSearchOperator
             IHyracksTaskContext ctx, int partition, IRecordDescriptorProvider recordDescProvider, int[] lowKeyFields,
             int[] highKeyFields, boolean lowKeyInclusive, boolean highKeyInclusive) throws HyracksDataException {
         super(opDesc, ctx, partition, recordDescProvider, lowKeyFields, highKeyFields, lowKeyInclusive,
-                highKeyInclusive, null, null);
+                highKeyInclusive, false, null, null);
     }
 
     // We override the open function to search a specific version of the index

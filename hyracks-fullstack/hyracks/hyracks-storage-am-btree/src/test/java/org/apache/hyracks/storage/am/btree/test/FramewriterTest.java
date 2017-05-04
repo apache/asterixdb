@@ -285,7 +285,7 @@ public class FramewriterTest {
             for (IRecordDescriptorProvider recordDescProvider : recordDescProviders) {
                 for (IHyracksTaskContext ctx : ctxs) {
                     BTreeSearchOperatorNodePushable writer = new BTreeSearchOperatorNodePushable(opDesc, ctx, partition,
-                            recordDescProvider, keys, keys, lowKeyInclusive, highKeyInclusive, keys, keys);
+                            recordDescProvider, keys, keys, lowKeyInclusive, highKeyInclusive, false, keys, keys);
                     writers.add(writer);
                 }
             }
@@ -399,6 +399,7 @@ public class FramewriterTest {
             // normal
             indexHelpers[j] = Mockito.mock(IIndexDataflowHelper.class);
             Mockito.when(indexHelpers[j].getIndexInstance()).thenReturn(indexes[i]);
+            Mockito.when(indexHelpers[j].getNumFilterFields()).thenReturn(0);
 
             // throws exception when opened
             j++;

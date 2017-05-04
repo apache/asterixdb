@@ -36,9 +36,9 @@ public class RTreeSearchOperatorNodePushable extends IndexSearchOperatorNodePush
     protected MultiComparator cmp;
 
     public RTreeSearchOperatorNodePushable(AbstractTreeIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
-            int partition, IRecordDescriptorProvider recordDescProvider, int[] keyFields, int[] minFilterFieldIndexes,
-            int[] maxFilterFieldIndexes) throws HyracksDataException {
-        super(opDesc, ctx, partition, recordDescProvider, minFilterFieldIndexes, maxFilterFieldIndexes);
+            int partition, IRecordDescriptorProvider recordDescProvider, int[] keyFields, boolean appendFilter,
+            int[] minFilterFieldIndexes, int[] maxFilterFieldIndexes) throws HyracksDataException {
+        super(opDesc, ctx, partition, recordDescProvider, appendFilter, minFilterFieldIndexes, maxFilterFieldIndexes);
         if (keyFields != null && keyFields.length > 0) {
             searchKey = new PermutingFrameTupleReference();
             searchKey.setFieldPermutation(keyFields);
@@ -67,6 +67,6 @@ public class RTreeSearchOperatorNodePushable extends IndexSearchOperatorNodePush
 
     @Override
     protected int getFieldCount() {
-        return ((ITreeIndex)index).getFieldCount();
+        return ((ITreeIndex) index).getFieldCount();
     }
 }

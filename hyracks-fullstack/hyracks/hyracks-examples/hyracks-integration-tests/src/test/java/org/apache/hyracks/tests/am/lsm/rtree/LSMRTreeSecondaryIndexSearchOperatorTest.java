@@ -21,6 +21,7 @@ package org.apache.hyracks.tests.am.lsm.rtree;
 
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ILinearizeComparatorFactory;
+import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
@@ -43,8 +44,10 @@ public class LSMRTreeSecondaryIndexSearchOperatorTest extends RTreeSecondaryInde
     protected IIndexDataflowHelperFactory createDataFlowHelperFactory(
             IPrimitiveValueProviderFactory[] secondaryValueProviderFactories, RTreePolicyType rtreePolicyType,
             IBinaryComparatorFactory[] btreeComparatorFactories, ILinearizeComparatorFactory linearizerCmpFactory,
-            int[] btreeFields) {
-        return ((LSMRTreeOperatorTestHelper) testHelper).createDataFlowHelperFactory(secondaryValueProviderFactories,
-                rtreePolicyType, btreeComparatorFactories, linearizerCmpFactory, btreeFields);
+            int[] btreeFields, int[] rtreeFields, ITypeTraits[] filterTypeTraits, IBinaryComparatorFactory[] filterCmpFactories,
+            int[] filterFields) {
+        return ((LSMRTreeOperatorTestHelper) testHelper)
+                .createDataFlowHelperFactory(secondaryValueProviderFactories, rtreePolicyType, btreeComparatorFactories,
+                        linearizerCmpFactory, btreeFields, rtreeFields, filterTypeTraits, filterCmpFactories, filterFields);
     }
 }

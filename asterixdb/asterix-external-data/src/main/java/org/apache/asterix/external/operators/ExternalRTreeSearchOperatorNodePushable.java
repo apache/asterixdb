@@ -39,7 +39,7 @@ public class ExternalRTreeSearchOperatorNodePushable extends RTreeSearchOperator
 
     public ExternalRTreeSearchOperatorNodePushable(AbstractTreeIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
             int partition, IRecordDescriptorProvider recordDescProvider, int[] keyFields) throws HyracksDataException {
-        super(opDesc, ctx, partition, recordDescProvider, keyFields, null, null);
+        super(opDesc, ctx, partition, recordDescProvider, keyFields, false, null, null);
     }
 
     // We override this method to specify the searched version of the index

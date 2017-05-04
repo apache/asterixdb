@@ -40,4 +40,6 @@ public interface IIndexDataflowHelper {
     public IIndex getIndexInstance();
 
     public LocalResource getResource() throws HyracksDataException;
+
+    public int getNumFilterFields();
 }

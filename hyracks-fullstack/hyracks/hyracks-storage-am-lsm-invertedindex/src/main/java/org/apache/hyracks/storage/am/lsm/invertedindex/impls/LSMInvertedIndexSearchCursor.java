@@ -32,6 +32,7 @@ import org.apache.hyracks.storage.am.common.api.ISearchPredicate;
 import org.apache.hyracks.storage.am.common.ophelpers.MultiComparator;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent.LSMComponentType;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilter;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMHarness;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import org.apache.hyracks.storage.am.lsm.common.impls.BloomFilterAwareBTreePointSearchCursor;
@@ -189,5 +190,24 @@ public class LSMInvertedIndexSearchCursor implements IIndexCursor {
     @Override
     public ITupleReference getTuple() {
         return currentCursor.getTuple();
+    }
+
+    @Override
+    public ITupleReference getFilterMinTuple() {
+        ILSMComponentFilter filter = getComponentFilter();
+        return filter == null ? null : filter.getMinTuple();
+    }
+
+    @Override
+    public ITupleReference getFilterMaxTuple() {
+        ILSMComponentFilter filter = getComponentFilter();
+        return filter == null ? null : filter.getMaxTuple();
+    }
+
+    private ILSMComponentFilter getComponentFilter() {
+        if (accessorIndex < 0) {
+            return null;
+        }
+        return operationalComponents.get(accessorIndex).getLSMComponentFilter();
     }
 }

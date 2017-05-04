@@ -79,6 +79,16 @@ public class RTreeSearchCursor implements ITreeIndexCursor {
         return frameTuple;
     }
 
+    @Override
+    public ITupleReference getFilterMinTuple() {
+        return null;
+    }
+
+    @Override
+    public ITupleReference getFilterMaxTuple() {
+        return null;
+    }
+
     public int getTupleOffset() {
         return leafFrame.getTupleOffset(currentTupleIndex);
     }

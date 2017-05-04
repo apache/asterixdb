@@ -211,7 +211,7 @@ public class TestNodeController {
                 filterFields, storageComponentProvider.getMetadataPageManagerFactory());
         BTreeSearchOperatorNodePushable searchOp = new BTreeSearchOperatorNodePushable(searchOpDesc, ctx, 0,
                 primaryIndexInfo.getSearchRecordDescriptorProvider(), /*primaryIndexInfo.primaryKeyIndexes*/null,
-                /*primaryIndexInfo.primaryKeyIndexes*/null, true, true, filterFields, filterFields);
+                /*primaryIndexInfo.primaryKeyIndexes*/null, true, true, false, filterFields, filterFields);
         emptyTupleOp.setFrameWriter(0, searchOp,
                 primaryIndexInfo.getSearchRecordDescriptorProvider().getInputRecordDescriptor(null, 0));
         searchOp.setOutputFrameWriter(0, countOp, primaryIndexInfo.rDesc);

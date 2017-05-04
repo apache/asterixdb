@@ -48,6 +48,7 @@ public class BTreeSearchOperatorDescriptor extends AbstractTreeIndexOperatorDesc
     protected final boolean highKeyInclusive;
     private final int[] minFilterFieldIndexes;
     private final int[] maxFilterFieldIndexes;
+    private boolean appendFilter;
 
     public BTreeSearchOperatorDescriptor(IOperatorDescriptorRegistry spec, RecordDescriptor recDesc,
             IStorageManager storageManager, IIndexLifecycleManagerProvider lifecycleManagerProvider,
@@ -56,7 +57,8 @@ public class BTreeSearchOperatorDescriptor extends AbstractTreeIndexOperatorDesc
             int[] highKeyFields, boolean lowKeyInclusive, boolean highKeyInclusive,
             IIndexDataflowHelperFactory dataflowHelperFactory, boolean retainInput, boolean retainMissing,
             IMissingWriterFactory missingWriterFactory, ISearchOperationCallbackFactory searchOpCallbackProvider,
-            int[] minFilterFieldIndexes, int[] maxFilterFieldIndexes, IPageManagerFactory pageManagerFactory) {
+            boolean appendFilter, int[] minFilterFieldIndexes, int[] maxFilterFieldIndexes,
+            IPageManagerFactory pageManagerFactory) {
         super(spec, 1, 1, recDesc, storageManager, lifecycleManagerProvider, fileSplitProvider, typeTraits,
                 comparatorFactories, bloomFilterKeyFields, dataflowHelperFactory, null, retainInput, retainMissing,
                 missingWriterFactory, NoOpLocalResourceFactoryProvider.INSTANCE, searchOpCallbackProvider,
@@ -67,12 +69,28 @@ public class BTreeSearchOperatorDescriptor extends AbstractTreeIndexOperatorDesc
         this.highKeyInclusive = highKeyInclusive;
         this.minFilterFieldIndexes = minFilterFieldIndexes;
         this.maxFilterFieldIndexes = maxFilterFieldIndexes;
+        this.appendFilter = appendFilter;
+    }
+
+    public BTreeSearchOperatorDescriptor(IOperatorDescriptorRegistry spec, RecordDescriptor recDesc,
+            IStorageManager storageManager, IIndexLifecycleManagerProvider lifecycleManagerProvider,
+            IFileSplitProvider fileSplitProvider, ITypeTraits[] typeTraits,
+            IBinaryComparatorFactory[] comparatorFactories, int[] bloomFilterKeyFields, int[] lowKeyFields,
+            int[] highKeyFields, boolean lowKeyInclusive, boolean highKeyInclusive,
+            IIndexDataflowHelperFactory dataflowHelperFactory, boolean retainInput, boolean retainMissing,
+            IMissingWriterFactory missingWriterFactory, ISearchOperationCallbackFactory searchOpCallbackProvider,
+            int[] minFilterFieldIndexes, int[] maxFilterFieldIndexes, IPageManagerFactory pageManagerFactory) {
+        this(spec, recDesc, storageManager, lifecycleManagerProvider, fileSplitProvider, typeTraits,
+                comparatorFactories, bloomFilterKeyFields, lowKeyFields, highKeyFields, lowKeyInclusive,
+                highKeyInclusive, dataflowHelperFactory, retainInput, retainMissing, missingWriterFactory,
+                searchOpCallbackProvider, false, minFilterFieldIndexes, maxFilterFieldIndexes, pageManagerFactory);
     }
 
     @Override
     public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) throws HyracksDataException {
         return new BTreeSearchOperatorNodePushable(this, ctx, partition, recordDescProvider, lowKeyFields,
-                highKeyFields, lowKeyInclusive, highKeyInclusive, minFilterFieldIndexes, maxFilterFieldIndexes);
+                highKeyFields, lowKeyInclusive, highKeyInclusive, appendFilter,
+                minFilterFieldIndexes, maxFilterFieldIndexes);
     }
 }

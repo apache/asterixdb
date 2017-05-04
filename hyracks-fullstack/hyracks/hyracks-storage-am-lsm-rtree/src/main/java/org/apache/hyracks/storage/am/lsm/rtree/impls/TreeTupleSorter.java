@@ -96,6 +96,16 @@ public class TreeTupleSorter implements ITreeIndexCursor {
         return frameTuple1;
     }
 
+    @Override
+    public ITupleReference getFilterMinTuple() {
+        return null;
+    }
+
+    @Override
+    public ITupleReference getFilterMaxTuple() {
+        return null;
+    }
+
     public void insertTupleEntry(int pageId, int tupleOffset) {
         if (numTuples * 2 == tPointers.length) {
             int[] newData = new int[tPointers.length + ARRAY_GROWTH];

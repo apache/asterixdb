@@ -39,7 +39,7 @@ public class BTreeUpdateSearchOperatorNodePushable extends BTreeSearchOperatorNo
             int partition, IRecordDescriptorProvider recordDescProvider, int[] lowKeyFields, int[] highKeyFields,
             boolean lowKeyInclusive, boolean highKeyInclusive, ITupleUpdater tupleUpdater) throws HyracksDataException {
         super(opDesc, ctx, partition, recordDescProvider, lowKeyFields, highKeyFields, lowKeyInclusive,
-                highKeyInclusive, null, null);
+                highKeyInclusive, false, null, null);
         this.tupleUpdater = tupleUpdater;
     }
 
@@ -68,8 +68,7 @@ public class BTreeUpdateSearchOperatorNodePushable extends BTreeSearchOperatorNo
                 dos.write(tuple.getFieldData(i), tuple.getFieldStart(i), tuple.getFieldLength(i));
                 tb.addFieldEndOffset();
             }
-            FrameUtils.appendToWriter(writer, appender, tb.getFieldEndOffsets(), tb.getByteArray(), 0,
-                    tb.getSize());
+            FrameUtils.appendToWriter(writer, appender, tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize());
         }
     }
 }

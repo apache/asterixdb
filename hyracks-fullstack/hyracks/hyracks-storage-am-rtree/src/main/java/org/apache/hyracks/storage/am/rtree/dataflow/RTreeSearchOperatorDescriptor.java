@@ -45,6 +45,25 @@ public class RTreeSearchOperatorDescriptor extends AbstractTreeIndexOperatorDesc
     protected int[] keyFields; // fields in input tuple to be used as keys
     protected final int[] minFilterFieldIndexes;
     protected final int[] maxFilterFieldIndexes;
+    protected final boolean appendFilter;
+
+    public RTreeSearchOperatorDescriptor(IOperatorDescriptorRegistry spec, RecordDescriptor recDesc,
+            IStorageManager storageManager, IIndexLifecycleManagerProvider lifecycleManagerProvider,
+            IFileSplitProvider fileSplitProvider, ITypeTraits[] typeTraits,
+            IBinaryComparatorFactory[] comparatorFactories, int[] keyFields,
+            IIndexDataflowHelperFactory dataflowHelperFactory, boolean retainInput, boolean retainNull,
+            IMissingWriterFactory nullWriterFactory, ISearchOperationCallbackFactory searchOpCallbackFactory,
+            boolean appendFilter, int[] minFilterFieldIndexes, int[] maxFilterFieldIndexes,
+            IPageManagerFactory pageManagerFactory) {
+        super(spec, 1, 1, recDesc, storageManager, lifecycleManagerProvider, fileSplitProvider, typeTraits,
+                comparatorFactories, null, dataflowHelperFactory, null, retainInput, retainNull, nullWriterFactory,
+                NoOpLocalResourceFactoryProvider.INSTANCE, searchOpCallbackFactory,
+                NoOpOperationCallbackFactory.INSTANCE, pageManagerFactory);
+        this.keyFields = keyFields;
+        this.minFilterFieldIndexes = minFilterFieldIndexes;
+        this.maxFilterFieldIndexes = maxFilterFieldIndexes;
+        this.appendFilter = appendFilter;
+    }
 
     public RTreeSearchOperatorDescriptor(IOperatorDescriptorRegistry spec, RecordDescriptor recDesc,
             IStorageManager storageManager, IIndexLifecycleManagerProvider lifecycleManagerProvider,
@@ -53,19 +72,15 @@ public class RTreeSearchOperatorDescriptor extends AbstractTreeIndexOperatorDesc
             IIndexDataflowHelperFactory dataflowHelperFactory, boolean retainInput, boolean retainNull,
             IMissingWriterFactory nullWriterFactory, ISearchOperationCallbackFactory searchOpCallbackFactory,
             int[] minFilterFieldIndexes, int[] maxFilterFieldIndexes, IPageManagerFactory pageManagerFactory) {
-        super(spec, 1, 1, recDesc, storageManager, lifecycleManagerProvider, fileSplitProvider, typeTraits,
-                comparatorFactories, null, dataflowHelperFactory, null, retainInput, retainNull, nullWriterFactory,
-                NoOpLocalResourceFactoryProvider.INSTANCE, searchOpCallbackFactory,
-                NoOpOperationCallbackFactory.INSTANCE, pageManagerFactory);
-        this.keyFields = keyFields;
-        this.minFilterFieldIndexes = minFilterFieldIndexes;
-        this.maxFilterFieldIndexes = maxFilterFieldIndexes;
+        this(spec, recDesc, storageManager, lifecycleManagerProvider, fileSplitProvider, typeTraits,
+                comparatorFactories, keyFields, dataflowHelperFactory, retainInput, retainNull, nullWriterFactory,
+                searchOpCallbackFactory, false, minFilterFieldIndexes, maxFilterFieldIndexes, pageManagerFactory);
     }
 
     @Override
     public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) throws HyracksDataException {
-        return new RTreeSearchOperatorNodePushable(this, ctx, partition, recordDescProvider, keyFields,
+        return new RTreeSearchOperatorNodePushable(this, ctx, partition, recordDescProvider, keyFields, appendFilter,
                 minFilterFieldIndexes, maxFilterFieldIndexes);
     }
 }

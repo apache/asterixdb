@@ -130,4 +130,14 @@ public class OnDiskInvertedIndexRangeSearchCursor implements IIndexCursor {
     public ITupleReference getTuple() {
         return concatTuple;
     }
+
+    @Override
+    public ITupleReference getFilterMinTuple() {
+        return null;
+    }
+
+    @Override
+    public ITupleReference getFilterMaxTuple() {
+        return null;
+    }
 }

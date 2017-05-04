@@ -19,9 +19,11 @@
 package org.apache.hyracks.storage.am.lsm.btree.impls;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.common.api.ICursorInitialState;
 import org.apache.hyracks.storage.am.common.api.ISearchPredicate;
 import org.apache.hyracks.storage.am.common.tuples.PermutingTupleReference;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilter;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 
 public class LSMBTreeWithBuddySortedCursor extends LSMBTreeWithBuddyAbstractCursor {
@@ -66,6 +68,25 @@ public class LSMBTreeWithBuddySortedCursor extends LSMBTreeWithBuddyAbstractCurs
                 lsmHarness.endSearch(opCtx);
             }
         }
+    }
+
+    @Override
+    public ITupleReference getFilterMinTuple() {
+        ILSMComponentFilter filter = getFilter();
+        return filter == null ? null : filter.getMinTuple();
+    }
+
+    @Override
+    public ITupleReference getFilterMaxTuple() {
+        ILSMComponentFilter filter = getFilter();
+        return filter == null ? null : filter.getMaxTuple();
+    }
+
+    private ILSMComponentFilter getFilter() {
+        if (foundIn < 0) {
+            return null;
+        }
+        return operationalComponents.get(foundIn).getLSMComponentFilter();
     }
 
     @Override

@@ -19,20 +19,38 @@
 
 package org.apache.hyracks.tests.am.lsm.rtree;
 
-import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
-import org.apache.hyracks.api.dataflow.value.ILinearizeComparatorFactory;
+import org.apache.hyracks.api.constraints.PartitionConstraintHelper;
+import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
+import org.apache.hyracks.api.dataflow.value.*;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.FileSplit;
+import org.apache.hyracks.api.job.JobSpecification;
+import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
+import org.apache.hyracks.dataflow.common.data.marshalling.DoubleSerializerDeserializer;
+import org.apache.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor;
+import org.apache.hyracks.dataflow.std.file.ConstantFileSplitProvider;
+import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
+import org.apache.hyracks.dataflow.std.file.PlainFileWriterOperatorDescriptor;
+import org.apache.hyracks.dataflow.std.misc.ConstantTupleSourceOperatorDescriptor;
+import org.apache.hyracks.storage.am.btree.dataflow.BTreeSearchOperatorDescriptor;
 import org.apache.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
+import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallbackFactory;
+import org.apache.hyracks.storage.am.rtree.dataflow.RTreeSearchOperatorDescriptor;
 import org.apache.hyracks.storage.am.rtree.frames.RTreePolicyType;
 import org.apache.hyracks.test.support.TestStorageManagerComponentHolder;
 import org.apache.hyracks.tests.am.common.ITreeIndexOperatorTestHelper;
 import org.apache.hyracks.tests.am.rtree.RTreeSecondaryIndexSearchOperatorTest;
+import org.apache.hyracks.tests.util.NoopMissingWriterFactory;
+import org.junit.Test;
 
-public class LSMRTreeWithAntiMatterTuplesSecondaryIndexSearchOperatorTest extends RTreeSecondaryIndexSearchOperatorTest {
+import java.io.DataOutput;
+
+public class LSMRTreeWithAntiMatterTuplesSecondaryIndexSearchOperatorTest
+        extends RTreeSecondaryIndexSearchOperatorTest {
     public LSMRTreeWithAntiMatterTuplesSecondaryIndexSearchOperatorTest() {
-            this.rTreeType = RTreeType.LSMRTREE_WITH_ANTIMATTER;
-        }
+        this.rTreeType = RTreeType.LSMRTREE_WITH_ANTIMATTER;
+    }
 
     @Override
     protected ITreeIndexOperatorTestHelper createTestHelper() throws HyracksDataException {
@@ -43,8 +61,50 @@ public class LSMRTreeWithAntiMatterTuplesSecondaryIndexSearchOperatorTest extend
     protected IIndexDataflowHelperFactory createDataFlowHelperFactory(
             IPrimitiveValueProviderFactory[] secondaryValueProviderFactories, RTreePolicyType rtreePolicyType,
             IBinaryComparatorFactory[] btreeComparatorFactories, ILinearizeComparatorFactory linearizerCmpFactory,
-            int[] btreeFields) {
-        return ((LSMRTreeWithAntiMatterTuplesOperatorTestHelper) testHelper).createDataFlowHelperFactory(
-                secondaryValueProviderFactories, rtreePolicyType, btreeComparatorFactories, linearizerCmpFactory);
+            int[] btreeFields, int[] rtreeFields, ITypeTraits[] filterTypeTraits,
+            IBinaryComparatorFactory[] filterCmpFactories, int[] filterFields) {
+        return ((LSMRTreeWithAntiMatterTuplesOperatorTestHelper) testHelper)
+                .createDataFlowHelperFactory(secondaryValueProviderFactories, rtreePolicyType, btreeComparatorFactories,
+                        linearizerCmpFactory, rtreeFields, filterTypeTraits, filterCmpFactories, filterFields);
+    }
+
+    @Test
+    public void shouldWriteFilterValueIfAppendFilterIsTrue() throws Exception {
+        JobSpecification spec = new JobSpecification();
+        // build tuple
+        ArrayTupleBuilder tb = new ArrayTupleBuilder(secondaryKeyFieldCount);
+        DataOutput dos = tb.getDataOutput();
+        tb.reset();
+        DoubleSerializerDeserializer.INSTANCE.serialize(61.2894, dos);
+        tb.addFieldEndOffset();
+        DoubleSerializerDeserializer.INSTANCE.serialize(-149.624, dos);
+        tb.addFieldEndOffset();
+        DoubleSerializerDeserializer.INSTANCE.serialize(61.8894, dos);
+        tb.addFieldEndOffset();
+        DoubleSerializerDeserializer.INSTANCE.serialize(-149.024, dos);
+        tb.addFieldEndOffset();
+        ISerializerDeserializer[] keyRecDescSers =
+                { DoubleSerializerDeserializer.INSTANCE, DoubleSerializerDeserializer.INSTANCE,
+                        DoubleSerializerDeserializer.INSTANCE, DoubleSerializerDeserializer.INSTANCE };
+        RecordDescriptor keyRecDesc = new RecordDescriptor(keyRecDescSers);
+        ConstantTupleSourceOperatorDescriptor keyProviderOp =
+                new ConstantTupleSourceOperatorDescriptor(spec, keyRecDesc, tb.getFieldEndOffsets(), tb.getByteArray(),
+                        tb.getSize());
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, keyProviderOp, NC1_ID);
+        int[] keyFields = { 0, 1, 2, 3 };
+        RTreeSearchOperatorDescriptor secondarySearchOp =
+                new RTreeSearchOperatorDescriptor(spec, secondaryWithFilterRecDesc, storageManager, lcManagerProvider,
+                        secondarySplitProvider, secondaryTypeTraits, secondaryComparatorFactories, keyFields,
+                        rtreeDataflowHelperFactory, false, false, NoopMissingWriterFactory.INSTANCE,
+                        NoOpOperationCallbackFactory.INSTANCE, true, null, null, pageManagerFactory);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, secondarySearchOp, NC1_ID);
+
+        IFileSplitProvider outSplits = new ConstantFileSplitProvider(new FileSplit[] { createFile(nc1) });
+        IOperatorDescriptor printer = new PlainFileWriterOperatorDescriptor(spec, outSplits, ",");
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, printer, NC1_ID);
+        spec.connect(new OneToOneConnectorDescriptor(spec), keyProviderOp, 0, secondarySearchOp, 0);
+        spec.connect(new OneToOneConnectorDescriptor(spec), secondarySearchOp, 0, printer, 0);
+        spec.addRoot(printer);
+        runTest(spec);
     }
 }
