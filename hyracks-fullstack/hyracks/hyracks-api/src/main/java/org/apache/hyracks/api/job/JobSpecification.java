@@ -78,6 +78,8 @@ public class JobSpecification implements Serializable, IOperatorDescriptorRegist
 
     private IJobletEventListenerFactory jobletEventListenerFactory;
 
+    private IGlobalJobDataFactory globalJobDataFactory;
+
     private boolean useConnectorPolicyForScheduling;
 
     private IClusterCapacity requiredClusterCapacity;
@@ -279,6 +281,14 @@ public class JobSpecification implements Serializable, IOperatorDescriptorRegist
 
     public void setJobletEventListenerFactory(IJobletEventListenerFactory jobletEventListenerFactory) {
         this.jobletEventListenerFactory = jobletEventListenerFactory;
+    }
+
+    public IGlobalJobDataFactory getGlobalJobDataFactory() {
+        return globalJobDataFactory;
+    }
+
+    public void setGlobalJobDataFactory(IGlobalJobDataFactory globalJobDataFactory) {
+        this.globalJobDataFactory = globalJobDataFactory;
     }
 
     public boolean isUseConnectorPolicyForScheduling() {
