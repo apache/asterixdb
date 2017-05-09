@@ -18,6 +18,7 @@
  */
 package org.apache.hyracks.api.config;
 
+import java.net.URL;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -83,5 +84,9 @@ public interface IApplicationConfig {
 
     default String [] getStringArray(IOption option) {
         return (String [])get(option);
+    }
+
+    default URL getURL(IOption option) {
+        return (URL)get(option);
     }
 }
