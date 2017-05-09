@@ -20,10 +20,11 @@ package org.apache.asterix.om.base;
 
 import java.io.IOException;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.asterix.om.base.temporal.GregorianCalendarSystem;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 /**
@@ -106,7 +107,7 @@ public class ADateTime implements IAObject {
     @Override
     public String toString() {
         StringBuilder sbder = new StringBuilder();
-        sbder.append("ADateTime: { ");
+        sbder.append("datetime: { ");
         try {
             GregorianCalendarSystem.getInstance().getExtendStringRepUntilField(chrononTime, 0, sbder,
                     GregorianCalendarSystem.Fields.YEAR, GregorianCalendarSystem.Fields.MILLISECOND, true);

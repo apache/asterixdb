@@ -3,7 +3,7 @@
     -- STREAM_PROJECT  |PARTITIONED|
       -- ASSIGN  |PARTITIONED|
         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-          -- PRE_CLUSTERED_GROUP_BY[$$7]  |PARTITIONED|
+          -- PRE_CLUSTERED_GROUP_BY[$$nation_key]  |PARTITIONED|
                   {
                     -- AGGREGATE  |LOCAL|
                       -- STREAM_LIMIT  |LOCAL|
@@ -11,8 +11,8 @@
                           -- NESTED_TUPLE_SOURCE  |LOCAL|
                   }
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-              -- STABLE_SORT [$$7(ASC)]  |PARTITIONED|
-                -- HASH_PARTITION_EXCHANGE [$$7]  |PARTITIONED|
+              -- STABLE_SORT [$$nation_key(ASC)]  |PARTITIONED|
+                -- HASH_PARTITION_EXCHANGE [$$nation_key]  |PARTITIONED|
                   -- SORT_GROUP_BY[$$69, $$70]  |PARTITIONED|
                           {
                             -- AGGREGATE  |LOCAL|

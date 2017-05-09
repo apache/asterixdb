@@ -21,10 +21,11 @@ package org.apache.asterix.om.base;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -104,7 +105,7 @@ public class AOrderedList implements IACollection {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append("AOrderedList: [ ");
+        sb.append("array: [ ");
         boolean first = true;
         for (IAObject v : values) {
             if (first) {

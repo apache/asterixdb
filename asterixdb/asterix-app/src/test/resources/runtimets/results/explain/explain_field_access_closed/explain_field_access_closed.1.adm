@@ -1,0 +1,42 @@
+distribute result [$$18]
+-- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
+  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$18])
+    -- STREAM_PROJECT  |PARTITIONED|
+      assign [$$18] <- [{"deptId": $#1, "star_cost": $$21}]
+      -- ASSIGN  |PARTITIONED|
+        exchange
+        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+          group by ([$#1 := $$25]) decor ([]) {
+                    aggregate [$$21] <- [agg-sql-sum($$24)]
+                    -- AGGREGATE  |LOCAL|
+                      nested tuple source
+                      -- NESTED_TUPLE_SOURCE  |LOCAL|
+                 }
+          -- SORT_GROUP_BY[$$25]  |PARTITIONED|
+            exchange
+            -- HASH_PARTITION_EXCHANGE [$$25]  |PARTITIONED|
+              group by ([$$25 := $$19]) decor ([]) {
+                        aggregate [$$24] <- [agg-local-sql-sum($$16)]
+                        -- AGGREGATE  |LOCAL|
+                          nested tuple source
+                          -- NESTED_TUPLE_SOURCE  |LOCAL|
+                     }
+              -- SORT_GROUP_BY[$$19]  |PARTITIONED|
+                exchange
+                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  project ([$$16, $$19])
+                  -- STREAM_PROJECT  |PARTITIONED|
+                    assign [$$19, $$16] <- [substring($$e.getField(1), 1), $$e.getField(2)]
+                    -- ASSIGN  |PARTITIONED|
+                      project ([$$e])
+                      -- STREAM_PROJECT  |PARTITIONED|
+                        exchange
+                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          data-scan []<-[$$20, $$e] <- gby.Employee
+                          -- DATASOURCE_SCAN  |PARTITIONED|
+                            exchange
+                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              empty-tuple-source
+                              -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

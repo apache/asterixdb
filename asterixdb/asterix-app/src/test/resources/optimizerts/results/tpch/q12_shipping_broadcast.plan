@@ -2,7 +2,7 @@
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
     -- STREAM_PROJECT  |PARTITIONED|
       -- ASSIGN  |PARTITIONED|
-        -- SORT_MERGE_EXCHANGE [$$3(ASC) ]  |PARTITIONED|
+        -- SORT_MERGE_EXCHANGE [$$l_shipmode(ASC) ]  |PARTITIONED|
           -- SORT_GROUP_BY[$$95]  |PARTITIONED|
                   {
                     -- AGGREGATE  |LOCAL|

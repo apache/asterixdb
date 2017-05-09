@@ -18,12 +18,11 @@
  */
 package org.apache.asterix.om.base;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class AFloat implements IAObject {
 
@@ -68,7 +67,7 @@ public class AFloat implements IAObject {
 
     @Override
     public String toString() {
-        return "AFloat: {" + value + "}";
+        return Float.toString(value);
     }
 
     @Override

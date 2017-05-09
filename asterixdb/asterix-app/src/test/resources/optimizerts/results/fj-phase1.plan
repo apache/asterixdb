@@ -10,12 +10,12 @@
                         -- NESTED_TUPLE_SOURCE  |LOCAL|
                   }
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-              -- STABLE_SORT [$$21(ASC), $$4(ASC)]  |PARTITIONED|
+              -- STABLE_SORT [$$21(ASC), $$item(ASC)]  |PARTITIONED|
                 -- HASH_PARTITION_EXCHANGE [$$21]  |PARTITIONED|
                   -- STREAM_PROJECT  |PARTITIONED|
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      -- HYBRID_HASH_JOIN [$$1][$$4]  |PARTITIONED|
-                        -- HASH_PARTITION_EXCHANGE [$$1]  |PARTITIONED|
+                      -- HYBRID_HASH_JOIN [$$lottery_number][$$item]  |PARTITIONED|
+                        -- HASH_PARTITION_EXCHANGE [$$lottery_number]  |PARTITIONED|
                           -- STREAM_PROJECT  |PARTITIONED|
                             -- UNNEST  |PARTITIONED|
                               -- STREAM_PROJECT  |PARTITIONED|
@@ -24,7 +24,7 @@
                                     -- DATASOURCE_SCAN  |PARTITIONED|
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                         -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-                        -- HASH_PARTITION_EXCHANGE [$$4]  |PARTITIONED|
+                        -- HASH_PARTITION_EXCHANGE [$$item]  |PARTITIONED|
                           -- ASSIGN  |PARTITIONED|
                             -- RUNNING_AGGREGATE  |PARTITIONED|
                               -- STREAM_PROJECT  |PARTITIONED|
@@ -37,7 +37,7 @@
                                                   -- NESTED_TUPLE_SOURCE  |LOCAL|
                                               }
                                         -- HASH_PARTITION_EXCHANGE [$$30]  |PARTITIONED|
-                                          -- SORT_GROUP_BY[$$3]  |PARTITIONED|
+                                          -- SORT_GROUP_BY[$$lottery_number]  |PARTITIONED|
                                                   {
                                                     -- AGGREGATE  |LOCAL|
                                                       -- NESTED_TUPLE_SOURCE  |LOCAL|

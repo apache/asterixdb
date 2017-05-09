@@ -137,6 +137,31 @@
         <output-dir compare="Text">explain_simple</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="explain">
+      <compilation-unit name="explain_object_constructor-01">
+        <output-dir compare="Text">explain_object_constructor-01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="explain">
+      <compilation-unit name="explain_object_constructor-02">
+        <output-dir compare="Text">explain_object_constructor-02</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="explain">
+      <compilation-unit name="explain_object_constructor-03">
+        <output-dir compare="Text">explain_object_constructor-03</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="explain">
+      <compilation-unit name="explain_field_access">
+        <output-dir compare="Text">explain_field_access</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="explain">
+      <compilation-unit name="explain_field_access_closed">
+        <output-dir compare="Text">explain_field_access_closed</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-case FilePath="flwor">
     <compilation-unit name="let33">

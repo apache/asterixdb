@@ -87,7 +87,7 @@ public abstract class AbstractFunctionCallExpression extends AbstractLogicalExpr
     protected List<Mutable<ILogicalExpression>> cloneArguments() {
         List<Mutable<ILogicalExpression>> clonedArgs = new ArrayList<Mutable<ILogicalExpression>>(arguments.size());
         for (Mutable<ILogicalExpression> e : arguments) {
-            ILogicalExpression e2 = ((AbstractLogicalExpression) e.getValue()).cloneExpression();
+            ILogicalExpression e2 = e.getValue().cloneExpression();
             clonedArgs.add(new MutableObject<ILogicalExpression>(e2));
         }
         return clonedArgs;
@@ -111,20 +111,7 @@ public abstract class AbstractFunctionCallExpression extends AbstractLogicalExpr
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("function-call: " + finfo.getFunctionIdentifier() + ", Args:[");
-        // + arguments;
-        boolean first = true;
-        for (Mutable<ILogicalExpression> ref : arguments) {
-            if (first) {
-                first = false;
-            } else {
-                sb.append(", ");
-            }
-            sb.append(ref.getValue());
-        }
-        sb.append("]");
-        return sb.toString();
+        return finfo.display(arguments);
     }
 
     @Override

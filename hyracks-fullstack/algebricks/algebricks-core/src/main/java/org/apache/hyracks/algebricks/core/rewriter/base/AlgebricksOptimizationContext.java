@@ -131,6 +131,12 @@ public class AlgebricksOptimizationContext implements IOptimizationContext {
     }
 
     @Override
+    public LogicalVariable newVar(String displayName) {
+        varCounter++;
+        return new LogicalVariable(varCounter, displayName);
+    }
+
+    @Override
     public IMetadataProvider getMetadataProvider() {
         return metadataProvider;
     }
@@ -230,12 +236,6 @@ public class AlgebricksOptimizationContext implements IOptimizationContext {
     @Override
     public void putFDList(ILogicalOperator op, List<FunctionalDependency> fdList) {
         this.fdGlobalMap.put(op, fdList);
-    }
-
-    @Override
-    public void clearAllFDAndEquivalenceClasses() {
-        eqClassGlobalMap.clear();
-        fdGlobalMap.clear();
     }
 
     @Override

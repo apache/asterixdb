@@ -18,9 +18,10 @@
  */
 package org.apache.asterix.om.base;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -95,14 +96,10 @@ public class ABinary implements IAObject {
     public String toString() {
         StringBuilder sb = new StringBuilder();
         int start = getStart();
-        sb.append("ABinary: [ ");
+        sb.append("0b");
         for (int i = 0; i < getLength(); i++) {
-            if (i > 0) {
-                sb.append(", ");
-            }
             sb.append(bytes[start + i]);
         }
-        sb.append(" ]");
         return sb.toString();
 
     }

@@ -67,8 +67,6 @@ public interface IOptimizationContext extends ITypingContext, IVariableContext {
 
     public List<FunctionalDependency> getFDList(ILogicalOperator op);
 
-    public void clearAllFDAndEquivalenceClasses();
-
     public void putLogicalPropertiesVector(ILogicalOperator op, ILogicalPropertiesVector v);
 
     public ILogicalPropertiesVector getLogicalPropertiesVector(ILogicalOperator op);

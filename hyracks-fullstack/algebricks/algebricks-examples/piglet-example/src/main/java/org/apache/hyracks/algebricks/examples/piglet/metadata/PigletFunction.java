@@ -18,16 +18,13 @@
  */
 package org.apache.hyracks.algebricks.examples.piglet.metadata;
 
-import org.apache.hyracks.algebricks.core.algebra.functions.AbstractFunctionInfo;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
 
-public class PigletFunction extends AbstractFunctionInfo {
-    private static final long serialVersionUID = 1L;
-
+public class PigletFunction implements IFunctionInfo {
     private final FunctionIdentifier fid;
 
     public PigletFunction(FunctionIdentifier fid) {
-        super(true);
         this.fid = fid;
     }
 

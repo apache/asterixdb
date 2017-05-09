@@ -3,10 +3,10 @@
     -- STREAM_PROJECT  |UNPARTITIONED|
       -- ASSIGN  |UNPARTITIONED|
         -- STREAM_LIMIT  |UNPARTITIONED|
-          -- SORT_MERGE_EXCHANGE [$$49(DESC), $$4(ASC) ]  |PARTITIONED|
+          -- SORT_MERGE_EXCHANGE [$$49(DESC), $$o_orderdate(ASC) ]  |PARTITIONED|
             -- STREAM_LIMIT  |PARTITIONED|
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                -- STABLE_SORT [topK: 10] [$$49(DESC), $$4(ASC)]  |PARTITIONED|
+                -- STABLE_SORT [topK: 10] [$$49(DESC), $$o_orderdate(ASC)]  |PARTITIONED|
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                     -- EXTERNAL_GROUP_BY[$$55, $$56, $$57]  |PARTITIONED|
                             {

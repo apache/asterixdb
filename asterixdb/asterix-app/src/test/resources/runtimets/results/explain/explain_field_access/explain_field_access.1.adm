@@ -1,0 +1,46 @@
+distribute result [$$19]
+-- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
+  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$19])
+    -- STREAM_PROJECT  |PARTITIONED|
+      assign [$$19] <- [{"deptId": $#1, "star_cost": $$22}]
+      -- ASSIGN  |PARTITIONED|
+        exchange
+        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+          group by ([$#1 := $$27]) decor ([]) {
+                    aggregate [$$22] <- [agg-sql-sum($$26)]
+                    -- AGGREGATE  |LOCAL|
+                      nested tuple source
+                      -- NESTED_TUPLE_SOURCE  |LOCAL|
+                 }
+          -- SORT_GROUP_BY[$$27]  |PARTITIONED|
+            exchange
+            -- HASH_PARTITION_EXCHANGE [$$27]  |PARTITIONED|
+              group by ([$$27 := $$20]) decor ([]) {
+                        aggregate [$$26] <- [agg-local-sql-sum($$17)]
+                        -- AGGREGATE  |LOCAL|
+                          nested tuple source
+                          -- NESTED_TUPLE_SOURCE  |LOCAL|
+                     }
+              -- SORT_GROUP_BY[$$20]  |PARTITIONED|
+                exchange
+                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  project ([$$17, $$20])
+                  -- STREAM_PROJECT  |PARTITIONED|
+                    assign [$$20] <- [substring($$24.getField("department_id"), 1)]
+                    -- ASSIGN  |PARTITIONED|
+                      project ([$$17, $$24])
+                      -- STREAM_PROJECT  |PARTITIONED|
+                        assign [$$17, $$24] <- [$$e.getField("salary"), $$e.getField("dept")]
+                        -- ASSIGN  |PARTITIONED|
+                          project ([$$e])
+                          -- STREAM_PROJECT  |PARTITIONED|
+                            exchange
+                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              data-scan []<-[$$21, $$e] <- gby.Employee
+                              -- DATASOURCE_SCAN  |PARTITIONED|
+                                exchange
+                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  empty-tuple-source
+                                  -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

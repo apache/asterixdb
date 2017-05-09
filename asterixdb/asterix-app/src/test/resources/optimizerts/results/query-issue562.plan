@@ -2,14 +2,14 @@
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
     -- STREAM_PROJECT  |PARTITIONED|
       -- ASSIGN  |PARTITIONED|
-        -- SORT_MERGE_EXCHANGE [$$7(ASC) ]  |PARTITIONED|
+        -- SORT_MERGE_EXCHANGE [$$cntrycode(ASC) ]  |PARTITIONED|
           -- SORT_GROUP_BY[$$82]  |PARTITIONED|
                   {
                     -- AGGREGATE  |LOCAL|
                       -- NESTED_TUPLE_SOURCE  |LOCAL|
                   }
             -- HASH_PARTITION_EXCHANGE [$$82]  |PARTITIONED|
-              -- SORT_GROUP_BY[$$11]  |PARTITIONED|
+              -- SORT_GROUP_BY[$$phone_substr]  |PARTITIONED|
                       {
                         -- AGGREGATE  |LOCAL|
                           -- NESTED_TUPLE_SOURCE  |LOCAL|
@@ -41,7 +41,7 @@
                                               -- ASSIGN  |PARTITIONED|
                                                 -- STREAM_PROJECT  |PARTITIONED|
                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                    -- HYBRID_HASH_JOIN [$$11][$$65]  |PARTITIONED|
+                                                    -- HYBRID_HASH_JOIN [$$phone_substr][$$65]  |PARTITIONED|
                                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                         -- STREAM_PROJECT  |PARTITIONED|
                                                           -- ASSIGN  |PARTITIONED|

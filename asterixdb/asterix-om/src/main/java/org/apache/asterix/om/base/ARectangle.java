@@ -18,11 +18,11 @@
  */
 package org.apache.asterix.om.base;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class ARectangle implements IAObject {
 
@@ -64,7 +64,7 @@ public class ARectangle implements IAObject {
 
     @Override
     public String toString() {
-        return "ARectangle: { p1: " + p1 + ", p2: " + p2 + "}";
+        return "rectangle: { p1: " + p1 + ", p2: " + p2 + "}";
     }
 
     @Override

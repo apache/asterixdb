@@ -190,9 +190,9 @@ public class SimilarityCheckRule implements IAlgebraicRewriteRule {
                     .add(new MutableObject<ILogicalOperator>(matchingAssign.getInputs().get(0).getValue()));
             matchingAssign.getInputs().get(0).setValue(newAssign);
 
-            // Replace select condition with a get-item on newVar.
+            // Replace select condition with a get-item on newVarFromExpression.
             List<Mutable<ILogicalExpression>> selectGetItemArgs = new ArrayList<Mutable<ILogicalExpression>>();
-            // First arg is a variable reference expr on newVar.
+            // First arg is a variable reference expr on newVarFromExpression.
             selectGetItemArgs.add(new MutableObject<ILogicalExpression>(new VariableReferenceExpression(newVar)));
             // Second arg is the item index to be accessed, here 0.
             selectGetItemArgs.add(new MutableObject<ILogicalExpression>(
@@ -202,9 +202,10 @@ public class SimilarityCheckRule implements IAlgebraicRewriteRule {
             // Replace the old similarity function call with the new getItemExpr.
             expRef.setValue(selectGetItemExpr);
 
-            // Replace expr corresponding to original variable in the original assign with a get-item on newVar.
+            // Replace expr corresponding to original variable in the original assign with a get-item on
+            // newVarFromExpression.
             List<Mutable<ILogicalExpression>> assignGetItemArgs = new ArrayList<Mutable<ILogicalExpression>>();
-            // First arg is a variable reference expr on newVar.
+            // First arg is a variable reference expr on newVarFromExpression.
             assignGetItemArgs.add(new MutableObject<ILogicalExpression>(new VariableReferenceExpression(newVar)));
             // Second arg is the item index to be accessed, here 1.
             assignGetItemArgs.add(new MutableObject<ILogicalExpression>(

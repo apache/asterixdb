@@ -18,40 +18,45 @@
  */
 package org.apache.asterix.om.functions;
 
-import org.apache.asterix.common.functions.FunctionSignature;
-import org.apache.hyracks.algebricks.core.algebra.functions.AbstractFunctionInfo;
+import java.util.List;
+
+import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
 
-public class FunctionInfo extends AbstractFunctionInfo {
-
-    private static final long serialVersionUID = 1L;
+public class FunctionInfo implements IFunctionInfo {
 
     private final FunctionIdentifier functionIdentifier;
+    private final boolean isFunctional;
 
     public FunctionInfo(String namespace, String name, int arity, boolean isFunctional) {
-        super(isFunctional);
-        this.functionIdentifier = new FunctionIdentifier(namespace, name, arity);
-    }
-
-    public FunctionInfo() {
-        super(true);
-        functionIdentifier = null;
+        this(new FunctionIdentifier(namespace, name, arity), isFunctional);
     }
 
     public FunctionInfo(FunctionIdentifier functionIdentifier, boolean isFunctional) {
-        super(isFunctional);
+        this.isFunctional = isFunctional;
         this.functionIdentifier = functionIdentifier;
-    }
-
-    public FunctionInfo(FunctionSignature functionSignature, boolean isFunctional) {
-        super(isFunctional);
-        this.functionIdentifier = new FunctionIdentifier(functionSignature.getNamespace(), functionSignature.getName(),
-                functionSignature.getArity());
     }
 
     @Override
     public FunctionIdentifier getFunctionIdentifier() {
         return functionIdentifier;
+    }
+
+    @Override
+    public boolean isFunctional() {
+        return isFunctional;
+    }
+
+    /**
+     * @param args,
+     *            the arguments.
+     * @return a display string of the FunctionInfo.
+     */
+    @Override
+    public String display(List<Mutable<ILogicalExpression>> args) {
+        return FunctionDisplayUtil.display(this, args, input -> IFunctionInfo.super.display(input));
     }
 
     @Override

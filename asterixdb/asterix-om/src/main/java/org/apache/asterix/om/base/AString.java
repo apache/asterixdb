@@ -20,10 +20,10 @@ package org.apache.asterix.om.base;
 
 import java.io.Serializable;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class AString implements IAObject, Serializable {
@@ -45,7 +45,7 @@ public class AString implements IAObject, Serializable {
 
     @Override
     public String toString() {
-        return "AString: {" + value + "}";
+        return "\"" + value + "\"";
     }
 
     @Override

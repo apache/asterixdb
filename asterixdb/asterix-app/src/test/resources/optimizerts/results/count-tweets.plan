@@ -9,7 +9,7 @@
                       -- NESTED_TUPLE_SOURCE  |LOCAL|
                   }
             -- HASH_PARTITION_EXCHANGE [$$14]  |PARTITIONED|
-              -- SORT_GROUP_BY[$$4]  |PARTITIONED|
+              -- SORT_GROUP_BY[$$token]  |PARTITIONED|
                       {
                         -- AGGREGATE  |LOCAL|
                           -- NESTED_TUPLE_SOURCE  |LOCAL|

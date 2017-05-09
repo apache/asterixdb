@@ -12,7 +12,7 @@
                             -- SUBPLAN  |LOCAL|
                                     {
                                       -- AGGREGATE  |LOCAL|
-                                        -- IN_MEMORY_STABLE_SORT [$$38(ASC)]  |LOCAL|
+                                        -- IN_MEMORY_STABLE_SORT [$$j(ASC)]  |LOCAL|
                                           -- UNNEST  |LOCAL|
                                             -- NESTED_TUPLE_SOURCE  |LOCAL|
                                     }
@@ -36,7 +36,7 @@
                                   -- SUBPLAN  |LOCAL|
                                           {
                                             -- AGGREGATE  |LOCAL|
-                                              -- IN_MEMORY_STABLE_SORT [$$31(ASC)]  |LOCAL|
+                                              -- IN_MEMORY_STABLE_SORT [$$j(ASC)]  |LOCAL|
                                                 -- UNNEST  |LOCAL|
                                                   -- NESTED_TUPLE_SOURCE  |LOCAL|
                                           }

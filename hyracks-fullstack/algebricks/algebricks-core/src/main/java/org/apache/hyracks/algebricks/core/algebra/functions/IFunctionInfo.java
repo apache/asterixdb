@@ -18,8 +18,44 @@
  */
 package org.apache.hyracks.algebricks.core.algebra.functions;
 
-public interface IFunctionInfo {
+import java.io.Serializable;
+import java.util.List;
+
+import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
+
+public interface IFunctionInfo extends Serializable {
+    /**
+     * @return the FunctionIdentifier.
+     */
     FunctionIdentifier getFunctionIdentifier();
 
-    public boolean isFunctional();
+    /**
+     * @return true if the function is a stateful function; false otherwise.
+     */
+    default boolean isFunctional() {
+        // A function is functional by default.
+        return true;
+    }
+
+    /**
+     * @param args,
+     *            the arguments.
+     * @return a display string of the FunctionInfo.
+     */
+    default String display(List<Mutable<ILogicalExpression>> args) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(getFunctionIdentifier().getName() + "(");
+        boolean first = true;
+        for (Mutable<ILogicalExpression> ref : args) {
+            if (first) {
+                first = false;
+            } else {
+                sb.append(", ");
+            }
+            sb.append(ref.getValue());
+        }
+        sb.append(")");
+        return sb.toString();
+    }
 }

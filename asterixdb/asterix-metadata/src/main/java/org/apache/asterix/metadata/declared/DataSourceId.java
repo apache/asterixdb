@@ -19,8 +19,6 @@
 
 package org.apache.asterix.metadata.declared;
 
-import java.io.File;
-
 public class DataSourceId {
 
     private String dataverseName;
@@ -33,7 +31,7 @@ public class DataSourceId {
 
     @Override
     public String toString() {
-        return dataverseName + File.pathSeparator + datasourceName;
+        return dataverseName + "." + datasourceName;
     }
 
     public String getDataverseName() {

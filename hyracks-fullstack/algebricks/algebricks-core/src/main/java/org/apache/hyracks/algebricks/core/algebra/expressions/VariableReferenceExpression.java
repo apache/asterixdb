@@ -41,14 +41,6 @@ public class VariableReferenceExpression extends AbstractLogicalExpression {
         this(0, variable);
     }
 
-    public int getTupleRef() {
-        return tupleRef;
-    }
-
-    public void setTupleRef(int tupleRef) {
-        this.tupleRef = tupleRef;
-    }
-
     public LogicalVariable getVariableReference() {
         return variable;
     }
@@ -64,7 +56,7 @@ public class VariableReferenceExpression extends AbstractLogicalExpression {
 
     @Override
     public String toString() {
-        return "%" + tupleRef + "->" + variable.toString();
+        return variable.toString();
     }
 
     @Override

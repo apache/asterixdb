@@ -18,11 +18,11 @@
  */
 package org.apache.asterix.om.base;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class ALine implements IAObject {
 
@@ -64,7 +64,7 @@ public class ALine implements IAObject {
 
     @Override
     public String toString() {
-        return "ALine: { p1: " + p1 + ", p2: " + p2 + "}";
+        return "line: { p1: " + p1 + ", p2: " + p2 + "}";
     }
 
     @Override

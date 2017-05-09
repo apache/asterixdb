@@ -18,12 +18,11 @@
  */
 package org.apache.asterix.om.base;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class AInt32 implements IAObject {
 
@@ -49,7 +48,7 @@ public class AInt32 implements IAObject {
 
     @Override
     public String toString() {
-        return "AInt32: {" + value + "}";
+        return Integer.toString(value);
     }
 
     @Override

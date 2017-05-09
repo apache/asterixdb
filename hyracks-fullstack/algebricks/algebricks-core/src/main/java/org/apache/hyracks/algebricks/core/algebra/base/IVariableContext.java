@@ -20,10 +20,11 @@ package org.apache.hyracks.algebricks.core.algebra.base;
 
 public interface IVariableContext {
 
-    public int getVarCounter();
+    int getVarCounter();
 
-    public void setVarCounter(int varCounter);
+    void setVarCounter(int varCounter);
 
-    public LogicalVariable newVar();
+    LogicalVariable newVar();
 
+    LogicalVariable newVar(String displayName);
 }

@@ -20,7 +20,7 @@
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                               -- STREAM_PROJECT  |PARTITIONED|
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                  -- HYBRID_HASH_JOIN [$$1][$$13]  |PARTITIONED|
+                                  -- HYBRID_HASH_JOIN [$$c][$$13]  |PARTITIONED|
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                       -- UNNEST  |PARTITIONED|
                                         -- STREAM_PROJECT  |PARTITIONED|

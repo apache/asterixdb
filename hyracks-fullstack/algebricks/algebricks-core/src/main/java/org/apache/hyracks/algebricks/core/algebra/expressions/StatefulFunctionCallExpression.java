@@ -24,7 +24,6 @@ import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
-import org.apache.hyracks.algebricks.core.algebra.properties.IPartitioningProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.IPropertiesComputer;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionVisitor;
 
@@ -54,11 +53,6 @@ public class StatefulFunctionCallExpression extends AbstractFunctionCallExpressi
         cloneAnnotations();
         List<Mutable<ILogicalExpression>> clonedArgs = cloneArguments();
         return new StatefulFunctionCallExpression(finfo, propertiesComputer, clonedArgs);
-    }
-
-    // can be null
-    public IPartitioningProperty getRequiredPartitioningProperty() {
-        return propertiesComputer.computePartitioningProperty(this);
     }
 
     @Override

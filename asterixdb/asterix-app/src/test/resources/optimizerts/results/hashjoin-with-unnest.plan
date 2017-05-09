@@ -4,8 +4,8 @@
       -- ASSIGN  |PARTITIONED|
         -- STREAM_PROJECT  |PARTITIONED|
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-            -- HYBRID_HASH_JOIN [$$2][$$3]  |PARTITIONED|
-              -- HASH_PARTITION_EXCHANGE [$$2]  |PARTITIONED|
+            -- HYBRID_HASH_JOIN [$$a][$$b]  |PARTITIONED|
+              -- HASH_PARTITION_EXCHANGE [$$a]  |PARTITIONED|
                 -- STREAM_PROJECT  |PARTITIONED|
                   -- UNNEST  |PARTITIONED|
                     -- ASSIGN  |PARTITIONED|
@@ -14,7 +14,7 @@
                           -- DATASOURCE_SCAN  |PARTITIONED|
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-              -- HASH_PARTITION_EXCHANGE [$$3]  |PARTITIONED|
+              -- HASH_PARTITION_EXCHANGE [$$b]  |PARTITIONED|
                 -- STREAM_PROJECT  |PARTITIONED|
                   -- UNNEST  |PARTITIONED|
                     -- ASSIGN  |PARTITIONED|

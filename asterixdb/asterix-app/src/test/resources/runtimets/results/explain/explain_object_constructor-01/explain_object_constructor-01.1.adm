@@ -1,0 +1,8 @@
+distribute result [$$2]
+-- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange
+  -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    assign [$$2] <- [{ a: "1", b: 1 }]
+    -- ASSIGN  |UNPARTITIONED|
+      empty-tuple-source
+      -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|

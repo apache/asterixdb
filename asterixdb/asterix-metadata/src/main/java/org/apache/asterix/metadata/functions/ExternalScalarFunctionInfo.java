@@ -35,8 +35,4 @@ public class ExternalScalarFunctionInfo extends ExternalFunctionInfo {
         super(namespace, name, arity , FunctionKind.SCALAR, argumentTypes, returnType, rtc, body, language);
     }
 
-    public ExternalScalarFunctionInfo() {
-        super();
-    }
-
 }

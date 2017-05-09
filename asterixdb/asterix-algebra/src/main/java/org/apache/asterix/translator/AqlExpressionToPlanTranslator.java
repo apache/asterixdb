@@ -79,7 +79,7 @@ class AqlExpressionToPlanTranslator extends LangExpressionToPlanTranslator imple
     @Override
     public Pair<ILogicalOperator, LogicalVariable> visit(ForClause fc, Mutable<ILogicalOperator> tupSource)
             throws CompilationException {
-        LogicalVariable v = context.newVar(fc.getVarExpr());
+        LogicalVariable v = context.newVarFromExpression(fc.getVarExpr());
         Expression inExpr = fc.getInExpr();
         Pair<ILogicalExpression, Mutable<ILogicalOperator>> eo = langExprToAlgExpression(inExpr, tupSource);
         ILogicalOperator returnedOp;
@@ -87,7 +87,7 @@ class AqlExpressionToPlanTranslator extends LangExpressionToPlanTranslator imple
         if (fc.getPosVarExpr() == null) {
             returnedOp = new UnnestOperator(v, new MutableObject<ILogicalExpression>(makeUnnestExpression(eo.first)));
         } else {
-            LogicalVariable pVar = context.newVar(fc.getPosVarExpr());
+            LogicalVariable pVar = context.newVarFromExpression(fc.getPosVarExpr());
             // We set the positional variable type as INT64 type.
             returnedOp = new UnnestOperator(v, new MutableObject<ILogicalExpression>(makeUnnestExpression(eo.first)),
                     pVar, BuiltinType.AINT64, new PositionWriter());

@@ -4,20 +4,20 @@
       -- ASSIGN  |PARTITIONED|
         -- STREAM_PROJECT  |PARTITIONED|
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-            -- PRE_CLUSTERED_GROUP_BY[$$1]  |PARTITIONED|
+            -- PRE_CLUSTERED_GROUP_BY[$$ccustkey]  |PARTITIONED|
                     {
                       -- AGGREGATE  |LOCAL|
                         -- STREAM_SELECT  |LOCAL|
                           -- NESTED_TUPLE_SOURCE  |LOCAL|
                     }
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                -- STABLE_SORT [$$1(ASC)]  |PARTITIONED|
+                -- STABLE_SORT [$$ccustkey(ASC)]  |PARTITIONED|
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                     -- STREAM_PROJECT  |PARTITIONED|
                       -- STREAM_PROJECT  |PARTITIONED|
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                          -- HYBRID_HASH_JOIN [$$1, $$2][$$24, $$26]  |PARTITIONED|
-                            -- HASH_PARTITION_EXCHANGE [$$1]  |PARTITIONED|
+                          -- HYBRID_HASH_JOIN [$$ccustkey, $$cnationkey][$$24, $$26]  |PARTITIONED|
+                            -- HASH_PARTITION_EXCHANGE [$$ccustkey]  |PARTITIONED|
                               -- PRE_CLUSTERED_GROUP_BY[$$20]  |PARTITIONED|
                                       {
                                         -- AGGREGATE  |LOCAL|

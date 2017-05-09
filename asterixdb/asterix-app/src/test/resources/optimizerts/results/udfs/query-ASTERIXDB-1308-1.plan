@@ -10,7 +10,7 @@
                   -- SUBPLAN  |UNPARTITIONED|
                           {
                             -- AGGREGATE  |UNPARTITIONED|
-                              -- IN_MEMORY_STABLE_SORT [$$28(ASC)]  |UNPARTITIONED|
+                              -- IN_MEMORY_STABLE_SORT [$$j(ASC)]  |UNPARTITIONED|
                                 -- UNNEST  |UNPARTITIONED|
                                   -- NESTED_TUPLE_SOURCE  |UNPARTITIONED|
                           }
@@ -31,7 +31,7 @@
                                                       -- SUBPLAN  |UNPARTITIONED|
                                                               {
                                                                 -- AGGREGATE  |UNPARTITIONED|
-                                                                  -- IN_MEMORY_STABLE_SORT [$$21(ASC)]  |UNPARTITIONED|
+                                                                  -- IN_MEMORY_STABLE_SORT [$$j(ASC)]  |UNPARTITIONED|
                                                                     -- UNNEST  |UNPARTITIONED|
                                                                       -- NESTED_TUPLE_SOURCE  |UNPARTITIONED|
                                                               }

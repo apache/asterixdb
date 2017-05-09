@@ -18,7 +18,6 @@
  */
 package org.apache.asterix.om.functions;
 
-import java.io.Serializable;
 import java.util.List;
 
 import org.apache.asterix.om.typecomputer.base.IResultTypeComputer;
@@ -26,7 +25,7 @@ import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression.FunctionKind;
 import org.apache.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
 
-public interface IExternalFunctionInfo extends IFunctionInfo, Serializable {
+public interface IExternalFunctionInfo extends IFunctionInfo {
 
     public IResultTypeComputer getResultTypeComputer();
 

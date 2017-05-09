@@ -21,9 +21,10 @@ package org.apache.asterix.om.base;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.asterix.om.types.AUnorderedListType;
 import org.apache.asterix.om.types.IAType;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -33,7 +34,7 @@ public class AUnorderedList implements IACollection {
     protected AUnorderedListType type;
 
     public AUnorderedList(AUnorderedListType type) {
-        values = new ArrayList<IAObject>();
+        values = new ArrayList<>();
         this.type = type;
     }
 
@@ -74,14 +75,6 @@ public class AUnorderedList implements IACollection {
         return values.size();
     }
 
-    public IAObject getOneObject() {
-        if (values == null || values.isEmpty()) {
-            return null;
-        } else {
-            return values.get(0);
-        }
-    }
-
     @Override
     public boolean deepEqual(IAObject obj) {
         return equals(obj);
@@ -95,7 +88,7 @@ public class AUnorderedList implements IACollection {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append("AUnorderedList: [ ");
+        sb.append("multiset: {{ ");
         boolean first = true;
         for (IAObject v : values) {
             if (first) {
@@ -105,7 +98,7 @@ public class AUnorderedList implements IACollection {
             }
             sb.append(v.toString());
         }
-        sb.append(" ]");
+        sb.append(" }}");
         return sb.toString();
     }
 

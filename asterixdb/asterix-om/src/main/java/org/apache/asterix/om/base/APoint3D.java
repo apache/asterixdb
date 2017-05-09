@@ -18,11 +18,11 @@
  */
 package org.apache.asterix.om.base;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class APoint3D implements IAObject {
 
@@ -70,7 +70,7 @@ public class APoint3D implements IAObject {
 
     @Override
     public String toString() {
-        return "APoint3D: { x: " + x + ", y: " + y + ", z: " + z + " }";
+        return "point3d: { x: " + x + ", y: " + y + ", z: " + z + " }";
     }
 
     @Override

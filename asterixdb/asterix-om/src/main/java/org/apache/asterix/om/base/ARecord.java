@@ -18,11 +18,11 @@
  */
 package org.apache.asterix.om.base;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.utils.RecordUtil;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class ARecord implements IAObject {
@@ -83,7 +83,7 @@ public class ARecord implements IAObject {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append("ARecord: { ");
+        sb.append("{ ");
         if (fields != null) {
             for (int i = 0; i < fields.length; i++) {
                 if (i > 0) {

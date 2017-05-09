@@ -18,12 +18,12 @@
  */
 package org.apache.asterix.om.base;
 
+import org.apache.asterix.om.types.BuiltinType;
+import org.apache.asterix.om.types.IAType;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-
-import org.apache.asterix.om.types.BuiltinType;
-import org.apache.asterix.om.types.IAType;
 
 public class APolygon implements IAObject {
 
@@ -76,7 +76,7 @@ public class APolygon implements IAObject {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append("APolygon: [ ");
+        sb.append("polygon: [ ");
         for (int i = 0; i < points.length; i++) {
             if (i > 0) {
                 sb.append(", ");

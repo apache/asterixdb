@@ -3,10 +3,10 @@
     -- STREAM_PROJECT  |UNPARTITIONED|
       -- ASSIGN  |UNPARTITIONED|
         -- STREAM_LIMIT  |UNPARTITIONED|
-          -- SORT_MERGE_EXCHANGE [$$12(DESC), $$11(ASC) ]  |PARTITIONED|
+          -- SORT_MERGE_EXCHANGE [$$o_totalprice(DESC), $$o_orderdate(ASC) ]  |PARTITIONED|
             -- STREAM_LIMIT  |PARTITIONED|
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                -- STABLE_SORT [topK: 100] [$$12(DESC), $$11(ASC)]  |PARTITIONED|
+                -- STABLE_SORT [topK: 100] [$$o_totalprice(DESC), $$o_orderdate(ASC)]  |PARTITIONED|
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                     -- SORT_GROUP_BY[$$72, $$73]  |PARTITIONED|
                             {
@@ -26,7 +26,7 @@
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                     -- STREAM_PROJECT  |PARTITIONED|
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                        -- HYBRID_HASH_JOIN [$$57][$$3]  |PARTITIONED|
+                                        -- HYBRID_HASH_JOIN [$$57][$$l_orderkey]  |PARTITIONED|
                                           -- HASH_PARTITION_EXCHANGE [$$57]  |PARTITIONED|
                                             -- STREAM_PROJECT  |PARTITIONED|
                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -45,7 +45,7 @@
                                                           -- DATASOURCE_SCAN  |PARTITIONED|
                                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-                                          -- HASH_PARTITION_EXCHANGE [$$3]  |PARTITIONED|
+                                          -- HASH_PARTITION_EXCHANGE [$$l_orderkey]  |PARTITIONED|
                                             -- STREAM_PROJECT  |PARTITIONED|
                                               -- STREAM_SELECT  |PARTITIONED|
                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

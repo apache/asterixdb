@@ -52,10 +52,6 @@ public class AggregateFunctionCallExpression extends AbstractFunctionCallExpress
         return twoStep;
     }
 
-    public void setTwoStep(boolean twoStep) {
-        this.twoStep = twoStep;
-    }
-
     @Override
     public AggregateFunctionCallExpression cloneExpression() {
         cloneAnnotations();

@@ -18,10 +18,12 @@
  */
 package org.apache.asterix.translator;
 
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Stack;
 
+import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.hyracks.algebricks.core.algebra.base.Counter;
 import org.apache.hyracks.algebricks.core.algebra.base.IVariableContext;
@@ -32,8 +34,8 @@ public final class TranslationContext implements IVariableContext {
     private Counter varCounter;
 
     /** The stack is the used to manage the scope of variables for group-by rebindings. */
-    private Stack<Map<Integer, LogicalVariable>> stack = new Stack<Map<Integer, LogicalVariable>>();
-    private Map<Integer, LogicalVariable> currentVarMap = new HashMap<Integer, LogicalVariable>();
+    private Deque<Map<Integer, LogicalVariable>> stack = new ArrayDeque<>();
+    private Map<Integer, LogicalVariable> currentVarMap = new HashMap<>();
     private boolean topFlwor = true;
 
     public TranslationContext(Counter varCounter) {
@@ -47,9 +49,15 @@ public final class TranslationContext implements IVariableContext {
 
     @Override
     public LogicalVariable newVar() {
+        return newVarFromExpression(null);
+    }
+
+    @Override
+    public LogicalVariable newVar(String displayName) {
         varCounter.inc();
-        LogicalVariable var = new LogicalVariable(varCounter.get());
-        currentVarMap.put(varCounter.get(), var);
+        int varId = varCounter.get();
+        LogicalVariable var = new LogicalVariable(varId, displayName);
+        currentVarMap.put(varId, var);
         return var;
     }
 
@@ -70,19 +78,25 @@ public final class TranslationContext implements IVariableContext {
         return currentVarMap.get(varId);
     }
 
-    public LogicalVariable getVar(VariableExpr v) {
-        return currentVarMap.get(v.getVar().getId());
-    }
-
-    public LogicalVariable newVar(VariableExpr v) {
-        Integer i = v.getVar().getId();
-        if (i > varCounter.get()) {
-            varCounter.set(i);
+    public LogicalVariable newVarFromExpression(Expression expr) {
+        int varId;
+        if (expr != null && expr.getKind() == Expression.Kind.VARIABLE_EXPRESSION) {
+            VariableExpr v = (VariableExpr) expr;
+            varId = v.getVar().getId();
+            if (varId > varCounter.get()) {
+                varCounter.set(varId);
+            }
+        } else {
+            varCounter.inc();
+            varId = varCounter.get();
         }
-        LogicalVariable var = new LogicalVariable(i);
-        currentVarMap.put(i, var);
+        LogicalVariable var = expr != null && (expr.getKind() == Expression.Kind.VARIABLE_EXPRESSION
+                || expr.getKind() == Expression.Kind.FIELD_ACCESSOR_EXPRESSION)
+                        ? new LogicalVariable(varId, expr.toString()) : new LogicalVariable(varId);
+        currentVarMap.put(varId, var);
         return var;
     }
+
 
     public void setVar(VariableExpr v, LogicalVariable var) {
         currentVarMap.put(v.getVar().getId(), var);
