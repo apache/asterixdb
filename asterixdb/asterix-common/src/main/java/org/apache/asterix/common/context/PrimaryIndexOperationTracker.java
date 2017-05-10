@@ -35,9 +35,9 @@ import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent.ComponentState;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMMemoryComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
-import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndex;
 
 public class PrimaryIndexOperationTracker extends BaseOperationTracker {
 
@@ -110,11 +110,11 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
         if (needsFlush || flushOnExit) {
             //Make the current mutable components READABLE_UNWRITABLE to stop coming modify operations from entering them until the current flush is scheduled.
             for (ILSMIndex lsmIndex : indexes) {
-                AbstractLSMIndex abstractLSMIndex = ((AbstractLSMIndex) lsmIndex);
-                ILSMOperationTracker opTracker = abstractLSMIndex.getOperationTracker();
+                ILSMOperationTracker opTracker = lsmIndex.getOperationTracker();
                 synchronized (opTracker) {
-                    if (abstractLSMIndex.getCurrentMutableComponentState() == ComponentState.READABLE_WRITABLE) {
-                        abstractLSMIndex.setCurrentMutableComponentState(ComponentState.READABLE_UNWRITABLE);
+                    ILSMMemoryComponent memComponent = lsmIndex.getCurrentMemoryComponent();
+                    if (memComponent.getState() == ComponentState.READABLE_WRITABLE && memComponent.isModified()) {
+                        memComponent.setState(ComponentState.READABLE_UNWRITABLE);
                     }
                 }
             }

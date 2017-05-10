@@ -88,6 +88,7 @@ public class LSMHarness implements ILSMHarness {
                                     .getCurrentMutableComponentState() == ComponentState.READABLE_UNWRITABLE) {
                                 ((AbstractLSMIndex) lsmIndex)
                                         .setCurrentMutableComponentState(ComponentState.READABLE_WRITABLE);
+                                opTracker.notifyAll();
                             }
                             return false;
                         }
@@ -367,7 +368,9 @@ public class LSMHarness implements ILSMHarness {
         }
         getAndEnterComponents(ctx, LSMOperationType.MODIFICATION, false);
         try {
-            lsmIndex.getCurrentMemoryComponent().getMetadata().put(key, value);
+            AbstractLSMMemoryComponent c = (AbstractLSMMemoryComponent) ctx.getComponentHolder().get(0);
+            c.getMetadata().put(key, value);
+            c.setModified();
         } finally {
             exitAndComplete(ctx, LSMOperationType.MODIFICATION);
         }
@@ -389,7 +392,9 @@ public class LSMHarness implements ILSMHarness {
         }
         getAndEnterComponents(ctx, LSMOperationType.FORCE_MODIFICATION, false);
         try {
-            lsmIndex.getCurrentMemoryComponent().getMetadata().put(key, value);
+            AbstractLSMMemoryComponent c = (AbstractLSMMemoryComponent) ctx.getComponentHolder().get(0);
+            c.getMetadata().put(key, value);
+            c.setModified();
         } finally {
             exitAndComplete(ctx, LSMOperationType.FORCE_MODIFICATION);
         }
