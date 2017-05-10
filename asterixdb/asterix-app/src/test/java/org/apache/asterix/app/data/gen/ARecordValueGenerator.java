@@ -56,10 +56,10 @@ public class ARecordValueGenerator implements IAsterixFieldValueGenerator<ITuple
                 case DOUBLE:
                     generators[i] = new ADoubleFieldValueGenerator(generationFunctions[i], uniques[i], true);
                     break;
-                case INT32:
+                case INTEGER:
                     generators[i] = new AInt32FieldValueGenerator(generationFunctions[i], uniques[i], true);
                     break;
-                case INT64:
+                case BIGINT:
                     generators[i] = new AInt64FieldValueGenerator(generationFunctions[i], uniques[i], true);
                     break;
                 case STRING:

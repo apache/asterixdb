@@ -234,13 +234,13 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
         IARecordBuilder derivedRecordBuilder = new RecordBuilder();
         ArrayBackedValueStorage fieldValue = new ArrayBackedValueStorage();
         switch (derivedDatatype.getTypeTag()) {
-            case ORDEREDLIST:
+            case ARRAY:
                 tag = DerivedTypeTag.ORDEREDLIST;
                 break;
-            case UNORDEREDLIST:
+            case MULTISET:
                 tag = DerivedTypeTag.UNORDEREDLIST;
                 break;
-            case RECORD:
+            case OBJECT:
                 tag = DerivedTypeTag.RECORD;
                 break;
             default:

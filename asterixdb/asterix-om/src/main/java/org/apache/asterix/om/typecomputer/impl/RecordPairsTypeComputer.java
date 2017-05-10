@@ -36,8 +36,8 @@ public class RecordPairsTypeComputer extends AbstractResultTypeComputer {
     @Override
     protected void checkArgType(String funcName, int argIndex, IAType type) throws AlgebricksException {
         ATypeTag typeTag = type.getTypeTag();
-        if (typeTag != ATypeTag.RECORD) {
-            throw new TypeMismatchException(funcName, argIndex, typeTag, ATypeTag.RECORD);
+        if (typeTag != ATypeTag.OBJECT) {
+            throw new TypeMismatchException(funcName, argIndex, typeTag, ATypeTag.OBJECT);
         }
     }
 

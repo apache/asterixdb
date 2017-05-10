@@ -18,8 +18,9 @@
  */
 package org.apache.asterix.om.types;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.asterix.om.base.IAObject;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class AOrderedListType extends AbstractCollectionType {
@@ -38,12 +39,12 @@ public class AOrderedListType extends AbstractCollectionType {
 
     @Override
     public ATypeTag getTypeTag() {
-        return ATypeTag.ORDEREDLIST;
+        return ATypeTag.ARRAY;
     }
 
     @Override
     public String getDisplayName() {
-        return "AOrderedList";
+        return "array";
     }
 
     @Override

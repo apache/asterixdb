@@ -72,13 +72,13 @@ public class AObjectSerializerDeserializer implements ISerializerDeserializer<IA
                 return ANullSerializerDeserializer.INSTANCE.deserialize(in);
             case BOOLEAN:
                 return ABooleanSerializerDeserializer.INSTANCE.deserialize(in);
-            case INT8:
+            case TINYINT:
                 return AInt8SerializerDeserializer.INSTANCE.deserialize(in);
-            case INT16:
+            case SMALLINT:
                 return AInt16SerializerDeserializer.INSTANCE.deserialize(in);
-            case INT32:
+            case INTEGER:
                 return AInt32SerializerDeserializer.INSTANCE.deserialize(in);
-            case INT64:
+            case BIGINT:
                 return AInt64SerializerDeserializer.INSTANCE.deserialize(in);
             case FLOAT:
                 return AFloatSerializerDeserializer.INSTANCE.deserialize(in);
@@ -114,11 +114,11 @@ public class AObjectSerializerDeserializer implements ISerializerDeserializer<IA
                 return APolygonSerializerDeserializer.INSTANCE.deserialize(in);
             case CIRCLE:
                 return ACircleSerializerDeserializer.INSTANCE.deserialize(in);
-            case RECORD:
+            case OBJECT:
                 return ARecordSerializerDeserializer.SCHEMALESS_INSTANCE.deserialize(in);
-            case ORDEREDLIST:
+            case ARRAY:
                 return AOrderedListSerializerDeserializer.SCHEMALESS_INSTANCE.deserialize(in);
-            case UNORDEREDLIST:
+            case MULTISET:
                 return AUnorderedListSerializerDeserializer.SCHEMALESS_INSTANCE.deserialize(in);
             default:
                 throw new NotImplementedException("No serializer/deserializer implemented for type " + typeTag + " .");
@@ -144,16 +144,16 @@ public class AObjectSerializerDeserializer implements ISerializerDeserializer<IA
             case BOOLEAN:
                 ABooleanSerializerDeserializer.INSTANCE.serialize((ABoolean) instance, out);
                 break;
-            case INT8:
+            case TINYINT:
                 AInt8SerializerDeserializer.INSTANCE.serialize((AInt8) instance, out);
                 break;
-            case INT16:
+            case SMALLINT:
                 AInt16SerializerDeserializer.INSTANCE.serialize((AInt16) instance, out);
                 break;
-            case INT32:
+            case INTEGER:
                 AInt32SerializerDeserializer.INSTANCE.serialize((AInt32) instance, out);
                 break;
-            case INT64:
+            case BIGINT:
                 AInt64SerializerDeserializer.INSTANCE.serialize((AInt64) instance, out);
                 break;
             case FLOAT:
@@ -201,13 +201,13 @@ public class AObjectSerializerDeserializer implements ISerializerDeserializer<IA
             case CIRCLE:
                 ACircleSerializerDeserializer.INSTANCE.serialize((ACircle) instance, out);
                 break;
-            case RECORD:
+            case OBJECT:
                 ARecordSerializerDeserializer.SCHEMALESS_INSTANCE.serialize((ARecord) instance, out);
                 break;
-            case ORDEREDLIST:
+            case ARRAY:
                 AOrderedListSerializerDeserializer.SCHEMALESS_INSTANCE.serialize((AOrderedList) instance, out);
                 break;
-            case UNORDEREDLIST:
+            case MULTISET:
                 AUnorderedListSerializerDeserializer.SCHEMALESS_INSTANCE.serialize((AUnorderedList) instance, out);
                 break;
             case TYPE:

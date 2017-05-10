@@ -47,31 +47,31 @@ public class SubsetCollectionTypeComputer implements IResultTypeComputer {
         IAType t = (IAType) env.getType(fun.getArguments().get(0).getValue());
         ATypeTag actualTypeTag = t.getTypeTag();
         switch (actualTypeTag) {
-            case UNORDEREDLIST:
-            case ORDEREDLIST: {
+            case MULTISET:
+            case ARRAY: {
                 AbstractCollectionType act = (AbstractCollectionType) t;
                 return act.getItemType();
             }
             case UNION: {
                 AUnionType ut = (AUnionType) t;
                 if (!ut.isUnknownableType()) {
-                    throw new TypeMismatchException(funcName, 0, actualTypeTag, ATypeTag.UNORDEREDLIST,
-                            ATypeTag.ORDEREDLIST);
+                    throw new TypeMismatchException(funcName, 0, actualTypeTag, ATypeTag.MULTISET,
+                            ATypeTag.ARRAY);
                 }
                 IAType t2 = ut.getActualType();
                 ATypeTag tag2 = t2.getTypeTag();
-                if (tag2 == ATypeTag.UNORDEREDLIST || tag2 == ATypeTag.ORDEREDLIST) {
+                if (tag2 == ATypeTag.MULTISET || tag2 == ATypeTag.ARRAY) {
                     AbstractCollectionType act = (AbstractCollectionType) t2;
                     return act.getItemType();
                 }
-                throw new TypeMismatchException(funcName, 0, actualTypeTag, ATypeTag.UNORDEREDLIST,
-                        ATypeTag.ORDEREDLIST);
+                throw new TypeMismatchException(funcName, 0, actualTypeTag, ATypeTag.MULTISET,
+                        ATypeTag.ARRAY);
             }
             case ANY:
                 return BuiltinType.ANY;
             default:
-                throw new TypeMismatchException(funcName, 0, actualTypeTag, ATypeTag.UNORDEREDLIST,
-                        ATypeTag.ORDEREDLIST);
+                throw new TypeMismatchException(funcName, 0, actualTypeTag, ATypeTag.MULTISET,
+                        ATypeTag.ARRAY);
         }
     }
 }

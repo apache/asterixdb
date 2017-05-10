@@ -291,7 +291,7 @@ public class OptimizableOperatorSubTree {
             }
             // Get the record type for that dataset.
             IAType itemType = metadataProvider.findType(ds.getItemTypeDataverseName(), ds.getItemTypeName());
-            if (itemType.getTypeTag() != ATypeTag.RECORD) {
+            if (itemType.getTypeTag() != ATypeTag.OBJECT) {
                 if (i == 0) {
                     return false;
                 } else {

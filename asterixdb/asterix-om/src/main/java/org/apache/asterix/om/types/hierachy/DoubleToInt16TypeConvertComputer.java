@@ -37,13 +37,13 @@ public class DoubleToInt16TypeConvertComputer implements ITypeConvertComputer {
         double sourceValue = DoublePointable.getDouble(data, start);
         // Boundary check
         if (sourceValue > Short.MAX_VALUE || sourceValue < Short.MIN_VALUE) {
-            throw new IOException("Cannot convert Double to INT16 - Double value " + sourceValue
-                    + " is out of range that INT16 type can hold: INT16.MAX_VALUE:" + Short.MAX_VALUE
-                    + ", INT16.MIN_VALUE: " + Short.MIN_VALUE);
+            throw new IOException("Cannot convert Double to SMALLINT - Double value " + sourceValue
+                    + " is out of range that SMALLINT type can hold: SMALLINT.MAX_VALUE:" + Short.MAX_VALUE
+                    + ", SMALLINT.MIN_VALUE: " + Short.MIN_VALUE);
         }
         // Math.floor to truncate decimal portion
         short targetValue = (short) Math.floor(sourceValue);
-        out.writeByte(ATypeTag.INT16.serialize());
+        out.writeByte(ATypeTag.SMALLINT.serialize());
         out.writeShort(targetValue);
     }
 

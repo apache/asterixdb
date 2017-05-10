@@ -136,7 +136,7 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
         if (pos != null) {
             String tName = dataset.getItemTypeName();
             IAType t = mp.findType(dataset.getItemTypeDataverseName(), tName);
-            if (t.getTypeTag() != ATypeTag.RECORD) {
+            if (t.getTypeTag() != ATypeTag.OBJECT) {
                 return false;
             }
             ARecordType rt = (ARecordType) t;
@@ -322,7 +322,7 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
                                 int pos = ((AInt32) obj).getIntegerValue();
                                 String tName = dataset.getItemTypeName();
                                 IAType t = mp.findType(dataset.getItemTypeDataverseName(), tName);
-                                if (t.getTypeTag() != ATypeTag.RECORD) {
+                                if (t.getTypeTag() != ATypeTag.OBJECT) {
                                     return false;
                                 }
                                 ARecordType rt = (ARecordType) t;

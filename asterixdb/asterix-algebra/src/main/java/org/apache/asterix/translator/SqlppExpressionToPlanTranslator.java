@@ -254,7 +254,7 @@ class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator imp
         ILogicalOperator unnestOp;
         if (fromTerm.hasPositionalVariable()) {
             LogicalVariable pVar = context.newVarFromExpression(fromTerm.getPositionalVariable());
-            // We set the positional variable type as INT64 type.
+            // We set the positional variable type as BIGINT type.
             unnestOp =
                     new UnnestOperator(fromVar, new MutableObject<ILogicalExpression>(makeUnnestExpression(eo.first)),
                             pVar, BuiltinType.AINT64, new PositionWriter());
@@ -454,7 +454,7 @@ class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator imp
         ILogicalOperator unnestOp;
         if (binaryCorrelate.hasPositionalVariable()) {
             LogicalVariable pVar = context.newVarFromExpression(binaryCorrelate.getPositionalVariable());
-            // We set the positional variable type as INT64 type.
+            // We set the positional variable type as BIGINT type.
             unnestOp = innerUnnest
                     ? new UnnestOperator(rightVar, new MutableObject<>(makeUnnestExpression(eo.first)), pVar,
                             BuiltinType.AINT64, new PositionWriter())

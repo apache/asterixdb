@@ -45,11 +45,11 @@ public class NormalizedKeyComputerFactoryProvider implements INormalizedKeyCompu
                 case DATE:
                 case TIME:
                 case YEARMONTHDURATION:
-                case INT32:
+                case INTEGER:
                     return new AWrappedAscNormalizedKeyComputerFactory(new IntegerNormalizedKeyComputerFactory());
                 case DATETIME:
                 case DAYTIMEDURATION:
-                case INT64:
+                case BIGINT:
                     return new AWrappedAscNormalizedKeyComputerFactory(new Integer64NormalizedKeyComputerFactory());
                 case FLOAT:
                     return new AWrappedAscNormalizedKeyComputerFactory(new FloatNormalizedKeyComputerFactory());
@@ -67,11 +67,11 @@ public class NormalizedKeyComputerFactoryProvider implements INormalizedKeyCompu
                 case DATE:
                 case TIME:
                 case YEARMONTHDURATION:
-                case INT32:
+                case INTEGER:
                     return new AWrappedDescNormalizedKeyComputerFactory(new IntegerNormalizedKeyComputerFactory());
                 case DATETIME:
                 case DAYTIMEDURATION:
-                case INT64:
+                case BIGINT:
                     return new AWrappedDescNormalizedKeyComputerFactory(new Integer64NormalizedKeyComputerFactory());
                 case FLOAT:
                     return new AWrappedDescNormalizedKeyComputerFactory(new FloatNormalizedKeyComputerFactory());

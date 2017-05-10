@@ -172,8 +172,8 @@ public class FullTextContainsParameterCheckRule implements IAlgebraicRewriteRule
             ATypeTag exprTypeTag = ConstantExpressionUtil.getConstantIaObjectType(secondExpr);
             switch (exprTypeTag) {
                 case STRING:
-                case UNORDEREDLIST:
-                case ORDEREDLIST:
+                case MULTISET:
+                case ARRAY:
                     break;
                 default:
                     throw new AlgebricksException("The second expression of " + functionName

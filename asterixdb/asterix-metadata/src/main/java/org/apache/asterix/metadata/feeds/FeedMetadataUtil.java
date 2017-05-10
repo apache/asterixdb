@@ -296,7 +296,7 @@ public class FeedMetadataUtil {
         try {
             ctx = MetadataManager.INSTANCE.beginTransaction();
             Datatype t = MetadataManager.INSTANCE.getDatatype(ctx, dataverseName, datatypeName);
-            if (t == null || t.getDatatype().getTypeTag() != ATypeTag.RECORD) {
+            if (t == null || t.getDatatype().getTypeTag() != ATypeTag.OBJECT) {
                 throw new MetadataException(ErrorCode.FEED_METADATA_UTIL_UNEXPECTED_FEED_DATATYPE, datatypeName);
             }
             outputType = (ARecordType) t.getDatatype();

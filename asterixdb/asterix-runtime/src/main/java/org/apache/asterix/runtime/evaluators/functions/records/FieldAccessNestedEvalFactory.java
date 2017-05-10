@@ -145,7 +145,7 @@ public class FieldAccessNestedEvalFactory implements IScalarEvaluatorFactory {
                                         BuiltinFunctions.FIELD_ACCESS_NESTED.getName(),
                                         serializedTypeTag);
                             }
-                            if (subType.getTypeTag() == ATypeTag.RECORD) {
+                            if (subType.getTypeTag() == ATypeTag.OBJECT) {
                                 recTypeInfos[pathIndex].reset((ARecordType) subType);
                             }
                         }
@@ -173,7 +173,7 @@ public class FieldAccessNestedEvalFactory implements IScalarEvaluatorFactory {
                             return;
                         }
                         subType = ((ARecordType) subType).getFieldTypes()[subFieldIndex];
-                        if (subType.getTypeTag() == ATypeTag.RECORD && pathIndex + 1 < fieldPointables.length) {
+                        if (subType.getTypeTag() == ATypeTag.OBJECT && pathIndex + 1 < fieldPointables.length) {
                             // Move to the next Depth
                             recTypeInfos[pathIndex + 1].reset((ARecordType) subType);
                         }

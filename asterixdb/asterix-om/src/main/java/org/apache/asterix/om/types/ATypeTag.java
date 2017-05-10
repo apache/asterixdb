@@ -27,10 +27,10 @@ import java.util.List;
  * non-primitive type in the object model
  */
 public enum ATypeTag implements IEnumSerializer {
-    INT8(1),
-    INT16(2),
-    INT32(3),
-    INT64(4),
+    TINYINT(1),
+    SMALLINT(2),
+    INTEGER(3),
+    BIGINT(4),
     UINT8(5),
     UINT16(6),
     UINT32(7),
@@ -48,10 +48,10 @@ public enum ATypeTag implements IEnumSerializer {
     DURATION(19),
     POINT(20),
     POINT3D(21),
-    ORDEREDLIST(22),
-    UNORDEREDLIST(23),
-    RECORD(24),
-    SPARSERECORD(25),
+    ARRAY(22),
+    MULTISET(23),
+    OBJECT(24),
+    SPARSOBJECT(25),
     UNION(26),
     ENUM(27),
     TYPE(28),
@@ -75,10 +75,10 @@ public enum ATypeTag implements IEnumSerializer {
     public static final byte SERIALIZED_MISSING_TYPE_TAG = MISSING.serialize();
     public static final byte SERIALIZED_NULL_TYPE_TAG = NULL.serialize();
     public static final byte SERIALIZED_DOUBLE_TYPE_TAG = DOUBLE.serialize();
-    public static final byte SERIALIZED_RECORD_TYPE_TAG = RECORD.serialize();
-    public static final byte SERIALIZED_INT32_TYPE_TAG = INT32.serialize();
-    public static final byte SERIALIZED_ORDEREDLIST_TYPE_TAG = ORDEREDLIST.serialize();
-    public static final byte SERIALIZED_UNORDEREDLIST_TYPE_TAG = UNORDEREDLIST.serialize();
+    public static final byte SERIALIZED_RECORD_TYPE_TAG = OBJECT.serialize();
+    public static final byte SERIALIZED_INT32_TYPE_TAG = INTEGER.serialize();
+    public static final byte SERIALIZED_ORDEREDLIST_TYPE_TAG = ARRAY.serialize();
+    public static final byte SERIALIZED_UNORDEREDLIST_TYPE_TAG = MULTISET.serialize();
     public static final byte SERIALIZED_POLYGON_TYPE_TAG = POLYGON.serialize();
     public static final byte SERIALIZED_DATE_TYPE_TAG = DATE.serialize();
     public static final byte SERIALIZED_TIME_TYPE_TAG = TIME.serialize();
@@ -93,9 +93,9 @@ public enum ATypeTag implements IEnumSerializer {
     public static final byte SERIALIZED_LINE_TYPE_TAG = LINE.serialize();
     public static final byte SERIALIZED_RECTANGLE_TYPE_TAG = RECTANGLE.serialize();
     public static final byte SERIALIZED_BOOLEAN_TYPE_TAG = BOOLEAN.serialize();
-    public static final byte SERIALIZED_INT8_TYPE_TAG = INT8.serialize();
-    public static final byte SERIALIZED_INT16_TYPE_TAG = INT16.serialize();
-    public static final byte SERIALIZED_INT64_TYPE_TAG = INT64.serialize();
+    public static final byte SERIALIZED_INT8_TYPE_TAG = TINYINT.serialize();
+    public static final byte SERIALIZED_INT16_TYPE_TAG = SMALLINT.serialize();
+    public static final byte SERIALIZED_INT64_TYPE_TAG = BIGINT.serialize();
     public static final byte SERIALIZED_FLOAT_TYPE_TAG = FLOAT.serialize();
     public static final byte SERIALIZED_BINARY_TYPE_TAG = BINARY.serialize();
     public static final byte SERIALIZED_UUID_TYPE_TAG = UUID.serialize();
@@ -129,7 +129,7 @@ public enum ATypeTag implements IEnumSerializer {
     }
 
     public boolean isDerivedType() {
-        return this == ATypeTag.RECORD || this == ATypeTag.ORDEREDLIST || this == ATypeTag.UNORDEREDLIST
+        return this == ATypeTag.OBJECT || this == ATypeTag.ARRAY || this == ATypeTag.MULTISET
                 || this == ATypeTag.UNION;
     }
 

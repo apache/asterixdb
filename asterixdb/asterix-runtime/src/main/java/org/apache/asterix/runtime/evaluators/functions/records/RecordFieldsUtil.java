@@ -289,19 +289,19 @@ public class RecordFieldsUtil {
     }
 
     private ARecordPointable getRecordPointable() {
-        return (ARecordPointable) recordPointablePool.allocate(ATypeTag.RECORD);
+        return (ARecordPointable) recordPointablePool.allocate(ATypeTag.OBJECT);
     }
 
     private AListPointable getListPointable() {
-        return (AListPointable) listPointablePool.allocate(ATypeTag.ORDEREDLIST);
+        return (AListPointable) listPointablePool.allocate(ATypeTag.ARRAY);
     }
 
     private IARecordBuilder getRecordBuilder() {
-        return recordBuilderPool.allocate(ATypeTag.RECORD);
+        return recordBuilderPool.allocate(ATypeTag.OBJECT);
     }
 
     private OrderedListBuilder getOrderedListBuilder() {
-        return (OrderedListBuilder) listBuilderPool.allocate(ATypeTag.ORDEREDLIST);
+        return (OrderedListBuilder) listBuilderPool.allocate(ATypeTag.ARRAY);
     }
 
     private ArrayBackedValueStorage getTempBuffer() {

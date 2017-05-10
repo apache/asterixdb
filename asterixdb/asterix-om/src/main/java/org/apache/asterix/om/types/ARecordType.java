@@ -157,7 +157,7 @@ public class ARecordType extends AbstractComplexType {
 
     @Override
     public ATypeTag getTypeTag() {
-        return ATypeTag.RECORD;
+        return ATypeTag.OBJECT;
     }
 
     public boolean isOpen() {
@@ -214,7 +214,7 @@ public class ARecordType extends AbstractComplexType {
             if (subRecordType.getTypeTag().equals(ATypeTag.UNION)) {
                 //enforced SubType
                 subRecordType = ((AUnionType) subRecordType).getActualType();
-                if (subRecordType.getTypeTag() != ATypeTag.RECORD) {
+                if (subRecordType.getTypeTag() != ATypeTag.OBJECT) {
                     throw new AsterixException(
                             "Field accessor is not defined for values of type " + subRecordType.getTypeTag());
                 }
@@ -264,7 +264,7 @@ public class ARecordType extends AbstractComplexType {
     public ARecordType deepCopy(ARecordType type) {
         IAType[] newTypes = new IAType[type.fieldNames.length];
         for (int i = 0; i < type.fieldTypes.length; i++) {
-            if (type.fieldTypes[i].getTypeTag() == ATypeTag.RECORD) {
+            if (type.fieldTypes[i].getTypeTag() == ATypeTag.OBJECT) {
                 newTypes[i] = deepCopy((ARecordType) type.fieldTypes[i]);
             } else {
                 newTypes[i] = type.fieldTypes[i];
@@ -275,7 +275,7 @@ public class ARecordType extends AbstractComplexType {
 
     @Override
     public String getDisplayName() {
-        return "ARecord";
+        return "object";
     }
 
     @Override

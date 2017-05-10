@@ -81,9 +81,9 @@ public class PointableAllocator {
     public IVisitablePointable allocateFieldValue(IAType type) {
         if (type == null)
             return flatValueAllocator.allocate(null);
-        else if (type.getTypeTag().equals(ATypeTag.RECORD))
+        else if (type.getTypeTag().equals(ATypeTag.OBJECT))
             return recordValueAllocator.allocate(type);
-        else if (type.getTypeTag().equals(ATypeTag.UNORDEREDLIST) || type.getTypeTag().equals(ATypeTag.ORDEREDLIST))
+        else if (type.getTypeTag().equals(ATypeTag.MULTISET) || type.getTypeTag().equals(ATypeTag.ARRAY))
             return listValueAllocator.allocate(type);
         else
             return flatValueAllocator.allocate(null);
@@ -98,9 +98,9 @@ public class PointableAllocator {
     public IVisitablePointable allocateFieldValue(ATypeTag typeTag, byte[] b, int offset) throws AsterixException {
         if (typeTag == null)
             return flatValueAllocator.allocate(null);
-        else if (typeTag.equals(ATypeTag.RECORD))
+        else if (typeTag.equals(ATypeTag.OBJECT))
             return recordValueAllocator.allocate(DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE);
-        else if (typeTag.equals(ATypeTag.UNORDEREDLIST)) {
+        else if (typeTag.equals(ATypeTag.MULTISET)) {
             ATypeTag listItemType = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(b[offset]);
             if (listItemType == ATypeTag.ANY)
                 return listValueAllocator.allocate(DefaultOpenFieldType.NESTED_OPEN_AUNORDERED_LIST_TYPE);
@@ -111,7 +111,7 @@ public class PointableAllocator {
                     return listValueAllocator.allocate(
                             unorederedListTypeAllocator.allocate(TypeTagUtil.getBuiltinTypeByTag(listItemType)));
             }
-        } else if (typeTag.equals(ATypeTag.ORDEREDLIST)) {
+        } else if (typeTag.equals(ATypeTag.ARRAY)) {
             ATypeTag listItemType = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(b[offset]);
             if (listItemType == ATypeTag.ANY)
                 return listValueAllocator.allocate(DefaultOpenFieldType.NESTED_OPEN_AORDERED_LIST_TYPE);

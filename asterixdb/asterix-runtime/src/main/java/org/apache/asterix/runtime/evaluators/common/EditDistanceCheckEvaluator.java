@@ -104,7 +104,7 @@ public class EditDistanceCheckEvaluator extends EditDistanceEvaluator {
                         rightStartOffset + typeIndicatorSize, edThresh);
             }
 
-            case ORDEREDLIST: {
+            case ARRAY: {
                 firstOrdListIter.reset(leftBytes, leftStartOffset);
                 secondOrdListIter.reset(rightBytes, rightStartOffset);
                 return (int) ed.computeSimilarity(firstOrdListIter, secondOrdListIter, edThresh);

@@ -27,7 +27,8 @@ import org.apache.hyracks.algebricks.data.IBinaryHashFunctionFamilyProvider;
 import org.apache.hyracks.api.dataflow.value.IBinaryHashFunctionFamily;
 
 /**
- * We use a binary hash function that promotes numeric types (INT8,INT16,INT32,INT64,FLOAT) to DOUBLE if requested.
+ * We use a binary hash function that promotes numeric types (tinyint,smallint,integer,bigint,float) to double
+ * if requested.
  * Non-numeric types will be hashed without type promotion.
  */
 public class BinaryHashFunctionFamilyProvider implements IBinaryHashFunctionFamilyProvider, Serializable {

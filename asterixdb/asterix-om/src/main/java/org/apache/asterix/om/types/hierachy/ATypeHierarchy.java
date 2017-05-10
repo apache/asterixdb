@@ -64,43 +64,43 @@ public class ATypeHierarchy {
 
     // add default type promotion rules
     static {
-        // Promotion (widening): INT8 -> INT16 -> INT32 -> INT64 -> FLOAT -> DOUBLE
+        // Promotion (widening): TINYINT -> SMALLINT -> INTEGER -> BIGINT -> FLOAT -> DOUBLE
         // No precision and range loss
-        addPromotionRule(ATypeTag.INT8, ATypeTag.INT16, IntegerToInt16TypeConvertComputer.INSTANCE);
-        addPromotionRule(ATypeTag.INT8, ATypeTag.INT32, IntegerToInt32TypeConvertComputer.INSTANCE);
-        addPromotionRule(ATypeTag.INT8, ATypeTag.INT64, IntegerToInt64TypeConvertComputer.INSTANCE);
-        addPromotionRule(ATypeTag.INT16, ATypeTag.INT32, IntegerToInt32TypeConvertComputer.INSTANCE);
-        addPromotionRule(ATypeTag.INT16, ATypeTag.INT64, IntegerToInt64TypeConvertComputer.INSTANCE);
-        addPromotionRule(ATypeTag.INT32, ATypeTag.INT64, IntegerToInt64TypeConvertComputer.INSTANCE);
-        addPromotionRule(ATypeTag.INT8, ATypeTag.DOUBLE, IntegerToDoubleTypeConvertComputer.INSTANCE);
-        addPromotionRule(ATypeTag.INT16, ATypeTag.DOUBLE, IntegerToDoubleTypeConvertComputer.INSTANCE);
-        addPromotionRule(ATypeTag.INT32, ATypeTag.DOUBLE, IntegerToDoubleTypeConvertComputer.INSTANCE);
-        addPromotionRule(ATypeTag.INT64, ATypeTag.DOUBLE, IntegerToDoubleTypeConvertComputer.INSTANCE);
+        addPromotionRule(ATypeTag.TINYINT, ATypeTag.SMALLINT, IntegerToInt16TypeConvertComputer.INSTANCE);
+        addPromotionRule(ATypeTag.TINYINT, ATypeTag.INTEGER, IntegerToInt32TypeConvertComputer.INSTANCE);
+        addPromotionRule(ATypeTag.TINYINT, ATypeTag.BIGINT, IntegerToInt64TypeConvertComputer.INSTANCE);
+        addPromotionRule(ATypeTag.SMALLINT, ATypeTag.INTEGER, IntegerToInt32TypeConvertComputer.INSTANCE);
+        addPromotionRule(ATypeTag.SMALLINT, ATypeTag.BIGINT, IntegerToInt64TypeConvertComputer.INSTANCE);
+        addPromotionRule(ATypeTag.INTEGER, ATypeTag.BIGINT, IntegerToInt64TypeConvertComputer.INSTANCE);
+        addPromotionRule(ATypeTag.TINYINT, ATypeTag.DOUBLE, IntegerToDoubleTypeConvertComputer.INSTANCE);
+        addPromotionRule(ATypeTag.SMALLINT, ATypeTag.DOUBLE, IntegerToDoubleTypeConvertComputer.INSTANCE);
+        addPromotionRule(ATypeTag.INTEGER, ATypeTag.DOUBLE, IntegerToDoubleTypeConvertComputer.INSTANCE);
+        addPromotionRule(ATypeTag.BIGINT, ATypeTag.DOUBLE, IntegerToDoubleTypeConvertComputer.INSTANCE);
         addPromotionRule(ATypeTag.FLOAT, ATypeTag.DOUBLE, FloatToDoubleTypeConvertComputer.INSTANCE);
-        addPromotionRule(ATypeTag.INT8, ATypeTag.FLOAT, IntegerToFloatTypeConvertComputer.INSTANCE);
-        addPromotionRule(ATypeTag.INT16, ATypeTag.FLOAT, IntegerToFloatTypeConvertComputer.INSTANCE);
-        addPromotionRule(ATypeTag.INT32, ATypeTag.FLOAT, IntegerToFloatTypeConvertComputer.INSTANCE);
-        addPromotionRule(ATypeTag.INT64, ATypeTag.FLOAT, IntegerToFloatTypeConvertComputer.INSTANCE);
+        addPromotionRule(ATypeTag.TINYINT, ATypeTag.FLOAT, IntegerToFloatTypeConvertComputer.INSTANCE);
+        addPromotionRule(ATypeTag.SMALLINT, ATypeTag.FLOAT, IntegerToFloatTypeConvertComputer.INSTANCE);
+        addPromotionRule(ATypeTag.INTEGER, ATypeTag.FLOAT, IntegerToFloatTypeConvertComputer.INSTANCE);
+        addPromotionRule(ATypeTag.BIGINT, ATypeTag.FLOAT, IntegerToFloatTypeConvertComputer.INSTANCE);
     }
 
     static {
-        // Demotion (narrowing): DOUBLE -> FLOAT -> INT64 -> INT32 -> INT16 -> INT8
+        // Demotion (narrowing): DOUBLE -> FLOAT -> BIGINT -> INTEGER -> SMALLINT -> TINYINT
         // Possible precision loss (e.g., FLOAT to INT)
         // This may produce an exception (if source value is greater than target.MAX or less than target.MIN)
-        addDemotionRule(ATypeTag.INT16, ATypeTag.INT8, IntegerToInt8TypeConvertComputer.INSTANCE);
-        addDemotionRule(ATypeTag.INT32, ATypeTag.INT8, IntegerToInt8TypeConvertComputer.INSTANCE);
-        addDemotionRule(ATypeTag.INT64, ATypeTag.INT8, IntegerToInt8TypeConvertComputer.INSTANCE);
-        addDemotionRule(ATypeTag.INT32, ATypeTag.INT16, IntegerToInt16TypeConvertComputer.INSTANCE);
-        addDemotionRule(ATypeTag.INT64, ATypeTag.INT16, IntegerToInt16TypeConvertComputer.INSTANCE);
-        addDemotionRule(ATypeTag.INT64, ATypeTag.INT32, IntegerToInt32TypeConvertComputer.INSTANCE);
-        addDemotionRule(ATypeTag.FLOAT, ATypeTag.INT8, FloatToInt8TypeConvertComputer.INSTANCE);
-        addDemotionRule(ATypeTag.FLOAT, ATypeTag.INT16, FloatToInt16TypeConvertComputer.INSTANCE);
-        addDemotionRule(ATypeTag.FLOAT, ATypeTag.INT32, FloatToInt32TypeConvertComputer.INSTANCE);
-        addDemotionRule(ATypeTag.FLOAT, ATypeTag.INT64, FloatToInt64TypeConvertComputer.INSTANCE);
-        addDemotionRule(ATypeTag.DOUBLE, ATypeTag.INT8, DoubleToInt8TypeConvertComputer.INSTANCE);
-        addDemotionRule(ATypeTag.DOUBLE, ATypeTag.INT16, DoubleToInt16TypeConvertComputer.INSTANCE);
-        addDemotionRule(ATypeTag.DOUBLE, ATypeTag.INT32, DoubleToInt32TypeConvertComputer.INSTANCE);
-        addDemotionRule(ATypeTag.DOUBLE, ATypeTag.INT64, DoubleToInt64TypeConvertComputer.INSTANCE);
+        addDemotionRule(ATypeTag.SMALLINT, ATypeTag.TINYINT, IntegerToInt8TypeConvertComputer.INSTANCE);
+        addDemotionRule(ATypeTag.INTEGER, ATypeTag.TINYINT, IntegerToInt8TypeConvertComputer.INSTANCE);
+        addDemotionRule(ATypeTag.BIGINT, ATypeTag.TINYINT, IntegerToInt8TypeConvertComputer.INSTANCE);
+        addDemotionRule(ATypeTag.INTEGER, ATypeTag.SMALLINT, IntegerToInt16TypeConvertComputer.INSTANCE);
+        addDemotionRule(ATypeTag.BIGINT, ATypeTag.SMALLINT, IntegerToInt16TypeConvertComputer.INSTANCE);
+        addDemotionRule(ATypeTag.BIGINT, ATypeTag.INTEGER, IntegerToInt32TypeConvertComputer.INSTANCE);
+        addDemotionRule(ATypeTag.FLOAT, ATypeTag.TINYINT, FloatToInt8TypeConvertComputer.INSTANCE);
+        addDemotionRule(ATypeTag.FLOAT, ATypeTag.SMALLINT, FloatToInt16TypeConvertComputer.INSTANCE);
+        addDemotionRule(ATypeTag.FLOAT, ATypeTag.INTEGER, FloatToInt32TypeConvertComputer.INSTANCE);
+        addDemotionRule(ATypeTag.FLOAT, ATypeTag.BIGINT, FloatToInt64TypeConvertComputer.INSTANCE);
+        addDemotionRule(ATypeTag.DOUBLE, ATypeTag.TINYINT, DoubleToInt8TypeConvertComputer.INSTANCE);
+        addDemotionRule(ATypeTag.DOUBLE, ATypeTag.SMALLINT, DoubleToInt16TypeConvertComputer.INSTANCE);
+        addDemotionRule(ATypeTag.DOUBLE, ATypeTag.INTEGER, DoubleToInt32TypeConvertComputer.INSTANCE);
+        addDemotionRule(ATypeTag.DOUBLE, ATypeTag.BIGINT, DoubleToInt64TypeConvertComputer.INSTANCE);
         addDemotionRule(ATypeTag.DOUBLE, ATypeTag.FLOAT, DoubleToFloatTypeConvertComputer.INSTANCE);
     }
 
@@ -110,14 +110,14 @@ public class ATypeHierarchy {
         hierarchyDomains.put(ATypeTag.CIRCLE, Domain.SPATIAL);
         hierarchyDomains.put(ATypeTag.POLYGON, Domain.SPATIAL);
         hierarchyDomains.put(ATypeTag.RECTANGLE, Domain.SPATIAL);
-        hierarchyDomains.put(ATypeTag.INT8, Domain.NUMERIC);
-        hierarchyDomains.put(ATypeTag.INT16, Domain.NUMERIC);
-        hierarchyDomains.put(ATypeTag.INT32, Domain.NUMERIC);
-        hierarchyDomains.put(ATypeTag.INT64, Domain.NUMERIC);
+        hierarchyDomains.put(ATypeTag.TINYINT, Domain.NUMERIC);
+        hierarchyDomains.put(ATypeTag.SMALLINT, Domain.NUMERIC);
+        hierarchyDomains.put(ATypeTag.INTEGER, Domain.NUMERIC);
+        hierarchyDomains.put(ATypeTag.BIGINT, Domain.NUMERIC);
         hierarchyDomains.put(ATypeTag.FLOAT, Domain.NUMERIC);
         hierarchyDomains.put(ATypeTag.DOUBLE, Domain.NUMERIC);
-        hierarchyDomains.put(ATypeTag.ORDEREDLIST, Domain.LIST);
-        hierarchyDomains.put(ATypeTag.UNORDEREDLIST, Domain.LIST);
+        hierarchyDomains.put(ATypeTag.ARRAY, Domain.LIST);
+        hierarchyDomains.put(ATypeTag.MULTISET, Domain.LIST);
     }
 
     public static Domain getTypeDomain(ATypeTag tag) {
@@ -193,22 +193,22 @@ public class ATypeHierarchy {
         if (sourceTypeTag != targetTypeTag) {
 
             switch (targetTypeTag) {
-                //Target Field Type:INT64
-                case INT64:
+                //Target Field Type:BIGINT
+                case BIGINT:
 
-                    // Change the Constant Type to INT64 Type
+                    // Change the Constant Type to BIGINT Type
                     switch (sourceTypeTag) {
-                        case INT8:
+                        case TINYINT:
                             asterixNewConstantValue = new AsterixConstantValue(
                                     new AInt64((long) ((AInt8) sourceObject).getByteValue()));
                             break;
 
-                        case INT16:
+                        case SMALLINT:
                             asterixNewConstantValue = new AsterixConstantValue(
                                     new AInt64((long) ((AInt16) sourceObject).getShortValue()));
                             break;
 
-                        case INT32:
+                        case INTEGER:
                             asterixNewConstantValue = new AsterixConstantValue(
                                     new AInt64((long) ((AInt32) sourceObject).getIntegerValue()));
                             break;
@@ -216,14 +216,14 @@ public class ATypeHierarchy {
                         case FLOAT:
                             tmpFloatValue = ((AFloat) sourceObject).getFloatValue();
                             // Check whether this value is within the range of the field type
-                            valueSanitycheck(ATypeTag.FLOAT, ATypeTag.INT64, tmpFloatValue);
+                            valueSanitycheck(ATypeTag.FLOAT, ATypeTag.BIGINT, tmpFloatValue);
                             asterixNewConstantValue = new AsterixConstantValue(new AInt64((long) tmpFloatValue));
                             break;
 
                         case DOUBLE:
                             tmpDoubleValue = ((ADouble) sourceObject).getDoubleValue();
                             // Check whether this value is within the range of the field type
-                            valueSanitycheck(ATypeTag.DOUBLE, ATypeTag.INT64, tmpDoubleValue);
+                            valueSanitycheck(ATypeTag.DOUBLE, ATypeTag.BIGINT, tmpDoubleValue);
                             asterixNewConstantValue = new AsterixConstantValue(new AInt64((long) tmpDoubleValue));
                             break;
 
@@ -233,39 +233,39 @@ public class ATypeHierarchy {
 
                     break;
 
-                //Target Field Type:INT32
-                case INT32:
+                //Target Field Type:INTEGER
+                case INTEGER:
 
-                    // Change the Constant Type to INT32 Type
+                    // Change the Constant Type to INTEGER Type
                     switch (sourceTypeTag) {
-                        case INT8:
+                        case TINYINT:
                             asterixNewConstantValue = new AsterixConstantValue(
                                     new AInt32(((AInt8) sourceObject).getByteValue()));
                             break;
 
-                        case INT16:
+                        case SMALLINT:
                             asterixNewConstantValue = new AsterixConstantValue(
                                     new AInt32(((AInt16) sourceObject).getShortValue()));
                             break;
 
-                        case INT64:
+                        case BIGINT:
                             tmpLongValue = ((AInt64) sourceObject).getLongValue();
                             // Check whether this value is within the range of the field type
-                            valueSanitycheck(ATypeTag.INT64, ATypeTag.INT32, tmpLongValue);
+                            valueSanitycheck(ATypeTag.BIGINT, ATypeTag.INTEGER, tmpLongValue);
                             asterixNewConstantValue = new AsterixConstantValue(new AInt32((int) tmpLongValue));
                             break;
 
                         case FLOAT:
                             tmpFloatValue = ((AFloat) sourceObject).getFloatValue();
                             // Check whether this value is within the range of the field type
-                            valueSanitycheck(ATypeTag.FLOAT, ATypeTag.INT32, tmpFloatValue);
+                            valueSanitycheck(ATypeTag.FLOAT, ATypeTag.INTEGER, tmpFloatValue);
                             asterixNewConstantValue = new AsterixConstantValue(new AInt32((int) tmpFloatValue));
                             break;
 
                         case DOUBLE:
                             tmpDoubleValue = ((ADouble) sourceObject).getDoubleValue();
                             // Check whether this value is within the range of the field type
-                            valueSanitycheck(ATypeTag.FLOAT, ATypeTag.INT32, tmpDoubleValue);
+                            valueSanitycheck(ATypeTag.FLOAT, ATypeTag.INTEGER, tmpDoubleValue);
                             asterixNewConstantValue = new AsterixConstantValue(new AInt32((int) tmpDoubleValue));
                             break;
 
@@ -275,43 +275,43 @@ public class ATypeHierarchy {
 
                     break;
 
-                //Target Field Type:INT8
-                case INT8:
+                //Target Field Type:TINYINT
+                case TINYINT:
 
-                    // Change the Constant Type to INT8 Type
+                    // Change the Constant Type to TINYINT Type
                     switch (sourceTypeTag) {
-                        case INT16:
+                        case SMALLINT:
                             tmpShortValue = ((AInt16) sourceObject).getShortValue();
                             // Check whether this value is within the range of the field type
-                            valueSanitycheck(ATypeTag.INT16, ATypeTag.INT8, tmpShortValue);
+                            valueSanitycheck(ATypeTag.SMALLINT, ATypeTag.TINYINT, tmpShortValue);
                             asterixNewConstantValue = new AsterixConstantValue(new AInt8((byte) tmpShortValue));
                             break;
 
-                        case INT32:
+                        case INTEGER:
                             tmpIntValue = ((AInt32) sourceObject).getIntegerValue();
                             // Check whether this value is within the range of the field type
-                            valueSanitycheck(ATypeTag.INT32, ATypeTag.INT8, tmpIntValue);
+                            valueSanitycheck(ATypeTag.INTEGER, ATypeTag.TINYINT, tmpIntValue);
                             asterixNewConstantValue = new AsterixConstantValue(new AInt8((byte) tmpIntValue));
                             break;
 
-                        case INT64:
+                        case BIGINT:
                             tmpLongValue = ((AInt64) sourceObject).getLongValue();
                             // Check whether this value is within the range of the field type
-                            valueSanitycheck(ATypeTag.INT64, ATypeTag.INT8, tmpLongValue);
+                            valueSanitycheck(ATypeTag.BIGINT, ATypeTag.TINYINT, tmpLongValue);
                             asterixNewConstantValue = new AsterixConstantValue(new AInt8((byte) tmpLongValue));
                             break;
 
                         case FLOAT:
                             tmpFloatValue = ((AFloat) sourceObject).getFloatValue();
                             // Check whether this value is within the range of the field type
-                            valueSanitycheck(ATypeTag.FLOAT, ATypeTag.INT8, tmpFloatValue);
+                            valueSanitycheck(ATypeTag.FLOAT, ATypeTag.TINYINT, tmpFloatValue);
                             asterixNewConstantValue = new AsterixConstantValue(new AInt8((byte) tmpFloatValue));
                             break;
 
                         case DOUBLE:
                             tmpDoubleValue = ((ADouble) sourceObject).getDoubleValue();
                             // Check whether this value is within the range of the field type
-                            valueSanitycheck(ATypeTag.DOUBLE, ATypeTag.INT8, tmpDoubleValue);
+                            valueSanitycheck(ATypeTag.DOUBLE, ATypeTag.TINYINT, tmpDoubleValue);
                             asterixNewConstantValue = new AsterixConstantValue(new AInt8((byte) tmpDoubleValue));
                             break;
 
@@ -320,40 +320,40 @@ public class ATypeHierarchy {
                     }
                     break;
 
-                //Target Field Type:INT16
-                case INT16:
-                    // Change the Constant Type to INT16 Type
+                //Target Field Type:SMALLINT
+                case SMALLINT:
+                    // Change the Constant Type to SMALLINT Type
                     switch (sourceTypeTag) {
-                        case INT8:
+                        case TINYINT:
                             asterixNewConstantValue = new AsterixConstantValue(
                                     new AInt16(((AInt8) sourceObject).getByteValue()));
                             break;
 
-                        case INT32:
+                        case INTEGER:
                             tmpIntValue = ((AInt32) sourceObject).getIntegerValue();
                             // Check whether this value is within the range of the field type
-                            valueSanitycheck(ATypeTag.INT32, ATypeTag.INT16, tmpIntValue);
+                            valueSanitycheck(ATypeTag.INTEGER, ATypeTag.SMALLINT, tmpIntValue);
                             asterixNewConstantValue = new AsterixConstantValue(new AInt16((short) tmpIntValue));
                             break;
 
-                        case INT64:
+                        case BIGINT:
                             tmpLongValue = ((AInt64) sourceObject).getLongValue();
                             // Check whether this value is within the range of the field type
-                            valueSanitycheck(ATypeTag.INT64, ATypeTag.INT16, tmpLongValue);
+                            valueSanitycheck(ATypeTag.BIGINT, ATypeTag.SMALLINT, tmpLongValue);
                             asterixNewConstantValue = new AsterixConstantValue(new AInt16((short) tmpLongValue));
                             break;
 
                         case FLOAT:
                             tmpFloatValue = ((AFloat) sourceObject).getFloatValue();
                             // Check whether this value is within the range of the field type
-                            valueSanitycheck(ATypeTag.FLOAT, ATypeTag.INT16, tmpFloatValue);
+                            valueSanitycheck(ATypeTag.FLOAT, ATypeTag.SMALLINT, tmpFloatValue);
                             asterixNewConstantValue = new AsterixConstantValue(new AInt16((short) tmpFloatValue));
                             break;
 
                         case DOUBLE:
                             tmpDoubleValue = ((ADouble) sourceObject).getDoubleValue();
                             // Check whether this value is within the range of the field type
-                            valueSanitycheck(ATypeTag.DOUBLE, ATypeTag.INT16, tmpDoubleValue);
+                            valueSanitycheck(ATypeTag.DOUBLE, ATypeTag.SMALLINT, tmpDoubleValue);
                             asterixNewConstantValue = new AsterixConstantValue(new AInt16((short) tmpDoubleValue));
                             break;
 
@@ -366,22 +366,22 @@ public class ATypeHierarchy {
                 case FLOAT:
                     // Change the Constant Type to FLOAT Type
                     switch (sourceTypeTag) {
-                        case INT8:
+                        case TINYINT:
                             asterixNewConstantValue = new AsterixConstantValue(
                                     new AFloat(((AInt8) sourceObject).getByteValue()));
                             break;
 
-                        case INT16:
+                        case SMALLINT:
                             asterixNewConstantValue = new AsterixConstantValue(
                                     new AFloat(((AInt16) sourceObject).getShortValue()));
                             break;
 
-                        case INT32:
+                        case INTEGER:
                             asterixNewConstantValue = new AsterixConstantValue(
                                     new AFloat(((AInt32) sourceObject).getIntegerValue()));
                             break;
 
-                        case INT64:
+                        case BIGINT:
                             asterixNewConstantValue = new AsterixConstantValue(
                                     new AFloat(((AInt64) sourceObject).getLongValue()));
                             break;
@@ -402,22 +402,22 @@ public class ATypeHierarchy {
                 case DOUBLE:
                     // Change the Constant Type to DOUBLE Type
                     switch (sourceTypeTag) {
-                        case INT8:
+                        case TINYINT:
                             asterixNewConstantValue = new AsterixConstantValue(
                                     new ADouble(((AInt8) sourceObject).getByteValue()));
                             break;
 
-                        case INT16:
+                        case SMALLINT:
                             asterixNewConstantValue = new AsterixConstantValue(
                                     new ADouble(((AInt16) sourceObject).getShortValue()));
                             break;
 
-                        case INT32:
+                        case INTEGER:
                             asterixNewConstantValue = new AsterixConstantValue(
                                     new ADouble(((AInt32) sourceObject).getIntegerValue()));
                             break;
 
-                        case INT64:
+                        case BIGINT:
                             asterixNewConstantValue = new AsterixConstantValue(
                                     new ADouble(((AInt64) sourceObject).getLongValue()));
                             break;
@@ -451,23 +451,23 @@ public class ATypeHierarchy {
         boolean canConvert = true;
 
         switch (targetType) {
-            case INT8:
+            case TINYINT:
                 if (sourceValue > Byte.MAX_VALUE || sourceValue < Byte.MIN_VALUE) {
                     canConvert = false;
                 }
                 break;
 
-            case INT16:
+            case SMALLINT:
                 if (sourceValue > Short.MAX_VALUE || sourceValue < Short.MIN_VALUE) {
                     canConvert = false;
                 }
                 break;
-            case INT32:
+            case INTEGER:
                 if (sourceValue > Integer.MAX_VALUE || sourceValue < Integer.MIN_VALUE) {
                     canConvert = false;
                 }
                 break;
-            case INT64:
+            case BIGINT:
                 if (sourceValue > Long.MAX_VALUE || sourceValue < Long.MIN_VALUE) {
                     canConvert = false;
                 }
@@ -493,15 +493,15 @@ public class ATypeHierarchy {
         ATypeTag sourceTypeTag = sourceObject.getType().getTypeTag();
 
         switch (sourceTypeTag) {
-            case INT8:
+            case TINYINT:
                 switch (targetTypeTag) {
-                    case INT8:
+                    case TINYINT:
                         return sourceObject;
-                    case INT16:
+                    case SMALLINT:
                         return new AInt16(((AInt8) sourceObject).getByteValue());
-                    case INT32:
+                    case INTEGER:
                         return new AInt32(((AInt8) sourceObject).getByteValue());
-                    case INT64:
+                    case BIGINT:
                         return new AInt64((long) ((AInt8) sourceObject).getByteValue());
                     case FLOAT:
                         return new AFloat(((AInt8) sourceObject).getByteValue());
@@ -511,16 +511,16 @@ public class ATypeHierarchy {
                         throw new AsterixException(
                                 "Can't convert the " + sourceTypeTag + " type to the " + targetTypeTag + " type.");
                 }
-            case INT16:
+            case SMALLINT:
                 switch (targetTypeTag) {
-                    case INT8:
-                        // an exception can happen because of a type demotion from INT16 to INT8
+                    case TINYINT:
+                        // an exception can happen because of a type demotion from SMALLINT to TINYINT
                         return new AInt8((byte) ((AInt16) sourceObject).getShortValue());
-                    case INT16:
+                    case SMALLINT:
                         return sourceObject;
-                    case INT32:
+                    case INTEGER:
                         return new AInt32(((AInt16) sourceObject).getShortValue());
-                    case INT64:
+                    case BIGINT:
                         return new AInt64((long) ((AInt16) sourceObject).getShortValue());
                     case FLOAT:
                         return new AFloat(((AInt16) sourceObject).getShortValue());
@@ -531,17 +531,17 @@ public class ATypeHierarchy {
                                 "Can't convert the " + sourceTypeTag + " type to the " + targetTypeTag + " type.");
                 }
 
-            case INT32:
+            case INTEGER:
                 switch (targetTypeTag) {
-                    case INT8:
-                        // an exception can happen because of a type demotion from INT32 to INT8
+                    case TINYINT:
+                        // an exception can happen because of a type demotion from INTEGER to TINYINT
                         return new AInt8(((AInt32) sourceObject).getIntegerValue().byteValue());
-                    case INT16:
-                        // an exception can happen because of a type demotion from INT32 to INT16
+                    case SMALLINT:
+                        // an exception can happen because of a type demotion from INTEGER to SMALLINT
                         return new AInt16(((AInt32) sourceObject).getIntegerValue().shortValue());
-                    case INT32:
+                    case INTEGER:
                         return sourceObject;
-                    case INT64:
+                    case BIGINT:
                         return new AInt64((long) ((AInt32) sourceObject).getIntegerValue());
                     case FLOAT:
                         return new AFloat(((AInt32) sourceObject).getIntegerValue());
@@ -552,18 +552,18 @@ public class ATypeHierarchy {
                                 "Can't convert the " + sourceTypeTag + " type to the " + targetTypeTag + " type.");
                 }
 
-            case INT64:
+            case BIGINT:
                 switch (targetTypeTag) {
-                    case INT8:
-                        // an exception can happen because of a type demotion from INT64 to INT8
+                    case TINYINT:
+                        // an exception can happen because of a type demotion from BIGINT to TINYINT
                         return new AInt8((byte) ((AInt64) sourceObject).getLongValue());
-                    case INT16:
-                        // an exception can happen because of a type demotion from INT64 to INT16
+                    case SMALLINT:
+                        // an exception can happen because of a type demotion from BIGINT to SMALLINT
                         return new AInt16((short) ((AInt64) sourceObject).getLongValue());
-                    case INT32:
-                        // an exception can happen because of a type demotion from INT64 to INT32
+                    case INTEGER:
+                        // an exception can happen because of a type demotion from BIGINT to INTEGER
                         return new AInt32((int) ((AInt64) sourceObject).getLongValue());
-                    case INT64:
+                    case BIGINT:
                         return sourceObject;
                     case FLOAT:
                         return new AFloat(((AInt64) sourceObject).getLongValue());
@@ -575,17 +575,17 @@ public class ATypeHierarchy {
                 }
             case FLOAT:
                 switch (targetTypeTag) {
-                    case INT8:
-                        // an exception can happen because of a type demotion from FLOAT to INT8
+                    case TINYINT:
+                        // an exception can happen because of a type demotion from FLOAT to TINYINT
                         return new AInt8((byte) ((AFloat) sourceObject).getFloatValue());
-                    case INT16:
-                        // an exception can happen because of a type demotion from FLOAT to INT16
+                    case SMALLINT:
+                        // an exception can happen because of a type demotion from FLOAT to SMALLINT
                         return new AInt16((short) ((AFloat) sourceObject).getFloatValue());
-                    case INT32:
-                        // an exception can happen because of a type demotion from FLOAT to INT32
+                    case INTEGER:
+                        // an exception can happen because of a type demotion from FLOAT to INTEGER
                         return new AInt32((int) ((AFloat) sourceObject).getFloatValue());
-                    case INT64:
-                        // an exception can happen because of a type demotion from FLOAT to INT64
+                    case BIGINT:
+                        // an exception can happen because of a type demotion from FLOAT to BIGINT
                         return new AInt64((long) ((AFloat) sourceObject).getFloatValue());
                     case FLOAT:
                         return sourceObject;
@@ -597,17 +597,17 @@ public class ATypeHierarchy {
                 }
             case DOUBLE:
                 switch (targetTypeTag) {
-                    case INT8:
-                        // an exception can happen because of a type demotion from DOUBLE to INT8
+                    case TINYINT:
+                        // an exception can happen because of a type demotion from DOUBLE to TINYINT
                         return new AInt8((byte) ((ADouble) sourceObject).getDoubleValue());
-                    case INT16:
-                        // an exception can happen because of a type demotion from DOUBLE to INT16
+                    case SMALLINT:
+                        // an exception can happen because of a type demotion from DOUBLE to SMALLINT
                         return new AInt16((short) ((ADouble) sourceObject).getDoubleValue());
-                    case INT32:
-                        // an exception can happen because of a type demotion from DOUBLE to INT32
+                    case INTEGER:
+                        // an exception can happen because of a type demotion from DOUBLE to INTEGER
                         return new AInt32((int) ((ADouble) sourceObject).getDoubleValue());
-                    case INT64:
-                        // an exception can happen because of a type demotion from DOUBLE to INT64
+                    case BIGINT:
+                        // an exception can happen because of a type demotion from DOUBLE to BIGINT
                         return new AInt64((long) ((ADouble) sourceObject).getDoubleValue());
                     case FLOAT:
                         // an exception can happen because of a type demotion from DOUBLE to FLOAT
@@ -631,7 +631,7 @@ public class ATypeHierarchy {
         ATypeTag sourceTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(sourceByteArray[s1]);
 
         if (sourceTypeTag != targetTypeTag) {
-            // source tag can be promoted to target tag (e.g. tag1: INT16, tag2: INT32)
+            // source tag can be promoted to target tag (e.g. tag1: SMALLINT, tag2: INTEGER)
             if (ATypeHierarchy.canPromote(sourceTypeTag, targetTypeTag)) {
                 convertComputer = ATypeHierarchy.getTypePromoteComputer(sourceTypeTag, targetTypeTag);;
                 convertComputer.convertType(sourceByteArray, s1 + 1, l1 - 1, out);
@@ -663,16 +663,16 @@ public class ATypeHierarchy {
             throw new RuntimeDataException(ErrorCode.INVALID_FORMAT, name, argIndex);
         }
         switch (sourceTypeTag) {
-            case INT64:
+            case BIGINT:
                 value = (int) LongPointable.getLong(bytes, offset);
                 break;
-            case INT32:
+            case INTEGER:
                 value = IntegerPointable.getInteger(bytes, offset);
                 break;
-            case INT8:
+            case TINYINT:
                 value = bytes[offset];
                 break;
-            case INT16:
+            case SMALLINT:
                 value = ShortPointable.getShort(bytes, offset);
                 break;
             case FLOAT:
@@ -683,19 +683,21 @@ public class ATypeHierarchy {
                 break;
             default:
                 throw new RuntimeDataException(ErrorCode.TYPE_MISMATCH, name, argIndex, sourceTypeTag,
-                        ATypeTag.INT8, ATypeTag.INT16, ATypeTag.INT32, ATypeTag.INT64, ATypeTag.FLOAT, ATypeTag.DOUBLE);
+                        ATypeTag.TINYINT, ATypeTag.SMALLINT, ATypeTag.INTEGER, ATypeTag.BIGINT, ATypeTag.FLOAT,
+                        ATypeTag.DOUBLE);
 
         }
 
         return value;
     }
 
-    // Get a LONG (INT64) value from numeric types array. We assume the first byte contains the type tag.
+    // Get a LONG (bigint) value from numeric types array. We assume the first byte contains the type tag.
     public static long getLongValue(String name, int argIndex, byte[] bytes, int offset) throws HyracksDataException {
         return getLongValueWithDifferentTypeTagPosition(name, argIndex, bytes, offset + 1, offset);
     }
 
-    // Get a LONG (INT64) value from numeric types array. We assume the specific location of a byte array contains the type tag.
+    // Get a LONG (bigint) value from numeric types array. We assume the specific location of a byte array
+    // contains the type tag.
     private static long getLongValueWithDifferentTypeTagPosition(String name, int argIndex, byte[] bytes, int offset,
             int typeTagPosition) throws HyracksDataException {
         long value;
@@ -704,16 +706,16 @@ public class ATypeHierarchy {
             throw new RuntimeDataException(ErrorCode.INVALID_FORMAT, name, argIndex);
         }
         switch (sourceTypeTag) {
-            case INT64:
+            case BIGINT:
                 value = LongPointable.getLong(bytes, offset);
                 break;
-            case INT32:
+            case INTEGER:
                 value = IntegerPointable.getInteger(bytes, offset);
                 break;
-            case INT8:
+            case TINYINT:
                 value = bytes[offset];
                 break;
-            case INT16:
+            case SMALLINT:
                 value = ShortPointable.getShort(bytes, offset);
                 break;
             case FLOAT:
@@ -724,7 +726,8 @@ public class ATypeHierarchy {
                 break;
             default:
                 throw new RuntimeDataException(ErrorCode.TYPE_MISMATCH, name, argIndex, sourceTypeTag,
-                        ATypeTag.INT8, ATypeTag.INT16, ATypeTag.INT32, ATypeTag.INT64, ATypeTag.FLOAT, ATypeTag.DOUBLE);
+                        ATypeTag.TINYINT, ATypeTag.SMALLINT, ATypeTag.INTEGER, ATypeTag.BIGINT, ATypeTag.FLOAT,
+                        ATypeTag.DOUBLE);
         }
 
         return value;
@@ -746,16 +749,16 @@ public class ATypeHierarchy {
             throw new RuntimeDataException(ErrorCode.INVALID_FORMAT, name, argIndex);
         }
         switch (sourceTypeTag) {
-            case INT64:
+            case BIGINT:
                 value = LongPointable.getLong(bytes, offset);
                 break;
-            case INT32:
+            case INTEGER:
                 value = IntegerPointable.getInteger(bytes, offset);
                 break;
-            case INT8:
+            case TINYINT:
                 value = bytes[offset];
                 break;
-            case INT16:
+            case SMALLINT:
                 value = ShortPointable.getShort(bytes, offset);
                 break;
             case FLOAT:
@@ -766,7 +769,8 @@ public class ATypeHierarchy {
                 break;
             default:
                 throw new RuntimeDataException(ErrorCode.TYPE_MISMATCH, name, argIndex, sourceTypeTag,
-                        ATypeTag.INT8, ATypeTag.INT16, ATypeTag.INT32, ATypeTag.INT64, ATypeTag.FLOAT, ATypeTag.DOUBLE);
+                        ATypeTag.TINYINT, ATypeTag.SMALLINT, ATypeTag.INTEGER, ATypeTag.BIGINT, ATypeTag.FLOAT,
+                        ATypeTag.DOUBLE);
         }
 
         return value;

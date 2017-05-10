@@ -19,16 +19,11 @@
 package org.apache.asterix.tools.datagen;
 
 import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
-import java.io.DataInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.PrintStream;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -222,7 +217,7 @@ public class AdmDataGen {
             this.act = act;
             this.min = min;
             this.max = max;
-            if (act.getTypeTag() == ATypeTag.ORDEREDLIST) {
+            if (act.getTypeTag() == ATypeTag.ARRAY) {
                 startList = "[";
                 endList = "]";
             } else {
@@ -245,7 +240,7 @@ public class AdmDataGen {
         public void init(PrintStream out, DataGeneratorContext ctx) throws Exception {
             super.init(out, ctx);
             IAType t = act.getItemType();
-            if (t.getTypeTag() != ATypeTag.RECORD) {
+            if (t.getTypeTag() != ATypeTag.OBJECT) {
                 throw new NotImplementedException("list annotation only works with record item types for now.");
             }
             ARecordType rt = (ARecordType) t;
@@ -679,7 +674,7 @@ public class AdmDataGen {
                     }
                     IRecordFieldDataGen rfdg = annot.getDeclaredFieldsDatagen()[i];
                     if (rfdg == null) {
-                        if (ti.getTypeTag() == ATypeTag.RECORD) {
+                        if (ti.getTypeTag() == ATypeTag.OBJECT) {
                             ARecordType rt = (ARecordType) ti;
                             RecordDataGenAnnotation dga = null;
                             for (IRecordTypeAnnotation annot : rt.getAnnotations()) {
@@ -727,7 +722,7 @@ public class AdmDataGen {
                                 a = readFileAsStringArray(lvf.getFile());
                                 ctx.getFileToLoadedDataMap().put(lvf.getFile(), a);
                             }
-                            if (ti.getTypeTag() != ATypeTag.ORDEREDLIST && ti.getTypeTag() != ATypeTag.UNORDEREDLIST) {
+                            if (ti.getTypeTag() != ATypeTag.ARRAY && ti.getTypeTag() != ATypeTag.MULTISET) {
                                 throw new Exception(
                                         "list-val-file annotation cannot be used for field of type " + ti.getTypeTag());
                             }
@@ -808,7 +803,7 @@ public class AdmDataGen {
                         }
                         case LIST: {
                             ListDataGen l = (ListDataGen) rfdg;
-                            if (ti.getTypeTag() != ATypeTag.ORDEREDLIST && ti.getTypeTag() != ATypeTag.UNORDEREDLIST) {
+                            if (ti.getTypeTag() != ATypeTag.ARRAY && ti.getTypeTag() != ATypeTag.MULTISET) {
                                 throw new Exception(
                                         "list-val-file annotation cannot be used for field of type " + ti.getTypeTag());
                             }
@@ -854,12 +849,12 @@ public class AdmDataGen {
                         case AUTO: {
                             AutoDataGen auto = (AutoDataGen) rfdg;
                             switch (ti.getTypeTag()) {
-                                case INT32: {
+                                case INTEGER: {
                                     declaredFieldsGenerators[i] = new IntAutoGenerator(
                                             Integer.parseInt(auto.getInitValueStr()));
                                     break;
                                 }
-                                case INT64: {
+                                case BIGINT: {
                                     declaredFieldsGenerators[i] = new LongAutoGenerator(
                                             Long.parseLong(auto.getInitValueStr()));
                                     break;
@@ -964,7 +959,7 @@ public class AdmDataGen {
             if (tdg.isDataGen()) {
                 IAType t = me.getValue();
 
-                if (t.getTypeTag() != ATypeTag.RECORD) {
+                if (t.getTypeTag() != ATypeTag.OBJECT) {
                     throw new NotImplementedException();
                 }
                 ARecordType rt = (ARecordType) t;

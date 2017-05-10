@@ -906,7 +906,7 @@ public class JObjects {
 
         @Override
         public ATypeTag getTypeTag() {
-            return ATypeTag.ORDEREDLIST;
+            return ATypeTag.ARRAY;
         }
 
         @Override
@@ -966,7 +966,7 @@ public class JObjects {
 
         @Override
         public ATypeTag getTypeTag() {
-            return ATypeTag.UNORDEREDLIST;
+            return ATypeTag.MULTISET;
         }
 
         @Override

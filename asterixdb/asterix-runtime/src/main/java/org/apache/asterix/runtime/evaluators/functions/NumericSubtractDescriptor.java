@@ -109,19 +109,19 @@ public class NumericSubtractDescriptor extends AbstractScalarFunctionDynamicDesc
                             int offset = argPtr.getStartOffset();
                             typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(data[offset]);
                             switch (typeTag) {
-                                case INT8:
+                                case TINYINT:
                                     metInt8 = true;
                                     operands[i] = AInt8SerializerDeserializer.getByte(data, offset + 1);
                                     break;
-                                case INT16:
+                                case SMALLINT:
                                     metInt16 = true;
                                     operands[i] = AInt16SerializerDeserializer.getShort(data, offset + 1);
                                     break;
-                                case INT32:
+                                case INTEGER:
                                     metInt32 = true;
                                     operands[i] = AInt32SerializerDeserializer.getInt(data, offset + 1);
                                     break;
-                                case INT64:
+                                case BIGINT:
                                     metInt64 = true;
                                     operands[i] = AInt64SerializerDeserializer.getLong(data, offset + 1);
                                     break;

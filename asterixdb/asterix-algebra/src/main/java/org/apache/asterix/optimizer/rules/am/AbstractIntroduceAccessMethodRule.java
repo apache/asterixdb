@@ -304,8 +304,8 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                             || optFuncExpr.getFuncExpr()
                                     .getFunctionIdentifier() == BuiltinFunctions.FULLTEXT_CONTAINS_WO_OPTION) {
                         for (int j = 0; j < matchedTypes.size(); j++) {
-                            if (matchedTypes.get(j).getTypeTag() == ATypeTag.ORDEREDLIST
-                                    || matchedTypes.get(j).getTypeTag() == ATypeTag.UNORDEREDLIST) {
+                            if (matchedTypes.get(j).getTypeTag() == ATypeTag.ARRAY
+                                    || matchedTypes.get(j).getTypeTag() == ATypeTag.MULTISET) {
                                 elementTypes.set(j, ((AbstractCollectionType) matchedTypes.get(j)).getItemType());
                             }
                         }

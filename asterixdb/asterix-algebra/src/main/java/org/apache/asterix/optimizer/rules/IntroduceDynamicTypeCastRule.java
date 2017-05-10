@@ -248,7 +248,7 @@ public class IntroduceDynamicTypeCastRule implements IAlgebraicRewriteRule {
         if (inputType.getTypeTag() == ATypeTag.ANY) {
             return false;
         }
-        if (inputType.getTypeTag() != ATypeTag.RECORD) {
+        if (inputType.getTypeTag() != ATypeTag.OBJECT) {
             throw new AlgebricksException("The input type " + inputType + " is not a valid record type!");
         }
         ARecordType inputRecType = (ARecordType) inputType;

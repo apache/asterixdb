@@ -94,7 +94,7 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
             filterFieldName = DatasetUtil.getFilterField(dataset);
             IAType itemType = ((MetadataProvider) context.getMetadataProvider())
                     .findType(dataset.getItemTypeDataverseName(), dataset.getItemTypeName());
-            if (itemType.getTypeTag() == ATypeTag.RECORD) {
+            if (itemType.getTypeTag() == ATypeTag.OBJECT) {
                 recType = (ARecordType) itemType;
             }
         }
@@ -457,7 +457,7 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
                 }
                 returnList.add(recType.getFieldNames()[fieldIndex]);
                 IAType subType = recType.getFieldTypes()[fieldIndex];
-                if (subType.getTypeTag() == ATypeTag.RECORD) {
+                if (subType.getTypeTag() == ATypeTag.OBJECT) {
                     recType = (ARecordType) subType;
                 }
                 return new Pair<>(recType, returnList);

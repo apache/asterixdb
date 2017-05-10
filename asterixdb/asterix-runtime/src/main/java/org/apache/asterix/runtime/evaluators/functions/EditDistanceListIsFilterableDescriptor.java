@@ -115,10 +115,10 @@ public class EditDistanceListIsFilterableDescriptor extends AbstractScalarFuncti
             ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes[offset]);
             long listLen;
             switch (typeTag) {
-                case UNORDEREDLIST:
+                case MULTISET:
                     listLen = AUnorderedListSerializerDeserializer.getNumberOfItems(bytes, offset);
                     break;
-                case ORDEREDLIST:
+                case ARRAY:
                     listLen = AOrderedListSerializerDeserializer.getNumberOfItems(bytes, offset);
                     break;
                 default:

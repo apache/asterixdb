@@ -84,11 +84,11 @@ public class TweetParser extends AbstractDataParser implements IRecordDataParser
                     out.write(BuiltinType.ASTRING.getTypeTag().serialize());
                     utf8Writer.writeUTF8(fieldObj.asText(), out);
                     break;
-                case INT64:
+                case BIGINT:
                     aInt64.setValue(fieldObj.asLong());
                     int64Serde.serialize(aInt64, out);
                     break;
-                case INT32:
+                case INTEGER:
                     out.write(BuiltinType.AINT32.getTypeTag().serialize());
                     out.writeInt(fieldObj.asInt());
                     break;
@@ -100,7 +100,7 @@ public class TweetParser extends AbstractDataParser implements IRecordDataParser
                     out.write(BuiltinType.ABOOLEAN.getTypeTag().serialize());
                     out.writeBoolean(fieldObj.asBoolean());
                     break;
-                case RECORD:
+                case OBJECT:
                     writeRecord(fieldObj, out, (ARecordType) fieldType);
                     break;
                 default:
@@ -227,11 +227,11 @@ public class TweetParser extends AbstractDataParser implements IRecordDataParser
     }
 
     private IARecordBuilder getRecordBuilder() {
-        return recordBuilderPool.allocate(ATypeTag.RECORD);
+        return recordBuilderPool.allocate(ATypeTag.OBJECT);
     }
 
     private IAsterixListBuilder getUnorderedListBuilder() {
-        return listBuilderPool.allocate(ATypeTag.UNORDEREDLIST);
+        return listBuilderPool.allocate(ATypeTag.MULTISET);
     }
 
     private ArrayBackedValueStorage getTempBuffer() {

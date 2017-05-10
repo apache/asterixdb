@@ -171,7 +171,7 @@ public class InvertedIndexPOperator extends IndexSearchPOperator {
                         "Cannot use " + numSecondaryKeys + " fields as a key for an inverted index. "
                                 + "There can be only one field as a key for the inverted index index.");
             }
-            if (itemType.getTypeTag() != ATypeTag.RECORD) {
+            if (itemType.getTypeTag() != ATypeTag.OBJECT) {
                 throw new AlgebricksException("Only record types can be indexed.");
             }
             ARecordType recordType = (ARecordType) itemType;

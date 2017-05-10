@@ -148,7 +148,7 @@ public class StaticTypeCastUtil {
             }
             return rewriteListFuncExpr(funcExpr, (AbstractCollectionType) reqType, (AbstractCollectionType) inputType,
                     env);
-        } else if (inputType.getTypeTag().equals(ATypeTag.RECORD)) {
+        } else if (inputType.getTypeTag().equals(ATypeTag.OBJECT)) {
             if (reqType.equals(BuiltinType.ANY)) {
                 reqType = DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE;
             }
@@ -456,13 +456,13 @@ public class StaticTypeCastUtil {
             IAType reqFieldType = inputFieldType;
             // do not enforce nested type in the case of no-used variables
             switch (inputFieldType.getTypeTag()) {
-                case RECORD:
+                case OBJECT:
                     reqFieldType = DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE;
                     break;
-                case ORDEREDLIST:
+                case ARRAY:
                     reqFieldType = DefaultOpenFieldType.NESTED_OPEN_AORDERED_LIST_TYPE;
                     break;
-                case UNORDEREDLIST:
+                case MULTISET:
                     reqFieldType = DefaultOpenFieldType.NESTED_OPEN_AUNORDERED_LIST_TYPE;
                     break;
                 default:

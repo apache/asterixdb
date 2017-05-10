@@ -41,16 +41,16 @@ public class AObjectPrinterFactory implements IPrinterFactory {
     public static boolean printFlatValue(ATypeTag typeTag, byte[] b, int s, int l, PrintStream ps)
             throws HyracksDataException {
         switch (typeTag) {
-            case INT8:
+            case TINYINT:
                 AInt8PrinterFactory.PRINTER.print(b, s, l, ps);
                 return true;
-            case INT16:
+            case SMALLINT:
                 AInt16PrinterFactory.PRINTER.print(b, s, l, ps);
                 return true;
-            case INT32:
+            case INTEGER:
                 AInt32PrinterFactory.PRINTER.print(b, s, l, ps);
                 return true;
-            case INT64:
+            case BIGINT:
                 AInt64PrinterFactory.PRINTER.print(b, s, l, ps);
                 return true;
             case MISSING:
@@ -138,15 +138,15 @@ public class AObjectPrinterFactory implements IPrinterFactory {
                 streamTag.second = typeTag;
                 try {
                     switch (typeTag) {
-                        case RECORD:
+                        case OBJECT:
                             rPointable.set(b, s, l);
                             visitor.visit(rPointable, streamTag);
                             break;
-                        case ORDEREDLIST:
+                        case ARRAY:
                             olPointable.set(b, s, l);
                             visitor.visit(olPointable, streamTag);
                             break;
-                        case UNORDEREDLIST:
+                        case MULTISET:
                             ulPointable.set(b, s, l);
                             visitor.visit(ulPointable, streamTag);
                             break;

@@ -1140,7 +1140,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> buildExternalDatasetDataScannerRuntime(
             JobSpecification jobSpec, IAType itemType, IAdapterFactory adapterFactory, IDataFormat format)
             throws AlgebricksException {
-        if (itemType.getTypeTag() != ATypeTag.RECORD) {
+        if (itemType.getTypeTag() != ATypeTag.OBJECT) {
             throw new AlgebricksException("Can only scan datasets of records.");
         }
 
@@ -1946,7 +1946,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             itemType = MetadataManager.INSTANCE.getDatatype(mdTxnCtx, dataset.getItemTypeDataverseName(), itemTypeName)
                     .getDatatype();
 
-            if (itemType.getTypeTag() != ATypeTag.RECORD) {
+            if (itemType.getTypeTag() != ATypeTag.OBJECT) {
                 throw new AlgebricksException("Only record types can be tokenized.");
             }
 
@@ -2050,7 +2050,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
     }
 
     private void validateRecordType(IAType itemType) throws AlgebricksException {
-        if (itemType.getTypeTag() != ATypeTag.RECORD) {
+        if (itemType.getTypeTag() != ATypeTag.OBJECT) {
             throw new AlgebricksException("Only record types can be indexed.");
         }
     }

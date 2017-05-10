@@ -81,14 +81,14 @@ public class CodePointToStringDescriptor extends AbstractScalarFunctionDynamicDe
                             int offset = inputArgList.getStartOffset();
                             int size;
 
-                            if (ATypeTag.VALUE_TYPE_MAPPING[serOrderedList[offset]] != ATypeTag.ORDEREDLIST) {
+                            if (ATypeTag.VALUE_TYPE_MAPPING[serOrderedList[offset]] != ATypeTag.ARRAY) {
                                 throw new TypeMismatchException(getIdentifier().getName(), 0, serOrderedList[offset]);
                             } else {
                                 switch (ATypeTag.VALUE_TYPE_MAPPING[serOrderedList[offset + 1]]) {
-                                    case INT8:
-                                    case INT16:
-                                    case INT32:
-                                    case INT64:
+                                    case TINYINT:
+                                    case SMALLINT:
+                                    case INTEGER:
+                                    case BIGINT:
                                     case FLOAT:
                                     case DOUBLE:
                                     case ANY:

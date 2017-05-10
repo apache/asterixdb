@@ -156,28 +156,28 @@ public class HiveRecordParser implements IRecordDataParser<Writable> {
                 case FLOAT:
                     parseFloat(value, (FloatObjectInspector) foi, dataOutput);
                     break;
-                case INT8:
+                case TINYINT:
                     parseInt8(value, (ByteObjectInspector) foi, dataOutput);
                     break;
-                case INT16:
+                case SMALLINT:
                     parseInt16(value, (ShortObjectInspector) foi, dataOutput);
                     break;
-                case INT32:
+                case INTEGER:
                     parseInt32(value, (IntObjectInspector) foi, dataOutput);
                     break;
-                case INT64:
+                case BIGINT:
                     parseInt64(value, (LongObjectInspector) foi, dataOutput);
                     break;
                 case STRING:
                     parseString(value, (StringObjectInspector) foi, dataOutput);
                     break;
-                case ORDEREDLIST:
+                case ARRAY:
                     if (primitiveOnly) {
                         throw new RuntimeDataException(ErrorCode.PARSER_HIVE_NON_PRIMITIVE_LIST_NOT_SUPPORT);
                     }
                     parseOrderedList((AOrderedListType) itemType, value, (ListObjectInspector) foi);
                     break;
-                case UNORDEREDLIST:
+                case MULTISET:
                     if (primitiveOnly) {
                         throw new RuntimeDataException(ErrorCode.PARSER_HIVE_NON_PRIMITIVE_LIST_NOT_SUPPORT);
                     }
@@ -239,21 +239,21 @@ public class HiveRecordParser implements IRecordDataParser<Writable> {
                 return Constants.DOUBLE_TYPE_NAME;
             case FLOAT:
                 return Constants.FLOAT_TYPE_NAME;
-            case INT16:
+            case SMALLINT:
                 return Constants.SMALLINT_TYPE_NAME;
-            case INT32:
+            case INTEGER:
                 return Constants.INT_TYPE_NAME;
-            case INT64:
+            case BIGINT:
                 return Constants.BIGINT_TYPE_NAME;
-            case INT8:
+            case TINYINT:
                 return Constants.TINYINT_TYPE_NAME;
-            case ORDEREDLIST:
+            case ARRAY:
                 return Constants.LIST_TYPE_NAME;
             case STRING:
                 return Constants.STRING_TYPE_NAME;
             case TIME:
                 return Constants.DATETIME_TYPE_NAME;
-            case UNORDEREDLIST:
+            case MULTISET:
                 return Constants.LIST_TYPE_NAME;
             default:
                 throw new RuntimeDataException(ErrorCode.PARSER_HIVE_FIELD_TYPE, tag);

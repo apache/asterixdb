@@ -231,7 +231,7 @@ public class ResolveVariableRule implements IAlgebraicRewriteRule {
             path.add(unresolvedVarName);
             varAccessCandidates.add(new Pair<>(expr, path));
         }
-        if (tag == ATypeTag.RECORD) {
+        if (tag == ATypeTag.OBJECT) {
             ARecordType recordType = (ARecordType) type;
             if (recordType.canContainField(unresolvedVarName)) {
                 // If the field name is possible.

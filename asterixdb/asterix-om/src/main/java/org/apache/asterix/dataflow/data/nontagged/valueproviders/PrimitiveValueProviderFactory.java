@@ -50,7 +50,7 @@ public class PrimitiveValueProviderFactory implements IPrimitiveValueProviderFac
             public double getValue(byte[] bytes, int offset) {
                 ATypeTag tag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes[offset]);
                 switch (tag) {
-                    case INT32:
+                    case INTEGER:
                         return intProvider.getValue(bytes, offset + 1);
                     case FLOAT:
                         return floatProvider.getValue(bytes, offset + 1);

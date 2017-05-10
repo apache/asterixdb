@@ -110,7 +110,7 @@ public class EditDistanceEvaluator implements IScalarEvaluator {
                 return ed.getActualUTF8StringEditDistanceVal(leftBytes, leftStartOffset + typeIndicatorSize, rightBytes,
                         rightStartOffset + typeIndicatorSize, -1);
             }
-            case ORDEREDLIST: {
+            case ARRAY: {
                 firstOrdListIter.reset(leftBytes, leftStartOffset);
                 secondOrdListIter.reset(rightBytes, rightStartOffset);
                 return (int) ed.computeSimilarity(firstOrdListIter, secondOrdListIter);
@@ -130,12 +130,12 @@ public class EditDistanceEvaluator implements IScalarEvaluator {
         }
 
         // Since they are equal, check one tag is enough.
-        if (typeTag1 != ATypeTag.STRING && typeTag1 != ATypeTag.ORDEREDLIST) { // could be an list
+        if (typeTag1 != ATypeTag.STRING && typeTag1 != ATypeTag.ARRAY) { // could be an list
             throw new TypeMismatchException(BuiltinFunctions.EDIT_DISTANCE, 0, typeTag1.serialize(),
                     ATypeTag.SERIALIZED_STRING_TYPE_TAG, ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG);
         }
 
-        if (typeTag1 == ATypeTag.ORDEREDLIST) {
+        if (typeTag1 == ATypeTag.ARRAY) {
             itemTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER
                     .deserialize(argPtr1.getByteArray()[argPtr1.getStartOffset() + 1]);
             if (itemTypeTag == ATypeTag.ANY) {

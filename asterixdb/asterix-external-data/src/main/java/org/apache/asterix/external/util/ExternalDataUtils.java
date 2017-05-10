@@ -163,10 +163,10 @@ public class ExternalDataUtils {
 
     private static Map<ATypeTag, IValueParserFactory> initializeValueParserFactoryMap() {
         Map<ATypeTag, IValueParserFactory> m = new EnumMap<>(ATypeTag.class);
-        m.put(ATypeTag.INT32, IntegerParserFactory.INSTANCE);
+        m.put(ATypeTag.INTEGER, IntegerParserFactory.INSTANCE);
         m.put(ATypeTag.FLOAT, FloatParserFactory.INSTANCE);
         m.put(ATypeTag.DOUBLE, DoubleParserFactory.INSTANCE);
-        m.put(ATypeTag.INT64, LongParserFactory.INSTANCE);
+        m.put(ATypeTag.BIGINT, LongParserFactory.INSTANCE);
         m.put(ATypeTag.STRING, UTF8StringParserFactory.INSTANCE);
         return m;
     }

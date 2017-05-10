@@ -39,7 +39,7 @@ public class CollectionToSequenceTypeComputer extends AbstractResultTypeComputer
     protected IAType getResultType(ILogicalExpression expr, IAType... strippedInputTypes) throws AlgebricksException {
         IAType argType = strippedInputTypes[0];
         ATypeTag argTypeTag = argType.getTypeTag();
-        if (argTypeTag == ATypeTag.ORDEREDLIST || argTypeTag == ATypeTag.UNORDEREDLIST) {
+        if (argTypeTag == ATypeTag.ARRAY || argTypeTag == ATypeTag.MULTISET) {
             /** if the input is a singleton list, return it's item type if any */
             AbstractCollectionType collectionType = (AbstractCollectionType) argType;
             return collectionType.getItemType();

@@ -408,8 +408,8 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
                 }
                 break;
             case CLASSAD_VALUE:
-                if (checkType(ATypeTag.RECORD, fieldType)) {
-                    IAType objectType = getComplexType(fieldType, ATypeTag.RECORD);
+                if (checkType(ATypeTag.OBJECT, fieldType)) {
+                    IAType objectType = getComplexType(fieldType, ATypeTag.OBJECT);
                     ClassAd classad = val.getClassadVal();
                     parseRecord((ARecordType) objectType, classad, out);
                 } else {
@@ -426,20 +426,20 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
                 }
                 break;
             case INTEGER_VALUE:
-                if (checkType(ATypeTag.INT64, fieldType)) {
-                    if (fieldType == null || fieldType.getTypeTag() == ATypeTag.INT64) {
+                if (checkType(ATypeTag.BIGINT, fieldType)) {
+                    if (fieldType == null || fieldType.getTypeTag() == ATypeTag.BIGINT) {
                         aInt64.setValue(val.getLongVal());
                         int64Serde.serialize(aInt64, out);
-                    } else if (fieldType.getTypeTag() == ATypeTag.INT32) {
+                    } else if (fieldType.getTypeTag() == ATypeTag.INTEGER) {
                         aInt32.setValue((int) val.getLongVal());
                         int32Serde.serialize(aInt32, out);
                     } else if (fieldType.getTypeTag() == ATypeTag.DOUBLE) {
                         aDouble.setValue(val.getLongVal());
                         doubleSerde.serialize(aDouble, out);
-                    } else if (fieldType.getTypeTag() == ATypeTag.INT16) {
+                    } else if (fieldType.getTypeTag() == ATypeTag.SMALLINT) {
                         aInt16.setValue((short) val.getLongVal());
                         int16Serde.serialize(aInt16, out);
-                    } else if (fieldType.getTypeTag() == ATypeTag.INT8) {
+                    } else if (fieldType.getTypeTag() == ATypeTag.TINYINT) {
                         aInt8.setValue((byte) val.getLongVal());
                         int8Serde.serialize(aInt8, out);
                     } else if (fieldType.getTypeTag() == ATypeTag.FLOAT) {
@@ -454,7 +454,7 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
                     // Classad uses Linux Timestamps (s instead of ms)
                     aDuration.setValue(0, val.getLongVal() * 1000);
                     durationSerde.serialize(aDuration, out);
-                } else if (checkType(ATypeTag.INT32, fieldType)) {
+                } else if (checkType(ATypeTag.INTEGER, fieldType)) {
                     aInt32.setValue((int) val.getLongVal());
                     int32Serde.serialize(aInt32, out);
                 } else if (checkType(ATypeTag.DOUBLE, fieldType)) {
@@ -467,11 +467,11 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
             case LIST_VALUE:
             case SLIST_VALUE:
                 IAType objectType;
-                if (checkType(ATypeTag.UNORDEREDLIST, fieldType)) {
-                    objectType = getComplexType(fieldType, ATypeTag.UNORDEREDLIST);
+                if (checkType(ATypeTag.MULTISET, fieldType)) {
+                    objectType = getComplexType(fieldType, ATypeTag.MULTISET);
                     parseUnorderedList((AUnorderedListType) objectType, val, out);
-                } else if (checkType(ATypeTag.ORDEREDLIST, fieldType)) {
-                    objectType = getComplexType(fieldType, ATypeTag.ORDEREDLIST);
+                } else if (checkType(ATypeTag.ARRAY, fieldType)) {
+                    objectType = getComplexType(fieldType, ATypeTag.ARRAY);
                     parseOrderedList((AOrderedListType) objectType, val, out);
                 } else {
                     throw new HyracksDataException(mismatchErrorMessage + fieldType.getTypeTag());
@@ -482,26 +482,26 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
                     if (fieldType == null || fieldType.getTypeTag() == ATypeTag.DOUBLE) {
                         aDouble.setValue(val.getDoubleVal());
                         doubleSerde.serialize(aDouble, out);
-                    } else if (fieldType.getTypeTag() == ATypeTag.INT32) {
+                    } else if (fieldType.getTypeTag() == ATypeTag.INTEGER) {
                         aInt32.setValue((int) val.getDoubleVal());
                         int32Serde.serialize(aInt32, out);
-                    } else if (fieldType.getTypeTag() == ATypeTag.INT64) {
+                    } else if (fieldType.getTypeTag() == ATypeTag.BIGINT) {
                         aInt64.setValue((long) val.getDoubleVal());
                         int64Serde.serialize(aInt64, out);
-                    } else if (fieldType.getTypeTag() == ATypeTag.INT16) {
+                    } else if (fieldType.getTypeTag() == ATypeTag.SMALLINT) {
                         aInt16.setValue((short) val.getDoubleVal());
                         int16Serde.serialize(aInt16, out);
-                    } else if (fieldType.getTypeTag() == ATypeTag.INT8) {
+                    } else if (fieldType.getTypeTag() == ATypeTag.TINYINT) {
                         aInt8.setValue((byte) val.getDoubleVal());
                         int8Serde.serialize(aInt8, out);
                     } else if (fieldType.getTypeTag() == ATypeTag.FLOAT) {
                         aFloat.setValue((float) val.getDoubleVal());
                         floatSerde.serialize(aFloat, out);
                     }
-                } else if (checkType(ATypeTag.INT32, fieldType)) {
+                } else if (checkType(ATypeTag.INTEGER, fieldType)) {
                     aInt32.setValue((int) val.getDoubleVal());
                     int32Serde.serialize(aInt32, out);
-                } else if (checkType(ATypeTag.INT64, fieldType)) {
+                } else if (checkType(ATypeTag.BIGINT, fieldType)) {
                     aInt64.setValue((long) val.getDoubleVal());
                     int64Serde.serialize(aInt64, out);
                 } else if (checkType(ATypeTag.DATETIME, fieldType)) {
@@ -643,15 +643,15 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
     }
 
     private IARecordBuilder getRecordBuilder() {
-        return recordBuilderPool.allocate(ATypeTag.RECORD);
+        return recordBuilderPool.allocate(ATypeTag.OBJECT);
     }
 
     private IAsterixListBuilder getOrderedListBuilder() {
-        return listBuilderPool.allocate(ATypeTag.ORDEREDLIST);
+        return listBuilderPool.allocate(ATypeTag.ARRAY);
     }
 
     private IAsterixListBuilder getUnorderedListBuilder() {
-        return listBuilderPool.allocate(ATypeTag.UNORDEREDLIST);
+        return listBuilderPool.allocate(ATypeTag.MULTISET);
     }
 
     private ArrayBackedValueStorage getTempBuffer() {
@@ -669,16 +669,16 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
             case BOOLEAN_VALUE:
                 return ATypeTag.BOOLEAN;
             case CLASSAD_VALUE:
-                return ATypeTag.RECORD;
+                return ATypeTag.OBJECT;
             case ERROR_VALUE:
             case STRING_VALUE:
             case UNDEFINED_VALUE:
                 return ATypeTag.STRING;
             case INTEGER_VALUE:
-                return ATypeTag.INT64;
+                return ATypeTag.BIGINT;
             case LIST_VALUE:
             case SLIST_VALUE:
-                return ATypeTag.UNORDEREDLIST;
+                return ATypeTag.MULTISET;
             case NULL_VALUE:
                 return ATypeTag.MISSING;
             case REAL_VALUE:

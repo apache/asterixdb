@@ -43,28 +43,28 @@ public class NumericRound2TypeComputer extends AbstractResultTypeComputer {
         ATypeTag tag = type.getTypeTag();
         if (argIndex == 0) {
             switch (tag) {
-                case INT8:
-                case INT16:
-                case INT32:
-                case INT64:
+                case TINYINT:
+                case SMALLINT:
+                case INTEGER:
+                case BIGINT:
                 case FLOAT:
                 case DOUBLE:
                     break;
                 default:
-                    throw new TypeMismatchException(funcName, argIndex, tag, ATypeTag.INT8, ATypeTag.INT16,
-                            ATypeTag.INT32, ATypeTag.INT64, ATypeTag.FLOAT, ATypeTag.DOUBLE);
+                    throw new TypeMismatchException(funcName, argIndex, tag, ATypeTag.TINYINT, ATypeTag.SMALLINT,
+                            ATypeTag.INTEGER, ATypeTag.BIGINT, ATypeTag.FLOAT, ATypeTag.DOUBLE);
             }
         }
         if (argIndex == 1) {
             switch (tag) {
-                case INT8:
-                case INT16:
-                case INT32:
-                case INT64:
+                case TINYINT:
+                case SMALLINT:
+                case INTEGER:
+                case BIGINT:
                     break;
                 default:
-                    throw new TypeMismatchException(funcName, argIndex, tag, ATypeTag.INT8, ATypeTag.INT16,
-                            ATypeTag.INT32, ATypeTag.INT64);
+                    throw new TypeMismatchException(funcName, argIndex, tag, ATypeTag.TINYINT, ATypeTag.SMALLINT,
+                            ATypeTag.INTEGER, ATypeTag.BIGINT);
             }
         }
     }
@@ -73,10 +73,10 @@ public class NumericRound2TypeComputer extends AbstractResultTypeComputer {
     protected IAType getResultType(ILogicalExpression expr, IAType... strippedInputTypes) throws AlgebricksException {
         ATypeTag tag = strippedInputTypes[0].getTypeTag();
         switch (tag) {
-            case INT8:
-            case INT16:
-            case INT32:
-            case INT64:
+            case TINYINT:
+            case SMALLINT:
+            case INTEGER:
+            case BIGINT:
             case FLOAT:
             case DOUBLE:
             case ANY:

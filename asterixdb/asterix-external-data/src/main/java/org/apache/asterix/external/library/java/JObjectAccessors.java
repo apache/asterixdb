@@ -101,16 +101,16 @@ public class JObjectAccessors {
             case BOOLEAN:
                 accessor = new JBooleanAccessor();
                 break;
-            case INT8:
+            case TINYINT:
                 accessor = new JInt8Accessor();
                 break;
-            case INT16:
+            case SMALLINT:
                 accessor = new JInt16Accessor();
                 break;
-            case INT32:
+            case INTEGER:
                 accessor = new JInt32Accessor();
                 break;
-            case INT64:
+            case BIGINT:
                 accessor = new JInt64Accessor();
                 break;
             case FLOAT:
@@ -507,11 +507,11 @@ public class JObjectAccessors {
                     IVisitablePointable fieldName = fieldNames.get(index);
                     typeInfo.reset(fieldType, typeTag);
                     switch (typeTag) {
-                        case RECORD:
+                        case OBJECT:
                             fieldObject = pointableVisitor.visit((ARecordVisitablePointable) fieldPointable, typeInfo);
                             break;
-                        case ORDEREDLIST:
-                        case UNORDEREDLIST:
+                        case ARRAY:
+                        case MULTISET:
                             if (fieldPointable instanceof AFlatValuePointable) {
                                 // value is null
                                 fieldObject = null;
@@ -577,11 +577,11 @@ public class JObjectAccessors {
                     fieldType = TypeTagUtil.getBuiltinTypeByTag(itemTypeTag);
                     typeInfo.reset(fieldType, itemTypeTag);
                     switch (itemTypeTag) {
-                        case RECORD:
+                        case OBJECT:
                             listItem = pointableVisitor.visit((ARecordVisitablePointable) itemPointable, typeInfo);
                             break;
-                        case UNORDEREDLIST:
-                        case ORDEREDLIST:
+                        case MULTISET:
+                        case ARRAY:
                             listItem = pointableVisitor.visit((AListVisitablePointable) itemPointable, typeInfo);
                             break;
                         case ANY:

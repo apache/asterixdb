@@ -66,13 +66,13 @@ public class CSVPrinterFactoryProvider implements IPrinterFactoryProvider {
 
         if (aqlType != null) {
             switch (aqlType.getTypeTag()) {
-                case INT8:
+                case TINYINT:
                     return AInt8PrinterFactory.INSTANCE;
-                case INT16:
+                case SMALLINT:
                     return AInt16PrinterFactory.INSTANCE;
-                case INT32:
+                case INTEGER:
                     return AInt32PrinterFactory.INSTANCE;
-                case INT64:
+                case BIGINT:
                     return AInt64PrinterFactory.INSTANCE;
                 case MISSING:
                 case NULL:
@@ -111,11 +111,11 @@ public class CSVPrinterFactoryProvider implements IPrinterFactoryProvider {
                     return ARectanglePrinterFactory.INSTANCE;
                 case STRING:
                     return AStringPrinterFactory.INSTANCE;
-                case RECORD:
+                case OBJECT:
                     return new ARecordPrinterFactory((ARecordType) aqlType);
-                case ORDEREDLIST:
+                case ARRAY:
                     throw new NotImplementedException("'Orderedlist' type unsupported for CSV output");
-                case UNORDEREDLIST:
+                case MULTISET:
                     throw new NotImplementedException("'Unorderedlist' type unsupported for CSV output");
                 case UNION:
                     if (((AUnionType) aqlType).isUnknownableType()) {
@@ -131,7 +131,7 @@ public class CSVPrinterFactoryProvider implements IPrinterFactoryProvider {
                 case BINARY:
                 case BITARRAY:
                 case ENUM:
-                case SPARSERECORD:
+                case SPARSOBJECT:
                 case SYSTEM_NULL:
                 case TYPE:
                 case UINT16:

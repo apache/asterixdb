@@ -37,13 +37,13 @@ public class DoubleToInt32TypeConvertComputer implements ITypeConvertComputer {
         double sourceValue = DoublePointable.getDouble(data, start);
         // Boundary check
         if (sourceValue > Integer.MAX_VALUE || sourceValue < Integer.MIN_VALUE) {
-            throw new IOException("Cannot convert Double to INT32 - Double value " + sourceValue
-                    + " is out of range that INT32 type can hold: INT32.MAX_VALUE:" + Integer.MAX_VALUE
-                    + ", INT32.MIN_VALUE: " + Integer.MIN_VALUE);
+            throw new IOException("Cannot convert Double to INTEGER - Double value " + sourceValue
+                    + " is out of range that INTEGER type can hold: INTEGER.MAX_VALUE:" + Integer.MAX_VALUE
+                    + ", INTEGER.MIN_VALUE: " + Integer.MIN_VALUE);
         }
         // Math.floor to truncate decimal portion
         int targetValue = (int) Math.floor(sourceValue);
-        out.writeByte(ATypeTag.INT32.serialize());
+        out.writeByte(ATypeTag.INTEGER.serialize());
         out.writeInt(targetValue);
     }
 

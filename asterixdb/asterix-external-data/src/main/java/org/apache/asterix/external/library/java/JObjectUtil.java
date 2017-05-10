@@ -94,7 +94,7 @@ public class JObjectUtil {
 
         switch (typeTag) {
 
-            case INT32: {
+            case INTEGER: {
                 int v = dis.readInt();
                 jObject = objectPool.allocate(BuiltinType.AINT32);
                 ((JInt) jObject).setValue(v);
@@ -234,7 +234,7 @@ public class JObjectUtil {
                 break;
             }
 
-            case UNORDEREDLIST: {
+            case MULTISET: {
                 AUnorderedListType listType = (AUnorderedListType) type;
                 IAType elementType = listType.getItemType();
                 jObject = objectPool.allocate(listType);
@@ -243,9 +243,9 @@ public class JObjectUtil {
                 ATypeTag tag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(dis.readByte());
                 switch (tag) {
                     case STRING:
-                    case RECORD:
-                    case ORDEREDLIST:
-                    case UNORDEREDLIST:
+                    case OBJECT:
+                    case ARRAY:
+                    case MULTISET:
                     case ANY:
                         fixedSize = false;
                         break;
@@ -270,7 +270,7 @@ public class JObjectUtil {
                 }
                 break;
             }
-            case ORDEREDLIST: {
+            case ARRAY: {
                 AOrderedListType listType = (AOrderedListType) type;
                 IAType elementType = listType.getItemType();
                 jObject = objectPool.allocate(listType);
@@ -278,9 +278,9 @@ public class JObjectUtil {
                 ATypeTag tag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(dis.readByte());
                 switch (tag) {
                     case STRING:
-                    case RECORD:
-                    case ORDEREDLIST:
-                    case UNORDEREDLIST:
+                    case OBJECT:
+                    case ARRAY:
+                    case MULTISET:
                     case ANY:
                         fixedSize = false;
                         break;
@@ -306,7 +306,7 @@ public class JObjectUtil {
                 }
                 break;
             }
-            case RECORD:
+            case OBJECT:
                 ARecordType recordType = (ARecordType) type;
                 int numberOfSchemaFields = recordType.getFieldTypes().length;
                 byte[] recordBits = dis.getInputStream().getArray();

@@ -40,13 +40,13 @@ public class NonTaggedGetItemResultType extends AbstractResultTypeComputer {
     protected void checkArgType(String funcName, int argIndex, IAType type) throws AlgebricksException {
         ATypeTag actualTypeTag = type.getTypeTag();
         if (argIndex == 0) {
-            if (type.getTypeTag() != ATypeTag.UNORDEREDLIST && type.getTypeTag() != ATypeTag.ORDEREDLIST) {
+            if (type.getTypeTag() != ATypeTag.MULTISET && type.getTypeTag() != ATypeTag.ARRAY) {
                 throw new TypeMismatchException(funcName, argIndex, actualTypeTag, ATypeTag.STRING,
-                        ATypeTag.ORDEREDLIST);
+                        ATypeTag.ARRAY);
             }
         } else {
-            if (!ATypeHierarchy.isCompatible(type.getTypeTag(), ATypeTag.INT32)) {
-                throw new TypeMismatchException(funcName, argIndex, actualTypeTag, ATypeTag.INT32);
+            if (!ATypeHierarchy.isCompatible(type.getTypeTag(), ATypeTag.INTEGER)) {
+                throw new TypeMismatchException(funcName, argIndex, actualTypeTag, ATypeTag.INTEGER);
             }
         }
     }

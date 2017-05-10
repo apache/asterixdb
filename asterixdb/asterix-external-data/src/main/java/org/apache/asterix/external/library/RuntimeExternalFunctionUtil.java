@@ -77,7 +77,7 @@ public class RuntimeExternalFunctionUtil {
 
     public static ByteBuffer allocateArgumentBuffers(IAType type) {
         switch (type.getTypeTag()) {
-            case INT32:
+            case INTEGER:
                 return ByteBuffer.allocate(4);
             case STRING:
                 return ByteBuffer.allocate(32 * 1024);
@@ -88,7 +88,7 @@ public class RuntimeExternalFunctionUtil {
 
     public static IAObject allocateArgumentObjects(IAType type) {
         switch (type.getTypeTag()) {
-            case INT32:
+            case INTEGER:
                 return new AMutableInt32(0);
             case STRING:
                 return new AMutableString("");

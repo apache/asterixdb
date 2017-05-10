@@ -33,7 +33,7 @@ public class IntegerToInt16TypeConvertComputer extends AbstractIntegerTypeConver
 
     @Override
     public void convertType(byte[] data, int start, int length, DataOutput out) throws IOException {
-        convertIntegerType(data, start, length, out, ATypeTag.INT16, 2);
+        convertIntegerType(data, start, length, out, ATypeTag.SMALLINT, 2);
     }
 
 }

@@ -92,16 +92,16 @@ public class DatetimeFromUnixTimeInSecsDescriptor extends AbstractScalarFunction
                         ATypeTag argPtrTypeTag = ATypeTag.VALUE_TYPE_MAPPING[bytes[offset]];
 
                         switch (argPtrTypeTag) {
-                            case INT8:
+                            case TINYINT:
                                 aDatetime.setValue(AInt8SerializerDeserializer.getByte(bytes, offset + 1) * 1000l);
                                 break;
-                            case INT16:
+                            case SMALLINT:
                                 aDatetime.setValue(AInt16SerializerDeserializer.getShort(bytes, offset + 1) * 1000l);
                                 break;
-                            case INT32:
+                            case INTEGER:
                                 aDatetime.setValue(AInt32SerializerDeserializer.getInt(bytes, offset + 1) * 1000l);
                                 break;
-                            case INT64:
+                            case BIGINT:
                                 aDatetime.setValue(AInt64SerializerDeserializer.getLong(bytes, offset + 1) * 1000l);
                                 break;
                             default:

@@ -950,7 +950,7 @@ public class MetadataNode implements IMetadataNode {
         Datatype parentType = getDatatype(jobId, dataverseName, datatypeName);
 
         List<IAType> subTypes = null;
-        if (parentType.getDatatype().getTypeTag() == ATypeTag.RECORD) {
+        if (parentType.getDatatype().getTypeTag() == ATypeTag.OBJECT) {
             ARecordType recType = (ARecordType) parentType.getDatatype();
             subTypes = Arrays.asList(recType.getFieldTypes());
         } else if (parentType.getDatatype().getTypeTag() == ATypeTag.UNION) {

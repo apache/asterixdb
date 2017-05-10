@@ -38,7 +38,7 @@ public abstract class AbstractSubBinaryEvaluator extends AbstractBinaryScalarEva
     private byte[] metaBuffer = new byte[5];
     protected final String functionName;
 
-    private static final ATypeTag[] EXPECTED_INPUT_TAGS = { ATypeTag.BINARY, ATypeTag.INT32 };
+    private static final ATypeTag[] EXPECTED_INPUT_TAGS = { ATypeTag.BINARY, ATypeTag.INTEGER };
 
     public AbstractSubBinaryEvaluator(IHyracksTaskContext context, IScalarEvaluatorFactory[] copyEvaluatorFactories,
             String functionName) throws HyracksDataException {

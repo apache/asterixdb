@@ -60,12 +60,12 @@ public class ConstantExpressionUtil {
     }
 
     public static Long getLongConstant(ILogicalExpression expr) {
-        final IAObject iaObject = getConstantIaObject(expr, ATypeTag.INT64);
+        final IAObject iaObject = getConstantIaObject(expr, ATypeTag.BIGINT);
         return iaObject != null ? ((AInt64) iaObject).getLongValue() : null;
     }
 
     public static Integer getIntConstant(ILogicalExpression expr) {
-        final IAObject iaObject = getConstantIaObject(expr, ATypeTag.INT32);
+        final IAObject iaObject = getConstantIaObject(expr, ATypeTag.INTEGER);
         return iaObject != null ? ((AInt32) iaObject).getIntegerValue() : null;
     }
 

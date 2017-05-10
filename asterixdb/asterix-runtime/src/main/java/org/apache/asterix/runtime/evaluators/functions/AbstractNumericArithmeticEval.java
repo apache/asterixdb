@@ -152,22 +152,22 @@ public abstract class AbstractNumericArithmeticEval extends AbstractScalarFuncti
 
                             typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes[offset]);
                             switch (typeTag) {
-                                case INT8:
+                                case TINYINT:
                                     currentType = typeInt8;
                                     operandsInteger[i] = AInt8SerializerDeserializer.getByte(bytes, offset + 1);
                                     operandsFloating[i] = operandsInteger[i];
                                     break;
-                                case INT16:
+                                case SMALLINT:
                                     currentType = typeInt16;
                                     operandsInteger[i] = AInt16SerializerDeserializer.getShort(bytes, offset + 1);
                                     operandsFloating[i] = operandsInteger[i];
                                     break;
-                                case INT32:
+                                case INTEGER:
                                     currentType = typeInt32;
                                     operandsInteger[i] = AInt32SerializerDeserializer.getInt(bytes, offset + 1);
                                     operandsFloating[i] = operandsInteger[i];
                                     break;
-                                case INT64:
+                                case BIGINT:
                                     currentType = typeInt64;
                                     operandsInteger[i] = AInt64SerializerDeserializer.getLong(bytes, offset + 1);
                                     operandsFloating[i] = operandsInteger[i];

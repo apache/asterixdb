@@ -50,8 +50,8 @@ public class FuzzyUtils {
         switch (inputTag) {
             case STRING:
                 return BuiltinFunctions.COUNTHASHED_WORD_TOKENS;
-            case UNORDEREDLIST:
-            case ORDEREDLIST:
+            case MULTISET:
+            case ARRAY:
             case ANY:
                 return null;
             default:

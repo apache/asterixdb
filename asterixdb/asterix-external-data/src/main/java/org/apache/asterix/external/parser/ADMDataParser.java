@@ -226,33 +226,33 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
                 parseConstructor(ATypeTag.FLOAT, objectType, out);
                 break;
             case AdmLexer.TOKEN_INT8_LITERAL:
-                parseAndCastNumeric(ATypeTag.INT8, objectType, out);
+                parseAndCastNumeric(ATypeTag.TINYINT, objectType, out);
                 break;
             case AdmLexer.TOKEN_INT8_CONS:
-                parseConstructor(ATypeTag.INT8, objectType, out);
+                parseConstructor(ATypeTag.TINYINT, objectType, out);
                 break;
             case AdmLexer.TOKEN_INT16_LITERAL:
-                parseAndCastNumeric(ATypeTag.INT16, objectType, out);
+                parseAndCastNumeric(ATypeTag.SMALLINT, objectType, out);
                 break;
             case AdmLexer.TOKEN_INT16_CONS:
-                parseConstructor(ATypeTag.INT16, objectType, out);
+                parseConstructor(ATypeTag.SMALLINT, objectType, out);
                 break;
             case AdmLexer.TOKEN_INT_LITERAL:
-                // For an INT value without any suffix, we return it as INT64 type value since it is
+                // For an INT value without any suffix, we return it as BIGINT type value since it is
                 // the default integer type.
-                parseAndCastNumeric(ATypeTag.INT64, objectType, out);
+                parseAndCastNumeric(ATypeTag.BIGINT, objectType, out);
                 break;
             case AdmLexer.TOKEN_INT32_LITERAL:
-                parseAndCastNumeric(ATypeTag.INT32, objectType, out);
+                parseAndCastNumeric(ATypeTag.INTEGER, objectType, out);
                 break;
             case AdmLexer.TOKEN_INT32_CONS:
-                parseConstructor(ATypeTag.INT32, objectType, out);
+                parseConstructor(ATypeTag.INTEGER, objectType, out);
                 break;
             case AdmLexer.TOKEN_INT64_LITERAL:
-                parseAndCastNumeric(ATypeTag.INT64, objectType, out);
+                parseAndCastNumeric(ATypeTag.BIGINT, objectType, out);
                 break;
             case AdmLexer.TOKEN_INT64_CONS:
-                parseConstructor(ATypeTag.INT64, objectType, out);
+                parseConstructor(ATypeTag.BIGINT, objectType, out);
                 break;
             case AdmLexer.TOKEN_STRING_LITERAL:
                 if (checkType(ATypeTag.STRING, objectType)) {
@@ -334,8 +334,8 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
                 parseConstructor(ATypeTag.POLYGON, objectType, out);
                 break;
             case AdmLexer.TOKEN_START_UNORDERED_LIST:
-                if (checkType(ATypeTag.UNORDEREDLIST, objectType)) {
-                    objectType = getComplexType(objectType, ATypeTag.UNORDEREDLIST);
+                if (checkType(ATypeTag.MULTISET, objectType)) {
+                    objectType = getComplexType(objectType, ATypeTag.MULTISET);
                     parseUnorderedList((AUnorderedListType) objectType, out);
                 } else {
                     throw new ParseException(ErrorCode.PARSER_ADM_DATA_PARSER_TYPE_MISMATCH,
@@ -343,8 +343,8 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
                 }
                 break;
             case AdmLexer.TOKEN_START_ORDERED_LIST:
-                if (checkType(ATypeTag.ORDEREDLIST, objectType)) {
-                    objectType = getComplexType(objectType, ATypeTag.ORDEREDLIST);
+                if (checkType(ATypeTag.ARRAY, objectType)) {
+                    objectType = getComplexType(objectType, ATypeTag.ARRAY);
                     parseOrderedList((AOrderedListType) objectType, out);
                 } else {
                     throw new ParseException(ErrorCode.PARSER_ADM_DATA_PARSER_TYPE_MISMATCH,
@@ -352,8 +352,8 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
                 }
                 break;
             case AdmLexer.TOKEN_START_RECORD:
-                if (checkType(ATypeTag.RECORD, objectType)) {
-                    objectType = getComplexType(objectType, ATypeTag.RECORD);
+                if (checkType(ATypeTag.OBJECT, objectType)) {
+                    objectType = getComplexType(objectType, ATypeTag.OBJECT);
                     parseRecord((ARecordType) objectType, out);
                 } else {
                     throw new ParseException(ErrorCode.PARSER_ADM_DATA_PARSER_TYPE_MISMATCH,
@@ -790,15 +790,15 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
     }
 
     private IARecordBuilder getRecordBuilder() {
-        return recordBuilderPool.allocate(ATypeTag.RECORD);
+        return recordBuilderPool.allocate(ATypeTag.OBJECT);
     }
 
     private IAsterixListBuilder getOrderedListBuilder() {
-        return listBuilderPool.allocate(ATypeTag.ORDEREDLIST);
+        return listBuilderPool.allocate(ATypeTag.ARRAY);
     }
 
     private IAsterixListBuilder getUnorderedListBuilder() {
-        return listBuilderPool.allocate(ATypeTag.UNORDEREDLIST);
+        return listBuilderPool.allocate(ATypeTag.MULTISET);
     }
 
     private ArrayBackedValueStorage getTempBuffer() {
@@ -907,16 +907,16 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
             case BOOLEAN:
                 parseBoolean(unquoted, out);
                 return true;
-            case INT8:
+            case TINYINT:
                 parseInt8(unquoted, out);
                 return true;
-            case INT16:
+            case SMALLINT:
                 parseInt16(unquoted, out);
                 return true;
-            case INT32:
+            case INTEGER:
                 parseInt32(unquoted, out);
                 return true;
-            case INT64:
+            case BIGINT:
                 parseInt64(unquoted, out);
                 return true;
             case FLOAT:

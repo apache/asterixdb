@@ -2672,7 +2672,7 @@
     <test-case FilePath="fuzzyjoin">
       <compilation-unit name="dblp-aqlplus_2">
         <output-dir compare="Text">dblp-aqlplus_2</output-dir>
-        <expected-error>Type mismatch: function similarity-jaccard expects its 1st input parameter to be type orderedlist or unorderedlist, but the actual input type is string</expected-error>
+        <expected-error>Type mismatch: function similarity-jaccard expects its 1st input parameter to be type array or multiset, but the actual input type is string</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="fuzzyjoin">
@@ -3452,13 +3452,13 @@
       <test-case FilePath="open-index-enforced/error-checking">
         <compilation-unit name="index-type-collision">
           <output-dir compare="Text">index-type-collision</output-dir>
-          <expected-error>Cannot create index testIdx2 , enforced index testIdx1 on field "[value]" is already defined with type "[int32]"</expected-error>
+          <expected-error>Cannot create index testIdx2 , enforced index testIdx1 on field "[value]" is already defined with type "[integer]"</expected-error>
         </compilation-unit>
       </test-case>
       <test-case FilePath="open-index-enforced/error-checking">
         <compilation-unit name="index-type-promotion-collision">
           <output-dir compare="Text">index-type-promotion-collision</output-dir>
-          <expected-error>Cannot create index testIdx2 , enforced index testIdx1 on field "[value]" is already defined with type "[int64]"</expected-error>
+          <expected-error>Cannot create index testIdx2 , enforced index testIdx1 on field "[value]" is already defined with type "[bigint]"</expected-error>
         </compilation-unit>
       </test-case>
       <test-case FilePath="open-index-enforced/error-checking">
@@ -6962,10 +6962,10 @@
     <test-case FilePath="types">
       <compilation-unit name="domain_boundaries_error">
         <output-dir compare="Text">domain_boundaries_error</output-dir>
-        <expected-error>ASX0006: Invalid format for int8 in int8</expected-error>
-        <expected-error>ASX0006: Invalid format for int16 in int16</expected-error>
-        <expected-error>ASX0006: Invalid format for int32 in int32</expected-error>
-        <expected-error>ASX0006: Invalid format for int64 in int64</expected-error>
+        <expected-error>ASX0006: Invalid format for int8 in tinyint</expected-error>
+        <expected-error>ASX0006: Invalid format for int16 in smallint</expected-error>
+        <expected-error>ASX0006: Invalid format for int32 in integer</expected-error>
+        <expected-error>ASX0006: Invalid format for int64 in bigint</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="types">

@@ -41,17 +41,17 @@ public class FullTextContainsResultTypeComputer extends AbstractResultTypeComput
             throw new TypeMismatchException(funcName, argIndex, actualTypeTag, ATypeTag.STRING);
         }
         // Expression2 should be a string, or an (un)ordered list.
-        if (argIndex == 1 && (actualTypeTag != ATypeTag.STRING && actualTypeTag != ATypeTag.UNORDEREDLIST
-                && actualTypeTag != ATypeTag.ORDEREDLIST && actualTypeTag != ATypeTag.ANY)) {
-            throw new TypeMismatchException(funcName, argIndex, actualTypeTag, ATypeTag.STRING, ATypeTag.UNORDEREDLIST,
-                    ATypeTag.ORDEREDLIST);
+        if (argIndex == 1 && (actualTypeTag != ATypeTag.STRING && actualTypeTag != ATypeTag.MULTISET
+                && actualTypeTag != ATypeTag.ARRAY && actualTypeTag != ATypeTag.ANY)) {
+            throw new TypeMismatchException(funcName, argIndex, actualTypeTag, ATypeTag.STRING, ATypeTag.MULTISET,
+                    ATypeTag.ARRAY);
         }
         // Each option name should be a string if it is already processed by FullTextContainsParameterCheckRule.
         // Before, the third argument should be a record if exists.
         // The structure is: arg2 = optionName1, arg3 = optionValue1, arg4 = optionName1, arg5 = optionValue2, ...
-        if (argIndex > 1 && argIndex % 2 == 0 && (actualTypeTag != ATypeTag.STRING && actualTypeTag != ATypeTag.RECORD
+        if (argIndex > 1 && argIndex % 2 == 0 && (actualTypeTag != ATypeTag.STRING && actualTypeTag != ATypeTag.OBJECT
                 && actualTypeTag != ATypeTag.ANY)) {
-            throw new TypeMismatchException(funcName, argIndex, actualTypeTag, ATypeTag.STRING, ATypeTag.RECORD);
+            throw new TypeMismatchException(funcName, argIndex, actualTypeTag, ATypeTag.STRING, ATypeTag.OBJECT);
         }
     }
 

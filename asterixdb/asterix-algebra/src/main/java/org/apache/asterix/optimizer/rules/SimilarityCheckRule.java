@@ -288,7 +288,7 @@ public class SimilarityCheckRule implements IAlgebraicRewriteRule {
         if (funcExpr.getFunctionIdentifier() == BuiltinFunctions.EDIT_DISTANCE) {
             AInt32 aInt = new AInt32(0);
             try {
-                aInt = (AInt32) ATypeHierarchy.convertNumericTypeObject(constVal.getObject(), ATypeTag.INT32);
+                aInt = (AInt32) ATypeHierarchy.convertNumericTypeObject(constVal.getObject(), ATypeTag.INTEGER);
             } catch (AsterixException e) {
                 throw new AlgebricksException(e);
             }

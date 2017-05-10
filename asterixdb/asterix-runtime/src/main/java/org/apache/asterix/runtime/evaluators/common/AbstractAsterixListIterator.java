@@ -108,19 +108,19 @@ public abstract class AbstractAsterixListIterator implements ISequenceIterator {
         this.listLength = getListLength(data, startOff);
         ATypeTag tag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(data[startOff + 1]);
         switch (tag) {
-            case INT64: {
+            case BIGINT: {
                 cmp = BinaryComparatorFactoryProvider.LONG_POINTABLE_INSTANCE.createBinaryComparator();
                 break;
             }
-            case INT32: {
+            case INTEGER: {
                 cmp = BinaryComparatorFactoryProvider.INTEGER_POINTABLE_INSTANCE.createBinaryComparator();
                 break;
             }
-            case INT16: {
+            case SMALLINT: {
                 cmp = BinaryComparatorFactoryProvider.SHORT_POINTABLE_INSTANCE.createBinaryComparator();
                 break;
             }
-            case INT8: {
+            case TINYINT: {
                 cmp = BinaryComparatorFactoryProvider.BYTE_POINTABLE_INSTANCE.createBinaryComparator();
                 break;
             }

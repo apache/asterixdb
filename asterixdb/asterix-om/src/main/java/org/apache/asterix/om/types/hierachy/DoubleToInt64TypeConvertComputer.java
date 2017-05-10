@@ -37,13 +37,13 @@ public class DoubleToInt64TypeConvertComputer implements ITypeConvertComputer {
         double sourceValue = DoublePointable.getDouble(data, start);
         // Boundary check
         if (sourceValue > Long.MAX_VALUE || sourceValue < Long.MIN_VALUE) {
-            throw new IOException("Cannot convert Double to INT64 - Double value " + sourceValue
-                    + " is out of range that INT64 type can hold: INT64.MAX_VALUE:" + Long.MAX_VALUE
-                    + ", INT64.MIN_VALUE: " + Long.MIN_VALUE);
+            throw new IOException("Cannot convert Double to BIGINT - Double value " + sourceValue
+                    + " is out of range that BIGINT type can hold: BIGINT.MAX_VALUE:" + Long.MAX_VALUE
+                    + ", BIGINT.MIN_VALUE: " + Long.MIN_VALUE);
         }
         // Math.floor to truncate decimal portion
         long targetValue = (long) Math.floor(sourceValue);
-        out.writeByte(ATypeTag.INT64.serialize());
+        out.writeByte(ATypeTag.BIGINT.serialize());
         out.writeLong(targetValue);
     }
 

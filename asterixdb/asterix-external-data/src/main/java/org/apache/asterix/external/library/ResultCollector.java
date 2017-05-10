@@ -54,7 +54,7 @@ public class ResultCollector implements IResultCollector {
 
     private IAObject allocateResultObjectHolder(IAType type) {
         switch (type.getTypeTag()) {
-            case INT32:
+            case INTEGER:
                 return new AMutableInt32(0);
             case FLOAT:
                 return new AMutableFloat(0f);
@@ -62,9 +62,9 @@ public class ResultCollector implements IResultCollector {
                 return new AMutableDouble(0);
             case STRING:
                 return new AMutableString("");
-            case ORDEREDLIST:
+            case ARRAY:
                 return new AMutableOrderedList((AOrderedListType) type);
-            case RECORD:
+            case OBJECT:
                 IAType[] fieldType = ((ARecordType) type).getFieldTypes();
                 IAObject[] fieldObjects = new IAObject[fieldType.length];
                 for (int i = 0; i < fieldType.length; i++) {

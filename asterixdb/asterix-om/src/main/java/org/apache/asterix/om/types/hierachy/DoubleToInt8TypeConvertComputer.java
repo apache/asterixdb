@@ -37,13 +37,13 @@ public class DoubleToInt8TypeConvertComputer implements ITypeConvertComputer {
         double sourceValue = DoublePointable.getDouble(data, start);
         // Boundary check
         if (sourceValue > Byte.MAX_VALUE || sourceValue < Byte.MIN_VALUE) {
-            throw new IOException("Cannot convert Double to INT8 - Double value " + sourceValue
-                    + " is out of range that INT8 type can hold: INT8.MAX_VALUE:" + Byte.MAX_VALUE
-                    + ", INT8.MIN_VALUE: " + Byte.MIN_VALUE);
+            throw new IOException("Cannot convert Double to TINYINT - Double value " + sourceValue
+                    + " is out of range that TINYINT type can hold: TINYINT.MAX_VALUE:" + Byte.MAX_VALUE
+                    + ", TINYINT.MIN_VALUE: " + Byte.MIN_VALUE);
         }
         // Math.floor to truncate decimal portion
         byte targetValue = (byte) Math.floor(sourceValue);
-        out.writeByte(ATypeTag.INT8.serialize());
+        out.writeByte(ATypeTag.TINYINT.serialize());
         out.writeByte(targetValue);
     }
 

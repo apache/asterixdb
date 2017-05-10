@@ -127,7 +127,7 @@ public class AUnionType extends AbstractComplexType {
 
     @Override
     public String getDisplayName() {
-        return "AUnion";
+        return "union";
     }
 
     @Override
@@ -138,7 +138,7 @@ public class AUnionType extends AbstractComplexType {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append("UNION(");
+        sb.append("union(");
         Iterator<IAType> iter = unionList.iterator();
         if (iter.hasNext()) {
             IAType t0 = iter.next();

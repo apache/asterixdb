@@ -113,7 +113,7 @@ public class ByNameToByIndexFieldAccessRule implements IAlgebraicRewriteRule {
     // Rewrites field-access-by-name into field-access-by-index if possible.
     private boolean rewriteFieldAccess(Mutable<ILogicalExpression> exprRef, AbstractFunctionCallExpression fce,
             IAType t) throws AlgebricksException {
-        if (t.getTypeTag() != ATypeTag.RECORD) {
+        if (t.getTypeTag() != ATypeTag.OBJECT) {
             return false;
         }
         ILogicalExpression fai = createFieldAccessByIndex((ARecordType) t, fce);
@@ -128,7 +128,7 @@ public class ByNameToByIndexFieldAccessRule implements IAlgebraicRewriteRule {
     private IAType getActualType(IAType t) throws AlgebricksException {
         switch (t.getTypeTag()) {
             case ANY:
-            case RECORD:
+            case OBJECT:
                 return t;
             case UNION:
                 return ((AUnionType) t).getActualType();

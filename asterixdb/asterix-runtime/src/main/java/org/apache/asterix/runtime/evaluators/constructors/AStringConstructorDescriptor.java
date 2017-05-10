@@ -90,22 +90,22 @@ public class AStringConstructorDescriptor extends AbstractScalarFunctionDynamicD
                                 builder.reset(baaos, len);
                                 int startOffset = offset + 1;
                                 switch (tt) {
-                                    case INT8: {
+                                    case TINYINT: {
                                         int i = AInt8SerializerDeserializer.getByte(serString, startOffset);
                                         builder.appendString(String.valueOf(i));
                                         break;
                                     }
-                                    case INT16: {
+                                    case SMALLINT: {
                                         int i = AInt16SerializerDeserializer.getShort(serString, startOffset);
                                         builder.appendString(String.valueOf(i));
                                         break;
                                     }
-                                    case INT32: {
+                                    case INTEGER: {
                                         int i = AInt32SerializerDeserializer.getInt(serString, startOffset);
                                         builder.appendString(String.valueOf(i));
                                         break;
                                     }
-                                    case INT64: {
+                                    case BIGINT: {
                                         long l = AInt64SerializerDeserializer.getLong(serString, startOffset);
                                         builder.appendString(String.valueOf(l));
                                         break;
@@ -136,13 +136,13 @@ public class AStringConstructorDescriptor extends AbstractScalarFunctionDynamicD
                                     case YEARMONTHDURATION:
                                     case DAYTIMEDURATION:
                                     case INTERVAL:
-                                    case ORDEREDLIST:
+                                    case ARRAY:
                                     case POINT:
                                     case POINT3D:
                                     case RECTANGLE:
                                     case POLYGON:
-                                    case RECORD:
-                                    case UNORDEREDLIST:
+                                    case OBJECT:
+                                    case MULTISET:
                                     case UUID:
                                     default:
                                         throw new UnsupportedTypeException(getIdentifier(), serString[offset]);

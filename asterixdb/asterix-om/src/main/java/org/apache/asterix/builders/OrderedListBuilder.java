@@ -26,7 +26,7 @@ import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.IToken;
 public class OrderedListBuilder extends AbstractListBuilder {
 
     public OrderedListBuilder() {
-        super(ATypeTag.ORDEREDLIST);
+        super(ATypeTag.ARRAY);
     }
 
     public void addItem(IToken token) throws IOException {

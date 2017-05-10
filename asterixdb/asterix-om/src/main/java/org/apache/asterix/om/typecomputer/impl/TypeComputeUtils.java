@@ -188,11 +188,11 @@ public class TypeComputeUtils {
 
     public static ARecordType extractRecordType(IAType t) {
         switch (t.getTypeTag()) {
-            case RECORD:
+            case OBJECT:
                 return (ARecordType) t;
             case UNION:
                 IAType innerType = ((AUnionType) t).getActualType();
-                if (innerType.getTypeTag() == ATypeTag.RECORD) {
+                if (innerType.getTypeTag() == ATypeTag.OBJECT) {
                     return (ARecordType) innerType;
                 } else {
                     return null;
@@ -205,13 +205,13 @@ public class TypeComputeUtils {
     }
 
     public static AOrderedListType extractOrderedListType(IAType t) {
-        if (t.getTypeTag() == ATypeTag.ORDEREDLIST) {
+        if (t.getTypeTag() == ATypeTag.ARRAY) {
             return (AOrderedListType) t;
         }
 
         if (t.getTypeTag() == ATypeTag.UNION) {
             IAType innerType = ((AUnionType) t).getActualType();
-            if (innerType.getTypeTag() == ATypeTag.ORDEREDLIST) {
+            if (innerType.getTypeTag() == ATypeTag.ARRAY) {
                 return (AOrderedListType) innerType;
             }
         }
@@ -219,13 +219,13 @@ public class TypeComputeUtils {
     }
 
     public static AUnorderedListType extractUnorderedListType(IAType t) {
-        if (t.getTypeTag() == ATypeTag.UNORDEREDLIST) {
+        if (t.getTypeTag() == ATypeTag.MULTISET) {
             return (AUnorderedListType) t;
         }
         if (t.getTypeTag() == ATypeTag.UNION) {
             AUnionType unionType = (AUnionType) t;
             IAType innerType = unionType.getActualType();
-            if (innerType.getTypeTag() == ATypeTag.UNORDEREDLIST) {
+            if (innerType.getTypeTag() == ATypeTag.MULTISET) {
                 return (AUnorderedListType) innerType;
             }
         }

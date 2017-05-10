@@ -133,7 +133,7 @@ public class ExternalFunctionCompilerUtil {
 
         final IAType type = getTypeInfo(function.getReturnType(), txnCtx, function);
         switch (type.getTypeTag()) {
-            case INT32:
+            case INTEGER:
                 return AInt32TypeComputer.INSTANCE;
             case FLOAT:
                 return AFloatTypeComputer.INSTANCE;
@@ -143,7 +143,7 @@ public class ExternalFunctionCompilerUtil {
                 return ABinaryTypeComputer.INSTANCE;
             case STRING:
                 return AStringTypeComputer.INSTANCE;
-            case ORDEREDLIST:
+            case ARRAY:
                 return new ExternalTypeComputer() {
                     private static final long serialVersionUID = 1L;
 
@@ -156,7 +156,7 @@ public class ExternalFunctionCompilerUtil {
                     }
 
                 };
-            case UNORDEREDLIST:
+            case MULTISET:
                 return new ExternalTypeComputer() {
                     private static final long serialVersionUID = 1L;
 

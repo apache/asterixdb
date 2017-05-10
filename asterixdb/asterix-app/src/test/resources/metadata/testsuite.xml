@@ -423,7 +423,7 @@
     <test-case FilePath="exception">
       <compilation-unit name="issue_255_create_dataset_error_2">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>Field of type RECORD cannot be used as a primary key field</expected-error>
+        <expected-error>Field of type object cannot be used as a primary key field</expected-error>
       </compilation-unit>
     </test-case>
     <!-- Feed datasets are not supported anymore
@@ -455,7 +455,7 @@
     <test-case FilePath="exception">
       <compilation-unit name="issue_384_create_index_error_2">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>Error: The field "[age]" which is of type int32 cannot be indexed using the RTree index.</expected-error>
+        <expected-error>Error: The field "[age]" which is of type integer cannot be indexed using the RTree index.</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">

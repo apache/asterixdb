@@ -38,23 +38,23 @@ public abstract class AbstractIntegerTypeConvertComputer implements ITypeConvert
         // Read source values
         switch (length) {
             case 1:
-                // INT8
+                // TINYINT
                 num = (data[start] & 0xff);
                 break;
 
             case 2:
-                // INT16
+                // SMALLINT
                 num = (short) ((data[start] << 8) | (data[start + 1] & 0xff));
                 break;
 
             case 4:
-                // INT32
+                // INTEGER
                 num = (int) (((data[start] & 0xff) << 24) | ((data[start + 1] & 0xff) << 16)
                         | ((data[start + 2] & 0xff) << 8) | (data[start + 3] & 0xff));
                 break;
 
             case 8:
-                // INT64
+                // BIGINT
                 num = (((long) (data[start] & 0xff) << 56) | ((long) (data[start + 1] & 0xff) << 48)
                         | ((long) (data[start + 2] & 0xff) << 40) | ((long) (data[start + 3] & 0xff) << 32)
                         | ((long) (data[start + 4] & 0xff) << 24) | ((long) (data[start + 5] & 0xff) << 16)
@@ -63,37 +63,38 @@ public abstract class AbstractIntegerTypeConvertComputer implements ITypeConvert
                 break;
 
             default:
-                throw new IOException("Can't convert integer types. The source type should be one of INT8/16/32/64.");
+                throw new IOException("Can't convert integer types. The source type should be one of "
+                        + "tinyint/smallint/integer/bigint.");
 
         }
 
         // Boundary check
         switch (targetType) {
-            case INT8:
+            case TINYINT:
                 if (num > Byte.MAX_VALUE || num < Byte.MIN_VALUE) {
                     throw new IOException("Source value " + num
-                            + " is out of range that INT8 can hold - INT8.MAX_VALUE:" + Byte.MAX_VALUE
-                            + ", INT8.MIN_VALUE:" + Byte.MIN_VALUE);
+                            + " is out of range that TINYINT can hold - TINYINT.MAX_VALUE:" + Byte.MAX_VALUE
+                            + ", TINYINT.MIN_VALUE:" + Byte.MIN_VALUE);
                 }
                 break;
 
-            case INT16:
+            case SMALLINT:
                 if (num > Short.MAX_VALUE || num < Short.MIN_VALUE) {
                     throw new IOException("Source value " + num
-                            + " is out of range that INT16 can hold - INT16.MAX_VALUE:" + Short.MAX_VALUE
-                            + ", INT16.MIN_VALUE:" + Short.MIN_VALUE);
+                            + " is out of range that SMALLINT can hold - SMALLINT.MAX_VALUE:" + Short.MAX_VALUE
+                            + ", SMALLINT.MIN_VALUE:" + Short.MIN_VALUE);
                 }
                 break;
 
-            case INT32:
+            case INTEGER:
                 if (num > Integer.MAX_VALUE || num < Integer.MIN_VALUE) {
                     throw new IOException("Source value " + num
-                            + " is out of range that INT32 can hold - INT32.MAX_VALUE:" + Integer.MAX_VALUE
-                            + ", INT32.MIN_VALUE:" + Integer.MIN_VALUE);
+                            + " is out of range that INTEGER can hold - INTEGER.MAX_VALUE:" + Integer.MAX_VALUE
+                            + ", INTEGER.MIN_VALUE:" + Integer.MIN_VALUE);
                 }
                 break;
 
-            case INT64:
+            case BIGINT:
             default:
                 break;
         }
@@ -103,18 +104,18 @@ public abstract class AbstractIntegerTypeConvertComputer implements ITypeConvert
         // Write actual target value
         switch (targetTypeLength) {
             case 1:
-                // INT8
+                // TINYINT
                 out.writeByte((byte) (num & 0xff));
                 break;
 
             case 2:
-                // INT16
+                // SMALLINT
                 out.writeByte((byte) ((num >> 8) & 0xff));
                 out.writeByte((byte) (num & 0xff));
                 break;
 
             case 4:
-                // INT32
+                // INTEGER
                 out.writeByte((byte) ((num >> 24) & 0xff));
                 out.writeByte((byte) ((num >> 16) & 0xff));
                 out.writeByte((byte) ((num >> 8) & 0xff));
@@ -122,7 +123,7 @@ public abstract class AbstractIntegerTypeConvertComputer implements ITypeConvert
                 break;
 
             case 8:
-                // INT64
+                // BIGINT
                 out.writeByte((byte) ((num >> 56) & 0xff));
                 out.writeByte((byte) ((num >> 48) & 0xff));
                 out.writeByte((byte) ((num >> 40) & 0xff));
@@ -134,7 +135,8 @@ public abstract class AbstractIntegerTypeConvertComputer implements ITypeConvert
                 break;
 
             default:
-                throw new IOException("Can't convert integer types. The target type should be one of INT8/16/32/64.");
+                throw new IOException("Can't convert integer types. The target type should be one of "
+                        + "tinyint/smallint/integer/bigint.");
 
         }
 

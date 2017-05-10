@@ -40,17 +40,17 @@ public class NumericUnaryFunctionTypeComputer extends AbstractResultTypeComputer
     protected void checkArgType(String funcName, int argIndex, IAType type) throws AlgebricksException {
         ATypeTag tag = type.getTypeTag();
         switch (tag) {
-            case INT8:
-            case INT16:
-            case INT32:
-            case INT64:
+            case TINYINT:
+            case SMALLINT:
+            case INTEGER:
+            case BIGINT:
             case FLOAT:
             case DOUBLE:
             case ANY:
                 break;
             default:
-                throw new TypeMismatchException(funcName, argIndex, tag, ATypeTag.INT8, ATypeTag.INT16, ATypeTag.INT32,
-                        ATypeTag.INT64, ATypeTag.FLOAT, ATypeTag.DOUBLE);
+                throw new TypeMismatchException(funcName, argIndex, tag, ATypeTag.TINYINT, ATypeTag.SMALLINT,
+                        ATypeTag.INTEGER, ATypeTag.BIGINT, ATypeTag.FLOAT, ATypeTag.DOUBLE);
         }
     }
 
@@ -58,10 +58,10 @@ public class NumericUnaryFunctionTypeComputer extends AbstractResultTypeComputer
     protected IAType getResultType(ILogicalExpression expr, IAType... strippedInputTypes) throws AlgebricksException {
         ATypeTag tag = strippedInputTypes[0].getTypeTag();
         switch (tag) {
-            case INT8:
-            case INT16:
-            case INT32:
-            case INT64:
+            case TINYINT:
+            case SMALLINT:
+            case INTEGER:
+            case BIGINT:
             case FLOAT:
             case DOUBLE:
             case ANY:

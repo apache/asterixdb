@@ -63,7 +63,7 @@ public class RecordAddFieldsTypeComputer implements IResultTypeComputer {
         IAType type0 = (IAType) env.getType(funcExpr.getArguments().get(0).getValue());
         ARecordType inputRecordType = TypeComputeUtils.extractRecordType(type0);
         if (inputRecordType == null) {
-            throw new TypeMismatchException(funcName, 0, type0.getTypeTag(), ATypeTag.RECORD);
+            throw new TypeMismatchException(funcName, 0, type0.getTypeTag(), ATypeTag.OBJECT);
         }
 
         ILogicalExpression arg1 = funcExpr.getArguments().get(1).getValue();
@@ -82,7 +82,7 @@ public class RecordAddFieldsTypeComputer implements IResultTypeComputer {
         Collections.sort(resultFieldNames);
 
         for (String fieldName : resultFieldNames) {
-            if (inputRecordType.getFieldType(fieldName).getTypeTag() == ATypeTag.RECORD) {
+            if (inputRecordType.getFieldType(fieldName).getTypeTag() == ATypeTag.OBJECT) {
                 ARecordType nestedType = (ARecordType) inputRecordType.getFieldType(fieldName);
                 //Deep Copy prevents altering of input types
                 resultFieldTypes.add(nestedType.deepCopy(nestedType));

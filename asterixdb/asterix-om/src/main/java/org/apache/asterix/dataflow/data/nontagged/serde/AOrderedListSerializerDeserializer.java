@@ -119,7 +119,7 @@ public class AOrderedListSerializerDeserializer implements ISerializerDeserializ
     }
 
     public static int getNumberOfItems(byte[] serOrderedList, int offset) {
-        if (serOrderedList[offset] == ATypeTag.ORDEREDLIST.serialize())
+        if (serOrderedList[offset] == ATypeTag.ARRAY.serialize())
             // 6 = tag (1) + itemTag (1) + list size (4)
             return AInt32SerializerDeserializer.getInt(serOrderedList, offset + 6);
         else
@@ -127,7 +127,7 @@ public class AOrderedListSerializerDeserializer implements ISerializerDeserializ
     }
 
     public static int getItemOffset(byte[] serOrderedList, int offset, int itemIndex) throws AsterixException {
-        if (serOrderedList[offset] == ATypeTag.ORDEREDLIST.serialize()) {
+        if (serOrderedList[offset] == ATypeTag.ARRAY.serialize()) {
             ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serOrderedList[offset + 1]);
             if (NonTaggedFormatUtil.isFixedSizedCollection(typeTag)) {
                 int length = NonTaggedFormatUtil.getFieldValueLength(serOrderedList, offset + 1, typeTag, true);

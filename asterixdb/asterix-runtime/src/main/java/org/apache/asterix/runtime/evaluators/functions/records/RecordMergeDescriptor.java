@@ -154,8 +154,8 @@ public class RecordMergeDescriptor extends AbstractScalarFunctionDynamicDescript
                                 if (PointableHelper.isEqual(leftName, rightName)
                                         && !deepEqualAssesor.isEqual(leftValue, rightValue)) {
                                     //Field was found on the right and are subrecords, merge them
-                                    if (PointableHelper.sameType(ATypeTag.RECORD, rightType)
-                                            && PointableHelper.sameType(ATypeTag.RECORD, leftType)) {
+                                    if (PointableHelper.sameType(ATypeTag.OBJECT, rightType)
+                                            && PointableHelper.sameType(ATypeTag.OBJECT, leftType)) {
                                         //We are merging two sub records
                                         addFieldToSubRecord(combinedType, leftName, leftValue, rightValue,
                                                 openFromParent, nestedLevel);

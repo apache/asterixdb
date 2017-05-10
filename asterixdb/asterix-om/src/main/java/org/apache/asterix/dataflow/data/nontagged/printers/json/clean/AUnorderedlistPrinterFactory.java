@@ -45,7 +45,7 @@ public class AUnorderedlistPrinterFactory implements IPrinterFactory {
     public IPrinter createPrinter() {
         PointableAllocator allocator = new PointableAllocator();
         final IAType inputType = unorderedlistType == null
-                ? DefaultOpenFieldType.getDefaultOpenFieldType(ATypeTag.UNORDEREDLIST) : unorderedlistType;
+                ? DefaultOpenFieldType.getDefaultOpenFieldType(ATypeTag.MULTISET) : unorderedlistType;
         final IVisitablePointable listAccessor = allocator.allocateListValue(inputType);
         final APrintVisitor printVisitor = new APrintVisitor();
         final Pair<PrintStream, ATypeTag> arg = new Pair<>(null, null);

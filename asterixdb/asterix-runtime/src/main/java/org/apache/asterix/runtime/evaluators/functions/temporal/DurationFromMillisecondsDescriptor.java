@@ -87,16 +87,16 @@ public class DurationFromMillisecondsDescriptor extends AbstractScalarFunctionDy
 
                         ATypeTag argPtrTypeTag = ATypeTag.VALUE_TYPE_MAPPING[bytes[offset]];
                         switch (argPtrTypeTag) {
-                            case INT8:
+                            case TINYINT:
                                 aDuration.setValue(0, AInt8SerializerDeserializer.getByte(bytes, offset + 1));
                                 break;
-                            case INT16:
+                            case SMALLINT:
                                 aDuration.setValue(0, AInt16SerializerDeserializer.getShort(bytes, offset + 1));
                                 break;
-                            case INT32:
+                            case INTEGER:
                                 aDuration.setValue(0, AInt32SerializerDeserializer.getInt(bytes, offset + 1));
                                 break;
-                            case INT64:
+                            case BIGINT:
                                 aDuration.setValue(0, AInt64SerializerDeserializer.getLong(bytes, offset + 1));
                                 break;
                             default:

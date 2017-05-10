@@ -276,7 +276,7 @@ class MetaKeyToFieldAccessTransform implements ILogicalExpressionReferenceTransf
         IAType fieldNameType = fieldNameValue.getObject().getType();
         FunctionIdentifier functionIdentifier;
         switch (fieldNameType.getTypeTag()) {
-            case ORDEREDLIST:
+            case ARRAY:
                 // Field access nested
                 functionIdentifier = BuiltinFunctions.FIELD_ACCESS_NESTED;
                 break;

@@ -48,19 +48,19 @@ public class FieldAccessNestedResultType extends AbstractResultTypeComputer {
     @Override
     protected void checkArgType(String funcName, int argIndex, IAType type) throws AlgebricksException {
         ATypeTag actualTypeTag = type.getTypeTag();
-        if (argIndex == 0 && actualTypeTag != ATypeTag.RECORD) {
-            throw new TypeMismatchException(funcName, argIndex, actualTypeTag, ATypeTag.RECORD);
+        if (argIndex == 0 && actualTypeTag != ATypeTag.OBJECT) {
+            throw new TypeMismatchException(funcName, argIndex, actualTypeTag, ATypeTag.OBJECT);
         }
         if (argIndex == 1) {
             switch (actualTypeTag) {
                 case STRING:
                     break;
-                case ORDEREDLIST:
+                case ARRAY:
                     checkOrderedList(funcName, type);
                     break;
                 default:
                     throw new TypeMismatchException(funcName, argIndex, actualTypeTag, ATypeTag.STRING,
-                            ATypeTag.ORDEREDLIST);
+                            ATypeTag.ARRAY);
             }
         }
     }
@@ -76,7 +76,7 @@ public class FieldAccessNestedResultType extends AbstractResultTypeComputer {
     @Override
     protected IAType getResultType(ILogicalExpression expr, IAType... strippedInputTypes) throws AlgebricksException {
         IAType firstArgType = strippedInputTypes[0];
-        if (firstArgType.getTypeTag() != ATypeTag.RECORD) {
+        if (firstArgType.getTypeTag() != ATypeTag.OBJECT) {
             return BuiltinType.ANY;
         }
         AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;
@@ -87,7 +87,7 @@ public class FieldAccessNestedResultType extends AbstractResultTypeComputer {
         ConstantExpression ce = (ConstantExpression) arg1;
         IAObject v = ((AsterixConstantValue) ce.getValue()).getObject();
         List<String> fieldPath = new ArrayList<>();
-        if (v.getType().getTypeTag() == ATypeTag.ORDEREDLIST) {
+        if (v.getType().getTypeTag() == ATypeTag.ARRAY) {
             for (int i = 0; i < ((AOrderedList) v).size(); i++) {
                 fieldPath.add(((AString) ((AOrderedList) v).getItem(i)).getStringValue());
             }

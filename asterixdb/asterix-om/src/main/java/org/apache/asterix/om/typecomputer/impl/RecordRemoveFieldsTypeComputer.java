@@ -78,7 +78,7 @@ public class RecordRemoveFieldsTypeComputer implements IResultTypeComputer {
                 String fn = ((AString) item).getStringValue();
                 fieldNameSet.add(fn);
                 break;
-            case ORDEREDLIST:
+            case ARRAY:
                 AOrderedList pathOrdereList = (AOrderedList) item;
                 String fieldName = ((AString) pathOrdereList.getItem(0)).getStringValue();
                 fieldNameSet.add(fieldName);
@@ -169,7 +169,7 @@ public class RecordRemoveFieldsTypeComputer implements IResultTypeComputer {
         IAType inputListType = (IAType) env.getType(arg1);
         AOrderedListType inputOrderedListType = TypeComputeUtils.extractOrderedListType(inputListType);
         if (inputOrderedListType == null) {
-            throw new TypeMismatchException(funcName, 1, inputListType.getTypeTag(), ATypeTag.ORDEREDLIST);
+            throw new TypeMismatchException(funcName, 1, inputListType.getTypeTag(), ATypeTag.ARRAY);
         }
 
         ATypeTag tt = inputOrderedListType.getItemType().getTypeTag();
@@ -202,7 +202,7 @@ public class RecordRemoveFieldsTypeComputer implements IResultTypeComputer {
     private void addField(ARecordType inputRecordType, String fieldName, List<String> resultFieldNames,
             List<IAType> resultFieldTypes) throws AlgebricksException {
         resultFieldNames.add(fieldName);
-        if (inputRecordType.getFieldType(fieldName).getTypeTag() == ATypeTag.RECORD) {
+        if (inputRecordType.getFieldType(fieldName).getTypeTag() == ATypeTag.OBJECT) {
             ARecordType nestedType = (ARecordType) inputRecordType.getFieldType(fieldName);
             //Deep Copy prevents altering of input types
             resultFieldTypes.add(nestedType.deepCopy(nestedType));
@@ -222,17 +222,14 @@ public class RecordRemoveFieldsTypeComputer implements IResultTypeComputer {
         for (int i = 0; i < fieldNames.length; i++) {
             if (!fieldNameSet.contains(fieldNames[i])) { // The main field is to be kept
                 addField(inputRecordType, fieldNames[i], resultFieldNames, resultFieldTypes);
-            } else if (!pathList.isEmpty()) { // Further check needed for nested fields
-                if (fieldTypes[i].getTypeTag() == ATypeTag.RECORD) {
-                    ARecordType subRecord = (ARecordType) fieldTypes[i];
-
-                    fieldPathStack.push(fieldNames[i]);
-                    subRecord = deepCheckAndCopy(fieldPathStack, subRecord, pathList, inputRecordType.isOpen());
-                    fieldPathStack.pop();
-                    if (subRecord != null) {
-                        resultFieldNames.add(fieldNames[i]);
-                        resultFieldTypes.add(subRecord);
-                    }
+            } else if (!pathList.isEmpty() && fieldTypes[i].getTypeTag() == ATypeTag.OBJECT) {
+                ARecordType subRecord = (ARecordType) fieldTypes[i];
+                fieldPathStack.push(fieldNames[i]);
+                subRecord = deepCheckAndCopy(fieldPathStack, subRecord, pathList, inputRecordType.isOpen());
+                fieldPathStack.pop();
+                if (subRecord != null) {
+                    resultFieldNames.add(fieldNames[i]);
+                    resultFieldTypes.add(subRecord);
                 }
             }
         }
@@ -300,7 +297,7 @@ public class RecordRemoveFieldsTypeComputer implements IResultTypeComputer {
         for (int i = 0; i < srcFieldNames.length; i++) {
             fieldPath.push(srcFieldNames[i]);
             if (!isRemovePath(fieldPath, pathList)) {
-                if (srcFieldTypes[i].getTypeTag() == ATypeTag.RECORD) {
+                if (srcFieldTypes[i].getTypeTag() == ATypeTag.OBJECT) {
                     ARecordType subRecord = (ARecordType) srcFieldTypes[i];
                     subRecord = deepCheckAndCopy(fieldPath, subRecord, pathList, isOpen);
                     if (subRecord != null) {
@@ -326,20 +323,20 @@ public class RecordRemoveFieldsTypeComputer implements IResultTypeComputer {
     private static ARecordType getRecordTypeFromType(String funcName, IAType type0)
             throws AlgebricksException {
         switch (type0.getTypeTag()) {
-            case RECORD:
+            case OBJECT:
                 return (ARecordType) type0;
             case ANY:
                 return DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE;
             case UNION:
                 IAType t1 = ((AUnionType) type0).getActualType();
-                if (t1.getTypeTag() == ATypeTag.RECORD) {
+                if (t1.getTypeTag() == ATypeTag.OBJECT) {
                     return (ARecordType) t1;
                 } else if (t1.getTypeTag() == ATypeTag.ANY) {
                     return DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE;
                 }
                 // Falls through for other cases.
             default:
-                throw new TypeMismatchException(funcName, 0, type0.getTypeTag(), ATypeTag.RECORD);
+                throw new TypeMismatchException(funcName, 0, type0.getTypeTag(), ATypeTag.OBJECT);
         }
     }
 

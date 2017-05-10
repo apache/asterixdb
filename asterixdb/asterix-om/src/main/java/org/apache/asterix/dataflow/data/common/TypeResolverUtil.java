@@ -74,7 +74,7 @@ public class TypeResolverUtil {
         }
         // Casts are only needed when the original return type is a complex type.
         // (In the runtime, there is already a type tag for scalar types.)
-        if (tag != ATypeTag.RECORD && tag != ATypeTag.UNORDEREDLIST && tag != ATypeTag.ORDEREDLIST) {
+        if (tag != ATypeTag.OBJECT && tag != ATypeTag.MULTISET && tag != ATypeTag.ARRAY) {
             return false;
         }
         return !TypeComputeUtils.getActualType(reqType).equals(TypeComputeUtils.getActualType(inputType));
@@ -121,11 +121,11 @@ public class TypeResolverUtil {
     // Generalizes two complex types, e.g., record, ordered list and unordered list.
     private static IAType generalizeComplexTypes(ATypeTag typeTag, IAType leftType, IAType rightType) {
         switch (typeTag) {
-            case RECORD:
+            case OBJECT:
                 return generalizeRecordTypes((ARecordType) leftType, (ARecordType) rightType);
-            case ORDEREDLIST:
+            case ARRAY:
                 return generalizeOrderedListTypes((AOrderedListType) leftType, (AOrderedListType) rightType);
-            case UNORDEREDLIST:
+            case MULTISET:
                 return generalizeUnorderedListTypes((AUnorderedListType) leftType, (AUnorderedListType) rightType);
             default:
                 return BuiltinType.ANY;

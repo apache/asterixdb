@@ -39,18 +39,18 @@ public class FieldAccessByIndexResultType extends AbstractResultTypeComputer {
     @Override
     protected void checkArgType(String funcName, int argIndex, IAType type) throws AlgebricksException {
         ATypeTag actualTypeTag = type.getTypeTag();
-        if (argIndex == 0 && actualTypeTag != ATypeTag.RECORD) {
-            throw new TypeMismatchException(funcName, argIndex, actualTypeTag, ATypeTag.RECORD);
+        if (argIndex == 0 && actualTypeTag != ATypeTag.OBJECT) {
+            throw new TypeMismatchException(funcName, argIndex, actualTypeTag, ATypeTag.OBJECT);
         }
-        if (argIndex == 1 && actualTypeTag != ATypeTag.INT32) {
-            throw new TypeMismatchException(funcName, argIndex, actualTypeTag, ATypeTag.INT32);
+        if (argIndex == 1 && actualTypeTag != ATypeTag.INTEGER) {
+            throw new TypeMismatchException(funcName, argIndex, actualTypeTag, ATypeTag.INTEGER);
         }
     }
 
     @Override
     protected IAType getResultType(ILogicalExpression expr, IAType... strippedInputTypes) throws AlgebricksException {
         IAType firstArgType = strippedInputTypes[0];
-        if (firstArgType.getTypeTag() != ATypeTag.RECORD) {
+        if (firstArgType.getTypeTag() != ATypeTag.OBJECT) {
             return BuiltinType.ANY;
         }
         AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;

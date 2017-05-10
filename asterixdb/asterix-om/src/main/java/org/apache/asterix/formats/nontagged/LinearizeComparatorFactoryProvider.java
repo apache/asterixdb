@@ -48,8 +48,8 @@ public class LinearizeComparatorFactoryProvider implements ILinearizeComparatorF
             return addOffset(new HilbertDoubleComparatorFactory(2), ascending);
         } else if (typeTag == ATypeTag.DOUBLE) {
             return addOffset(new ZCurveDoubleComparatorFactory(dimension), ascending);
-        } else if (typeTag == ATypeTag.INT8 || typeTag == ATypeTag.INT16 || typeTag == ATypeTag.INT32
-                || typeTag == ATypeTag.INT64) {
+        } else if (typeTag == ATypeTag.TINYINT || typeTag == ATypeTag.SMALLINT || typeTag == ATypeTag.INTEGER
+                || typeTag == ATypeTag.BIGINT) {
             return addOffset(new ZCurveIntComparatorFactory(dimension), ascending);
         } else {
             throw new AlgebricksException("Cannot propose linearizer for key with type " + typeTag + " and dimension "

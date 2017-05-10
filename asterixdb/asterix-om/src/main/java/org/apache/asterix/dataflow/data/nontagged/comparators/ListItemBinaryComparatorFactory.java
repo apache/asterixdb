@@ -124,12 +124,12 @@ public class ListItemBinaryComparatorFactory implements IBinaryComparatorFactory
                     case TIME:
                     case DATE:
                     case YEARMONTHDURATION:
-                    case INT32: {
+                    case INTEGER: {
                         return ascIntComp.compare(b1, s1 + skip1, l1 - skip1, b2, s2 + skip2, l2 - skip2);
                     }
                     case DATETIME:
                     case DAYTIMEDURATION:
-                    case INT64: {
+                    case BIGINT: {
                         return ascLongComp.compare(b1, s1 + skip1, l1 - skip1, b2, s2 + skip2, l2 - skip2);
                     }
                     case FLOAT: {

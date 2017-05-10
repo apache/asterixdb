@@ -80,7 +80,7 @@ public abstract class BuiltinType implements IAType {
 
         @Override
         public ATypeTag getTypeTag() {
-            return ATypeTag.INT8;
+            return ATypeTag.TINYINT;
         }
 
         @Override
@@ -108,7 +108,7 @@ public abstract class BuiltinType implements IAType {
 
         @Override
         public ATypeTag getTypeTag() {
-            return ATypeTag.INT16;
+            return ATypeTag.SMALLINT;
         }
 
         @Override
@@ -136,7 +136,7 @@ public abstract class BuiltinType implements IAType {
 
         @Override
         public ATypeTag getTypeTag() {
-            return ATypeTag.INT32;
+            return ATypeTag.INTEGER;
         }
 
         @Override
@@ -159,7 +159,7 @@ public abstract class BuiltinType implements IAType {
 
         @Override
         public ATypeTag getTypeTag() {
-            return ATypeTag.INT64;
+            return ATypeTag.BIGINT;
         }
 
         @Override

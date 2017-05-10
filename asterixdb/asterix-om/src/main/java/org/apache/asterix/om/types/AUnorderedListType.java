@@ -18,9 +18,9 @@
  */
 package org.apache.asterix.om.types;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.asterix.om.base.AUnorderedList;
 import org.apache.asterix.om.base.IAObject;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class AUnorderedListType extends AbstractCollectionType {
@@ -39,12 +39,12 @@ public class AUnorderedListType extends AbstractCollectionType {
 
     @Override
     public ATypeTag getTypeTag() {
-        return ATypeTag.UNORDEREDLIST;
+        return ATypeTag.MULTISET;
     }
 
     @Override
     public String getDisplayName() {
-        return "AUnorderedList";
+        return "multiset";
     }
 
     @Override

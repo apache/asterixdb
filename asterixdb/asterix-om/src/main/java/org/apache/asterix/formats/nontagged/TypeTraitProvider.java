@@ -48,16 +48,16 @@ public class TypeTraitProvider implements ITypeTraitProvider {
         }
         switch (aqlType.getTypeTag()) {
             case BOOLEAN:
-            case INT8:
+            case TINYINT:
                 return ONEBYTETYPETRAIT;
-            case INT16:
+            case SMALLINT:
                 return TWOBYTETYPETRAIT;
-            case INT32:
+            case INTEGER:
             case FLOAT:
             case DATE:
             case TIME:
                 return FOURBYTETYPETRAIT;
-            case INT64:
+            case BIGINT:
             case DOUBLE:
             case DATETIME:
             case DURATION:

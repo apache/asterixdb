@@ -25,7 +25,7 @@ public class ListBuilderFactory implements IObjectFactory<IAsterixListBuilder, A
 
     @Override
     public IAsterixListBuilder create(ATypeTag typeTag) {
-        if (typeTag == ATypeTag.ORDEREDLIST) {
+        if (typeTag == ATypeTag.ARRAY) {
             return new OrderedListBuilder();
         } else {
             return new UnorderedListBuilder();

@@ -40,23 +40,23 @@ public class IntegerToFloatTypeConvertComputer implements ITypeConvertComputer {
         //
         switch (length) {
             case 1:
-                // INT8
+                // TINYINT
                 val = (data[start] & 0xff);
                 break;
 
             case 2:
-                // INT16
+                // SMALLINT
                 val = (short) ((data[start] << 8) | (data[start + 1] & 0xff));
                 break;
 
             case 4:
-                // INT32
+                // INTEGER
                 val = (int) (((data[start] & 0xff) << 24) | ((data[start + 1] & 0xff) << 16)
                         | ((data[start + 2] & 0xff) << 8) | (data[start + 3] & 0xff));
                 break;
 
             case 8:
-                // INT64
+                // BIGINT
                 val = (((long) (data[start] & 0xff) << 56) | ((long) (data[start + 1] & 0xff) << 48)
                         | ((long) (data[start + 2] & 0xff) << 40) | ((long) (data[start + 3] & 0xff) << 32)
                         | ((long) (data[start + 4] & 0xff) << 24) | ((long) (data[start + 5] & 0xff) << 16)

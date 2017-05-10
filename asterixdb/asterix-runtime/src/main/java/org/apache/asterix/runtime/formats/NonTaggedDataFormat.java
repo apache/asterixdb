@@ -121,10 +121,10 @@ public class NonTaggedDataFormat implements IDataFormat {
     private Map<FunctionIdentifier, FunctionTypeInferer> functionTypeInferers = new HashMap<>();
 
     static {
-        typeToValueParserFactMap.put(ATypeTag.INT32, IntegerParserFactory.INSTANCE);
+        typeToValueParserFactMap.put(ATypeTag.INTEGER, IntegerParserFactory.INSTANCE);
         typeToValueParserFactMap.put(ATypeTag.FLOAT, FloatParserFactory.INSTANCE);
         typeToValueParserFactMap.put(ATypeTag.DOUBLE, DoubleParserFactory.INSTANCE);
-        typeToValueParserFactMap.put(ATypeTag.INT64, LongParserFactory.INSTANCE);
+        typeToValueParserFactMap.put(ATypeTag.BIGINT, LongParserFactory.INSTANCE);
         typeToValueParserFactMap.put(ATypeTag.STRING, UTF8StringParserFactory.INSTANCE);
     }
 
@@ -496,7 +496,7 @@ public class NonTaggedDataFormat implements IDataFormat {
                 AbstractFunctionCallExpression fce = (AbstractFunctionCallExpression) expr;
                 IAType t = (IAType) context.getType(fce.getArguments().get(0).getValue());
                 switch (t.getTypeTag()) {
-                    case RECORD: {
+                    case OBJECT: {
                         fd.setImmutableStates(t);
                         break;
                     }
@@ -504,7 +504,7 @@ public class NonTaggedDataFormat implements IDataFormat {
                         AUnionType unionT = (AUnionType) t;
                         if (unionT.isUnknownableType()) {
                             IAType t2 = unionT.getActualType();
-                            if (t2.getTypeTag() == ATypeTag.RECORD) {
+                            if (t2.getTypeTag() == ATypeTag.OBJECT) {
                                 fd.setImmutableStates(t2);
                                 break;
                             }
@@ -531,7 +531,7 @@ public class NonTaggedDataFormat implements IDataFormat {
                 }
 
                 switch (t.getTypeTag()) {
-                    case RECORD: {
+                    case OBJECT: {
                         fd.setImmutableStates(t, listFieldPath);
                         break;
                     }
@@ -551,7 +551,7 @@ public class NonTaggedDataFormat implements IDataFormat {
                 AbstractFunctionCallExpression fce = (AbstractFunctionCallExpression) expr;
                 IAType t = (IAType) context.getType(fce.getArguments().get(0).getValue());
                 ATypeTag typeTag = t.getTypeTag();
-                if (typeTag.equals(ATypeTag.RECORD)) {
+                if (typeTag.equals(ATypeTag.OBJECT)) {
                     fd.setImmutableStates(t);
                 } else if (typeTag.equals(ATypeTag.ANY)) {
                     fd.setImmutableStates(RecordUtil.FULLY_OPEN_RECORD_TYPE);
@@ -567,7 +567,7 @@ public class NonTaggedDataFormat implements IDataFormat {
                 AbstractFunctionCallExpression fce = (AbstractFunctionCallExpression) expr;
                 IAType t = (IAType) context.getType(fce.getArguments().get(0).getValue());
                 ATypeTag typeTag = t.getTypeTag();
-                if (typeTag.equals(ATypeTag.RECORD)) {
+                if (typeTag.equals(ATypeTag.OBJECT)) {
                     fd.setImmutableStates(t);
                 } else if (typeTag.equals(ATypeTag.ANY)) {
                     fd.setImmutableStates(RecordUtil.FULLY_OPEN_RECORD_TYPE);
@@ -583,7 +583,7 @@ public class NonTaggedDataFormat implements IDataFormat {
                 AbstractFunctionCallExpression fce = (AbstractFunctionCallExpression) expr;
                 IAType t = (IAType) context.getType(fce.getArguments().get(0).getValue());
                 ATypeTag typeTag = t.getTypeTag();
-                if (typeTag.equals(ATypeTag.RECORD)) {
+                if (typeTag.equals(ATypeTag.OBJECT)) {
                     fd.setImmutableStates(t);
                 } else if (typeTag.equals(ATypeTag.ANY)) {
                     fd.setImmutableStates(RecordUtil.FULLY_OPEN_RECORD_TYPE);
@@ -675,13 +675,13 @@ public class NonTaggedDataFormat implements IDataFormat {
                                     return 1;
                                 case NULL:
                                     return 1;
-                                case INT8:
+                                case TINYINT:
                                     return 2;
-                                case INT16:
+                                case SMALLINT:
                                     return 3;
-                                case INT32:
+                                case INTEGER:
                                     return 5;
-                                case INT64:
+                                case BIGINT:
                                     return 9;
                                 default:
                                     return -1;

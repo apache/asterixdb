@@ -140,22 +140,22 @@ public abstract class AbstractAvgAggregateFunction implements IAggregateEvaluato
         }
         ++count;
         switch (typeTag) {
-            case INT8: {
+            case TINYINT: {
                 byte val = AInt8SerializerDeserializer.getByte(data, offset + 1);
                 sum += val;
                 break;
             }
-            case INT16: {
+            case SMALLINT: {
                 short val = AInt16SerializerDeserializer.getShort(data, offset + 1);
                 sum += val;
                 break;
             }
-            case INT32: {
+            case INTEGER: {
                 int val = AInt32SerializerDeserializer.getInt(data, offset + 1);
                 sum += val;
                 break;
             }
-            case INT64: {
+            case BIGINT: {
                 long val = AInt64SerializerDeserializer.getLong(data, offset + 1);
                 sum += val;
                 break;
@@ -221,7 +221,7 @@ public abstract class AbstractAvgAggregateFunction implements IAggregateEvaluato
                 // Ignore and return.
                 break;
             }
-            case RECORD: {
+            case OBJECT: {
                 // Expected.
                 aggType = ATypeTag.DOUBLE;
                 int nullBitmapSize = 0;

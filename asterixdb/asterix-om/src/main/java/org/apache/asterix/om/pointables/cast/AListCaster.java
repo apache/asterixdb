@@ -58,11 +58,11 @@ class AListCaster {
 
     public void castList(AListVisitablePointable listAccessor, IVisitablePointable resultAccessor,
             AbstractCollectionType reqType, ACastVisitor visitor) throws IOException, AsterixException {
-        if (reqType.getTypeTag().equals(ATypeTag.UNORDEREDLIST)) {
+        if (reqType.getTypeTag().equals(ATypeTag.MULTISET)) {
             unOrderedListBuilder.reset(reqType);
             reqItemType = reqType.getItemType();
         }
-        if (reqType.getTypeTag().equals(ATypeTag.ORDEREDLIST)) {
+        if (reqType.getTypeTag().equals(ATypeTag.ARRAY)) {
             orderedListBuilder.reset(reqType);
             reqItemType = reqType.getItemType();
         }
@@ -83,17 +83,17 @@ class AListCaster {
                 itemVisitorArg.second = reqItemType;
             }
             item.accept(visitor, itemVisitorArg);
-            if (reqType.getTypeTag().equals(ATypeTag.ORDEREDLIST)) {
+            if (reqType.getTypeTag().equals(ATypeTag.ARRAY)) {
                 orderedListBuilder.addItem(itemVisitorArg.first);
             }
-            if (reqType.getTypeTag().equals(ATypeTag.UNORDEREDLIST)) {
+            if (reqType.getTypeTag().equals(ATypeTag.MULTISET)) {
                 unOrderedListBuilder.addItem(itemVisitorArg.first);
             }
         }
-        if (reqType.getTypeTag().equals(ATypeTag.ORDEREDLIST)) {
+        if (reqType.getTypeTag().equals(ATypeTag.ARRAY)) {
             orderedListBuilder.write(dataDos, true);
         }
-        if (reqType.getTypeTag().equals(ATypeTag.UNORDEREDLIST)) {
+        if (reqType.getTypeTag().equals(ATypeTag.MULTISET)) {
             unOrderedListBuilder.write(dataDos, true);
         }
         int end = dataBos.size();

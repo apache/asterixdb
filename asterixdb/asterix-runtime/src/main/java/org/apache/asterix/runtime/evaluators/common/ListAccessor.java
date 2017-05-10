@@ -77,7 +77,7 @@ public class ListAccessor {
     }
 
     public int getItemOffset(int itemIndex) throws AsterixException {
-        if (listType == ATypeTag.UNORDEREDLIST) {
+        if (listType == ATypeTag.MULTISET) {
             return AUnorderedListSerializerDeserializer.getItemOffset(listBytes, start, itemIndex);
         } else {
             return AOrderedListSerializerDeserializer.getItemOffset(listBytes, start, itemIndex);

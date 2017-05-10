@@ -142,22 +142,22 @@ public abstract class AbstractSerializableAvgAggregateFunction implements ISeria
         }
         ++count;
         switch (typeTag) {
-            case INT8: {
+            case TINYINT: {
                 byte val = AInt8SerializerDeserializer.getByte(bytes, offset + 1);
                 sum += val;
                 break;
             }
-            case INT16: {
+            case SMALLINT: {
                 short val = AInt16SerializerDeserializer.getShort(bytes, offset + 1);
                 sum += val;
                 break;
             }
-            case INT32: {
+            case INTEGER: {
                 int val = AInt32SerializerDeserializer.getInt(bytes, offset + 1);
                 sum += val;
                 break;
             }
-            case INT64: {
+            case BIGINT: {
                 long val = AInt64SerializerDeserializer.getLong(bytes, offset + 1);
                 sum += val;
                 break;
@@ -235,7 +235,7 @@ public abstract class AbstractSerializableAvgAggregateFunction implements ISeria
                 // Ignore and return.
                 break;
             }
-            case RECORD: {
+            case OBJECT: {
                 // Expected.
                 ATypeTag aggType = ATypeTag.DOUBLE;
                 int nullBitmapSize = 0;

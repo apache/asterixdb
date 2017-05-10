@@ -145,11 +145,11 @@ class CastTypeEvaluator implements IScalarEvaluator {
     private IVisitablePointable allocatePointableForAny(IAType type) {
         ATypeTag tag = type.getTypeTag();
         switch (tag) {
-            case RECORD:
+            case OBJECT:
                 return allocator.allocateFieldValue(DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE);
-            case ORDEREDLIST:
+            case ARRAY:
                 return allocator.allocateFieldValue(DefaultOpenFieldType.NESTED_OPEN_AORDERED_LIST_TYPE);
-            case UNORDEREDLIST:
+            case MULTISET:
                 return allocator.allocateFieldValue(DefaultOpenFieldType.NESTED_OPEN_AUNORDERED_LIST_TYPE);
             default:
                 return allocator.allocateFieldValue(null);

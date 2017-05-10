@@ -115,8 +115,8 @@ public class TupleGenerator {
         switch (field.getTypeTag()) {
             case BOOLEAN:
             case DOUBLE:
-            case INT32:
-            case INT64:
+            case INTEGER:
+            case BIGINT:
             case STRING:
                 break;
             default:

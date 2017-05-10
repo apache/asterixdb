@@ -38,10 +38,10 @@ public class NumericAggTypeComputer extends AbstractResultTypeComputer {
         switch (tag) {
             case DOUBLE:
             case FLOAT:
-            case INT64:
-            case INT32:
-            case INT16:
-            case INT8:
+            case BIGINT:
+            case INTEGER:
+            case SMALLINT:
+            case TINYINT:
             case ANY:
                 break;
             default:
@@ -56,10 +56,10 @@ public class NumericAggTypeComputer extends AbstractResultTypeComputer {
         switch (tag) {
             case DOUBLE:
             case FLOAT:
-            case INT64:
-            case INT32:
-            case INT16:
-            case INT8:
+            case BIGINT:
+            case INTEGER:
+            case SMALLINT:
+            case TINYINT:
             case ANY:
                 type = strippedInputTypes[0];
                 break;

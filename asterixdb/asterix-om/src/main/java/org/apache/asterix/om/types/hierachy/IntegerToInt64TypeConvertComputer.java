@@ -32,7 +32,7 @@ public class IntegerToInt64TypeConvertComputer extends AbstractIntegerTypeConver
 
     @Override
     public void convertType(byte[] data, int start, int length, DataOutput out) throws IOException {
-        convertIntegerType(data, start, length, out, ATypeTag.INT64, 8);
+        convertIntegerType(data, start, length, out, ATypeTag.BIGINT, 8);
     }
 
 }

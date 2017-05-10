@@ -32,7 +32,7 @@ public class IntegerToInt32TypeConvertComputer extends AbstractIntegerTypeConver
 
     @Override
     public void convertType(byte[] data, int start, int length, DataOutput out) throws IOException {
-        convertIntegerType(data, start, length, out, ATypeTag.INT32, 4);
+        convertIntegerType(data, start, length, out, ATypeTag.INTEGER, 4);
     }
 
 }

@@ -70,13 +70,13 @@ public class LosslessJSONPrinterFactoryProvider implements IPrinterFactoryProvid
 
         if (aqlType != null) {
             switch (aqlType.getTypeTag()) {
-                case INT8:
+                case TINYINT:
                     return AInt8PrinterFactory.INSTANCE;
-                case INT16:
+                case SMALLINT:
                     return AInt16PrinterFactory.INSTANCE;
-                case INT32:
+                case INTEGER:
                     return AInt32PrinterFactory.INSTANCE;
-                case INT64:
+                case BIGINT:
                     return AInt64PrinterFactory.INSTANCE;
                 case MISSING:
                 case NULL:
@@ -117,11 +117,11 @@ public class LosslessJSONPrinterFactoryProvider implements IPrinterFactoryProvid
                     return AStringPrinterFactory.INSTANCE;
                 case BINARY:
                     return ABinaryHexPrinterFactory.INSTANCE;
-                case RECORD:
+                case OBJECT:
                     return new ARecordPrinterFactory((ARecordType) aqlType);
-                case ORDEREDLIST:
+                case ARRAY:
                     return new AOrderedlistPrinterFactory((AOrderedListType) aqlType);
-                case UNORDEREDLIST:
+                case MULTISET:
                     return new AUnorderedlistPrinterFactory((AUnorderedListType) aqlType);
                 case UNION:
                     if (((AUnionType) aqlType).isUnknownableType()) {
@@ -136,7 +136,7 @@ public class LosslessJSONPrinterFactoryProvider implements IPrinterFactoryProvid
                 case ANY:
                 case BITARRAY:
                 case ENUM:
-                case SPARSERECORD:
+                case SPARSOBJECT:
                 case SYSTEM_NULL:
                 case TYPE:
                 case UINT16:

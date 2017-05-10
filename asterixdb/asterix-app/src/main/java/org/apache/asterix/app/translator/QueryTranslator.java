@@ -548,7 +548,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             switch (dd.getDatasetType()) {
                 case INTERNAL:
                     IAType itemType = dt.getDatatype();
-                    if (itemType.getTypeTag() != ATypeTag.RECORD) {
+                    if (itemType.getTypeTag() != ATypeTag.OBJECT) {
                         throw new AlgebricksException("Dataset type has to be a record type.");
                     }
 
@@ -556,7 +556,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     if (metaItemTypeDataverseName != null && metaItemTypeName != null) {
                         metaItemType = metadataProvider.findType(metaItemTypeDataverseName, metaItemTypeName);
                     }
-                    if (metaItemType != null && metaItemType.getTypeTag() != ATypeTag.RECORD) {
+                    if (metaItemType != null && metaItemType.getTypeTag() != ATypeTag.OBJECT) {
                         throw new AlgebricksException("Dataset meta type has to be a record type.");
                     }
                     ARecordType metaRecType = (ARecordType) metaItemType;

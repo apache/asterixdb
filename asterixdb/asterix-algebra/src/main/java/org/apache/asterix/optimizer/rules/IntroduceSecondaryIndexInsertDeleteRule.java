@@ -156,7 +156,7 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
         // Create operators for secondary index insert / delete.
         String itemTypeName = dataset.getItemTypeName();
         IAType itemType = mp.findType(dataset.getItemTypeDataverseName(), itemTypeName);
-        if (itemType.getTypeTag() != ATypeTag.RECORD) {
+        if (itemType.getTypeTag() != ATypeTag.OBJECT) {
             throw new AlgebricksException("Only record types can be indexed.");
         }
         ARecordType recType = (ARecordType) itemType;
@@ -206,7 +206,7 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
         ReplicateOperator replicateOp = null;
         if (secondaryIndexTotalCnt > 1 && primaryIndexModificationOp.isBulkload()) {
             // Split the logical plan into "each secondary index update branch"
-            // to replicate each <PK,RECORD> pair.
+            // to replicate each <PK,OBJECT> pair.
             replicateOp = new ReplicateOperator(secondaryIndexTotalCnt);
             replicateOp.getInputs().add(new MutableObject<ILogicalOperator>(currentTop));
             replicateOp.setExecutionMode(ExecutionMode.PARTITIONED);
@@ -531,7 +531,7 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
             throws AlgebricksException {
         if (recordExpr.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
             IAType type = (IAType) typeEnvironment.getType(recordExpr);
-            return type != null && type.getTypeTag() == ATypeTag.RECORD;
+            return type != null && type.getTypeTag() == ATypeTag.OBJECT;
         }
         return false;
     }

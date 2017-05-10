@@ -245,11 +245,11 @@ public class AccessMethodUtils {
                 arg2Value = ConstantExpressionUtil.getStringConstant(objectFromExpr);
                 checkAndGenerateFTSearchExceptionForStringPhrase(arg2Value);
                 break;
-            case ORDEREDLIST:
+            case ARRAY:
                 oListCursor = ConstantExpressionUtil.getOrderedListConstant(objectFromExpr).getCursor();
                 checkEachElementInFTSearchListPredicate(oListCursor);
                 break;
-            case UNORDEREDLIST:
+            case MULTISET:
                 oListCursor = ConstantExpressionUtil.getUnorderedListConstant(objectFromExpr).getCursor();
                 checkEachElementInFTSearchListPredicate(oListCursor);
                 break;
@@ -434,10 +434,10 @@ public class AccessMethodUtils {
                     case DOUBLE:
                     case FLOAT:
                         switch (fieldType.getTypeTag()) {
-                            case INT8:
-                            case INT16:
-                            case INT32:
-                            case INT64:
+                            case TINYINT:
+                            case SMALLINT:
+                            case INTEGER:
+                            case BIGINT:
                                 realTypeConvertedToIntegerType = true;
                                 break;
                             default:

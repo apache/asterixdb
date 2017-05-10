@@ -32,14 +32,14 @@ public class SleepTypeComputer extends AbstractResultTypeComputer {
     public void checkArgType(String funcName, int argIndex, IAType type) throws AlgebricksException {
         if (argIndex == 1) {
             switch (type.getTypeTag()) {
-                case INT8:
-                case INT16:
-                case INT32:
-                case INT64:
+                case TINYINT:
+                case SMALLINT:
+                case INTEGER:
+                case BIGINT:
                     break;
                 default:
-                    throw new TypeMismatchException(funcName, argIndex, type.getTypeTag(), ATypeTag.INT8,
-                            ATypeTag.INT16, ATypeTag.INT32, ATypeTag.INT64);
+                    throw new TypeMismatchException(funcName, argIndex, type.getTypeTag(), ATypeTag.TINYINT,
+                            ATypeTag.SMALLINT, ATypeTag.INTEGER, ATypeTag.BIGINT);
             }
         }
     }

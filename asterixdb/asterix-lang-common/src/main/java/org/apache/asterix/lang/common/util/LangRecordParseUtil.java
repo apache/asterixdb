@@ -206,9 +206,9 @@ public class LangRecordParseUtil {
         switch (aObj.getType().getTypeTag()) {
             case DOUBLE:
                 return Double.toString(((ADouble) aObj).getDoubleValue());
-            case INT64:
+            case BIGINT:
                 return Long.toString(((AInt64) aObj).getLongValue());
-            case ORDEREDLIST:
+            case ARRAY:
                 return aOrderedListToString((AOrderedList) aObj);
             case STRING:
                 return ((AString) aObj).getStringValue();

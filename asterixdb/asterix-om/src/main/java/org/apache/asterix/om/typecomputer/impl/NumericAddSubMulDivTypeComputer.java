@@ -47,10 +47,10 @@ public class NumericAddSubMulDivTypeComputer extends AbstractResultTypeComputer 
         switch (tag1) {
             case DOUBLE:
                 switch (tag2) {
-                    case INT8:
-                    case INT16:
-                    case INT32:
-                    case INT64:
+                    case TINYINT:
+                    case SMALLINT:
+                    case INTEGER:
+                    case BIGINT:
                     case FLOAT:
                     case DOUBLE:
                         type = BuiltinType.ADOUBLE;
@@ -64,10 +64,10 @@ public class NumericAddSubMulDivTypeComputer extends AbstractResultTypeComputer 
                 break;
             case FLOAT:
                 switch (tag2) {
-                    case INT8:
-                    case INT16:
-                    case INT32:
-                    case INT64:
+                    case TINYINT:
+                    case SMALLINT:
+                    case INTEGER:
+                    case BIGINT:
                     case FLOAT:
                         type = BuiltinType.AFLOAT;
                         break;
@@ -81,12 +81,12 @@ public class NumericAddSubMulDivTypeComputer extends AbstractResultTypeComputer 
                         throw new IncompatibleTypeException(funcName, tag1, tag2);
                 }
                 break;
-            case INT64:
+            case BIGINT:
                 switch (tag2) {
-                    case INT8:
-                    case INT16:
-                    case INT32:
-                    case INT64:
+                    case TINYINT:
+                    case SMALLINT:
+                    case INTEGER:
+                    case BIGINT:
                         type = BuiltinType.AINT64;
                         break;
                     case FLOAT:
@@ -102,14 +102,14 @@ public class NumericAddSubMulDivTypeComputer extends AbstractResultTypeComputer 
                         throw new IncompatibleTypeException(funcName, tag1, tag2);
                 }
                 break;
-            case INT32:
+            case INTEGER:
                 switch (tag2) {
-                    case INT8:
-                    case INT16:
-                    case INT32:
+                    case TINYINT:
+                    case SMALLINT:
+                    case INTEGER:
                         type = BuiltinType.AINT32;
                         break;
-                    case INT64:
+                    case BIGINT:
                         type = BuiltinType.AINT64;
                         break;
                     case FLOAT:
@@ -125,16 +125,16 @@ public class NumericAddSubMulDivTypeComputer extends AbstractResultTypeComputer 
                         throw new IncompatibleTypeException(funcName, tag1, tag2);
                 }
                 break;
-            case INT16:
+            case SMALLINT:
                 switch (tag2) {
-                    case INT8:
-                    case INT16:
+                    case TINYINT:
+                    case SMALLINT:
                         type = BuiltinType.AINT16;
                         break;
-                    case INT32:
+                    case INTEGER:
                         type = BuiltinType.AINT32;
                         break;
-                    case INT64:
+                    case BIGINT:
                         type = BuiltinType.AINT64;
                         break;
                     case FLOAT:
@@ -150,18 +150,18 @@ public class NumericAddSubMulDivTypeComputer extends AbstractResultTypeComputer 
                         throw new IncompatibleTypeException(funcName, tag1, tag2);
                 }
                 break;
-            case INT8:
+            case TINYINT:
                 switch (tag2) {
-                    case INT8:
+                    case TINYINT:
                         type = BuiltinType.AINT8;
                         break;
-                    case INT16:
+                    case SMALLINT:
                         type = BuiltinType.AINT16;
                         break;
-                    case INT32:
+                    case INTEGER:
                         type = BuiltinType.AINT32;
                         break;
-                    case INT64:
+                    case BIGINT:
                         type = BuiltinType.AINT64;
                         break;
                     case FLOAT:
@@ -179,10 +179,10 @@ public class NumericAddSubMulDivTypeComputer extends AbstractResultTypeComputer 
                 break;
             case ANY:
                 switch (tag2) {
-                    case INT8:
-                    case INT16:
-                    case INT32:
-                    case INT64:
+                    case TINYINT:
+                    case SMALLINT:
+                    case INTEGER:
+                    case BIGINT:
                     case FLOAT:
                     case ANY:
                     case DOUBLE:

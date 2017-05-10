@@ -60,7 +60,7 @@ public interface IDataParser {
     @SuppressWarnings("unchecked")
     public static void writeObject(IAObject obj, DataOutput dataOutput) throws HyracksDataException {
         switch (obj.getType().getTypeTag()) {
-            case RECORD: {
+            case OBJECT: {
                 IARecordBuilder recordBuilder = new RecordBuilder();
                 recordBuilder.reset((ARecordType) obj.getType());
                 recordBuilder.init();
@@ -68,7 +68,7 @@ public interface IDataParser {
                 break;
             }
 
-            case ORDEREDLIST: {
+            case ARRAY: {
                 OrderedListBuilder listBuilder = new OrderedListBuilder();
                 listBuilder.reset((AOrderedListType) ((AMutableOrderedList) obj).getType());
                 IACursor cursor = ((AMutableOrderedList) obj).getCursor();
@@ -83,7 +83,7 @@ public interface IDataParser {
                 break;
             }
 
-            case UNORDEREDLIST: {
+            case MULTISET: {
                 UnorderedListBuilder listBuilder = new UnorderedListBuilder();
                 listBuilder.reset((AUnorderedListType) ((AMutableUnorderedList) obj).getType());
                 IACursor cursor = ((AMutableUnorderedList) obj).getCursor();

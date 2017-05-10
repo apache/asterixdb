@@ -38,8 +38,8 @@ public class ScalarVersionOfAggregateResultType extends AbstractResultTypeComput
     @Override
     public void checkArgType(String funcName, int argIndex, IAType type) throws AlgebricksException {
         ATypeTag tag = type.getTypeTag();
-        if (tag != ATypeTag.ANY && tag != ATypeTag.ORDEREDLIST && tag != ATypeTag.UNORDEREDLIST) {
-            throw new TypeMismatchException(funcName, argIndex, tag, ATypeTag.ORDEREDLIST, ATypeTag.UNORDEREDLIST);
+        if (tag != ATypeTag.ANY && tag != ATypeTag.ARRAY && tag != ATypeTag.MULTISET) {
+            throw new TypeMismatchException(funcName, argIndex, tag, ATypeTag.ARRAY, ATypeTag.MULTISET);
         }
     }
 
@@ -49,7 +49,7 @@ public class ScalarVersionOfAggregateResultType extends AbstractResultTypeComput
         if (tag == ATypeTag.ANY) {
             return BuiltinType.ANY;
         }
-        if (tag != ATypeTag.ORDEREDLIST && tag != ATypeTag.UNORDEREDLIST) {
+        if (tag != ATypeTag.ARRAY && tag != ATypeTag.MULTISET) {
             return strippedInputTypes[0];
         }
         AbstractCollectionType act = (AbstractCollectionType) strippedInputTypes[0];

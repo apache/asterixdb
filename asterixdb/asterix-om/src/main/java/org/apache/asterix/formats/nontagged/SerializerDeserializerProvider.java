@@ -116,13 +116,13 @@ public class SerializerDeserializerProvider implements ISerializerDeserializerPr
                 return AFloatSerializerDeserializer.INSTANCE;
             case BOOLEAN:
                 return ABooleanSerializerDeserializer.INSTANCE;
-            case INT8:
+            case TINYINT:
                 return AInt8SerializerDeserializer.INSTANCE;
-            case INT16:
+            case SMALLINT:
                 return AInt16SerializerDeserializer.INSTANCE;
-            case INT32:
+            case INTEGER:
                 return AInt32SerializerDeserializer.INSTANCE;
-            case INT64:
+            case BIGINT:
                 return AInt64SerializerDeserializer.INSTANCE;
             case LINE:
                 return ALineSerializerDeserializer.INSTANCE;
@@ -144,7 +144,7 @@ public class SerializerDeserializerProvider implements ISerializerDeserializerPr
                 return ADayTimeDurationSerializerDeserializer.INSTANCE;
             case INTERVAL:
                 return AIntervalSerializerDeserializer.INSTANCE;
-            case ORDEREDLIST:
+            case ARRAY:
                 return new AOrderedListSerializerDeserializer((AOrderedListType) aqlType);
             case POINT:
                 return APointSerializerDeserializer.INSTANCE;
@@ -154,9 +154,9 @@ public class SerializerDeserializerProvider implements ISerializerDeserializerPr
                 return ARectangleSerializerDeserializer.INSTANCE;
             case POLYGON:
                 return APolygonSerializerDeserializer.INSTANCE;
-            case RECORD:
+            case OBJECT:
                 return new ARecordSerializerDeserializer((ARecordType) aqlType);
-            case UNORDEREDLIST:
+            case MULTISET:
                 return new AUnorderedListSerializerDeserializer((AUnorderedListType) aqlType);
             case UUID:
                 return AUUIDSerializerDeserializer.INSTANCE;

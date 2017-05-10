@@ -62,10 +62,10 @@ public final class NonTaggedFormatUtil {
         switch (type) {
             case STRING:
             case BINARY:
-            case RECORD:
+            case OBJECT:
             case INTERVAL:
-            case ORDEREDLIST:
-            case UNORDEREDLIST:
+            case ARRAY:
+            case MULTISET:
             case POLYGON:
             case ANY:
                 return false;
@@ -118,18 +118,18 @@ public final class NonTaggedFormatUtil {
             case NULL:
                 return 0;
             case BOOLEAN:
-            case INT8:
+            case TINYINT:
                 return 1;
-            case INT16:
+            case SMALLINT:
                 return 2;
-            case INT32:
+            case INTEGER:
             case FLOAT:
             case DATE:
             case YEARMONTHDURATION:
                 return 4;
             case TIME:
                 return 4;
-            case INT64:
+            case BIGINT:
             case DOUBLE:
             case DATETIME:
             case DAYTIMEDURATION:
@@ -173,19 +173,19 @@ public final class NonTaggedFormatUtil {
                     int len = ByteArrayPointable.getContentLength(serNonTaggedAObject, offset);
                     return len + ByteArrayPointable.getNumberBytesToStoreMeta(len);
                 }
-            case RECORD:
+            case OBJECT:
                 if (tagged) {
                     return ARecordSerializerDeserializer.getRecordLength(serNonTaggedAObject, offset + 1) - 1;
                 } else {
                     return ARecordSerializerDeserializer.getRecordLength(serNonTaggedAObject, offset) - 1;
                 }
-            case ORDEREDLIST:
+            case ARRAY:
                 if (tagged) {
                     return AOrderedListSerializerDeserializer.getOrderedListLength(serNonTaggedAObject, offset + 1) - 1;
                 } else {
                     return AOrderedListSerializerDeserializer.getOrderedListLength(serNonTaggedAObject, offset) - 1;
                 }
-            case UNORDEREDLIST:
+            case MULTISET:
                 if (tagged) {
                     return AUnorderedListSerializerDeserializer.getUnorderedListLength(serNonTaggedAObject, offset + 1)
                             - 1;
@@ -249,7 +249,7 @@ public final class NonTaggedFormatUtil {
         IAType type = keyType;
         ATypeTag typeTag = keyType.getTypeTag();
         // Extract item type from list.
-        if (typeTag == ATypeTag.UNORDEREDLIST || typeTag == ATypeTag.ORDEREDLIST) {
+        if (typeTag == ATypeTag.MULTISET || typeTag == ATypeTag.ARRAY) {
             AbstractCollectionType listType = (AbstractCollectionType) keyType;
             if (!listType.isTyped()) {
                 throw new AlgebricksException("Cannot build an inverted index on untyped lists.)");

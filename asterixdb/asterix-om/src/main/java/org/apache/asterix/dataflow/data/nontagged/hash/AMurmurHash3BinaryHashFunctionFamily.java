@@ -61,10 +61,10 @@ public class AMurmurHash3BinaryHashFunctionFamily implements IBinaryHashFunction
                 sourceTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes[offset]);
 
                 switch (sourceTag) {
-                    case INT8:
-                    case INT16:
-                    case INT32:
-                    case INT64:
+                    case TINYINT:
+                    case SMALLINT:
+                    case INTEGER:
+                    case BIGINT:
                         try {
                             IntegerToDoubleTypeConvertComputer.INSTANCE.convertType(bytes, offset + 1, length - 1,
                                     fieldValueBufferOutput);

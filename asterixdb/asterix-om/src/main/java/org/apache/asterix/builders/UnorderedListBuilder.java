@@ -23,6 +23,6 @@ import org.apache.asterix.om.types.ATypeTag;
 public class UnorderedListBuilder extends AbstractListBuilder {
 
     public UnorderedListBuilder() {
-        super(ATypeTag.UNORDEREDLIST);
+        super(ATypeTag.MULTISET);
     }
 }

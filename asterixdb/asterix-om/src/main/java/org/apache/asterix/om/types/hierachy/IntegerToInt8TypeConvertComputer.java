@@ -33,7 +33,7 @@ public class IntegerToInt8TypeConvertComputer extends AbstractIntegerTypeConvert
 
     @Override
     public void convertType(byte[] data, int start, int length, DataOutput out) throws IOException {
-        convertIntegerType(data, start, length, out, ATypeTag.INT8, 1);
+        convertIntegerType(data, start, length, out, ATypeTag.TINYINT, 1);
     }
 
 }

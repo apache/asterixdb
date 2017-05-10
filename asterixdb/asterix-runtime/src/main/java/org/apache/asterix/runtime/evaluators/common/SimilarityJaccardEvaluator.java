@@ -240,11 +240,11 @@ public class SimilarityJaccardEvaluator implements IScalarEvaluator {
 
     protected boolean checkArgTypes(ATypeTag typeTag1, ATypeTag typeTag2) throws HyracksDataException {
         switch (typeTag1) {
-            case ORDEREDLIST: {
+            case ARRAY: {
                 firstListIter = fstOrdListIter;
                 break;
             }
-            case UNORDEREDLIST: {
+            case MULTISET: {
                 firstListIter = fstUnordListIter;
                 break;
             }
@@ -254,11 +254,11 @@ public class SimilarityJaccardEvaluator implements IScalarEvaluator {
             }
         }
         switch (typeTag2) {
-            case ORDEREDLIST: {
+            case ARRAY: {
                 secondListIter = sndOrdListIter;
                 break;
             }
-            case UNORDEREDLIST: {
+            case MULTISET: {
                 secondListIter = sndUnordListIter;
                 break;
             }

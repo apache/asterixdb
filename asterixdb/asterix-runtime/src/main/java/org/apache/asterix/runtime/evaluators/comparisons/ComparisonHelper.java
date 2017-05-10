@@ -77,13 +77,13 @@ public class ComparisonHelper implements Serializable {
     public int compare(ATypeTag typeTag1, ATypeTag typeTag2, IPointable arg1, IPointable arg2)
             throws HyracksDataException {
         switch (typeTag1) {
-            case INT8:
+            case TINYINT:
                 return compareInt8WithArg(typeTag2, arg1, arg2);
-            case INT16:
+            case SMALLINT:
                 return compareInt16WithArg(typeTag2, arg1, arg2);
-            case INT32:
+            case INTEGER:
                 return compareInt32WithArg(typeTag2, arg1, arg2);
-            case INT64:
+            case BIGINT:
                 return compareInt64WithArg(typeTag2, arg1, arg2);
             case FLOAT:
                 return compareFloatWithArg(typeTag2, arg1, arg2);
@@ -190,13 +190,13 @@ public class ComparisonHelper implements Serializable {
 
         double s = ADoubleSerializerDeserializer.getDouble(leftBytes, leftOffset);
         switch (typeTag2) {
-            case INT8:
+            case TINYINT:
                 return compareDouble(s, AInt8SerializerDeserializer.getByte(rightBytes, rightOffset));
-            case INT16:
+            case SMALLINT:
                 return compareDouble(s, AInt16SerializerDeserializer.getShort(rightBytes, rightOffset));
-            case INT32:
+            case INTEGER:
                 return compareDouble(s, AInt32SerializerDeserializer.getInt(rightBytes, rightOffset));
-            case INT64:
+            case BIGINT:
                 return compareDouble(s, AInt64SerializerDeserializer.getLong(rightBytes, rightOffset));
             case FLOAT:
                 return compareDouble(s, AFloatSerializerDeserializer.getFloat(rightBytes, rightOffset));
@@ -217,13 +217,13 @@ public class ComparisonHelper implements Serializable {
 
         float s = FloatPointable.getFloat(leftBytes, leftOffset);
         switch (typeTag2) {
-            case INT8:
+            case TINYINT:
                 return compareFloat(s, AInt8SerializerDeserializer.getByte(rightBytes, rightOffset));
-            case INT16:
+            case SMALLINT:
                 return compareFloat(s, AInt16SerializerDeserializer.getShort(rightBytes, rightOffset));
-            case INT32:
+            case INTEGER:
                 return compareFloat(s, AInt32SerializerDeserializer.getInt(rightBytes, rightOffset));
-            case INT64:
+            case BIGINT:
                 return compareFloat(s, AInt64SerializerDeserializer.getLong(rightBytes, rightOffset));
             case FLOAT:
                 return compareFloat(s, AFloatSerializerDeserializer.getFloat(rightBytes, rightOffset));
@@ -243,13 +243,13 @@ public class ComparisonHelper implements Serializable {
 
         long s = AInt64SerializerDeserializer.getLong(leftBytes, leftOffset);
         switch (typeTag2) {
-            case INT8:
+            case TINYINT:
                 return compareLong(s, AInt8SerializerDeserializer.getByte(rightBytes, rightOffset));
-            case INT16:
+            case SMALLINT:
                 return compareLong(s, AInt16SerializerDeserializer.getShort(rightBytes, rightOffset));
-            case INT32:
+            case INTEGER:
                 return compareLong(s, AInt32SerializerDeserializer.getInt(rightBytes, rightOffset));
-            case INT64:
+            case BIGINT:
                 return compareLong(s, AInt64SerializerDeserializer.getLong(rightBytes, rightOffset));
             case FLOAT:
                 return compareFloat(s, AFloatSerializerDeserializer.getFloat(rightBytes, rightOffset));
@@ -269,19 +269,19 @@ public class ComparisonHelper implements Serializable {
 
         int s = IntegerPointable.getInteger(leftBytes, leftOffset);
         switch (typeTag2) {
-            case INT8: {
+            case TINYINT: {
                 byte v2 = AInt8SerializerDeserializer.getByte(rightBytes, rightOffset);
                 return compareInt(s, v2);
             }
-            case INT16: {
+            case SMALLINT: {
                 short v2 = AInt16SerializerDeserializer.getShort(rightBytes, rightOffset);
                 return compareInt(s, v2);
             }
-            case INT32: {
+            case INTEGER: {
                 int v2 = AInt32SerializerDeserializer.getInt(rightBytes, rightOffset);
                 return compareInt(s, v2);
             }
-            case INT64: {
+            case BIGINT: {
                 long v2 = AInt64SerializerDeserializer.getLong(rightBytes, rightOffset);
                 return compareLong(s, v2);
             }
@@ -307,19 +307,19 @@ public class ComparisonHelper implements Serializable {
 
         short s = AInt16SerializerDeserializer.getShort(leftBytes, leftOffset);
         switch (typeTag2) {
-            case INT8: {
+            case TINYINT: {
                 byte v2 = AInt8SerializerDeserializer.getByte(rightBytes, rightOffset);
                 return compareShort(s, v2);
             }
-            case INT16: {
+            case SMALLINT: {
                 short v2 = AInt16SerializerDeserializer.getShort(rightBytes, rightOffset);
                 return compareShort(s, v2);
             }
-            case INT32: {
+            case INTEGER: {
                 int v2 = AInt32SerializerDeserializer.getInt(rightBytes, rightOffset);
                 return compareInt(s, v2);
             }
-            case INT64: {
+            case BIGINT: {
                 long v2 = AInt64SerializerDeserializer.getLong(rightBytes, rightOffset);
                 return compareLong(s, v2);
             }
@@ -346,13 +346,13 @@ public class ComparisonHelper implements Serializable {
 
         byte s = AInt8SerializerDeserializer.getByte(leftBytes, leftStart);
         switch (typeTag2) {
-            case INT8:
+            case TINYINT:
                 return compareByte(s, AInt8SerializerDeserializer.getByte(rightBytes, rightStart));
-            case INT16:
+            case SMALLINT:
                 return compareShort(s, AInt16SerializerDeserializer.getShort(rightBytes, rightStart));
-            case INT32:
+            case INTEGER:
                 return compareInt(s, AInt32SerializerDeserializer.getInt(rightBytes, rightStart));
-            case INT64:
+            case BIGINT:
                 return compareLong(s, AInt64SerializerDeserializer.getLong(rightBytes, rightStart));
             case FLOAT:
                 return compareFloat(s, AFloatSerializerDeserializer.getFloat(rightBytes, rightStart));

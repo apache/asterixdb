@@ -107,13 +107,13 @@ public class JavaFunctionHelper implements IFunctionHelper {
         IJObject jObject = null;
         IAType type = finfo.getParamList().get(index);
         switch (type.getTypeTag()) {
-            case RECORD:
+            case OBJECT:
                 pointable = pointableAllocator.allocateRecordValue(type);
                 pointable.set(valueReference);
                 jObject = pointableVisitor.visit((ARecordVisitablePointable) pointable, getTypeInfo(index, type));
                 break;
-            case ORDEREDLIST:
-            case UNORDEREDLIST:
+            case ARRAY:
+            case MULTISET:
                 pointable = pointableAllocator.allocateListValue(type);
                 pointable.set(valueReference);
                 jObject = pointableVisitor.visit((AListVisitablePointable) pointable, getTypeInfo(index, type));

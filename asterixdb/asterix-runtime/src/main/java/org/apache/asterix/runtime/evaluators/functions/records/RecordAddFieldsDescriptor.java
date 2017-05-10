@@ -203,7 +203,7 @@ public class RecordAddFieldsDescriptor extends AbstractScalarFunctionDynamicDesc
 
                             // Get the fields from a list of records
                             for (int i = 0; i < inputFields.size(); i++) {
-                                if (!PointableHelper.sameType(ATypeTag.RECORD, inputFields.get(i))) {
+                                if (!PointableHelper.sameType(ATypeTag.OBJECT, inputFields.get(i))) {
                                     throw new AsterixException("Expected list of record, got "
                                             + PointableHelper.getTypeTag(inputFields.get(i)));
                                 }

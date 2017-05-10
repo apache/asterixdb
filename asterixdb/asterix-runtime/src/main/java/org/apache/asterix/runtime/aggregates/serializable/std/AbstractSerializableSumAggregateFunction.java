@@ -108,22 +108,22 @@ public abstract class AbstractSerializableSumAggregateFunction implements ISeria
         }
 
         switch (typeTag) {
-            case INT8: {
+            case TINYINT: {
                 byte val = AInt8SerializerDeserializer.getByte(bytes, offset + 1);
                 sum += val;
                 break;
             }
-            case INT16: {
+            case SMALLINT: {
                 short val = AInt16SerializerDeserializer.getShort(bytes, offset + 1);
                 sum += val;
                 break;
             }
-            case INT32: {
+            case INTEGER: {
                 int val = AInt32SerializerDeserializer.getInt(bytes, offset + 1);
                 sum += val;
                 break;
             }
-            case INT64: {
+            case BIGINT: {
                 long val = AInt64SerializerDeserializer.getLong(bytes, offset + 1);
                 sum += val;
                 break;
@@ -160,25 +160,25 @@ public abstract class AbstractSerializableSumAggregateFunction implements ISeria
         double sum = BufferSerDeUtil.getDouble(state, start + SUM_OFFSET);
         try {
             switch (aggType) {
-                case INT8: {
+                case TINYINT: {
                     serde = SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT8);
                     aInt8.setValue((byte) sum);
                     serde.serialize(aInt8, out);
                     break;
                 }
-                case INT16: {
+                case SMALLINT: {
                     serde = SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT16);
                     aInt16.setValue((short) sum);
                     serde.serialize(aInt16, out);
                     break;
                 }
-                case INT32: {
+                case INTEGER: {
                     serde = SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT32);
                     aInt32.setValue((int) sum);
                     serde.serialize(aInt32, out);
                     break;
                 }
-                case INT64: {
+                case BIGINT: {
                     serde = SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT64);
                     aInt64.setValue((long) sum);
                     serde.serialize(aInt64, out);

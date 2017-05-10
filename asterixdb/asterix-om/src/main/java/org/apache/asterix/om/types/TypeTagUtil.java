@@ -25,13 +25,13 @@ public class TypeTagUtil {
 
     public static IAType getBuiltinTypeByTag(ATypeTag typeTag) throws AsterixException {
         switch (typeTag) {
-            case INT8:
+            case TINYINT:
                 return BuiltinType.AINT8;
-            case INT16:
+            case SMALLINT:
                 return BuiltinType.AINT16;
-            case INT32:
+            case INTEGER:
                 return BuiltinType.AINT32;
-            case INT64:
+            case BIGINT:
                 return BuiltinType.AINT64;
             case BINARY:
                 return BuiltinType.ABINARY;
@@ -81,11 +81,11 @@ public class TypeTagUtil {
                 return BuiltinType.ADAYTIMEDURATION;
             case UUID:
                 return BuiltinType.AUUID;
-            case RECORD:
+            case OBJECT:
                 return RecordUtil.FULLY_OPEN_RECORD_TYPE;
-            case UNORDEREDLIST:
+            case MULTISET:
                 return AUnorderedListType.FULLY_OPEN_UNORDEREDLIST_TYPE;
-            case ORDEREDLIST:
+            case ARRAY:
                 return AOrderedListType.FULL_OPEN_ORDEREDLIST_TYPE;
             default:
                 throw new AsterixException("Typetag " + typeTag + " is not a built-in type");
