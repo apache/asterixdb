@@ -22,7 +22,7 @@ package org.apache.hyracks.storage.am.btree.impls;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.common.impls.AbstractSearchPredicate;
-import org.apache.hyracks.storage.am.common.ophelpers.MultiComparator;
+import org.apache.hyracks.storage.common.MultiComparator;
 
 public class RangePredicate extends AbstractSearchPredicate {
 

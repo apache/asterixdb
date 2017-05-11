@@ -25,9 +25,8 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -42,11 +41,12 @@ import java.util.logging.Logger;
 
 import org.apache.asterix.common.cluster.ClusterPartition;
 import org.apache.asterix.common.config.MetadataProperties;
+import org.apache.asterix.common.dataflow.DatasetLocalResource;
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.replication.IReplicationManager;
 import org.apache.asterix.common.replication.ReplicationJob;
 import org.apache.asterix.common.storage.IndexFileProperties;
-import org.apache.asterix.common.transactions.Resource;
 import org.apache.asterix.common.utils.StorageConstants;
 import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.commons.io.FileUtils;
@@ -58,8 +58,8 @@ import org.apache.hyracks.api.replication.IReplicationJob.ReplicationExecutionTy
 import org.apache.hyracks.api.replication.IReplicationJob.ReplicationJobType;
 import org.apache.hyracks.api.replication.IReplicationJob.ReplicationOperation;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
-import org.apache.hyracks.storage.common.file.ILocalResourceRepository;
-import org.apache.hyracks.storage.common.file.LocalResource;
+import org.apache.hyracks.storage.common.ILocalResourceRepository;
+import org.apache.hyracks.storage.common.LocalResource;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
@@ -72,7 +72,6 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
     private static final Logger LOGGER = Logger.getLogger(PersistentLocalResourceRepository.class.getName());
     private static final String STORAGE_METADATA_DIRECTORY = StorageConstants.METADATA_ROOT;
     private static final String STORAGE_METADATA_FILE_NAME_PREFIX = "." + StorageConstants.METADATA_ROOT;
-    private static final long STORAGE_LOCAL_RESOURCE_ID = -4321;
     private static final int MAX_CACHED_RESOURCES = 1000;
     private static final FilenameFilter METADATA_FILES_FILTER =
             (File dir, String name) -> name.equalsIgnoreCase(METADATA_FILE_NAME);
@@ -132,11 +131,10 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
         return aString.toString();
     }
 
-    public void initializeNewUniverse(String storageRootDirName) throws HyracksDataException {
+    public void initializeNewUniverse(String storageRoot) throws HyracksDataException {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Initializing local resource repository ... ");
         }
-
         /*
          * create storage metadata file
          * (This file is used to locate the root storage directory after instance restarts).
@@ -144,30 +142,30 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
          * we can find out the storage root directory without looking at this file.
          * This file could potentially store more information, otherwise no need to keep it.
          */
+        String storageRootDirName = storageRoot;
+        while (storageRootDirName.startsWith(File.separator)) {
+            storageRootDirName = storageRootDirName.substring(File.separator.length());
+        }
         for (int i = 0; i < mountPoints.length; i++) {
             FileReference storageMetadataFile = getStorageMetadataFile(ioManager, nodeId, i);
             File storageMetadataDir = storageMetadataFile.getFile().getParentFile();
+            if (storageMetadataDir.exists()) {
+                throw HyracksDataException.create(ErrorCode.ROOT_LOCAL_RESOURCE_EXISTS, getClass().getSimpleName(),
+                        storageMetadataDir.getAbsolutePath());
+            }
             //make dirs for the storage metadata file
             boolean success = storageMetadataDir.mkdirs();
             if (!success) {
-                throw new IllegalStateException(
-                        "Unable to create storage metadata directory of PersistentLocalResourceRepository in "
-                                + storageMetadataDir.getAbsolutePath() + " or directory already exists");
+                throw HyracksDataException.create(ErrorCode.ROOT_LOCAL_RESOURCE_COULD_NOT_BE_CREATED,
+                        getClass().getSimpleName(), storageMetadataDir.getAbsolutePath());
             }
-
             LOGGER.log(Level.INFO,
                     "created the root-metadata-file's directory: " + storageMetadataDir.getAbsolutePath());
-
-            String storageRootDirPath;
-            if (storageRootDirName.startsWith(File.separator)) {
-                storageRootDirPath = mountPoints[i] + storageRootDirName.substring(File.separator.length());
-            } else {
-                storageRootDirPath = mountPoints[i] + storageRootDirName;
+            try (FileOutputStream fos = new FileOutputStream(storageMetadataFile.getFile())) {
+                fos.write(storageRootDirName.getBytes(StandardCharsets.UTF_8));
+            } catch (IOException e) {
+                throw HyracksDataException.create(e);
             }
-
-            LocalResource rootLocalResource = new LocalResource(STORAGE_LOCAL_RESOURCE_ID,
-                    storageMetadataFile.getRelativePath(), 0, ITreeIndexFrame.Constants.VERSION, storageRootDirPath);
-            insert(rootLocalResource);
             LOGGER.log(Level.INFO, "created the root-metadata-file: " + storageMetadataFile.getAbsolutePath());
         }
         LOGGER.log(Level.INFO, "Completed the initialization of the local resource repository");
@@ -188,17 +186,14 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
 
     @Override
     public synchronized void insert(LocalResource resource) throws HyracksDataException {
-        String relativePath = getFileName(resource.getPath(), resource.getId());
+        String relativePath = getFileName(resource.getPath());
         FileReference resourceFile = ioManager.resolve(relativePath);
         if (resourceFile.getFile().exists()) {
             throw new HyracksDataException("Duplicate resource: " + resourceFile.getAbsolutePath());
         } else {
             resourceFile.getFile().getParentFile().mkdirs();
         }
-
-        if (resource.getId() != STORAGE_LOCAL_RESOURCE_ID) {
-            resourceCache.put(resource.getPath(), resource);
-        }
+        resourceCache.put(resource.getPath(), resource);
 
         try (FileOutputStream fos = new FileOutputStream(resourceFile.getFile());
                 ObjectOutputStream oosToFos = new ObjectOutputStream(fos)) {
@@ -209,7 +204,7 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
         }
 
         //if replication enabled, send resource metadata info to remote nodes
-        if (isReplicationEnabled && resource.getId() != STORAGE_LOCAL_RESOURCE_ID) {
+        if (isReplicationEnabled) {
             createReplicationJob(ReplicationOperation.REPLICATE, resourceFile);
         }
     }
@@ -237,19 +232,25 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
         return ioManager.resolve(fileName);
     }
 
-    public Map<Long, LocalResource> loadAndGetAllResources() throws HyracksDataException {
+    public Map<Long, LocalResource> loadAndGetAllResources() throws IOException {
         //TODO During recovery, the memory usage currently is proportional to the number of resources available.
         //This could be fixed by traversing all resources on disk until the required resource is found.
+        LOGGER.log(Level.INFO, "Loading all resources");
         Map<Long, LocalResource> resourcesMap = new HashMap<>();
         for (int i = 0; i < mountPoints.length; i++) {
             File storageRootDir = getStorageRootDirectoryIfExists(ioManager, nodeId, i);
             if (storageRootDir == null) {
+                LOGGER.log(Level.INFO, "Getting storage root dir returned null. Returning");
                 continue;
             }
+            LOGGER.log(Level.INFO, "Getting storage root dir returned " + storageRootDir.getAbsolutePath());
             //load all local resources.
             File[] partitions = storageRootDir.listFiles();
+            LOGGER.log(Level.INFO, "Number of partitions found = " + partitions.length);
             for (File partition : partitions) {
                 File[] dataverseFileList = partition.listFiles();
+                LOGGER.log(Level.INFO, "Reading partition = " + partition.getName() + ". Number of dataverses found: "
+                        + dataverseFileList.length);
                 if (dataverseFileList != null) {
                     for (File dataverseFile : dataverseFileList) {
                         loadDataverse(dataverseFile, resourcesMap);
@@ -261,6 +262,7 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
     }
 
     private void loadDataverse(File dataverseFile, Map<Long, LocalResource> resourcesMap) throws HyracksDataException {
+        LOGGER.log(Level.INFO, "Loading dataverse:" + dataverseFile.getName());
         if (dataverseFile.isDirectory()) {
             File[] indexFileList = dataverseFile.listFiles();
             if (indexFileList != null) {
@@ -272,11 +274,13 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
     }
 
     private void loadIndex(File indexFile, Map<Long, LocalResource> resourcesMap) throws HyracksDataException {
+        LOGGER.log(Level.INFO, "Loading index:" + indexFile.getName());
         if (indexFile.isDirectory()) {
             File[] metadataFiles = indexFile.listFiles(METADATA_FILES_FILTER);
             if (metadataFiles != null) {
                 for (File metadataFile : metadataFiles) {
                     LocalResource localResource = readLocalResource(metadataFile);
+                    LOGGER.log(Level.INFO, "Resource loaded " + localResource.getId() + ":" + localResource.getPath());
                     resourcesMap.put(localResource.getId(), localResource);
                 }
             }
@@ -286,7 +290,6 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
     @Override
     public long maxId() throws HyracksDataException {
         long maxResourceId = 0;
-
         for (int i = 0; i < mountPoints.length; i++) {
             File storageRootDir = getStorageRootDirectoryIfExists(ioManager, nodeId, i);
             if (storageRootDir == null) {
@@ -335,10 +338,9 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
         return maxResourceId;
     }
 
-    private static String getFileName(String baseDir, long resourceId) {
-        return (resourceId == STORAGE_LOCAL_RESOURCE_ID) ? baseDir
-                : baseDir.endsWith(File.separator) ? (baseDir + METADATA_FILE_NAME)
-                        : (baseDir + File.separator + METADATA_FILE_NAME);
+    private static String getFileName(String path) {
+        return path.endsWith(File.separator) ? (path + METADATA_FILE_NAME)
+                : (path + File.separator + METADATA_FILE_NAME);
     }
 
     public static LocalResource readLocalResource(File file) throws HyracksDataException {
@@ -437,17 +439,27 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
      */
     public static File getStorageRootDirectoryIfExists(IIOManager ioManager, String nodeId, int ioDeviceId)
             throws HyracksDataException {
-        File storageRootDir = null;
-        FileReference storageMetadataFile = getStorageMetadataFile(ioManager, nodeId, ioDeviceId);
-        if (storageMetadataFile.getFile().exists()) {
-            LocalResource rootLocalResource = readLocalResource(storageMetadataFile.getFile());
-            String storageRootDirPath = (String) rootLocalResource.getResource();
-            Path path = Paths.get(storageRootDirPath);
-            if (Files.exists(path)) {
-                storageRootDir = new File(storageRootDirPath);
+        try {
+            FileReference storageMetadataFile = getStorageMetadataFile(ioManager, nodeId, ioDeviceId);
+            LOGGER.log(Level.INFO, "Storage metadata file is " + storageMetadataFile.getAbsolutePath());
+            if (storageMetadataFile.getFile().exists()) {
+                String storageRootDirPath =
+                        new String(Files.readAllBytes(storageMetadataFile.getFile().toPath()), StandardCharsets.UTF_8);
+                LOGGER.log(Level.INFO, "Storage metadata file found and root dir is " + storageRootDirPath);
+                FileReference storageRootFileRef =
+                        new FileReference(ioManager.getIODevices().get(ioDeviceId), storageRootDirPath);
+                if (storageRootFileRef.getFile().exists()) {
+                    return storageRootFileRef.getFile();
+                } else {
+                    LOGGER.log(Level.INFO, "Storage root doesn't exist");
+                }
+            } else {
+                LOGGER.log(Level.INFO, "Storage metadata file doesn't exist");
             }
+            return null;
+        } catch (IOException ioe) {
+            throw HyracksDataException.create(ioe);
         }
-        return storageRootDir;
     }
 
     /**
@@ -505,7 +517,7 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
         int partitionId = StoragePathUtil.getPartitionNumFromName(partition);
         String relativePath = getLocalResourceRelativePath(absoluteFilePath);
         final LocalResource lr = get(relativePath);
-        int datasetId = lr == null ? -1 : ((Resource) lr.getResource()).datasetId();
+        int datasetId = lr == null ? -1 : ((DatasetLocalResource) lr.getResource()).getDatasetId();
         return new IndexFileProperties(partitionId, dataverse, index, fileName, datasetId);
     }
 }

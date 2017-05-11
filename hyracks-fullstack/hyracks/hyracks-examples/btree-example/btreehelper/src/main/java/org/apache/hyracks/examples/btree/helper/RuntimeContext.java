@@ -22,10 +22,11 @@ package org.apache.hyracks.examples.btree.helper;
 import java.util.concurrent.ThreadFactory;
 
 import org.apache.hyracks.api.application.INCServiceContext;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.storage.am.common.api.IResourceLifecycleManager;
 import org.apache.hyracks.storage.am.common.dataflow.IndexLifecycleManager;
+import org.apache.hyracks.storage.common.IIndex;
+import org.apache.hyracks.storage.common.ILocalResourceRepository;
+import org.apache.hyracks.storage.common.IResourceLifecycleManager;
 import org.apache.hyracks.storage.common.buffercache.BufferCache;
 import org.apache.hyracks.storage.common.buffercache.ClockPageReplacementStrategy;
 import org.apache.hyracks.storage.common.buffercache.DelayPageCleanerPolicy;
@@ -35,7 +36,6 @@ import org.apache.hyracks.storage.common.buffercache.ICacheMemoryAllocator;
 import org.apache.hyracks.storage.common.buffercache.IPageReplacementStrategy;
 import org.apache.hyracks.storage.common.file.IFileMapManager;
 import org.apache.hyracks.storage.common.file.IFileMapProvider;
-import org.apache.hyracks.storage.common.file.ILocalResourceRepository;
 import org.apache.hyracks.storage.common.file.ILocalResourceRepositoryFactory;
 import org.apache.hyracks.storage.common.file.ResourceIdFactory;
 import org.apache.hyracks.storage.common.file.ResourceIdFactoryProvider;
@@ -46,7 +46,7 @@ public class RuntimeContext {
     private IBufferCache bufferCache;
     private IFileMapManager fileMapManager;
     private ILocalResourceRepository localResourceRepository;
-    private IResourceLifecycleManager lcManager;
+    private IResourceLifecycleManager<IIndex> lcManager;
     private ResourceIdFactory resourceIdFactory;
     private ThreadFactory threadFactory = new ThreadFactory() {
         @Override
@@ -59,8 +59,8 @@ public class RuntimeContext {
         fileMapManager = new TransientFileMapManager();
         ICacheMemoryAllocator allocator = new HeapBufferAllocator();
         IPageReplacementStrategy prs = new ClockPageReplacementStrategy(allocator, 32768, 50);
-        bufferCache = new BufferCache(appCtx.getIoManager(), prs, new DelayPageCleanerPolicy(1000),
-                fileMapManager, 100, threadFactory);
+        bufferCache = new BufferCache(appCtx.getIoManager(), prs, new DelayPageCleanerPolicy(1000), fileMapManager, 100,
+                threadFactory);
         ILocalResourceRepositoryFactory localResourceRepositoryFactory = new TransientLocalResourceRepositoryFactory();
         localResourceRepository = localResourceRepositoryFactory.createRepository();
         resourceIdFactory = (new ResourceIdFactoryProvider(localResourceRepository)).createResourceIdFactory();
@@ -79,8 +79,8 @@ public class RuntimeContext {
         return fileMapManager;
     }
 
-    public static RuntimeContext get(IHyracksTaskContext ctx) {
-        return (RuntimeContext) ctx.getJobletContext().getServiceContext().getApplicationContext();
+    public static RuntimeContext get(INCServiceContext ctx) {
+        return (RuntimeContext) ctx.getApplicationContext();
     }
 
     public ILocalResourceRepository getLocalResourceRepository() {
@@ -91,7 +91,7 @@ public class RuntimeContext {
         return resourceIdFactory;
     }
 
-    public IResourceLifecycleManager getIndexLifecycleManager() {
+    public IResourceLifecycleManager<IIndex> getIndexLifecycleManager() {
         return lcManager;
     }
 }

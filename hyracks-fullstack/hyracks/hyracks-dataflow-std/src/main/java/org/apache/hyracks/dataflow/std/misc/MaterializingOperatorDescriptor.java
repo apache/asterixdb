@@ -52,7 +52,7 @@ public class MaterializingOperatorDescriptor extends AbstractOperatorDescriptor 
     public MaterializingOperatorDescriptor(IOperatorDescriptorRegistry spec, RecordDescriptor recordDescriptor,
             boolean isSingleActivity) {
         super(spec, 1, 1);
-        recordDescriptors[0] = recordDescriptor;
+        outRecDescs[0] = recordDescriptor;
         this.isSingleActivity = isSingleActivity;
     }
 

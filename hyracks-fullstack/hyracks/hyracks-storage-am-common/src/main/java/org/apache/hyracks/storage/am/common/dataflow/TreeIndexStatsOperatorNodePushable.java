@@ -30,27 +30,27 @@ import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import org.apache.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import org.apache.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
+import org.apache.hyracks.storage.am.common.api.IIndexDataflowHelper;
 import org.apache.hyracks.storage.am.common.api.ITreeIndex;
 import org.apache.hyracks.storage.am.common.util.TreeIndexStats;
 import org.apache.hyracks.storage.am.common.util.TreeIndexStatsGatherer;
+import org.apache.hyracks.storage.common.IStorageManager;
+import org.apache.hyracks.storage.common.LocalResource;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.file.IFileMapProvider;
-import org.apache.hyracks.storage.common.file.LocalResource;
 
 public class TreeIndexStatsOperatorNodePushable extends AbstractUnaryOutputSourceOperatorNodePushable {
-    private final AbstractTreeIndexOperatorDescriptor opDesc;
     private final IHyracksTaskContext ctx;
-    private final TreeIndexDataflowHelper treeIndexHelper;
+    private final IStorageManager storageManager;
+    private final IIndexDataflowHelper treeIndexHelper;
     private final UTF8StringSerializerDeserializer utf8SerDer = new UTF8StringSerializerDeserializer();
-    private TreeIndexStatsGatherer statsGatherer;
 
-    public TreeIndexStatsOperatorNodePushable(AbstractTreeIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
-            int partition) throws HyracksDataException {
-        this.opDesc = opDesc;
+    public TreeIndexStatsOperatorNodePushable(IHyracksTaskContext ctx, int partition,
+            IIndexDataflowHelperFactory indexHelperFactory, IStorageManager storageManager)
+            throws HyracksDataException {
         this.ctx = ctx;
-        this.treeIndexHelper = (TreeIndexDataflowHelper) opDesc.getIndexDataflowHelperFactory()
-                .createIndexDataflowHelper(opDesc, ctx, partition);
-
+        this.treeIndexHelper = indexHelperFactory.create(ctx, partition);
+        this.storageManager = storageManager;
     }
 
     @Override
@@ -68,16 +68,18 @@ public class TreeIndexStatsOperatorNodePushable extends AbstractUnaryOutputSourc
         ITreeIndex treeIndex = (ITreeIndex) treeIndexHelper.getIndexInstance();
         try {
             writer.open();
-            IBufferCache bufferCache = opDesc.getStorageManager().getBufferCache(ctx);
-            IFileMapProvider fileMapProvider = opDesc.getStorageManager().getFileMapProvider(ctx);
+            IBufferCache bufferCache = storageManager.getBufferCache(ctx.getJobletContext().getServiceContext());
+            IFileMapProvider fileMapProvider =
+                    storageManager.getFileMapProvider(ctx.getJobletContext().getServiceContext());
             LocalResource resource = treeIndexHelper.getResource();
-            IIOManager ioManager = ctx.getIOManager();
+            IIOManager ioManager = ctx.getIoManager();
             FileReference fileRef = ioManager.resolve(resource.getPath());
             int indexFileId = fileMapProvider.lookupFileId(fileRef);
-            statsGatherer = new TreeIndexStatsGatherer(bufferCache, treeIndex.getPageManager(), indexFileId,
-                    treeIndex.getRootPageId());
-            TreeIndexStats stats = statsGatherer.gatherStats(treeIndex.getLeafFrameFactory().createFrame(), treeIndex
-                    .getInteriorFrameFactory().createFrame(), treeIndex.getPageManager().createMetadataFrame());
+            TreeIndexStatsGatherer statsGatherer = new TreeIndexStatsGatherer(bufferCache, treeIndex.getPageManager(),
+                    indexFileId, treeIndex.getRootPageId());
+            TreeIndexStats stats = statsGatherer.gatherStats(treeIndex.getLeafFrameFactory().createFrame(),
+                    treeIndex.getInteriorFrameFactory().createFrame(),
+                    treeIndex.getPageManager().createMetadataFrame());
             // Write the stats output as a single string field.
             FrameTupleAppender appender = new FrameTupleAppender(new VSizeFrame(ctx));
             ArrayTupleBuilder tb = new ArrayTupleBuilder(1);

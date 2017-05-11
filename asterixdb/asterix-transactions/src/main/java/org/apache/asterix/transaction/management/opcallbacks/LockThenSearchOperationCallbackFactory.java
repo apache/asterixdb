@@ -28,7 +28,6 @@ import org.apache.asterix.common.transactions.JobId;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.storage.am.common.api.ISearchOperationCallback;
 import org.apache.hyracks.storage.am.common.api.ISearchOperationCallbackFactory;
 
 public class LockThenSearchOperationCallbackFactory extends AbstractOperationCallbackFactory
@@ -42,7 +41,7 @@ public class LockThenSearchOperationCallbackFactory extends AbstractOperationCal
     }
 
     @Override
-    public ISearchOperationCallback createSearchOperationCallback(long resourceId, IHyracksTaskContext ctx,
+    public LockThenSearchOperationCallback createSearchOperationCallback(long resourceId, IHyracksTaskContext ctx,
             IOperatorNodePushable operatorNodePushable) throws HyracksDataException {
         ITransactionSubsystem txnSubsystem = txnSubsystemProvider.getTransactionSubsystem(ctx);
         try {

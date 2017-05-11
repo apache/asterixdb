@@ -29,8 +29,8 @@ import org.apache.asterix.common.transactions.JobId;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.storage.am.common.api.ISearchOperationCallback;
 import org.apache.hyracks.storage.am.common.api.ISearchOperationCallbackFactory;
+import org.apache.hyracks.storage.common.ISearchOperationCallback;
 
 public class PrimaryIndexSearchOperationCallbackFactory extends AbstractOperationCallbackFactory
         implements ISearchOperationCallbackFactory {

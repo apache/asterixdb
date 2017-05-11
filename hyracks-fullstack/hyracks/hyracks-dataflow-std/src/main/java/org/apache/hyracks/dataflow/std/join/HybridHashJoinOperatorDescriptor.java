@@ -110,7 +110,7 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
         this.predEvaluatorFactory = predEvalFactory;
         this.isLeftOuter = isLeftOuter;
         this.nonMatchWriterFactories1 = nullWriterFactories1;
-        recordDescriptors[0] = recordDescriptor;
+        outRecDescs[0] = recordDescriptor;
     }
 
     @Override
@@ -338,7 +338,7 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
                     if (writer == null) {
                         FileReference file = ctx.getJobletContext()
                                 .createManagedWorkspaceFile(BuildAndPartitionActivityNode.class.getSimpleName());
-                        writer = new RunFileWriter(file, ctx.getIOManager());
+                        writer = new RunFileWriter(file, ctx.getIoManager());
                         writer.open();
                         state.fWriters[i] = writer;
                     }
@@ -560,7 +560,7 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
                     if (writer == null) {
                         FileReference file = ctx
                                 .createManagedWorkspaceFile(PartitionAndJoinActivityNode.class.getSimpleName());
-                        writer = new RunFileWriter(file, ctx.getIOManager());
+                        writer = new RunFileWriter(file, ctx.getIoManager());
                         writer.open();
                         probeWriters[i] = writer;
                     }

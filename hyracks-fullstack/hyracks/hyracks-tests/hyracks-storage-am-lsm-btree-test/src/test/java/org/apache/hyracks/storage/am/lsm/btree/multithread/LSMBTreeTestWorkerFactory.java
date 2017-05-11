@@ -23,8 +23,8 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.common.AbstractIndexTestWorker;
 import org.apache.hyracks.storage.am.common.IIndexTestWorkerFactory;
 import org.apache.hyracks.storage.am.common.TestOperationSelector;
-import org.apache.hyracks.storage.am.common.api.IIndex;
 import org.apache.hyracks.storage.am.common.datagen.DataGenThread;
+import org.apache.hyracks.storage.common.IIndex;
 
 public class LSMBTreeTestWorkerFactory implements IIndexTestWorkerFactory {
     @Override

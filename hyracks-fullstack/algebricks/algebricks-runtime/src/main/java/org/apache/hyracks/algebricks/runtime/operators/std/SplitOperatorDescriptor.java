@@ -97,7 +97,7 @@ public class SplitOperatorDescriptor extends AbstractReplicateOperatorDescriptor
             final boolean[] isOpen = new boolean[numberOfNonMaterializedOutputs];
             final IPointable p = VoidPointable.FACTORY.createPointable();;
             // To deal with each tuple in a frame
-            final FrameTupleAccessor accessor = new FrameTupleAccessor(recordDescriptors[0]);;
+            final FrameTupleAccessor accessor = new FrameTupleAccessor(outRecDescs[0]);;
             final FrameTupleAppender[] appenders = new FrameTupleAppender[numberOfNonMaterializedOutputs];
             final FrameTupleReference tRef = new FrameTupleReference();;
             final IBinaryIntegerInspector intInsepctor = intInsepctorFactory.createBinaryIntegerInspector(ctx);

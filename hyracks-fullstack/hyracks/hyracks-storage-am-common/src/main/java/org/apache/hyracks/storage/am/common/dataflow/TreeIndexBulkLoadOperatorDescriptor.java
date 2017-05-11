@@ -21,50 +21,41 @@ package org.apache.hyracks.storage.am.common.dataflow;
 
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
-import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
-import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
-import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
-import org.apache.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
-import org.apache.hyracks.storage.am.common.api.IPageManagerFactory;
-import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallbackFactory;
-import org.apache.hyracks.storage.common.IStorageManager;
-import org.apache.hyracks.storage.common.file.NoOpLocalResourceFactoryProvider;
+import org.apache.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
 
-public class TreeIndexBulkLoadOperatorDescriptor extends AbstractTreeIndexOperatorDescriptor {
+public class TreeIndexBulkLoadOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
 
     private static final long serialVersionUID = 1L;
 
-    private final int[] fieldPermutation;
-    private final float fillFactor;
-    private final boolean verifyInput;
-    private final long numElementsHint;
-    private final boolean checkIfEmptyIndex;
+    protected final int[] fieldPermutation;
+    protected final float fillFactor;
+    protected final boolean verifyInput;
+    protected final long numElementsHint;
+    protected final boolean checkIfEmptyIndex;
+    protected final IIndexDataflowHelperFactory indexHelperFactory;
 
-    public TreeIndexBulkLoadOperatorDescriptor(IOperatorDescriptorRegistry spec, RecordDescriptor recDesc,
-            IStorageManager storageManager, IIndexLifecycleManagerProvider lifecycleManagerProvider,
-            IFileSplitProvider fileSplitProvider, ITypeTraits[] typeTraits,
-            IBinaryComparatorFactory[] comparatorFactories, int[] bloomFilterKeyFields, int[] fieldPermutation,
-            float fillFactor, boolean verifyInput, long numElementsHint, boolean checkIfEmptyIndex,
-            IIndexDataflowHelperFactory dataflowHelperFactory, IPageManagerFactory pageManagerFactory) {
-        super(spec, 1, 1, recDesc, storageManager, lifecycleManagerProvider, fileSplitProvider, typeTraits,
-                comparatorFactories, bloomFilterKeyFields, dataflowHelperFactory, null, false, false, null,
-                NoOpLocalResourceFactoryProvider.INSTANCE, NoOpOperationCallbackFactory.INSTANCE,
-                NoOpOperationCallbackFactory.INSTANCE, pageManagerFactory);
+    public TreeIndexBulkLoadOperatorDescriptor(IOperatorDescriptorRegistry spec, RecordDescriptor outRecDesc,
+            int[] fieldPermutation, float fillFactor, boolean verifyInput, long numElementsHint,
+            boolean checkIfEmptyIndex, IIndexDataflowHelperFactory indexHelperFactory) {
+        super(spec, 1, 1);
+        this.indexHelperFactory = indexHelperFactory;
         this.fieldPermutation = fieldPermutation;
         this.fillFactor = fillFactor;
         this.verifyInput = verifyInput;
         this.numElementsHint = numElementsHint;
         this.checkIfEmptyIndex = checkIfEmptyIndex;
+        this.outRecDescs[0] = outRecDesc;
     }
 
     @Override
     public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) throws HyracksDataException {
-        return new IndexBulkLoadOperatorNodePushable(this, ctx, partition, fieldPermutation, fillFactor, verifyInput,
-                numElementsHint, checkIfEmptyIndex, recordDescProvider);
+        return new IndexBulkLoadOperatorNodePushable(indexHelperFactory, ctx, partition, fieldPermutation, fillFactor,
+                verifyInput, numElementsHint, checkIfEmptyIndex,
+                recordDescProvider.getInputRecordDescriptor(this.getActivityId(), 0));
     }
 }

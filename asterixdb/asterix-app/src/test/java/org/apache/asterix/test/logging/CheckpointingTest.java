@@ -19,6 +19,7 @@
 package org.apache.asterix.test.logging;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -112,9 +113,11 @@ public class CheckpointingTest {
             TestNodeController nc = new TestNodeController(new File(TEST_CONFIG_FILE_PATH).getAbsolutePath(), false);
             StorageComponentProvider storageManager = new StorageComponentProvider();
             nc.init();
+            List<List<String>> partitioningKeys = new ArrayList<>();
+            partitioningKeys.add(Collections.singletonList("key"));
             Dataset dataset = new Dataset(DATAVERSE_NAME, DATASET_NAME, DATAVERSE_NAME, DATA_TYPE_NAME,
                     NODE_GROUP_NAME, null, null, new InternalDatasetDetails(null, PartitioningStrategy.HASH,
-                            Collections.emptyList(), null, null, null, false, null, false),
+                            partitioningKeys, null, null, null, false, null, false),
                     null, DatasetType.INTERNAL, DATASET_ID, 0);
             try {
                 nc.createPrimaryIndex(dataset, KEY_TYPES, RECORD_TYPE, META_TYPE, new NoMergePolicyFactory(), null,

@@ -70,7 +70,7 @@ public class ExternalSortOperatorDescriptor extends AbstractSorterOperatorDescri
             protected AbstractSortRunGenerator getRunGenerator(IHyracksTaskContext ctx,
                     IRecordDescriptorProvider recordDescProvider) throws HyracksDataException {
                 return new ExternalSortRunGenerator(ctx, sortFields, firstKeyNormalizerFactory, comparatorFactories,
-                        recordDescriptors[0], alg, policy, framesLimit, outputLimit);
+                        outRecDescs[0], alg, policy, framesLimit, outputLimit);
             }
         };
     }
@@ -86,7 +86,7 @@ public class ExternalSortOperatorDescriptor extends AbstractSorterOperatorDescri
                     List<GeneratedRunFileReader> runs, IBinaryComparator[] comparators,
                     INormalizedKeyComputer nmkComputer, int necessaryFrames) {
                 return new ExternalSortRunMerger(ctx, sorter, runs, sortFields, comparators, nmkComputer,
-                        recordDescriptors[0], necessaryFrames, outputLimit, writer);
+                        outRecDescs[0], necessaryFrames, outputLimit, writer);
             }
         };
     }

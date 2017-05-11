@@ -32,8 +32,8 @@ import org.apache.asterix.transaction.management.service.transaction.Transaction
 import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
-import org.apache.hyracks.storage.am.common.api.ISearchOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.dataflow.LSMIndexInsertUpdateDeleteOperatorNodePushable;
+import org.apache.hyracks.storage.common.ISearchOperationCallback;
 
 public class LockThenSearchOperationCallback extends AbstractOperationCallback implements ISearchOperationCallback {
 

@@ -19,6 +19,8 @@
 
 package org.apache.hyracks.tests.am.lsm.btree;
 
+import java.io.DataOutput;
+
 import org.apache.hyracks.api.constraints.PartitionConstraintHelper;
 import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -34,23 +36,15 @@ import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
 import org.apache.hyracks.dataflow.std.file.PlainFileWriterOperatorDescriptor;
 import org.apache.hyracks.dataflow.std.misc.ConstantTupleSourceOperatorDescriptor;
 import org.apache.hyracks.storage.am.btree.dataflow.BTreeSearchOperatorDescriptor;
-import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
-import org.apache.hyracks.storage.am.common.freepage.LinkedMetadataPageManagerFactory;
+import org.apache.hyracks.storage.am.common.api.IMetadataPageManagerFactory;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallbackFactory;
+import org.apache.hyracks.storage.common.IResourceFactory;
 import org.apache.hyracks.test.support.TestStorageManagerComponentHolder;
 import org.apache.hyracks.tests.am.btree.BTreePrimaryIndexSearchOperatorTest;
+import org.apache.hyracks.tests.am.btree.DataSetConstants;
 import org.apache.hyracks.tests.am.common.ITreeIndexOperatorTestHelper;
 import org.apache.hyracks.tests.util.NoopMissingWriterFactory;
 import org.junit.Test;
-
-import java.io.DataOutput;
-
-import static org.apache.hyracks.tests.am.btree.DataSetConstants.primaryAndFilterRecDesc;
-import static org.apache.hyracks.tests.am.btree.DataSetConstants.primaryBloomFilterKeyFields;
-import static org.apache.hyracks.tests.am.btree.DataSetConstants.primaryComparatorFactories;
-import static org.apache.hyracks.tests.am.btree.DataSetConstants.primaryFilterFields;
-import static org.apache.hyracks.tests.am.btree.DataSetConstants.primaryKeyFieldCount;
-import static org.apache.hyracks.tests.am.btree.DataSetConstants.primaryTypeTraits;
 
 public class LSMBTreePrimaryIndexSearchOperatorTest extends BTreePrimaryIndexSearchOperatorTest {
     @Override
@@ -59,8 +53,12 @@ public class LSMBTreePrimaryIndexSearchOperatorTest extends BTreePrimaryIndexSea
     }
 
     @Override
-    protected IIndexDataflowHelperFactory createDataFlowHelperFactory(int[] btreeFields, int[] filterFields) {
-        return ((LSMBTreeOperatorTestHelper) testHelper).createDataFlowHelperFactory(btreeFields, filterFields);
+    protected IResourceFactory createPrimaryResourceFactory() {
+        return ((LSMBTreeOperatorTestHelper) testHelper).getLocalResourceFactory(storageManager,
+                DataSetConstants.primaryTypeTraits, DataSetConstants.primaryComparatorFactories,
+                (IMetadataPageManagerFactory) pageManagerFactory, DataSetConstants.primaryBloomFilterKeyFields,
+                DataSetConstants.primaryBtreeFields, DataSetConstants.primaryFilterFields,
+                DataSetConstants.filterTypeTraits, DataSetConstants.filterCmpFactories);
     }
 
     @Test
@@ -69,7 +67,7 @@ public class LSMBTreePrimaryIndexSearchOperatorTest extends BTreePrimaryIndexSea
 
         // build tuple containing low and high search key
         // high key and low key
-        ArrayTupleBuilder tb = new ArrayTupleBuilder(primaryKeyFieldCount * 2);
+        ArrayTupleBuilder tb = new ArrayTupleBuilder(DataSetConstants.primaryKeyFieldCount * 2);
         DataOutput dos = tb.getDataOutput();
 
         tb.reset();
@@ -84,21 +82,17 @@ public class LSMBTreePrimaryIndexSearchOperatorTest extends BTreePrimaryIndexSea
                 { new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer() };
         RecordDescriptor keyRecDesc = new RecordDescriptor(keyRecDescSers);
 
-        ConstantTupleSourceOperatorDescriptor keyProviderOp =
-                new ConstantTupleSourceOperatorDescriptor(spec, keyRecDesc, tb.getFieldEndOffsets(), tb.getByteArray(),
-                        tb.getSize());
+        ConstantTupleSourceOperatorDescriptor keyProviderOp = new ConstantTupleSourceOperatorDescriptor(spec,
+                keyRecDesc, tb.getFieldEndOffsets(), tb.getByteArray(), tb.getSize());
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, keyProviderOp, NC1_ID);
 
         int[] lowKeyFields = { 0 };
         int[] highKeyFields = { 1 };
 
         BTreeSearchOperatorDescriptor primaryBtreeSearchOp =
-                new BTreeSearchOperatorDescriptor(spec, primaryAndFilterRecDesc, storageManager, lcManagerProvider,
-                        primarySplitProvider, primaryTypeTraits, primaryComparatorFactories,
-                        primaryBloomFilterKeyFields, lowKeyFields, highKeyFields, true, true,
-                        primaryDataflowHelperFactory,
-                        false, false, NoopMissingWriterFactory.INSTANCE, NoOpOperationCallbackFactory.INSTANCE, true,
-                        null, null, new LinkedMetadataPageManagerFactory());
+                new BTreeSearchOperatorDescriptor(spec, DataSetConstants.primaryAndFilterRecDesc, lowKeyFields,
+                        highKeyFields, true, true, primaryHelperFactory, false, false,
+                        NoopMissingWriterFactory.INSTANCE, NoOpOperationCallbackFactory.INSTANCE, null, null, true);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, primaryBtreeSearchOp, NC1_ID);
 
         IFileSplitProvider outSplits = new ConstantFileSplitProvider(new FileSplit[] { createFile(nc1) });
@@ -118,7 +112,8 @@ public class LSMBTreePrimaryIndexSearchOperatorTest extends BTreePrimaryIndexSea
 
         // build tuple containing low and high search key
         // high key and low key
-        ArrayTupleBuilder tb = new ArrayTupleBuilder((primaryKeyFieldCount + primaryFilterFields.length) * 2);
+        ArrayTupleBuilder tb = new ArrayTupleBuilder(
+                (DataSetConstants.primaryKeyFieldCount + DataSetConstants.primaryFilterFields.length) * 2);
         DataOutput dos = tb.getDataOutput();
 
         tb.reset();
@@ -140,9 +135,8 @@ public class LSMBTreePrimaryIndexSearchOperatorTest extends BTreePrimaryIndexSea
                         new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer() };
         RecordDescriptor keyRecDesc = new RecordDescriptor(keyRecDescSers);
 
-        ConstantTupleSourceOperatorDescriptor keyProviderOp =
-                new ConstantTupleSourceOperatorDescriptor(spec, keyRecDesc, tb.getFieldEndOffsets(), tb.getByteArray(),
-                        tb.getSize());
+        ConstantTupleSourceOperatorDescriptor keyProviderOp = new ConstantTupleSourceOperatorDescriptor(spec,
+                keyRecDesc, tb.getFieldEndOffsets(), tb.getByteArray(), tb.getSize());
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, keyProviderOp, NC1_ID);
 
         int[] lowKeyFields = { 0 };
@@ -150,13 +144,10 @@ public class LSMBTreePrimaryIndexSearchOperatorTest extends BTreePrimaryIndexSea
         int[] minFilterFields = { 2 };
         int[] maxFilterFields = { 3 };
 
-        BTreeSearchOperatorDescriptor primaryBtreeSearchOp =
-                new BTreeSearchOperatorDescriptor(spec, primaryAndFilterRecDesc, storageManager, lcManagerProvider,
-                        primarySplitProvider, primaryTypeTraits, primaryComparatorFactories,
-                        primaryBloomFilterKeyFields, lowKeyFields, highKeyFields, true, true,
-                        primaryDataflowHelperFactory,
-                        false, false, NoopMissingWriterFactory.INSTANCE, NoOpOperationCallbackFactory.INSTANCE, true,
-                        minFilterFields, maxFilterFields, new LinkedMetadataPageManagerFactory());
+        BTreeSearchOperatorDescriptor primaryBtreeSearchOp = new BTreeSearchOperatorDescriptor(spec,
+                DataSetConstants.primaryAndFilterRecDesc, lowKeyFields, highKeyFields, true, true, primaryHelperFactory,
+                false, false, NoopMissingWriterFactory.INSTANCE, NoOpOperationCallbackFactory.INSTANCE, minFilterFields,
+                maxFilterFields, true);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, primaryBtreeSearchOp, NC1_ID);
 
         IFileSplitProvider outSplits = new ConstantFileSplitProvider(new FileSplit[] { createFile(nc1) });
@@ -168,5 +159,14 @@ public class LSMBTreePrimaryIndexSearchOperatorTest extends BTreePrimaryIndexSea
 
         spec.addRoot(printer);
         runTest(spec);
+    }
+
+    @Override
+    protected IResourceFactory createSecondaryResourceFactory() {
+        return ((LSMBTreeOperatorTestHelper) testHelper).getLocalResourceFactory(storageManager,
+                DataSetConstants.secondaryTypeTraits, DataSetConstants.secondaryComparatorFactories,
+                (IMetadataPageManagerFactory) pageManagerFactory, DataSetConstants.secondaryBloomFilterKeyFields,
+                DataSetConstants.secondaryBtreeFields, DataSetConstants.secondaryFilterFields,
+                DataSetConstants.filterTypeTraits, DataSetConstants.filterCmpFactories);
     }
 }

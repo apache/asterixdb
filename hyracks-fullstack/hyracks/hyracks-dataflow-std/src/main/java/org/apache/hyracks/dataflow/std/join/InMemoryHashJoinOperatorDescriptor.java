@@ -80,7 +80,7 @@ public class InMemoryHashJoinOperatorDescriptor extends AbstractOperatorDescript
         this.hashFunctionFactories = hashFunctionFactories;
         this.comparatorFactories = comparatorFactories;
         this.predEvaluatorFactory = predEvalFactory;
-        recordDescriptors[0] = recordDescriptor;
+        outRecDescs[0] = recordDescriptor;
         this.isLeftOuter = false;
         this.nonMatchWriterFactories = null;
         this.tableSize = tableSize;
@@ -97,7 +97,7 @@ public class InMemoryHashJoinOperatorDescriptor extends AbstractOperatorDescript
         this.hashFunctionFactories = hashFunctionFactories;
         this.comparatorFactories = comparatorFactories;
         this.predEvaluatorFactory = predEvalFactory;
-        recordDescriptors[0] = recordDescriptor;
+        outRecDescs[0] = recordDescriptor;
         this.isLeftOuter = isLeftOuter;
         this.nonMatchWriterFactories = missingWriterFactories1;
         this.tableSize = tableSize;

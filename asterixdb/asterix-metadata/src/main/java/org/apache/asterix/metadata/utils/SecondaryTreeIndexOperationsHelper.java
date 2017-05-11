@@ -19,8 +19,6 @@
 
 package org.apache.asterix.metadata.utils;
 
-import java.util.Map;
-
 import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
@@ -35,11 +33,14 @@ import org.apache.hyracks.algebricks.core.jobgen.impl.ConnectorPolicyAssignmentP
 import org.apache.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConfig;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
+import org.apache.hyracks.storage.am.common.api.IIndexBuilderFactory;
+import org.apache.hyracks.storage.am.common.build.IndexBuilderFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
+import org.apache.hyracks.storage.am.common.dataflow.IndexCreateOperatorDescriptor;
 import org.apache.hyracks.storage.am.common.dataflow.IndexDropOperatorDescriptor;
-import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
+import org.apache.hyracks.storage.am.common.dataflow.IndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.lsm.common.dataflow.LSMTreeIndexCompactOperatorDescriptor;
+import org.apache.hyracks.storage.common.IResourceFactory;
 
 public abstract class SecondaryTreeIndexOperationsHelper extends SecondaryIndexOperationsHelper {
 
@@ -50,23 +51,31 @@ public abstract class SecondaryTreeIndexOperationsHelper extends SecondaryIndexO
     }
 
     @Override
-    public JobSpecification buildDropJobSpec() throws AlgebricksException {
+    public JobSpecification buildCreationJobSpec() throws AlgebricksException {
         JobSpecification spec = RuntimeUtils.createJobSpecification(metadataProvider.getApplicationContext());
         IStorageComponentProvider storageComponentProvider = metadataProvider.getStorageComponentProvider();
+        IResourceFactory resourceFactory = dataset.getResourceFactory(metadataProvider, index, itemType, metaType,
+                mergePolicyFactory, mergePolicyProperties);
+        IIndexBuilderFactory indexBuilderFactory = new IndexBuilderFactory(storageComponentProvider.getStorageManager(),
+                secondaryFileSplitProvider, resourceFactory, !dataset.isTemp());
+        IndexCreateOperatorDescriptor secondaryIndexCreateOp =
+                new IndexCreateOperatorDescriptor(spec, indexBuilderFactory);
+        AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, secondaryIndexCreateOp,
+                secondaryPartitionConstraint);
+        spec.addRoot(secondaryIndexCreateOp);
+        spec.setConnectorPolicyAssignmentPolicy(new ConnectorPolicyAssignmentPolicy());
+        return spec;
+    }
+
+    @Override
+    public JobSpecification buildDropJobSpec() throws AlgebricksException {
+        JobSpecification spec = RuntimeUtils.createJobSpecification(metadataProvider.getApplicationContext());
         Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint =
                 metadataProvider.getSplitProviderAndConstraints(dataset, index.getIndexName());
-        Pair<ILSMMergePolicyFactory, Map<String, String>> compactionInfo =
-                DatasetUtil.getMergePolicyFactory(dataset, metadataProvider.getMetadataTxnContext());
-        ARecordType recordType =
-                (ARecordType) metadataProvider.findType(dataset.getItemTypeDataverseName(), dataset.getItemTypeName());
-        ARecordType metaType = DatasetUtil.getMetaType(metadataProvider, dataset);
-        IIndexDataflowHelperFactory dataflowHelperFactory = dataset.getIndexDataflowHelperFactory(metadataProvider,
-                index, recordType, metaType, compactionInfo.first, compactionInfo.second);
+        IIndexDataflowHelperFactory dataflowHelperFactory = new IndexDataflowHelperFactory(
+                metadataProvider.getStorageComponentProvider().getStorageManager(), splitsAndConstraint.first);
         // The index drop operation should be persistent regardless of temp datasets or permanent dataset.
-        IndexDropOperatorDescriptor btreeDrop =
-                new IndexDropOperatorDescriptor(spec, storageComponentProvider.getStorageManager(),
-                        storageComponentProvider.getIndexLifecycleManagerProvider(), splitsAndConstraint.first,
-                        dataflowHelperFactory, storageComponentProvider.getMetadataPageManagerFactory());
+        IndexDropOperatorDescriptor btreeDrop = new IndexDropOperatorDescriptor(spec, dataflowHelperFactory);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, btreeDrop,
                 splitsAndConstraint.second);
         spec.addRoot(btreeDrop);
@@ -76,17 +85,12 @@ public abstract class SecondaryTreeIndexOperationsHelper extends SecondaryIndexO
     @Override
     public JobSpecification buildCompactJobSpec() throws AlgebricksException {
         JobSpecification spec = RuntimeUtils.createJobSpecification(metadataProvider.getApplicationContext());
-        IIndexDataflowHelperFactory indexDataflowHelperFactory = dataset.getIndexDataflowHelperFactory(metadataProvider,
-                index, itemType, metaType, mergePolicyFactory, mergePolicyFactoryProperties);
-        LSMTreeIndexCompactOperatorDescriptor compactOp = new LSMTreeIndexCompactOperatorDescriptor(spec,
-                metadataProvider.getStorageComponentProvider().getStorageManager(),
-                metadataProvider.getStorageComponentProvider().getIndexLifecycleManagerProvider(),
-                secondaryFileSplitProvider, secondaryTypeTraits, secondaryComparatorFactories,
-                secondaryBloomFilterKeyFields, indexDataflowHelperFactory,
-                dataset.getModificationCallbackFactory(metadataProvider.getStorageComponentProvider(), index, null,
-                        IndexOperation.FULL_MERGE, null),
-                metadataProvider.getStorageComponentProvider().getMetadataPageManagerFactory());
-
+        Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint =
+                metadataProvider.getSplitProviderAndConstraints(dataset, index.getIndexName());
+        IIndexDataflowHelperFactory dataflowHelperFactory = new IndexDataflowHelperFactory(
+                metadataProvider.getStorageComponentProvider().getStorageManager(), splitsAndConstraint.first);
+        LSMTreeIndexCompactOperatorDescriptor compactOp =
+                new LSMTreeIndexCompactOperatorDescriptor(spec, dataflowHelperFactory);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, compactOp,
                 secondaryPartitionConstraint);
         spec.addRoot(compactOp);

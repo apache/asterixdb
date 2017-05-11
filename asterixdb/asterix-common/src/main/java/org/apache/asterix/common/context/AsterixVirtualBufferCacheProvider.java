@@ -21,32 +21,33 @@ package org.apache.asterix.common.context;
 import java.util.List;
 
 import org.apache.asterix.common.api.INcApplicationContext;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
-import org.apache.hyracks.api.io.FileSplit;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.io.IODeviceHandle;
-import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
 import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCacheProvider;
 
 public class AsterixVirtualBufferCacheProvider implements IVirtualBufferCacheProvider {
 
     private static final long serialVersionUID = 1L;
-    private final int datasetID;
+    private final int datasetId;
 
-    public AsterixVirtualBufferCacheProvider(int datasetID) {
-        this.datasetID = datasetID;
+    public AsterixVirtualBufferCacheProvider(int datasetId) {
+        this.datasetId = datasetId;
     }
 
     @Override
-    public List<IVirtualBufferCache> getVirtualBufferCaches(IHyracksTaskContext ctx,
-            IFileSplitProvider fileSplitProvider) throws HyracksDataException {
-        final int partition = ctx.getTaskAttemptId().getTaskId().getPartition();
-        IIOManager ioManager = ctx.getIOManager();
-        FileSplit fileSplit = fileSplitProvider.getFileSplits()[partition];
-        FileReference fileRef = fileSplit.getFileReference(ioManager);
+    public List<IVirtualBufferCache> getVirtualBufferCaches(INCServiceContext ctx, FileReference fileRef)
+            throws HyracksDataException {
+        IIOManager ioManager = ctx.getIoManager();
+        int deviceId = getDeviceId(ioManager, fileRef);
+        return ((INcApplicationContext) ctx.getApplicationContext()).getDatasetLifecycleManager()
+                .getVirtualBufferCaches(datasetId, deviceId);
+    }
+
+    public static int getDeviceId(IIOManager ioManager, FileReference fileRef) {
         IODeviceHandle device = fileRef.getDeviceHandle();
         List<IODeviceHandle> devices = ioManager.getIODevices();
         int deviceId = 0;
@@ -56,8 +57,7 @@ public class AsterixVirtualBufferCacheProvider implements IVirtualBufferCachePro
                 deviceId = i;
             }
         }
-        return ((INcApplicationContext) ctx.getJobletContext().getServiceContext().getApplicationContext())
-                .getDatasetLifecycleManager().getVirtualBufferCaches(datasetID, deviceId);
+        return deviceId;
     }
 
 }

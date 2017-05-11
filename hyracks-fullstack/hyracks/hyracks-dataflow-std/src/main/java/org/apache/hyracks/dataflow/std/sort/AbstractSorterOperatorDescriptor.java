@@ -68,7 +68,7 @@ public abstract class AbstractSorterOperatorDescriptor extends AbstractOperatorD
         this.sortFields = sortFields;
         this.firstKeyNormalizerFactory = firstKeyNormalizerFactory;
         this.comparatorFactories = comparatorFactories;
-        recordDescriptors[0] = recordDescriptor;
+        outRecDescs[0] = recordDescriptor;
     }
 
     public abstract SortActivity getSortActivity(ActivityId id);

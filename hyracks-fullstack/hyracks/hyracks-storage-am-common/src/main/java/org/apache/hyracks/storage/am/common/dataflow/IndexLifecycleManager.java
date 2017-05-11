@@ -29,8 +29,8 @@ import java.util.Map.Entry;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.lifecycle.ILifeCycleComponent;
-import org.apache.hyracks.storage.am.common.api.IIndex;
-import org.apache.hyracks.storage.am.common.api.IResourceLifecycleManager;
+import org.apache.hyracks.storage.common.IIndex;
+import org.apache.hyracks.storage.common.IResourceLifecycleManager;
 
 public class IndexLifecycleManager implements IResourceLifecycleManager<IIndex>, ILifeCycleComponent {
     private static final long DEFAULT_MEMORY_BUDGET = 1024 * 1024 * 100; // 100 megabytes

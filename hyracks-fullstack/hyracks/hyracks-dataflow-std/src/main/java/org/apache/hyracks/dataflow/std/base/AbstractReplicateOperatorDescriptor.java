@@ -60,7 +60,7 @@ public abstract class AbstractReplicateOperatorDescriptor extends AbstractOperat
             int outputArity, boolean[] outputMaterializationFlags) {
         super(spec, 1, outputArity);
         for (int i = 0; i < outputArity; i++) {
-            recordDescriptors[i] = rDesc;
+            outRecDescs[i] = rDesc;
         }
         this.outputMaterializationFlags = outputMaterializationFlags;
 

@@ -21,80 +21,66 @@ package org.apache.hyracks.storage.am.lsm.invertedindex.dataflow;
 
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
-import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
-import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
-import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
-import org.apache.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
-import org.apache.hyracks.storage.am.common.api.IPageManagerFactory;
+import org.apache.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
 import org.apache.hyracks.storage.am.common.api.ISearchOperationCallbackFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
-import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexSearchModifier;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexSearchModifierFactory;
 import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizerFactory;
-import org.apache.hyracks.storage.common.IStorageManager;
-import org.apache.hyracks.storage.common.file.NoOpLocalResourceFactoryProvider;
 
-public class LSMInvertedIndexSearchOperatorDescriptor extends AbstractLSMInvertedIndexOperatorDescriptor {
+public class LSMInvertedIndexSearchOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
     private static final long serialVersionUID = 1L;
 
     private final int queryField;
     private final IInvertedIndexSearchModifierFactory searchModifierFactory;
     private final int[] minFilterFieldIndexes;
     private final int[] maxFilterFieldIndexes;
-    private final boolean appendFilter;
+    private final boolean appendIndexFilter;
     private final boolean isFullTextSearchQuery;
+    private final IIndexDataflowHelperFactory indexHelperFactory;
+    private final IBinaryTokenizerFactory queryTokenizerFactory;
+    private final boolean retainInput;
+    private final boolean retainMissing;
+    private final IMissingWriterFactory missingWriterFactory;
+    private final ISearchOperationCallbackFactory searchCallbackFactory;
+    private final int numOfFields;
 
-    public LSMInvertedIndexSearchOperatorDescriptor(IOperatorDescriptorRegistry spec, int queryField,
-            IStorageManager storageManager, IFileSplitProvider fileSplitProvider,
-            IIndexLifecycleManagerProvider lifecycleManagerProvider, ITypeTraits[] tokenTypeTraits,
-            IBinaryComparatorFactory[] tokenComparatorFactories, ITypeTraits[] invListsTypeTraits,
-            IBinaryComparatorFactory[] invListComparatorFactories,
-            IIndexDataflowHelperFactory btreeDataflowHelperFactory, IBinaryTokenizerFactory queryTokenizerFactory,
-            IInvertedIndexSearchModifierFactory searchModifierFactory, RecordDescriptor recDesc, boolean retainInput,
-            boolean retainNull, IMissingWriterFactory nullWriterFactory,
-            ISearchOperationCallbackFactory searchOpCallbackProvider, boolean appendFilter, int[] minFilterFieldIndexes,
-            int[] maxFilterFieldIndexes, IPageManagerFactory pageManagerFactory, boolean isFullTextSearchQuery) {
-        super(spec, 1, 1, recDesc, storageManager, fileSplitProvider, lifecycleManagerProvider, tokenTypeTraits,
-                tokenComparatorFactories, invListsTypeTraits, invListComparatorFactories, queryTokenizerFactory,
-                btreeDataflowHelperFactory, null, retainInput, retainNull, nullWriterFactory,
-                NoOpLocalResourceFactoryProvider.INSTANCE, searchOpCallbackProvider,
-                NoOpOperationCallbackFactory.INSTANCE, pageManagerFactory);
+    public LSMInvertedIndexSearchOperatorDescriptor(IOperatorDescriptorRegistry spec, RecordDescriptor outRecDesc,
+            int queryField, IIndexDataflowHelperFactory indexHelperFactory,
+            IBinaryTokenizerFactory queryTokenizerFactory, IInvertedIndexSearchModifierFactory searchModifierFactory,
+            boolean retainInput, boolean retainMissing, IMissingWriterFactory missingWriterFactory,
+            ISearchOperationCallbackFactory searchCallbackFactory, int[] minFilterFieldIndexes,
+            int[] maxFilterFieldIndexes, boolean isFullTextSearchQuery, int numOfFields, boolean appendIndexFilter) {
+        super(spec, 1, 1);
+        this.indexHelperFactory = indexHelperFactory;
+        this.queryTokenizerFactory = queryTokenizerFactory;
         this.queryField = queryField;
+        this.retainInput = retainInput;
+        this.retainMissing = retainMissing;
+        this.missingWriterFactory = missingWriterFactory;
         this.searchModifierFactory = searchModifierFactory;
+        this.searchCallbackFactory = searchCallbackFactory;
         this.minFilterFieldIndexes = minFilterFieldIndexes;
         this.maxFilterFieldIndexes = maxFilterFieldIndexes;
         this.isFullTextSearchQuery = isFullTextSearchQuery;
-        this.appendFilter = appendFilter;
-    }
-
-    public LSMInvertedIndexSearchOperatorDescriptor(IOperatorDescriptorRegistry spec, int queryField,
-            IStorageManager storageManager, IFileSplitProvider fileSplitProvider,
-            IIndexLifecycleManagerProvider lifecycleManagerProvider, ITypeTraits[] tokenTypeTraits,
-            IBinaryComparatorFactory[] tokenComparatorFactories, ITypeTraits[] invListsTypeTraits,
-            IBinaryComparatorFactory[] invListComparatorFactories,
-            IIndexDataflowHelperFactory btreeDataflowHelperFactory, IBinaryTokenizerFactory queryTokenizerFactory,
-            IInvertedIndexSearchModifierFactory searchModifierFactory, RecordDescriptor recDesc, boolean retainInput,
-            boolean retainNull, IMissingWriterFactory nullWriterFactory,
-            ISearchOperationCallbackFactory searchOpCallbackProvider, int[] minFilterFieldIndexes,
-            int[] maxFilterFieldIndexes, IPageManagerFactory pageManagerFactory, boolean isFullTextSearchQuery) {
-        this(spec, queryField, storageManager, fileSplitProvider, lifecycleManagerProvider, tokenTypeTraits,
-                tokenComparatorFactories, invListsTypeTraits, invListComparatorFactories, btreeDataflowHelperFactory,
-                queryTokenizerFactory, searchModifierFactory, recDesc, retainInput, retainNull, nullWriterFactory,
-                searchOpCallbackProvider, false, minFilterFieldIndexes, maxFilterFieldIndexes, pageManagerFactory,
-                isFullTextSearchQuery);
+        this.appendIndexFilter = appendIndexFilter;
+        this.numOfFields = numOfFields;
+        this.outRecDescs[0] = outRecDesc;
     }
 
     @Override
     public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) throws HyracksDataException {
         IInvertedIndexSearchModifier searchModifier = searchModifierFactory.createSearchModifier();
-        return new LSMInvertedIndexSearchOperatorNodePushable(this, ctx, partition, recordDescProvider, queryField,
-                searchModifier, appendFilter, minFilterFieldIndexes, maxFilterFieldIndexes, isFullTextSearchQuery);
+        return new LSMInvertedIndexSearchOperatorNodePushable(ctx,
+                recordDescProvider.getInputRecordDescriptor(getActivityId(), 0), partition, minFilterFieldIndexes,
+                maxFilterFieldIndexes, indexHelperFactory, retainInput, retainMissing, missingWriterFactory,
+                searchCallbackFactory, searchModifier, queryTokenizerFactory, queryField, isFullTextSearchQuery,
+                numOfFields, appendIndexFilter);
     }
 }

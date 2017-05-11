@@ -23,6 +23,7 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.data.IBinaryBooleanInspectorFactory;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.common.api.ITupleFilter;
 import org.apache.hyracks.storage.am.common.api.ITupleFilterFactory;
 
@@ -40,7 +41,7 @@ public class AsterixTupleFilterFactory implements ITupleFilterFactory {
     }
 
     @Override
-    public ITupleFilter createTupleFilter(IHyracksTaskContext ctx) throws Exception {
+    public ITupleFilter createTupleFilter(IHyracksTaskContext ctx) throws HyracksDataException {
         return new AsterixTupleFilter(ctx, evalFactory, boolInspectorFactory.createBinaryBooleanInspector(ctx));
     }
 

@@ -33,8 +33,8 @@ import org.apache.hyracks.dataflow.common.utils.SerdeUtils;
 import org.apache.hyracks.storage.am.common.IIndexTestWorkerFactory;
 import org.apache.hyracks.storage.am.common.IndexMultiThreadTestDriver;
 import org.apache.hyracks.storage.am.common.TestWorkloadConf;
-import org.apache.hyracks.storage.am.common.api.IIndex;
 import org.apache.hyracks.storage.am.config.AccessMethodTestsConfig;
+import org.apache.hyracks.storage.common.IIndex;
 import org.junit.Test;
 
 @SuppressWarnings("rawtypes")

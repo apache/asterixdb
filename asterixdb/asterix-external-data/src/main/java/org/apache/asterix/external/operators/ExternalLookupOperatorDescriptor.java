@@ -23,43 +23,35 @@ import java.nio.ByteBuffer;
 import org.apache.asterix.external.adapter.factory.LookupAdapterFactory;
 import org.apache.asterix.external.dataset.adapter.LookupAdapter;
 import org.apache.asterix.external.indexing.ExternalFileIndexAccessor;
-import org.apache.asterix.external.indexing.FilesIndexDescription;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
-import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
+import org.apache.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
 import org.apache.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
-import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
-import org.apache.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
-import org.apache.hyracks.storage.am.common.api.IPageManagerFactory;
 import org.apache.hyracks.storage.am.common.api.ISearchOperationCallbackFactory;
-import org.apache.hyracks.storage.am.common.dataflow.AbstractTreeIndexOperatorDescriptor;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
-import org.apache.hyracks.storage.am.lsm.btree.dataflow.ExternalBTreeDataflowHelper;
-import org.apache.hyracks.storage.common.IStorageManager;
 
 /*
  * This operator is intended for using record ids to access data in external sources
  */
-public class ExternalLookupOperatorDescriptor extends AbstractTreeIndexOperatorDescriptor {
+public class ExternalLookupOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
     private static final long serialVersionUID = 1L;
     private final LookupAdapterFactory<?> adapterFactory;
+    private final IIndexDataflowHelperFactory dataflowHelperFactory;
+    private final int version;
+    private final ISearchOperationCallbackFactory searchOpCallbackFactory;
 
     public ExternalLookupOperatorDescriptor(IOperatorDescriptorRegistry spec, LookupAdapterFactory<?> adapterFactory,
-            RecordDescriptor outRecDesc, IIndexDataflowHelperFactory externalFilesIndexDataFlowHelperFactory,
-            boolean propagateInput, IIndexLifecycleManagerProvider lcManagerProvider,
-            IStorageManager storageManager, IFileSplitProvider fileSplitProvider,
-            ISearchOperationCallbackFactory searchOpCallbackFactory,
-            boolean retainMissing, IMissingWriterFactory missingWriterFactory,
-            IPageManagerFactory pageManagerFactory) {
-        super(spec, 1, 1, outRecDesc, storageManager, lcManagerProvider, fileSplitProvider,
-                new FilesIndexDescription().EXTERNAL_FILE_INDEX_TYPE_TRAITS,
-                FilesIndexDescription.FILES_INDEX_COMP_FACTORIES, FilesIndexDescription.BLOOM_FILTER_FIELDS,
-                externalFilesIndexDataFlowHelperFactory, null, propagateInput, retainMissing, missingWriterFactory,
-                null, searchOpCallbackFactory, null, pageManagerFactory);
+            RecordDescriptor outRecDesc, IIndexDataflowHelperFactory dataflowHelperFactory,
+            ISearchOperationCallbackFactory searchOpCallbackFactory, int version) {
+        super(spec, 1, 1);
+        outRecDescs[0] = outRecDesc;
+        this.dataflowHelperFactory = dataflowHelperFactory;
+        this.searchOpCallbackFactory = searchOpCallbackFactory;
+        this.version = version;
         this.adapterFactory = adapterFactory;
     }
 
@@ -68,10 +60,8 @@ public class ExternalLookupOperatorDescriptor extends AbstractTreeIndexOperatorD
             final IRecordDescriptorProvider recordDescProvider, final int partition, int nPartitions)
             throws HyracksDataException {
         // Create a file index accessor to be used for files lookup operations
-        // Note that all file index accessors will use partition 0 since we only have 1 files index per NC
         final ExternalFileIndexAccessor snapshotAccessor = new ExternalFileIndexAccessor(
-                (ExternalBTreeDataflowHelper) dataflowHelperFactory.createIndexDataflowHelper(this, ctx, partition),
-                this);
+                dataflowHelperFactory.create(ctx, partition), searchOpCallbackFactory, version);
         return new AbstractUnaryInputUnaryOutputOperatorNodePushable() {
             // The adapter that uses the file index along with the coming tuples to access files in HDFS
             private LookupAdapter<?> adapter;

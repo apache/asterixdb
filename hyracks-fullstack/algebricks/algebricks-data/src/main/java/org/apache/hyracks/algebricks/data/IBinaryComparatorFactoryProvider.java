@@ -24,8 +24,8 @@ import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 /**
  * Provides {@link org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory} for different types
  */
-@FunctionalInterface
 public interface IBinaryComparatorFactoryProvider {
+
     /**
      * @param type
      *            the type of the binary data
@@ -36,4 +36,19 @@ public interface IBinaryComparatorFactoryProvider {
      *             if the comparator factory for the passed type could not be created
      */
     IBinaryComparatorFactory getBinaryComparatorFactory(Object type, boolean ascending) throws AlgebricksException;
+
+    /**
+     *
+     * @param type
+     *            the type of the binary data
+     * @param ascending
+     *            the order direction. true if ascending order is desired, false otherwise
+     * @param ignoreCase
+     *            ignore case for strings
+     * @return the appropriate {@link org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory} instance
+     * @throws AlgebricksException
+     *             if the comparator factory for the passed type could not be created
+     */
+    IBinaryComparatorFactory getBinaryComparatorFactory(Object type, boolean ascending, boolean ignoreCase)
+            throws AlgebricksException;
 }

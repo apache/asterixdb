@@ -34,7 +34,7 @@ public class IdentityOperatorDescriptor extends AbstractSingleActivityOperatorDe
 
     public IdentityOperatorDescriptor(IOperatorDescriptorRegistry spec, RecordDescriptor rDesc) {
         super(spec, 1, 1);
-        recordDescriptors[0] = rDesc;
+        outRecDescs[0] = rDesc;
     }
 
     @Override

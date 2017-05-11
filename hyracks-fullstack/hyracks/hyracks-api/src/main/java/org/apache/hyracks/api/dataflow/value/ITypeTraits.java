@@ -20,8 +20,17 @@ package org.apache.hyracks.api.dataflow.value;
 
 import java.io.Serializable;
 
+/**
+ * Specify whether a type has fixed length and if so, what is the length
+ */
 public interface ITypeTraits extends Serializable {
-    public boolean isFixedLength();
+    /**
+     * @return true if the type has a fixed length, false otherwise
+     */
+    boolean isFixedLength();
 
-    public int getFixedLength();
+    /**
+     * @return the fixed length if isFixedLength() returns true, undefined otherwise
+     */
+    int getFixedLength();
 }

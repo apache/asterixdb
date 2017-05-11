@@ -40,7 +40,7 @@ public abstract class AbstractDeserializedFileScanOperatorDescriptor extends Abs
     public AbstractDeserializedFileScanOperatorDescriptor(IOperatorDescriptorRegistry spec, FileSplit[] splits,
             RecordDescriptor recordDescriptor) {
         super(spec, 0, 1);
-        recordDescriptors[0] = recordDescriptor;
+        outRecDescs[0] = recordDescriptor;
         this.splits = splits;
     }
 
@@ -67,7 +67,7 @@ public abstract class AbstractDeserializedFileScanOperatorDescriptor extends Abs
         @Override
         public void open() throws HyracksDataException {
             FileSplit split = splits[index];
-            RecordDescriptor desc = recordDescriptors[0];
+            RecordDescriptor desc = outRecDescs[0];
             IRecordReader reader;
             try {
                 reader = createRecordReader(split.getFile(null), desc);
@@ -75,7 +75,7 @@ public abstract class AbstractDeserializedFileScanOperatorDescriptor extends Abs
                 throw new HyracksDataException(e);
             }
             if (desc == null) {
-                desc = recordDescriptors[0];
+                desc = outRecDescs[0];
             }
             writer.open();
             try {

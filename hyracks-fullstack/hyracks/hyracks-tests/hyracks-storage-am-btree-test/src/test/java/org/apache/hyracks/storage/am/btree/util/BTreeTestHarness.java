@@ -37,8 +37,8 @@ import org.apache.hyracks.test.support.TestStorageManagerComponentHolder;
 import org.apache.hyracks.test.support.TestUtils;
 
 public class BTreeTestHarness {
-    public static final BTreeLeafFrameType[] LEAF_FRAMES_TO_TEST = new BTreeLeafFrameType[] {
-            BTreeLeafFrameType.REGULAR_NSM, BTreeLeafFrameType.FIELD_PREFIX_COMPRESSED_NSM };
+    public static final BTreeLeafFrameType[] LEAF_FRAMES_TO_TEST =
+            new BTreeLeafFrameType[] { BTreeLeafFrameType.REGULAR_NSM, BTreeLeafFrameType.FIELD_PREFIX_COMPRESSED_NSM };
 
     private static final long RANDOM_SEED = 50;
 
@@ -75,9 +75,9 @@ public class BTreeTestHarness {
     public void setUp() throws HyracksDataException {
         ctx = TestUtils.create(getHyracksFrameSize());
         TestStorageManagerComponentHolder.init(pageSize, numPages, maxOpenFiles);
-        bufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx);
-        fileMapProvider = TestStorageManagerComponentHolder.getFileMapProvider(ctx);
-        file = ctx.getIOManager().getFileReference(0, simpleDateFormat.format(new Date()));
+        bufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx.getJobletContext().getServiceContext());
+        fileMapProvider = TestStorageManagerComponentHolder.getFileMapProvider();
+        file = ctx.getIoManager().getFileReference(0, simpleDateFormat.format(new Date()));
         pageManagerFactory = new LinkedMetadataPageManagerFactory();
         rnd.setSeed(RANDOM_SEED);
     }

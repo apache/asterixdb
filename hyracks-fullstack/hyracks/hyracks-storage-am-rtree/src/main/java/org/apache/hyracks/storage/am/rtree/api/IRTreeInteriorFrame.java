@@ -21,8 +21,8 @@ package org.apache.hyracks.storage.am.rtree.api;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
-import org.apache.hyracks.storage.am.common.ophelpers.MultiComparator;
 import org.apache.hyracks.storage.am.rtree.impls.PathList;
+import org.apache.hyracks.storage.common.MultiComparator;
 
 public interface IRTreeInteriorFrame extends IRTreeFrame {
 

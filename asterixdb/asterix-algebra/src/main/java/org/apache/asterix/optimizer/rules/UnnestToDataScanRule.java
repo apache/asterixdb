@@ -37,7 +37,6 @@ import org.apache.asterix.metadata.entities.FeedConnection;
 import org.apache.asterix.metadata.entities.FeedPolicyEntity;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails;
 import org.apache.asterix.metadata.feeds.BuiltinFeedPolicies;
-import org.apache.asterix.metadata.utils.DatasetUtil;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.BuiltinFunctions;
@@ -124,7 +123,7 @@ public class UnnestToDataScanRule implements IAlgebraicRewriteRule {
             DataSourceId asid = new DataSourceId(dataverseName, datasetName);
             List<LogicalVariable> variables = new ArrayList<>();
             if (dataset.getDatasetType() == DatasetType.INTERNAL) {
-                int numPrimaryKeys = DatasetUtil.getPartitioningKeys(dataset).size();
+                int numPrimaryKeys = dataset.getPrimaryKeys().size();
                 for (int i = 0; i < numPrimaryKeys; i++) {
                     variables.add(context.newVar());
                 }
@@ -144,8 +143,8 @@ public class UnnestToDataScanRule implements IAlgebraicRewriteRule {
             // Adds equivalence classes --- one equivalent class between a primary key
             // variable and a record field-access expression.
             IAType[] schemaTypes = dataSource.getSchemaTypes();
-            ARecordType recordType = (ARecordType) (hasMeta ? schemaTypes[schemaTypes.length - 2]
-                    : schemaTypes[schemaTypes.length - 1]);
+            ARecordType recordType =
+                    (ARecordType) (hasMeta ? schemaTypes[schemaTypes.length - 2] : schemaTypes[schemaTypes.length - 1]);
             ARecordType metaRecordType = (ARecordType) (hasMeta ? schemaTypes[schemaTypes.length - 1] : null);
             EquivalenceClassUtils.addEquivalenceClassesForPrimaryIndexAccess(scan, variables, recordType,
                     metaRecordType, dataset, context);
@@ -198,7 +197,7 @@ public class UnnestToDataScanRule implements IAlgebraicRewriteRule {
     private void addPrimaryKey(List<LogicalVariable> scanVariables, DataSource dataSource,
             IOptimizationContext context) {
         List<LogicalVariable> primaryKey = dataSource.getPrimaryKeyVariables(scanVariables);
-        List<LogicalVariable> tail = new ArrayList<LogicalVariable>();
+        List<LogicalVariable> tail = new ArrayList<>();
         tail.addAll(scanVariables);
         FunctionalDependency pk = new FunctionalDependency(primaryKey, tail);
         context.addPrimaryKey(pk);
@@ -215,8 +214,8 @@ public class UnnestToDataScanRule implements IAlgebraicRewriteRule {
         Dataset dataset = metadataProvider.findDataset(aqlId.getDataverseName(), targetDataset);
         ARecordType feedOutputType = (ARecordType) metadataProvider.findType(aqlId.getDataverseName(), outputType);
         Feed sourceFeed = metadataProvider.findFeed(aqlId.getDataverseName(), sourceFeedName);
-        FeedConnection feedConnection = metadataProvider.findFeedConnection(aqlId.getDataverseName(), sourceFeedName,
-                targetDataset);
+        FeedConnection feedConnection =
+                metadataProvider.findFeedConnection(aqlId.getDataverseName(), sourceFeedName, targetDataset);
         ARecordType metaType = null;
         // Does dataset have meta?
         if (dataset.hasMetaPart()) {
@@ -263,8 +262,8 @@ public class UnnestToDataScanRule implements IAlgebraicRewriteRule {
         }
         FeedDataSource feedDataSource = new FeedDataSource(sourceFeed, aqlId, targetDataset, feedOutputType, metaType,
                 pkTypes, partitioningKeys, keyAccessScalarFunctionCallExpression, sourceFeed.getFeedId(),
-                 FeedRuntimeType.valueOf(subscriptionLocation), locations.split(","),
-                context.getComputationNodeDomain(), feedConnection);
+                FeedRuntimeType.valueOf(subscriptionLocation), locations.split(","), context.getComputationNodeDomain(),
+                feedConnection);
         feedDataSource.getProperties().put(BuiltinFeedPolicies.CONFIG_FEED_POLICY_KEY, feedPolicy);
         return feedDataSource;
     }

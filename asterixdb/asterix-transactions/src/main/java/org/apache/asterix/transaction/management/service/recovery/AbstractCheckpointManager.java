@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.common.exceptions.ACIDException;
@@ -87,6 +88,7 @@ public abstract class AbstractCheckpointManager implements ICheckpointManager {
         List<Checkpoint> checkpointObjectList = new ArrayList<>();
         for (File file : checkpoints) {
             try {
+                LOGGER.log(Level.WARNING, "Reading snapshot file: " + file.getAbsolutePath());
                 String jsonString = new String(Files.readAllBytes(Paths.get(file.getAbsolutePath())));
                 checkpointObjectList.add(Checkpoint.fromJson(jsonString));
             } catch (IOException e) {

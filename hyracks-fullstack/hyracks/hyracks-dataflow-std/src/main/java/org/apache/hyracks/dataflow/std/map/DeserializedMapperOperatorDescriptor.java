@@ -76,7 +76,7 @@ public class DeserializedMapperOperatorDescriptor extends AbstractSingleActivity
             IDeserializedMapperFactory mapperFactory, RecordDescriptor recordDescriptor) {
         super(spec, 1, 1);
         this.mapperFactory = mapperFactory;
-        recordDescriptors[0] = recordDescriptor;
+        outRecDescs[0] = recordDescriptor;
     }
 
     @Override

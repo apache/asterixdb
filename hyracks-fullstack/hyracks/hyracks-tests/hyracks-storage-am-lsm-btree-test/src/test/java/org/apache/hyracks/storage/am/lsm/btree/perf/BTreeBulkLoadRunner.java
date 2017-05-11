@@ -22,9 +22,9 @@ package org.apache.hyracks.storage.am.lsm.btree.perf;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.storage.am.common.api.IIndexBulkLoader;
 import org.apache.hyracks.storage.am.common.datagen.DataGenThread;
 import org.apache.hyracks.storage.am.common.datagen.TupleBatch;
+import org.apache.hyracks.storage.common.IIndexBulkLoader;
 
 public class BTreeBulkLoadRunner extends BTreeRunner {
 

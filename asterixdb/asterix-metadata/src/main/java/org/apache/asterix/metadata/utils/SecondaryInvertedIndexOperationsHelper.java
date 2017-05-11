@@ -18,14 +18,10 @@
  */
 package org.apache.asterix.metadata.utils;
 
-import java.util.Map;
-
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
-import org.apache.asterix.common.context.IStorageComponentProvider;
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
-import org.apache.asterix.common.transactions.IResourceFactory;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
@@ -35,9 +31,6 @@ import org.apache.asterix.om.utils.NonTaggedFormatUtil;
 import org.apache.asterix.om.utils.RecordUtil;
 import org.apache.asterix.runtime.formats.FormatUtils;
 import org.apache.asterix.runtime.utils.RuntimeUtils;
-import org.apache.asterix.transaction.management.resource.LSMInvertedIndexLocalResourceMetadataFactory;
-import org.apache.asterix.transaction.management.resource.PersistentLocalResourceFactoryProvider;
-import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraintHelper;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
@@ -58,23 +51,16 @@ import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
 import org.apache.hyracks.data.std.primitive.ShortPointable;
 import org.apache.hyracks.dataflow.common.data.marshalling.ShortSerializerDeserializer;
 import org.apache.hyracks.dataflow.std.base.AbstractOperatorDescriptor;
+import org.apache.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
 import org.apache.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor;
-import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
 import org.apache.hyracks.dataflow.std.sort.ExternalSortOperatorDescriptor;
 import org.apache.hyracks.storage.am.btree.dataflow.BTreeSearchOperatorDescriptor;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
-import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
+import org.apache.hyracks.storage.am.common.dataflow.IndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.lsm.invertedindex.dataflow.BinaryTokenizerOperatorDescriptor;
-import org.apache.hyracks.storage.am.lsm.invertedindex.dataflow.LSMInvertedIndexBulkLoadOperatorDescriptor;
-import org.apache.hyracks.storage.am.lsm.invertedindex.dataflow.LSMInvertedIndexCompactOperator;
-import org.apache.hyracks.storage.am.lsm.invertedindex.dataflow.LSMInvertedIndexCreateOperatorDescriptor;
-import org.apache.hyracks.storage.am.lsm.invertedindex.dataflow.LSMInvertedIndexDropOperatorDescriptor;
 import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizerFactory;
-import org.apache.hyracks.storage.common.file.ILocalResourceFactoryProvider;
-import org.apache.hyracks.storage.common.file.LocalResource;
 
-public class SecondaryInvertedIndexOperationsHelper extends SecondaryIndexOperationsHelper {
+public class SecondaryInvertedIndexOperationsHelper extends SecondaryTreeIndexOperationsHelper {
 
     private IAType secondaryKeyType;
     private ITypeTraits[] invListsTypeTraits;
@@ -219,36 +205,6 @@ public class SecondaryInvertedIndexOperationsHelper extends SecondaryIndexOperat
     }
 
     @Override
-    public JobSpecification buildCreationJobSpec() throws AlgebricksException {
-        JobSpecification spec = RuntimeUtils.createJobSpecification(metadataProvider.getApplicationContext());
-        IStorageComponentProvider storageComponentProvider = metadataProvider.getStorageComponentProvider();
-        //prepare a LocalResourceMetadata which will be stored in NC's local resource repository
-        IResourceFactory localResourceMetadata = new LSMInvertedIndexLocalResourceMetadataFactory(invListsTypeTraits,
-                primaryComparatorFactories, tokenTypeTraits, tokenComparatorFactories, tokenizerFactory, isPartitioned,
-                dataset.getDatasetId(), mergePolicyFactory, mergePolicyFactoryProperties, filterTypeTraits,
-                filterCmpFactories, invertedIndexFields, secondaryFilterFields, secondaryFilterFieldsForNonBulkLoadOps,
-                invertedIndexFieldsForNonBulkLoadOps, dataset.getIndexOperationTrackerFactory(index),
-                dataset.getIoOperationCallbackFactory(index), storageComponentProvider.getMetadataPageManagerFactory());
-        ILocalResourceFactoryProvider localResourceFactoryProvider = new PersistentLocalResourceFactoryProvider(
-                localResourceMetadata, LocalResource.LSMInvertedIndexResource);
-
-        IIndexDataflowHelperFactory dataflowHelperFactory = createDataflowHelperFactory();
-        LSMInvertedIndexCreateOperatorDescriptor invIndexCreateOp =
-                new LSMInvertedIndexCreateOperatorDescriptor(spec, storageComponentProvider.getStorageManager(),
-                        secondaryFileSplitProvider, storageComponentProvider.getIndexLifecycleManagerProvider(),
-                        tokenTypeTraits, tokenComparatorFactories, invListsTypeTraits, primaryComparatorFactories,
-                        tokenizerFactory, dataflowHelperFactory,
-                        localResourceFactoryProvider, dataset.getModificationCallbackFactory(storageComponentProvider,
-                                index, null, IndexOperation.CREATE, null),
-                        storageComponentProvider.getMetadataPageManagerFactory());
-        AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, invIndexCreateOp,
-                secondaryPartitionConstraint);
-        spec.addRoot(invIndexCreateOp);
-        spec.setConnectorPolicyAssignmentPolicy(new ConnectorPolicyAssignmentPolicy());
-        return spec;
-    }
-
-    @Override
     public JobSpecification buildLoadingJobSpec() throws AlgebricksException {
         JobSpecification spec = RuntimeUtils.createJobSpecification(metadataProvider.getApplicationContext());
 
@@ -282,7 +238,9 @@ public class SecondaryInvertedIndexOperationsHelper extends SecondaryIndexOperat
                 createSortOp(spec, tokenKeyPairComparatorFactories, tokenKeyPairRecDesc);
 
         // Create secondary inverted index bulk load op.
-        LSMInvertedIndexBulkLoadOperatorDescriptor invIndexBulkLoadOp = createInvertedIndexBulkLoadOp(spec);
+        AbstractSingleActivityOperatorDescriptor invIndexBulkLoadOp = createInvertedIndexBulkLoadOp(spec);
+        AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, invIndexBulkLoadOp,
+                secondaryPartitionConstraint);
 
         AlgebricksMetaOperatorDescriptor metaOp = new AlgebricksMetaOperatorDescriptor(spec, 1, 0,
                 new IPushRuntimeFactory[] { new SinkRuntimeFactory() }, new RecordDescriptor[] {});
@@ -331,71 +289,15 @@ public class SecondaryInvertedIndexOperationsHelper extends SecondaryIndexOperat
         return sortOp;
     }
 
-    private LSMInvertedIndexBulkLoadOperatorDescriptor createInvertedIndexBulkLoadOp(JobSpecification spec)
+    private AbstractSingleActivityOperatorDescriptor createInvertedIndexBulkLoadOp(JobSpecification spec)
             throws AlgebricksException {
         int[] fieldPermutation = new int[numTokenKeyPairFields + numFilterFields];
         for (int i = 0; i < fieldPermutation.length; i++) {
             fieldPermutation[i] = i;
         }
-        IIndexDataflowHelperFactory dataflowHelperFactory = createDataflowHelperFactory();
-        IStorageComponentProvider storageComponentProvider = metadataProvider.getStorageComponentProvider();
-        LSMInvertedIndexBulkLoadOperatorDescriptor invIndexBulkLoadOp = new LSMInvertedIndexBulkLoadOperatorDescriptor(
-                spec, secondaryRecDesc, fieldPermutation, false, numElementsHint, false,
-                storageComponentProvider.getStorageManager(), secondaryFileSplitProvider,
-                storageComponentProvider.getIndexLifecycleManagerProvider(), tokenTypeTraits, tokenComparatorFactories,
-                invListsTypeTraits, primaryComparatorFactories, tokenizerFactory, dataflowHelperFactory,
-                storageComponentProvider.getMetadataPageManagerFactory());
-        AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, invIndexBulkLoadOp,
-                secondaryPartitionConstraint);
-        return invIndexBulkLoadOp;
-    }
-
-    private IIndexDataflowHelperFactory createDataflowHelperFactory() throws AlgebricksException {
-        return dataset.getIndexDataflowHelperFactory(metadataProvider, index, itemType, metaType, mergePolicyFactory,
-                mergePolicyFactoryProperties);
-    }
-
-    @Override
-    public JobSpecification buildCompactJobSpec() throws AsterixException, AlgebricksException {
-        JobSpecification spec = RuntimeUtils.createJobSpecification(metadataProvider.getApplicationContext());
-        IIndexDataflowHelperFactory dataflowHelperFactory = createDataflowHelperFactory();
-        IStorageComponentProvider storageComponentProvider = metadataProvider.getStorageComponentProvider();
-        LSMInvertedIndexCompactOperator compactOp =
-                new LSMInvertedIndexCompactOperator(spec, storageComponentProvider.getStorageManager(),
-                        secondaryFileSplitProvider, storageComponentProvider.getIndexLifecycleManagerProvider(),
-                        tokenTypeTraits, tokenComparatorFactories, invListsTypeTraits, primaryComparatorFactories,
-                        tokenizerFactory, dataflowHelperFactory,
-                        dataset.getModificationCallbackFactory(storageComponentProvider, index, null,
-                                IndexOperation.FULL_MERGE, null),
-                        storageComponentProvider.getMetadataPageManagerFactory());
-        AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, compactOp,
-                secondaryPartitionConstraint);
-
-        spec.addRoot(compactOp);
-        spec.setConnectorPolicyAssignmentPolicy(new ConnectorPolicyAssignmentPolicy());
-        return spec;
-    }
-
-    @Override
-    public JobSpecification buildDropJobSpec() throws AlgebricksException {
-        JobSpecification spec = RuntimeUtils.createJobSpecification(metadataProvider.getApplicationContext());
-        IStorageComponentProvider storageComponentProvider = metadataProvider.getStorageComponentProvider();
-        Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint =
-                metadataProvider.getSplitProviderAndConstraints(dataset, index.getIndexName());
-        Pair<ILSMMergePolicyFactory, Map<String, String>> compactionInfo =
-                DatasetUtil.getMergePolicyFactory(dataset, metadataProvider.getMetadataTxnContext());
-        ARecordType recordType =
-                (ARecordType) metadataProvider.findType(dataset.getItemTypeDataverseName(), dataset.getItemTypeName());
-        ARecordType metaType = DatasetUtil.getMetaType(metadataProvider, dataset);
-        IIndexDataflowHelperFactory dataflowHelperFactory = dataset.getIndexDataflowHelperFactory(metadataProvider,
-                index, recordType, metaType, compactionInfo.first, compactionInfo.second);
-        LSMInvertedIndexDropOperatorDescriptor invIdxDrop =
-                new LSMInvertedIndexDropOperatorDescriptor(spec, storageComponentProvider.getStorageManager(),
-                        storageComponentProvider.getIndexLifecycleManagerProvider(), splitsAndConstraint.first,
-                        dataflowHelperFactory, storageComponentProvider.getMetadataPageManagerFactory());
-        AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, invIdxDrop,
-                splitsAndConstraint.second);
-        spec.addRoot(invIdxDrop);
-        return spec;
+        IIndexDataflowHelperFactory dataflowHelperFactory = new IndexDataflowHelperFactory(
+                metadataProvider.getStorageComponentProvider().getStorageManager(), secondaryFileSplitProvider);
+        return createTreeIndexBulkLoadOp(spec, fieldPermutation, dataflowHelperFactory,
+                GlobalConfig.DEFAULT_TREE_FILL_FACTOR);
     }
 }

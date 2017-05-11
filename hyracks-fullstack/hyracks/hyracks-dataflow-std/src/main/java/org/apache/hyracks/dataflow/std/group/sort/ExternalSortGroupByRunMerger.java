@@ -103,7 +103,7 @@ public class ExternalSortGroupByRunMerger extends AbstractExternalSortRunMerger 
     @Override
     protected RunFileWriter prepareIntermediateMergeRunFile() throws HyracksDataException {
         FileReference newRun = ctx.createManagedWorkspaceFile(ExternalSortGroupByRunMerger.class.getSimpleName());
-        return new RunFileWriter(newRun, ctx.getIOManager());
+        return new RunFileWriter(newRun, ctx.getIoManager());
     }
 
     @Override

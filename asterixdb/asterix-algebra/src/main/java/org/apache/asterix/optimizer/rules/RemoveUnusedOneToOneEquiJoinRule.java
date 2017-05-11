@@ -26,7 +26,6 @@ import java.util.Set;
 
 import org.apache.asterix.metadata.declared.DatasetDataSource;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails;
-import org.apache.asterix.metadata.utils.DatasetUtil;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
@@ -231,7 +230,7 @@ public class RemoveUnusedOneToOneEquiJoinRule implements IAlgebraicRewriteRule {
         DatasetDataSource datasetDataSource = (DatasetDataSource) dataScan.getDataSource();
         pkVars.clear();
         if (datasetDataSource.getDataset().getDatasetDetails() instanceof InternalDatasetDetails) {
-            int numPKs = DatasetUtil.getPartitioningKeys(datasetDataSource.getDataset()).size();
+            int numPKs = datasetDataSource.getDataset().getPrimaryKeys().size();
             for (int i = 0; i < numPKs; i++) {
                 pkVars.add(dataScan.getVariables().get(i));
             }

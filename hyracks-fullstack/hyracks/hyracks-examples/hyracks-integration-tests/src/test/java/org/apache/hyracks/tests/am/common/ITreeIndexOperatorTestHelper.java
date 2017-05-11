@@ -20,6 +20,7 @@
 package org.apache.hyracks.tests.am.common;
 
 public interface ITreeIndexOperatorTestHelper {
-    public String getPrimaryIndexName();
-    public String getSecondaryIndexName();
+    String getPrimaryIndexName();
+
+    String getSecondaryIndexName();
 }

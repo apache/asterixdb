@@ -18,6 +18,18 @@
  */
 package org.apache.asterix.common.metadata;
 
+import java.util.List;
+
 public interface IDataset {
+
+    /**
+     * @return the list of primary keys for the dataset
+     */
+    List<List<String>> getPrimaryKeys();
+
+    /**
+     * @return the bloom filter fields indexes for the primary index of the dataset
+     */
+    int[] getPrimaryBloomFilterFields();
 
 }

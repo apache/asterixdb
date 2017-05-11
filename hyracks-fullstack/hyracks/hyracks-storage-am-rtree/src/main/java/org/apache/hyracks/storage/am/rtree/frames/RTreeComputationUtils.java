@@ -22,7 +22,7 @@ package org.apache.hyracks.storage.am.rtree.frames;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.common.api.IPrimitiveValueProvider;
-import org.apache.hyracks.storage.am.common.ophelpers.MultiComparator;
+import org.apache.hyracks.storage.common.MultiComparator;
 
 public class RTreeComputationUtils {
 

@@ -48,7 +48,7 @@ public class FrameFileWriterOperatorDescriptor extends AbstractSingleActivityOpe
     public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
             IRecordDescriptorProvider recordDescProvider, final int partition, int nPartitions) {
         final FileSplit[] splits = fileSplitProvider.getFileSplits();
-        final IIOManager ioManager = ctx.getIOManager();
+        final IIOManager ioManager = ctx.getIoManager();
         return new AbstractUnaryInputSinkOperatorNodePushable() {
             private OutputStream out;
 

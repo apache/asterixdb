@@ -77,8 +77,8 @@ public class RTreeTestHarness {
         fileName = simpleDateFormat.format(new Date());
         file = ioManager.resolve(fileName);
         ctx = TestUtils.create(getHyracksFrameSize());
-        bufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx);
-        fileMapProvider = TestStorageManagerComponentHolder.getFileMapProvider(ctx);
+        bufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx.getJobletContext().getServiceContext());
+        fileMapProvider = TestStorageManagerComponentHolder.getFileMapProvider();
         rnd.setSeed(RANDOM_SEED);
     }
 

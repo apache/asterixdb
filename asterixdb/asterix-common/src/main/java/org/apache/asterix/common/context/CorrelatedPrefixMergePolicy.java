@@ -27,7 +27,6 @@ import java.util.Set;
 
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.storage.am.common.api.IResourceLifecycleManager;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent.ComponentState;
@@ -42,11 +41,11 @@ public class CorrelatedPrefixMergePolicy implements ILSMMergePolicy {
     private int maxToleranceComponentCount;
 
     private final IDatasetLifecycleManager datasetLifecycleManager;
-    private final int datasetID;
+    private final int datasetId;
 
-    public CorrelatedPrefixMergePolicy(IResourceLifecycleManager datasetLifecycleManager, int datasetID) {
-        this.datasetLifecycleManager = (DatasetLifecycleManager) datasetLifecycleManager;
-        this.datasetID = datasetID;
+    public CorrelatedPrefixMergePolicy(IDatasetLifecycleManager datasetLifecycleManager, int datasetId) {
+        this.datasetLifecycleManager = datasetLifecycleManager;
+        this.datasetId = datasetId;
     }
 
     @Override
@@ -80,7 +79,7 @@ public class CorrelatedPrefixMergePolicy implements ILSMMergePolicy {
         int startIndex = -1;
         int minNumComponents = Integer.MAX_VALUE;
 
-        Set<ILSMIndex> indexes = datasetLifecycleManager.getDatasetInfo(datasetID).getDatasetIndexes();
+        Set<ILSMIndex> indexes = datasetLifecycleManager.getDatasetInfo(datasetId).getDatasetIndexes();
         for (ILSMIndex lsmIndex : indexes) {
             minNumComponents = Math.min(minNumComponents, lsmIndex.getImmutableComponents().size());
         }
@@ -122,8 +121,10 @@ public class CorrelatedPrefixMergePolicy implements ILSMMergePolicy {
 
     @Override
     public void configure(Map<String, String> properties) {
-        maxMergableComponentSize = Long.parseLong(properties.get("max-mergable-component-size"));
-        maxToleranceComponentCount = Integer.parseInt(properties.get("max-tolerance-component-count"));
+        maxMergableComponentSize =
+                Long.parseLong(properties.get(CorrelatedPrefixMergePolicyFactory.KEY_MAX_COMPONENT_SIZE));
+        maxToleranceComponentCount =
+                Integer.parseInt(properties.get(CorrelatedPrefixMergePolicyFactory.KEY_MAX_COMPONENT_COUNT));
     }
 
     @Override

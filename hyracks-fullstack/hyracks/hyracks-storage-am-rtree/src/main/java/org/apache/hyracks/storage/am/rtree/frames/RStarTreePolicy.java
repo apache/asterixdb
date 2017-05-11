@@ -30,7 +30,6 @@ import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
 import org.apache.hyracks.storage.am.common.frames.FrameOpSpaceStatus;
-import org.apache.hyracks.storage.am.common.ophelpers.MultiComparator;
 import org.apache.hyracks.storage.am.rtree.api.IRTreeFrame;
 import org.apache.hyracks.storage.am.rtree.api.IRTreePolicy;
 import org.apache.hyracks.storage.am.rtree.impls.EntriesOrder;
@@ -39,6 +38,7 @@ import org.apache.hyracks.storage.am.rtree.impls.Rectangle;
 import org.apache.hyracks.storage.am.rtree.impls.TupleEntryArrayList;
 import org.apache.hyracks.storage.am.rtree.impls.UnorderedSlotManager;
 import org.apache.hyracks.storage.am.rtree.tuples.RTreeTypeAwareTupleWriter;
+import org.apache.hyracks.storage.common.MultiComparator;
 
 public class RStarTreePolicy implements IRTreePolicy {
 

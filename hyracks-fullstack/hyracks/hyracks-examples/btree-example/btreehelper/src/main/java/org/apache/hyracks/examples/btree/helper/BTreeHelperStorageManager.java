@@ -19,11 +19,13 @@
 
 package org.apache.hyracks.examples.btree.helper;
 
-import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.application.INCServiceContext;
+import org.apache.hyracks.storage.common.IIndex;
+import org.apache.hyracks.storage.common.ILocalResourceRepository;
+import org.apache.hyracks.storage.common.IResourceLifecycleManager;
 import org.apache.hyracks.storage.common.IStorageManager;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.file.IFileMapProvider;
-import org.apache.hyracks.storage.common.file.ILocalResourceRepository;
 import org.apache.hyracks.storage.common.file.ResourceIdFactory;
 
 public class BTreeHelperStorageManager implements IStorageManager {
@@ -35,22 +37,27 @@ public class BTreeHelperStorageManager implements IStorageManager {
     }
 
     @Override
-    public IBufferCache getBufferCache(IHyracksTaskContext ctx) {
+    public IBufferCache getBufferCache(INCServiceContext ctx) {
         return RuntimeContext.get(ctx).getBufferCache();
     }
 
     @Override
-    public IFileMapProvider getFileMapProvider(IHyracksTaskContext ctx) {
+    public IFileMapProvider getFileMapProvider(INCServiceContext ctx) {
         return RuntimeContext.get(ctx).getFileMapManager();
     }
 
     @Override
-    public ILocalResourceRepository getLocalResourceRepository(IHyracksTaskContext ctx) {
+    public ILocalResourceRepository getLocalResourceRepository(INCServiceContext ctx) {
         return RuntimeContext.get(ctx).getLocalResourceRepository();
     }
 
     @Override
-    public ResourceIdFactory getResourceIdFactory(IHyracksTaskContext ctx) {
+    public ResourceIdFactory getResourceIdFactory(INCServiceContext ctx) {
         return RuntimeContext.get(ctx).getResourceIdFactory();
+    }
+
+    @Override
+    public IResourceLifecycleManager<IIndex> getLifecycleManager(INCServiceContext ctx) {
+        return RuntimeContext.get(ctx).getIndexLifecycleManager();
     }
 }

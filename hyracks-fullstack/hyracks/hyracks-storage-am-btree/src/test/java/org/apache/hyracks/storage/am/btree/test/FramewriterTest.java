@@ -22,11 +22,14 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 import org.apache.hyracks.api.comm.IFrameTupleAppender;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.dataflow.ActivityId;
 import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
+import org.apache.hyracks.api.dataflow.OperatorDescriptorId;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
@@ -42,16 +45,15 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.dataflow.std.base.AbstractUnaryOutputOperatorNodePushable;
 import org.apache.hyracks.storage.am.btree.dataflow.BTreeSearchOperatorNodePushable;
 import org.apache.hyracks.storage.am.btree.util.BTreeUtils;
-import org.apache.hyracks.storage.am.common.api.IIndexAccessor;
-import org.apache.hyracks.storage.am.common.api.IIndexCursor;
 import org.apache.hyracks.storage.am.common.api.IIndexDataflowHelper;
-import org.apache.hyracks.storage.am.common.api.ISearchOperationCallback;
 import org.apache.hyracks.storage.am.common.api.ISearchOperationCallbackFactory;
 import org.apache.hyracks.storage.am.common.api.ITreeIndex;
-import org.apache.hyracks.storage.am.common.dataflow.AbstractTreeIndexOperatorDescriptor;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IndexSearchOperatorNodePushable;
-import org.apache.hyracks.storage.am.common.ophelpers.MultiComparator;
+import org.apache.hyracks.storage.common.IIndexAccessor;
+import org.apache.hyracks.storage.common.IIndexCursor;
+import org.apache.hyracks.storage.common.ISearchOperationCallback;
+import org.apache.hyracks.storage.common.MultiComparator;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
@@ -274,18 +276,21 @@ public class FramewriterTest {
      */
     public IFrameWriter[] createWriters() throws HyracksDataException {
         ArrayList<BTreeSearchOperatorNodePushable> writers = new ArrayList<>();
-        AbstractTreeIndexOperatorDescriptor[] opDescs = mockIndexOpDesc();
+        Pair<IIndexDataflowHelperFactory, ISearchOperationCallbackFactory>[] pairs = pairs();
         IRecordDescriptorProvider[] recordDescProviders = mockRecDescProviders();
         int partition = 0;
         IHyracksTaskContext[] ctxs = mockIHyracksTaskContext();
         int[] keys = { 0 };
         boolean lowKeyInclusive = true;
         boolean highKeyInclusive = true;
-        for (AbstractTreeIndexOperatorDescriptor opDesc : opDescs) {
+        for (Pair<IIndexDataflowHelperFactory, ISearchOperationCallbackFactory> pair : pairs) {
             for (IRecordDescriptorProvider recordDescProvider : recordDescProviders) {
                 for (IHyracksTaskContext ctx : ctxs) {
-                    BTreeSearchOperatorNodePushable writer = new BTreeSearchOperatorNodePushable(opDesc, ctx, partition,
-                            recordDescProvider, keys, keys, lowKeyInclusive, highKeyInclusive, false, keys, keys);
+                    BTreeSearchOperatorNodePushable writer = new BTreeSearchOperatorNodePushable(ctx, partition,
+                            recordDescProvider.getInputRecordDescriptor(new ActivityId(new OperatorDescriptorId(0), 0),
+                                    0),
+                            keys, keys, lowKeyInclusive, highKeyInclusive, keys, keys, pair.getLeft(), false, false,
+                            null, pair.getRight(), false);
                     writers.add(writer);
                 }
             }
@@ -399,7 +404,6 @@ public class FramewriterTest {
             // normal
             indexHelpers[j] = Mockito.mock(IIndexDataflowHelper.class);
             Mockito.when(indexHelpers[j].getIndexInstance()).thenReturn(indexes[i]);
-            Mockito.when(indexHelpers[j].getNumFilterFields()).thenReturn(0);
 
             // throws exception when opened
             j++;
@@ -417,32 +421,27 @@ public class FramewriterTest {
         IIndexDataflowHelperFactory[] indexHelperFactories = new IIndexDataflowHelperFactory[helpers.length];
         for (int i = 0; i < helpers.length; i++) {
             indexHelperFactories[i] = Mockito.mock(IIndexDataflowHelperFactory.class);
-            Mockito.when(
-                    indexHelperFactories[i].createIndexDataflowHelper(Mockito.any(), Mockito.any(), Mockito.anyInt()))
-                    .thenReturn(helpers[i]);
+            Mockito.when(indexHelperFactories[i].create(Mockito.any(), Mockito.anyInt())).thenReturn(helpers[i]);
         }
         return indexHelperFactories;
     }
 
-    public AbstractTreeIndexOperatorDescriptor[] mockIndexOpDesc() throws HyracksDataException {
+    @SuppressWarnings("unchecked")
+    public Pair<IIndexDataflowHelperFactory, ISearchOperationCallbackFactory>[] pairs() throws HyracksDataException {
         IIndexDataflowHelperFactory[] indexDataflowHelperFactories = mockIndexHelperFactories();
         ISearchOperationCallbackFactory[] searchOpCallbackFactories = mockSearchOpCallbackFactories();
-        AbstractTreeIndexOperatorDescriptor[] opDescs =
-                new AbstractTreeIndexOperatorDescriptor[indexDataflowHelperFactories.length
-                        * searchOpCallbackFactories.length];
+        Pair<IIndexDataflowHelperFactory, ISearchOperationCallbackFactory>[] pairs =
+                new Pair[indexDataflowHelperFactories.length * searchOpCallbackFactories.length];
         int k = 0;
         for (int i = 0; i < indexDataflowHelperFactories.length; i++) {
             for (int j = 0; j < searchOpCallbackFactories.length; j++) {
-                AbstractTreeIndexOperatorDescriptor opDesc = Mockito.mock(AbstractTreeIndexOperatorDescriptor.class);
-                Mockito.when(opDesc.getIndexDataflowHelperFactory()).thenReturn(indexDataflowHelperFactories[i]);
-                Mockito.when(opDesc.getRetainInput()).thenReturn(false);
-                Mockito.when(opDesc.getRetainMissing()).thenReturn(false);
-                Mockito.when(opDesc.getSearchOpCallbackFactory()).thenReturn(searchOpCallbackFactories[j]);
-                opDescs[k] = opDesc;
+                Pair<IIndexDataflowHelperFactory, ISearchOperationCallbackFactory> pair =
+                        Pair.of(indexDataflowHelperFactories[i], searchOpCallbackFactories[j]);
+                pairs[k] = pair;
                 k++;
             }
         }
-        return opDescs;
+        return pairs;
     }
 
     private ISearchOperationCallbackFactory[] mockSearchOpCallbackFactories() throws HyracksDataException {

@@ -20,74 +20,38 @@ package org.apache.asterix.common.dataflow;
 
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
-import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
-import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
-import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
-import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
-import org.apache.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
 import org.apache.hyracks.storage.am.common.api.IModificationOperationCallbackFactory;
-import org.apache.hyracks.storage.am.common.api.IPageManagerFactory;
-import org.apache.hyracks.storage.am.common.api.ISearchOperationCallbackFactory;
 import org.apache.hyracks.storage.am.common.api.ITupleFilterFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.am.lsm.common.dataflow.LSMTreeIndexInsertUpdateDeleteOperatorDescriptor;
-import org.apache.hyracks.storage.common.IStorageManager;
 
 public class LSMTreeInsertDeleteOperatorDescriptor extends LSMTreeIndexInsertUpdateDeleteOperatorDescriptor {
 
     private static final long serialVersionUID = 1L;
-
     private final boolean isPrimary;
 
-    /** the name of the index that is being operated upon **/
-    private final String indexName;
-
-    public LSMTreeInsertDeleteOperatorDescriptor(IOperatorDescriptorRegistry spec, RecordDescriptor recDesc,
-            IStorageManager storageManager, IIndexLifecycleManagerProvider lifecycleManagerProvider,
-            IFileSplitProvider fileSplitProvider, ITypeTraits[] typeTraits,
-            IBinaryComparatorFactory[] comparatorFactories, int[] bloomFilterKeyFields, int[] fieldPermutation,
-            IndexOperation op, IIndexDataflowHelperFactory dataflowHelperFactory,
-            ITupleFilterFactory tupleFilterFactory, boolean isPrimary, String indexName,
-            IMissingWriterFactory nullWriterFactory,
-            IModificationOperationCallbackFactory modificationOpCallbackProvider,
-            ISearchOperationCallbackFactory searchOpCallbackProvider, IPageManagerFactory pageManagerFactory) {
-        super(spec, recDesc, storageManager, lifecycleManagerProvider, fileSplitProvider, typeTraits,
-                comparatorFactories, bloomFilterKeyFields, fieldPermutation, op, dataflowHelperFactory,
-                tupleFilterFactory, nullWriterFactory, modificationOpCallbackProvider, searchOpCallbackProvider,
-                pageManagerFactory);
+    public LSMTreeInsertDeleteOperatorDescriptor(IOperatorDescriptorRegistry spec, RecordDescriptor outRecDesc,
+            int[] fieldPermutation, IndexOperation op, IIndexDataflowHelperFactory indexHelperFactory,
+            ITupleFilterFactory tupleFilterFactory, boolean isPrimary,
+            IModificationOperationCallbackFactory modCallbackFactory) {
+        super(spec, outRecDesc, indexHelperFactory, fieldPermutation, op, modCallbackFactory, tupleFilterFactory);
         this.isPrimary = isPrimary;
-        this.indexName = indexName;
     }
 
     @Override
     public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) throws HyracksDataException {
-        return new LSMInsertDeleteOperatorNodePushable(this, ctx, partition, fieldPermutation, recordDescProvider, op,
-                isPrimary);
+        RecordDescriptor inputRecDesc = recordDescProvider.getInputRecordDescriptor(getActivityId(), 0);
+        return new LSMInsertDeleteOperatorNodePushable(ctx, partition, fieldPermutation, inputRecDesc, op, isPrimary,
+                indexHelperFactory, modCallbackFactory, tupleFilterFactory);
     }
 
     public boolean isPrimary() {
         return isPrimary;
-    }
-
-    public String getIndexName() {
-        return indexName;
-    }
-
-    public int[] getFieldPermutations() {
-        return fieldPermutation;
-    }
-
-    public IndexOperation getIndexOperation() {
-        return op;
-    }
-
-    public IBinaryComparatorFactory[] getComparatorFactories() {
-        return comparatorFactories;
     }
 }

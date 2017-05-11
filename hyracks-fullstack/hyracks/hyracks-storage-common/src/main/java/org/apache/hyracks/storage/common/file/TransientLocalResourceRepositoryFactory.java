@@ -19,6 +19,8 @@
 package org.apache.hyracks.storage.common.file;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.storage.common.ILocalResourceRepository;
+import org.apache.hyracks.storage.common.TransientLocalResourceRepository;
 
 public class TransientLocalResourceRepositoryFactory implements ILocalResourceRepositoryFactory {
 

@@ -23,7 +23,6 @@ import java.nio.ByteBuffer;
 import org.apache.hyracks.api.comm.IFrame;
 import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
-import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -31,22 +30,22 @@ import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.dataflow.common.comm.util.FrameUtils;
 import org.apache.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 import org.apache.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
-import org.apache.hyracks.storage.am.common.api.IIndex;
-import org.apache.hyracks.storage.am.common.api.IIndexAccessor;
 import org.apache.hyracks.storage.am.common.api.IIndexDataflowHelper;
-import org.apache.hyracks.storage.am.common.api.IModificationOperationCallback;
+import org.apache.hyracks.storage.am.common.api.IModificationOperationCallbackFactory;
 import org.apache.hyracks.storage.am.common.api.ITupleFilter;
 import org.apache.hyracks.storage.am.common.api.ITupleFilterFactory;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.am.common.tuples.PermutingFrameTupleReference;
-import org.apache.hyracks.storage.common.file.LocalResource;
+import org.apache.hyracks.storage.common.IIndex;
+import org.apache.hyracks.storage.common.IIndexAccessor;
+import org.apache.hyracks.storage.common.IModificationOperationCallback;
+import org.apache.hyracks.storage.common.LocalResource;
 
 public class IndexInsertUpdateDeleteOperatorNodePushable extends AbstractUnaryInputUnaryOutputOperatorNodePushable {
-    protected final IIndexOperatorDescriptor opDesc;
     protected final IHyracksTaskContext ctx;
     protected final IIndexDataflowHelper indexHelper;
-    protected final IRecordDescriptorProvider recordDescProvider;
+    protected final RecordDescriptor inputRecDesc;
     protected final IndexOperation op;
     protected final PermutingFrameTupleReference tuple = new PermutingFrameTupleReference();
     protected FrameTupleAccessor accessor;
@@ -56,21 +55,24 @@ public class IndexInsertUpdateDeleteOperatorNodePushable extends AbstractUnaryIn
     protected ITupleFilter tupleFilter;
     protected IModificationOperationCallback modCallback;
     protected IIndex index;
+    protected final IModificationOperationCallbackFactory modOpCallbackFactory;
+    protected final ITupleFilterFactory tupleFilterFactory;
 
-    public IndexInsertUpdateDeleteOperatorNodePushable(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
-            int partition, int[] fieldPermutation, IRecordDescriptorProvider recordDescProvider, IndexOperation op)
-            throws HyracksDataException {
-        this.opDesc = opDesc;
+    public IndexInsertUpdateDeleteOperatorNodePushable(IHyracksTaskContext ctx, int partition,
+            IIndexDataflowHelperFactory indexHelperFactory, int[] fieldPermutation, RecordDescriptor inputRecDesc,
+            IndexOperation op, IModificationOperationCallbackFactory modOpCallbackFactory,
+            ITupleFilterFactory tupleFilterFactory) throws HyracksDataException {
         this.ctx = ctx;
-        this.indexHelper = opDesc.getIndexDataflowHelperFactory().createIndexDataflowHelper(opDesc, ctx, partition);
-        this.recordDescProvider = recordDescProvider;
+        this.indexHelper = indexHelperFactory.create(ctx, partition);
+        this.modOpCallbackFactory = modOpCallbackFactory;
+        this.tupleFilterFactory = tupleFilterFactory;
+        this.inputRecDesc = inputRecDesc;
         this.op = op;
         this.tuple.setFieldPermutation(fieldPermutation);
     }
 
     @Override
     public void open() throws HyracksDataException {
-        RecordDescriptor inputRecDesc = recordDescProvider.getInputRecordDescriptor(opDesc.getActivityId(), 0);
         accessor = new FrameTupleAccessor(inputRecDesc);
         writeBuffer = new VSizeFrame(ctx);
         indexHelper.open();
@@ -78,10 +80,8 @@ public class IndexInsertUpdateDeleteOperatorNodePushable extends AbstractUnaryIn
         try {
             writer.open();
             LocalResource resource = indexHelper.getResource();
-            modCallback =
-                    opDesc.getModificationOpCallbackFactory().createModificationOperationCallback(resource, ctx, this);
+            modCallback = modOpCallbackFactory.createModificationOperationCallback(resource, ctx, this);
             indexAccessor = index.createAccessor(modCallback, NoOpOperationCallback.INSTANCE);
-            ITupleFilterFactory tupleFilterFactory = opDesc.getTupleFilterFactory();
             if (tupleFilterFactory != null) {
                 tupleFilter = tupleFilterFactory.createTupleFilter(ctx);
                 frameTuple = new FrameTupleReference();

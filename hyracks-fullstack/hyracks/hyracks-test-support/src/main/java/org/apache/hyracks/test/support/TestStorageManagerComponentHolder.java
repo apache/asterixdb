@@ -24,16 +24,17 @@ import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 
-import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.io.IODeviceHandle;
 import org.apache.hyracks.control.nc.io.IOManager;
-import org.apache.hyracks.storage.am.common.api.IIndex;
 import org.apache.hyracks.storage.am.common.api.IMetadataPageManagerFactory;
-import org.apache.hyracks.storage.am.common.api.IResourceLifecycleManager;
 import org.apache.hyracks.storage.am.common.dataflow.IndexLifecycleManager;
 import org.apache.hyracks.storage.am.common.freepage.AppendOnlyLinkedMetadataPageManagerFactory;
+import org.apache.hyracks.storage.common.IIndex;
+import org.apache.hyracks.storage.common.ILocalResourceRepository;
+import org.apache.hyracks.storage.common.IResourceLifecycleManager;
 import org.apache.hyracks.storage.common.buffercache.BufferCache;
 import org.apache.hyracks.storage.common.buffercache.ClockPageReplacementStrategy;
 import org.apache.hyracks.storage.common.buffercache.DelayPageCleanerPolicy;
@@ -43,7 +44,6 @@ import org.apache.hyracks.storage.common.buffercache.ICacheMemoryAllocator;
 import org.apache.hyracks.storage.common.buffercache.IPageReplacementStrategy;
 import org.apache.hyracks.storage.common.file.IFileMapManager;
 import org.apache.hyracks.storage.common.file.IFileMapProvider;
-import org.apache.hyracks.storage.common.file.ILocalResourceRepository;
 import org.apache.hyracks.storage.common.file.ILocalResourceRepositoryFactory;
 import org.apache.hyracks.storage.common.file.ResourceIdFactory;
 import org.apache.hyracks.storage.common.file.ResourceIdFactoryProvider;
@@ -86,18 +86,18 @@ public class TestStorageManagerComponentHolder {
         return lcManager;
     }
 
-    public synchronized static IBufferCache getBufferCache(IHyracksTaskContext ctx) {
+    public synchronized static IBufferCache getBufferCache(INCServiceContext ctx) {
         if (bufferCache == null) {
             ICacheMemoryAllocator allocator = new HeapBufferAllocator();
             IPageReplacementStrategy prs = new ClockPageReplacementStrategy(allocator, pageSize, numPages);
-            IFileMapProvider fileMapProvider = getFileMapProvider(ctx);
-            bufferCache = new BufferCache(ctx.getIOManager(), prs, new DelayPageCleanerPolicy(1000),
+            IFileMapProvider fileMapProvider = getFileMapProvider();
+            bufferCache = new BufferCache(ctx.getIoManager(), prs, new DelayPageCleanerPolicy(1000),
                     (IFileMapManager) fileMapProvider, maxOpenFiles, threadFactory);
         }
         return bufferCache;
     }
 
-    public synchronized static IFileMapProvider getFileMapProvider(IHyracksTaskContext ctx) {
+    public synchronized static IFileMapProvider getFileMapProvider() {
         if (fileMapProvider == null) {
             fileMapProvider = new TransientFileMapManager();
         }
@@ -114,7 +114,7 @@ public class TestStorageManagerComponentHolder {
         return ioManager;
     }
 
-    public synchronized static ILocalResourceRepository getLocalResourceRepository(IHyracksTaskContext ctx) {
+    public synchronized static ILocalResourceRepository getLocalResourceRepository() {
         if (localResourceRepository == null) {
             try {
                 ILocalResourceRepositoryFactory localResourceRepositoryFactory =
@@ -132,11 +132,11 @@ public class TestStorageManagerComponentHolder {
         return metadataPageManagerFactory;
     }
 
-    public synchronized static ResourceIdFactory getResourceIdFactory(IHyracksTaskContext ctx) {
+    public synchronized static ResourceIdFactory getResourceIdFactory() {
         if (resourceIdFactory == null) {
             try {
-                ResourceIdFactoryProvider resourceIdFactoryFactory = new ResourceIdFactoryProvider(
-                        getLocalResourceRepository(ctx));
+                ResourceIdFactoryProvider resourceIdFactoryFactory =
+                        new ResourceIdFactoryProvider(getLocalResourceRepository());
                 resourceIdFactory = resourceIdFactoryFactory.createResourceIdFactory();
             } catch (HyracksException e) {
                 //In order not to change the IStorageManagerInterface due to the test code, throw runtime exception.

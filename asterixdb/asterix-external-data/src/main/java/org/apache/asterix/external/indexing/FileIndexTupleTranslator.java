@@ -35,33 +35,30 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 
 @SuppressWarnings("unchecked")
 public class FileIndexTupleTranslator {
-    private final FilesIndexDescription filesIndexDescription = new FilesIndexDescription();
-    private ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(
-            filesIndexDescription.FILE_INDEX_RECORD_DESCRIPTOR.getFieldCount());
+    private final ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(FilesIndexDescription.FILE_INDEX_TUPLE_SIZE);
     private RecordBuilder recordBuilder = new RecordBuilder();
     private ArrayBackedValueStorage fieldValue = new ArrayBackedValueStorage();
     private AMutableInt32 aInt32 = new AMutableInt32(0);
     private AMutableInt64 aInt64 = new AMutableInt64(0);
     private AMutableString aString = new AMutableString(null);
     private AMutableDateTime aDateTime = new AMutableDateTime(0);
-    private ISerializerDeserializer<IAObject> stringSerde = SerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.ASTRING);
-    private ISerializerDeserializer<IAObject> dateTimeSerde = SerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.ADATETIME);
-    private ISerializerDeserializer<IAObject> longSerde = SerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.AINT64);
+    private ISerializerDeserializer<IAObject> stringSerde =
+            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ASTRING);
+    private ISerializerDeserializer<IAObject> dateTimeSerde =
+            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ADATETIME);
+    private ISerializerDeserializer<IAObject> longSerde =
+            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT64);
     private ArrayTupleReference tuple = new ArrayTupleReference();
 
     public ITupleReference getTupleFromFile(ExternalFile file) throws HyracksDataException {
         tupleBuilder.reset();
         //File Number
         aInt32.setValue(file.getFileNumber());
-        filesIndexDescription.FILE_INDEX_RECORD_DESCRIPTOR.getFields()[0].serialize(aInt32,
-                tupleBuilder.getDataOutput());
+        FilesIndexDescription.FILE_NUMBER_SERDE.serialize(aInt32, tupleBuilder.getDataOutput());
         tupleBuilder.addFieldEndOffset();
 
         //File Record
-        recordBuilder.reset(filesIndexDescription.EXTERNAL_FILE_RECORD_TYPE);
+        recordBuilder.reset(FilesIndexDescription.EXTERNAL_FILE_RECORD_TYPE);
         // write field 0 (File Name)
         fieldValue.reset();
         aString.setValue(file.getFileName());

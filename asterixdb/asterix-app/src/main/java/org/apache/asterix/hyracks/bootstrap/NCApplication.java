@@ -205,7 +205,7 @@ public class NCApplication extends BaseNCApplication {
 
     private void performLocalCleanUp() {
         //Delete working area files from failed jobs
-        runtimeContext.getIOManager().deleteWorkspaceFiles();
+        runtimeContext.getIoManager().deleteWorkspaceFiles();
 
         //Reclaim storage for temporary datasets.
         String storageDirName = ClusterProperties.INSTANCE.getStorageDirectoryName();

@@ -108,13 +108,13 @@ public class FeedUtils {
     public static FeedLogManager getFeedLogManager(IHyracksTaskContext ctx, int partition,
             FileSplit[] feedLogFileSplits) throws HyracksDataException {
         return new FeedLogManager(
-                FeedUtils.getAbsoluteFileRef(feedLogFileSplits[partition].getPath(), 0, ctx.getIOManager()).getFile());
+                FeedUtils.getAbsoluteFileRef(feedLogFileSplits[partition].getPath(), 0, ctx.getIoManager()).getFile());
     }
 
     public static FeedLogManager getFeedLogManager(IHyracksTaskContext ctx, FileSplit feedLogFileSplit)
             throws HyracksDataException {
         return new FeedLogManager(FeedUtils.getAbsoluteFileRef(feedLogFileSplit.getPath(),
-                0, ctx.getIOManager()).getFile());
+                0, ctx.getIoManager()).getFile());
     }
 
     public static void processFeedMessage(ByteBuffer input, VSizeFrame message, FrameTupleAccessor fta)

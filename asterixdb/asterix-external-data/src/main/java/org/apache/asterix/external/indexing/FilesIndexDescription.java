@@ -42,57 +42,50 @@ public class FilesIndexDescription {
     public static final int FILE_KEY_SIZE = 1;
     public static final int FILE_PAYLOAD_INDEX = 1;
     private static final String[] payloadFieldNames = { "FileName", "FileSize", "FileModDate" };
-    private static final IAType[] payloadFieldTypes = { BuiltinType.ASTRING, BuiltinType.AINT64,
-            BuiltinType.ADATETIME };
+    private static final IAType[] payloadFieldTypes =
+            { BuiltinType.ASTRING, BuiltinType.AINT64, BuiltinType.ADATETIME };
 
     public static final int[] BLOOM_FILTER_FIELDS = { 0 };
     public static final int EXTERNAL_FILE_NAME_FIELD_INDEX = 0;
     public static final int EXTERNAL_FILE_SIZE_FIELD_INDEX = 1;
     public static final int EXTERNAL_FILE_MOD_DATE_FIELD_INDEX = 2;
 
-    public final ARecordType EXTERNAL_FILE_RECORD_TYPE;
-    public final ITypeTraits[] EXTERNAL_FILE_BUDDY_BTREE_TYPE_TRAITS = new ITypeTraits[1];
-    public final ITypeTraits[] EXTERNAL_FILE_INDEX_TYPE_TRAITS = new ITypeTraits[FILE_INDEX_TUPLE_SIZE];
-
-    public final ISerializerDeserializer EXTERNAL_FILE_RECORD_SERDE;
-    public final RecordDescriptor FILE_INDEX_RECORD_DESCRIPTOR;
-    public final RecordDescriptor FILE_BUDDY_BTREE_RECORD_DESCRIPTOR;
-    public final ISerializerDeserializer[] EXTERNAL_FILE_BUDDY_BTREE_FIELDS = new ISerializerDeserializer[1];
-    public final ISerializerDeserializer[] EXTERNAL_FILE_TUPLE_FIELDS = new ISerializerDeserializer[FILE_INDEX_TUPLE_SIZE];
+    public static final ARecordType EXTERNAL_FILE_RECORD_TYPE =
+            new ARecordType("ExternalFileRecordType", payloadFieldNames, payloadFieldTypes, true);
+    public static final ITypeTraits[] EXTERNAL_FILE_BUDDY_BTREE_TYPE_TRAITS =
+            new ITypeTraits[] { TypeTraitProvider.INSTANCE.getTypeTrait(IndexingConstants.FILE_NUMBER_FIELD_TYPE) };
+    public static final ITypeTraits[] EXTERNAL_FILE_INDEX_TYPE_TRAITS =
+            new ITypeTraits[] { TypeTraitProvider.INSTANCE.getTypeTrait(IndexingConstants.FILE_NUMBER_FIELD_TYPE),
+                    TypeTraitProvider.INSTANCE.getTypeTrait(EXTERNAL_FILE_RECORD_TYPE) };
     public static final IBinaryComparatorFactory[] FILES_INDEX_COMP_FACTORIES = new IBinaryComparatorFactory[] {
             BinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(BuiltinType.AINT32, true) };
+    public static final ISerializerDeserializer FILE_NUMBER_SERDE =
+            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(IndexingConstants.FILE_NUMBER_FIELD_TYPE);
+    public static final ISerializerDeserializer[] EXTERNAL_FILE_BUDDY_BTREE_FIELDS =
+            new ISerializerDeserializer[] { FILE_NUMBER_SERDE };
+    public static final RecordDescriptor FILE_BUDDY_BTREE_RECORD_DESCRIPTOR =
+            new RecordDescriptor(EXTERNAL_FILE_BUDDY_BTREE_FIELDS, EXTERNAL_FILE_BUDDY_BTREE_TYPE_TRAITS);
 
-    public FilesIndexDescription() {
-        ARecordType type = new ARecordType("ExternalFileRecordType", payloadFieldNames, payloadFieldTypes, true);
-        EXTERNAL_FILE_RECORD_TYPE = type;
-        EXTERNAL_FILE_INDEX_TYPE_TRAITS[FILE_KEY_INDEX] = TypeTraitProvider.INSTANCE
-                .getTypeTrait(IndexingConstants.FILE_NUMBER_FIELD_TYPE);
-        EXTERNAL_FILE_INDEX_TYPE_TRAITS[FILE_PAYLOAD_INDEX] = TypeTraitProvider.INSTANCE
-                .getTypeTrait(EXTERNAL_FILE_RECORD_TYPE);
-        EXTERNAL_FILE_BUDDY_BTREE_TYPE_TRAITS[FILE_KEY_INDEX] = TypeTraitProvider.INSTANCE
-                .getTypeTrait(IndexingConstants.FILE_NUMBER_FIELD_TYPE);
+    private FilesIndexDescription() {
+    }
 
-        EXTERNAL_FILE_RECORD_SERDE = SerializerDeserializerProvider.INSTANCE
-                .getSerializerDeserializer(EXTERNAL_FILE_RECORD_TYPE);
+    public static ISerializerDeserializer createExternalFileRecordSerde() {
+        return SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(EXTERNAL_FILE_RECORD_TYPE);
+    }
 
-        EXTERNAL_FILE_TUPLE_FIELDS[FILE_KEY_INDEX] = SerializerDeserializerProvider.INSTANCE
-                .getSerializerDeserializer(IndexingConstants.FILE_NUMBER_FIELD_TYPE);
-        EXTERNAL_FILE_TUPLE_FIELDS[FILE_PAYLOAD_INDEX] = EXTERNAL_FILE_RECORD_SERDE;
-        EXTERNAL_FILE_BUDDY_BTREE_FIELDS[FILE_KEY_INDEX] = SerializerDeserializerProvider.INSTANCE
-                .getSerializerDeserializer(IndexingConstants.FILE_NUMBER_FIELD_TYPE);
+    public static ISerializerDeserializer[] createExternalFileTupleFieldsSerdes() {
+        return new ISerializerDeserializer[] { FILE_NUMBER_SERDE, createExternalFileRecordSerde() };
+    }
 
-        FILE_INDEX_RECORD_DESCRIPTOR = new RecordDescriptor(EXTERNAL_FILE_TUPLE_FIELDS,
-                EXTERNAL_FILE_INDEX_TYPE_TRAITS);
-
-        FILE_BUDDY_BTREE_RECORD_DESCRIPTOR = new RecordDescriptor(EXTERNAL_FILE_BUDDY_BTREE_FIELDS,
-                EXTERNAL_FILE_BUDDY_BTREE_TYPE_TRAITS);
+    public static RecordDescriptor createFileIndexRecordDescriptor() {
+        return new RecordDescriptor(createExternalFileTupleFieldsSerdes(), EXTERNAL_FILE_INDEX_TYPE_TRAITS);
     }
 
     @SuppressWarnings("unchecked")
-    public void getBuddyBTreeTupleFromFileNumber(ArrayTupleReference tuple, ArrayTupleBuilder tupleBuilder,
+    public static void getBuddyBTreeTupleFromFileNumber(ArrayTupleReference tuple, ArrayTupleBuilder tupleBuilder,
             AMutableInt32 aInt32) throws IOException, AsterixException {
         tupleBuilder.reset();
-        FILE_BUDDY_BTREE_RECORD_DESCRIPTOR.getFields()[0].serialize(aInt32, tupleBuilder.getDataOutput());
+        FILE_NUMBER_SERDE.serialize(aInt32, tupleBuilder.getDataOutput());
         tupleBuilder.addFieldEndOffset();
         tuple.reset(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray());
     }

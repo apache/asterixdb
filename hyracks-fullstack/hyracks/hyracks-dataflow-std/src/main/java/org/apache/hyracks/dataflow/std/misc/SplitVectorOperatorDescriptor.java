@@ -185,7 +185,7 @@ public class SplitVectorOperatorDescriptor extends AbstractOperatorDescriptor {
             RecordDescriptor recordDescriptor) {
         super(spec, 1, 1);
         this.splits = splits;
-        recordDescriptors[0] = recordDescriptor;
+        outRecDescs[0] = recordDescriptor;
     }
 
     @Override

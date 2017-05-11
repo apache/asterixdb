@@ -27,15 +27,11 @@ import org.apache.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor;
 import org.apache.hyracks.dataflow.std.file.ConstantFileSplitProvider;
 import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
 import org.apache.hyracks.dataflow.std.file.PlainFileWriterOperatorDescriptor;
-import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
+import org.apache.hyracks.storage.am.btree.dataflow.BTreeResourceFactory;
 import org.apache.hyracks.storage.am.common.dataflow.TreeIndexStatsOperatorDescriptor;
-import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallbackFactory;
+import org.apache.hyracks.storage.common.IResourceFactory;
 import org.junit.Before;
 import org.junit.Test;
-
-import static org.apache.hyracks.tests.am.btree.DataSetConstants.primaryBloomFilterKeyFields;
-import static org.apache.hyracks.tests.am.btree.DataSetConstants.primaryComparatorFactories;
-import static org.apache.hyracks.tests.am.btree.DataSetConstants.primaryTypeTraits;
 
 public class BTreePrimaryIndexStatsOperatorTest extends AbstractBTreeOperatorTest {
 
@@ -51,10 +47,8 @@ public class BTreePrimaryIndexStatsOperatorTest extends AbstractBTreeOperatorTes
     public void showPrimaryIndexStats() throws Exception {
         JobSpecification spec = new JobSpecification();
 
-        TreeIndexStatsOperatorDescriptor primaryStatsOp = new TreeIndexStatsOperatorDescriptor(spec, storageManager,
-                lcManagerProvider, primarySplitProvider, primaryTypeTraits, primaryComparatorFactories,
-                primaryBloomFilterKeyFields, primaryDataflowHelperFactory, NoOpOperationCallbackFactory.INSTANCE,
-                pageManagerFactory);
+        TreeIndexStatsOperatorDescriptor primaryStatsOp =
+                new TreeIndexStatsOperatorDescriptor(spec, storageManager, primaryHelperFactory);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, primaryStatsOp, NC1_ID);
         IFileSplitProvider outSplits = new ConstantFileSplitProvider(new FileSplit[] { createFile(nc1) });
         IOperatorDescriptor printer = new PlainFileWriterOperatorDescriptor(spec, outSplits, ",");
@@ -66,12 +60,19 @@ public class BTreePrimaryIndexStatsOperatorTest extends AbstractBTreeOperatorTes
     }
 
     @Override
-    protected IIndexDataflowHelperFactory createDataFlowHelperFactory(int[] btreeFields, int[] filterFields) {
-        return ((BTreeOperatorTestHelper) testHelper).createDataFlowHelperFactory();
+    public void cleanup() throws Exception {
+        destroyPrimaryIndex();
     }
 
     @Override
-    public void cleanup() throws Exception {
-        destroyPrimaryIndex();
+    protected IResourceFactory createPrimaryResourceFactory() {
+        return new BTreeResourceFactory(storageManager, DataSetConstants.primaryTypeTraits,
+                DataSetConstants.primaryComparatorFactories, pageManagerFactory);
+    }
+
+    @Override
+    protected IResourceFactory createSecondaryResourceFactory() {
+        return new BTreeResourceFactory(storageManager, DataSetConstants.secondaryTypeTraits,
+                DataSetConstants.secondaryComparatorFactories, pageManagerFactory);
     }
 }

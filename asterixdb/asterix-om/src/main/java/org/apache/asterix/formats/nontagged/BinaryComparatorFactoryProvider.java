@@ -87,6 +87,7 @@ public class BinaryComparatorFactoryProvider implements IBinaryComparatorFactory
 
     // This method add the option of ignoring the case in string comparisons.
     // TODO: We should incorporate this option more nicely, but I'd have to change algebricks.
+    @Override
     public IBinaryComparatorFactory getBinaryComparatorFactory(Object type, boolean ascending, boolean ignoreCase) {
         if (type == null) {
             return anyBinaryComparatorFactory(ascending);

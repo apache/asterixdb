@@ -33,14 +33,12 @@ import org.apache.hyracks.dataflow.std.file.ConstantFileSplitProvider;
 import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
 import org.apache.hyracks.dataflow.std.file.PlainFileWriterOperatorDescriptor;
 import org.apache.hyracks.dataflow.std.misc.ConstantTupleSourceOperatorDescriptor;
+import org.apache.hyracks.storage.am.btree.dataflow.BTreeResourceFactory;
 import org.apache.hyracks.storage.am.btree.dataflow.BTreeSearchOperatorDescriptor;
-import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
-import org.apache.hyracks.storage.am.common.freepage.LinkedMetadataPageManagerFactory;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallbackFactory;
+import org.apache.hyracks.storage.common.IResourceFactory;
 import org.junit.Before;
 import org.junit.Test;
-
-import static org.apache.hyracks.tests.am.btree.DataSetConstants.*;
 
 public class BTreeSecondaryIndexUpsertOperatorTest extends AbstractBTreeOperatorTest {
 
@@ -61,7 +59,7 @@ public class BTreeSecondaryIndexUpsertOperatorTest extends AbstractBTreeOperator
 
         // build tuple containing search keys (only use the first key as search
         // key)
-        ArrayTupleBuilder tb = new ArrayTupleBuilder(secondaryKeyFieldCount);
+        ArrayTupleBuilder tb = new ArrayTupleBuilder(DataSetConstants.secondaryKeyFieldCount);
         DataOutput dos = tb.getDataOutput();
 
         tb.reset();
@@ -72,8 +70,8 @@ public class BTreeSecondaryIndexUpsertOperatorTest extends AbstractBTreeOperator
         new UTF8StringSerializerDeserializer().serialize("2000-10-18", dos);
         tb.addFieldEndOffset();
 
-        ISerializerDeserializer[] keyRecDescSers = { new UTF8StringSerializerDeserializer(),
-                new UTF8StringSerializerDeserializer() };
+        ISerializerDeserializer[] keyRecDescSers =
+                { new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer() };
         RecordDescriptor keyRecDesc = new RecordDescriptor(keyRecDescSers);
 
         ConstantTupleSourceOperatorDescriptor keyProviderOp = new ConstantTupleSourceOperatorDescriptor(spec,
@@ -85,10 +83,8 @@ public class BTreeSecondaryIndexUpsertOperatorTest extends AbstractBTreeOperator
 
         // search secondary index
         BTreeSearchOperatorDescriptor secondaryBtreeSearchOp = new BTreeSearchOperatorDescriptor(spec,
-                secondaryRecDesc, storageManager, lcManagerProvider, secondarySplitProvider, secondaryTypeTraits,
-                secondaryComparatorFactories, secondaryBloomFilterKeyFields, secondaryLowKeyFields,
-                secondaryHighKeyFields, true, true, primaryDataflowHelperFactory, false, false, null,
-                NoOpOperationCallbackFactory.INSTANCE, null, null, new LinkedMetadataPageManagerFactory());
+                DataSetConstants.secondaryRecDesc, secondaryLowKeyFields, secondaryHighKeyFields, true, true,
+                secondaryHelperFactory, false, false, null, NoOpOperationCallbackFactory.INSTANCE, null, null, false);
 
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, secondaryBtreeSearchOp, NC1_ID);
 
@@ -98,11 +94,9 @@ public class BTreeSecondaryIndexUpsertOperatorTest extends AbstractBTreeOperator
         int[] primaryHighKeyFields = { 1 };
 
         // search primary index
-        BTreeSearchOperatorDescriptor primaryBtreeSearchOp = new BTreeSearchOperatorDescriptor(spec, primaryRecDesc,
-                storageManager, lcManagerProvider, primarySplitProvider, primaryTypeTraits, primaryComparatorFactories,
-                primaryBloomFilterKeyFields, primaryLowKeyFields, primaryHighKeyFields, true, true,
-                primaryDataflowHelperFactory, false, false, null, NoOpOperationCallbackFactory.INSTANCE, null, null,
-                new LinkedMetadataPageManagerFactory());
+        BTreeSearchOperatorDescriptor primaryBtreeSearchOp = new BTreeSearchOperatorDescriptor(spec,
+                DataSetConstants.primaryRecDesc, primaryLowKeyFields, primaryHighKeyFields, true, true,
+                primaryHelperFactory, false, false, null, NoOpOperationCallbackFactory.INSTANCE, null, null, false);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, primaryBtreeSearchOp, NC1_ID);
 
         IFileSplitProvider outSplits = new ConstantFileSplitProvider(new FileSplit[] { createFile(nc1) });
@@ -118,13 +112,20 @@ public class BTreeSecondaryIndexUpsertOperatorTest extends AbstractBTreeOperator
     }
 
     @Override
-    protected IIndexDataflowHelperFactory createDataFlowHelperFactory(int[] btreeFields, int[] filterFields) {
-        return ((BTreeOperatorTestHelper) testHelper).createDataFlowHelperFactory();
-    }
-
-    @Override
     public void cleanup() throws Exception {
         destroyPrimaryIndex();
         destroySecondaryIndex();
+    }
+
+    @Override
+    protected IResourceFactory createPrimaryResourceFactory() {
+        return new BTreeResourceFactory(storageManager, DataSetConstants.primaryTypeTraits,
+                DataSetConstants.primaryComparatorFactories, pageManagerFactory);
+    }
+
+    @Override
+    protected IResourceFactory createSecondaryResourceFactory() {
+        return new BTreeResourceFactory(storageManager, DataSetConstants.secondaryTypeTraits,
+                DataSetConstants.secondaryComparatorFactories, pageManagerFactory);
     }
 }

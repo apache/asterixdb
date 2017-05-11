@@ -30,7 +30,6 @@ import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.dataflow.data.common.ExpressionTypeComputer;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Index;
-import org.apache.asterix.metadata.utils.DatasetUtil;
 import org.apache.asterix.metadata.utils.MetadataUtil;
 import org.apache.asterix.om.base.AOrderedList;
 import org.apache.asterix.om.base.AString;
@@ -643,7 +642,7 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
             List<List<String>> subTreePKs = null;
 
             if (!fromAdditionalDataSource) {
-                subTreePKs = DatasetUtil.getPartitioningKeys(subTree.getDataset());
+                subTreePKs = subTree.getDataset().getPrimaryKeys();
                 // Check whether this variable is PK, not a record variable.
                 if (varIndex <= subTreePKs.size() - 1) {
                     fieldName = subTreePKs.get(varIndex);
@@ -654,8 +653,7 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                 // Need to check additional dataset one by one
                 for (int i = 0; i < subTree.getIxJoinOuterAdditionalDatasets().size(); i++) {
                     if (subTree.getIxJoinOuterAdditionalDatasets().get(i) != null) {
-                        subTreePKs =
-                                DatasetUtil.getPartitioningKeys(subTree.getIxJoinOuterAdditionalDatasets().get(i));
+                        subTreePKs = subTree.getIxJoinOuterAdditionalDatasets().get(i).getPrimaryKeys();
 
                         // Check whether this variable is PK, not a record variable.
                         if (subTreePKs.contains(var) && varIndex <= subTreePKs.size() - 1) {
@@ -698,10 +696,10 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
      *
      * @throws AlgebricksException
      */
-    protected List<String> getFieldNameFromSubTree(IOptimizableFuncExpr optFuncExpr,
-            OptimizableOperatorSubTree subTree, int opIndex, int assignVarIndex, ARecordType recordType,
-            int funcVarIndex, ILogicalExpression parentFuncExpr, LogicalVariable recordVar, ARecordType metaType,
-            LogicalVariable metaVar) throws AlgebricksException {
+    protected List<String> getFieldNameFromSubTree(IOptimizableFuncExpr optFuncExpr, OptimizableOperatorSubTree subTree,
+            int opIndex, int assignVarIndex, ARecordType recordType, int funcVarIndex,
+            ILogicalExpression parentFuncExpr, LogicalVariable recordVar, ARecordType metaType, LogicalVariable metaVar)
+            throws AlgebricksException {
         // Get expression corresponding to opVar at varIndex.
         AbstractLogicalExpression expr = null;
         AbstractFunctionCallExpression childFuncExpr = null;

@@ -21,10 +21,12 @@ package org.apache.asterix.external.operators;
 import java.util.List;
 
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
+import org.apache.hyracks.storage.am.common.api.IIndexDataflowHelper;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
-import org.apache.hyracks.storage.am.common.util.IndexFileNameUtil;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbortRecoverLSMIndexFileManager;
 
 public class ExternalDatasetIndexesRecoverOperatorDescriptor extends AbstractExternalDatasetIndexesOperatorDescriptor {
@@ -32,19 +34,17 @@ public class ExternalDatasetIndexesRecoverOperatorDescriptor extends AbstractExt
     private static final long serialVersionUID = 1L;
 
     public ExternalDatasetIndexesRecoverOperatorDescriptor(IOperatorDescriptorRegistry spec,
-            IIndexDataflowHelperFactory filesIndexDataflowHelperFactory, IndexInfoOperatorDescriptor fileIndexesInfo,
-            List<IIndexDataflowHelperFactory> indexesDataflowHelperFactories,
-            List<IndexInfoOperatorDescriptor> indexesInfos) {
-        super(spec, filesIndexDataflowHelperFactory, fileIndexesInfo, indexesDataflowHelperFactories,
-                indexesInfos);
+            List<IIndexDataflowHelperFactory> indexesDataflowHelperFactories) {
+        super(spec, indexesDataflowHelperFactories);
     }
 
     @Override
-    protected void performOpOnIndex(IIndexDataflowHelperFactory indexDataflowHelperFactory, IHyracksTaskContext ctx,
-            IndexInfoOperatorDescriptor fileIndexInfo, int partition) throws Exception {
-        FileReference file = IndexFileNameUtil.getIndexAbsoluteFileRef(fileIndexInfo, partition, ctx.getIOManager());
-        AbortRecoverLSMIndexFileManager fileManager = new AbortRecoverLSMIndexFileManager(ctx.getIOManager(), file);
+    protected void performOpOnIndex(IIndexDataflowHelper indexDataflowHelper, IHyracksTaskContext ctx)
+            throws HyracksDataException {
+        String path = indexDataflowHelper.getResource().getPath();
+        IIOManager ioManager = ctx.getIoManager();
+        FileReference file = ioManager.resolve(path);
+        AbortRecoverLSMIndexFileManager fileManager = new AbortRecoverLSMIndexFileManager(ctx.getIoManager(), file);
         fileManager.recoverTransaction();
     }
-
 }

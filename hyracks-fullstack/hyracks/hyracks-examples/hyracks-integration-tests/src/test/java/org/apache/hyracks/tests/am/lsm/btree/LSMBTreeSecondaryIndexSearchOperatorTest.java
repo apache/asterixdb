@@ -19,6 +19,8 @@
 
 package org.apache.hyracks.tests.am.lsm.btree;
 
+import java.io.DataOutput;
+
 import org.apache.hyracks.api.constraints.PartitionConstraintHelper;
 import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -34,26 +36,15 @@ import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
 import org.apache.hyracks.dataflow.std.file.PlainFileWriterOperatorDescriptor;
 import org.apache.hyracks.dataflow.std.misc.ConstantTupleSourceOperatorDescriptor;
 import org.apache.hyracks.storage.am.btree.dataflow.BTreeSearchOperatorDescriptor;
-import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
-import org.apache.hyracks.storage.am.common.freepage.LinkedMetadataPageManagerFactory;
+import org.apache.hyracks.storage.am.common.api.IMetadataPageManagerFactory;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallbackFactory;
+import org.apache.hyracks.storage.common.IResourceFactory;
 import org.apache.hyracks.test.support.TestStorageManagerComponentHolder;
 import org.apache.hyracks.tests.am.btree.BTreeSecondaryIndexSearchOperatorTest;
+import org.apache.hyracks.tests.am.btree.DataSetConstants;
 import org.apache.hyracks.tests.am.common.ITreeIndexOperatorTestHelper;
 import org.apache.hyracks.tests.util.NoopMissingWriterFactory;
 import org.junit.Test;
-
-import java.io.DataOutput;
-
-import static org.apache.hyracks.tests.am.btree.DataSetConstants.primaryBloomFilterKeyFields;
-import static org.apache.hyracks.tests.am.btree.DataSetConstants.primaryComparatorFactories;
-import static org.apache.hyracks.tests.am.btree.DataSetConstants.primaryRecDesc;
-import static org.apache.hyracks.tests.am.btree.DataSetConstants.primaryTypeTraits;
-import static org.apache.hyracks.tests.am.btree.DataSetConstants.secondaryBloomFilterKeyFields;
-import static org.apache.hyracks.tests.am.btree.DataSetConstants.secondaryComparatorFactories;
-import static org.apache.hyracks.tests.am.btree.DataSetConstants.secondaryKeyFieldCount;
-import static org.apache.hyracks.tests.am.btree.DataSetConstants.secondaryTypeTraits;
-import static org.apache.hyracks.tests.am.btree.DataSetConstants.secondaryWithFilterRecDesc;
 
 public class LSMBTreeSecondaryIndexSearchOperatorTest extends BTreeSecondaryIndexSearchOperatorTest {
     @Override
@@ -62,8 +53,12 @@ public class LSMBTreeSecondaryIndexSearchOperatorTest extends BTreeSecondaryInde
     }
 
     @Override
-    protected IIndexDataflowHelperFactory createDataFlowHelperFactory(int[] btreeFields, int[] filterFields) {
-        return ((LSMBTreeOperatorTestHelper) testHelper).createDataFlowHelperFactory(btreeFields, filterFields);
+    protected IResourceFactory createPrimaryResourceFactory() {
+        return ((LSMBTreeOperatorTestHelper) testHelper).getLocalResourceFactory(storageManager,
+                DataSetConstants.primaryTypeTraits, DataSetConstants.primaryComparatorFactories,
+                (IMetadataPageManagerFactory) pageManagerFactory, DataSetConstants.primaryBloomFilterKeyFields,
+                DataSetConstants.primaryBtreeFields, DataSetConstants.primaryFilterFields,
+                DataSetConstants.filterTypeTraits, DataSetConstants.filterCmpFactories);
     }
 
     @Test
@@ -72,7 +67,7 @@ public class LSMBTreeSecondaryIndexSearchOperatorTest extends BTreeSecondaryInde
 
         // build tuple containing search keys (only use the first key as search
         // key)
-        ArrayTupleBuilder tb = new ArrayTupleBuilder(secondaryKeyFieldCount);
+        ArrayTupleBuilder tb = new ArrayTupleBuilder(DataSetConstants.secondaryKeyFieldCount);
         DataOutput dos = tb.getDataOutput();
 
         tb.reset();
@@ -87,9 +82,8 @@ public class LSMBTreeSecondaryIndexSearchOperatorTest extends BTreeSecondaryInde
                 { new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer() };
         RecordDescriptor keyRecDesc = new RecordDescriptor(keyRecDescSers);
 
-        ConstantTupleSourceOperatorDescriptor keyProviderOp =
-                new ConstantTupleSourceOperatorDescriptor(spec, keyRecDesc, tb.getFieldEndOffsets(), tb.getByteArray(),
-                        tb.getSize());
+        ConstantTupleSourceOperatorDescriptor keyProviderOp = new ConstantTupleSourceOperatorDescriptor(spec,
+                keyRecDesc, tb.getFieldEndOffsets(), tb.getByteArray(), tb.getSize());
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, keyProviderOp, NC1_ID);
 
         int[] secondaryLowKeyFields = { 0 };
@@ -97,12 +91,9 @@ public class LSMBTreeSecondaryIndexSearchOperatorTest extends BTreeSecondaryInde
 
         // search secondary index
         BTreeSearchOperatorDescriptor secondaryBtreeSearchOp =
-                new BTreeSearchOperatorDescriptor(spec, secondaryWithFilterRecDesc, storageManager, lcManagerProvider,
-                        secondarySplitProvider, secondaryTypeTraits, secondaryComparatorFactories,
-                        secondaryBloomFilterKeyFields, secondaryLowKeyFields, secondaryHighKeyFields, true, true,
-                        primaryDataflowHelperFactory, false, false, NoopMissingWriterFactory.INSTANCE,
-                        NoOpOperationCallbackFactory.INSTANCE, true, null, null,
-                        new LinkedMetadataPageManagerFactory());
+                new BTreeSearchOperatorDescriptor(spec, DataSetConstants.secondaryWithFilterRecDesc,
+                        secondaryLowKeyFields, secondaryHighKeyFields, true, true, secondaryHelperFactory, false, false,
+                        NoopMissingWriterFactory.INSTANCE, NoOpOperationCallbackFactory.INSTANCE, null, null, true);
 
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, secondaryBtreeSearchOp, NC1_ID);
 
@@ -112,12 +103,10 @@ public class LSMBTreeSecondaryIndexSearchOperatorTest extends BTreeSecondaryInde
         int[] maxFilterFields = { 3 };
 
         // search primary index
-        BTreeSearchOperatorDescriptor primaryBtreeSearchOp =
-                new BTreeSearchOperatorDescriptor(spec, primaryRecDesc, storageManager, lcManagerProvider,
-                        primarySplitProvider, primaryTypeTraits, primaryComparatorFactories,
-                        primaryBloomFilterKeyFields, primaryLowKeyFields, primaryHighKeyFields, true, true,
-                        primaryDataflowHelperFactory, false, false, null, NoOpOperationCallbackFactory.INSTANCE,
-                        minFilterFields, maxFilterFields, new LinkedMetadataPageManagerFactory());
+        BTreeSearchOperatorDescriptor primaryBtreeSearchOp = new BTreeSearchOperatorDescriptor(spec,
+                DataSetConstants.primaryRecDesc, primaryLowKeyFields, primaryHighKeyFields, true, true,
+                primaryHelperFactory, false, false, NoopMissingWriterFactory.INSTANCE,
+                NoOpOperationCallbackFactory.INSTANCE, minFilterFields, maxFilterFields, false);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, primaryBtreeSearchOp, NC1_ID);
         IFileSplitProvider outSplits = new ConstantFileSplitProvider(new FileSplit[] { createFile(nc1) });
         IOperatorDescriptor printer = new PlainFileWriterOperatorDescriptor(spec, outSplits, ",");
@@ -127,6 +116,15 @@ public class LSMBTreeSecondaryIndexSearchOperatorTest extends BTreeSecondaryInde
         spec.connect(new OneToOneConnectorDescriptor(spec), primaryBtreeSearchOp, 0, printer, 0);
         spec.addRoot(printer);
         runTest(spec);
+    }
+
+    @Override
+    protected IResourceFactory createSecondaryResourceFactory() {
+        return ((LSMBTreeOperatorTestHelper) testHelper).getLocalResourceFactory(storageManager,
+                DataSetConstants.secondaryTypeTraits, DataSetConstants.secondaryComparatorFactories,
+                (IMetadataPageManagerFactory) pageManagerFactory, DataSetConstants.secondaryBloomFilterKeyFields,
+                DataSetConstants.secondaryBtreeFields, DataSetConstants.secondaryFilterFields,
+                DataSetConstants.filterTypeTraits, DataSetConstants.filterCmpFactories);
     }
 
 }

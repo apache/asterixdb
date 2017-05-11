@@ -79,8 +79,9 @@ public class BufferCacheRegressionTest {
     private void flushBehaviorTest(boolean deleteFile) throws IOException {
         TestStorageManagerComponentHolder.init(PAGE_SIZE, 10, 1);
 
-        IBufferCache bufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx);
-        IFileMapProvider fmp = TestStorageManagerComponentHolder.getFileMapProvider(ctx);
+        IBufferCache bufferCache =
+                TestStorageManagerComponentHolder.getBufferCache(ctx.getJobletContext().getServiceContext());
+        IFileMapProvider fmp = TestStorageManagerComponentHolder.getFileMapProvider();
         IOManager ioManager = TestStorageManagerComponentHolder.getIOManager();
 
         FileReference firstFileRef = ioManager.resolve(fileName);

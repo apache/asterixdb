@@ -26,14 +26,14 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.common.AbstractIndexTestWorker;
 import org.apache.hyracks.storage.am.common.TestOperationSelector;
 import org.apache.hyracks.storage.am.common.TestOperationSelector.TestOperation;
-import org.apache.hyracks.storage.am.common.api.IIndex;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexCursor;
 import org.apache.hyracks.storage.am.common.datagen.DataGenThread;
-import org.apache.hyracks.storage.am.common.ophelpers.MultiComparator;
-import org.apache.hyracks.storage.am.lsm.common.impls.NoOpIOOperationCallback;
+import org.apache.hyracks.storage.am.lsm.common.impls.NoOpIOOperationCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.rtree.impls.LSMRTree;
 import org.apache.hyracks.storage.am.lsm.rtree.impls.LSMRTree.LSMRTreeAccessor;
 import org.apache.hyracks.storage.am.rtree.impls.SearchPredicate;
+import org.apache.hyracks.storage.common.IIndex;
+import org.apache.hyracks.storage.common.MultiComparator;
 
 public class LSMRTreeTestWorker extends AbstractIndexTestWorker {
 
@@ -76,7 +76,8 @@ public class LSMRTreeTestWorker extends AbstractIndexTestWorker {
                 break;
 
             case MERGE:
-                accessor.scheduleMerge(NoOpIOOperationCallback.INSTANCE, lsmRTree.getImmutableComponents());
+                accessor.scheduleMerge(NoOpIOOperationCallbackFactory.INSTANCE.createIoOpCallback(),
+                        lsmRTree.getImmutableComponents());
                 break;
 
             default:

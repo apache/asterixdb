@@ -69,7 +69,7 @@ public class MaterializingPipelinedPartition implements IFrameWriter, IPartition
             TaskAttemptId taId, Executor executor) {
         this.ctx = ctx;
         this.executor = executor;
-        this.ioManager = ctx.getIOManager();
+        this.ioManager = ctx.getIoManager();
         this.manager = manager;
         this.pid = pid;
         this.taId = taId;
@@ -206,7 +206,7 @@ public class MaterializingPipelinedPartition implements IFrameWriter, IPartition
     @Override
     public synchronized void nextFrame(ByteBuffer buffer) throws HyracksDataException {
         checkOrCreateFile();
-        size += ctx.getIOManager().syncWrite(writeHandle, size, buffer);
+        size += ctx.getIoManager().syncWrite(writeHandle, size, buffer);
         notifyAll();
     }
 
@@ -222,7 +222,7 @@ public class MaterializingPipelinedPartition implements IFrameWriter, IPartition
             LOGGER.log(openCloseLevel, "close(" + pid + " by " + taId);
         }
         if (writeHandle != null) {
-            ctx.getIOManager().close(writeHandle);
+            ctx.getIoManager().close(writeHandle);
         }
         synchronized (this) {
             eos = true;

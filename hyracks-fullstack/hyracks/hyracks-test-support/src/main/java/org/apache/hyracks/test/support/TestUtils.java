@@ -45,8 +45,8 @@ public class TestUtils {
     public static IHyracksTaskContext create(int frameSize) {
         try {
             IOManager ioManager = createIoManager();
-            INCServiceContext appCtx = new TestNCServiceContext(ioManager, null);
-            TestJobletContext jobletCtx = new TestJobletContext(frameSize, appCtx, new JobId(0));
+            INCServiceContext serviceCtx = new TestNCServiceContext(ioManager, null);
+            TestJobletContext jobletCtx = new TestJobletContext(frameSize, serviceCtx, new JobId(0));
             TaskAttemptId tid = new TaskAttemptId(new TaskId(new ActivityId(new OperatorDescriptorId(0), 0), 0), 0);
             IHyracksTaskContext taskCtx = new TestTaskContext(jobletCtx, tid);
             return taskCtx;

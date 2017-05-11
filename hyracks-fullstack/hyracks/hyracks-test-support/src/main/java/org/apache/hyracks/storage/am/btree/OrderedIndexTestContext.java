@@ -26,7 +26,7 @@ import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.common.CheckTuple;
 import org.apache.hyracks.storage.am.common.IndexTestContext;
-import org.apache.hyracks.storage.am.common.api.IIndex;
+import org.apache.hyracks.storage.common.IIndex;
 
 @SuppressWarnings("rawtypes")
 public abstract class OrderedIndexTestContext extends IndexTestContext<CheckTuple> {

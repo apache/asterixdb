@@ -72,20 +72,17 @@ public class FeedMetaOperatorDescriptor extends AbstractSingleActivityOperatorDe
      **/
     private final FeedRuntimeType runtimeType;
 
-    private final String operandId;
-
     public FeedMetaOperatorDescriptor(final JobSpecification spec, final FeedConnectionId feedConnectionId,
             final IOperatorDescriptor coreOperatorDescriptor, final Map<String, String> feedPolicyProperties,
-            final FeedRuntimeType runtimeType, final String operandId) {
+            final FeedRuntimeType runtimeType) {
         super(spec, coreOperatorDescriptor.getInputArity(), coreOperatorDescriptor.getOutputArity());
         this.feedConnectionId = feedConnectionId;
         this.feedPolicyProperties = feedPolicyProperties;
         if (coreOperatorDescriptor.getOutputRecordDescriptors().length == 1) {
-            recordDescriptors[0] = coreOperatorDescriptor.getOutputRecordDescriptors()[0];
+            outRecDescs[0] = coreOperatorDescriptor.getOutputRecordDescriptors()[0];
         }
         this.coreOperator = coreOperatorDescriptor;
         this.runtimeType = runtimeType;
-        this.operandId = operandId;
     }
 
     @Override
@@ -96,11 +93,11 @@ public class FeedMetaOperatorDescriptor extends AbstractSingleActivityOperatorDe
         switch (runtimeType) {
             case COMPUTE:
                 nodePushable = new FeedMetaComputeNodePushable(ctx, recordDescProvider, partition, nPartitions,
-                        coreOperator, feedConnectionId, feedPolicyProperties, operandId, this);
+                        coreOperator, feedConnectionId, feedPolicyProperties, this);
                 break;
             case STORE:
                 nodePushable = new FeedMetaStoreNodePushable(ctx, recordDescProvider, partition, nPartitions,
-                        coreOperator, feedConnectionId, feedPolicyProperties, operandId, this);
+                        coreOperator, feedConnectionId, feedPolicyProperties, this);
                 break;
             default:
                 throw new RuntimeDataException(ErrorCode.OPERATORS_FEED_META_OPERATOR_DESCRIPTOR_INVALID_RUNTIME,

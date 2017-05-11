@@ -19,9 +19,14 @@
 
 package org.apache.hyracks.tests.am.lsm.rtree;
 
+import java.io.DataOutput;
+
 import org.apache.hyracks.api.constraints.PartitionConstraintHelper;
 import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
-import org.apache.hyracks.api.dataflow.value.*;
+import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
+import org.apache.hyracks.api.dataflow.value.ILinearizeComparatorFactory;
+import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
+import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileSplit;
 import org.apache.hyracks.api.job.JobSpecification;
@@ -32,19 +37,16 @@ import org.apache.hyracks.dataflow.std.file.ConstantFileSplitProvider;
 import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
 import org.apache.hyracks.dataflow.std.file.PlainFileWriterOperatorDescriptor;
 import org.apache.hyracks.dataflow.std.misc.ConstantTupleSourceOperatorDescriptor;
-import org.apache.hyracks.storage.am.btree.dataflow.BTreeSearchOperatorDescriptor;
+import org.apache.hyracks.storage.am.common.api.IMetadataPageManagerFactory;
 import org.apache.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
-import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallbackFactory;
 import org.apache.hyracks.storage.am.rtree.dataflow.RTreeSearchOperatorDescriptor;
 import org.apache.hyracks.storage.am.rtree.frames.RTreePolicyType;
+import org.apache.hyracks.storage.common.IResourceFactory;
 import org.apache.hyracks.test.support.TestStorageManagerComponentHolder;
 import org.apache.hyracks.tests.am.common.ITreeIndexOperatorTestHelper;
 import org.apache.hyracks.tests.am.rtree.RTreeSecondaryIndexSearchOperatorTest;
-import org.apache.hyracks.tests.util.NoopMissingWriterFactory;
 import org.junit.Test;
-
-import java.io.DataOutput;
 
 public class LSMRTreeWithAntiMatterTuplesSecondaryIndexSearchOperatorTest
         extends RTreeSecondaryIndexSearchOperatorTest {
@@ -58,14 +60,14 @@ public class LSMRTreeWithAntiMatterTuplesSecondaryIndexSearchOperatorTest
     }
 
     @Override
-    protected IIndexDataflowHelperFactory createDataFlowHelperFactory(
+    protected IResourceFactory createSecondaryResourceFactory(
             IPrimitiveValueProviderFactory[] secondaryValueProviderFactories, RTreePolicyType rtreePolicyType,
             IBinaryComparatorFactory[] btreeComparatorFactories, ILinearizeComparatorFactory linearizerCmpFactory,
-            int[] btreeFields, int[] rtreeFields, ITypeTraits[] filterTypeTraits,
-            IBinaryComparatorFactory[] filterCmpFactories, int[] filterFields) {
-        return ((LSMRTreeWithAntiMatterTuplesOperatorTestHelper) testHelper)
-                .createDataFlowHelperFactory(secondaryValueProviderFactories, rtreePolicyType, btreeComparatorFactories,
-                        linearizerCmpFactory, rtreeFields, filterTypeTraits, filterCmpFactories, filterFields);
+            int[] btreeFields) {
+        return ((LSMRTreeWithAntiMatterTuplesOperatorTestHelper) testHelper).getSecondaryLocalResourceFactory(
+                storageManager, secondaryValueProviderFactories, rtreePolicyType, btreeComparatorFactories,
+                linearizerCmpFactory, btreeFields, secondaryTypeTraits, secondaryComparatorFactories,
+                (IMetadataPageManagerFactory) pageManagerFactory);
     }
 
     @Test
@@ -87,16 +89,13 @@ public class LSMRTreeWithAntiMatterTuplesSecondaryIndexSearchOperatorTest
                 { DoubleSerializerDeserializer.INSTANCE, DoubleSerializerDeserializer.INSTANCE,
                         DoubleSerializerDeserializer.INSTANCE, DoubleSerializerDeserializer.INSTANCE };
         RecordDescriptor keyRecDesc = new RecordDescriptor(keyRecDescSers);
-        ConstantTupleSourceOperatorDescriptor keyProviderOp =
-                new ConstantTupleSourceOperatorDescriptor(spec, keyRecDesc, tb.getFieldEndOffsets(), tb.getByteArray(),
-                        tb.getSize());
+        ConstantTupleSourceOperatorDescriptor keyProviderOp = new ConstantTupleSourceOperatorDescriptor(spec,
+                keyRecDesc, tb.getFieldEndOffsets(), tb.getByteArray(), tb.getSize());
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, keyProviderOp, NC1_ID);
         int[] keyFields = { 0, 1, 2, 3 };
-        RTreeSearchOperatorDescriptor secondarySearchOp =
-                new RTreeSearchOperatorDescriptor(spec, secondaryWithFilterRecDesc, storageManager, lcManagerProvider,
-                        secondarySplitProvider, secondaryTypeTraits, secondaryComparatorFactories, keyFields,
-                        rtreeDataflowHelperFactory, false, false, NoopMissingWriterFactory.INSTANCE,
-                        NoOpOperationCallbackFactory.INSTANCE, true, null, null, pageManagerFactory);
+        RTreeSearchOperatorDescriptor secondarySearchOp = new RTreeSearchOperatorDescriptor(spec,
+                secondaryWithFilterRecDesc, keyFields, true, true, secondaryHelperFactory, false, false, null,
+                NoOpOperationCallbackFactory.INSTANCE, null, null, false);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, secondarySearchOp, NC1_ID);
 
         IFileSplitProvider outSplits = new ConstantFileSplitProvider(new FileSplit[] { createFile(nc1) });

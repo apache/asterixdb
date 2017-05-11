@@ -25,72 +25,63 @@ import org.apache.asterix.common.transactions.IResourceIdManager;
 import org.apache.hyracks.api.application.ICCServiceContext;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.job.IJobLifecycleListener;
-import org.apache.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
 import org.apache.hyracks.storage.common.IStorageManager;
 
 /**
  * Provides methods for obtaining
- * {@link org.apache.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider},
  * {@link org.apache.hyracks.storage.common.IStorageManager},
  * {@link org.apache.hyracks.api.application.ICCServiceContext},
  * {@link org.apache.asterix.common.cluster.IGlobalRecoveryManager},
- * and {@link org.apache.asterix.common.library.ILibraryManager}
+ * {@link org.apache.asterix.common.library.ILibraryManager},
+ * {@link org.apache.asterix.common.transactions.IResourceIdManager}
+ *
  * at the cluster controller side.
  */
 public interface ICcApplicationContext extends IApplicationContext {
 
     /**
-     * Returns an instance of the implementation for IIndexLifecycleManagerProvider.
-     *
-     * @return IIndexLifecycleManagerProvider implementation instance
-     */
-    public IIndexLifecycleManagerProvider getIndexLifecycleManagerProvider();
-
-    /**
      * @return an instance which implements {@link org.apache.hyracks.storage.common.IStorageManager}
      */
-    public IStorageManager getStorageManager();
+    IStorageManager getStorageManager();
 
     /**
      * @return an instance which implements {@link org.apache.hyracks.api.application.ICCServiceContext}
      */
     @Override
-    public ICCServiceContext getServiceContext();
+    ICCServiceContext getServiceContext();
 
     /**
      * @return the global recovery manager which implements
      *         {@link org.apache.asterix.common.cluster.IGlobalRecoveryManager}
      */
-    public IGlobalRecoveryManager getGlobalRecoveryManager();
+    IGlobalRecoveryManager getGlobalRecoveryManager();
 
     /**
      * @return the active lifecycle listener at Cluster controller
      */
-    public IJobLifecycleListener getActiveLifecycleListener();
+    IJobLifecycleListener getActiveLifecycleListener();
 
     /**
      * @return a new instance of {@link IHyracksClientConnection}
      */
-    public IHyracksClientConnection getHcc();
+    IHyracksClientConnection getHcc();
 
     /**
-     * Returns the resource manager
-     *
-     * @return {@link IResourceIdManager} implementation instance
+     * @return the cluster wide resource id manager
      */
-    public IResourceIdManager getResourceIdManager();
+    IResourceIdManager getResourceIdManager();
 
     /**
      * Returns the storage component provider
      *
      * @return {@link IStorageComponentProvider} implementation instance
      */
-    public IStorageComponentProvider getStorageComponentProvider();
+    IStorageComponentProvider getStorageComponentProvider();
 
     /**
      * Returns the extension manager
      *
      * @return the extension manager instance
      */
-    public Object getExtensionManager();
+    Object getExtensionManager();
 }

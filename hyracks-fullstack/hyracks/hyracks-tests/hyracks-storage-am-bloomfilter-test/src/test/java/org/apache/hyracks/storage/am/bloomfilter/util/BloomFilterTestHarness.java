@@ -68,9 +68,9 @@ public class BloomFilterTestHarness {
     public void setUp() throws HyracksDataException {
         ctx = TestUtils.create(getHyracksFrameSize());
         TestStorageManagerComponentHolder.init(pageSize, numPages, maxOpenFiles);
-        ioManager = ctx.getIOManager();
-        bufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx);
-        fileMapProvider = TestStorageManagerComponentHolder.getFileMapProvider(ctx);
+        ioManager = ctx.getIoManager();
+        bufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx.getJobletContext().getServiceContext());
+        fileMapProvider = TestStorageManagerComponentHolder.getFileMapProvider();
         file = ioManager.getFileReference(0, simpleDateFormat.format(new Date()));
         rnd.setSeed(RANDOM_SEED);
     }

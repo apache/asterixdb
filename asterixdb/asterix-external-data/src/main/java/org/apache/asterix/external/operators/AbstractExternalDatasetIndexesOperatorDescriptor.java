@@ -26,11 +26,10 @@ import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.io.FileReference;
-import org.apache.hyracks.api.io.FileSplit;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
 import org.apache.hyracks.dataflow.std.base.AbstractOperatorNodePushable;
 import org.apache.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
+import org.apache.hyracks.storage.am.common.api.IIndexDataflowHelper;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 
 // This is an operator that takes a single file index and an array of secondary indexes
@@ -42,25 +41,17 @@ public abstract class AbstractExternalDatasetIndexesOperatorDescriptor
         extends AbstractSingleActivityOperatorDescriptor {
 
     private static final long serialVersionUID = 1L;
-    private IIndexDataflowHelperFactory filesIndexDataflowHelperFactory;
-    private IndexInfoOperatorDescriptor fileIndexInfo;
     private List<IIndexDataflowHelperFactory> treeIndexesDataflowHelperFactories;
-    private List<IndexInfoOperatorDescriptor> treeIndexesInfos;
 
     public AbstractExternalDatasetIndexesOperatorDescriptor(IOperatorDescriptorRegistry spec,
-            IIndexDataflowHelperFactory filesIndexDataflowHelperFactory, IndexInfoOperatorDescriptor fileIndexesInfo,
-            List<IIndexDataflowHelperFactory> treeIndexesDataflowHelperFactories,
-            List<IndexInfoOperatorDescriptor> indexesInfos) {
+            List<IIndexDataflowHelperFactory> treeIndexesDataflowHelperFactories) {
         super(spec, 0, 0);
-        this.filesIndexDataflowHelperFactory = filesIndexDataflowHelperFactory;
-        this.fileIndexInfo = fileIndexesInfo;
         this.treeIndexesDataflowHelperFactories = treeIndexesDataflowHelperFactories;
-        this.treeIndexesInfos = indexesInfos;
     }
 
     // opening and closing the index is done inside these methods since we don't always need open indexes
-    protected abstract void performOpOnIndex(IIndexDataflowHelperFactory indexDataflowHelperFactory,
-            IHyracksTaskContext ctx, IndexInfoOperatorDescriptor fileIndexInfo, int partition) throws Exception;
+    protected abstract void performOpOnIndex(IIndexDataflowHelper indexDataflowHelper, IHyracksTaskContext ctx)
+            throws HyracksDataException;
 
     @Override
     public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
@@ -70,16 +61,11 @@ public abstract class AbstractExternalDatasetIndexesOperatorDescriptor
             @Override
             public void initialize() throws HyracksDataException {
                 try {
-                    FileSplit fileSplit = fileIndexInfo.getFileSplitProvider().getFileSplits()[partition];
-                    FileReference fileRef = fileSplit.getFileReference(ctx.getIOManager());
-                    // only in partition of device id = 0, we perform the operation on the files index
-                    if (fileRef.getDeviceHandle() == ctx.getIOManager().getIODevices().get(0)) {
-                        performOpOnIndex(filesIndexDataflowHelperFactory, ctx, fileIndexInfo, partition);
-                    }
                     // perform operation on btrees
                     for (int i = 0; i < treeIndexesDataflowHelperFactories.size(); i++) {
-                        performOpOnIndex(treeIndexesDataflowHelperFactories.get(i), ctx, treeIndexesInfos.get(i),
-                                partition);
+                        IIndexDataflowHelper indexHelper =
+                                treeIndexesDataflowHelperFactories.get(i).create(ctx, partition);
+                        performOpOnIndex(indexHelper, ctx);
                     }
                 } catch (Exception e) {
                     throw new HyracksDataException(e);

@@ -43,22 +43,24 @@ import org.apache.asterix.common.transactions.JobId;
 import org.apache.asterix.common.utils.JobUtils;
 import org.apache.asterix.common.utils.JobUtils.ProgressState;
 import org.apache.asterix.external.feed.management.FeedConnectionId;
+import org.apache.asterix.external.indexing.IndexingConstants;
 import org.apache.asterix.metadata.IDatasetDetails;
 import org.apache.asterix.metadata.MetadataCache;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.api.IMetadataEntity;
-import org.apache.asterix.metadata.declared.BTreeDataflowHelperFactoryProvider;
+import org.apache.asterix.metadata.declared.BTreeResourceFactoryProvider;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.lock.ExternalDatasetsRegistry;
 import org.apache.asterix.metadata.utils.DatasetUtil;
 import org.apache.asterix.metadata.utils.ExternalIndexingOperations;
 import org.apache.asterix.metadata.utils.IndexUtil;
-import org.apache.asterix.metadata.utils.InvertedIndexDataflowHelperFactoryProvider;
+import org.apache.asterix.metadata.utils.InvertedIndexResourceFactoryProvider;
 import org.apache.asterix.metadata.utils.MetadataConstants;
 import org.apache.asterix.metadata.utils.MetadataUtil;
-import org.apache.asterix.metadata.utils.RTreeDataflowHelperFactoryProvider;
+import org.apache.asterix.metadata.utils.RTreeResourceFactoryProvider;
 import org.apache.asterix.om.types.ARecordType;
+import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.utils.RecordUtil;
 import org.apache.asterix.transaction.management.opcallbacks.AbstractIndexModificationOperationCallback.Operation;
 import org.apache.asterix.transaction.management.opcallbacks.LockThenSearchOperationCallbackFactory;
@@ -71,12 +73,15 @@ import org.apache.asterix.transaction.management.opcallbacks.SecondaryIndexSearc
 import org.apache.asterix.transaction.management.opcallbacks.TempDatasetPrimaryIndexModificationOperationCallbackFactory;
 import org.apache.asterix.transaction.management.opcallbacks.TempDatasetSecondaryIndexModificationOperationCallbackFactory;
 import org.apache.asterix.transaction.management.opcallbacks.UpsertOperationCallbackFactory;
+import org.apache.asterix.transaction.management.resource.DatasetLocalResourceFactory;
 import org.apache.asterix.transaction.management.runtime.CommitRuntimeFactory;
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
+import org.apache.hyracks.algebricks.data.IBinaryComparatorFactoryProvider;
+import org.apache.hyracks.algebricks.data.ITypeTraitProvider;
 import org.apache.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
@@ -84,13 +89,13 @@ import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.storage.am.common.api.IModificationOperationCallbackFactory;
 import org.apache.hyracks.storage.am.common.api.ISearchOperationCallbackFactory;
-import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallbackFactory;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.IFrameOperationCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
+import org.apache.hyracks.storage.common.IResourceFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -106,12 +111,12 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = Logger.getLogger(Dataset.class.getName());
     //TODO: Remove Singletons
-    private static final BTreeDataflowHelperFactoryProvider bTreeDataflowHelperFactoryProvider =
-            BTreeDataflowHelperFactoryProvider.INSTANCE;
-    private static final RTreeDataflowHelperFactoryProvider rTreeDataflowHelperFactoryProvider =
-            RTreeDataflowHelperFactoryProvider.INSTANCE;
-    private static final InvertedIndexDataflowHelperFactoryProvider invertedIndexDataflowHelperFactoryProvider =
-            InvertedIndexDataflowHelperFactoryProvider.INSTANCE;
+    private static final BTreeResourceFactoryProvider bTreeResourceFactoryProvider =
+            BTreeResourceFactoryProvider.INSTANCE;
+    private static final RTreeResourceFactoryProvider rTreeResourceFactoryProvider =
+            RTreeResourceFactoryProvider.INSTANCE;
+    private static final InvertedIndexResourceFactoryProvider invertedIndexResourceFactoryProvider =
+            InvertedIndexResourceFactoryProvider.INSTANCE;
     /*
      * Members
      */
@@ -129,6 +134,9 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
     private final String metaTypeDataverseName;
     private final String metaTypeName;
     private int pendingOp;
+    /*
+     * Transient (For caching)
+     */
 
     public Dataset(String dataverseName, String datasetName, String recordTypeDataverseName, String recordTypeName,
             String nodeGroupName, String compactionPolicy, Map<String, String> compactionPolicyProperties,
@@ -275,10 +283,9 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
      * @throws Exception
      *             if an error occur during the drop process or if the dataset can't be dropped for any reason
      */
-    public void drop(MetadataProvider metadataProvider,
-            MutableObject<MetadataTransactionContext> mdTxnCtx, List<JobSpecification> jobsToExecute,
-            MutableBoolean bActiveTxn, MutableObject<ProgressState> progress, IHyracksClientConnection hcc)
-            throws Exception {
+    public void drop(MetadataProvider metadataProvider, MutableObject<MetadataTransactionContext> mdTxnCtx,
+            List<JobSpecification> jobsToExecute, MutableBoolean bActiveTxn, MutableObject<ProgressState> progress,
+            IHyracksClientConnection hcc) throws Exception {
         Map<FeedConnectionId, Pair<JobSpecification, Boolean>> disconnectJobList = new HashMap<>();
         if (getDatasetType() == DatasetType.INTERNAL) {
             // prepare job spec(s) that would disconnect any active feeds involving the dataset.
@@ -300,9 +307,7 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
                     jobsToExecute.add(IndexUtil.buildDropIndexJobSpec(indexes.get(j), metadataProvider, this));
                 }
             }
-            Index primaryIndex =
-                    MetadataManager.INSTANCE.getIndex(mdTxnCtx.getValue(), dataverseName, datasetName, datasetName);
-            jobsToExecute.add(DatasetUtil.createDropDatasetJobSpec(this, primaryIndex, metadataProvider));
+            jobsToExecute.add(DatasetUtil.dropDatasetJobSpec(this, metadataProvider));
             // #. mark the existing dataset as PendingDropOp
             MetadataManager.INSTANCE.dropDataset(mdTxnCtx.getValue(), dataverseName, datasetName);
             MetadataManager.INSTANCE.addDataset(mdTxnCtx.getValue(),
@@ -395,32 +400,35 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
      * @throws AlgebricksException
      *             if dataflow helper factory could not be created
      */
-    public IIndexDataflowHelperFactory getIndexDataflowHelperFactory(MetadataProvider mdProvider, Index index,
-            ARecordType recordType, ARecordType metaType, ILSMMergePolicyFactory mergePolicyFactory,
-            Map<String, String> mergePolicyProperties) throws AlgebricksException {
+    public IResourceFactory getResourceFactory(MetadataProvider mdProvider, Index index, ARecordType recordType,
+            ARecordType metaType, ILSMMergePolicyFactory mergePolicyFactory, Map<String, String> mergePolicyProperties)
+            throws AlgebricksException {
         ITypeTraits[] filterTypeTraits = DatasetUtil.computeFilterTypeTraits(this, recordType);
         IBinaryComparatorFactory[] filterCmpFactories = DatasetUtil.computeFilterBinaryComparatorFactories(this,
                 recordType, mdProvider.getStorageComponentProvider().getComparatorFactoryProvider());
+        IResourceFactory resourceFactory;
         switch (index.getIndexType()) {
             case BTREE:
-                return bTreeDataflowHelperFactoryProvider.getIndexDataflowHelperFactory(mdProvider, this, index,
-                        recordType, metaType, mergePolicyFactory, mergePolicyProperties, filterTypeTraits,
-                        filterCmpFactories);
+                resourceFactory = bTreeResourceFactoryProvider.getResourceFactory(mdProvider, this, index, recordType,
+                        metaType, mergePolicyFactory, mergePolicyProperties, filterTypeTraits, filterCmpFactories);
+                break;
             case RTREE:
-                return rTreeDataflowHelperFactoryProvider.getIndexDataflowHelperFactory(mdProvider, this, index,
-                        recordType, metaType, mergePolicyFactory, mergePolicyProperties, filterTypeTraits,
-                        filterCmpFactories);
+                resourceFactory = rTreeResourceFactoryProvider.getResourceFactory(mdProvider, this, index, recordType,
+                        metaType, mergePolicyFactory, mergePolicyProperties, filterTypeTraits, filterCmpFactories);
+                break;
             case LENGTH_PARTITIONED_NGRAM_INVIX:
             case LENGTH_PARTITIONED_WORD_INVIX:
             case SINGLE_PARTITION_NGRAM_INVIX:
             case SINGLE_PARTITION_WORD_INVIX:
-                return invertedIndexDataflowHelperFactoryProvider.getIndexDataflowHelperFactory(mdProvider, this, index,
+                resourceFactory = invertedIndexResourceFactoryProvider.getResourceFactory(mdProvider, this, index,
                         recordType, metaType, mergePolicyFactory, mergePolicyProperties, filterTypeTraits,
                         filterCmpFactories);
+                break;
             default:
                 throw new CompilationException(ErrorCode.COMPILATION_UNKNOWN_INDEX_TYPE,
                         index.getIndexType().toString());
         }
+        return new DatasetLocalResourceFactory(datasetId, resourceFactory);
     }
 
     /**
@@ -438,7 +446,7 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
         switch (index.getIndexType()) {
             case BTREE:
                 return getDatasetType() == DatasetType.EXTERNAL
-                        && !index.getIndexName().equals(BTreeDataflowHelperFactoryProvider.externalFileIndexName(this))
+                        && !index.getIndexName().equals(IndexingConstants.getFilesIndexName(getDatasetName()))
                                 ? LSMBTreeWithBuddyIOOperationCallbackFactory.INSTANCE
                                 : LSMBTreeIOOperationCallbackFactory.INSTANCE;
             case RTREE:
@@ -597,8 +605,7 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
      *            an instance of metadata provider that is used to fetch metadata information
      * @throws AlgebricksException
      */
-    public IIndexDataflowHelperFactory getIndexDataflowHelperFactory(MetadataProvider mdProvider)
-            throws AlgebricksException {
+    public IResourceFactory getResourceFactory(MetadataProvider mdProvider) throws AlgebricksException {
         if (getDatasetType() != DatasetType.INTERNAL) {
             throw new AlgebricksException(ErrorCode.ASTERIX,
                     ErrorCode.COMPILATION_DATASET_TYPE_DOES_NOT_HAVE_PRIMARY_INDEX, getDatasetType());
@@ -608,8 +615,7 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
         ARecordType metaType = (ARecordType) mdProvider.findType(getMetaItemTypeDataverseName(), getMetaItemTypeName());
         Pair<ILSMMergePolicyFactory, Map<String, String>> compactionInfo =
                 DatasetUtil.getMergePolicyFactory(this, mdProvider.getMetadataTxnContext());
-        return getIndexDataflowHelperFactory(mdProvider, index, recordType, metaType, compactionInfo.first,
-                compactionInfo.second);
+        return getResourceFactory(mdProvider, index, recordType, metaType, compactionInfo.first, compactionInfo.second);
     }
 
     public IFrameOperationCallbackFactory getFrameOpCallbackFactory() {
@@ -618,5 +624,69 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
 
     public boolean isTemp() {
         return getDatasetDetails().isTemp();
+    }
+
+    @Override
+    public List<List<String>> getPrimaryKeys() {
+        if (getDatasetType() == DatasetType.EXTERNAL) {
+            return IndexingConstants.getRIDKeys(((ExternalDatasetDetails) getDatasetDetails()).getProperties());
+        }
+        return ((InternalDatasetDetails) getDatasetDetails()).getPartitioningKey();
+    }
+
+    public ITypeTraits[] getPrimaryTypeTraits(MetadataProvider metadataProvider, ARecordType recordType,
+            ARecordType metaType) throws AlgebricksException {
+        IStorageComponentProvider storageComponentProvider = metadataProvider.getStorageComponentProvider();
+        ITypeTraitProvider ttProvider = storageComponentProvider.getTypeTraitProvider();
+        List<List<String>> partitioningKeys = getPrimaryKeys();
+        int numPrimaryKeys = partitioningKeys.size();
+        ITypeTraits[] typeTraits = new ITypeTraits[numPrimaryKeys + 1 + (hasMetaPart() ? 1 : 0)];
+        List<Integer> indicators = null;
+        if (hasMetaPart()) {
+            indicators = ((InternalDatasetDetails) getDatasetDetails()).getKeySourceIndicator();
+        }
+        for (int i = 0; i < numPrimaryKeys; i++) {
+            IAType keyType = datasetType == DatasetType.EXTERNAL ? IndexingConstants.getFieldType(i)
+                    : (indicators == null || indicators.get(i) == 0)
+                            ? recordType.getSubFieldType(partitioningKeys.get(i))
+                            : metaType.getSubFieldType(partitioningKeys.get(i));
+            typeTraits[i] = ttProvider.getTypeTrait(keyType);
+        }
+        typeTraits[numPrimaryKeys] = ttProvider.getTypeTrait(recordType);
+        if (hasMetaPart()) {
+            typeTraits[numPrimaryKeys + 1] = ttProvider.getTypeTrait(metaType);
+        }
+        return typeTraits;
+    }
+
+    public IBinaryComparatorFactory[] getPrimaryComparatorFactories(MetadataProvider metadataProvider,
+            ARecordType recordType, ARecordType metaType) throws AlgebricksException {
+        IStorageComponentProvider storageComponentProvider = metadataProvider.getStorageComponentProvider();
+        IBinaryComparatorFactoryProvider cmpFactoryProvider = storageComponentProvider.getComparatorFactoryProvider();
+        List<List<String>> partitioningKeys = getPrimaryKeys();
+        int numPrimaryKeys = partitioningKeys.size();
+        IBinaryComparatorFactory[] cmpFactories = new IBinaryComparatorFactory[numPrimaryKeys];
+        List<Integer> indicators = null;
+        if (hasMetaPart()) {
+            indicators = ((InternalDatasetDetails) getDatasetDetails()).getKeySourceIndicator();
+        }
+        for (int i = 0; i < numPrimaryKeys; i++) {
+            IAType keyType =
+                    (indicators == null || indicators.get(i) == 0) ? recordType.getSubFieldType(partitioningKeys.get(i))
+                            : metaType.getSubFieldType(partitioningKeys.get(i));
+            cmpFactories[i] = cmpFactoryProvider.getBinaryComparatorFactory(keyType, true);
+        }
+        return cmpFactories;
+    }
+
+    @Override
+    public int[] getPrimaryBloomFilterFields() {
+        List<List<String>> partitioningKeys = getPrimaryKeys();
+        int numPrimaryKeys = partitioningKeys.size();
+        int[] bloomFilterKeyFields = new int[numPrimaryKeys];
+        for (int i = 0; i < numPrimaryKeys; i++) {
+            bloomFilterKeyFields[i] = i;
+        }
+        return bloomFilterKeyFields;
     }
 }

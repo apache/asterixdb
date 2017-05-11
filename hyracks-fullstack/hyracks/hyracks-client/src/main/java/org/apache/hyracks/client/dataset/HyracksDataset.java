@@ -68,7 +68,7 @@ public class HyracksDataset implements IHyracksDataset {
         }
 
         @Override
-        public IIOManager getIOManager() {
+        public IIOManager getIoManager() {
             return null;
         }
     }

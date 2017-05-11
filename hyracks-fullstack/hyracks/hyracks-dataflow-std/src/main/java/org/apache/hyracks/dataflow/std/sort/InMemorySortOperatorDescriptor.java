@@ -68,7 +68,7 @@ public class InMemorySortOperatorDescriptor extends AbstractOperatorDescriptor {
         this.sortFields = sortFields;
         this.firstKeyNormalizerFactory = firstKeyNormalizerFactory;
         this.comparatorFactories = comparatorFactories;
-        recordDescriptors[0] = recordDescriptor;
+        outRecDescs[0] = recordDescriptor;
     }
 
     @Override
@@ -124,7 +124,7 @@ public class InMemorySortOperatorDescriptor extends AbstractOperatorDescriptor {
                             FrameFreeSlotPolicyFactory.createFreeSlotPolicy(EnumFreeSlotPolicy.LAST_FIT));
 
                     state.frameSorter = new FrameSorterMergeSort(ctx, frameBufferManager, sortFields,
-                            firstKeyNormalizerFactory, comparatorFactories, recordDescriptors[0]);
+                            firstKeyNormalizerFactory, comparatorFactories, outRecDescs[0]);
                     state.frameSorter.reset();
                 }
 

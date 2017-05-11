@@ -55,6 +55,8 @@ public class ErrorCode {
     public static final int COERCION = 12;
     public static final int DUPLICATE_FIELD_NAME = 13;
     public static final int PROPERTY_NOT_SET = 14;
+    public static final int ROOT_LOCAL_RESOURCE_EXISTS = 15;
+    public static final int ROOT_LOCAL_RESOURCE_COULD_NOT_BE_CREATED = 16;
     public static final int INSTANTIATION_ERROR = 100;
 
     // Compilation errors

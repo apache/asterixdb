@@ -79,8 +79,6 @@ public class FeedMetaStoreNodePushable extends AbstractUnaryInputUnaryOutputOper
 
     private final IHyracksTaskContext ctx;
 
-    private final String targetId;
-
     private final VSizeFrame message;
 
     private final IRecordDescriptorProvider recordDescProvider;
@@ -89,8 +87,8 @@ public class FeedMetaStoreNodePushable extends AbstractUnaryInputUnaryOutputOper
 
     public FeedMetaStoreNodePushable(IHyracksTaskContext ctx, IRecordDescriptorProvider recordDescProvider,
             int partition, int nPartitions, IOperatorDescriptor coreOperator, FeedConnectionId feedConnectionId,
-            Map<String, String> feedPolicyProperties, String targetId,
-            FeedMetaOperatorDescriptor feedMetaOperatorDescriptor) throws HyracksDataException {
+            Map<String, String> feedPolicyProperties, FeedMetaOperatorDescriptor feedMetaOperatorDescriptor)
+            throws HyracksDataException {
         this.ctx = ctx;
         this.insertOperator = (AbstractUnaryInputUnaryOutputOperatorNodePushable) ((IActivity) coreOperator)
                 .createPushRuntime(ctx, recordDescProvider, partition, nPartitions);
@@ -99,7 +97,6 @@ public class FeedMetaStoreNodePushable extends AbstractUnaryInputUnaryOutputOper
         this.connectionId = feedConnectionId;
         this.feedManager = (ActiveManager) ((INcApplicationContext) ctx.getJobletContext().getServiceContext()
                 .getApplicationContext()).getActiveManager();
-        this.targetId = targetId;
         this.message = new VSizeFrame(ctx);
         TaskUtil.putInSharedMap(HyracksConstants.KEY_MESSAGE, message, ctx);
         this.recordDescProvider = recordDescProvider;
@@ -109,7 +106,7 @@ public class FeedMetaStoreNodePushable extends AbstractUnaryInputUnaryOutputOper
     @Override
     public void open() throws HyracksDataException {
         ActiveRuntimeId runtimeId = new ActiveRuntimeId(connectionId.getFeedId(),
-                runtimeType.toString() + "." + targetId, partition);
+                runtimeType.toString() + "." + connectionId.getDatasetName(), partition);
         try {
             initializeNewFeedRuntime(runtimeId);
             insertOperator.open();
@@ -123,16 +120,15 @@ public class FeedMetaStoreNodePushable extends AbstractUnaryInputUnaryOutputOper
         fta = new FrameTupleAccessor(recordDescProvider.getInputRecordDescriptor(opDesc.getActivityId(), 0));
         insertOperator.setOutputFrameWriter(0, writer, recordDesc);
         if (insertOperator instanceof LSMInsertDeleteOperatorNodePushable) {
-            LSMInsertDeleteOperatorNodePushable indexOp =
-                    (LSMInsertDeleteOperatorNodePushable) insertOperator;
+            LSMInsertDeleteOperatorNodePushable indexOp = (LSMInsertDeleteOperatorNodePushable) insertOperator;
             if (!indexOp.isPrimary()) {
                 writer = insertOperator;
                 return;
             }
         }
         if (policyAccessor.flowControlEnabled()) {
-            writer = new FeedRuntimeInputHandler(ctx, connectionId, runtimeId, insertOperator,
-                    policyAccessor, fta, feedManager.getFramePool());
+            writer = new FeedRuntimeInputHandler(ctx, connectionId, runtimeId, insertOperator, policyAccessor, fta,
+                    feedManager.getFramePool());
         } else {
             writer = new SyncFeedRuntimeInputHandler(ctx, insertOperator, fta);
         }

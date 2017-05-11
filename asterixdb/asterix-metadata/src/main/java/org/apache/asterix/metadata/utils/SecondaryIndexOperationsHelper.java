@@ -34,17 +34,18 @@ import org.apache.asterix.common.transactions.IRecoveryManager.ResourceType;
 import org.apache.asterix.common.transactions.JobId;
 import org.apache.asterix.external.indexing.ExternalFile;
 import org.apache.asterix.external.indexing.IndexingConstants;
+import org.apache.asterix.external.operators.ExternalIndexBulkLoadOperatorDescriptor;
 import org.apache.asterix.external.operators.ExternalIndexBulkModifyOperatorDescriptor;
 import org.apache.asterix.external.operators.ExternalScanOperatorDescriptor;
 import org.apache.asterix.formats.nontagged.BinaryBooleanInspector;
 import org.apache.asterix.formats.nontagged.BinaryComparatorFactoryProvider;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.formats.nontagged.TypeTraitProvider;
-import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails;
+import org.apache.asterix.metadata.lock.ExternalDatasetsRegistry;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.evaluators.functions.AndDescriptor;
@@ -52,7 +53,6 @@ import org.apache.asterix.runtime.evaluators.functions.CastTypeDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.IsUnknownDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.NotDescriptor;
 import org.apache.asterix.runtime.job.listener.JobEventListenerFactory;
-import org.apache.asterix.runtime.utils.RuntimeComponentsProvider;
 import org.apache.asterix.transaction.management.opcallbacks.PrimaryIndexInstantSearchOperationCallbackFactory;
 import org.apache.asterix.transaction.management.service.transaction.JobIdFactory;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
@@ -83,6 +83,7 @@ import org.apache.hyracks.dataflow.std.sort.ExternalSortOperatorDescriptor;
 import org.apache.hyracks.storage.am.btree.dataflow.BTreeSearchOperatorDescriptor;
 import org.apache.hyracks.storage.am.common.api.ISearchOperationCallbackFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
+import org.apache.hyracks.storage.am.common.dataflow.IndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.dataflow.TreeIndexBulkLoadOperatorDescriptor;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
@@ -117,7 +118,7 @@ public abstract class SecondaryIndexOperationsHelper {
     protected RecordDescriptor secondaryRecDesc;
     protected IScalarEvaluatorFactory[] secondaryFieldAccessEvalFactories;
     protected ILSMMergePolicyFactory mergePolicyFactory;
-    protected Map<String, String> mergePolicyFactoryProperties;
+    protected Map<String, String> mergePolicyProperties;
     protected RecordDescriptor enforcedRecDesc;
     protected int numFilterFields;
     protected List<String> filterFieldName;
@@ -132,8 +133,8 @@ public abstract class SecondaryIndexOperationsHelper {
 
     // Prevent public construction. Should be created via createIndexCreator().
     protected SecondaryIndexOperationsHelper(Dataset dataset, Index index, PhysicalOptimizationConfig physOptConf,
-            MetadataProvider metadataProvider, ARecordType recType,
-            ARecordType metaType, ARecordType enforcedType, ARecordType enforcedMetaType) {
+            MetadataProvider metadataProvider, ARecordType recType, ARecordType metaType, ARecordType enforcedType,
+            ARecordType enforcedMetaType) {
         this.dataset = dataset;
         this.index = index;
         this.physOptConf = physOptConf;
@@ -150,14 +151,12 @@ public abstract class SecondaryIndexOperationsHelper {
         SecondaryIndexOperationsHelper indexOperationsHelper;
         switch (index.getIndexType()) {
             case BTREE:
-                indexOperationsHelper =
-                        new SecondaryBTreeOperationsHelper(dataset, index, physOptConf,
-                                metadataProvider, recType, metaType, enforcedType, enforcedMetaType);
+                indexOperationsHelper = new SecondaryBTreeOperationsHelper(dataset, index, physOptConf,
+                        metadataProvider, recType, metaType, enforcedType, enforcedMetaType);
                 break;
             case RTREE:
-                indexOperationsHelper =
-                        new SecondaryRTreeOperationsHelper(dataset, index, physOptConf,
-                                metadataProvider, recType, metaType, enforcedType, enforcedMetaType);
+                indexOperationsHelper = new SecondaryRTreeOperationsHelper(dataset, index, physOptConf,
+                        metadataProvider, recType, metaType, enforcedType, enforcedMetaType);
                 break;
             case SINGLE_PARTITION_WORD_INVIX:
             case SINGLE_PARTITION_NGRAM_INVIX:
@@ -189,7 +188,7 @@ public abstract class SecondaryIndexOperationsHelper {
                 metadataProvider.getSplitProviderAndConstraints(dataset, index.getIndexName());
         secondaryFileSplitProvider = secondarySplitsAndConstraint.first;
         secondaryPartitionConstraint = secondarySplitsAndConstraint.second;
-        numPrimaryKeys = DatasetUtil.getPartitioningKeys(dataset).size();
+        numPrimaryKeys = dataset.getPrimaryKeys().size();
         if (dataset.getDatasetType() == DatasetType.INTERNAL) {
             filterFieldName = DatasetUtil.getFilterField(dataset);
             if (filterFieldName != null) {
@@ -208,7 +207,7 @@ public abstract class SecondaryIndexOperationsHelper {
         Pair<ILSMMergePolicyFactory, Map<String, String>> compactionInfo =
                 DatasetUtil.getMergePolicyFactory(dataset, metadataProvider.getMetadataTxnContext());
         mergePolicyFactory = compactionInfo.first;
-        mergePolicyFactoryProperties = compactionInfo.second;
+        mergePolicyProperties = compactionInfo.second;
         if (numFilterFields > 0) {
             setFilterTypeTraitsAndComparators();
         }
@@ -238,7 +237,7 @@ public abstract class SecondaryIndexOperationsHelper {
     protected abstract int getNumSecondaryKeys();
 
     protected void setPrimaryRecDescAndComparators() throws AlgebricksException {
-        List<List<String>> partitioningKeys = DatasetUtil.getPartitioningKeys(dataset);
+        List<List<String>> partitioningKeys = dataset.getPrimaryKeys();
         ISerializerDeserializer[] primaryRecFields =
                 new ISerializerDeserializer[numPrimaryKeys + 1 + (dataset.hasMetaPart() ? 1 : 0)];
         ITypeTraits[] primaryTypeTraits = new ITypeTraits[numPrimaryKeys + 1 + (dataset.hasMetaPart() ? 1 : 0)];
@@ -292,8 +291,7 @@ public abstract class SecondaryIndexOperationsHelper {
         return keyProviderOp;
     }
 
-    protected BTreeSearchOperatorDescriptor createPrimaryIndexScanOp(JobSpecification spec)
-            throws AlgebricksException {
+    protected BTreeSearchOperatorDescriptor createPrimaryIndexScanOp(JobSpecification spec) throws AlgebricksException {
         // -Infinity
         int[] lowKeyFields = null;
         // +Infinity
@@ -304,22 +302,15 @@ public abstract class SecondaryIndexOperationsHelper {
         boolean isWriteTransaction = metadataProvider.isWriteTransaction();
         IJobletEventListenerFactory jobEventListenerFactory = new JobEventListenerFactory(jobId, isWriteTransaction);
         spec.setJobletEventListenerFactory(jobEventListenerFactory);
-        Index primaryIndex = MetadataManager.INSTANCE.getIndex(metadataProvider.getMetadataTxnContext(),
-                dataset.getDataverseName(), dataset.getDatasetName(), dataset.getDatasetName());
-
         boolean temp = dataset.getDatasetDetails().isTemp();
         ISearchOperationCallbackFactory searchCallbackFactory = temp ? NoOpOperationCallbackFactory.INSTANCE
                 : new PrimaryIndexInstantSearchOperationCallbackFactory(jobId, dataset.getDatasetId(),
                         primaryBloomFilterKeyFields, txnSubsystemProvider, ResourceType.LSM_BTREE);
-        BTreeSearchOperatorDescriptor primarySearchOp = new BTreeSearchOperatorDescriptor(spec, primaryRecDesc,
-                RuntimeComponentsProvider.RUNTIME_PROVIDER, RuntimeComponentsProvider.RUNTIME_PROVIDER,
-                primaryFileSplitProvider, primaryRecDesc.getTypeTraits(), primaryComparatorFactories,
-                primaryBloomFilterKeyFields, lowKeyFields, highKeyFields, true, true,
-                dataset.getIndexDataflowHelperFactory(metadataProvider, primaryIndex, itemType, metaType,
-                        mergePolicyFactory, mergePolicyFactoryProperties),
-                false, false, null, searchCallbackFactory, null, null,
-                metadataProvider.getStorageComponentProvider().getMetadataPageManagerFactory());
-
+        IndexDataflowHelperFactory indexHelperFactory = new IndexDataflowHelperFactory(
+                metadataProvider.getStorageComponentProvider().getStorageManager(), primaryFileSplitProvider);
+        BTreeSearchOperatorDescriptor primarySearchOp =
+                new BTreeSearchOperatorDescriptor(spec, primaryRecDesc, lowKeyFields, highKeyFields, true, true,
+                        indexHelperFactory, false, false, null, searchCallbackFactory, null, null, false);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, primarySearchOp,
                 primaryPartitionConstraint);
         return primarySearchOp;
@@ -401,11 +392,18 @@ public abstract class SecondaryIndexOperationsHelper {
             int[] fieldPermutation, IIndexDataflowHelperFactory dataflowHelperFactory, float fillFactor)
             throws AlgebricksException {
         TreeIndexBulkLoadOperatorDescriptor treeIndexBulkLoadOp = new TreeIndexBulkLoadOperatorDescriptor(spec,
-                secondaryRecDesc, RuntimeComponentsProvider.RUNTIME_PROVIDER,
-                RuntimeComponentsProvider.RUNTIME_PROVIDER, secondaryFileSplitProvider,
-                secondaryRecDesc.getTypeTraits(), secondaryComparatorFactories, secondaryBloomFilterKeyFields,
-                fieldPermutation, fillFactor, false, numElementsHint, false, dataflowHelperFactory,
-                metadataProvider.getStorageComponentProvider().getMetadataPageManagerFactory());
+                secondaryRecDesc, fieldPermutation, fillFactor, false, numElementsHint, false, dataflowHelperFactory);
+        AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, treeIndexBulkLoadOp,
+                secondaryPartitionConstraint);
+        return treeIndexBulkLoadOp;
+    }
+
+    protected TreeIndexBulkLoadOperatorDescriptor createExternalIndexBulkLoadOp(JobSpecification spec,
+            int[] fieldPermutation, IIndexDataflowHelperFactory dataflowHelperFactory, float fillFactor)
+            throws AlgebricksException {
+        ExternalIndexBulkLoadOperatorDescriptor treeIndexBulkLoadOp = new ExternalIndexBulkLoadOperatorDescriptor(spec,
+                secondaryRecDesc, fieldPermutation, fillFactor, false, numElementsHint, false, dataflowHelperFactory,
+                ExternalDatasetsRegistry.INSTANCE.getAndLockDatasetVersion(dataset, metadataProvider));
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, treeIndexBulkLoadOp,
                 secondaryPartitionConstraint);
         return treeIndexBulkLoadOp;
@@ -517,11 +515,7 @@ public abstract class SecondaryIndexOperationsHelper {
             }
         }
         ExternalIndexBulkModifyOperatorDescriptor treeIndexBulkLoadOp = new ExternalIndexBulkModifyOperatorDescriptor(
-                spec, RuntimeComponentsProvider.RUNTIME_PROVIDER, RuntimeComponentsProvider.RUNTIME_PROVIDER,
-                secondaryFileSplitProvider, secondaryTypeTraits, secondaryComparatorFactories,
-                secondaryBloomFilterKeyFields, dataflowHelperFactory, NoOpOperationCallbackFactory.INSTANCE,
-                deletedFiles, fieldPermutation, fillFactor, numElementsHint,
-                metadataProvider.getStorageComponentProvider().getMetadataPageManagerFactory());
+                spec, dataflowHelperFactory, deletedFiles, fieldPermutation, fillFactor, false, numElementsHint, false);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, treeIndexBulkLoadOp,
                 secondaryPartitionConstraint);
         return treeIndexBulkLoadOp;

@@ -23,23 +23,31 @@ import java.io.IOException;
 
 import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
-import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
+import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
+import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import org.apache.hyracks.dataflow.common.data.accessors.FrameTupleReference;
-import org.apache.hyracks.storage.am.common.api.ISearchOperationCallback;
-import org.apache.hyracks.storage.am.common.dataflow.AbstractTreeIndexOperatorDescriptor;
-import org.apache.hyracks.storage.am.lsm.rtree.dataflow.ExternalRTreeDataflowHelper;
+import org.apache.hyracks.storage.am.common.api.ISearchOperationCallbackFactory;
+import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.lsm.rtree.impls.ExternalRTree;
 import org.apache.hyracks.storage.am.rtree.dataflow.RTreeSearchOperatorNodePushable;
+import org.apache.hyracks.storage.common.ISearchOperationCallback;
 
 public class ExternalRTreeSearchOperatorNodePushable extends RTreeSearchOperatorNodePushable {
 
-    public ExternalRTreeSearchOperatorNodePushable(AbstractTreeIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
-            int partition, IRecordDescriptorProvider recordDescProvider, int[] keyFields) throws HyracksDataException {
-        super(opDesc, ctx, partition, recordDescProvider, keyFields, false, null, null);
+    private final int version;
+
+    public ExternalRTreeSearchOperatorNodePushable(IHyracksTaskContext ctx, int partition,
+            RecordDescriptor inputRecDesc, int[] keyFields, int[] minFilterFieldIndexes, int[] maxFilterFieldIndexes,
+            IIndexDataflowHelperFactory indexHelperFactory, boolean retainInput, boolean retainMissing,
+            IMissingWriterFactory missingWriterFactory, ISearchOperationCallbackFactory searchCallbackFactory,
+            int version) throws HyracksDataException {
+        super(ctx, partition, inputRecDesc, keyFields, minFilterFieldIndexes, maxFilterFieldIndexes, indexHelperFactory,
+                retainInput, retainMissing, missingWriterFactory, searchCallbackFactory, false);
+        this.version = version;
     }
 
     // We override this method to specify the searched version of the index
@@ -48,7 +56,6 @@ public class ExternalRTreeSearchOperatorNodePushable extends RTreeSearchOperator
         writer.open();
         accessor = new FrameTupleAccessor(inputRecDesc);
         indexHelper.open();
-        ExternalRTreeDataflowHelper rTreeDataflowHelper = (ExternalRTreeDataflowHelper) indexHelper;
         index = indexHelper.getIndexInstance();
         if (retainMissing) {
             int fieldCount = getFieldCount();
@@ -71,10 +78,11 @@ public class ExternalRTreeSearchOperatorNodePushable extends RTreeSearchOperator
             tb = new ArrayTupleBuilder(recordDesc.getFieldCount());
             dos = tb.getDataOutput();
             appender = new FrameTupleAppender(new VSizeFrame(ctx));
-            ISearchOperationCallback searchCallback = opDesc.getSearchOpCallbackFactory()
-                    .createSearchOperationCallback(indexHelper.getResource().getId(), ctx, null);
-            // The next line is the reason we override this method
-            indexAccessor = rTreeIndex.createAccessor(searchCallback, rTreeDataflowHelper.getTargetVersion());
+            ISearchOperationCallback searchCallback =
+                    searchCallbackFactory.createSearchOperationCallback(indexHelper.getResource().getId(), ctx, null);
+            // The next line is the reason we override this method...
+            // The right thing to do would be to change the signature of createAccessor
+            indexAccessor = rTreeIndex.createAccessor(searchCallback, version);
             cursor = createCursor();
             if (retainInput) {
                 frameTuple = new FrameTupleReference();

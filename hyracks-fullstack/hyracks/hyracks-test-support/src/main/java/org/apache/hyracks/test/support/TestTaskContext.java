@@ -35,7 +35,6 @@ import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.job.profiling.counters.ICounterContext;
 import org.apache.hyracks.api.resources.IDeallocatable;
-import org.apache.hyracks.control.nc.io.IOManager;
 import org.apache.hyracks.control.nc.io.WorkspaceFileFactory;
 
 public class TestTaskContext implements IHyracksTaskContext {
@@ -48,7 +47,7 @@ public class TestTaskContext implements IHyracksTaskContext {
     public TestTaskContext(TestJobletContext jobletContext, TaskAttemptId taskId) {
         this.jobletContext = jobletContext;
         this.taskId = taskId;
-        fileFactory = new WorkspaceFileFactory(this, (IIOManager) getIOManager());
+        fileFactory = new WorkspaceFileFactory(this, getIoManager());
     }
 
     @Override
@@ -79,7 +78,7 @@ public class TestTaskContext implements IHyracksTaskContext {
     }
 
     @Override
-    public IIOManager getIOManager() {
+    public IIOManager getIoManager() {
         return jobletContext.getIOManager();
     }
 

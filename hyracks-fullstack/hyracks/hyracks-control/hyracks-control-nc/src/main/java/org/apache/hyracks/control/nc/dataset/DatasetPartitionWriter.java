@@ -69,7 +69,7 @@ public class DatasetPartitionWriter implements IFrameWriter {
         this.datasetMemoryManager = datasetMemoryManager;
 
         resultSetPartitionId = new ResultSetPartitionId(jobId, rsId, partition);
-        resultState = new ResultState(resultSetPartitionId, asyncMode, ctx.getIOManager(), fileFactory,
+        resultState = new ResultState(resultSetPartitionId, asyncMode, ctx.getIoManager(), fileFactory,
                 ctx.getInitialFrameSize());
     }
 

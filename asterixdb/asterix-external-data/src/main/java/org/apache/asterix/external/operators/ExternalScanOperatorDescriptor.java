@@ -42,7 +42,7 @@ public class ExternalScanOperatorDescriptor extends AbstractSingleActivityOperat
     public ExternalScanOperatorDescriptor(JobSpecification spec, RecordDescriptor rDesc,
             IAdapterFactory dataSourceAdapterFactory) {
         super(spec, 0, 1);
-        recordDescriptors[0] = rDesc;
+        outRecDescs[0] = rDesc;
         this.adapterFactory = dataSourceAdapterFactory;
     }
 

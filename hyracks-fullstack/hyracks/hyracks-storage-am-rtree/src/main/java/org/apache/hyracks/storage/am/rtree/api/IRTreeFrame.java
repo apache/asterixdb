@@ -20,7 +20,7 @@
 package org.apache.hyracks.storage.am.rtree.api;
 
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
-import org.apache.hyracks.storage.am.common.ophelpers.MultiComparator;
+import org.apache.hyracks.storage.common.MultiComparator;
 
 public interface IRTreeFrame extends ITreeIndexFrame {
 

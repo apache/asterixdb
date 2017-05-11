@@ -49,7 +49,7 @@ public class PreclusteredGroupOperatorDescriptor extends AbstractSingleActivityO
         this.groupFields = groupFields;
         this.comparatorFactories = comparatorFactories;
         this.aggregatorFactory = aggregatorFactory;
-        recordDescriptors[0] = recordDescriptor;
+        outRecDescs[0] = recordDescriptor;
         this.groupAll = groupAll;
     }
 
@@ -58,6 +58,6 @@ public class PreclusteredGroupOperatorDescriptor extends AbstractSingleActivityO
             final IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions)
             throws HyracksDataException {
         return new PreclusteredGroupOperatorNodePushable(ctx, groupFields, comparatorFactories, aggregatorFactory,
-                recordDescProvider.getInputRecordDescriptor(getActivityId(), 0), recordDescriptors[0], groupAll);
+                recordDescProvider.getInputRecordDescriptor(getActivityId(), 0), outRecDescs[0], groupAll);
     }
 }

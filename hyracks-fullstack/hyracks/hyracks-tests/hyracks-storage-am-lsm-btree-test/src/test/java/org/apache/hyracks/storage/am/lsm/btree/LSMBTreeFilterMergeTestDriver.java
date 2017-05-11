@@ -19,7 +19,8 @@
 
 package org.apache.hyracks.storage.am.lsm.btree;
 
-import junit.framework.Assert;
+import java.util.List;
+
 import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
@@ -37,12 +38,14 @@ import org.apache.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
 import org.apache.hyracks.storage.am.common.TreeIndexTestUtils;
 import org.apache.hyracks.storage.am.config.AccessMethodTestsConfig;
 import org.apache.hyracks.storage.am.lsm.btree.impls.LSMBTree;
-import org.apache.hyracks.storage.am.lsm.common.api.*;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilter;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.common.impls.BlockingIOOperationCallbackWrapper;
-import org.apache.hyracks.storage.am.lsm.common.impls.NoOpIOOperationCallback;
+import org.apache.hyracks.storage.am.lsm.common.impls.NoOpIOOperationCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.impls.StubIOOperationCallback;
 
-import java.util.List;
+import junit.framework.Assert;
 
 /**
  * This test is the LSMBTreeMergeTest but using a filter, and at each step of the filter's lifecycle its value is
@@ -103,8 +106,8 @@ public abstract class LSMBTreeFilterMergeTestDriver extends OrderedIndexTestDriv
                     minMax = orderedIndexTestUtils.insertStringTuples(ctx, numTuplesToInsert, true, getRandom());
                 }
                 if (minMax != null) {
-                    ILSMComponentFilter f = ((LSMBTree) ctx.getIndex()).getCurrentMemoryComponent()
-                            .getLSMComponentFilter();
+                    ILSMComponentFilter f =
+                            ((LSMBTree) ctx.getIndex()).getCurrentMemoryComponent().getLSMComponentFilter();
                     Pair<ITupleReference, ITupleReference> obsMinMax = filterToMinMax(f);
                     Assert.assertEquals(0,
                             TreeIndexTestUtils.compareFilterTuples(obsMinMax.getLeft(), minMax.getLeft(), comp));
@@ -117,8 +120,8 @@ public abstract class LSMBTreeFilterMergeTestDriver extends OrderedIndexTestDriv
                 accessor.scheduleFlush(waiter);
                 waiter.waitForIO();
                 if (minMax != null) {
-                    Pair<ITupleReference, ITupleReference> obsMinMax = filterToMinMax(
-                            stub.getLastNewComponent().getLSMComponentFilter());
+                    Pair<ITupleReference, ITupleReference> obsMinMax =
+                            filterToMinMax(stub.getLastNewComponent().getLSMComponentFilter());
                     Assert.assertEquals(0,
                             TreeIndexTestUtils.compareFilterTuples(obsMinMax.getLeft(), minMax.getLeft(), comp));
                     Assert.assertEquals(0,
@@ -142,12 +145,12 @@ public abstract class LSMBTreeFilterMergeTestDriver extends OrderedIndexTestDriv
                     expectedMergeMinMax.setRight(componentMinMax.getRight());
                 }
             }
-            accessor.scheduleMerge(NoOpIOOperationCallback.INSTANCE,
+            accessor.scheduleMerge(NoOpIOOperationCallbackFactory.INSTANCE.createIoOpCallback(),
                     ((LSMBTree) ctx.getIndex()).getImmutableComponents());
 
             flushedComponents = ((LSMBTree) ctx.getIndex()).getImmutableComponents();
-            Pair<ITupleReference, ITupleReference> mergedMinMax = filterToMinMax(
-                    flushedComponents.get(0).getLSMComponentFilter());
+            Pair<ITupleReference, ITupleReference> mergedMinMax =
+                    filterToMinMax(flushedComponents.get(0).getLSMComponentFilter());
             Assert.assertEquals(0, TreeIndexTestUtils.compareFilterTuples(expectedMergeMinMax.getLeft(),
                     mergedMinMax.getLeft(), comp));
             Assert.assertEquals(0, TreeIndexTestUtils.compareFilterTuples(expectedMergeMinMax.getRight(),

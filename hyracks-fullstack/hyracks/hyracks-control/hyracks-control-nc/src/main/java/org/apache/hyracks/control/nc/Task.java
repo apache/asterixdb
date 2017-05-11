@@ -147,7 +147,7 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
     }
 
     @Override
-    public IIOManager getIOManager() {
+    public IIOManager getIoManager() {
         return joblet.getIOManager();
     }
 

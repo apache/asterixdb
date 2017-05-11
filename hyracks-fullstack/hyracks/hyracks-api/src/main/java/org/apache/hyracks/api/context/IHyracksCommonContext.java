@@ -22,5 +22,5 @@ import org.apache.hyracks.api.io.IIOManager;
 
 public interface IHyracksCommonContext extends IHyracksFrameMgrContext{
 
-    public IIOManager getIOManager();
+    public IIOManager getIoManager();
 }

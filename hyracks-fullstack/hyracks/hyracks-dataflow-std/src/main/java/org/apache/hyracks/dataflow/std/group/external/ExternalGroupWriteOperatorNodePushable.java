@@ -173,6 +173,6 @@ public class ExternalGroupWriteOperatorNodePushable extends AbstractUnaryOutputS
     public RunFileWriter getRunFileWriter() throws HyracksDataException {
         FileReference newRun = ctx.getJobletContext()
                 .createManagedWorkspaceFile(ExternalGroupOperatorDescriptor.class.getSimpleName());
-        return new RunFileWriter(newRun, ctx.getIOManager());
+        return new RunFileWriter(newRun, ctx.getIoManager());
     }
 }

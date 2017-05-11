@@ -155,7 +155,7 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
         this.comparatorFactories = comparatorFactories;
         this.tuplePairComparatorFactoryProbe2Build = tupPaircomparatorFactory01;
         this.tuplePairComparatorFactoryBuild2Probe = tupPaircomparatorFactory10;
-        recordDescriptors[0] = recordDescriptor;
+        outRecDescs[0] = recordDescriptor;
         this.predEvaluatorFactory = predEvaluatorFactory;
         this.isLeftOuter = isLeftOuter;
         this.nonMatchWriterFactories = nonMatchWriterFactories;

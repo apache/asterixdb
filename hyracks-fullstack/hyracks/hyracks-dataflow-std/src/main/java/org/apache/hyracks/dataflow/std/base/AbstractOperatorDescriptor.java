@@ -34,7 +34,7 @@ public abstract class AbstractOperatorDescriptor implements IOperatorDescriptor 
 
     protected String[] partitions;
 
-    protected final RecordDescriptor[] recordDescriptors;
+    protected final RecordDescriptor[] outRecDescs;
 
     protected final int inputArity;
 
@@ -46,7 +46,7 @@ public abstract class AbstractOperatorDescriptor implements IOperatorDescriptor 
         odId = spec.createOperatorDescriptorId(this);
         this.inputArity = inputArity;
         this.outputArity = outputArity;
-        recordDescriptors = new RecordDescriptor[outputArity];
+        outRecDescs = new RecordDescriptor[outputArity];
         displayName = getClass().getName() + "[" + odId + "]";
     }
 
@@ -72,7 +72,7 @@ public abstract class AbstractOperatorDescriptor implements IOperatorDescriptor 
 
     @Override
     public RecordDescriptor[] getOutputRecordDescriptors() {
-        return recordDescriptors;
+        return outRecDescs;
     }
 
     @Override

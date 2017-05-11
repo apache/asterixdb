@@ -75,11 +75,11 @@ public class MaterializedPartitionWriter implements IFrameWriter {
     public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
         if (handle == null) {
             fRef = manager.getFileFactory().createUnmanagedWorkspaceFile(pid.toString());
-            handle = ctx.getIOManager().open(fRef, IIOManager.FileReadWriteMode.READ_WRITE,
+            handle = ctx.getIoManager().open(fRef, IIOManager.FileReadWriteMode.READ_WRITE,
                     IIOManager.FileSyncMode.METADATA_ASYNC_DATA_ASYNC);
             size = 0;
         }
-        size += ctx.getIOManager().syncWrite(handle, size, buffer);
+        size += ctx.getIoManager().syncWrite(handle, size, buffer);
     }
 
     @Override
@@ -93,11 +93,11 @@ public class MaterializedPartitionWriter implements IFrameWriter {
             LOGGER.info("close(" + pid + " by " + taId);
         }
         if (handle != null) {
-            ctx.getIOManager().close(handle);
+            ctx.getIoManager().close(handle);
         }
         if (!failed) {
             manager.registerPartition(pid, taId,
-                    new MaterializedPartition(ctx, fRef, executor, ctx.getIOManager()),
+                    new MaterializedPartition(ctx, fRef, executor, ctx.getIoManager()),
                     PartitionState.COMMITTED, taId.getAttempt() == 0 ? false : true);
 
         }

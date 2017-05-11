@@ -23,10 +23,12 @@ import java.nio.ByteBuffer;
 import org.apache.asterix.transaction.management.opcallbacks.AbstractIndexModificationOperationCallback;
 import org.apache.asterix.transaction.management.opcallbacks.AbstractIndexModificationOperationCallback.Operation;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
-import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
+import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.util.FrameUtils;
-import org.apache.hyracks.storage.am.common.dataflow.IIndexOperatorDescriptor;
+import org.apache.hyracks.storage.am.common.api.IModificationOperationCallbackFactory;
+import org.apache.hyracks.storage.am.common.api.ITupleFilterFactory;
+import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.am.common.tuples.PermutingFrameTupleReference;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
@@ -51,15 +53,15 @@ import org.apache.hyracks.storage.am.lsm.common.dataflow.LSMIndexInsertUpdateDel
 public class LSMSecondaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDeleteOperatorNodePushable {
 
     private final PermutingFrameTupleReference prevValueTuple = new PermutingFrameTupleReference();
-    private int numberOfFields;
-    private boolean isNewNull = false;
-    private boolean isPrevValueNull = false;
+    private final int numberOfFields;
     private AbstractIndexModificationOperationCallback abstractModCallback;
 
-    public LSMSecondaryUpsertOperatorNodePushable(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
-            int partition, int[] fieldPermutation, IRecordDescriptorProvider recordDescProvider,
+    public LSMSecondaryUpsertOperatorNodePushable(IHyracksTaskContext ctx, int partition,
+            IIndexDataflowHelperFactory indexHelperFactory, IModificationOperationCallbackFactory modCallbackFactory,
+            ITupleFilterFactory tupleFilterFactory, int[] fieldPermutation, RecordDescriptor inputRecDesc,
             int[] prevValuePermutation) throws HyracksDataException {
-        super(opDesc, ctx, partition, fieldPermutation, recordDescProvider, IndexOperation.UPSERT);
+        super(ctx, partition, indexHelperFactory, fieldPermutation, inputRecDesc, IndexOperation.UPSERT,
+                modCallbackFactory, tupleFilterFactory);
         this.prevValueTuple.setFieldPermutation(prevValuePermutation);
         this.numberOfFields = prevValuePermutation.length;
     }
@@ -105,8 +107,8 @@ public class LSMSecondaryUpsertOperatorNodePushable extends LSMIndexInsertUpdate
                 // if both previous value and new value are null, then we skip
                 tuple.reset(accessor, i);
                 prevValueTuple.reset(accessor, i);
-                isNewNull = LSMPrimaryUpsertOperatorNodePushable.isNull(tuple, 0);
-                isPrevValueNull = LSMPrimaryUpsertOperatorNodePushable.isNull(prevValueTuple, 0);
+                boolean isNewNull = LSMPrimaryUpsertOperatorNodePushable.isNull(tuple, 0);
+                boolean isPrevValueNull = LSMPrimaryUpsertOperatorNodePushable.isNull(prevValueTuple, 0);
                 if (isNewNull && isPrevValueNull) {
                     continue;
                 }

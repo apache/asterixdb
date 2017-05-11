@@ -26,7 +26,6 @@ import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.metadata.declared.DataSource;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
-import org.apache.asterix.metadata.utils.DatasetUtil;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
@@ -84,8 +83,7 @@ public class OptimizableOperatorSubTree {
     private List<Dataset> ixJoinOuterAdditionalDatasets = null;
     private List<ARecordType> ixJoinOuterAdditionalRecordTypes = null;
 
-    public boolean initFromSubTree(Mutable<ILogicalOperator> subTreeOpRef)
-            throws AlgebricksException {
+    public boolean initFromSubTree(Mutable<ILogicalOperator> subTreeOpRef) throws AlgebricksException {
         reset();
         rootRef = subTreeOpRef;
         root = subTreeOpRef.getValue();
@@ -226,8 +224,8 @@ public class OptimizableOperatorSubTree {
         Dataset ds = null;
         ARecordType rType = null;
 
-        List<Mutable<ILogicalOperator>> sourceOpRefs = new ArrayList<Mutable<ILogicalOperator>>();
-        List<DataSourceType> dsTypes = new ArrayList<DataSourceType>();
+        List<Mutable<ILogicalOperator>> sourceOpRefs = new ArrayList<>();
+        List<DataSourceType> dsTypes = new ArrayList<>();
 
         sourceOpRefs.add(getDataSourceRef());
         dsTypes.add(getDataSourceType());
@@ -247,8 +245,7 @@ public class OptimizableOperatorSubTree {
                     IDataSource<?> datasource = dataSourceScan.getDataSource();
                     if (datasource instanceof DataSource) {
                         byte dsType = ((DataSource) datasource).getDatasourceType();
-                        if (dsType != DataSource.Type.INTERNAL_DATASET
-                                && dsType != DataSource.Type.EXTERNAL_DATASET) {
+                        if (dsType != DataSource.Type.INTERNAL_DATASET && dsType != DataSource.Type.EXTERNAL_DATASET) {
                             return false;
                         }
                     }
@@ -376,12 +373,12 @@ public class OptimizableOperatorSubTree {
      */
     public void getPrimaryKeyVars(Mutable<ILogicalOperator> dataSourceRefToFetch, List<LogicalVariable> target)
             throws AlgebricksException {
-        Mutable<ILogicalOperator> dataSourceRefToFetchKey = (dataSourceRefToFetch == null) ? dataSourceRef
-                : dataSourceRefToFetch;
+        Mutable<ILogicalOperator> dataSourceRefToFetchKey =
+                (dataSourceRefToFetch == null) ? dataSourceRef : dataSourceRefToFetch;
         switch (dataSourceType) {
             case DATASOURCE_SCAN:
                 DataSourceScanOperator dataSourceScan = (DataSourceScanOperator) getDataSourceRef().getValue();
-                int numPrimaryKeys = DatasetUtil.getPartitioningKeys(getDataset()).size();
+                int numPrimaryKeys = dataset.getPrimaryKeys().size();
                 for (int i = 0; i < numPrimaryKeys; i++) {
                     target.add(dataSourceScan.getVariables().get(i));
                 }
@@ -400,6 +397,7 @@ public class OptimizableOperatorSubTree {
 
         }
     }
+
     public List<LogicalVariable> getDataSourceVariables() throws AlgebricksException {
         switch (getDataSourceType()) {
             case DATASOURCE_SCAN:
@@ -421,8 +419,8 @@ public class OptimizableOperatorSubTree {
                 case DATASOURCE_SCAN:
                 case EXTERNAL_SCAN:
                 case PRIMARY_INDEX_LOOKUP:
-                    AbstractScanOperator scanOp = (AbstractScanOperator) getIxJoinOuterAdditionalDataSourceRefs()
-                            .get(idx).getValue();
+                    AbstractScanOperator scanOp =
+                            (AbstractScanOperator) getIxJoinOuterAdditionalDataSourceRefs().get(idx).getValue();
                     return scanOp.getVariables();
                 case COLLECTION_SCAN:
                     return new ArrayList<>();

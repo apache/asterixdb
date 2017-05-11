@@ -97,7 +97,7 @@ public class HDFSReadOperatorDescriptor extends AbstractSingleActivityOperatorDe
         this.executed = new boolean[scheduledLocations.length];
         Arrays.fill(executed, false);
         this.tupleParserFactory = tupleParserFactory;
-        this.recordDescriptors[0] = rd;
+        this.outRecDescs[0] = rd;
     }
 
     @Override

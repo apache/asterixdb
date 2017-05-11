@@ -34,7 +34,6 @@ import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
-import org.apache.asterix.metadata.utils.DatasetUtil;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.utils.FlushDatasetUtil;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
@@ -110,7 +109,7 @@ public class ConnectorApiServlet extends AbstractServlet {
                         metadataProvider.splitsForDataset(mdTxnCtx, dataverseName, datasetName, datasetName, temp);
                 ARecordType recordType = (ARecordType) metadataProvider.findType(dataset.getItemTypeDataverseName(),
                         dataset.getItemTypeName());
-                List<List<String>> primaryKeys = DatasetUtil.getPartitioningKeys(dataset);
+                List<List<String>> primaryKeys = dataset.getPrimaryKeys();
                 StringBuilder pkStrBuf = new StringBuilder();
                 for (List<String> keys : primaryKeys) {
                     for (String key : keys) {

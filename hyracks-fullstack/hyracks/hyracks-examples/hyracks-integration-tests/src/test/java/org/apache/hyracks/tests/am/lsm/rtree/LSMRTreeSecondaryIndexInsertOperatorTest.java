@@ -23,9 +23,10 @@ import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ILinearizeComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.storage.am.common.api.IMetadataPageManagerFactory;
 import org.apache.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
-import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.rtree.frames.RTreePolicyType;
+import org.apache.hyracks.storage.common.IResourceFactory;
 import org.apache.hyracks.test.support.TestStorageManagerComponentHolder;
 import org.apache.hyracks.tests.am.common.ITreeIndexOperatorTestHelper;
 import org.apache.hyracks.tests.am.rtree.RTreeSecondaryIndexInsertOperatorTest;
@@ -42,13 +43,13 @@ public class LSMRTreeSecondaryIndexInsertOperatorTest extends RTreeSecondaryInde
     }
 
     @Override
-    protected IIndexDataflowHelperFactory createDataFlowHelperFactory(
+    protected IResourceFactory createSecondaryResourceFactory(
             IPrimitiveValueProviderFactory[] secondaryValueProviderFactories, RTreePolicyType rtreePolicyType,
             IBinaryComparatorFactory[] btreeComparatorFactories, ILinearizeComparatorFactory linearizerCmpFactory,
-            int[] btreeFields, int[] rtreeFields, ITypeTraits[] filterTypeTraits, IBinaryComparatorFactory[] filterCmpFactories,
-            int[] filterFields) {
-        return ((LSMRTreeOperatorTestHelper) testHelper)
-                .createDataFlowHelperFactory(secondaryValueProviderFactories, rtreePolicyType, btreeComparatorFactories,
-                        linearizerCmpFactory, btreeFields, rtreeFields, filterTypeTraits, filterCmpFactories, filterFields);
+            int[] btreeFields) {
+        return ((LSMRTreeOperatorTestHelper) testHelper).getSecondaryLocalResourceFactory(storageManager,
+                secondaryValueProviderFactories, rtreePolicyType, btreeComparatorFactories, linearizerCmpFactory,
+                btreeFields, secondaryTypeTraits, secondaryComparatorFactories,
+                (IMetadataPageManagerFactory) pageManagerFactory);
     }
 }

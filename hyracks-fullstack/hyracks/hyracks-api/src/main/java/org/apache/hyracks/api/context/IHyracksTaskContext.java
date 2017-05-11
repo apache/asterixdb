@@ -31,21 +31,21 @@ import org.apache.hyracks.api.resources.IDeallocatableRegistry;
 
 public interface IHyracksTaskContext
         extends IHyracksCommonContext, IWorkspaceFileFactory, IDeallocatableRegistry, IOperatorEnvironment {
-    public IHyracksJobletContext getJobletContext();
+    IHyracksJobletContext getJobletContext();
 
-    public TaskAttemptId getTaskAttemptId();
+    TaskAttemptId getTaskAttemptId();
 
-    public ICounterContext getCounterContext();
+    ICounterContext getCounterContext();
 
-    public ExecutorService getExecutorService();
+    ExecutorService getExecutorService();
 
-    public IDatasetPartitionManager getDatasetPartitionManager();
+    IDatasetPartitionManager getDatasetPartitionManager();
 
-    public void sendApplicationMessageToCC(Serializable message, DeploymentId deploymentId) throws Exception;
+    void sendApplicationMessageToCC(Serializable message, DeploymentId deploymentId) throws Exception;
 
-    public void sendApplicationMessageToCC(byte[] message, DeploymentId deploymentId) throws Exception;
+    void sendApplicationMessageToCC(byte[] message, DeploymentId deploymentId) throws Exception;
 
-    public void setSharedObject(Object object);
+    void setSharedObject(Object object);
 
-    public Object getSharedObject();
+    Object getSharedObject();
 }

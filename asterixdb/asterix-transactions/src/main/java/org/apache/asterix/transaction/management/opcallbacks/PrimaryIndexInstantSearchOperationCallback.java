@@ -27,7 +27,7 @@ import org.apache.asterix.common.transactions.ITransactionContext;
 import org.apache.asterix.transaction.management.service.transaction.TransactionManagementConstants.LockManagerConstants.LockMode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
-import org.apache.hyracks.storage.am.common.api.ISearchOperationCallback;
+import org.apache.hyracks.storage.common.ISearchOperationCallback;
 
 /**
  * Assumes LSM-BTrees as primary indexes. Implements try/locking and unlocking on primary keys.

@@ -20,7 +20,6 @@ package org.apache.asterix.common.context;
 
 import org.apache.hyracks.algebricks.data.IBinaryComparatorFactoryProvider;
 import org.apache.hyracks.algebricks.data.ITypeTraitProvider;
-import org.apache.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
 import org.apache.hyracks.storage.am.common.api.IMetadataPageManagerFactory;
 import org.apache.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationSchedulerProvider;
@@ -40,12 +39,6 @@ public interface IStorageComponentProvider {
      * @return {@link org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationSchedulerProvider} instance
      */
     ILSMIOOperationSchedulerProvider getIoOperationSchedulerProvider();
-
-    /**
-     * @return the application's root
-     *         {@link org.apache.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider} instance
-     */
-    IIndexLifecycleManagerProvider getIndexLifecycleManagerProvider();
 
     /**
      * @return {@link org.apache.hyracks.storage.common.IStorageManager} instance

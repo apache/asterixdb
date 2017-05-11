@@ -54,7 +54,7 @@ public class BinaryTokenizerOperatorDescriptor extends AbstractSingleActivityOpe
         this.docField = docField;
         this.keyFields = keyFields;
         this.addNumTokensKey = addNumTokensKey;
-        recordDescriptors[0] = recDesc;
+        outRecDescs[0] = recDesc;
         this.writeKeyFieldsFirst = writeKeyFieldsFirst;
     }
 
@@ -62,7 +62,7 @@ public class BinaryTokenizerOperatorDescriptor extends AbstractSingleActivityOpe
     public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) throws HyracksDataException {
         return new BinaryTokenizerOperatorNodePushable(ctx, recordDescProvider.getInputRecordDescriptor(
-                getActivityId(), 0), recordDescriptors[0], tokenizerFactory.createTokenizer(), docField, keyFields,
+                getActivityId(), 0), outRecDescs[0], tokenizerFactory.createTokenizer(), docField, keyFields,
                 addNumTokensKey, writeKeyFieldsFirst);
     }
 }

@@ -37,7 +37,6 @@ import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppenderAccessor;
 import org.apache.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
-import org.apache.hyracks.storage.am.common.ophelpers.MultiComparator;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndex;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexSearcher;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedListCursor;
@@ -49,6 +48,7 @@ import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokeniz
 import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.IToken;
 import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.TokenizerInfo.TokenizerType;
 import org.apache.hyracks.storage.am.lsm.invertedindex.util.ObjectCache;
+import org.apache.hyracks.storage.common.MultiComparator;
 
 public abstract class AbstractTOccurrenceSearcher implements IInvertedIndexSearcher {
     protected static final RecordDescriptor QUERY_TOKEN_REC_DESC =

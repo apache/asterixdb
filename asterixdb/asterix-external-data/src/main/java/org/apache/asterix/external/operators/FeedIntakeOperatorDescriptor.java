@@ -74,7 +74,7 @@ public class FeedIntakeOperatorDescriptor extends AbstractSingleActivityOperator
         this.adaptorFactory = adapterFactory;
         this.adapterOutputType = adapterOutputType;
         this.policyAccessor = policyAccessor;
-        this.recordDescriptors[0] = rDesc;
+        this.outRecDescs[0] = rDesc;
     }
 
     public FeedIntakeOperatorDescriptor(JobSpecification spec, IFeed primaryFeed, String adapterLibraryName,
@@ -87,7 +87,7 @@ public class FeedIntakeOperatorDescriptor extends AbstractSingleActivityOperator
         this.adaptorConfiguration = primaryFeed.getAdapterConfiguration();
         this.adapterOutputType = adapterOutputType;
         this.policyAccessor = policyAccessor;
-        this.recordDescriptors[0] = rDesc;
+        this.outRecDescs[0] = rDesc;
     }
 
     @Override

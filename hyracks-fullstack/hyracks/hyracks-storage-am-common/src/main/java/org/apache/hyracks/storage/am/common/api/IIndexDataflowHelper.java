@@ -19,27 +19,40 @@
 package org.apache.hyracks.storage.am.common.api;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.storage.common.file.LocalResource;
+import org.apache.hyracks.storage.common.IIndex;
+import org.apache.hyracks.storage.common.LocalResource;
 
 public interface IIndexDataflowHelper {
 
-    public void create() throws HyracksDataException;
-
-    /*
-     * If close throws an exception, it means that the index was not closed successfully.
-     */
-    public void close() throws HyracksDataException;
-
-    /*
+    /**
      * If open throws an exception, it means that the index was not opened successfully.
+     *
+     * @throws HyracksDataException
      */
-    public void open() throws HyracksDataException;
+    void open() throws HyracksDataException;
 
-    public void destroy() throws HyracksDataException;
+    /**
+     * If close throws an exception, it means that the index was not closed successfully.
+     *
+     * @throws HyracksDataException
+     */
+    void close() throws HyracksDataException;
 
-    public IIndex getIndexInstance();
+    /**
+     * Removes the index permanently.
+     *
+     * @throws HyracksDataException
+     */
+    void destroy() throws HyracksDataException;
 
-    public LocalResource getResource() throws HyracksDataException;
+    /**
+     * @return the index instance
+     */
+    IIndex getIndexInstance();
 
-    public int getNumFilterFields();
+    /**
+     * @return the serializable resource representing the index
+     * @throws HyracksDataException
+     */
+    LocalResource getResource() throws HyracksDataException;
 }

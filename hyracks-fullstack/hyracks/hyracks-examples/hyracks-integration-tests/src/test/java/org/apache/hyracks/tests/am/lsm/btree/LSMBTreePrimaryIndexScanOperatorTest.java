@@ -20,9 +20,11 @@
 package org.apache.hyracks.tests.am.lsm.btree;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
+import org.apache.hyracks.storage.am.common.api.IMetadataPageManagerFactory;
+import org.apache.hyracks.storage.common.IResourceFactory;
 import org.apache.hyracks.test.support.TestStorageManagerComponentHolder;
 import org.apache.hyracks.tests.am.btree.BTreePrimaryIndexScanOperatorTest;
+import org.apache.hyracks.tests.am.btree.DataSetConstants;
 import org.apache.hyracks.tests.am.common.ITreeIndexOperatorTestHelper;
 
 public class LSMBTreePrimaryIndexScanOperatorTest extends BTreePrimaryIndexScanOperatorTest {
@@ -33,8 +35,21 @@ public class LSMBTreePrimaryIndexScanOperatorTest extends BTreePrimaryIndexScanO
     }
 
     @Override
-    protected IIndexDataflowHelperFactory createDataFlowHelperFactory(int[] btreeFields, int[] filterFields) {
-        return ((LSMBTreeOperatorTestHelper) testHelper).createDataFlowHelperFactory(btreeFields, filterFields);
+    protected IResourceFactory createPrimaryResourceFactory() {
+        return ((LSMBTreeOperatorTestHelper) testHelper).getLocalResourceFactory(storageManager,
+                DataSetConstants.primaryTypeTraits, DataSetConstants.primaryComparatorFactories,
+                (IMetadataPageManagerFactory) pageManagerFactory, DataSetConstants.primaryBloomFilterKeyFields,
+                DataSetConstants.primaryBtreeFields, DataSetConstants.primaryFilterFields,
+                DataSetConstants.filterTypeTraits, DataSetConstants.filterCmpFactories);
+    }
+
+    @Override
+    protected IResourceFactory createSecondaryResourceFactory() {
+        return ((LSMBTreeOperatorTestHelper) testHelper).getLocalResourceFactory(storageManager,
+                DataSetConstants.secondaryTypeTraits, DataSetConstants.secondaryComparatorFactories,
+                (IMetadataPageManagerFactory) pageManagerFactory, DataSetConstants.secondaryBloomFilterKeyFields,
+                DataSetConstants.secondaryBtreeFields, DataSetConstants.secondaryFilterFields,
+                DataSetConstants.filterTypeTraits, DataSetConstants.filterCmpFactories);
     }
 
 }

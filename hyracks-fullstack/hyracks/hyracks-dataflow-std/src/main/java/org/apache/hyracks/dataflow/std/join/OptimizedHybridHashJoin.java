@@ -216,7 +216,7 @@ public class OptimizedHybridHashJoin {
         RunFileWriter writer = runFileWriters[pid];
         if (writer == null) {
             FileReference file = ctx.getJobletContext().createManagedWorkspaceFile(refName);
-            writer = new RunFileWriter(file, ctx.getIOManager());
+            writer = new RunFileWriter(file, ctx.getIoManager());
             writer.open();
             runFileWriters[pid] = writer;
         }

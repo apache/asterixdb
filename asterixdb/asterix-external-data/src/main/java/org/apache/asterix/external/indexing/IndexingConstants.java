@@ -50,17 +50,17 @@ public class IndexingConstants {
     public static final IAType ROW_NUMBER_FIELD_TYPE = BuiltinType.AINT32;
 
     //Comparator Factories
-    private static final IBinaryComparatorFactory fileNumberCompFactory = BinaryComparatorFactoryProvider.INSTANCE
-            .getBinaryComparatorFactory(BuiltinType.AINT32, true);
-    private static final IBinaryComparatorFactory recordOffsetCompFactory = BinaryComparatorFactoryProvider.INSTANCE
-            .getBinaryComparatorFactory(BuiltinType.AINT64, true);
-    private static final IBinaryComparatorFactory rowNumberCompFactory = BinaryComparatorFactoryProvider.INSTANCE
-            .getBinaryComparatorFactory(BuiltinType.AINT32, true);
+    private static final IBinaryComparatorFactory fileNumberCompFactory =
+            BinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(BuiltinType.AINT32, true);
+    private static final IBinaryComparatorFactory recordOffsetCompFactory =
+            BinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(BuiltinType.AINT64, true);
+    private static final IBinaryComparatorFactory rowNumberCompFactory =
+            BinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(BuiltinType.AINT32, true);
 
-    private static final IBinaryComparatorFactory[] rCFileRIDComparatorFactories = { fileNumberCompFactory,
-            recordOffsetCompFactory, rowNumberCompFactory };
-    private static final IBinaryComparatorFactory[] txtSeqFileRIDComparatorFactories = { fileNumberCompFactory,
-            recordOffsetCompFactory };
+    private static final IBinaryComparatorFactory[] rCFileRIDComparatorFactories =
+            { fileNumberCompFactory, recordOffsetCompFactory, rowNumberCompFactory };
+    private static final IBinaryComparatorFactory[] txtSeqFileRIDComparatorFactories =
+            { fileNumberCompFactory, recordOffsetCompFactory };
 
     private static final IBinaryComparatorFactory[] buddyBtreeComparatorFactories = { fileNumberCompFactory };
 
@@ -86,12 +86,12 @@ public class IndexingConstants {
 
     static {
 
-        fileNumberSerializerDeserializer = SerializerDeserializerProvider.INSTANCE
-                .getSerializerDeserializer(FILE_NUMBER_FIELD_TYPE);
-        recordOffsetSerializerDeserializer = SerializerDeserializerProvider.INSTANCE
-                .getSerializerDeserializer(RECORD_OFFSET_FIELD_TYPE);
-        rowNumberSerializerDeserializer = SerializerDeserializerProvider.INSTANCE
-                .getSerializerDeserializer(ROW_NUMBER_FIELD_TYPE);
+        fileNumberSerializerDeserializer =
+                SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(FILE_NUMBER_FIELD_TYPE);
+        recordOffsetSerializerDeserializer =
+                SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(RECORD_OFFSET_FIELD_TYPE);
+        rowNumberSerializerDeserializer =
+                SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(ROW_NUMBER_FIELD_TYPE);
 
         fileNumberTypeTraits = TypeTraitProvider.INSTANCE.getTypeTrait(FILE_NUMBER_FIELD_TYPE);
         recordOffsetTypeTraits = TypeTraitProvider.INSTANCE.getTypeTrait(RECORD_OFFSET_FIELD_TYPE);

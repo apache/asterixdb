@@ -23,33 +23,39 @@ import java.io.IOException;
 
 import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
-import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
+import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
+import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import org.apache.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 import org.apache.hyracks.storage.am.btree.dataflow.BTreeSearchOperatorNodePushable;
-import org.apache.hyracks.storage.am.common.api.ISearchOperationCallback;
-import org.apache.hyracks.storage.am.lsm.btree.dataflow.ExternalBTreeWithBuddyDataflowHelper;
+import org.apache.hyracks.storage.am.common.api.ISearchOperationCallbackFactory;
+import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.lsm.btree.impls.ExternalBTreeWithBuddy;
+import org.apache.hyracks.storage.common.ISearchOperationCallback;
 
 public class ExternalBTreeSearchOperatorNodePushable extends BTreeSearchOperatorNodePushable {
 
-    public ExternalBTreeSearchOperatorNodePushable(ExternalBTreeSearchOperatorDescriptor opDesc,
-            IHyracksTaskContext ctx, int partition, IRecordDescriptorProvider recordDescProvider, int[] lowKeyFields,
-            int[] highKeyFields, boolean lowKeyInclusive, boolean highKeyInclusive) throws HyracksDataException {
-        super(opDesc, ctx, partition, recordDescProvider, lowKeyFields, highKeyFields, lowKeyInclusive,
-                highKeyInclusive, false, null, null);
+    private final int version;
+
+    public ExternalBTreeSearchOperatorNodePushable(IHyracksTaskContext ctx, int partition,
+            RecordDescriptor intputRecDesc, int[] lowKeyFields, int[] highKeyFields, boolean lowKeyInclusive,
+            boolean highKeyInclusive, IIndexDataflowHelperFactory indexHelperFactory, boolean retainInput,
+            boolean retainMissing, IMissingWriterFactory missingWriterFactory,
+            ISearchOperationCallbackFactory searchCallbackFactory, int version) throws HyracksDataException {
+        super(ctx, partition, intputRecDesc, lowKeyFields, highKeyFields, lowKeyInclusive, highKeyInclusive, null, null,
+                indexHelperFactory, retainInput, retainMissing, missingWriterFactory, searchCallbackFactory, false);
+        this.version = version;
     }
 
     // We override the open function to search a specific version of the index
     @Override
     public void open() throws HyracksDataException {
         writer.open();
-        ExternalBTreeWithBuddyDataflowHelper dataFlowHelper = (ExternalBTreeWithBuddyDataflowHelper) indexHelper;
         accessor = new FrameTupleAccessor(inputRecDesc);
-        dataFlowHelper.open();
+        indexHelper.open();
         index = indexHelper.getIndexInstance();
         if (retainMissing) {
             int fieldCount = getFieldCount();
@@ -72,10 +78,10 @@ public class ExternalBTreeSearchOperatorNodePushable extends BTreeSearchOperator
             tb = new ArrayTupleBuilder(recordDesc.getFieldCount());
             dos = tb.getDataOutput();
             appender = new FrameTupleAppender(new VSizeFrame(ctx));
-            ISearchOperationCallback searchCallback = opDesc.getSearchOpCallbackFactory()
-                    .createSearchOperationCallback(indexHelper.getResource().getId(), ctx, null);
+            ISearchOperationCallback searchCallback =
+                    searchCallbackFactory.createSearchOperationCallback(indexHelper.getResource().getId(), ctx, null);
             // The next line is the reason we override this method
-            indexAccessor = externalIndex.createAccessor(searchCallback, dataFlowHelper.getTargetVersion());
+            indexAccessor = externalIndex.createAccessor(searchCallback, version);
             cursor = createCursor();
             if (retainInput) {
                 frameTuple = new FrameTupleReference();

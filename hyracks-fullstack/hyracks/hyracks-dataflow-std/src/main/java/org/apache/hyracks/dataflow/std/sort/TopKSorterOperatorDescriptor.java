@@ -54,7 +54,7 @@ public class TopKSorterOperatorDescriptor extends AbstractSorterOperatorDescript
             protected AbstractSortRunGenerator getRunGenerator(IHyracksTaskContext ctx,
                     IRecordDescriptorProvider recordDescProvider) {
                 return new HybridTopKSortRunGenerator(ctx, framesLimit, topK, sortFields, firstKeyNormalizerFactory,
-                        comparatorFactories, recordDescriptors[0]);
+                        comparatorFactories, outRecDescs[0]);
 
             }
         };
@@ -71,7 +71,7 @@ public class TopKSorterOperatorDescriptor extends AbstractSorterOperatorDescript
                     List<GeneratedRunFileReader> runs, IBinaryComparator[] comparators,
                     INormalizedKeyComputer nmkComputer, int necessaryFrames) {
                 return new ExternalSortRunMerger(ctx, sorter, runs, sortFields, comparators, nmkComputer,
-                        recordDescriptors[0], necessaryFrames, topK, writer);
+                        outRecDescs[0], necessaryFrames, topK, writer);
             }
         };
     }

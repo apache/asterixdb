@@ -42,7 +42,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import org.apache.hyracks.storage.am.lsm.common.impls.NoMergePolicy;
-import org.apache.hyracks.storage.am.lsm.common.impls.NoOpIOOperationCallback;
+import org.apache.hyracks.storage.am.lsm.common.impls.NoOpIOOperationCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.impls.SynchronousScheduler;
 import org.apache.hyracks.storage.am.lsm.common.impls.ThreadCountingTracker;
 import org.apache.hyracks.storage.am.lsm.common.impls.VirtualBufferCache;
@@ -96,7 +96,7 @@ public class LSMRTreeTestHarness {
         this.ioScheduler = SynchronousScheduler.INSTANCE;
         this.mergePolicy = new NoMergePolicy();
         this.opTracker = new ThreadCountingTracker();
-        this.ioOpCallback = NoOpIOOperationCallback.INSTANCE;
+        this.ioOpCallback = NoOpIOOperationCallbackFactory.INSTANCE.createIoOpCallback();
         this.numMutableComponents = AccessMethodTestsConfig.LSM_RTREE_NUM_MUTABLE_COMPONENTS;
     }
 
@@ -108,12 +108,12 @@ public class LSMRTreeTestHarness {
         file = ioManager.resolveAbsolutePath(onDiskDir);
         ctx = TestUtils.create(getHyracksFrameSize());
         TestStorageManagerComponentHolder.init(diskPageSize, diskNumPages, diskMaxOpenFiles);
-        diskBufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx);
-        diskFileMapProvider = TestStorageManagerComponentHolder.getFileMapProvider(ctx);
+        diskBufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx.getJobletContext().getServiceContext());
+        diskFileMapProvider = TestStorageManagerComponentHolder.getFileMapProvider();
         virtualBufferCaches = new ArrayList<>();
         for (int i = 0; i < numMutableComponents; i++) {
-            IVirtualBufferCache virtualBufferCache = new VirtualBufferCache(new HeapBufferAllocator(), memPageSize,
-                    memNumPages / numMutableComponents);
+            IVirtualBufferCache virtualBufferCache =
+                    new VirtualBufferCache(new HeapBufferAllocator(), memPageSize, memNumPages / numMutableComponents);
             virtualBufferCaches.add(virtualBufferCache);
         }
         rnd.setSeed(RANDOM_SEED);

@@ -19,6 +19,7 @@
 package org.apache.asterix.transaction.management.opcallbacks;
 
 import org.apache.asterix.common.context.ITransactionSubsystemProvider;
+import org.apache.asterix.common.dataflow.DatasetLocalResource;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.transactions.AbstractOperationCallback;
 import org.apache.asterix.common.transactions.AbstractOperationCallbackFactory;
@@ -26,16 +27,15 @@ import org.apache.asterix.common.transactions.DatasetId;
 import org.apache.asterix.common.transactions.ITransactionContext;
 import org.apache.asterix.common.transactions.ITransactionSubsystem;
 import org.apache.asterix.common.transactions.JobId;
-import org.apache.asterix.common.transactions.Resource;
 import org.apache.asterix.transaction.management.opcallbacks.AbstractIndexModificationOperationCallback.Operation;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.storage.am.common.api.IModificationOperationCallback;
 import org.apache.hyracks.storage.am.common.api.IModificationOperationCallbackFactory;
-import org.apache.hyracks.storage.am.common.api.IResourceLifecycleManager;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
-import org.apache.hyracks.storage.common.file.LocalResource;
+import org.apache.hyracks.storage.common.IModificationOperationCallback;
+import org.apache.hyracks.storage.common.IResourceLifecycleManager;
+import org.apache.hyracks.storage.common.LocalResource;
 
 public class UpsertOperationCallbackFactory extends AbstractOperationCallbackFactory
         implements IModificationOperationCallbackFactory {
@@ -52,7 +52,7 @@ public class UpsertOperationCallbackFactory extends AbstractOperationCallbackFac
     @Override
     public IModificationOperationCallback createModificationOperationCallback(LocalResource resource,
             IHyracksTaskContext ctx, IOperatorNodePushable operatorNodePushable) throws HyracksDataException {
-        Resource aResource = (Resource) resource.getResource();
+        DatasetLocalResource aResource = (DatasetLocalResource) resource.getResource();
         ITransactionSubsystem txnSubsystem = txnSubsystemProvider.getTransactionSubsystem(ctx);
         IResourceLifecycleManager indexLifeCycleManager =
                 txnSubsystem.getAsterixAppRuntimeContextProvider().getDatasetLifecycleManager();
@@ -65,7 +65,7 @@ public class UpsertOperationCallbackFactory extends AbstractOperationCallbackFac
             ITransactionContext txnCtx = txnSubsystem.getTransactionManager().getTransactionContext(jobId, false);
             IModificationOperationCallback modCallback = new UpsertOperationCallback(new DatasetId(datasetId),
                     primaryKeyFields, txnCtx, txnSubsystem.getLockManager(), txnSubsystem, resource.getId(),
-                    aResource.partition(), resourceType, indexOp);
+                    aResource.getPartition(), resourceType, indexOp);
             txnCtx.registerIndexAndCallback(resource.getId(), index, (AbstractOperationCallback) modCallback, true);
             return modCallback;
         } catch (ACIDException e) {

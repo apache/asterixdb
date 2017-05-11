@@ -19,45 +19,41 @@
 
 package org.apache.hyracks.tests.am.lsm.rtree;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ILinearizeComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.control.nc.io.IOManager;
+import org.apache.hyracks.storage.am.common.api.IMetadataPageManagerFactory;
 import org.apache.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
-import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
-import org.apache.hyracks.storage.am.lsm.common.impls.ConstantMergePolicyFactory;
-import org.apache.hyracks.storage.am.lsm.common.impls.NoOpIOOperationCallback;
+import org.apache.hyracks.storage.am.lsm.common.impls.NoOpIOOperationCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.impls.SynchronousSchedulerProvider;
 import org.apache.hyracks.storage.am.lsm.common.impls.ThreadCountingOperationTrackerFactory;
-import org.apache.hyracks.storage.am.lsm.rtree.dataflow.LSMRTreeWithAntiMatterTuplesDataflowHelperFactory;
+import org.apache.hyracks.storage.am.lsm.rtree.dataflow.LSMRTreeWithAntiMatterLocalResourceFactory;
 import org.apache.hyracks.storage.am.rtree.frames.RTreePolicyType;
+import org.apache.hyracks.storage.common.IResourceFactory;
+import org.apache.hyracks.storage.common.IStorageManager;
 import org.apache.hyracks.tests.am.common.LSMTreeOperatorTestHelper;
 
 public class LSMRTreeWithAntiMatterTuplesOperatorTestHelper extends LSMTreeOperatorTestHelper {
 
-    private static final Map<String, String> MERGE_POLICY_PROPERTIES;
+    public static final boolean IS_POINT_MBR = false;
+    public static final boolean DURABLE = true;
 
-    static {
-        MERGE_POLICY_PROPERTIES = new HashMap<String, String>();
-        MERGE_POLICY_PROPERTIES.put("num-components", "3");
-    }
 
     public LSMRTreeWithAntiMatterTuplesOperatorTestHelper(IOManager ioManager) {
         super(ioManager);
     }
 
-    public IIndexDataflowHelperFactory createDataFlowHelperFactory(
+    public IResourceFactory getSecondaryLocalResourceFactory(IStorageManager storageManager,
             IPrimitiveValueProviderFactory[] valueProviderFactories, RTreePolicyType rtreePolicyType,
             IBinaryComparatorFactory[] btreeComparatorFactories, ILinearizeComparatorFactory linearizerCmpFactory,
-            int[] rtreeFields, ITypeTraits[] filterTypeTraits, IBinaryComparatorFactory[] filterCmpFactories,
-            int[] filterFields) {
-        return new LSMRTreeWithAntiMatterTuplesDataflowHelperFactory(valueProviderFactories, rtreePolicyType,
-                btreeComparatorFactories, virtualBufferCacheProvider, new ConstantMergePolicyFactory(),
-                MERGE_POLICY_PROPERTIES, ThreadCountingOperationTrackerFactory.INSTANCE,
-                SynchronousSchedulerProvider.INSTANCE, NoOpIOOperationCallback.INSTANCE, linearizerCmpFactory,
-                rtreeFields, filterTypeTraits, filterCmpFactories, filterFields, true, false);
+            int[] btreeFields, ITypeTraits[] secondaryTypeTraits,
+            IBinaryComparatorFactory[] secondaryComparatorFactories, IMetadataPageManagerFactory pageManagerFactory) {
+        return new LSMRTreeWithAntiMatterLocalResourceFactory(storageManager, secondaryTypeTraits,
+                secondaryComparatorFactories, null, null, null, ThreadCountingOperationTrackerFactory.INSTANCE,
+                NoOpIOOperationCallbackFactory.INSTANCE, pageManagerFactory, getVirtualBufferCacheProvider(),
+                SynchronousSchedulerProvider.INSTANCE, MERGE_POLICY_FACTORY, MERGE_POLICY_PROPERTIES, DURABLE,
+                valueProviderFactories, rtreePolicyType, linearizerCmpFactory, btreeFields, IS_POINT_MBR,
+                btreeComparatorFactories);
     }
 }

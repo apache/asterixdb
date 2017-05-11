@@ -20,18 +20,24 @@
 package org.apache.hyracks.tests.am.rtree;
 
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
+import org.apache.hyracks.api.dataflow.value.ILinearizeComparatorFactory;
+import org.apache.hyracks.api.dataflow.value.ITypeTraits;
+import org.apache.hyracks.storage.am.common.api.IMetadataPageManagerFactory;
 import org.apache.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
-import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
-import org.apache.hyracks.storage.am.rtree.dataflow.RTreeDataflowHelperFactory;
+import org.apache.hyracks.storage.am.rtree.dataflow.RTreeResourceFactory;
 import org.apache.hyracks.storage.am.rtree.frames.RTreePolicyType;
+import org.apache.hyracks.storage.common.IResourceFactory;
+import org.apache.hyracks.storage.common.IStorageManager;
 import org.apache.hyracks.tests.am.common.TreeOperatorTestHelper;
 
 public class RTreeOperatorTestHelper extends TreeOperatorTestHelper {
 
-    public IIndexDataflowHelperFactory createDataFlowHelperFactory(
+    public IResourceFactory getSecondaryLocalResourceFactory(IStorageManager storageManager,
             IPrimitiveValueProviderFactory[] valueProviderFactories, RTreePolicyType rtreePolicyType,
-            IBinaryComparatorFactory[] btreeComparatorFactories, boolean durable) {
-        return new RTreeDataflowHelperFactory(valueProviderFactories, rtreePolicyType, durable);
+            IBinaryComparatorFactory[] btreeComparatorFactories, ILinearizeComparatorFactory linearizerCmpFactory,
+            int[] btreeFields, ITypeTraits[] secondaryTypeTraits,
+            IBinaryComparatorFactory[] secondaryComparatorFactories, IMetadataPageManagerFactory pageManagerFactory) {
+        return new RTreeResourceFactory(storageManager, secondaryTypeTraits, secondaryComparatorFactories,
+                pageManagerFactory, valueProviderFactories, rtreePolicyType);
     }
-
 }

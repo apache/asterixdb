@@ -72,7 +72,7 @@ public class ExternalSortGroupByRunGenerator extends AbstractExternalSortRunGene
     protected RunFileWriter getRunFileWriter() throws HyracksDataException {
         FileReference file = ctx.getJobletContext().createManagedWorkspaceFile(
                 ExternalSortGroupByRunGenerator.class.getSimpleName());
-        return new RunFileWriter(file, ctx.getIOManager());
+        return new RunFileWriter(file, ctx.getIoManager());
     }
 
     @Override

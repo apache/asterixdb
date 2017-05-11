@@ -24,7 +24,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.storage.am.common.api.IIndex;
+import org.apache.hyracks.storage.common.IIndex;
 
 public abstract class AbstractIndexLifecycleTest {
 

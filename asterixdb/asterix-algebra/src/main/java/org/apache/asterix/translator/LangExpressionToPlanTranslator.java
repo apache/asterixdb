@@ -211,7 +211,7 @@ class LangExpressionToPlanTranslator
                 metadataProvider.findType(dataset.getMetaItemTypeDataverseName(), dataset.getMetaItemTypeName());
         DatasetDataSource targetDatasource =
                 validateDatasetInfo(metadataProvider, stmt.getDataverseName(), stmt.getDatasetName());
-        List<List<String>> partitionKeys = DatasetUtil.getPartitioningKeys(targetDatasource.getDataset());
+        List<List<String>> partitionKeys = targetDatasource.getDataset().getPrimaryKeys();
         if (dataset.hasMetaPart()) {
             throw new AlgebricksException(
                     dataset.getDatasetName() + ": load dataset is not supported on Datasets with Meta records");
@@ -361,7 +361,7 @@ class LangExpressionToPlanTranslator
             ArrayList<LogicalVariable> vars = new ArrayList<>();
             ArrayList<Mutable<ILogicalExpression>> exprs = new ArrayList<>();
             List<Mutable<ILogicalExpression>> varRefsForLoading = new ArrayList<>();
-            List<List<String>> partitionKeys = DatasetUtil.getPartitioningKeys(targetDatasource.getDataset());
+            List<List<String>> partitionKeys = targetDatasource.getDataset().getPrimaryKeys();
             int numOfPrimaryKeys = partitionKeys.size();
             for (int i = 0; i < numOfPrimaryKeys; i++) {
                 if (keySourceIndicator == null || keySourceIndicator.get(i).intValue() == 0) {

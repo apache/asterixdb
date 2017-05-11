@@ -524,7 +524,6 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 metaItemTypeDataverseName + "." + metaItemTypeName, nodegroupName, compactionPolicy,
                 dataverseName + "." + datasetName, defaultCompactionPolicy);
         Dataset dataset = null;
-        Index primaryIndex = null;
         try {
             IDatasetDetails datasetDetails = null;
             Dataset ds = metadataProvider.findDataset(dataverseName, datasetName);
@@ -612,7 +611,6 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     datasetDetails, dd.getHints(), dsType, DatasetIdFactory.generateDatasetId(),
                     MetadataUtil.PENDING_ADD_OP);
             MetadataManager.INSTANCE.addDataset(metadataProvider.getMetadataTxnContext(), dataset);
-            primaryIndex = MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataverseName, datasetName, datasetName);
             if (dd.getDatasetType() == DatasetType.INTERNAL) {
                 Dataverse dataverse =
                         MetadataManager.INSTANCE.getDataverse(metadataProvider.getMetadataTxnContext(), dataverseName);
@@ -653,7 +651,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 bActiveTxn = true;
                 metadataProvider.setMetadataTxnContext(mdTxnCtx);
                 try {
-                    JobSpecification jobSpec = DatasetUtil.dropDatasetJobSpec(dataset, primaryIndex, metadataProvider);
+                    JobSpecification jobSpec = DatasetUtil.dropDatasetJobSpec(dataset, metadataProvider);
                     MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
                     bActiveTxn = false;
                     JobUtils.runJob(hcc, jobSpec, true);
@@ -872,7 +870,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     || stmtCreateIndex.getIndexType() == IndexType.SINGLE_PARTITION_NGRAM_INVIX
                     || stmtCreateIndex.getIndexType() == IndexType.LENGTH_PARTITIONED_WORD_INVIX
                     || stmtCreateIndex.getIndexType() == IndexType.LENGTH_PARTITIONED_NGRAM_INVIX) {
-                List<List<String>> partitioningKeys = DatasetUtil.getPartitioningKeys(ds);
+                List<List<String>> partitioningKeys = ds.getPrimaryKeys();
                 for (List<String> partitioningKey : partitioningKeys) {
                     IAType keyType = aRecordType.getSubFieldType(partitioningKey);
                     ITypeTraits typeTrait = TypeTraitProvider.INSTANCE.getTypeTrait(keyType);
@@ -933,8 +931,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         MetadataManager.INSTANCE.addExternalFile(mdTxnCtx, file);
                     }
                     // This is the first index for the external dataset, replicate the files index
-                    spec = ExternalIndexingOperations.buildFilesIndexReplicationJobSpec(ds, externalFilesSnapshot,
-                            metadataProvider, true);
+                    spec = ExternalIndexingOperations.buildFilesIndexCreateJobSpec(ds, externalFilesSnapshot,
+                            metadataProvider);
                     if (spec == null) {
                         throw new CompilationException(
                                 "Failed to create job spec for replicating Files Index For external dataset");
@@ -1213,9 +1211,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                                     IndexUtil.buildDropIndexJobSpec(indexes.get(k), metadataProvider, datasets.get(j)));
                         }
                     }
-                    Index primaryIndex =
-                            MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataverseName, datasetName, datasetName);
-                    jobsToExecute.add(DatasetUtil.dropDatasetJobSpec(datasets.get(j), primaryIndex, metadataProvider));
+                    jobsToExecute.add(DatasetUtil.dropDatasetJobSpec(datasets.get(j), metadataProvider));
                 } else {
                     // External dataset
                     List<Index> indexes =
@@ -2268,14 +2264,10 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             MetadataProvider metadataProvider, ARecordType enforcedType, ARecordType enforcedMeta)
             throws AlgebricksException {
         for (int j = 0; j < indexes.size(); j++) {
-            if (!ExternalIndexingOperations.isFileIndex(indexes.get(j))) {
-                jobsToExecute.add(IndexUtil.buildSecondaryIndexCompactJobSpec(ds, indexes.get(j), aRecordType,
-                        metaRecordType, enforcedType, enforcedMeta, metadataProvider));
-            }
+            jobsToExecute.add(IndexUtil.buildSecondaryIndexCompactJobSpec(ds, indexes.get(j), aRecordType,
+                    metaRecordType, enforcedType, enforcedMeta, metadataProvider));
 
         }
-        jobsToExecute.add(ExternalIndexingOperations.compactFilesIndexJobSpec(ds, metadataProvider,
-                new StorageComponentProvider()));
     }
 
     private interface IMetadataLocker {

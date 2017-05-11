@@ -39,13 +39,10 @@ import org.apache.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor;
 import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
 import org.apache.hyracks.dataflow.std.misc.ConstantTupleSourceOperatorDescriptor;
 import org.apache.hyracks.dataflow.std.misc.PrinterOperatorDescriptor;
-import org.apache.hyracks.examples.btree.helper.IndexLifecycleManagerProvider;
 import org.apache.hyracks.examples.btree.helper.BTreeHelperStorageManager;
-import org.apache.hyracks.storage.am.btree.dataflow.BTreeDataflowHelperFactory;
 import org.apache.hyracks.storage.am.btree.dataflow.BTreeSearchOperatorDescriptor;
-import org.apache.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
-import org.apache.hyracks.storage.am.common.freepage.LinkedMetadataPageManagerFactory;
+import org.apache.hyracks.storage.am.common.dataflow.IndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallbackFactory;
 import org.apache.hyracks.storage.common.IStorageManager;
 import org.kohsuke.args4j.CmdLineParser;
@@ -97,7 +94,6 @@ public class SecondaryIndexSearchExample {
 
         String[] splitNCs = options.ncs.split(",");
 
-        IIndexLifecycleManagerProvider lcManagerProvider = IndexLifecycleManagerProvider.INSTANCE;
         IStorageManager storageManager = BTreeHelperStorageManager.INSTANCE;
 
         // schema of tuples coming out of secondary index
@@ -146,14 +142,14 @@ public class SecondaryIndexSearchExample {
 
         tb.reset();
         new UTF8StringSerializerDeserializer().serialize("0", dos); // low
-                                                                       // key
+                                                                    // key
         tb.addFieldEndOffset();
         new UTF8StringSerializerDeserializer().serialize("f", dos); // high
-                                                                       // key
+                                                                    // key
         tb.addFieldEndOffset();
 
-        ISerializerDeserializer[] keyRecDescSers = { new UTF8StringSerializerDeserializer(),
-                new UTF8StringSerializerDeserializer() };
+        ISerializerDeserializer[] keyRecDescSers =
+                { new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer() };
         RecordDescriptor keyRecDesc = new RecordDescriptor(keyRecDescSers);
 
         ConstantTupleSourceOperatorDescriptor keyProviderOp = new ConstantTupleSourceOperatorDescriptor(spec,
@@ -167,14 +163,13 @@ public class SecondaryIndexSearchExample {
                                               // tuples going into secondary
                                               // index search op
 
-        IFileSplitProvider secondarySplitProvider = JobHelper.createFileSplitProvider(splitNCs,
-                options.secondaryBTreeName);
-        IIndexDataflowHelperFactory dataflowHelperFactory = new BTreeDataflowHelperFactory(true);
+        IFileSplitProvider secondarySplitProvider =
+                JobHelper.createFileSplitProvider(splitNCs, options.secondaryBTreeName);
+        IIndexDataflowHelperFactory secondaryHelperFactory =
+                new IndexDataflowHelperFactory(storageManager, secondarySplitProvider);
         BTreeSearchOperatorDescriptor secondarySearchOp = new BTreeSearchOperatorDescriptor(spec, secondaryRecDesc,
-                storageManager, lcManagerProvider, secondarySplitProvider, secondaryTypeTraits,
-                searchComparatorFactories, null, secondaryLowKeyFields, secondaryHighKeyFields, true, true,
-                dataflowHelperFactory, false, false, null, NoOpOperationCallbackFactory.INSTANCE, null, null,
-                new LinkedMetadataPageManagerFactory());
+                secondaryLowKeyFields, secondaryHighKeyFields, true, true, secondaryHelperFactory, false, false, null,
+                NoOpOperationCallbackFactory.INSTANCE, null, null, false);
 
         JobHelper.createPartitionConstraint(spec, secondarySearchOp, splitNCs);
 
@@ -188,10 +183,10 @@ public class SecondaryIndexSearchExample {
                                             // op
 
         IFileSplitProvider primarySplitProvider = JobHelper.createFileSplitProvider(splitNCs, options.primaryBTreeName);
+        IIndexDataflowHelperFactory primaryHelperFactory = new IndexDataflowHelperFactory(storageManager, primarySplitProvider);
         BTreeSearchOperatorDescriptor primarySearchOp = new BTreeSearchOperatorDescriptor(spec, primaryRecDesc,
-                storageManager, lcManagerProvider, primarySplitProvider, primaryTypeTraits, primaryComparatorFactories,
-                null, primaryLowKeyFields, primaryHighKeyFields, true, true, dataflowHelperFactory, false, false, null,
-                NoOpOperationCallbackFactory.INSTANCE, null, null, new LinkedMetadataPageManagerFactory());
+                primaryLowKeyFields, primaryHighKeyFields, true, true, primaryHelperFactory, false, false, null,
+                NoOpOperationCallbackFactory.INSTANCE, null, null, false);
 
         JobHelper.createPartitionConstraint(spec, primarySearchOp, splitNCs);
 

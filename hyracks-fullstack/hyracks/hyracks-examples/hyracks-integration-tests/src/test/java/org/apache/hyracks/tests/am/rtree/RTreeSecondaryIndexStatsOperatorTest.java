@@ -23,18 +23,17 @@ import org.apache.hyracks.api.constraints.PartitionConstraintHelper;
 import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ILinearizeComparatorFactory;
-import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.io.FileSplit;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor;
 import org.apache.hyracks.dataflow.std.file.ConstantFileSplitProvider;
 import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
 import org.apache.hyracks.dataflow.std.file.PlainFileWriterOperatorDescriptor;
+import org.apache.hyracks.storage.am.common.api.IMetadataPageManagerFactory;
 import org.apache.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
-import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.dataflow.TreeIndexStatsOperatorDescriptor;
-import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallbackFactory;
 import org.apache.hyracks.storage.am.rtree.frames.RTreePolicyType;
+import org.apache.hyracks.storage.common.IResourceFactory;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -56,9 +55,8 @@ public class RTreeSecondaryIndexStatsOperatorTest extends AbstractRTreeOperatorT
     @Test
     public void showPrimaryIndexStats() throws Exception {
         JobSpecification spec = new JobSpecification();
-        TreeIndexStatsOperatorDescriptor secondaryStatsOp = new TreeIndexStatsOperatorDescriptor(spec, storageManager,
-                lcManagerProvider, secondarySplitProvider, secondaryTypeTraits, secondaryComparatorFactories, null,
-                rtreeDataflowHelperFactory, NoOpOperationCallbackFactory.INSTANCE, pageManagerFactory);
+        TreeIndexStatsOperatorDescriptor secondaryStatsOp =
+                new TreeIndexStatsOperatorDescriptor(spec, storageManager, secondaryHelperFactory);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, secondaryStatsOp, NC1_ID);
         IFileSplitProvider outSplits = new ConstantFileSplitProvider(new FileSplit[] { createFile(nc1) });
         IOperatorDescriptor printer = new PlainFileWriterOperatorDescriptor(spec, outSplits, ",");
@@ -69,18 +67,19 @@ public class RTreeSecondaryIndexStatsOperatorTest extends AbstractRTreeOperatorT
     }
 
     @Override
-    protected IIndexDataflowHelperFactory createDataFlowHelperFactory(
-            IPrimitiveValueProviderFactory[] secondaryValueProviderFactories, RTreePolicyType rtreePolicyType,
-            IBinaryComparatorFactory[] btreeComparatorFactories, ILinearizeComparatorFactory linearizerCmpFactory,
-            int[] btreeFields, int[] rtreeFields, ITypeTraits[] filterTypeTraits, IBinaryComparatorFactory[] filterCmpFactories,
-            int[] filterFields) {
-        return ((RTreeOperatorTestHelper) testHelper).createDataFlowHelperFactory(secondaryValueProviderFactories,
-                rtreePolicyType, null, true);
-    }
-
-    @Override
     public void cleanup() throws Exception {
         destroyPrimaryIndex();
         destroySecondaryIndex();
+    }
+
+    @Override
+    protected IResourceFactory createSecondaryResourceFactory(
+            IPrimitiveValueProviderFactory[] secondaryValueProviderFactories, RTreePolicyType rtreePolicyType,
+            IBinaryComparatorFactory[] btreeComparatorFactories, ILinearizeComparatorFactory linearizerCmpFactory,
+            int[] btreeFields) {
+        return ((RTreeOperatorTestHelper) testHelper).getSecondaryLocalResourceFactory(storageManager,
+                secondaryValueProviderFactories, rtreePolicyType, btreeComparatorFactories, linearizerCmpFactory,
+                btreeFields, secondaryTypeTraits, secondaryComparatorFactories,
+                (IMetadataPageManagerFactory) pageManagerFactory);
     }
 }

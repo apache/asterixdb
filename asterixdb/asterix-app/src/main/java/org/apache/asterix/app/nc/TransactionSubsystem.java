@@ -81,7 +81,7 @@ public class TransactionSubsystem implements ITransactionSubsystem {
         if (latestCheckpoint != null && latestCheckpoint.getStorageVersion() != StorageConstants.VERSION) {
             throw new IllegalStateException(
                     String.format("Storage version mismatch. Current version (%s). On disk version: (%s)",
-                            latestCheckpoint.getStorageVersion(), StorageConstants.VERSION));
+                            StorageConstants.VERSION, latestCheckpoint.getStorageVersion()));
         }
 
         if (replicationEnabled) {

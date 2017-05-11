@@ -19,44 +19,40 @@
 
 package org.apache.hyracks.tests.am.lsm.rtree;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ILinearizeComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.control.nc.io.IOManager;
+import org.apache.hyracks.storage.am.common.api.IMetadataPageManagerFactory;
 import org.apache.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
-import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
-import org.apache.hyracks.storage.am.lsm.common.impls.ConstantMergePolicyFactory;
-import org.apache.hyracks.storage.am.lsm.common.impls.NoOpIOOperationCallback;
+import org.apache.hyracks.storage.am.lsm.common.impls.NoOpIOOperationCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.impls.SynchronousSchedulerProvider;
 import org.apache.hyracks.storage.am.lsm.common.impls.ThreadCountingOperationTrackerFactory;
-import org.apache.hyracks.storage.am.lsm.rtree.dataflow.LSMRTreeDataflowHelperFactory;
+import org.apache.hyracks.storage.am.lsm.rtree.dataflow.LSMRTreeLocalResourceFactory;
 import org.apache.hyracks.storage.am.rtree.frames.RTreePolicyType;
+import org.apache.hyracks.storage.common.IResourceFactory;
+import org.apache.hyracks.storage.common.IStorageManager;
 import org.apache.hyracks.tests.am.common.LSMTreeOperatorTestHelper;
 
 public class LSMRTreeOperatorTestHelper extends LSMTreeOperatorTestHelper {
 
-    private static final Map<String, String> MERGE_POLICY_PROPERTIES;
-    static {
-        MERGE_POLICY_PROPERTIES = new HashMap<String, String>();
-        MERGE_POLICY_PROPERTIES.put("num-components", "3");
-    }
+    public static final boolean IS_POINT_MBR = false;
+    public static final boolean DURABLE = true;
 
     public LSMRTreeOperatorTestHelper(IOManager ioManager) {
         super(ioManager);
     }
 
-    public IIndexDataflowHelperFactory createDataFlowHelperFactory(
+    public IResourceFactory getSecondaryLocalResourceFactory(IStorageManager storageManager,
             IPrimitiveValueProviderFactory[] valueProviderFactories, RTreePolicyType rtreePolicyType,
             IBinaryComparatorFactory[] btreeComparatorFactories, ILinearizeComparatorFactory linearizerCmpFactory,
-            int[] btreeFields, int[] rtreeFields, ITypeTraits[] filterTypeTraits, IBinaryComparatorFactory[] filterCmpFactories,
-            int[] filterFields) {
-        return new LSMRTreeDataflowHelperFactory(valueProviderFactories, rtreePolicyType, btreeComparatorFactories,
-                virtualBufferCacheProvider, new ConstantMergePolicyFactory(), MERGE_POLICY_PROPERTIES,
-                ThreadCountingOperationTrackerFactory.INSTANCE, SynchronousSchedulerProvider.INSTANCE,
-                NoOpIOOperationCallback.INSTANCE, linearizerCmpFactory, DEFAULT_BLOOM_FILTER_FALSE_POSITIVE_RATE, rtreeFields,
-                btreeFields, filterTypeTraits, filterCmpFactories, filterFields, true, false);
+            int[] btreeFields, ITypeTraits[] secondaryTypeTraits,
+            IBinaryComparatorFactory[] secondaryComparatorFactories, IMetadataPageManagerFactory pageManagerFactory) {
+        return new LSMRTreeLocalResourceFactory(storageManager, secondaryTypeTraits, secondaryComparatorFactories, null,
+                null, null, ThreadCountingOperationTrackerFactory.INSTANCE, NoOpIOOperationCallbackFactory.INSTANCE,
+                pageManagerFactory, getVirtualBufferCacheProvider(), SynchronousSchedulerProvider.INSTANCE,
+                MERGE_POLICY_FACTORY, MERGE_POLICY_PROPERTIES, DURABLE, btreeComparatorFactories,
+                valueProviderFactories, rtreePolicyType, linearizerCmpFactory, null, btreeFields, IS_POINT_MBR,
+                DEFAULT_BLOOM_FILTER_FALSE_POSITIVE_RATE);
     }
 }

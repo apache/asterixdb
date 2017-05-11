@@ -92,7 +92,7 @@ public class NestedLoopJoin {
 
         FileReference file = ctx.getJobletContext()
                 .createManagedWorkspaceFile(this.getClass().getSimpleName() + this.toString());
-        runFileWriter = new RunFileWriter(file, ctx.getIOManager());
+        runFileWriter = new RunFileWriter(file, ctx.getIoManager());
         runFileWriter.open();
     }
 

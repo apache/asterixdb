@@ -35,7 +35,7 @@ import org.apache.hyracks.storage.am.bloomfilter.impls.BloomCalculations;
 import org.apache.hyracks.storage.am.bloomfilter.impls.BloomFilter;
 import org.apache.hyracks.storage.am.bloomfilter.impls.BloomFilterSpecification;
 import org.apache.hyracks.storage.am.bloomfilter.util.AbstractBloomFilterTest;
-import org.apache.hyracks.storage.am.common.api.IIndexBulkLoader;
+import org.apache.hyracks.storage.common.IIndexBulkLoader;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.junit.Assert;
 import org.junit.Before;

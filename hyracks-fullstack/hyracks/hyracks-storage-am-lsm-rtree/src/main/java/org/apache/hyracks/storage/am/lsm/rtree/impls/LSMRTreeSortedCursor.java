@@ -23,11 +23,11 @@ import org.apache.hyracks.api.dataflow.value.ILinearizeComparator;
 import org.apache.hyracks.api.dataflow.value.ILinearizeComparatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
-import org.apache.hyracks.storage.am.common.api.ICursorInitialState;
-import org.apache.hyracks.storage.am.common.api.ISearchPredicate;
 import org.apache.hyracks.storage.am.common.tuples.PermutingTupleReference;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilter;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
+import org.apache.hyracks.storage.common.ICursorInitialState;
+import org.apache.hyracks.storage.common.ISearchPredicate;
 
 public class LSMRTreeSortedCursor extends LSMRTreeAbstractCursor {
 
@@ -74,18 +74,19 @@ public class LSMRTreeSortedCursor extends LSMRTreeAbstractCursor {
     @Override
     public ITupleReference getFilterMinTuple() {
         ILSMComponentFilter filter = getFilter();
-        return filter == null ?  null : filter.getMinTuple();
+        return filter == null ? null : filter.getMinTuple();
     }
 
     @Override
     public ITupleReference getFilterMaxTuple() {
         ILSMComponentFilter filter = getFilter();
-        return filter == null ?  null : filter.getMaxTuple();
+        return filter == null ? null : filter.getMaxTuple();
     }
 
     private ILSMComponentFilter getFilter() {
         return foundIn < 0 ? null : operationalComponents.get(foundIn).getLSMComponentFilter();
     }
+
     @Override
     public boolean hasNext() throws HyracksDataException {
         while (!foundNext) {

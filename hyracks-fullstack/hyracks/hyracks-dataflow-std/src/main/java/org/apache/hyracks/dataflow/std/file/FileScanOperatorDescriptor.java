@@ -46,7 +46,7 @@ public class FileScanOperatorDescriptor extends AbstractSingleActivityOperatorDe
         super(spec, 0, 1);
         this.fileSplitProvider = fileSplitProvider;
         this.tupleParserFactory = tupleParserFactory;
-        recordDescriptors[0] = rDesc;
+        outRecDescs[0] = rDesc;
     }
 
     @Override
@@ -54,7 +54,7 @@ public class FileScanOperatorDescriptor extends AbstractSingleActivityOperatorDe
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) throws HyracksDataException {
         final FileSplit split = fileSplitProvider.getFileSplits()[partition];
         final ITupleParser tp = tupleParserFactory.createTupleParser(ctx);
-        final IIOManager ioManager = ctx.getIOManager();
+        final IIOManager ioManager = ctx.getIoManager();
         return new AbstractUnaryOutputSourceOperatorNodePushable() {
             @Override
             public void initialize() throws HyracksDataException {

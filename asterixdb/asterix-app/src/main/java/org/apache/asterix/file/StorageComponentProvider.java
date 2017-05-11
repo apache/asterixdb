@@ -26,7 +26,6 @@ import org.apache.asterix.formats.nontagged.BinaryComparatorFactoryProvider;
 import org.apache.asterix.formats.nontagged.TypeTraitProvider;
 import org.apache.asterix.runtime.utils.RuntimeComponentsProvider;
 import org.apache.hyracks.algebricks.data.IBinaryComparatorFactoryProvider;
-import org.apache.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
 import org.apache.hyracks.storage.am.common.api.IMetadataPageManagerFactory;
 import org.apache.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import org.apache.hyracks.storage.am.common.freepage.AppendOnlyLinkedMetadataPageManagerFactory;
@@ -63,11 +62,6 @@ public class StorageComponentProvider implements IStorageComponentProvider {
     @Override
     public TypeTraitProvider getTypeTraitProvider() {
         return TypeTraitProvider.INSTANCE;
-    }
-
-    @Override
-    public IIndexLifecycleManagerProvider getIndexLifecycleManagerProvider() {
-        return RuntimeComponentsProvider.RUNTIME_PROVIDER;
     }
 
     @Override

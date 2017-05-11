@@ -33,10 +33,10 @@ import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
 import org.apache.hyracks.storage.am.common.frames.AbstractSlotManager;
 import org.apache.hyracks.storage.am.common.frames.FrameOpSpaceStatus;
-import org.apache.hyracks.storage.am.common.ophelpers.MultiComparator;
 import org.apache.hyracks.storage.am.common.ophelpers.SlotOffTupleOff;
 import org.apache.hyracks.storage.am.rtree.api.IRTreeInteriorFrame;
 import org.apache.hyracks.storage.am.rtree.impls.PathList;
+import org.apache.hyracks.storage.common.MultiComparator;
 
 public class RTreeNSMInteriorFrame extends RTreeNSMFrame implements IRTreeInteriorFrame {
 

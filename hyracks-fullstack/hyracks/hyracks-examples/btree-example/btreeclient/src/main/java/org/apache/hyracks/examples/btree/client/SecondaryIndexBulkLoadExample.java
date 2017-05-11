@@ -35,14 +35,11 @@ import org.apache.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor;
 import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
 import org.apache.hyracks.dataflow.std.misc.NullSinkOperatorDescriptor;
 import org.apache.hyracks.dataflow.std.sort.ExternalSortOperatorDescriptor;
-import org.apache.hyracks.examples.btree.helper.IndexLifecycleManagerProvider;
 import org.apache.hyracks.examples.btree.helper.BTreeHelperStorageManager;
-import org.apache.hyracks.storage.am.btree.dataflow.BTreeDataflowHelperFactory;
-import org.apache.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
+import org.apache.hyracks.storage.am.common.dataflow.IndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.dataflow.TreeIndexBulkLoadOperatorDescriptor;
 import org.apache.hyracks.storage.am.common.dataflow.TreeIndexDiskOrderScanOperatorDescriptor;
-import org.apache.hyracks.storage.am.common.freepage.LinkedMetadataPageManagerFactory;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallbackFactory;
 import org.apache.hyracks.storage.common.IStorageManager;
 import org.kohsuke.args4j.CmdLineParser;
@@ -96,19 +93,15 @@ public class SecondaryIndexBulkLoadExample {
         JobSpecification spec = new JobSpecification(options.frameSize);
 
         String[] splitNCs = options.ncs.split(",");
-
-        IIndexLifecycleManagerProvider lcManagerProvider = IndexLifecycleManagerProvider.INSTANCE;
         IStorageManager storageManager = BTreeHelperStorageManager.INSTANCE;
 
         // schema of tuples that we are retrieving from the primary index
         RecordDescriptor recDesc = new RecordDescriptor(new ISerializerDeserializer[] {
-                IntegerSerializerDeserializer.INSTANCE, // we will use this as
-                                                        // payload in secondary
-                                                        // index
-                new UTF8StringSerializerDeserializer(), // we will use this
-                                                           // ask key in
-                                                           // secondary index
-                IntegerSerializerDeserializer.INSTANCE, new UTF8StringSerializerDeserializer() });
+                // we will use this as payload in secondary index
+                IntegerSerializerDeserializer.INSTANCE,
+                // we will use this ask key in secondary index
+                new UTF8StringSerializerDeserializer(), IntegerSerializerDeserializer.INSTANCE,
+                new UTF8StringSerializerDeserializer() });
 
         int primaryFieldCount = 4;
         ITypeTraits[] primaryTypeTraits = new ITypeTraits[primaryFieldCount];
@@ -124,17 +117,16 @@ public class SecondaryIndexBulkLoadExample {
 
         // use a disk-order scan to read primary index
         IFileSplitProvider primarySplitProvider = JobHelper.createFileSplitProvider(splitNCs, options.primaryBTreeName);
-        IIndexDataflowHelperFactory dataflowHelperFactory = new BTreeDataflowHelperFactory(true);
+        IIndexDataflowHelperFactory primaryHelperFactory = new IndexDataflowHelperFactory(storageManager, primarySplitProvider);
         TreeIndexDiskOrderScanOperatorDescriptor btreeScanOp = new TreeIndexDiskOrderScanOperatorDescriptor(spec,
-                recDesc, storageManager, lcManagerProvider, primarySplitProvider, primaryTypeTraits,
-                dataflowHelperFactory, NoOpOperationCallbackFactory.INSTANCE, new LinkedMetadataPageManagerFactory());
+                recDesc, primaryHelperFactory, NoOpOperationCallbackFactory.INSTANCE);
         JobHelper.createPartitionConstraint(spec, btreeScanOp, splitNCs);
 
         // sort the tuples as preparation for bulk load into secondary index
         // fields to sort on
         int[] sortFields = { 1, 0 };
-        ExternalSortOperatorDescriptor sorter = new ExternalSortOperatorDescriptor(spec, options.sbSize, sortFields,
-                comparatorFactories, recDesc);
+        ExternalSortOperatorDescriptor sorter =
+                new ExternalSortOperatorDescriptor(spec, options.sbSize, sortFields, comparatorFactories, recDesc);
         JobHelper.createPartitionConstraint(spec, sorter, splitNCs);
 
         // tuples to be put into B-Tree shall have 2 fields
@@ -147,10 +139,9 @@ public class SecondaryIndexBulkLoadExample {
         // tuple
         int[] fieldPermutation = { 1, 0 };
         IFileSplitProvider btreeSplitProvider = JobHelper.createFileSplitProvider(splitNCs, options.secondaryBTreeName);
+        IIndexDataflowHelperFactory secondaryHelperFactory = new IndexDataflowHelperFactory(storageManager, btreeSplitProvider);
         TreeIndexBulkLoadOperatorDescriptor btreeBulkLoad = new TreeIndexBulkLoadOperatorDescriptor(spec, null,
-                storageManager, lcManagerProvider, btreeSplitProvider, secondaryTypeTraits, comparatorFactories, null,
-                fieldPermutation, 0.7f, false, 1000L, true, dataflowHelperFactory,
-                new LinkedMetadataPageManagerFactory());
+                fieldPermutation, 0.7f, false, 1000L, true, secondaryHelperFactory);
         JobHelper.createPartitionConstraint(spec, btreeBulkLoad, splitNCs);
         NullSinkOperatorDescriptor nsOpDesc = new NullSinkOperatorDescriptor(spec);
         JobHelper.createPartitionConstraint(spec, nsOpDesc, splitNCs);

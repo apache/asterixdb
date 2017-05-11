@@ -214,8 +214,8 @@ public class FeedOperations {
             JobSpecification subJob = jobsList.get(iter1);
             operatorIdMapping.clear();
             Map<OperatorDescriptorId, IOperatorDescriptor> operatorsMap = subJob.getOperatorMap();
-            FeedConnectionId feedConnectionId =
-                    new FeedConnectionId(ingestionOp.getEntityId(), feedConnections.get(iter1).getDatasetName());
+            String datasetName = feedConnections.get(iter1).getDatasetName();
+            FeedConnectionId feedConnectionId = new FeedConnectionId(ingestionOp.getEntityId(), datasetName);
 
             FeedPolicyEntity feedPolicyEntity =
                     FeedMetadataUtil.validateIfPolicyExists(curFeedConnection.getDataverseName(),
@@ -227,9 +227,8 @@ public class FeedOperations {
                 OperatorDescriptorId opId = null;
                 if (opDesc instanceof LSMTreeInsertDeleteOperatorDescriptor
                         && ((LSMTreeInsertDeleteOperatorDescriptor) opDesc).isPrimary()) {
-                    String operandId = ((LSMTreeInsertDeleteOperatorDescriptor) opDesc).getIndexName();
                     metaOp = new FeedMetaOperatorDescriptor(jobSpec, feedConnectionId, opDesc,
-                            feedPolicyEntity.getProperties(), FeedRuntimeType.STORE, operandId);
+                            feedPolicyEntity.getProperties(), FeedRuntimeType.STORE);
                     opId = metaOp.getOperatorId();
                     opDesc.setOperatorId(opId);
                 } else {
@@ -243,7 +242,7 @@ public class FeedOperations {
                             // anything on the network interface needs to be message compatible
                             if (connectorDesc instanceof MToNPartitioningConnectorDescriptor) {
                                 metaOp = new FeedMetaOperatorDescriptor(jobSpec, feedConnectionId, opDesc,
-                                        feedPolicyEntity.getProperties(), FeedRuntimeType.COMPUTE, null);
+                                        feedPolicyEntity.getProperties(), FeedRuntimeType.COMPUTE);
                                 opId = metaOp.getOperatorId();
                                 opDesc.setOperatorId(opId);
                             }

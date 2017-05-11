@@ -20,52 +20,31 @@ package org.apache.asterix.external.operators;
 
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
-import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
-import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
-import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
-import org.apache.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
-import org.apache.hyracks.storage.am.common.api.IMetadataPageManagerFactory;
-import org.apache.hyracks.storage.am.common.api.IModificationOperationCallbackFactory;
-import org.apache.hyracks.storage.am.common.dataflow.AbstractTreeIndexOperatorDescriptor;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
-import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallbackFactory;
-import org.apache.hyracks.storage.common.IStorageManager;
-import org.apache.hyracks.storage.common.file.NoOpLocalResourceFactoryProvider;
+import org.apache.hyracks.storage.am.common.dataflow.TreeIndexBulkLoadOperatorDescriptor;
 
-public class ExternalIndexBulkModifyOperatorDescriptor extends AbstractTreeIndexOperatorDescriptor {
+public class ExternalIndexBulkModifyOperatorDescriptor extends TreeIndexBulkLoadOperatorDescriptor {
 
     private static final long serialVersionUID = 1L;
     private final int[] deletedFiles;
-    private final int[] fieldPermutation;
-    private final float fillFactor;
-    private final long numElementsHint;
 
     public ExternalIndexBulkModifyOperatorDescriptor(IOperatorDescriptorRegistry spec,
-            IStorageManager storageManager, IIndexLifecycleManagerProvider lifecycleManagerProvider,
-            IFileSplitProvider fileSplitProvider, ITypeTraits[] typeTraits,
-            IBinaryComparatorFactory[] comparatorFactories, int[] bloomFilterKeyFields,
-            IIndexDataflowHelperFactory dataflowHelperFactory,
-            IModificationOperationCallbackFactory modificationOpCallbackFactory, int[] deletedFiles,
-            int[] fieldPermutation, float fillFactor, long numElementsHint,
-            IMetadataPageManagerFactory metadataPageManagerFactory) {
-        super(spec, 1, 0, null, storageManager, lifecycleManagerProvider, fileSplitProvider, typeTraits,
-                comparatorFactories, bloomFilterKeyFields, dataflowHelperFactory, null, false, false, null,
-                NoOpLocalResourceFactoryProvider.INSTANCE, NoOpOperationCallbackFactory.INSTANCE,
-                modificationOpCallbackFactory, metadataPageManagerFactory);
+            IIndexDataflowHelperFactory dataflowHelperFactory, int[] deletedFiles, int[] fieldPermutation,
+            float fillFactor, boolean verifyInput, long numElementsHint, boolean checkIfEmpty) {
+        super(spec, null, fieldPermutation, fillFactor, verifyInput, numElementsHint, checkIfEmpty,
+                dataflowHelperFactory);
         this.deletedFiles = deletedFiles;
-        this.fieldPermutation = fieldPermutation;
-        this.fillFactor = fillFactor;
-        this.numElementsHint = numElementsHint;
     }
 
     @Override
     public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) throws HyracksDataException {
-        return new ExternalIndexBulkModifyOperatorNodePushable(this, ctx, partition, fieldPermutation, fillFactor,
-                numElementsHint, recordDescProvider, deletedFiles);
+        return new ExternalIndexBulkModifyOperatorNodePushable(indexHelperFactory, ctx, partition, fieldPermutation,
+                fillFactor, verifyInput, numElementsHint, checkIfEmptyIndex,
+                recordDescProvider.getInputRecordDescriptor(getActivityId(), 0), deletedFiles);
     }
 
 }

@@ -18,7 +18,7 @@
  */
 package org.apache.hyracks.storage.am.lsm.common.impls;
 
-import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationSchedulerProvider;
 
@@ -26,7 +26,7 @@ public enum SynchronousSchedulerProvider implements ILSMIOOperationSchedulerProv
     INSTANCE;
 
     @Override
-    public ILSMIOOperationScheduler getIOScheduler(IHyracksTaskContext ctx) {
+    public ILSMIOOperationScheduler getIoScheduler(INCServiceContext ctx) {
         return SynchronousScheduler.INSTANCE;
     }
 

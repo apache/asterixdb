@@ -74,7 +74,7 @@ public class PlainFileWriterOperatorDescriptor extends AbstractSingleActivityOpe
             throws HyracksDataException {
         // Output files
         final FileSplit[] splits = fileSplitProvider.getFileSplits();
-        IIOManager ioManager = ctx.getIOManager();
+        IIOManager ioManager = ctx.getIoManager();
         // Frame accessor
         final FrameTupleAccessor frameTupleAccessor = new FrameTupleAccessor(
                 recordDescProvider.getInputRecordDescriptor(getActivityId(), 0));

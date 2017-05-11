@@ -33,8 +33,8 @@ import org.apache.hyracks.storage.am.btree.impls.FieldPrefixSlotManager;
 import org.apache.hyracks.storage.am.btree.impls.FieldPrefixTupleReference;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameCompressor;
-import org.apache.hyracks.storage.am.common.ophelpers.MultiComparator;
 import org.apache.hyracks.storage.am.common.tuples.TypeAwareTupleWriter;
+import org.apache.hyracks.storage.common.MultiComparator;
 
 public class FieldPrefixCompressor implements ITreeIndexFrameCompressor {
 

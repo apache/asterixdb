@@ -25,7 +25,7 @@ import org.apache.hyracks.storage.am.common.api.ISlotManager;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 import org.apache.hyracks.storage.am.common.ophelpers.FindTupleMode;
 import org.apache.hyracks.storage.am.common.ophelpers.FindTupleNoExactMatchPolicy;
-import org.apache.hyracks.storage.am.common.ophelpers.MultiComparator;
+import org.apache.hyracks.storage.common.MultiComparator;
 
 /**
  * A slot consists of two fields. The first field is 1 byte and it indicates the slot number of

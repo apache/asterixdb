@@ -70,7 +70,7 @@ public class IntersectOperatorDescriptor extends AbstractOperatorDescriptor {
             INormalizedKeyComputerFactory firstKeyNormalizerFactory, IBinaryComparatorFactory[] comparatorFactories,
             RecordDescriptor recordDescriptor) throws HyracksException {
         super(spec, nInputs, 1);
-        recordDescriptors[0] = recordDescriptor;
+        outRecDescs[0] = recordDescriptor;
 
         validateParameters(compareAndProjectFields, comparatorFactories);
 

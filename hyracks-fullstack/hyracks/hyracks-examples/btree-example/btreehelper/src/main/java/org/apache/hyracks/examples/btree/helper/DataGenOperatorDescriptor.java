@@ -57,7 +57,7 @@ public class DataGenOperatorDescriptor extends AbstractSingleActivityOperatorDes
         this.intMaxVal = intMaxVal;
         this.maxStrLen = maxStrLen;
         this.randomSeed = randomSeed;
-        recordDescriptors[0] = outputRecord;
+        outRecDescs[0] = outputRecord;
     }
 
     @Override
@@ -65,7 +65,7 @@ public class DataGenOperatorDescriptor extends AbstractSingleActivityOperatorDes
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) throws HyracksDataException {
 
         final FrameTupleAppender appender = new FrameTupleAppender(new VSizeFrame(ctx));
-        final RecordDescriptor recDesc = recordDescriptors[0];
+        final RecordDescriptor recDesc = outRecDescs[0];
         final ArrayTupleBuilder tb = new ArrayTupleBuilder(recDesc.getFields().length);
         final Random rnd = new Random(randomSeed);
         final int maxUniqueAttempts = 20;

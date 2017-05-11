@@ -61,7 +61,7 @@ public class LSMIndexFileManagerTest {
     public void setUp() throws HyracksDataException {
         TestStorageManagerComponentHolder.init(DEFAULT_PAGE_SIZE, DEFAULT_NUM_PAGES, DEFAULT_MAX_OPEN_FILES);
         ioManager = TestStorageManagerComponentHolder.getIOManager();
-        fileMapProvider = TestStorageManagerComponentHolder.getFileMapProvider(null);
+        fileMapProvider = TestStorageManagerComponentHolder.getFileMapProvider();
         baseDir = ioManager.getIODevices().get(DEFAULT_IO_DEVICE_ID).getMount() + sep + "lsm_tree"
                 + simpleDateFormat.format(new Date()) + sep;
         File f = new File(baseDir);

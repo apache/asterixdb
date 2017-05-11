@@ -34,12 +34,7 @@ import org.apache.hyracks.storage.am.bloomfilter.impls.BloomFilterFactory;
 import org.apache.hyracks.storage.am.bloomfilter.impls.BloomFilterSpecification;
 import org.apache.hyracks.storage.am.btree.impls.BTree;
 import org.apache.hyracks.storage.am.btree.impls.BTree.BTreeBulkLoader;
-import org.apache.hyracks.storage.am.common.api.IIndexBulkLoader;
-import org.apache.hyracks.storage.am.common.api.IIndexCursor;
 import org.apache.hyracks.storage.am.common.api.IIndexOperationContext;
-import org.apache.hyracks.storage.am.common.api.IModificationOperationCallback;
-import org.apache.hyracks.storage.am.common.api.ISearchOperationCallback;
-import org.apache.hyracks.storage.am.common.api.ISearchPredicate;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexCursor;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import org.apache.hyracks.storage.am.common.api.ITwoPCIndexBulkLoader;
@@ -63,6 +58,11 @@ import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences
 import org.apache.hyracks.storage.am.lsm.common.impls.TreeIndexFactory;
 import org.apache.hyracks.storage.am.rtree.impls.RTree;
 import org.apache.hyracks.storage.am.rtree.impls.SearchPredicate;
+import org.apache.hyracks.storage.common.IIndexBulkLoader;
+import org.apache.hyracks.storage.common.IIndexCursor;
+import org.apache.hyracks.storage.common.IModificationOperationCallback;
+import org.apache.hyracks.storage.common.ISearchOperationCallback;
+import org.apache.hyracks.storage.common.ISearchPredicate;
 import org.apache.hyracks.storage.common.file.IFileMapProvider;
 
 /**
@@ -80,7 +80,7 @@ public class ExternalRTree extends LSMRTree implements ITwoPCIndex {
     // A pointer that points to the current most recent list (either
     // diskComponents = 0, or secondDiskComponents = 1). It starts with -1 to
     // indicate first time activation
-    private int version = -1;
+    private int version = 0;
     private final int fieldCount;
 
     public ExternalRTree(IIOManager ioManager, ITreeIndexFrameFactory rtreeInteriorFrameFactory,
@@ -92,14 +92,13 @@ public class ExternalRTree extends LSMRTree implements ITwoPCIndex {
             IBinaryComparatorFactory[] btreeCmpFactories, ILinearizeComparatorFactory linearizer,
             int[] comparatorFields, IBinaryComparatorFactory[] linearizerArray, ILSMMergePolicy mergePolicy,
             ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallback ioOpCallback,
-            int[] buddyBTreeFields, int version, boolean durable, boolean isPointMBR) {
+            int[] buddyBTreeFields, boolean durable, boolean isPointMBR) {
         super(ioManager, rtreeInteriorFrameFactory, rtreeLeafFrameFactory, btreeInteriorFrameFactory,
                 btreeLeafFrameFactory, fileNameManager, diskRTreeFactory, diskBTreeFactory, bloomFilterFactory,
                 bloomFilterFalsePositiveRate, diskFileMapProvider, rtreeCmpFactories, btreeCmpFactories, linearizer,
                 comparatorFields, linearizerArray, mergePolicy, opTracker, ioScheduler, ioOpCallback, buddyBTreeFields,
                 durable, isPointMBR);
         this.secondDiskComponents = new LinkedList<>();
-        this.version = version;
         this.fieldCount = fieldCount;
     }
 
@@ -390,7 +389,7 @@ public class ExternalRTree extends LSMRTree implements ITwoPCIndex {
 
         diskComponents.clear();
         secondDiskComponents.clear();
-        version = -1;
+        version = 0;
     }
 
     @Override
@@ -415,7 +414,7 @@ public class ExternalRTree extends LSMRTree implements ITwoPCIndex {
         diskComponents.clear();
         secondDiskComponents.clear();
         fileManager.deleteDirs();
-        version = -1;
+        version = 0;
     }
 
     // Not supported
@@ -692,6 +691,11 @@ public class ExternalRTree extends LSMRTree implements ITwoPCIndex {
     @Override
     public int getCurrentVersion() {
         return version;
+    }
+
+    @Override
+    public void setCurrentVersion(int version) {
+        this.version = version;
     }
 
     @Override

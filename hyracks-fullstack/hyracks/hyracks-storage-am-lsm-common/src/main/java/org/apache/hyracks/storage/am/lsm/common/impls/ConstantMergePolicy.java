@@ -55,7 +55,7 @@ public class ConstantMergePolicy implements ILSMMergePolicy {
 
     @Override
     public void configure(Map<String, String> properties) {
-        numComponents = Integer.parseInt(properties.get("num-components"));
+        numComponents = Integer.parseInt(properties.get(ConstantMergePolicyFactory.NUM_COMPONENTS));
     }
 
     @Override

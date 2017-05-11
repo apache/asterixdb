@@ -37,7 +37,7 @@ import org.apache.asterix.transaction.management.opcallbacks.LockThenSearchOpera
 import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IMissingWriter;
-import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
+import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
@@ -50,11 +50,11 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.dataflow.common.utils.TaskUtil;
 import org.apache.hyracks.storage.am.btree.impls.RangePredicate;
 import org.apache.hyracks.storage.am.btree.util.BTreeUtils;
-import org.apache.hyracks.storage.am.common.api.IIndexCursor;
+import org.apache.hyracks.storage.am.common.api.IModificationOperationCallbackFactory;
+import org.apache.hyracks.storage.am.common.api.ISearchOperationCallbackFactory;
 import org.apache.hyracks.storage.am.common.api.ITreeIndex;
-import org.apache.hyracks.storage.am.common.dataflow.IIndexOperatorDescriptor;
+import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
-import org.apache.hyracks.storage.am.common.ophelpers.MultiComparator;
 import org.apache.hyracks.storage.am.common.tuples.PermutingFrameTupleReference;
 import org.apache.hyracks.storage.am.lsm.common.api.IFrameOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.IFrameOperationCallbackFactory;
@@ -62,6 +62,8 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.common.dataflow.LSMIndexInsertUpdateDeleteOperatorNodePushable;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMTreeIndexAccessor;
+import org.apache.hyracks.storage.common.IIndexCursor;
+import org.apache.hyracks.storage.common.MultiComparator;
 
 public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDeleteOperatorNodePushable {
 
@@ -90,16 +92,21 @@ public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDe
     private final IFrameOperationCallbackFactory frameOpCallbackFactory;
     private AbstractIndexModificationOperationCallback abstractModCallback;
     private final boolean hasSecondaries;
+    private final ISearchOperationCallbackFactory searchCallbackFactory;
 
-    public LSMPrimaryUpsertOperatorNodePushable(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx, int partition,
-            int[] fieldPermutation, IRecordDescriptorProvider recordDescProvider, int numOfPrimaryKeys,
-            ARecordType recordType, int filterFieldIndex, IFrameOperationCallbackFactory frameOpCallbackFactory,
-            boolean hasSecondaries) throws HyracksDataException {
-        super(opDesc, ctx, partition, fieldPermutation, recordDescProvider, IndexOperation.UPSERT);
+    public LSMPrimaryUpsertOperatorNodePushable(IHyracksTaskContext ctx, int partition,
+            IIndexDataflowHelperFactory indexHelperFactory, int[] fieldPermutation, RecordDescriptor inputRecDesc,
+            IModificationOperationCallbackFactory modCallbackFactory,
+            ISearchOperationCallbackFactory searchCallbackFactory, int numOfPrimaryKeys, ARecordType recordType,
+            int filterFieldIndex, IFrameOperationCallbackFactory frameOpCallbackFactory,
+            IMissingWriterFactory missingWriterFactory, boolean hasSecondaries) throws HyracksDataException {
+        super(ctx, partition, indexHelperFactory, fieldPermutation, inputRecDesc, IndexOperation.UPSERT,
+                modCallbackFactory, null);
         this.key = new PermutingFrameTupleReference();
+        this.searchCallbackFactory = searchCallbackFactory;
         this.numOfPrimaryKeys = numOfPrimaryKeys;
         this.frameOpCallbackFactory = frameOpCallbackFactory;
-        missingWriter = opDesc.getMissingWriterFactory().createMissingWriter();
+        missingWriter = missingWriterFactory.createMissingWriter();
         int[] searchKeyPermutations = new int[numOfPrimaryKeys];
         for (int i = 0; i < searchKeyPermutations.length; i++) {
             searchKeyPermutations[i] = fieldPermutation[i];
@@ -127,7 +134,6 @@ public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDe
 
     @Override
     public void open() throws HyracksDataException {
-        RecordDescriptor inputRecDesc = recordDescProvider.getInputRecordDescriptor(opDesc.getActivityId(), 0);
         accessor = new FrameTupleAccessor(inputRecDesc);
         writeBuffer = new VSizeFrame(ctx);
         writer.open();
@@ -150,10 +156,10 @@ public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDe
             tb = new ArrayTupleBuilder(recordDesc.getFieldCount());
             dos = tb.getDataOutput();
             appender = new FrameTupleAppender(new VSizeFrame(ctx), true);
-            modCallback = opDesc.getModificationOpCallbackFactory()
-                    .createModificationOperationCallback(indexHelper.getResource(), ctx, this);
+            modCallback =
+                    modOpCallbackFactory.createModificationOperationCallback(indexHelper.getResource(), ctx, this);
             abstractModCallback = (AbstractIndexModificationOperationCallback) modCallback;
-            searchCallback = (LockThenSearchOperationCallback) opDesc.getSearchOpCallbackFactory()
+            searchCallback = (LockThenSearchOperationCallback) searchCallbackFactory
                     .createSearchOperationCallback(indexHelper.getResource().getId(), ctx, this);
             indexAccessor = index.createAccessor(abstractModCallback, searchCallback);
 

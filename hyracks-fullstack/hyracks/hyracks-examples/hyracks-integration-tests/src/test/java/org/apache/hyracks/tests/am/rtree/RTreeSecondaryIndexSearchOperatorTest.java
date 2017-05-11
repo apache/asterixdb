@@ -23,8 +23,10 @@ import java.io.DataOutput;
 
 import org.apache.hyracks.api.constraints.PartitionConstraintHelper;
 import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
-import org.apache.hyracks.api.dataflow.value.*;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
+import org.apache.hyracks.api.dataflow.value.ILinearizeComparatorFactory;
+import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
+import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.io.FileSplit;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
@@ -35,12 +37,12 @@ import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
 import org.apache.hyracks.dataflow.std.file.PlainFileWriterOperatorDescriptor;
 import org.apache.hyracks.dataflow.std.misc.ConstantTupleSourceOperatorDescriptor;
 import org.apache.hyracks.storage.am.btree.dataflow.BTreeSearchOperatorDescriptor;
+import org.apache.hyracks.storage.am.common.api.IMetadataPageManagerFactory;
 import org.apache.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
-import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
-import org.apache.hyracks.storage.am.common.freepage.LinkedMetadataPageManagerFactory;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallbackFactory;
 import org.apache.hyracks.storage.am.rtree.dataflow.RTreeSearchOperatorDescriptor;
 import org.apache.hyracks.storage.am.rtree.frames.RTreePolicyType;
+import org.apache.hyracks.storage.common.IResourceFactory;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -74,18 +76,17 @@ public class RTreeSecondaryIndexSearchOperatorTest extends AbstractRTreeOperator
         tb.addFieldEndOffset();
         DoubleSerializerDeserializer.INSTANCE.serialize(-149.024, dos);
         tb.addFieldEndOffset();
-        ISerializerDeserializer[] keyRecDescSers = { DoubleSerializerDeserializer.INSTANCE,
-                DoubleSerializerDeserializer.INSTANCE, DoubleSerializerDeserializer.INSTANCE,
-                DoubleSerializerDeserializer.INSTANCE };
+        ISerializerDeserializer[] keyRecDescSers =
+                { DoubleSerializerDeserializer.INSTANCE, DoubleSerializerDeserializer.INSTANCE,
+                        DoubleSerializerDeserializer.INSTANCE, DoubleSerializerDeserializer.INSTANCE };
         RecordDescriptor keyRecDesc = new RecordDescriptor(keyRecDescSers);
         ConstantTupleSourceOperatorDescriptor keyProviderOp = new ConstantTupleSourceOperatorDescriptor(spec,
                 keyRecDesc, tb.getFieldEndOffsets(), tb.getByteArray(), tb.getSize());
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, keyProviderOp, NC1_ID);
         int[] keyFields = { 0, 1, 2, 3 };
-        RTreeSearchOperatorDescriptor secondarySearchOp = new RTreeSearchOperatorDescriptor(spec, secondaryRecDesc,
-                storageManager, lcManagerProvider, secondarySplitProvider, secondaryTypeTraits,
-                secondaryComparatorFactories, keyFields, rtreeDataflowHelperFactory, false, false, null,
-                NoOpOperationCallbackFactory.INSTANCE, null, null, pageManagerFactory);
+        RTreeSearchOperatorDescriptor secondarySearchOp =
+                new RTreeSearchOperatorDescriptor(spec, secondaryRecDesc, keyFields, true, true, secondaryHelperFactory,
+                        false, false, null, NoOpOperationCallbackFactory.INSTANCE, null, null, false);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, secondarySearchOp, NC1_ID);
         // fifth field from the tuples coming from secondary index
         int[] primaryLowKeyFields = { 4 };
@@ -93,9 +94,8 @@ public class RTreeSecondaryIndexSearchOperatorTest extends AbstractRTreeOperator
         int[] primaryHighKeyFields = { 4 };
         // search primary index
         BTreeSearchOperatorDescriptor primarySearchOp = new BTreeSearchOperatorDescriptor(spec, primaryRecDesc,
-                storageManager, lcManagerProvider, primarySplitProvider, primaryTypeTraits, primaryComparatorFactories,
-                null, primaryLowKeyFields, primaryHighKeyFields, true, true, btreeDataflowHelperFactory, false, false,
-                null, NoOpOperationCallbackFactory.INSTANCE, null, null, new LinkedMetadataPageManagerFactory());
+                primaryLowKeyFields, primaryHighKeyFields, true, true, primaryHelperFactory, false, false, null,
+                NoOpOperationCallbackFactory.INSTANCE, null, null, false);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, primarySearchOp, NC1_ID);
         IFileSplitProvider outSplits = new ConstantFileSplitProvider(new FileSplit[] { createFile(nc1) });
         IOperatorDescriptor printer = new PlainFileWriterOperatorDescriptor(spec, outSplits, ",");
@@ -108,13 +108,14 @@ public class RTreeSecondaryIndexSearchOperatorTest extends AbstractRTreeOperator
     }
 
     @Override
-    protected IIndexDataflowHelperFactory createDataFlowHelperFactory(
+    protected IResourceFactory createSecondaryResourceFactory(
             IPrimitiveValueProviderFactory[] secondaryValueProviderFactories, RTreePolicyType rtreePolicyType,
             IBinaryComparatorFactory[] btreeComparatorFactories, ILinearizeComparatorFactory linearizerCmpFactory,
-            int[] btreeFields, int [] rtreeFields, ITypeTraits[] filterTypeTraits, IBinaryComparatorFactory[] filterCmpFactories,
-            int[] filterFields) throws HyracksDataException {
-        return ((RTreeOperatorTestHelper) testHelper).createDataFlowHelperFactory(secondaryValueProviderFactories,
-                rtreePolicyType, null, true);
+            int[] btreeFields) {
+        return ((RTreeOperatorTestHelper) testHelper).getSecondaryLocalResourceFactory(storageManager,
+                secondaryValueProviderFactories, rtreePolicyType, btreeComparatorFactories, linearizerCmpFactory,
+                btreeFields, secondaryTypeTraits, secondaryComparatorFactories,
+                (IMetadataPageManagerFactory) pageManagerFactory);
     }
 
     @Override

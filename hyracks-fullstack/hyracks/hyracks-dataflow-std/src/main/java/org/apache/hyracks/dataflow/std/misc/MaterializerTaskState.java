@@ -61,7 +61,7 @@ public class MaterializerTaskState extends AbstractStateObject {
     public void open(IHyracksTaskContext ctx) throws HyracksDataException {
         FileReference file = ctx.getJobletContext()
                 .createManagedWorkspaceFile(MaterializerTaskState.class.getSimpleName());
-        out = new RunFileWriter(file, ctx.getIOManager());
+        out = new RunFileWriter(file, ctx.getIoManager());
         out.open();
     }
 

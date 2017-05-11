@@ -21,8 +21,8 @@ package org.apache.asterix.common.context;
 import java.util.Map;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.storage.am.common.api.IIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
+import org.apache.hyracks.storage.common.IIndex;
 
 /**
  * A dataset can be in one of two states { EVICTED , LOADED }.

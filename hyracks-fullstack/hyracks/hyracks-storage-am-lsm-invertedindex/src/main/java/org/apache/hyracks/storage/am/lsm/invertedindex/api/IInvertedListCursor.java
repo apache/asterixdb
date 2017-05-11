@@ -22,7 +22,7 @@ package org.apache.hyracks.storage.am.lsm.invertedindex.api;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
-import org.apache.hyracks.storage.am.common.ophelpers.MultiComparator;
+import org.apache.hyracks.storage.common.MultiComparator;
 
 public interface IInvertedListCursor extends Comparable<IInvertedListCursor> {
     public void reset(int startPageId, int endPageId, int startOff, int numElements);

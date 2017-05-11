@@ -41,14 +41,11 @@ import org.apache.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor;
 import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
 import org.apache.hyracks.dataflow.std.misc.NullSinkOperatorDescriptor;
 import org.apache.hyracks.dataflow.std.sort.ExternalSortOperatorDescriptor;
-import org.apache.hyracks.examples.btree.helper.DataGenOperatorDescriptor;
-import org.apache.hyracks.examples.btree.helper.IndexLifecycleManagerProvider;
 import org.apache.hyracks.examples.btree.helper.BTreeHelperStorageManager;
-import org.apache.hyracks.storage.am.btree.dataflow.BTreeDataflowHelperFactory;
-import org.apache.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
+import org.apache.hyracks.examples.btree.helper.DataGenOperatorDescriptor;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
+import org.apache.hyracks.storage.am.common.dataflow.IndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.dataflow.TreeIndexBulkLoadOperatorDescriptor;
-import org.apache.hyracks.storage.am.common.freepage.LinkedMetadataPageManagerFactory;
 import org.apache.hyracks.storage.common.IStorageManager;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
@@ -83,11 +80,8 @@ public class PrimaryIndexBulkLoadExample {
         Options options = new Options();
         CmdLineParser parser = new CmdLineParser(options);
         parser.parseArgument(args);
-
         IHyracksClientConnection hcc = new HyracksConnection(options.host, options.port);
-
         JobSpecification job = createJob(options);
-
         long start = System.currentTimeMillis();
         JobId jobId = hcc.startJob(job);
         hcc.waitForCompletion(jobId);
@@ -105,23 +99,22 @@ public class PrimaryIndexBulkLoadExample {
         // int, string
         // we will use field-index 2 as primary key to fill a clustered index
         RecordDescriptor recDesc = new RecordDescriptor(new ISerializerDeserializer[] {
-                new UTF8StringSerializerDeserializer(), // this field will
-                                                           // not go into B-Tree
-                new UTF8StringSerializerDeserializer(), // we will use this
-                                                           // as payload
-                IntegerSerializerDeserializer.INSTANCE, // we will use this
-                                                        // field as key
-                IntegerSerializerDeserializer.INSTANCE, // we will use this as
-                                                        // payload
-                new UTF8StringSerializerDeserializer() // we will use this as
-                                                          // payload
-                });
+                // this field will not go into B-Tree
+                new UTF8StringSerializerDeserializer(),
+                // we will use this as payload
+                new UTF8StringSerializerDeserializer(),
+                // we will use this field as key
+                IntegerSerializerDeserializer.INSTANCE,
+                // we will use this as payload
+                IntegerSerializerDeserializer.INSTANCE,
+                // we will use this as payload
+                new UTF8StringSerializerDeserializer() });
 
         // generate numRecords records with field 2 being unique, integer values
         // in [0, 100000], and strings with max length of 10 characters, and
         // random seed 50
-        DataGenOperatorDescriptor dataGen = new DataGenOperatorDescriptor(spec, recDesc, options.numTuples, 2, 0,
-                100000, 10, 50);
+        DataGenOperatorDescriptor dataGen =
+                new DataGenOperatorDescriptor(spec, recDesc, options.numTuples, 2, 0, 100000, 10, 50);
         // run data generator on first nodecontroller given
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, dataGen, splitNCs[0]);
 
@@ -131,8 +124,8 @@ public class PrimaryIndexBulkLoadExample {
         // comparators for sort fields
         IBinaryComparatorFactory[] comparatorFactories = new IBinaryComparatorFactory[1];
         comparatorFactories[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
-        ExternalSortOperatorDescriptor sorter = new ExternalSortOperatorDescriptor(spec, options.sbSize, sortFields,
-                comparatorFactories, recDesc);
+        ExternalSortOperatorDescriptor sorter =
+                new ExternalSortOperatorDescriptor(spec, options.sbSize, sortFields, comparatorFactories, recDesc);
         JobHelper.createPartitionConstraint(spec, sorter, splitNCs);
 
         // tuples to be put into B-Tree shall have 4 fields
@@ -144,7 +137,6 @@ public class PrimaryIndexBulkLoadExample {
         typeTraits[3] = UTF8StringPointable.TYPE_TRAITS;
 
         // create providers for B-Tree
-        IIndexLifecycleManagerProvider lcManagerProvider = IndexLifecycleManagerProvider.INSTANCE;
         IStorageManager storageManager = BTreeHelperStorageManager.INSTANCE;
 
         // the B-Tree expects its keyfields to be at the front of its input
@@ -153,11 +145,9 @@ public class PrimaryIndexBulkLoadExample {
                                                  // to field 0 of B-Tree tuple,
                                                  // etc.
         IFileSplitProvider btreeSplitProvider = JobHelper.createFileSplitProvider(splitNCs, options.btreeName);
-        IIndexDataflowHelperFactory dataflowHelperFactory = new BTreeDataflowHelperFactory(true);
+        IIndexDataflowHelperFactory dataflowHelperFactory = new IndexDataflowHelperFactory(storageManager, btreeSplitProvider);
         TreeIndexBulkLoadOperatorDescriptor btreeBulkLoad = new TreeIndexBulkLoadOperatorDescriptor(spec, recDesc,
-                storageManager, lcManagerProvider, btreeSplitProvider, typeTraits, comparatorFactories, null,
-                fieldPermutation, 0.7f, false, 1000L, true, dataflowHelperFactory,
-                new LinkedMetadataPageManagerFactory());
+                fieldPermutation, 0.7f, false, 1000L, true, dataflowHelperFactory);
 
         JobHelper.createPartitionConstraint(spec, btreeBulkLoad, splitNCs);
 

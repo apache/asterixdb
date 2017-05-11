@@ -21,40 +21,25 @@ package org.apache.hyracks.storage.am.common.dataflow;
 
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
-import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
-import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
-import org.apache.hyracks.data.std.primitive.IntegerPointable;
-import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
-import org.apache.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
-import org.apache.hyracks.storage.am.common.api.IPageManagerFactory;
-import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallbackFactory;
-import org.apache.hyracks.storage.common.IStorageManager;
-import org.apache.hyracks.storage.common.file.NoOpLocalResourceFactoryProvider;
+import org.apache.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
 
-public class IndexDropOperatorDescriptor extends AbstractTreeIndexOperatorDescriptor {
+public class IndexDropOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
 
     private static final long serialVersionUID = 1L;
+    private final IIndexDataflowHelperFactory dataflowHelperFactory;
 
-    public IndexDropOperatorDescriptor(IOperatorDescriptorRegistry spec, IStorageManager storageManager,
-            IIndexLifecycleManagerProvider lifecycleManagerProvider, IFileSplitProvider fileSplitProvider,
-            IIndexDataflowHelperFactory dataflowHelperFactory, IPageManagerFactory pageManagerFactory) {
-        // TODO: providing the type traits below is a hack to allow:
-        // 1) Type traits not to be specified when creating the drop operator
-        // 2) The LSMRTreeDataflowHelper to get acceptable type traits
-        // This should eventually not be *hacked*, but I don't know the proper fix yet. -zheilbron
-        super(spec, 0, 0, null, storageManager, lifecycleManagerProvider, fileSplitProvider, new ITypeTraits[] {
-                IntegerPointable.TYPE_TRAITS, IntegerPointable.TYPE_TRAITS },
-                new IBinaryComparatorFactory[] { null }, null, dataflowHelperFactory, null, false, false,
-                null, NoOpLocalResourceFactoryProvider.INSTANCE, NoOpOperationCallbackFactory.INSTANCE,
-                NoOpOperationCallbackFactory.INSTANCE, pageManagerFactory);
+    public IndexDropOperatorDescriptor(IOperatorDescriptorRegistry spec,
+            IIndexDataflowHelperFactory dataflowHelperFactory) {
+        super(spec, 0, 0);
+        this.dataflowHelperFactory = dataflowHelperFactory;
     }
 
     @Override
     public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) throws HyracksDataException {
-        return new IndexDropOperatorNodePushable(this, ctx, partition);
+        return new IndexDropOperatorNodePushable(dataflowHelperFactory, ctx, partition);
     }
 }

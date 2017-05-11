@@ -20,12 +20,12 @@ package org.apache.hyracks.storage.am.lsm.common.api;
 
 import java.io.Serializable;
 
-import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.application.INCServiceContext;
 
 /**
  * Provides the {@link ILSMIOOperationScheduler} for the application
  */
 @FunctionalInterface
 public interface ILSMIOOperationSchedulerProvider extends Serializable {
-    ILSMIOOperationScheduler getIOScheduler(IHyracksTaskContext ctx);
+    ILSMIOOperationScheduler getIoScheduler(INCServiceContext ctx);
 }

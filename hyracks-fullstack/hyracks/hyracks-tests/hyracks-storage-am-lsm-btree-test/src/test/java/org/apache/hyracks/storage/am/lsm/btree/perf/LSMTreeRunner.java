@@ -31,7 +31,6 @@ import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.control.nc.io.IOManager;
-import org.apache.hyracks.storage.am.common.api.IIndexAccessor;
 import org.apache.hyracks.storage.am.common.datagen.DataGenThread;
 import org.apache.hyracks.storage.am.common.datagen.TupleBatch;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
@@ -41,9 +40,10 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import org.apache.hyracks.storage.am.lsm.common.impls.AsynchronousScheduler;
 import org.apache.hyracks.storage.am.lsm.common.impls.NoMergePolicy;
-import org.apache.hyracks.storage.am.lsm.common.impls.NoOpIOOperationCallback;
+import org.apache.hyracks.storage.am.lsm.common.impls.NoOpIOOperationCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.impls.ThreadCountingTracker;
 import org.apache.hyracks.storage.am.lsm.common.impls.VirtualBufferCache;
+import org.apache.hyracks.storage.common.IIndexAccessor;
 import org.apache.hyracks.storage.common.buffercache.HeapBufferAllocator;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.file.IFileMapProvider;
@@ -90,12 +90,12 @@ public class LSMTreeRunner implements IExperimentRunner {
         onDiskDir = classDir + sep + simpleDateFormat.format(new Date()) + sep;
         ctx = TestUtils.create(HYRACKS_FRAME_SIZE);
         TestStorageManagerComponentHolder.init(this.onDiskPageSize, this.onDiskNumPages, MAX_OPEN_FILES);
-        bufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx);
+        bufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx.getJobletContext().getServiceContext());
         ioManager = TestStorageManagerComponentHolder.getIOManager();
 
         ioDeviceId = 0;
         file = ioManager.resolveAbsolutePath(onDiskDir);
-        IFileMapProvider fmp = TestStorageManagerComponentHolder.getFileMapProvider(ctx);
+        IFileMapProvider fmp = TestStorageManagerComponentHolder.getFileMapProvider();
 
         List<IVirtualBufferCache> virtualBufferCaches = new ArrayList<>();
         for (int i = 0; i < 2; i++) {
@@ -109,8 +109,8 @@ public class LSMTreeRunner implements IExperimentRunner {
 
         lsmtree = LSMBTreeUtil.createLSMTree(ioManager, virtualBufferCaches, file, bufferCache, fmp, typeTraits,
                 cmpFactories, bloomFilterKeyFields, bloomFilterFalsePositiveRate, new NoMergePolicy(),
-                new ThreadCountingTracker(), ioScheduler, NoOpIOOperationCallback.INSTANCE, true, null, null, null,
-                null, true, TestStorageManagerComponentHolder.getMetadataPageManagerFactory());
+                new ThreadCountingTracker(), ioScheduler, NoOpIOOperationCallbackFactory.INSTANCE.createIoOpCallback(),
+                true, null, null, null, null, true, TestStorageManagerComponentHolder.getMetadataPageManagerFactory());
     }
 
     @Override

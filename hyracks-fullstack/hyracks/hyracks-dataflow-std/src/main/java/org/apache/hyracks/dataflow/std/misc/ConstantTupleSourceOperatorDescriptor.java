@@ -40,7 +40,7 @@ public class ConstantTupleSourceOperatorDescriptor extends AbstractSingleActivit
         this.tupleData = tupleData;
         this.fieldSlots = fieldSlots;
         this.tupleSize = tupleSize;
-        recordDescriptors[0] = recDesc;
+        outRecDescs[0] = recDesc;
     }
 
     @Override

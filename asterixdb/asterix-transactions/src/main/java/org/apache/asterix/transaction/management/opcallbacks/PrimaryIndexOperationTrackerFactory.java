@@ -19,8 +19,8 @@
 
 package org.apache.asterix.transaction.management.opcallbacks;
 
-import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
+import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
@@ -29,17 +29,17 @@ public class PrimaryIndexOperationTrackerFactory implements ILSMOperationTracker
 
     private static final long serialVersionUID = 1L;
 
-    private final int datasetID;
+    private final int datasetId;
 
-    public PrimaryIndexOperationTrackerFactory(int datasetID) {
-        this.datasetID = datasetID;
+    public PrimaryIndexOperationTrackerFactory(int datasetId) {
+        this.datasetId = datasetId;
     }
 
     @Override
     public ILSMOperationTracker getOperationTracker(INCServiceContext ctx) {
         IDatasetLifecycleManager dslcManager =
                 ((INcApplicationContext) ctx.getApplicationContext()).getDatasetLifecycleManager();
-        return dslcManager.getOperationTracker(datasetID);
+        return dslcManager.getOperationTracker(datasetId);
     }
 
 }

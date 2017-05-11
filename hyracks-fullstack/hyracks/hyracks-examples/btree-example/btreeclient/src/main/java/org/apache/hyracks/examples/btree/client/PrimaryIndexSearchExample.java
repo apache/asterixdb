@@ -39,13 +39,10 @@ import org.apache.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor;
 import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
 import org.apache.hyracks.dataflow.std.misc.ConstantTupleSourceOperatorDescriptor;
 import org.apache.hyracks.dataflow.std.misc.PrinterOperatorDescriptor;
-import org.apache.hyracks.examples.btree.helper.IndexLifecycleManagerProvider;
 import org.apache.hyracks.examples.btree.helper.BTreeHelperStorageManager;
-import org.apache.hyracks.storage.am.btree.dataflow.BTreeDataflowHelperFactory;
 import org.apache.hyracks.storage.am.btree.dataflow.BTreeSearchOperatorDescriptor;
-import org.apache.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
-import org.apache.hyracks.storage.am.common.freepage.LinkedMetadataPageManagerFactory;
+import org.apache.hyracks.storage.am.common.dataflow.IndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallbackFactory;
 import org.apache.hyracks.storage.common.IStorageManager;
 import org.kohsuke.args4j.CmdLineParser;
@@ -106,7 +103,6 @@ public class PrimaryIndexSearchExample {
         comparatorFactories[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
 
         // create roviders for B-Tree
-        IIndexLifecycleManagerProvider lcManagerProvider = IndexLifecycleManagerProvider.INSTANCE;
         IStorageManager storageManager = BTreeHelperStorageManager.INSTANCE;
 
         // schema of tuples coming out of primary index
@@ -129,8 +125,8 @@ public class PrimaryIndexSearchExample {
                                                                     // high key
         tb.addFieldEndOffset();
 
-        ISerializerDeserializer[] keyRecDescSers = { new UTF8StringSerializerDeserializer(),
-                new UTF8StringSerializerDeserializer() };
+        ISerializerDeserializer[] keyRecDescSers =
+                { new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer() };
         RecordDescriptor keyRecDesc = new RecordDescriptor(keyRecDescSers);
 
         ConstantTupleSourceOperatorDescriptor keyProviderOp = new ConstantTupleSourceOperatorDescriptor(spec,
@@ -143,11 +139,10 @@ public class PrimaryIndexSearchExample {
                                      // into search op
 
         IFileSplitProvider btreeSplitProvider = JobHelper.createFileSplitProvider(splitNCs, options.btreeName);
-        IIndexDataflowHelperFactory dataflowHelperFactory = new BTreeDataflowHelperFactory(true);
-        BTreeSearchOperatorDescriptor btreeSearchOp = new BTreeSearchOperatorDescriptor(spec, recDesc, storageManager,
-                lcManagerProvider, btreeSplitProvider, typeTraits, comparatorFactories, null, lowKeyFields,
+        IIndexDataflowHelperFactory dataflowHelperFactory = new IndexDataflowHelperFactory(storageManager, btreeSplitProvider);
+        BTreeSearchOperatorDescriptor btreeSearchOp = new BTreeSearchOperatorDescriptor(spec, recDesc, lowKeyFields,
                 highKeyFields, true, true, dataflowHelperFactory, false, false, null,
-                NoOpOperationCallbackFactory.INSTANCE, null, null, new LinkedMetadataPageManagerFactory());
+                NoOpOperationCallbackFactory.INSTANCE, null, null, false);
 
         JobHelper.createPartitionConstraint(spec, btreeSearchOp, splitNCs);
 

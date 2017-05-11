@@ -95,7 +95,7 @@ public abstract class AbstractFileWriteOperatorDescriptor extends AbstractSingle
     @Override
     public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
-        return new DeserializedOperatorNodePushable(ctx, new FileWriteOperator(ctx.getIOManager(),
+        return new DeserializedOperatorNodePushable(ctx, new FileWriteOperator(ctx.getIoManager(),
                 partition), recordDescProvider.getInputRecordDescriptor(getActivityId(), 0));
     }
 }

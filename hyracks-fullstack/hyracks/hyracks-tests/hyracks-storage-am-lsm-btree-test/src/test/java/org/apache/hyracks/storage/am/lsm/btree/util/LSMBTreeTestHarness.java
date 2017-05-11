@@ -43,7 +43,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import org.apache.hyracks.storage.am.lsm.common.impls.NoMergePolicy;
-import org.apache.hyracks.storage.am.lsm.common.impls.NoOpIOOperationCallback;
+import org.apache.hyracks.storage.am.lsm.common.impls.NoOpIOOperationCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.impls.SynchronousScheduler;
 import org.apache.hyracks.storage.am.lsm.common.impls.ThreadCountingTracker;
 import org.apache.hyracks.storage.am.lsm.common.impls.VirtualBufferCache;
@@ -56,7 +56,8 @@ import org.apache.hyracks.test.support.TestUtils;
 public class LSMBTreeTestHarness {
     protected static final Logger LOGGER = Logger.getLogger(LSMBTreeTestHarness.class.getName());
 
-    public static final BTreeLeafFrameType[] LEAF_FRAMES_TO_TEST = new BTreeLeafFrameType[] { BTreeLeafFrameType.REGULAR_NSM };
+    public static final BTreeLeafFrameType[] LEAF_FRAMES_TO_TEST =
+            new BTreeLeafFrameType[] { BTreeLeafFrameType.REGULAR_NSM };
 
     private static final long RANDOM_SEED = 50;
 
@@ -98,7 +99,7 @@ public class LSMBTreeTestHarness {
         this.ioScheduler = SynchronousScheduler.INSTANCE;
         this.mergePolicy = new NoMergePolicy();
         this.opTracker = new ThreadCountingTracker();
-        this.ioOpCallback = NoOpIOOperationCallback.INSTANCE;
+        this.ioOpCallback = NoOpIOOperationCallbackFactory.INSTANCE.createIoOpCallback();
         this.numMutableComponents = AccessMethodTestsConfig.LSM_BTREE_NUM_MUTABLE_COMPONENTS;
         this.metadataPageManagerFactory = AppendOnlyLinkedMetadataPageManagerFactory.INSTANCE;
     }
@@ -111,12 +112,12 @@ public class LSMBTreeTestHarness {
         ctx = TestUtils.create(getHyracksFrameSize());
         TestStorageManagerComponentHolder.init(diskPageSize, diskNumPages, diskMaxOpenFiles);
         file = ioManager.resolveAbsolutePath(onDiskDir);
-        diskBufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx);
-        diskFileMapProvider = TestStorageManagerComponentHolder.getFileMapProvider(ctx);
+        diskBufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx.getJobletContext().getServiceContext());
+        diskFileMapProvider = TestStorageManagerComponentHolder.getFileMapProvider();
         virtualBufferCaches = new ArrayList<>();
         for (int i = 0; i < numMutableComponents; i++) {
-            IVirtualBufferCache virtualBufferCache = new VirtualBufferCache(new HeapBufferAllocator(), memPageSize,
-                    memNumPages / numMutableComponents);
+            IVirtualBufferCache virtualBufferCache =
+                    new VirtualBufferCache(new HeapBufferAllocator(), memPageSize, memNumPages / numMutableComponents);
             virtualBufferCaches.add(virtualBufferCache);
         }
         rnd.setSeed(RANDOM_SEED);

@@ -37,7 +37,7 @@ public class UnionAllOperatorDescriptor extends AbstractOperatorDescriptor {
     public UnionAllOperatorDescriptor(IOperatorDescriptorRegistry spec, int nInputs,
             RecordDescriptor recordDescriptor) {
         super(spec, nInputs, 1);
-        recordDescriptors[0] = recordDescriptor;
+        outRecDescs[0] = recordDescriptor;
     }
 
     private static final long serialVersionUID = 1L;

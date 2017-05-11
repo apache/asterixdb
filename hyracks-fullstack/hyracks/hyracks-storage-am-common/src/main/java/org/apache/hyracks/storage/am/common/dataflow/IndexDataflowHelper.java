@@ -19,55 +19,32 @@
 
 package org.apache.hyracks.storage.am.common.dataflow;
 
-import java.io.IOException;
-
-import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
-import org.apache.hyracks.api.io.FileSplit;
-import org.apache.hyracks.api.io.IIOManager;
-import org.apache.hyracks.storage.am.common.api.IIndex;
 import org.apache.hyracks.storage.am.common.api.IIndexDataflowHelper;
-import org.apache.hyracks.storage.am.common.api.IPageManagerFactory;
-import org.apache.hyracks.storage.am.common.api.IResourceLifecycleManager;
-import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
-import org.apache.hyracks.storage.common.file.ILocalResourceFactory;
-import org.apache.hyracks.storage.common.file.ILocalResourceRepository;
-import org.apache.hyracks.storage.common.file.IResourceIdFactory;
-import org.apache.hyracks.storage.common.file.LocalResource;
+import org.apache.hyracks.storage.common.IIndex;
+import org.apache.hyracks.storage.common.ILocalResourceRepository;
+import org.apache.hyracks.storage.common.IResource;
+import org.apache.hyracks.storage.common.IResourceLifecycleManager;
+import org.apache.hyracks.storage.common.IStorageManager;
+import org.apache.hyracks.storage.common.LocalResource;
 
-public abstract class IndexDataflowHelper implements IIndexDataflowHelper {
+public class IndexDataflowHelper implements IIndexDataflowHelper {
 
-    protected final IHyracksTaskContext ctx;
-    protected final IIOManager ioManager;
-    protected final IIndexOperatorDescriptor opDesc;
-    protected final IResourceLifecycleManager<IIndex> lcManager;
-    protected final ILocalResourceRepository localResourceRepository;
-    protected final IResourceIdFactory resourceIdFactory;
-    protected final IPageManagerFactory pageManagerFactory;
-    protected final boolean durable;
-    protected final FileReference resourceRef;
-    protected final String resourceName;
-    protected final int partition;
-    protected IIndex index;
+    private final INCServiceContext ctx;
+    private final IResourceLifecycleManager<IIndex> lcManager;
+    private final ILocalResourceRepository localResourceRepository;
+    private final FileReference resourceRef;
+    private IIndex index;
 
-    public IndexDataflowHelper(IIndexOperatorDescriptor opDesc, final IHyracksTaskContext ctx, int partition,
-            boolean durable) throws HyracksDataException {
+    public IndexDataflowHelper(final INCServiceContext ctx, IStorageManager storageMgr, FileReference resourceRef)
+            throws HyracksDataException {
         this.ctx = ctx;
-        this.opDesc = opDesc;
-        this.ioManager = ctx.getIOManager();
-        this.lcManager = opDesc.getLifecycleManagerProvider().getLifecycleManager(ctx);
-        this.localResourceRepository = opDesc.getStorageManager().getLocalResourceRepository(ctx);
-        this.resourceIdFactory = opDesc.getStorageManager().getResourceIdFactory(ctx);
-        FileSplit fileSplit = opDesc.getFileSplitProvider().getFileSplits()[partition];
-        this.resourceRef = fileSplit.getFileReference(ioManager);
-        this.resourceName = resourceRef.getRelativePath();
-        this.pageManagerFactory = opDesc.getPageManagerFactory();
-        this.durable = durable;
-        this.partition = partition;
+        this.lcManager = storageMgr.getLifecycleManager(ctx);
+        this.localResourceRepository = storageMgr.getLocalResourceRepository(ctx);
+        this.resourceRef = resourceRef;
     }
-
-    protected abstract IIndex createIndexInstance() throws HyracksDataException;
 
     @Override
     public IIndex getIndexInstance() {
@@ -75,52 +52,28 @@ public abstract class IndexDataflowHelper implements IIndexDataflowHelper {
     }
 
     @Override
-    public void create() throws HyracksDataException {
-        synchronized (lcManager) {
-            index = lcManager.get(resourceRef.getRelativePath());
-            if (index != null) {
-                //how is this right?????????? <needs to be fixed>
-                lcManager.unregister(resourceRef.getRelativePath());
-            } else {
-                index = createIndexInstance();
-            }
-
-            // The previous resource ID needs to be removed since calling IIndex.create() may possibly destroy
-            // any physical artifact that the LocalResourceRepository is managing (e.g. a file containing the resource ID).
-            // Once the index has been created, a new resource ID can be generated.
-            long resourceID = getResourceID();
-            if (resourceID != -1) {
-                localResourceRepository.delete(resourceRef.getRelativePath());
-            }
-            index.create();
-            try {
-                resourceID = resourceIdFactory.createId();
-                ILocalResourceFactory localResourceFactory = opDesc.getLocalResourceFactoryProvider()
-                        .getLocalResourceFactory();
-                localResourceRepository.insert(localResourceFactory.createLocalResource(resourceID, resourceRef
-                        .getRelativePath(),
-                        ITreeIndexFrame.Constants.VERSION, partition));
-            } catch (IOException e) {
-                throw new HyracksDataException(e);
-            }
-            lcManager.register(resourceRef.getRelativePath(), index);
-        }
-    }
-
-    @Override
     public void open() throws HyracksDataException {
+        //Get local resource file
         synchronized (lcManager) {
-            if (getResourceID() == -1) {
-                throw new HyracksDataException("Index does not have a valid resource ID. Has it been created yet?");
-            }
-
             index = lcManager.get(resourceRef.getRelativePath());
             if (index == null) {
-                index = createIndexInstance();
-                lcManager.register(resourceRef.getRelativePath(), index);
+                LocalResource lr = readIndex();
+                lcManager.register(lr.getPath(), index);
             }
             lcManager.open(resourceRef.getRelativePath());
         }
+    }
+
+    private LocalResource readIndex() throws HyracksDataException {
+        // Get local resource
+        LocalResource lr = getResource();
+        if (lr == null) {
+            throw new HyracksDataException(
+                    "Index resource couldn't be found. Has it been created yet? Was it deleted?");
+        }
+        IResource resource = lr.getResource();
+        index = resource.createInstance(ctx);
+        return lr;
     }
 
     @Override
@@ -137,17 +90,17 @@ public abstract class IndexDataflowHelper implements IIndexDataflowHelper {
             if (index != null) {
                 lcManager.unregister(resourceRef.getRelativePath());
             } else {
-                index = createIndexInstance();
+                readIndex();
             }
 
-            if (getResourceID() != -1) {
+            if (getResourceId() != -1) {
                 localResourceRepository.delete(resourceRef.getRelativePath());
             }
             index.destroy();
         }
     }
 
-    private long getResourceID() throws HyracksDataException {
+    private long getResourceId() throws HyracksDataException {
         LocalResource lr = localResourceRepository.get(resourceRef.getRelativePath());
         return lr == null ? -1 : lr.getId();
     }

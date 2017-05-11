@@ -44,6 +44,7 @@ import java.util.logging.Logger;
 
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.config.ReplicationProperties;
+import org.apache.asterix.common.dataflow.DatasetLocalResource;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.ioopcallbacks.AbstractLSMIOOperationCallback;
 import org.apache.asterix.common.replication.IReplicaResourcesManager;
@@ -56,7 +57,6 @@ import org.apache.asterix.common.transactions.IRecoveryManager;
 import org.apache.asterix.common.transactions.ITransactionContext;
 import org.apache.asterix.common.transactions.ITransactionSubsystem;
 import org.apache.asterix.common.transactions.LogType;
-import org.apache.asterix.common.transactions.Resource;
 import org.apache.asterix.transaction.management.opcallbacks.AbstractIndexModificationOperationCallback;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepository;
 import org.apache.asterix.transaction.management.service.logging.LogManager;
@@ -67,12 +67,12 @@ import org.apache.commons.io.FileUtils;
 import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.lifecycle.ILifeCycleComponent;
-import org.apache.hyracks.storage.am.common.api.IIndex;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndex;
-import org.apache.hyracks.storage.common.file.LocalResource;
+import org.apache.hyracks.storage.common.IIndex;
+import org.apache.hyracks.storage.common.LocalResource;
 
 /**
  * This is the Recovery Manager and is responsible for rolling back a
@@ -307,7 +307,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
         long lsn = -1;
         ILSMIndex index = null;
         LocalResource localResource = null;
-        Resource localResourceMetadata = null;
+        DatasetLocalResource localResourceMetadata = null;
         boolean foundWinner = false;
         JobEntityCommits jobEntityWinners = null;
 
@@ -359,6 +359,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
                                  * log record.
                                  *******************************************************************/
                                 if (localResource == null) {
+                                    LOGGER.log(Level.WARNING, "resource was not found for resource id " + resourceId);
                                     logRecord = logReader.next();
                                     continue;
                                 }
@@ -368,11 +369,11 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
                                 //if index is not registered into IndexLifeCycleManager,
                                 //create the index using LocalMetadata stored in LocalResourceRepository
                                 //get partition path in this node
-                                localResourceMetadata = (Resource) localResource.getResource();
+                                localResourceMetadata = (DatasetLocalResource) localResource.getResource();
                                 index = (ILSMIndex) datasetLifecycleManager.get(localResource.getPath());
                                 if (index == null) {
                                     //#. create index instance and register to indexLifeCycleManager
-                                    index = localResourceMetadata.createIndexInstance(serviceCtx, localResource);
+                                    index = (ILSMIndex) localResourceMetadata.createInstance(serviceCtx);
                                     datasetLifecycleManager.register(localResource.getPath(), index);
                                     datasetLifecycleManager.open(localResource.getPath());
 

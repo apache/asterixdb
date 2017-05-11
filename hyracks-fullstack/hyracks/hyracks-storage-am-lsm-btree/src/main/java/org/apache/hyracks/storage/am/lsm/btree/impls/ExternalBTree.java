@@ -19,6 +19,7 @@
 package org.apache.hyracks.storage.am.lsm.btree.impls;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -34,13 +35,8 @@ import org.apache.hyracks.storage.am.bloomfilter.impls.BloomFilterFactory;
 import org.apache.hyracks.storage.am.bloomfilter.impls.BloomFilterSpecification;
 import org.apache.hyracks.storage.am.btree.impls.BTree;
 import org.apache.hyracks.storage.am.btree.impls.BTree.BTreeBulkLoader;
-import org.apache.hyracks.storage.am.common.api.IIndexBulkLoader;
-import org.apache.hyracks.storage.am.common.api.IIndexCursor;
 import org.apache.hyracks.storage.am.common.api.IIndexOperationContext;
 import org.apache.hyracks.storage.am.common.api.IMetadataPageManager;
-import org.apache.hyracks.storage.am.common.api.IModificationOperationCallback;
-import org.apache.hyracks.storage.am.common.api.ISearchOperationCallback;
-import org.apache.hyracks.storage.am.common.api.ISearchPredicate;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexCursor;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleWriterFactory;
@@ -64,6 +60,11 @@ import org.apache.hyracks.storage.am.lsm.common.impls.BlockingIOOperationCallbac
 import org.apache.hyracks.storage.am.lsm.common.impls.ExternalIndexHarness;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
 import org.apache.hyracks.storage.am.lsm.common.impls.TreeIndexFactory;
+import org.apache.hyracks.storage.common.IIndexBulkLoader;
+import org.apache.hyracks.storage.common.IIndexCursor;
+import org.apache.hyracks.storage.common.IModificationOperationCallback;
+import org.apache.hyracks.storage.common.ISearchOperationCallback;
+import org.apache.hyracks.storage.common.ISearchPredicate;
 import org.apache.hyracks.storage.common.file.IFileMapProvider;
 
 /**
@@ -85,7 +86,7 @@ public class ExternalBTree extends LSMBTree implements ITwoPCIndex {
     // A pointer that points to the current most recent list (either
     // diskComponents = 0, or secondDiskComponents = 1). It starts with -1 to
     // indicate first time activation
-    private int version = -1;
+    private int version = 0;
 
     private final ITreeIndexFrameFactory interiorFrameFactory;
 
@@ -97,7 +98,7 @@ public class ExternalBTree extends LSMBTree implements ITwoPCIndex {
             double bloomFilterFalsePositiveRate, IFileMapProvider diskFileMapProvider, int fieldCount,
             IBinaryComparatorFactory[] cmpFactories, ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker,
             ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallback ioOpCallback,
-            TreeIndexFactory<BTree> transactionBTreeFactory, int version, boolean durable) {
+            TreeIndexFactory<BTree> transactionBTreeFactory, boolean durable) {
         super(ioManager, insertLeafFrameFactory, deleteLeafFrameFactory, fileManager, diskBTreeFactory,
                 bulkLoadBTreeFactory, bloomFilterFactory, bloomFilterFalsePositiveRate, diskFileMapProvider, fieldCount,
                 cmpFactories, mergePolicy, opTracker, ioScheduler, ioOpCallback, false, durable);
@@ -105,7 +106,6 @@ public class ExternalBTree extends LSMBTree implements ITwoPCIndex {
                 new LSMBTreeDiskComponentFactory(transactionBTreeFactory, bloomFilterFactory, null);
         this.secondDiskComponents = new LinkedList<>();
         this.interiorFrameFactory = interiorFrameFactory;
-        this.version = version;
     }
 
     // The subsume merged components is overridden to account for:
@@ -143,8 +143,10 @@ public class ExternalBTree extends LSMBTree implements ITwoPCIndex {
     public List<ILSMDiskComponent> getImmutableComponents() {
         if (version == 0) {
             return diskComponents;
-        } else {
+        } else if (version == 1) {
             return secondDiskComponents;
+        } else {
+            return Collections.emptyList();
         }
     }
 
@@ -344,7 +346,7 @@ public class ExternalBTree extends LSMBTree implements ITwoPCIndex {
         }
         diskComponents.clear();
         secondDiskComponents.clear();
-        version = -1;
+        version = 0;
     }
 
     @Override
@@ -367,7 +369,7 @@ public class ExternalBTree extends LSMBTree implements ITwoPCIndex {
         diskComponents.clear();
         secondDiskComponents.clear();
         fileManager.deleteDirs();
-        version = -1;
+        version = 0;
     }
 
     @Override
@@ -641,6 +643,11 @@ public class ExternalBTree extends LSMBTree implements ITwoPCIndex {
     @Override
     public int getCurrentVersion() {
         return version;
+    }
+
+    @Override
+    public void setCurrentVersion(int version) {
+        this.version = version;
     }
 
     @Override

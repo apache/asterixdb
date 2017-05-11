@@ -20,7 +20,7 @@
 package org.apache.hyracks.storage.am.common.impls;
 
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
-import org.apache.hyracks.storage.am.common.api.ISearchPredicate;
+import org.apache.hyracks.storage.common.ISearchPredicate;
 
 public abstract class AbstractSearchPredicate implements ISearchPredicate {
 

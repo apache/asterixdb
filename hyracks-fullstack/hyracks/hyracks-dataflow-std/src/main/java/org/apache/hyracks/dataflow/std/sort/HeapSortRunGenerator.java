@@ -78,7 +78,7 @@ public class HeapSortRunGenerator extends AbstractSortRunGenerator {
     protected RunFileWriter getRunFileWriter() throws HyracksDataException {
         FileReference file = ctx.getJobletContext()
                 .createManagedWorkspaceFile(HeapSortRunGenerator.class.getSimpleName());
-        return new RunFileWriter(file, ctx.getIOManager());
+        return new RunFileWriter(file, ctx.getIoManager());
     }
 
     @Override

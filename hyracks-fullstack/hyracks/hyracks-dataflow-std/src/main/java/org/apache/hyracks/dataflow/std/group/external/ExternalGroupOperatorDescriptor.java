@@ -88,7 +88,7 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
          * Set the record descriptor. Note that since this operator is a unary
          * operator, only the first record descriptor is used here.
          */
-        recordDescriptors[0] = outRecordDesc;
+        outRecDescs[0] = outRecordDesc;
         this.tableSize = inputSizeInTuple;
         this.fileSize = inputFileSize;
     }
@@ -128,7 +128,7 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
             return new ExternalGroupBuildOperatorNodePushable(ctx, new TaskId(getActivityId(), partition), tableSize,
                     fileSize, keyFields, framesLimit, comparatorFactories, firstNormalizerFactory,
                     partialAggregatorFactory, recordDescProvider.getInputRecordDescriptor(getActivityId(), 0),
-                    recordDescriptors[0], spillableTableFactory);
+                    outRecDescs[0], spillableTableFactory);
         }
     }
 

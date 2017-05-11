@@ -26,17 +26,18 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
+import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.cluster.ClusterPartition;
 import org.apache.asterix.common.config.ClusterProperties;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.config.MetadataProperties;
+import org.apache.asterix.common.context.AsterixVirtualBufferCacheProvider;
 import org.apache.asterix.common.context.CorrelatedPrefixMergePolicyFactory;
+import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.ioopcallbacks.LSMBTreeIOOperationCallbackFactory;
-import org.apache.asterix.common.transactions.Resource;
 import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.asterix.external.adapter.factory.GenericAdapterFactory;
 import org.apache.asterix.external.api.IAdapterFactory;
@@ -68,8 +69,7 @@ import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.formats.NonTaggedDataFormat;
 import org.apache.asterix.transaction.management.opcallbacks.PrimaryIndexOperationTrackerFactory;
 import org.apache.asterix.transaction.management.opcallbacks.SecondaryIndexOperationTrackerFactory;
-import org.apache.asterix.transaction.management.resource.LSMBTreeLocalResourceMetadata;
-import org.apache.asterix.transaction.management.resource.PersistentLocalResourceFactoryProvider;
+import org.apache.asterix.transaction.management.resource.DatasetLocalResourceFactory;
 import org.apache.asterix.transaction.management.service.transaction.TransactionManagementConstants.LockManagerConstants.LockMode;
 import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
@@ -77,9 +77,10 @@ import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
-import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
-import org.apache.hyracks.storage.am.lsm.btree.impls.LSMBTree;
-import org.apache.hyracks.storage.am.lsm.btree.utils.LSMBTreeUtil;
+import org.apache.hyracks.storage.am.common.api.IIndexBuilder;
+import org.apache.hyracks.storage.am.common.build.IndexBuilder;
+import org.apache.hyracks.storage.am.common.dataflow.IndexDataflowHelper;
+import org.apache.hyracks.storage.am.lsm.btree.dataflow.LSMBTreeLocalResourceFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
@@ -87,12 +88,10 @@ import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import org.apache.hyracks.storage.am.lsm.common.impls.ConstantMergePolicyFactory;
 import org.apache.hyracks.storage.am.lsm.common.impls.NoMergePolicyFactory;
 import org.apache.hyracks.storage.am.lsm.common.impls.PrefixMergePolicyFactory;
+import org.apache.hyracks.storage.common.ILocalResourceRepository;
+import org.apache.hyracks.storage.common.LocalResource;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.file.IFileMapProvider;
-import org.apache.hyracks.storage.common.file.ILocalResourceFactory;
-import org.apache.hyracks.storage.common.file.ILocalResourceFactoryProvider;
-import org.apache.hyracks.storage.common.file.ILocalResourceRepository;
-import org.apache.hyracks.storage.common.file.LocalResource;
 
 /**
  * Initializes the remote metadata storage facilities ("universe") using a
@@ -335,47 +334,38 @@ public class MetadataBootstrap {
                 ClusterProperties.INSTANCE.getStorageDirectoryName(), metadataPartition.getPartitionId());
         String resourceName = metadataPartitionPath + File.separator + index.getFileNameRelativePath();
         FileReference file = ioManager.getFileReference(metadataDeviceId, resourceName);
-
+        index.setFile(file);
         // this should not be done this way. dataset lifecycle manager shouldn't return virtual buffer caches for
         // a dataset that was not yet created
         List<IVirtualBufferCache> virtualBufferCaches = appContext.getDatasetLifecycleManager()
                 .getVirtualBufferCaches(index.getDatasetId().getId(), metadataPartition.getIODeviceNum());
         ITypeTraits[] typeTraits = index.getTypeTraits();
-        IBinaryComparatorFactory[] comparatorFactories = index.getKeyBinaryComparatorFactory();
+        IBinaryComparatorFactory[] cmpFactories = index.getKeyBinaryComparatorFactory();
         int[] bloomFilterKeyFields = index.getBloomFilterKeyFields();
-        LSMBTree lsmBtree;
-        long resourceID;
+
         // opTrackerProvider and ioOpCallbackFactory should both be acquired through IStorageManager
         // We are unable to do this since IStorageManager needs a dataset to determine the appropriate
         // objects
-        ILSMOperationTrackerFactory opTrackerProvider =
+        ILSMOperationTrackerFactory opTrackerFactory =
                 index.isPrimaryIndex() ? new PrimaryIndexOperationTrackerFactory(index.getDatasetId().getId())
                         : new SecondaryIndexOperationTrackerFactory(index.getDatasetId().getId());
         ILSMIOOperationCallbackFactory ioOpCallbackFactory = LSMBTreeIOOperationCallbackFactory.INSTANCE;
+        IStorageComponentProvider storageComponentProvider = appContext.getStorageComponentProvider();
         if (isNewUniverse()) {
+            LSMBTreeLocalResourceFactory lsmBtreeFactory = new LSMBTreeLocalResourceFactory(
+                    storageComponentProvider.getStorageManager(), typeTraits, cmpFactories, null, null, null,
+                    opTrackerFactory, ioOpCallbackFactory, storageComponentProvider.getMetadataPageManagerFactory(),
+                    new AsterixVirtualBufferCacheProvider(index.getDatasetId().getId()),
+                    storageComponentProvider.getIoOperationSchedulerProvider(),
+                    appContext.getMetadataMergePolicyFactory(), GlobalConfig.DEFAULT_COMPACTION_POLICY_PROPERTIES, true,
+                    bloomFilterKeyFields, appContext.getBloomFilterFalsePositiveRate(), true, null);
+            DatasetLocalResourceFactory dsLocalResourceFactory =
+                    new DatasetLocalResourceFactory(index.getDatasetId().getId(), lsmBtreeFactory);
             // TODO(amoudi) Creating the index should be done through the same code path as other indexes
             // This is to be done by having a metadata dataset associated with each index
-            lsmBtree = LSMBTreeUtil.createLSMTree(ioManager, virtualBufferCaches, file, bufferCache, fileMapProvider,
-                    typeTraits, comparatorFactories, bloomFilterKeyFields,
-                    appContext.getBloomFilterFalsePositiveRate(),
-                    appContext.getMetadataMergePolicyFactory().createMergePolicy(
-                            GlobalConfig.DEFAULT_COMPACTION_POLICY_PROPERTIES, dataLifecycleManager),
-                    opTrackerProvider.getOperationTracker(ncServiceCtx), appContext.getLSMIOScheduler(),
-                    ioOpCallbackFactory.createIoOpCallback(), index.isPrimaryIndex(), null, null, null, null, true,
-                    appContext.getStorageComponentProvider().getMetadataPageManagerFactory());
-            lsmBtree.create();
-            resourceID = index.getResourceId();
-            Resource localResourceMetadata = new LSMBTreeLocalResourceMetadata(typeTraits, comparatorFactories,
-                    bloomFilterKeyFields, index.isPrimaryIndex(), index.getDatasetId().getId(),
-                    metadataPartition.getPartitionId(), appContext.getMetadataMergePolicyFactory(),
-                    GlobalConfig.DEFAULT_COMPACTION_POLICY_PROPERTIES, null, null, null, null, opTrackerProvider,
-                    ioOpCallbackFactory, appContext.getStorageComponentProvider().getMetadataPageManagerFactory());
-            ILocalResourceFactoryProvider localResourceFactoryProvider = new PersistentLocalResourceFactoryProvider(
-                    partition -> localResourceMetadata, LocalResource.LSMBTreeResource);
-            ILocalResourceFactory localResourceFactory = localResourceFactoryProvider.getLocalResourceFactory();
-            localResourceRepository.insert(localResourceFactory.createLocalResource(resourceID, resourceName,
-                    ITreeIndexFrame.Constants.VERSION, metadataPartition.getPartitionId()));
-            dataLifecycleManager.register(file.getRelativePath(), lsmBtree);
+            IIndexBuilder indexBuilder = new IndexBuilder(ncServiceCtx, storageComponentProvider.getStorageManager(),
+                    index::getResourceId, file, dsLocalResourceFactory, true);
+            indexBuilder.build();
         } else {
             final LocalResource resource = localResourceRepository.get(file.getRelativePath());
             if (resource == null) {
@@ -384,26 +374,14 @@ public class MetadataBootstrap {
                                 .get(appContext.getTransactionSubsystem().getId())
                         + " to intialize as a new instance. (WARNING: all data will be lost.)");
             }
-            resourceID = resource.getId();
+            // Why do we care about metadata dataset's resource ids? why not assign them ids similar to other resources?
             if (index.getResourceId() != resource.getId()) {
                 throw new HyracksDataException("Resource Id doesn't match expected metadata index resource id");
             }
-            lsmBtree = (LSMBTree) dataLifecycleManager.get(file.getRelativePath());
-            if (lsmBtree == null) {
-                lsmBtree = LSMBTreeUtil.createLSMTree(ioManager, virtualBufferCaches, file, bufferCache,
-                        fileMapProvider, typeTraits, comparatorFactories, bloomFilterKeyFields,
-                        appContext.getBloomFilterFalsePositiveRate(),
-                        appContext.getMetadataMergePolicyFactory().createMergePolicy(
-                                GlobalConfig.DEFAULT_COMPACTION_POLICY_PROPERTIES, dataLifecycleManager),
-                        opTrackerProvider.getOperationTracker(ncServiceCtx), appContext.getLSMIOScheduler(),
-                        LSMBTreeIOOperationCallbackFactory.INSTANCE.createIoOpCallback(), index.isPrimaryIndex(), null,
-                        null, null, null, true,
-                        appContext.getStorageComponentProvider().getMetadataPageManagerFactory());
-                dataLifecycleManager.register(file.getRelativePath(), lsmBtree);
-            }
+            IndexDataflowHelper indexHelper = new IndexDataflowHelper(ncServiceCtx, storageComponentProvider.getStorageManager(), file);
+            indexHelper.open(); // Opening the index through the helper will ensure it gets instantiated
+            indexHelper.close();
         }
-        index.setResourceId(resourceID);
-        index.setFile(file);
     }
 
     public static String getOutputDir() {

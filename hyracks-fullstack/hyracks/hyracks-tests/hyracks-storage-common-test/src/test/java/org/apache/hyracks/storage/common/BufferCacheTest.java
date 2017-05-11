@@ -63,8 +63,9 @@ public class BufferCacheTest {
     @Test
     public void simpleOpenPinCloseTest() throws HyracksException {
         TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES, MAX_OPEN_FILES);
-        IBufferCache bufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx);
-        IFileMapProvider fmp = TestStorageManagerComponentHolder.getFileMapProvider(ctx);
+        IBufferCache bufferCache =
+                TestStorageManagerComponentHolder.getBufferCache(ctx.getJobletContext().getServiceContext());
+        IFileMapProvider fmp = TestStorageManagerComponentHolder.getFileMapProvider();
         IIOManager ioManager = TestStorageManagerComponentHolder.getIOManager();
         String fileName = getFileName();
         FileReference file = ioManager.resolve(fileName);
@@ -145,8 +146,9 @@ public class BufferCacheTest {
     @Test
     public void simpleMaxOpenFilesTest() throws HyracksException {
         TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES, MAX_OPEN_FILES);
-        IBufferCache bufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx);
-        IFileMapProvider fmp = TestStorageManagerComponentHolder.getFileMapProvider(ctx);
+        IBufferCache bufferCache =
+                TestStorageManagerComponentHolder.getBufferCache(ctx.getJobletContext().getServiceContext());
+        IFileMapProvider fmp = TestStorageManagerComponentHolder.getFileMapProvider();
         IIOManager ioManager = TestStorageManagerComponentHolder.getIOManager();
 
         List<Integer> fileIds = new ArrayList<>();
@@ -205,8 +207,9 @@ public class BufferCacheTest {
     @Test
     public void contentCheckingMaxOpenFilesTest() throws HyracksException {
         TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES, MAX_OPEN_FILES);
-        IBufferCache bufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx);
-        IFileMapProvider fmp = TestStorageManagerComponentHolder.getFileMapProvider(ctx);
+        IBufferCache bufferCache =
+                TestStorageManagerComponentHolder.getBufferCache(ctx.getJobletContext().getServiceContext());
+        IFileMapProvider fmp = TestStorageManagerComponentHolder.getFileMapProvider();
         IIOManager ioManager = TestStorageManagerComponentHolder.getIOManager();
 
         List<Integer> fileIds = new ArrayList<>();

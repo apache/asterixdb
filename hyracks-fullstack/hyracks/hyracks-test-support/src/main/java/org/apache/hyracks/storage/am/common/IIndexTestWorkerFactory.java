@@ -20,8 +20,8 @@
 package org.apache.hyracks.storage.am.common;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.storage.am.common.api.IIndex;
 import org.apache.hyracks.storage.am.common.datagen.DataGenThread;
+import org.apache.hyracks.storage.common.IIndex;
 
 public interface IIndexTestWorkerFactory {
     public AbstractIndexTestWorker create(DataGenThread dataGen, TestOperationSelector opSelector, IIndex index,

@@ -44,7 +44,6 @@ import org.apache.asterix.common.transactions.IResourceIdManager;
 import org.apache.hyracks.api.application.ICCServiceContext;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.job.IJobLifecycleListener;
-import org.apache.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
 import org.apache.hyracks.storage.common.IStorageManager;
 
 /*
@@ -151,11 +150,6 @@ public class CcApplicationContext implements ICcApplicationContext {
     @Override
     public IHyracksClientConnection getHcc() {
         return hcc;
-    }
-
-    @Override
-    public IIndexLifecycleManagerProvider getIndexLifecycleManagerProvider() {
-        return RuntimeComponentsProvider.RUNTIME_PROVIDER;
     }
 
     @Override

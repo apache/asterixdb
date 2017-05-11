@@ -20,22 +20,21 @@
 package org.apache.hyracks.storage.am.common.dataflow;
 
 import org.apache.hyracks.api.comm.IFrameWriter;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.std.base.AbstractOperatorNodePushable;
-import org.apache.hyracks.storage.am.common.api.IIndexDataflowHelper;
+import org.apache.hyracks.storage.am.common.api.IIndexBuilder;
 
 public class IndexCreateOperatorNodePushable extends AbstractOperatorNodePushable {
-    private final IIndexDataflowHelper indexHelper;
+    private final IIndexBuilder indexBuilder;
 
-    public IndexCreateOperatorNodePushable(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx, int partition)
-            throws HyracksDataException {
-        this.indexHelper = opDesc.getIndexDataflowHelperFactory().createIndexDataflowHelper(opDesc, ctx, partition);
+    public IndexCreateOperatorNodePushable(IIndexBuilder indexBuilder) throws HyracksDataException {
+        this.indexBuilder = indexBuilder;
     }
 
     @Override
     public void deinitialize() throws HyracksDataException {
+        //No Cleanup needed
     }
 
     @Override
@@ -50,10 +49,11 @@ public class IndexCreateOperatorNodePushable extends AbstractOperatorNodePushabl
 
     @Override
     public void initialize() throws HyracksDataException {
-        indexHelper.create();
+        indexBuilder.build();
     }
 
     @Override
     public void setOutputFrameWriter(int index, IFrameWriter writer, RecordDescriptor recordDesc) {
+        // There is no output for this operator
     }
 }

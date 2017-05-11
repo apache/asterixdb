@@ -59,87 +59,46 @@ public class SplitsAndConstraintsUtil {
     public static FileSplit[] getDatasetSplits(Dataset dataset, MetadataTransactionContext mdTxnCtx,
             String targetIdxName, boolean temp) throws AlgebricksException {
         try {
-            File relPathFile = new File(StoragePathUtil.prepareDataverseIndexName(dataset.getDataverseName(),
-                    dataset.getDatasetName(), targetIdxName));
             List<String> nodeGroup =
                     MetadataManager.INSTANCE.getNodegroup(mdTxnCtx, dataset.getNodeGroupName()).getNodeNames();
             if (nodeGroup == null) {
                 throw new AlgebricksException("Couldn't find node group " + dataset.getNodeGroupName());
             }
-
-            String storageDirName = ClusterProperties.INSTANCE.getStorageDirectoryName();
-            List<FileSplit> splits = new ArrayList<>();
-            for (String nd : nodeGroup) {
-                int numPartitions = ClusterStateManager.INSTANCE.getNodePartitionsCount(nd);
-                ClusterPartition[] nodePartitions = ClusterStateManager.INSTANCE.getNodePartitions(nd);
-                // currently this case is never executed since the metadata group doesn't exists
-                if (dataset.getNodeGroupName().compareTo(MetadataConstants.METADATA_NODEGROUP_NAME) == 0) {
-                    numPartitions = 1;
-                }
-
-                for (int k = 0; k < numPartitions; k++) {
-                    // format: 'storage dir name'/partition_#/dataverse/dataset_idx_index
-                    File f = new File(StoragePathUtil.prepareStoragePartitionPath(storageDirName,
-                            nodePartitions[k].getPartitionId())
-                            + (temp ? (File.separator + StoragePathUtil.TEMP_DATASETS_STORAGE_FOLDER) : "")
-                            + File.separator + relPathFile);
-                    splits.add(StoragePathUtil.getFileSplitForClusterPartition(nodePartitions[k], f.getPath()));
-                }
-            }
-            return splits.toArray(new FileSplit[] {});
+            return getDatasetSplits(dataset, nodeGroup, targetIdxName, temp);
         } catch (MetadataException me) {
             throw new AlgebricksException(me);
         }
     }
 
-    private static FileSplit[] getFilesIndexSplits(Dataset dataset, MetadataTransactionContext mdTxnCtx,
-            String targetIdxName, boolean create) throws AlgebricksException {
-        try {
-            File relPathFile = new File(StoragePathUtil.prepareDataverseIndexName(dataset.getDataverseName(),
-                    dataset.getDatasetName(), targetIdxName));
-            List<String> nodeGroup =
-                    MetadataManager.INSTANCE.getNodegroup(mdTxnCtx, dataset.getNodeGroupName()).getNodeNames();
-            if (nodeGroup == null) {
-                throw new AlgebricksException("Couldn't find node group " + dataset.getNodeGroupName());
+    public static FileSplit[] getDatasetSplits(Dataset dataset, List<String> nodes, String targetIdxName,
+            boolean temp) {
+        File relPathFile = new File(StoragePathUtil.prepareDataverseIndexName(dataset.getDataverseName(),
+                dataset.getDatasetName(), targetIdxName));
+        String storageDirName = ClusterProperties.INSTANCE.getStorageDirectoryName();
+        List<FileSplit> splits = new ArrayList<>();
+        for (String nd : nodes) {
+            int numPartitions = ClusterStateManager.INSTANCE.getNodePartitionsCount(nd);
+            ClusterPartition[] nodePartitions = ClusterStateManager.INSTANCE.getNodePartitions(nd);
+            // currently this case is never executed since the metadata group doesn't exists
+            if (dataset.getNodeGroupName().compareTo(MetadataConstants.METADATA_NODEGROUP_NAME) == 0) {
+                numPartitions = 1;
             }
 
-            List<FileSplit> splits = new ArrayList<>();
-            for (String nodeId : nodeGroup) {
-                // get node partitions
-                ClusterPartition[] nodePartitions = ClusterStateManager.INSTANCE.getNodePartitions(nodeId);
-                String storageDirName = ClusterProperties.INSTANCE.getStorageDirectoryName();
-                int firstPartition = 0;
-                if (create) {
-                    // Only the first partition when create
-                    File f = new File(StoragePathUtil.prepareStoragePartitionPath(storageDirName,
-                            nodePartitions[firstPartition].getPartitionId()) + File.separator + relPathFile);
-                    splits.add(StoragePathUtil.getFileSplitForClusterPartition(nodePartitions[firstPartition],
-                            f.getPath()));
-                } else {
-                    for (int k = 0; k < nodePartitions.length; k++) {
-                        File f = new File(StoragePathUtil.prepareStoragePartitionPath(storageDirName,
-                                nodePartitions[firstPartition].getPartitionId()) + File.separator + relPathFile);
-                        splits.add(StoragePathUtil.getFileSplitForClusterPartition(nodePartitions[firstPartition],
-                                f.getPath()));
-                    }
-                }
+            for (int k = 0; k < numPartitions; k++) {
+                // format: 'storage dir name'/partition_#/dataverse/dataset_idx_index
+                File f = new File(
+                        StoragePathUtil.prepareStoragePartitionPath(storageDirName, nodePartitions[k].getPartitionId())
+                                + (temp ? (File.separator + StoragePathUtil.TEMP_DATASETS_STORAGE_FOLDER) : "")
+                                + File.separator + relPathFile);
+                splits.add(StoragePathUtil.getFileSplitForClusterPartition(nodePartitions[k], f.getPath()));
             }
-            return splits.toArray(new FileSplit[] {});
-        } catch (MetadataException me) {
-            throw new AlgebricksException(me);
         }
+        return splits.toArray(new FileSplit[] {});
     }
 
     public static Pair<IFileSplitProvider, AlgebricksPartitionConstraint> getDataverseSplitProviderAndConstraints(
             String dataverse) {
         FileSplit[] splits = getDataverseSplits(dataverse);
-        return StoragePathUtil.splitProviderAndPartitionConstraints(splits);
-    }
-
-    public static Pair<IFileSplitProvider, AlgebricksPartitionConstraint> getFilesIndexSplitProviderAndConstraints(
-            Dataset dataset, MetadataTransactionContext mdTxnCtx, String targetIdxName, boolean create)
-            throws AlgebricksException {
-        FileSplit[] splits = getFilesIndexSplits(dataset, mdTxnCtx, targetIdxName, create);
         return StoragePathUtil.splitProviderAndPartitionConstraints(splits);
     }
 

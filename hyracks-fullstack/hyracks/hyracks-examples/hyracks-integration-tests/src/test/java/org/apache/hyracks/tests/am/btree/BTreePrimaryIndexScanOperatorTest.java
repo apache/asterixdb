@@ -19,6 +19,8 @@
 
 package org.apache.hyracks.tests.am.btree;
 
+import java.io.DataOutput;
+
 import org.apache.hyracks.api.constraints.PartitionConstraintHelper;
 import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -32,19 +34,12 @@ import org.apache.hyracks.dataflow.std.file.ConstantFileSplitProvider;
 import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
 import org.apache.hyracks.dataflow.std.file.PlainFileWriterOperatorDescriptor;
 import org.apache.hyracks.dataflow.std.misc.ConstantTupleSourceOperatorDescriptor;
+import org.apache.hyracks.storage.am.btree.dataflow.BTreeResourceFactory;
 import org.apache.hyracks.storage.am.btree.dataflow.BTreeSearchOperatorDescriptor;
-import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallbackFactory;
+import org.apache.hyracks.storage.common.IResourceFactory;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.io.DataOutput;
-
-import static org.apache.hyracks.tests.am.btree.DataSetConstants.primaryBloomFilterKeyFields;
-import static org.apache.hyracks.tests.am.btree.DataSetConstants.primaryComparatorFactories;
-import static org.apache.hyracks.tests.am.btree.DataSetConstants.primaryKeyFieldCount;
-import static org.apache.hyracks.tests.am.btree.DataSetConstants.primaryRecDesc;
-import static org.apache.hyracks.tests.am.btree.DataSetConstants.primaryTypeTraits;
 
 public class BTreePrimaryIndexScanOperatorTest extends AbstractBTreeOperatorTest {
 
@@ -61,15 +56,15 @@ public class BTreePrimaryIndexScanOperatorTest extends AbstractBTreeOperatorTest
         JobSpecification spec = new JobSpecification();
 
         // build dummy tuple containing nothing
-        ArrayTupleBuilder tb = new ArrayTupleBuilder(primaryKeyFieldCount * 2);
+        ArrayTupleBuilder tb = new ArrayTupleBuilder(DataSetConstants.primaryKeyFieldCount * 2);
         DataOutput dos = tb.getDataOutput();
 
         tb.reset();
         new UTF8StringSerializerDeserializer().serialize("0", dos);
         tb.addFieldEndOffset();
 
-        ISerializerDeserializer[] keyRecDescSers = { new UTF8StringSerializerDeserializer(),
-                new UTF8StringSerializerDeserializer() };
+        ISerializerDeserializer[] keyRecDescSers =
+                { new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer() };
         RecordDescriptor keyRecDesc = new RecordDescriptor(keyRecDescSers);
 
         ConstantTupleSourceOperatorDescriptor keyProviderOp = new ConstantTupleSourceOperatorDescriptor(spec,
@@ -79,10 +74,9 @@ public class BTreePrimaryIndexScanOperatorTest extends AbstractBTreeOperatorTest
         int[] lowKeyFields = null; // - infinity
         int[] highKeyFields = null; // + infinity
 
-        BTreeSearchOperatorDescriptor primaryBtreeSearchOp = new BTreeSearchOperatorDescriptor(spec, primaryRecDesc,
-                storageManager, lcManagerProvider, primarySplitProvider, primaryTypeTraits, primaryComparatorFactories,
-                primaryBloomFilterKeyFields, lowKeyFields, highKeyFields, true, true, primaryDataflowHelperFactory, false,
-                false, null, NoOpOperationCallbackFactory.INSTANCE, null, null, pageManagerFactory);
+        BTreeSearchOperatorDescriptor primaryBtreeSearchOp = new BTreeSearchOperatorDescriptor(spec,
+                DataSetConstants.primaryRecDesc, lowKeyFields, highKeyFields, true, true, primaryHelperFactory, false,
+                false, null, NoOpOperationCallbackFactory.INSTANCE, null, null, false);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, primaryBtreeSearchOp, NC1_ID);
 
         IFileSplitProvider outSplits = new ConstantFileSplitProvider(new FileSplit[] { createFile(nc1) });
@@ -97,12 +91,19 @@ public class BTreePrimaryIndexScanOperatorTest extends AbstractBTreeOperatorTest
     }
 
     @Override
-    protected IIndexDataflowHelperFactory createDataFlowHelperFactory(int[] btreeFields, int[] filterFields) {
-        return ((BTreeOperatorTestHelper) testHelper).createDataFlowHelperFactory();
+    public void cleanup() throws Exception {
+        destroyPrimaryIndex();
     }
 
     @Override
-    public void cleanup() throws Exception {
-        destroyPrimaryIndex();
+    protected IResourceFactory createPrimaryResourceFactory() {
+        return new BTreeResourceFactory(storageManager, DataSetConstants.primaryTypeTraits,
+                DataSetConstants.primaryComparatorFactories, pageManagerFactory);
+    }
+
+    @Override
+    protected IResourceFactory createSecondaryResourceFactory() {
+        return new BTreeResourceFactory(storageManager, DataSetConstants.secondaryTypeTraits,
+                DataSetConstants.secondaryComparatorFactories, pageManagerFactory);
     }
 }

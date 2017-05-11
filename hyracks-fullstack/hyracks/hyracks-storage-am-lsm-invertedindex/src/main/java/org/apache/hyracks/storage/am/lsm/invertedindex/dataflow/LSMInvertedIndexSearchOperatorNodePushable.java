@@ -20,45 +20,52 @@
 package org.apache.hyracks.storage.am.lsm.invertedindex.dataflow;
 
 import org.apache.hyracks.api.context.IHyracksTaskContext;
-import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
+import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
+import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.FrameTupleReference;
-import org.apache.hyracks.storage.am.common.api.ISearchPredicate;
-import org.apache.hyracks.storage.am.common.dataflow.IIndexOperatorDescriptor;
+import org.apache.hyracks.storage.am.common.api.ISearchOperationCallbackFactory;
+import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IndexSearchOperatorNodePushable;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexSearchModifier;
 import org.apache.hyracks.storage.am.lsm.invertedindex.search.InvertedIndexSearchPredicate;
+import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizerFactory;
+import org.apache.hyracks.storage.common.ISearchPredicate;
 
 public class LSMInvertedIndexSearchOperatorNodePushable extends IndexSearchOperatorNodePushable {
 
     protected final IInvertedIndexSearchModifier searchModifier;
+    protected final IBinaryTokenizerFactory binaryTokenizerFactory;
     protected final int queryFieldIndex;
-    protected final int invListFields;
+    protected final int numOfFields;
     // Keeps the information whether the given query is a full-text search or not.
     // We need to have this information to stop the search process since we don't allow a phrase search yet.
     protected final boolean isFullTextSearchQuery;
 
-    public LSMInvertedIndexSearchOperatorNodePushable(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
-            int partition, IRecordDescriptorProvider recordDescProvider, int queryFieldIndex,
-            IInvertedIndexSearchModifier searchModifier, boolean appendFilter, int[] minFilterFieldIndexes,
-            int[] maxFilterFieldIndexes, boolean isFullTextSearchQuery) throws HyracksDataException {
-        super(opDesc, ctx, partition, recordDescProvider, appendFilter, minFilterFieldIndexes, maxFilterFieldIndexes);
+    public LSMInvertedIndexSearchOperatorNodePushable(IHyracksTaskContext ctx, RecordDescriptor inputRecDesc,
+            int partition, int[] minFilterFieldIndexes, int[] maxFilterFieldIndexes,
+            IIndexDataflowHelperFactory indexHelperFactory, boolean retainInput, boolean retainMissing,
+            IMissingWriterFactory missingWriterFactory, ISearchOperationCallbackFactory searchCallbackFactory,
+            IInvertedIndexSearchModifier searchModifier, IBinaryTokenizerFactory binaryTokenizerFactory,
+            int queryFieldIndex, boolean isFullTextSearchQuery, int numOfFields, boolean appendIndexFilter)
+            throws HyracksDataException {
+        super(ctx, inputRecDesc, partition, minFilterFieldIndexes, maxFilterFieldIndexes, indexHelperFactory,
+                retainInput, retainMissing, missingWriterFactory, searchCallbackFactory, appendIndexFilter);
         this.searchModifier = searchModifier;
+        this.binaryTokenizerFactory = binaryTokenizerFactory;
         this.queryFieldIndex = queryFieldIndex;
         this.isFullTextSearchQuery = isFullTextSearchQuery;
         // If retainInput is true, the frameTuple is created in IndexSearchOperatorNodePushable.open().
-        if (!opDesc.getRetainInput()) {
+        if (!retainInput) {
             this.frameTuple = new FrameTupleReference();
         }
-        AbstractLSMInvertedIndexOperatorDescriptor invIndexOpDesc = (AbstractLSMInvertedIndexOperatorDescriptor) opDesc;
-        invListFields = invIndexOpDesc.getInvListsTypeTraits().length;
+        this.numOfFields = numOfFields;
     }
 
     @Override
     protected ISearchPredicate createSearchPredicate() {
-        AbstractLSMInvertedIndexOperatorDescriptor invIndexOpDesc = (AbstractLSMInvertedIndexOperatorDescriptor) opDesc;
-        return new InvertedIndexSearchPredicate(invIndexOpDesc.getTokenizerFactory().createTokenizer(), searchModifier,
-                minFilterKey, maxFilterKey, isFullTextSearchQuery);
+        return new InvertedIndexSearchPredicate(binaryTokenizerFactory.createTokenizer(), searchModifier, minFilterKey,
+                maxFilterKey, isFullTextSearchQuery);
     }
 
     @Override
@@ -78,6 +85,6 @@ public class LSMInvertedIndexSearchOperatorNodePushable extends IndexSearchOpera
 
     @Override
     protected int getFieldCount() {
-        return invListFields;
+        return numOfFields;
     }
 }

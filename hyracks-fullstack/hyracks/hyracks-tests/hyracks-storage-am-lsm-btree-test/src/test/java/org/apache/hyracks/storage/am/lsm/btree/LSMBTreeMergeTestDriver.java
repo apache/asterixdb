@@ -30,7 +30,7 @@ import org.apache.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
 import org.apache.hyracks.storage.am.config.AccessMethodTestsConfig;
 import org.apache.hyracks.storage.am.lsm.btree.impls.LSMBTree;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
-import org.apache.hyracks.storage.am.lsm.common.impls.NoOpIOOperationCallback;
+import org.apache.hyracks.storage.am.lsm.common.impls.NoOpIOOperationCallbackFactory;
 
 @SuppressWarnings("rawtypes")
 public abstract class LSMBTreeMergeTestDriver extends OrderedIndexTestDriver {
@@ -44,8 +44,8 @@ public abstract class LSMBTreeMergeTestDriver extends OrderedIndexTestDriver {
 
     @Override
     protected void runTest(ISerializerDeserializer[] fieldSerdes, int numKeys, BTreeLeafFrameType leafType,
-            ITupleReference lowKey, ITupleReference highKey, ITupleReference prefixLowKey, ITupleReference prefixHighKey)
-            throws Exception {
+            ITupleReference lowKey, ITupleReference highKey, ITupleReference prefixLowKey,
+            ITupleReference prefixHighKey) throws Exception {
         OrderedIndexTestContext ctx = createTestContext(fieldSerdes, numKeys, leafType, false);
         ctx.getIndex().create();
         ctx.getIndex().activate();
@@ -75,7 +75,7 @@ public abstract class LSMBTreeMergeTestDriver extends OrderedIndexTestDriver {
             }
 
             ILSMIndexAccessor accessor = (ILSMIndexAccessor) ctx.getIndexAccessor();
-            accessor.scheduleMerge(NoOpIOOperationCallback.INSTANCE,
+            accessor.scheduleMerge(NoOpIOOperationCallbackFactory.INSTANCE.createIoOpCallback(),
                     ((LSMBTree) ctx.getIndex()).getImmutableComponents());
 
             orderedIndexTestUtils.checkPointSearches(ctx);

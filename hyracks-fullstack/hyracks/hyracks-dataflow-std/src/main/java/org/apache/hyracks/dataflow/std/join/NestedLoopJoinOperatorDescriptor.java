@@ -68,7 +68,7 @@ public class NestedLoopJoinOperatorDescriptor extends AbstractOperatorDescriptor
             IMissingWriterFactory[] nullWriterFactories1) {
         super(spec, 2, 1);
         this.comparatorFactory = comparatorFactory;
-        this.recordDescriptors[0] = recordDescriptor;
+        this.outRecDescs[0] = recordDescriptor;
         this.memSize = memSize;
         this.predEvaluatorFactory = predEvalFactory;
         this.isLeftOuter = isLeftOuter;

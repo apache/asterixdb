@@ -22,7 +22,6 @@ import java.util.List;
 
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.GlobalConfig;
-import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.external.indexing.IndexingConstants;
 import org.apache.asterix.external.operators.ExternalScanOperatorDescriptor;
 import org.apache.asterix.metadata.declared.MetadataProvider;
@@ -31,10 +30,6 @@ import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.utils.RuntimeUtils;
-import org.apache.asterix.transaction.management.resource.ExternalBTreeWithBuddyLocalResourceMetadataFactory;
-import org.apache.asterix.transaction.management.resource.LSMBTreeLocalResourceMetadataFactory;
-import org.apache.asterix.transaction.management.resource.PersistentLocalResourceFactoryProvider;
-import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraintHelper;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.jobgen.impl.ConnectorPolicyAssignmentPolicy;
@@ -53,16 +48,13 @@ import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.dataflow.std.base.AbstractOperatorDescriptor;
+import org.apache.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
 import org.apache.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor;
 import org.apache.hyracks.dataflow.std.sort.ExternalSortOperatorDescriptor;
 import org.apache.hyracks.storage.am.btree.dataflow.BTreeSearchOperatorDescriptor;
-import org.apache.hyracks.storage.am.common.dataflow.AbstractTreeIndexOperatorDescriptor;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
+import org.apache.hyracks.storage.am.common.dataflow.IndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.dataflow.TreeIndexBulkLoadOperatorDescriptor;
-import org.apache.hyracks.storage.am.common.dataflow.TreeIndexCreateOperatorDescriptor;
-import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
-import org.apache.hyracks.storage.common.file.ILocalResourceFactoryProvider;
-import org.apache.hyracks.storage.common.file.LocalResource;
 
 public class SecondaryBTreeOperationsHelper extends SecondaryTreeIndexOperationsHelper {
 
@@ -73,57 +65,12 @@ public class SecondaryBTreeOperationsHelper extends SecondaryTreeIndexOperations
     }
 
     @Override
-    public JobSpecification buildCreationJobSpec() throws AlgebricksException {
-        JobSpecification spec = RuntimeUtils.createJobSpecification(metadataProvider.getApplicationContext());
-        ILocalResourceFactoryProvider localResourceFactoryProvider;
-        IIndexDataflowHelperFactory indexDataflowHelperFactory = dataset.getIndexDataflowHelperFactory(metadataProvider,
-                index, itemType, metaType, mergePolicyFactory, mergePolicyFactoryProperties);
-        IStorageComponentProvider storageComponentProvider = metadataProvider.getStorageComponentProvider();
-        if (dataset.getDatasetType() == DatasetType.INTERNAL) {
-            //prepare a LocalResourceMetadata which will be stored in NC's local resource repository
-            LSMBTreeLocalResourceMetadataFactory localResourceMetadata = new LSMBTreeLocalResourceMetadataFactory(
-                    secondaryTypeTraits, secondaryComparatorFactories, secondaryBloomFilterKeyFields, false,
-                    dataset.getDatasetId(), mergePolicyFactory, mergePolicyFactoryProperties, filterTypeTraits,
-                    filterCmpFactories, secondaryBTreeFields, secondaryFilterFields,
-                    dataset.getIndexOperationTrackerFactory(index), dataset.getIoOperationCallbackFactory(index),
-                    storageComponentProvider.getMetadataPageManagerFactory());
-            localResourceFactoryProvider =
-                    new PersistentLocalResourceFactoryProvider(localResourceMetadata, LocalResource.LSMBTreeResource);
-        } else {
-            // External dataset local resource and dataflow helper
-            int[] buddyBreeFields = new int[] { index.getKeyFieldNames().size() };
-            ExternalBTreeWithBuddyLocalResourceMetadataFactory localResourceMetadata =
-                    new ExternalBTreeWithBuddyLocalResourceMetadataFactory(dataset.getDatasetId(),
-                            secondaryComparatorFactories, secondaryTypeTraits, mergePolicyFactory,
-                            mergePolicyFactoryProperties, buddyBreeFields,
-                            dataset.getIndexOperationTrackerFactory(index),
-                            dataset.getIoOperationCallbackFactory(index),
-                            storageComponentProvider.getMetadataPageManagerFactory());
-            localResourceFactoryProvider = new PersistentLocalResourceFactoryProvider(localResourceMetadata,
-                    LocalResource.ExternalBTreeWithBuddyResource);
-        }
-        TreeIndexCreateOperatorDescriptor secondaryIndexCreateOp =
-                new TreeIndexCreateOperatorDescriptor(spec, storageComponentProvider.getStorageManager(),
-                        storageComponentProvider.getIndexLifecycleManagerProvider(), secondaryFileSplitProvider,
-                        secondaryTypeTraits, secondaryComparatorFactories, secondaryBloomFilterKeyFields,
-                        indexDataflowHelperFactory,
-                        localResourceFactoryProvider, dataset.getModificationCallbackFactory(storageComponentProvider,
-                                index, null, IndexOperation.CREATE, null),
-                        storageComponentProvider.getMetadataPageManagerFactory());
-        AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, secondaryIndexCreateOp,
-                secondaryPartitionConstraint);
-        spec.addRoot(secondaryIndexCreateOp);
-        spec.setConnectorPolicyAssignmentPolicy(new ConnectorPolicyAssignmentPolicy());
-        return spec;
-    }
-
-    @Override
     public JobSpecification buildLoadingJobSpec() throws AlgebricksException {
         JobSpecification spec = RuntimeUtils.createJobSpecification(metadataProvider.getApplicationContext());
         boolean isEnforcingKeyTypes = index.isEnforcingKeyFileds();
         int[] fieldPermutation = createFieldPermutationForBulkLoadOp(index.getKeyFieldNames().size());
-        IIndexDataflowHelperFactory dataflowHelperFactory = dataset.getIndexDataflowHelperFactory(metadataProvider,
-                index, itemType, metaType, mergePolicyFactory, mergePolicyFactoryProperties);
+        IIndexDataflowHelperFactory dataflowHelperFactory = new IndexDataflowHelperFactory(
+                metadataProvider.getStorageComponentProvider().getStorageManager(), secondaryFileSplitProvider);
         if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
             /*
              * In case of external data,
@@ -152,23 +99,22 @@ public class SecondaryBTreeOperationsHelper extends SecondaryTreeIndexOperations
             // Sort by secondary keys.
             ExternalSortOperatorDescriptor sortOp = createSortOp(spec, secondaryComparatorFactories, secondaryRecDesc);
             // Create secondary BTree bulk load op.
-            AbstractTreeIndexOperatorDescriptor secondaryBulkLoadOp;
+            AbstractSingleActivityOperatorDescriptor secondaryBulkLoadOp;
             IOperatorDescriptor root;
             if (externalFiles != null) {
                 // Transaction load
                 secondaryBulkLoadOp = createExternalIndexBulkModifyOp(spec, fieldPermutation, dataflowHelperFactory,
                         GlobalConfig.DEFAULT_TREE_FILL_FACTOR);
-                root = secondaryBulkLoadOp;
             } else {
                 // Initial load
-                secondaryBulkLoadOp = createTreeIndexBulkLoadOp(spec, fieldPermutation, dataflowHelperFactory,
+                secondaryBulkLoadOp = createExternalIndexBulkLoadOp(spec, fieldPermutation, dataflowHelperFactory,
                         GlobalConfig.DEFAULT_TREE_FILL_FACTOR);
-                AlgebricksMetaOperatorDescriptor metaOp = new AlgebricksMetaOperatorDescriptor(spec, 1, 0,
-                        new IPushRuntimeFactory[] { new SinkRuntimeFactory() },
-                        new RecordDescriptor[] { secondaryRecDesc });
-                spec.connect(new OneToOneConnectorDescriptor(spec), secondaryBulkLoadOp, 0, metaOp, 0);
-                root = metaOp;
             }
+            AlgebricksMetaOperatorDescriptor metaOp = new AlgebricksMetaOperatorDescriptor(spec, 1, 0,
+                    new IPushRuntimeFactory[] { new SinkRuntimeFactory() },
+                    new RecordDescriptor[] { secondaryRecDesc });
+            spec.connect(new OneToOneConnectorDescriptor(spec), secondaryBulkLoadOp, 0, metaOp, 0);
+            root = metaOp;
             spec.connect(new OneToOneConnectorDescriptor(spec), sourceOp, 0, asterixAssignOp, 0);
             if (anySecondaryKeyIsNullable || isEnforcingKeyTypes) {
                 spec.connect(new OneToOneConnectorDescriptor(spec), asterixAssignOp, 0, selectOp, 0);

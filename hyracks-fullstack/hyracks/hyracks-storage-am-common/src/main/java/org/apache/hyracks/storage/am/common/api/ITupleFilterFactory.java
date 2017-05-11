@@ -22,7 +22,8 @@ package org.apache.hyracks.storage.am.common.api;
 import java.io.Serializable;
 
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public interface ITupleFilterFactory extends Serializable {
-    public ITupleFilter createTupleFilter(IHyracksTaskContext ctx) throws Exception;
+    ITupleFilter createTupleFilter(IHyracksTaskContext ctx) throws HyracksDataException;
 }

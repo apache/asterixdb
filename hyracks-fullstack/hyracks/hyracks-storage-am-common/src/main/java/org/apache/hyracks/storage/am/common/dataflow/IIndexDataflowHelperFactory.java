@@ -25,7 +25,7 @@ import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.common.api.IIndexDataflowHelper;
 
+@FunctionalInterface
 public interface IIndexDataflowHelperFactory extends Serializable {
-    public IIndexDataflowHelper createIndexDataflowHelper(IIndexOperatorDescriptor opDesc,
-            final IHyracksTaskContext ctx, int partition) throws HyracksDataException;
+    IIndexDataflowHelper create(final IHyracksTaskContext ctx, int partition) throws HyracksDataException;
 }

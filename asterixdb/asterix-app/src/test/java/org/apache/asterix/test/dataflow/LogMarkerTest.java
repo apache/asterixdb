@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.test.dataflow;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -105,9 +106,11 @@ public class LogMarkerTest {
             TestNodeController nc = new TestNodeController(null, false);
             nc.init();
             StorageComponentProvider storageManager = new StorageComponentProvider();
+            List<List<String>> partitioningKeys = new ArrayList<>();
+            partitioningKeys.add(Collections.singletonList("key"));
             Dataset dataset = new Dataset(DATAVERSE_NAME, DATASET_NAME, DATAVERSE_NAME, DATA_TYPE_NAME,
                     NODE_GROUP_NAME, null, null, new InternalDatasetDetails(null, PartitioningStrategy.HASH,
-                            Collections.emptyList(), null, null, null, false, null, false),
+                            partitioningKeys, null, null, null, false, null, false),
                     null, DatasetType.INTERNAL, DATASET_ID, 0);
             try {
                 nc.createPrimaryIndex(dataset, KEY_TYPES, RECORD_TYPE, META_TYPE, new NoMergePolicyFactory(), null,
