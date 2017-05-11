@@ -229,8 +229,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         this.executorService = executorService;
     }
 
-    public SessionConfig getSessionConfig() {
-        return sessionConfig;
+    public SessionOutput getSessionOutput() {
+        return sessionOutput;
     }
 
     protected List<FunctionDecl> getDeclaredFunctions(List<Statement> statements) {
