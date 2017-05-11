@@ -24,8 +24,7 @@ import java.util.List;
 
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
-import org.apache.hyracks.dataflow.std.sort.util.DeletableFrameTupleAppender;
-import org.apache.hyracks.dataflow.std.sort.util.IAppendDeletableFrameTupleAccessor;
+import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.dataflow.std.structures.TuplePointer;
 
 /**
@@ -33,11 +32,11 @@ import org.apache.hyracks.dataflow.std.structures.TuplePointer;
  */
 public class TupleInFrameListAccessor extends AbstractTuplePointerAccessor {
 
-    private IAppendDeletableFrameTupleAccessor bufferAccessor;
+    private IFrameTupleAccessor bufferAccessor;
     private List<ByteBuffer> bufferFrames;
 
     public TupleInFrameListAccessor(RecordDescriptor rd, List<ByteBuffer> bufferFrames) {
-        bufferAccessor = new DeletableFrameTupleAppender(rd);
+        bufferAccessor = new FrameTupleAccessor(rd);
         this.bufferFrames = bufferFrames;
     }
 
