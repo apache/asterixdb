@@ -24,10 +24,11 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.ByteBuffer;
 
-import org.apache.asterix.common.dataflow.ICcApplicationContext;
+import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.translator.IStatementExecutor.Stats;
 import org.apache.asterix.translator.SessionConfig;
+import org.apache.asterix.translator.SessionOutput;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.AlgebricksAppendable;
 import org.apache.hyracks.api.comm.IFrame;
@@ -47,6 +48,7 @@ public class ResultPrinter {
 
     private final FrameManager resultDisplayFrameMgr;
 
+    private final SessionOutput output;
     private final SessionConfig conf;
     private final Stats stats;
     private final ARecordType recordType;
@@ -62,8 +64,9 @@ public class ResultPrinter {
     private ObjectMapper om;
     private ObjectWriter ow;
 
-    public ResultPrinter(ICcApplicationContext appCtx, SessionConfig conf, Stats stats, ARecordType recordType) {
-        this.conf = conf;
+    public ResultPrinter(IApplicationContext appCtx, SessionOutput output, Stats stats, ARecordType recordType) {
+        this.output = output;
+        this.conf = output.config();
         this.stats = stats;
         this.recordType = recordType;
         this.indentJSON = conf.is(SessionConfig.FORMAT_INDENT_JSON);
@@ -112,18 +115,18 @@ public class ResultPrinter {
         // If we're outputting CSV with a header, the HTML header was already
         // output by displayCSVHeader(), so skip it here
         if (conf.is(SessionConfig.FORMAT_HTML)) {
-            conf.out().println("<h4>Results:</h4>");
-            conf.out().println("<pre class=\"result-content\">");
+            output.out().println("<h4>Results:</h4>");
+            output.out().println("<pre class=\"result-content\">");
         }
 
         try {
-            conf.resultPrefix(new AlgebricksAppendable(conf.out()));
+            output.resultPrefix(new AlgebricksAppendable(output.out()));
         } catch (AlgebricksException e) {
             throw new HyracksDataException(e);
         }
 
         if (conf.is(SessionConfig.FORMAT_WRAPPER_ARRAY)) {
-            conf.out().print("[ ");
+            output.out().print("[ ");
             wrapArray = true;
         }
 
@@ -134,29 +137,29 @@ public class ResultPrinter {
             if (quoteRecord) {
                 StringWriter sw = new StringWriter();
                 appendCSVHeader(sw, recordType);
-                conf.out().print(JSONUtil.quoteAndEscape(sw.toString()));
-                conf.out().print("\n");
+                output.out().print(JSONUtil.quoteAndEscape(sw.toString()));
+                output.out().print("\n");
                 notFirst = true;
             } else {
-                appendCSVHeader(conf.out(), recordType);
+                appendCSVHeader(output.out(), recordType);
             }
         }
     }
 
     private void printPostfix() throws HyracksDataException {
-        conf.out().flush();
+        output.out().flush();
         if (wrapArray) {
-            conf.out().println(" ]");
+            output.out().println(" ]");
         }
         try {
-            conf.resultPostfix(new AlgebricksAppendable(conf.out()));
+            output.resultPostfix(new AlgebricksAppendable(output.out()));
         } catch (AlgebricksException e) {
             throw new HyracksDataException(e);
         }
         if (conf.is(SessionConfig.FORMAT_HTML)) {
-            conf.out().println("</pre>");
+            output.out().println("</pre>");
         }
-        conf.out().flush();
+        output.out().flush();
     }
 
     private void displayRecord(String result) throws HyracksDataException {
@@ -177,7 +180,7 @@ public class ResultPrinter {
             // TODO(tillw): this is inefficient as well
             record = JSONUtil.quoteAndEscape(record);
         }
-        conf.out().print(record);
+        output.out().print(record);
         stats.setCount(stats.getCount() + 1);
         // TODO(tillw) fix this approximation
         stats.setSize(stats.getSize() + record.length());
@@ -211,7 +214,7 @@ public class ResultPrinter {
                 }
                 String result = new String(frameBytes, start, length, UTF_8);
                 if (wrapArray && notFirst) {
-                    conf.out().print(", ");
+                    output.out().print(", ");
                 }
                 notFirst = true;
                 displayRecord(result);

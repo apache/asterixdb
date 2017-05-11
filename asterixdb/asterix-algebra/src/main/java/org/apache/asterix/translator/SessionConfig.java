@@ -18,12 +18,9 @@
  */
 package org.apache.asterix.translator;
 
-import java.io.PrintWriter;
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
-
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.core.algebra.prettyprint.AlgebricksAppendable;
 
 /**
  * SessionConfig captures several different parameters for controlling
@@ -38,8 +35,10 @@ import org.apache.hyracks.algebricks.core.algebra.prettyprint.AlgebricksAppendab
  * execution output - LOSSLESS_JSON, CSV, etc.
  * <li>It allows you to specify output format-specific parameters.
  */
+public class SessionConfig implements Serializable {
 
-public class SessionConfig {
+    private static final long serialVersionUID = 1L;
+
     /**
      * Used to specify the output format for the primary execution.
      */
@@ -105,53 +104,25 @@ public class SessionConfig {
      */
     public static final String FORMAT_QUOTE_RECORD = "quote-record";
 
-    @FunctionalInterface
-    public interface ResultDecorator {
-        AlgebricksAppendable append(AlgebricksAppendable app) throws AlgebricksException;
-    }
-
-    @FunctionalInterface
-    public interface ResultAppender {
-        AlgebricksAppendable append(AlgebricksAppendable app, String str) throws AlgebricksException;
-    }
+    // Output format.
+    private final OutputFormat fmt;
 
     // Standard execution flags.
     private final boolean executeQuery;
     private final boolean generateJobSpec;
     private final boolean optimize;
 
-    // Output path for primary execution.
-    private final PrintWriter out;
-
-    // Output format.
-    private final OutputFormat fmt;
-
-    private final ResultDecorator preResultDecorator;
-    private final ResultDecorator postResultDecorator;
-    private final ResultAppender handleAppender;
-    private final ResultAppender statusAppender;
-
     // Flags.
     private final Map<String, Boolean> flags;
 
-    public SessionConfig(PrintWriter out, OutputFormat fmt, ResultDecorator preResultDecorator,
-            ResultDecorator postResultDecorator, ResultAppender handleAppender, ResultAppender statusAppender) {
-        this(out, fmt, preResultDecorator, postResultDecorator, handleAppender, statusAppender,
-                true, true, true);
-    }
-
-    public SessionConfig(PrintWriter out, OutputFormat fmt, boolean optimize, boolean executeQuery,
-            boolean generateJobSpec) {
-        this(out, fmt, null, null, null, null, optimize, executeQuery, generateJobSpec);
+    public SessionConfig(OutputFormat fmt) {
+        this(fmt, true, true, true);
     }
 
     /**
      * Create a SessionConfig object with all optional values set to defaults:
      * - All format flags set to "false".
      * - All out-of-band outputs set to "false".
-     *
-     * @param out
-     *            PrintWriter for execution output.
      * @param fmt
      *            Output format for execution output.
      * @param optimize
@@ -160,17 +131,9 @@ public class SessionConfig {
      *            Whether to execute the query or not.
      * @param generateJobSpec
      *            Whether to generate the Hyracks job specification (if
-     *            false, job cannot be executed).
      */
-    public SessionConfig(PrintWriter out, OutputFormat fmt, ResultDecorator preResultDecorator,
-            ResultDecorator postResultDecorator, ResultAppender handleAppender, ResultAppender statusAppender,
-            boolean optimize, boolean executeQuery, boolean generateJobSpec) {
-        this.out = out;
+    public SessionConfig(OutputFormat fmt, boolean optimize, boolean executeQuery, boolean generateJobSpec) {
         this.fmt = fmt;
-        this.preResultDecorator = preResultDecorator;
-        this.postResultDecorator = postResultDecorator;
-        this.handleAppender = handleAppender;
-        this.statusAppender = statusAppender;
         this.optimize = optimize;
         this.executeQuery = executeQuery;
         this.generateJobSpec = generateJobSpec;
@@ -178,33 +141,10 @@ public class SessionConfig {
     }
 
     /**
-     * Retrieve the PrintWriter to produce output to.
-     */
-    public PrintWriter out() {
-        return this.out;
-    }
-
-    /**
      * Retrieve the OutputFormat for this execution.
      */
     public OutputFormat fmt() {
         return this.fmt;
-    }
-
-    public AlgebricksAppendable resultPrefix(AlgebricksAppendable app) throws AlgebricksException {
-        return this.preResultDecorator != null ? this.preResultDecorator.append(app) : app;
-    }
-
-    public AlgebricksAppendable resultPostfix(AlgebricksAppendable app) throws AlgebricksException {
-        return this.postResultDecorator != null ? this.postResultDecorator.append(app) : app;
-    }
-
-    public AlgebricksAppendable appendHandle(AlgebricksAppendable app, String handle) throws AlgebricksException {
-        return this.handleAppender != null ? this.handleAppender.append(app, handle) : app;
-    }
-
-    public AlgebricksAppendable appendStatus(AlgebricksAppendable app, String status) throws AlgebricksException {
-        return this.statusAppender != null ? this.statusAppender.append(app, status) : app;
     }
 
     /**

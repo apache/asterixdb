@@ -16,16 +16,25 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.api.http.servlet;
 
-public class ServletConstants {
-    public static final String HYRACKS_CONNECTION_ATTR = "org.apache.asterix.HYRACKS_CONNECTION";
-    public static final String HYRACKS_DATASET_ATTR = "org.apache.asterix.HYRACKS_DATASET";
-    public static final String ASTERIX_APP_CONTEXT_INFO_ATTR = "org.apache.asterix.APP_CONTEXT_INFO";
-    public static final String EXECUTOR_SERVICE_ATTR = "org.apache.asterix.EXECUTOR_SERVICE";
-    public static final String RUNNING_QUERIES_ATTR = "org.apache.asterix.RUNINNG_QUERIES";
-    public static final String SERVICE_CONTEXT_ATTR = "org.apache.asterix.SERVICE_CONTEXT";
+package org.apache.asterix.common.messaging.api;
 
-    private ServletConstants() {
+import org.apache.hyracks.api.messages.IMessage;
+
+import java.util.concurrent.CompletableFuture;
+
+/**
+ * A {@link CompletableFuture} associated with an identifier
+ */
+public class MessageFuture extends CompletableFuture<IMessage> {
+
+    private final long futureId;
+
+    public MessageFuture(long futureId) {
+        this.futureId = futureId;
+    }
+
+    public long getFutureId() {
+        return futureId;
     }
 }

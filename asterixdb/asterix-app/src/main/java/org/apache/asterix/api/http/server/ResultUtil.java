@@ -36,10 +36,10 @@ import java.util.stream.Stream;
 import org.apache.asterix.app.result.ResultHandle;
 import org.apache.asterix.app.result.ResultPrinter;
 import org.apache.asterix.app.result.ResultReader;
-import org.apache.asterix.common.dataflow.ICcApplicationContext;
+import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.translator.IStatementExecutor.Stats;
-import org.apache.asterix.translator.SessionConfig;
+import org.apache.asterix.translator.SessionOutput;
 import org.apache.http.ParseException;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.AlgebricksAppendable;
@@ -77,29 +77,29 @@ public class ResultUtil {
         return escaped;
     }
 
-    public static void printResults(ICcApplicationContext appCtx, ResultReader resultReader, SessionConfig conf,
+    public static void printResults(IApplicationContext appCtx, ResultReader resultReader, SessionOutput output,
             Stats stats, ARecordType recordType) throws HyracksDataException {
-        new ResultPrinter(appCtx, conf, stats, recordType).print(resultReader);
+        new ResultPrinter(appCtx, output, stats, recordType).print(resultReader);
     }
 
-    public static void printResults(ICcApplicationContext appCtx, String record, SessionConfig conf, Stats stats,
+    public static void printResults(IApplicationContext appCtx, String record, SessionOutput output, Stats stats,
             ARecordType recordType) throws HyracksDataException {
-        new ResultPrinter(appCtx, conf, stats, recordType).print(record);
+        new ResultPrinter(appCtx, output, stats, recordType).print(record);
     }
 
-    public static void printResultHandle(SessionConfig conf, ResultHandle handle) throws HyracksDataException {
+    public static void printResultHandle(SessionOutput output, ResultHandle handle) throws HyracksDataException {
         try {
-            final AlgebricksAppendable app = new AlgebricksAppendable(conf.out());
-            conf.appendHandle(app, handle.toString());
+            final AlgebricksAppendable app = new AlgebricksAppendable(output.out());
+            output.appendHandle(app, handle.toString());
         } catch (AlgebricksException e) {
             LOGGER.warn("error printing handle", e);
         }
     }
 
-    public static void printStatus(SessionConfig conf, AbstractQueryApiServlet.ResultStatus rs) {
+    public static void printStatus(SessionOutput output, AbstractQueryApiServlet.ResultStatus rs) {
         try {
-            final AlgebricksAppendable app = new AlgebricksAppendable(conf.out());
-            conf.appendStatus(app, rs.str());
+            final AlgebricksAppendable app = new AlgebricksAppendable(output.out());
+            output.appendStatus(app, rs.str());
         } catch (AlgebricksException e) {
             LOGGER.warn("error printing status", e);
         }
@@ -318,4 +318,35 @@ public class ResultUtil {
         return errorTemplate;
     }
 
+    public static SessionOutput.ResultDecorator createPreResultDecorator() {
+        return new SessionOutput.ResultDecorator() {
+            int resultNo = -1;
+
+            @Override
+            public AlgebricksAppendable append(AlgebricksAppendable app) throws AlgebricksException {
+                app.append("\t\"");
+                app.append(AbstractQueryApiServlet.ResultFields.RESULTS.str());
+                if (resultNo >= 0) {
+                    app.append('-').append(String.valueOf(resultNo));
+                }
+                ++resultNo;
+                app.append("\": ");
+                return app;
+            }
+        };
+    }
+
+    public static SessionOutput.ResultDecorator createPostResultDecorator() {
+        return app -> app.append("\t,\n");
+    }
+
+    public static SessionOutput.ResultAppender createResultHandleAppender(String handleUrl) {
+        return (app, handle) -> app.append("\t\"").append(AbstractQueryApiServlet.ResultFields.HANDLE.str())
+                .append("\": \"").append(handleUrl).append(handle).append("\",\n");
+    }
+
+    public static SessionOutput.ResultAppender createResultStatusAppender() {
+        return (app, status) -> app.append("\t\"").append(AbstractQueryApiServlet.ResultFields.STATUS.str())
+                .append("\": \"").append(status).append("\",\n");
+    }
 }

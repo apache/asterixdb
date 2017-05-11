@@ -49,21 +49,26 @@ import org.apache.asterix.transaction.management.resource.PersistentLocalResourc
 import org.apache.commons.io.FileUtils;
 import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.application.IServiceContext;
+import org.apache.hyracks.api.client.ClusterControllerInfo;
+import org.apache.hyracks.api.client.HyracksConnection;
+import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.config.IConfigManager;
 import org.apache.hyracks.api.job.resource.NodeCapacity;
 import org.apache.hyracks.api.messages.IMessageBroker;
 import org.apache.hyracks.control.common.controllers.NCConfig;
 import org.apache.hyracks.control.nc.BaseNCApplication;
 import org.apache.hyracks.control.nc.NodeControllerService;
+import org.apache.hyracks.http.server.WebManager;
 
 public class NCApplication extends BaseNCApplication {
     private static final Logger LOGGER = Logger.getLogger(NCApplication.class.getName());
 
-    private INCServiceContext ncServiceCtx;
+    protected INCServiceContext ncServiceCtx;
     private INcApplicationContext runtimeContext;
     private String nodeId;
     private boolean stopInitiated = false;
     private SystemState systemState;
+    protected WebManager webManager;
 
     @Override
     public void registerConfig(IConfigManager configManager) {
@@ -122,6 +127,8 @@ public class NCApplication extends BaseNCApplication {
             localResourceRepository.initializeNewUniverse(ClusterProperties.INSTANCE.getStorageDirectoryName());
         }
 
+        webManager = new WebManager();
+
         performLocalCleanUp();
     }
 
@@ -129,6 +136,10 @@ public class NCApplication extends BaseNCApplication {
     protected void configureLoggingLevel(Level level) {
         super.configureLoggingLevel(level);
         Logger.getLogger("org.apache.asterix").setLevel(level);
+    }
+
+    protected void configureServers() throws Exception {
+        // override to start web services on NC nodes
     }
 
     protected List<AsterixExtension> getExtensions() {
@@ -143,6 +154,9 @@ public class NCApplication extends BaseNCApplication {
             if (LOGGER.isLoggable(Level.INFO)) {
                 LOGGER.info("Stopping Asterix node controller: " + nodeId);
             }
+
+            webManager.stop();
+
             //Clean any temporary files
             performLocalCleanUp();
 
@@ -163,6 +177,10 @@ public class NCApplication extends BaseNCApplication {
 
     @Override
     public void startupCompleted() throws Exception {
+        // configure servlets after joining the cluster, so we can create HyracksClientConnection
+        configureServers();
+        webManager.start();
+
         // Since we don't pass initial run flag in AsterixHyracksIntegrationUtil, we use the virtualNC flag
         final NodeProperties nodeProperties = runtimeContext.getNodeProperties();
         if (systemState == SystemState.PERMANENT_DATA_LOSS
@@ -261,5 +279,11 @@ public class NCApplication extends BaseNCApplication {
     @Override
     public INcApplicationContext getApplicationContext() {
         return runtimeContext;
+    }
+
+    protected IHyracksClientConnection getHcc() throws Exception {
+        NodeControllerService ncSrv = (NodeControllerService) ncServiceCtx.getControllerService();
+        ClusterControllerInfo ccInfo = ncSrv.getNodeParameters().getClusterControllerInfo();
+        return new HyracksConnection(ccInfo.getClientNetAddress(), ccInfo.getClientNetPort());
     }
 }

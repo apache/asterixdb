@@ -39,7 +39,7 @@ import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.statement.RunStatement;
 import org.apache.asterix.runtime.utils.CcApplicationContext;
 import org.apache.asterix.translator.IStatementExecutor;
-import org.apache.asterix.translator.SessionConfig;
+import org.apache.asterix.translator.SessionOutput;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -51,7 +51,7 @@ public class QueryTranslatorTest {
     @Test
     public void test() throws Exception {
         List<Statement> statements = new ArrayList<>();
-        SessionConfig mockSessionConfig = mock(SessionConfig.class);
+        SessionOutput mockSessionOutput = mock(SessionOutput.class);
         RunStatement mockRunStatement = mock(RunStatement.class);
 
         // Mocks AppContextInfo.
@@ -70,7 +70,7 @@ public class QueryTranslatorTest {
         when(mockMasterNode.getClientIp()).thenReturn("127.0.0.1");
 
         IStatementExecutor aqlTranslator = new DefaultStatementExecutorFactory().create(mockAsterixAppContextInfo,
-                statements, mockSessionConfig, new AqlCompilationProvider(), new StorageComponentProvider());
+                statements, mockSessionOutput, new AqlCompilationProvider(), new StorageComponentProvider());
         List<String> parameters = new ArrayList<>();
         parameters.add("examples/pregelix-example-jar-with-dependencies.jar");
         parameters.add("org.apache.pregelix.example.PageRankVertex");

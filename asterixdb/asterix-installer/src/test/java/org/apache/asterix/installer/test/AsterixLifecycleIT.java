@@ -88,6 +88,7 @@ public class AsterixLifecycleIT {
             AsterixInstallerIntegrationUtil.transformIntoRequiredState(State.ACTIVE);
             String command = "stop -n " + AsterixInstallerIntegrationUtil.ASTERIX_INSTANCE_NAME;
             cmdHandler.processCommand(command.split(" "));
+            Thread.sleep(4000);
             AsterixInstance instance = ServiceProvider.INSTANCE.getLookupService()
                     .getAsterixInstance(AsterixInstallerIntegrationUtil.ASTERIX_INSTANCE_NAME);
             AsterixRuntimeState state = VerificationUtil.getAsterixRuntimeState(instance);

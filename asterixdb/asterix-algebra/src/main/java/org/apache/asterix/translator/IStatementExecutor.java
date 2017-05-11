@@ -18,17 +18,24 @@
  */
 package org.apache.asterix.translator;
 
+import java.io.Serializable;
 import java.rmi.RemoteException;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.lang.common.statement.Query;
 import org.apache.asterix.metadata.declared.MetadataProvider;
+import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.translator.CompiledStatements.ICompiledDmlStatement;
+import org.apache.commons.lang3.tuple.Triple;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.client.IClusterInfoCollector;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.dataset.IHyracksDataset;
+import org.apache.hyracks.api.dataset.ResultSetId;
+import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
 
 /**
@@ -52,6 +59,16 @@ public interface IStatementExecutor {
          * A result handle is returned before the resutlts are complete
          */
         ASYNC
+    }
+
+    class ResultMetadata implements Serializable {
+        private static final long serialVersionUID = 1L;
+
+        private final List<Triple<JobId, ResultSetId, ARecordType>> resultSets = new ArrayList<>();
+
+        public List<Triple<JobId, ResultSetId, ARecordType>> getResultSets() {
+            return resultSets;
+        }
     }
 
     public static class Stats {
@@ -85,12 +102,14 @@ public interface IStatementExecutor {
      *            A Hyracks dataset client object that is used to read the results.
      * @param resultDelivery
      *            The {@code ResultDelivery} kind required for queries in the list of statements
+     * @param outMetadata
+     *            a reference to write the metadata of executed queries
      * @param stats
      *            a reference to write the stats of executed queries
      * @throws Exception
      */
     void compileAndExecute(IHyracksClientConnection hcc, IHyracksDataset hdc, ResultDelivery resultDelivery,
-            Stats stats) throws Exception;
+            ResultMetadata outMetadata, Stats stats) throws Exception;
 
     /**
      * Compiles and execute a list of statements, with passing in client context id and context.
@@ -101,6 +120,8 @@ public interface IStatementExecutor {
      *            A Hyracks dataset client object that is used to read the results.
      * @param resultDelivery
      *            The {@code ResultDelivery} kind required for queries in the list of statements
+     * @param outMetadata
+     *            a reference to write the metadata of executed queries
      * @param stats
      *            a reference to write the stats of executed queries
      * @param clientContextId
@@ -110,7 +131,8 @@ public interface IStatementExecutor {
      * @throws Exception
      */
     void compileAndExecute(IHyracksClientConnection hcc, IHyracksDataset hdc, ResultDelivery resultDelivery,
-            Stats stats, String clientContextId, IStatementExecutorContext ctx) throws Exception;
+            ResultMetadata outMetadata, Stats stats, String clientContextId, IStatementExecutorContext ctx)
+            throws Exception;
 
     /**
      * rewrites and compiles query into a hyracks job specifications

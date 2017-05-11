@@ -27,8 +27,9 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.asterix.api.http.ctx.StatementExecutorContext;
+import org.apache.asterix.algebra.base.ILangExtension;
 import org.apache.asterix.api.http.servlet.ServletConstants;
+import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.api.IClusterManagementWork;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.context.IStorageComponentProvider;
@@ -46,8 +47,8 @@ import org.apache.asterix.translator.IStatementExecutor.Stats;
 import org.apache.asterix.translator.IStatementExecutorContext;
 import org.apache.asterix.translator.IStatementExecutorFactory;
 import org.apache.asterix.translator.SessionConfig;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.core.algebra.prettyprint.AlgebricksAppendable;
+import org.apache.asterix.translator.SessionOutput;
+import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
 import org.apache.hyracks.http.server.utils.HttpUtil;
@@ -66,19 +67,23 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 
 public class QueryServiceServlet extends AbstractQueryApiServlet {
     private static final Logger LOGGER = Logger.getLogger(QueryServiceServlet.class.getName());
+    protected final ILangExtension.Language queryLanguage;
     private final ILangCompilationProvider compilationProvider;
     private final IStatementExecutorFactory statementExecutorFactory;
     private final IStorageComponentProvider componentProvider;
-    private final IStatementExecutorContext queryCtx = new StatementExecutorContext();
+    private final IStatementExecutorContext queryCtx;
+    protected final IServiceContext serviceCtx;
 
-    public QueryServiceServlet(ConcurrentMap<String, Object> ctx, String[] paths, ICcApplicationContext appCtx,
-            ILangCompilationProvider compilationProvider, IStatementExecutorFactory statementExecutorFactory,
-            IStorageComponentProvider componentProvider) {
+    public QueryServiceServlet(ConcurrentMap<String, Object> ctx, String[] paths, IApplicationContext appCtx,
+            ILangExtension.Language queryLanguage, ILangCompilationProvider compilationProvider,
+            IStatementExecutorFactory statementExecutorFactory, IStorageComponentProvider componentProvider) {
         super(appCtx, ctx, paths);
+        this.queryLanguage = queryLanguage;
         this.compilationProvider = compilationProvider;
         this.statementExecutorFactory = statementExecutorFactory;
         this.componentProvider = componentProvider;
-        ctx.put(ServletConstants.RUNNING_QUERIES_ATTR, queryCtx);
+        this.queryCtx = (IStatementExecutorContext) ctx.get(ServletConstants.RUNNING_QUERIES_ATTR);
+        this.serviceCtx = (IServiceContext) ctx.get(ServletConstants.SERVICE_CONTEXT_ATTR);
     }
 
     @Override
@@ -235,40 +240,22 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         return SessionConfig.OutputFormat.CLEAN_JSON;
     }
 
-    private static SessionConfig createSessionConfig(RequestParameters param, String handleUrl,
+    private static SessionOutput createSessionOutput(RequestParameters param, String handleUrl,
             PrintWriter resultWriter) {
-        SessionConfig.ResultDecorator resultPrefix = new SessionConfig.ResultDecorator() {
-            int resultNo = -1;
-
-            @Override
-            public AlgebricksAppendable append(AlgebricksAppendable app) throws AlgebricksException {
-                app.append("\t\"");
-                app.append(ResultFields.RESULTS.str());
-                if (resultNo >= 0) {
-                    app.append('-').append(String.valueOf(resultNo));
-                }
-                ++resultNo;
-                app.append("\": ");
-                return app;
-            }
-        };
-
-        SessionConfig.ResultDecorator resultPostfix = app -> app.append("\t,\n");
-        SessionConfig.ResultAppender appendHandle = (app, handle) -> app.append("\t\"")
-                .append(ResultFields.HANDLE.str()).append("\": \"").append(handleUrl).append(handle).append("\",\n");
-        SessionConfig.ResultAppender appendStatus = (app, status) -> app.append("\t\"")
-                .append(ResultFields.STATUS.str()).append("\": \"").append(status).append("\",\n");
+        SessionOutput.ResultDecorator resultPrefix = ResultUtil.createPreResultDecorator();
+        SessionOutput.ResultDecorator resultPostfix = ResultUtil.createPostResultDecorator();
+        SessionOutput.ResultAppender appendHandle = ResultUtil.createResultHandleAppender(handleUrl);
+        SessionOutput.ResultAppender appendStatus = ResultUtil.createResultStatusAppender();
 
         SessionConfig.OutputFormat format = getFormat(param.format);
-        SessionConfig sessionConfig =
-                new SessionConfig(resultWriter, format, resultPrefix, resultPostfix, appendHandle, appendStatus);
+        SessionConfig sessionConfig = new SessionConfig(format);
         sessionConfig.set(SessionConfig.FORMAT_WRAPPER_ARRAY, true);
         sessionConfig.set(SessionConfig.FORMAT_INDENT_JSON, param.pretty);
         sessionConfig.set(SessionConfig.FORMAT_QUOTE_RECORD,
                 format != SessionConfig.OutputFormat.CLEAN_JSON && format != SessionConfig.OutputFormat.LOSSLESS_JSON);
         sessionConfig.set(SessionConfig.FORMAT_CSV_HEADER, format == SessionConfig.OutputFormat.CSV
                 && "present".equals(getParameterValue(param.format, Attribute.HEADER.str())));
-        return sessionConfig;
+        return new SessionOutput(sessionConfig, resultWriter, resultPrefix, resultPostfix, appendHandle, appendStatus);
     }
 
     private static void printClientContextID(PrintWriter pw, RequestParameters params) {
@@ -406,13 +393,13 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         ResultDelivery delivery = parseResultDelivery(param.mode);
 
         String handleUrl = getHandleUrl(param.host, param.path, delivery);
-        SessionConfig sessionConfig = createSessionConfig(param, handleUrl, resultWriter);
+        SessionOutput sessionOutput = createSessionOutput(param, handleUrl, resultWriter);
+        SessionConfig sessionConfig = sessionOutput.config();
         HttpUtil.setContentType(response, HttpUtil.ContentType.APPLICATION_JSON, HttpUtil.Encoding.UTF8);
 
         HttpResponseStatus status = HttpResponseStatus.OK;
         Stats stats = new Stats();
-        long execStart = -1;
-        long execEnd = -1;
+        long[] execStartEnd = new long[] { -1, -1 };
 
         resultWriter.print("{\n");
         printRequestId(resultWriter);
@@ -420,46 +407,33 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         printSignature(resultWriter);
         printType(resultWriter, sessionConfig);
         try {
-            final IClusterManagementWork.ClusterState clusterState = ClusterStateManager.INSTANCE.getState();
-            if (clusterState != IClusterManagementWork.ClusterState.ACTIVE) {
-                // using a plain IllegalStateException here to get into the right catch clause for a 500
-                throw new IllegalStateException("Cannot execute request, cluster is " + clusterState);
-            }
             if (param.statement == null || param.statement.isEmpty()) {
                 throw new AsterixException("Empty request, no statement provided");
             }
-            IParser parser = compilationProvider.getParserFactory().createParser(param.statement + ";");
-            List<Statement> statements = parser.parse();
-            MetadataManager.INSTANCE.init();
-            IStatementExecutor translator =
-                    statementExecutorFactory.create(appCtx, statements, sessionConfig, compilationProvider,
-                            componentProvider);
-            execStart = System.nanoTime();
-            translator.compileAndExecute(getHyracksClientConnection(), getHyracksDataset(), delivery, stats,
-                    param.clientContextID, queryCtx);
-            execEnd = System.nanoTime();
+            String statementsText = param.statement + ";";
+            executeStatement(statementsText, sessionOutput, delivery, stats, param, handleUrl, execStartEnd);
             if (ResultDelivery.IMMEDIATE == delivery || ResultDelivery.DEFERRED == delivery) {
-                ResultUtil.printStatus(sessionConfig, ResultStatus.SUCCESS);
+                ResultUtil.printStatus(sessionOutput, ResultStatus.SUCCESS);
             }
         } catch (AsterixException | TokenMgrError | org.apache.asterix.aqlplus.parser.TokenMgrError pe) {
             GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, pe.getMessage(), pe);
             ResultUtil.printError(resultWriter, pe);
-            ResultUtil.printStatus(sessionConfig, ResultStatus.FATAL);
+            ResultUtil.printStatus(sessionOutput, ResultStatus.FATAL);
             status = HttpResponseStatus.BAD_REQUEST;
         } catch (Exception e) {
-            GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, e.getMessage(), e);
+            GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, e.toString(), e);
             ResultUtil.printError(resultWriter, e);
-            ResultUtil.printStatus(sessionConfig, ResultStatus.FATAL);
+            ResultUtil.printStatus(sessionOutput, ResultStatus.FATAL);
             status = HttpResponseStatus.INTERNAL_SERVER_ERROR;
         } finally {
-            if (execStart == -1) {
-                execEnd = -1;
-            } else if (execEnd == -1) {
-                execEnd = System.nanoTime();
+            if (execStartEnd[0] == -1) {
+                execStartEnd[1] = -1;
+            } else if (execStartEnd[1] == -1) {
+                execStartEnd[1] = System.nanoTime();
             }
         }
-        printMetrics(resultWriter, System.nanoTime() - elapsedStart, execEnd - execStart, stats.getCount(),
-                stats.getSize());
+        printMetrics(resultWriter, System.nanoTime() - elapsedStart, execStartEnd[1] - execStartEnd[0],
+                stats.getCount(), stats.getSize());
         resultWriter.print("}\n");
         resultWriter.flush();
         String result = stringWriter.toString();
@@ -471,5 +445,24 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         if (response.writer().checkError()) {
             LOGGER.warning("Error flushing output writer");
         }
+    }
+
+    protected void executeStatement(String statementsText, SessionOutput sessionOutput, ResultDelivery delivery,
+            IStatementExecutor.Stats stats, RequestParameters param, String handleUrl, long[] outExecStartEnd)
+            throws Exception {
+        IClusterManagementWork.ClusterState clusterState = ClusterStateManager.INSTANCE.getState();
+        if (clusterState != IClusterManagementWork.ClusterState.ACTIVE) {
+            // using a plain IllegalStateException here to get into the right catch clause for a 500
+            throw new IllegalStateException("Cannot execute request, cluster is " + clusterState);
+        }
+        IParser parser = compilationProvider.getParserFactory().createParser(statementsText);
+        List<Statement> statements = parser.parse();
+        MetadataManager.INSTANCE.init();
+        IStatementExecutor translator = statementExecutorFactory.create((ICcApplicationContext) appCtx, statements,
+                sessionOutput, compilationProvider, componentProvider);
+        outExecStartEnd[0] = System.nanoTime();
+        translator.compileAndExecute(getHyracksClientConnection(), getHyracksDataset(), delivery, null, stats,
+                param.clientContextID, queryCtx);
+        outExecStartEnd[1] = System.nanoTime();
     }
 }

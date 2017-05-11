@@ -47,6 +47,8 @@ public class HttpServer {
     // Constants
     private static final int LOW_WRITE_BUFFER_WATER_MARK = 8 * 1024;
     private static final int HIGH_WRITE_BUFFER_WATER_MARK = 32 * 1024;
+    protected static final WriteBufferWaterMark WRITE_BUFFER_WATER_MARK =
+            new WriteBufferWaterMark(LOW_WRITE_BUFFER_WATER_MARK, HIGH_WRITE_BUFFER_WATER_MARK);
     private static final Logger LOGGER = Logger.getLogger(HttpServer.class.getName());
     private static final int FAILED = -1;
     private static final int STOPPED = 0;
@@ -192,8 +194,7 @@ public class HttpServer {
         Collections.sort(servlets, (l1, l2) -> l2.getPaths()[0].length() - l1.getPaths()[0].length());
         ServerBootstrap b = new ServerBootstrap();
         b.group(bossGroup, workerGroup).channel(NioServerSocketChannel.class)
-                .childOption(ChannelOption.WRITE_BUFFER_WATER_MARK,
-                        new WriteBufferWaterMark(LOW_WRITE_BUFFER_WATER_MARK, HIGH_WRITE_BUFFER_WATER_MARK))
+                .childOption(ChannelOption.WRITE_BUFFER_WATER_MARK, WRITE_BUFFER_WATER_MARK)
                 .handler(new LoggingHandler(LogLevel.DEBUG)).childHandler(new HttpServerInitializer(this));
         channel = b.bind(port).sync().channel();
     }
@@ -225,7 +226,6 @@ public class HttpServer {
                 }
             }
         }
-        LOGGER.warning("No servlet for " + uri);
         return null;
     }
 
@@ -254,7 +254,15 @@ public class HttpServer {
         return b && (path.length() == cpl || '/' == path.charAt(cpl));
     }
 
+    protected HttpServerHandler createHttpHandler(int chunkSize) {
+        return new HttpServerHandler<>(this, chunkSize);
+    }
+
     public ExecutorService getExecutor() {
         return executor;
+    }
+
+    protected EventLoopGroup getWorkerGroup() {
+        return workerGroup;
     }
 }

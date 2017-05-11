@@ -212,7 +212,6 @@
             <usedDependency>org.apache.httpcomponents:httpclient</usedDependency>
             <usedDependency>org.apache.httpcomponents:httpcore</usedDependency>
             <usedDependency>org.slf4j:slf4j-simple</usedDependency>
-            <usedDependency>xerces:xercesImpl</usedDependency>
           </usedDependencies>
           <ignoredUnusedDeclaredDependencies>
             <ignoredUnusedDeclaredDependency>org.apache.asterix:asterix-external-data:zip:*</ignoredUnusedDeclaredDependency>
@@ -385,11 +384,6 @@
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>xerces</groupId>
-      <artifactId>xercesImpl</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>

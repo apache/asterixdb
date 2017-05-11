@@ -21,6 +21,7 @@ package org.apache.asterix.messaging;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -30,11 +31,15 @@ import org.apache.asterix.common.memory.ConcurrentFramePool;
 import org.apache.asterix.common.messaging.api.ICcAddressedMessage;
 import org.apache.asterix.common.messaging.api.INCMessageBroker;
 import org.apache.asterix.common.messaging.api.INcAddressedMessage;
+import org.apache.asterix.common.messaging.api.MessageFuture;
 import org.apache.hyracks.api.comm.IChannelControlBlock;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.messages.IMessage;
 import org.apache.hyracks.api.util.JavaSerializationUtils;
 import org.apache.hyracks.control.nc.NodeControllerService;
+
+import io.netty.util.collection.LongObjectHashMap;
+import io.netty.util.collection.LongObjectMap;
 
 public class NCMessageBroker implements INCMessageBroker {
     private static final Logger LOGGER = Logger.getLogger(NCMessageBroker.class.getName());
@@ -44,6 +49,8 @@ public class NCMessageBroker implements INCMessageBroker {
     private final LinkedBlockingQueue<INcAddressedMessage> receivedMsgsQ;
     private final ConcurrentFramePool messagingFramePool;
     private final int maxMsgSize;
+    private final AtomicLong futureIdGenerator;
+    private final LongObjectMap<MessageFuture> futureMap;
 
     public NCMessageBroker(NodeControllerService ncs, MessagingProperties messagingProperties) {
         this.ncs = ncs;
@@ -53,6 +60,8 @@ public class NCMessageBroker implements INCMessageBroker {
         messagingFramePool = new ConcurrentFramePool(ncs.getId(), messagingMemoryBudget,
                 messagingProperties.getFrameSize());
         receivedMsgsQ = new LinkedBlockingQueue<>();
+        futureIdGenerator = new AtomicLong();
+        futureMap = new LongObjectHashMap<>();
         MessageDeliveryService msgDeliverySvc = new MessageDeliveryService();
         appContext.getThreadExecutor().execute(msgDeliverySvc);
     }
@@ -102,6 +111,26 @@ public class NCMessageBroker implements INCMessageBroker {
         msgBuffer.flip();
         // Give the buffer to the channel write interface for writing
         ccb.getWriteInterface().getFullBufferAcceptor().accept(msgBuffer);
+    }
+
+    @Override
+    public MessageFuture registerMessageFuture() {
+        long futureId = futureIdGenerator.incrementAndGet();
+        MessageFuture future = new MessageFuture(futureId);
+        synchronized (futureMap) {
+            if (futureMap.containsKey(futureId)) {
+                throw new IllegalStateException();
+            }
+            futureMap.put(futureId, future);
+        }
+        return future;
+    }
+
+    @Override
+    public MessageFuture deregisterMessageFuture(long futureId) {
+        synchronized (futureMap) {
+            return futureMap.remove(futureId);
+        }
     }
 
     private class MessageDeliveryService implements Runnable {

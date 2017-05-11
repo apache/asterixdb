@@ -110,11 +110,11 @@ public class CCExtensionManager implements IAlgebraExtensionManager {
         return statementExecutorFactory;
     }
 
-    public ILangCompilationProvider getAqlCompilationProvider() {
-        return aqlCompilationProvider;
-    }
-
-    public ILangCompilationProvider getSqlppCompilationProvider() {
-        return sqlppCompilationProvider;
+    public ILangCompilationProvider getCompilationProvider(Language lang) {
+        switch (lang) {
+            case AQL: return aqlCompilationProvider;
+            case SQLPP: return sqlppCompilationProvider;
+            default: throw new IllegalArgumentException(String.valueOf(lang));
+        }
     }
 }

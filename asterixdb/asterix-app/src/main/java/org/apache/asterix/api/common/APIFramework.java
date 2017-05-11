@@ -67,6 +67,7 @@ import org.apache.asterix.transaction.management.service.transaction.JobIdFactor
 import org.apache.asterix.translator.CompiledStatements.ICompiledDmlStatement;
 import org.apache.asterix.translator.IStatementExecutor.Stats;
 import org.apache.asterix.translator.SessionConfig;
+import org.apache.asterix.translator.SessionOutput;
 import org.apache.asterix.utils.ResourceUtils;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
@@ -152,31 +153,33 @@ public class APIFramework {
         }
     }
 
-    private void printPlanPrefix(SessionConfig conf, String planName) {
-        if (conf.is(SessionConfig.FORMAT_HTML)) {
-            conf.out().println("<h4>" + planName + ":</h4>");
-            conf.out().println("<pre>");
+    private void printPlanPrefix(SessionOutput output, String planName) {
+        if (output.config().is(SessionConfig.FORMAT_HTML)) {
+            output.out().println("<h4>" + planName + ":</h4>");
+            output.out().println("<pre>");
         } else {
-            conf.out().println("----------" + planName + ":");
+            output.out().println("----------" + planName + ":");
         }
     }
 
-    private void printPlanPostfix(SessionConfig conf) {
-        if (conf.is(SessionConfig.FORMAT_HTML)) {
-            conf.out().println("</pre>");
+    private void printPlanPostfix(SessionOutput output) {
+        if (output.config().is(SessionConfig.FORMAT_HTML)) {
+            output.out().println("</pre>");
         }
     }
 
     public Pair<IReturningStatement, Integer> reWriteQuery(List<FunctionDecl> declaredFunctions,
-            MetadataProvider metadataProvider, IReturningStatement q, SessionConfig conf) throws CompilationException {
+            MetadataProvider metadataProvider, IReturningStatement q, SessionOutput output)
+            throws CompilationException {
         if (q == null) {
             return null;
         }
+        SessionConfig conf = output.config();
         if (!conf.is(SessionConfig.FORMAT_ONLY_PHYSICAL_OPS) && conf.is(SessionConfig.OOB_EXPR_TREE)) {
-            conf.out().println();
-            printPlanPrefix(conf, "Expression tree");
-            q.accept(astPrintVisitorFactory.createLangVisitor(conf.out()), 0);
-            printPlanPostfix(conf);
+            output.out().println();
+            printPlanPrefix(output, "Expression tree");
+            q.accept(astPrintVisitorFactory.createLangVisitor(output.out()), 0);
+            printPlanPostfix(output);
         }
         IQueryRewriter rw = rewriterFactory.createQueryRewriter();
         rw.rewrite(declaredFunctions, q, metadataProvider, new LangRewritingContext(q.getVarCounter()));
@@ -184,17 +187,18 @@ public class APIFramework {
     }
 
     public JobSpecification compileQuery(IClusterInfoCollector clusterInfoCollector, MetadataProvider metadataProvider,
-            Query rwQ, int varCounter, String outputDatasetName, SessionConfig conf, ICompiledDmlStatement statement)
+            Query rwQ, int varCounter, String outputDatasetName, SessionOutput output, ICompiledDmlStatement statement)
             throws AlgebricksException, RemoteException, ACIDException {
 
+        SessionConfig conf = output.config();
         if (!conf.is(SessionConfig.FORMAT_ONLY_PHYSICAL_OPS) && conf.is(SessionConfig.OOB_REWRITTEN_EXPR_TREE)) {
-            conf.out().println();
+            output.out().println();
 
-            printPlanPrefix(conf, "Rewritten expression tree");
+            printPlanPrefix(output, "Rewritten expression tree");
             if (rwQ != null) {
-                rwQ.accept(astPrintVisitorFactory.createLangVisitor(conf.out()), 0);
+                rwQ.accept(astPrintVisitorFactory.createLangVisitor(output.out()), 0);
             }
-            printPlanPostfix(conf);
+            printPlanPostfix(output);
         }
 
         org.apache.asterix.common.transactions.JobId asterixJobId = JobIdFactory.generateJobId();
@@ -211,14 +215,14 @@ public class APIFramework {
         }
 
         if (!conf.is(SessionConfig.FORMAT_ONLY_PHYSICAL_OPS) && conf.is(SessionConfig.OOB_LOGICAL_PLAN)) {
-            conf.out().println();
+            output.out().println();
 
-            printPlanPrefix(conf, "Logical plan");
+            printPlanPrefix(output, "Logical plan");
             if (rwQ != null || (statement != null && statement.getKind() == Statement.Kind.LOAD)) {
-                LogicalOperatorPrettyPrintVisitor pvisitor = new LogicalOperatorPrettyPrintVisitor(conf.out());
+                LogicalOperatorPrettyPrintVisitor pvisitor = new LogicalOperatorPrettyPrintVisitor(output.out());
                 PlanPrettyPrinter.printPlan(plan, pvisitor, 0);
             }
-            printPlanPostfix(conf);
+            printPlanPostfix(output);
         }
         CompilerProperties compilerProperties = metadataProvider.getApplicationContext().getCompilerProperties();
         int frameSize = compilerProperties.getFrameSize();
@@ -264,15 +268,16 @@ public class APIFramework {
             if (conf.is(SessionConfig.OOB_OPTIMIZED_LOGICAL_PLAN)) {
                 if (conf.is(SessionConfig.FORMAT_ONLY_PHYSICAL_OPS)) {
                     // For Optimizer tests.
-                    AlgebricksAppendable buffer = new AlgebricksAppendable(conf.out());
+                    AlgebricksAppendable buffer = new AlgebricksAppendable(output.out());
                     PlanPrettyPrinter.printPhysicalOps(plan, buffer, 0);
                 } else {
-                    printPlanPrefix(conf, "Optimized logical plan");
+                    printPlanPrefix(output, "Optimized logical plan");
                     if (rwQ != null || (statement != null && statement.getKind() == Statement.Kind.LOAD)) {
-                        LogicalOperatorPrettyPrintVisitor pvisitor = new LogicalOperatorPrettyPrintVisitor(conf.out());
+                        LogicalOperatorPrettyPrintVisitor pvisitor =
+                                new LogicalOperatorPrettyPrintVisitor(output.out());
                         PlanPrettyPrinter.printPlan(plan, pvisitor, 0);
                     }
-                    printPlanPostfix(conf);
+                    printPlanPostfix(output);
                 }
             }
         }
@@ -280,7 +285,7 @@ public class APIFramework {
             try {
                 LogicalOperatorPrettyPrintVisitor pvisitor = new LogicalOperatorPrettyPrintVisitor();
                 PlanPrettyPrinter.printPlan(plan, pvisitor, 0);
-                ResultUtil.printResults(metadataProvider.getApplicationContext(), pvisitor.get().toString(), conf,
+                ResultUtil.printResults(metadataProvider.getApplicationContext(), pvisitor.get().toString(), output,
                         new Stats(), null);
                 return null;
             } catch (IOException e) {
@@ -336,17 +341,17 @@ public class APIFramework {
         }
 
         if (conf.is(SessionConfig.OOB_HYRACKS_JOB)) {
-            printPlanPrefix(conf, "Hyracks job");
+            printPlanPrefix(output, "Hyracks job");
             if (rwQ != null) {
                 try {
-                    conf.out().println(
+                    output.out().println(
                             new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(spec.toJSON()));
                 } catch (IOException e) {
                     throw new AlgebricksException(e);
                 }
-                conf.out().println(spec.getUserConstraints());
+                output.out().println(spec.getUserConstraints());
             }
-            printPlanPostfix(conf);
+            printPlanPostfix(output);
         }
         return spec;
     }
@@ -459,9 +464,7 @@ public class APIFramework {
 
     // Gets the frame limit.
     private static int getFrameLimit(String parameterName, String parameter, long memBudgetInConfiguration,
-            int frameSize,
-            int minFrameLimit)
-            throws AlgebricksException {
+            int frameSize, int minFrameLimit) throws AlgebricksException {
         IOptionType<Long> longBytePropertyInterpreter = OptionTypes.LONG_BYTE_UNIT;
         long memBudget = parameter == null ? memBudgetInConfiguration : longBytePropertyInterpreter.parse(parameter);
         int frameLimit = (int) (memBudget / frameSize);

@@ -26,7 +26,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentMap;
 
 import org.apache.asterix.app.result.ResultReader;
-import org.apache.asterix.common.dataflow.ICcApplicationContext;
+import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
@@ -35,7 +35,7 @@ import org.apache.hyracks.client.dataset.HyracksDataset;
 import org.apache.hyracks.http.server.AbstractServlet;
 
 public class AbstractQueryApiServlet extends AbstractServlet {
-    protected final ICcApplicationContext appCtx;
+    protected final IApplicationContext appCtx;
 
     public enum ResultFields {
         REQUEST_ID("requestID"),
@@ -93,7 +93,7 @@ public class AbstractQueryApiServlet extends AbstractServlet {
         }
     }
 
-    AbstractQueryApiServlet(ICcApplicationContext appCtx, ConcurrentMap<String, Object> ctx, String[] paths) {
+    AbstractQueryApiServlet(IApplicationContext appCtx, ConcurrentMap<String, Object> ctx, String[] paths) {
         super(ctx, paths);
         this.appCtx = appCtx;
     }

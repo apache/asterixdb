@@ -18,43 +18,10 @@
  !-->
 <!DOCTYPE test-suite [
   <!ENTITY RecordsQueries SYSTEM "queries_sqlpp/objects/ObjectsQueries.xml">
-
+  <!ENTITY AsyncDeferredQueries SYSTEM "queries_sqlpp/async-deferred/AsyncDeferredQueries.xml">
 ]>
 <test-suite xmlns="urn:xml.testframework.asterix.apache.org" ResultOffsetPath="results" QueryOffsetPath="queries_sqlpp" QueryFileExtension=".sqlpp">
-  <test-group name="async-deferred">
-    <test-case FilePath="async-deferred">
-      <compilation-unit name="async-failed">
-        <output-dir compare="Text">async-failed</output-dir>
-        <expected-error>Injected failure in asterix:inject-failure</expected-error>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="async-deferred">
-      <compilation-unit name="async-compilation-failed">
-        <output-dir compare="Text">async-compilation-failed</output-dir>
-        <expected-error>Cannot find dataset gargel</expected-error>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="async-deferred">
-      <compilation-unit name="deferred">
-        <output-dir compare="Text">deferred</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="async-deferred">
-      <compilation-unit name="async">
-        <output-dir compare="Text">async</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="async-deferred">
-      <compilation-unit name="async-repeated">
-        <output-dir compare="Text">async-repeated</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="async-deferred">
-      <compilation-unit name="async-running">
-        <output-dir compare="Text">async-running</output-dir>
-      </compilation-unit>
-    </test-case>
-  </test-group>
+  &AsyncDeferredQueries;
   <test-group name="flwor">
     <test-case FilePath="flwor">
       <compilation-unit name="at00">

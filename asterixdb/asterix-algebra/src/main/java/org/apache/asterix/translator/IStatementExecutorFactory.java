@@ -37,14 +37,14 @@ public interface IStatementExecutorFactory {
      *
      * @param statements
      *            Statements to execute
-     * @param conf
-     *            request configuration
+     * @param output
+     *            output and request configuration
      * @param compilationProvider
      *            provides query language related components
      * @param storageComponentProvider
      *            provides storage related components
      * @return an implementation of {@code IStatementExecutor} thaxt is used to execute the passed list of statements
      */
-    IStatementExecutor create(ICcApplicationContext appCtx, List<Statement> statements, SessionConfig conf,
+    IStatementExecutor create(ICcApplicationContext appCtx, List<Statement> statements, SessionOutput output,
             ILangCompilationProvider compilationProvider, IStorageComponentProvider storageComponentProvider);
 }

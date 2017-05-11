@@ -26,7 +26,6 @@ public interface INCMessageBroker extends IMessageBroker {
      * Sends application message from this NC to the CC.
      *
      * @param message
-     * @param callback
      * @throws Exception
      */
     public void sendMessageToCC(ICcAddressedMessage message) throws Exception;
@@ -35,7 +34,6 @@ public interface INCMessageBroker extends IMessageBroker {
      * Sends application message from this NC to another NC.
      *
      * @param message
-     * @param callback
      * @throws Exception
      */
     public void sendMessageToNC(String nodeId, INcAddressedMessage message)
@@ -47,4 +45,17 @@ public interface INCMessageBroker extends IMessageBroker {
      * @param msg
      */
     public void queueReceivedMessage(INcAddressedMessage msg);
+
+    /**
+     * Creates and registers a Future for a message that will be send through this broker
+     * @return new Future
+     */
+    MessageFuture registerMessageFuture();
+
+    /**
+     * Removes a previously registered Future
+     * @param futureId future identifier
+     * @return existing Future or {@code null} if there was no Future associated with this identifier
+     */
+    MessageFuture deregisterMessageFuture(long futureId);
 }

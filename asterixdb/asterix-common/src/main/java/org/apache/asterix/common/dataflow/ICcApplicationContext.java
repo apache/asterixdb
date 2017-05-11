@@ -20,6 +20,7 @@ package org.apache.asterix.common.dataflow;
 
 import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.cluster.IGlobalRecoveryManager;
+import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.transactions.IResourceIdManager;
 import org.apache.hyracks.api.application.ICCServiceContext;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
@@ -72,5 +73,24 @@ public interface ICcApplicationContext extends IApplicationContext {
      */
     public IHyracksClientConnection getHcc();
 
+    /**
+     * Returns the resource manager
+     *
+     * @return {@link IResourceIdManager} implementation instance
+     */
     public IResourceIdManager getResourceIdManager();
+
+    /**
+     * Returns the storage component provider
+     *
+     * @return {@link IStorageComponentProvider} implementation instance
+     */
+    public IStorageComponentProvider getStorageComponentProvider();
+
+    /**
+     * Returns the extension manager
+     *
+     * @return the extension manager instance
+     */
+    public Object getExtensionManager();
 }

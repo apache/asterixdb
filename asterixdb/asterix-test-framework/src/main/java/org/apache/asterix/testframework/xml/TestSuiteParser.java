@@ -20,14 +20,29 @@ package org.apache.asterix.testframework.xml;
 
 import java.io.File;
 
+import javax.xml.XMLConstants;
 import javax.xml.bind.JAXBContext;
+import javax.xml.bind.Unmarshaller;
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
+import javax.xml.transform.sax.SAXSource;
+
+import org.xml.sax.InputSource;
 
 public class TestSuiteParser {
     public TestSuiteParser() {
     }
 
     public org.apache.asterix.testframework.xml.TestSuite parse(File testSuiteCatalog) throws Exception {
+        SAXParserFactory saxParserFactory = SAXParserFactory.newInstance();
+        saxParserFactory.setNamespaceAware(true);
+        saxParserFactory.setXIncludeAware(true);
+        SAXParser saxParser = saxParserFactory.newSAXParser();
+        saxParser.setProperty(XMLConstants.ACCESS_EXTERNAL_DTD, "file");
+
         JAXBContext ctx = JAXBContext.newInstance(org.apache.asterix.testframework.xml.TestSuite.class);
-        return (org.apache.asterix.testframework.xml.TestSuite) ctx.createUnmarshaller().unmarshal(testSuiteCatalog);
+        Unmarshaller um = ctx.createUnmarshaller();
+        return (org.apache.asterix.testframework.xml.TestSuite) um.unmarshal(new SAXSource(saxParser.getXMLReader(),
+                new InputSource(testSuiteCatalog.toURI().toString())));
     }
 }

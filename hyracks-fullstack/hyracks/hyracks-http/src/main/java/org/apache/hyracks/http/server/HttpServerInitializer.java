@@ -44,6 +44,6 @@ public class HttpServerInitializer extends ChannelInitializer<SocketChannel> {
                 MAX_REQUEST_CHUNK_SIZE));
         p.addLast(new HttpResponseEncoder());
         p.addLast(new HttpObjectAggregator(Integer.MAX_VALUE));
-        p.addLast(new HttpServerHandler(server, RESPONSE_CHUNK_SIZE));
+        p.addLast(server.createHttpHandler(RESPONSE_CHUNK_SIZE));
     }
 }
