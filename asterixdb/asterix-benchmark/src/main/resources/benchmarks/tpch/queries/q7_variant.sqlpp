@@ -35,7 +35,8 @@ FROM
   (
     SELECT t.supp_nation, t.cust_nation, GET_YEAR(l3.l_shipdate) AS l_year,
            l3.l_extendedprice * (1 - l3.l_discount) AS volume
-    FROM (
+    FROM q7_volume_shipping_tmp t JOIN
+        (
            SELECT l2.l_shipdate, l2.l_extendedprice, l2.l_discount, l2.c_nationkey, s.s_nationkey
            FROM Supplier s JOIN
              (
@@ -47,10 +48,10 @@ FROM
                    JOIN LineItem l ON o.o_orderkey = l.l_orderkey AND l.l_shipdate >= '1995-01-01'
                         AND l.l_shipdate <= '1996-12-31'
                ) l1 ON c.c_custkey = l1.o_custkey
+
             ) l2 ON s.s_suppkey = l2.l_suppkey
-          ) l3
-          JOIN q7_volume_shipping_tmp t
-          ON t.c_nationkey = l3.c_nationkey AND t.s_nationkey = l3.s_nationkey
+         ) l3 ON t.c_nationkey = l3.c_nationkey AND t.s_nationkey = l3.s_nationkey
    ) shipping
 GROUP BY supp_nation, cust_nation, l_year
 ORDER BY supp_nation, cust_nation, l_year;
+

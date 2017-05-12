@@ -442,7 +442,7 @@ public class SimpleSerializableHashTable implements ISerializableTable {
      *         expected the byte size of the hash table
      */
     public static long getExpectedTableFrameCount(long tableSize, int frameSize) {
-        long numberOfHeaderFrame = (long) (Math.ceil((double) tableSize * 2 / (double) frameSize));
+        long numberOfHeaderFrame = (long) (Math.ceil((double) tableSize * 2 * getUnitSize() / (double) frameSize));
         long numberOfContentFrame = (long) (Math
                 .ceil(((double) getNumberOfEntryInSlot() * 2 * getUnitSize() * tableSize) / (double) frameSize));
         return numberOfHeaderFrame + numberOfContentFrame;

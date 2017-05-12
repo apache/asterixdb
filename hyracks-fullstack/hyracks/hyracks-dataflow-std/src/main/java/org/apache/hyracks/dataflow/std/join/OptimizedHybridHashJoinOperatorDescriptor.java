@@ -480,8 +480,8 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                             hashFunctionGeneratorFactories).createPartitioner(level);
 
                     int frameSize = ctx.getInitialFrameSize();
-                    long buildPartSize = buildSideReader.getFileSize() / frameSize;
-                    long probePartSize = probeSideReader.getFileSize() / frameSize;
+                    long buildPartSize = (long) Math.ceil((double) buildSideReader.getFileSize() / (double) frameSize);
+                    long probePartSize = (long) Math.ceil((double) probeSideReader.getFileSize() / (double) frameSize);
                     int beforeMax = Math.max(buildSizeInTuple, probeSizeInTuple);
 
                     if (LOGGER.isLoggable(Level.FINE)) {

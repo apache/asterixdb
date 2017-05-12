@@ -42,7 +42,7 @@ public class ExternalGroupOperatorDescriptorTest {
         int frameSize = 256;
         int resultCardinality = (int) PA.invokeMethod(eGByOp, "calculateGroupByTableCardinality(long,int,int)",
                 memoryBudgetInBytes, numberOfGroupByColumns, frameSize);
-        Assert.assertTrue(resultCardinality == 9);
+        Assert.assertTrue(resultCardinality == 10);
 
         // Sets the frame size to 128KB.
         frameSize = 128 * 1024;
@@ -51,31 +51,31 @@ public class ExternalGroupOperatorDescriptorTest {
         memoryBudgetInBytes = 1024 * 1024;
         resultCardinality = (int) PA.invokeMethod(eGByOp, "calculateGroupByTableCardinality(long,int,int)",
                 memoryBudgetInBytes, numberOfGroupByColumns, frameSize);
-        Assert.assertTrue(resultCardinality == 19660);
+        Assert.assertTrue(resultCardinality == 20388);
 
         // Test 3: memory size: 100 MB, frame size: 128 KB, 1 column group-by
         memoryBudgetInBytes = 1024 * 1024 * 100;
         resultCardinality = (int) PA.invokeMethod(eGByOp, "calculateGroupByTableCardinality(long,int,int)",
                 memoryBudgetInBytes, numberOfGroupByColumns, frameSize);
-        Assert.assertTrue(resultCardinality == 1937883);
+        Assert.assertTrue(resultCardinality == 2016724);
 
         // Test 4: memory size: 1 GB, frame size: 128 KB, 1 column group-by
         memoryBudgetInBytes = 1024 * 1024 * 1024;
         resultCardinality = (int) PA.invokeMethod(eGByOp, "calculateGroupByTableCardinality(long,int,int)",
                 memoryBudgetInBytes, numberOfGroupByColumns, frameSize);
-        Assert.assertTrue(resultCardinality == 19841178);
+        Assert.assertTrue(resultCardinality == 20649113);
 
         // Test 5: memory size: 10 GB, frame size: 128 KB, 1 column group-by
         memoryBudgetInBytes = 1024 * 1024 * 1024 * 10L;
         resultCardinality = (int) PA.invokeMethod(eGByOp, "calculateGroupByTableCardinality(long,int,int)",
                 memoryBudgetInBytes, numberOfGroupByColumns, frameSize);
-        Assert.assertTrue(resultCardinality == 198409112);
+        Assert.assertTrue(resultCardinality == 206489044);
 
         // Test 6: memory size: 100 GB, frame size: 128 KB, 1 column group-by
         memoryBudgetInBytes = 1024 * 1024 * 1024 * 100L;
         resultCardinality = (int) PA.invokeMethod(eGByOp, "calculateGroupByTableCardinality(long,int,int)",
                 memoryBudgetInBytes, numberOfGroupByColumns, frameSize);
-        Assert.assertTrue(resultCardinality == 1962753871);
+        Assert.assertTrue(resultCardinality == 2045222521);
 
         // Test 7: memory size: 1 TB, frame size: 128 KB, 1 column group-by
         // The cardinality will be set to Integer.MAX_VALUE in this case since the budget is too huge.
@@ -90,28 +90,28 @@ public class ExternalGroupOperatorDescriptorTest {
         numberOfGroupByColumns = 2;
         resultCardinality = (int) PA.invokeMethod(eGByOp, "calculateGroupByTableCardinality(long,int,int)",
                 memoryBudgetInBytes, numberOfGroupByColumns, frameSize);
-        Assert.assertTrue(resultCardinality == 16681);
+        Assert.assertTrue(resultCardinality == 17825);
 
         // Test 9: memory size: 1 MB, frame size: 128 KB, 3 columns group-by
         memoryBudgetInBytes = 1024 * 1024;
         numberOfGroupByColumns = 3;
         resultCardinality = (int) PA.invokeMethod(eGByOp, "calculateGroupByTableCardinality(long,int,int)",
                 memoryBudgetInBytes, numberOfGroupByColumns, frameSize);
-        Assert.assertTrue(resultCardinality == 15176);
+        Assert.assertTrue(resultCardinality == 16227);
 
         // Test 10: memory size: 1 MB, frame size: 128 KB, 4 columns group-by
         memoryBudgetInBytes = 1024 * 1024;
         numberOfGroupByColumns = 4;
         resultCardinality = (int) PA.invokeMethod(eGByOp, "calculateGroupByTableCardinality(long,int,int)",
                 memoryBudgetInBytes, numberOfGroupByColumns, frameSize);
-        Assert.assertTrue(resultCardinality == 13878);
+        Assert.assertTrue(resultCardinality == 14563);
 
         // Test 11: memory size: 32 MB, frame size: 128 KB, 2 columns group-by
         memoryBudgetInBytes = 1024 * 1024 * 32L;
         numberOfGroupByColumns = 4;
         resultCardinality = (int) PA.invokeMethod(eGByOp, "calculateGroupByTableCardinality(long,int,int)",
                 memoryBudgetInBytes, numberOfGroupByColumns, frameSize);
-        Assert.assertTrue(resultCardinality == 408503);
+        Assert.assertTrue(resultCardinality == 441913);
     }
 
 }
