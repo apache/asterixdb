@@ -20,6 +20,7 @@ package org.apache.asterix.external.operators;
 
 import java.util.List;
 
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.external.indexing.ExternalFile;
 import org.apache.asterix.external.indexing.FileIndexTupleTranslator;
 import org.apache.hyracks.api.comm.IFrameWriter;
@@ -59,8 +60,6 @@ public class ExternalFilesIndexModificationOperatorDescriptor extends AbstractSi
     public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) throws HyracksDataException {
         return new AbstractOperatorNodePushable() {
-
-            @SuppressWarnings("incomplete-switch")
             @Override
             public void initialize() throws HyracksDataException {
                 final IIndexDataflowHelper indexHelper = dataflowHelperFactory.create(ctx, partition);
@@ -86,7 +85,8 @@ public class ExternalFilesIndexModificationOperatorDescriptor extends AbstractSi
                             case NO_OP:
                                 break;
                             default:
-                                throw new HyracksDataException("Unknown pending op " + file.getPendingOp());
+                                throw HyracksDataException.create(ErrorCode.UNKNOWN_EXTERNAL_FILE_PENDING_OP,
+                                        file.getPendingOp());
                         }
                     }
                     bulkLoader.end();
