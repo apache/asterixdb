@@ -36,7 +36,7 @@ import org.junit.runners.Parameterized.Parameters;
 @RunWith(Parameterized.class)
 public class SqlppExecutionWithCancellationTest {
     protected static final String TEST_CONFIG_FILE_NAME = "asterix-build-configuration.xml";
-    private static int numCancelledQueries = 0;
+    public static int numCancelledQueries = 0;
 
     @BeforeClass
     public static void setUp() throws Exception {
@@ -70,31 +70,12 @@ public class SqlppExecutionWithCancellationTest {
         try {
             LangExecutionUtil.test(tcCtx);
         } catch (Exception e) {
-            Throwable cause = getRootCause(e);
-            String errorMsg = cause.getMessage();
-            if (errorMsg.startsWith("HYR0025") // Expected, "HYR0025" means a user cancelled the query.
-                    || errorMsg.contains("\"status\": ") // Expected, "status" results for cancelled queries can change.
-                    || errorMsg.contains("reference count = 1") // not expected, but is a false alarm.
-                    || errorMsg.contains("pinned and file is being closed") // not expected, but maybe a false alarm.
-            // happens after the test query: big_object_load_20M.
+            String errorMsg = CancellationTestExecutor.getErrorMessage(e);
+            if (!errorMsg.contains("reference count = 1") // not expected, but is a false alarm.
+                    && !errorMsg.contains("pinned and file is being closed") // not expected, but maybe a false alarm.
             ) {
-                numCancelledQueries++;
-            } else {
-                // Re-throw other kinds of exceptions.
                 throw e;
             }
         }
-    }
-
-    // Finds the root cause of Throwable.
-    private Throwable getRootCause(Throwable e) {
-        Throwable current = e;
-        Throwable cause = e.getCause();
-        while (cause != null) {
-            Throwable nextCause = current.getCause();
-            current = cause;
-            cause = nextCause;
-        }
-        return current;
     }
 }

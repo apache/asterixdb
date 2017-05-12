@@ -30,8 +30,11 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import org.apache.asterix.common.utils.Servlets;
+import org.apache.asterix.test.runtime.SqlppExecutionWithCancellationTest;
 import org.apache.asterix.testframework.context.TestCaseContext;
 import org.apache.asterix.testframework.xml.TestCase;
+import org.apache.asterix.testframework.xml.TestCase.CompilationUnit;
+import org.apache.commons.lang3.mutable.MutableInt;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.methods.RequestBuilder;
@@ -86,5 +89,37 @@ public class CancellationTestExecutor extends TestExecutor {
         }
         builder.setCharset(StandardCharsets.UTF_8);
         return builder.build();
+    }
+
+    @Override
+    protected boolean isUnExpected(Exception e, CompilationUnit cUnit, int numOfErrors, MutableInt queryCount) {
+        if (super.isUnExpected(e, cUnit, numOfErrors, queryCount)) {
+            String errorMsg = getErrorMessage(e);
+            // Expected, "HYR0025" means a user cancelled the query.)
+            if (errorMsg.startsWith("HYR0025")) {
+                SqlppExecutionWithCancellationTest.numCancelledQueries++;
+                queryCount.increment();
+            } else {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static String getErrorMessage(Throwable th) {
+        Throwable cause = getRootCause(th);
+        return cause.getMessage();
+    }
+
+    // Finds the root cause of Throwable.
+    private static Throwable getRootCause(Throwable e) {
+        Throwable current = e;
+        Throwable cause = e.getCause();
+        while (cause != null && cause != current) {
+            Throwable nextCause = current.getCause();
+            current = cause;
+            cause = nextCause;
+        }
+        return current;
     }
 }

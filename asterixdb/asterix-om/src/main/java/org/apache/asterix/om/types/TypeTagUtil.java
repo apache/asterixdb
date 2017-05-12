@@ -20,6 +20,7 @@ package org.apache.asterix.om.types;
 
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.utils.RecordUtil;
+import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 
 public class TypeTagUtil {
 
@@ -90,5 +91,9 @@ public class TypeTagUtil {
             default:
                 throw new AsterixException("Typetag " + typeTag + " is not a built-in type");
         }
+    }
+
+    public static boolean isType(ITupleReference tuple, int fieldIdx, byte tag) {
+        return tuple.getFieldData(fieldIdx)[tuple.getFieldStart(fieldIdx)] == tag;
     }
 }

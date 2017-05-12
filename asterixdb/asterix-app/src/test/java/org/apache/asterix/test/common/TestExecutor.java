@@ -381,8 +381,8 @@ public class TestExecutor {
                 if (match && !negate || negate && !match) {
                     continue;
                 }
-                throw new Exception(
-                        "Result for " + scriptFile + ": expected pattern '" + expression + "' not found in result: "+actual);
+                throw new Exception("Result for " + scriptFile + ": expected pattern '" + expression
+                        + "' not found in result: " + actual);
             }
         } catch (Exception e) {
             System.err.println("Actual results file: " + actualFile.toString());
@@ -1241,27 +1241,11 @@ public class TestExecutor {
                             expectedResultFileCtxs, testFile, actualPath);
                 } catch (Exception e) {
                     System.err.println("testFile " + testFile.toString() + " raised an exception: " + e);
-                    boolean unExpectedFailure = false;
                     numOfErrors++;
-                    String expectedError = null;
-                    if (cUnit.getExpectedError().size() < numOfErrors) {
-                        unExpectedFailure = true;
-                    } else {
-                        // Get the expected exception
-                        expectedError = cUnit.getExpectedError().get(numOfErrors - 1);
-                        if (e.toString().contains(expectedError)) {
-                            System.err.println("...but that was expected.");
-                        } else {
-                            unExpectedFailure = true;
-                        }
-                    }
+                    boolean unExpectedFailure = isUnExpected(e, cUnit, numOfErrors, queryCount);
                     if (unExpectedFailure) {
                         e.printStackTrace();
                         System.err.println("...Unexpected!");
-                        if (expectedError != null) {
-                            System.err.println("Expected to find the following in error text:\n+++++\n" + expectedError
-                                    + "\n+++++");
-                        }
                         if (failedGroup != null) {
                             failedGroup.getTestCase().add(testCaseCtx.getTestCase());
                         }
@@ -1279,6 +1263,24 @@ public class TestExecutor {
                                 + " PASSED ");
                     }
                 }
+            }
+        }
+    }
+
+    protected boolean isUnExpected(Exception e, CompilationUnit cUnit, int numOfErrors, MutableInt queryCount) {
+        String expectedError = null;
+        if (cUnit.getExpectedError().size() < numOfErrors) {
+            return true;
+        } else {
+            // Get the expected exception
+            expectedError = cUnit.getExpectedError().get(numOfErrors - 1);
+            if (e.toString().contains(expectedError)) {
+                System.err.println("...but that was expected.");
+                return false;
+            } else {
+                System.err
+                        .println("Expected to find the following in error text:\n+++++\n" + expectedError + "\n+++++");
+                return true;
             }
         }
     }
