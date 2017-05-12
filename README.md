@@ -27,8 +27,8 @@ A semistructured NoSQL style data model ([ADM](https://ci.apache.org/projects/as
 extending JSON with object database ideas
 
 - __Query languages__<br/>
-Two expressive and declarative query languages ([SQL++](http://asterixdb.apache.org/docs/0.9.0/sqlpp/manual.html)
-and [AQL](http://asterixdb.apache.org/docs/0.9.0/aql/manual.html)) that support a broad range of queries and analysis
+Two expressive and declarative query languages ([SQL++](http://asterixdb.apache.org/docs/0.9.1/sqlpp/manual.html)
+and [AQL](http://asterixdb.apache.org/docs/0.9.1/aql/manual.html)) that support a broad range of queries and analysis
 over semistructured data
 
 - __Scalability__<br/>
@@ -90,6 +90,7 @@ Here are steps to get AsterixDB running on your local machine:
 ## Documentation
 
 * [master](https://ci.apache.org/projects/asterixdb/index.html) |
+  [0.9.1](http://asterixdb.apache.org/docs/0.9.1/index.html) |
   [0.9.0](http://asterixdb.apache.org/docs/0.9.0/index.html)
 
 ## Community support
