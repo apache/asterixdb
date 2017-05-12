@@ -42,6 +42,11 @@
         <output-dir compare="Text">getCapital</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="external-library">
+      <compilation-unit name="upperCase">
+        <output-dir compare="Text">upperCase</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="feeds">
     <test-case FilePath="feeds">

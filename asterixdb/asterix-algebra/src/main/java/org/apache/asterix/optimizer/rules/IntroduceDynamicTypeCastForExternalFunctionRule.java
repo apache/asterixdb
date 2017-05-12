@@ -19,26 +19,25 @@
 
 package org.apache.asterix.optimizer.rules;
 
-import java.util.ArrayList;
-import java.util.List;
-
+import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.metadata.functions.ExternalScalarFunctionInfo;
 import org.apache.asterix.om.functions.BuiltinFunctions;
+import org.apache.asterix.om.typecomputer.base.TypeCastUtils;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.AUnionType;
+import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.utils.NonTaggedFormatUtil;
 import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
-import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
-import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
+import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
-import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
@@ -56,94 +55,69 @@ public class IntroduceDynamicTypeCastForExternalFunctionRule implements IAlgebra
         return false;
     }
 
+    private boolean rewriteFunctionArgs(ILogicalOperator op, Mutable<ILogicalExpression> expRef,
+            IOptimizationContext context) throws AlgebricksException {
+        ILogicalExpression expr = expRef.getValue();
+        if (expr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL
+                || !(expr instanceof ScalarFunctionCallExpression)) {
+            return false;
+        }
+        ScalarFunctionCallExpression funcCallExpr = (ScalarFunctionCallExpression) expr;
+        boolean changed = false;
+        IAType inputRecordType;
+        ARecordType requiredRecordType;
+        for (int iter1 = 0; iter1 < funcCallExpr.getArguments().size(); iter1++) {
+            inputRecordType = (IAType) op.computeOutputTypeEnvironment(context)
+                    .getType(funcCallExpr.getArguments().get(iter1).getValue());
+            if (!(((ExternalScalarFunctionInfo) funcCallExpr.getFunctionInfo()).getArgumenTypes()
+                    .get(iter1) instanceof ARecordType)) {
+                continue;
+            }
+            requiredRecordType = (ARecordType) ((ExternalScalarFunctionInfo) funcCallExpr.getFunctionInfo())
+                    .getArgumenTypes().get(iter1);
+            /**
+             * the input record type can be an union type
+             * for the case when it comes from a subplan or left-outer join
+             */
+            boolean checkUnknown = false;
+            while (NonTaggedFormatUtil.isOptional(inputRecordType)) {
+                /** while-loop for the case there is a nested multi-level union */
+                inputRecordType = ((AUnionType) inputRecordType).getActualType();
+                checkUnknown = true;
+            }
+            boolean castFlag = !IntroduceDynamicTypeCastRule.compatible(requiredRecordType, inputRecordType);
+            if (castFlag || checkUnknown) {
+                AbstractFunctionCallExpression castFunc = new ScalarFunctionCallExpression(
+                        FunctionUtil.getFunctionInfo(BuiltinFunctions.CAST_TYPE));
+                castFunc.getArguments().add(funcCallExpr.getArguments().get(iter1));
+                TypeCastUtils.setRequiredAndInputTypes(castFunc, requiredRecordType, inputRecordType);
+                funcCallExpr.getArguments().set(iter1, new MutableObject<>(castFunc));
+                changed = changed || true;
+            }
+        }
+        return changed;
+    }
+
     @Override
     public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
             throws AlgebricksException {
-        /**
-         * pattern match: distribute_result - project - assign (external function call) - assign (open_record_constructor)
-         * resulting plan: distribute_result - project - assign (external function call) - assign (cast-record) - assign(open_record_constructor)
-         */
-        AbstractLogicalOperator op1 = (AbstractLogicalOperator) opRef.getValue();
-        if (op1.getOperatorTag() != LogicalOperatorTag.DISTRIBUTE_RESULT) {
+        AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
+        if (op.getOperatorTag() != LogicalOperatorTag.ASSIGN) {
             return false;
         }
-        AbstractLogicalOperator op2 = (AbstractLogicalOperator) op1.getInputs().get(0).getValue();
-        if (op2.getOperatorTag() != LogicalOperatorTag.PROJECT) {
+        AssignOperator assignOp = (AssignOperator) op;
+        ILogicalExpression assignExpr = assignOp.getExpressions().get(0).getValue();
+        if (assignExpr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
             return false;
         }
-        AbstractLogicalOperator op3 = (AbstractLogicalOperator) op2.getInputs().get(0).getValue();
-        if (op3.getOperatorTag() != LogicalOperatorTag.ASSIGN) {
+        if (BuiltinFunctions.getBuiltinFunctionIdentifier(
+                ((AbstractFunctionCallExpression) assignExpr).getFunctionIdentifier()) != null) {
             return false;
         }
-        AbstractLogicalOperator op4 = (AbstractLogicalOperator) op3.getInputs().get(0).getValue();
-        if (op4.getOperatorTag() != LogicalOperatorTag.ASSIGN) {
-            return false;
-        }
-
-        // Op1 : assign (external function call), Op2 : assign (open_record_constructor)
-        AssignOperator assignOp1 = (AssignOperator) op3;
-        AssignOperator assignOp2 = (AssignOperator) op4;
-
-        // Checks whether open-record-constructor is called to create a record in the first assign operator - assignOp2
-        FunctionIdentifier fid = null;
-        ILogicalExpression assignExpr = assignOp2.getExpressions().get(0).getValue();
-        if (assignExpr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
-            ScalarFunctionCallExpression funcExpr =
-                    (ScalarFunctionCallExpression) assignOp2.getExpressions().get(0).getValue();
-            fid = funcExpr.getFunctionIdentifier();
-
-            if (fid != BuiltinFunctions.OPEN_RECORD_CONSTRUCTOR) {
-                return false;
-            }
+        if (op.acceptExpressionTransform(exprRef -> rewriteFunctionArgs(op, exprRef, context))) {
+            return true;
         } else {
             return false;
         }
-
-        // Checks whether an external function is called in the second assign operator - assignOp1
-        assignExpr = assignOp1.getExpressions().get(0).getValue();
-        ScalarFunctionCallExpression funcExpr = null;
-        if (assignExpr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
-            funcExpr = (ScalarFunctionCallExpression) assignOp1.getExpressions().get(0).getValue();
-            fid = funcExpr.getFunctionIdentifier();
-
-            // Checks whether this is an internal function call. Then, we return false.
-            if (BuiltinFunctions.getBuiltinFunctionIdentifier(fid) != null) {
-                return false;
-            }
-
-        } else {
-            return false;
-        }
-
-        ExternalScalarFunctionInfo finfo = (ExternalScalarFunctionInfo) funcExpr.getFunctionInfo();
-        ARecordType requiredRecordType = (ARecordType) finfo.getArgumenTypes().get(0);
-
-        List<LogicalVariable> recordVar = new ArrayList<LogicalVariable>();
-        recordVar.addAll(assignOp2.getVariables());
-
-        IVariableTypeEnvironment env = assignOp2.computeOutputTypeEnvironment(context);
-        IAType inputRecordType = (IAType) env.getVarType(recordVar.get(0));
-
-        /** the input record type can be an union type -- for the case when it comes from a subplan or left-outer join */
-        boolean checkUnknown = false;
-        while (NonTaggedFormatUtil.isOptional(inputRecordType)) {
-            /** while-loop for the case there is a nested multi-level union */
-            inputRecordType = ((AUnionType) inputRecordType).getActualType();
-            checkUnknown = true;
-        }
-
-        /** see whether the input record type needs to be casted */
-        boolean cast = !IntroduceDynamicTypeCastRule.compatible(requiredRecordType, inputRecordType);
-
-        if (checkUnknown) {
-            recordVar.set(0, IntroduceDynamicTypeCastRule.addWrapperFunction(requiredRecordType, recordVar.get(0),
-                    assignOp1, context, BuiltinFunctions.CHECK_UNKNOWN));
-        }
-        if (cast) {
-            IntroduceDynamicTypeCastRule.addWrapperFunction(requiredRecordType, recordVar.get(0), assignOp1, context,
-                    BuiltinFunctions.CAST_TYPE);
-        }
-        return cast || checkUnknown;
     }
-
 }
