@@ -53,9 +53,7 @@ import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConst
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.data.IBinaryComparatorFactoryProvider;
-import org.apache.hyracks.algebricks.data.IBinaryHashFunctionFactoryProvider;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
-import org.apache.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -66,8 +64,8 @@ import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
 import org.apache.hyracks.storage.am.common.build.IndexBuilderFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IndexCreateOperatorDescriptor;
-import org.apache.hyracks.storage.am.common.dataflow.IndexDropOperatorDescriptor;
 import org.apache.hyracks.storage.am.common.dataflow.IndexDataflowHelperFactory;
+import org.apache.hyracks.storage.am.common.dataflow.IndexDropOperatorDescriptor;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
 import org.apache.hyracks.storage.am.lsm.common.dataflow.LSMTreeIndexCompactOperatorDescriptor;
 import org.apache.hyracks.storage.common.IResourceFactory;
@@ -77,97 +75,9 @@ public class DatasetUtil {
     /*
      * Dataset related operations
      */
-    public static final byte OP_READ = 0x00;
-    public static final byte OP_INSERT = 0x01;
-    public static final byte OP_DELETE = 0x02;
     public static final byte OP_UPSERT = 0x03;
 
     private DatasetUtil() {
-    }
-
-    public static IBinaryComparatorFactory[] computeKeysBinaryComparatorFactories(Dataset dataset, ARecordType itemType,
-            ARecordType metaItemType, IBinaryComparatorFactoryProvider comparatorFactoryProvider)
-            throws AlgebricksException {
-        List<List<String>> partitioningKeys = dataset.getPrimaryKeys();
-        IBinaryComparatorFactory[] bcfs = new IBinaryComparatorFactory[partitioningKeys.size()];
-        if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
-            // Get comparators for RID fields.
-            for (int i = 0; i < partitioningKeys.size(); i++) {
-                try {
-                    bcfs[i] = IndexingConstants.getComparatorFactory(i);
-                } catch (AsterixException e) {
-                    throw new AlgebricksException(e);
-                }
-            }
-        } else {
-            InternalDatasetDetails dsd = (InternalDatasetDetails) dataset.getDatasetDetails();
-            for (int i = 0; i < partitioningKeys.size(); i++) {
-                IAType keyType = (dataset.hasMetaPart() && dsd.getKeySourceIndicator().get(i).intValue() == 1)
-                        ? metaItemType.getSubFieldType(partitioningKeys.get(i))
-                        : itemType.getSubFieldType(partitioningKeys.get(i));
-                bcfs[i] = comparatorFactoryProvider.getBinaryComparatorFactory(keyType, true);
-            }
-        }
-        return bcfs;
-    }
-
-    public static int[] createBloomFilterKeyFields(Dataset dataset) throws AlgebricksException {
-        if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
-            throw new AlgebricksException("not implemented");
-        }
-        List<List<String>> partitioningKeys = dataset.getPrimaryKeys();
-        int[] bloomFilterKeyFields = new int[partitioningKeys.size()];
-        for (int i = 0; i < partitioningKeys.size(); ++i) {
-            bloomFilterKeyFields[i] = i;
-        }
-        return bloomFilterKeyFields;
-    }
-
-    public static IBinaryHashFunctionFactory[] computeKeysBinaryHashFunFactories(Dataset dataset, ARecordType itemType,
-            IBinaryHashFunctionFactoryProvider hashFunProvider) throws AlgebricksException {
-        if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
-            throw new AlgebricksException("not implemented");
-        }
-        List<List<String>> partitioningKeys = dataset.getPrimaryKeys();
-        IBinaryHashFunctionFactory[] bhffs = new IBinaryHashFunctionFactory[partitioningKeys.size()];
-        for (int i = 0; i < partitioningKeys.size(); i++) {
-            IAType keyType = itemType.getSubFieldType(partitioningKeys.get(i));
-            bhffs[i] = hashFunProvider.getBinaryHashFunctionFactory(keyType);
-        }
-        return bhffs;
-    }
-
-    public static ITypeTraits[] computeTupleTypeTraits(Dataset dataset, ARecordType itemType, ARecordType metaItemType)
-            throws AlgebricksException {
-        if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
-            throw new AlgebricksException("not implemented");
-        }
-        List<List<String>> partitioningKeys = dataset.getPrimaryKeys();
-        int numKeys = partitioningKeys.size();
-        ITypeTraits[] typeTraits;
-        if (metaItemType != null) {
-            typeTraits = new ITypeTraits[numKeys + 2];
-            List<Integer> indicator = ((InternalDatasetDetails) dataset.getDatasetDetails()).getKeySourceIndicator();
-            typeTraits[numKeys + 1] = TypeTraitProvider.INSTANCE.getTypeTrait(metaItemType);
-            for (int i = 0; i < numKeys; i++) {
-                IAType keyType;
-                if (indicator.get(i) == 0) {
-                    keyType = itemType.getSubFieldType(partitioningKeys.get(i));
-                } else {
-                    keyType = metaItemType.getSubFieldType(partitioningKeys.get(i));
-                }
-                typeTraits[i] = TypeTraitProvider.INSTANCE.getTypeTrait(keyType);
-            }
-        } else {
-            typeTraits = new ITypeTraits[numKeys + 1];
-            for (int i = 0; i < numKeys; i++) {
-                IAType keyType;
-                keyType = itemType.getSubFieldType(partitioningKeys.get(i));
-                typeTraits[i] = TypeTraitProvider.INSTANCE.getTypeTrait(keyType);
-            }
-        }
-        typeTraits[numKeys] = TypeTraitProvider.INSTANCE.getTypeTrait(itemType);
-        return typeTraits;
     }
 
     public static List<String> getFilterField(Dataset dataset) {

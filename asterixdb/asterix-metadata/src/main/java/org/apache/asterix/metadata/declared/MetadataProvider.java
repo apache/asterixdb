@@ -35,7 +35,6 @@ import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.dataflow.LSMTreeInsertDeleteOperatorDescriptor;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.CompilationException;
-import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.common.transactions.JobId;
 import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.asterix.external.adapter.factory.LookupAdapterFactory;
@@ -127,9 +126,7 @@ import org.apache.hyracks.dataflow.common.data.marshalling.ShortSerializerDeseri
 import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
 import org.apache.hyracks.dataflow.std.result.ResultWriterOperatorDescriptor;
 import org.apache.hyracks.storage.am.btree.dataflow.BTreeSearchOperatorDescriptor;
-import org.apache.hyracks.storage.am.common.api.IMetadataPageManagerFactory;
 import org.apache.hyracks.storage.am.common.api.IModificationOperationCallbackFactory;
-import org.apache.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import org.apache.hyracks.storage.am.common.api.ISearchOperationCallbackFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IndexDataflowHelperFactory;
@@ -144,10 +141,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
 
     private final ICcApplicationContext appCtx;
     private final IStorageComponentProvider storaegComponentProvider;
-    private final IMetadataPageManagerFactory metadataPageManagerFactory;
-    private final IPrimitiveValueProviderFactory primitiveValueProviderFactory;
     private final StorageProperties storageProperties;
-    private final ILibraryManager libraryManager;
     private final Dataverse defaultDataverse;
     private final LockList locks;
 
@@ -170,9 +164,6 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         this.defaultDataverse = defaultDataverse;
         this.storaegComponentProvider = componentProvider;
         storageProperties = appCtx.getStorageProperties();
-        libraryManager = appCtx.getLibraryManager();
-        metadataPageManagerFactory = componentProvider.getMetadataPageManagerFactory();
-        primitiveValueProviderFactory = componentProvider.getPrimitiveValueProviderFactory();
         locks = new LockList();
     }
 
@@ -195,10 +186,6 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
     @Override
     public Map<String, String> getConfig() {
         return config;
-    }
-
-    public ILibraryManager getLibraryManager() {
-        return libraryManager;
     }
 
     public void setJobId(JobId jobId) {
@@ -259,10 +246,6 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
 
     public void setResultSerializerFactoryProvider(IResultSerializerFactoryProvider rafp) {
         this.resultSerializerFactoryProvider = rafp;
-    }
-
-    public IResultSerializerFactoryProvider getResultSerializerFactoryProvider() {
-        return resultSerializerFactoryProvider;
     }
 
     public boolean isWriteTransaction() {
@@ -379,10 +362,6 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         } catch (AsterixException e) {
             throw new AlgebricksException(e);
         }
-    }
-
-    public static AlgebricksAbsolutePartitionConstraint determineLocationConstraint(FeedDataSource feedDataSource) {
-        return new AlgebricksAbsolutePartitionConstraint(feedDataSource.getLocations());
     }
 
     protected Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> buildLoadableDatasetScan(
