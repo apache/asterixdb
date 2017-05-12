@@ -20,7 +20,6 @@ package org.apache.asterix.event.management;
 
 import java.io.File;
 import java.io.IOException;
-import java.math.BigInteger;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -41,7 +40,8 @@ import org.apache.asterix.event.schema.pattern.Pattern;
 public class EventUtil {
 
     public static final String EVENTS_DIR = "events";
-    public static final DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+    public static final ThreadLocal<DateFormat> dateFormat =
+            ThreadLocal.withInitial(() -> new SimpleDateFormat("yyyy/MM/dd HH:mm:ss"));
     public static final String NC_JAVA_OPTS = "nc.java.opts";
     public static final String CC_JAVA_OPTS = "cc.java.opts";
 

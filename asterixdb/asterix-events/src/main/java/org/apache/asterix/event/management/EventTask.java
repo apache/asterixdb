@@ -115,7 +115,7 @@ public class EventTask extends TimerTask {
                 }
             }
 
-            logger.debug(EventUtil.dateFormat.format(new Date()) + " " + "EVENT "
+            logger.debug(EventUtil.dateFormat.get().format(new Date()) + " " + "EVENT "
                     + pattern.getEvent().getType().toUpperCase() + " at " + location.getId().toUpperCase());
             try {
                 if (!client.isDryRun()) {
