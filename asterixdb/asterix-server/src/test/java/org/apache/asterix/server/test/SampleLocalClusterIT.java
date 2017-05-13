@@ -52,7 +52,7 @@ public class SampleLocalClusterIT {
 
     // Directory where the NCs create and store all data, as configured by
     // src/test/resources/NCServiceExecutionIT/cc.conf.
-    private static final String OUTPUT_DIR = FileUtil.joinPath(TARGET_DIR, "sample-local-cluster");
+    private static final String OUTPUT_DIR = FileUtil.joinPath(TARGET_DIR, "sample local cluster");
 
     private static final String LOCAL_SAMPLES_DIR = FileUtil.joinPath(OUTPUT_DIR, "opt", "local");
 

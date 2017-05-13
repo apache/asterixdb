@@ -48,17 +48,17 @@ fi
   "$JAVA_HOME/bin/java" -version
   exit 2
 }
-DIRNAME=$(dirname $0)
+DIRNAME=$(dirname "$0")
 [ $(echo $DIRNAME | wc -l) -ne 1 ] && {
   echo "Paths with spaces are not supported"
   exit 3
 }
 
-CLUSTERDIR=$(cd $DIRNAME/..; echo $PWD)
-INSTALLDIR=$(cd $CLUSTERDIR/../..; echo $PWD)
-$INSTALLDIR/bin/${HELPER_COMMAND} get_cluster_state -quiet
+CLUSTERDIR=$(cd "$DIRNAME/.."; echo $PWD)
+INSTALLDIR=$(cd "$CLUSTERDIR/../.."; echo $PWD)
+"$INSTALLDIR/bin/${HELPER_COMMAND}" get_cluster_state -quiet
 if [ $? -ne 1 ]; then
-  $INSTALLDIR/bin/${HELPER_COMMAND} shutdown_cluster_all
+  "$INSTALLDIR/bin/${HELPER_COMMAND}" shutdown_cluster_all
   first=1
   tries=0
   echo -n "INFO: Waiting up to 60s for cluster to shutdown"
@@ -91,3 +91,4 @@ if ps -ef | grep 'java.*org\.apache\.hyracks\.control\.[cn]c\.\([CN]CDriver\|ser
   fi
 fi
 rm /tmp/$$_pids
+
