@@ -103,7 +103,7 @@ public class SecondaryRTreeOperationsHelper extends SecondaryTreeIndexOperations
         int recordColumn = dataset.getDatasetType() == DatasetType.INTERNAL ? numPrimaryKeys : 0;
         secondaryFieldAccessEvalFactories =
                 metadataProvider.getFormat().createMBRFactory(isEnforcingKeyTypes ? enforcedItemType : itemType,
-                        secondaryKeyFields.get(0), recordColumn, numDimensions, filterFieldName);
+                        secondaryKeyFields.get(0), recordColumn, numDimensions, filterFieldName, isPointMBR);
         secondaryComparatorFactories = new IBinaryComparatorFactory[numNestedSecondaryKeyFields];
         valueProviderFactories = new IPrimitiveValueProviderFactory[numNestedSecondaryKeyFields];
         ISerializerDeserializer[] secondaryRecFields =

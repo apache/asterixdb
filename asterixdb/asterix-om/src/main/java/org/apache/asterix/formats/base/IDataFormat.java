@@ -82,7 +82,7 @@ public interface IDataFormat {
     public IScalarEvaluatorFactory getConstantEvalFactory(IAlgebricksConstantValue value) throws AlgebricksException;
 
     public IScalarEvaluatorFactory[] createMBRFactory(ARecordType recType, List<String> fldName, int recordColumn,
-            int dimension, List<String> filterFieldName) throws AlgebricksException;
+            int dimension, List<String> filterFieldName, boolean isPointMBR) throws AlgebricksException;
 
     public IExpressionEvalSizeComputer getExpressionEvalSizeComputer();
 

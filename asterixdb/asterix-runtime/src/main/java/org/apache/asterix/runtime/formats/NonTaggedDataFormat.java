@@ -242,9 +242,9 @@ public class NonTaggedDataFormat implements IDataFormat {
     @SuppressWarnings("unchecked")
     @Override
     public IScalarEvaluatorFactory[] createMBRFactory(ARecordType recType, List<String> fldName, int recordColumn,
-            int dimension, List<String> filterFieldName) throws AlgebricksException {
+            int dimension, List<String> filterFieldName, boolean isPointMBR) throws AlgebricksException {
         IScalarEvaluatorFactory evalFactory = getFieldAccessEvaluatorFactory(recType, fldName, recordColumn);
-        int numOfFields = dimension * 2;
+        int numOfFields = isPointMBR ? dimension : dimension * 2;
         IScalarEvaluatorFactory[] evalFactories =
                 new IScalarEvaluatorFactory[numOfFields + (filterFieldName == null ? 0 : 1)];
 
