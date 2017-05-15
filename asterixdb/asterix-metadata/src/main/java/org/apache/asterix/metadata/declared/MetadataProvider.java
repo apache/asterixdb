@@ -248,6 +248,10 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         this.resultSerializerFactoryProvider = rafp;
     }
 
+    public IResultSerializerFactoryProvider getResultSerializerFactoryProvider() {
+        return resultSerializerFactoryProvider;
+    }
+
     public boolean isWriteTransaction() {
         // The transaction writes persistent datasets.
         return isWriteTransaction;
