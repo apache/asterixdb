@@ -102,7 +102,7 @@ public class TypeResolverUtil {
 
         // Deals with the case one input type is null or missing.
         if (leftTypeTag == ATypeTag.MISSING || leftTypeTag == ATypeTag.NULL) {
-            return AUnionType.createUnknownableType(leftType);
+            return AUnionType.createUnknownableType(rightType);
         }
         if (rightTypeTag == ATypeTag.MISSING || rightTypeTag == ATypeTag.NULL) {
             return AUnionType.createUnknownableType(leftType);
