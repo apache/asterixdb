@@ -58,6 +58,21 @@ public class TypeResolverUtil {
     }
 
     /**
+     * Returns a minimally generalized type that conforms to all input types.
+     *
+     * @param inputTypes,
+     *            a list of input types
+     * @return a generalized type that conforms to all input types.
+     */
+    public static IAType resolve(IAType... inputTypes) {
+        IAType currentType = null;
+        for (IAType type : inputTypes) {
+            currentType = currentType == null ? type : generalizeTypes(currentType, type);
+        }
+        return currentType;
+    }
+
+    /**
      * Decides whether a type cast is needed to covert data instances from the input type to the required type.
      *
      * @param reqType,

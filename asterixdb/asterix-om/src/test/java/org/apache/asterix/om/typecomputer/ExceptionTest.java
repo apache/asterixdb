@@ -59,8 +59,8 @@ public class ExceptionTest {
             testTypeComputer(c);
             ++numTypeComputers;
         }
-        // Currently, there are 78 type computers.
-        Assert.assertTrue(numTypeComputers >= 78);
+        // Currently, there are 83 type computers.
+        Assert.assertTrue(numTypeComputers >= 83);
     }
 
     private void testTypeComputer(Class<? extends IResultTypeComputer> c) throws Exception {

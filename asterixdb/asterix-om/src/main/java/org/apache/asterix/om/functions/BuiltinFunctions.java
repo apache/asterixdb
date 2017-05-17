@@ -66,6 +66,9 @@ import org.apache.asterix.om.typecomputer.impl.FieldAccessByNameResultType;
 import org.apache.asterix.om.typecomputer.impl.FieldAccessNestedResultType;
 import org.apache.asterix.om.typecomputer.impl.FullTextContainsResultTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.GetOverlappingInvervalTypeComputer;
+import org.apache.asterix.om.typecomputer.impl.IfMissingOrNullTypeComputer;
+import org.apache.asterix.om.typecomputer.impl.IfMissingTypeComputer;
+import org.apache.asterix.om.typecomputer.impl.IfNullTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.InjectFailureTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.LocalAvgTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.MinMaxAggTypeComputer;
@@ -792,7 +795,14 @@ public class BuiltinFunctions {
     public static final FunctionIdentifier CHECK_UNKNOWN = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "check-unknown", 1);
     public static final FunctionIdentifier COLLECTION_TO_SEQUENCE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "" + "collection-to-sequence", 1);
+            "collection-to-sequence", 1);
+
+    public static final FunctionIdentifier IF_MISSING = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "if-missing", FunctionIdentifier.VARARGS);
+    public static final FunctionIdentifier IF_NULL = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "if-null", FunctionIdentifier.VARARGS);
+    public static final FunctionIdentifier IF_MISSING_OR_NULL = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "if-missing-or-null", FunctionIdentifier.VARARGS);
 
     public static final FunctionIdentifier EXTERNAL_LOOKUP = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "external-lookup", FunctionIdentifier.VARARGS);
@@ -880,6 +890,9 @@ public class BuiltinFunctions {
         addPrivateFunction(GRAM_TOKENS, OrderedListOfAStringTypeComputer.INSTANCE, true);
         addPrivateFunction(HASHED_GRAM_TOKENS, OrderedListOfAInt32TypeComputer.INSTANCE, true);
         addPrivateFunction(HASHED_WORD_TOKENS, OrderedListOfAInt32TypeComputer.INSTANCE, true);
+        addFunction(IF_MISSING_OR_NULL, IfMissingOrNullTypeComputer.INSTANCE,  true);
+        addFunction(IF_MISSING, IfMissingTypeComputer.INSTANCE,  true);
+        addFunction(IF_NULL, IfNullTypeComputer.INSTANCE,  true);
         addPrivateFunction(INDEX_SEARCH, AnyTypeComputer.INSTANCE, true);
         addFunction(INT8_CONSTRUCTOR, AInt8TypeComputer.INSTANCE, true);
         addFunction(INT16_CONSTRUCTOR, AInt16TypeComputer.INSTANCE, true);

@@ -8410,6 +8410,21 @@
         <output-dir compare="Text">promotion_opentype_field_vs_opentype_field_02</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="types">
+      <compilation-unit name="ifmissing">
+        <output-dir compare="Text">ifmissing</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="types">
+      <compilation-unit name="ifnull">
+        <output-dir compare="Text">ifnull</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="types">
+      <compilation-unit name="ifmissingornull">
+        <output-dir compare="Text">ifmissingornull</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="materialization">
     <test-case FilePath="materialization">

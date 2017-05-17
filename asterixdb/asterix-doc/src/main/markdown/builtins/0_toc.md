@@ -32,6 +32,7 @@
 * [Aggregate Functions (Array Functions)](#AggregateFunctions)
 * [Comparison Functions](#ComparisonFunctions)
 * [Type Functions](#TypeFunctions)
+* [Conditional Functions](#ConditionalFunctions)
 * [Miscellaneous Functions](#MiscFunctions)
 
 The system provides various classes of functions to support operations on numeric, string, spatial, and temporal data.

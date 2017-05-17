@@ -98,6 +98,7 @@ public class ErrorCode {
     public static final int INCOMPATIBLE_SEARCH_MODIFIER = 1035;
     public static final int UNKNOWN_SEARCH_MODIFIER = 1036;
     public static final int COMPILATION_BAD_QUERY_PARAMETER_VALUE = 1037;
+    public static final int COMPILATION_ILLEGAL_STATE = 1038;
 
     // Feed errors
     public static final int DATAFLOW_ILLEGAL_STATE = 3001;

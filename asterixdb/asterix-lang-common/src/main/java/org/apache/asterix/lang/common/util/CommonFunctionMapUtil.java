@@ -62,6 +62,9 @@ public class CommonFunctionMapUtil {
         FUNCTION_NAME_MAP.put("isarray", "is-array"); // isarray, internal: is-array
         FUNCTION_NAME_MAP.put("isobject", "is-object"); // isobject, internal: is-object
         FUNCTION_NAME_MAP.put("isobj", "is-object"); // isobj, internal: is-object
+        FUNCTION_NAME_MAP.put("ifmissing", "if-missing"); // ifmissing, internal: if-missing
+        FUNCTION_NAME_MAP.put("ifnull", "if-null"); // ifnull, internal: if-null
+        FUNCTION_NAME_MAP.put("ifmissingornull", "if-missing-or-null"); // ifmissingornull, internal: is-missing-or-null
 
         // Object functions
         FUNCTION_NAME_MAP.put("record-merge", "object-merge"); // record-merge, internal: object-merge

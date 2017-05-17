@@ -158,6 +158,9 @@ import org.apache.asterix.runtime.evaluators.functions.GetItemDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.GramTokensDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.HashedGramTokensDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.HashedWordTokensDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.IfMissingDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.IfMissingOrNullDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.IfNullDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.InjectFailureDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.IsArrayDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.IsBooleanDescriptor;
@@ -428,6 +431,9 @@ public class FunctionCollection {
         temp.add(IsUnknownDescriptor.FACTORY);
         temp.add(IsSystemNullDescriptor.FACTORY);
         temp.add(CheckUnknownDescriptor.FACTORY);
+        temp.add(IfMissingDescriptor.FACTORY);
+        temp.add(IfNullDescriptor.FACTORY);
+        temp.add(IfMissingOrNullDescriptor.FACTORY);
 
         // uuid generators (zero independent functions)
         temp.add(CreateUUIDDescriptor.FACTORY);
