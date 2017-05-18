@@ -130,6 +130,12 @@ public class TransactionContext implements ITransactionContext, Serializable {
         }
     }
 
+    public PrimaryIndexOperationTracker getPrimaryIndexOpTracker() {
+        synchronized (indexMap) {
+            return primaryIndexOpTracker;
+        }
+    }
+
     // [Notice]
     // This method is called sequentially by the LogAppender threads.
     @Override
