@@ -18,12 +18,14 @@
  */
 package org.apache.asterix.common.config;
 
-import java.util.function.Supplier;
+import java.util.function.Function;
 
+import org.apache.hyracks.api.config.IApplicationConfig;
 import org.apache.hyracks.api.config.IOption;
 import org.apache.hyracks.api.config.IOptionType;
 import org.apache.hyracks.api.config.Section;
 import org.apache.hyracks.control.common.config.OptionTypes;
+import org.apache.hyracks.control.common.controllers.ControllerConfig;
 import org.apache.hyracks.control.common.controllers.NCConfig;
 import org.apache.hyracks.util.file.FileUtil;
 
@@ -33,29 +35,34 @@ public class NodeProperties extends AbstractProperties {
         INITIAL_RUN(OptionTypes.BOOLEAN, false, "A flag indicating if it's the first time the NC is started"),
         CORE_DUMP_DIR(
                 OptionTypes.STRING,
-                (Supplier<String>) () -> FileUtil.joinPath(NCConfig.defaultDir, "coredump"),
-                "The directory where node core dumps should be written"),
+                appConfig -> FileUtil.joinPath(appConfig.getString(ControllerConfig.Option.DEFAULT_DIR), "coredump"),
+                "The directory where node core dumps should be written",
+                "<value of " + ControllerConfig.Option.DEFAULT_DIR.cmdline() + ">/coredump"),
         TXN_LOG_DIR(
                 OptionTypes.STRING,
-                (Supplier<String>) () -> FileUtil.joinPath(NCConfig.defaultDir, "txn-log"),
-                "The directory where transaction logs should be stored"),
-        STORAGE_SUBDIR(OptionTypes.STRING, "storage", "The subdirectory name under each iodevice used for storage"),
-        ;
+                appConfig -> FileUtil.joinPath(appConfig.getString(ControllerConfig.Option.DEFAULT_DIR), "txn-log"),
+                "The directory where transaction logs should be stored",
+                "<value of " + ControllerConfig.Option.DEFAULT_DIR.cmdline() + ">/txn-log"),
+        STORAGE_SUBDIR(OptionTypes.STRING, "storage", "The subdirectory name under each iodevice used for storage"),;
 
         private final IOptionType type;
         private final Object defaultValue;
         private final String description;
+        private final String defaultValueDescription;
 
         <T> Option(IOptionType<T> type, T defaultValue, String description) {
             this.type = type;
             this.defaultValue = defaultValue;
             this.description = description;
+            this.defaultValueDescription = null;
         }
 
-        <T> Option(IOptionType<T> type, Supplier<T> defaultValue, String description) {
+        <T> Option(IOptionType<T> type, Function<IApplicationConfig, T> defaultValue, String description,
+                String defaultValueDescription) {
             this.type = type;
             this.defaultValue = defaultValue;
             this.description = description;
+            this.defaultValueDescription = defaultValueDescription;
         }
 
         @Override
@@ -79,9 +86,15 @@ public class NodeProperties extends AbstractProperties {
         }
 
         @Override
+        public String usageDefaultOverride(IApplicationConfig accessor, Function<IOption, String> optionPrinter) {
+            return defaultValueDescription;
+        }
+
+        @Override
         public boolean hidden() {
             return this == INITIAL_RUN;
         }
+
     }
 
     public NodeProperties(PropertiesAccessor accessor) {

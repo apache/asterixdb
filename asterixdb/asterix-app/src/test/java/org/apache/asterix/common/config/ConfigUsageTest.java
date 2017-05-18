@@ -85,8 +85,9 @@ public class ConfigUsageTest {
         ConfigManager configManager = new ConfigManager();
         CCApplication application = new CCApplication();
         application.registerConfig(configManager);
-        ControllerConfig.defaultDir = ControllerConfig.defaultDir.replace(System.getProperty("java.io.tmpdir"),
-                "${java.io.tmpdir}/");
+        ControllerConfig.Option.DEFAULT_DIR
+                .setDefaultValue(((String) ControllerConfig.Option.DEFAULT_DIR.defaultValue())
+                        .replace(System.getProperty("java.io.tmpdir"), "${java.io.tmpdir}/"));
         return configManager;
     }
 

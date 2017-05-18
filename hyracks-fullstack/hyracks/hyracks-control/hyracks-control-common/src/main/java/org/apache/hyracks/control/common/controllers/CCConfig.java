@@ -26,8 +26,9 @@ import java.io.File;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Supplier;
+import java.util.function.Function;
 
+import org.apache.hyracks.api.config.IApplicationConfig;
 import org.apache.hyracks.api.config.IOption;
 import org.apache.hyracks.api.config.IOptionType;
 import org.apache.hyracks.api.config.Section;
@@ -38,10 +39,8 @@ import org.ini4j.Ini;
 @SuppressWarnings("SameParameterValue")
 public class CCConfig extends ControllerConfig {
 
-    public static String defaultAppClass;
-
     public enum Option implements IOption {
-        APP_CLASS(STRING, (Supplier<String>)() -> defaultAppClass),
+        APP_CLASS(STRING, (String) null),
         ADDRESS(STRING, InetAddress.getLoopbackAddress().getHostAddress()),
         CLUSTER_LISTEN_ADDRESS(STRING, ADDRESS),
         CLUSTER_LISTEN_PORT(INTEGER, 1099),
@@ -58,32 +57,40 @@ public class CCConfig extends ControllerConfig {
         RESULT_TTL(LONG, 86400000L), // TODO(mblow): add time unit
         RESULT_SWEEP_THRESHOLD(LONG, 60000L), // TODO(mblow): add time unit
         @SuppressWarnings("RedundantCast") // not redundant- false positive from IDEA
-        ROOT_DIR(STRING, (Supplier<String>)() -> FileUtil.joinPath(defaultDir, "ClusterControllerService")),
+        ROOT_DIR(STRING, (Function<IApplicationConfig, String>) appConfig ->
+                FileUtil.joinPath(appConfig.getString(ControllerConfig.Option.DEFAULT_DIR),
+                        "ClusterControllerService"), "<value of " + ControllerConfig.Option.DEFAULT_DIR.cmdline() +
+                ">/ClusterControllerService"),
         CLUSTER_TOPOLOGY(STRING),
         JOB_QUEUE_CLASS(STRING, "org.apache.hyracks.control.cc.scheduler.FIFOJobQueue"),
         JOB_QUEUE_CAPACITY(INTEGER, 4096),
         JOB_MANAGER_CLASS(STRING, "org.apache.hyracks.control.cc.job.JobManager");
 
         private final IOptionType parser;
-        private final Object defaultValue;
+        private Object defaultValue;
+        private final String defaultValueDescription;
 
         <T> Option(IOptionType<T> parser) {
-            this(parser, (T)null);
+            this(parser, (T) null);
         }
 
         <T> Option(IOptionType<T> parser, Option defaultOption) {
             this.parser = parser;
             this.defaultValue = defaultOption;
+            defaultValueDescription = null;
         }
 
         <T> Option(IOptionType<T> parser, T defaultValue) {
             this.parser = parser;
             this.defaultValue = defaultValue;
+            defaultValueDescription = null;
         }
 
-        <T> Option(IOptionType<T> parser, Supplier<T> defaultValue) {
+        <T> Option(IOptionType<T> parser, Function<IApplicationConfig, T> defaultValue,
+                   String defaultValueDescription) {
             this.parser = parser;
             this.defaultValue = defaultValue;
+            this.defaultValueDescription = defaultValueDescription;
         }
 
         @Override
@@ -129,16 +136,16 @@ public class CCConfig extends ControllerConfig {
                 case HEARTBEAT_MAX_MISSES:
                     return "Sets the maximum number of missed heartbeats before a node is marked as dead";
                 case PROFILE_DUMP_PERIOD:
-                    return "Sets the time duration between two profile dumps from each node controller in " +
-                            "milliseconds; 0 to disable";
+                    return "Sets the time duration between two profile dumps from each node controller in "
+                            + "milliseconds; 0 to disable";
                 case JOB_HISTORY_SIZE:
                     return "Limits the number of historical jobs remembered by the system to the specified value";
                 case RESULT_TTL:
-                    return "Limits the amount of time results for asynchronous jobs should be retained by the system " +
-                            "in milliseconds";
+                    return "Limits the amount of time results for asynchronous jobs should be retained by the system "
+                            + "in milliseconds";
                 case RESULT_SWEEP_THRESHOLD:
-                    return "The duration within which an instance of the result cleanup should be invoked in " +
-                            "milliseconds";
+                    return "The duration within which an instance of the result cleanup should be invoked in "
+                            + "milliseconds";
                 case ROOT_DIR:
                     return "Sets the root folder used for file operations";
                 case CLUSTER_TOPOLOGY:
@@ -152,6 +159,15 @@ public class CCConfig extends ControllerConfig {
                 default:
                     throw new IllegalStateException("NYI: " + this);
             }
+        }
+
+        public void setDefaultValue(Object defaultValue) {
+            this.defaultValue = defaultValue;
+        }
+
+        @Override
+        public String usageDefaultOverride(IApplicationConfig accessor, Function<IOption, String> optionPrinter) {
+            return defaultValueDescription;
         }
     }
 

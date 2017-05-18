@@ -36,9 +36,10 @@ class ApplicationConfigurator {
 
     static void registerConfigOptions(IConfigManager configManager) {
         AsterixProperties.registerConfigOptions(configManager);
-        ControllerConfig.defaultDir = FileUtil.joinPath(System.getProperty("java.io.tmpdir"), "asterixdb");
-        NCConfig.defaultAppClass = NCApplication.class.getName();
-        CCConfig.defaultAppClass = CCApplication.class.getName();
+        ControllerConfig.Option.DEFAULT_DIR
+                .setDefaultValue(FileUtil.joinPath(System.getProperty("java.io.tmpdir"), "asterixdb"));
+        NCConfig.Option.APP_CLASS.setDefaultValue(NCApplication.class.getName());
+        CCConfig.Option.APP_CLASS.setDefaultValue(CCApplication.class.getName());
         try {
             InputStream propertyStream = ApplicationConfigurator.class.getClassLoader()
                     .getResourceAsStream("git.properties");

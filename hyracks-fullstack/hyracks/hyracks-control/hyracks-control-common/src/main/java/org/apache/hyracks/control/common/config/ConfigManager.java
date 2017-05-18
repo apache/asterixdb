@@ -142,7 +142,10 @@ public class ConfigManager implements IConfigManager, Serializable {
                 }
             } else {
                 registeredOptions.add(option);
-                optionSetters.put(option, (node, value, isDefault) -> correctedMap(node, isDefault).put(option, value));
+                optionSetters.put(option,
+                        (node, value,
+                                isDefault) -> correctedMap(option.section() == Section.NC ? node : null, isDefault)
+                                        .put(option, value));
                 if (LOGGER.isLoggable(Level.FINE)) {
                     optionSetters.put(option, (node, value, isDefault) -> LOGGER
                             .fine((isDefault ? "defaulting" : "setting ") + option.toIniString() + " to " + value));
@@ -184,8 +187,7 @@ public class ConfigManager implements IConfigManager, Serializable {
         return map == null ? null : map.get(key);
     }
 
-    public void processConfig()
-            throws CmdLineException, IOException {
+    public void processConfig() throws CmdLineException, IOException {
         if (!configured) {
             for (List<IConfigurator> configuratorList : configurators.values()) {
                 for (IConfigurator configurator : configuratorList) {
@@ -222,8 +224,7 @@ public class ConfigManager implements IConfigManager, Serializable {
 
     @SuppressWarnings({ "squid:S106", "squid:S1147" }) // use of System.err, System.exit()
     private List<String> processCommandLine(Collection<Section> sections, OptionHandlerFilter usageFilter,
-            BiConsumer<IOption, Object> setAction)
-            throws CmdLineException {
+            BiConsumer<IOption, Object> setAction) throws CmdLineException {
         final Args4jBean bean = new Args4jBean();
         CmdLineParser cmdLineParser = new CmdLineParser(bean);
         final List<String> appArgs = new ArrayList<>();
@@ -277,12 +278,12 @@ public class ConfigManager implements IConfigManager, Serializable {
         for (IOption option : iniPointerOptions) {
             Object pointer = get(option);
             if (pointer instanceof String) {
-                ini = ConfigUtils.loadINIFile((String)pointer);
+                ini = ConfigUtils.loadINIFile((String) pointer);
             } else if (pointer instanceof URL) {
-                ini = ConfigUtils.loadINIFile((URL)pointer);
+                ini = ConfigUtils.loadINIFile((URL) pointer);
             } else if (pointer != null) {
-                throw new IllegalArgumentException("config file pointer options must be of type String (for file) or " +
-                        "URL, instead of " + option.type().targetType());
+                throw new IllegalArgumentException("config file pointer options must be of type String (for file) or "
+                        + "URL, instead of " + option.type().targetType());
             }
         }
         if (ini == null) {

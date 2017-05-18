@@ -188,24 +188,24 @@ public class TestExecutor {
                     if (lineExpected.isEmpty()) {
                         continue;
                     }
-                    throwLineChanged(scriptFile, lineExpected, "<EOF>", num);
+                    throw createLineChangedException(scriptFile, lineExpected, "<EOF>", num);
                 }
 
                 // Comparing result equality but ignore "Time"-prefixed fields. (for metadata tests.)
                 String[] lineSplitsExpected = lineExpected.split("Time");
                 String[] lineSplitsActual = lineActual.split("Time");
                 if (lineSplitsExpected.length != lineSplitsActual.length) {
-                    throwLineChanged(scriptFile, lineExpected, lineActual, num);
+                    throw createLineChangedException(scriptFile, lineExpected, lineActual, num);
                 }
                 if (!equalStrings(lineSplitsExpected[0], lineSplitsActual[0], regex)) {
-                    throwLineChanged(scriptFile, lineExpected, lineActual, num);
+                    throw createLineChangedException(scriptFile, lineExpected, lineActual, num);
                 }
 
                 for (int i = 1; i < lineSplitsExpected.length; i++) {
                     String[] splitsByCommaExpected = lineSplitsExpected[i].split(",");
                     String[] splitsByCommaActual = lineSplitsActual[i].split(",");
                     if (splitsByCommaExpected.length != splitsByCommaActual.length) {
-                        throwLineChanged(scriptFile, lineExpected, lineActual, num);
+                        throw createLineChangedException(scriptFile, lineExpected, lineActual, num);
                     }
                     for (int j = 1; j < splitsByCommaExpected.length; j++) {
                         if (splitsByCommaExpected[j].indexOf("DatasetId") >= 0) {
@@ -214,7 +214,7 @@ public class TestExecutor {
                             continue;
                         }
                         if (!equalStrings(splitsByCommaExpected[j], splitsByCommaActual[j], regex)) {
-                            throwLineChanged(scriptFile, lineExpected, lineActual, num);
+                            throw createLineChangedException(scriptFile, lineExpected, lineActual, num);
                         }
                     }
                 }
@@ -223,7 +223,7 @@ public class TestExecutor {
             }
             lineActual = readerActual.readLine();
             if (lineActual != null) {
-                throwLineChanged(scriptFile, "<EOF>", lineActual, num);
+                throw createLineChangedException(scriptFile, "<EOF>", lineActual, num);
             }
         } catch (Exception e) {
             System.err.println("Actual results file: " + actualFile.toString());
@@ -235,9 +235,9 @@ public class TestExecutor {
 
     }
 
-    private void throwLineChanged(File scriptFile, String lineExpected, String lineActual, int num)
-            throws ComparisonException {
-        throw new ComparisonException("Result for " + scriptFile + " changed at line " + num + ":\n< "
+    private ComparisonException createLineChangedException(File scriptFile, String lineExpected, String lineActual,
+                                                           int num) {
+        return new ComparisonException("Result for " + scriptFile + " changed at line " + num + ":\n< "
                 + truncateIfLong(lineExpected) + "\n> " + truncateIfLong(lineActual));
     }
 
@@ -346,7 +346,6 @@ public class TestExecutor {
 
     public void runScriptAndCompareWithResultRegex(File scriptFile, File expectedFile, File actualFile)
             throws Exception {
-        System.err.println("Expected results file: " + expectedFile.toString());
         String lineExpected, lineActual;
         try (BufferedReader readerExpected =
                 new BufferedReader(new InputStreamReader(new FileInputStream(expectedFile), "UTF-8"));
@@ -384,11 +383,7 @@ public class TestExecutor {
                 throw new Exception("Result for " + scriptFile + ": expected pattern '" + expression
                         + "' not found in result: " + actual);
             }
-        } catch (Exception e) {
-            System.err.println("Actual results file: " + actualFile.toString());
-            throw e;
         }
-
     }
 
     public void runScriptAndCompareWithResultRegexAdm(File scriptFile, File expectedFile, File actualFile)
@@ -399,6 +394,22 @@ public class TestExecutor {
         IOUtils.copy(new FileInputStream(expectedFile), expected, StandardCharsets.UTF_8);
         Pattern pattern = Pattern.compile(expected.toString(), Pattern.DOTALL | Pattern.MULTILINE);
         if (!pattern.matcher(actual.toString()).matches()) {
+            // figure out where the problem first occurs...
+            StringBuilder builder = new StringBuilder();
+            String [] lines = expected.toString().split("\\n");
+            int endOfMatch = 0;
+            final StringBuffer actualBuffer = actual.getBuffer();
+            for (int i = 0; i < lines.length; i++) {
+                builder.append(lines[i]).append('\n');
+                Pattern partPatten = Pattern.compile(builder.toString(), Pattern.DOTALL | Pattern.MULTILINE);
+                final Matcher matcher = partPatten.matcher(actualBuffer);
+                if (!matcher.lookingAt()) {
+                    final int eol = actualBuffer.indexOf("\n", endOfMatch);
+                    String actualLine = actualBuffer.substring(endOfMatch, eol == -1 ? actualBuffer.length() : eol);
+                    throw createLineChangedException(scriptFile, lines[i], actualLine, i + 1);
+                }
+                endOfMatch = matcher.end();
+            }
             throw new Exception("Result for " + scriptFile + ": actual file did not match expected result");
         }
     }

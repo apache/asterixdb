@@ -31,19 +31,21 @@ import org.apache.hyracks.util.file.FileUtil;
 
 public class ControllerConfig implements Serializable {
 
-    public static String defaultDir = FileUtil.joinPath(System.getProperty("java.io.tmpdir"), "hyracks");
-
     public enum Option implements IOption {
-        CONFIG_FILE(OptionTypes.STRING, "Specify path to master configuration file"),
-        CONFIG_FILE_URL(OptionTypes.URL, "Specify URL to master configuration file");
+        CONFIG_FILE(OptionTypes.STRING, "Specify path to master configuration file", null),
+        CONFIG_FILE_URL(OptionTypes.URL, "Specify URL to master configuration file", null),
+        DEFAULT_DIR(OptionTypes.STRING, "Directory where files are written to by default",
+                FileUtil.joinPath(System.getProperty("java.io.tmpdir"), "hyracks")),
+        ;
 
         private final IOptionType type;
         private final String description;
+        private String defaultValue;
 
-
-        Option(IOptionType type, String description) {
+        Option(IOptionType type, String description, String defaultValue) {
             this.type = type;
             this.description = description;
+            this.defaultValue = defaultValue;
         }
 
         @Override
@@ -63,7 +65,11 @@ public class ControllerConfig implements Serializable {
 
         @Override
         public Object defaultValue() {
-            return null;
+            return defaultValue;
+        }
+
+        public void setDefaultValue(String defaultValue) {
+            this.defaultValue = defaultValue;
         }
     }
 

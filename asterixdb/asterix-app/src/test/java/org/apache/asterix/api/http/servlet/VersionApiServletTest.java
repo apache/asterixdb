@@ -37,7 +37,9 @@ import org.apache.asterix.test.runtime.SqlppExecutionTest;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -48,11 +50,21 @@ import io.netty.handler.codec.http.HttpMethod;
 
 public class VersionApiServletTest {
 
-    @Test
-    public void testGet() throws Exception {
+    @Before
+    public void setup() throws Exception {
         // Starts test asterixdb cluster.
         SqlppExecutionTest.setUp();
+    }
 
+    @After
+    public void teardown() throws Exception {
+        // Tears down the asterixdb cluster.
+        SqlppExecutionTest.tearDown();
+    }
+
+
+    @Test
+    public void testGet() throws Exception {
         // Configures a test version api servlet.
         VersionApiServlet servlet = new VersionApiServlet(new ConcurrentHashMap<>(), new String[] { "/" });
         Map<String, String> propMap = new HashMap<>();
@@ -113,8 +125,5 @@ public class VersionApiServletTest {
 
         // Checks the response contains all the expected keys.
         Assert.assertEquals(actualResponse.toString(), expectedResponse.toString());
-
-        // Tears down the asterixdb cluster.
-        SqlppExecutionTest.tearDown();
     }
 }
