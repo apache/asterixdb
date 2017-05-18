@@ -23,7 +23,7 @@ import org.apache.asterix.om.typecomputer.base.IResultTypeComputer;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
 
-public class IfNullTypeComputer extends IfMissingOrNullTypeComputer {
+public class IfNullTypeComputer extends AbstractIfMissingOrNullTypeComputer {
 
     public static final IResultTypeComputer INSTANCE = new IfNullTypeComputer();
 
