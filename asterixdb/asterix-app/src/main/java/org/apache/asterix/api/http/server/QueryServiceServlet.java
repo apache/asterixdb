@@ -48,7 +48,9 @@ import org.apache.asterix.translator.IStatementExecutorContext;
 import org.apache.asterix.translator.IStatementExecutorFactory;
 import org.apache.asterix.translator.SessionConfig;
 import org.apache.asterix.translator.SessionOutput;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.application.IServiceContext;
+import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
 import org.apache.hyracks.http.server.utils.HttpUtil;
@@ -415,13 +417,18 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
             if (ResultDelivery.IMMEDIATE == delivery || ResultDelivery.DEFERRED == delivery) {
                 ResultUtil.printStatus(sessionOutput, ResultStatus.SUCCESS);
             }
-        } catch (AsterixException | TokenMgrError | org.apache.asterix.aqlplus.parser.TokenMgrError pe) {
-            GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, pe.getMessage(), pe);
+        } catch (AlgebricksException | TokenMgrError | org.apache.asterix.aqlplus.parser.TokenMgrError pe) {
+            GlobalConfig.ASTERIX_LOGGER.log(Level.INFO, pe.getMessage(), pe);
             ResultUtil.printError(resultWriter, pe);
             ResultUtil.printStatus(sessionOutput, ResultStatus.FATAL);
             status = HttpResponseStatus.BAD_REQUEST;
+        } catch (HyracksException pe) {
+            GlobalConfig.ASTERIX_LOGGER.log(Level.WARNING, pe.getMessage(), pe);
+            ResultUtil.printError(resultWriter, pe);
+            ResultUtil.printStatus(sessionOutput, ResultStatus.FATAL);
+            status = HttpResponseStatus.INTERNAL_SERVER_ERROR;
         } catch (Exception e) {
-            GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, e.toString(), e);
+            GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, "Unexpected exception", e);
             ResultUtil.printError(resultWriter, e);
             ResultUtil.printStatus(sessionOutput, ResultStatus.FATAL);
             status = HttpResponseStatus.INTERNAL_SERVER_ERROR;

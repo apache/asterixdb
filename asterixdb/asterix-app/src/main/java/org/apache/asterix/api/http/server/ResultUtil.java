@@ -37,6 +37,7 @@ import org.apache.asterix.app.result.ResultHandle;
 import org.apache.asterix.app.result.ResultPrinter;
 import org.apache.asterix.app.result.ResultReader;
 import org.apache.asterix.common.api.IApplicationContext;
+import org.apache.asterix.lang.aql.parser.TokenMgrError;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.translator.IStatementExecutor.Stats;
 import org.apache.asterix.translator.SessionOutput;
@@ -44,6 +45,7 @@ import org.apache.http.ParseException;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.AlgebricksAppendable;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.util.JSONUtil;
 import org.apache.log4j.Logger;
 
@@ -115,17 +117,18 @@ public class ResultUtil {
 
     public static void printError(PrintWriter pw, Throwable e, boolean comma) {
         Throwable rootCause = getRootCause(e);
-        if (rootCause == null) {
-            rootCause = e;
-        }
         final boolean addStack = false;
         pw.print("\t\"");
         pw.print(AbstractQueryApiServlet.ResultFields.ERRORS.str());
         pw.print("\": [{ \n");
         printField(pw, QueryServiceServlet.ErrorField.CODE.str(), "1");
-        final String msg = rootCause.getMessage();
-        printField(pw, QueryServiceServlet.ErrorField.MSG.str(),
-                JSONUtil.escape(msg != null ? msg : rootCause.getClass().getSimpleName()), addStack);
+        String msg = rootCause.getMessage();
+        if (!(rootCause instanceof AlgebricksException || rootCause instanceof HyracksException
+                || rootCause instanceof TokenMgrError
+                || rootCause instanceof org.apache.asterix.aqlplus.parser.TokenMgrError)) {
+            msg = rootCause.getClass().getSimpleName() + (msg == null ? "" : ": " + msg);
+        }
+        printField(pw, QueryServiceServlet.ErrorField.MSG.str(), JSONUtil.escape(msg), addStack);
         pw.print(comma ? "\t}],\n" : "\t}]\n");
     }
 

@@ -32,7 +32,6 @@ import org.apache.asterix.common.api.IClusterManagementWork;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.messaging.api.ICcAddressedMessage;
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.asterix.hyracks.bootstrap.CCApplication;
@@ -47,8 +46,10 @@ import org.apache.asterix.translator.IStatementExecutorContext;
 import org.apache.asterix.translator.IStatementExecutorFactory;
 import org.apache.asterix.translator.SessionConfig;
 import org.apache.asterix.translator.SessionOutput;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.application.ICCServiceContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.control.cc.ClusterControllerService;
 
 public final class ExecuteStatementRequestMessage implements ICcAddressedMessage {
@@ -129,16 +130,14 @@ public final class ExecuteStatementRequestMessage implements ICcAddressedMessage
                 outPrinter.close();
                 responseMsg.setResult(outWriter.toString());
                 responseMsg.setMetadata(outMetadata);
-            } catch (TokenMgrError | org.apache.asterix.aqlplus.parser.TokenMgrError pe) {
-                GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, pe.getMessage(), pe);
+            } catch (AlgebricksException | HyracksException | TokenMgrError
+                    | org.apache.asterix.aqlplus.parser.TokenMgrError pe) {
+                // we trust that "our" exceptions are serializable and have a comprehensible error message
+                GlobalConfig.ASTERIX_LOGGER.log(Level.WARNING, pe.getMessage(), pe);
                 responseMsg.setError(pe);
-            } catch (AsterixException pe) {
-                GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, pe.getMessage(), pe);
-                responseMsg.setError(new AsterixException(pe.getMessage()));
             } catch (Exception e) {
-                String estr = e.toString();
-                GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, estr, e);
-                responseMsg.setError(new Exception(estr));
+                GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, "Unexpected exception", e);
+                responseMsg.setError(new Exception(e.toString()));
             }
 
             try {
