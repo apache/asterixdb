@@ -88,24 +88,32 @@ public class LogBuffer implements ILogBuffer {
     ////////////////////////////////////
 
     @Override
-    public void append(ILogRecord logRecord, long appendLSN) {
+    public void append(ILogRecord logRecord, long appendLsn) {
         logRecord.writeLogRecord(appendBuffer);
-        if (logRecord.getLogType() != LogType.FLUSH && logRecord.getLogType() != LogType.WAIT) {
-            logRecord.getTxnCtx().setLastLSN(appendLSN);
+
+        if (logRecord.getLogSource() == LogSource.LOCAL && logRecord.getLogType() != LogType.FLUSH
+                && logRecord.getLogType() != LogType.WAIT) {
+            logRecord.getTxnCtx().setLastLSN(appendLsn);
         }
+
         synchronized (this) {
             appendOffset += logRecord.getLogSize();
             if (IS_DEBUG_MODE) {
                 LOGGER.info("append()| appendOffset: " + appendOffset);
             }
-            if (logRecord.getLogType() == LogType.JOB_COMMIT || logRecord.getLogType() == LogType.ABORT
-                    || logRecord.getLogType() == LogType.WAIT) {
-                logRecord.isFlushed(false);
-                syncCommitQ.offer(logRecord);
-            }
-            if (logRecord.getLogType() == LogType.FLUSH) {
-                logRecord.isFlushed(false);
-                flushQ.offer(logRecord);
+            if (logRecord.getLogSource() == LogSource.LOCAL) {
+                if (logRecord.getLogType() == LogType.JOB_COMMIT || logRecord.getLogType() == LogType.ABORT
+                        || logRecord.getLogType() == LogType.WAIT) {
+                    logRecord.isFlushed(false);
+                    syncCommitQ.offer(logRecord);
+                }
+                if (logRecord.getLogType() == LogType.FLUSH) {
+                    logRecord.isFlushed(false);
+                    flushQ.offer(logRecord);
+                }
+            } else if (logRecord.getLogSource() == LogSource.REMOTE
+                    && (logRecord.getLogType() == LogType.JOB_COMMIT || logRecord.getLogType() == LogType.ABORT)) {
+                remoteJobsQ.offer(logRecord);
             }
             this.notify();
         }

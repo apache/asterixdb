@@ -36,10 +36,8 @@ import org.apache.asterix.common.transactions.ITransactionManager;
 import org.apache.asterix.common.transactions.ITransactionSubsystem;
 import org.apache.asterix.common.utils.StorageConstants;
 import org.apache.asterix.transaction.management.service.locking.ConcurrentLockManager;
-import org.apache.asterix.transaction.management.service.logging.LogBufferFactory;
 import org.apache.asterix.transaction.management.service.logging.LogManager;
 import org.apache.asterix.transaction.management.service.logging.LogManagerWithReplication;
-import org.apache.asterix.transaction.management.service.logging.ReplicatingLogBufferFactory;
 import org.apache.asterix.transaction.management.service.recovery.CheckpointManagerFactory;
 import org.apache.asterix.transaction.management.service.transaction.TransactionManager;
 import org.apache.hyracks.api.application.INCServiceContext;
@@ -85,10 +83,9 @@ public class TransactionSubsystem implements ITransactionSubsystem {
         }
 
         if (replicationEnabled) {
-            this.logManager =
-                    new LogManagerWithReplication(this, ReplicatingLogBufferFactory.INSTANCE, replicationStrategy);
+            this.logManager = new LogManagerWithReplication(this, replicationStrategy);
         } else {
-            this.logManager = new LogManager(this, LogBufferFactory.INSTANCE);
+            this.logManager = new LogManager(this);
         }
         this.recoveryManager = new RecoveryManager(this, serviceCtx);
 

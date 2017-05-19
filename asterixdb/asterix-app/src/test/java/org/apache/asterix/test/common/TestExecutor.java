@@ -236,7 +236,7 @@ public class TestExecutor {
     }
 
     private ComparisonException createLineChangedException(File scriptFile, String lineExpected, String lineActual,
-                                                           int num) {
+            int num) {
         return new ComparisonException("Result for " + scriptFile + " changed at line " + num + ":\n< "
                 + truncateIfLong(lineExpected) + "\n> " + truncateIfLong(lineActual));
     }
@@ -396,7 +396,7 @@ public class TestExecutor {
         if (!pattern.matcher(actual.toString()).matches()) {
             // figure out where the problem first occurs...
             StringBuilder builder = new StringBuilder();
-            String [] lines = expected.toString().split("\\n");
+            String[] lines = expected.toString().split("\\n");
             int endOfMatch = 0;
             final StringBuffer actualBuffer = actual.getBuffer();
             for (int i = 0; i < lines.length; i++) {

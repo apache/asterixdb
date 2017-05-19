@@ -41,7 +41,6 @@ import java.util.logging.Logger;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.replication.IReplicationManager;
 import org.apache.asterix.common.transactions.ILogBuffer;
-import org.apache.asterix.common.transactions.ILogBufferFactory;
 import org.apache.asterix.common.transactions.ILogManager;
 import org.apache.asterix.common.transactions.ILogReader;
 import org.apache.asterix.common.transactions.ILogRecord;
@@ -67,7 +66,6 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
      * Finals
      */
     private final ITransactionSubsystem txnSubsystem;
-    private final ILogBufferFactory logBufferFactory;
     private final LogManagerProperties logManagerProperties;
     private final int numLogPages;
     private final String logDir;
@@ -91,9 +89,8 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
     private Future<? extends Object> futureLogFlusher;
     protected LinkedBlockingQueue<ILogRecord> flushLogsQ;
 
-    public LogManager(ITransactionSubsystem txnSubsystem, ILogBufferFactory logBufferFactory) {
+    public LogManager(ITransactionSubsystem txnSubsystem) {
         this.txnSubsystem = txnSubsystem;
-        this.logBufferFactory = logBufferFactory;
         logManagerProperties =
                 new LogManagerProperties(this.txnSubsystem.getTransactionProperties(), this.txnSubsystem.getId());
         logFileSize = logManagerProperties.getLogPartitionSize();
@@ -114,7 +111,7 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
         flushQ = new LinkedBlockingQueue<>(numLogPages);
         stashQ = new LinkedBlockingQueue<>(numLogPages);
         for (int i = 0; i < numLogPages; i++) {
-            emptyQ.offer(logBufferFactory.create(txnSubsystem, logPageSize, flushLSN));
+            emptyQ.offer(new LogBuffer(txnSubsystem, logPageSize, flushLSN));
         }
         appendLSN.set(initializeLogAnchor(nextLogFileId));
         flushLSN.set(appendLSN.get());
@@ -208,7 +205,7 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
             }
             // for now, alloc a new buffer for each large page
             // TODO: pool large pages??
-            appendPage = logBufferFactory.create(txnSubsystem, logSize, flushLSN);
+            appendPage = new LogBuffer(txnSubsystem, logSize, flushLSN);
             appendPage.setFileChannel(appendChannel);
             flushQ.offer(appendPage);
         } else {
@@ -639,8 +636,7 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
 
 class LogFlusher implements Callable<Boolean> {
     private static final Logger LOGGER = Logger.getLogger(LogFlusher.class.getName());
-    private static final ILogBuffer POISON_PILL =
-            LogBufferFactory.INSTANCE.create(null, ILogRecord.JOB_TERMINATE_LOG_SIZE, null);
+    private static final ILogBuffer POISON_PILL = new LogBuffer(null, ILogRecord.JOB_TERMINATE_LOG_SIZE, null);
     private final LogManager logMgr;//for debugging
     private final LinkedBlockingQueue<ILogBuffer> emptyQ;
     private final LinkedBlockingQueue<ILogBuffer> flushQ;

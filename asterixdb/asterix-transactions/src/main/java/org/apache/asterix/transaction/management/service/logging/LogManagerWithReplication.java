@@ -24,7 +24,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.replication.IReplicationManager;
 import org.apache.asterix.common.replication.IReplicationStrategy;
-import org.apache.asterix.common.transactions.ILogBufferFactory;
 import org.apache.asterix.common.transactions.ILogRecord;
 import org.apache.asterix.common.transactions.ITransactionContext;
 import org.apache.asterix.common.transactions.ITransactionManager;
@@ -38,9 +37,8 @@ public class LogManagerWithReplication extends LogManager {
     private final IReplicationStrategy replicationStrategy;
     private final Set<Integer> replicatedJob = ConcurrentHashMap.newKeySet();
 
-    public LogManagerWithReplication(ITransactionSubsystem txnSubsystem, ILogBufferFactory logBufferFactory,
-            IReplicationStrategy replicationStrategy) {
-        super(txnSubsystem, logBufferFactory);
+    public LogManagerWithReplication(ITransactionSubsystem txnSubsystem, IReplicationStrategy replicationStrategy) {
+        super(txnSubsystem);
         this.replicationStrategy = replicationStrategy;
     }
 
