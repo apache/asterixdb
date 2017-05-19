@@ -818,11 +818,10 @@ boolean IfNotExists() throws ParseException:
     }
 }
 
-List<FunctionSignature> ApplyFunction() throws ParseException:
+void ApplyFunction(List<FunctionSignature> funcSigs) throws ParseException:
 {
   FunctionName functioName = null;
   String fqFunctionName = null;
-  List<FunctionSignature> funcSigs = new ArrayList<FunctionSignature>();
 }
 {
   <APPLY> <FUNCTION> functioName = FunctionName()
@@ -837,9 +836,6 @@ List<FunctionSignature> ApplyFunction() throws ParseException:
       funcSigs.add(new FunctionSignature(functioName.dataverse, fqFunctionName, 1));
     }
   )*
-    {
-        return funcSigs;
-    }
 }
 
 String GetPolicy() throws ParseException:
@@ -1167,14 +1163,14 @@ Statement FeedStatement() throws ParseException:
   Pair<Identifier,Identifier> datasetNameComponents = null;
 
   Map<String,String> configuration = null;
-  List<FunctionSignature> appliedFunctions = null;
+  List<FunctionSignature> appliedFunctions = new ArrayList<FunctionSignature>();
   Statement stmt = null;
   String policy = null;
 }
 {
   (
     <CONNECT> <FEED> feedNameComponents = QualifiedName() <TO> <DATASET> datasetNameComponents = QualifiedName()
-    (appliedFunctions = ApplyFunction())? (policy = GetPolicy())?
+    (ApplyFunction(appliedFunctions))? (policy = GetPolicy())?
       {
         stmt = new ConnectFeedStatement(feedNameComponents, datasetNameComponents, appliedFunctions, policy, getVarCounter());
       }

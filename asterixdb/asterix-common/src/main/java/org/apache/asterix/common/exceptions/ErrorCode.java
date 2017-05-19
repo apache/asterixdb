@@ -179,6 +179,7 @@ public class ErrorCode {
     public static final int FEED_METADATA_UTIL_UNEXPECTED_FEED_DATATYPE = 3080;
     public static final int FEED_METADATA_SOCKET_ADAPTOR_SOCKET_NOT_PROPERLY_CONFIGURED = 3081;
     public static final int FEED_METADATA_SOCKET_ADAPTOR_SOCKET_INVALID_HOST_NC = 3082;
+    public static final int FEED_CONNECT_FEED_APPLIED_INVALID_FUNCTION = 3087;
 
     private ErrorCode() {
     }
