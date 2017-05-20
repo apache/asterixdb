@@ -70,7 +70,7 @@ public abstract class AbstractCheckpointManager implements ICheckpointManager {
         checkpointDir = new File(checkpointDirPath);
         // Create the checkpoint directory if missing
         if (!checkpointDir.exists()) {
-            (new File(checkpointDirPath)).mkdir();
+            checkpointDir.mkdirs();
         }
         lsnThreshold = checkpointProperties.getLsnThreshold();
         pollFrequency = checkpointProperties.getPollFrequency();

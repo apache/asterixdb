@@ -19,6 +19,7 @@
 package org.apache.asterix.api.common;
 
 import static org.apache.asterix.api.common.AsterixHyracksIntegrationUtil.LoggerHolder.LOGGER;
+import static org.apache.hyracks.util.file.FileUtil.joinPath;
 
 import java.io.File;
 import java.io.IOException;
@@ -47,8 +48,10 @@ import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.common.config.ConfigManager;
 import org.apache.hyracks.control.common.controllers.CCConfig;
+import org.apache.hyracks.control.common.controllers.ControllerConfig;
 import org.apache.hyracks.control.common.controllers.NCConfig;
 import org.apache.hyracks.control.nc.NodeControllerService;
+import org.kohsuke.args4j.CmdLineException;
 
 public class AsterixHyracksIntegrationUtil {
     static class LoggerHolder {
@@ -58,7 +61,7 @@ public class AsterixHyracksIntegrationUtil {
         }
     }
 
-    private static final String IO_DIR_KEY = "java.io.tmpdir";
+    protected static final String IO_DIR_KEY = "java.io.tmpdir";
     public static final int DEFAULT_HYRACKS_CC_CLIENT_PORT = 1098;
     public static final int DEFAULT_HYRACKS_CC_CLUSTER_PORT = 1099;
 
@@ -76,13 +79,16 @@ public class AsterixHyracksIntegrationUtil {
         final CCConfig ccConfig = createCCConfig(configManager);
         cc = new ClusterControllerService(ccConfig, ccApplication);
 
-        nodeNames = ccConfig.getConfigManager().getNodeNames();
+
+            nodeNames = ccConfig.getConfigManager().getNodeNames();
         if (deleteOldInstanceData) {
             deleteTransactionLogs();
             removeTestStorageFiles();
         }
         final List<NodeControllerService> nodeControllers = new ArrayList<>();
         for (String nodeId : nodeNames) {
+            // mark this NC as virtual in the CC's config manager, so he doesn't try to contact NCService...
+            configManager.set(nodeId, NCConfig.Option.VIRTUAL_NC, true);
             final INCApplication ncApplication = createNCApplication();
             ConfigManager ncConfigManager = new ConfigManager();
             ncApplication.registerConfig(ncConfigManager);
@@ -113,13 +119,6 @@ public class AsterixHyracksIntegrationUtil {
         for (Thread thread : startupThreads) {
             thread.join();
         }
-        for (NodeControllerService nc : nodeControllers) {
-            for (String ioDevice : nc.getConfiguration().getIODevices()) {
-                if (!new File(ioDevice).isAbsolute()) {
-                    throw new IllegalStateException("iodevice not absolute: " + ioDevice);
-                }
-            }
-        }
         // Wait until cluster becomes active
         ClusterStateManager.INSTANCE.waitForState(ClusterState.ACTIVE);
         hcc = new HyracksConnection(cc.getConfig().getClientListenAddress(), cc.getConfig().getClientListenPort());
@@ -134,6 +133,7 @@ public class AsterixHyracksIntegrationUtil {
         ccConfig.setClusterListenPort(DEFAULT_HYRACKS_CC_CLUSTER_PORT);
         ccConfig.setResultTTL(120000L);
         ccConfig.setResultSweepThreshold(1000L);
+        configManager.set(ControllerConfig.Option.DEFAULT_DIR, joinPath(System.getProperty(IO_DIR_KEY), "asterixdb"));
         return ccConfig;
     }
 
@@ -152,6 +152,8 @@ public class AsterixHyracksIntegrationUtil {
         ncConfig.setResultTTL(120000L);
         ncConfig.setResultSweepThreshold(1000L);
         ncConfig.setVirtualNC(true);
+        configManager.set(ControllerConfig.Option.DEFAULT_DIR,
+                joinPath(System.getProperty(IO_DIR_KEY), "asterixdb", ncName));
         return ncConfig;
     }
 
@@ -159,32 +161,22 @@ public class AsterixHyracksIntegrationUtil {
         return new NCApplication();
     }
 
-    private NCConfig fixupIODevices(NCConfig ncConfig) throws IOException, AsterixException {
-        PropertiesAccessor accessor = PropertiesAccessor.getInstance(ncConfig.getAppConfig());
-        String tempPath = System.getProperty(IO_DIR_KEY);
-        if (tempPath.endsWith(File.separator)) {
-            tempPath = tempPath.substring(0, tempPath.length() - 1);
-        }
-        LOGGER.info("Using the temp path: " + tempPath);
-        // get initial partitions from properties
-        String[] nodeStores = accessor.getStores().get(ncConfig.getNodeId());
+    private NCConfig fixupIODevices(NCConfig ncConfig) throws IOException, AsterixException, CmdLineException {
+        // we have to first process the config
+        ncConfig.getConfigManager().processConfig();
+
+        // get initial partitions from config
+        String[] nodeStores = ncConfig.getAppConfig().getStringArray(NCConfig.Option.IODEVICES);
         if (nodeStores == null) {
             throw new IllegalStateException("Couldn't find stores for NC: " + ncConfig.getNodeId());
         }
         String tempDirPath = System.getProperty(IO_DIR_KEY);
-        if (!tempDirPath.endsWith(File.separator)) {
-            tempDirPath += File.separator;
-        }
-        List<String> ioDevices = new ArrayList<>();
-        for (String nodeStore : nodeStores) {
+        LOGGER.info("Using the temp path: " + tempDirPath);
+        for (int i = 0; i < nodeStores.length; i++) {
             // create IO devices based on stores
-            String iodevicePath = tempDirPath + ncConfig.getNodeId() + File.separator + nodeStore;
-            File ioDeviceDir = new File(iodevicePath);
-            ioDeviceDir.mkdirs();
-            ioDevices.add(iodevicePath);
+            nodeStores[i] = joinPath(tempDirPath, ncConfig.getNodeId(), nodeStores[i]);
         }
-        ncConfig.getConfigManager().set(ncConfig.getNodeId(), NCConfig.Option.IODEVICES,
-                ioDevices.toArray(new String[0]));
+        ncConfig.getConfigManager().set(ncConfig.getNodeId(), NCConfig.Option.IODEVICES, nodeStores);
         return ncConfig;
     }
 
