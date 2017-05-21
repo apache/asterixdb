@@ -104,8 +104,10 @@ public class FunctionTupleTranslator extends AbstractTupleTranslator<Function> {
         String functionKind =
                 ((AString) functionRecord.getValueByPos(MetadataRecordTypes.FUNCTION_ARECORD_FUNCTION_KIND_FIELD_INDEX))
                         .getStringValue();
+        String referenceCount = ((AString) functionRecord
+                .getValueByPos(MetadataRecordTypes.FUNCTION_ARECORD_FUNCTION_REFERENCE_COUNT_INDEX)).getStringValue();
         return new Function(dataverseName, functionName, Integer.parseInt(arity), params, returnType, definition,
-                language, functionKind);
+                language, functionKind, Integer.parseInt(referenceCount));
 
     }
 
@@ -184,6 +186,12 @@ public class FunctionTupleTranslator extends AbstractTupleTranslator<Function> {
         aString.setValue(function.getKind());
         stringSerde.serialize(aString, fieldValue.getDataOutput());
         recordBuilder.addField(MetadataRecordTypes.FUNCTION_ARECORD_FUNCTION_KIND_FIELD_INDEX, fieldValue);
+
+        // write field 8
+        fieldValue.reset();
+        aString.setValue(Integer.toString(function.getReferenceCount()));
+        stringSerde.serialize(aString, fieldValue.getDataOutput());
+        recordBuilder.addField(MetadataRecordTypes.FUNCTION_ARECORD_FUNCTION_REFERENCE_COUNT_INDEX, fieldValue);
 
         // write record
         recordBuilder.write(tupleBuilder.getDataOutput(), true);

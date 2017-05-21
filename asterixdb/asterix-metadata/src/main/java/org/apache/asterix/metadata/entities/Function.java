@@ -19,6 +19,7 @@
 package org.apache.asterix.metadata.entities;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.asterix.metadata.MetadataCache;
 import org.apache.asterix.metadata.api.IMetadataEntity;
@@ -39,9 +40,10 @@ public class Function implements IMetadataEntity<Function> {
     private final String returnType;
     private final String language;
     private final String kind;
+    private AtomicInteger referenceCount;
 
     public Function(String dataverseName, String functionName, int arity, List<String> params, String returnType,
-            String functionBody, String language, String functionKind) {
+            String functionBody, String language, String functionKind, int referenceCount) {
         this.dataverse = dataverseName;
         this.name = functionName;
         this.params = params;
@@ -50,6 +52,7 @@ public class Function implements IMetadataEntity<Function> {
         this.language = language;
         this.kind = functionKind;
         this.arity = arity;
+        this.referenceCount = new AtomicInteger(referenceCount);
     }
 
     public String getDataverseName() {
@@ -94,4 +97,15 @@ public class Function implements IMetadataEntity<Function> {
         return cache.dropFunction(this);
     }
 
+    public int getReferenceCount() {
+        return referenceCount.get();
+    }
+
+    public int reference() {
+        return referenceCount.incrementAndGet();
+    }
+
+    public int dereference() {
+        return referenceCount.decrementAndGet();
+    }
 }

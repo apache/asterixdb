@@ -558,6 +558,17 @@ public class MetadataManager implements IMetadataManager {
     }
 
     @Override
+    public void updateFunction(MetadataTransactionContext mdTxnCtx, Function function) throws MetadataException {
+        try {
+            metadataNode.updateFunction(mdTxnCtx.getJobId(), function);
+        } catch (RemoteException e) {
+            throw new MetadataException(e);
+        }
+        mdTxnCtx.dropFunction(function);
+        mdTxnCtx.addFunction(function);
+    }
+
+    @Override
     public void addFunction(MetadataTransactionContext mdTxnCtx, Function function) throws MetadataException {
         try {
             metadataNode.addFunction(mdTxnCtx.getJobId(), function);

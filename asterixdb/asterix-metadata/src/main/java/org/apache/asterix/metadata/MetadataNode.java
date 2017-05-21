@@ -1866,4 +1866,24 @@ public class MetadataNode implements IMetadataNode {
             throw new MetadataException(e);
         }
     }
+
+    @Override
+    public void updateFunction(JobId jobId, Function function) throws MetadataException, RemoteException {
+        try {
+            // remove old function
+            ITupleReference searchKey;
+            searchKey = createTuple(function.getDataverseName(), function.getName(),
+                    Integer.toString(function.getArity()));
+            ITupleReference functionTuple = getTupleToBeDeleted(jobId, MetadataPrimaryIndexes.FUNCTION_DATASET,
+                    searchKey);
+            deleteTupleFromIndex(jobId, MetadataPrimaryIndexes.FUNCTION_DATASET, functionTuple);
+            // add new function
+            FunctionTupleTranslator functionTupleTranslator = tupleTranslatorProvider.getFunctionTupleTranslator(true);
+            functionTuple = functionTupleTranslator.getTupleFromMetadataEntity(function);
+            insertTupleIntoIndex(jobId, MetadataPrimaryIndexes.FUNCTION_DATASET, functionTuple);
+        } catch (HyracksDataException | ACIDException e) {
+            throw new MetadataException(e);
+        }
+
+    }
 }
