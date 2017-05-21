@@ -40,6 +40,8 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Stream;
 
 import javax.xml.bind.JAXBContext;
@@ -65,8 +67,6 @@ import org.apache.hyracks.control.common.application.ConfigManagerApplicationCon
 import org.apache.hyracks.control.common.config.ConfigManager;
 import org.apache.hyracks.control.common.controllers.ControllerConfig;
 import org.apache.hyracks.control.common.controllers.NCConfig;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
 
 public class PropertiesAccessor implements IApplicationConfig {
     private static final Logger LOGGER = Logger.getLogger(PropertiesAccessor.class.getName());
@@ -159,7 +159,7 @@ public class PropertiesAccessor implements IApplicationConfig {
                     option = optionTemp;
                 }
                 if (option == null) {
-                    LOGGER.warn("Ignoring unknown property: " + p.getName());
+                    LOGGER.warning("Ignoring unknown property: " + p.getName());
                 } else {
                     configManager.set(option, option.type().parse(p.getValue()));
                 }
@@ -197,8 +197,9 @@ public class PropertiesAccessor implements IApplicationConfig {
         try (FileInputStream is = new FileInputStream(fileName)) {
             return configure(is, fileName);
         } catch (FileNotFoundException fnf1) {
-            LOGGER.warn("Failed to get configuration file " + fileName + " as FileInputStream. FileNotFoundException");
-            LOGGER.warn("Attempting to get default configuration file " + GlobalConfig.DEFAULT_CONFIG_FILE_NAME
+            LOGGER.warning(
+                    "Failed to get configuration file " + fileName + " as FileInputStream. FileNotFoundException");
+            LOGGER.warning("Attempting to get default configuration file " + GlobalConfig.DEFAULT_CONFIG_FILE_NAME
                     + " as FileInputStream");
             try (FileInputStream fis = new FileInputStream(GlobalConfig.DEFAULT_CONFIG_FILE_NAME)) {
                 return configure(fis, GlobalConfig.DEFAULT_CONFIG_FILE_NAME);
@@ -300,8 +301,8 @@ public class PropertiesAccessor implements IApplicationConfig {
         try {
             return value == null ? defaultValue : interpreter.parse(value);
         } catch (IllegalArgumentException e) {
-            if (LOGGER.isEnabledFor(Level.ERROR)) {
-                LOGGER.error("Invalid property value '" + value + "' for property '" + property + "'.\n" +
+            if (LOGGER.isLoggable(Level.SEVERE)) {
+                LOGGER.severe("Invalid property value '" + value + "' for property '" + property + "'.\n" +
                         "Default = " + defaultValue);
             }
             throw e;
