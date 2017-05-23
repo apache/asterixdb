@@ -19,6 +19,10 @@
 package org.apache.asterix.external.input.record.reader.stream;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.ExceptionUtils;
@@ -35,10 +39,16 @@ public class SemiStructuredRecordReader extends StreamRecordReader {
     private char recordStart;
     private char recordEnd;
     private int recordNumber = 0;
+    private static final List<String> recordReaderFormats = Collections
+            .unmodifiableList(Arrays.asList(ExternalDataConstants.FORMAT_ADM, ExternalDataConstants.FORMAT_JSON,
+                    ExternalDataConstants.FORMAT_SEMISTRUCTURED));
+    private static final String REQUIRED_CONFIGS = "";
 
-    public SemiStructuredRecordReader(AsterixInputStream stream, String recStartString, String recEndString)
-            throws HyracksDataException {
-        super(stream);
+    @Override
+    public void configure(AsterixInputStream stream, Map<String, String> config) throws HyracksDataException {
+        super.configure(stream);
+        String recStartString = config.get(ExternalDataConstants.KEY_RECORD_START);
+        String recEndString = config.get(ExternalDataConstants.KEY_RECORD_END);
         // set record opening char
         if (recStartString != null) {
             if (recStartString.length() != 1) {
@@ -150,6 +160,16 @@ public class SemiStructuredRecordReader extends StreamRecordReader {
         record.endRecord();
         recordNumber++;
         return true;
+    }
+
+    @Override
+    public List<String> getRecordReaderFormats() {
+        return recordReaderFormats;
+    }
+
+    @Override
+    public String getRequiredConfigs() {
+        return REQUIRED_CONFIGS;
     }
 
     @Override

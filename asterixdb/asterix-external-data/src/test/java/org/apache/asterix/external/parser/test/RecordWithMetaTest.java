@@ -24,11 +24,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.asterix.external.api.IRawRecord;
 import org.apache.asterix.external.input.record.converter.CSVToRecordWithMetadataAndPKConverter;
-import org.apache.asterix.external.input.record.reader.stream.QuotedLineRecordReader;
+import org.apache.asterix.external.input.record.reader.stream.LineRecordReader;
 import org.apache.asterix.external.input.stream.LocalFSInputStream;
 import org.apache.asterix.external.parser.ADMDataParser;
 import org.apache.asterix.external.parser.RecordWithMetadataParser;
@@ -84,8 +86,11 @@ public class RecordWithMetaTest {
             // create input stream
             LocalFSInputStream inputStream = new LocalFSInputStream(watcher);
             // create reader record reader
-            QuotedLineRecordReader lineReader = new QuotedLineRecordReader(true, inputStream,
-                    ExternalDataConstants.DEFAULT_QUOTE);
+            Map<String, String> config = new HashMap<>();
+            config.put(ExternalDataConstants.KEY_HEADER, "true");
+            config.put(ExternalDataConstants.KEY_QUOTE, ExternalDataConstants.DEFAULT_QUOTE);
+            LineRecordReader lineReader = new LineRecordReader();
+            lineReader.configure(inputStream, config);
             // create csv with json record reader
             CSVToRecordWithMetadataAndPKConverter recordConverter = new CSVToRecordWithMetadataAndPKConverter(
                     valueIndex, delimiter, metaType, recordType, pkIndicators, pkIndexes, keyTypes);
@@ -105,7 +110,7 @@ public class RecordWithMetaTest {
             serdes[1] = SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(metaType);
             printerFactories[0] = ADMPrinterFactoryProvider.INSTANCE.getPrinterFactory(recordType);
             printerFactories[1] = ADMPrinterFactoryProvider.INSTANCE.getPrinterFactory(metaType);
-            // create output descriptor 
+            // create output descriptor
             IPrinter[] printers = new IPrinter[printerFactories.length];
 
             for (int i = 0; i < printerFactories.length; i++) {

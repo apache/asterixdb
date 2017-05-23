@@ -102,7 +102,7 @@ public class ParserFactoryProvider {
                         continue;
                     }
                     final Class<?> clazz = Class.forName(className);
-                    String[] formats = ((IDataParserFactory) clazz.newInstance()).getFormats();
+                    List<String> formats = ((IDataParserFactory) clazz.newInstance()).getParserFormats();
                     for (String format : formats) {
                         if (factories.containsKey(format)) {
                             throw new AsterixException("Duplicate format " + format);
@@ -111,8 +111,7 @@ public class ParserFactoryProvider {
                     }
                 }
             }
-        } catch (IOException | ClassNotFoundException | InstantiationException
-                | IllegalAccessException e) {
+        } catch (IOException | ClassNotFoundException | InstantiationException | IllegalAccessException e) {
             throw new AsterixException(e);
         }
         return factories;

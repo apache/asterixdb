@@ -19,6 +19,7 @@
 package org.apache.asterix.external.api;
 
 import java.io.Serializable;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.common.exceptions.AsterixException;
@@ -59,5 +60,10 @@ public interface IDataParserFactory extends Serializable {
      */
     public void setMetaType(ARecordType metaType);
 
-    public String[] getFormats();
+    /**
+     * Get the formats that are handled by this parser.
+     *
+     * @return A list of formats
+     */
+    public List<String> getParserFormats();
 }

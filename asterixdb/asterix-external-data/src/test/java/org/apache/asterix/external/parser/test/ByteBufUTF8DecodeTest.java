@@ -30,13 +30,16 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.asterix.external.api.IRawRecord;
 import org.apache.asterix.external.input.record.CharArrayRecord;
 import org.apache.asterix.external.input.record.converter.DCPMessageToRecordConverter;
 import org.apache.asterix.external.input.record.reader.stream.SemiStructuredRecordReader;
 import org.apache.asterix.external.input.stream.LocalFSInputStream;
+import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.FileSystemWatcher;
 import org.junit.Assert;
 import org.junit.Test;
@@ -73,10 +76,14 @@ public class ByteBufUTF8DecodeTest {
     public void testDecodingJsonRecords() throws URISyntaxException, IOException {
         String jsonFileName = "/record.json";
         List<Path> paths = new ArrayList<>();
+        Map<String, String> config = new HashMap<>();
+        config.put(ExternalDataConstants.KEY_RECORD_START, "{");
+        config.put(ExternalDataConstants.KEY_RECORD_END, "}");
         paths.add(Paths.get(getClass().getResource(jsonFileName).toURI()));
         FileSystemWatcher watcher = new FileSystemWatcher(paths, null, false);
         LocalFSInputStream in = new LocalFSInputStream(watcher);
-        try (SemiStructuredRecordReader recordReader = new SemiStructuredRecordReader(in, "{", "}")) {
+        try (SemiStructuredRecordReader recordReader = new SemiStructuredRecordReader()) {
+            recordReader.configure(in, config);
             while (recordReader.hasNext()) {
                 try {
                     IRawRecord<char[]> record = recordReader.next();

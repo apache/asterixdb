@@ -18,6 +18,9 @@
  */
 package org.apache.asterix.external.parser.factory;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.external.api.IRecordDataParser;
@@ -31,7 +34,7 @@ import com.sun.syndication.feed.synd.SyndEntryImpl;
 public class RSSParserFactory implements IRecordDataParserFactory<SyndEntryImpl> {
 
     private static final long serialVersionUID = 1L;
-    private static String[] formats = { "rss" };
+    private static final List<String> parserFormats = Collections.unmodifiableList(Arrays.asList("rss"));
     private ARecordType recordType;
 
     @Override
@@ -60,8 +63,8 @@ public class RSSParserFactory implements IRecordDataParserFactory<SyndEntryImpl>
     }
 
     @Override
-    public String[] getFormats() {
-        return formats;
+    public List<String> getParserFormats() {
+        return parserFormats;
     }
 
 }

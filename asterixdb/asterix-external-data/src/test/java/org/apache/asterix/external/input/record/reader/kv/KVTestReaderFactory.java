@@ -18,6 +18,9 @@
  */
 package org.apache.asterix.external.input.record.reader.kv;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.external.api.IRecordReader;
@@ -40,6 +43,7 @@ public class KVTestReaderFactory implements IRecordReaderFactory<DCPRequest> {
     private int upsertCycle = 0;
     private int numOfReaders;
     private transient AlgebricksAbsolutePartitionConstraint clusterLocations;
+    private static final List<String> recordReaderNames = Collections.unmodifiableList(Arrays.asList());
 
     @Override
     public AlgebricksAbsolutePartitionConstraint getPartitionConstraint() {
@@ -77,5 +81,9 @@ public class KVTestReaderFactory implements IRecordReaderFactory<DCPRequest> {
     @Override
     public Class<?> getRecordClass() {
         return DCPRequest.class;
+    }
+
+    @Override public List<String> getRecordReaderNames() {
+        return recordReaderNames;
     }
 }

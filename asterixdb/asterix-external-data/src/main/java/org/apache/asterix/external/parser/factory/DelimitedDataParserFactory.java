@@ -18,6 +18,9 @@
  */
 package org.apache.asterix.external.parser.factory;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.common.exceptions.ErrorCode;
@@ -36,7 +39,8 @@ import org.apache.hyracks.dataflow.common.data.parsers.IValueParserFactory;
 public class DelimitedDataParserFactory extends AbstractRecordStreamParserFactory<char[]> {
 
     private static final long serialVersionUID = 1L;
-    private static String[] formats = { "csv", "delimited-text" };
+    private static final List<String> parserFormats = Collections
+            .unmodifiableList(Arrays.asList("csv", "delimited-text"));
 
     @Override
     public IRecordDataParser<char[]> createRecordParser(IHyracksTaskContext ctx) throws HyracksDataException {
@@ -102,8 +106,7 @@ public class DelimitedDataParserFactory extends AbstractRecordStreamParserFactor
     }
 
     @Override
-    public String[] getFormats() {
-        return formats;
+    public List<String> getParserFormats() {
+        return parserFormats;
     }
-
 }

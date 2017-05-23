@@ -19,24 +19,33 @@
 package org.apache.asterix.external.input.record.reader.stream;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 import org.apache.asterix.external.api.AsterixInputStream;
 import org.apache.asterix.external.util.ExternalDataConstants;
+import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class LineRecordReader extends StreamRecordReader {
 
-    private final boolean hasHeader;
+    private boolean hasHeader;
     protected boolean prevCharCR;
     protected int newlineLength;
     protected int recordNumber = 0;
     protected boolean nextIsHeader = false;
+    private static final List<String> recordReaderFormats = Collections.unmodifiableList(
+            Arrays.asList(ExternalDataConstants.FORMAT_DELIMITED_TEXT, ExternalDataConstants.FORMAT_CSV));
+    private static final String REQUIRED_CONFIGS = "";
 
-    public LineRecordReader(final boolean hasHeader, final AsterixInputStream stream) throws HyracksDataException {
-        super(stream);
-        this.hasHeader = hasHeader;
+    @Override
+    public void configure(AsterixInputStream inputStream, Map<String, String> config) throws HyracksDataException {
+        super.configure(inputStream);
+        this.hasHeader = ExternalDataUtils.hasHeader(config);
         if (hasHeader) {
-            stream.setNotificationHandler(this);
+            inputStream.setNotificationHandler(this);
         }
     }
 
@@ -45,6 +54,16 @@ public class LineRecordReader extends StreamRecordReader {
         if (hasHeader) {
             nextIsHeader = true;
         }
+    }
+
+    @Override
+    public List<String> getRecordReaderFormats() {
+        return recordReaderFormats;
+    }
+
+    @Override
+    public String getRequiredConfigs() {
+        return REQUIRED_CONFIGS;
     }
 
     @Override

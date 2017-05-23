@@ -19,6 +19,10 @@
 package org.apache.asterix.external.input.record.reader.stream;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 import org.apache.asterix.common.exceptions.ExceptionUtils;
 import org.apache.asterix.external.api.AsterixInputStream;
@@ -27,18 +31,32 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class QuotedLineRecordReader extends LineRecordReader {
 
-    private final char quote;
+    private char quote;
     private boolean prevCharEscape;
     private boolean inQuote;
+    private static final List<String> recordReaderFormats = Collections.unmodifiableList(
+            Arrays.asList(ExternalDataConstants.FORMAT_DELIMITED_TEXT, ExternalDataConstants.FORMAT_CSV));
+    private static final String REQUIRED_CONFIGS = "quote";
 
-    public QuotedLineRecordReader(final boolean hasHeader, final AsterixInputStream stream, final String quoteString)
-            throws HyracksDataException {
-        super(hasHeader, stream);
-        if ((quoteString == null) || (quoteString.length() != 1)) {
-            throw new HyracksDataException(ExceptionUtils.incorrectParameterMessage(
-                    ExternalDataConstants.KEY_QUOTE, ExternalDataConstants.PARAMETER_OF_SIZE_ONE, quoteString));
+    @Override
+    public void configure(AsterixInputStream inputStream, Map<String, String> config) throws HyracksDataException {
+        super.configure(inputStream, config);
+        String quoteString = config.get(ExternalDataConstants.KEY_QUOTE);
+        if (quoteString.length() != 1) {
+            throw new HyracksDataException(ExceptionUtils.incorrectParameterMessage(ExternalDataConstants.KEY_QUOTE,
+                    ExternalDataConstants.PARAMETER_OF_SIZE_ONE, quoteString));
         }
         this.quote = quoteString.charAt(0);
+    }
+
+    @Override
+    public List<String> getRecordReaderFormats() {
+        return recordReaderFormats;
+    }
+
+    @Override
+    public String getRequiredConfigs() {
+        return REQUIRED_CONFIGS;
     }
 
     @Override

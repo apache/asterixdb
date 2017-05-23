@@ -18,6 +18,9 @@
  */
 package org.apache.asterix.external.parser.factory;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.common.exceptions.CompilationException;
@@ -35,7 +38,8 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 public class HiveDataParserFactory implements IRecordDataParserFactory<Writable> {
 
     private static final long serialVersionUID = 1L;
-    private static String[] formats = { "hive", "hive-parser"};
+    private static final List<String> parserFormats = Collections
+            .unmodifiableList(Arrays.asList("hive", "hive-parser"));
     private Map<String, String> configuration;
     private ARecordType recordType;
     private String hiveSerdeClassName;
@@ -73,8 +77,8 @@ public class HiveDataParserFactory implements IRecordDataParserFactory<Writable>
     public void setMetaType(ARecordType metaType) {
     }
 
-    @Override public String[] getFormats() {
-        return formats;
+    @Override
+    public List<String> getParserFormats() {
+        return parserFormats;
     }
-
 }

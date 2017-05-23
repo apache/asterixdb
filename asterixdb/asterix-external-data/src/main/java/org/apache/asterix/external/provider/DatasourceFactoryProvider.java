@@ -18,8 +18,17 @@
  */
 package org.apache.asterix.external.provider;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.nio.charset.Charset;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.common.library.ILibraryManager;
@@ -27,26 +36,23 @@ import org.apache.asterix.external.api.IExternalDataSourceFactory;
 import org.apache.asterix.external.api.IExternalDataSourceFactory.DataSourceType;
 import org.apache.asterix.external.api.IInputStreamFactory;
 import org.apache.asterix.external.api.IRecordReaderFactory;
-import org.apache.asterix.external.input.HDFSDataSourceFactory;
-import org.apache.asterix.external.input.record.reader.rss.RSSRecordReaderFactory;
-import org.apache.asterix.external.input.record.reader.stream.StreamRecordReaderFactory;
-import org.apache.asterix.external.input.record.reader.twitter.TwitterRecordReaderFactory;
 import org.apache.asterix.external.input.stream.factory.LocalFSInputStreamFactory;
-import org.apache.asterix.external.input.stream.factory.SocketClientInputStreamFactory;
 import org.apache.asterix.external.input.stream.factory.SocketServerInputStreamFactory;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataUtils;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.commons.io.IOUtils;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import twitter4j.conf.ConfigurationBuilder;
 
 public class DatasourceFactoryProvider {
+
+    private static final String RESOURCE = "META-INF/services/org.apache.asterix.external.api.IRecordReaderFactory";
+    private static Map<String, Class> factories = null;
 
     private DatasourceFactoryProvider() {
     }
 
     public static IExternalDataSourceFactory getExternalDataSourceFactory(ILibraryManager libraryManager,
-            Map<String, String> configuration) throws HyracksDataException {
+            Map<String, String> configuration) throws HyracksDataException, AsterixException {
         if (ExternalDataUtils.getDataSourceType(configuration).equals(DataSourceType.RECORDS)) {
             String reader = configuration.get(ExternalDataConstants.KEY_READER);
             return DatasourceFactoryProvider.getRecordReaderFactory(libraryManager, reader, configuration);
@@ -89,46 +95,64 @@ public class DatasourceFactoryProvider {
         return streamSourceFactory;
     }
 
-    public static IRecordReaderFactory<?> getRecordReaderFactory(ILibraryManager libraryManager, String reader,
-            Map<String, String> configuration) throws HyracksDataException {
-        if (reader.equals(ExternalDataConstants.EXTERNAL)) {
-            try {
-                return ExternalDataUtils.createExternalRecordReaderFactory(libraryManager, configuration);
-            } catch (AlgebricksException e) {
-                // Not sure whether this is the right way to handle AlgebricksException  (xikui)
-                throw new HyracksDataException(e);
+    protected static IRecordReaderFactory getInstance(Class clazz) throws AsterixException {
+        try {
+            return (IRecordReaderFactory) clazz.newInstance();
+        } catch (InstantiationException | IllegalAccessException | ClassCastException e) {
+            throw new AsterixException("Cannot create: " + clazz.getSimpleName(), e);
+        }
+    }
+
+    public static IRecordReaderFactory getRecordReaderFactory(ILibraryManager libraryManager, String adaptorName,
+            Map<String, String> configuration) throws HyracksDataException, AsterixException {
+        if (adaptorName.equals(ExternalDataConstants.EXTERNAL)) {
+            return ExternalDataUtils.createExternalRecordReaderFactory(libraryManager, configuration);
+        }
+
+        if (factories == null) {
+            factories = initFactories();
+        }
+
+        if (factories.containsKey(adaptorName)) {
+            return getInstance(factories.get(adaptorName));
+        }
+
+        try {
+            return (IRecordReaderFactory) Class.forName(adaptorName).newInstance();
+        } catch (IllegalAccessException | ClassNotFoundException | InstantiationException | ClassCastException e) {
+            throw new RuntimeDataException(ErrorCode.UNKNOWN_RECORD_READER_FACTORY, e, adaptorName);
+        }
+    }
+
+    protected static Map<String, Class> initFactories() throws AsterixException {
+        Map<String, Class> factories = new HashMap<>();
+        ClassLoader cl = ParserFactoryProvider.class.getClassLoader();
+        final Charset encoding = Charset.forName("UTF-8");
+        try {
+            Enumeration<URL> urls = cl.getResources(RESOURCE);
+            for (URL url : Collections.list(urls)) {
+                InputStream is = url.openStream();
+                String config = IOUtils.toString(is, encoding);
+                is.close();
+                String[] classNames = config.split("\n");
+                for (String className : classNames) {
+                    if (className.startsWith("#")) {
+                        continue;
+                    }
+                    final Class<?> clazz = Class.forName(className);
+                    List<String> formats = ((IRecordReaderFactory) clazz.newInstance()).getRecordReaderNames();
+                    for (String format : formats) {
+                        if (factories.containsKey(format)) {
+                            throw new AsterixException(ErrorCode.PROVIDER_DATASOURCE_FACTORY_DUPLICATE_FORMAT_MAPPING,
+                                    format);
+                        }
+                        factories.put(format, clazz);
+                    }
+                }
             }
+        } catch (IOException | ClassNotFoundException | InstantiationException | IllegalAccessException e) {
+            throw new AsterixException(e);
         }
-        switch (reader) {
-            case ExternalDataConstants.READER_HDFS:
-                return new HDFSDataSourceFactory();
-            case ExternalDataConstants.ALIAS_LOCALFS_ADAPTER:
-                return new StreamRecordReaderFactory(new LocalFSInputStreamFactory());
-            case ExternalDataConstants.READER_TWITTER_PULL:
-            case ExternalDataConstants.READER_TWITTER_PUSH:
-            case ExternalDataConstants.READER_PUSH_TWITTER:
-            case ExternalDataConstants.READER_PULL_TWITTER:
-            case ExternalDataConstants.READER_USER_STREAM_TWITTER:
-                try {
-                    Class.forName("twitter4j.Twitter");
-                } catch (ClassNotFoundException e) {
-                    throw new RuntimeDataException(ErrorCode.ADAPTER_TWITTER_TWITTER4J_LIB_NOT_FOUND, e);
-                }
-                return new TwitterRecordReaderFactory();
-            case ExternalDataConstants.ALIAS_SOCKET_ADAPTER:
-            case ExternalDataConstants.SOCKET:
-                return new StreamRecordReaderFactory(new SocketServerInputStreamFactory());
-            case ExternalDataConstants.STREAM_SOCKET_CLIENT:
-                return new StreamRecordReaderFactory(new SocketClientInputStreamFactory());
-            case ExternalDataConstants.READER_RSS:
-                return new RSSRecordReaderFactory();
-            default:
-                try {
-                    return (IRecordReaderFactory<?>) Class.forName(reader).newInstance();
-                } catch (IllegalAccessException | ClassNotFoundException | InstantiationException
-                        | ClassCastException e) {
-                    throw new RuntimeDataException(ErrorCode.UNKNOWN_RECORD_READER_FACTORY, e,reader);
-                }
-        }
+        return factories;
     }
 }

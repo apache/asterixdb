@@ -18,13 +18,24 @@
  */
 package org.apache.asterix.external.input.record.reader.stream;
 
+import java.lang.reflect.InvocationTargetException;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
+import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.external.api.AsterixInputStream;
 import org.apache.asterix.external.api.IInputStreamFactory;
 import org.apache.asterix.external.api.IRecordReader;
 import org.apache.asterix.external.api.IRecordReaderFactory;
+import org.apache.asterix.external.input.stream.factory.LocalFSInputStreamFactory;
+import org.apache.asterix.external.input.stream.factory.SocketClientInputStreamFactory;
+import org.apache.asterix.external.input.stream.factory.SocketServerInputStreamFactory;
 import org.apache.asterix.external.provider.StreamRecordReaderProvider;
-import org.apache.asterix.external.provider.StreamRecordReaderProvider.Format;
+import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.application.IServiceContext;
@@ -34,13 +45,12 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 public class StreamRecordReaderFactory implements IRecordReaderFactory<char[]> {
 
     private static final long serialVersionUID = 1L;
-    protected final IInputStreamFactory streamFactory;
+    protected IInputStreamFactory streamFactory;
     protected Map<String, String> configuration;
-    protected Format format;
-
-    public StreamRecordReaderFactory(IInputStreamFactory inputStreamFactory) {
-        this.streamFactory = inputStreamFactory;
-    }
+    protected Class recordReaderClazz;
+    private static final List<String> recordReaderNames = Collections.unmodifiableList(
+            Arrays.asList(ExternalDataConstants.ALIAS_LOCALFS_ADAPTER, ExternalDataConstants.ALIAS_SOCKET_ADAPTER,
+                    ExternalDataConstants.SOCKET, ExternalDataConstants.STREAM_SOCKET_CLIENT));
 
     @Override
     public DataSourceType getDataSourceType() {
@@ -57,18 +67,45 @@ public class StreamRecordReaderFactory implements IRecordReaderFactory<char[]> {
         return streamFactory.getPartitionConstraint();
     }
 
+    private void configureInputStreamFactory(Map<String, String> config) throws CompilationException {
+        String reader = config.get(ExternalDataConstants.KEY_READER);
+        if (reader.equals(ExternalDataConstants.ALIAS_LOCALFS_ADAPTER)) {
+            streamFactory = new LocalFSInputStreamFactory();
+        } else if (reader.equals(ExternalDataConstants.ALIAS_SOCKET_ADAPTER)
+                || reader.equals(ExternalDataConstants.SOCKET)) {
+            streamFactory = new SocketServerInputStreamFactory();
+        } else if (reader.equals(ExternalDataConstants.STREAM_SOCKET_CLIENT)) {
+            streamFactory = new SocketClientInputStreamFactory();
+        } else {
+            throw new CompilationException(ErrorCode.FEED_UNKNOWN_ADAPTER_NAME);
+        }
+    }
+
     @Override
     public void configure(IServiceContext serviceCtx, Map<String, String> configuration)
             throws HyracksDataException, AlgebricksException {
         this.configuration = configuration;
+        configureInputStreamFactory(configuration);
         streamFactory.configure(serviceCtx, configuration);
-        format = StreamRecordReaderProvider.getReaderFormat(configuration);
+        recordReaderClazz = StreamRecordReaderProvider.getRecordReaderClazz(configuration);
     }
 
     @Override
     public IRecordReader<? extends char[]> createRecordReader(IHyracksTaskContext ctx, int partition)
             throws HyracksDataException {
-        return StreamRecordReaderProvider.createRecordReader(format, streamFactory.createInputStream(ctx, partition),
-                configuration);
+        try {
+            StreamRecordReader streamRecordReader = (StreamRecordReader) recordReaderClazz.getConstructor()
+                    .newInstance();
+            streamRecordReader.configure(streamFactory.createInputStream(ctx, partition), configuration);
+            return streamRecordReader;
+        } catch (InstantiationException | IllegalAccessException | InvocationTargetException
+                | NoSuchMethodException e) {
+            throw new HyracksDataException(e);
+        }
+    }
+
+    @Override
+    public List<String> getRecordReaderNames() {
+        return recordReaderNames;
     }
 }

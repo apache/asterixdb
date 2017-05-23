@@ -21,6 +21,9 @@ package org.apache.asterix.external.library;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.external.api.IRecordDataParser;
@@ -34,7 +37,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 public class ClassAdParserFactory implements IRecordDataParserFactory<char[]> {
 
     private static final long serialVersionUID = 1L;
-    private static final String[] formats = { "line-separated" };
+    private static final List<String> parserFormats = Collections.unmodifiableList(Arrays.asList("line-separated"));
     public static final String KEY_OLD_FORMAT = "old-format";
     public static final String KEY_EVALUATE = "evaluate";
     public static final String KEY_KEEP_EXPR = "keep-expr";
@@ -123,8 +126,8 @@ public class ClassAdParserFactory implements IRecordDataParserFactory<char[]> {
     }
 
     @Override
-    public String[] getFormats() {
-        return formats;
+    public List<String> getParserFormats() {
+        return parserFormats;
     }
 
 }

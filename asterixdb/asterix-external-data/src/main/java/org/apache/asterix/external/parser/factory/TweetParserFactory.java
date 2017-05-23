@@ -18,6 +18,9 @@
  */
 package org.apache.asterix.external.parser.factory;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.external.api.IRecordDataParser;
@@ -31,7 +34,7 @@ import twitter4j.Status;
 public class TweetParserFactory implements IRecordDataParserFactory<String> {
 
     private static final long serialVersionUID = 1L;
-    private static String[] formats = { "twitter-status" };
+    private static final List<String> parserFormats = Collections.unmodifiableList(Arrays.asList("twitter-status"));
     private ARecordType recordType;
 
     @Override
@@ -61,8 +64,8 @@ public class TweetParserFactory implements IRecordDataParserFactory<String> {
     }
 
     @Override
-    public String[] getFormats() {
-        return formats;
+    public List<String> getParserFormats() {
+        return parserFormats;
     }
 
 }

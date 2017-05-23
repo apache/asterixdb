@@ -18,6 +18,9 @@
  */
 package org.apache.asterix.external.parser.factory;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.common.exceptions.AsterixException;
@@ -38,7 +41,8 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 public class RecordWithMetadataParserFactory<I, O> implements IRecordDataParserFactory<I> {
 
     private static final long serialVersionUID = 1L;
-    private static String[] formats = { "record-with-metadata" };
+    private static final List<String> parserFormats = Collections
+            .unmodifiableList(Arrays.asList("record-with-metadata"));
     private ARecordType metaType;
     private ARecordType recordType;
     private IRecordDataParserFactory<O> recordParserFactory;
@@ -83,8 +87,8 @@ public class RecordWithMetadataParserFactory<I, O> implements IRecordDataParserF
     }
 
     @Override
-    public String[] getFormats() {
-        return formats;
+    public List<String> getParserFormats() {
+        return parserFormats;
     }
 
     @Override

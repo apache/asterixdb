@@ -27,10 +27,15 @@ import org.apache.asterix.om.types.ARecordType;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
 public class ADMDataParserFactory extends AbstractRecordStreamParserFactory<char[]> {
 
     private static final long serialVersionUID = 1L;
-    private static String[] formats = { "adm", "json", "semi-structured" };
+    private static final List<String> parserFormats = Collections
+            .unmodifiableList(Arrays.asList("adm", "json", "semi-structured"));
 
     @Override
     public IRecordDataParser<char[]> createRecordParser(IHyracksTaskContext ctx) {
@@ -58,8 +63,7 @@ public class ADMDataParserFactory extends AbstractRecordStreamParserFactory<char
     }
 
     @Override
-    public String[] getFormats() {
-        return formats;
+    public List<String> getParserFormats() {
+        return parserFormats;
     }
-
 }

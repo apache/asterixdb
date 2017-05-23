@@ -21,6 +21,8 @@ package org.apache.asterix.external.api;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
+import java.util.List;
+
 public interface IRecordReaderFactory<T> extends IExternalDataSourceFactory {
 
     public IRecordReader<? extends T> createRecordReader(IHyracksTaskContext ctx, int partition)
@@ -32,4 +34,7 @@ public interface IRecordReaderFactory<T> extends IExternalDataSourceFactory {
     public default DataSourceType getDataSourceType() {
         return DataSourceType.RECORDS;
     }
+
+    public List<String> getRecordReaderNames();
+
 }

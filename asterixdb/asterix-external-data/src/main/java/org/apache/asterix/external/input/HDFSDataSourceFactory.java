@@ -20,6 +20,7 @@ package org.apache.asterix.external.input;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -38,7 +39,6 @@ import org.apache.asterix.external.input.record.reader.stream.StreamRecordReader
 import org.apache.asterix.external.input.stream.HDFSInputStream;
 import org.apache.asterix.external.provider.ExternalIndexerProvider;
 import org.apache.asterix.external.provider.StreamRecordReaderProvider;
-import org.apache.asterix.external.provider.StreamRecordReaderProvider.Format;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.external.util.HDFSUtils;
@@ -76,7 +76,8 @@ public class HDFSDataSourceFactory implements IRecordReaderFactory<Object>, IInd
     private JobConf conf;
     private InputSplit[] inputSplits;
     private String nodeName;
-    private Format format;
+    private Class recordReaderClazz;
+    private static final List<String> recordReaderNames = Collections.unmodifiableList(Arrays.asList("hdfs"));
 
     @Override
     public void configure(IServiceContext serviceCtx, Map<String, String> configuration) throws AsterixException {
@@ -109,7 +110,7 @@ public class HDFSDataSourceFactory implements IRecordReaderFactory<Object>, IInd
                 this.recordClass = reader.createValue().getClass();
                 reader.close();
             } else {
-                format = StreamRecordReaderProvider.getReaderFormat(configuration);
+                recordReaderClazz = StreamRecordReaderProvider.getRecordReaderClazz(configuration);
                 this.recordClass = char[].class;
             }
         } catch (IOException e) {
@@ -202,9 +203,9 @@ public class HDFSDataSourceFactory implements IRecordReaderFactory<Object>, IInd
             throws HyracksDataException {
         try {
             IExternalIndexer indexer = files == null ? null : ExternalIndexerProvider.getIndexer(configuration);
-            if (format != null) {
-                StreamRecordReader streamReader = StreamRecordReaderProvider.createRecordReader(format,
-                        createInputStream(ctx, partition, indexer), configuration);
+            if (recordReaderClazz != null) {
+                StreamRecordReader streamReader = (StreamRecordReader) recordReaderClazz.getConstructor().newInstance();
+                streamReader.configure(createInputStream(ctx, partition, indexer), configuration);
                 if (indexer != null) {
                     return new IndexingStreamRecordReader(streamReader, indexer);
                 } else {
@@ -231,5 +232,10 @@ public class HDFSDataSourceFactory implements IRecordReaderFactory<Object>, IInd
     @Override
     public boolean isIndexingOp() {
         return ((files != null) && indexingOp);
+    }
+
+    @Override
+    public List<String> getRecordReaderNames() {
+        return recordReaderNames;
     }
 }
