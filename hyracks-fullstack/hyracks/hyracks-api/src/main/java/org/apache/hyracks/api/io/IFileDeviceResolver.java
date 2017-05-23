@@ -18,20 +18,23 @@
  */
 package org.apache.hyracks.api.io;
 
+import java.util.List;
+
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 /**
- * Computes the device destination for a file from its relative path
+ * Resolves the device destination for a file from its relative path
  */
 @FunctionalInterface
-public interface IFileDeviceComputer {
+public interface IFileDeviceResolver {
 
     /**
-     * Compute the device from the relative path
+     * Resolves the device from the relative path.
      *
      * @param relativePath
-     * @return
+     *            a relative file path.
+     * @return the resident IO device of the file.
      */
-    IODeviceHandle compute(String relativePath) throws HyracksDataException;
+    IODeviceHandle resolve(String relativePath, List<IODeviceHandle> devices) throws HyracksDataException;
 
 }

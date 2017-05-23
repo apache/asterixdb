@@ -39,6 +39,7 @@ import org.apache.hyracks.api.dataflow.TaskId;
 import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.io.IODeviceHandle;
 import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.control.nc.io.DefaultDeviceResolver;
 import org.apache.hyracks.control.nc.io.IOManager;
 
 public class TestUtils {
@@ -58,7 +59,7 @@ public class TestUtils {
     private static IOManager createIoManager() throws HyracksException {
         List<IODeviceHandle> devices = new ArrayList<>();
         devices.add(new IODeviceHandle(new File(System.getProperty("java.io.tmpdir")), "."));
-        return new IOManager(devices, Executors.newCachedThreadPool());
+        return new IOManager(devices, Executors.newCachedThreadPool(), new DefaultDeviceResolver());
     }
 
     public static void compareWithResult(File expectedFile, File actualFile) throws Exception {

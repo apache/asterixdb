@@ -22,6 +22,7 @@ import org.apache.hyracks.api.application.INCApplication;
 import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.config.IConfigManager;
+import org.apache.hyracks.api.io.IFileDeviceResolver;
 import org.apache.hyracks.api.job.resource.NodeCapacity;
 
 public class TestNCApplication implements INCApplication {
@@ -61,6 +62,11 @@ public class TestNCApplication implements INCApplication {
     @Override
     public RuntimeContext getApplicationContext() {
         return rCtx;
+    }
+
+    @Override
+    public IFileDeviceResolver getFileDeviceResolver() {
+        return null;
     }
 
 }

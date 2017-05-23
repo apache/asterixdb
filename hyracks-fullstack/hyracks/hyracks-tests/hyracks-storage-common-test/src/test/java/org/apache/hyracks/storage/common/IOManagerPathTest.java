@@ -18,23 +18,28 @@
  */
 package org.apache.hyracks.storage.common;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.Arrays;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IODeviceHandle;
+import org.apache.hyracks.control.nc.io.DefaultDeviceResolver;
 import org.apache.hyracks.control.nc.io.IOManager;
-import org.junit.*;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.Arrays;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 
 public class IOManagerPathTest {
     @Test
     public void testPrefixNames() throws HyracksDataException {
         IODeviceHandle shorter = new IODeviceHandle(new File("/tmp/tst/1"), "storage");
         IODeviceHandle longer = new IODeviceHandle(new File("/tmp/tst/11"), "storage");
-        IOManager ioManager = new IOManager(Arrays.asList(new IODeviceHandle[] { shorter, longer }));
+        IOManager ioManager = new IOManager(Arrays.asList(new IODeviceHandle[] { shorter, longer }),
+                new DefaultDeviceResolver());
         FileReference f = ioManager.resolveAbsolutePath("/tmp/tst/11/storage/Foo_idx_foo/my_btree");
         Assert.assertEquals("/tmp/tst/11/storage/Foo_idx_foo/my_btree", f.getAbsolutePath());
     }
@@ -43,7 +48,8 @@ public class IOManagerPathTest {
     public void testDuplicates() throws HyracksDataException {
         IODeviceHandle first = new IODeviceHandle(new File("/tmp/tst/1"), "storage");
         IODeviceHandle second = new IODeviceHandle(new File("/tmp/tst/1"), "storage");
-        IOManager ioManager = new IOManager(Arrays.asList(new IODeviceHandle[] { first, second }));
+        IOManager ioManager = new IOManager(Arrays.asList(new IODeviceHandle[] { first, second }),
+                new DefaultDeviceResolver());
     }
 
     @After

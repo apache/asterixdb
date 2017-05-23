@@ -19,31 +19,28 @@
 package org.apache.hyracks.control.nc.io;
 
 import java.io.File;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.io.IFileDeviceComputer;
+import org.apache.hyracks.api.io.IFileDeviceResolver;
 import org.apache.hyracks.api.io.IODeviceHandle;
 
-public class DefaultDeviceComputer implements IFileDeviceComputer {
-    private final IOManager ioManager;
+public class DefaultDeviceResolver implements IFileDeviceResolver {
     private AtomicInteger next = new AtomicInteger(0);
 
-    public DefaultDeviceComputer(IOManager ioManager) {
-        this.ioManager = ioManager;
-    }
-
     @Override
-    public IODeviceHandle compute(String relPath) throws HyracksDataException {
+    public IODeviceHandle resolve(String relPath, List<IODeviceHandle> devices) throws HyracksDataException {
+        int numDevices = devices.size();
         String path = relPath;
         // if number of devices is 1, we return the device
-        if (ioManager.getIODevices().size() == 1) {
-            return ioManager.getIODevices().get(0);
+        if (numDevices == 1) {
+            return devices.get(0);
         }
         // check if it exists already on a device
         int nextSeparator = path.lastIndexOf(File.separator);
         while (nextSeparator > 0) {
-            for (IODeviceHandle dev : ioManager.getIODevices()) {
+            for (IODeviceHandle dev : devices) {
                 if (dev.contains(path)) {
                     return dev;
                 }
@@ -52,13 +49,13 @@ public class DefaultDeviceComputer implements IFileDeviceComputer {
             nextSeparator = path.lastIndexOf(File.separator);
         }
         // one last attempt
-        for (IODeviceHandle dev : ioManager.getIODevices()) {
+        for (IODeviceHandle dev : devices) {
             if (dev.contains(path)) {
                 return dev;
             }
         }
         // not on any device, round robin assignment
-        return ioManager.getIODevices().get(next.getAndIncrement() % ioManager.getIODevices().size());
+        return devices.get(next.getAndIncrement() % numDevices);
     }
 
 }

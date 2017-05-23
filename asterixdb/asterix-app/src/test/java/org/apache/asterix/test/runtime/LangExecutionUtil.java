@@ -123,16 +123,79 @@ public class LangExecutionUtil {
                     librarian.cleanup();
                 }
                 testExecutor.executeTest(PATH_ACTUAL, tcCtx, null, false, ExecutionTestUtil.FailedGroup);
+
                 try {
+                    checkStorageFiles();
+                } finally {
                     testExecutor.cleanup(tcCtx.toString(), badTestCases);
-                } catch (Throwable th) {
-                    th.printStackTrace();
-                    throw th;
                 }
             }
         } finally {
             System.err.flush();
         }
+    }
+
+    // Checks whether data files are uniformly distributed among io devices.
+    private static void checkStorageFiles() throws Exception {
+        String tempDirPath = System.getProperty("java.io.tmpdir");
+        File dir = new File(tempDirPath);
+        File[] subDirs = dir.listFiles();
+        List<File> ncStores = new ArrayList<>();
+        // Finds nc stores.
+        for (File file : subDirs) {
+            if (file.getName().startsWith("asterix_nc")) {
+                ncStores.add(file);
+            }
+        }
+        // Checks that dataset files are uniformly distributed across each nc store.
+        for (File ncStore : ncStores) {
+            checkNcStore(ncStore);
+        }
+    }
+
+    // For each NC, check whether data files are uniformly distributed among io devices.
+    private static void checkNcStore(File ncStore) throws Exception {
+        File[] ioDevices = ncStore.listFiles();
+        int expectedPartitionNum = -1;
+        for (File ioDevice : ioDevices) {
+            File[] dataDirs = ioDevice.listFiles();
+            for (File dataDir : dataDirs) {
+                String dirName = dataDir.getName();
+                if (!dirName.equals("storage")) {
+                    // Skips non-storage directories.
+                    continue;
+                }
+                int numPartitions = getNumResidentPartitions(dataDir.listFiles());
+                if (expectedPartitionNum < 0) {
+                    // Sets the expected number of partitions to the number of partitions on the first io device.
+                    expectedPartitionNum = numPartitions;
+                } else {
+                    // Checks whether the number of partitions of the current io device is expected.
+                    if (expectedPartitionNum != numPartitions) {
+                        throw new Exception("Non-uniform data distribution on io devices: " + dataDir.getAbsolutePath()
+                                + " number of partitions: " + numPartitions + " expected number of partitions: "
+                                + expectedPartitionNum);
+                    }
+                }
+            }
+        }
+    }
+
+    // Gets the number of partitions on each io device.
+    private static int getNumResidentPartitions(File[] partitions) {
+        int num = 0;
+        for (File partition : partitions) {
+            File[] dataverses = partition.listFiles();
+            for (File dv : dataverses) {
+                String dvName = dv.getName();
+                // If a partition only contains the Metadata dataverse, it's not counted.
+                if (!dvName.equals("Metadata")) {
+                    num++;
+                    break;
+                }
+            }
+        }
+        return num;
     }
 
     private static void checkThreadLeaks() throws IOException {

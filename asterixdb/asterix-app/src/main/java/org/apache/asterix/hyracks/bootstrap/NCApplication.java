@@ -53,6 +53,7 @@ import org.apache.hyracks.api.client.ClusterControllerInfo;
 import org.apache.hyracks.api.client.HyracksConnection;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.config.IConfigManager;
+import org.apache.hyracks.api.io.IFileDeviceResolver;
 import org.apache.hyracks.api.job.resource.NodeCapacity;
 import org.apache.hyracks.api.messages.IMessageBroker;
 import org.apache.hyracks.control.common.controllers.NCConfig;
@@ -279,6 +280,14 @@ public class NCApplication extends BaseNCApplication {
     @Override
     public INcApplicationContext getApplicationContext() {
         return runtimeContext;
+    }
+
+    @Override
+    public IFileDeviceResolver getFileDeviceResolver() {
+        return (relPath, devices) -> {
+            int ioDeviceIndex = Math.abs(StoragePathUtil.getPartitionNumFromRelativePath(relPath) % devices.size());
+            return devices.get(ioDeviceIndex);
+        };
     }
 
     protected IHyracksClientConnection getHcc() throws Exception {

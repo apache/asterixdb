@@ -172,7 +172,8 @@ public class NodeControllerService implements IControllerService {
         this.application = application;
         id = ncConfig.getNodeId();
 
-        ioManager = new IOManager(IODeviceHandle.getDevices(ncConfig.getIODevices()));
+        ioManager = new IOManager(IODeviceHandle.getDevices(ncConfig.getIODevices()),
+                application.getFileDeviceResolver());
         if (id == null) {
             throw new HyracksException("id not set");
         }

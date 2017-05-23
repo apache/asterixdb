@@ -28,6 +28,7 @@ import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.io.IODeviceHandle;
+import org.apache.hyracks.control.nc.io.DefaultDeviceResolver;
 import org.apache.hyracks.control.nc.io.IOManager;
 import org.apache.hyracks.storage.am.common.api.IMetadataPageManagerFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IndexLifecycleManager;
@@ -109,7 +110,7 @@ public class TestStorageManagerComponentHolder {
             List<IODeviceHandle> devices = new ArrayList<>();
             devices.add(new IODeviceHandle(new File(System.getProperty("user.dir") + File.separator + "target"),
                     "iodev_test_wa"));
-            ioManager = new IOManager(devices, Executors.newCachedThreadPool());
+            ioManager = new IOManager(devices, Executors.newCachedThreadPool(), new DefaultDeviceResolver());
         }
         return ioManager;
     }

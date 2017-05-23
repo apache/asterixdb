@@ -33,7 +33,7 @@ import java.util.concurrent.Executor;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
-import org.apache.hyracks.api.io.IFileDeviceComputer;
+import org.apache.hyracks.api.io.IFileDeviceResolver;
 import org.apache.hyracks.api.io.IFileHandle;
 import org.apache.hyracks.api.io.IIOFuture;
 import org.apache.hyracks.api.io.IIOManager;
@@ -55,14 +55,15 @@ public class IOManager implements IIOManager {
      */
     private Executor executor;
     private int workspaceIndex;
-    private IFileDeviceComputer deviceComputer;
+    private IFileDeviceResolver deviceComputer;
 
-    public IOManager(List<IODeviceHandle> devices, Executor executor) throws HyracksDataException {
-        this(devices);
+    public IOManager(List<IODeviceHandle> devices, Executor executor, IFileDeviceResolver deviceComputer)
+            throws HyracksDataException {
+        this(devices, deviceComputer);
         this.executor = executor;
     }
 
-    public IOManager(List<IODeviceHandle> devices) throws HyracksDataException {
+    public IOManager(List<IODeviceHandle> devices, IFileDeviceResolver deviceComputer) throws HyracksDataException {
         this.ioDevices = Collections.unmodifiableList(devices);
         checkDeviceValidity(devices);
         workspaces = new ArrayList<>();
@@ -76,7 +77,7 @@ public class IOManager implements IIOManager {
             throw new HyracksDataException("No devices with workspace found");
         }
         workspaceIndex = 0;
-        deviceComputer = new DefaultDeviceComputer(this);
+        this.deviceComputer = deviceComputer;
     }
 
     private void checkDeviceValidity(List<IODeviceHandle> devices) throws HyracksDataException {
@@ -356,7 +357,7 @@ public class IOManager implements IIOManager {
 
     @Override
     public FileReference resolve(String path) throws HyracksDataException {
-        return new FileReference(deviceComputer.compute(path), path);
+        return new FileReference(deviceComputer.resolve(path, getIODevices()), path);
     }
 
     @Override

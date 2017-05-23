@@ -36,6 +36,7 @@ import java.util.concurrent.Executors;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IODeviceHandle;
+import org.apache.hyracks.control.nc.io.DefaultDeviceResolver;
 import org.apache.hyracks.control.nc.io.IOManager;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexFileManager;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
@@ -247,7 +248,7 @@ public class LSMIndexFileManagerTest {
             String iodevPath = System.getProperty("java.io.tmpdir") + sep + "test_iodev" + i;
             devices.add(new IODeviceHandle(new File(iodevPath), "wa"));
         }
-        return new IOManager(devices, Executors.newCachedThreadPool());
+        return new IOManager(devices, Executors.newCachedThreadPool(), new DefaultDeviceResolver());
     }
 
     private FileReference simulateMerge(ILSMIndexFileManager fileManager, FileReference a, FileReference b)

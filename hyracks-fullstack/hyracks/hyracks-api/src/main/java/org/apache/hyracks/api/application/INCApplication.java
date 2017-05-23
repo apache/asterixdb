@@ -18,6 +18,7 @@
  */
 package org.apache.hyracks.api.application;
 
+import org.apache.hyracks.api.io.IFileDeviceResolver;
 import org.apache.hyracks.api.job.resource.NodeCapacity;
 
 public interface INCApplication extends IApplication {
@@ -25,4 +26,11 @@ public interface INCApplication extends IApplication {
     void preStop() throws Exception; //NOSONAR
 
     NodeCapacity getCapacity();
+
+    /**
+     * @return the file device resolver which resolves the relative path of a storage
+     *         file into an io device.
+     */
+    IFileDeviceResolver getFileDeviceResolver();
+
 }

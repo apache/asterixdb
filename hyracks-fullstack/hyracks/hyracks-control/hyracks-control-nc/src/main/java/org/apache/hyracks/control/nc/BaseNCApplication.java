@@ -27,10 +27,12 @@ import org.apache.hyracks.api.application.INCApplication;
 import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.config.IConfigManager;
 import org.apache.hyracks.api.config.Section;
+import org.apache.hyracks.api.io.IFileDeviceResolver;
 import org.apache.hyracks.api.job.resource.NodeCapacity;
 import org.apache.hyracks.control.common.controllers.CCConfig;
 import org.apache.hyracks.control.common.controllers.ControllerConfig;
 import org.apache.hyracks.control.common.controllers.NCConfig;
+import org.apache.hyracks.control.nc.io.DefaultDeviceResolver;
 
 public class BaseNCApplication implements INCApplication {
     public static final BaseNCApplication INSTANCE = new BaseNCApplication();
@@ -77,6 +79,11 @@ public class BaseNCApplication implements INCApplication {
     @Override
     public Object getApplicationContext() {
         return null;
+    }
+
+    @Override
+    public IFileDeviceResolver getFileDeviceResolver() {
+        return new DefaultDeviceResolver();
     }
 
     protected void configureLoggingLevel(Level level) {
