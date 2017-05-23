@@ -483,12 +483,18 @@
       </properties>
     </profile>
     <profile>
-      <id>source-assembly</id>
+      <id>skip-assembly</id>
       <activation>
         <file>
-          <exists>src/main/assembly/source.xml</exists>
+          <missing>src/main/assembly/source.xml</missing>
         </file>
       </activation>
+      <properties>
+        <skip.assembly>true</skip.assembly>
+      </properties>
+    </profile>
+    <profile>
+      <id>release</id>
       <build>
         <plugins>
           <plugin>
@@ -511,17 +517,11 @@
                   <descriptors>
                     <descriptor>src/main/assembly/source.xml</descriptor>
                   </descriptors>
+                  <skipAssembly>${skip.assembly}</skipAssembly>
                 </configuration>
               </execution>
             </executions>
           </plugin>
-        </plugins>
-      </build>
-    </profile>
-    <profile>
-      <id>release</id>
-      <build>
-        <plugins>
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-gpg-plugin</artifactId>
