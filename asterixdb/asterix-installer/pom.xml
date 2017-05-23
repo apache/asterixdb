@@ -388,7 +388,6 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-failsafe-plugin</artifactId>
-            <version>2.6</version>
             <configuration>
               <runOrder>alphabetical</runOrder>
               <forkMode>pertest</forkMode>
