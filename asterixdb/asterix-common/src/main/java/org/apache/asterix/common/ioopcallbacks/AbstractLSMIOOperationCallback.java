@@ -107,8 +107,14 @@ public abstract class AbstractLSMIOOperationCallback implements ILSMIOOperationC
         return pointable.getLength() == 0 ? INVALID : pointable.longValue();
     }
 
-    public void updateLastLSN(long lastLSN) {
-        mutableLastLSNs[writeIndex] = lastLSN;
+    public synchronized void updateLastLSN(long lastLSN) {
+        if (!flushRequested[writeIndex]) {
+            //if the memory component pointed by writeIndex is being flushed, we should ignore this update call
+            //since otherwise the original LSN is overwritten.
+            //Moreover, since the memory component is already being flushed, the next scheduleFlush request must fail.
+            //See https://issues.apache.org/jira/browse/ASTERIXDB-1917
+            mutableLastLSNs[writeIndex] = lastLSN;
+        }
     }
 
     public void setFirstLSN(long firstLSN) {
