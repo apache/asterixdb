@@ -22,6 +22,7 @@ package org.apache.asterix.test.common;
 import java.io.InputStream;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Callable;
@@ -33,7 +34,6 @@ import org.apache.asterix.common.utils.Servlets;
 import org.apache.asterix.test.runtime.SqlppExecutionWithCancellationTest;
 import org.apache.asterix.testframework.context.TestCaseContext;
 import org.apache.asterix.testframework.xml.TestCase;
-import org.apache.asterix.testframework.xml.TestCase.CompilationUnit;
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
@@ -92,18 +92,26 @@ public class CancellationTestExecutor extends TestExecutor {
     }
 
     @Override
-    protected boolean isUnExpected(Exception e, CompilationUnit cUnit, int numOfErrors, MutableInt queryCount) {
-        if (super.isUnExpected(e, cUnit, numOfErrors, queryCount)) {
-            String errorMsg = getErrorMessage(e);
-            // Expected, "HYR0025" means a user cancelled the query.)
-            if (errorMsg.startsWith("HYR0025")) {
-                SqlppExecutionWithCancellationTest.numCancelledQueries++;
-                queryCount.increment();
-            } else {
-                return true;
+    protected boolean isUnExpected(Exception e, List<String> expectedErrors, int numOfErrors, MutableInt queryCount) {
+        // Get the expected exception
+        for (Iterator<String> iter = expectedErrors.iterator(); iter.hasNext();) {
+            String expectedError = iter.next();
+            if (e.toString().contains(expectedError)) {
+                System.err.println("...but that was expected.");
+                iter.remove();
+                return false;
             }
         }
-        return false;
+        String errorMsg = getErrorMessage(e);
+        // Expected, "HYR0025" means a user cancelled the query.)
+        if (errorMsg.startsWith("HYR0025")) {
+            SqlppExecutionWithCancellationTest.numCancelledQueries++;
+            queryCount.increment();
+            return false;
+        } else {
+            System.err.println("Expected to find one of the following in error text:\n+++++\n" + expectedErrors + "\n+++++");
+            return true;
+        }
     }
 
     public static String getErrorMessage(Throwable th) {

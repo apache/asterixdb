@@ -1238,6 +1238,7 @@ public class TestExecutor {
         int numOfFiles = 0;
         List<CompilationUnit> cUnits = testCaseCtx.getTestCase().getCompilationUnit();
         for (CompilationUnit cUnit : cUnits) {
+            List<String> expectedErrors = cUnit.getExpectedError();
             LOGGER.info(
                     "Starting [TEST]: " + testCaseCtx.getTestCase().getFilePath() + "/" + cUnit.getName() + " ... ");
             Map<String, Object> variableCtx = new HashMap<>();
@@ -1253,8 +1254,7 @@ public class TestExecutor {
                 } catch (Exception e) {
                     System.err.println("testFile " + testFile.toString() + " raised an exception: " + e);
                     numOfErrors++;
-                    boolean unExpectedFailure = isUnExpected(e, cUnit, numOfErrors, queryCount);
-                    if (unExpectedFailure) {
+                    if (isUnExpected(e, expectedErrors, numOfErrors, queryCount)) {
                         e.printStackTrace();
                         System.err.println("...Unexpected!");
                         if (failedGroup != null) {
@@ -1263,13 +1263,14 @@ public class TestExecutor {
                         throw new Exception("Test \"" + testFile + "\" FAILED!", e);
                     }
                 } finally {
-                    if (numOfFiles == testFileCtxs.size() && numOfErrors < cUnit.getExpectedError().size()) {
-                        System.err.println("...Unexpected!");
-                        Exception e = new Exception(
-                                "Test \"" + cUnit.getName() + "\" FAILED!\nExpected error was not thrown...");
-                        System.err.println(e);
-                        throw e;
-                    } else if (numOfFiles == testFileCtxs.size()) {
+                    if (numOfFiles == testFileCtxs.size()) {
+                        if (numOfErrors < cUnit.getExpectedError().size()) {
+                            System.err.println("...Unexpected!");
+                            Exception e = new Exception(
+                                    "Test \"" + cUnit.getName() + "\" FAILED!\nExpected error was not thrown...");
+                            System.err.println(e);
+                            throw e;
+                        }
                         LOGGER.info("[TEST]: " + testCaseCtx.getTestCase().getFilePath() + "/" + cUnit.getName()
                                 + " PASSED ");
                     }
@@ -1278,13 +1279,13 @@ public class TestExecutor {
         }
     }
 
-    protected boolean isUnExpected(Exception e, CompilationUnit cUnit, int numOfErrors, MutableInt queryCount) {
+    protected boolean isUnExpected(Exception e, List<String> expectedErrors, int numOfErrors, MutableInt queryCount) {
         String expectedError = null;
-        if (cUnit.getExpectedError().size() < numOfErrors) {
+        if (expectedErrors.size() < numOfErrors) {
             return true;
         } else {
             // Get the expected exception
-            expectedError = cUnit.getExpectedError().get(numOfErrors - 1);
+            expectedError = expectedErrors.get(numOfErrors - 1);
             if (e.toString().contains(expectedError)) {
                 System.err.println("...but that was expected.");
                 return false;
