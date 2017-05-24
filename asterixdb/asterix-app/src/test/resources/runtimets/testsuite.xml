@@ -4527,6 +4527,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="numeric">
+      <compilation-unit name="scientific">
+        <output-dir compare="Text">scientific</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
       <compilation-unit name="subtract_double">
         <output-dir compare="Text">subtract_double</output-dir>
       </compilation-unit>

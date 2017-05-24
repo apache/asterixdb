@@ -3332,8 +3332,9 @@ TOKEN :
 <DEFAULT,IN_DBL_BRACE>
 TOKEN:
 {
-    < DOUBLE_LITERAL: <DIGITS> ( "." <DIGITS> )
-                      | "." <DIGITS>
+    < DOUBLE_LITERAL: <DIGITS> ( "." <DIGITS> ) (("e"|"E") ("-")? <DIGITS>)?
+                      | <DIGITS> (("e"|"E") ("-")? <DIGITS>)
+                      | "." <DIGITS> (("e"|"E") ("-")? <DIGITS>)?
     >
   | < FLOAT_LITERAL:  <DIGITS> ( "f" | "F" )
                       | <DIGITS> ( "." <DIGITS> ( "f" | "F" ) )?
