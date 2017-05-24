@@ -32,7 +32,7 @@
 
 - hosts: all
   tasks:
-    - include: install_jdk.yml
+    - include: install_jre.yml
 
     - include_vars: ../conf/instance_settings.yml
 
