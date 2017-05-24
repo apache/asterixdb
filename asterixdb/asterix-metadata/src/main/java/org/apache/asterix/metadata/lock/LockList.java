@@ -21,25 +21,51 @@ package org.apache.asterix.metadata.lock;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.asterix.metadata.lock.IMetadataLock.Mode;
+import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.commons.lang3.tuple.Pair;
 
+/**
+ * The LockList is used for two phase locking.
+ */
 public class LockList {
-    List<Pair<IMetadataLock.Mode, IMetadataLock>> locks = new ArrayList<>();
+    private List<Pair<IMetadataLock.Mode, IMetadataLock>> locks = new ArrayList<>();
+    private boolean lockPhase = true;
 
-    public void add(IMetadataLock.Mode mode, IMetadataLock lock) {
+    /**
+     * Acquires a lock.
+     *
+     * @param mode
+     *            the lock mode.
+     * @param lock
+     *            the lock object.
+     */
+    public void add(IMetadataLock.Mode mode, IMetadataLock lock) throws AsterixException {
+        if (!lockPhase) {
+            throw new AsterixException(ErrorCode.COMPILATION_TWO_PHASE_LOCKING_VIOLATION);
+        }
         lock.acquire(mode);
         locks.add(Pair.of(mode, lock));
     }
 
+    /**
+     * Once unlock() is called, no caller can call add(IMetadataLock.Mode mode, IMetadataLock lock),
+     * except that reset() is called.
+     */
     public void unlock() {
         for (int i = locks.size() - 1; i >= 0; i--) {
             Pair<IMetadataLock.Mode, IMetadataLock> pair = locks.get(i);
             pair.getRight().release(pair.getLeft());
         }
+        locks.clear();
+        lockPhase = false;
     }
 
+    /**
+     * Clears the state and starts another pass of two phase locking again.
+     */
     public void reset() {
-        locks.clear();
+        unlock();
+        lockPhase = true;
     }
 }

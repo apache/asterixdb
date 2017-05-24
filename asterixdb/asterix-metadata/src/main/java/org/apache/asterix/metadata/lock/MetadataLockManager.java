@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
+import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.metadata.entities.FeedConnection;
 import org.apache.asterix.metadata.utils.DatasetUtil;
 
@@ -54,115 +55,104 @@ public class MetadataLockManager {
     }
 
     // Dataverse
-    public void acquireDataverseReadLock(LockList locks, String dataverseName) {
+    public void acquireDataverseReadLock(LockList locks, String dataverseName) throws AsterixException {
         MetadataLock lock = dataversesLocks.computeIfAbsent(dataverseName, LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.READ, lock);
     }
 
-    public void acquireDataverseWriteLock(LockList locks, String dataverseName) {
+    public void acquireDataverseWriteLock(LockList locks, String dataverseName) throws AsterixException {
         MetadataLock lock = dataversesLocks.computeIfAbsent(dataverseName, LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.WRITE, lock);
     }
 
     // Dataset
-    public void acquireDatasetReadLock(LockList locks, String datasetName) {
+    public void acquireDatasetReadLock(LockList locks, String datasetName) throws AsterixException {
         DatasetLock lock = datasetsLocks.computeIfAbsent(datasetName, DATASET_LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.READ, lock);
     }
 
-    public void acquireDatasetWriteLock(LockList locks, String datasetName) {
+    public void acquireDatasetWriteLock(LockList locks, String datasetName) throws AsterixException {
         DatasetLock lock = datasetsLocks.computeIfAbsent(datasetName, DATASET_LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.WRITE, lock);
     }
 
-    public void acquireDatasetModifyLock(LockList locks, String datasetName) {
+    public void acquireDatasetModifyLock(LockList locks, String datasetName) throws AsterixException {
         DatasetLock lock = datasetsLocks.computeIfAbsent(datasetName, DATASET_LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.MODIFY, lock);
     }
 
-    public void acquireDatasetCreateIndexLock(LockList locks, String datasetName) {
+    public void acquireDatasetCreateIndexLock(LockList locks, String datasetName) throws AsterixException {
         DatasetLock lock = datasetsLocks.computeIfAbsent(datasetName, DATASET_LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.INDEX_BUILD, lock);
     }
 
-    public void acquireExternalDatasetRefreshLock(LockList locks, String datasetName) {
+    public void acquireExternalDatasetRefreshLock(LockList locks, String datasetName) throws AsterixException {
         DatasetLock lock = datasetsLocks.computeIfAbsent(datasetName, DATASET_LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.INDEX_BUILD, lock);
     }
 
     // Function
-    public void acquireFunctionReadLock(LockList locks, String dataverseName) {
+    public void acquireFunctionReadLock(LockList locks, String dataverseName) throws AsterixException {
         MetadataLock lock = functionsLocks.computeIfAbsent(dataverseName, LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.READ, lock);
     }
 
-    public void acquireFunctionWriteLock(LockList locks, String dataverseName) {
+    public void acquireFunctionWriteLock(LockList locks, String dataverseName) throws AsterixException {
         MetadataLock lock = functionsLocks.computeIfAbsent(dataverseName, LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.WRITE, lock);
     }
 
     // Node Group
-    public void acquireNodeGroupReadLock(LockList locks, String dataverseName) {
+    public void acquireNodeGroupReadLock(LockList locks, String dataverseName) throws AsterixException {
         MetadataLock lock = nodeGroupsLocks.computeIfAbsent(dataverseName, LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.READ, lock);
     }
 
-    public void acquireNodeGroupWriteLock(LockList locks, String dataverseName) {
+    public void acquireNodeGroupWriteLock(LockList locks, String dataverseName) throws AsterixException {
         MetadataLock lock = nodeGroupsLocks.computeIfAbsent(dataverseName, LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.WRITE, lock);
     }
 
     // Feeds
-    public void acquireFeedReadLock(LockList locks, String dataverseName) {
+    public void acquireFeedReadLock(LockList locks, String dataverseName) throws AsterixException {
         MetadataLock lock = feedsLocks.computeIfAbsent(dataverseName, LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.READ, lock);
     }
 
-    public void acquireFeedWriteLock(LockList locks, String dataverseName) {
+    public void acquireFeedWriteLock(LockList locks, String dataverseName) throws AsterixException {
         MetadataLock lock = feedsLocks.computeIfAbsent(dataverseName, LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.WRITE, lock);
     }
 
-    // Feed Policies
-    public void acquireFeedPolicyReadLock(LockList locks, String dataverseName) {
-        MetadataLock lock = feedPolicyLocks.computeIfAbsent(dataverseName, LOCK_FUNCTION);
-        locks.add(IMetadataLock.Mode.READ, lock);
-    }
-
-    public void acquireFeedPolicyWriteLock(LockList locks, String dataverseName) {
+    public void acquireFeedPolicyWriteLock(LockList locks, String dataverseName) throws AsterixException {
         MetadataLock lock = feedPolicyLocks.computeIfAbsent(dataverseName, LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.WRITE, lock);
     }
 
     // CompactionPolicy
-    public void acquireCompactionPolicyReadLock(LockList locks, String dataverseName) {
+    public void acquireCompactionPolicyReadLock(LockList locks, String dataverseName) throws AsterixException {
         MetadataLock lock = compactionPolicyLocks.computeIfAbsent(dataverseName, LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.READ, lock);
     }
 
-    public void acquireCompactionPolicyWriteLock(LockList locks, String dataverseName) {
-        MetadataLock lock = compactionPolicyLocks.computeIfAbsent(dataverseName, LOCK_FUNCTION);
-        locks.add(IMetadataLock.Mode.WRITE, lock);
-    }
-
     // DataType
-    public void acquireDataTypeReadLock(LockList locks, String dataverseName) {
+    public void acquireDataTypeReadLock(LockList locks, String dataverseName) throws AsterixException {
         MetadataLock lock = dataTypeLocks.computeIfAbsent(dataverseName, LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.READ, lock);
     }
 
-    public void acquireDataTypeWriteLock(LockList locks, String dataverseName) {
+    public void acquireDataTypeWriteLock(LockList locks, String dataverseName) throws AsterixException {
         MetadataLock lock = dataTypeLocks.computeIfAbsent(dataverseName, LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.WRITE, lock);
     }
 
     // Extensions
-    public void acquireExtensionReadLock(LockList locks, String dataverseName) {
+    public void acquireExtensionReadLock(LockList locks, String dataverseName) throws AsterixException {
         MetadataLock lock = extensionLocks.computeIfAbsent(dataverseName, LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.READ, lock);
     }
 
-    public void acquireExtensionWriteLock(LockList locks, String dataverseName) {
+    public void acquireExtensionWriteLock(LockList locks, String dataverseName) throws AsterixException {
         MetadataLock lock = extensionLocks.computeIfAbsent(dataverseName, LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.WRITE, lock);
     }
@@ -170,7 +160,7 @@ public class MetadataLockManager {
     public void createDatasetBegin(LockList locks, String dataverseName, String itemTypeDataverseName,
             String itemTypeFullyQualifiedName, String metaItemTypeDataverseName, String metaItemTypeFullyQualifiedName,
             String nodeGroupName, String compactionPolicyName, String datasetFullyQualifiedName,
-            boolean isDefaultCompactionPolicy) {
+            boolean isDefaultCompactionPolicy) throws AsterixException {
         acquireDataverseReadLock(locks, dataverseName);
         if (!dataverseName.equals(itemTypeDataverseName)) {
             acquireDataverseReadLock(locks, itemTypeDataverseName);
@@ -191,58 +181,66 @@ public class MetadataLockManager {
         acquireDatasetWriteLock(locks, datasetFullyQualifiedName);
     }
 
-    public void createIndexBegin(LockList locks, String dataverseName, String datasetFullyQualifiedName) {
+    public void createIndexBegin(LockList locks, String dataverseName, String datasetFullyQualifiedName)
+            throws AsterixException {
         acquireDataverseReadLock(locks, dataverseName);
         acquireDatasetCreateIndexLock(locks, datasetFullyQualifiedName);
     }
 
-    public void createTypeBegin(LockList locks, String dataverseName, String itemTypeFullyQualifiedName) {
+    public void createTypeBegin(LockList locks, String dataverseName, String itemTypeFullyQualifiedName)
+            throws AsterixException {
         acquireDataverseReadLock(locks, dataverseName);
         acquireDataTypeWriteLock(locks, itemTypeFullyQualifiedName);
     }
 
-    public void dropDatasetBegin(LockList locks, String dataverseName, String datasetFullyQualifiedName) {
+    public void dropDatasetBegin(LockList locks, String dataverseName, String datasetFullyQualifiedName)
+            throws AsterixException {
         acquireDataverseReadLock(locks, dataverseName);
         acquireDatasetWriteLock(locks, datasetFullyQualifiedName);
     }
 
-    public void dropIndexBegin(LockList locks, String dataverseName, String datasetFullyQualifiedName) {
+    public void dropIndexBegin(LockList locks, String dataverseName, String datasetFullyQualifiedName)
+            throws AsterixException {
         acquireDataverseReadLock(locks, dataverseName);
         acquireDatasetWriteLock(locks, datasetFullyQualifiedName);
     }
 
-    public void dropTypeBegin(LockList locks, String dataverseName, String dataTypeFullyQualifiedName) {
+    public void dropTypeBegin(LockList locks, String dataverseName, String dataTypeFullyQualifiedName)
+            throws AsterixException {
         acquireDataverseReadLock(locks, dataverseName);
         acquireDataTypeWriteLock(locks, dataTypeFullyQualifiedName);
     }
 
-    public void functionStatementBegin(LockList locks, String dataverseName, String functionFullyQualifiedName) {
+    public void functionStatementBegin(LockList locks, String dataverseName, String functionFullyQualifiedName)
+            throws AsterixException {
         acquireDataverseReadLock(locks, dataverseName);
         acquireFunctionWriteLock(locks, functionFullyQualifiedName);
     }
 
-    public void modifyDatasetBegin(LockList locks, String dataverseName, String datasetFullyQualifiedName) {
+    public void modifyDatasetBegin(LockList locks, String dataverseName, String datasetFullyQualifiedName)
+            throws AsterixException {
         acquireDataverseReadLock(locks, dataverseName);
         acquireDatasetModifyLock(locks, datasetFullyQualifiedName);
     }
 
-    public void insertDeleteUpsertBegin(LockList locks, String datasetFullyQualifiedName) {
+    public void insertDeleteUpsertBegin(LockList locks, String datasetFullyQualifiedName) throws AsterixException {
         acquireDataverseReadLock(locks, DatasetUtil.getDataverseFromFullyQualifiedName(datasetFullyQualifiedName));
         acquireDatasetModifyLock(locks, datasetFullyQualifiedName);
     }
 
-    public void dropFeedBegin(LockList locks, String dataverseName, String feedFullyQualifiedName) {
+    public void dropFeedBegin(LockList locks, String dataverseName, String feedFullyQualifiedName)
+            throws AsterixException {
         acquireDataverseReadLock(locks, dataverseName);
         acquireFeedWriteLock(locks, feedFullyQualifiedName);
     }
 
-    public void dropFeedPolicyBegin(LockList locks, String dataverseName, String policyName) {
+    public void dropFeedPolicyBegin(LockList locks, String dataverseName, String policyName) throws AsterixException {
         acquireFeedWriteLock(locks, policyName);
         acquireDataverseReadLock(locks, dataverseName);
     }
 
     public void startFeedBegin(LockList locks, String dataverseName, String feedName,
-            List<FeedConnection> feedConnections) {
+            List<FeedConnection> feedConnections) throws AsterixException {
         acquireDataverseReadLock(locks, dataverseName);
         acquireFeedReadLock(locks, feedName);
         for (FeedConnection feedConnection : feedConnections) {
@@ -252,43 +250,46 @@ public class MetadataLockManager {
         }
     }
 
-    public void stopFeedBegin(LockList locks, String dataverseName, String feedName) {
+    public void stopFeedBegin(LockList locks, String dataverseName, String feedName) throws AsterixException {
         // TODO: dataset lock?
         // Dataset locks are not required here since datasets are protected by the active event listener
         acquireDataverseReadLock(locks, dataverseName);
         acquireFeedReadLock(locks, feedName);
     }
 
-    public void createFeedBegin(LockList locks, String dataverseName, String feedFullyQualifiedName) {
+    public void createFeedBegin(LockList locks, String dataverseName, String feedFullyQualifiedName)
+            throws AsterixException {
         acquireDataverseReadLock(locks, dataverseName);
         acquireFeedWriteLock(locks, feedFullyQualifiedName);
     }
 
     public void connectFeedBegin(LockList locks, String dataverseName, String datasetFullyQualifiedName,
-            String feedFullyQualifiedName) {
+            String feedFullyQualifiedName) throws AsterixException {
         acquireDataverseReadLock(locks, dataverseName);
         acquireDatasetReadLock(locks, datasetFullyQualifiedName);
         acquireFeedReadLock(locks, feedFullyQualifiedName);
     }
 
-    public void createFeedPolicyBegin(LockList locks, String dataverseName, String policyName) {
+    public void createFeedPolicyBegin(LockList locks, String dataverseName, String policyName) throws AsterixException {
         acquireDataverseReadLock(locks, dataverseName);
         acquireFeedPolicyWriteLock(locks, policyName);
     }
 
     public void disconnectFeedBegin(LockList locks, String dataverseName, String datasetFullyQualifiedName,
-            String feedFullyQualifiedName) {
+            String feedFullyQualifiedName) throws AsterixException {
         acquireDataverseReadLock(locks, dataverseName);
         acquireDatasetReadLock(locks, datasetFullyQualifiedName);
         acquireFeedReadLock(locks, feedFullyQualifiedName);
     }
 
-    public void compactBegin(LockList locks, String dataverseName, String datasetFullyQualifiedName) {
+    public void compactBegin(LockList locks, String dataverseName, String datasetFullyQualifiedName)
+            throws AsterixException {
         acquireDataverseReadLock(locks, dataverseName);
         acquireDatasetReadLock(locks, datasetFullyQualifiedName);
     }
 
-    public void refreshDatasetBegin(LockList locks, String dataverseName, String datasetFullyQualifiedName) {
+    public void refreshDatasetBegin(LockList locks, String dataverseName, String datasetFullyQualifiedName)
+            throws AsterixException {
         acquireDataverseReadLock(locks, dataverseName);
         acquireExternalDatasetRefreshLock(locks, datasetFullyQualifiedName);
     }
