@@ -65,7 +65,7 @@ public class SuperActivity extends OneToOneConnectedActivityCluster implements I
              * extract start activities
              */
             List<IConnectorDescriptor> conns = getActivityInputMap().get(entry.getKey());
-            if (conns == null || conns.size() == 0) {
+            if (conns == null || conns.isEmpty()) {
                 startActivities.put(entry.getKey(), entry.getValue());
             }
         }
