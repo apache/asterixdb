@@ -18,42 +18,26 @@
  */
 package org.apache.hyracks.storage.am.lsm.btree.impls;
 
-import java.util.LinkedList;
-import java.util.List;
-
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
-import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMHarness;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexOperationContext;
 import org.apache.hyracks.storage.common.IModificationOperationCallback;
 import org.apache.hyracks.storage.common.ISearchOperationCallback;
-import org.apache.hyracks.storage.common.ISearchPredicate;
 import org.apache.hyracks.storage.common.MultiComparator;
 
 public class ExternalBTreeWithBuddyOpContext extends AbstractLSMIndexOperationContext {
-    private IndexOperation op;
     private MultiComparator bTreeCmp;
     private MultiComparator buddyBTreeCmp;
-    private final List<ILSMComponent> componentHolder;
-    private final List<ILSMDiskComponent> componentsToBeMerged;
-    private final List<ILSMDiskComponent> componentsToBeReplicated;
-    private final ISearchOperationCallback searchCallback;
     private final int targetIndexVersion;
-    private ISearchPredicate searchPredicate;
     private LSMBTreeWithBuddyCursorInitialState searchInitialState;
 
     public ExternalBTreeWithBuddyOpContext(IBinaryComparatorFactory[] btreeCmpFactories,
             IBinaryComparatorFactory[] buddyBtreeCmpFactories, ISearchOperationCallback searchCallback,
             int targetIndexVersion, ILSMHarness lsmHarness, ITreeIndexFrameFactory btreeInteriorFrameFactory,
             ITreeIndexFrameFactory btreeLeafFrameFactory, ITreeIndexFrameFactory buddyBtreeLeafFrameFactory) {
-        this.componentHolder = new LinkedList<>();
-        this.componentsToBeMerged = new LinkedList<>();
-        this.componentsToBeReplicated = new LinkedList<>();
-        this.searchCallback = searchCallback;
+        super(null, null, null, searchCallback, null);
         this.targetIndexVersion = targetIndexVersion;
         this.bTreeCmp = MultiComparator.create(btreeCmpFactories);
         this.buddyBTreeCmp = MultiComparator.create(buddyBtreeCmpFactories);
@@ -63,27 +47,8 @@ public class ExternalBTreeWithBuddyOpContext extends AbstractLSMIndexOperationCo
     }
 
     @Override
-    public void setOperation(IndexOperation newOp) {
-        reset();
-        this.op = newOp;
-    }
-
-    @Override
     public void setCurrentMutableComponentId(int currentMutableComponentId) {
         // Do nothing. this should never be called for disk only indexes
-    }
-
-    @Override
-    public void reset() {
-        super.reset();
-        componentHolder.clear();
-        componentsToBeMerged.clear();
-        componentsToBeReplicated.clear();
-    }
-
-    @Override
-    public IndexOperation getOperation() {
-        return op;
     }
 
     public MultiComparator getBTreeMultiComparator() {
@@ -94,44 +59,14 @@ public class ExternalBTreeWithBuddyOpContext extends AbstractLSMIndexOperationCo
         return buddyBTreeCmp;
     }
 
-    @Override
-    public List<ILSMComponent> getComponentHolder() {
-        return componentHolder;
-    }
-
-    @Override
-    public ISearchOperationCallback getSearchOperationCallback() {
-        return searchCallback;
-    }
-
     // This should never be needed for disk only indexes
     @Override
     public IModificationOperationCallback getModificationCallback() {
         return null;
     }
 
-    @Override
-    public List<ILSMDiskComponent> getComponentsToBeMerged() {
-        return componentsToBeMerged;
-    }
-
     public int getTargetIndexVersion() {
         return targetIndexVersion;
-    }
-
-    @Override
-    public void setSearchPredicate(ISearchPredicate searchPredicate) {
-        this.searchPredicate = searchPredicate;
-    }
-
-    @Override
-    public ISearchPredicate getSearchPredicate() {
-        return searchPredicate;
-    }
-
-    @Override
-    public List<ILSMDiskComponent> getComponentsToBeReplicated() {
-        return componentsToBeReplicated;
     }
 
     public LSMBTreeWithBuddyCursorInitialState getSearchInitialState() {

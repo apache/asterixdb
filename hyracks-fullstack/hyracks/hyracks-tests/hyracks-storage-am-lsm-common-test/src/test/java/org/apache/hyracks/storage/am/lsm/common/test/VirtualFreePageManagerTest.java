@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.hyracks.storage.am.lsm.common;
+package org.apache.hyracks.storage.am.lsm.common.test;
 
 import static org.junit.Assert.assertEquals;
 

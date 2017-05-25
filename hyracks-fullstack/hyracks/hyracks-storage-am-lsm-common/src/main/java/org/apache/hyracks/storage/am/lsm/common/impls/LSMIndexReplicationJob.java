@@ -45,7 +45,7 @@ public class LSMIndexReplicationJob extends AbstractReplicationJob implements IL
     @Override
     public void endReplication() throws HyracksDataException {
         if (operationContext != null) {
-            ((AbstractLSMIndex) (lsmIndex)).lsmHarness.endReplication(operationContext);
+            ((AbstractLSMIndex) (lsmIndex)).getLsmHarness().endReplication(operationContext);
         }
     }
 

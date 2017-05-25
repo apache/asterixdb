@@ -21,9 +21,11 @@ package org.apache.hyracks.storage.am.lsm.common.api;
 import java.util.List;
 
 import org.apache.hyracks.storage.am.common.api.IIndexOperationContext;
+import org.apache.hyracks.storage.am.common.tuples.PermutingTupleReference;
 import org.apache.hyracks.storage.common.IModificationOperationCallback;
 import org.apache.hyracks.storage.common.ISearchOperationCallback;
 import org.apache.hyracks.storage.common.ISearchPredicate;
+import org.apache.hyracks.storage.common.MultiComparator;
 
 public interface ILSMIndexOperationContext extends IIndexOperationContext {
     List<ILSMComponent> getComponentHolder();
@@ -48,4 +50,10 @@ public interface ILSMIndexOperationContext extends IIndexOperationContext {
     boolean isAccessingComponents();
 
     void setAccessingComponents(boolean accessingComponents);
+
+    PermutingTupleReference getIndexTuple();
+
+    PermutingTupleReference getFilterTuple();
+
+    MultiComparator getFilterCmp();
 }

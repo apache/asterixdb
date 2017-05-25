@@ -34,7 +34,6 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMTreeTupleReference;
 import org.apache.hyracks.storage.common.IIndexCursor;
 import org.apache.hyracks.storage.common.MultiComparator;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
-import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 
 public abstract class LSMIndexSearchCursor implements ITreeIndexCursor {
     protected final ILSMIndexOperationContext opCtx;
@@ -130,12 +129,6 @@ public abstract class LSMIndexSearchCursor implements ITreeIndexCursor {
     public void next() throws HyracksDataException {
         outputElement = outputPriorityQueue.poll();
         needPushElementIntoQueue = true;
-    }
-
-    @Override
-    public ICachedPage getPage() {
-        // do nothing
-        return null;
     }
 
     @Override
@@ -244,7 +237,7 @@ public abstract class LSMIndexSearchCursor implements ITreeIndexCursor {
     }
 
     @Override
-    public boolean exclusiveLatchNodes() {
+    public boolean isExclusiveLatchNodes() {
         return false;
     }
 
@@ -313,8 +306,4 @@ public abstract class LSMIndexSearchCursor implements ITreeIndexCursor {
         return cmp.compare(tupleA, tupleB);
     }
 
-    @Override
-    public void markCurrentTupleAsUpdated() throws HyracksDataException {
-        throw new HyracksDataException("Updating tuples is not supported with this cursor.");
-    }
 }

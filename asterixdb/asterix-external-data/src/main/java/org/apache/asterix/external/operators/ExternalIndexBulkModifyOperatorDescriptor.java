@@ -33,9 +33,8 @@ public class ExternalIndexBulkModifyOperatorDescriptor extends TreeIndexBulkLoad
 
     public ExternalIndexBulkModifyOperatorDescriptor(IOperatorDescriptorRegistry spec,
             IIndexDataflowHelperFactory dataflowHelperFactory, int[] deletedFiles, int[] fieldPermutation,
-            float fillFactor, boolean verifyInput, long numElementsHint, boolean checkIfEmpty) {
-        super(spec, null, fieldPermutation, fillFactor, verifyInput, numElementsHint, checkIfEmpty,
-                dataflowHelperFactory);
+            float fillFactor, boolean verifyInput, long numElementsHint) {
+        super(spec, null, fieldPermutation, fillFactor, verifyInput, numElementsHint, false, dataflowHelperFactory);
         this.deletedFiles = deletedFiles;
     }
 
@@ -43,7 +42,7 @@ public class ExternalIndexBulkModifyOperatorDescriptor extends TreeIndexBulkLoad
     public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) throws HyracksDataException {
         return new ExternalIndexBulkModifyOperatorNodePushable(indexHelperFactory, ctx, partition, fieldPermutation,
-                fillFactor, verifyInput, numElementsHint, checkIfEmptyIndex,
+                fillFactor, verifyInput, numElementsHint,
                 recordDescProvider.getInputRecordDescriptor(getActivityId(), 0), deletedFiles);
     }
 

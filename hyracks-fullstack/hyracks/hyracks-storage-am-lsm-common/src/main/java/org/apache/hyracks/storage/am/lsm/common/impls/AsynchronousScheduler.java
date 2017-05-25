@@ -59,7 +59,7 @@ public class AsynchronousScheduler implements ILSMIOOperationScheduler {
                 super.afterExecute(r, t);
                 LSMIOOperationTask<Boolean> task = (LSMIOOperationTask<Boolean>) r;
                 ILSMIOOperation executedOp = task.getOperation();
-                String id = executedOp.getIndexUniqueIdentifier();
+                String id = executedOp.getIndexIdentifier();
                 synchronized (this) {
                     runningFlushOperations.remove(id);
                     if (waitingFlushOperations.containsKey(id)) {
@@ -84,7 +84,7 @@ public class AsynchronousScheduler implements ILSMIOOperationScheduler {
         if (operation.getIOOpertionType() == LSMIOOpertionType.MERGE) {
             executor.submit(operation);
         } else {
-            String id = operation.getIndexUniqueIdentifier();
+            String id = operation.getIndexIdentifier();
             synchronized (executor) {
                 if (runningFlushOperations.containsKey(id)) {
                     if (waitingFlushOperations.containsKey(id)) {

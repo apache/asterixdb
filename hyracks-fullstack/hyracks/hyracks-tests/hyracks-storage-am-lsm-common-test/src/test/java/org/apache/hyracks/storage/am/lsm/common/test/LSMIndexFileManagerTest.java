@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.hyracks.storage.am.lsm.common;
+package org.apache.hyracks.storage.am.lsm.common.test;
 
 import static org.junit.Assert.assertEquals;
 
@@ -39,6 +39,7 @@ import org.apache.hyracks.api.io.IODeviceHandle;
 import org.apache.hyracks.control.nc.io.DefaultDeviceResolver;
 import org.apache.hyracks.control.nc.io.IOManager;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexFileManager;
+import org.apache.hyracks.storage.am.lsm.common.component.TestLsmIndexFileManager;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
 import org.apache.hyracks.storage.common.file.IFileMapProvider;
 import org.apache.hyracks.test.support.TestStorageManagerComponentHolder;
@@ -77,8 +78,7 @@ public class LSMIndexFileManagerTest {
     }
 
     public void sortOrderTest(boolean testFlushFileName) throws InterruptedException, HyracksDataException {
-        ILSMIndexFileManager fileManager =
-                new DummyLSMIndexFileManager(ioManager, fileMapProvider, file, new DummyTreeFactory());
+        ILSMIndexFileManager fileManager = new TestLsmIndexFileManager(ioManager, fileMapProvider, file);
         LinkedList<String> fileNames = new LinkedList<>();
 
         int numFileNames = 100;
@@ -123,8 +123,7 @@ public class LSMIndexFileManagerTest {
         File f = new File(dirPath);
         f.mkdirs();
         FileReference file = ioManager.resolveAbsolutePath(f.getAbsolutePath());
-        ILSMIndexFileManager fileManager =
-                new DummyLSMIndexFileManager(ioManager, fileMapProvider, file, new DummyTreeFactory());
+        ILSMIndexFileManager fileManager = new TestLsmIndexFileManager(ioManager, fileMapProvider, file);
         fileManager.createDirs();
 
         List<FileReference> flushFiles = new ArrayList<>();

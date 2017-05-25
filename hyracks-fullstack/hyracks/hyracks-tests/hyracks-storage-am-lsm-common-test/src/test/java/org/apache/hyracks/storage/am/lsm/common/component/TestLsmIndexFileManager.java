@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.hyracks.storage.am.lsm.common;
+package org.apache.hyracks.storage.am.lsm.common.component;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -31,11 +31,10 @@ import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexFileManage
 import org.apache.hyracks.storage.am.lsm.common.impls.TreeIndexFactory;
 import org.apache.hyracks.storage.common.file.IFileMapProvider;
 
-public class DummyLSMIndexFileManager extends AbstractLSMIndexFileManager {
+public class TestLsmIndexFileManager extends AbstractLSMIndexFileManager {
 
-    public DummyLSMIndexFileManager(IIOManager ioManager, IFileMapProvider fileMapProvider, FileReference file,
-            TreeIndexFactory<? extends ITreeIndex> treeFactory) {
-        super(ioManager, fileMapProvider, file, treeFactory);
+    public TestLsmIndexFileManager(IIOManager ioManager, IFileMapProvider fileMapProvider, FileReference file) {
+        super(ioManager, fileMapProvider, file, null);
     }
 
     @Override

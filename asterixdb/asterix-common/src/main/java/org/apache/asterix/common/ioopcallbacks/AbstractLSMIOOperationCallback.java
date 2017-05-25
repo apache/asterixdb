@@ -24,12 +24,13 @@ import java.util.List;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.primitive.LongPointable;
 import org.apache.hyracks.storage.am.common.api.IMetadataPageManager;
-import org.apache.hyracks.storage.am.common.api.ITreeIndex;
 import org.apache.hyracks.storage.am.common.freepage.MutableArrayValueReference;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
+import org.apache.hyracks.storage.am.lsm.common.impls.DiskComponentMetadata;
+import org.apache.hyracks.storage.am.lsm.common.utils.ComponentMetadataUtil;
 
 // A single LSMIOOperationCallback per LSM index used to perform actions around Flush and Merge operations
 public abstract class AbstractLSMIOOperationCallback implements ILSMIOOperationCallback {
@@ -93,16 +94,14 @@ public abstract class AbstractLSMIOOperationCallback implements ILSMIOOperationC
         }
     }
 
-    public abstract long getComponentLSN(List<? extends ILSMComponent> oldComponents) throws HyracksDataException;
-
     public void putLSNIntoMetadata(ILSMDiskComponent index, List<ILSMComponent> oldComponents)
             throws HyracksDataException {
         index.getMetadata().put(LSN_KEY, LongPointable.FACTORY.createPointable(getComponentLSN(oldComponents)));
     }
 
-    public static long getTreeIndexLSN(ITreeIndex treeIndex) throws HyracksDataException {
+    public static long getTreeIndexLSN(DiskComponentMetadata md) throws HyracksDataException {
         LongPointable pointable = new LongPointable();
-        IMetadataPageManager metadataPageManager = (IMetadataPageManager) treeIndex.getPageManager();
+        IMetadataPageManager metadataPageManager = md.getMetadataPageManager();
         metadataPageManager.get(metadataPageManager.createMetadataFrame(), LSN_KEY, pointable);
         return pointable.getLength() == 0 ? INVALID : pointable.longValue();
     }
@@ -137,6 +136,40 @@ public abstract class AbstractLSMIOOperationCallback implements ILSMIOOperationC
             }
         }
         return false;
+    }
+
+    @Override
+    public final void afterOperation(LSMOperationType opType, List<ILSMComponent> oldComponents,
+            ILSMDiskComponent newComponent) throws HyracksDataException {
+        //TODO: Copying Filters and all content of the metadata pages for flush operation should be done here
+        if (newComponent != null) {
+            putLSNIntoMetadata(newComponent, oldComponents);
+            if (opType == LSMOperationType.MERGE) {
+                LongPointable markerLsn = LongPointable.FACTORY
+                        .createPointable(ComponentMetadataUtil.getLong(oldComponents.get(0).getMetadata(),
+                                ComponentMetadataUtil.MARKER_LSN_KEY, ComponentMetadataUtil.NOT_FOUND));
+                newComponent.getMetadata().put(ComponentMetadataUtil.MARKER_LSN_KEY, markerLsn);
+            }
+
+        }
+    }
+
+    public long getComponentLSN(List<? extends ILSMComponent> diskComponents) throws HyracksDataException {
+        if (diskComponents == null) {
+            // Implies a flush IO operation. --> moves the flush pointer
+            // Flush operation of an LSM index are executed sequentially.
+            synchronized (this) {
+                long lsn = mutableLastLSNs[readIndex];
+                return lsn;
+            }
+        }
+        // Get max LSN from the diskComponents. Implies a merge IO operation or Recovery operation.
+        long maxLSN = -1L;
+        for (ILSMComponent c : diskComponents) {
+            DiskComponentMetadata md = ((ILSMDiskComponent) c).getMetadata();
+            maxLSN = Math.max(getTreeIndexLSN(md), maxLSN);
+        }
+        return maxLSN;
     }
 
     /**

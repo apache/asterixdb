@@ -203,4 +203,22 @@ public class LSMInvertedIndexAccessor implements ILSMIndexAccessor, IInvertedInd
         throw new UnsupportedOperationException("Upsert not supported by lsm inverted index.");
     }
 
+    /**
+     * enter the memory component for modification
+     */
+    @Override
+    public void enter() throws HyracksDataException {
+        ctx.setOperation(IndexOperation.UPSERT);
+        lsmHarness.enter(ctx);
+    }
+
+    /**
+     * exit the memory component
+     */
+    @Override
+    public void exit() throws HyracksDataException {
+        ctx.setOperation(IndexOperation.UPSERT);
+        lsmHarness.exit(ctx);
+    }
+
 }

@@ -19,65 +19,39 @@
 
 package org.apache.hyracks.storage.am.lsm.invertedindex.impls;
 
-import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
-import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.am.common.tuples.PermutingTupleReference;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMemoryComponent;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexOperationContext;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexAccessor;
 import org.apache.hyracks.storage.common.IIndexAccessor;
 import org.apache.hyracks.storage.common.IModificationOperationCallback;
 import org.apache.hyracks.storage.common.ISearchOperationCallback;
-import org.apache.hyracks.storage.common.ISearchPredicate;
-import org.apache.hyracks.storage.common.MultiComparator;
 
 public class LSMInvertedIndexOpContext extends AbstractLSMIndexOperationContext {
 
     private static final int NUM_DOCUMENT_FIELDS = 1;
 
-    private IndexOperation op;
-    private final List<ILSMComponent> componentHolder;
-    private final List<ILSMDiskComponent> componentsToBeMerged;
-    private final List<ILSMDiskComponent> componentsToBeReplicated;
-
-    private IModificationOperationCallback modificationCallback;
-    private ISearchOperationCallback searchCallback;
-
     // Tuple that only has the inverted-index elements (aka keys), projecting away the document fields.
     private PermutingTupleReference keysOnlyTuple;
-
     // Accessor to the in-memory inverted indexes.
     private IInvertedIndexAccessor[] mutableInvIndexAccessors;
     // Accessor to the deleted-keys BTrees.
     private IIndexAccessor[] deletedKeysBTreeAccessors;
-
     private IInvertedIndexAccessor currentMutableInvIndexAccessors;
     private IIndexAccessor currentDeletedKeysBTreeAccessors;
 
-    private final PermutingTupleReference indexTuple;
-    private final MultiComparator filterCmp;
-    private final PermutingTupleReference filterTuple;
-
-    private ISearchPredicate searchPredicate;
-
     public LSMInvertedIndexOpContext(List<ILSMMemoryComponent> mutableComponents,
             IModificationOperationCallback modificationCallback, ISearchOperationCallback searchCallback,
-            int[] invertedIndexFields, int[] filterFields) throws HyracksDataException {
-        this.componentHolder = new LinkedList<>();
-        this.componentsToBeMerged = new LinkedList<>();
-        this.componentsToBeReplicated = new LinkedList<>();
-        this.modificationCallback = modificationCallback;
-        this.searchCallback = searchCallback;
-
+            int[] invertedIndexFields, int[] filterFields, IBinaryComparatorFactory[] filterComparatorFactories)
+            throws HyracksDataException {
+        super(invertedIndexFields, filterFields, filterComparatorFactories, searchCallback, modificationCallback);
         mutableInvIndexAccessors = new IInvertedIndexAccessor[mutableComponents.size()];
         deletedKeysBTreeAccessors = new IIndexAccessor[mutableComponents.size()];
-
         for (int i = 0; i < mutableComponents.size(); i++) {
             LSMInvertedIndexMemoryComponent mutableComponent =
                     (LSMInvertedIndexMemoryComponent) mutableComponents.get(i);
@@ -86,9 +60,6 @@ public class LSMInvertedIndexOpContext extends AbstractLSMIndexOperationContext 
             deletedKeysBTreeAccessors[i] = mutableComponent.getDeletedKeysBTree()
                     .createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
         }
-
-        assert mutableComponents.size() > 0;
-
         // Project away the document fields, leaving only the key fields.
         LSMInvertedIndexMemoryComponent c = (LSMInvertedIndexMemoryComponent) mutableComponents.get(0);
         int numKeyFields = c.getInvIndex().getInvListTypeTraits().length;
@@ -97,85 +68,12 @@ public class LSMInvertedIndexOpContext extends AbstractLSMIndexOperationContext 
             keyFieldPermutation[i] = NUM_DOCUMENT_FIELDS + i;
         }
         keysOnlyTuple = new PermutingTupleReference(keyFieldPermutation);
-
-        if (filterFields != null) {
-            indexTuple = new PermutingTupleReference(invertedIndexFields);
-            filterCmp = MultiComparator.create(c.getLSMComponentFilter().getFilterCmpFactories());
-            filterTuple = new PermutingTupleReference(filterFields);
-        } else {
-            indexTuple = null;
-            filterCmp = null;
-            filterTuple = null;
-        }
-    }
-
-    @Override
-    public void reset() {
-        super.reset();
-        componentHolder.clear();
-        componentsToBeMerged.clear();
-        componentsToBeReplicated.clear();
-    }
-
-    @Override
-    // TODO: Ignore opcallback for now.
-    public void setOperation(IndexOperation newOp) throws HyracksDataException {
-        reset();
-        op = newOp;
-    }
-
-    @Override
-    public IndexOperation getOperation() {
-        return op;
-    }
-
-    @Override
-    public List<ILSMComponent> getComponentHolder() {
-        return componentHolder;
-    }
-
-    @Override
-    public ISearchOperationCallback getSearchOperationCallback() {
-        return searchCallback;
-    }
-
-    @Override
-    public IModificationOperationCallback getModificationCallback() {
-        return modificationCallback;
     }
 
     @Override
     public void setCurrentMutableComponentId(int currentMutableComponentId) {
         currentMutableInvIndexAccessors = mutableInvIndexAccessors[currentMutableComponentId];
         currentDeletedKeysBTreeAccessors = deletedKeysBTreeAccessors[currentMutableComponentId];
-    }
-
-    @Override
-    public List<ILSMDiskComponent> getComponentsToBeMerged() {
-        return componentsToBeMerged;
-    }
-
-    @Override
-    public void setSearchPredicate(ISearchPredicate searchPredicate) {
-        this.searchPredicate = searchPredicate;
-    }
-
-    @Override
-    public ISearchPredicate getSearchPredicate() {
-        return searchPredicate;
-    }
-
-    @Override
-    public List<ILSMDiskComponent> getComponentsToBeReplicated() {
-        return componentsToBeReplicated;
-    }
-
-    public MultiComparator getFilterCmp() {
-        return filterCmp;
-    }
-
-    public PermutingTupleReference getIndexTuple() {
-        return indexTuple;
     }
 
     public IInvertedIndexAccessor getCurrentMutableInvIndexAccessors() {
@@ -188,9 +86,5 @@ public class LSMInvertedIndexOpContext extends AbstractLSMIndexOperationContext 
 
     public IIndexAccessor getCurrentDeletedKeysBTreeAccessors() {
         return currentDeletedKeysBTreeAccessors;
-    }
-
-    public PermutingTupleReference getFilterTuple() {
-        return filterTuple;
     }
 }

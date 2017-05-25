@@ -70,7 +70,7 @@ public class ExternalFilesIndexModificationOperatorDescriptor extends AbstractSi
                 LSMTwoPCBTreeBulkLoader bulkLoader = null;
                 try {
                     bulkLoader = (LSMTwoPCBTreeBulkLoader) ((ExternalBTree) index)
-                            .createTransactionBulkLoader(BTree.DEFAULT_FILL_FACTOR, false, files.size(), false);
+                            .createTransactionBulkLoader(BTree.DEFAULT_FILL_FACTOR, false, files.size());
                     // Load files
                     // The files must be ordered according to their numbers
                     for (ExternalFile file : files) {

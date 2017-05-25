@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
@@ -84,31 +85,37 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
     @Override
     public synchronized void create() throws HyracksDataException {
         if (isActive) {
-            throw new HyracksDataException("Failed to create the index since it is activated.");
+            throw HyracksDataException.create(ErrorCode.CANNOT_CREATE_ACTIVE_INDEX);
         }
         synchronized (fileMapProvider) {
-            boolean fileIsMapped = fileMapProvider.isMapped(file);
-            if (!fileIsMapped) {
-                bufferCache.createFile(file);
-            }
-            fileId = fileMapProvider.lookupFileId(file);
-            try {
-                // Also creates the file if it doesn't exist yet.
-                bufferCache.openFile(fileId);
-            } catch (HyracksDataException e) {
-                // Revert state of buffer cache since file failed to open.
-                if (!fileIsMapped) {
-                    bufferCache.deleteFile(fileId, false);
-                }
-                throw e;
-            }
+            fileId = createAndOpen(bufferCache, fileMapProvider, file);
         }
-
         freePageManager.open(fileId);
         freePageManager.init(interiorFrameFactory, leafFrameFactory);
         setRootPage();
         freePageManager.close();
         bufferCache.closeFile(fileId);
+    }
+
+    public static int createAndOpen(IBufferCache bufferCache, IFileMapProvider fileMapProvider, FileReference file)
+            throws HyracksDataException {
+        int fileId;
+        boolean fileIsMapped = fileMapProvider.isMapped(file);
+        if (!fileIsMapped) {
+            bufferCache.createFile(file);
+        }
+        fileId = fileMapProvider.lookupFileId(file);
+        try {
+            // Also creates the file if it doesn't exist yet.
+            bufferCache.openFile(fileId);
+        } catch (HyracksDataException e) {
+            // Revert state of buffer cache since file failed to open.
+            if (!fileIsMapped) {
+                bufferCache.deleteFile(fileId, false);
+            }
+            throw e;
+        }
+        return fileId;
     }
 
     private void setRootPage() throws HyracksDataException {
@@ -119,7 +126,7 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
     @Override
     public synchronized void activate() throws HyracksDataException {
         if (isActive) {
-            throw new HyracksDataException("Failed to activate the index since it is already activated.");
+            throw HyracksDataException.create(ErrorCode.CANNOT_ACTIVATE_ACTIVE_INDEX);
         }
         boolean fileIsMapped = false;
         synchronized (fileMapProvider) {
@@ -150,7 +157,7 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
     @Override
     public synchronized void deactivate() throws HyracksDataException {
         if (!isActive && hasEverBeenActivated) {
-            throw new HyracksDataException("Failed to deactivate the index since it is already deactivated.");
+            throw HyracksDataException.create(ErrorCode.CANNOT_DEACTIVATE_INACTIVE_INDEX);
         }
         if (isActive) {
             freePageManager.close();
@@ -169,7 +176,7 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
     @Override
     public synchronized void destroy() throws HyracksDataException {
         if (isActive) {
-            throw new HyracksDataException("Failed to destroy the index since it is activated.");
+            throw HyracksDataException.create(ErrorCode.CANNOT_DESTROY_ACTIVE_INDEX);
         }
 
         if (fileId == -1) {
@@ -183,7 +190,7 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
     @Override
     public synchronized void clear() throws HyracksDataException {
         if (!isActive) {
-            throw new HyracksDataException("Failed to clear the index since it is not activated.");
+            throw HyracksDataException.create(ErrorCode.CANNOT_CLEAR_INACTIVE_INDEX);
         }
         freePageManager.init(interiorFrameFactory, leafFrameFactory);
         setRootPage();

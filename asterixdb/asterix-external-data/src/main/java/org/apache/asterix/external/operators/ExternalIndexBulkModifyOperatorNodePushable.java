@@ -43,10 +43,9 @@ public class ExternalIndexBulkModifyOperatorNodePushable extends IndexBulkLoadOp
 
     public ExternalIndexBulkModifyOperatorNodePushable(IIndexDataflowHelperFactory indexHelperFactory,
             IHyracksTaskContext ctx, int partition, int[] fieldPermutation, float fillFactor, boolean verifyInput,
-            long numElementsHint, boolean checkIfEmpty, RecordDescriptor inputRecDesc, int[] deletedFiles)
-            throws HyracksDataException {
-        super(indexHelperFactory, ctx, partition, fieldPermutation, fillFactor, verifyInput, numElementsHint,
-                checkIfEmpty, inputRecDesc);
+            long numElementsHint, RecordDescriptor inputRecDesc, int[] deletedFiles) throws HyracksDataException {
+        super(indexHelperFactory, ctx, partition, fieldPermutation, fillFactor, verifyInput, numElementsHint, false,
+                inputRecDesc);
         this.deletedFiles = deletedFiles;
     }
 
@@ -61,8 +60,8 @@ public class ExternalIndexBulkModifyOperatorNodePushable extends IndexBulkLoadOp
         try {
             writer.open();
             // Transactional BulkLoader
-            bulkLoader = ((ITwoPCIndex) index).createTransactionBulkLoader(fillFactor, verifyInput, deletedFiles.length,
-                    checkIfEmptyIndex);
+            bulkLoader =
+                    ((ITwoPCIndex) index).createTransactionBulkLoader(fillFactor, verifyInput, deletedFiles.length);
             // Delete files
             for (int i = 0; i < deletedFiles.length; i++) {
                 fileNumber.setValue(deletedFiles[i]);

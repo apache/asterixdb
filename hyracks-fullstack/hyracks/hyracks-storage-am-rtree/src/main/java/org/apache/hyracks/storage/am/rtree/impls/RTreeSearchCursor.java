@@ -97,11 +97,6 @@ public class RTreeSearchCursor implements ITreeIndexCursor {
         return pageId;
     }
 
-    @Override
-    public ICachedPage getPage() {
-        return page;
-    }
-
     protected boolean fetchNextLeafPage() throws HyracksDataException {
         boolean succeeded = false;
         if (readLatched) {
@@ -114,8 +109,12 @@ public class RTreeSearchCursor implements ITreeIndexCursor {
             int pageId = pathList.getLastPageId();
             long parentLsn = pathList.getLastPageLsn();
             pathList.moveLast();
-            if(pageId <0) throw new IllegalStateException();
-            if(fileId<0) throw new IllegalStateException();
+            if (pageId < 0) {
+                throw new IllegalStateException();
+            }
+            if (fileId < 0) {
+                throw new IllegalStateException();
+            }
             ICachedPage node = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, pageId), false);
             node.acquireReadLatch();
             readLatched = true;
@@ -265,12 +264,7 @@ public class RTreeSearchCursor implements ITreeIndexCursor {
     }
 
     @Override
-    public boolean exclusiveLatchNodes() {
+    public boolean isExclusiveLatchNodes() {
         return false;
-    }
-
-    @Override
-    public void markCurrentTupleAsUpdated() throws HyracksDataException {
-        throw new HyracksDataException("Updating tuples is not supported with this cursor.");
     }
 }

@@ -18,8 +18,17 @@
  */
 package org.apache.hyracks.storage.am.lsm.common.api;
 
-@FunctionalInterface
+import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
+
 public interface ILSMComponentFilterFactory {
+    /**
+     * @return an instance of ILSMComponentFilter
+     */
     ILSMComponentFilter createFilter();
+
+    /**
+     * @return the array of binary comparator factories for the filter
+     */
+    IBinaryComparatorFactory[] getFilterCmpFactories();
 
 }

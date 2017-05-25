@@ -53,4 +53,8 @@ public class DiskComponentMetadata implements IComponentMetadata {
     public void put(MemoryComponentMetadata metadata) throws HyracksDataException {
         metadata.copy(mdpManager);
     }
+
+    public IMetadataPageManager getMetadataPageManager() {
+        return mdpManager;
+    }
 }

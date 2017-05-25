@@ -19,21 +19,15 @@
 
 package org.apache.hyracks.storage.am.common.api;
 
-import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.common.IIndexCursor;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
-import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 
 public interface ITreeIndexCursor extends IIndexCursor {
 
-    public ICachedPage getPage();
+    void setBufferCache(IBufferCache bufferCache);
 
-    public void setBufferCache(IBufferCache bufferCache);
-
-    public void setFileId(int fileId);
+    void setFileId(int fileId);
 
     // For allowing updates.
-    public boolean exclusiveLatchNodes();
-
-    public void markCurrentTupleAsUpdated() throws HyracksDataException;
+    boolean isExclusiveLatchNodes();
 }

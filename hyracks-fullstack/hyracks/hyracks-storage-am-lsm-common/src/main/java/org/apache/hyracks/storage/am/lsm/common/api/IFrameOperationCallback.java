@@ -29,9 +29,7 @@ public interface IFrameOperationCallback {
      * Called once processing the frame is done before calling nextFrame on the next IFrameWriter in
      * the pipeline
      *
-     * @param modified
-     *            true if the index was modified during the processing of the frame, false otherwise
      * @throws HyracksDataException
      */
-    void frameCompleted(boolean modified) throws HyracksDataException;
+    void frameCompleted() throws HyracksDataException;
 }

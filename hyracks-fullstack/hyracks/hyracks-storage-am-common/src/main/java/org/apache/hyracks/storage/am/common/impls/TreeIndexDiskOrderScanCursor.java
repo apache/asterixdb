@@ -69,11 +69,6 @@ public class TreeIndexDiskOrderScanCursor implements ITreeIndexCursor {
         return null;
     }
 
-    @Override
-    public ICachedPage getPage() {
-        return page;
-    }
-
     private boolean positionToNextLeaf(boolean skipCurrent) throws HyracksDataException {
         while (frame.getLevel() != 0 || skipCurrent || frame.getTupleCount() == 0) {
             if (++currentPageId > maxPageId) {
@@ -161,12 +156,7 @@ public class TreeIndexDiskOrderScanCursor implements ITreeIndexCursor {
     }
 
     @Override
-    public boolean exclusiveLatchNodes() {
+    public boolean isExclusiveLatchNodes() {
         return false;
-    }
-
-    @Override
-    public void markCurrentTupleAsUpdated() throws HyracksDataException {
-        throw new HyracksDataException("Updating tuples is not supported with this cursor.");
     }
 }

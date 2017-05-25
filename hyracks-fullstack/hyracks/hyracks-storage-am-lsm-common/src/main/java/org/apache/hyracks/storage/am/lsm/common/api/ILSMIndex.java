@@ -42,7 +42,7 @@ import org.apache.hyracks.storage.common.ISearchPredicate;
  */
 public interface ILSMIndex extends IIndex {
 
-    void deactivate(boolean flushOnExit) throws HyracksDataException;
+    void deactivate(boolean flush) throws HyracksDataException;
 
     @Override
     ILSMIndexAccessor createAccessor(IModificationOperationCallback modificationCallback,
@@ -130,4 +130,13 @@ public interface ILSMIndex extends IIndex {
      * @return true if the index is durable. Otherwise false.
      */
     boolean isDurable();
+
+    /**
+     * Update the filter with the passed tuple
+     *
+     * @param ictx
+     * @param tuple
+     * @throws HyracksDataException
+     */
+    void updateFilter(ILSMIndexOperationContext ictx, ITupleReference tuple) throws HyracksDataException;
 }

@@ -82,6 +82,12 @@ public class ErrorCode {
     public static final int UNSORTED_LOAD_INPUT = 46;
     public static final int OPERATION_EXCEEDED_MAX_RESTARTS = 47;
     public static final int DUPLICATE_LOAD_INPUT = 48;
+    public static final int CANNOT_CREATE_ACTIVE_INDEX = 49;
+    public static final int CANNOT_ACTIVATE_ACTIVE_INDEX = 50;
+    public static final int CANNOT_DEACTIVATE_INACTIVE_INDEX = 51;
+    public static final int CANNOT_DESTROY_ACTIVE_INDEX = 52;
+    public static final int CANNOT_CLEAR_INACTIVE_INDEX = 53;
+    public static final int CANNOT_ALLOCATE_MEMORY_FOR_INACTIVE_INDEX = 54;
 
     // Compilation error codes.
     public static final int RULECOLLECTION_NOT_INSTANCE_OF_LIST = 10000;

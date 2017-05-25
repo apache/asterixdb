@@ -535,7 +535,7 @@ public class BTree extends AbstractTreeIndex {
     }
 
     private final boolean acquireLatch(ICachedPage node, BTreeOpContext ctx, boolean isLeaf) {
-        if (!isLeaf || (ctx.getOperation() == IndexOperation.SEARCH && !ctx.getCursor().exclusiveLatchNodes())) {
+        if (!isLeaf || (ctx.getOperation() == IndexOperation.SEARCH && !ctx.getCursor().isExclusiveLatchNodes())) {
             node.acquireReadLatch();
             return true;
         } else {

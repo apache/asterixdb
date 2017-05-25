@@ -577,4 +577,35 @@ public class LSMHarness implements ILSMHarness {
             throw new HyracksDataException("Opeartion already has access to components of index " + lsmIndex);
         }
     }
+
+    @Override
+    public void updateFilter(ILSMIndexOperationContext ctx, ITupleReference tuple) throws HyracksDataException {
+        if (!lsmIndex.isMemoryComponentsAllocated()) {
+            lsmIndex.allocateMemoryComponents();
+        }
+        lsmIndex.updateFilter(ctx, tuple);
+    }
+
+    @Override
+    public void enter(ILSMIndexOperationContext ctx) throws HyracksDataException {
+        if (!lsmIndex.isMemoryComponentsAllocated()) {
+            lsmIndex.allocateMemoryComponents();
+        }
+        getAndEnterComponents(ctx, LSMOperationType.MODIFICATION, false);
+    }
+
+    @Override
+    public void exit(ILSMIndexOperationContext ctx) throws HyracksDataException {
+        getAndExitComponentsAndComplete(ctx, LSMOperationType.MODIFICATION);
+    }
+
+    private void getAndExitComponentsAndComplete(ILSMIndexOperationContext ctx, LSMOperationType op)
+            throws HyracksDataException {
+        validateOperationEnterComponentsState(ctx);
+        synchronized (opTracker) {
+            lsmIndex.getOperationalComponents(ctx);
+            ctx.setAccessingComponents(true);
+            exitAndComplete(ctx, op);
+        }
+    }
 }

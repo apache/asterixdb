@@ -244,11 +244,6 @@ public class BTreeCountingSearchCursor implements ITreeIndexCursor {
     }
 
     @Override
-    public ICachedPage getPage() {
-        return page;
-    }
-
-    @Override
     public void setBufferCache(IBufferCache bufferCache) {
         this.bufferCache = bufferCache;
     }
@@ -259,17 +254,7 @@ public class BTreeCountingSearchCursor implements ITreeIndexCursor {
     }
 
     @Override
-    public boolean exclusiveLatchNodes() {
+    public boolean isExclusiveLatchNodes() {
         return exclusiveLatchNodes;
     }
-
-    @Override
-    public void markCurrentTupleAsUpdated() throws HyracksDataException {
-        if (exclusiveLatchNodes) {
-            isPageDirty = true;
-        } else {
-            throw new HyracksDataException("This cursor has not been created with the intention to allow updates.");
-        }
-    }
-
 }

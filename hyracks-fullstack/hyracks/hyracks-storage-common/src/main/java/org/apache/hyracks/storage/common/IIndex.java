@@ -101,18 +101,20 @@ public interface IIndex {
             ISearchOperationCallback searchCallback) throws HyracksDataException;
 
     /**
+     * Strictly a test method
+     *
      * Ensures that all pages (and tuples) of the index are logically consistent.
      * An assertion error is thrown if validation fails.
      *
      * @throws HyracksDataException
      *             if there is an error performing validation
      */
-    public void validate() throws HyracksDataException;
+    void validate() throws HyracksDataException;
 
     /**
      * @return the {@link IBufferCache} underlying this index.
      */
-    public IBufferCache getBufferCache();
+    IBufferCache getBufferCache();
 
     /**
      * @return the size, in bytes, of pre-allocated memory space that this index was allotted.

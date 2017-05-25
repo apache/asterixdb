@@ -40,7 +40,7 @@ public class NoOpFrameOperationCallbackFactory implements IFrameOperationCallbac
 
     private static class NoOpFrameOperationCallback implements IFrameOperationCallback {
         @Override
-        public void frameCompleted(boolean modified) throws HyracksDataException {
+        public void frameCompleted() throws HyracksDataException {
             // No Op
         }
     }

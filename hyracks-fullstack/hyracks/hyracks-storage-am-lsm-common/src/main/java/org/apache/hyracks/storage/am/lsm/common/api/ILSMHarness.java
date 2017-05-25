@@ -68,8 +68,7 @@ public interface ILSMHarness {
      * @throws HyracksDataException
      * @throws IndexException
      */
-    void search(ILSMIndexOperationContext ctx, IIndexCursor cursor, ISearchPredicate pred)
-            throws HyracksDataException;
+    void search(ILSMIndexOperationContext ctx, IIndexCursor cursor, ISearchPredicate pred) throws HyracksDataException;
 
     /**
      * End the search
@@ -87,8 +86,7 @@ public interface ILSMHarness {
      * @throws HyracksDataException
      * @throws IndexException
      */
-    void scheduleMerge(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
-            throws HyracksDataException;
+    void scheduleMerge(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback) throws HyracksDataException;
 
     /**
      * Schedule full merge
@@ -98,8 +96,7 @@ public interface ILSMHarness {
      * @throws HyracksDataException
      * @throws IndexException
      */
-    void scheduleFullMerge(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
-            throws HyracksDataException;
+    void scheduleFullMerge(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback) throws HyracksDataException;
 
     /**
      * Perform a merge operation
@@ -198,4 +195,28 @@ public interface ILSMHarness {
      */
     void forceUpdateMeta(ILSMIndexOperationContext ctx, IValueReference key, IValueReference value)
             throws HyracksDataException;
+
+    /**
+     * Enter components for the operation
+     *
+     * @param ctx
+     * @throws HyracksDataException
+     */
+    void enter(ILSMIndexOperationContext ctx) throws HyracksDataException;
+
+    /**
+     * Exits components for the operation
+     *
+     * @param ctx
+     * @throws HyracksDataException
+     */
+    void exit(ILSMIndexOperationContext ctx) throws HyracksDataException;
+
+    /**
+     * Update the filter with the value in the passed tuple
+     *
+     * @param ctx
+     * @throws HyracksDataException
+     */
+    void updateFilter(ILSMIndexOperationContext ctx, ITupleReference tuple) throws HyracksDataException;
 }

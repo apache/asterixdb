@@ -75,8 +75,8 @@ public class TreeTupleSorter implements ITreeIndexCursor {
         // We don't latch pages since this code is only used by flush () before
         // bulk-loading the r-tree to disk and flush is not concurrent.
         //
-        ICachedPage node1 = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, tPointers[currentTupleIndex * 2]),
-                false);
+        ICachedPage node1 =
+                bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, tPointers[currentTupleIndex * 2]), false);
         try {
             leafFrame1.setPage(node1);
             frameTuple1.resetByTupleOffset(leafFrame1.getBuffer().array(), tPointers[currentTupleIndex * 2 + 1]);
@@ -222,11 +222,6 @@ public class TreeTupleSorter implements ITreeIndexCursor {
     }
 
     @Override
-    public ICachedPage getPage() {
-        return null;
-    }
-
-    @Override
     public void setBufferCache(IBufferCache bufferCache) {
         // do nothing
     }
@@ -237,12 +232,7 @@ public class TreeTupleSorter implements ITreeIndexCursor {
     }
 
     @Override
-    public boolean exclusiveLatchNodes() {
+    public boolean isExclusiveLatchNodes() {
         return false;
-    }
-
-    @Override
-    public void markCurrentTupleAsUpdated() throws HyracksDataException {
-        throw new HyracksDataException("Updating tuples is not supported with this cursor.");
     }
 }

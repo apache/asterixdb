@@ -54,7 +54,7 @@ public class DualTupleReference implements ITupleReference {
         permutingTuple.reset(tuple);
     }
 
-    public ITupleReference getPermutingTuple() {
+    public PermutingTupleReference getPermutingTuple() {
         return permutingTuple;
     }
 }

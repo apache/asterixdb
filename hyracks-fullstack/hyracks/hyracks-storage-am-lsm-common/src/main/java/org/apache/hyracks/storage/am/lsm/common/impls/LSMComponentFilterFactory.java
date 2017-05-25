@@ -38,4 +38,9 @@ public class LSMComponentFilterFactory implements ILSMComponentFilterFactory {
     public ILSMComponentFilter createFilter() {
         return new LSMComponentFilter(tupleWriterFactory.createTupleWriter(), filterCmpFactories);
     }
+
+    @Override
+    public IBinaryComparatorFactory[] getFilterCmpFactories() {
+        return filterCmpFactories;
+    }
 }

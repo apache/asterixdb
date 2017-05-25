@@ -30,7 +30,8 @@ import org.apache.hyracks.storage.am.common.TestOperationSelector;
 import org.apache.hyracks.storage.am.common.TestOperationSelector.TestOperation;
 import org.apache.hyracks.storage.am.common.datagen.DataGenThread;
 import org.apache.hyracks.storage.am.lsm.btree.impls.LSMBTree;
-import org.apache.hyracks.storage.am.lsm.btree.impls.LSMBTree.LSMBTreeAccessor;
+import org.apache.hyracks.storage.am.lsm.btree.impls.LSMBTreeOpContext;
+import org.apache.hyracks.storage.am.lsm.common.impls.LSMTreeIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.common.impls.NoOpIOOperationCallbackFactory;
 import org.apache.hyracks.storage.common.IIndex;
 import org.apache.hyracks.storage.common.IIndexCursor;
@@ -52,9 +53,10 @@ public class LSMBTreeTestWorker extends AbstractIndexTestWorker {
 
     @Override
     public void performOp(ITupleReference tuple, TestOperation op) throws HyracksDataException {
-        LSMBTreeAccessor accessor = (LSMBTreeAccessor) indexAccessor;
+        LSMTreeIndexAccessor accessor = (LSMTreeIndexAccessor) indexAccessor;
         IIndexCursor searchCursor = accessor.createSearchCursor(false);
-        MultiComparator cmp = accessor.getMultiComparator();
+        LSMBTreeOpContext concreteCtx = (LSMBTreeOpContext) accessor.getCtx();
+        MultiComparator cmp = concreteCtx.getCmp();
         RangePredicate rangePred = new RangePredicate(tuple, tuple, true, true, cmp, cmp);
 
         switch (op) {

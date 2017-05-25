@@ -214,8 +214,8 @@ public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDe
         accessor.reset(buffer);
         LSMTreeIndexAccessor lsmAccessor = (LSMTreeIndexAccessor) indexAccessor;
         int tupleCount = accessor.getTupleCount();
-        boolean firstModification = true;
         int i = 0;
+        lsmAccessor.enter();
         try {
             while (i < tupleCount) {
                 tb.reset();
@@ -223,7 +223,7 @@ public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDe
                 boolean recordWasDeleted = false;
                 tuple.reset(accessor, i);
                 resetSearchPredicate(i);
-                if (hasSecondaries) {
+                if (isFiltered || hasSecondaries) {
                     lsmAccessor.search(cursor, searchPred);
                     if (cursor.hasNext()) {
                         cursor.next();
@@ -243,31 +243,27 @@ public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDe
                 if (isDeleteOperation(tuple, numOfPrimaryKeys)) {
                     // Only delete if it is a delete and not upsert
                     abstractModCallback.setOp(Operation.DELETE);
-                    if (firstModification) {
-                        lsmAccessor.delete(tuple);
-                        firstModification = false;
-                    } else {
-                        lsmAccessor.forceDelete(tuple);
-                    }
+                    lsmAccessor.forceDelete(tuple);
                     recordWasDeleted = true;
                 } else {
                     abstractModCallback.setOp(Operation.UPSERT);
-                    if (firstModification) {
-                        lsmAccessor.upsert(tuple);
-                        firstModification = false;
-                    } else {
-                        lsmAccessor.forceUpsert(tuple);
-                    }
+                    lsmAccessor.forceUpsert(tuple);
                     recordWasInserted = true;
+                }
+                if (isFiltered && prevTuple != null) {
+                    // need to update the filter of the new component with the previous value
+                    lsmAccessor.updateFilter(prevTuple);
                 }
                 writeOutput(i, recordWasInserted, recordWasDeleted);
                 i++;
             }
             // callback here before calling nextFrame on the next operator
-            frameOpCallback.frameCompleted(!firstModification);
+            frameOpCallback.frameCompleted();
             appender.write(writer, true);
         } catch (Exception e) {
             throw HyracksDataException.create(e);
+        } finally {
+            lsmAccessor.exit();
         }
     }
 

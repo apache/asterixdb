@@ -112,11 +112,6 @@ public class BTreeRangeSearchCursor implements ITreeIndexCursor {
         return null;
     }
 
-    @Override
-    public ICachedPage getPage() {
-        return page;
-    }
-
     public int getTupleOffset() {
         return frame.getTupleOffset(tupleIndex - 1);
     }
@@ -312,17 +307,8 @@ public class BTreeRangeSearchCursor implements ITreeIndexCursor {
     }
 
     @Override
-    public boolean exclusiveLatchNodes() {
+    public boolean isExclusiveLatchNodes() {
         return exclusiveLatchNodes;
-    }
-
-    @Override
-    public void markCurrentTupleAsUpdated() throws HyracksDataException {
-        if (exclusiveLatchNodes) {
-            isPageDirty = true;
-        } else {
-            throw new HyracksDataException("This cursor has not been created with the intention to allow updates.");
-        }
     }
 
     public boolean isBloomFilterAware() {

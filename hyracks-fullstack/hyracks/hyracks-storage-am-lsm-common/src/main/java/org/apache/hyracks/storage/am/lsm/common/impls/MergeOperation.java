@@ -16,30 +16,45 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
-package org.apache.hyracks.storage.am.lsm.btree.impls;
+package org.apache.hyracks.storage.am.lsm.common.impls;
 
 import java.util.List;
 
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
-import org.apache.hyracks.storage.am.common.api.ITreeIndexCursor;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
-import org.apache.hyracks.storage.am.lsm.common.impls.MergeOperation;
+import org.apache.hyracks.storage.common.IIndexCursor;
 
-public class LSMBTreeMergeOperation extends MergeOperation {
+public class MergeOperation extends AbstractIoOperation {
 
-    private final FileReference bloomFilterMergeTarget;
+    protected final List<ILSMComponent> mergingComponents;
+    protected final IIndexCursor cursor;
 
-    public LSMBTreeMergeOperation(ILSMIndexAccessor accessor, List<ILSMComponent> mergingComponents,
-            ITreeIndexCursor cursor, FileReference target, FileReference bloomFilterMergeTarget,
-            ILSMIOOperationCallback callback, String indexIdentifier) {
-        super(accessor, target, callback, indexIdentifier, mergingComponents, cursor);
-        this.bloomFilterMergeTarget = bloomFilterMergeTarget;
+    public MergeOperation(ILSMIndexAccessor accessor, FileReference target, ILSMIOOperationCallback callback,
+            String indexIdentifier, List<ILSMComponent> mergingComponents, IIndexCursor cursor) {
+        super(accessor, target, callback, indexIdentifier);
+        this.mergingComponents = mergingComponents;
+        this.cursor = cursor;
     }
 
-    public FileReference getBloomFilterTarget() {
-        return bloomFilterMergeTarget;
+    public List<ILSMComponent> getMergingComponents() {
+        return mergingComponents;
+    }
+
+    @Override
+    public Boolean call() throws HyracksDataException {
+        accessor.merge(this);
+        return true;
+    }
+
+    @Override
+    public LSMIOOpertionType getIOOpertionType() {
+        return LSMIOOpertionType.MERGE;
+    }
+
+    public IIndexCursor getCursor() {
+        return cursor;
     }
 }
