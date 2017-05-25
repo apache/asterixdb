@@ -59,6 +59,7 @@ import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.am.common.tuples.PermutingFrameTupleReference;
 import org.apache.hyracks.storage.am.lsm.common.api.IFrameOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.IFrameOperationCallbackFactory;
+import org.apache.hyracks.storage.am.lsm.common.api.IFrameTupleProcessor;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.common.dataflow.LSMIndexInsertUpdateDeleteOperatorNodePushable;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndex;
@@ -92,15 +93,16 @@ public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDe
     private IFrameOperationCallback frameOpCallback;
     private final IFrameOperationCallbackFactory frameOpCallbackFactory;
     private AbstractIndexModificationOperationCallback abstractModCallback;
-    private final boolean hasSecondaries;
     private final ISearchOperationCallbackFactory searchCallbackFactory;
+    private final IFrameTupleProcessor processor;
+    private LSMTreeIndexAccessor lsmAccessor;
 
     public LSMPrimaryUpsertOperatorNodePushable(IHyracksTaskContext ctx, int partition,
             IIndexDataflowHelperFactory indexHelperFactory, int[] fieldPermutation, RecordDescriptor inputRecDesc,
             IModificationOperationCallbackFactory modCallbackFactory,
             ISearchOperationCallbackFactory searchCallbackFactory, int numOfPrimaryKeys, ARecordType recordType,
             int filterFieldIndex, IFrameOperationCallbackFactory frameOpCallbackFactory,
-            IMissingWriterFactory missingWriterFactory, boolean hasSecondaries) throws HyracksDataException {
+            IMissingWriterFactory missingWriterFactory, final boolean hasSecondaries) throws HyracksDataException {
         super(ctx, partition, indexHelperFactory, fieldPermutation, inputRecDesc, IndexOperation.UPSERT,
                 modCallbackFactory, null);
         this.key = new PermutingFrameTupleReference();
@@ -125,7 +127,61 @@ public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDe
             this.prevRecWithPKWithFilterValue = new ArrayTupleBuilder(fieldPermutation.length + (hasMeta ? 1 : 0));
             this.prevDos = prevRecWithPKWithFilterValue.getDataOutput();
         }
-        this.hasSecondaries = hasSecondaries;
+        processor = new IFrameTupleProcessor() {
+            @Override
+            public void process(ITupleReference tuple, int index) throws HyracksDataException {
+                try {
+                    tb.reset();
+                    boolean recordWasInserted = false;
+                    boolean recordWasDeleted = false;
+                    resetSearchPredicate(index);
+                    if (isFiltered || hasSecondaries) {
+                        lsmAccessor.search(cursor, searchPred);
+                        if (cursor.hasNext()) {
+                            cursor.next();
+                            prevTuple = cursor.getTuple();
+                            cursor.reset(); // end the search
+                            appendFilterToPrevTuple();
+                            appendPrevRecord();
+                            appendPreviousMeta();
+                            appendFilterToOutput();
+                        } else {
+                            appendPreviousTupleAsMissing();
+                        }
+                    } else {
+                        searchCallback.before(key); // lock
+                        appendPreviousTupleAsMissing();
+                    }
+                    if (isDeleteOperation(tuple, numOfPrimaryKeys)) {
+                        // Only delete if it is a delete and not upsert
+                        abstractModCallback.setOp(Operation.DELETE);
+                        lsmAccessor.forceDelete(tuple);
+                        recordWasDeleted = true;
+                    } else {
+                        abstractModCallback.setOp(Operation.UPSERT);
+                        lsmAccessor.forceUpsert(tuple);
+                        recordWasInserted = true;
+                    }
+                    if (isFiltered && prevTuple != null) {
+                        // need to update the filter of the new component with the previous value
+                        lsmAccessor.updateFilter(prevTuple);
+                    }
+                    writeOutput(index, recordWasInserted, recordWasDeleted);
+                } catch (Exception e) {
+                    throw HyracksDataException.create(e);
+                }
+            }
+
+            @Override
+            public void start() throws HyracksDataException {
+                lsmAccessor.getCtx().setOperation(IndexOperation.UPSERT);
+            }
+
+            @Override
+            public void finish() throws HyracksDataException {
+                lsmAccessor.getCtx().setOperation(IndexOperation.UPSERT);
+            }
+        };
     }
 
     // we have the permutation which has [pk locations, record location, optional:filter-location]
@@ -163,15 +219,24 @@ public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDe
             searchCallback = (LockThenSearchOperationCallback) searchCallbackFactory
                     .createSearchOperationCallback(indexHelper.getResource().getId(), ctx, this);
             indexAccessor = index.createAccessor(abstractModCallback, searchCallback);
-
+            lsmAccessor = (LSMTreeIndexAccessor) indexAccessor;
             cursor = indexAccessor.createSearchCursor(false);
             frameTuple = new FrameTupleReference();
             INcApplicationContext appCtx =
                     (INcApplicationContext) ctx.getJobletContext().getServiceContext().getApplicationContext();
             LSMIndexUtil.checkAndSetFirstLSN((AbstractLSMIndex) index,
                     appCtx.getTransactionSubsystem().getLogManager());
-            frameOpCallback =
-                    frameOpCallbackFactory.createFrameOperationCallback(ctx, (ILSMIndexAccessor) indexAccessor);
+            frameOpCallback = new IFrameOperationCallback() {
+                IFrameOperationCallback callback =
+                        frameOpCallbackFactory.createFrameOperationCallback(ctx, (ILSMIndexAccessor) indexAccessor);
+
+                @Override
+                public void frameCompleted() throws HyracksDataException {
+                    callback.frameCompleted();
+                    appender.write(writer, true);
+                }
+            };
+
         } catch (Exception e) {
             indexHelper.close();
             throw new HyracksDataException(e);
@@ -212,59 +277,7 @@ public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDe
     @Override
     public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
         accessor.reset(buffer);
-        LSMTreeIndexAccessor lsmAccessor = (LSMTreeIndexAccessor) indexAccessor;
-        int tupleCount = accessor.getTupleCount();
-        int i = 0;
-        lsmAccessor.enter();
-        try {
-            while (i < tupleCount) {
-                tb.reset();
-                boolean recordWasInserted = false;
-                boolean recordWasDeleted = false;
-                tuple.reset(accessor, i);
-                resetSearchPredicate(i);
-                if (isFiltered || hasSecondaries) {
-                    lsmAccessor.search(cursor, searchPred);
-                    if (cursor.hasNext()) {
-                        cursor.next();
-                        prevTuple = cursor.getTuple();
-                        cursor.reset(); // end the search
-                        appendFilterToPrevTuple();
-                        appendPrevRecord();
-                        appendPreviousMeta();
-                        appendFilterToOutput();
-                    } else {
-                        appendPreviousTupleAsMissing();
-                    }
-                } else {
-                    searchCallback.before(key); // lock
-                    appendPreviousTupleAsMissing();
-                }
-                if (isDeleteOperation(tuple, numOfPrimaryKeys)) {
-                    // Only delete if it is a delete and not upsert
-                    abstractModCallback.setOp(Operation.DELETE);
-                    lsmAccessor.forceDelete(tuple);
-                    recordWasDeleted = true;
-                } else {
-                    abstractModCallback.setOp(Operation.UPSERT);
-                    lsmAccessor.forceUpsert(tuple);
-                    recordWasInserted = true;
-                }
-                if (isFiltered && prevTuple != null) {
-                    // need to update the filter of the new component with the previous value
-                    lsmAccessor.updateFilter(prevTuple);
-                }
-                writeOutput(i, recordWasInserted, recordWasDeleted);
-                i++;
-            }
-            // callback here before calling nextFrame on the next operator
-            frameOpCallback.frameCompleted();
-            appender.write(writer, true);
-        } catch (Exception e) {
-            throw HyracksDataException.create(e);
-        } finally {
-            lsmAccessor.exit();
-        }
+        lsmAccessor.batchOperate(accessor, tuple, processor, frameOpCallback);
     }
 
     private void appendFilterToOutput() throws IOException {

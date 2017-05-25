@@ -29,9 +29,13 @@ import java.util.logging.Logger;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.replication.IReplicationJob.ReplicationOperation;
 import org.apache.hyracks.data.std.api.IValueReference;
+import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
+import org.apache.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
+import org.apache.hyracks.storage.am.lsm.common.api.IFrameOperationCallback;
+import org.apache.hyracks.storage.am.lsm.common.api.IFrameTupleProcessor;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent.ComponentState;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent.LSMComponentType;
@@ -586,16 +590,14 @@ public class LSMHarness implements ILSMHarness {
         lsmIndex.updateFilter(ctx, tuple);
     }
 
-    @Override
-    public void enter(ILSMIndexOperationContext ctx) throws HyracksDataException {
+    private void enter(ILSMIndexOperationContext ctx) throws HyracksDataException {
         if (!lsmIndex.isMemoryComponentsAllocated()) {
             lsmIndex.allocateMemoryComponents();
         }
         getAndEnterComponents(ctx, LSMOperationType.MODIFICATION, false);
     }
 
-    @Override
-    public void exit(ILSMIndexOperationContext ctx) throws HyracksDataException {
+    private void exit(ILSMIndexOperationContext ctx) throws HyracksDataException {
         getAndExitComponentsAndComplete(ctx, LSMOperationType.MODIFICATION);
     }
 
@@ -606,6 +608,28 @@ public class LSMHarness implements ILSMHarness {
             lsmIndex.getOperationalComponents(ctx);
             ctx.setAccessingComponents(true);
             exitAndComplete(ctx, op);
+        }
+    }
+
+    @Override
+    public void batchOperate(ILSMIndexOperationContext ctx, FrameTupleAccessor accessor, FrameTupleReference tuple,
+            IFrameTupleProcessor processor, IFrameOperationCallback frameOpCallback) throws HyracksDataException {
+        processor.start();
+        enter(ctx);
+        try {
+            int tupleCount = accessor.getTupleCount();
+            int i = 0;
+            while (i < tupleCount) {
+                tuple.reset(accessor, i);
+                processor.process(tuple, i);
+                i++;
+            }
+            frameOpCallback.frameCompleted();
+            processor.finish();
+        } catch (Exception e) {
+            throw HyracksDataException.create(e);
+        } finally {
+            exit(ctx);
         }
     }
 }

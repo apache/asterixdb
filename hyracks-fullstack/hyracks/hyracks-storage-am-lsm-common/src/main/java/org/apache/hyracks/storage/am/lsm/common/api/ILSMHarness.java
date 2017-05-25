@@ -22,6 +22,8 @@ import java.util.List;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IValueReference;
+import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
+import org.apache.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.common.IIndexCursor;
 import org.apache.hyracks.storage.common.ISearchPredicate;
@@ -197,26 +199,28 @@ public interface ILSMHarness {
             throws HyracksDataException;
 
     /**
-     * Enter components for the operation
-     *
-     * @param ctx
-     * @throws HyracksDataException
-     */
-    void enter(ILSMIndexOperationContext ctx) throws HyracksDataException;
-
-    /**
-     * Exits components for the operation
-     *
-     * @param ctx
-     * @throws HyracksDataException
-     */
-    void exit(ILSMIndexOperationContext ctx) throws HyracksDataException;
-
-    /**
      * Update the filter with the value in the passed tuple
      *
      * @param ctx
      * @throws HyracksDataException
      */
     void updateFilter(ILSMIndexOperationContext ctx, ITupleReference tuple) throws HyracksDataException;
+
+    /**
+     * Perform batch operation on all tuples in the passed frame tuple accessor
+     *
+     * @param ctx
+     *            the operation ctx
+     * @param accessor
+     *            the frame tuple accessor
+     * @param tuple
+     *            the mutable tuple used to pass the tuple to the processor
+     * @param processor
+     *            the tuple processor
+     * @param frameOpCallback
+     *            the callback at the end of the frame
+     * @throws HyracksDataException
+     */
+    void batchOperate(ILSMIndexOperationContext ctx, FrameTupleAccessor accessor, FrameTupleReference tuple,
+            IFrameTupleProcessor processor, IFrameOperationCallback frameOpCallback) throws HyracksDataException;
 }

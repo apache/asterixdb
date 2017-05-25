@@ -35,16 +35,6 @@ import org.apache.hyracks.storage.common.IIndexAccessor;
 public interface ILSMIndexAccessor extends IIndexAccessor {
 
     /**
-     * Enter the memory component for modification
-     */
-    void enter() throws HyracksDataException;
-
-    /**
-     * Exit the memory component
-     */
-    void exit() throws HyracksDataException;
-
-    /**
      * Schedule a flush operation
      *
      * @param callback
