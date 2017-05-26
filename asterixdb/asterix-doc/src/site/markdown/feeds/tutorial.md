@@ -256,10 +256,10 @@ AsterixDB directly. Here is an example:
         use dataverse feeds;
 
         create type TestDataType as open {
-           screen-name: string
+           screenName: string
         }
 
-        create dataset TestDataset(TestDataType) primary key screen-name;
+        create dataset TestDataset(TestDataType) primary key screenName;
 
         create feed TestSocketFeed using socket_adapter
         (
