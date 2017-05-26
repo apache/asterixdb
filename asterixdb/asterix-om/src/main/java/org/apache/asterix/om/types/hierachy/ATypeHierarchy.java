@@ -52,7 +52,6 @@ public class ATypeHierarchy {
     private static HashMap<Integer, ITypeConvertComputer> promoteComputerMap = new HashMap<Integer, ITypeConvertComputer>();
     private static HashMap<Integer, ITypeConvertComputer> demoteComputerMap = new HashMap<Integer, ITypeConvertComputer>();
     private static Map<ATypeTag, Domain> hierarchyDomains = new HashMap<ATypeTag, Domain>();
-    private static ITypeConvertComputer convertComputer;
 
     // allow type promotion or demotion to the type itself
     static {
@@ -633,11 +632,13 @@ public class ATypeHierarchy {
         if (sourceTypeTag != targetTypeTag) {
             // source tag can be promoted to target tag (e.g. tag1: SMALLINT, tag2: INTEGER)
             if (ATypeHierarchy.canPromote(sourceTypeTag, targetTypeTag)) {
-                convertComputer = ATypeHierarchy.getTypePromoteComputer(sourceTypeTag, targetTypeTag);;
+                ITypeConvertComputer convertComputer =
+                        ATypeHierarchy.getTypePromoteComputer(sourceTypeTag, targetTypeTag);
                 convertComputer.convertType(sourceByteArray, s1 + 1, l1 - 1, out);
                 // source tag can be demoted to target tag
             } else if (ATypeHierarchy.canDemote(sourceTypeTag, targetTypeTag)) {
-                convertComputer = ATypeHierarchy.getTypeDemoteComputer(sourceTypeTag, targetTypeTag);;
+                ITypeConvertComputer convertComputer =
+                        ATypeHierarchy.getTypeDemoteComputer(sourceTypeTag, targetTypeTag);
                 convertComputer.convertType(sourceByteArray, s1 + 1, l1 - 1, out);
             } else {
                 throw new IOException(
