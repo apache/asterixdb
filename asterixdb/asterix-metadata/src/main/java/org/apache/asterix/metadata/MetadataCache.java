@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
-import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.metadata.api.IMetadataEntity;
 import org.apache.asterix.metadata.entities.CompactionPolicy;
@@ -39,9 +38,9 @@ import org.apache.asterix.metadata.entities.FeedConnection;
 import org.apache.asterix.metadata.entities.FeedPolicyEntity;
 import org.apache.asterix.metadata.entities.Function;
 import org.apache.asterix.metadata.entities.Index;
-import org.apache.asterix.metadata.entities.InternalDatasetDetails;
 import org.apache.asterix.metadata.entities.Library;
 import org.apache.asterix.metadata.entities.NodeGroup;
+import org.apache.asterix.metadata.utils.IndexUtil;
 
 /**
  * Caches metadata entities such that the MetadataManager does not have to
@@ -161,10 +160,7 @@ public class MetadataCache {
                 // Add the primary index associated with the dataset, if the dataset is an
                 // internal dataset.
                 if (dataset.getDatasetType() == DatasetType.INTERNAL) {
-                    InternalDatasetDetails id = (InternalDatasetDetails) dataset.getDatasetDetails();
-                    Index index = new Index(dataset.getDataverseName(), dataset.getDatasetName(),
-                            dataset.getDatasetName(), IndexType.BTREE, id.getPartitioningKey(),
-                            id.getKeySourceIndicator(), id.getPrimaryKeyType(), false, true, dataset.getPendingOp());
+                    Index index = IndexUtil.getPrimaryIndex(dataset);
                     addIndexIfNotExistsInternal(index);
                 }
 

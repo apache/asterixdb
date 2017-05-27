@@ -51,8 +51,10 @@ import org.apache.asterix.metadata.utils.DatasetUtil;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.ADateTime;
 import org.apache.asterix.om.base.AInt32;
+import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.base.AInt8;
 import org.apache.asterix.om.base.AMutableInt32;
+import org.apache.asterix.om.base.AMutableInt64;
 import org.apache.asterix.om.base.AMutableString;
 import org.apache.asterix.om.base.AOrderedList;
 import org.apache.asterix.om.base.ARecord;
@@ -73,26 +75,26 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
  */
 public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
     private static final long serialVersionUID = 1L;
-    // Field indexes of serialized Dataset in a tuple.
-    // First key field.
-    public static final int DATASET_DATAVERSENAME_TUPLE_FIELD_INDEX = 0;
-    // Second key field.
-    public static final int DATASET_DATASETNAME_TUPLE_FIELD_INDEX = 1;
     // Payload field containing serialized Dataset.
     public static final int DATASET_PAYLOAD_TUPLE_FIELD_INDEX = 2;
+    private static final String REBALANCE_ID_FIELD_NAME = "rebalanceCount";
 
     @SuppressWarnings("unchecked")
     protected final ISerializerDeserializer<ARecord> recordSerDes =
             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(MetadataRecordTypes.DATASET_RECORDTYPE);
     protected final transient AMutableInt32 aInt32;
     protected final transient ISerializerDeserializer<AInt32> aInt32Serde;
+    protected final transient AMutableInt64 aBigInt;
+    protected final transient ISerializerDeserializer<AInt64> aBigIntSerde;
     protected final transient ArrayBackedValueStorage fieldName = new ArrayBackedValueStorage();
 
     @SuppressWarnings("unchecked")
     protected DatasetTupleTranslator(boolean getTuple) {
         super(getTuple, MetadataPrimaryIndexes.DATASET_DATASET.getFieldCount());
         aInt32 = new AMutableInt32(-1);
+        aBigInt = new AMutableInt64(-1);
         aInt32Serde = SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT32);
+        aBigIntSerde = SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT64);
     }
 
     @Override
@@ -107,7 +109,6 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
     }
 
     protected Dataset createDatasetFromARecord(ARecord datasetRecord) throws HyracksDataException {
-
         String dataverseName =
                 ((AString) datasetRecord.getValueByPos(MetadataRecordTypes.DATASET_ARECORD_DATAVERSENAME_FIELD_INDEX))
                         .getStringValue();
@@ -258,9 +259,14 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
             metaTypeName = ((AString) datasetRecord.getValueByPos(metaTypeNameIndex)).getStringValue();
         }
 
+        // Read the rebalance count if there is one.
+        int rebalanceCountIndex = datasetRecord.getType().getFieldIndex(REBALANCE_ID_FIELD_NAME);
+        long rebalanceCount = rebalanceCountIndex >= 0
+                ? ((AInt64) datasetRecord.getValueByPos(rebalanceCountIndex)).getLongValue() : 0;
+
         return new Dataset(dataverseName, datasetName, typeDataverseName, typeName, metaTypeDataverseName, metaTypeName,
                 nodeGroupName, compactionPolicy, compactionPolicyProperties, datasetDetails, hints, datasetType,
-                datasetId, pendingOp);
+                datasetId, pendingOp, rebalanceCount);
     }
 
     @Override
@@ -407,6 +413,16 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
             fieldValue.reset();
             aString.setValue(dataset.getMetaItemTypeName());
             stringSerde.serialize(aString, fieldValue.getDataOutput());
+            recordBuilder.addField(fieldName, fieldValue);
+        }
+        if (dataset.getRebalanceCount() > 0) {
+            // Adds the field rebalanceCount.
+            fieldName.reset();
+            aString.setValue("rebalanceCount");
+            stringSerde.serialize(aString, fieldName.getDataOutput());
+            fieldValue.reset();
+            aBigInt.setValue(dataset.getRebalanceCount());
+            aBigIntSerde.serialize(aBigInt, fieldValue.getDataOutput());
             recordBuilder.addField(fieldName, fieldValue);
         }
     }

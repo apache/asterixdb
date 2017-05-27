@@ -222,7 +222,8 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
                 createReplicationJob(ReplicationOperation.DELETE, resourceFile);
             }
         } else {
-            throw new HyracksDataException("Resource doesn't exist");
+            throw HyracksDataException.create(org.apache.hyracks.api.exceptions.ErrorCode.RESOURCE_DOES_NOT_EXIST,
+                    relativePath);
         }
     }
 

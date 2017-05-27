@@ -18,26 +18,34 @@
  */
 package org.apache.asterix.transaction.management.service.transaction;
 
-import java.util.concurrent.atomic.AtomicInteger;
+import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 
 public class DatasetIdFactory {
-    private static AtomicInteger id = new AtomicInteger();
+    private static int id = 0;
     private static boolean isInitialized = false;
 
-    public static boolean isInitialized() {
+    public static synchronized boolean isInitialized() {
         return isInitialized;
     }
 
-    public static void initialize(int initialId) {
-        id.set(initialId);
+    public static synchronized void initialize(int initialId) {
+        id = initialId;
         isInitialized = true;
     }
 
-    public static int generateDatasetId() {
-        return id.incrementAndGet();
+    public static synchronized int generateDatasetId() throws AsterixException {
+        if (id == Integer.MAX_VALUE) {
+            throw new AsterixException(ErrorCode.DATASET_ID_EXHAUSTED);
+        }
+        return ++id;
     }
 
-    public static int getMostRecentDatasetId() {
-        return id.get();
+    public static int generateAlternatingDatasetId(int originalId) {
+        return originalId ^ 0x80000000;
+    }
+
+    public static synchronized int getMostRecentDatasetId() {
+        return id;
     }
 }

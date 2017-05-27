@@ -21,18 +21,24 @@ package org.apache.asterix.metadata.utils;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.asterix.common.config.DatasetConfig;
 import org.apache.asterix.common.config.OptimizationConfUtil;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.transactions.JobId;
 import org.apache.asterix.external.indexing.ExternalFile;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
+import org.apache.asterix.metadata.entities.InternalDatasetDetails;
 import org.apache.asterix.om.types.ARecordType;
+import org.apache.asterix.runtime.job.listener.JobEventListenerFactory;
+import org.apache.asterix.transaction.management.service.transaction.JobIdFactory;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConfig;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
+import org.apache.hyracks.api.job.IJobletEventListenerFactory;
 import org.apache.hyracks.api.job.JobSpecification;
 
 public class IndexUtil {
@@ -51,6 +57,13 @@ public class IndexUtil {
             return DatasetUtil.createFilterFields(dataset);
         }
         return secondaryFilterFields(dataset, index, filterTypeTraits);
+    }
+
+    public static Index getPrimaryIndex(Dataset dataset) {
+        InternalDatasetDetails id = (InternalDatasetDetails) dataset.getDatasetDetails();
+        return new Index(dataset.getDataverseName(), dataset.getDatasetName(), dataset.getDatasetName(),
+                DatasetConfig.IndexType.BTREE, id.getPartitioningKey(), id.getKeySourceIndicator(),
+                id.getPrimaryKeyType(), false, true, dataset.getPendingOp());
     }
 
     public static int[] getBtreeFieldsIfFiltered(Dataset dataset, Index index) throws AlgebricksException {
@@ -143,5 +156,23 @@ public class IndexUtil {
                 SecondaryIndexOperationsHelper.createIndexOperationsHelper(dataset, index, metadataProvider,
                         physicalOptimizationConfig, recType, metaType, enforcedType, enforcedMetaType);
         return secondaryIndexHelper.buildCompactJobSpec();
+    }
+
+    /**
+     * Binds a job event listener to the job specification.
+     *
+     * @param spec,
+     *            the job specification.
+     * @param metadataProvider,
+     *            the metadata provider.
+     * @return the AsterixDB job id for transaction management.
+     */
+    public static JobId bindJobEventListener(JobSpecification spec, MetadataProvider metadataProvider) {
+        JobId jobId = JobIdFactory.generateJobId();
+        metadataProvider.setJobId(jobId);
+        boolean isWriteTransaction = metadataProvider.isWriteTransaction();
+        IJobletEventListenerFactory jobEventListenerFactory = new JobEventListenerFactory(jobId, isWriteTransaction);
+        spec.setJobletEventListenerFactory(jobEventListenerFactory);
+        return jobId;
     }
 }

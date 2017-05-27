@@ -88,6 +88,7 @@ public class ErrorCode {
     public static final int CANNOT_DESTROY_ACTIVE_INDEX = 52;
     public static final int CANNOT_CLEAR_INACTIVE_INDEX = 53;
     public static final int CANNOT_ALLOCATE_MEMORY_FOR_INACTIVE_INDEX = 54;
+    public static final int RESOURCE_DOES_NOT_EXIST = 55;
 
     // Compilation error codes.
     public static final int RULECOLLECTION_NOT_INSTANCE_OF_LIST = 10000;

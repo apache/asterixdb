@@ -82,7 +82,6 @@ import org.apache.asterix.om.utils.NonTaggedFormatUtil;
 import org.apache.asterix.runtime.base.AsterixTupleFilterFactory;
 import org.apache.asterix.runtime.formats.FormatUtils;
 import org.apache.asterix.runtime.job.listener.JobEventListenerFactory;
-import org.apache.asterix.runtime.operators.LSMPrimaryUpsertOperatorDescriptor;
 import org.apache.asterix.runtime.operators.LSMSecondaryUpsertOperatorDescriptor;
 import org.apache.asterix.runtime.utils.ClusterStateManager;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
@@ -302,8 +301,20 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         return MetadataManagerUtil.findNodeDomain(mdTxnCtx, nodeGroupName);
     }
 
+    public List<String> findNodes(String nodeGroupName) throws AlgebricksException {
+        return MetadataManagerUtil.findNodes(mdTxnCtx, nodeGroupName);
+    }
+
     public IAType findType(String dataverse, String typeName) throws AlgebricksException {
         return MetadataManagerUtil.findType(mdTxnCtx, dataverse, typeName);
+    }
+
+    public IAType findType(Dataset dataset) throws AlgebricksException {
+        return findType(dataset.getItemTypeDataverseName(), dataset.getItemTypeName());
+    }
+
+    public IAType findMetaType(Dataset dataset) throws AlgebricksException {
+        return findType(dataset.getMetaItemTypeDataverseName(), dataset.getMetaItemTypeName());
     }
 
     public Feed findFeed(String dataverse, String feedName) throws AlgebricksException {
@@ -379,17 +390,6 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             throw new AlgebricksException(e);
         }
         return new Pair<>(dataScanner, constraint);
-    }
-
-    public IDataFormat getDataFormat(String dataverseName) throws CompilationException {
-        Dataverse dataverse = MetadataManager.INSTANCE.getDataverse(mdTxnCtx, dataverseName);
-        IDataFormat format;
-        try {
-            format = (IDataFormat) Class.forName(dataverse.getDataFormat()).newInstance();
-        } catch (Exception e) {
-            throw new CompilationException(e);
-        }
-        return format;
     }
 
     public Dataverse findDataverse(String dataverseName) throws CompilationException {
@@ -760,10 +760,9 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         return SplitsAndConstraintsUtil.getDataverseSplitProviderAndConstraints(dataverse);
     }
 
-    public FileSplit[] splitsForDataset(MetadataTransactionContext mdTxnCtx, String dataverseName, String datasetName,
-            String targetIdxName, boolean temp) throws AlgebricksException {
-        return SplitsAndConstraintsUtil.getDatasetSplits(findDataset(dataverseName, datasetName), mdTxnCtx,
-                targetIdxName, temp);
+    public FileSplit[] splitsForIndex(MetadataTransactionContext mdTxnCtx, Dataset dataset, String indexName)
+            throws AlgebricksException {
+        return SplitsAndConstraintsUtil.getIndexSplits(dataset, indexName, mdTxnCtx);
     }
 
     public DatasourceAdapter getAdapter(MetadataTransactionContext mdTxnCtx, String dataverseName, String adapterName)
@@ -860,79 +859,10 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
                 fieldPermutation[i++] = idx;
             }
         }
-        try {
-            Index primaryIndex = MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataset.getDataverseName(),
-                    dataset.getDatasetName(), dataset.getDatasetName());
-            String itemTypeName = dataset.getItemTypeName();
-            String itemTypeDataverseName = dataset.getItemTypeDataverseName();
-            ARecordType itemType = (ARecordType) MetadataManager.INSTANCE
-                    .getDatatype(mdTxnCtx, itemTypeDataverseName, itemTypeName).getDatatype();
-            ARecordType metaItemType = DatasetUtil.getMetaType(this, dataset);
-            Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint =
-                    getSplitProviderAndConstraints(dataset);
-            // prepare callback
-            JobId jobId = ((JobEventListenerFactory) spec.getJobletEventListenerFactory()).getJobId();
-            int[] primaryKeyFields = new int[numKeys];
-            for (i = 0; i < numKeys; i++) {
-                primaryKeyFields[i] = i;
-            }
-
-            boolean hasSecondaries = MetadataManager.INSTANCE
-                    .getDatasetIndexes(mdTxnCtx, dataset.getDataverseName(), dataset.getDatasetName()).size() > 1;
-
-            IModificationOperationCallbackFactory modificationCallbackFactory = dataset.getModificationCallbackFactory(
-                    storaegComponentProvider, primaryIndex, jobId, IndexOperation.UPSERT, primaryKeyFields);
-            ISearchOperationCallbackFactory searchCallbackFactory = dataset.getSearchCallbackFactory(
-                    storaegComponentProvider, primaryIndex, jobId, IndexOperation.UPSERT, primaryKeyFields);
-            IIndexDataflowHelperFactory idfh =
-                    new IndexDataflowHelperFactory(storaegComponentProvider.getStorageManager(), splitsAndConstraint.first);
-            LSMPrimaryUpsertOperatorDescriptor op;
-            ITypeTraits[] outputTypeTraits =
-                    new ITypeTraits[recordDesc.getFieldCount() + (dataset.hasMetaPart() ? 2 : 1) + numFilterFields];
-            ISerializerDeserializer<?>[] outputSerDes = new ISerializerDeserializer[recordDesc.getFieldCount()
-                    + (dataset.hasMetaPart() ? 2 : 1) + numFilterFields];
-
-            // add the previous record first
-            int f = 0;
-            outputSerDes[f] = FormatUtils.getDefaultFormat().getSerdeProvider().getSerializerDeserializer(itemType);
-            f++;
-            // add the previous meta second
-            if (dataset.hasMetaPart()) {
-                outputSerDes[f] =
-                        FormatUtils.getDefaultFormat().getSerdeProvider().getSerializerDeserializer(metaItemType);
-                outputTypeTraits[f] = FormatUtils.getDefaultFormat().getTypeTraitProvider().getTypeTrait(metaItemType);
-                f++;
-            }
-            // add the previous filter third
-            int fieldIdx = -1;
-            if (numFilterFields > 0) {
-                String filterField = DatasetUtil.getFilterField(dataset).get(0);
-                for (i = 0; i < itemType.getFieldNames().length; i++) {
-                    if (itemType.getFieldNames()[i].equals(filterField)) {
-                        break;
-                    }
-                }
-                fieldIdx = i;
-                outputTypeTraits[f] = FormatUtils.getDefaultFormat().getTypeTraitProvider()
-                        .getTypeTrait(itemType.getFieldTypes()[fieldIdx]);
-                outputSerDes[f] = FormatUtils.getDefaultFormat().getSerdeProvider()
-                        .getSerializerDeserializer(itemType.getFieldTypes()[fieldIdx]);
-                f++;
-            }
-            for (int j = 0; j < recordDesc.getFieldCount(); j++) {
-                outputTypeTraits[j + f] = recordDesc.getTypeTraits()[j];
-                outputSerDes[j + f] = recordDesc.getFields()[j];
-            }
-            RecordDescriptor outputRecordDesc = new RecordDescriptor(outputSerDes, outputTypeTraits);
-            op = new LSMPrimaryUpsertOperatorDescriptor(spec, outputRecordDesc, fieldPermutation, idfh,
-                    context.getMissingWriterFactory(), modificationCallbackFactory, searchCallbackFactory,
-                    dataset.getFrameOpCallbackFactory(), numKeys, itemType, fieldIdx, hasSecondaries);
-            return new Pair<>(op, splitsAndConstraint.second);
-
-        } catch (MetadataException me) {
-            throw new AlgebricksException(me);
-        }
+        return DatasetUtil.createPrimaryIndexUpsertOp(spec, this, dataset, recordDesc, fieldPermutation,
+                context.getMissingWriterFactory());
     }
+
 
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> buildExternalDatasetDataScannerRuntime(
             JobSpecification jobSpec, IAType itemType, IAdapterFactory adapterFactory, IDataFormat format)
@@ -1635,15 +1565,12 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
 
     public Pair<IFileSplitProvider, AlgebricksPartitionConstraint> getSplitProviderAndConstraints(Dataset ds)
             throws AlgebricksException {
-        FileSplit[] splits = splitsForDataset(mdTxnCtx, ds.getDataverseName(), ds.getDatasetName(), ds.getDatasetName(),
-                ds.getDatasetDetails().isTemp());
-        return StoragePathUtil.splitProviderAndPartitionConstraints(splits);
+        return getSplitProviderAndConstraints(ds, ds.getDatasetName());
     }
 
     public Pair<IFileSplitProvider, AlgebricksPartitionConstraint> getSplitProviderAndConstraints(Dataset ds,
             String indexName) throws AlgebricksException {
-        FileSplit[] splits = splitsForDataset(mdTxnCtx, ds.getDataverseName(), ds.getDatasetName(), indexName,
-                ds.getDatasetDetails().isTemp());
+        FileSplit[] splits = splitsForIndex(mdTxnCtx, ds, indexName);
         return StoragePathUtil.splitProviderAndPartitionConstraints(splits);
     }
 

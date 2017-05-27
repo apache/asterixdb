@@ -335,10 +335,6 @@ public class MetadataBootstrap {
         String resourceName = metadataPartitionPath + File.separator + index.getFileNameRelativePath();
         FileReference file = ioManager.getFileReference(metadataDeviceId, resourceName);
         index.setFile(file);
-        // this should not be done this way. dataset lifecycle manager shouldn't return virtual buffer caches for
-        // a dataset that was not yet created
-        List<IVirtualBufferCache> virtualBufferCaches = appContext.getDatasetLifecycleManager()
-                .getVirtualBufferCaches(index.getDatasetId().getId(), metadataPartition.getIODeviceNum());
         ITypeTraits[] typeTraits = index.getTypeTraits();
         IBinaryComparatorFactory[] cmpFactories = index.getKeyBinaryComparatorFactory();
         int[] bloomFilterKeyFields = index.getBloomFilterKeyFields();

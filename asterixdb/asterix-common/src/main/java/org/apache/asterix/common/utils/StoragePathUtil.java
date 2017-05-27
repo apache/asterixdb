@@ -37,7 +37,6 @@ public class StoragePathUtil {
     public static final String PARTITION_DIR_PREFIX = "partition_";
     public static final String TEMP_DATASETS_STORAGE_FOLDER = "temp";
     public static final String DATASET_INDEX_NAME_SEPARATOR = "_idx_";
-    public static final String ADAPTER_INSTANCE_PREFIX = "adapter_";
 
     private StoragePathUtil() {
     }
@@ -61,16 +60,18 @@ public class StoragePathUtil {
         return storageDirName + File.separator + StoragePathUtil.PARTITION_DIR_PREFIX + partitonId;
     }
 
-    public static String prepareDataverseIndexName(String dataverseName, String datasetName, String idxName) {
-        return prepareDataverseIndexName(dataverseName, prepareFullIndexName(datasetName, idxName));
+    public static String prepareDataverseIndexName(String dataverseName, String datasetName, String idxName,
+            long rebalanceCount) {
+        return prepareDataverseIndexName(dataverseName, prepareFullIndexName(datasetName, idxName, rebalanceCount));
     }
 
     public static String prepareDataverseIndexName(String dataverseName, String fullIndexName) {
         return dataverseName + File.separator + fullIndexName;
     }
 
-    private static String prepareFullIndexName(String datasetName, String idxName) {
-        return datasetName + DATASET_INDEX_NAME_SEPARATOR + idxName;
+    private static String prepareFullIndexName(String datasetName, String idxName, long rebalanceCount) {
+        return (rebalanceCount == 0 ? "" : rebalanceCount + File.separator) + datasetName + DATASET_INDEX_NAME_SEPARATOR
+                + idxName;
     }
 
     public static int getPartitionNumFromName(String name) {

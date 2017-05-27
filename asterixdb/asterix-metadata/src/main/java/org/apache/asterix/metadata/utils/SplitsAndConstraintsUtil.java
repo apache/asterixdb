@@ -56,24 +56,23 @@ public class SplitsAndConstraintsUtil {
         return splits.toArray(new FileSplit[] {});
     }
 
-    public static FileSplit[] getDatasetSplits(Dataset dataset, MetadataTransactionContext mdTxnCtx,
-            String targetIdxName, boolean temp) throws AlgebricksException {
+    public static FileSplit[] getIndexSplits(Dataset dataset, String indexName, MetadataTransactionContext mdTxnCtx)
+            throws AlgebricksException {
         try {
             List<String> nodeGroup =
                     MetadataManager.INSTANCE.getNodegroup(mdTxnCtx, dataset.getNodeGroupName()).getNodeNames();
             if (nodeGroup == null) {
                 throw new AlgebricksException("Couldn't find node group " + dataset.getNodeGroupName());
             }
-            return getDatasetSplits(dataset, nodeGroup, targetIdxName, temp);
+            return getIndexSplits(dataset, indexName, nodeGroup);
         } catch (MetadataException me) {
             throw new AlgebricksException(me);
         }
     }
 
-    public static FileSplit[] getDatasetSplits(Dataset dataset, List<String> nodes, String targetIdxName,
-            boolean temp) {
+    public static FileSplit[] getIndexSplits(Dataset dataset, String indexName, List<String> nodes) {
         File relPathFile = new File(StoragePathUtil.prepareDataverseIndexName(dataset.getDataverseName(),
-                dataset.getDatasetName(), targetIdxName));
+                dataset.getDatasetName(), indexName, dataset.getRebalanceCount()));
         String storageDirName = ClusterProperties.INSTANCE.getStorageDirectoryName();
         List<FileSplit> splits = new ArrayList<>();
         for (String nd : nodes) {
@@ -88,7 +87,8 @@ public class SplitsAndConstraintsUtil {
                 // format: 'storage dir name'/partition_#/dataverse/dataset_idx_index
                 File f = new File(
                         StoragePathUtil.prepareStoragePartitionPath(storageDirName, nodePartitions[k].getPartitionId())
-                                + (temp ? (File.separator + StoragePathUtil.TEMP_DATASETS_STORAGE_FOLDER) : "")
+                                + (dataset.isTemp() ? (File.separator + StoragePathUtil.TEMP_DATASETS_STORAGE_FOLDER)
+                                        : "")
                                 + File.separator + relPathFile);
                 splits.add(StoragePathUtil.getFileSplitForClusterPartition(nodePartitions[k], f.getPath()));
             }

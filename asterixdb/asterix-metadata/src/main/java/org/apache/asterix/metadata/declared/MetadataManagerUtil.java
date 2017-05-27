@@ -124,6 +124,11 @@ public class MetadataManagerUtil {
         return new DefaultNodeGroupDomain(partitions);
     }
 
+    public static List<String> findNodes(MetadataTransactionContext mdTxnCtx, String nodeGroupName)
+            throws AlgebricksException {
+        return MetadataManager.INSTANCE.getNodegroup(mdTxnCtx, nodeGroupName).getNodeNames();
+    }
+
     public static Feed findFeed(MetadataTransactionContext mdTxnCtx, String dataverse, String feedName)
             throws AlgebricksException {
         try {

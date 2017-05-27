@@ -88,15 +88,8 @@ public class CommitPOperator extends AbstractPhysicalOperator {
         int[] primaryKeyFields = JobGenHelper.variablesToFieldIndexes(primaryKeyLogicalVars, inputSchemas[0]);
 
         //get dataset splits
-        FileSplit[] splitsForDataset = metadataProvider.splitsForDataset(metadataProvider.getMetadataTxnContext(),
-                dataset.getDataverseName(), dataset.getDatasetName(), dataset.getDatasetName(),
-                metadataProvider.isTemporaryDatasetWriteJob());
-        int[] datasetPartitions = new int[splitsForDataset.length];
-        for (int i = 0; i < splitsForDataset.length; i++) {
-            datasetPartitions[i] = i;
-        }
-        IPushRuntimeFactory runtime = dataset.getCommitRuntimeFactory(jobId, primaryKeyFields, metadataProvider,
-                datasetPartitions, isSink);
+        IPushRuntimeFactory runtime = dataset.getCommitRuntimeFactory(metadataProvider, jobId, primaryKeyFields,
+                isSink);
         builder.contributeMicroOperator(op, runtime, recDesc);
         ILogicalOperator src = op.getInputs().get(0).getValue();
         builder.contributeGraphEdge(src, 0, op, 0);

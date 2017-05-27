@@ -46,6 +46,7 @@ import org.apache.asterix.api.http.server.QueryResultApiServlet;
 import org.apache.asterix.api.http.server.QueryServiceServlet;
 import org.apache.asterix.api.http.server.QueryStatusApiServlet;
 import org.apache.asterix.api.http.server.QueryWebInterfaceServlet;
+import org.apache.asterix.api.http.server.RebalanceApiServlet;
 import org.apache.asterix.api.http.server.ShutdownApiServlet;
 import org.apache.asterix.api.http.server.UpdateApiServlet;
 import org.apache.asterix.api.http.server.VersionApiServlet;
@@ -226,6 +227,7 @@ public class CCApplication extends BaseCCApplication {
         addServlet(jsonAPIServer, Servlets.SHUTDOWN);
         addServlet(jsonAPIServer, Servlets.VERSION);
         addServlet(jsonAPIServer, Servlets.CLUSTER_STATE);
+        addServlet(jsonAPIServer, Servlets.REBALANCE);
         addServlet(jsonAPIServer, Servlets.CLUSTER_STATE_NODE_DETAIL); // must not precede add of CLUSTER_STATE
         addServlet(jsonAPIServer, Servlets.CLUSTER_STATE_CC_DETAIL); // must not precede add of CLUSTER_STATE
         addServlet(jsonAPIServer, Servlets.DIAGNOSTICS);
@@ -283,6 +285,8 @@ public class CCApplication extends BaseCCApplication {
                         componentProvider);
             case Servlets.CONNECTOR:
                 return new ConnectorApiServlet(ctx, paths, appCtx);
+            case Servlets.REBALANCE:
+                return new RebalanceApiServlet(ctx, paths, appCtx);
             case Servlets.SHUTDOWN:
                 return new ShutdownApiServlet(ctx, paths);
             case Servlets.VERSION:

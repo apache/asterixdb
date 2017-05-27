@@ -406,7 +406,7 @@ public class TestNodeController {
                     IndexType.BTREE, keyFieldNames, keyFieldSourceIndicators, keyFieldTypes, false, true,
                     MetadataUtil.PENDING_NO_OP);
             List<String> nodes = Collections.singletonList(ExecutionTestUtil.integrationUtil.ncs[0].getId());
-            FileSplit[] splits = SplitsAndConstraintsUtil.getDatasetSplits(dataset, nodes, index.getIndexName(), false);
+            FileSplit[] splits = SplitsAndConstraintsUtil.getIndexSplits(dataset, index.getIndexName(), nodes);
             fileSplitProvider = new ConstantFileSplitProvider(Arrays.copyOfRange(splits, 0, 1));
         }
 
