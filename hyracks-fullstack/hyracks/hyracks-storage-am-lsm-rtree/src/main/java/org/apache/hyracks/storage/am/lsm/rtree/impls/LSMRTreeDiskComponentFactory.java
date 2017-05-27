@@ -22,7 +22,7 @@ package org.apache.hyracks.storage.am.lsm.rtree.impls;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.bloomfilter.impls.BloomFilterFactory;
 import org.apache.hyracks.storage.am.btree.impls.BTree;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilterFactory;
+import org.apache.hyracks.storage.am.lsm.common.api.IComponentFilterHelper;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponentFactory;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
 import org.apache.hyracks.storage.am.lsm.common.impls.TreeIndexFactory;
@@ -32,14 +32,14 @@ public class LSMRTreeDiskComponentFactory implements ILSMDiskComponentFactory {
     private final TreeIndexFactory<RTree> rtreeFactory;
     private final TreeIndexFactory<BTree> btreeFactory;
     private final BloomFilterFactory bloomFilterFactory;
-    private final ILSMComponentFilterFactory filterFactory;
+    private final IComponentFilterHelper filterHelper;
 
     public LSMRTreeDiskComponentFactory(TreeIndexFactory<RTree> rtreeFactory, TreeIndexFactory<BTree> btreeFactory,
-            BloomFilterFactory bloomFilterFactory, ILSMComponentFilterFactory filterFactory) {
+            BloomFilterFactory bloomFilterFactory, IComponentFilterHelper filterHelper) {
         this.rtreeFactory = rtreeFactory;
         this.btreeFactory = btreeFactory;
         this.bloomFilterFactory = bloomFilterFactory;
-        this.filterFactory = filterFactory;
+        this.filterHelper = filterHelper;
     }
 
     @Override
@@ -47,6 +47,6 @@ public class LSMRTreeDiskComponentFactory implements ILSMDiskComponentFactory {
         return new LSMRTreeDiskComponent(rtreeFactory.createIndexInstance(cfr.getInsertIndexFileReference()),
                 btreeFactory.createIndexInstance(cfr.getDeleteIndexFileReference()),
                 bloomFilterFactory.createBloomFiltertInstance(cfr.getBloomFilterFileReference()),
-                filterFactory == null ? null : filterFactory.createFilter());
+                filterHelper == null ? null : filterHelper.createFilter());
     }
 }

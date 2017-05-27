@@ -20,7 +20,7 @@ package org.apache.hyracks.storage.am.lsm.common.api;
 
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 
-public interface ILSMComponentFilterFactory {
+public interface IComponentFilterHelper {
     /**
      * @return an instance of ILSMComponentFilter
      */

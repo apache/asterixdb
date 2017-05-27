@@ -47,7 +47,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import org.apache.hyracks.storage.am.lsm.common.frames.LSMComponentFilterFrameFactory;
 import org.apache.hyracks.storage.am.lsm.common.impls.BTreeFactory;
-import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentFilterFactory;
+import org.apache.hyracks.storage.am.lsm.common.impls.ComponentFilterHelper;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentFilterManager;
 import org.apache.hyracks.storage.am.lsm.common.impls.TreeIndexFactory;
 import org.apache.hyracks.storage.am.lsm.rtree.impls.ExternalRTree;
@@ -121,24 +121,23 @@ public class LSMRTreeUtils {
         BloomFilterFactory bloomFilterFactory =
                 new BloomFilterFactory(diskBufferCache, diskFileMapProvider, bloomFilterKeyFields);
 
-        LSMComponentFilterFactory filterFactory = null;
+        ComponentFilterHelper filterHelper = null;
         LSMComponentFilterFrameFactory filterFrameFactory = null;
         LSMComponentFilterManager filterManager = null;
         if (filterCmpFactories != null) {
             TypeAwareTupleWriterFactory filterTupleWriterFactory = new TypeAwareTupleWriterFactory(filterTypeTraits);
-            filterFactory = new LSMComponentFilterFactory(filterTupleWriterFactory, filterCmpFactories);
+            filterHelper = new ComponentFilterHelper(filterTupleWriterFactory, filterCmpFactories);
             filterFrameFactory = new LSMComponentFilterFrameFactory(filterTupleWriterFactory);
             filterManager = new LSMComponentFilterManager(filterFrameFactory);
         }
         ILSMIndexFileManager fileNameManager =
                 new LSMRTreeFileManager(ioManager, diskFileMapProvider, file, diskRTreeFactory, diskBTreeFactory);
-        LSMRTree lsmTree = new LSMRTree(ioManager, virtualBufferCaches, rtreeInteriorFrameFactory,
-                rtreeLeafFrameFactory, btreeInteriorFrameFactory, btreeLeafFrameFactory, fileNameManager,
-                diskRTreeFactory, diskBTreeFactory, bloomFilterFactory, filterFactory, filterFrameFactory,
-                filterManager, bloomFilterFalsePositiveRate, diskFileMapProvider, typeTraits.length, rtreeCmpFactories,
-                btreeCmpFactories, linearizeCmpFactory, comparatorFields, linearizerArray, mergePolicy, opTracker,
-                ioScheduler, ioOpCallback, rtreeFields, buddyBTreeFields, filterFields, durable, isPointMBR);
-        return lsmTree;
+        return new LSMRTree(ioManager, virtualBufferCaches, rtreeInteriorFrameFactory, rtreeLeafFrameFactory,
+                btreeInteriorFrameFactory, btreeLeafFrameFactory, fileNameManager, diskRTreeFactory, diskBTreeFactory,
+                bloomFilterFactory, filterHelper, filterFrameFactory, filterManager, bloomFilterFalsePositiveRate,
+                diskFileMapProvider, typeTraits.length, rtreeCmpFactories, btreeCmpFactories, linearizeCmpFactory,
+                comparatorFields, linearizerArray, mergePolicy, opTracker, ioScheduler, ioOpCallback, rtreeFields,
+                buddyBTreeFields, filterFields, durable, isPointMBR);
     }
 
     public static LSMRTreeWithAntiMatterTuples createLSMTreeWithAntiMatterTuples(IIOManager ioManager,
@@ -204,24 +203,23 @@ public class LSMRTreeUtils {
             j++;
         }
 
-        LSMComponentFilterFactory filterFactory = null;
+        ComponentFilterHelper filterHelper = null;
         LSMComponentFilterFrameFactory filterFrameFactory = null;
         LSMComponentFilterManager filterManager = null;
         if (filterCmpFactories != null) {
             TypeAwareTupleWriterFactory filterTupleWriterFactory = new TypeAwareTupleWriterFactory(filterTypeTraits);
-            filterFactory = new LSMComponentFilterFactory(filterTupleWriterFactory, filterCmpFactories);
+            filterHelper = new ComponentFilterHelper(filterTupleWriterFactory, filterCmpFactories);
             filterFrameFactory = new LSMComponentFilterFrameFactory(filterTupleWriterFactory);
             filterManager = new LSMComponentFilterManager(filterFrameFactory);
         }
         ILSMIndexFileManager fileNameManager =
                 new LSMRTreeWithAntiMatterTuplesFileManager(ioManager, diskFileMapProvider, file, diskRTreeFactory);
-        LSMRTreeWithAntiMatterTuples lsmTree = new LSMRTreeWithAntiMatterTuples(ioManager, virtualBufferCaches,
-                rtreeInteriorFrameFactory, rtreeLeafFrameFactory, btreeInteriorFrameFactory, btreeLeafFrameFactory,
-                fileNameManager, diskRTreeFactory, bulkLoadRTreeFactory, filterFactory, filterFrameFactory,
-                filterManager, diskFileMapProvider, typeTraits.length, rtreeCmpFactories,
-                btreeComparatorFactories, linearizerCmpFactory, comparatorFields, linearizerArray, mergePolicy,
-                opTracker, ioScheduler, ioOpCallback, rtreeFields, filterFields, durable, isPointMBR);
-        return lsmTree;
+        return new LSMRTreeWithAntiMatterTuples(ioManager, virtualBufferCaches, rtreeInteriorFrameFactory,
+                rtreeLeafFrameFactory, btreeInteriorFrameFactory, btreeLeafFrameFactory, fileNameManager,
+                diskRTreeFactory, bulkLoadRTreeFactory, filterHelper, filterFrameFactory, filterManager,
+                diskFileMapProvider, typeTraits.length, rtreeCmpFactories, btreeComparatorFactories,
+                linearizerCmpFactory, comparatorFields, linearizerArray, mergePolicy, opTracker, ioScheduler,
+                ioOpCallback, rtreeFields, filterFields, durable, isPointMBR);
     }
 
     public static ExternalRTree createExternalRTree(IIOManager ioManager, FileReference file,

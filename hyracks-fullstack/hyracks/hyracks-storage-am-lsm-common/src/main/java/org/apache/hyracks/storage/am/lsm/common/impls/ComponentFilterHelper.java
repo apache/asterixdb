@@ -20,15 +20,15 @@ package org.apache.hyracks.storage.am.lsm.common.impls;
 
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleWriterFactory;
+import org.apache.hyracks.storage.am.lsm.common.api.IComponentFilterHelper;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilter;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilterFactory;
 
-public class LSMComponentFilterFactory implements ILSMComponentFilterFactory {
+public class ComponentFilterHelper implements IComponentFilterHelper {
 
     private final ITreeIndexTupleWriterFactory tupleWriterFactory;
     private final IBinaryComparatorFactory[] filterCmpFactories;
 
-    public LSMComponentFilterFactory(ITreeIndexTupleWriterFactory tupleWriterFactory,
+    public ComponentFilterHelper(ITreeIndexTupleWriterFactory tupleWriterFactory,
             IBinaryComparatorFactory[] filterCmpFactories) {
         this.tupleWriterFactory = tupleWriterFactory;
         this.filterCmpFactories = filterCmpFactories;

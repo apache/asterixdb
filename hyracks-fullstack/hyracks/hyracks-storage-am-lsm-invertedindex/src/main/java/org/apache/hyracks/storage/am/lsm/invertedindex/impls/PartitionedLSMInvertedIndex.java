@@ -26,7 +26,7 @@ import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.storage.am.bloomfilter.impls.BloomFilterFactory;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilterFactory;
+import org.apache.hyracks.storage.am.lsm.common.api.IComponentFilterHelper;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilterFrameFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
@@ -47,7 +47,7 @@ public class PartitionedLSMInvertedIndex extends LSMInvertedIndex {
 
     public PartitionedLSMInvertedIndex(IIOManager ioManager, List<IVirtualBufferCache> virtualBufferCaches,
             OnDiskInvertedIndexFactory diskInvIndexFactory, BTreeFactory deletedKeysBTreeFactory,
-            BloomFilterFactory bloomFilterFactory, ILSMComponentFilterFactory filterFactory,
+            BloomFilterFactory bloomFilterFactory, IComponentFilterHelper filterHelper,
             ILSMComponentFilterFrameFactory filterFrameFactory, LSMComponentFilterManager filterManager,
             double bloomFilterFalsePositiveRate, ILSMIndexFileManager fileManager, IFileMapProvider diskFileMapProvider,
             ITypeTraits[] invListTypeTraits, IBinaryComparatorFactory[] invListCmpFactories,
@@ -57,7 +57,7 @@ public class PartitionedLSMInvertedIndex extends LSMInvertedIndex {
             int[] filterFields, int[] filterFieldsForNonBulkLoadOps, int[] invertedIndexFieldsForNonBulkLoadOps,
             boolean durable) throws HyracksDataException {
         super(ioManager, virtualBufferCaches, diskInvIndexFactory, deletedKeysBTreeFactory, bloomFilterFactory,
-                filterFactory, filterFrameFactory, filterManager, bloomFilterFalsePositiveRate, fileManager,
+                filterHelper, filterFrameFactory, filterManager, bloomFilterFalsePositiveRate, fileManager,
                 diskFileMapProvider, invListTypeTraits, invListCmpFactories, tokenTypeTraits, tokenCmpFactories,
                 tokenizerFactory, mergePolicy, opTracker, ioScheduler, ioOpCallback, invertedIndexFields, filterFields,
                 filterFieldsForNonBulkLoadOps, invertedIndexFieldsForNonBulkLoadOps, durable);

@@ -49,7 +49,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import org.apache.hyracks.storage.am.lsm.common.frames.LSMComponentFilterFrameFactory;
 import org.apache.hyracks.storage.am.lsm.common.impls.BTreeFactory;
-import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentFilterFactory;
+import org.apache.hyracks.storage.am.lsm.common.impls.ComponentFilterHelper;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentFilterManager;
 import org.apache.hyracks.storage.am.lsm.common.impls.TreeIndexFactory;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
@@ -88,12 +88,12 @@ public class LSMBTreeUtil {
         BloomFilterFactory bloomFilterFactory = needKeyDupCheck
                 ? new BloomFilterFactory(diskBufferCache, diskFileMapProvider, bloomFilterKeyFields) : null;
 
-        LSMComponentFilterFactory filterFactory = null;
+        ComponentFilterHelper filterHelper = null;
         LSMComponentFilterFrameFactory filterFrameFactory = null;
         LSMComponentFilterManager filterManager = null;
         if (filterCmpFactories != null) {
             TypeAwareTupleWriterFactory filterTupleWriterFactory = new TypeAwareTupleWriterFactory(filterTypeTraits);
-            filterFactory = new LSMComponentFilterFactory(filterTupleWriterFactory, filterCmpFactories);
+            filterHelper = new ComponentFilterHelper(filterTupleWriterFactory, filterCmpFactories);
             filterFrameFactory = new LSMComponentFilterFrameFactory(filterTupleWriterFactory);
             filterManager = new LSMComponentFilterManager(filterFrameFactory);
         }
@@ -102,12 +102,11 @@ public class LSMBTreeUtil {
         ILSMIndexFileManager fileNameManager =
                 new LSMBTreeFileManager(ioManager, diskFileMapProvider, file, diskBTreeFactory, needKeyDupCheck);
 
-        LSMBTree lsmTree = new LSMBTree(ioManager, virtualBufferCaches, interiorFrameFactory, insertLeafFrameFactory,
+        return new LSMBTree(ioManager, virtualBufferCaches, interiorFrameFactory, insertLeafFrameFactory,
                 deleteLeafFrameFactory, fileNameManager, diskBTreeFactory, bulkLoadBTreeFactory, bloomFilterFactory,
-                filterFactory, filterFrameFactory, filterManager, bloomFilterFalsePositiveRate, diskFileMapProvider,
+                filterHelper, filterFrameFactory, filterManager, bloomFilterFalsePositiveRate, diskFileMapProvider,
                 typeTraits.length, cmpFactories, mergePolicy, opTracker, ioScheduler, ioOpCallback, needKeyDupCheck,
                 btreeFields, filterFields, durable);
-        return lsmTree;
     }
 
     public static ExternalBTree createExternalBTree(IIOManager ioManager, FileReference file,
