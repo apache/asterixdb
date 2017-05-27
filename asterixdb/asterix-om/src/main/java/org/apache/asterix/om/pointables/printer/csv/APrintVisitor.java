@@ -38,8 +38,8 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
  */
 public class APrintVisitor extends AbstractPrintVisitor {
     @Override
-    protected AListPrinter createListPrinter(AListVisitablePointable accessor) throws AsterixException {
-        throw new AsterixException("'List' type unsupported for CSV output");
+    protected AListPrinter createListPrinter(AListVisitablePointable accessor) throws HyracksDataException {
+        throw new HyracksDataException("'List' type unsupported for CSV output");
     }
 
     @Override

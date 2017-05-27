@@ -23,7 +23,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.pointables.AFlatValuePointable;
 import org.apache.asterix.om.pointables.AListVisitablePointable;
 import org.apache.asterix.om.pointables.ARecordVisitablePointable;
@@ -37,6 +36,7 @@ import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.hyracks.algebricks.common.utils.Triple;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 
 /**
@@ -58,46 +58,38 @@ public class ACastVisitor implements IVisitablePointableVisitor<Void, Triple<IVi
 
     @Override
     public Void visit(AListVisitablePointable accessor, Triple<IVisitablePointable, IAType, Boolean> arg)
-            throws AsterixException {
+            throws HyracksDataException {
         AListCaster caster = laccessorToCaster.get(accessor);
         if (caster == null) {
             caster = new AListCaster();
             laccessorToCaster.put(accessor, caster);
         }
-        try {
-            if (arg.second.getTypeTag().equals(ATypeTag.ANY)) {
-                arg.second = DefaultOpenFieldType.NESTED_OPEN_AUNORDERED_LIST_TYPE;
-            }
-            caster.castList(accessor, arg.first, (AbstractCollectionType) arg.second, this);
-        } catch (Exception e) {
-            throw new AsterixException(e);
+        if (arg.second.getTypeTag().equals(ATypeTag.ANY)) {
+            arg.second = DefaultOpenFieldType.NESTED_OPEN_AUNORDERED_LIST_TYPE;
         }
+        caster.castList(accessor, arg.first, (AbstractCollectionType) arg.second, this);
         return null;
     }
 
     @Override
     public Void visit(ARecordVisitablePointable accessor, Triple<IVisitablePointable, IAType, Boolean> arg)
-            throws AsterixException {
+            throws HyracksDataException {
         ARecordCaster caster = raccessorToCaster.get(accessor);
         if (caster == null) {
             caster = new ARecordCaster();
             raccessorToCaster.put(accessor, caster);
         }
-        try {
-            if (arg.second.getTypeTag().equals(ATypeTag.ANY)) {
-                arg.second = DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE;
-            }
-            ARecordType resultType = (ARecordType) arg.second;
-            caster.castRecord(accessor, arg.first, resultType, this);
-        } catch (Exception e) {
-            throw new AsterixException(e);
+        if (arg.second.getTypeTag().equals(ATypeTag.ANY)) {
+            arg.second = DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE;
         }
+        ARecordType resultType = (ARecordType) arg.second;
+        caster.castRecord(accessor, arg.first, resultType, this);
         return null;
     }
 
     @Override
     public Void visit(AFlatValuePointable accessor, Triple<IVisitablePointable, IAType, Boolean> arg)
-            throws AsterixException {
+            throws HyracksDataException {
         if (arg.second == null) {
             // for open type case
             arg.first.set(accessor);
@@ -121,7 +113,7 @@ public class ACastVisitor implements IVisitablePointableVisitor<Void, Triple<IVi
                         accessor.getLength(), reqTypeTag, castBuffer.getDataOutput());
                 arg.first.set(castBuffer);
             } catch (IOException e1) {
-                throw new AsterixException(
+                throw new HyracksDataException(
                         "Type mismatch: cannot cast the " + inputTypeTag + " type to the " + reqTypeTag + " type.");
             }
 

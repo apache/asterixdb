@@ -19,12 +19,10 @@
 
 package org.apache.asterix.om.pointables.printer;
 
-import java.io.IOException;
 import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.pointables.AFlatValuePointable;
 import org.apache.asterix.om.pointables.AListVisitablePointable;
 import org.apache.asterix.om.pointables.ARecordVisitablePointable;
@@ -38,55 +36,44 @@ public abstract class AbstractPrintVisitor implements IPrintVisitor {
     private final Map<IVisitablePointable, AListPrinter> laccessorToPrinter = new HashMap<>();
 
     @Override
-    public Void visit(AListVisitablePointable accessor, Pair<PrintStream, ATypeTag> arg) throws AsterixException {
+    public Void visit(AListVisitablePointable accessor, Pair<PrintStream, ATypeTag> arg) throws HyracksDataException {
         AListPrinter printer = laccessorToPrinter.get(accessor);
         if (printer == null) {
             printer = createListPrinter(accessor);
             laccessorToPrinter.put(accessor, printer);
         }
-        try {
-            printer.printList(accessor, arg.first, this);
-        } catch (IOException e) {
-            throw new AsterixException(e);
-        }
+        printer.printList(accessor, arg.first, this);
         return null;
     }
 
     @Override
-    public Void visit(ARecordVisitablePointable accessor, Pair<PrintStream, ATypeTag> arg) throws AsterixException {
+    public Void visit(ARecordVisitablePointable accessor, Pair<PrintStream, ATypeTag> arg) throws HyracksDataException {
         ARecordPrinter printer = raccessorToPrinter.get(accessor);
         if (printer == null) {
             printer = createRecordPrinter(accessor);
             raccessorToPrinter.put(accessor, printer);
         }
-        try {
-            printer.printRecord(accessor, arg.first, this);
-        } catch (IOException e) {
-            throw new AsterixException(e);
-        }
+        printer.printRecord(accessor, arg.first, this);
         return null;
     }
 
     @Override
-    public Void visit(AFlatValuePointable accessor, Pair<PrintStream, ATypeTag> arg) throws AsterixException {
-        try {
-            byte[] b = accessor.getByteArray();
-            int s = accessor.getStartOffset();
-            int l = accessor.getLength();
-            PrintStream ps = arg.first;
-            ATypeTag typeTag = arg.second;
-            if (!printFlatValue(typeTag, b, s, l, ps)) {
-                throw new AsterixException("No printer for type " + typeTag);
-            }
-            return null;
-        } catch (HyracksDataException e) {
-            throw new AsterixException(e);
+    public Void visit(AFlatValuePointable accessor, Pair<PrintStream, ATypeTag> arg) throws HyracksDataException {
+        byte[] b = accessor.getByteArray();
+        int s = accessor.getStartOffset();
+        int l = accessor.getLength();
+        PrintStream ps = arg.first;
+        ATypeTag typeTag = arg.second;
+        if (!printFlatValue(typeTag, b, s, l, ps)) {
+            throw new HyracksDataException("No printer for type " + typeTag);
         }
+        return null;
     }
 
-    protected abstract AListPrinter createListPrinter(AListVisitablePointable accessor) throws AsterixException;
+    protected abstract AListPrinter createListPrinter(AListVisitablePointable accessor) throws HyracksDataException;
 
-    protected abstract ARecordPrinter createRecordPrinter(ARecordVisitablePointable accessor) throws AsterixException;
+    protected abstract ARecordPrinter createRecordPrinter(ARecordVisitablePointable accessor)
+            throws HyracksDataException;
 
     protected abstract boolean printFlatValue(ATypeTag typeTag, byte[] b, int s, int l, PrintStream ps)
             throws HyracksDataException;

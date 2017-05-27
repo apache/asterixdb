@@ -47,7 +47,7 @@ class ListDeepEqualityChecker {
     }
 
     public boolean accessList(IVisitablePointable listPointableLeft, IVisitablePointable listPointableRight,
-            DeepEqualityVisitor visitor) throws IOException, AsterixException {
+            DeepEqualityVisitor visitor) throws HyracksDataException {
         this.visitor = visitor;
 
         AListVisitablePointable listLeft = (AListVisitablePointable)listPointableLeft;
@@ -74,7 +74,7 @@ class ListDeepEqualityChecker {
 
     private boolean processOrderedList(List<IVisitablePointable> itemsLeft, List<IVisitablePointable> itemTagTypesLeft,
             List<IVisitablePointable> itemsRight, List<IVisitablePointable> itemTagTypesRight)
-            throws HyracksDataException, AsterixException {
+            throws HyracksDataException {
         for(int i=0; i<itemsLeft.size(); i++) {
             ATypeTag fieldTypeLeft = PointableHelper.getTypeTag(itemTagTypesLeft.get(i));
             if(fieldTypeLeft.isDerivedType() && fieldTypeLeft != PointableHelper.getTypeTag(itemTagTypesRight.get(i))) {
@@ -91,7 +91,7 @@ class ListDeepEqualityChecker {
 
     private boolean processUnorderedList(List<IVisitablePointable> itemsLeft, List<IVisitablePointable> itemTagTypesLeft,
             List<IVisitablePointable> itemsRight, List<IVisitablePointable> itemTagTypesRight)
-            throws HyracksDataException, AsterixException {
+            throws HyracksDataException {
 
         hashMap.clear();
         // Build phase: Add items into hash map, starting with first list.
@@ -111,7 +111,7 @@ class ListDeepEqualityChecker {
 
     private boolean probeHashMap(List<IVisitablePointable> itemsLeft, List<IVisitablePointable> itemTagTypesLeft,
             List<IVisitablePointable> itemsRight, List<IVisitablePointable> itemTagTypesRight)
-            throws HyracksDataException, AsterixException {
+            throws HyracksDataException {
         // Probe phase: Probe items from second list
         for(int indexRight=0; indexRight<itemsRight.size(); indexRight++) {
             IVisitablePointable itemRight = itemsRight.get(indexRight);

@@ -26,7 +26,6 @@ import java.util.List;
 
 import org.apache.asterix.builders.OrderedListBuilder;
 import org.apache.asterix.builders.UnorderedListBuilder;
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.pointables.AListVisitablePointable;
 import org.apache.asterix.om.pointables.PointableAllocator;
 import org.apache.asterix.om.pointables.base.DefaultOpenFieldType;
@@ -37,6 +36,7 @@ import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.utils.ResettableByteArrayOutputStream;
 import org.apache.hyracks.algebricks.common.utils.Triple;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 /**
  * This class is to do the runtime type cast for a list. It is ONLY visible to
@@ -57,7 +57,7 @@ class AListCaster {
     private IAType reqItemType;
 
     public void castList(AListVisitablePointable listAccessor, IVisitablePointable resultAccessor,
-            AbstractCollectionType reqType, ACastVisitor visitor) throws IOException, AsterixException {
+            AbstractCollectionType reqType, ACastVisitor visitor) throws HyracksDataException {
         if (reqType.getTypeTag().equals(ATypeTag.MULTISET)) {
             unOrderedListBuilder.reset(reqType);
             reqItemType = reqType.getItemType();

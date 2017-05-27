@@ -626,7 +626,7 @@ public class ATypeHierarchy {
 
     // convert a numeric value in a byte array to the target type value
     public static void convertNumericTypeByteArray(byte[] sourceByteArray, int s1, int l1, ATypeTag targetTypeTag,
-            DataOutput out) throws AsterixException, IOException {
+            DataOutput out) throws IOException {
         ATypeTag sourceTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(sourceByteArray[s1]);
 
         if (sourceTypeTag != targetTypeTag) {

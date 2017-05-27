@@ -28,7 +28,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.asterix.builders.RecordBuilder;
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.om.pointables.ARecordVisitablePointable;
 import org.apache.asterix.om.pointables.PointableAllocator;
@@ -97,7 +96,7 @@ class ARecordCaster {
 
     private final UTF8StringWriter utf8Writer = new UTF8StringWriter();
 
-    public ARecordCaster() {
+    public ARecordCaster() throws HyracksDataException {
         try {
             bos.reset();
             int start = bos.size();
@@ -109,34 +108,34 @@ class ARecordCaster {
             end = bos.size();
             nullTypeTag.set(bos.getByteArray(), start, end - start);
         } catch (IOException e) {
-            throw new IllegalStateException(e);
+            throw HyracksDataException.create(e);
         }
     }
 
     public void castRecord(ARecordVisitablePointable recordAccessor, IVisitablePointable resultAccessor,
-            ARecordType reqType, ACastVisitor visitor) throws IOException {
+            ARecordType reqType, ACastVisitor visitor) throws HyracksDataException {
         List<IVisitablePointable> fieldNames = recordAccessor.getFieldNames();
         List<IVisitablePointable> fieldTypeTags = recordAccessor.getFieldTypeTags();
         List<IVisitablePointable> fieldValues = recordAccessor.getFieldValues();
         numInputFields = fieldNames.size();
 
-        try {
-            if (openFields == null || numInputFields > openFields.length) {
-                openFields = new boolean[numInputFields];
-                fieldNamesSortedIndex = new int[numInputFields];
-            }
-            if (cachedReqType == null || !reqType.equals(cachedReqType)) {
-                loadRequiredType(reqType);
-            }
-
-            // clear the previous states
-            reset();
-            matchClosedPart(fieldNames, fieldTypeTags);
-            writeOutput(fieldNames, fieldTypeTags, fieldValues, outputDos, visitor);
-            resultAccessor.set(outputBos.getByteArray(), 0, outputBos.size());
-        } catch (AsterixException e) {
-            throw new HyracksDataException("Unable to cast record to " + reqType.getTypeName(), e);
+        if (openFields == null || numInputFields > openFields.length) {
+            openFields = new boolean[numInputFields];
+            fieldNamesSortedIndex = new int[numInputFields];
         }
+        if (cachedReqType == null || !reqType.equals(cachedReqType)) {
+            try {
+                loadRequiredType(reqType);
+            } catch (IOException e) {
+                throw HyracksDataException.create(e);
+            }
+        }
+
+        // clear the previous states
+        reset();
+        matchClosedPart(fieldNames, fieldTypeTags);
+        writeOutput(fieldNames, fieldTypeTags, fieldValues, outputDos, visitor);
+        resultAccessor.set(outputBos.getByteArray(), 0, outputBos.size());
     }
 
     private void reset() {
@@ -204,7 +203,7 @@ class ARecordCaster {
     }
 
     private void matchClosedPart(List<IVisitablePointable> fieldNames, List<IVisitablePointable> fieldTypeTags)
-            throws AsterixException, HyracksDataException {
+            throws HyracksDataException {
         // sort-merge based match
         quickSort(fieldNamesSortedIndex, fieldNames, 0, numInputFields - 1);
         int fnStart = 0;
@@ -270,7 +269,7 @@ class ARecordCaster {
                 ps.print(typeTag);
 
                 //collect the output message and throw the exception
-                throw new IllegalStateException("type mismatch: including an extra field " + fieldBos.toString());
+                throw new HyracksDataException("type mismatch: including an extra field " + fieldBos.toString());
             }
         }
 
@@ -280,8 +279,8 @@ class ARecordCaster {
                 IAType t = cachedReqType.getFieldTypes()[i];
                 if (!NonTaggedFormatUtil.isOptional(t)) {
                     // no matched field in the input for a required closed field
-                    throw new IllegalStateException("type mismatch: missing a required closed field "
-                            + cachedReqType.getFieldNames()[i] + ":" + t.getTypeName());
+                    throw new HyracksDataException("type mismatch: missing a required closed field "
+                            + cachedReqType.getFieldNames()[i] + ": " + t.getTypeName());
                 }
             }
         }
@@ -289,7 +288,7 @@ class ARecordCaster {
 
     private void writeOutput(List<IVisitablePointable> fieldNames, List<IVisitablePointable> fieldTypeTags,
             List<IVisitablePointable> fieldValues, DataOutput output, ACastVisitor visitor)
-            throws IOException, AsterixException {
+            throws HyracksDataException {
         // reset the states of the record builder
         recBuilder.reset(cachedReqType);
         recBuilder.init();

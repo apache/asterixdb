@@ -4878,7 +4878,7 @@
     <test-case FilePath="open-closed">
       <compilation-unit name="query-issue487"><!-- This test case is never run!!!! -->
         <output-dir compare="Text">query-issue487</output-dir>
-        <expected-error>org.apache.asterix.common.exceptions.AsterixException</expected-error>
+        <expected-error>type mismatch: missing a required closed field name: string</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="open-closed">

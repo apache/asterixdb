@@ -23,12 +23,12 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.List;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.pointables.ARecordVisitablePointable;
 import org.apache.asterix.om.pointables.base.IVisitablePointable;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 /**
  * This class is to print the content of a record.
@@ -51,7 +51,7 @@ public class ARecordPrinter {
     }
 
     public void printRecord(ARecordVisitablePointable recordAccessor, PrintStream ps, IPrintVisitor visitor)
-            throws IOException, AsterixException {
+            throws HyracksDataException {
         final List<IVisitablePointable> fieldNames = recordAccessor.getFieldNames();
         final List<IVisitablePointable> fieldValues = recordAccessor.getFieldValues();
 
@@ -84,7 +84,7 @@ public class ARecordPrinter {
     }
 
     private void printField(PrintStream ps, IPrintVisitor visitor, IVisitablePointable fieldName,
-            IVisitablePointable fieldValue, ATypeTag fieldTypeTag) throws AsterixException {
+            IVisitablePointable fieldValue, ATypeTag fieldTypeTag) throws HyracksDataException {
         itemVisitorArg.second = fieldTypeTag;
         if (fieldNameSeparator != null) {
             // print field name

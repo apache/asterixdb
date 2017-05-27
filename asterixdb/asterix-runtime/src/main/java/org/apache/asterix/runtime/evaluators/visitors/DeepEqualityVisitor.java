@@ -21,7 +21,6 @@ package org.apache.asterix.runtime.evaluators.visitors;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.pointables.AFlatValuePointable;
 import org.apache.asterix.om.pointables.AListVisitablePointable;
 import org.apache.asterix.om.pointables.ARecordVisitablePointable;
@@ -40,75 +39,63 @@ public class DeepEqualityVisitor implements IVisitablePointableVisitor<Void, Pai
 
     @Override
     public Void visit(AListVisitablePointable pointable, Pair<IVisitablePointable, Boolean> arg)
-            throws AsterixException {
+            throws HyracksDataException {
         ListDeepEqualityChecker listDeepEqualityChecker = lpointableToEquality.get(pointable);
         if (listDeepEqualityChecker == null) {
             listDeepEqualityChecker = new ListDeepEqualityChecker();
             lpointableToEquality.put(pointable, listDeepEqualityChecker);
         }
 
-        try {
-            arg.second = listDeepEqualityChecker.accessList(pointable, arg.first, this);
-        } catch (Exception e) {
-            throw new AsterixException(e);
-        }
+        arg.second = listDeepEqualityChecker.accessList(pointable, arg.first, this);
 
         return null;
     }
 
     @Override
     public Void visit(ARecordVisitablePointable pointable, Pair<IVisitablePointable, Boolean> arg)
-            throws AsterixException {
+            throws HyracksDataException {
         RecordDeepEqualityChecker recDeepEqualityChecker = rpointableToEquality.get(pointable);
         if (recDeepEqualityChecker == null) {
             recDeepEqualityChecker = new RecordDeepEqualityChecker();
             rpointableToEquality.put(pointable, recDeepEqualityChecker);
         }
 
-        try {
-            arg.second = recDeepEqualityChecker.accessRecord(pointable, arg.first, this);
-        } catch (Exception e) {
-            throw new AsterixException(e);
-        }
+        arg.second = recDeepEqualityChecker.accessRecord(pointable, arg.first, this);
 
         return null;
     }
 
     @Override
-    public Void visit(AFlatValuePointable pointable, Pair<IVisitablePointable, Boolean> arg) throws AsterixException {
+    public Void visit(AFlatValuePointable pointable, Pair<IVisitablePointable, Boolean> arg)
+            throws HyracksDataException {
 
         if (pointable.equals(arg.first)) {
             arg.second = true;
             return null;
         }
-        try {
-            ATypeTag tt1 = PointableHelper.getTypeTag(pointable);
-            ATypeTag tt2 = PointableHelper.getTypeTag(arg.first);
+        ATypeTag tt1 = PointableHelper.getTypeTag(pointable);
+        ATypeTag tt2 = PointableHelper.getTypeTag(arg.first);
 
-            if (tt1 != tt2) {
-                if (!ATypeHierarchy.isSameTypeDomain(tt1, tt2, false)) {
-                    arg.second = false;
-                } else {
-                    // If same domain, check if numberic
-                    Domain domain = ATypeHierarchy.getTypeDomain(tt1);
-                    byte b1[] = pointable.getByteArray();
-                    byte b2[] = arg.first.getByteArray();
-                    if (domain == Domain.NUMERIC) {
-                        int s1 = pointable.getStartOffset();
-                        int s2 = arg.first.getStartOffset();
-                        arg.second = Math.abs(ATypeHierarchy.getDoubleValue("deep-equal", 0, b1, s1)
-                                - ATypeHierarchy.getDoubleValue("deep-equal", 1, b2, s2)) < 1E-10;
-                    } else {
-                        arg.second = false;
-                    }
-                }
+        if (tt1 != tt2) {
+            if (!ATypeHierarchy.isSameTypeDomain(tt1, tt2, false)) {
+                arg.second = false;
             } else {
-                arg.second = PointableHelper.byteArrayEqual(pointable, arg.first, 1);
+                // If same domain, check if numberic
+                Domain domain = ATypeHierarchy.getTypeDomain(tt1);
+                byte b1[] = pointable.getByteArray();
+                byte b2[] = arg.first.getByteArray();
+                if (domain == Domain.NUMERIC) {
+                    int s1 = pointable.getStartOffset();
+                    int s2 = arg.first.getStartOffset();
+                    arg.second = Math.abs(ATypeHierarchy.getDoubleValue("deep-equal", 0, b1, s1)
+                            - ATypeHierarchy.getDoubleValue("deep-equal", 1, b2, s2)) < 1E-10;
+                } else {
+                    arg.second = false;
+                }
             }
-        } catch (HyracksDataException e) {
-            throw new AsterixException(e);
+        } else {
+            arg.second = PointableHelper.byteArrayEqual(pointable, arg.first, 1);
         }
-
         return null;
     }
 

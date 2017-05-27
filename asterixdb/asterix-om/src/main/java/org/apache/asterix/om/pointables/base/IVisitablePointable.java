@@ -19,8 +19,8 @@
 
 package org.apache.asterix.om.pointables.base;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.pointables.visitor.IVisitablePointableVisitor;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 
 /**
@@ -29,5 +29,5 @@ import org.apache.hyracks.data.std.api.IPointable;
  */
 public interface IVisitablePointable extends IPointable {
 
-    public <R, T> R accept(IVisitablePointableVisitor<R, T> vistor, T tag) throws AsterixException;
+    <R, T> R accept(IVisitablePointableVisitor<R, T> vistor, T tag) throws HyracksDataException;
 }

@@ -19,10 +19,10 @@
 
 package org.apache.asterix.om.pointables.visitor;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.pointables.AFlatValuePointable;
 import org.apache.asterix.om.pointables.AListVisitablePointable;
 import org.apache.asterix.om.pointables.ARecordVisitablePointable;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 /**
  * This interface is a visitor for all the three different IVisitablePointable
@@ -31,9 +31,9 @@ import org.apache.asterix.om.pointables.ARecordVisitablePointable;
  */
 public interface IVisitablePointableVisitor<R, T> {
 
-    public R visit(AListVisitablePointable accessor, T arg) throws AsterixException;
+    R visit(AListVisitablePointable accessor, T arg) throws HyracksDataException;
 
-    public R visit(ARecordVisitablePointable accessor, T arg) throws AsterixException;
+    R visit(ARecordVisitablePointable accessor, T arg) throws HyracksDataException;
 
-    public R visit(AFlatValuePointable accessor, T arg) throws AsterixException;
+    R visit(AFlatValuePointable accessor, T arg) throws HyracksDataException;
 }

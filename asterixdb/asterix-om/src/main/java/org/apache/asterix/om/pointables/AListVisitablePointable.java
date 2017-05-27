@@ -23,7 +23,6 @@ import java.io.DataOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt32SerializerDeserializer;
 import org.apache.asterix.om.pointables.base.IVisitablePointable;
 import org.apache.asterix.om.pointables.visitor.IVisitablePointableVisitor;
@@ -35,6 +34,7 @@ import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.util.container.IObjectFactory;
 import org.apache.asterix.om.utils.NonTaggedFormatUtil;
 import org.apache.asterix.om.utils.ResettableByteArrayOutputStream;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 /**
  * This class interprets the binary data representation of a list, one can
@@ -157,7 +157,7 @@ public class AListVisitablePointable extends AbstractVisitablePointable {
     }
 
     @Override
-    public <R, T> R accept(IVisitablePointableVisitor<R, T> vistor, T tag) throws AsterixException {
+    public <R, T> R accept(IVisitablePointableVisitor<R, T> vistor, T tag) throws HyracksDataException {
         return vistor.visit(this, tag);
     }
 

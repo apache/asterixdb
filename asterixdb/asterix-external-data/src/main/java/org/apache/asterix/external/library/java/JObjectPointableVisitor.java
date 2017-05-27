@@ -45,39 +45,31 @@ public class JObjectPointableVisitor implements IVisitablePointableVisitor<IJObj
     private final Map<IVisitablePointable, IJListAccessor> laccessorToPrinter = new HashMap<IVisitablePointable, IJListAccessor>();
 
     @Override
-    public IJObject visit(AListVisitablePointable accessor, TypeInfo arg) throws AsterixException {
+    public IJObject visit(AListVisitablePointable accessor, TypeInfo arg) throws HyracksDataException {
         IJObject result = null;
         IJListAccessor jListAccessor = laccessorToPrinter.get(accessor);
         if (jListAccessor == null) {
             jListAccessor = new JListAccessor(arg.getObjectPool());
             laccessorToPrinter.put(accessor, jListAccessor);
         }
-        try {
-            result = jListAccessor.access(accessor, arg.getObjectPool(), arg.getAtype(), this);
-        } catch (Exception e) {
-            throw new AsterixException(e);
-        }
+        result = jListAccessor.access(accessor, arg.getObjectPool(), arg.getAtype(), this);
         return result;
     }
 
     @Override
-    public IJObject visit(ARecordVisitablePointable accessor, TypeInfo arg) throws AsterixException {
+    public IJObject visit(ARecordVisitablePointable accessor, TypeInfo arg) throws HyracksDataException {
         IJObject result = null;
         IJRecordAccessor jRecordAccessor = raccessorToJObject.get(accessor);
         if (jRecordAccessor == null) {
             jRecordAccessor = new JRecordAccessor(accessor.getInputRecordType(), arg.getObjectPool());
             raccessorToJObject.put(accessor, jRecordAccessor);
         }
-        try {
-            result = jRecordAccessor.access(accessor, arg.getObjectPool(), (ARecordType) arg.getAtype(), this);
-        } catch (Exception e) {
-            throw new AsterixException(e);
-        }
+        result = jRecordAccessor.access(accessor, arg.getObjectPool(), (ARecordType) arg.getAtype(), this);
         return result;
     }
 
     @Override
-    public IJObject visit(AFlatValuePointable accessor, TypeInfo arg) throws AsterixException {
+    public IJObject visit(AFlatValuePointable accessor, TypeInfo arg) throws HyracksDataException {
         ATypeTag typeTag = arg.getTypeTag();
         IJObject result = null;
         IJObjectAccessor jObjectAccessor = flatJObjectAccessors.get(typeTag);
@@ -86,11 +78,7 @@ public class JObjectPointableVisitor implements IVisitablePointableVisitor<IJObj
             flatJObjectAccessors.put(typeTag, jObjectAccessor);
         }
 
-        try {
-            result = jObjectAccessor.access(accessor, arg.getObjectPool());
-        } catch (HyracksDataException e) {
-            throw new AsterixException(e);
-        }
+        result = jObjectAccessor.access(accessor, arg.getObjectPool());
         return result;
     }
 

@@ -20,7 +20,6 @@ package org.apache.asterix.runtime.evaluators.visitors;
 
 import java.util.List;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt32SerializerDeserializer;
 import org.apache.asterix.om.pointables.ARecordVisitablePointable;
 import org.apache.asterix.om.pointables.base.IVisitablePointable;
@@ -50,7 +49,7 @@ class RecordDeepEqualityChecker {
     }
 
     public boolean accessRecord(IVisitablePointable recPointableLeft, IVisitablePointable recPointableRight,
-            DeepEqualityVisitor visitor) throws HyracksDataException, AsterixException {
+            DeepEqualityVisitor visitor) throws HyracksDataException {
 
         if (recPointableLeft.equals(recPointableRight)) {
             return true;
@@ -86,7 +85,7 @@ class RecordDeepEqualityChecker {
 
     private boolean compareValues(List<IVisitablePointable> fieldTypesLeft, List<IVisitablePointable> fieldValuesLeft,
             List<IVisitablePointable> fieldNamesRight, List<IVisitablePointable> fieldTypesRight,
-            List<IVisitablePointable> fieldValuesRight) throws HyracksDataException, AsterixException {
+            List<IVisitablePointable> fieldValuesRight) throws HyracksDataException {
 
         // Probe phase: Probe items from second record
         for (int i = 0; i < fieldNamesRight.size(); i++) {

@@ -20,7 +20,6 @@ package org.apache.asterix.dataflow.data.nontagged.printers.json.lossless;
 
 import java.io.PrintStream;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.pointables.AListVisitablePointable;
 import org.apache.asterix.om.pointables.ARecordVisitablePointable;
 import org.apache.asterix.om.pointables.base.DefaultOpenFieldType;
@@ -136,25 +135,21 @@ public class AObjectPrinterFactory implements IPrinterFactory {
             if (!printFlatValue(typeTag, b, s, l, ps)) {
                 streamTag.first = ps;
                 streamTag.second = typeTag;
-                try {
-                    switch (typeTag) {
-                        case OBJECT:
-                            rPointable.set(b, s, l);
-                            visitor.visit(rPointable, streamTag);
-                            break;
-                        case ARRAY:
-                            olPointable.set(b, s, l);
-                            visitor.visit(olPointable, streamTag);
-                            break;
-                        case MULTISET:
-                            ulPointable.set(b, s, l);
-                            visitor.visit(ulPointable, streamTag);
-                            break;
-                        default:
-                            throw new HyracksDataException("No printer for type " + typeTag);
-                    }
-                } catch (AsterixException e) {
-                    throw new HyracksDataException(e);
+                switch (typeTag) {
+                    case OBJECT:
+                        rPointable.set(b, s, l);
+                        visitor.visit(rPointable, streamTag);
+                        break;
+                    case ARRAY:
+                        olPointable.set(b, s, l);
+                        visitor.visit(olPointable, streamTag);
+                        break;
+                    case MULTISET:
+                        ulPointable.set(b, s, l);
+                        visitor.visit(ulPointable, streamTag);
+                        break;
+                    default:
+                        throw new HyracksDataException("No printer for type " + typeTag);
                 }
             }
         };

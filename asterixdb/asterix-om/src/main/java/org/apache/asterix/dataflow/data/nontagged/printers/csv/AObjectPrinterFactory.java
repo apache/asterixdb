@@ -20,7 +20,6 @@ package org.apache.asterix.dataflow.data.nontagged.printers.csv;
 
 import java.io.PrintStream;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.pointables.ARecordVisitablePointable;
 import org.apache.asterix.om.pointables.base.DefaultOpenFieldType;
 import org.apache.asterix.om.pointables.printer.IPrintVisitor;
@@ -131,17 +130,13 @@ public class AObjectPrinterFactory implements IPrinterFactory {
             if (!printFlatValue(typeTag, b, s, l, ps)) {
                 streamTag.first = ps;
                 streamTag.second = typeTag;
-                try {
-                    switch (typeTag) {
-                        case OBJECT:
-                            rPointable.set(b, s, l);
-                            visitor.visit(rPointable, streamTag);
-                            break;
-                        default:
-                            throw new HyracksDataException("No printer for type " + typeTag);
-                    }
-                } catch (AsterixException e) {
-                    throw new HyracksDataException(e);
+                switch (typeTag) {
+                    case OBJECT:
+                        rPointable.set(b, s, l);
+                        visitor.visit(rPointable, streamTag);
+                        break;
+                    default:
+                        throw new HyracksDataException("No printer for type " + typeTag);
                 }
             }
         };

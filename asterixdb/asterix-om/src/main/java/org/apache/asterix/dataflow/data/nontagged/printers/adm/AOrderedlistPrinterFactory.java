@@ -20,7 +20,6 @@ package org.apache.asterix.dataflow.data.nontagged.printers.adm;
 
 import java.io.PrintStream;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.pointables.PointableAllocator;
 import org.apache.asterix.om.pointables.base.DefaultOpenFieldType;
 import org.apache.asterix.om.pointables.base.IVisitablePointable;
@@ -59,13 +58,9 @@ public class AOrderedlistPrinterFactory implements IPrinterFactory {
 
             @Override
             public void print(byte[] b, int start, int l, PrintStream ps) throws HyracksDataException {
-                try {
-                    listAccessor.set(b, start, l);
-                    arg.first = ps;
-                    listAccessor.accept(printVisitor, arg);
-                } catch (AsterixException e) {
-                    throw new HyracksDataException(e);
-                }
+                listAccessor.set(b, start, l);
+                arg.first = ps;
+                listAccessor.accept(printVisitor, arg);
             }
         };
     }

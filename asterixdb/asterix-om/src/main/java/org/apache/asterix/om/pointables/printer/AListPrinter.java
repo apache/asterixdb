@@ -29,6 +29,7 @@ import org.apache.asterix.om.pointables.base.IVisitablePointable;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 /**
  * This class is to print the content of a list.
@@ -47,7 +48,7 @@ public class AListPrinter {
     }
 
     public void printList(AListVisitablePointable listAccessor, PrintStream ps, IPrintVisitor visitor)
-            throws IOException, AsterixException {
+            throws HyracksDataException {
         List<IVisitablePointable> itemTags = listAccessor.getItemTags();
         List<IVisitablePointable> items = listAccessor.getItems();
         itemVisitorArg.first = ps;
@@ -70,7 +71,7 @@ public class AListPrinter {
     }
 
     private void printItem(IPrintVisitor visitor, List<IVisitablePointable> itemTags, List<IVisitablePointable> items,
-            int i) throws AsterixException {
+            int i) throws HyracksDataException {
         IVisitablePointable itemTypeTag = itemTags.get(i);
         IVisitablePointable item = items.get(i);
         ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER
