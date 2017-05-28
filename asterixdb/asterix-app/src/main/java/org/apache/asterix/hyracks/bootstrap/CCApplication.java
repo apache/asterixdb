@@ -222,6 +222,7 @@ public class CCApplication extends BaseCCApplication {
         addServlet(jsonAPIServer, Servlets.QUERY_STATUS);
         addServlet(jsonAPIServer, Servlets.QUERY_RESULT);
         addServlet(jsonAPIServer, Servlets.QUERY_SERVICE);
+        addServlet(jsonAPIServer, Servlets.QUERY_AQL);
         addServlet(jsonAPIServer, Servlets.RUNNING_REQUESTS);
         addServlet(jsonAPIServer, Servlets.CONNECTOR);
         addServlet(jsonAPIServer, Servlets.SHUTDOWN);
@@ -282,6 +283,10 @@ public class CCApplication extends BaseCCApplication {
             case Servlets.QUERY_SERVICE:
                 return new QueryServiceServlet(ctx, paths, appCtx, SQLPP,
                         ccExtensionManager.getCompilationProvider(SQLPP), getStatementExecutorFactory(),
+                        componentProvider);
+            case Servlets.QUERY_AQL:
+                return new QueryServiceServlet(ctx, paths, appCtx, AQL,
+                        ccExtensionManager.getCompilationProvider(AQL), getStatementExecutorFactory(),
                         componentProvider);
             case Servlets.CONNECTOR:
                 return new ConnectorApiServlet(ctx, paths, appCtx);
