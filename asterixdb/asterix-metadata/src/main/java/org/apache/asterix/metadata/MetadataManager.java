@@ -957,7 +957,7 @@ public class MetadataManager implements IMetadataManager {
             throw new MetadataException(e);
         }
         // reflect the dataset into the cache
-        ctx.dropDataset(dataset);
+        ctx.dropDataset(dataset.getDataverseName(), dataset.getDatasetName());
         ctx.addDataset(dataset);
     }
 

@@ -46,6 +46,7 @@ import org.apache.asterix.runtime.evaluators.functions.AndDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.CastTypeDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.IsUnknownDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.NotDescriptor;
+import org.apache.commons.collections4.IteratorUtils;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraintHelper;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -114,37 +115,47 @@ public abstract class SecondaryIndexOperationsHelper {
 
     // Prevent public construction. Should be created via createIndexCreator().
     protected SecondaryIndexOperationsHelper(Dataset dataset, Index index, PhysicalOptimizationConfig physOptConf,
-            MetadataProvider metadataProvider, ARecordType recType, ARecordType metaType, ARecordType enforcedType,
-            ARecordType enforcedMetaType) {
+            MetadataProvider metadataProvider) throws AlgebricksException {
         this.dataset = dataset;
         this.index = index;
         this.physOptConf = physOptConf;
         this.metadataProvider = metadataProvider;
-        this.itemType = recType;
-        this.metaType = metaType;
-        this.enforcedItemType = enforcedType;
-        this.enforcedMetaType = enforcedMetaType;
+        this.itemType = (ARecordType) metadataProvider.findType(dataset.getItemTypeDataverseName(),
+                dataset.getItemTypeName());
+        this.metaType = DatasetUtil.getMetaType(metadataProvider, dataset);
+        Pair<ARecordType, ARecordType> enforcedTypes = getEnforcedType(index, itemType, metaType);
+        this.enforcedItemType = enforcedTypes.first;
+        this.enforcedMetaType = enforcedTypes.second;
+    }
+
+    private static Pair<ARecordType, ARecordType> getEnforcedType(Index index, ARecordType aRecordType,
+            ARecordType metaRecordType) throws AlgebricksException {
+        return index.isEnforcingKeyFileds()
+                ? TypeUtil.createEnforcedType(aRecordType, metaRecordType,
+                        IteratorUtils.toList(IteratorUtils.singletonIterator(index)))
+                : new Pair<>(null, null);
+
     }
 
     public static SecondaryIndexOperationsHelper createIndexOperationsHelper(Dataset dataset, Index index,
-            MetadataProvider metadataProvider, PhysicalOptimizationConfig physOptConf, ARecordType recType,
-            ARecordType metaType, ARecordType enforcedType, ARecordType enforcedMetaType) throws AlgebricksException {
+            MetadataProvider metadataProvider, PhysicalOptimizationConfig physOptConf) throws AlgebricksException {
+
         SecondaryIndexOperationsHelper indexOperationsHelper;
         switch (index.getIndexType()) {
             case BTREE:
                 indexOperationsHelper = new SecondaryBTreeOperationsHelper(dataset, index, physOptConf,
-                        metadataProvider, recType, metaType, enforcedType, enforcedMetaType);
+                        metadataProvider);
                 break;
             case RTREE:
                 indexOperationsHelper = new SecondaryRTreeOperationsHelper(dataset, index, physOptConf,
-                        metadataProvider, recType, metaType, enforcedType, enforcedMetaType);
+                        metadataProvider);
                 break;
             case SINGLE_PARTITION_WORD_INVIX:
             case SINGLE_PARTITION_NGRAM_INVIX:
             case LENGTH_PARTITIONED_WORD_INVIX:
             case LENGTH_PARTITIONED_NGRAM_INVIX:
                 indexOperationsHelper = new SecondaryInvertedIndexOperationsHelper(dataset, index, physOptConf,
-                        metadataProvider, recType, metaType, enforcedType, enforcedMetaType);
+                        metadataProvider);
                 break;
             default:
                 throw new CompilationException(ErrorCode.COMPILATION_UNKNOWN_INDEX_TYPE, index.getIndexType());

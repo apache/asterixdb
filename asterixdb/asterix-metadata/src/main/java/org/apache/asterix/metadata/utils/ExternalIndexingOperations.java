@@ -441,7 +441,7 @@ public class ExternalIndexingOperations {
         for (ExternalFile file : appendedFiles) {
             files.add(file);
         }
-        return IndexUtil.buildSecondaryIndexLoadingJobSpec(ds, index, null, null, null, null, metadataProvider, files);
+        return IndexUtil.buildSecondaryIndexLoadingJobSpec(ds, index, metadataProvider, files);
     }
 
     public static JobSpecification buildCommitJob(Dataset ds, List<Index> indexes, MetadataProvider metadataProvider)

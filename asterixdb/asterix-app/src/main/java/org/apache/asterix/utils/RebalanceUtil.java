@@ -168,6 +168,9 @@ public class RebalanceUtil {
 
         // Populates the data from the rebalance source to the rebalance target.
         populateDataToRebalanceTarget(source, target, metadataProvider, hcc);
+
+        // Creates and loads indexes for the rebalance target.
+        createAndLoadSecondaryIndexesForTarget(source, target, metadataProvider, hcc);
     }
 
     private static void rebalanceSwitch(Dataset source, Dataset target, MetadataProvider metadataProvider,
@@ -189,17 +192,14 @@ public class RebalanceUtil {
         // Drops the source dataset files.
         dropDatasetFiles(source, metadataProvider, hcc);
 
-        // Drops the source dataset's metadata entry.
-        MetadataManager.INSTANCE.dropDataset(mdTxnCtx, source.getDataverseName(), source.getDatasetName());
+        // Updates the dataset entry in the metadata storage
+        MetadataManager.INSTANCE.updateDataset(mdTxnCtx, target);
 
         // Drops the metadata entry of source dataset's node group.
         String sourceNodeGroup = source.getNodeGroupName();
         if (!sourceNodeGroup.equals(MetadataConstants.METADATA_DEFAULT_NODEGROUP_NAME)) {
             MetadataManager.INSTANCE.dropNodegroup(mdTxnCtx, sourceNodeGroup);
         }
-
-        // Adds a new rebalanced dataset entry in the metadata storage
-        MetadataManager.INSTANCE.addDataset(mdTxnCtx, target);
     }
 
     // Creates the files for the rebalance target dataset.
@@ -290,5 +290,24 @@ public class RebalanceUtil {
         MetadataLockManager.INSTANCE.acquireDataverseReadLock(locks, dataset.getDataverseName());
         MetadataLockManager.INSTANCE.acquireDatasetWriteLock(locks,
                 dataset.getDataverseName() + "." + dataset.getDatasetName());
+    }
+
+    // Creates and loads all secondary indexes for the rebalance target dataset.
+    private static void createAndLoadSecondaryIndexesForTarget(Dataset source, Dataset target,
+            MetadataProvider metadataProvider, IHyracksClientConnection hcc) throws Exception {
+        for (Index index : metadataProvider.getDatasetIndexes(source.getDataverseName(), source.getDatasetName())) {
+            if (!index.isSecondaryIndex()) {
+                continue;
+            }
+            // Creates the secondary index.
+            JobSpecification indexCreationJobSpec = IndexUtil.buildSecondaryIndexCreationJobSpec(target, index,
+                    metadataProvider);
+            JobUtils.runJob(hcc, indexCreationJobSpec, true);
+
+            // Loads the secondary index.
+            JobSpecification indexLoadingJobSpec = IndexUtil.buildSecondaryIndexLoadingJobSpec(target, index,
+                    metadataProvider);
+            JobUtils.runJob(hcc, indexLoadingJobSpec, true);
+        }
     }
 }

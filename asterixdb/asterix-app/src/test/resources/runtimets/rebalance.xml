@@ -46,5 +46,10 @@ ERROR_BODY: {"results":"target nodes should not be empty"}</expected-error>
         <output-dir compare="Text">single_dataset</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="rebalance">
+      <compilation-unit name="single_dataset_with_index">
+        <output-dir compare="Text">single_dataset_with_index</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
 </test-suite>
