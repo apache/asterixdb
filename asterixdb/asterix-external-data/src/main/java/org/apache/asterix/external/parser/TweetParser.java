@@ -24,16 +24,16 @@ import org.apache.asterix.builders.AbvsBuilderFactory;
 import org.apache.asterix.builders.IARecordBuilder;
 import org.apache.asterix.builders.IAsterixListBuilder;
 import org.apache.asterix.builders.ListBuilderFactory;
+import org.apache.asterix.builders.OrderedListBuilder;
 import org.apache.asterix.builders.RecordBuilderFactory;
-import org.apache.asterix.builders.UnorderedListBuilder;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.external.api.IRawRecord;
 import org.apache.asterix.external.api.IRecordDataParser;
-import org.apache.asterix.om.base.AMutablePoint;
 import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.util.container.IObjectPool;
@@ -59,25 +59,28 @@ public class TweetParser extends AbstractDataParser implements IRecordDataParser
 
     public TweetParser(ARecordType recordType) {
         this.recordType = recordType;
-        aPoint = new AMutablePoint(0, 0);
     }
 
-    private void parseUnorderedList(JsonNode jArray, DataOutput output) throws IOException {
+    private void parseArrayList(JsonNode jArray, DataOutput output) throws IOException {
         ArrayBackedValueStorage itemBuffer = getTempBuffer();
-        UnorderedListBuilder unorderedListBuilder = (UnorderedListBuilder) getUnorderedListBuilder();
+        OrderedListBuilder arrayBuilder = (OrderedListBuilder) getArrayBuilder();
 
-        unorderedListBuilder.reset(null);
+        arrayBuilder.reset(null);
         for (int iter1 = 0; iter1 < jArray.size(); iter1++) {
             itemBuffer.reset();
             if (writeField(jArray.get(iter1), null, itemBuffer.getDataOutput())) {
-                unorderedListBuilder.addItem(itemBuffer);
+                arrayBuilder.addItem(itemBuffer);
             }
         }
-        unorderedListBuilder.write(output, true);
+        arrayBuilder.write(output, true);
     }
 
-    private boolean writeField(JsonNode fieldObj, IAType fieldType, DataOutput out) throws IOException {
+    private boolean writeField(JsonNode fieldObj, IAType originalFieldType, DataOutput out) throws IOException {
         boolean writeResult = true;
+        IAType fieldType = originalFieldType;
+        if (originalFieldType instanceof AUnionType) {
+            fieldType = ((AUnionType) originalFieldType).getActualType();
+        }
         if (fieldType != null) {
             switch (fieldType.getTypeTag()) {
                 case STRING:
@@ -103,6 +106,9 @@ public class TweetParser extends AbstractDataParser implements IRecordDataParser
                 case OBJECT:
                     writeRecord(fieldObj, out, (ARecordType) fieldType);
                     break;
+                case ARRAY:
+                    parseArrayList(fieldObj, out);
+                    break;
                 default:
                     writeResult = false;
             }
@@ -126,7 +132,7 @@ public class TweetParser extends AbstractDataParser implements IRecordDataParser
                 utf8Writer.writeUTF8(fieldObj.asText(), out);
             } else if (fieldObj.isArray()) {
                 if ((fieldObj).size() != 0) {
-                    parseUnorderedList(fieldObj, out);
+                    parseArrayList(fieldObj, out);
                 } else {
                     writeResult = false;
                 }
@@ -159,6 +165,7 @@ public class TweetParser extends AbstractDataParser implements IRecordDataParser
         String[] curFNames = null;
         int fieldN;
         int attrIdx;
+        int expectedFieldsCount = 0;
 
         ArrayBackedValueStorage fieldValueBuffer = getTempBuffer();
         ArrayBackedValueStorage fieldNameBuffer = getTempBuffer();
@@ -167,6 +174,11 @@ public class TweetParser extends AbstractDataParser implements IRecordDataParser
         if (curRecType != null) {
             curTypes = curRecType.getFieldTypes();
             curFNames = curRecType.getFieldNames();
+            for (IAType curType : curTypes) {
+                if (!(curType instanceof AUnionType)) {
+                    expectedFieldsCount++;
+                }
+            }
         }
 
         recBuilder.reset(curRecType);
@@ -178,10 +190,11 @@ public class TweetParser extends AbstractDataParser implements IRecordDataParser
             for (int iter1 = 0; iter1 < fieldN; iter1++) {
                 fieldValueBuffer.reset();
                 DataOutput fieldOutput = fieldValueBuffer.getDataOutput();
-                if (obj.get(curFNames[iter1]).isNull()) {
+                if (obj.get(curFNames[iter1]).isNull() && !(curTypes[iter1] instanceof AUnionType)) {
                     if (curRecType.isClosedField(curFNames[iter1])) {
                         throw new RuntimeDataException(ErrorCode.PARSER_TWEET_PARSER_CLOSED_FIELD_NULL,
-                                curFNames[iter1]);                    } else {
+                                curFNames[iter1]);
+                    } else {
                         continue;
                     }
                 } else {
@@ -198,7 +211,7 @@ public class TweetParser extends AbstractDataParser implements IRecordDataParser
             Iterator<String> iter = obj.fieldNames();
             while (iter.hasNext()) {
                 attrName = iter.next();
-                if (obj.get(attrName).isNull() || obj.size() == 0) {
+                if (obj.get(attrName) == null || obj.get(attrName).isNull() || obj.size() == 0) {
                     continue;
                 }
                 attrIdx = checkAttrNameIdx(curFNames, attrName);
@@ -219,7 +232,7 @@ public class TweetParser extends AbstractDataParser implements IRecordDataParser
                     }
                 }
             }
-            if (curRecType != null && closedFieldCount < curFNames.length) {
+            if (curRecType != null && closedFieldCount < expectedFieldsCount) {
                 throw new HyracksDataException("Non-null field is null");
             }
         }
@@ -230,8 +243,8 @@ public class TweetParser extends AbstractDataParser implements IRecordDataParser
         return recordBuilderPool.allocate(ATypeTag.OBJECT);
     }
 
-    private IAsterixListBuilder getUnorderedListBuilder() {
-        return listBuilderPool.allocate(ATypeTag.MULTISET);
+    private IAsterixListBuilder getArrayBuilder() {
+        return listBuilderPool.allocate(ATypeTag.ARRAY);
     }
 
     private ArrayBackedValueStorage getTempBuffer() {
