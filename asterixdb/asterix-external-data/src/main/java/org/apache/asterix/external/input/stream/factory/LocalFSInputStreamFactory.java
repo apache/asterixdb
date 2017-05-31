@@ -18,13 +18,16 @@
  */
 package org.apache.asterix.external.input.stream.factory;
 
+import java.net.InetAddress;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.AsterixException;
@@ -37,6 +40,7 @@ import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.external.util.FileSystemWatcher;
 import org.apache.asterix.external.util.NodeResolverFactory;
+import org.apache.asterix.runtime.utils.RuntimeUtils;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -103,6 +107,8 @@ public class LocalFSInputStreamFactory implements IInputStreamFactory {
 
     private void configureFileSplits(ICcApplicationContext appCtx, String[] splits) throws AsterixException {
         INodeResolver resolver = getNodeResolver();
+        Map<InetAddress, Set<String>> ncMap = RuntimeUtils.getForcedNodeControllerMap(appCtx);
+        Set<String> ncs = ncMap.values().stream().flatMap(Collection::stream).collect(Collectors.toSet());
         inputFileSplits = new UnmanagedFileSplit[splits.length];
         String node;
         String path;
@@ -114,7 +120,7 @@ public class LocalFSInputStreamFactory implements IInputStreamFactory {
                 throw new AsterixException(
                         "Invalid path: " + splitPath + "\nUsage- path=\"Host://Absolute File Path\"");
             }
-            node = resolver.resolveNode(appCtx, trimmedValue.split(":")[0]);
+            node = resolver.resolveNode(appCtx, trimmedValue.split(":")[0], ncMap, ncs);
             path = trimmedValue.split("://")[1];
             inputFileSplits[count++] = new UnmanagedFileSplit(node, path);
         }

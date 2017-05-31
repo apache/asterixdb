@@ -18,6 +18,10 @@
  */
 package org.apache.asterix.external.util;
 
+import java.net.InetAddress;
+import java.util.Map;
+import java.util.Set;
+
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.external.api.INodeResolver;
 
@@ -28,7 +32,8 @@ import org.apache.asterix.external.api.INodeResolver;
 public class IdentityResolver implements INodeResolver {
 
     @Override
-    public String resolveNode(ICcApplicationContext appCtx, String value) {
+    public String resolveNode(ICcApplicationContext appCtx, String value, Map<InetAddress, Set<String>> ncMap,
+            Set<String> ncs) {
         return value;
     }
 

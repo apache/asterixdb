@@ -60,10 +60,10 @@ public class RuntimeUtils {
         return map;
     }
 
-    public static void getNodeControllerMap(ICcApplicationContext appCtx, Map<InetAddress, Set<String>> map) {
+    public static Map<InetAddress, Set<String>> getForcedNodeControllerMap(ICcApplicationContext appCtx) {
         ClusterControllerService ccs = (ClusterControllerService) appCtx.getServiceContext().getControllerService();
         INodeManager nodeManager = ccs.getNodeManager();
-        map.putAll(nodeManager.getIpAddressNodeNameMap());
+        return nodeManager.getIpAddressNodeNameMap();
     }
 
     public static JobSpecification createJobSpecification(ICcApplicationContext appCtx) {

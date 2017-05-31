@@ -20,10 +20,7 @@ package org.apache.asterix.external.util;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Random;
 import java.util.Set;
 
@@ -31,57 +28,30 @@ import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.external.api.INodeResolver;
-import org.apache.asterix.runtime.utils.RuntimeUtils;
 
 /**
  * Resolves a value (DNS/IP Address) or a (Node Controller Id) to the id of a Node Controller running at the location.
  */
 public class NodeResolver implements INodeResolver {
     //TODO: change this call and replace by calling AsterixClusterProperties
-    private static final Random random = new Random();
-    private static final Map<InetAddress, Set<String>> ncMap = new HashMap<>();
-    private static final Set<String> ncs = new HashSet<>();
+    private final Random random = new Random();
 
     @Override
-    public String resolveNode(ICcApplicationContext appCtx, String value) throws AsterixException {
+    public String resolveNode(ICcApplicationContext appCtx, String value, Map<InetAddress, Set<String>> ncMap,
+            Set<String> ncs) throws AsterixException {
+        if (ncs.contains(value)) {
+            return value;
+        }
+        InetAddress ipAddress = null;
         try {
-            if (ncMap.isEmpty()) {
-                NodeResolver.updateNCs(appCtx);
-            }
-            if (ncs.contains(value)) {
-                return value;
-            } else {
-                NodeResolver.updateNCs(appCtx);
-                if (ncs.contains(value)) {
-                    return value;
-                }
-            }
-            InetAddress ipAddress = null;
-            try {
-                ipAddress = InetAddress.getByName(value);
-            } catch (UnknownHostException e) {
-                throw new AsterixException(ErrorCode.NODE_RESOLVER_UNABLE_RESOLVE_HOST, e, value);
-            }
-            Set<String> nodeControllers = ncMap.get(ipAddress);
-            if (nodeControllers == null || nodeControllers.isEmpty()) {
-                throw new AsterixException(ErrorCode.NODE_RESOLVER_NO_NODE_CONTROLLERS, value);
-            }
-            return nodeControllers.toArray(new String[] {})[random.nextInt(nodeControllers.size())];
-        } catch (Exception e) {
-            throw new AsterixException(e);
+            ipAddress = InetAddress.getByName(value);
+        } catch (UnknownHostException e) {
+            throw new AsterixException(ErrorCode.NODE_RESOLVER_UNABLE_RESOLVE_HOST, e, value);
         }
-    }
-
-    private static void updateNCs(ICcApplicationContext appCtx) throws Exception {
-        synchronized (ncMap) {
-            ncMap.clear();
-            RuntimeUtils.getNodeControllerMap(appCtx, ncMap);
-            synchronized (ncs) {
-                ncs.clear();
-                for (Entry<InetAddress, Set<String>> entry : ncMap.entrySet()) {
-                    ncs.addAll(entry.getValue());
-                }
-            }
+        Set<String> nodeControllers = ncMap.get(ipAddress);
+        if (nodeControllers == null || nodeControllers.isEmpty()) {
+            throw new AsterixException(ErrorCode.NODE_RESOLVER_NO_NODE_CONTROLLERS, value);
         }
+        return nodeControllers.toArray(new String[] {})[random.nextInt(nodeControllers.size())];
     }
 }
