@@ -28,6 +28,7 @@ import org.apache.hyracks.api.config.IConfigManager;
 import org.apache.hyracks.control.common.controllers.CCConfig;
 import org.apache.hyracks.control.common.controllers.ControllerConfig;
 import org.apache.hyracks.control.common.controllers.NCConfig;
+import org.apache.hyracks.control.common.utils.ConfigurationUtil;
 import org.apache.hyracks.util.file.FileUtil;
 
 class ApplicationConfigurator {
@@ -37,12 +38,12 @@ class ApplicationConfigurator {
     static void registerConfigOptions(IConfigManager configManager) {
         AsterixProperties.registerConfigOptions(configManager);
         ControllerConfig.Option.DEFAULT_DIR
-                .setDefaultValue(FileUtil.joinPath(System.getProperty("java.io.tmpdir"), "asterixdb"));
+                .setDefaultValue(FileUtil.joinPath(System.getProperty(ConfigurationUtil.JAVA_IO_TMPDIR), "asterixdb"));
         NCConfig.Option.APP_CLASS.setDefaultValue(NCApplication.class.getName());
         CCConfig.Option.APP_CLASS.setDefaultValue(CCApplication.class.getName());
         try {
-            InputStream propertyStream = ApplicationConfigurator.class.getClassLoader()
-                    .getResourceAsStream("git.properties");
+            InputStream propertyStream =
+                    ApplicationConfigurator.class.getClassLoader().getResourceAsStream("git.properties");
             if (propertyStream != null) {
                 Properties gitProperties = new Properties();
                 gitProperties.load(propertyStream);

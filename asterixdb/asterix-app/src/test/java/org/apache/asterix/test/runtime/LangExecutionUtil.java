@@ -32,12 +32,15 @@ import java.util.Collection;
 import java.util.List;
 
 import org.apache.asterix.app.external.TestLibrarian;
+import org.apache.asterix.common.config.ClusterProperties;
 import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.test.common.TestExecutor;
 import org.apache.asterix.testframework.context.TestCaseContext;
 import org.apache.commons.lang.SystemUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.hyracks.api.io.IODeviceHandle;
 import org.apache.hyracks.control.common.utils.ThreadDumpHelper;
+import org.apache.hyracks.control.nc.NodeControllerService;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
@@ -48,8 +51,8 @@ import org.junit.runners.Parameterized;
 public class LangExecutionUtil {
 
     private static final String PATH_ACTUAL = "target" + File.separator + "rttest" + File.separator;
-    private static final String PATH_BASE = StringUtils.join(new String[] { "src", "test", "resources", "runtimets" },
-            File.separator);
+    private static final String PATH_BASE =
+            StringUtils.join(new String[] { "src", "test", "resources", "runtimets" }, File.separator);
 
     private static final boolean cleanupOnStart = true;
     private static final boolean cleanupOnStop = true;
@@ -137,31 +140,22 @@ public class LangExecutionUtil {
 
     // Checks whether data files are uniformly distributed among io devices.
     private static void checkStorageFiles() throws Exception {
-        String tempDirPath = System.getProperty("java.io.tmpdir");
-        File dir = new File(tempDirPath);
-        File[] subDirs = dir.listFiles();
-        List<File> ncStores = new ArrayList<>();
-        // Finds nc stores.
-        for (File file : subDirs) {
-            if (file.getName().startsWith("asterix_nc")) {
-                ncStores.add(file);
-            }
-        }
-        // Checks that dataset files are uniformly distributed across each nc store.
-        for (File ncStore : ncStores) {
-            checkNcStore(ncStore);
+        NodeControllerService[] ncs = ExecutionTestUtil.integrationUtil.ncs;
+        // Checks that dataset files are uniformly distributed across each io device.
+        for (NodeControllerService nc : ncs) {
+            checkNcStore(nc);
         }
     }
 
     // For each NC, check whether data files are uniformly distributed among io devices.
-    private static void checkNcStore(File ncStore) throws Exception {
-        File[] ioDevices = ncStore.listFiles();
+    private static void checkNcStore(NodeControllerService nc) throws Exception {
+        List<IODeviceHandle> ioDevices = nc.getIoManager().getIODevices();
         int expectedPartitionNum = -1;
-        for (File ioDevice : ioDevices) {
-            File[] dataDirs = ioDevice.listFiles();
+        for (IODeviceHandle ioDevice : ioDevices) {
+            File[] dataDirs = ioDevice.getMount().listFiles();
             for (File dataDir : dataDirs) {
                 String dirName = dataDir.getName();
-                if (!dirName.equals("storage")) {
+                if (!dirName.equals(ClusterProperties.DEFAULT_STORAGE_DIR_NAME)) {
                     // Skips non-storage directories.
                     continue;
                 }
@@ -202,8 +196,8 @@ public class LangExecutionUtil {
         String threadDump = ThreadDumpHelper.takeDumpJSON(ManagementFactory.getThreadMXBean());
         // Currently we only do sanity check for threads used in the execution engine.
         // Later we should check if there are leaked storage threads as well.
-        if (threadDump.contains("Operator") || threadDump.contains("SuperActivity") || threadDump
-                .contains("PipelinedPartition")) {
+        if (threadDump.contains("Operator") || threadDump.contains("SuperActivity")
+                || threadDump.contains("PipelinedPartition")) {
             System.out.print(threadDump);
             throw new AssertionError("There are leaked threads in the execution engine.");
         }
@@ -219,8 +213,8 @@ public class LangExecutionUtil {
         String processId = processName.split("@")[0];
 
         // Checks whether there are leaked run files from operators.
-        Process process = Runtime.getRuntime()
-                .exec(new String[] { "bash", "-c", "lsof -p " + processId + "|grep waf|wc -l" });
+        Process process =
+                Runtime.getRuntime().exec(new String[] { "bash", "-c", "lsof -p " + processId + "|grep waf|wc -l" });
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
             int runFileCount = Integer.parseInt(reader.readLine().trim());
             if (runFileCount != 0) {
@@ -232,8 +226,8 @@ public class LangExecutionUtil {
     }
 
     private static void outputLeakedOpenFiles(String processId) throws IOException {
-        Process process = Runtime.getRuntime()
-                .exec(new String[] { "bash", "-c", "lsof -p " + processId + "|grep waf" });
+        Process process =
+                Runtime.getRuntime().exec(new String[] { "bash", "-c", "lsof -p " + processId + "|grep waf" });
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
             String line;
             while ((line = reader.readLine()) != null) {

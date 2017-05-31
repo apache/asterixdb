@@ -61,7 +61,6 @@ public class AsterixHyracksIntegrationUtil {
         }
     }
 
-    protected static final String IO_DIR_KEY = "java.io.tmpdir";
     public static final int DEFAULT_HYRACKS_CC_CLIENT_PORT = 1098;
     public static final int DEFAULT_HYRACKS_CC_CLUSTER_PORT = 1099;
 
@@ -79,8 +78,7 @@ public class AsterixHyracksIntegrationUtil {
         final CCConfig ccConfig = createCCConfig(configManager);
         cc = new ClusterControllerService(ccConfig, ccApplication);
 
-
-            nodeNames = ccConfig.getConfigManager().getNodeNames();
+        nodeNames = ccConfig.getConfigManager().getNodeNames();
         if (deleteOldInstanceData) {
             deleteTransactionLogs();
             removeTestStorageFiles();
@@ -133,7 +131,7 @@ public class AsterixHyracksIntegrationUtil {
         ccConfig.setClusterListenPort(DEFAULT_HYRACKS_CC_CLUSTER_PORT);
         ccConfig.setResultTTL(120000L);
         ccConfig.setResultSweepThreshold(1000L);
-        configManager.set(ControllerConfig.Option.DEFAULT_DIR, joinPath(System.getProperty(IO_DIR_KEY), "asterixdb"));
+        configManager.set(ControllerConfig.Option.DEFAULT_DIR, joinPath(getDefaultStoragePath(), "asterixdb"));
         return ccConfig;
     }
 
@@ -152,8 +150,7 @@ public class AsterixHyracksIntegrationUtil {
         ncConfig.setResultTTL(120000L);
         ncConfig.setResultSweepThreshold(1000L);
         ncConfig.setVirtualNC(true);
-        configManager.set(ControllerConfig.Option.DEFAULT_DIR,
-                joinPath(System.getProperty(IO_DIR_KEY), "asterixdb", ncName));
+        configManager.set(ControllerConfig.Option.DEFAULT_DIR, joinPath(getDefaultStoragePath(), "asterixdb", ncName));
         return ncConfig;
     }
 
@@ -170,11 +167,10 @@ public class AsterixHyracksIntegrationUtil {
         if (nodeStores == null) {
             throw new IllegalStateException("Couldn't find stores for NC: " + ncConfig.getNodeId());
         }
-        String tempDirPath = System.getProperty(IO_DIR_KEY);
-        LOGGER.info("Using the temp path: " + tempDirPath);
+        LOGGER.info("Using the path: " + getDefaultStoragePath());
         for (int i = 0; i < nodeStores.length; i++) {
             // create IO devices based on stores
-            nodeStores[i] = joinPath(tempDirPath, ncConfig.getNodeId(), nodeStores[i]);
+            nodeStores[i] = joinPath(getDefaultStoragePath(), ncConfig.getNodeId(), nodeStores[i]);
         }
         ncConfig.getConfigManager().set(ncConfig.getNodeId(), NCConfig.Option.IODEVICES, nodeStores);
         return ncConfig;
@@ -226,8 +222,12 @@ public class AsterixHyracksIntegrationUtil {
         hcc.waitForCompletion(jobId);
     }
 
+    protected String getDefaultStoragePath() {
+        return joinPath("target", "io", "dir");
+    }
+
     public void removeTestStorageFiles() {
-        File dir = new File(System.getProperty(IO_DIR_KEY));
+        File dir = new File(getDefaultStoragePath());
         for (String ncName : nodeNames) {
             File ncDir = new File(dir, ncName);
             FileUtils.deleteQuietly(ncDir);

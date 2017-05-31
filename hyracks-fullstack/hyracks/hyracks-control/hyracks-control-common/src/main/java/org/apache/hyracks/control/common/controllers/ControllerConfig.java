@@ -27,16 +27,19 @@ import org.apache.hyracks.api.config.IOptionType;
 import org.apache.hyracks.api.config.Section;
 import org.apache.hyracks.control.common.config.ConfigManager;
 import org.apache.hyracks.control.common.config.OptionTypes;
+import org.apache.hyracks.control.common.utils.ConfigurationUtil;
 import org.apache.hyracks.util.file.FileUtil;
 
 public class ControllerConfig implements Serializable {
 
+    private static final long serialVersionUID = 1L;
     public enum Option implements IOption {
         CONFIG_FILE(OptionTypes.STRING, "Specify path to master configuration file", null),
         CONFIG_FILE_URL(OptionTypes.URL, "Specify URL to master configuration file", null),
-        DEFAULT_DIR(OptionTypes.STRING, "Directory where files are written to by default",
-                FileUtil.joinPath(System.getProperty("java.io.tmpdir"), "hyracks")),
-        ;
+        DEFAULT_DIR(
+                OptionTypes.STRING,
+                "Directory where files are written to by default",
+                FileUtil.joinPath(System.getProperty(ConfigurationUtil.JAVA_IO_TMPDIR), "hyracks")),;
 
         private final IOptionType type;
         private final String description;

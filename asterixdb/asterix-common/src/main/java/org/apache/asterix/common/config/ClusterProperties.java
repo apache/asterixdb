@@ -37,8 +37,8 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 public class ClusterProperties {
 
     public static final ClusterProperties INSTANCE = new ClusterProperties();
-    private static final String CLUSTER_CONFIGURATION_FILE = "cluster.xml";
-    private static final String DEFAULT_STORAGE_DIR_NAME = "storage";
+    public static final String CLUSTER_CONFIGURATION_FILE = "cluster.xml";
+    public static final String DEFAULT_STORAGE_DIR_NAME = "storage";
     private String nodeNamePrefix = StringUtils.EMPTY;
     private Cluster cluster;
 
