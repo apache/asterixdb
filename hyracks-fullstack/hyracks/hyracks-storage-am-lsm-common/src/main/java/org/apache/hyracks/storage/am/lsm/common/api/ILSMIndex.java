@@ -27,6 +27,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.common.api.IIndexOperationContext;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMHarness;
 import org.apache.hyracks.storage.common.IIndex;
+import org.apache.hyracks.storage.common.IIndexBulkLoader;
 import org.apache.hyracks.storage.common.IIndexCursor;
 import org.apache.hyracks.storage.common.IModificationOperationCallback;
 import org.apache.hyracks.storage.common.ISearchOperationCallback;
@@ -139,4 +140,20 @@ public interface ILSMIndex extends IIndex {
      * @throws HyracksDataException
      */
     void updateFilter(ILSMIndexOperationContext ictx, ITupleReference tuple) throws HyracksDataException;
+
+    /**
+     * Create a component bulk loader for the given component
+     *
+     * @param component
+     * @param fillFactor
+     * @param verifyInput
+     * @param numElementsHint
+     * @param checkIfEmptyIndex
+     * @param withFilter
+     * @return
+     * @throws HyracksDataException
+     */
+    IIndexBulkLoader createComponentBulkLoader(ILSMDiskComponent component, float fillFactor, boolean verifyInput,
+            long numElementsHint, boolean checkIfEmptyIndex, boolean withFilter) throws HyracksDataException;
+
 }

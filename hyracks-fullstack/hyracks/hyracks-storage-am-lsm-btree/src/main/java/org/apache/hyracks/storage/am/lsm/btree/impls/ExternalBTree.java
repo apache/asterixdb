@@ -28,12 +28,9 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
-import org.apache.hyracks.storage.am.bloomfilter.impls.BloomCalculations;
 import org.apache.hyracks.storage.am.bloomfilter.impls.BloomFilter;
 import org.apache.hyracks.storage.am.bloomfilter.impls.BloomFilterFactory;
-import org.apache.hyracks.storage.am.bloomfilter.impls.BloomFilterSpecification;
 import org.apache.hyracks.storage.am.btree.impls.BTree;
-import org.apache.hyracks.storage.am.btree.impls.BTree.BTreeBulkLoader;
 import org.apache.hyracks.storage.am.common.api.IIndexOperationContext;
 import org.apache.hyracks.storage.am.common.api.IMetadataPageManager;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexCursor;
@@ -451,13 +448,10 @@ public class ExternalBTree extends LSMBTree implements ITwoPCIndex {
     // modifications
     public class LSMTwoPCBTreeBulkLoader implements IIndexBulkLoader, ITwoPCIndexBulkLoader {
         private final ILSMDiskComponent component;
-        private final BTreeBulkLoader bulkLoader;
-        private final IIndexBulkLoader builder;
-        private boolean cleanedUpArtifacts = false;
-        private boolean isEmptyComponent = true;
-        private boolean endedBloomFilterLoad = false;
-        private final boolean isTransaction;
+        private final IIndexBulkLoader componentBulkLoader;
         private final ITreeIndexTupleWriterFactory frameTupleWriterFactory;
+
+        private final boolean isTransaction;
 
         public LSMTwoPCBTreeBulkLoader(float fillFactor, boolean verifyInput, long numElementsHint,
                 boolean isTransaction) throws HyracksDataException {
@@ -471,68 +465,23 @@ public class ExternalBTree extends LSMBTree implements ITwoPCIndex {
 
             frameTupleWriterFactory =
                     ((LSMBTreeDiskComponent) component).getBTree().getLeafFrameFactory().getTupleWriterFactory();
-            bulkLoader = (BTreeBulkLoader) ((LSMBTreeDiskComponent) component).getBTree().createBulkLoader(fillFactor,
-                    verifyInput, numElementsHint, false);
 
-            int maxBucketsPerElement = BloomCalculations.maxBucketsPerElement(numElementsHint);
-            BloomFilterSpecification bloomFilterSpec =
-                    BloomCalculations.computeBloomSpec(maxBucketsPerElement, bloomFilterFalsePositiveRate);
-            builder = ((LSMBTreeDiskComponent) component).getBloomFilter().createBuilder(numElementsHint,
-                    bloomFilterSpec.getNumHashes(), bloomFilterSpec.getNumBucketsPerElements());
+            componentBulkLoader =
+                    createComponentBulkLoader(component, fillFactor, verifyInput, numElementsHint, false, true);
         }
 
         // It is expected that the mode was set to insert operation before
         // calling add
         @Override
         public void add(ITupleReference tuple) throws HyracksDataException {
-            try {
-                bulkLoader.add(tuple);
-                builder.add(tuple);
-            } catch (Exception e) {
-                cleanupArtifacts();
-                throw e;
-            }
-            if (isEmptyComponent) {
-                isEmptyComponent = false;
-            }
-        }
-
-        // This is made public in case of a failure, it is better to delete all
-        // created artifacts.
-        public void cleanupArtifacts() throws HyracksDataException {
-            if (!cleanedUpArtifacts) {
-                cleanedUpArtifacts = true;
-                // We make sure to end the bloom filter load to release latches.
-                if (!endedBloomFilterLoad) {
-                    builder.end();
-                    endedBloomFilterLoad = true;
-                }
-                try {
-                    ((LSMBTreeDiskComponent) component).getBTree().deactivate();
-                } catch (HyracksDataException e) {
-                    // Do nothing.. this could've bee
-                }
-                ((LSMBTreeDiskComponent) component).getBTree().destroy();
-                try {
-                    ((LSMBTreeDiskComponent) component).getBloomFilter().deactivate();
-                } catch (HyracksDataException e) {
-                    // Do nothing.. this could've bee
-                }
-                ((LSMBTreeDiskComponent) component).getBloomFilter().destroy();
-            }
+            componentBulkLoader.add(tuple);
         }
 
         @Override
         public void end() throws HyracksDataException {
-            if (!cleanedUpArtifacts) {
-                if (!endedBloomFilterLoad) {
-                    builder.end();
-                    endedBloomFilterLoad = true;
-                }
-                bulkLoader.end();
-                if (isEmptyComponent) {
-                    cleanupArtifacts();
-                } else if (isTransaction) {
+            componentBulkLoader.end();
+            if (component.getComponentSize() > 0) {
+                if (isTransaction) {
                     // Since this is a transaction component, validate and
                     // deactivate. it could later be added or deleted
                     markAsValid(component);
@@ -551,23 +500,14 @@ public class ExternalBTree extends LSMBTree implements ITwoPCIndex {
         @Override
         public void delete(ITupleReference tuple) throws HyracksDataException {
             ((LSMBTreeRefrencingTupleWriterFactory) frameTupleWriterFactory).setMode(IndexOperation.DELETE);
-            try {
-                bulkLoader.add(tuple);
-                builder.add(tuple);
-            } catch (Exception e) {
-                cleanupArtifacts();
-                throw e;
-            }
-            if (isEmptyComponent) {
-                isEmptyComponent = false;
-            }
+            componentBulkLoader.add(tuple);
             ((LSMBTreeRefrencingTupleWriterFactory) frameTupleWriterFactory).setMode(IndexOperation.INSERT);
         }
 
         @Override
         public void abort() {
             try {
-                cleanupArtifacts();
+                componentBulkLoader.abort();
             } catch (Exception e) {
                 // Do nothing
             }
