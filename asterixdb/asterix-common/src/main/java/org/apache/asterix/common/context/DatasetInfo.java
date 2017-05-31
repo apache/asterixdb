@@ -76,6 +76,17 @@ public class DatasetInfo extends Info implements Comparable<DatasetInfo> {
         return datasetIndexes;
     }
 
+    public synchronized Set<IndexInfo> getDatsetIndexInfos() {
+        Set<IndexInfo> infos = new HashSet<>();
+        for (IndexInfo iInfo : getIndexes().values()) {
+            if (iInfo.isOpen()) {
+                infos.add(iInfo);
+            }
+        }
+
+        return infos;
+    }
+
     @Override
     public int compareTo(DatasetInfo i) {
         // sort by (isOpen, referenceCount, lastAccess) ascending, where true < false

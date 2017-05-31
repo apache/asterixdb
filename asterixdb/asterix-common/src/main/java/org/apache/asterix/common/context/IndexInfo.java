@@ -22,13 +22,15 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 
 public class IndexInfo extends Info {
     private final ILSMIndex index;
-    private final long resourceId;
     private final int datasetId;
+    private final long resourceId;
+    private final int partition;
 
-    public IndexInfo(ILSMIndex index, int datasetId, long resourceId) {
+    public IndexInfo(ILSMIndex index, int datasetId, long resourceId, int partition) {
         this.index = index;
         this.datasetId = datasetId;
         this.resourceId = resourceId;
+        this.partition = partition;
     }
 
     public ILSMIndex getIndex() {
@@ -37,6 +39,10 @@ public class IndexInfo extends Info {
 
     public long getResourceId() {
         return resourceId;
+    }
+
+    public int getPartition() {
+        return partition;
     }
 
     public int getDatasetId() {

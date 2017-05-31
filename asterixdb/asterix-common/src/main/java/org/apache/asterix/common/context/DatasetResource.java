@@ -20,9 +20,11 @@ package org.apache.asterix.common.context;
 
 import java.util.Map;
 
+import org.apache.asterix.common.dataflow.DatasetLocalResource;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.common.IIndex;
+import org.apache.hyracks.storage.common.LocalResource;
 
 /**
  * A dataset can be in one of two states { EVICTED , LOADED }.
@@ -41,8 +43,7 @@ public class DatasetResource implements Comparable<DatasetResource> {
     private final PrimaryIndexOperationTracker datasetPrimaryOpTracker;
     private final DatasetVirtualBufferCaches datasetVirtualBufferCaches;
 
-    public DatasetResource(DatasetInfo datasetInfo,
-            PrimaryIndexOperationTracker datasetPrimaryOpTracker,
+    public DatasetResource(DatasetInfo datasetInfo, PrimaryIndexOperationTracker datasetPrimaryOpTracker,
             DatasetVirtualBufferCaches datasetVirtualBufferCaches) {
         this.datasetInfo = datasetInfo;
         this.datasetPrimaryOpTracker = datasetPrimaryOpTracker;
@@ -86,7 +87,8 @@ public class DatasetResource implements Comparable<DatasetResource> {
         return (iInfo == null) ? null : iInfo.getIndex();
     }
 
-    public void register(long resourceID, IIndex index) throws HyracksDataException {
+    public void register(LocalResource resource, IIndex index) throws HyracksDataException {
+        long resourceID = resource.getId();
         if (!datasetInfo.isRegistered()) {
             synchronized (datasetInfo) {
                 if (!datasetInfo.isRegistered()) {
@@ -102,8 +104,8 @@ public class DatasetResource implements Comparable<DatasetResource> {
         if (index == null) {
             throw new HyracksDataException("Attempt to register a null index");
         }
-        datasetInfo.getIndexes().put(resourceID,
-                new IndexInfo((ILSMIndex) index, datasetInfo.getDatasetID(), resourceID));
+        datasetInfo.getIndexes().put(resourceID, new IndexInfo((ILSMIndex) index, datasetInfo.getDatasetID(),
+                resourceID, ((DatasetLocalResource) resource.getResource()).getPartition()));
     }
 
     public DatasetInfo getDatasetInfo() {

@@ -93,12 +93,12 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
     public synchronized void register(String resourcePath, IIndex index) throws HyracksDataException {
         validateDatasetLifecycleManagerState();
         int did = getDIDfromResourcePath(resourcePath);
-        long resourceID = getResourceIDfromResourcePath(resourcePath);
+        LocalResource resource = resourceRepository.get(resourcePath);
         DatasetResource datasetResource = datasets.get(did);
         if (datasetResource == null) {
             datasetResource = getDatasetLifecycle(did);
         }
-        datasetResource.register(resourceID, index);
+        datasetResource.register(resource, index);
     }
 
     public int getDIDfromResourcePath(String resourcePath) throws HyracksDataException {

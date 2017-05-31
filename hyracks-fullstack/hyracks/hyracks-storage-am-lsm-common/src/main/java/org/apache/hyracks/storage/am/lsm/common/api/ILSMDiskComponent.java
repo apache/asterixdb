@@ -46,4 +46,12 @@ public interface ILSMDiskComponent extends ILSMComponent {
      * @throws HyracksDataException
      */
     void destroy() throws HyracksDataException;
+
+    /**
+     * Return the component Id of this disk component from its metadata
+     * @return
+     * @throws HyracksDataException
+     */
+    ILSMDiskComponentId getComponentId() throws HyracksDataException;
+
 }
