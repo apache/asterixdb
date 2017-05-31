@@ -51,5 +51,31 @@ ERROR_BODY: {"results":"target nodes should not be empty"}</expected-error>
         <output-dir compare="Text">single_dataset_with_index</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="rebalance">
+      <compilation-unit name="single_dataverse">
+        <output-dir compare="Text">single_dataverse</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="rebalance">
+      <compilation-unit name="all_datasets">
+        <output-dir compare="Text">all_datasets</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="rebalance">
+      <compilation-unit name="metadata">
+        <output-dir compare="Text">metadata</output-dir>
+        <expected-error>HTTP operation failed:
+STATUS LINE: HTTP/1.1 400 Bad Request
+ERROR_BODY: {"results":"cannot rebalance a metadata dataset"}</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="rebalance">
+      <compilation-unit name="miss_dataverse">
+        <output-dir compare="Text">miss_dataverse</output-dir>
+        <expected-error>HTTP operation failed:
+STATUS LINE: HTTP/1.1 400 Bad Request
+ERROR_BODY: {"results":"to rebalance a particular dataset, the parameter dataverseName must be given"}</expected-error>
+      </compilation-unit>
+    </test-case>
   </test-group>
 </test-suite>
