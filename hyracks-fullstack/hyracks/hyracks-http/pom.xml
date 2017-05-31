@@ -24,6 +24,9 @@
     <version>0.3.2-SNAPSHOT</version>
   </parent>
   <artifactId>hyracks-http</artifactId>
+  <properties>
+    <root.dir>${basedir}/../..</root.dir>
+  </properties>
   <dependencies>
     <dependency>
       <groupId>io.netty</groupId>

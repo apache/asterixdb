@@ -45,6 +45,11 @@
   </build>
 
   <artifactId>hyracks-util</artifactId>
+
+  <properties>
+    <root.dir>${basedir}/../..</root.dir>
+  </properties>
+
   <dependencies>
     <dependency>
       <groupId>junit</groupId>

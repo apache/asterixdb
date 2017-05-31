@@ -54,6 +54,7 @@
     <jdk.version>1.8</jdk.version>
     <jvm.extraargs />
     <sonar.jacoco.reportPath>${env.PWD}/target/jacoco-merged.exec</sonar.jacoco.reportPath>
+    <source-format.skip>false</source-format.skip>
 
     <!-- Definition of tests in various categories which may be excluded -->
     <hanging.pregelix.tests>**/pregelix/**/FailureRecovery*.java</hanging.pregelix.tests>
@@ -158,6 +159,11 @@
         <groupId>org.apache.rat</groupId>
         <artifactId>apache-rat-plugin</artifactId>
         <version>0.12</version>
+      </dependency>
+      <dependency>
+        <groupId>net.revelc.code.formatter</groupId>
+        <artifactId>formatter-maven-plugin</artifactId>
+        <version>2.0.1</version>
       </dependency>
       <dependency>
         <groupId>args4j</groupId>
@@ -362,6 +368,11 @@
           <artifactId>apache-rat-plugin</artifactId>
           <version>0.12</version>
         </plugin>
+        <plugin>
+          <groupId>net.revelc.code.formatter</groupId>
+          <artifactId>formatter-maven-plugin</artifactId>
+          <version>2.0.1</version>
+        </plugin>
         <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
         <plugin>
           <groupId>org.eclipse.m2e</groupId>
@@ -448,6 +459,34 @@
       <properties>
         <hanging.pregelix.tests />
       </properties>
+    </profile>
+    <profile>
+      <id>source-format</id>
+      <activation>
+        <activeByDefault>false</activeByDefault>
+      </activation>
+      <properties>
+        <source-format.goal>format</source-format.goal>
+      </properties>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>net.revelc.code.formatter</groupId>
+            <artifactId>formatter-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <goals>
+                  <goal>${source-format.goal}</goal>
+                </goals>
+              </execution>
+            </executions>
+            <configuration>
+              <configFile>${root.dir}/AsterixCodeFormatProfile.xml</configFile>
+              <skipFormatting>${source-format.skip}</skipFormatting>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
     </profile>
     <profile>
       <id>skip-assembly</id>

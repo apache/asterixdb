@@ -27,6 +27,11 @@
   <packaging>maven-plugin</packaging>
 
   <artifactId>license-automation-plugin</artifactId>
+
+  <properties>
+    <root.dir>${basedir}/../../..</root.dir>
+  </properties>
+
   <dependencies>
     <dependency>
       <groupId>org.apache.maven.plugin-tools</groupId>

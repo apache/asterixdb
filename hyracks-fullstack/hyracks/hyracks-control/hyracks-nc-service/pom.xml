@@ -27,6 +27,10 @@
 
   <artifactId>hyracks-nc-service</artifactId>
 
+  <properties>
+    <root.dir>${basedir}/../../..</root.dir>
+  </properties>
+
   <dependencies>
     <dependency>
       <groupId>args4j</groupId>
