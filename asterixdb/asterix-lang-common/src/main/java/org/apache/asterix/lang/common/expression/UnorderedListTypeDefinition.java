@@ -54,7 +54,7 @@ public class UnorderedListTypeDefinition implements TypeExpression {
         if (this == object) {
             return true;
         }
-        if (!(object instanceof OrderedListTypeDefinition)) {
+        if (!(object instanceof UnorderedListTypeDefinition)) {
             return false;
         }
         UnorderedListTypeDefinition target = (UnorderedListTypeDefinition) object;
