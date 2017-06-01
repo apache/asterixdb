@@ -50,7 +50,7 @@ public class AsterixExternalLibraryIT {
 
     @Rule
     public TestRule retainLogs = new RetainLogsRule(
-            AsterixInstallerIntegrationUtil.getManagixHome(), reportPath);
+            AsterixInstallerIntegrationUtil.getManagixHome(), reportPath, this);
 
     @BeforeClass
     public static void setUp() throws Exception {

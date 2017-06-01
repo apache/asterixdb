@@ -19,6 +19,7 @@
 package org.apache.hyracks.http.server.utils;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 
@@ -72,6 +73,10 @@ public class HttpUtil {
 
     public static IServletRequest toServletRequest(FullHttpRequest request) throws IOException {
         return request.method() == HttpMethod.POST ? PostRequest.create(request) : BaseRequest.create(request);
+    }
+
+    public static String getRequestBody(IServletRequest request) {
+        return request.getHttpRequest().content().toString(StandardCharsets.UTF_8);
     }
 
     public static void setContentType(IServletResponse response, String type, String charset) throws IOException {

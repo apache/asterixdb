@@ -63,7 +63,7 @@ public class AsterixRestartIT {
     }
 
     @Rule
-    public TestRule retainLogs = new RetainLogsRule(AsterixInstallerIntegrationUtil.getManagixHome(), reportPath);
+    public TestRule retainLogs = new RetainLogsRule(AsterixInstallerIntegrationUtil.getManagixHome(), reportPath, this);
 
     @BeforeClass
     public static void setUp() throws Exception {

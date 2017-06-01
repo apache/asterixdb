@@ -21,7 +21,6 @@ package org.apache.asterix.api.http.server;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.concurrent.ConcurrentMap;
 import java.util.logging.Level;
@@ -320,7 +319,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         param.path = servletPath(request);
         if (HttpUtil.ContentType.APPLICATION_JSON.equals(contentType)) {
             try {
-                JsonNode jsonRequest = new ObjectMapper().readTree(getRequestBody(request));
+                JsonNode jsonRequest = new ObjectMapper().readTree(HttpUtil.getRequestBody(request));
                 param.statement = jsonRequest.get(Parameter.STATEMENT.str()).asText();
                 param.format = toLower(getOptText(jsonRequest, Parameter.FORMAT.str()));
                 param.pretty = getOptBoolean(jsonRequest, Parameter.PRETTY.str(), false);
@@ -333,7 +332,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         } else {
             param.statement = request.getParameter(Parameter.STATEMENT.str());
             if (param.statement == null) {
-                param.statement = getRequestBody(request);
+                param.statement = HttpUtil.getRequestBody(request);
             }
             param.format = toLower(request.getParameter(Parameter.FORMAT.str()));
             param.pretty = Boolean.parseBoolean(request.getParameter(Parameter.PRETTY.str()));
@@ -341,10 +340,6 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
             param.clientContextID = request.getParameter(Parameter.CLIENT_ID.str());
         }
         return param;
-    }
-
-    private static String getRequestBody(IServletRequest request) throws IOException {
-        return request.getHttpRequest().content().toString(StandardCharsets.UTF_8);
     }
 
     private static ResultDelivery parseResultDelivery(String mode) {

@@ -22,7 +22,6 @@ import static org.apache.asterix.api.http.servlet.ServletConstants.HYRACKS_CONNE
 import static org.apache.asterix.api.http.servlet.ServletConstants.HYRACKS_DATASET_ATTR;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.concurrent.ConcurrentMap;
 import java.util.logging.Level;
@@ -222,7 +221,7 @@ public abstract class RestApiServlet extends AbstractServlet {
     //TODO: Both Get and Post of this API must use the same parameter names
     private String query(IServletRequest request) {
         if (request.getHttpRequest().method() == HttpMethod.POST) {
-            return request.getHttpRequest().content().toString(StandardCharsets.UTF_8);
+            return HttpUtil.getRequestBody(request);
         } else {
             return getQueryParameter(request);
         }

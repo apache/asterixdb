@@ -25,6 +25,7 @@ import java.util.Set;
 
 import org.apache.asterix.app.replication.message.CompleteFailbackRequestMessage;
 import org.apache.asterix.app.replication.message.PreparePartitionsFailbackRequestMessage;
+import org.apache.asterix.app.replication.message.PreparePartitionsFailbackResponseMessage;
 
 public class NodeFailbackPlan {
 

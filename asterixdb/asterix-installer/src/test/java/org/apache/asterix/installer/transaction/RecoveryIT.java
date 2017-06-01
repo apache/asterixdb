@@ -58,7 +58,7 @@ public class RecoveryIT {
     private final TestExecutor testExecutor = new TestExecutor();
 
     @Rule
-    public TestRule retainLogs = new RetainLogsRule(managixHomePath, reportPath);
+    public TestRule retainLogs = new RetainLogsRule(managixHomePath, reportPath, this);
 
     @BeforeClass
     public static void setUp() throws Exception {

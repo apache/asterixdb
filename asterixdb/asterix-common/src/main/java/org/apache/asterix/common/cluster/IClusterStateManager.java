@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.asterix.common.api.IClusterManagementWork.ClusterState;
+import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.hyracks.api.config.IOption;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
@@ -97,4 +98,13 @@ public interface IClusterStateManager {
     boolean waitForState(ClusterState waitForState, long timeout, TimeUnit unit)
             throws HyracksDataException, InterruptedException;
 
+    /**
+     * Register the specified node partitions with the specified nodeId with this cluster state manager
+     */
+    void registerNodePartitions(String nodeId, ClusterPartition[] nodePartitions) throws AsterixException;
+
+    /**
+     * De-register the specified node's partitions from this cluster state manager
+     */
+    void deregisterNodePartitions(String nodeId);
 }

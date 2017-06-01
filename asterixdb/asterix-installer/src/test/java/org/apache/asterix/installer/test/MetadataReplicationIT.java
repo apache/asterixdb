@@ -26,11 +26,10 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import org.apache.asterix.event.model.AsterixInstance.State;
-import org.apache.asterix.test.common.TestExecutor;
 import org.apache.asterix.test.base.RetainLogsRule;
+import org.apache.asterix.test.common.TestExecutor;
 import org.apache.asterix.testframework.context.TestCaseContext;
 import org.apache.commons.lang3.StringUtils;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -62,7 +61,7 @@ public class MetadataReplicationIT {
     }
 
     @Rule
-    public TestRule retainLogs = new RetainLogsRule(AsterixInstallerIntegrationUtil.getManagixHome(), reportPath);
+    public TestRule retainLogs = new RetainLogsRule(AsterixInstallerIntegrationUtil.getManagixHome(), reportPath, this);
 
     @BeforeClass
     public static void setUp() throws Exception {
@@ -89,7 +88,7 @@ public class MetadataReplicationIT {
         LOGGER.info("Instance is in ACTIVE state.");
     }
 
-    @After
+    @RetainLogsRule.After
     public void after() throws Exception {
         LOGGER.info("Destroying instance...");
         AsterixInstallerIntegrationUtil.deinit();

@@ -43,7 +43,11 @@ public class NodeProperties extends AbstractProperties {
                 appConfig -> FileUtil.joinPath(appConfig.getString(ControllerConfig.Option.DEFAULT_DIR), "txn-log"),
                 "The directory where transaction logs should be stored",
                 "<value of " + ControllerConfig.Option.DEFAULT_DIR.cmdline() + ">/txn-log"),
-        STORAGE_SUBDIR(OptionTypes.STRING, "storage", "The subdirectory name under each iodevice used for storage"),;
+        STORAGE_SUBDIR(OptionTypes.STRING, "storage", "The subdirectory name under each iodevice used for storage"),
+        STARTING_PARTITION_ID(
+                OptionTypes.INTEGER,
+                -1,
+                "The first partition id to assign to iodevices on this node (-1 == auto-assign)");
 
         private final IOptionType type;
         private final Object defaultValue;
@@ -92,7 +96,7 @@ public class NodeProperties extends AbstractProperties {
 
         @Override
         public boolean hidden() {
-            return this == INITIAL_RUN;
+            return this == INITIAL_RUN || this == STARTING_PARTITION_ID;
         }
 
     }

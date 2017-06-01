@@ -29,7 +29,6 @@ import org.apache.asterix.test.base.RetainLogsRule;
 import org.apache.asterix.test.common.TestExecutor;
 import org.apache.asterix.testframework.context.TestCaseContext;
 import org.apache.hyracks.util.file.FileUtil;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -60,7 +59,7 @@ public class ReplicationIT {
     }
 
     @Rule
-    public TestRule retainLogs = new RetainLogsRule(AsterixInstallerIntegrationUtil.getManagixHome(), reportPath);
+    public TestRule retainLogs = new RetainLogsRule(AsterixInstallerIntegrationUtil.getManagixHome(), reportPath, this);
 
     @BeforeClass
     public static void setUp() throws Exception {
@@ -86,7 +85,7 @@ public class ReplicationIT {
         LOGGER.info("Instance is in ACTIVE state.");
     }
 
-    @After
+    @RetainLogsRule.After
     public void after() throws Exception {
         LOGGER.info("Destroying instance...");
         AsterixInstallerIntegrationUtil.deinit();

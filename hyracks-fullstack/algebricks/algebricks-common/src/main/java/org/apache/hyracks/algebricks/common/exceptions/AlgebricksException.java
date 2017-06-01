@@ -31,7 +31,9 @@ public class AlgebricksException extends Exception {
     private final int errorCode;
     private final Serializable[] params;
     private final String nodeId;
-    private transient volatile String msgCache;
+
+    @SuppressWarnings("squid:S1165") // exception class not final
+    private transient CachedMessage msgCache;
 
     public AlgebricksException(String component, int errorCode, String message, Throwable cause, String nodeId,
             Serializable... params) {
@@ -42,16 +44,12 @@ public class AlgebricksException extends Exception {
         this.params = params;
     }
 
-    public static AlgebricksException create(int errorCode, Serializable... params) {
-        return new AlgebricksException(ErrorCode.HYRACKS, errorCode, ErrorCode.getErrorMessage(errorCode), params);
-    }
-
     /**
      * @deprecated Error code is needed.
      */
     @Deprecated
     public AlgebricksException(String message) {
-        this(ErrorMessageUtil.NONE, UNKNOWN, message, null, null);
+        this(ErrorMessageUtil.NONE, UNKNOWN, message, null, (Serializable[]) null);
     }
 
     /**
@@ -59,23 +57,7 @@ public class AlgebricksException extends Exception {
      */
     @Deprecated
     public AlgebricksException(Throwable cause) {
-        this(ErrorMessageUtil.NONE, UNKNOWN, cause.getMessage(), cause, null);
-    }
-
-    /**
-     * @deprecated Error code is needed.
-     */
-    @Deprecated
-    public AlgebricksException(Throwable cause, String nodeId) {
-        this(ErrorMessageUtil.NONE, UNKNOWN, cause.getMessage(), cause, nodeId);
-    }
-
-    /**
-     * @deprecated Error code is needed.
-     */
-    @Deprecated
-    public AlgebricksException(String message, Throwable cause, String nodeId) {
-        this(ErrorMessageUtil.NONE, UNKNOWN, message, cause, nodeId);
+        this(ErrorMessageUtil.NONE, UNKNOWN, cause.getMessage(), cause, (Serializable[]) null);
     }
 
     /**
@@ -107,6 +89,10 @@ public class AlgebricksException extends Exception {
         this(component, errorCode, message, cause, null, params);
     }
 
+    public static AlgebricksException create(int errorCode, Serializable... params) {
+        return new AlgebricksException(ErrorCode.HYRACKS, errorCode, ErrorCode.getErrorMessage(errorCode), params);
+    }
+
     public String getComponent() {
         return component;
     }
@@ -122,10 +108,17 @@ public class AlgebricksException extends Exception {
     @Override
     public String getMessage() {
         if (msgCache == null) {
-            synchronized (this) {
-                msgCache = ErrorMessageUtil.formatMessage(component, errorCode, super.getMessage(), params);
-            }
+            msgCache = new CachedMessage(
+                    ErrorMessageUtil.formatMessage(component, errorCode, super.getMessage(), params));
         }
-        return msgCache;
+        return msgCache.message;
+    }
+
+    private static class CachedMessage {
+        private final String message;
+
+        private CachedMessage(String message) {
+            this.message = message;
+        }
     }
 }

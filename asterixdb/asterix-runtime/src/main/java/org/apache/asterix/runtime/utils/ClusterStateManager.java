@@ -19,6 +19,7 @@
 package org.apache.asterix.runtime.utils;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -35,6 +36,8 @@ import org.apache.asterix.common.api.IClusterManagementWork.ClusterState;
 import org.apache.asterix.common.cluster.ClusterPartition;
 import org.apache.asterix.common.cluster.IClusterStateManager;
 import org.apache.asterix.common.config.ClusterProperties;
+import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.replication.IFaultToleranceStrategy;
 import org.apache.asterix.event.schema.cluster.Cluster;
 import org.apache.asterix.event.schema.cluster.Node;
@@ -249,8 +252,8 @@ public class ClusterStateManager implements IClusterStateManager {
                 clusterActiveLocations.add(p.getActiveNodeId());
             }
         }
-        clusterPartitionConstraint =
-                new AlgebricksAbsolutePartitionConstraint(clusterActiveLocations.toArray(new String[] {}));
+        clusterPartitionConstraint = new AlgebricksAbsolutePartitionConstraint(
+                clusterActiveLocations.toArray(new String[] {}));
     }
 
     public boolean isGlobalRecoveryCompleted() {
@@ -349,5 +352,35 @@ public class ClusterStateManager implements IClusterStateManager {
     @Override
     public String getCurrentMetadataNodeId() {
         return currentMetadataNode;
+    }
+
+    @Override
+    public synchronized void registerNodePartitions(String nodeId, ClusterPartition[] nodePartitions)
+            throws AsterixException {
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("Registering node partitions for node " + nodeId + ": " + Arrays.toString(nodePartitions));
+        }
+        // We want to make sure there are no conflicts; make two passes for simplicity...
+        for (ClusterPartition nodePartition : nodePartitions) {
+            if (clusterPartitions.containsKey(nodePartition.getPartitionId())) {
+                throw AsterixException.create(ErrorCode.DUPLICATE_PARTITION_ID, nodePartition.getPartitionId(), nodeId,
+                        clusterPartitions.get(nodePartition.getPartitionId()).getNodeId());
+            }
+        }
+        for (ClusterPartition nodePartition : nodePartitions) {
+            clusterPartitions.put(nodePartition.getPartitionId(), nodePartition);
+        }
+        node2PartitionsMap.put(nodeId, nodePartitions);
+    }
+
+    @Override
+    public synchronized void deregisterNodePartitions(String nodeId) {
+        ClusterPartition [] nodePartitions = node2PartitionsMap.remove(nodeId);
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("Deegistering node partitions for node " + nodeId + ": " + Arrays.toString(nodePartitions));
+        }
+        for (ClusterPartition nodePartition : nodePartitions) {
+            clusterPartitions.remove(nodePartition.getPartitionId());
+        }
     }
 }

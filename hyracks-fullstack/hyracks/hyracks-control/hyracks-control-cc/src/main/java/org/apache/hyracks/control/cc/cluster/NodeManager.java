@@ -84,19 +84,14 @@ public class NodeManager implements INodeManager {
         }
         // Updates the node registry.
         if (nodeRegistry.containsKey(nodeId)) {
-            LOGGER.warning("Node with name " + nodeId + " has already registered.");
-            return;
+            LOGGER.warning("Node with name " + nodeId + " has already registered; re-registering");
         }
         nodeRegistry.put(nodeId, ncState);
 
         // Updates the IP address to node names map.
         try {
             InetAddress ipAddress = getIpAddress(ncState);
-            Set<String> nodes = ipAddressNodeNameMap.get(ipAddress);
-            if (nodes == null) {
-                nodes = new HashSet<>();
-                ipAddressNodeNameMap.put(ipAddress, nodes);
-            }
+            Set<String> nodes = ipAddressNodeNameMap.computeIfAbsent(ipAddress, k -> new HashSet<>());
             nodes.add(nodeId);
         } catch (HyracksException e) {
             // If anything fails, we ignore the node.

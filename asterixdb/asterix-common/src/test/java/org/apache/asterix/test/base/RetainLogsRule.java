@@ -19,6 +19,9 @@
 package org.apache.asterix.test.base;
 
 import java.io.File;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.reflect.Method;
 
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
@@ -26,15 +29,17 @@ import org.junit.runner.Description;
 public class RetainLogsRule extends TestWatcher {
     private final File baseDir;
     private final File destDir;
+    private final Object instance;
     private long startTime;
 
-    public RetainLogsRule(File baseDir, File destDir) {
+    public RetainLogsRule(File baseDir, File destDir, Object instance) {
         this.baseDir = baseDir;
         this.destDir = destDir;
+        this.instance = instance;
     }
 
-    public RetainLogsRule(String baseDir, String destDir) {
-        this(new File(baseDir), new File(destDir));
+    public RetainLogsRule(String baseDir, String destDir, Object instance) {
+        this(new File(baseDir), new File(destDir), instance);
     }
 
     @Override
@@ -44,7 +49,7 @@ public class RetainLogsRule extends TestWatcher {
 
     @Override
     protected void failed(Throwable e, Description description) {
-        File reportDir = new File(destDir, description.getTestClass().getName() + "." + description.getMethodName());
+        File reportDir = new File(destDir, description.getTestClass().getSimpleName() + "." + description.getMethodName());
         reportDir.mkdirs();
         try {
             AsterixTestHelper.deepSelectiveCopy(baseDir, reportDir,
@@ -53,5 +58,24 @@ public class RetainLogsRule extends TestWatcher {
         } catch (Exception e1) {
             e1.printStackTrace();
         }
+    }
+
+    @Override
+    protected void finished(Description description) {
+        if (instance != null) {
+            for (Method m : instance.getClass().getMethods()) {
+                if (m.isAnnotationPresent(After.class)) {
+                    try {
+                        m.invoke(instance);
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }
+        }
+    }
+
+    @Retention(RetentionPolicy.RUNTIME)
+    public @interface After {
     }
 }

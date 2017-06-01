@@ -19,6 +19,7 @@ package org.apache.asterix.common.api;
  * under the License.
  */
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Set;
 
 import org.apache.asterix.common.api.IClusterManagementWork.ClusterState;
@@ -27,26 +28,35 @@ public interface IClusterEventsSubscriber {
 
     /**
      * @param deadNodeIds
-     * @return
+     * @return set of work to execute as a result of this node failure
      */
-    public Set<IClusterManagementWork> notifyNodeFailure(Collection<String> deadNodeIds);
+    default Set<IClusterManagementWork> notifyNodeFailure(Collection<String> deadNodeIds) {
+        // default is no-op
+        return Collections.emptySet();
+    }
 
     /**
      * @param joinedNodeId
-     * @return
+     * @return set of work to execute as a result of this node join
      */
-    public Set<IClusterManagementWork> notifyNodeJoin(String joinedNodeId);
+    default Set<IClusterManagementWork> notifyNodeJoin(String joinedNodeId) {
+        // default is no-op
+        return Collections.emptySet();
+    }
 
     /**
      * @param response
      */
-    public void notifyRequestCompletion(IClusterManagementWorkResponse response);
+    default void notifyRequestCompletion(IClusterManagementWorkResponse response) {
+        // default is no-op
+    }
 
     /**
      * @param previousState
      * @param newState
      */
-    public void notifyStateChange(ClusterState previousState, ClusterState newState);
-
+    default void notifyStateChange(ClusterState previousState, ClusterState newState) {
+        // default is no-op
+    }
 
 }

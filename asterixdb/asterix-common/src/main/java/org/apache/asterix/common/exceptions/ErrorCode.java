@@ -187,6 +187,9 @@ public class ErrorCode {
     public static final int PROVIDER_STREAM_RECORD_READER_WRONG_CONFIGURATION = 3086;
     public static final int FEED_CONNECT_FEED_APPLIED_INVALID_FUNCTION = 3087;
 
+    // Lifecycle management errors
+    public static final int DUPLICATE_PARTITION_ID = 4000;
+
     private ErrorCode() {
     }
 

@@ -19,7 +19,6 @@
 
 package org.apache.hyracks.api.util;
 
-import java.io.IOError;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
@@ -29,8 +28,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import org.apache.hyracks.api.exceptions.ErrorCode;
 
 public class ErrorMessageUtil {
 

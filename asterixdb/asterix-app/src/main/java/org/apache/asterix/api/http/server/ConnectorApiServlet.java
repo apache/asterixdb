@@ -69,10 +69,11 @@ public class ConnectorApiServlet extends AbstractServlet {
     protected void get(IServletRequest request, IServletResponse response) {
         response.setStatus(HttpResponseStatus.OK);
         try {
-            HttpUtil.setContentType(response, HttpUtil.ContentType.TEXT_HTML, HttpUtil.Encoding.UTF8);
+            HttpUtil.setContentType(response, HttpUtil.ContentType.APPLICATION_JSON, HttpUtil.Encoding.UTF8);
         } catch (IOException e) {
             LOGGER.log(Level.WARNING, "Failure setting content type", e);
             response.setStatus(HttpResponseStatus.INTERNAL_SERVER_ERROR);
+            response.writer().write(e.toString());
             return;
         }
         PrintWriter out = response.writer();
@@ -84,7 +85,6 @@ public class ConnectorApiServlet extends AbstractServlet {
             if (dataverseName == null || datasetName == null) {
                 jsonResponse.put("error", "Parameter dataverseName or datasetName is null,");
                 out.write(jsonResponse.toString());
-                out.flush();
                 return;
             }
 
@@ -127,15 +127,15 @@ public class ConnectorApiServlet extends AbstractServlet {
                 MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
                 // Writes file splits.
                 out.write(jsonResponse.toString());
-                out.flush();
             } finally {
                 metadataProvider.getLocks().unlock();
             }
         } catch (Exception e) {
             LOGGER.log(Level.WARNING, "Failure handling a request", e);
-            out.println(e.getMessage());
+            response.setStatus(HttpResponseStatus.INTERNAL_SERVER_ERROR);
+            out.write(e.toString());
+        } finally {
             out.flush();
-            e.printStackTrace(out);
         }
     }
 
