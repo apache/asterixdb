@@ -191,7 +191,7 @@ public class BuiltinClassAdFunctions {
                 val.setIntegerValue(classadToSize.size());
                 return true;
             } else if (arg.isStringValue(length)) {
-                val.setIntegerValue(length.getIntegerValue().intValue());
+                val.setIntegerValue(length.getIntegerValue());
                 return true;
             } else {
                 val.setErrorValue();

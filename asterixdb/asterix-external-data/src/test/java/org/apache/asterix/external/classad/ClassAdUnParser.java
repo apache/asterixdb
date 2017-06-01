@@ -236,7 +236,7 @@ public class ClassAdUnParser {
                 ExprTreeHolder t2 = objectPool.mutableExprPool.get();
                 ExprTreeHolder t3 = objectPool.mutableExprPool.get();
                 ((Operation) tree.getTree()).getComponents(op, t1, t2, t3);
-                unparseAux(buffer, op.getIntegerValue().intValue(), t1, t2, t3);
+                unparseAux(buffer, op.getIntegerValue(), t1, t2, t3);
                 return;
             }
 

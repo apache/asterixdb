@@ -266,7 +266,7 @@ public class JObjects {
         }
 
         public int getValue() {
-            return ((AMutableInt32) value).getIntegerValue().intValue();
+            return ((AMutableInt32) value).getIntegerValue();
         }
 
         @Override

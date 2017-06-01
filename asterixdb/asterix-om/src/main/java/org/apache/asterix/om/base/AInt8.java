@@ -28,7 +28,7 @@ public class AInt8 implements IAObject {
 
     protected byte value;
 
-    public AInt8(Byte value) {
+    public AInt8(byte value) {
         this.value = value;
     }
 

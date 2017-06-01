@@ -320,7 +320,7 @@ public class ClassAdUnitTester {
     /*********************************************************************
      * Function: test_classad
      * Purpose: Test the ClassAd class.
-     * @param objectPool 
+     * @param objectPool
      *
      * @throws IOException
      *********************************************************************/
@@ -441,10 +441,10 @@ public class ClassAdUnitTester {
         AMutableInt32 offset = new AMutableInt32(0);
 
         parser.parseClassAd(twoClassads, classad1, offset);
-        test("Have good offset #1", offset.getIntegerValue().intValue() == 10, "Test Parsing multiple ClassAds 1",
+        test("Have good offset #1", offset.getIntegerValue() == 10, "Test Parsing multiple ClassAds 1",
                 results);
         parser.parseClassAd(twoClassads, classad2, offset);
-        test("Have good offset #2", offset.getIntegerValue().intValue() == 20, "Test Parsing multiple ClassAds 2",
+        test("Have good offset #2", offset.getIntegerValue() == 20, "Test Parsing multiple ClassAds 2",
                 results);
 
         /* ----- Test chained ClassAds ----- */

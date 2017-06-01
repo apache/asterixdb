@@ -28,7 +28,7 @@ public class AInt64 implements IAObject {
 
     protected long value;
 
-    public AInt64(Long value) {
+    public AInt64(long value) {
         this.value = value;
     }
 

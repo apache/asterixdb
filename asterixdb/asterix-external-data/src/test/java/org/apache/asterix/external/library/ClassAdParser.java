@@ -784,7 +784,7 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
 
     public boolean parseClassAd(String buffer, ClassAd classad, AMutableInt32 offset) throws IOException {
         boolean success = false;
-        StringLexerSource stringLexerSource = new StringLexerSource(buffer, offset.getIntegerValue().intValue());
+        StringLexerSource stringLexerSource = new StringLexerSource(buffer, offset.getIntegerValue());
         success = parseClassAd(stringLexerSource, classad);
         offset.setValue(stringLexerSource.getCurrentLocation());
         return success;

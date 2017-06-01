@@ -534,10 +534,10 @@ public class ATypeHierarchy {
                 switch (targetTypeTag) {
                     case TINYINT:
                         // an exception can happen because of a type demotion from INTEGER to TINYINT
-                        return new AInt8(((AInt32) sourceObject).getIntegerValue().byteValue());
+                        return new AInt8((byte) ((AInt32) sourceObject).getIntegerValue());
                     case SMALLINT:
                         // an exception can happen because of a type demotion from INTEGER to SMALLINT
-                        return new AInt16(((AInt32) sourceObject).getIntegerValue().shortValue());
+                        return new AInt16((short) ((AInt32) sourceObject).getIntegerValue());
                     case INTEGER:
                         return sourceObject;
                     case BIGINT:

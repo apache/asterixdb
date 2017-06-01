@@ -124,9 +124,9 @@ public class PrettyPrint extends ClassAdUnParser {
 
         if (op1.getKind() == NodeKind.OP_NODE) {
             ((Operation) op1.getInnerTree()).getComponents(top, t1, t2, t3);
-            if (Operation.precedenceLevel(top.getIntegerValue().intValue()) < Operation.precedenceLevel(op)) {
+            if (Operation.precedenceLevel(top.getIntegerValue()) < Operation.precedenceLevel(op)) {
                 buffer.appendString(" ( ");
-                unparseAux(buffer, top.getIntegerValue().intValue(), t1, t2, t3);
+                unparseAux(buffer, top.getIntegerValue(), t1, t2, t3);
                 buffer.appendString(" ) ");
             }
         } else {
@@ -135,9 +135,9 @@ public class PrettyPrint extends ClassAdUnParser {
         buffer.appendString(opString[op]);
         if (op2.getKind() == NodeKind.OP_NODE) {
             ((Operation) op2.getInnerTree()).getComponents(top, t1, t2, t3);
-            if (Operation.precedenceLevel(top.getIntegerValue().intValue()) < Operation.precedenceLevel(op)) {
+            if (Operation.precedenceLevel(top.getIntegerValue()) < Operation.precedenceLevel(op)) {
                 buffer.appendString(" ( ");
-                unparseAux(buffer, top.getIntegerValue().intValue(), t1, t2, t3);
+                unparseAux(buffer, top.getIntegerValue(), t1, t2, t3);
                 buffer.appendString(" ) ");
             }
         } else {
