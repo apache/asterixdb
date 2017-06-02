@@ -367,12 +367,16 @@ public interface IMetadataNode extends Remote, Serializable {
      *            A globally unique id for an active metadata transaction.
      * @param nodeGroupName
      *            Name of node group to be deleted.
+     * @param failSilently
+     *            true means it's a no-op if the node group cannot be dropped; false means it will throw an exception.
+     * @return Whether the node group has been successfully dropped.
      * @throws MetadataException
      *             For example, there are still datasets partitioned on the node
      *             group to be deleted.
      * @throws RemoteException
      */
-    void dropNodegroup(JobId jobId, String nodeGroupName) throws MetadataException, RemoteException;
+    boolean dropNodegroup(JobId jobId, String nodeGroupName, boolean failSilently)
+            throws MetadataException, RemoteException;
 
     /**
      * Inserts a node (compute node), acquiring local locks on behalf of the

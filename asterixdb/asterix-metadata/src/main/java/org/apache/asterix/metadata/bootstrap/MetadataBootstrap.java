@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.cluster.ClusterPartition;
 import org.apache.asterix.common.config.ClusterProperties;
@@ -84,14 +83,11 @@ import org.apache.hyracks.storage.am.lsm.btree.dataflow.LSMBTreeLocalResourceFac
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
-import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import org.apache.hyracks.storage.am.lsm.common.impls.ConstantMergePolicyFactory;
 import org.apache.hyracks.storage.am.lsm.common.impls.NoMergePolicyFactory;
 import org.apache.hyracks.storage.am.lsm.common.impls.PrefixMergePolicyFactory;
 import org.apache.hyracks.storage.common.ILocalResourceRepository;
 import org.apache.hyracks.storage.common.LocalResource;
-import org.apache.hyracks.storage.common.buffercache.IBufferCache;
-import org.apache.hyracks.storage.common.file.IFileMapProvider;
 
 /**
  * Initializes the remote metadata storage facilities ("universe") using a
@@ -106,14 +102,10 @@ public class MetadataBootstrap {
     public static final boolean IS_DEBUG_MODE = false;
     private static final Logger LOGGER = Logger.getLogger(MetadataBootstrap.class.getName());
     private static INcApplicationContext appContext;
-    private static IBufferCache bufferCache;
-    private static IFileMapProvider fileMapProvider;
-    private static IDatasetLifecycleManager dataLifecycleManager;
     private static ILocalResourceRepository localResourceRepository;
     private static IIOManager ioManager;
     private static String metadataNodeName;
     private static List<String> nodeNames;
-    private static String outputDir;
     private static boolean isNewUniverse;
     private static final IMetadataIndex[] PRIMARY_INDEXES =
             new IMetadataIndex[] { MetadataPrimaryIndexes.DATAVERSE_DATASET, MetadataPrimaryIndexes.DATASET_DATASET,
@@ -130,7 +122,6 @@ public class MetadataBootstrap {
     /**
      * bootstrap metadata
      *
-     * @param asterixPropertiesProvider
      * @param ncServiceContext
      * @param isNewUniverse
      * @throws ACIDException
@@ -146,10 +137,7 @@ public class MetadataBootstrap {
         MetadataProperties metadataProperties = appContext.getMetadataProperties();
         metadataNodeName = metadataProperties.getMetadataNodeName();
         nodeNames = metadataProperties.getNodeNames();
-        dataLifecycleManager = appContext.getDatasetLifecycleManager();
         localResourceRepository = appContext.getLocalResourceRepository();
-        bufferCache = appContext.getBufferCache();
-        fileMapProvider = appContext.getFileMapManager();
         ioManager = ncServiceContext.getIoManager();
 
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
@@ -260,10 +248,6 @@ public class MetadataBootstrap {
         metadataGroupNodeNames.add(metadataNodeName);
         NodeGroup groupRecord = new NodeGroup(MetadataConstants.METADATA_NODEGROUP_NAME, metadataGroupNodeNames);
         MetadataManager.INSTANCE.addNodegroup(mdTxnCtx, groupRecord);
-        List<String> nodes = new ArrayList<>();
-        nodes.addAll(nodeNames);
-        NodeGroup defaultGroup = new NodeGroup(MetadataConstants.METADATA_DEFAULT_NODEGROUP_NAME, nodes);
-        MetadataManager.INSTANCE.addNodegroup(mdTxnCtx, defaultGroup);
     }
 
     private static void insertInitialAdapters(MetadataTransactionContext mdTxnCtx) throws MetadataException {
@@ -378,14 +362,6 @@ public class MetadataBootstrap {
             indexHelper.open(); // Opening the index through the helper will ensure it gets instantiated
             indexHelper.close();
         }
-    }
-
-    public static String getOutputDir() {
-        return outputDir;
-    }
-
-    public static String getMetadataNodeName() {
-        return metadataNodeName;
     }
 
     /**

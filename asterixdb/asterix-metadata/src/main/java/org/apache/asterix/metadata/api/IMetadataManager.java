@@ -349,11 +349,14 @@ public interface IMetadataManager extends IMetadataBootstrap {
      *            MetadataTransactionContext of an active metadata transaction.
      * @param nodeGroupName
      *            Name of node group to be deleted.
+     * @param failSilently
+     *            true means it's a no-op if the node group cannot be dropped; false means it will throw an exception.
      * @throws MetadataException
      *             For example, there are still datasets partitioned on the node
      *             group to be deleted.
      */
-    void dropNodegroup(MetadataTransactionContext ctx, String nodeGroupName) throws MetadataException;
+    void dropNodegroup(MetadataTransactionContext ctx, String nodeGroupName, boolean failSilently)
+            throws MetadataException;
 
     /**
      * Inserts a node (machine).

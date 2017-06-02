@@ -19,4 +19,4 @@
 
 select GroupName, NodeNames
 from Metadata.`Nodegroup`
-where GroupName like "LineItem%";
+where GroupName like "tpch.LineItem%";

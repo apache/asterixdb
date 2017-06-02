@@ -16,6 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-drop dataverse TinySocial if exists;
 
-drop nodegroup group_test if exists;
+use twitter;
+
+SELECT ds.GroupName, ng.NodeNames
+FROM Metadata.`Dataset` ds, Metadata.`Nodegroup` ng
+WHERE ds.GroupName = ng.GroupName AND ds.DatasetName="TwitterData";

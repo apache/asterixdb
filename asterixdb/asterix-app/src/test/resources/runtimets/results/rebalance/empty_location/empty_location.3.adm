@@ -1,1 +1,1 @@
-{ "DatasetName": "LineItem", "GroupName": "DEFAULT_NG_ALL_NODES" }
+{ "DatasetName": "LineItem", "GroupName": "tpch.LineItem" }

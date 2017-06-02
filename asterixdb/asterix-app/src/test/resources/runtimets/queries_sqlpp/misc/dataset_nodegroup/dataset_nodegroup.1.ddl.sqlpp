@@ -16,6 +16,20 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-drop dataverse TinySocial if exists;
 
-drop nodegroup group_test if exists;
+drop  dataverse twitter if exists;
+create  dataverse twitter;
+
+use twitter;
+
+create type Tweet as
+{
+  id : bigint,
+  tweetid : bigint,
+  loc : point,
+  time : datetime,
+  text : string
+}
+
+create dataset TwitterData(Tweet) primary key id;
+

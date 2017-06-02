@@ -33,7 +33,6 @@ import org.apache.asterix.lang.common.statement.DataverseDropStatement;
 import org.apache.asterix.lang.common.statement.DeleteStatement;
 import org.apache.asterix.lang.common.statement.DropDatasetStatement;
 import org.apache.asterix.lang.common.statement.InsertStatement;
-import org.apache.asterix.lang.common.statement.NodeGroupDropStatement;
 import org.apache.asterix.metadata.dataset.hints.DatasetHints;
 import org.apache.asterix.metadata.entities.Dataverse;
 import org.apache.asterix.metadata.utils.MetadataConstants;
@@ -125,14 +124,6 @@ public abstract class AbstractLangTranslator {
                 if (invalidOperation) {
                     message = "Delete operation is not permitted in dataverse "
                             + MetadataConstants.METADATA_DATAVERSE_NAME;
-                }
-                break;
-
-            case Statement.Kind.NODEGROUP_DROP:
-                String nodegroupName = ((NodeGroupDropStatement) stmt).getNodeGroupName().getValue();
-                invalidOperation = MetadataConstants.METADATA_DEFAULT_NODEGROUP_NAME.equals(nodegroupName);
-                if (invalidOperation) {
-                    message = "Cannot drop nodegroup:" + nodegroupName;
                 }
                 break;
 

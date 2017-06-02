@@ -25,7 +25,6 @@ import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
-import org.apache.asterix.metadata.utils.MetadataConstants;
 
 public class DatasetDecl implements Statement {
     protected final Identifier name;
@@ -61,8 +60,7 @@ public class DatasetDecl implements Statement {
         } else {
             this.metaItemTypeDataverse = metaItemTypeDataverse;
         }
-        this.nodegroupName = nodeGroupName == null ? new Identifier(MetadataConstants.METADATA_DEFAULT_NODEGROUP_NAME)
-                : nodeGroupName;
+        this.nodegroupName = nodeGroupName;
         this.compactionPolicy = compactionPolicy;
         this.compactionPolicyProperties = compactionPolicyProperties;
         this.hints = hints;

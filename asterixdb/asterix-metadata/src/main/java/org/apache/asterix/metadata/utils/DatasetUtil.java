@@ -20,8 +20,11 @@ package org.apache.asterix.metadata.utils;
 
 import java.io.DataOutput;
 import java.rmi.RemoteException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 import java.util.logging.Logger;
 
 import org.apache.asterix.builders.IARecordBuilder;
@@ -47,6 +50,8 @@ import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Dataverse;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails;
+import org.apache.asterix.metadata.entities.NodeGroup;
+import org.apache.asterix.metadata.lock.MetadataLockManager;
 import org.apache.asterix.om.base.AMutableString;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.types.ARecordType;
@@ -504,5 +509,54 @@ public class DatasetUtil {
     public static String getDataverseFromFullyQualifiedName(String datasetName) {
         int idx = datasetName.indexOf('.');
         return datasetName.substring(0, idx);
+    }
+
+    /***
+     * Creates a node group that is associated with a new dataset.
+     *
+     * @param dataverseName,
+     *            the dataverse name of the dataset.
+     * @param datasetName,
+     *            the name of the dataset.
+     * @param ncNames,
+     *            the set of node names.
+     * @param metadataProvider,
+     *            the metadata provider.
+     * @return the name of the created node group.
+     * @throws Exception
+     */
+    public static String createNodeGroupForNewDataset(String dataverseName, String datasetName, Set<String> ncNames,
+            MetadataProvider metadataProvider) throws Exception {
+        return createNodeGroupForNewDataset(dataverseName, datasetName, 0L, ncNames, metadataProvider);
+    }
+
+    /***
+     * Creates a node group that is associated with a new dataset.
+     *
+     * @param dataverseName,
+     *            the dataverse name of the dataset.
+     * @param datasetName,
+     *            the name of the dataset.
+     * @param rebalanceCount
+     *            , the rebalance count of the dataset.
+     * @param ncNames,
+     *            the set of node names.
+     * @param metadataProvider,
+     *            the metadata provider.
+     * @return the name of the created node group.
+     * @throws Exception
+     */
+    public static String createNodeGroupForNewDataset(String dataverseName, String datasetName, long rebalanceCount,
+            Set<String> ncNames, MetadataProvider metadataProvider) throws Exception {
+        String nodeGroup = dataverseName + "." + datasetName + (rebalanceCount == 0L ? "" : "_" + rebalanceCount);
+        MetadataTransactionContext mdTxnCtx = metadataProvider.getMetadataTxnContext();
+        MetadataLockManager.INSTANCE.acquireNodeGroupWriteLock(metadataProvider.getLocks(), nodeGroup);
+        NodeGroup ng = MetadataManager.INSTANCE.getNodegroup(mdTxnCtx, nodeGroup);
+        if (ng != null) {
+            nodeGroup = nodeGroup + "_" + UUID.randomUUID().toString();
+            MetadataLockManager.INSTANCE.acquireNodeGroupWriteLock(metadataProvider.getLocks(), nodeGroup);
+        }
+        MetadataManager.INSTANCE.addNodegroup(mdTxnCtx, new NodeGroup(nodeGroup, new ArrayList<>(ncNames)));
+        return nodeGroup;
     }
 }

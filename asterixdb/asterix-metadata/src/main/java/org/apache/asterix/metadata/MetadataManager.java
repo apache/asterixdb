@@ -515,13 +515,17 @@ public class MetadataManager implements IMetadataManager {
     }
 
     @Override
-    public void dropNodegroup(MetadataTransactionContext ctx, String nodeGroupName) throws MetadataException {
+    public void dropNodegroup(MetadataTransactionContext ctx, String nodeGroupName, boolean failSilently)
+            throws MetadataException {
+        boolean dropped;
         try {
-            metadataNode.dropNodegroup(ctx.getJobId(), nodeGroupName);
+            dropped = metadataNode.dropNodegroup(ctx.getJobId(), nodeGroupName, failSilently);
         } catch (RemoteException e) {
             throw new MetadataException(e);
         }
-        ctx.dropNodeGroup(nodeGroupName);
+        if (dropped) {
+            ctx.dropNodeGroup(nodeGroupName);
+        }
     }
 
     @Override

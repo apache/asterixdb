@@ -1,1 +1,1 @@
-{ "DatasetName": "LineItem", "GroupName": "LineItem_1", "rebalanceCount": 1 }
+{ "DatasetName": "LineItem", "GroupName": "tpch.LineItem_1", "rebalanceCount": 1 }

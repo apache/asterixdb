@@ -24,7 +24,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 import java.util.stream.IntStream;
 
 import org.apache.asterix.common.exceptions.AsterixException;
@@ -37,12 +36,10 @@ import org.apache.asterix.metadata.declared.MetadataManagerUtil;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
-import org.apache.asterix.metadata.entities.NodeGroup;
 import org.apache.asterix.metadata.lock.LockList;
 import org.apache.asterix.metadata.lock.MetadataLockManager;
 import org.apache.asterix.metadata.utils.DatasetUtil;
 import org.apache.asterix.metadata.utils.IndexUtil;
-import org.apache.asterix.metadata.utils.MetadataConstants;
 import org.apache.asterix.runtime.job.listener.JobEventListenerFactory;
 import org.apache.asterix.transaction.management.service.transaction.JobIdFactory;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
@@ -108,11 +105,10 @@ public class RebalanceUtil {
                 return;
             }
 
-            // The new node group name.
-            String nodeGroupName = datasetName + "_" + (sourceDataset.getRebalanceCount() + 1);
-
             // Creates a node group for rebalance.
-            createNodeGroup(nodeGroupName, targetNcNames, metadataProvider);
+            String nodeGroupName = DatasetUtil.createNodeGroupForNewDataset(sourceDataset.getDataverseName(),
+                    sourceDataset.getDatasetName(), sourceDataset.getRebalanceCount() + 1, targetNcNames,
+                    metadataProvider);
 
             // The target dataset for rebalance.
             targetDataset = new Dataset(sourceDataset, true, nodeGroupName);
@@ -144,20 +140,6 @@ public class RebalanceUtil {
         } finally {
             metadataProvider.getLocks().reset();
         }
-    }
-
-    // Creates a node group for the rebalance target dataset.
-    private static void createNodeGroup(String ngName, Set<String> ncNames, MetadataProvider metadataProvider)
-            throws Exception {
-        String nodeGroup = ngName;
-        MetadataTransactionContext mdTxnCtx = metadataProvider.getMetadataTxnContext();
-        MetadataLockManager.INSTANCE.acquireNodeGroupWriteLock(metadataProvider.getLocks(), nodeGroup);
-        NodeGroup ng = MetadataManager.INSTANCE.getNodegroup(mdTxnCtx, nodeGroup);
-        if (ng != null) {
-            nodeGroup = ngName + UUID.randomUUID().toString();
-            MetadataLockManager.INSTANCE.acquireNodeGroupWriteLock(metadataProvider.getLocks(), nodeGroup);
-        }
-        MetadataManager.INSTANCE.addNodegroup(mdTxnCtx, new NodeGroup(nodeGroup, new ArrayList<>(ncNames)));
     }
 
     // Rebalances from the source to the target.
@@ -197,9 +179,8 @@ public class RebalanceUtil {
 
         // Drops the metadata entry of source dataset's node group.
         String sourceNodeGroup = source.getNodeGroupName();
-        if (!sourceNodeGroup.equals(MetadataConstants.METADATA_DEFAULT_NODEGROUP_NAME)) {
-            MetadataManager.INSTANCE.dropNodegroup(mdTxnCtx, sourceNodeGroup);
-        }
+        MetadataLockManager.INSTANCE.acquireNodeGroupWriteLock(metadataProvider.getLocks(), sourceNodeGroup);
+        MetadataManager.INSTANCE.dropNodegroup(mdTxnCtx, sourceNodeGroup, true);
     }
 
     // Creates the files for the rebalance target dataset.

@@ -645,10 +645,13 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public void dropNodegroup(JobId jobId, String nodeGroupName) throws MetadataException, RemoteException {
-        List<String> datasetNames;
-        datasetNames = getDatasetNamesPartitionedOnThisNodeGroup(jobId, nodeGroupName);
+    public boolean dropNodegroup(JobId jobId, String nodeGroupName, boolean failSilently)
+            throws MetadataException, RemoteException {
+        List<String> datasetNames = getDatasetNamesPartitionedOnThisNodeGroup(jobId, nodeGroupName);
         if (!datasetNames.isEmpty()) {
+            if (failSilently) {
+                return false;
+            }
             StringBuilder sb = new StringBuilder();
             sb.append("Nodegroup '" + nodeGroupName
                     + "' cannot be dropped; it was used for partitioning these datasets:");
@@ -665,6 +668,7 @@ public class MetadataNode implements IMetadataNode {
             deleteTupleFromIndex(jobId, MetadataPrimaryIndexes.NODEGROUP_DATASET, tuple);
             // TODO: Change this to be a BTree specific exception, e.g.,
             // BTreeKeyDoesNotExistException.
+            return true;
         } catch (HyracksDataException e) {
             if (e.getComponent().equals(ErrorCode.HYRACKS)
                     && e.getErrorCode() == ErrorCode.UPDATE_OR_DELETE_NON_EXISTENT_KEY) {

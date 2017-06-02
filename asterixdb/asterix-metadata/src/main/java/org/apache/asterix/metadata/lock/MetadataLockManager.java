@@ -108,8 +108,8 @@ public class MetadataLockManager {
         locks.add(IMetadataLock.Mode.READ, lock);
     }
 
-    public void acquireNodeGroupWriteLock(LockList locks, String dataverseName) throws AsterixException {
-        MetadataLock lock = nodeGroupsLocks.computeIfAbsent(dataverseName, LOCK_FUNCTION);
+    public void acquireNodeGroupWriteLock(LockList locks, String nodeGroupName) throws AsterixException {
+        MetadataLock lock = nodeGroupsLocks.computeIfAbsent(nodeGroupName, LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.WRITE, lock);
     }
 
@@ -174,7 +174,9 @@ public class MetadataLockManager {
                 && !metaItemTypeFullyQualifiedName.equals(itemTypeFullyQualifiedName)) {
             acquireDataTypeReadLock(locks, metaItemTypeFullyQualifiedName);
         }
-        acquireNodeGroupReadLock(locks, nodeGroupName);
+        if (nodeGroupName != null) {
+            acquireNodeGroupReadLock(locks, nodeGroupName);
+        }
         if (!isDefaultCompactionPolicy) {
             acquireCompactionPolicyReadLock(locks, compactionPolicyName);
         }
