@@ -59,10 +59,7 @@ public abstract class AbstractLSMDiskComponentWithBuddyBulkLoader extends Abstra
 
             indexBulkLoader.add(t);
 
-            if (filterTuple != null) {
-                filterTuple.reset(tuple);
-                component.getLSMComponentFilter().update(filterTuple, filterCmp);
-            }
+            updateFilter(tuple);
         } catch (Exception e) {
             cleanupArtifacts();
             throw e;
@@ -72,12 +69,23 @@ public abstract class AbstractLSMDiskComponentWithBuddyBulkLoader extends Abstra
         }
     }
 
+    @Override
     public void delete(ITupleReference tuple) throws HyracksDataException {
         try {
-            buddyBTreeBulkLoader.add(tuple);
-            if (bloomFilterBuilder != null) {
-                bloomFilterBuilder.add(tuple);
+            ITupleReference t;
+            if (indexTuple != null) {
+                indexTuple.reset(tuple);
+                t = indexTuple;
+            } else {
+                t = tuple;
             }
+
+            buddyBTreeBulkLoader.add(t);
+            if (bloomFilterBuilder != null) {
+                bloomFilterBuilder.add(t);
+            }
+
+            updateFilter(tuple);
         } catch (HyracksDataException e) {
             //deleting a key multiple times is OK
             if (e.getErrorCode() != ErrorCode.DUPLICATE_KEY) {

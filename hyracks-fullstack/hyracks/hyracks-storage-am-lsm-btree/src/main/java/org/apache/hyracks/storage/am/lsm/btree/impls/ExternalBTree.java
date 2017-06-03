@@ -35,13 +35,12 @@ import org.apache.hyracks.storage.am.common.api.IIndexOperationContext;
 import org.apache.hyracks.storage.am.common.api.IMetadataPageManager;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexCursor;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
-import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleWriterFactory;
 import org.apache.hyracks.storage.am.common.api.ITwoPCIndexBulkLoader;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
-import org.apache.hyracks.storage.am.lsm.btree.tuples.LSMBTreeRefrencingTupleWriterFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponentBulkLoader;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
@@ -448,8 +447,7 @@ public class ExternalBTree extends LSMBTree implements ITwoPCIndex {
     // modifications
     public class LSMTwoPCBTreeBulkLoader implements IIndexBulkLoader, ITwoPCIndexBulkLoader {
         private final ILSMDiskComponent component;
-        private final IIndexBulkLoader componentBulkLoader;
-        private final ITreeIndexTupleWriterFactory frameTupleWriterFactory;
+        private final ILSMDiskComponentBulkLoader componentBulkLoader;
 
         private final boolean isTransaction;
 
@@ -462,9 +460,6 @@ public class ExternalBTree extends LSMBTree implements ITwoPCIndex {
             } else {
                 component = createBulkLoadTarget();
             }
-
-            frameTupleWriterFactory =
-                    ((LSMBTreeDiskComponent) component).getBTree().getLeafFrameFactory().getTupleWriterFactory();
 
             componentBulkLoader =
                     createComponentBulkLoader(component, fillFactor, verifyInput, numElementsHint, false, true);
@@ -499,9 +494,7 @@ public class ExternalBTree extends LSMBTree implements ITwoPCIndex {
         // calling delete
         @Override
         public void delete(ITupleReference tuple) throws HyracksDataException {
-            ((LSMBTreeRefrencingTupleWriterFactory) frameTupleWriterFactory).setMode(IndexOperation.DELETE);
-            componentBulkLoader.add(tuple);
-            ((LSMBTreeRefrencingTupleWriterFactory) frameTupleWriterFactory).setMode(IndexOperation.INSERT);
+            componentBulkLoader.delete(tuple);
         }
 
         @Override

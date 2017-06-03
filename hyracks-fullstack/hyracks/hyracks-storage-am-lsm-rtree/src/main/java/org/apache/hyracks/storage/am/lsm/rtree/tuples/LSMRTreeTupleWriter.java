@@ -22,10 +22,11 @@ package org.apache.hyracks.storage.am.lsm.rtree.tuples;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleReference;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMTreeTupleWriter;
 import org.apache.hyracks.storage.am.rtree.tuples.RTreeTypeAwareTupleWriter;
 
-public class LSMRTreeTupleWriter extends RTreeTypeAwareTupleWriter {
-    private final boolean isAntimatter;
+public class LSMRTreeTupleWriter extends RTreeTypeAwareTupleWriter implements ILSMTreeTupleWriter {
+    private boolean isAntimatter;
 
     public LSMRTreeTupleWriter(ITypeTraits[] typeTraits, boolean isAntimatter) {
         super(typeTraits);
@@ -54,18 +55,23 @@ public class LSMRTreeTupleWriter extends RTreeTypeAwareTupleWriter {
     @Override
     protected int getNullFlagsBytes(int numFields) {
         // +1.0 is for matter/antimatter bit.
-        return (int) Math.ceil(((double) numFields + 1.0) / 8.0);
+        return (int) Math.ceil((numFields + 1.0) / 8.0);
     }
 
     @Override
     protected int getNullFlagsBytes(ITupleReference tuple) {
         // +1.0 is for matter/antimatter bit.
-        return (int) Math.ceil(((double) tuple.getFieldCount() + 1.0) / 8.0);
+        return (int) Math.ceil((tuple.getFieldCount() + 1.0) / 8.0);
     }
 
     protected void setAntimatterBit(byte[] targetBuf, int targetOff) {
         // Set leftmost bit to 1.
         targetBuf[targetOff] = (byte) (targetBuf[targetOff] | (1 << 7));
+    }
+
+    @Override
+    public void setAntimatter(boolean isAntimatter) {
+        this.isAntimatter = isAntimatter;
     }
 
 }

@@ -23,8 +23,9 @@ import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 import org.apache.hyracks.storage.am.common.tuples.TypeAwareTupleWriter;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMTreeTupleWriter;
 
-public class LSMBTreeTupleWriter extends TypeAwareTupleWriter {
+public class LSMBTreeTupleWriter extends TypeAwareTupleWriter implements ILSMTreeTupleWriter {
     private boolean isAntimatter;
     private final int numKeyFields;
 
@@ -57,13 +58,13 @@ public class LSMBTreeTupleWriter extends TypeAwareTupleWriter {
     @Override
     protected int getNullFlagsBytes(int numFields) {
         // +1.0 is for matter/antimatter bit.
-        return (int) Math.ceil(((double) numFields + 1.0) / 8.0);
+        return (int) Math.ceil((numFields + 1.0) / 8.0);
     }
 
     @Override
     protected int getNullFlagsBytes(ITupleReference tuple) {
         // +1.0 is for matter/antimatter bit.
-        return (int) Math.ceil(((double) tuple.getFieldCount() + 1.0) / 8.0);
+        return (int) Math.ceil((tuple.getFieldCount() + 1.0) / 8.0);
     }
 
     @Override
@@ -83,8 +84,8 @@ public class LSMBTreeTupleWriter extends TypeAwareTupleWriter {
         targetBuf[targetOff] = (byte) (targetBuf[targetOff] | (1 << 7));
     }
 
-    // Allow using the same writer for both delete and insert tuples
-    public void setAntimatter(boolean isAntimatter) {
-        this.isAntimatter = isAntimatter;
+    @Override
+    public void setAntimatter(boolean isDelete) {
+        this.isAntimatter = isDelete;
     }
 }

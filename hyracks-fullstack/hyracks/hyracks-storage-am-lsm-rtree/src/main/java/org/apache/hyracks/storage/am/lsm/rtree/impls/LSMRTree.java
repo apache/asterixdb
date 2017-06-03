@@ -49,6 +49,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.IComponentFilterHelper;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilterFrameFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponentBulkLoader;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
@@ -195,7 +196,7 @@ public class LSMRTree extends AbstractLSMRTree {
             btreeCountingCursor.close();
         }
 
-        IIndexBulkLoader componentBulkLoader =
+        ILSMDiskComponentBulkLoader componentBulkLoader =
                 createComponentBulkLoader(component, 1.0f, false, numBTreeTuples, false, false);
 
         ITreeIndexCursor cursor;
@@ -240,7 +241,7 @@ public class LSMRTree extends AbstractLSMRTree {
             while (btreeScanCursor.hasNext()) {
                 btreeScanCursor.next();
                 ITupleReference frameTuple = btreeScanCursor.getTuple();
-                ((LSMRTreeDiskComponentBulkLoader) componentBulkLoader).delete(frameTuple);
+                componentBulkLoader.delete(frameTuple);
             }
         } finally {
             btreeScanCursor.close();
@@ -272,7 +273,7 @@ public class LSMRTree extends AbstractLSMRTree {
         LSMRTreeDiskComponent mergedComponent = createDiskComponent(componentFactory, mergeOp.getTarget(),
                 mergeOp.getBTreeTarget(), mergeOp.getBloomFilterTarget(), true);
 
-        IIndexBulkLoader componentBulkLoader;
+        ILSMDiskComponentBulkLoader componentBulkLoader;
 
         // In case we must keep the deleted-keys BTrees, then they must be merged *before* merging the r-trees so that
         // lsmHarness.endSearch() is called once when the r-trees have been merged.
@@ -293,7 +294,7 @@ public class LSMRTree extends AbstractLSMRTree {
                 while (btreeCursor.hasNext()) {
                     btreeCursor.next();
                     ITupleReference tuple = btreeCursor.getTuple();
-                    ((LSMRTreeDiskComponentBulkLoader) componentBulkLoader).delete(tuple);
+                    componentBulkLoader.delete(tuple);
                 }
             } finally {
                 btreeCursor.close();
@@ -343,7 +344,7 @@ public class LSMRTree extends AbstractLSMRTree {
     }
 
     @Override
-    public IIndexBulkLoader createComponentBulkLoader(ILSMDiskComponent component, float fillFactor,
+    public ILSMDiskComponentBulkLoader createComponentBulkLoader(ILSMDiskComponent component, float fillFactor,
             boolean verifyInput, long numElementsHint, boolean checkIfEmptyIndex, boolean withFilter)
             throws HyracksDataException {
         BloomFilterSpecification bloomFilterSpec = null;

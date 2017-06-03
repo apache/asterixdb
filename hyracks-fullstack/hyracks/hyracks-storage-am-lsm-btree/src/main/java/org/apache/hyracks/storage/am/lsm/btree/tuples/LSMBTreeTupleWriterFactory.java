@@ -20,23 +20,24 @@
 package org.apache.hyracks.storage.am.lsm.btree.tuples;
 
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
-import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
 import org.apache.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMTreeTupleWriter;
 
 public class LSMBTreeTupleWriterFactory extends TypeAwareTupleWriterFactory {
 
     private static final long serialVersionUID = 1L;
     private final int numKeyFields;
-    private final boolean isDelete;
+    private final boolean isAntimatter;
 
-    public LSMBTreeTupleWriterFactory(ITypeTraits[] typeTraits, int numKeyFields, boolean isDelete) {
+    public LSMBTreeTupleWriterFactory(ITypeTraits[] typeTraits, int numKeyFields, boolean isAntimatter) {
         super(typeTraits);
         this.numKeyFields = numKeyFields;
-        this.isDelete = isDelete;
+        this.isAntimatter = isAntimatter;
     }
 
     @Override
-    public ITreeIndexTupleWriter createTupleWriter() {
-        return new LSMBTreeTupleWriter(typeTraits, numKeyFields, isDelete);
+    public ILSMTreeTupleWriter createTupleWriter() {
+        return new LSMBTreeTupleWriter(typeTraits, numKeyFields, isAntimatter);
     }
+
 }

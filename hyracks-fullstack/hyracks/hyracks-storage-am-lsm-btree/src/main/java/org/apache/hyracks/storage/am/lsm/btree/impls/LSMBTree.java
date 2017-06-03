@@ -48,6 +48,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.IComponentFilterHelper;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilterFrameFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponentBulkLoader;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
@@ -311,7 +312,7 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
         LSMBTreeDiskComponent component =
                 createDiskComponent(componentFactory, flushOp.getTarget(), flushOp.getBloomFilterTarget(), true);
 
-        IIndexBulkLoader componentBulkLoader =
+        ILSMDiskComponentBulkLoader componentBulkLoader =
                 createComponentBulkLoader(component, 1.0f, false, numElements, false, false);
 
         IIndexCursor scanCursor = accessor.createSearchCursor(false);
@@ -365,7 +366,7 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
         LSMBTreeDiskComponent mergedComponent =
                 createDiskComponent(componentFactory, mergeOp.getTarget(), mergeOp.getBloomFilterTarget(), true);
 
-        IIndexBulkLoader componentBulkLoader =
+        ILSMDiskComponentBulkLoader componentBulkLoader =
                 createComponentBulkLoader(mergedComponent, 1.0f, false, numElements, false, false);
         try {
             while (cursor.hasNext()) {
@@ -415,7 +416,7 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
     }
 
     @Override
-    public IIndexBulkLoader createComponentBulkLoader(ILSMDiskComponent component, float fillFactor,
+    public ILSMDiskComponentBulkLoader createComponentBulkLoader(ILSMDiskComponent component, float fillFactor,
             boolean verifyInput, long numElementsHint, boolean checkIfEmptyIndex, boolean withFilter)
             throws HyracksDataException {
         BloomFilterSpecification bloomFilterSpec = null;

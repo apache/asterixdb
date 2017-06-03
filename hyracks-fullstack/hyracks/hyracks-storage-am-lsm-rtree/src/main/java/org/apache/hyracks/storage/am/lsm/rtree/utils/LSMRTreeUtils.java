@@ -92,7 +92,7 @@ public class LSMRTreeUtils {
         ITreeIndexTupleWriterFactory rtreeLeafFrameTupleWriterFactory = null;
         if (isPointMBR) {
             rtreeLeafFrameTupleWriterFactory =
-                    new LSMRTreeTupleWriterFactoryForPointMBR(typeTraits, keyFieldCount, valueFieldCount, false);
+                    new LSMRTreeTupleWriterFactoryForPointMBR(typeTraits, keyFieldCount, valueFieldCount, false, false);
         } else {
             rtreeLeafFrameTupleWriterFactory = rtreeInteriorFrameTupleWriterFactory;
         }
@@ -154,24 +154,30 @@ public class LSMRTreeUtils {
                 new LSMRTreeTupleWriterFactory(typeTraits, false);
         ITreeIndexTupleWriterFactory rtreeLeafFrameTupleWriterFactory;
         ITreeIndexTupleWriterFactory rtreeLeafFrameCopyTupleWriterFactory;
+        ITreeIndexTupleWriterFactory rtreeLeafFrameBulkLoadWriterFactory;
         if (isPointMBR) {
             int keyFieldCount = rtreeCmpFactories.length;
             int valueFieldCount = btreeComparatorFactories.length - keyFieldCount;
             rtreeLeafFrameTupleWriterFactory =
-                    new LSMRTreeTupleWriterFactoryForPointMBR(typeTraits, keyFieldCount, valueFieldCount, true);
+                    new LSMRTreeTupleWriterFactoryForPointMBR(typeTraits, keyFieldCount, valueFieldCount, true, false);
             rtreeLeafFrameCopyTupleWriterFactory =
-                    new LSMRTreeTupleWriterFactoryForPointMBR(typeTraits, keyFieldCount, valueFieldCount, true);
-
+                    new LSMRTreeTupleWriterFactoryForPointMBR(typeTraits, keyFieldCount, valueFieldCount, true, false);
+            rtreeLeafFrameBulkLoadWriterFactory =
+                    new LSMRTreeTupleWriterFactoryForPointMBR(typeTraits, keyFieldCount, valueFieldCount, true, false);
         } else {
             rtreeLeafFrameTupleWriterFactory = new LSMRTreeTupleWriterFactory(typeTraits, false);
             rtreeLeafFrameCopyTupleWriterFactory = new LSMRTreeCopyTupleWriterFactory(typeTraits);
+            rtreeLeafFrameBulkLoadWriterFactory = new LSMRTreeTupleWriterFactory(typeTraits, false);
         }
+
         LSMRTreeTupleWriterFactory btreeTupleWriterFactory = new LSMRTreeTupleWriterFactory(typeTraits, true);
 
         ITreeIndexFrameFactory rtreeInteriorFrameFactory = new RTreeNSMInteriorFrameFactory(
                 rtreeInteriorFrameTupleWriterFactory, valueProviderFactories, rtreePolicyType, isPointMBR);
         ITreeIndexFrameFactory rtreeLeafFrameFactory = new RTreeNSMLeafFrameFactory(rtreeLeafFrameTupleWriterFactory,
                 valueProviderFactories, rtreePolicyType, isPointMBR);
+        ITreeIndexFrameFactory rtreeLeafFrameBulkLoadFactory = new RTreeNSMLeafFrameFactory(
+                rtreeLeafFrameBulkLoadWriterFactory, valueProviderFactories, rtreePolicyType, isPointMBR);
 
         ITreeIndexFrameFactory btreeInteriorFrameFactory = new BTreeNSMInteriorFrameFactory(btreeTupleWriterFactory);
         ITreeIndexFrameFactory btreeLeafFrameFactory = new BTreeNSMLeafFrameFactory(btreeTupleWriterFactory);
@@ -183,7 +189,7 @@ public class LSMRTreeUtils {
                 typeTraits.length, isPointMBR);
 
         TreeIndexFactory<RTree> bulkLoadRTreeFactory = new RTreeFactory(ioManager, diskBufferCache, diskFileMapProvider,
-                freePageManagerFactory, rtreeInteriorFrameFactory, rtreeLeafFrameFactory, rtreeCmpFactories,
+                freePageManagerFactory, rtreeInteriorFrameFactory, rtreeLeafFrameBulkLoadFactory, rtreeCmpFactories,
                 typeTraits.length, isPointMBR);
 
         // The first field is for the sorted curve (e.g. Hilbert curve), and the
@@ -242,7 +248,7 @@ public class LSMRTreeUtils {
         ITreeIndexTupleWriterFactory rtreeLeafFrameTupleWriterFactory = null;
         if (isPointMBR) {
             rtreeLeafFrameTupleWriterFactory =
-                    new LSMRTreeTupleWriterFactoryForPointMBR(typeTraits, keyFieldCount, valueFieldCount, false);
+                    new LSMRTreeTupleWriterFactoryForPointMBR(typeTraits, keyFieldCount, valueFieldCount, false, false);
         } else {
             rtreeLeafFrameTupleWriterFactory = rtreeInteriorFrameTupleWriterFactory;
         }

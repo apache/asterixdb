@@ -28,17 +28,17 @@ public class LSMTypeAwareTupleWriterFactory extends TypeAwareTupleWriterFactory 
 
     private static final long serialVersionUID = 1L;
     private ITypeTraits[] typeTraits;
-    private final boolean isDelete;
+    private final boolean isAntimatter;
 
-    public LSMTypeAwareTupleWriterFactory(ITypeTraits[] typeTraits, boolean isDelete) {
+    public LSMTypeAwareTupleWriterFactory(ITypeTraits[] typeTraits, boolean isAntimatter) {
         super(typeTraits);
         this.typeTraits = typeTraits;
-        this.isDelete = isDelete;
+        this.isAntimatter = isAntimatter;
     }
 
     @Override
     public ITreeIndexTupleWriter createTupleWriter() {
-        if (isDelete) {
+        if (isAntimatter) {
             return new TypeAwareTupleWriter(typeTraits);
         } else {
             return new RTreeTypeAwareTupleWriter(typeTraits);

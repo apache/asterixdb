@@ -39,7 +39,6 @@ import org.apache.hyracks.storage.am.lsm.btree.impls.LSMBTree;
 import org.apache.hyracks.storage.am.lsm.btree.impls.LSMBTreeFileManager;
 import org.apache.hyracks.storage.am.lsm.btree.impls.LSMBTreeWithBuddyFileManager;
 import org.apache.hyracks.storage.am.lsm.btree.tuples.LSMBTreeCopyTupleWriterFactory;
-import org.apache.hyracks.storage.am.lsm.btree.tuples.LSMBTreeRefrencingTupleWriterFactory;
 import org.apache.hyracks.storage.am.lsm.btree.tuples.LSMBTreeTupleWriterFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
@@ -74,16 +73,21 @@ public class LSMBTreeUtil {
                 new LSMBTreeTupleWriterFactory(typeTraits, cmpFactories.length, true);
         LSMBTreeCopyTupleWriterFactory copyTupleWriterFactory =
                 new LSMBTreeCopyTupleWriterFactory(typeTraits, cmpFactories.length);
+        LSMBTreeTupleWriterFactory bulkLoadTupleWriterFactory =
+                new LSMBTreeTupleWriterFactory(typeTraits, cmpFactories.length, false);
+
         ITreeIndexFrameFactory insertLeafFrameFactory = new BTreeNSMLeafFrameFactory(insertTupleWriterFactory);
         ITreeIndexFrameFactory copyTupleLeafFrameFactory = new BTreeNSMLeafFrameFactory(copyTupleWriterFactory);
         ITreeIndexFrameFactory deleteLeafFrameFactory = new BTreeNSMLeafFrameFactory(deleteTupleWriterFactory);
         ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(insertTupleWriterFactory);
+        ITreeIndexFrameFactory bulkLoadLeafFrameFactory = new BTreeNSMLeafFrameFactory(bulkLoadTupleWriterFactory);
 
         TreeIndexFactory<BTree> diskBTreeFactory =
                 new BTreeFactory(ioManager, diskBufferCache, diskFileMapProvider, freePageManagerFactory,
                         interiorFrameFactory, copyTupleLeafFrameFactory, cmpFactories, typeTraits.length);
-        TreeIndexFactory<BTree> bulkLoadBTreeFactory = new BTreeFactory(ioManager, diskBufferCache, diskFileMapProvider,
-                freePageManagerFactory, interiorFrameFactory, insertLeafFrameFactory, cmpFactories, typeTraits.length);
+        TreeIndexFactory<BTree> bulkLoadBTreeFactory =
+                new BTreeFactory(ioManager, diskBufferCache, diskFileMapProvider, freePageManagerFactory,
+                        interiorFrameFactory, bulkLoadLeafFrameFactory, cmpFactories, typeTraits.length);
 
         BloomFilterFactory bloomFilterFactory = needKeyDupCheck
                 ? new BloomFilterFactory(diskBufferCache, diskFileMapProvider, bloomFilterKeyFields) : null;
@@ -125,11 +129,12 @@ public class LSMBTreeUtil {
         ITreeIndexFrameFactory deleteLeafFrameFactory = new BTreeNSMLeafFrameFactory(deleteTupleWriterFactory);
         ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(insertTupleWriterFactory);
         // This is the tuple writer that can do both inserts and deletes
-        LSMBTreeRefrencingTupleWriterFactory referencingTupleWriterFactory =
-                new LSMBTreeRefrencingTupleWriterFactory(typeTraits, cmpFactories.length, false);
+        LSMBTreeTupleWriterFactory transactionTupleWriterFactory =
+                new LSMBTreeTupleWriterFactory(typeTraits, cmpFactories.length, false);
         // This is the leaf frame factory for transaction components since it
         // can be used for both inserts and deletes
-        ITreeIndexFrameFactory dualLeafFrameFactory = new BTreeNSMLeafFrameFactory(referencingTupleWriterFactory);
+        ITreeIndexFrameFactory transactionLeafFrameFactory =
+                new BTreeNSMLeafFrameFactory(transactionTupleWriterFactory);
 
         TreeIndexFactory<BTree> diskBTreeFactory =
                 new BTreeFactory(ioManager, diskBufferCache, diskFileMapProvider, freePageManagerFactory,
@@ -143,7 +148,7 @@ public class LSMBTreeUtil {
         // This is the component factory for transactions
         TreeIndexFactory<BTree> transactionBTreeFactory =
                 new BTreeFactory(ioManager, diskBufferCache, diskFileMapProvider, freePageManagerFactory,
-                        interiorFrameFactory, dualLeafFrameFactory, cmpFactories, typeTraits.length);
+                        interiorFrameFactory, transactionLeafFrameFactory, cmpFactories, typeTraits.length);
         //TODO remove BloomFilter from external dataset's secondary LSMBTree index
         ILSMIndexFileManager fileNameManager =
                 new LSMBTreeFileManager(ioManager, diskFileMapProvider, file, diskBTreeFactory, true);

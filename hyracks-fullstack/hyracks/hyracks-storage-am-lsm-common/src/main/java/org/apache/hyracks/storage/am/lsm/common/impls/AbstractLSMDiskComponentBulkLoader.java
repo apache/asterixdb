@@ -23,14 +23,17 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.bloomfilter.impls.BloomFilter;
 import org.apache.hyracks.storage.am.bloomfilter.impls.BloomFilterSpecification;
 import org.apache.hyracks.storage.am.common.api.ITreeIndex;
+import org.apache.hyracks.storage.am.common.impls.AbstractTreeIndex.AbstractTreeIndexBulkLoader;
 import org.apache.hyracks.storage.am.common.tuples.PermutingTupleReference;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilterManager;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponentBulkLoader;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMTreeTupleWriter;
 import org.apache.hyracks.storage.common.IIndex;
 import org.apache.hyracks.storage.common.IIndexBulkLoader;
 import org.apache.hyracks.storage.common.MultiComparator;
 
-public abstract class AbstractLSMDiskComponentBulkLoader implements IIndexBulkLoader {
+public abstract class AbstractLSMDiskComponentBulkLoader implements ILSMDiskComponentBulkLoader {
     protected final ILSMDiskComponent component;
 
     protected final IIndexBulkLoader indexBulkLoader;
@@ -87,14 +90,39 @@ public abstract class AbstractLSMDiskComponentBulkLoader implements IIndexBulkLo
             if (bloomFilterBuilder != null) {
                 bloomFilterBuilder.add(t);
             }
+            updateFilter(tuple);
 
-            if (filterTuple != null) {
-                filterTuple.reset(tuple);
-                component.getLSMComponentFilter().update(filterTuple, filterCmp);
-            }
         } catch (Exception e) {
             cleanupArtifacts();
             throw e;
+        }
+        if (isEmptyComponent) {
+            isEmptyComponent = false;
+        }
+    }
+
+    @Override
+    public void delete(ITupleReference tuple) throws HyracksDataException {
+        ILSMTreeTupleWriter tupleWriter =
+                (ILSMTreeTupleWriter) ((AbstractTreeIndexBulkLoader) indexBulkLoader).getLeafFrame().getTupleWriter();
+        tupleWriter.setAntimatter(true);
+        try {
+            ITupleReference t;
+            if (indexTuple != null) {
+                indexTuple.reset(tuple);
+                t = indexTuple;
+            } else {
+                t = tuple;
+            }
+
+            indexBulkLoader.add(t);
+
+            updateFilter(tuple);
+        } catch (Exception e) {
+            cleanupArtifacts();
+            throw e;
+        } finally {
+            tupleWriter.setAntimatter(false);
         }
         if (isEmptyComponent) {
             isEmptyComponent = false;
@@ -145,6 +173,13 @@ public abstract class AbstractLSMDiskComponentBulkLoader implements IIndexBulkLo
                 getBloomFilter(component).deactivate();
                 getBloomFilter(component).destroy();
             }
+        }
+    }
+
+    protected void updateFilter(ITupleReference tuple) throws HyracksDataException {
+        if (filterTuple != null) {
+            filterTuple.reset(tuple);
+            component.getLSMComponentFilter().update(filterTuple, filterCmp);
         }
     }
 

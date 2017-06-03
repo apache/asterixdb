@@ -49,6 +49,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent.LSMComponentType;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilterFrameFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponentBulkLoader;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponentFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
@@ -362,7 +363,7 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
             btreeCountingCursor.close();
         }
 
-        IIndexBulkLoader componentBulkLoader =
+        ILSMDiskComponentBulkLoader componentBulkLoader =
                 createComponentBulkLoader(component, 1.0f, false, numBTreeTuples, false, false);
 
         // Create a scan cursor on the deleted keys BTree underlying the in-memory inverted index.
@@ -425,7 +426,7 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
         LSMInvertedIndexDiskComponent component = createDiskInvIndexComponent(componentFactory, mergeOp.getTarget(),
                 mergeOp.getDeletedKeysBTreeTarget(), mergeOp.getBloomFilterTarget(), true);
 
-        IIndexBulkLoader componentBulkLoader;
+        ILSMDiskComponentBulkLoader componentBulkLoader;
 
         // In case we must keep the deleted-keys BTrees, then they must be merged *before* merging the inverted indexes so that
         // lsmHarness.endSearch() is called once when the inverted indexes have been merged.
@@ -448,7 +449,7 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
                 while (btreeCursor.hasNext()) {
                     btreeCursor.next();
                     ITupleReference tuple = btreeCursor.getTuple();
-                    ((LSMInvertedIndexDiskComponentBulkLoader) componentBulkLoader).delete(tuple);
+                    componentBulkLoader.delete(tuple);
                 }
             } finally {
                 btreeCursor.close();
@@ -489,7 +490,7 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
     }
 
     @Override
-    public IIndexBulkLoader createComponentBulkLoader(ILSMDiskComponent component, float fillFactor,
+    public ILSMDiskComponentBulkLoader createComponentBulkLoader(ILSMDiskComponent component, float fillFactor,
             boolean verifyInput, long numElementsHint, boolean checkIfEmptyIndex, boolean withFilter)
             throws HyracksDataException {
         BloomFilterSpecification bloomFilterSpec = null;
