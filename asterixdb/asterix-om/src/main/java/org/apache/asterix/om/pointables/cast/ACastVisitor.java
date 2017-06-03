@@ -110,7 +110,7 @@ public class ACastVisitor implements IVisitablePointableVisitor<Void, Triple<IVi
             try {
                 castBuffer.reset();
                 ATypeHierarchy.convertNumericTypeByteArray(accessor.getByteArray(), accessor.getStartOffset(),
-                        accessor.getLength(), reqTypeTag, castBuffer.getDataOutput());
+                        accessor.getLength(), reqTypeTag, castBuffer.getDataOutput(), true);
                 arg.first.set(castBuffer);
             } catch (IOException e1) {
                 throw new HyracksDataException(

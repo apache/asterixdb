@@ -27,7 +27,6 @@ import java.util.Map;
 
 import org.apache.asterix.common.annotations.SkipSecondaryIndexSearchExpressionAnnotation;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.dataflow.data.common.ExpressionTypeComputer;
@@ -82,6 +81,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperat
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.LogicalOperatorDeepCopyWithNewVariablesVisitor;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexSearchModifierFactory;
 import org.apache.hyracks.storage.am.lsm.invertedindex.search.ConjunctiveEditDistanceSearchModifierFactory;
 import org.apache.hyracks.storage.am.lsm.invertedindex.search.ConjunctiveListEditDistanceSearchModifierFactory;
@@ -989,7 +989,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         // Apply type casting based on numeric types of the input to INTEGER type.
         try {
             edThresh = (AInt32) ATypeHierarchy.convertNumericTypeObject(intObj, ATypeTag.INTEGER);
-        } catch (AsterixException e) {
+        } catch (HyracksDataException e) {
             throw new AlgebricksException(e);
         }
         int mergeThreshold = 0;
@@ -1243,7 +1243,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
                 try {
                     edThresh = ((AInt32) ATypeHierarchy.convertNumericTypeObject(simThresh, ATypeTag.INTEGER))
                             .getIntegerValue();
-                } catch (AsterixException e) {
+                } catch (HyracksDataException e) {
                     throw new AlgebricksException(e);
                 }
 

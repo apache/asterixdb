@@ -21,30 +21,75 @@ package org.apache.asterix.om.types.hierachy;
 import java.io.DataOutput;
 import java.io.IOException;
 
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
+import org.apache.asterix.om.base.ADouble;
+import org.apache.asterix.om.base.AInt16;
+import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.primitive.DoublePointable;
 
 public class DoubleToInt16TypeConvertComputer implements ITypeConvertComputer {
 
-    public static final DoubleToInt16TypeConvertComputer INSTANCE = new DoubleToInt16TypeConvertComputer();
+    private static final DoubleToInt16TypeConvertComputer INSTANCE_STRICT = new DoubleToInt16TypeConvertComputer(true);
 
-    private DoubleToInt16TypeConvertComputer() {
+    private static final DoubleToInt16TypeConvertComputer INSTANCE_LAX = new DoubleToInt16TypeConvertComputer(false);
 
+    private final boolean strict;
+
+    private DoubleToInt16TypeConvertComputer(boolean strict) {
+        this.strict = strict;
+    }
+
+    public static DoubleToInt16TypeConvertComputer getInstance(boolean strict) {
+        return strict ? INSTANCE_STRICT : INSTANCE_LAX;
     }
 
     @Override
     public void convertType(byte[] data, int start, int length, DataOutput out) throws IOException {
         double sourceValue = DoublePointable.getDouble(data, start);
-        // Boundary check
-        if (sourceValue > Short.MAX_VALUE || sourceValue < Short.MIN_VALUE) {
-            throw new IOException("Cannot convert Double to SMALLINT - Double value " + sourceValue
-                    + " is out of range that SMALLINT type can hold: SMALLINT.MAX_VALUE:" + Short.MAX_VALUE
-                    + ", SMALLINT.MIN_VALUE: " + Short.MIN_VALUE);
-        }
-        // Math.floor to truncate decimal portion
-        short targetValue = (short) Math.floor(sourceValue);
+        short targetValue = convert(sourceValue);
         out.writeByte(ATypeTag.SMALLINT.serialize());
         out.writeShort(targetValue);
     }
 
+    @Override
+    public IAObject convertType(IAObject sourceObject) throws HyracksDataException {
+        double sourceValue = ((ADouble) sourceObject).getDoubleValue();
+        short targetValue = convert(sourceValue);
+        return new AInt16(targetValue);
+    }
+
+    private short convert(double sourceValue) throws HyracksDataException {
+        // Boundary check
+        if (Double.isNaN(sourceValue)) {
+            if (strict) {
+                raiseBoundaryCheckException(sourceValue);
+            } else {
+                return 0;
+            }
+        }
+        if (sourceValue > Short.MAX_VALUE) {
+            if (strict) {
+                raiseBoundaryCheckException(sourceValue);
+            } else {
+                return Short.MAX_VALUE;
+            }
+        } else if (sourceValue < Short.MIN_VALUE) {
+            if (strict) {
+                raiseBoundaryCheckException(sourceValue);
+            } else {
+                return Short.MIN_VALUE;
+            }
+        }
+
+        // Math.floor to truncate decimal portion
+        return (short) Math.floor(sourceValue);
+    }
+
+    private void raiseBoundaryCheckException(double sourceValue) throws HyracksDataException {
+        throw new RuntimeDataException(ErrorCode.TYPE_CONVERT_OUT_OF_BOUND, sourceValue, ATypeTag.SMALLINT,
+                Short.MAX_VALUE, Short.MIN_VALUE);
+    }
 }

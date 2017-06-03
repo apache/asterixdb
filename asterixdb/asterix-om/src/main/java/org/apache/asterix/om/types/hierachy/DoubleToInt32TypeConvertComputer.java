@@ -21,30 +21,78 @@ package org.apache.asterix.om.types.hierachy;
 import java.io.DataOutput;
 import java.io.IOException;
 
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
+import org.apache.asterix.om.base.ADouble;
+import org.apache.asterix.om.base.AInt32;
+import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.primitive.DoublePointable;
 
 public class DoubleToInt32TypeConvertComputer implements ITypeConvertComputer {
 
-    public static final DoubleToInt32TypeConvertComputer INSTANCE = new DoubleToInt32TypeConvertComputer();
+    private static final DoubleToInt32TypeConvertComputer INSTANCE_STRICT = new DoubleToInt32TypeConvertComputer(true);
 
-    private DoubleToInt32TypeConvertComputer() {
+    private static final DoubleToInt32TypeConvertComputer INSTANCE_LAX = new DoubleToInt32TypeConvertComputer(false);
 
+    private final boolean strict;
+
+    private DoubleToInt32TypeConvertComputer(boolean strict) {
+        this.strict = strict;
+    }
+
+    public static DoubleToInt32TypeConvertComputer getInstance(boolean strict) {
+        return strict ? INSTANCE_STRICT : INSTANCE_LAX;
     }
 
     @Override
     public void convertType(byte[] data, int start, int length, DataOutput out) throws IOException {
-        double sourceValue = DoublePointable.getDouble(data, start);
-        // Boundary check
-        if (sourceValue > Integer.MAX_VALUE || sourceValue < Integer.MIN_VALUE) {
-            throw new IOException("Cannot convert Double to INTEGER - Double value " + sourceValue
-                    + " is out of range that INTEGER type can hold: INTEGER.MAX_VALUE:" + Integer.MAX_VALUE
-                    + ", INTEGER.MIN_VALUE: " + Integer.MIN_VALUE);
-        }
-        // Math.floor to truncate decimal portion
-        int targetValue = (int) Math.floor(sourceValue);
+        int targetValue = convertType(data, start);
         out.writeByte(ATypeTag.INTEGER.serialize());
         out.writeInt(targetValue);
     }
 
+    int convertType(byte[] data, int start) throws HyracksDataException {
+        double sourceValue = DoublePointable.getDouble(data, start);
+        return convert(sourceValue);
+    }
+
+    @Override
+    public IAObject convertType(IAObject sourceObject) throws HyracksDataException {
+        double sourceValue = ((ADouble) sourceObject).getDoubleValue();
+        int targetValue = convert(sourceValue);
+        return new AInt32(targetValue);
+    }
+
+    private int convert(double sourceValue) throws HyracksDataException {
+        // Boundary check
+        if (Double.isNaN(sourceValue)) {
+            if (strict) {
+                raiseBoundaryCheckException(sourceValue);
+            } else {
+                return 0;
+            }
+        } else if (sourceValue > Integer.MAX_VALUE) {
+            if (strict) {
+                return raiseBoundaryCheckException(sourceValue);
+            } else {
+                return Integer.MAX_VALUE;
+            }
+        } else if (sourceValue < Integer.MIN_VALUE) {
+            if (strict) {
+                return raiseBoundaryCheckException(sourceValue);
+            } else {
+                return Integer.MIN_VALUE;
+            }
+        }
+
+        // Math.floor to truncate decimal portion
+        return (int) Math.floor(sourceValue);
+    }
+
+    private int raiseBoundaryCheckException(double sourceValue) throws HyracksDataException {
+        throw new RuntimeDataException(ErrorCode.TYPE_CONVERT_OUT_OF_BOUND, sourceValue, ATypeTag.INTEGER,
+                Integer.MAX_VALUE, Integer.MIN_VALUE);
+    }
 }

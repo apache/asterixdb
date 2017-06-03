@@ -21,30 +21,75 @@ package org.apache.asterix.om.types.hierachy;
 import java.io.DataOutput;
 import java.io.IOException;
 
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
+import org.apache.asterix.om.base.AFloat;
+import org.apache.asterix.om.base.AInt16;
+import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.primitive.FloatPointable;
 
 public class FloatToInt16TypeConvertComputer implements ITypeConvertComputer {
 
-    public static final FloatToInt16TypeConvertComputer INSTANCE = new FloatToInt16TypeConvertComputer();
+    private static final FloatToInt16TypeConvertComputer INSTANCE_STRICT = new FloatToInt16TypeConvertComputer(true);
 
-    private FloatToInt16TypeConvertComputer() {
+    private static final FloatToInt16TypeConvertComputer INSTANCE_LAX = new FloatToInt16TypeConvertComputer(false);
 
+    private final boolean strict;
+
+    private FloatToInt16TypeConvertComputer(boolean strict) {
+        this.strict = strict;
+    }
+
+    public static FloatToInt16TypeConvertComputer getInstance(boolean strict) {
+        return strict ? INSTANCE_STRICT : INSTANCE_LAX;
     }
 
     @Override
     public void convertType(byte[] data, int start, int length, DataOutput out) throws IOException {
         float sourceValue = FloatPointable.getFloat(data, start);
-        // Boundary check
-        if (sourceValue > Short.MAX_VALUE || sourceValue < Short.MIN_VALUE) {
-            throw new IOException("Cannot convert Float to SMALLINT - Float value " + sourceValue
-                    + " is out of range that SMALLINT type can hold: SMALLINT.MAX_VALUE:" + Short.MAX_VALUE
-                    + ", SMALLINT.MIN_VALUE: " + Short.MIN_VALUE);
-        }
-        // Math.floor to truncate decimal portion
-        short targetValue = (short) Math.floor(sourceValue);
+        short targetValue = convert(sourceValue);
         out.writeByte(ATypeTag.SMALLINT.serialize());
         out.writeShort(targetValue);
     }
 
+    @Override
+    public IAObject convertType(IAObject sourceObject) throws HyracksDataException {
+        float sourceValue = ((AFloat) sourceObject).getFloatValue();
+        short targetValue = convert(sourceValue);
+        return new AInt16(targetValue);
+    }
+
+    private short convert(float sourceValue) throws HyracksDataException {
+        // Boundary check
+        if (Float.isNaN(sourceValue)) {
+            if (strict) {
+                raiseBoundaryException(sourceValue);
+            } else {
+                return 0;
+            }
+        }
+        if (sourceValue > Short.MAX_VALUE) {
+            if (strict) {
+                raiseBoundaryException(sourceValue);
+            } else {
+                return Short.MAX_VALUE;
+            }
+        } else if (sourceValue < Short.MIN_VALUE) {
+            if (strict) {
+                raiseBoundaryException(sourceValue);
+            } else {
+                return Short.MIN_VALUE;
+            }
+        }
+
+        // Math.floor to truncate decimal portion
+        return (short) Math.floor(sourceValue);
+    }
+
+    private void raiseBoundaryException(float sourceValue) throws HyracksDataException {
+        throw new RuntimeDataException(ErrorCode.TYPE_CONVERT_OUT_OF_BOUND, sourceValue, ATypeTag.SMALLINT,
+                Short.MAX_VALUE, Short.MIN_VALUE);
+    }
 }

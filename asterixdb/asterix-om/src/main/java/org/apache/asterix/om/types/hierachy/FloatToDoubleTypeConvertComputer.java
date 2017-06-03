@@ -21,23 +21,39 @@ package org.apache.asterix.om.types.hierachy;
 import java.io.DataOutput;
 import java.io.IOException;
 
+import org.apache.asterix.om.base.ADouble;
+import org.apache.asterix.om.base.AFloat;
+import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.primitive.FloatPointable;
 import org.apache.hyracks.dataflow.common.data.marshalling.DoubleSerializerDeserializer;
 
 public class FloatToDoubleTypeConvertComputer implements ITypeConvertComputer {
 
-    public static final FloatToDoubleTypeConvertComputer INSTANCE = new FloatToDoubleTypeConvertComputer();
+    private static final FloatToDoubleTypeConvertComputer INSTANCE = new FloatToDoubleTypeConvertComputer();
 
     private FloatToDoubleTypeConvertComputer() {
+    }
 
+    public static FloatToDoubleTypeConvertComputer getInstance() {
+        return INSTANCE;
     }
 
     @Override
     public void convertType(byte[] data, int start, int length, DataOutput out) throws IOException {
+        double targetValue = convertType(data, start);
         out.writeByte(ATypeTag.DOUBLE.serialize());
-        DoubleSerializerDeserializer.INSTANCE.serialize((double) (FloatPointable.getFloat(data, start)),
-                out);
+        DoubleSerializerDeserializer.INSTANCE.serialize(targetValue, out);
     }
 
+    @Override
+    public IAObject convertType(IAObject sourceObject) throws HyracksDataException {
+        double targetValue = ((AFloat) sourceObject).getFloatValue();
+        return new ADouble(targetValue);
+    }
+
+    double convertType(byte[] data, int start) {
+        return FloatPointable.getFloat(data, start);
+    }
 }

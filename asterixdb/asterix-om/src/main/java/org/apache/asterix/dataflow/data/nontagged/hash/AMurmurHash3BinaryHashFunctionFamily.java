@@ -66,7 +66,7 @@ public class AMurmurHash3BinaryHashFunctionFamily implements IBinaryHashFunction
                     case INTEGER:
                     case BIGINT:
                         try {
-                            IntegerToDoubleTypeConvertComputer.INSTANCE.convertType(bytes, offset + 1, length - 1,
+                            IntegerToDoubleTypeConvertComputer.getInstance().convertType(bytes, offset + 1, length - 1,
                                     fieldValueBufferOutput);
                         } catch (IOException e) {
                             throw new HyracksDataException(
@@ -78,7 +78,7 @@ public class AMurmurHash3BinaryHashFunctionFamily implements IBinaryHashFunction
 
                     case FLOAT:
                         try {
-                            FloatToDoubleTypeConvertComputer.INSTANCE.convertType(bytes, offset + 1, length - 1,
+                            FloatToDoubleTypeConvertComputer.getInstance().convertType(bytes, offset + 1, length - 1,
                                     fieldValueBufferOutput);
                         } catch (IOException e) {
                             throw new HyracksDataException(

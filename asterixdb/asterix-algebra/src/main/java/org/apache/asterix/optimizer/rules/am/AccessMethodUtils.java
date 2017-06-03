@@ -80,6 +80,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOpe
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.algebra.plan.ALogicalPlanImpl;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.DelimitedUTF8StringBinaryTokenizer;
 
 /**
@@ -419,8 +420,12 @@ public class AccessMethodUtils {
 
             // if the constant type and target type does not match, we do a type conversion
             if (constantValueTag != fieldType.getTypeTag() && constantValue != null) {
-                replacedConstantValue = ATypeHierarchy.getAsterixConstantValueFromNumericTypeObject(
-                        constantValue.getObject(), fieldType.getTypeTag());
+                try {
+                    replacedConstantValue = ATypeHierarchy.getAsterixConstantValueFromNumericTypeObject(
+                            constantValue.getObject(), fieldType.getTypeTag(), true);
+                } catch (HyracksDataException e) {
+                    throw new AlgebricksException(e);
+                }
                 if (replacedConstantValue != null) {
                     typeCastingApplied = true;
                 }

@@ -21,9 +21,14 @@ package org.apache.asterix.om.types.hierachy;
 import java.io.DataOutput;
 import java.io.IOException;
 
+import org.apache.asterix.om.base.IAObject;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+
 public interface ITypeConvertComputer {
 
     // promote or demote a type to a different type
     void convertType(byte[] data, int start, int length, DataOutput out) throws IOException;
 
+    // promote or demote a type to a different type
+    IAObject convertType(IAObject sourceObject) throws HyracksDataException;
 }

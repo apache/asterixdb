@@ -21,13 +21,20 @@ package org.apache.asterix.om.types.hierachy;
 import java.io.DataOutput;
 import java.io.IOException;
 
+import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class IntegerToInt64TypeConvertComputer extends AbstractIntegerTypeConvertComputer {
 
-    public static final IntegerToInt64TypeConvertComputer INSTANCE = new IntegerToInt64TypeConvertComputer();
+    private static final IntegerToInt64TypeConvertComputer INSTANCE = new IntegerToInt64TypeConvertComputer();
 
     private IntegerToInt64TypeConvertComputer() {
+        super(true);
+    }
+
+    public static IntegerToInt64TypeConvertComputer getInstance() {
+        return INSTANCE;
     }
 
     @Override
@@ -35,4 +42,8 @@ public class IntegerToInt64TypeConvertComputer extends AbstractIntegerTypeConver
         convertIntegerType(data, start, length, out, ATypeTag.BIGINT, 8);
     }
 
+    @Override
+    public IAObject convertType(IAObject sourceObject) throws HyracksDataException {
+        return convertIntegerType(sourceObject, ATypeTag.BIGINT);
+    }
 }

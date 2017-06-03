@@ -20,38 +20,32 @@ package org.apache.asterix.om.types.hierachy;
 
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.BitSet;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
-import org.apache.asterix.om.base.ADouble;
-import org.apache.asterix.om.base.AFloat;
-import org.apache.asterix.om.base.AInt16;
-import org.apache.asterix.om.base.AInt32;
-import org.apache.asterix.om.base.AInt64;
-import org.apache.asterix.om.base.AInt8;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.EnumDeserializer;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.primitive.DoublePointable;
-import org.apache.hyracks.data.std.primitive.FloatPointable;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.data.std.primitive.LongPointable;
-import org.apache.hyracks.data.std.primitive.ShortPointable;
 
 public class ATypeHierarchy {
 
-    private static BitSet typePromotionHierachyMap = new BitSet(ATypeTag.TYPE_COUNT * ATypeTag.TYPE_COUNT);
-    private static BitSet typeDemotionHierachyMap = new BitSet(ATypeTag.TYPE_COUNT * ATypeTag.TYPE_COUNT);
-    private static HashMap<Integer, ITypeConvertComputer> promoteComputerMap = new HashMap<Integer, ITypeConvertComputer>();
-    private static HashMap<Integer, ITypeConvertComputer> demoteComputerMap = new HashMap<Integer, ITypeConvertComputer>();
-    private static Map<ATypeTag, Domain> hierarchyDomains = new HashMap<ATypeTag, Domain>();
+    private static final BitSet typePromotionHierachyMap = new BitSet(ATypeTag.TYPE_COUNT * ATypeTag.TYPE_COUNT);
+    private static final BitSet typeDemotionHierachyMap = new BitSet(ATypeTag.TYPE_COUNT * ATypeTag.TYPE_COUNT);
+    private static final Map<Integer, ITypeConvertComputer> promoteComputerMap = new HashMap<>();
+    private static final Map<Integer, Pair<ITypeConvertComputer, ITypeConvertComputer>> demoteComputerMap =
+            new HashMap<>();
+    private static Map<ATypeTag, Domain> hierarchyDomains = new EnumMap<>(ATypeTag.class);
 
     // allow type promotion or demotion to the type itself
     static {
@@ -65,42 +59,58 @@ public class ATypeHierarchy {
     static {
         // Promotion (widening): TINYINT -> SMALLINT -> INTEGER -> BIGINT -> FLOAT -> DOUBLE
         // No precision and range loss
-        addPromotionRule(ATypeTag.TINYINT, ATypeTag.SMALLINT, IntegerToInt16TypeConvertComputer.INSTANCE);
-        addPromotionRule(ATypeTag.TINYINT, ATypeTag.INTEGER, IntegerToInt32TypeConvertComputer.INSTANCE);
-        addPromotionRule(ATypeTag.TINYINT, ATypeTag.BIGINT, IntegerToInt64TypeConvertComputer.INSTANCE);
-        addPromotionRule(ATypeTag.SMALLINT, ATypeTag.INTEGER, IntegerToInt32TypeConvertComputer.INSTANCE);
-        addPromotionRule(ATypeTag.SMALLINT, ATypeTag.BIGINT, IntegerToInt64TypeConvertComputer.INSTANCE);
-        addPromotionRule(ATypeTag.INTEGER, ATypeTag.BIGINT, IntegerToInt64TypeConvertComputer.INSTANCE);
-        addPromotionRule(ATypeTag.TINYINT, ATypeTag.DOUBLE, IntegerToDoubleTypeConvertComputer.INSTANCE);
-        addPromotionRule(ATypeTag.SMALLINT, ATypeTag.DOUBLE, IntegerToDoubleTypeConvertComputer.INSTANCE);
-        addPromotionRule(ATypeTag.INTEGER, ATypeTag.DOUBLE, IntegerToDoubleTypeConvertComputer.INSTANCE);
-        addPromotionRule(ATypeTag.BIGINT, ATypeTag.DOUBLE, IntegerToDoubleTypeConvertComputer.INSTANCE);
-        addPromotionRule(ATypeTag.FLOAT, ATypeTag.DOUBLE, FloatToDoubleTypeConvertComputer.INSTANCE);
-        addPromotionRule(ATypeTag.TINYINT, ATypeTag.FLOAT, IntegerToFloatTypeConvertComputer.INSTANCE);
-        addPromotionRule(ATypeTag.SMALLINT, ATypeTag.FLOAT, IntegerToFloatTypeConvertComputer.INSTANCE);
-        addPromotionRule(ATypeTag.INTEGER, ATypeTag.FLOAT, IntegerToFloatTypeConvertComputer.INSTANCE);
-        addPromotionRule(ATypeTag.BIGINT, ATypeTag.FLOAT, IntegerToFloatTypeConvertComputer.INSTANCE);
+        addPromotionRule(ATypeTag.TINYINT, ATypeTag.SMALLINT, IntegerToInt16TypeConvertComputer.getInstance(true));
+        addPromotionRule(ATypeTag.TINYINT, ATypeTag.INTEGER, IntegerToInt32TypeConvertComputer.getInstance(true));
+        addPromotionRule(ATypeTag.TINYINT, ATypeTag.BIGINT, IntegerToInt64TypeConvertComputer.getInstance());
+        addPromotionRule(ATypeTag.SMALLINT, ATypeTag.INTEGER, IntegerToInt32TypeConvertComputer.getInstance(true));
+        addPromotionRule(ATypeTag.SMALLINT, ATypeTag.BIGINT, IntegerToInt64TypeConvertComputer.getInstance());
+        addPromotionRule(ATypeTag.INTEGER, ATypeTag.BIGINT, IntegerToInt64TypeConvertComputer.getInstance());
+        addPromotionRule(ATypeTag.TINYINT, ATypeTag.DOUBLE, IntegerToDoubleTypeConvertComputer.getInstance());
+        addPromotionRule(ATypeTag.SMALLINT, ATypeTag.DOUBLE, IntegerToDoubleTypeConvertComputer.getInstance());
+        addPromotionRule(ATypeTag.INTEGER, ATypeTag.DOUBLE, IntegerToDoubleTypeConvertComputer.getInstance());
+        addPromotionRule(ATypeTag.BIGINT, ATypeTag.DOUBLE, IntegerToDoubleTypeConvertComputer.getInstance());
+        addPromotionRule(ATypeTag.FLOAT, ATypeTag.DOUBLE, FloatToDoubleTypeConvertComputer.getInstance());
+        addPromotionRule(ATypeTag.TINYINT, ATypeTag.FLOAT, IntegerToFloatTypeConvertComputer.getInstance());
+        addPromotionRule(ATypeTag.SMALLINT, ATypeTag.FLOAT, IntegerToFloatTypeConvertComputer.getInstance());
+        addPromotionRule(ATypeTag.INTEGER, ATypeTag.FLOAT, IntegerToFloatTypeConvertComputer.getInstance());
+        addPromotionRule(ATypeTag.BIGINT, ATypeTag.FLOAT, IntegerToFloatTypeConvertComputer.getInstance());
     }
 
     static {
         // Demotion (narrowing): DOUBLE -> FLOAT -> BIGINT -> INTEGER -> SMALLINT -> TINYINT
         // Possible precision loss (e.g., FLOAT to INT)
-        // This may produce an exception (if source value is greater than target.MAX or less than target.MIN)
-        addDemotionRule(ATypeTag.SMALLINT, ATypeTag.TINYINT, IntegerToInt8TypeConvertComputer.INSTANCE);
-        addDemotionRule(ATypeTag.INTEGER, ATypeTag.TINYINT, IntegerToInt8TypeConvertComputer.INSTANCE);
-        addDemotionRule(ATypeTag.BIGINT, ATypeTag.TINYINT, IntegerToInt8TypeConvertComputer.INSTANCE);
-        addDemotionRule(ATypeTag.INTEGER, ATypeTag.SMALLINT, IntegerToInt16TypeConvertComputer.INSTANCE);
-        addDemotionRule(ATypeTag.BIGINT, ATypeTag.SMALLINT, IntegerToInt16TypeConvertComputer.INSTANCE);
-        addDemotionRule(ATypeTag.BIGINT, ATypeTag.INTEGER, IntegerToInt32TypeConvertComputer.INSTANCE);
-        addDemotionRule(ATypeTag.FLOAT, ATypeTag.TINYINT, FloatToInt8TypeConvertComputer.INSTANCE);
-        addDemotionRule(ATypeTag.FLOAT, ATypeTag.SMALLINT, FloatToInt16TypeConvertComputer.INSTANCE);
-        addDemotionRule(ATypeTag.FLOAT, ATypeTag.INTEGER, FloatToInt32TypeConvertComputer.INSTANCE);
-        addDemotionRule(ATypeTag.FLOAT, ATypeTag.BIGINT, FloatToInt64TypeConvertComputer.INSTANCE);
-        addDemotionRule(ATypeTag.DOUBLE, ATypeTag.TINYINT, DoubleToInt8TypeConvertComputer.INSTANCE);
-        addDemotionRule(ATypeTag.DOUBLE, ATypeTag.SMALLINT, DoubleToInt16TypeConvertComputer.INSTANCE);
-        addDemotionRule(ATypeTag.DOUBLE, ATypeTag.INTEGER, DoubleToInt32TypeConvertComputer.INSTANCE);
-        addDemotionRule(ATypeTag.DOUBLE, ATypeTag.BIGINT, DoubleToInt64TypeConvertComputer.INSTANCE);
-        addDemotionRule(ATypeTag.DOUBLE, ATypeTag.FLOAT, DoubleToFloatTypeConvertComputer.INSTANCE);
+        // 'strict' mode produces an exception if source value is greater than target.MAX or less than target.MIN
+        // 'lax' mode does not fail. it returns target.MAX/target.MIN if source value is out of range
+        addDemotionRule(ATypeTag.SMALLINT, ATypeTag.TINYINT, IntegerToInt8TypeConvertComputer.getInstance(true),
+                IntegerToInt8TypeConvertComputer.getInstance(false));
+        addDemotionRule(ATypeTag.INTEGER, ATypeTag.TINYINT, IntegerToInt8TypeConvertComputer.getInstance(true),
+                IntegerToInt8TypeConvertComputer.getInstance(false));
+        addDemotionRule(ATypeTag.BIGINT, ATypeTag.TINYINT, IntegerToInt8TypeConvertComputer.getInstance(true),
+                IntegerToInt8TypeConvertComputer.getInstance(false));
+        addDemotionRule(ATypeTag.INTEGER, ATypeTag.SMALLINT, IntegerToInt16TypeConvertComputer.getInstance(true),
+                IntegerToInt16TypeConvertComputer.getInstance(false));
+        addDemotionRule(ATypeTag.BIGINT, ATypeTag.SMALLINT, IntegerToInt16TypeConvertComputer.getInstance(true),
+                IntegerToInt16TypeConvertComputer.getInstance(false));
+        addDemotionRule(ATypeTag.BIGINT, ATypeTag.INTEGER, IntegerToInt32TypeConvertComputer.getInstance(true),
+                IntegerToInt32TypeConvertComputer.getInstance(false));
+        addDemotionRule(ATypeTag.FLOAT, ATypeTag.TINYINT, FloatToInt8TypeConvertComputer.getInstance(true),
+                FloatToInt8TypeConvertComputer.getInstance(false));
+        addDemotionRule(ATypeTag.FLOAT, ATypeTag.SMALLINT, FloatToInt16TypeConvertComputer.getInstance(true),
+                FloatToInt16TypeConvertComputer.getInstance(false));
+        addDemotionRule(ATypeTag.FLOAT, ATypeTag.INTEGER, FloatToInt32TypeConvertComputer.getInstance(true),
+                FloatToInt32TypeConvertComputer.getInstance(false));
+        addDemotionRule(ATypeTag.FLOAT, ATypeTag.BIGINT, FloatToInt64TypeConvertComputer.getInstance(true),
+                FloatToInt64TypeConvertComputer.getInstance(false));
+        addDemotionRule(ATypeTag.DOUBLE, ATypeTag.TINYINT, DoubleToInt8TypeConvertComputer.getInstance(true),
+                DoubleToInt8TypeConvertComputer.getInstance(false));
+        addDemotionRule(ATypeTag.DOUBLE, ATypeTag.SMALLINT, DoubleToInt16TypeConvertComputer.getInstance(true),
+                DoubleToInt16TypeConvertComputer.getInstance(false));
+        addDemotionRule(ATypeTag.DOUBLE, ATypeTag.INTEGER, DoubleToInt32TypeConvertComputer.getInstance(true),
+                DoubleToInt32TypeConvertComputer.getInstance(false));
+        addDemotionRule(ATypeTag.DOUBLE, ATypeTag.BIGINT, DoubleToInt64TypeConvertComputer.getInstance(true),
+                DoubleToInt64TypeConvertComputer.getInstance(false));
+        addDemotionRule(ATypeTag.DOUBLE, ATypeTag.FLOAT, DoubleToFloatTypeConvertComputer.getInstance(true),
+                DoubleToFloatTypeConvertComputer.getInstance(false));
     }
 
     static {
@@ -135,16 +145,17 @@ public class ATypeHierarchy {
         return tagHierarchy1.equals(tagHierarchy2) && !useListDomain;
     }
 
-    public static void addPromotionRule(ATypeTag type1, ATypeTag type2, ITypeConvertComputer promoteComputer) {
+    private static void addPromotionRule(ATypeTag type1, ATypeTag type2, ITypeConvertComputer promoteComputer) {
         int index = type1.ordinal() * ATypeTag.TYPE_COUNT + type2.ordinal();
         typePromotionHierachyMap.set(index);
         promoteComputerMap.put(index, promoteComputer);
     }
 
-    public static void addDemotionRule(ATypeTag type1, ATypeTag type2, ITypeConvertComputer demoteComputer) {
+    private static void addDemotionRule(ATypeTag type1, ATypeTag type2, ITypeConvertComputer demoteStrictComputer,
+            ITypeConvertComputer demoteLenientComputer) {
         int index = type1.ordinal() * ATypeTag.TYPE_COUNT + type2.ordinal();
         typeDemotionHierachyMap.set(index);
-        demoteComputerMap.put(index, demoteComputer);
+        demoteComputerMap.put(index, Pair.of(demoteStrictComputer, demoteLenientComputer));
     }
 
     public static ITypeConvertComputer getTypePromoteComputer(ATypeTag type1, ATypeTag type2) {
@@ -154,9 +165,11 @@ public class ATypeHierarchy {
         return null;
     }
 
-    public static ITypeConvertComputer getTypeDemoteComputer(ATypeTag type1, ATypeTag type2) {
+    public static ITypeConvertComputer getTypeDemoteComputer(ATypeTag type1, ATypeTag type2, boolean strict) {
         if (canDemote(type1, type2)) {
-            return demoteComputerMap.get(type1.ordinal() * ATypeTag.TYPE_COUNT + type2.ordinal());
+            Pair<ITypeConvertComputer, ITypeConvertComputer> pair =
+                    demoteComputerMap.get(type1.ordinal() * ATypeTag.TYPE_COUNT + type2.ordinal());
+            return strict ? pair.getLeft() : pair.getRight();
         }
         return null;
     }
@@ -179,559 +192,169 @@ public class ATypeHierarchy {
 
     // Get an AsterixConstantValue from a source Object
     public static AsterixConstantValue getAsterixConstantValueFromNumericTypeObject(IAObject sourceObject,
-            ATypeTag targetTypeTag) throws AlgebricksException {
+            ATypeTag targetTypeTag) throws HyracksDataException {
+        return getAsterixConstantValueFromNumericTypeObject(sourceObject, targetTypeTag, false);
+    }
+
+    // Get an AsterixConstantValue from a source Object
+    public static AsterixConstantValue getAsterixConstantValueFromNumericTypeObject(IAObject sourceObject,
+            ATypeTag targetTypeTag, boolean strictDemote) throws HyracksDataException {
         ATypeTag sourceTypeTag = sourceObject.getType().getTypeTag();
-        AsterixConstantValue asterixNewConstantValue = null;
-        short tmpShortValue;
-        int tmpIntValue;
-        long tmpLongValue;
-        float tmpFloatValue;
-        double tmpDoubleValue;
-
-        // if the constant type and target type does not match, we do a type conversion
-        if (sourceTypeTag != targetTypeTag) {
-
-            switch (targetTypeTag) {
-                //Target Field Type:BIGINT
-                case BIGINT:
-
-                    // Change the Constant Type to BIGINT Type
-                    switch (sourceTypeTag) {
-                        case TINYINT:
-                            asterixNewConstantValue = new AsterixConstantValue(
-                                    new AInt64((long) ((AInt8) sourceObject).getByteValue()));
-                            break;
-
-                        case SMALLINT:
-                            asterixNewConstantValue = new AsterixConstantValue(
-                                    new AInt64((long) ((AInt16) sourceObject).getShortValue()));
-                            break;
-
-                        case INTEGER:
-                            asterixNewConstantValue = new AsterixConstantValue(
-                                    new AInt64((long) ((AInt32) sourceObject).getIntegerValue()));
-                            break;
-
-                        case FLOAT:
-                            tmpFloatValue = ((AFloat) sourceObject).getFloatValue();
-                            // Check whether this value is within the range of the field type
-                            valueSanitycheck(ATypeTag.FLOAT, ATypeTag.BIGINT, tmpFloatValue);
-                            asterixNewConstantValue = new AsterixConstantValue(new AInt64((long) tmpFloatValue));
-                            break;
-
-                        case DOUBLE:
-                            tmpDoubleValue = ((ADouble) sourceObject).getDoubleValue();
-                            // Check whether this value is within the range of the field type
-                            valueSanitycheck(ATypeTag.DOUBLE, ATypeTag.BIGINT, tmpDoubleValue);
-                            asterixNewConstantValue = new AsterixConstantValue(new AInt64((long) tmpDoubleValue));
-                            break;
-
-                        default:
-                            break;
-                    }
-
-                    break;
-
-                //Target Field Type:INTEGER
-                case INTEGER:
-
-                    // Change the Constant Type to INTEGER Type
-                    switch (sourceTypeTag) {
-                        case TINYINT:
-                            asterixNewConstantValue = new AsterixConstantValue(
-                                    new AInt32(((AInt8) sourceObject).getByteValue()));
-                            break;
-
-                        case SMALLINT:
-                            asterixNewConstantValue = new AsterixConstantValue(
-                                    new AInt32(((AInt16) sourceObject).getShortValue()));
-                            break;
-
-                        case BIGINT:
-                            tmpLongValue = ((AInt64) sourceObject).getLongValue();
-                            // Check whether this value is within the range of the field type
-                            valueSanitycheck(ATypeTag.BIGINT, ATypeTag.INTEGER, tmpLongValue);
-                            asterixNewConstantValue = new AsterixConstantValue(new AInt32((int) tmpLongValue));
-                            break;
-
-                        case FLOAT:
-                            tmpFloatValue = ((AFloat) sourceObject).getFloatValue();
-                            // Check whether this value is within the range of the field type
-                            valueSanitycheck(ATypeTag.FLOAT, ATypeTag.INTEGER, tmpFloatValue);
-                            asterixNewConstantValue = new AsterixConstantValue(new AInt32((int) tmpFloatValue));
-                            break;
-
-                        case DOUBLE:
-                            tmpDoubleValue = ((ADouble) sourceObject).getDoubleValue();
-                            // Check whether this value is within the range of the field type
-                            valueSanitycheck(ATypeTag.FLOAT, ATypeTag.INTEGER, tmpDoubleValue);
-                            asterixNewConstantValue = new AsterixConstantValue(new AInt32((int) tmpDoubleValue));
-                            break;
-
-                        default:
-                            break;
-                    }
-
-                    break;
-
-                //Target Field Type:TINYINT
-                case TINYINT:
-
-                    // Change the Constant Type to TINYINT Type
-                    switch (sourceTypeTag) {
-                        case SMALLINT:
-                            tmpShortValue = ((AInt16) sourceObject).getShortValue();
-                            // Check whether this value is within the range of the field type
-                            valueSanitycheck(ATypeTag.SMALLINT, ATypeTag.TINYINT, tmpShortValue);
-                            asterixNewConstantValue = new AsterixConstantValue(new AInt8((byte) tmpShortValue));
-                            break;
-
-                        case INTEGER:
-                            tmpIntValue = ((AInt32) sourceObject).getIntegerValue();
-                            // Check whether this value is within the range of the field type
-                            valueSanitycheck(ATypeTag.INTEGER, ATypeTag.TINYINT, tmpIntValue);
-                            asterixNewConstantValue = new AsterixConstantValue(new AInt8((byte) tmpIntValue));
-                            break;
-
-                        case BIGINT:
-                            tmpLongValue = ((AInt64) sourceObject).getLongValue();
-                            // Check whether this value is within the range of the field type
-                            valueSanitycheck(ATypeTag.BIGINT, ATypeTag.TINYINT, tmpLongValue);
-                            asterixNewConstantValue = new AsterixConstantValue(new AInt8((byte) tmpLongValue));
-                            break;
-
-                        case FLOAT:
-                            tmpFloatValue = ((AFloat) sourceObject).getFloatValue();
-                            // Check whether this value is within the range of the field type
-                            valueSanitycheck(ATypeTag.FLOAT, ATypeTag.TINYINT, tmpFloatValue);
-                            asterixNewConstantValue = new AsterixConstantValue(new AInt8((byte) tmpFloatValue));
-                            break;
-
-                        case DOUBLE:
-                            tmpDoubleValue = ((ADouble) sourceObject).getDoubleValue();
-                            // Check whether this value is within the range of the field type
-                            valueSanitycheck(ATypeTag.DOUBLE, ATypeTag.TINYINT, tmpDoubleValue);
-                            asterixNewConstantValue = new AsterixConstantValue(new AInt8((byte) tmpDoubleValue));
-                            break;
-
-                        default:
-                            break;
-                    }
-                    break;
-
-                //Target Field Type:SMALLINT
-                case SMALLINT:
-                    // Change the Constant Type to SMALLINT Type
-                    switch (sourceTypeTag) {
-                        case TINYINT:
-                            asterixNewConstantValue = new AsterixConstantValue(
-                                    new AInt16(((AInt8) sourceObject).getByteValue()));
-                            break;
-
-                        case INTEGER:
-                            tmpIntValue = ((AInt32) sourceObject).getIntegerValue();
-                            // Check whether this value is within the range of the field type
-                            valueSanitycheck(ATypeTag.INTEGER, ATypeTag.SMALLINT, tmpIntValue);
-                            asterixNewConstantValue = new AsterixConstantValue(new AInt16((short) tmpIntValue));
-                            break;
-
-                        case BIGINT:
-                            tmpLongValue = ((AInt64) sourceObject).getLongValue();
-                            // Check whether this value is within the range of the field type
-                            valueSanitycheck(ATypeTag.BIGINT, ATypeTag.SMALLINT, tmpLongValue);
-                            asterixNewConstantValue = new AsterixConstantValue(new AInt16((short) tmpLongValue));
-                            break;
-
-                        case FLOAT:
-                            tmpFloatValue = ((AFloat) sourceObject).getFloatValue();
-                            // Check whether this value is within the range of the field type
-                            valueSanitycheck(ATypeTag.FLOAT, ATypeTag.SMALLINT, tmpFloatValue);
-                            asterixNewConstantValue = new AsterixConstantValue(new AInt16((short) tmpFloatValue));
-                            break;
-
-                        case DOUBLE:
-                            tmpDoubleValue = ((ADouble) sourceObject).getDoubleValue();
-                            // Check whether this value is within the range of the field type
-                            valueSanitycheck(ATypeTag.DOUBLE, ATypeTag.SMALLINT, tmpDoubleValue);
-                            asterixNewConstantValue = new AsterixConstantValue(new AInt16((short) tmpDoubleValue));
-                            break;
-
-                        default:
-                            break;
-                    }
-                    break;
-
-                //Target Field Type:FLOAT
-                case FLOAT:
-                    // Change the Constant Type to FLOAT Type
-                    switch (sourceTypeTag) {
-                        case TINYINT:
-                            asterixNewConstantValue = new AsterixConstantValue(
-                                    new AFloat(((AInt8) sourceObject).getByteValue()));
-                            break;
-
-                        case SMALLINT:
-                            asterixNewConstantValue = new AsterixConstantValue(
-                                    new AFloat(((AInt16) sourceObject).getShortValue()));
-                            break;
-
-                        case INTEGER:
-                            asterixNewConstantValue = new AsterixConstantValue(
-                                    new AFloat(((AInt32) sourceObject).getIntegerValue()));
-                            break;
-
-                        case BIGINT:
-                            asterixNewConstantValue = new AsterixConstantValue(
-                                    new AFloat(((AInt64) sourceObject).getLongValue()));
-                            break;
-
-                        case DOUBLE:
-                            tmpDoubleValue = ((ADouble) sourceObject).getDoubleValue();
-                            // Check whether this value is within the range of the field type
-                            valueSanitycheck(ATypeTag.DOUBLE, ATypeTag.FLOAT, tmpDoubleValue);
-                            asterixNewConstantValue = new AsterixConstantValue(new AFloat((float) tmpDoubleValue));
-                            break;
-
-                        default:
-                            break;
-                    }
-                    break;
-
-                //Target Field Type:DOUBLE
-                case DOUBLE:
-                    // Change the Constant Type to DOUBLE Type
-                    switch (sourceTypeTag) {
-                        case TINYINT:
-                            asterixNewConstantValue = new AsterixConstantValue(
-                                    new ADouble(((AInt8) sourceObject).getByteValue()));
-                            break;
-
-                        case SMALLINT:
-                            asterixNewConstantValue = new AsterixConstantValue(
-                                    new ADouble(((AInt16) sourceObject).getShortValue()));
-                            break;
-
-                        case INTEGER:
-                            asterixNewConstantValue = new AsterixConstantValue(
-                                    new ADouble(((AInt32) sourceObject).getIntegerValue()));
-                            break;
-
-                        case BIGINT:
-                            asterixNewConstantValue = new AsterixConstantValue(
-                                    new ADouble(((AInt64) sourceObject).getLongValue()));
-                            break;
-
-                        case FLOAT:
-                            asterixNewConstantValue = new AsterixConstantValue(
-                                    new ADouble(((AFloat) sourceObject).getFloatValue()));
-                            break;
-
-                        default:
-                            break;
-                    }
-                    break;
-
-                default:
-                    break;
-            }
-
-            return asterixNewConstantValue;
-
-        } else {
-
+        if (sourceTypeTag == targetTypeTag) {
             return new AsterixConstantValue(sourceObject);
         }
 
-    }
-
-    // checks whether the source value is within the range of the target type
-    private static void valueSanitycheck(ATypeTag sourceType, ATypeTag targetType, double sourceValue)
-            throws AlgebricksException {
-        boolean canConvert = true;
-
-        switch (targetType) {
-            case TINYINT:
-                if (sourceValue > Byte.MAX_VALUE || sourceValue < Byte.MIN_VALUE) {
-                    canConvert = false;
-                }
-                break;
-
-            case SMALLINT:
-                if (sourceValue > Short.MAX_VALUE || sourceValue < Short.MIN_VALUE) {
-                    canConvert = false;
-                }
-                break;
-            case INTEGER:
-                if (sourceValue > Integer.MAX_VALUE || sourceValue < Integer.MIN_VALUE) {
-                    canConvert = false;
-                }
-                break;
-            case BIGINT:
-                if (sourceValue > Long.MAX_VALUE || sourceValue < Long.MIN_VALUE) {
-                    canConvert = false;
-                }
-                break;
-            case FLOAT:
-                if (sourceValue > Float.MAX_VALUE || sourceValue < Float.MIN_VALUE) {
-                    canConvert = false;
-                }
-                break;
-            default:
-                break;
+        // if the constant type and target type does not match, we do a type conversion
+        ITypeConvertComputer convertComputer = null;
+        if (canPromote(sourceTypeTag, targetTypeTag)) {
+            convertComputer = ATypeHierarchy.getTypePromoteComputer(sourceTypeTag, targetTypeTag);
+        } else if (canDemote(sourceTypeTag, targetTypeTag)) {
+            convertComputer = ATypeHierarchy.getTypeDemoteComputer(sourceTypeTag, targetTypeTag, strictDemote);
+        }
+        if (convertComputer == null) {
+            return null;
         }
 
-        if (!canConvert) {
-            throw new AlgebricksException("Can't cast a value: " + sourceValue + " from " + sourceType + " type to "
-                    + targetType + " type because of the out-of-range error.");
-        }
+        IAObject targetObject = convertComputer.convertType(sourceObject);
+        return new AsterixConstantValue(targetObject);
     }
 
     // Type Casting from source Object to an Object with Target type
     public static IAObject convertNumericTypeObject(IAObject sourceObject, ATypeTag targetTypeTag)
-            throws AsterixException {
+            throws HyracksDataException {
+        return convertNumericTypeObject(sourceObject, targetTypeTag, false);
+    }
+
+    // Type Casting from source Object to an Object with Target type
+    public static IAObject convertNumericTypeObject(IAObject sourceObject, ATypeTag targetTypeTag, boolean strictDemote)
+            throws HyracksDataException {
         ATypeTag sourceTypeTag = sourceObject.getType().getTypeTag();
-
-        switch (sourceTypeTag) {
-            case TINYINT:
-                switch (targetTypeTag) {
-                    case TINYINT:
-                        return sourceObject;
-                    case SMALLINT:
-                        return new AInt16(((AInt8) sourceObject).getByteValue());
-                    case INTEGER:
-                        return new AInt32(((AInt8) sourceObject).getByteValue());
-                    case BIGINT:
-                        return new AInt64((long) ((AInt8) sourceObject).getByteValue());
-                    case FLOAT:
-                        return new AFloat(((AInt8) sourceObject).getByteValue());
-                    case DOUBLE:
-                        return new ADouble(((AInt8) sourceObject).getByteValue());
-                    default:
-                        throw new AsterixException(
-                                "Can't convert the " + sourceTypeTag + " type to the " + targetTypeTag + " type.");
-                }
-            case SMALLINT:
-                switch (targetTypeTag) {
-                    case TINYINT:
-                        // an exception can happen because of a type demotion from SMALLINT to TINYINT
-                        return new AInt8((byte) ((AInt16) sourceObject).getShortValue());
-                    case SMALLINT:
-                        return sourceObject;
-                    case INTEGER:
-                        return new AInt32(((AInt16) sourceObject).getShortValue());
-                    case BIGINT:
-                        return new AInt64((long) ((AInt16) sourceObject).getShortValue());
-                    case FLOAT:
-                        return new AFloat(((AInt16) sourceObject).getShortValue());
-                    case DOUBLE:
-                        return new ADouble(((AInt16) sourceObject).getShortValue());
-                    default:
-                        throw new AsterixException(
-                                "Can't convert the " + sourceTypeTag + " type to the " + targetTypeTag + " type.");
-                }
-
-            case INTEGER:
-                switch (targetTypeTag) {
-                    case TINYINT:
-                        // an exception can happen because of a type demotion from INTEGER to TINYINT
-                        return new AInt8((byte) ((AInt32) sourceObject).getIntegerValue());
-                    case SMALLINT:
-                        // an exception can happen because of a type demotion from INTEGER to SMALLINT
-                        return new AInt16((short) ((AInt32) sourceObject).getIntegerValue());
-                    case INTEGER:
-                        return sourceObject;
-                    case BIGINT:
-                        return new AInt64((long) ((AInt32) sourceObject).getIntegerValue());
-                    case FLOAT:
-                        return new AFloat(((AInt32) sourceObject).getIntegerValue());
-                    case DOUBLE:
-                        return new ADouble(((AInt32) sourceObject).getIntegerValue());
-                    default:
-                        throw new AsterixException(
-                                "Can't convert the " + sourceTypeTag + " type to the " + targetTypeTag + " type.");
-                }
-
-            case BIGINT:
-                switch (targetTypeTag) {
-                    case TINYINT:
-                        // an exception can happen because of a type demotion from BIGINT to TINYINT
-                        return new AInt8((byte) ((AInt64) sourceObject).getLongValue());
-                    case SMALLINT:
-                        // an exception can happen because of a type demotion from BIGINT to SMALLINT
-                        return new AInt16((short) ((AInt64) sourceObject).getLongValue());
-                    case INTEGER:
-                        // an exception can happen because of a type demotion from BIGINT to INTEGER
-                        return new AInt32((int) ((AInt64) sourceObject).getLongValue());
-                    case BIGINT:
-                        return sourceObject;
-                    case FLOAT:
-                        return new AFloat(((AInt64) sourceObject).getLongValue());
-                    case DOUBLE:
-                        return new ADouble(((AInt64) sourceObject).getLongValue());
-                    default:
-                        throw new AsterixException(
-                                "Can't convert the " + sourceTypeTag + " type to the " + targetTypeTag + " type.");
-                }
-            case FLOAT:
-                switch (targetTypeTag) {
-                    case TINYINT:
-                        // an exception can happen because of a type demotion from FLOAT to TINYINT
-                        return new AInt8((byte) ((AFloat) sourceObject).getFloatValue());
-                    case SMALLINT:
-                        // an exception can happen because of a type demotion from FLOAT to SMALLINT
-                        return new AInt16((short) ((AFloat) sourceObject).getFloatValue());
-                    case INTEGER:
-                        // an exception can happen because of a type demotion from FLOAT to INTEGER
-                        return new AInt32((int) ((AFloat) sourceObject).getFloatValue());
-                    case BIGINT:
-                        // an exception can happen because of a type demotion from FLOAT to BIGINT
-                        return new AInt64((long) ((AFloat) sourceObject).getFloatValue());
-                    case FLOAT:
-                        return sourceObject;
-                    case DOUBLE:
-                        return new ADouble(((AFloat) sourceObject).getFloatValue());
-                    default:
-                        throw new AsterixException(
-                                "Can't convert the " + sourceTypeTag + " type to the " + targetTypeTag + " type.");
-                }
-            case DOUBLE:
-                switch (targetTypeTag) {
-                    case TINYINT:
-                        // an exception can happen because of a type demotion from DOUBLE to TINYINT
-                        return new AInt8((byte) ((ADouble) sourceObject).getDoubleValue());
-                    case SMALLINT:
-                        // an exception can happen because of a type demotion from DOUBLE to SMALLINT
-                        return new AInt16((short) ((ADouble) sourceObject).getDoubleValue());
-                    case INTEGER:
-                        // an exception can happen because of a type demotion from DOUBLE to INTEGER
-                        return new AInt32((int) ((ADouble) sourceObject).getDoubleValue());
-                    case BIGINT:
-                        // an exception can happen because of a type demotion from DOUBLE to BIGINT
-                        return new AInt64((long) ((ADouble) sourceObject).getDoubleValue());
-                    case FLOAT:
-                        // an exception can happen because of a type demotion from DOUBLE to FLOAT
-                        return new AFloat((float) ((ADouble) sourceObject).getDoubleValue());
-                    case DOUBLE:
-                        return sourceObject;
-                    default:
-                        throw new AsterixException(
-                                "Can't convert the " + sourceTypeTag + " type to the " + targetTypeTag + " type.");
-                }
-            default:
-                throw new AsterixException("Source type is not a numeric type.");
-
+        if (sourceTypeTag == targetTypeTag) {
+            return sourceObject;
         }
 
+        ITypeConvertComputer convertComputer = null;
+        if (canPromote(sourceTypeTag, targetTypeTag)) {
+            convertComputer = ATypeHierarchy.getTypePromoteComputer(sourceTypeTag, targetTypeTag);
+        } else if (canDemote(sourceTypeTag, targetTypeTag)) {
+            convertComputer = ATypeHierarchy.getTypeDemoteComputer(sourceTypeTag, targetTypeTag, strictDemote);
+        }
+        if (convertComputer == null) {
+            throw new RuntimeDataException(ErrorCode.TYPE_CONVERT, sourceTypeTag, targetTypeTag);
+        }
+
+        return convertComputer.convertType(sourceObject);
     }
 
     // convert a numeric value in a byte array to the target type value
     public static void convertNumericTypeByteArray(byte[] sourceByteArray, int s1, int l1, ATypeTag targetTypeTag,
             DataOutput out) throws IOException {
+        convertNumericTypeByteArray(sourceByteArray, s1, l1, targetTypeTag, out, false);
+    }
+
+    // convert a numeric value in a byte array to the target type value
+    public static void convertNumericTypeByteArray(byte[] sourceByteArray, int s1, int l1, ATypeTag targetTypeTag,
+            DataOutput out, boolean strictDemote) throws IOException {
         ATypeTag sourceTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(sourceByteArray[s1]);
 
         if (sourceTypeTag != targetTypeTag) {
             // source tag can be promoted to target tag (e.g. tag1: SMALLINT, tag2: INTEGER)
-            if (ATypeHierarchy.canPromote(sourceTypeTag, targetTypeTag)) {
+            if (canPromote(sourceTypeTag, targetTypeTag)) {
                 ITypeConvertComputer convertComputer =
                         ATypeHierarchy.getTypePromoteComputer(sourceTypeTag, targetTypeTag);
                 convertComputer.convertType(sourceByteArray, s1 + 1, l1 - 1, out);
                 // source tag can be demoted to target tag
-            } else if (ATypeHierarchy.canDemote(sourceTypeTag, targetTypeTag)) {
+            } else if (canDemote(sourceTypeTag, targetTypeTag)) {
                 ITypeConvertComputer convertComputer =
-                        ATypeHierarchy.getTypeDemoteComputer(sourceTypeTag, targetTypeTag);
+                        ATypeHierarchy.getTypeDemoteComputer(sourceTypeTag, targetTypeTag, strictDemote);
                 convertComputer.convertType(sourceByteArray, s1 + 1, l1 - 1, out);
             } else {
-                throw new IOException(
-                        "Can't convert the " + sourceTypeTag + " type to the " + targetTypeTag + " type.");
+                throw new RuntimeDataException(ErrorCode.TYPE_CONVERT, sourceTypeTag, targetTypeTag);
             }
         }
-
     }
-
 
     // Get an INT value from numeric types array. We assume the first byte contains the type tag.
     public static int getIntegerValue(String name, int argIndex, byte[] bytes, int offset) throws HyracksDataException {
-        return getIntegerValueWithDifferentTypeTagPosition(name, argIndex, bytes, offset + 1, offset);
+        return getIntegerValue(name, argIndex, bytes, offset, false);
+    }
+
+    // Get an INT value from numeric types array. We assume the first byte contains the type tag.
+    public static int getIntegerValue(String name, int argIndex, byte[] bytes, int offset, boolean strictDemote)
+            throws HyracksDataException {
+        return getIntegerValueWithDifferentTypeTagPosition(name, argIndex, bytes, offset + 1, offset, strictDemote);
     }
 
     // Get an INT value from numeric types array. We assume the specific location of a byte array contains the type tag.
     public static int getIntegerValueWithDifferentTypeTagPosition(String name, int argIndex, byte[] bytes, int offset,
             int typeTagPosition) throws HyracksDataException {
-        int value;
-        ATypeTag sourceTypeTag = ATypeTag.VALUE_TYPE_MAPPING[bytes[typeTagPosition]];
+        return getIntegerValueWithDifferentTypeTagPosition(name, argIndex, bytes, offset, typeTagPosition, false);
+    }
 
+    // Get an INT value from numeric types array. We assume the specific location of a byte array contains the type tag.
+    public static int getIntegerValueWithDifferentTypeTagPosition(String name, int argIndex, byte[] bytes, int offset,
+            int typeTagPosition, boolean strictDemote) throws HyracksDataException {
+        ATypeTag sourceTypeTag = ATypeTag.VALUE_TYPE_MAPPING[bytes[typeTagPosition]];
         if (sourceTypeTag == null) {
             throw new RuntimeDataException(ErrorCode.INVALID_FORMAT, name, argIndex);
         }
         switch (sourceTypeTag) {
-            case BIGINT:
-                value = (int) LongPointable.getLong(bytes, offset);
-                break;
             case INTEGER:
-                value = IntegerPointable.getInteger(bytes, offset);
-                break;
+                return IntegerPointable.getInteger(bytes, offset);
             case TINYINT:
-                value = bytes[offset];
-                break;
             case SMALLINT:
-                value = ShortPointable.getShort(bytes, offset);
-                break;
+            case BIGINT:
+                return (int) IntegerToInt32TypeConvertComputer.getInstance(strictDemote).convertIntegerType(bytes,
+                        offset, sourceTypeTag, ATypeTag.INTEGER);
             case FLOAT:
-                value = (int) FloatPointable.getFloat(bytes, offset);
-                break;
+                return FloatToInt32TypeConvertComputer.getInstance(strictDemote).convertType(bytes, offset);
             case DOUBLE:
-                value = (int) DoublePointable.getDouble(bytes, offset);
-                break;
+                return DoubleToInt32TypeConvertComputer.getInstance(strictDemote).convertType(bytes, offset);
             default:
-                throw new RuntimeDataException(ErrorCode.TYPE_MISMATCH, name, argIndex, sourceTypeTag,
-                        ATypeTag.TINYINT, ATypeTag.SMALLINT, ATypeTag.INTEGER, ATypeTag.BIGINT, ATypeTag.FLOAT,
-                        ATypeTag.DOUBLE);
-
+                throw new RuntimeDataException(ErrorCode.TYPE_MISMATCH, name, argIndex,
+                        Arrays.toString(new Object[] { ATypeTag.TINYINT, ATypeTag.SMALLINT, ATypeTag.INTEGER,
+                                ATypeTag.BIGINT, ATypeTag.FLOAT, ATypeTag.DOUBLE }),
+                        sourceTypeTag);
         }
-
-        return value;
     }
 
     // Get a LONG (bigint) value from numeric types array. We assume the first byte contains the type tag.
     public static long getLongValue(String name, int argIndex, byte[] bytes, int offset) throws HyracksDataException {
-        return getLongValueWithDifferentTypeTagPosition(name, argIndex, bytes, offset + 1, offset);
+        return getLongValue(name, argIndex, bytes, offset, false);
+    }
+
+    // Get a LONG (bigint) value from numeric types array. We assume the first byte contains the type tag.
+    public static long getLongValue(String name, int argIndex, byte[] bytes, int offset, boolean strictDemote)
+            throws HyracksDataException {
+        return getLongValueWithDifferentTypeTagPosition(name, argIndex, bytes, offset + 1, offset, strictDemote);
     }
 
     // Get a LONG (bigint) value from numeric types array. We assume the specific location of a byte array
     // contains the type tag.
     private static long getLongValueWithDifferentTypeTagPosition(String name, int argIndex, byte[] bytes, int offset,
-            int typeTagPosition) throws HyracksDataException {
-        long value;
+            int typeTagPosition, boolean strictDemote) throws HyracksDataException {
         ATypeTag sourceTypeTag = ATypeTag.VALUE_TYPE_MAPPING[bytes[typeTagPosition]];
         if (sourceTypeTag == null) {
             throw new RuntimeDataException(ErrorCode.INVALID_FORMAT, name, argIndex);
         }
         switch (sourceTypeTag) {
             case BIGINT:
-                value = LongPointable.getLong(bytes, offset);
-                break;
-            case INTEGER:
-                value = IntegerPointable.getInteger(bytes, offset);
-                break;
+                return LongPointable.getLong(bytes, offset);
             case TINYINT:
-                value = bytes[offset];
-                break;
             case SMALLINT:
-                value = ShortPointable.getShort(bytes, offset);
-                break;
+            case INTEGER:
+                return IntegerToInt64TypeConvertComputer.getInstance().convertIntegerType(bytes, offset, sourceTypeTag,
+                        ATypeTag.BIGINT);
             case FLOAT:
-                value = (long) FloatPointable.getFloat(bytes, offset);
-                break;
+                return FloatToInt64TypeConvertComputer.getInstance(strictDemote).convertType(bytes, offset);
             case DOUBLE:
-                value = (long) DoublePointable.getDouble(bytes, offset);
-                break;
+                return DoubleToInt64TypeConvertComputer.getInstance(strictDemote).convertType(bytes, offset);
             default:
-                throw new RuntimeDataException(ErrorCode.TYPE_MISMATCH, name, argIndex, sourceTypeTag,
-                        ATypeTag.TINYINT, ATypeTag.SMALLINT, ATypeTag.INTEGER, ATypeTag.BIGINT, ATypeTag.FLOAT,
-                        ATypeTag.DOUBLE);
+                throw new RuntimeDataException(ErrorCode.TYPE_MISMATCH, name, argIndex,
+                        Arrays.toString(new Object[] { ATypeTag.TINYINT, ATypeTag.SMALLINT, ATypeTag.INTEGER,
+                                ATypeTag.BIGINT, ATypeTag.FLOAT, ATypeTag.DOUBLE }),
+                        sourceTypeTag);
         }
-
-        return value;
     }
 
     // Get a DOUBLE value from numeric types array. We assume the first byte contains the type tag.
@@ -742,46 +365,33 @@ public class ATypeHierarchy {
 
     // Get a DOUBLE value from numeric types array. We assume the specific location of a byte array contains the type tag.
     private static double getDoubleValueWithDifferentTypeTagPosition(String name, int argIndex, byte[] bytes,
-            int offset, int typeTagPosition)
-            throws HyracksDataException {
-        double value;
+            int offset, int typeTagPosition) throws HyracksDataException {
         ATypeTag sourceTypeTag = ATypeTag.VALUE_TYPE_MAPPING[bytes[typeTagPosition]];
         if (sourceTypeTag == null) {
             throw new RuntimeDataException(ErrorCode.INVALID_FORMAT, name, argIndex);
         }
         switch (sourceTypeTag) {
-            case BIGINT:
-                value = LongPointable.getLong(bytes, offset);
-                break;
-            case INTEGER:
-                value = IntegerPointable.getInteger(bytes, offset);
-                break;
-            case TINYINT:
-                value = bytes[offset];
-                break;
-            case SMALLINT:
-                value = ShortPointable.getShort(bytes, offset);
-                break;
-            case FLOAT:
-                value = FloatPointable.getFloat(bytes, offset);
-                break;
             case DOUBLE:
-                value = DoublePointable.getDouble(bytes, offset);
-                break;
+                return DoublePointable.getDouble(bytes, offset);
+            case FLOAT:
+                return FloatToDoubleTypeConvertComputer.getInstance().convertType(bytes, offset);
+            case TINYINT:
+            case SMALLINT:
+            case INTEGER:
+            case BIGINT:
+                return IntegerToDoubleTypeConvertComputer.getInstance().convertType(bytes, offset, sourceTypeTag);
             default:
-                throw new RuntimeDataException(ErrorCode.TYPE_MISMATCH, name, argIndex, sourceTypeTag,
-                        ATypeTag.TINYINT, ATypeTag.SMALLINT, ATypeTag.INTEGER, ATypeTag.BIGINT, ATypeTag.FLOAT,
-                        ATypeTag.DOUBLE);
+                throw new RuntimeDataException(ErrorCode.TYPE_MISMATCH, name, argIndex,
+                        Arrays.toString(new ATypeTag[] { ATypeTag.TINYINT, ATypeTag.SMALLINT, ATypeTag.INTEGER,
+                                ATypeTag.BIGINT, ATypeTag.FLOAT, ATypeTag.DOUBLE }),
+                        sourceTypeTag);
         }
-
-        return value;
     }
 
-    public static enum Domain {
+    public enum Domain {
         SPATIAL,
         NUMERIC,
         LIST,
         ANY
     }
-
 }

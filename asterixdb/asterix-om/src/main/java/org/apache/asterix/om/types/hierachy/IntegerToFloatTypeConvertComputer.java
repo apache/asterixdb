@@ -20,56 +20,80 @@ package org.apache.asterix.om.types.hierachy;
 
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.Arrays;
 
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
+import org.apache.asterix.om.base.AFloat;
+import org.apache.asterix.om.base.AInt16;
+import org.apache.asterix.om.base.AInt32;
+import org.apache.asterix.om.base.AInt64;
+import org.apache.asterix.om.base.AInt8;
+import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.primitive.BytePointable;
+import org.apache.hyracks.data.std.primitive.IntegerPointable;
+import org.apache.hyracks.data.std.primitive.LongPointable;
+import org.apache.hyracks.data.std.primitive.ShortPointable;
 import org.apache.hyracks.dataflow.common.data.marshalling.FloatSerializerDeserializer;
 
 public class IntegerToFloatTypeConvertComputer implements ITypeConvertComputer {
 
-    public static final IntegerToFloatTypeConvertComputer INSTANCE = new IntegerToFloatTypeConvertComputer();
+    private static final IntegerToFloatTypeConvertComputer INSTANCE = new IntegerToFloatTypeConvertComputer();
 
     private IntegerToFloatTypeConvertComputer() {
+    }
 
+    public static IntegerToFloatTypeConvertComputer getInstance() {
+        return INSTANCE;
     }
 
     @Override
     public void convertType(byte[] data, int start, int length, DataOutput out) throws IOException {
-        float val = 0;
-        // In order to convert a negative number correctly,
-        // proper casting per INT type is needed.
-        //
+        float val;
+        // In order to convert a negative number correctly, proper casting per INT type is needed.
         switch (length) {
-            case 1:
-                // TINYINT
-                val = (data[start] & 0xff);
+            case 1: // TINYINT
+                val = BytePointable.getByte(data, start);
                 break;
-
-            case 2:
-                // SMALLINT
-                val = (short) ((data[start] << 8) | (data[start + 1] & 0xff));
+            case 2: // SMALLINT
+                val = ShortPointable.getShort(data, start);
                 break;
-
-            case 4:
-                // INTEGER
-                val = (int) (((data[start] & 0xff) << 24) | ((data[start + 1] & 0xff) << 16)
-                        | ((data[start + 2] & 0xff) << 8) | (data[start + 3] & 0xff));
+            case 4: // INTEGER
+                val = IntegerPointable.getInteger(data, start);
                 break;
-
-            case 8:
-                // BIGINT
-                val = (((long) (data[start] & 0xff) << 56) | ((long) (data[start + 1] & 0xff) << 48)
-                        | ((long) (data[start + 2] & 0xff) << 40) | ((long) (data[start + 3] & 0xff) << 32)
-                        | ((long) (data[start + 4] & 0xff) << 24) | ((long) (data[start + 5] & 0xff) << 16)
-                        | ((long) (data[start + 6] & 0xff) << 8) | ((long) (data[start + 7] & 0xff)));
-
+            case 8: // BIGINT
+                val = LongPointable.getLong(data, start);
                 break;
-
             default:
-                break;
+                throw new RuntimeDataException(ErrorCode.TYPE_CONVERT_INTEGER_SOURCE, Arrays.toString(
+                        new ATypeTag[] { ATypeTag.TINYINT, ATypeTag.SMALLINT, ATypeTag.INTEGER, ATypeTag.BIGINT }));
         }
         out.writeByte(ATypeTag.FLOAT.serialize());
         FloatSerializerDeserializer.INSTANCE.serialize(val, out);
-
     }
 
+    @Override
+    public IAObject convertType(IAObject sourceObject) throws HyracksDataException {
+        float val;
+        switch (sourceObject.getType().getTypeTag()) {
+            case TINYINT:
+                val = ((AInt8) sourceObject).getByteValue();
+                break;
+            case SMALLINT:
+                val = ((AInt16) sourceObject).getShortValue();
+                break;
+            case INTEGER:
+                val = ((AInt32) sourceObject).getIntegerValue();
+                break;
+            case BIGINT:
+                val = ((AInt64) sourceObject).getLongValue();
+                break;
+            default:
+                throw new RuntimeDataException(ErrorCode.TYPE_CONVERT_INTEGER_SOURCE, Arrays.toString(
+                        new ATypeTag[] { ATypeTag.TINYINT, ATypeTag.SMALLINT, ATypeTag.INTEGER, ATypeTag.BIGINT }));
+        }
+        return new AFloat(val);
+    }
 }

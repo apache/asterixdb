@@ -850,7 +850,8 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
                         castBuffer.getLength() - 1, out);
             } else if (ATypeHierarchy.canDemote(typeTag, targetTypeTag)) {
                 // can demote source type to the target type
-                ITypeConvertComputer demoteComputer = ATypeHierarchy.getTypeDemoteComputer(typeTag, targetTypeTag);
+                ITypeConvertComputer demoteComputer =
+                        ATypeHierarchy.getTypeDemoteComputer(typeTag, targetTypeTag, true);
                 if (demoteComputer == null) {
                     throw new ParseException(ErrorCode.PARSER_ADM_DATA_PARSER_CAST_ERROR, typeTag, targetTypeTag);
                 }

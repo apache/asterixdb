@@ -21,30 +21,74 @@ package org.apache.asterix.om.types.hierachy;
 import java.io.DataOutput;
 import java.io.IOException;
 
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
+import org.apache.asterix.om.base.AFloat;
+import org.apache.asterix.om.base.AInt8;
+import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.primitive.FloatPointable;
 
 public class FloatToInt8TypeConvertComputer implements ITypeConvertComputer {
 
-    public static final FloatToInt8TypeConvertComputer INSTANCE = new FloatToInt8TypeConvertComputer();
+    private static final FloatToInt8TypeConvertComputer INSTANCE_STRICT = new FloatToInt8TypeConvertComputer(true);
 
-    private FloatToInt8TypeConvertComputer() {
+    private static final FloatToInt8TypeConvertComputer INSTANCE_LAX = new FloatToInt8TypeConvertComputer(false);
 
+    private final boolean strict;
+
+    private FloatToInt8TypeConvertComputer(boolean strict) {
+        this.strict = strict;
+    }
+
+    public static FloatToInt8TypeConvertComputer getInstance(boolean strict) {
+        return strict ? INSTANCE_STRICT : INSTANCE_LAX;
     }
 
     @Override
     public void convertType(byte[] data, int start, int length, DataOutput out) throws IOException {
         float sourceValue = FloatPointable.getFloat(data, start);
-        // Boundary check
-        if (sourceValue > Byte.MAX_VALUE || sourceValue < Byte.MIN_VALUE) {
-            throw new IOException("Cannot convert Float to TINYINT - Float value " + sourceValue
-                    + " is out of range that TINYINT type can hold: TINYINT.MAX_VALUE:" + Byte.MAX_VALUE
-                    + ", TINYINT.MIN_VALUE: " + Byte.MIN_VALUE);
-        }
-        // Math.floor to truncate decimal portion
-        byte targetValue = (byte) Math.floor(sourceValue);
+        byte targetValue = convert(sourceValue);
         out.writeByte(ATypeTag.TINYINT.serialize());
         out.writeByte(targetValue);
     }
 
+    @Override
+    public IAObject convertType(IAObject sourceObject) throws HyracksDataException {
+        float sourceValue = ((AFloat) sourceObject).getFloatValue();
+        byte targetValue = convert(sourceValue);
+        return new AInt8(targetValue);
+    }
+
+    private byte convert(float sourceValue) throws HyracksDataException {
+        // Boundary check
+        if (Float.isNaN(sourceValue)) {
+            if (strict) {
+                raiseBoundaryException(sourceValue);
+            } else {
+                return 0;
+            }
+        } else if (sourceValue > Byte.MAX_VALUE) {
+            if (strict) {
+                raiseBoundaryException(sourceValue);
+            } else {
+                return Byte.MAX_VALUE;
+            }
+        } else if (sourceValue < Byte.MIN_VALUE) {
+            if (strict) {
+                raiseBoundaryException(sourceValue);
+            } else {
+                return Byte.MIN_VALUE;
+            }
+        }
+
+        // Math.floor to truncate decimal portion
+        return (byte) Math.floor(sourceValue);
+    }
+
+    private void raiseBoundaryException(float sourceValue) throws HyracksDataException {
+        throw new RuntimeDataException(ErrorCode.TYPE_CONVERT_OUT_OF_BOUND, sourceValue, ATypeTag.TINYINT,
+                Byte.MAX_VALUE, Byte.MIN_VALUE);
+    }
 }

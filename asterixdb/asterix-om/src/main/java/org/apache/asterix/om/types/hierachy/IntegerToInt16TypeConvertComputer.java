@@ -21,14 +21,23 @@ package org.apache.asterix.om.types.hierachy;
 import java.io.DataOutput;
 import java.io.IOException;
 
+import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class IntegerToInt16TypeConvertComputer extends AbstractIntegerTypeConvertComputer {
 
-    public static final IntegerToInt16TypeConvertComputer INSTANCE = new IntegerToInt16TypeConvertComputer();
+    private static final IntegerToInt16TypeConvertComputer INSTANCE_STRICT =
+            new IntegerToInt16TypeConvertComputer(true);
 
-    private IntegerToInt16TypeConvertComputer() {
+    private static final IntegerToInt16TypeConvertComputer INSTANCE_LAX = new IntegerToInt16TypeConvertComputer(false);
 
+    private IntegerToInt16TypeConvertComputer(boolean strict) {
+        super(strict);
+    }
+
+    public static IntegerToInt16TypeConvertComputer getInstance(boolean strict) {
+        return strict ? INSTANCE_STRICT : INSTANCE_LAX;
     }
 
     @Override
@@ -36,4 +45,8 @@ public class IntegerToInt16TypeConvertComputer extends AbstractIntegerTypeConver
         convertIntegerType(data, start, length, out, ATypeTag.SMALLINT, 2);
     }
 
+    @Override
+    public IAObject convertType(IAObject sourceObject) throws HyracksDataException {
+        return convertIntegerType(sourceObject, ATypeTag.SMALLINT);
+    }
 }
