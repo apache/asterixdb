@@ -164,17 +164,18 @@ public class ClusterStateManager implements IClusterStateManager {
             }
         }
 
-        setState(ClusterState.PENDING);
-        LOGGER.info("Cluster is now " + state);
-
         // if all storage partitions are active as well as the metadata node, then the cluster is active
         if (metadataNodeActive) {
+            if (state != ClusterState.ACTIVE) {
+                setState(ClusterState.PENDING);
+            }
             appCtx.getMetadataBootstrap().init();
             setState(ClusterState.ACTIVE);
-            LOGGER.info("Cluster is now " + state);
             notifyAll();
             // start global recovery
             appCtx.getGlobalRecoveryManager().startGlobalRecovery(appCtx);
+        } else {
+            setState(ClusterState.PENDING);
         }
     }
 
@@ -377,7 +378,7 @@ public class ClusterStateManager implements IClusterStateManager {
     public synchronized void deregisterNodePartitions(String nodeId) {
         ClusterPartition [] nodePartitions = node2PartitionsMap.remove(nodeId);
         if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("Deegistering node partitions for node " + nodeId + ": " + Arrays.toString(nodePartitions));
+            LOGGER.info("Deregistering node partitions for node " + nodeId + ": " + Arrays.toString(nodePartitions));
         }
         for (ClusterPartition nodePartition : nodePartitions) {
             clusterPartitions.remove(nodePartition.getPartitionId());
