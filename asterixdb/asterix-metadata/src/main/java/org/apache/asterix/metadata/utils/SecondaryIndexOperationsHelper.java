@@ -130,7 +130,7 @@ public abstract class SecondaryIndexOperationsHelper {
 
     private static Pair<ARecordType, ARecordType> getEnforcedType(Index index, ARecordType aRecordType,
             ARecordType metaRecordType) throws AlgebricksException {
-        return index.isEnforcingKeyFileds()
+        return index.isEnforcingKeyFields()
                 ? TypeUtil.createEnforcedType(aRecordType, metaRecordType,
                         IteratorUtils.toList(IteratorUtils.singletonIterator(index)))
                 : new Pair<>(null, null);

@@ -83,7 +83,7 @@ public class SecondaryRTreeOperationsHelper extends SecondaryTreeIndexOperations
     protected void setSecondaryRecDescAndComparators() throws AlgebricksException {
         List<List<String>> secondaryKeyFields = index.getKeyFieldNames();
         int numSecondaryKeys = secondaryKeyFields.size();
-        boolean isEnforcingKeyTypes = index.isEnforcingKeyFileds();
+        boolean isEnforcingKeyTypes = index.isEnforcingKeyFields();
         if (numSecondaryKeys != 1) {
             throw new AsterixException("Cannot use " + numSecondaryKeys + " fields as a key for the R-tree index. "
                     + "There can be only one field as a key for the R-tree index.");
@@ -195,7 +195,7 @@ public class SecondaryRTreeOperationsHelper extends SecondaryTreeIndexOperations
                 isPointMBR ? numNestedSecondaryKeyFields / 2 : numNestedSecondaryKeyFields;
         RecordDescriptor secondaryRecDescConsideringPointMBR =
                 isPointMBR ? secondaryRecDescForPointMBR : secondaryRecDesc;
-        boolean isEnforcingKeyTypes = index.isEnforcingKeyFileds();
+        boolean isEnforcingKeyTypes = index.isEnforcingKeyFields();
         IIndexDataflowHelperFactory indexDataflowHelperFactory = new IndexDataflowHelperFactory(
                 metadataProvider.getStorageComponentProvider().getStorageManager(), secondaryFileSplitProvider);
         if (dataset.getDatasetType() == DatasetType.INTERNAL) {

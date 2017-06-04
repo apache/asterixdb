@@ -86,7 +86,7 @@ public class SecondaryInvertedIndexOperationsHelper extends SecondaryTreeIndexOp
     protected void setSecondaryRecDescAndComparators() throws AlgebricksException {
         int numSecondaryKeys = index.getKeyFieldNames().size();
         IndexType indexType = index.getIndexType();
-        boolean isEnforcingKeyTypes = index.isEnforcingKeyFileds();
+        boolean isEnforcingKeyTypes = index.isEnforcingKeyFields();
         // Sanity checks.
         if (numPrimaryKeys > 1) {
             throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_INDEX_FOR_DATASET_WITH_COMPOSITE_PRIMARY_INDEX,
@@ -216,7 +216,7 @@ public class SecondaryInvertedIndexOperationsHelper extends SecondaryTreeIndexOp
                 jobId);
 
         IOperatorDescriptor sourceOp = primaryScanOp;
-        boolean isEnforcingKeyTypes = index.isEnforcingKeyFileds();
+        boolean isEnforcingKeyTypes = index.isEnforcingKeyFields();
         int numSecondaryKeys = index.getKeyFieldNames().size();
         if (isEnforcingKeyTypes && !enforcedItemType.equals(itemType)) {
             sourceOp = createCastOp(spec, dataset.getDatasetType());

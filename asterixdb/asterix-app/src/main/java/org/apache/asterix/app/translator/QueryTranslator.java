@@ -911,7 +911,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 for (Index existingIndex : indexes) {
                     if (existingIndex.getKeyFieldNames().equals(indexFields)
                             && !existingIndex.getKeyFieldTypes().equals(indexFieldTypes)
-                            && existingIndex.isEnforcingKeyFileds()) {
+                            && existingIndex.isEnforcingKeyFields()) {
                         throw new CompilationException("Cannot create index " + indexName + " , enforced index "
                                 + existingIndex.getIndexName() + " on field \"" + StringUtils.join(indexFields, ',')
                                 + "\" is already defined with type \"" + existingIndex.getKeyFieldTypes() + "\"");
@@ -1397,7 +1397,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 MetadataManager.INSTANCE.addIndex(mdTxnCtx,
                         new Index(dataverseName, datasetName, indexName, index.getIndexType(), index.getKeyFieldNames(),
                                 index.getKeyFieldSourceIndicators(), index.getKeyFieldTypes(),
-                                index.isEnforcingKeyFileds(), index.isPrimaryIndex(), MetadataUtil.PENDING_DROP_OP));
+                                index.isEnforcingKeyFields(), index.isPrimaryIndex(), MetadataUtil.PENDING_DROP_OP));
 
                 // #. commit the existing transaction before calling runJob.
                 MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
@@ -1447,7 +1447,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                                     new Index(dataverseName, datasetName, externalIndex.getIndexName(),
                                             externalIndex.getIndexType(), externalIndex.getKeyFieldNames(),
                                             externalIndex.getKeyFieldSourceIndicators(), index.getKeyFieldTypes(),
-                                            index.isEnforcingKeyFileds(), externalIndex.isPrimaryIndex(),
+                                            index.isEnforcingKeyFields(), externalIndex.isPrimaryIndex(),
                                             MetadataUtil.PENDING_DROP_OP));
                         }
                     }
@@ -1458,7 +1458,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 MetadataManager.INSTANCE.addIndex(mdTxnCtx,
                         new Index(dataverseName, datasetName, indexName, index.getIndexType(), index.getKeyFieldNames(),
                                 index.getKeyFieldSourceIndicators(), index.getKeyFieldTypes(),
-                                index.isEnforcingKeyFileds(), index.isPrimaryIndex(), MetadataUtil.PENDING_DROP_OP));
+                                index.isEnforcingKeyFields(), index.isPrimaryIndex(), MetadataUtil.PENDING_DROP_OP));
 
                 // #. commit the existing transaction before calling runJob.
                 MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);

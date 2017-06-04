@@ -101,7 +101,6 @@ public class IndexUtil {
 
     public static JobSpecification buildDropIndexJobSpec(Index index, MetadataProvider metadataProvider,
             Dataset dataset) throws AlgebricksException {
-
         SecondaryIndexOperationsHelper secondaryIndexHelper =
                 SecondaryIndexOperationsHelper.createIndexOperationsHelper(dataset, index, metadataProvider,
                         physicalOptimizationConfig);

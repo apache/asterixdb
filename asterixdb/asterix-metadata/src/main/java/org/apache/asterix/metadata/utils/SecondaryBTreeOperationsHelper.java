@@ -66,7 +66,7 @@ public class SecondaryBTreeOperationsHelper extends SecondaryTreeIndexOperations
     @Override
     public JobSpecification buildLoadingJobSpec() throws AlgebricksException {
         JobSpecification spec = RuntimeUtils.createJobSpecification(metadataProvider.getApplicationContext());
-        boolean isEnforcingKeyTypes = index.isEnforcingKeyFileds();
+        boolean isEnforcingKeyTypes = index.isEnforcingKeyFields();
         int[] fieldPermutation = createFieldPermutationForBulkLoadOp(index.getKeyFieldNames().size());
         IIndexDataflowHelperFactory dataflowHelperFactory = new IndexDataflowHelperFactory(
                 metadataProvider.getStorageComponentProvider().getStorageManager(), secondaryFileSplitProvider);
@@ -201,7 +201,7 @@ public class SecondaryBTreeOperationsHelper extends SecondaryTreeIndexOperations
                 metadataProvider.getFormat().getBinaryComparatorFactoryProvider();
         // Record column is 0 for external datasets, numPrimaryKeys for internal ones
         int recordColumn = dataset.getDatasetType() == DatasetType.INTERNAL ? numPrimaryKeys : 0;
-        boolean isEnforcingKeyTypes = index.isEnforcingKeyFileds();
+        boolean isEnforcingKeyTypes = index.isEnforcingKeyFields();
         for (int i = 0; i < numSecondaryKeys; i++) {
             ARecordType sourceType;
             int sourceColumn;

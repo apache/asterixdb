@@ -293,7 +293,7 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
             recordBuilder.addField(nameValue, fieldValue);
         }
 
-        if (instance.isEnforcingKeyFileds()) {
+        if (instance.isEnforcingKeyFields()) {
             // write optional field 9
             OrderedListBuilder typeListBuilder = new OrderedListBuilder();
             typeListBuilder.reset(new AOrderedListType(BuiltinType.ANY, null));

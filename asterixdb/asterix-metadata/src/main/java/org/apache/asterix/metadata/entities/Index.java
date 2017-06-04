@@ -117,7 +117,7 @@ public class Index implements IMetadataEntity<Index>, Comparable<Index> {
         return isPrimaryIndex;
     }
 
-    public boolean isEnforcingKeyFileds() {
+    public boolean isEnforcingKeyFields() {
         return enforceKeyFields;
     }
 
