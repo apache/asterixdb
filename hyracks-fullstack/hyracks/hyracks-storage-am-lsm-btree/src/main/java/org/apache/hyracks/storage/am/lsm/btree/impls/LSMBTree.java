@@ -286,6 +286,19 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
     }
 
     @Override
+    public void scanDiskComponents(ILSMIndexOperationContext ictx, IIndexCursor cursor) throws HyracksDataException {
+        if (!isPrimaryIndex()) {
+            throw HyracksDataException.create(ErrorCode.DISK_COMPONENT_SCAN_NOT_ALLOWED_FOR_SECONDARY_INDEX);
+        }
+        LSMBTreeOpContext ctx = (LSMBTreeOpContext) ictx;
+        List<ILSMComponent> operationalComponents = ctx.getComponentHolder();
+        MultiComparator comp = MultiComparator.create(getComparatorFactories());
+        ISearchPredicate pred = new RangePredicate(null, null, true, true, comp, comp);
+        ctx.getSearchInitialState().reset(pred, operationalComponents);
+        ((LSMBTreeSearchCursor) cursor).scan(ctx.getSearchInitialState(), pred);
+    }
+
+    @Override
     public ILSMDiskComponent flush(ILSMIOOperation operation) throws HyracksDataException {
         LSMBTreeFlushOperation flushOp = (LSMBTreeFlushOperation) operation;
         LSMBTreeMemoryComponent flushingComponent = (LSMBTreeMemoryComponent) flushOp.getFlushingComponent();

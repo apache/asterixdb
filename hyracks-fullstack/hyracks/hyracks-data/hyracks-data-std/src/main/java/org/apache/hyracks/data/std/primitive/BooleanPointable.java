@@ -26,6 +26,9 @@ import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.api.IPointableFactory;
 
 public final class BooleanPointable extends AbstractPointable implements IHashable, IComparable {
+
+    public static final BooleanPointableFactory FACTORY = new BooleanPointableFactory();
+
     public static final ITypeTraits TYPE_TRAITS = new ITypeTraits() {
         private static final long serialVersionUID = 1L;
 
@@ -40,7 +43,7 @@ public final class BooleanPointable extends AbstractPointable implements IHashab
         }
     };
 
-    public static final IPointableFactory FACTORY = new IPointableFactory() {
+    public static class BooleanPointableFactory implements IPointableFactory {
         private static final long serialVersionUID = 1L;
 
         @Override
@@ -48,11 +51,17 @@ public final class BooleanPointable extends AbstractPointable implements IHashab
             return new BooleanPointable();
         }
 
+        public IPointable createPointable(boolean value) {
+            BooleanPointable pointable = new BooleanPointable();
+            pointable.setBoolean(value);
+            return pointable;
+        }
+
         @Override
         public ITypeTraits getTypeTraits() {
             return TYPE_TRAITS;
         }
-    };
+    }
 
     public static boolean getBoolean(byte[] bytes, int start) {
         return bytes[start] != 0;
@@ -67,6 +76,11 @@ public final class BooleanPointable extends AbstractPointable implements IHashab
     }
 
     public void setBoolean(boolean value) {
+        if (bytes == null) {
+            start = 0;
+            length = TYPE_TRAITS.getFixedLength();
+            bytes = new byte[length];
+        }
         setBoolean(bytes, start, value);
     }
 

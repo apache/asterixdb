@@ -26,6 +26,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.replication.IReplicationJob.ReplicationOperation;
 import org.apache.hyracks.data.std.api.IValueReference;
@@ -449,6 +450,33 @@ public class LSMHarness implements ILSMHarness {
                 exitComponents(ctx, LSMOperationType.SEARCH, null, false);
             } catch (Exception e) {
                 throw new HyracksDataException(e);
+            }
+        }
+    }
+
+    @Override
+    public void scanDiskComponents(ILSMIndexOperationContext ctx, IIndexCursor cursor) throws HyracksDataException {
+        if (!lsmIndex.isPrimaryIndex()) {
+            throw HyracksDataException.create(ErrorCode.DISK_COMPONENT_SCAN_NOT_ALLOWED_FOR_SECONDARY_INDEX);
+        }
+        LSMOperationType opType = LSMOperationType.DISK_COMPONENT_SCAN;
+        getAndEnterComponents(ctx, opType, false);
+        try {
+            ctx.getSearchOperationCallback().before(null);
+            lsmIndex.scanDiskComponents(ctx, cursor);
+        } catch (Exception e) {
+            exitComponents(ctx, opType, null, true);
+            throw e;
+        }
+    }
+
+    @Override
+    public void endScanDiskComponents(ILSMIndexOperationContext ctx) throws HyracksDataException {
+        if (ctx.getOperation() == IndexOperation.DISK_COMPONENT_SCAN) {
+            try {
+                exitComponents(ctx, LSMOperationType.DISK_COMPONENT_SCAN, null, false);
+            } catch (Exception e) {
+                throw HyracksDataException.create(e);
             }
         }
     }

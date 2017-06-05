@@ -81,6 +81,25 @@ public interface ILSMHarness {
     void endSearch(ILSMIndexOperationContext ctx) throws HyracksDataException;
 
     /**
+     * Scan all disk components of the index
+     *
+     * @param ctx
+     *            the search operation context
+     * @param cursor
+     *            the index cursor
+     * @throws HyracksDataException
+     */
+    void scanDiskComponents(ILSMIndexOperationContext ctx, IIndexCursor cursor) throws HyracksDataException;
+
+    /**
+     * End the scan
+     *
+     * @param ctx
+     * @throws HyracksDataException
+     */
+    void endScanDiskComponents(ILSMIndexOperationContext ctx) throws HyracksDataException;
+
+    /**
      * Schedule a merge
      *
      * @param ctx

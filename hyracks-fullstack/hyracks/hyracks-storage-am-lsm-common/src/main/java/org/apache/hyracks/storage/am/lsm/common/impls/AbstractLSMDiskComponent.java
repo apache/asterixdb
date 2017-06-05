@@ -47,6 +47,7 @@ public abstract class AbstractLSMDiskComponent extends AbstractLSMComponent impl
             case MODIFICATION:
             case REPLICATE:
             case SEARCH:
+            case DISK_COMPONENT_SCAN:
                 readerCount++;
                 break;
             case MERGE:
@@ -80,6 +81,7 @@ public abstract class AbstractLSMDiskComponent extends AbstractLSMComponent impl
             case MODIFICATION:
             case REPLICATE:
             case SEARCH:
+            case DISK_COMPONENT_SCAN:
                 readerCount--;
                 if (readerCount == 0 && state == ComponentState.READABLE_MERGING) {
                     state = ComponentState.INACTIVE;

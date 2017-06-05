@@ -37,20 +37,28 @@ public class LSMBTreeSearchCursor implements ITreeIndexCursor {
 
     private final LSMBTreePointSearchCursor pointCursor;
     private final LSMBTreeRangeSearchCursor rangeCursor;
+    private final LSMBTreeDiskComponentScanCursor scanCursor;
     private ITreeIndexCursor currentCursor;
 
     public LSMBTreeSearchCursor(ILSMIndexOperationContext opCtx) {
         pointCursor = new LSMBTreePointSearchCursor(opCtx);
         rangeCursor = new LSMBTreeRangeSearchCursor(opCtx);
+        scanCursor = new LSMBTreeDiskComponentScanCursor(opCtx);
     }
 
     @Override
     public void open(ICursorInitialState initialState, ISearchPredicate searchPred) throws HyracksDataException {
         LSMBTreeCursorInitialState lsmInitialState = (LSMBTreeCursorInitialState) initialState;
         RangePredicate btreePred = (RangePredicate) searchPred;
+
         currentCursor =
                 btreePred.isPointPredicate(lsmInitialState.getOriginalKeyComparator()) ? pointCursor : rangeCursor;
         currentCursor.open(lsmInitialState, searchPred);
+    }
+
+    public void scan(ICursorInitialState initialState, ISearchPredicate searchPred) throws HyracksDataException {
+        currentCursor = scanCursor;
+        currentCursor.open(initialState, searchPred);
     }
 
     @Override

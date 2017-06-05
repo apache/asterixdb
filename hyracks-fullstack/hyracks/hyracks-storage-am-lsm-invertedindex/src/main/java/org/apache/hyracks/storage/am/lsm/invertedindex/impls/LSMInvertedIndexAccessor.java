@@ -20,6 +20,7 @@ package org.apache.hyracks.storage.am.lsm.invertedindex.impls;
 
 import java.util.List;
 
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
@@ -201,5 +202,11 @@ public class LSMInvertedIndexAccessor implements ILSMIndexAccessor, IInvertedInd
     @Override
     public void forceUpsert(ITupleReference tuple) throws HyracksDataException {
         throw new UnsupportedOperationException("Upsert not supported by lsm inverted index.");
+    }
+
+    @Override
+    public void scanDiskComponents(IIndexCursor cursor) throws HyracksDataException {
+        throw HyracksDataException.create(ErrorCode.DISK_COMPONENT_SCAN_NOT_ALLOWED_FOR_SECONDARY_INDEX);
+
     }
 }

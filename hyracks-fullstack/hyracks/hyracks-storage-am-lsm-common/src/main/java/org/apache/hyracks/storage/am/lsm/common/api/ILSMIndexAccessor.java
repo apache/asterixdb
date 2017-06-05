@@ -24,6 +24,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.common.IIndexAccessor;
+import org.apache.hyracks.storage.common.IIndexCursor;
 
 /**
  * Client handle for performing operations
@@ -230,4 +231,18 @@ public interface ILSMIndexAccessor extends IIndexAccessor {
      * @throws HyracksDataException
      */
     void forceUpdateMeta(IValueReference key, IValueReference value) throws HyracksDataException;
+
+    /**
+     * Open the given cursor for scanning all disk components of the primary index.
+     * The returned tuple has the format of [(int) disk_component_position, (boolean) anti-matter flag,
+     * primary key, payload].
+     * The returned tuples are first ordered on primary key, and then ordered on the descending order of
+     * disk_component_position (older components get returned first)
+     *
+     * @param icursor
+     *            Cursor over the index entries satisfying searchPred.
+     * @throws HyracksDataException
+     *             If the BufferCache throws while un/pinning or un/latching.
+     */
+    void scanDiskComponents(IIndexCursor cursor) throws HyracksDataException;
 }

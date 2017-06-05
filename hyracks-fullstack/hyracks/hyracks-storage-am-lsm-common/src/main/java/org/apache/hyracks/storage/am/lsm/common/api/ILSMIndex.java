@@ -65,6 +65,8 @@ public interface ILSMIndex extends IIndex {
 
     void search(ILSMIndexOperationContext ictx, IIndexCursor cursor, ISearchPredicate pred) throws HyracksDataException;
 
+    public void scanDiskComponents(ILSMIndexOperationContext ctx, IIndexCursor cursor) throws HyracksDataException;
+
     void scheduleFlush(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback) throws HyracksDataException;
 
     ILSMDiskComponent flush(ILSMIOOperation operation) throws HyracksDataException;
