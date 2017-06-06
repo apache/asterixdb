@@ -18,7 +18,6 @@
  */
 package org.apache.asterix.formats.nontagged;
 
-import org.apache.asterix.dataflow.data.nontagged.printers.adm.AUUIDPrinterFactory;
 import org.apache.asterix.dataflow.data.nontagged.printers.adm.ShortWithoutTypeInfoPrinterFactory;
 import org.apache.asterix.dataflow.data.nontagged.printers.json.clean.ABinaryHexPrinterFactory;
 import org.apache.asterix.dataflow.data.nontagged.printers.json.clean.ABooleanPrinterFactory;
@@ -36,8 +35,8 @@ import org.apache.asterix.dataflow.data.nontagged.printers.json.clean.AInt8Print
 import org.apache.asterix.dataflow.data.nontagged.printers.json.clean.AIntervalPrinterFactory;
 import org.apache.asterix.dataflow.data.nontagged.printers.json.clean.ALinePrinterFactory;
 import org.apache.asterix.dataflow.data.nontagged.printers.json.clean.ANullPrinterFactory;
-import org.apache.asterix.dataflow.data.nontagged.printers.json.clean.AOptionalFieldPrinterFactory;
 import org.apache.asterix.dataflow.data.nontagged.printers.json.clean.AObjectPrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.json.clean.AOptionalFieldPrinterFactory;
 import org.apache.asterix.dataflow.data.nontagged.printers.json.clean.AOrderedlistPrinterFactory;
 import org.apache.asterix.dataflow.data.nontagged.printers.json.clean.APoint3DPrinterFactory;
 import org.apache.asterix.dataflow.data.nontagged.printers.json.clean.APointPrinterFactory;
@@ -46,6 +45,7 @@ import org.apache.asterix.dataflow.data.nontagged.printers.json.clean.ARecordPri
 import org.apache.asterix.dataflow.data.nontagged.printers.json.clean.ARectanglePrinterFactory;
 import org.apache.asterix.dataflow.data.nontagged.printers.json.clean.AStringPrinterFactory;
 import org.apache.asterix.dataflow.data.nontagged.printers.json.clean.ATimePrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.json.clean.AUUIDPrinterFactory;
 import org.apache.asterix.dataflow.data.nontagged.printers.json.clean.AUnionPrinterFactory;
 import org.apache.asterix.dataflow.data.nontagged.printers.json.clean.AUnorderedlistPrinterFactory;
 import org.apache.asterix.dataflow.data.nontagged.printers.json.clean.AYearMonthDurationPrinterFactory;

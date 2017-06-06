@@ -18,7 +18,6 @@
  */
 package org.apache.asterix.formats.nontagged;
 
-import org.apache.asterix.dataflow.data.nontagged.printers.adm.AUUIDPrinterFactory;
 import org.apache.asterix.dataflow.data.nontagged.printers.adm.ShortWithoutTypeInfoPrinterFactory;
 import org.apache.asterix.dataflow.data.nontagged.printers.csv.ABooleanPrinterFactory;
 import org.apache.asterix.dataflow.data.nontagged.printers.csv.ACirclePrinterFactory;
@@ -35,8 +34,8 @@ import org.apache.asterix.dataflow.data.nontagged.printers.csv.AInt8PrinterFacto
 import org.apache.asterix.dataflow.data.nontagged.printers.csv.AIntervalPrinterFactory;
 import org.apache.asterix.dataflow.data.nontagged.printers.csv.ALinePrinterFactory;
 import org.apache.asterix.dataflow.data.nontagged.printers.csv.ANullPrinterFactory;
-import org.apache.asterix.dataflow.data.nontagged.printers.csv.AOptionalFieldPrinterFactory;
 import org.apache.asterix.dataflow.data.nontagged.printers.csv.AObjectPrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.csv.AOptionalFieldPrinterFactory;
 import org.apache.asterix.dataflow.data.nontagged.printers.csv.APoint3DPrinterFactory;
 import org.apache.asterix.dataflow.data.nontagged.printers.csv.APointPrinterFactory;
 import org.apache.asterix.dataflow.data.nontagged.printers.csv.APolygonPrinterFactory;
@@ -44,6 +43,7 @@ import org.apache.asterix.dataflow.data.nontagged.printers.csv.ARecordPrinterFac
 import org.apache.asterix.dataflow.data.nontagged.printers.csv.ARectanglePrinterFactory;
 import org.apache.asterix.dataflow.data.nontagged.printers.csv.AStringPrinterFactory;
 import org.apache.asterix.dataflow.data.nontagged.printers.csv.ATimePrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.csv.AUUIDPrinterFactory;
 import org.apache.asterix.dataflow.data.nontagged.printers.csv.AUnionPrinterFactory;
 import org.apache.asterix.dataflow.data.nontagged.printers.csv.AYearMonthDurationPrinterFactory;
 import org.apache.asterix.om.types.ARecordType;
