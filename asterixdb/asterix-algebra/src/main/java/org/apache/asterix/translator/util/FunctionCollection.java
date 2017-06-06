@@ -161,6 +161,7 @@ import org.apache.asterix.runtime.evaluators.functions.HashedWordTokensDescripto
 import org.apache.asterix.runtime.evaluators.functions.IfMissingDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.IfMissingOrNullDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.IfNullDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.CastTypeLaxDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.InjectFailureDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.IsArrayDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.IsBooleanDescriptor;
@@ -697,6 +698,7 @@ public class FunctionCollection {
 
         // Cast function
         functionsToInjectUnkownHandling.add(CastTypeDescriptor.FACTORY);
+        functionsToInjectUnkownHandling.add(CastTypeLaxDescriptor.FACTORY);
 
         // Record function
         functionsToInjectUnkownHandling.add(RecordPairsDescriptor.FACTORY);

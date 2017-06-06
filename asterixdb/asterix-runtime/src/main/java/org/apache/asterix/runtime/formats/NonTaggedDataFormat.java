@@ -440,6 +440,16 @@ public class NonTaggedDataFormat implements IDataFormat {
                 fd.setImmutableStates(rt, it);
             }
         });
+        functionTypeInferers.put(BuiltinFunctions.CAST_TYPE_LAX, new FunctionTypeInferer() {
+            @Override
+            public void infer(ILogicalExpression expr, IFunctionDescriptor fd, IVariableTypeEnvironment context)
+                    throws AlgebricksException {
+                AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;
+                IAType rt = TypeCastUtils.getRequiredType(funcExpr);
+                IAType it = (IAType) context.getType(funcExpr.getArguments().get(0).getValue());
+                fd.setImmutableStates(rt, it);
+            }
+        });
         functionTypeInferers.put(BuiltinFunctions.OPEN_RECORD_CONSTRUCTOR, new FunctionTypeInferer() {
             @Override
             public void infer(ILogicalExpression expr, IFunctionDescriptor fd, IVariableTypeEnvironment context)

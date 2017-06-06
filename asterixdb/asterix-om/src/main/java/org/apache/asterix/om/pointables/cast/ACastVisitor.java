@@ -56,6 +56,16 @@ public class ACastVisitor implements IVisitablePointableVisitor<Void, Triple<IVi
     private final Map<IVisitablePointable, AListCaster> laccessorToCaster = new HashMap<>();
     private final ArrayBackedValueStorage castBuffer = new ArrayBackedValueStorage();
 
+    private final boolean strictDemote;
+
+    public ACastVisitor() {
+        this(true);
+    }
+
+    public ACastVisitor(boolean strictDemote) {
+        this.strictDemote = strictDemote;
+    }
+
     @Override
     public Void visit(AListVisitablePointable accessor, Triple<IVisitablePointable, IAType, Boolean> arg)
             throws HyracksDataException {
@@ -110,7 +120,7 @@ public class ACastVisitor implements IVisitablePointableVisitor<Void, Triple<IVi
             try {
                 castBuffer.reset();
                 ATypeHierarchy.convertNumericTypeByteArray(accessor.getByteArray(), accessor.getStartOffset(),
-                        accessor.getLength(), reqTypeTag, castBuffer.getDataOutput(), true);
+                        accessor.getLength(), reqTypeTag, castBuffer.getDataOutput(), strictDemote);
                 arg.first.set(castBuffer);
             } catch (IOException e1) {
                 throw new HyracksDataException(

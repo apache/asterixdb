@@ -16,6 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.apache.asterix.runtime.evaluators.functions;
 
 import org.apache.asterix.om.functions.BuiltinFunctions;
@@ -31,16 +32,23 @@ import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 /**
- * This runtime function casts an input ADM instance of a certain type into the form
- * that confirms a required type.
+ * Implements 'lax' cast. It differs from the regular cast as follows:
+ * <ul>
+ * <li>Numeric type demotion does not fail if the input value is not within bounds for the target type.
+ * Instead it returns min/max value of the target type.
+ * </li>
+ * <li>
+ * If there's an error during casting then 'MISSING' is returned.
+ * Note that errors from argument evaluation are still propagated.
+ * </li>
+ * </ul>
  */
-public class CastTypeDescriptor extends AbstractScalarFunctionDynamicDescriptor {
+public class CastTypeLaxDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
-
         @Override
         public IFunctionDescriptor createFunctionDescriptor() {
-            return new CastTypeDescriptor();
+            return new CastTypeLaxDescriptor();
         }
     };
 
@@ -48,7 +56,7 @@ public class CastTypeDescriptor extends AbstractScalarFunctionDynamicDescriptor 
     private IAType reqType;
     private IAType inputType;
 
-    private CastTypeDescriptor() {
+    private CastTypeLaxDescriptor() {
     }
 
     @Override
@@ -67,7 +75,7 @@ public class CastTypeDescriptor extends AbstractScalarFunctionDynamicDescriptor 
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return BuiltinFunctions.CAST_TYPE;
+        return BuiltinFunctions.CAST_TYPE_LAX;
     }
 
     @Override
@@ -79,9 +87,8 @@ public class CastTypeDescriptor extends AbstractScalarFunctionDynamicDescriptor 
 
             @Override
             public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
-                return new CastTypeEvaluator(reqType, inputType, recordEvalFactory.createScalarEvaluator(ctx));
+                return new CastTypeLaxEvaluator(reqType, inputType, recordEvalFactory.createScalarEvaluator(ctx));
             }
         };
     }
 }
-

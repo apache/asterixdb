@@ -69,11 +69,11 @@ public class DoubleToFloatTypeConvertComputer implements ITypeConvertComputer {
             } else {
                 return Float.MAX_VALUE;
             }
-        } else if (sourceValue < Float.MIN_VALUE) {
+        } else if (sourceValue < -Float.MAX_VALUE) {
             if (strict) {
                 raiseBoundaryCheckException(sourceValue);
             } else {
-                return Float.MIN_VALUE;
+                return -Float.MAX_VALUE;
             }
         }
 
@@ -82,6 +82,6 @@ public class DoubleToFloatTypeConvertComputer implements ITypeConvertComputer {
 
     private void raiseBoundaryCheckException(double sourceValue) throws HyracksDataException {
         throw new RuntimeDataException(ErrorCode.TYPE_CONVERT_OUT_OF_BOUND, sourceValue, ATypeTag.FLOAT,
-                Float.MAX_VALUE, Float.MIN_VALUE);
+                Float.MAX_VALUE, -Float.MAX_VALUE);
     }
 }

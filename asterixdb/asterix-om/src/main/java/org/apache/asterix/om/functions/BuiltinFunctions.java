@@ -57,6 +57,7 @@ import org.apache.asterix.om.typecomputer.impl.BooleanFunctionTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.BooleanOnlyTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.BooleanOrMissingTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.CastTypeComputer;
+import org.apache.asterix.om.typecomputer.impl.CastTypeLaxComputer;
 import org.apache.asterix.om.typecomputer.impl.ClosedRecordConstructorResultType;
 import org.apache.asterix.om.typecomputer.impl.CollectionMemberResultType;
 import org.apache.asterix.om.typecomputer.impl.CollectionToSequenceTypeComputer;
@@ -663,6 +664,8 @@ public class BuiltinFunctions {
             "flow-object", 1);
     public static final FunctionIdentifier CAST_TYPE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "cast", 1);
+    public static final FunctionIdentifier CAST_TYPE_LAX = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "cast-lax", 1);
 
     public static final FunctionIdentifier CREATE_UUID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "create-uuid", 0);
@@ -1077,6 +1080,7 @@ public class BuiltinFunctions {
         addFunction(SLEEP, SleepTypeComputer.INSTANCE, false);
         addPrivateFunction(INJECT_FAILURE, InjectFailureTypeComputer.INSTANCE, true);
         addPrivateFunction(CAST_TYPE, CastTypeComputer.INSTANCE, true);
+        addPrivateFunction(CAST_TYPE_LAX, CastTypeLaxComputer.INSTANCE, true);
 
         addFunction(TID, AInt64TypeComputer.INSTANCE, true);
         addFunction(TIME_CONSTRUCTOR, ATimeTypeComputer.INSTANCE, true);
