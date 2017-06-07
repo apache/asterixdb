@@ -51,10 +51,12 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <file.encoding>UTF-8</file.encoding>
     <jdk.version>1.8</jdk.version>
     <jvm.extraargs />
     <sonar.jacoco.reportPath>${env.PWD}/target/jacoco-merged.exec</sonar.jacoco.reportPath>
     <source-format.skip>false</source-format.skip>
+    <skip.surefire.tests>${skipTests}</skip.surefire.tests>
 
     <!-- Definition of tests in various categories which may be excluded -->
     <hanging.pregelix.tests>**/pregelix/**/FailureRecovery*.java</hanging.pregelix.tests>
@@ -256,6 +258,7 @@
           <excludes combine.children="append">
             <exclude>${global.test.excludes},${test.excludes}</exclude>
           </excludes>
+          <skipTests>${skip.surefire.tests}</skipTests>
         </configuration>
       </plugin>
       <plugin>

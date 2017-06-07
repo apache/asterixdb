@@ -41,13 +41,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.hyracks.api.io.IODeviceHandle;
 import org.apache.hyracks.control.common.utils.ThreadDumpHelper;
 import org.apache.hyracks.control.nc.NodeControllerService;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
 /**
  * Utils for running SQL++ or AQL runtime tests.
  */
-@RunWith(Parameterized.class)
 public class LangExecutionUtil {
 
     private static final String PATH_ACTUAL = "target" + File.separator + "rttest" + File.separator;

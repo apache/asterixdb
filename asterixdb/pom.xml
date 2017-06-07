@@ -43,21 +43,20 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <file.encoding>UTF-8</file.encoding>
     <jvm.extraargs />
     <jdk.version>1.8</jdk.version>
     <runSlowAQLTests>false</runSlowAQLTests>
     <appendedResourcesDirectory>${basedir}/src/main/appended-resources</appendedResourcesDirectory>
     <sonar.jacoco.reportPath>${env.PWD}/target/jacoco-merged.exec</sonar.jacoco.reportPath>
     <debug.suspend.flag>n</debug.suspend.flag>
+    <skip.surefire.tests>${skipTests}</skip.surefire.tests>
 
     <!-- Definition of tests in various categories which may be excluded -->
-    <optimizer.tests>**/optimizer/**/*Test.java</optimizer.tests>
-    <metadata.tests>**/metadata/*Test.java</metadata.tests>
-    <execution.tests>**/ExecutionTest.java</execution.tests>
     <repeated.tests>**/RepeatedTest.java</repeated.tests>
     <invalid.tests>**/DmlTest.java</invalid.tests>
-    <global.test.includes>**/*TestSuite.java,**/*Test.java,${execution.tests}</global.test.includes>
-    <global.test.excludes>${optimizer.tests},${metadata.tests},${invalid.tests},${repeated.tests}</global.test.excludes>
+    <global.test.includes>**/*TestSuite.java,**/*Test.java</global.test.includes>
+    <global.test.excludes>${invalid.tests},${repeated.tests}</global.test.excludes>
 
     <failsafe.test.excludes>**/DmlRecoveryIT.java</failsafe.test.excludes>
     <cluster.test.excludes>**/AsterixClusterLifeCycleIT.java</cluster.test.excludes>
@@ -107,6 +106,7 @@
           <excludes>
             <exclude>${global.test.excludes},${test.excludes}</exclude>
           </excludes>
+          <skipTests>${skip.surefire.tests}</skipTests>
         </configuration>
       </plugin>
       <plugin>
@@ -440,24 +440,6 @@
       <id>slow-aql-tests</id>
       <properties>
         <runSlowAQLTests>true</runSlowAQLTests>
-      </properties>
-    </profile>
-    <profile>
-      <id>optimizer-tests</id>
-      <properties>
-        <optimizer.tests />
-      </properties>
-    </profile>
-    <profile>
-      <id>metadata-tests</id>
-      <properties>
-        <metadata.tests />
-      </properties>
-    </profile>
-    <profile>
-      <id>execution-tests</id>
-      <properties>
-        <execution.tests />
       </properties>
     </profile>
     <profile>
