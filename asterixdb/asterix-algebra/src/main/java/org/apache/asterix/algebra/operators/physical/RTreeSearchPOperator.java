@@ -66,7 +66,7 @@ public class RTreeSearchPOperator extends IndexSearchPOperator {
     @Override
     public void contributeRuntimeOperator(IHyracksJobBuilder builder, JobGenContext context, ILogicalOperator op,
             IOperatorSchema opSchema, IOperatorSchema[] inputSchemas, IOperatorSchema outerPlanSchema)
-                    throws AlgebricksException {
+            throws AlgebricksException {
         AbstractUnnestMapOperator unnestMap = (AbstractUnnestMapOperator) op;
         ILogicalExpression unnestExpr = unnestMap.getExpressionRef().getValue();
         if (unnestExpr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
@@ -81,6 +81,7 @@ public class RTreeSearchPOperator extends IndexSearchPOperator {
         jobGenParams.readFromFuncArgs(unnestFuncExpr.getArguments());
         int[] keyIndexes = getKeyIndexes(jobGenParams.getKeyVarList(), inputSchemas);
 
+        boolean propagateIndexFilter = unnestMap.propagateIndexFilter();
         int[] minFilterFieldIndexes = getKeyIndexes(unnestMap.getMinFilterVars(), inputSchemas);
         int[] maxFilterFieldIndexes = getKeyIndexes(unnestMap.getMaxFilterVars(), inputSchemas);
 
@@ -97,9 +98,10 @@ public class RTreeSearchPOperator extends IndexSearchPOperator {
             // By nature, LEFT_OUTER_UNNEST_MAP should generate null values for non-matching tuples.
             retainNull = true;
         }
-        Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> rtreeSearch = mp.buildRtreeRuntime(
-                builder.getJobSpec(), outputVars, opSchema, typeEnv, context, jobGenParams.getRetainInput(), retainNull,
-                dataset, jobGenParams.getIndexName(), keyIndexes, minFilterFieldIndexes, maxFilterFieldIndexes);
+        Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> rtreeSearch =
+                mp.buildRtreeRuntime(builder.getJobSpec(), outputVars, opSchema, typeEnv, context,
+                        jobGenParams.getRetainInput(), retainNull, dataset, jobGenParams.getIndexName(), keyIndexes,
+                        propagateIndexFilter, minFilterFieldIndexes, maxFilterFieldIndexes);
 
         builder.contributeHyracksOperator(unnestMap, rtreeSearch.first);
         builder.contributeAlgebricksPartitionConstraint(rtreeSearch.first, rtreeSearch.second);

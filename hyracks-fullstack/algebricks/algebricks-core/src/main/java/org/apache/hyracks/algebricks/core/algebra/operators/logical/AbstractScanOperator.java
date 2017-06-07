@@ -36,6 +36,11 @@ public abstract class AbstractScanOperator extends AbstractLogicalOperator {
         return variables;
     }
 
+    public List<LogicalVariable> getScanVariables() {
+        return variables;
+    }
+
+
     public void setVariables(List<LogicalVariable> variables) {
         this.variables = variables;
     }

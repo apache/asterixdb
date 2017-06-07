@@ -35,12 +35,24 @@ public abstract class AbstractUnnestMapOperator extends AbstractUnnestOperator {
     protected List<LogicalVariable> minFilterVars;
     protected List<LogicalVariable> maxFilterVars;
 
+    protected boolean propagateIndexFilter;
+
     public AbstractUnnestMapOperator(List<LogicalVariable> variables, Mutable<ILogicalExpression> expression,
             List<Object> variableTypes, boolean propagateInput) {
         super(variables, expression);
         this.expression = expression;
         this.variableTypes = variableTypes;
         this.propagateInput = propagateInput;
+        this.propagateIndexFilter = false;
+    }
+
+    @Override
+    public List<LogicalVariable> getScanVariables() {
+        if (propagateIndexFilter) {
+            return variables.subList(0, variables.size() - 2);
+        } else {
+            return variables;
+        }
     }
 
     public List<Object> getVariableTypes() {
@@ -98,4 +110,27 @@ public abstract class AbstractUnnestMapOperator extends AbstractUnnestOperator {
         return additionalFilteringExpressions;
     }
 
+    public void markPropagageIndexFilter() {
+        this.propagateIndexFilter = true;
+    }
+
+    public boolean propagateIndexFilter() {
+        return this.propagateIndexFilter;
+    }
+
+    public LogicalVariable getPropagateIndexMinFilterVar() {
+        if (propagateIndexFilter) {
+            return variables.get(variables.size() - 2);
+        } else {
+            return null;
+        }
+    }
+
+    public LogicalVariable getPropagateIndexMaxFilterVar() {
+        if (propagateIndexFilter) {
+            return variables.get(variables.size() - 1);
+        } else {
+            return null;
+        }
+    }
 }

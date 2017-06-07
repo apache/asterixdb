@@ -135,13 +135,16 @@ public class InvertedIndexPOperator extends IndexSearchPOperator {
             AbstractUnnestMapOperator unnestMap, IOperatorSchema opSchema, boolean retainInput, boolean retainMissing,
             String datasetName, Dataset dataset, String indexName, ATypeTag searchKeyType, int[] keyFields,
             SearchModifierType searchModifierType, IAlgebricksConstantValue similarityThreshold,
-            int[] minFilterFieldIndexes, int[] maxFilterFieldIndexes, boolean isFullTextSearchQuery)
-            throws AlgebricksException {
+            int[] minFilterFieldIndexes, int[] maxFilterFieldIndexes,
+            boolean isFullTextSearchQuery) throws AlgebricksException {
         try {
+
+            boolean propagateIndexFilter = unnestMap.propagateIndexFilter();
             IAObject simThresh = ((AsterixConstantValue) similarityThreshold).getObject();
             int numPrimaryKeys = dataset.getPrimaryKeys().size();
-            Index secondaryIndex = MetadataManager.INSTANCE.getIndex(metadataProvider.getMetadataTxnContext(),
-                    dataset.getDataverseName(), dataset.getDatasetName(), indexName);
+            Index secondaryIndex = MetadataManager.INSTANCE
+                    .getIndex(metadataProvider.getMetadataTxnContext(), dataset.getDataverseName(),
+                            dataset.getDatasetName(), indexName);
             if (secondaryIndex == null) {
                 throw new AlgebricksException(
                         "Code generation error: no index " + indexName + " for dataset " + datasetName);
@@ -160,13 +163,15 @@ public class InvertedIndexPOperator extends IndexSearchPOperator {
             IIndexDataflowHelperFactory dataflowHelperFactory =
                     new IndexDataflowHelperFactory(metadataProvider.getStorageComponentProvider().getStorageManager(),
                             secondarySplitsAndConstraint.first);
-            LSMInvertedIndexSearchOperatorDescriptor invIndexSearchOp = new LSMInvertedIndexSearchOperatorDescriptor(
-                    jobSpec, outputRecDesc, queryField, dataflowHelperFactory, queryTokenizerFactory,
-                    searchModifierFactory, retainInput, retainMissing, context.getMissingWriterFactory(),
-                    dataset.getSearchCallbackFactory(metadataProvider.getStorageComponentProvider(), secondaryIndex,
-                            ((JobEventListenerFactory) jobSpec.getJobletEventListenerFactory()).getJobId(),
-                            IndexOperation.SEARCH, null),
-                    minFilterFieldIndexes, maxFilterFieldIndexes, isFullTextSearchQuery, numPrimaryKeys, false);
+            LSMInvertedIndexSearchOperatorDescriptor invIndexSearchOp =
+                    new LSMInvertedIndexSearchOperatorDescriptor(jobSpec, outputRecDesc, queryField,
+                            dataflowHelperFactory, queryTokenizerFactory, searchModifierFactory, retainInput,
+                            retainMissing, context.getMissingWriterFactory(),
+                            dataset.getSearchCallbackFactory(metadataProvider.getStorageComponentProvider(),
+                                    secondaryIndex,
+                                    ((JobEventListenerFactory) jobSpec.getJobletEventListenerFactory()).getJobId(),
+                                    IndexOperation.SEARCH, null), minFilterFieldIndexes, maxFilterFieldIndexes,
+                            isFullTextSearchQuery, numPrimaryKeys, propagateIndexFilter);
             return new Pair<>(invIndexSearchOp, secondarySplitsAndConstraint.second);
         } catch (MetadataException e) {
             throw new AlgebricksException(e);

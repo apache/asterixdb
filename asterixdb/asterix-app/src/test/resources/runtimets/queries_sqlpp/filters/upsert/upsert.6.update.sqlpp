@@ -1,0 +1,53 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+use test;
+
+upsert into Tweet (
+{ "create_at": datetime("2015-11-23T16:14:03.000Z"),
+  "id": 668945640186101761,
+  "text": "Just posted a photo @ Campus Martius Park https://t.co/5Ax4E2CdWZ",
+  "in_reply_to_status": -1,
+  "in_reply_to_user": -1,
+  "favorite_count": 0,
+  "coordinate": point("-83.04647491,42.33170228"),
+  "retweet_count": 0,
+  "lang": "en",
+  "is_retweet": false,
+  "user": {
+    "id": 48121888, "name": "Kevin McKague", "screen_name": "KevinOfMI", "lang": "en", "location": "Davison, Michigan",
+    "create_at": date("2009-06-17"),
+    "description": "I need", "followers_count": 1178, "friends_count": 1780, "statues_count": 22263
+  },
+  "place": {
+    "country": "United States",
+    "country_code": "United States",
+    "full_name": "Detroit, MI",
+    "id": "b463d3bd6064861b",
+    "name": "Detroit", "place_type": "city",
+    "bounding_box": rectangle("-83.288056,42.255085 -82.91052,42.450488")
+  },
+  "geo_tag": {
+    "stateID": 0, "stateName": "Michigan",
+    "countyID": 26163, "countyName": "Wayne",
+    "cityID": 2622000, "cityName": "Detroit"
+  }
+}
+)
+;

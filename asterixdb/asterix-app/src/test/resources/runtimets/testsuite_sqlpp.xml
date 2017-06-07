@@ -8511,6 +8511,16 @@
         <output-dir compare="Text">nested-filter-equality-predicate</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="filters">
+      <compilation-unit name="upsert">
+        <output-dir compare="Text">upsert</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="filters">
+      <compilation-unit name="delete">
+        <output-dir compare="Text">delete</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="json">
     <test-case FilePath="json">

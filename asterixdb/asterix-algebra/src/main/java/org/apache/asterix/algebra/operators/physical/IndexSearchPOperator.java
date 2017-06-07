@@ -63,7 +63,7 @@ public abstract class IndexSearchPOperator extends AbstractScanPOperator {
         IDataSource<?> ds = idx.getDataSource();
         IDataSourcePropertiesProvider dspp = ds.getPropertiesProvider();
         AbstractScanOperator as = (AbstractScanOperator) op;
-        deliveredProperties = dspp.computePropertiesVector(as.getVariables());
+        deliveredProperties = dspp.computePropertiesVector(as.getScanVariables());
     }
 
     protected int[] getKeyIndexes(List<LogicalVariable> keyVarList, IOperatorSchema[] inputSchemas) {

@@ -69,13 +69,13 @@ public class IntersectPOperator extends AbstractPhysicalOperator {
         for (int i = 0; i < intersectOp.getNumInput(); i++) {
             List<ILocalStructuralProperty> localProps = new ArrayList<>();
             List<OrderColumn> orderColumns = new ArrayList<>();
-            for (LogicalVariable column : intersectOp.getInputVariables(i)) {
+            for (LogicalVariable column : intersectOp.getCompareVariables(i)) {
                 orderColumns.add(new OrderColumn(column, OrderOperator.IOrder.OrderKind.ASC));
             }
             localProps.add(new LocalOrderProperty(orderColumns));
             IPartitioningProperty pp = null;
             if (intersectOp.getExecutionMode() == AbstractLogicalOperator.ExecutionMode.PARTITIONED) {
-                Set<LogicalVariable> partitioningVariables = new HashSet<>(intersectOp.getInputVariables(i));
+                Set<LogicalVariable> partitioningVariables = new HashSet<>(intersectOp.getCompareVariables(i));
                 pp = new UnorderedPartitionedProperty(partitioningVariables, null);
             }
             pv[i] = new StructuralPropertiesVector(pp, localProps);
@@ -108,37 +108,48 @@ public class IntersectPOperator extends AbstractPhysicalOperator {
     @Override
     public void contributeRuntimeOperator(IHyracksJobBuilder builder, JobGenContext context, ILogicalOperator op,
             IOperatorSchema opSchema, IOperatorSchema[] inputSchemas, IOperatorSchema outerPlanSchema)
-                    throws AlgebricksException {
+            throws AlgebricksException {
         // logical op should have checked all the mismatch issues.
         IntersectOperator logicalOp = (IntersectOperator) op;
         int nInput = logicalOp.getNumInput();
         int[][] compareFields = new int[nInput][];
 
-        IBinaryComparatorFactory[] comparatorFactories = JobGenHelper.variablesToAscBinaryComparatorFactories(
-                logicalOp.getInputVariables(0), context.getTypeEnvironment(op), context);
+        IBinaryComparatorFactory[] comparatorFactories = JobGenHelper
+                .variablesToAscBinaryComparatorFactories(logicalOp.getCompareVariables(0),
+                        context.getTypeEnvironment(op), context);
 
         INormalizedKeyComputerFactoryProvider nkcfProvider = context.getNormalizedKeyComputerFactoryProvider();
         INormalizedKeyComputerFactory nkcf = null;
 
         if (nkcfProvider != null) {
-            Object type = context.getTypeEnvironment(op).getVarType(logicalOp.getInputVariables(0).get(0));
+            Object type = context.getTypeEnvironment(op).getVarType(logicalOp.getCompareVariables(0).get(0));
             if (type != null) {
                 nkcf = nkcfProvider.getNormalizedKeyComputerFactory(type, true);
             }
         }
 
         for (int i = 0; i < logicalOp.getNumInput(); i++) {
-            compareFields[i] = JobGenHelper.variablesToFieldIndexes(logicalOp.getInputVariables(i), inputSchemas[i]);
+            compareFields[i] = JobGenHelper.variablesToFieldIndexes(logicalOp.getCompareVariables(i), inputSchemas[i]);
+        }
+
+        int[][] extraFields = null;
+        if (logicalOp.getExtraVariables() != null) {
+            extraFields = new int[logicalOp.getNumInput()][];
+            for (int i = 0; i < logicalOp.getNumInput(); i++) {
+                extraFields[i] =
+                        JobGenHelper.variablesToFieldIndexes(logicalOp.getExtraVariables().get(i), inputSchemas[i]);
+            }
         }
 
         IOperatorDescriptorRegistry spec = builder.getJobSpec();
-        RecordDescriptor recordDescriptor = JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), opSchema,
-                context);
+        RecordDescriptor recordDescriptor =
+                JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), opSchema, context);
 
-        IntersectOperatorDescriptor opDescriptor = null;
+        IntersectOperatorDescriptor opDescriptor;
         try {
-            opDescriptor = new IntersectOperatorDescriptor(spec, nInput, compareFields, nkcf, comparatorFactories,
-                    recordDescriptor);
+            opDescriptor =
+                    new IntersectOperatorDescriptor(spec, nInput, compareFields, extraFields, nkcf, comparatorFactories,
+                            recordDescriptor);
         } catch (HyracksException e) {
             throw new AlgebricksException(e);
         }

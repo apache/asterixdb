@@ -19,7 +19,9 @@
 
 package org.apache.hyracks.algebricks.core.algebra.operators.logical;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
@@ -32,22 +34,45 @@ import org.apache.hyracks.algebricks.core.algebra.typing.NonPropagatingTypeEnvir
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionReferenceTransform;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisitor;
 import org.apache.hyracks.algebricks.core.config.AlgebricksConfig;
+import org.apache.hyracks.api.exceptions.ErrorCode;
 
 public class IntersectOperator extends AbstractLogicalOperator {
 
     private final List<List<LogicalVariable>> inputVars;
+    private final List<List<LogicalVariable>> compareVars;
     private final List<LogicalVariable> outputVars;
+    private List<List<LogicalVariable>> extraVars;
 
-    public IntersectOperator(List<LogicalVariable> outputVars, List<List<LogicalVariable>> inputVars)
+    public IntersectOperator(List<LogicalVariable> outputVars, List<List<LogicalVariable>> compareVars)
             throws AlgebricksException {
-        if (outputVars.size() != inputVars.get(0).size()) {
-            throw new AlgebricksException("The number of output variables is different with the input variable number");
+        this(outputVars, compareVars,
+                compareVars.stream().map(vars -> new ArrayList<LogicalVariable>()).collect(Collectors.toList()));
+    }
+
+    public IntersectOperator(List<LogicalVariable> outputVars, List<List<LogicalVariable>> compareVars,
+            List<List<LogicalVariable>> extraVars) throws AlgebricksException {
+        int numCompareFields = compareVars.get(0).size();
+        if (compareVars.stream().anyMatch(vlist -> vlist.size() != numCompareFields)) {
+            throw AlgebricksException.create(ErrorCode.INVALID_INPUT_PARAMETER);
         }
-        if (inputVars.stream().anyMatch(vlist -> vlist.size() != outputVars.size())) {
-            throw new AlgebricksException("The schemas of input variables are not consistent");
+        int numExtraFields = extraVars.get(0).size();
+        if (extraVars.stream().anyMatch(vlist -> vlist.size() != numExtraFields)) {
+            throw AlgebricksException.create(ErrorCode.INVALID_INPUT_PARAMETER);
         }
-        this.outputVars = outputVars;
-        this.inputVars = inputVars;
+        if (outputVars.size() != numCompareFields + numExtraFields) {
+            throw AlgebricksException.create(ErrorCode.INVALID_INPUT_PARAMETER);
+        }
+
+        this.outputVars = new ArrayList<>(outputVars);
+        this.compareVars = new ArrayList<>(compareVars);
+        this.inputVars = new ArrayList<>(compareVars.size());
+        for (List<LogicalVariable> vars : compareVars) {
+            this.inputVars.add(new ArrayList<>(vars));
+        }
+        for (int i = 0; i < extraVars.size(); i++) {
+            this.inputVars.get(i).addAll(extraVars.get(i));
+        }
+        this.extraVars = extraVars;
     }
 
     @Override
@@ -86,14 +111,20 @@ public class IntersectOperator extends AbstractLogicalOperator {
         IVariableTypeEnvironment typeEnv = ctx.getOutputTypeEnvironment(inputs.get(0).getValue());
 
         for (int i = 1; i < inputs.size(); i++) {
-            checkTypeConsistency(typeEnv, inputVars.get(0), ctx.getOutputTypeEnvironment(inputs.get(i).getValue()),
-                    inputVars.get(i));
+            checkTypeConsistency(typeEnv, compareVars.get(0), ctx.getOutputTypeEnvironment(inputs.get(i).getValue()),
+                    compareVars.get(i));
         }
 
-        IVariableTypeEnvironment env = new NonPropagatingTypeEnvironment(ctx.getExpressionTypeComputer(),
-                ctx.getMetadataProvider());
-        for (int i = 0; i < outputVars.size(); i++) {
-            env.setVarType(outputVars.get(i), typeEnv.getVarType(inputVars.get(0).get(i)));
+        IVariableTypeEnvironment env =
+                new NonPropagatingTypeEnvironment(ctx.getExpressionTypeComputer(), ctx.getMetadataProvider());
+        int i = 0;
+        for (; i < compareVars.get(0).size(); i++) {
+            env.setVarType(outputVars.get(i), typeEnv.getVarType(compareVars.get(0).get(i)));
+        }
+        if (extraVars != null) {
+            for (int k = 0; k < extraVars.get(0).size(); k++) {
+                env.setVarType(outputVars.get(i + k), typeEnv.getVarType(extraVars.get(0).get(k)));
+            }
         }
         return typeEnv;
     }
@@ -103,11 +134,19 @@ public class IntersectOperator extends AbstractLogicalOperator {
     }
 
     public int getNumInput() {
-        return inputVars.size();
+        return compareVars.size();
+    }
+
+    public List<LogicalVariable> getCompareVariables(int inputIndex) {
+        return compareVars.get(inputIndex);
+    }
+
+    public List<List<LogicalVariable>> getExtraVariables() {
+        return extraVars;
     }
 
     public List<LogicalVariable> getInputVariables(int inputIndex) {
-        return inputVars.get(inputIndex);
+        return this.inputVars.get(inputIndex);
     }
 
     private void checkTypeConsistency(IVariableTypeEnvironment expected, List<LogicalVariable> expectedVariables,
@@ -116,8 +155,8 @@ public class IntersectOperator extends AbstractLogicalOperator {
             Object expectedType = expected.getVarType(expectedVariables.get(i));
             Object actualType = actual.getVarType(actualVariables.get(i));
             if (!expectedType.equals(actualType)) {
-                AlgebricksConfig.ALGEBRICKS_LOGGER
-                        .warning("Type of two variables are not equal." + expectedVariables.get(i) + " is of type: "
+                AlgebricksConfig.ALGEBRICKS_LOGGER.warning(
+                        "Type of two variables are not equal." + expectedVariables.get(i) + " is of type: "
                                 + expectedType + actualVariables.get(i) + " is of type: " + actualType);
             }
         }

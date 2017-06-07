@@ -51,7 +51,7 @@ public class UnnestMapOperator extends AbstractUnnestMapOperator {
     // this operator propagates all input variables.
     @Override
     public IVariableTypeEnvironment computeOutputTypeEnvironment(ITypingContext ctx) throws AlgebricksException {
-        IVariableTypeEnvironment env = null;
+        IVariableTypeEnvironment env;
         if (propagateInput) {
             env = createPropagatingAllInputsTypeEnvironment(ctx);
         } else {

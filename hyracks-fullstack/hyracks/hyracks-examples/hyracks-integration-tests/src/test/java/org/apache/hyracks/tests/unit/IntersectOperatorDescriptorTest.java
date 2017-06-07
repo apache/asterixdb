@@ -108,7 +108,7 @@ public class IntersectOperatorDescriptorTest {
     public void testNormalOperatorInitialization() throws HyracksException {
 
         IntersectOperatorDescriptor operatorDescriptor = new IntersectOperatorDescriptor(mockRegistry, nInputs,
-                compareFields, normalizedKeyFactory, comparatorFactory, outRecordDescriptor);
+                compareFields, null, normalizedKeyFactory, comparatorFactory, outRecordDescriptor);
 
         assertEquals(nInputs, operatorDescriptor.getInputArity());
     }
@@ -158,7 +158,7 @@ public class IntersectOperatorDescriptorTest {
     private void executeAndVerifyResult(List<IFrame>[] inputFrames, List<Object[]> answer) throws Exception {
         IntersectOperatorDescriptor.IntersectOperatorNodePushable pushable =
                 new IntersectOperatorDescriptor.IntersectOperatorNodePushable(ctx, nInputs, inputRecordDescriptor,
-                        compareFields, null, comparatorFactory);
+                        compareFields, null, null, comparatorFactory);
         assertEquals(nInputs, pushable.getInputArity());
 
         IFrameWriter[] writers = new IFrameWriter[nInputs];

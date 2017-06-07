@@ -3051,6 +3051,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="index-selection">
+      <compilation-unit name="intersection-with-filter">
+        <output-dir compare="Text">intersection-with-filter</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
       <compilation-unit name="intersection_with_nodegroup">
         <output-dir compare="Text">intersection</output-dir>
       </compilation-unit>
@@ -7227,6 +7232,16 @@
     <test-case FilePath="filters">
       <compilation-unit name="nested-filterequality-predicate">
         <output-dir compare="Text">nested-filter-equality-predicate</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="filters">
+      <compilation-unit name="upsert">
+        <output-dir compare="Text">upsert</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="filters">
+      <compilation-unit name="delete">
+        <output-dir compare="Text">delete</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>
