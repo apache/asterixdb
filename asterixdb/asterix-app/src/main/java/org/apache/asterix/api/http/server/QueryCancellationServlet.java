@@ -72,9 +72,7 @@ public class QueryCancellationServlet extends AbstractServlet {
             // response: OK
             response.setStatus(HttpResponseStatus.OK);
         } catch (Exception e) {
-            if (LOGGER.isLoggable(Level.WARNING)) {
-                LOGGER.log(Level.WARNING, e.getMessage(), e);
-            }
+            LOGGER.log(Level.WARNING, "unexpected exception thrown from cancel", e);
             // response: INTERNAL SERVER ERROR
             response.setStatus(HttpResponseStatus.INTERNAL_SERVER_ERROR);
         }
