@@ -45,7 +45,6 @@ import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartit
 import org.apache.hyracks.api.config.IOption;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.HyracksException;
-import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.common.controllers.NCConfig;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -309,8 +308,7 @@ public class ClusterStateManager implements IClusterStateManager {
         stateDescription.put("metadata_node", currentMetadataNode);
         ArrayNode ncs = om.createArrayNode();
         stateDescription.set("ncs", ncs);
-        for (String node : new TreeSet<>(((ClusterControllerService) appCtx.getServiceContext().getControllerService())
-                .getNodeManager().getAllNodeIds())) {
+        for (String node : new TreeSet<>(node2PartitionsMap.keySet())) {
             ObjectNode nodeJSON = om.createObjectNode();
             nodeJSON.put("node_id", node);
             boolean allActive = true;
