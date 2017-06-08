@@ -136,7 +136,7 @@ public class LogMarkerTest {
                         marker.getBuffer().putLong(markerId);
                         marker.getBuffer().flip();
                         markerId++;
-                        TaskUtil.putInSharedMap(HyracksConstants.KEY_MESSAGE, marker, ctx);
+                        TaskUtil.put(HyracksConstants.KEY_MESSAGE, marker, ctx);
                         tupleAppender.flush(insertOp);
                     }
                     ITupleReference tuple = tupleGenerator.next();

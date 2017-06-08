@@ -66,7 +66,7 @@ public class FeedIntakeOperatorNodePushable extends ActiveSourceOperatorNodePush
             FeedAdapter adapter = (FeedAdapter) adapterFactory.createAdapter(ctx, partition);
             adapterRuntimeManager = new AdapterRuntimeManager(ctx, runtimeId.getEntityId(), adapter, writer, partition);
             IFrame message = new VSizeFrame(ctx);
-            TaskUtil.putInSharedMap(HyracksConstants.KEY_MESSAGE, message, ctx);
+            TaskUtil.put(HyracksConstants.KEY_MESSAGE, message, ctx);
             /*
              * Set null feed message. Feed pipeline carries with it a message with each frame
              * Initially, the message is set to a null message that can be changed by feed adapters.

@@ -58,7 +58,7 @@ public class TaskUtil {
      * @param ctx
      * @param object
      */
-    public static void putInSharedMap(String key, Object object, IHyracksTaskContext ctx) {
+    public static void put(String key, Object object, IHyracksTaskContext ctx) {
         TaskUtil.getSharedMap(ctx, true).put(key, object);
     }
 

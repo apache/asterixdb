@@ -72,7 +72,7 @@ public class ConnectorDescriptorWithMessagingTest {
             IHyracksTaskContext ctx = TestUtils.create(DEFAULT_FRAME_SIZE);
             VSizeFrame message = new VSizeFrame(ctx);
             VSizeFrame tempBuffer = new VSizeFrame(ctx);
-            TaskUtil.putInSharedMap(HyracksConstants.KEY_MESSAGE, message, ctx);
+            TaskUtil.put(HyracksConstants.KEY_MESSAGE, message, ctx);
             message.getBuffer().clear();
             message.getBuffer().put(MessagingFrameTupleAppender.NULL_FEED_MESSAGE);
             message.getBuffer().flip();
@@ -152,7 +152,7 @@ public class ConnectorDescriptorWithMessagingTest {
             IHyracksTaskContext ctx = TestUtils.create(DEFAULT_FRAME_SIZE);
             VSizeFrame message = new VSizeFrame(ctx);
             VSizeFrame tempBuffer = new VSizeFrame(ctx);
-            TaskUtil.putInSharedMap(HyracksConstants.KEY_MESSAGE, message, ctx);
+            TaskUtil.put(HyracksConstants.KEY_MESSAGE, message, ctx);
             writeRandomMessage(message, MessagingFrameTupleAppender.MARKER_MESSAGE, DEFAULT_FRAME_SIZE + 1);
             ISerializerDeserializer<?>[] serdes = new ISerializerDeserializer<?>[] {
                     Integer64SerializerDeserializer.INSTANCE, DoubleSerializerDeserializer.INSTANCE,
@@ -236,7 +236,7 @@ public class ConnectorDescriptorWithMessagingTest {
             IHyracksTaskContext ctx = TestUtils.create(DEFAULT_FRAME_SIZE);
             VSizeFrame message = new VSizeFrame(ctx);
             VSizeFrame tempBuffer = new VSizeFrame(ctx);
-            TaskUtil.putInSharedMap(HyracksConstants.KEY_MESSAGE, message, ctx);
+            TaskUtil.put(HyracksConstants.KEY_MESSAGE, message, ctx);
             message.getBuffer().clear();
             writeRandomMessage(message, MessagingFrameTupleAppender.MARKER_MESSAGE, DEFAULT_FRAME_SIZE);
             ISerializerDeserializer<?>[] serdes = new ISerializerDeserializer<?>[] {
@@ -294,7 +294,7 @@ public class ConnectorDescriptorWithMessagingTest {
             IHyracksTaskContext ctx = TestUtils.create(DEFAULT_FRAME_SIZE);
             VSizeFrame message = new VSizeFrame(ctx);
             VSizeFrame tempBuffer = new VSizeFrame(ctx);
-            TaskUtil.putInSharedMap(HyracksConstants.KEY_MESSAGE, message, ctx);
+            TaskUtil.put(HyracksConstants.KEY_MESSAGE, message, ctx);
             message.getBuffer().clear();
             message.getBuffer().put(MessagingFrameTupleAppender.ACK_REQ_FEED_MESSAGE);
             message.getBuffer().flip();
