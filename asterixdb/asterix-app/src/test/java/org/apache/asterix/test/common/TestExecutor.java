@@ -188,7 +188,7 @@ public class TestExecutor {
                     if (lineExpected.isEmpty()) {
                         continue;
                     }
-                    throw createLineChangedException(scriptFile, lineExpected, "<EOF>", num);
+                    throw createLineChangedException(scriptFile, lineExpected, "<EOF> after " + num + " lines", num);
                 }
 
                 // Comparing result equality but ignore "Time"-prefixed fields. (for metadata tests.)

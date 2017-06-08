@@ -71,6 +71,7 @@ public class DatasetPartitionReader {
                             buffer.flip();
                             channel.nextFrame(buffer);
                         }
+                        LOGGER.info("Result Reader read + " + offset + " bytes");
                     } finally {
                         channel.close();
                         resultState.readClose();
