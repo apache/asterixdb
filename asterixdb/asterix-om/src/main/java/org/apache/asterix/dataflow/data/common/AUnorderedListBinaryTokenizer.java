@@ -18,8 +18,8 @@
  */
 package org.apache.asterix.dataflow.data.common;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.dataflow.data.nontagged.serde.AUnorderedListSerializerDeserializer;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.ITokenFactory;
 
 public class AUnorderedListBinaryTokenizer extends AOrderedListBinaryTokenizer {
@@ -29,7 +29,7 @@ public class AUnorderedListBinaryTokenizer extends AOrderedListBinaryTokenizer {
     }
 
     @Override
-    protected int getItemOffset(byte[] data, int start, int itemIndex) throws AsterixException {
+    protected int getItemOffset(byte[] data, int start, int itemIndex) throws HyracksDataException {
         return AUnorderedListSerializerDeserializer.getItemOffset(data, start, itemIndex);
     }
 

@@ -21,7 +21,6 @@ package org.apache.asterix.runtime.evaluators.common;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.dataflow.data.nontagged.serde.AFloatSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AOrderedListSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AUnorderedListSerializerDeserializer;
@@ -72,8 +71,8 @@ public class SimilarityJaccardPrefixEvaluator implements IScalarEvaluator {
     // result
     protected final AMutableFloat res = new AMutableFloat(0);
     @SuppressWarnings("unchecked")
-    protected final ISerializerDeserializer<AFloat> reusSerde = SerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.AFLOAT);
+    protected final ISerializerDeserializer<AFloat> reusSerde =
+            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AFLOAT);
 
     public SimilarityJaccardPrefixEvaluator(IScalarEvaluatorFactory[] args, IHyracksTaskContext context)
             throws HyracksDataException {
@@ -91,8 +90,8 @@ public class SimilarityJaccardPrefixEvaluator implements IScalarEvaluator {
         // similarity threshold
         sim = 0;
         evalThreshold.evaluate(tuple, inputVal);
-        float similarityThreshold = AFloatSerializerDeserializer.getFloat(inputVal.getByteArray(),
-                inputVal.getStartOffset() + 1);
+        float similarityThreshold =
+                AFloatSerializerDeserializer.getFloat(inputVal.getByteArray(), inputVal.getStartOffset() + 1);
 
         if (similarityThreshold != similarityThresholdCache || similarityFilters == null) {
             similarityFilters = new SimilarityFiltersJaccard(similarityThreshold);
@@ -126,39 +125,23 @@ public class SimilarityJaccardPrefixEvaluator implements IScalarEvaluator {
 
             int lengthTokens1;
             if (serList[startOffset] == ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG) {
-                lengthTokens1 = AOrderedListSerializerDeserializer.getNumberOfItems(inputVal.getByteArray(),
-                        startOffset);
+                lengthTokens1 =
+                        AOrderedListSerializerDeserializer.getNumberOfItems(inputVal.getByteArray(), startOffset);
                 // read tokens
                 for (i = 0; i < lengthTokens1; i++) {
-                    int itemOffset;
-                    int token;
-                    try {
-                        itemOffset = AOrderedListSerializerDeserializer.getItemOffset(serList, startOffset, i);
-                    } catch (AsterixException e) {
-                        throw new HyracksDataException(e);
-                    }
-                    token = ATypeHierarchy.getIntegerValueWithDifferentTypeTagPosition(
-                            BuiltinFunctions.SIMILARITY_JACCARD.getName(), 1, serList, itemOffset,
-                                startOffset + 1);
+                    int itemOffset = AOrderedListSerializerDeserializer.getItemOffset(serList, startOffset, i);
+                    int token = ATypeHierarchy.getIntegerValueWithDifferentTypeTagPosition(
+                            BuiltinFunctions.SIMILARITY_JACCARD.getName(), 1, serList, itemOffset, startOffset + 1);
                     tokens1.add(token);
                 }
             } else {
-                lengthTokens1 = AUnorderedListSerializerDeserializer.getNumberOfItems(inputVal.getByteArray(),
-                        startOffset);
+                lengthTokens1 =
+                        AUnorderedListSerializerDeserializer.getNumberOfItems(inputVal.getByteArray(), startOffset);
                 // read tokens
                 for (i = 0; i < lengthTokens1; i++) {
-                    int itemOffset;
-                    int token;
-
-                    try {
-                        itemOffset = AUnorderedListSerializerDeserializer.getItemOffset(serList, startOffset, i);
-                    } catch (AsterixException e) {
-                        throw new HyracksDataException(e);
-                    }
-
-                    token = ATypeHierarchy.getIntegerValueWithDifferentTypeTagPosition(
-                            BuiltinFunctions.SIMILARITY_JACCARD.getName(), 1, serList, itemOffset,
-                                startOffset + 1);
+                    int itemOffset = AUnorderedListSerializerDeserializer.getItemOffset(serList, startOffset, i);
+                    int token = ATypeHierarchy.getIntegerValueWithDifferentTypeTagPosition(
+                            BuiltinFunctions.SIMILARITY_JACCARD.getName(), 1, serList, itemOffset, startOffset + 1);
                     tokens1.add(token);
                 }
             }
@@ -181,39 +164,23 @@ public class SimilarityJaccardPrefixEvaluator implements IScalarEvaluator {
 
             int lengthTokens2;
             if (serList[startOffset] == ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG) {
-                lengthTokens2 = AOrderedListSerializerDeserializer.getNumberOfItems(inputVal.getByteArray(),
-                        startOffset);
+                lengthTokens2 =
+                        AOrderedListSerializerDeserializer.getNumberOfItems(inputVal.getByteArray(), startOffset);
                 // read tokens
                 for (i = 0; i < lengthTokens2; i++) {
-                    int itemOffset;
-                    int token;
-
-                    try {
-                        itemOffset = AOrderedListSerializerDeserializer.getItemOffset(serList, startOffset, i);
-                    } catch (AsterixException e) {
-                        throw new HyracksDataException(e);
-                    }
-                    token = ATypeHierarchy.getIntegerValueWithDifferentTypeTagPosition(
-                            BuiltinFunctions.SIMILARITY_JACCARD.getName(), 3, serList, itemOffset,
-                                startOffset + 1);
+                    int itemOffset = AOrderedListSerializerDeserializer.getItemOffset(serList, startOffset, i);
+                    int token = ATypeHierarchy.getIntegerValueWithDifferentTypeTagPosition(
+                            BuiltinFunctions.SIMILARITY_JACCARD.getName(), 3, serList, itemOffset, startOffset + 1);
                     tokens2.add(token);
                 }
             } else {
-                lengthTokens2 = AUnorderedListSerializerDeserializer.getNumberOfItems(inputVal.getByteArray(),
-                        startOffset);
+                lengthTokens2 =
+                        AUnorderedListSerializerDeserializer.getNumberOfItems(inputVal.getByteArray(), startOffset);
                 // read tokens
                 for (i = 0; i < lengthTokens2; i++) {
-                    int itemOffset;
-                    int token;
-
-                    try {
-                        itemOffset = AUnorderedListSerializerDeserializer.getItemOffset(serList, startOffset, i);
-                    } catch (AsterixException e) {
-                        throw new HyracksDataException(e);
-                    }
-                    token = ATypeHierarchy.getIntegerValueWithDifferentTypeTagPosition(
-                            BuiltinFunctions.SIMILARITY_JACCARD.getName(), 3, serList, itemOffset,
-                                startOffset + 1);
+                    int itemOffset = AUnorderedListSerializerDeserializer.getItemOffset(serList, startOffset, i);
+                    int token = ATypeHierarchy.getIntegerValueWithDifferentTypeTagPosition(
+                            BuiltinFunctions.SIMILARITY_JACCARD.getName(), 3, serList, itemOffset, startOffset + 1);
                     tokens2.add(token);
                 }
             }

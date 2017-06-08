@@ -24,7 +24,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.asterix.builders.OrderedListBuilder;
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AOrderedList;
 import org.apache.asterix.om.base.IAObject;
@@ -42,7 +41,8 @@ import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 public class AOrderedListSerializerDeserializer implements ISerializerDeserializer<AOrderedList> {
 
     private static final long serialVersionUID = 1L;
-    public static final AOrderedListSerializerDeserializer SCHEMALESS_INSTANCE = new AOrderedListSerializerDeserializer();
+    public static final AOrderedListSerializerDeserializer SCHEMALESS_INSTANCE =
+            new AOrderedListSerializerDeserializer();
 
     private final IAType itemType;
     @SuppressWarnings("rawtypes")
@@ -74,18 +74,19 @@ public class AOrderedListSerializerDeserializer implements ISerializerDeserializ
             ISerializerDeserializer currentDeserializer = deserializer;
             if (itemType.getTypeTag() == ATypeTag.ANY && typeTag != ATypeTag.ANY) {
                 currentItemType = TypeTagUtil.getBuiltinTypeByTag(typeTag);
-                currentDeserializer = SerializerDeserializerProvider.INSTANCE
-                        .getNonTaggedSerializerDeserializer(currentItemType);
+                currentDeserializer =
+                        SerializerDeserializerProvider.INSTANCE.getNonTaggedSerializerDeserializer(currentItemType);
             }
 
-            List<IAObject> items = new ArrayList<IAObject>();
+            List<IAObject> items = new ArrayList<>();
             in.readInt(); // list size
             int numberOfitems;
             numberOfitems = in.readInt();
             if (numberOfitems > 0) {
                 if (!NonTaggedFormatUtil.isFixedSizedCollection(currentItemType)) {
-                    for (int i = 0; i < numberOfitems; i++)
+                    for (int i = 0; i < numberOfitems; i++) {
                         in.readInt();
+                    }
                 }
                 for (int i = 0; i < numberOfitems; i++) {
                     IAObject v = (IAObject) currentDeserializer.deserialize(in);
@@ -119,14 +120,15 @@ public class AOrderedListSerializerDeserializer implements ISerializerDeserializ
     }
 
     public static int getNumberOfItems(byte[] serOrderedList, int offset) {
-        if (serOrderedList[offset] == ATypeTag.ARRAY.serialize())
+        if (serOrderedList[offset] == ATypeTag.ARRAY.serialize()) {
             // 6 = tag (1) + itemTag (1) + list size (4)
             return AInt32SerializerDeserializer.getInt(serOrderedList, offset + 6);
-        else
+        } else {
             return -1;
+        }
     }
 
-    public static int getItemOffset(byte[] serOrderedList, int offset, int itemIndex) throws AsterixException {
+    public static int getItemOffset(byte[] serOrderedList, int offset, int itemIndex) throws HyracksDataException {
         if (serOrderedList[offset] == ATypeTag.ARRAY.serialize()) {
             ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serOrderedList[offset + 1]);
             if (NonTaggedFormatUtil.isFixedSizedCollection(typeTag)) {
@@ -136,8 +138,9 @@ public class AOrderedListSerializerDeserializer implements ISerializerDeserializ
                 return offset + AInt32SerializerDeserializer.getInt(serOrderedList, offset + 10 + (4 * itemIndex));
             }
             // 10 = tag (1) + itemTag (1) + list size (4) + number of items (4)
-        } else
+        } else {
             return -1;
+        }
     }
 
 }

@@ -18,13 +18,13 @@
  */
 package org.apache.asterix.runtime.evaluators.common;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.dataflow.data.nontagged.serde.AUnorderedListSerializerDeserializer;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public final class UnorderedListIterator extends AbstractAsterixListIterator {
 
     @Override
-    protected int getItemOffset(byte[] serOrderedList, int offset, int itemIndex) throws AsterixException {
+    protected int getItemOffset(byte[] serOrderedList, int offset, int itemIndex) throws HyracksDataException {
         return AUnorderedListSerializerDeserializer.getItemOffset(serOrderedList, offset, itemIndex);
     }
 

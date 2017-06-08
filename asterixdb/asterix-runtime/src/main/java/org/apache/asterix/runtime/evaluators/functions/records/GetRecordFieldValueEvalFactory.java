@@ -21,9 +21,7 @@ package org.apache.asterix.runtime.evaluators.functions.records;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.dataflow.data.nontagged.serde.ARecordSerializerDeserializer;
-import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
@@ -31,6 +29,7 @@ import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.runtime.RuntimeRecordTypeInfo;
 import org.apache.asterix.om.utils.NonTaggedFormatUtil;
 import org.apache.asterix.om.utils.RecordUtil;
+import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -107,8 +106,8 @@ public class GetRecordFieldValueEvalFactory implements IScalarEvaluatorFactory {
                             return;
                         }
                         ATypeTag fieldTypeTag = recordType.getFieldTypes()[subFieldIndex].getTypeTag();
-                        subFieldLength = NonTaggedFormatUtil.getFieldValueLength(serRecord, subFieldOffset,
-                                fieldTypeTag, false);
+                        subFieldLength =
+                                NonTaggedFormatUtil.getFieldValueLength(serRecord, subFieldOffset, fieldTypeTag, false);
                         // write result.
                         out.writeByte(fieldTypeTag.serialize());
                         out.write(serRecord, subFieldOffset, subFieldLength);
@@ -125,16 +124,15 @@ public class GetRecordFieldValueEvalFactory implements IScalarEvaluatorFactory {
                         return;
                     }
                     // Get the field length.
-                    ATypeTag fieldValueTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER
-                            .deserialize(serRecord[subFieldOffset]);
-                    subFieldLength = NonTaggedFormatUtil.getFieldValueLength(serRecord, subFieldOffset,
-                            fieldValueTypeTag, true) + 1;
+                    ATypeTag fieldValueTypeTag =
+                            EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serRecord[subFieldOffset]);
+                    subFieldLength =
+                            NonTaggedFormatUtil.getFieldValueLength(serRecord, subFieldOffset, fieldValueTypeTag, true)
+                                    + 1;
                     // write result.
                     result.set(serRecord, subFieldOffset, subFieldLength);
                 } catch (IOException e) {
-                    throw new HyracksDataException(e);
-                } catch (AsterixException e) {
-                    throw new HyracksDataException(e);
+                    throw HyracksDataException.create(e);
                 }
             }
         };

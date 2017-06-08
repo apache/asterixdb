@@ -21,7 +21,6 @@ package org.apache.asterix.runtime.evaluators.functions;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.dataflow.data.nontagged.serde.AOrderedListSerializerDeserializer;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
@@ -106,8 +105,8 @@ public class GetItemDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                             itemIndex = ATypeHierarchy.getIntegerValue(BuiltinFunctions.GET_ITEM.getName(), 0,
                                     indexBytes, indexOffset);
                         } else {
-                            throw new TypeMismatchException(BuiltinFunctions.GET_ITEM,
-                                    0, serOrderedList[offset], ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG);
+                            throw new TypeMismatchException(BuiltinFunctions.GET_ITEM, 0, serOrderedList[offset],
+                                    ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG);
                         }
 
                         if (itemIndex < 0 || itemIndex >= AOrderedListSerializerDeserializer
@@ -124,26 +123,25 @@ public class GetItemDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                             serItemTypeTag = serOrderedList[offset + 1];
                         }
 
-                        itemOffset = AOrderedListSerializerDeserializer.getItemOffset(serOrderedList, offset,
-                                itemIndex);
+                        itemOffset =
+                                AOrderedListSerializerDeserializer.getItemOffset(serOrderedList, offset, itemIndex);
 
                         if (selfDescList) {
                             itemTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serOrderedList[itemOffset]);
-                            itemLength = NonTaggedFormatUtil.getFieldValueLength(serOrderedList, itemOffset, itemTag,
-                                    true) + 1;
+                            itemLength =
+                                    NonTaggedFormatUtil.getFieldValueLength(serOrderedList, itemOffset, itemTag, true)
+                                            + 1;
                             result.set(serOrderedList, itemOffset, itemLength);
                         } else {
-                            itemLength = NonTaggedFormatUtil.getFieldValueLength(serOrderedList, itemOffset, itemTag,
-                                    false);
+                            itemLength =
+                                    NonTaggedFormatUtil.getFieldValueLength(serOrderedList, itemOffset, itemTag, false);
                             resultStorage.reset();
                             output.writeByte(serItemTypeTag);
                             output.write(serOrderedList, itemOffset, itemLength);
                             result.set(resultStorage);
                         }
                     } catch (IOException e) {
-                        throw new HyracksDataException(e);
-                    } catch (AsterixException e) {
-                        throw new HyracksDataException(e);
+                        throw HyracksDataException.create(e);
                     }
                 }
             };

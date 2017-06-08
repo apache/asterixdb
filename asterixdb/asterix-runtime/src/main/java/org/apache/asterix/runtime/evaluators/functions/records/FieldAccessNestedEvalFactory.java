@@ -22,7 +22,6 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.util.List;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.dataflow.data.nontagged.serde.ARecordSerializerDeserializer;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMissing;
@@ -80,11 +79,11 @@ public class FieldAccessNestedEvalFactory implements IScalarEvaluatorFactory {
             private final IPointable[] fieldPointables = new VoidPointable[fieldPath.size()];
             private final RuntimeRecordTypeInfo[] recTypeInfos = new RuntimeRecordTypeInfo[fieldPath.size()];
             @SuppressWarnings("unchecked")
-            private final ISerializerDeserializer<ANull> nullSerde = SerializerDeserializerProvider.INSTANCE
-                    .getSerializerDeserializer(BuiltinType.ANULL);
+            private final ISerializerDeserializer<ANull> nullSerde =
+                    SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ANULL);
             @SuppressWarnings("unchecked")
-            private final ISerializerDeserializer<AMissing> missingSerde = SerializerDeserializerProvider.INSTANCE
-                    .getSerializerDeserializer(BuiltinType.AMISSING);
+            private final ISerializerDeserializer<AMissing> missingSerde =
+                    SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AMISSING);
 
             {
                 generateFieldsPointables();
@@ -100,8 +99,7 @@ public class FieldAccessNestedEvalFactory implements IScalarEvaluatorFactory {
                     ArrayBackedValueStorage storage = new ArrayBackedValueStorage();
                     DataOutput out = storage.getDataOutput();
                     AString as = new AString(fieldPath.get(i));
-                    SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(as.getType()).serialize(as,
-                                out);
+                    SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(as.getType()).serialize(as, out);
                     fieldPointables[i] = new VoidPointable();
                     fieldPointables[i].set(storage);
                 }
@@ -118,8 +116,8 @@ public class FieldAccessNestedEvalFactory implements IScalarEvaluatorFactory {
                     int len = inputArg0.getLength();
 
                     if (serRecord[start] != ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
-                        throw new TypeMismatchException(BuiltinFunctions.FIELD_ACCESS_NESTED, 0,
-                                serRecord[start], ATypeTag.SERIALIZED_RECORD_TYPE_TAG);
+                        throw new TypeMismatchException(BuiltinFunctions.FIELD_ACCESS_NESTED, 0, serRecord[start],
+                                ATypeTag.SERIALIZED_RECORD_TYPE_TAG);
                     }
 
                     int subFieldIndex = -1;
@@ -141,8 +139,7 @@ public class FieldAccessNestedEvalFactory implements IScalarEvaluatorFactory {
                             subType = ((AUnionType) subType).getActualType();
                             byte serializedTypeTag = subType.getTypeTag().serialize();
                             if (serializedTypeTag != ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
-                                throw new UnsupportedTypeException(
-                                        BuiltinFunctions.FIELD_ACCESS_NESTED.getName(),
+                                throw new UnsupportedTypeException(BuiltinFunctions.FIELD_ACCESS_NESTED.getName(),
                                         serializedTypeTag);
                             }
                             if (subType.getTypeTag() == ATypeTag.OBJECT) {
@@ -198,8 +195,7 @@ public class FieldAccessNestedEvalFactory implements IScalarEvaluatorFactory {
                         // type check
                         if (pathIndex < fieldPointables.length - 1
                                 && serRecord[start] != ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
-                            throw new UnsupportedTypeException(BuiltinFunctions.FIELD_ACCESS_NESTED,
-                                    serRecord[start]);
+                            throw new UnsupportedTypeException(BuiltinFunctions.FIELD_ACCESS_NESTED, serRecord[start]);
                         }
                     }
 
@@ -215,8 +211,9 @@ public class FieldAccessNestedEvalFactory implements IScalarEvaluatorFactory {
                         }
 
                         subTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serRecord[subFieldOffset]);
-                        subFieldLength = NonTaggedFormatUtil.getFieldValueLength(serRecord, subFieldOffset, subTypeTag,
-                                true) + 1;
+                        subFieldLength =
+                                NonTaggedFormatUtil.getFieldValueLength(serRecord, subFieldOffset, subTypeTag, true)
+                                        + 1;
 
                         if (pathIndex >= fieldPointables.length - 1) {
                             continue;
@@ -232,8 +229,8 @@ public class FieldAccessNestedEvalFactory implements IScalarEvaluatorFactory {
                             return;
                         }
                         if (serRecord[start] != ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
-                                throw new UnsupportedTypeException(
-                                    BuiltinFunctions.FIELD_ACCESS_NESTED.getName(), serRecord[start]);
+                            throw new UnsupportedTypeException(BuiltinFunctions.FIELD_ACCESS_NESTED.getName(),
+                                    serRecord[start]);
                         }
                     }
                     // emit the final result.
@@ -244,8 +241,8 @@ public class FieldAccessNestedEvalFactory implements IScalarEvaluatorFactory {
                         out.write(serRecord, subFieldOffset, subFieldLength);
                         result.set(resultStorage);
                     }
-                } catch (IOException | AsterixException e) {
-                    throw new HyracksDataException(e);
+                } catch (IOException e) {
+                    throw HyracksDataException.create(e);
                 }
             }
         };

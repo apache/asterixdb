@@ -29,6 +29,7 @@ import org.apache.asterix.om.types.AbstractCollectionType;
 import org.apache.asterix.om.util.container.IObjectFactory;
 import org.apache.asterix.om.utils.NonTaggedFormatUtil;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.AbstractPointable;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.api.IPointableFactory;
@@ -123,7 +124,7 @@ public class AListPointable extends AbstractPointable {
         return NonTaggedFormatUtil.isFixedSizedCollection(inputType.getItemType());
     }
 
-    public int getFixedLength(AbstractCollectionType inputType) throws AsterixException {
+    public int getFixedLength(AbstractCollectionType inputType) throws HyracksDataException {
         return NonTaggedFormatUtil.getFieldValueLength(bytes, 0, inputType.getItemType().getTypeTag(), false);
     }
 
@@ -163,7 +164,7 @@ public class AListPointable extends AbstractPointable {
     // Item accessors
     // ----------------------
 
-    public int getItemOffset(AbstractCollectionType inputType, int index) throws AsterixException {
+    public int getItemOffset(AbstractCollectionType inputType, int index) throws HyracksDataException {
         if (isFixedType(inputType)) {
             return getItemCountOffset() + getItemCountSize() + index * getFixedLength(inputType);
         } else {
@@ -172,14 +173,14 @@ public class AListPointable extends AbstractPointable {
         }
     }
 
-    public byte getItemTag(AbstractCollectionType inputType, int index) throws AsterixException {
+    public byte getItemTag(AbstractCollectionType inputType, int index) throws HyracksDataException {
         if (getType() != ATypeTag.ANY.serialize()) {
             return getType();
         }
         return bytes[getItemOffset(inputType, index)];
     }
 
-    public int getItemSize(AbstractCollectionType inputType, int index) throws AsterixException {
+    public int getItemSize(AbstractCollectionType inputType, int index) throws HyracksDataException {
         if (isFixedType(inputType)) {
             return getFixedLength(inputType);
         } else {
@@ -188,8 +189,8 @@ public class AListPointable extends AbstractPointable {
         }
     }
 
-    public void getItemValue(AbstractCollectionType inputType, int index, DataOutput dOut) throws IOException,
-            AsterixException {
+    public void getItemValue(AbstractCollectionType inputType, int index, DataOutput dOut)
+            throws IOException, AsterixException {
         if (getType() != ATypeTag.ANY.serialize()) {
             dOut.writeByte(getType());
         }

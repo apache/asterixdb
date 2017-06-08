@@ -21,13 +21,12 @@ package org.apache.asterix.runtime.unnestingfunctions.std;
 
 import java.io.IOException;
 
-import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.runtime.evaluators.common.ListAccessor;
+import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.asterix.runtime.unnestingfunctions.base.AbstractUnnestingFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
@@ -112,9 +111,7 @@ public class ScanCollectionDescriptor extends AbstractUnnestingFunctionDynamicDe
                             }
                         }
                     } catch (IOException e) {
-                        throw new HyracksDataException(e);
-                    } catch (AsterixException e) {
-                        throw new HyracksDataException(e);
+                        throw HyracksDataException.create(e);
                     }
                     return false;
                 }

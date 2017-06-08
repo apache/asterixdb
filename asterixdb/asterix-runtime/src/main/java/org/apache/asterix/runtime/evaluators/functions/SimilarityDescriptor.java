@@ -21,7 +21,6 @@ package org.apache.asterix.runtime.evaluators.functions;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.functions.FunctionConstants;
 import org.apache.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AOrderedListSerializerDeserializer;
@@ -33,13 +32,13 @@ import org.apache.asterix.fuzzyjoin.similarity.SimilarityFilters;
 import org.apache.asterix.fuzzyjoin.similarity.SimilarityMetric;
 import org.apache.asterix.om.base.ADouble;
 import org.apache.asterix.om.base.AMutableDouble;
-import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.asterix.runtime.evaluators.common.SimilarityFiltersCache;
+import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
@@ -55,8 +54,8 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public class SimilarityDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
-    private final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "similarity@7",
-            7);
+    private final static FunctionIdentifier FID =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "similarity@7", 7);
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         @Override
         public IFunctionDescriptor createFunctionDescriptor() {
@@ -94,8 +93,8 @@ public class SimilarityDescriptor extends AbstractScalarFunctionDynamicDescripto
                     // result
                     private final AMutableDouble res = new AMutableDouble(0);
                     @SuppressWarnings("unchecked")
-                    private final ISerializerDeserializer<ADouble> doubleSerde = SerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ADOUBLE);
+                    private final ISerializerDeserializer<ADouble> doubleSerde =
+                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ADOUBLE);
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
@@ -120,8 +119,8 @@ public class SimilarityDescriptor extends AbstractScalarFunctionDynamicDescripto
                             throw new TypeMismatchException(getIdentifier(), 1, data[offset],
                                     ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG);
                         }
-                        SimilarityFilters similarityFilters = similarityFiltersCache.get(similarityThreshold, data,
-                                offset, len);
+                        SimilarityFilters similarityFilters =
+                                similarityFiltersCache.get(similarityThreshold, data, offset, len);
 
                         evalLen1.evaluate(tuple, inputVal);
                         data = inputVal.getByteArray();
@@ -167,26 +166,16 @@ public class SimilarityDescriptor extends AbstractScalarFunctionDynamicDescripto
                                 lengthTokens1 = AOrderedListSerializerDeserializer.getNumberOfItems(serList, offset);
                                 // read tokens
                                 for (i = 0; i < lengthTokens1; i++) {
-                                    int itemOffset;
-                                    try {
-                                        itemOffset = AOrderedListSerializerDeserializer.getItemOffset(serList, offset,
-                                                i);
-                                    } catch (AsterixException e) {
-                                        throw new HyracksDataException(e);
-                                    }
+                                    int itemOffset =
+                                            AOrderedListSerializerDeserializer.getItemOffset(serList, offset, i);
                                     tokens1.add(IntegerPointable.getInteger(serList, itemOffset));
                                 }
                             } else {
                                 lengthTokens1 = AUnorderedListSerializerDeserializer.getNumberOfItems(serList, offset);
                                 // read tokens
                                 for (i = 0; i < lengthTokens1; i++) {
-                                    int itemOffset;
-                                    try {
-                                        itemOffset = AUnorderedListSerializerDeserializer.getItemOffset(serList, offset,
-                                                i);
-                                    } catch (AsterixException e) {
-                                        throw new HyracksDataException(e);
-                                    }
+                                    int itemOffset =
+                                            AUnorderedListSerializerDeserializer.getItemOffset(serList, offset, i);
                                     tokens1.add(IntegerPointable.getInteger(serList, itemOffset));
                                 }
                             }
@@ -213,26 +202,16 @@ public class SimilarityDescriptor extends AbstractScalarFunctionDynamicDescripto
                                 lengthTokens2 = AOrderedListSerializerDeserializer.getNumberOfItems(serList, offset);
                                 // read tokens
                                 for (i = 0; i < lengthTokens2; i++) {
-                                    int itemOffset;
-                                    try {
-                                        itemOffset = AOrderedListSerializerDeserializer.getItemOffset(serList, offset,
-                                                i);
-                                    } catch (AsterixException e) {
-                                        throw new HyracksDataException(e);
-                                    }
+                                    int itemOffset =
+                                            AOrderedListSerializerDeserializer.getItemOffset(serList, offset, i);
                                     tokens2.add(IntegerPointable.getInteger(serList, itemOffset));
                                 }
                             } else {
                                 lengthTokens2 = AUnorderedListSerializerDeserializer.getNumberOfItems(serList, offset);
                                 // read tokens
                                 for (i = 0; i < lengthTokens2; i++) {
-                                    int itemOffset;
-                                    try {
-                                        itemOffset = AUnorderedListSerializerDeserializer.getItemOffset(serList, offset,
-                                                i);
-                                    } catch (AsterixException e) {
-                                        throw new HyracksDataException(e);
-                                    }
+                                    int itemOffset =
+                                            AUnorderedListSerializerDeserializer.getItemOffset(serList, offset, i);
                                     tokens2.add(IntegerPointable.getInteger(serList, itemOffset));
                                 }
                             }
@@ -243,8 +222,8 @@ public class SimilarityDescriptor extends AbstractScalarFunctionDynamicDescripto
 
                             // -- - token prefix - --
                             evalTokenPrefix.evaluate(tuple, inputVal);
-                            int tokenPrefix = IntegerPointable.getInteger(inputVal.getByteArray(),
-                                    inputVal.getStartOffset() + 1);
+                            int tokenPrefix =
+                                    IntegerPointable.getInteger(inputVal.getByteArray(), inputVal.getStartOffset() + 1);
 
                             //
                             // -- - position filter - --
@@ -272,7 +251,7 @@ public class SimilarityDescriptor extends AbstractScalarFunctionDynamicDescripto
                         try {
                             doubleSerde.serialize(res, out);
                         } catch (IOException e) {
-                            throw new HyracksDataException(e);
+                            throw HyracksDataException.create(e);
                         }
                         result.set(resultStorage);
                     }

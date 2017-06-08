@@ -21,7 +21,6 @@ package org.apache.asterix.runtime.evaluators.functions;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.dataflow.data.nontagged.serde.AOrderedListSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AUnorderedListSerializerDeserializer;
 import org.apache.asterix.om.functions.BuiltinFunctions;
@@ -96,9 +95,8 @@ public class AnyCollectionMemberDescriptor extends AbstractScalarFunctionDynamic
 
                     if (serList[offset] != ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG
                             && serList[offset] != ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG) {
-                        throw new TypeMismatchException(BuiltinFunctions.ANY_COLLECTION_MEMBER, 0,
-                                serList[offset], ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG,
-                                ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG);
+                        throw new TypeMismatchException(BuiltinFunctions.ANY_COLLECTION_MEMBER, 0, serList[offset],
+                                ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG, ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG);
                     }
 
                     try {
@@ -127,8 +125,8 @@ public class AnyCollectionMemberDescriptor extends AbstractScalarFunctionDynamic
 
                         if (selfDescList) {
                             itemTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serList[itemOffset]);
-                            itemLength = NonTaggedFormatUtil.getFieldValueLength(serList, itemOffset, itemTag, true)
-                                    + 1;
+                            itemLength =
+                                    NonTaggedFormatUtil.getFieldValueLength(serList, itemOffset, itemTag, true) + 1;
                             result.set(serList, itemOffset, itemLength);
                         } else {
                             itemLength = NonTaggedFormatUtil.getFieldValueLength(serList, itemOffset, itemTag, false);
@@ -137,9 +135,7 @@ public class AnyCollectionMemberDescriptor extends AbstractScalarFunctionDynamic
                             result.set(resultStorage);
                         }
                     } catch (IOException e) {
-                        throw new HyracksDataException(e);
-                    } catch (AsterixException e) {
-                        throw new HyracksDataException(e);
+                        throw HyracksDataException.create(e);
                     }
                 }
             };

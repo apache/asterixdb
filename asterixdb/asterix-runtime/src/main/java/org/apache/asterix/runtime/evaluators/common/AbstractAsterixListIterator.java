@@ -18,7 +18,6 @@
  */
 package org.apache.asterix.runtime.evaluators.common;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.formats.nontagged.BinaryComparatorFactoryProvider;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.EnumDeserializer;
@@ -72,32 +71,24 @@ public abstract class AbstractAsterixListIterator implements ISequenceIterator {
 
     @Override
     public void next() throws HyracksDataException {
-        try {
-            pos = nextPos;
-            ++count;
-            nextPos = startOff + listLength;
-            if (count + 1 < numberOfItems) {
-                nextPos = getItemOffset(data, startOff, count + 1);
-            }
-            itemLen = nextPos - pos;
-        } catch (AsterixException e) {
-            throw new HyracksDataException(e);
+        pos = nextPos;
+        ++count;
+        nextPos = startOff + listLength;
+        if (count + 1 < numberOfItems) {
+            nextPos = getItemOffset(data, startOff, count + 1);
         }
+        itemLen = nextPos - pos;
     }
 
     @Override
     public void reset() throws HyracksDataException {
         count = 0;
-        try {
-            pos = getItemOffset(data, startOff, count);
-            nextPos = startOff + listLength;
-            if (count + 1 < numberOfItems) {
-                nextPos = getItemOffset(data, startOff, count + 1);
-            }
-            itemLen = nextPos - pos;
-        } catch (AsterixException e) {
-            throw new HyracksDataException(e);
+        pos = getItemOffset(data, startOff, count);
+        nextPos = startOff + listLength;
+        if (count + 1 < numberOfItems) {
+            nextPos = getItemOffset(data, startOff, count + 1);
         }
+        itemLen = nextPos - pos;
     }
 
     @Override
@@ -153,7 +144,7 @@ public abstract class AbstractAsterixListIterator implements ISequenceIterator {
         reset();
     }
 
-    protected abstract int getItemOffset(byte[] serOrderedList, int offset, int itemIndex) throws AsterixException;
+    protected abstract int getItemOffset(byte[] serOrderedList, int offset, int itemIndex) throws HyracksDataException;
 
     protected abstract int getNumberOfItems(byte[] serOrderedList, int offset);
 

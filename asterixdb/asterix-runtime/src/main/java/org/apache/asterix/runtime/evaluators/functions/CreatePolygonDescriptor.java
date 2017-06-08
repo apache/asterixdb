@@ -21,7 +21,6 @@ package org.apache.asterix.runtime.evaluators.functions;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.APointSerializerDeserializer;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
@@ -75,10 +74,10 @@ public class CreatePolygonDescriptor extends AbstractScalarFunctionDynamicDescri
                     private final IPointable inputArgList = new VoidPointable();
                     private final IScalarEvaluator evalList = listEvalFactory.createScalarEvaluator(ctx);
                     @SuppressWarnings("unchecked")
-                    private final ISerializerDeserializer<ANull> nullSerde = SerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ANULL);
-                    private final ISerializerDeserializer<AMissing> missingSerde = SerializerDeserializerProvider.
-                            INSTANCE.getSerializerDeserializer(BuiltinType.AMISSING);
+                    private final ISerializerDeserializer<ANull> nullSerde =
+                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ANULL);
+                    private final ISerializerDeserializer<AMissing> missingSerde =
+                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AMISSING);
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
@@ -95,51 +94,46 @@ public class CreatePolygonDescriptor extends AbstractScalarFunctionDynamicDescri
                                         ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG);
                             }
                             listAccessor.reset(listBytes, offset);
-                            try {
-                                // First check the list consists of a valid items
-                                for (int i = 0; i < listAccessor.size(); i++) {
-                                    int itemOffset = listAccessor.getItemOffset(i);
-                                    ATypeTag itemType = listAccessor.getItemType(itemOffset);
-                                    if (itemType != ATypeTag.DOUBLE) {
-                                        if (itemType == ATypeTag.NULL) {
-                                            nullSerde.serialize(ANull.NULL, out);
-                                            return;
-                                        }
-                                        if (itemType == ATypeTag.MISSING) {
-                                            missingSerde.serialize(AMissing.MISSING, out);
-                                            return;
-                                        }
-                                        throw new UnsupportedItemTypeException(BuiltinFunctions.CREATE_POLYGON,
-                                                itemType.serialize());
+                            // First check the list consists of a valid items
+                            for (int i = 0; i < listAccessor.size(); i++) {
+                                int itemOffset = listAccessor.getItemOffset(i);
+                                ATypeTag itemType = listAccessor.getItemType(itemOffset);
+                                if (itemType != ATypeTag.DOUBLE) {
+                                    if (itemType == ATypeTag.NULL) {
+                                        nullSerde.serialize(ANull.NULL, out);
+                                        return;
                                     }
-
+                                    if (itemType == ATypeTag.MISSING) {
+                                        missingSerde.serialize(AMissing.MISSING, out);
+                                        return;
+                                    }
+                                    throw new UnsupportedItemTypeException(BuiltinFunctions.CREATE_POLYGON,
+                                            itemType.serialize());
                                 }
-                                if (listAccessor.size() < 6) {
-                                    throw new InvalidDataFormatException(getIdentifier(),
-                                            ATypeTag.SERIALIZED_POLYGON_TYPE_TAG);
-                                } else if (listAccessor.size() % 2 != 0) {
-                                    throw new InvalidDataFormatException(getIdentifier(),
-                                            ATypeTag.SERIALIZED_POLYGON_TYPE_TAG);
-                                }
-                                out.writeByte(ATypeTag.SERIALIZED_POLYGON_TYPE_TAG);
-                                out.writeShort(listAccessor.size() / 2);
 
-                                final int skipTypeTag = listAccessor.itemsAreSelfDescribing() ? 1 : 0;
-                                for (int i = 0; i < listAccessor.size() / 2; i++) {
-                                    int firstDoubleOffset = listAccessor.getItemOffset(i * 2) + skipTypeTag;
-                                    int secondDobuleOffset = listAccessor.getItemOffset((i * 2) + 1) + skipTypeTag;
-
-                                    APointSerializerDeserializer.serialize(
-                                            ADoubleSerializerDeserializer.getDouble(listBytes, firstDoubleOffset),
-                                            ADoubleSerializerDeserializer.getDouble(listBytes, secondDobuleOffset),
-                                            out);
-                                }
-                                result.set(resultStorage);
-                            } catch (AsterixException ex) {
-                                throw new HyracksDataException(ex);
                             }
-                        } catch (IOException e1) {
-                            throw new HyracksDataException(e1);
+                            if (listAccessor.size() < 6) {
+                                throw new InvalidDataFormatException(getIdentifier(),
+                                        ATypeTag.SERIALIZED_POLYGON_TYPE_TAG);
+                            } else if (listAccessor.size() % 2 != 0) {
+                                throw new InvalidDataFormatException(getIdentifier(),
+                                        ATypeTag.SERIALIZED_POLYGON_TYPE_TAG);
+                            }
+                            out.writeByte(ATypeTag.SERIALIZED_POLYGON_TYPE_TAG);
+                            out.writeShort(listAccessor.size() / 2);
+
+                            final int skipTypeTag = listAccessor.itemsAreSelfDescribing() ? 1 : 0;
+                            for (int i = 0; i < listAccessor.size() / 2; i++) {
+                                int firstDoubleOffset = listAccessor.getItemOffset(i * 2) + skipTypeTag;
+                                int secondDobuleOffset = listAccessor.getItemOffset((i * 2) + 1) + skipTypeTag;
+
+                                APointSerializerDeserializer.serialize(
+                                        ADoubleSerializerDeserializer.getDouble(listBytes, firstDoubleOffset),
+                                        ADoubleSerializerDeserializer.getDouble(listBytes, secondDobuleOffset), out);
+                            }
+                            result.set(resultStorage);
+                        } catch (IOException e) {
+                            throw HyracksDataException.create(e);
                         }
                     }
                 };

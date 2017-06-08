@@ -21,7 +21,6 @@ package org.apache.asterix.runtime.evaluators.functions;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMissing;
 import org.apache.asterix.om.base.ANull;
@@ -74,10 +73,10 @@ public class StringJoinDescriptor extends AbstractScalarFunctionDynamicDescripto
                     private final IScalarEvaluator evalList = listEvalFactory.createScalarEvaluator(ctx);
                     private final IScalarEvaluator evalSep = sepEvalFactory.createScalarEvaluator(ctx);
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ANull> nullSerde = SerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ANULL);
-                    private ISerializerDeserializer<AMissing> missingSerde = SerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.AMISSING);
+                    private ISerializerDeserializer<ANull> nullSerde =
+                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ANULL);
+                    private ISerializerDeserializer<AMissing> missingSerde =
+                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AMISSING);
                     private final byte[] tempLengthArray = new byte[5];
 
                     @Override
@@ -151,8 +150,8 @@ public class StringJoinDescriptor extends AbstractScalarFunctionDynamicDescripto
                                     out.writeByte(sepBytes[sepOffset + 1 + sepMetaLen + j]);
                                 }
                             }
-                        } catch (IOException | AsterixException ex) {
-                            throw new HyracksDataException(ex);
+                        } catch (IOException ex) {
+                            throw HyracksDataException.create(ex);
                         }
                         result.set(resultStorage);
                     }

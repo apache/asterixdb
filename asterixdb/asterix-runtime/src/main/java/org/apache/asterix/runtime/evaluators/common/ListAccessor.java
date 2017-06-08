@@ -22,7 +22,6 @@ package org.apache.asterix.runtime.evaluators.common;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.dataflow.data.nontagged.serde.AOrderedListSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AUnorderedListSerializerDeserializer;
 import org.apache.asterix.om.types.ATypeTag;
@@ -76,7 +75,7 @@ public class ListAccessor {
         return size;
     }
 
-    public int getItemOffset(int itemIndex) throws AsterixException {
+    public int getItemOffset(int itemIndex) throws HyracksDataException {
         if (listType == ATypeTag.MULTISET) {
             return AUnorderedListSerializerDeserializer.getItemOffset(listBytes, start, itemIndex);
         } else {
@@ -84,12 +83,12 @@ public class ListAccessor {
         }
     }
 
-    public int getItemLength(int itemOffset) throws AsterixException {
+    public int getItemLength(int itemOffset) throws HyracksDataException {
         ATypeTag itemType = getItemType(itemOffset);
         return NonTaggedFormatUtil.getFieldValueLength(listBytes, itemOffset, itemType, itemsAreSelfDescribing());
     }
 
-    public ATypeTag getItemType(int itemOffset) throws AsterixException {
+    public ATypeTag getItemType(int itemOffset) {
         if (itemType == ATypeTag.ANY) {
             return EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(listBytes[itemOffset]);
         } else {
@@ -97,7 +96,7 @@ public class ListAccessor {
         }
     }
 
-    public void writeItem(int itemIndex, DataOutput dos) throws AsterixException, IOException {
+    public void writeItem(int itemIndex, DataOutput dos) throws IOException {
         int itemOffset = getItemOffset(itemIndex);
         int itemLength = getItemLength(itemOffset);
         if (itemsAreSelfDescribing()) {

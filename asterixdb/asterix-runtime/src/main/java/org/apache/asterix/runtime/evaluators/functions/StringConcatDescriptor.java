@@ -21,11 +21,9 @@ package org.apache.asterix.runtime.evaluators.functions;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMissing;
 import org.apache.asterix.om.base.ANull;
-import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
@@ -33,6 +31,7 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.asterix.runtime.evaluators.common.ListAccessor;
+import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.asterix.runtime.exceptions.UnsupportedItemTypeException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
@@ -72,10 +71,10 @@ public class StringConcatDescriptor extends AbstractScalarFunctionDynamicDescrip
                     private final IPointable inputArgList = new VoidPointable();
                     private final IScalarEvaluator evalList = listEvalFactory.createScalarEvaluator(ctx);
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ANull> nullSerde = SerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ANULL);
-                    private ISerializerDeserializer<AMissing> missingSerde = SerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.AMISSING);
+                    private ISerializerDeserializer<ANull> nullSerde =
+                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ANULL);
+                    private ISerializerDeserializer<AMissing> missingSerde =
+                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AMISSING);
                     private final byte[] tempLengthArray = new byte[5];
 
                     @Override
@@ -93,49 +92,45 @@ public class StringConcatDescriptor extends AbstractScalarFunctionDynamicDescrip
                                         ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG);
                             }
                             listAccessor.reset(listBytes, listOffset);
-                            try {
-                                // calculate length first
-                                int utf8Len = 0;
-                                for (int i = 0; i < listAccessor.size(); i++) {
-                                    int itemOffset = listAccessor.getItemOffset(i);
-                                    ATypeTag itemType = listAccessor.getItemType(itemOffset);
-                                    // Increase the offset by 1 if the give list has heterogeneous elements,
-                                    // since the item itself has a typetag.
-                                    if (listAccessor.itemsAreSelfDescribing()) {
-                                        itemOffset += 1;
-                                    }
-                                    if (itemType != ATypeTag.STRING) {
-                                        if (itemType == ATypeTag.NULL) {
-                                            nullSerde.serialize(ANull.NULL, out);
-                                            result.set(resultStorage);
-                                            return;
-                                        }
-                                        if (itemType == ATypeTag.MISSING) {
-                                            missingSerde.serialize(AMissing.MISSING, out);
-                                            result.set(resultStorage);
-                                            return;
-                                        }
-                                        throw new UnsupportedItemTypeException(getIdentifier(), itemType.serialize());
-                                    }
-                                    utf8Len += UTF8StringUtil.getUTFLength(listBytes, itemOffset);
+                            // calculate length first
+                            int utf8Len = 0;
+                            for (int i = 0; i < listAccessor.size(); i++) {
+                                int itemOffset = listAccessor.getItemOffset(i);
+                                ATypeTag itemType = listAccessor.getItemType(itemOffset);
+                                // Increase the offset by 1 if the give list has heterogeneous elements,
+                                // since the item itself has a typetag.
+                                if (listAccessor.itemsAreSelfDescribing()) {
+                                    itemOffset += 1;
                                 }
-                                out.writeByte(ATypeTag.SERIALIZED_STRING_TYPE_TAG);
-                                int cbytes = UTF8StringUtil.encodeUTF8Length(utf8Len, tempLengthArray, 0);
-                                out.write(tempLengthArray, 0, cbytes);
-                                for (int i = 0; i < listAccessor.size(); i++) {
-                                    int itemOffset = listAccessor.getItemOffset(i);
-                                    if (listAccessor.itemsAreSelfDescribing()) {
-                                        itemOffset += 1;
+                                if (itemType != ATypeTag.STRING) {
+                                    if (itemType == ATypeTag.NULL) {
+                                        nullSerde.serialize(ANull.NULL, out);
+                                        result.set(resultStorage);
+                                        return;
                                     }
-                                    utf8Len = UTF8StringUtil.getUTFLength(listBytes, itemOffset);
-                                    out.write(listBytes, UTF8StringUtil.getNumBytesToStoreLength(utf8Len) + itemOffset,
-                                            utf8Len);
+                                    if (itemType == ATypeTag.MISSING) {
+                                        missingSerde.serialize(AMissing.MISSING, out);
+                                        result.set(resultStorage);
+                                        return;
+                                    }
+                                    throw new UnsupportedItemTypeException(getIdentifier(), itemType.serialize());
                                 }
-                            } catch (AsterixException ex) {
-                                throw new HyracksDataException(ex);
+                                utf8Len += UTF8StringUtil.getUTFLength(listBytes, itemOffset);
                             }
-                        } catch (IOException e1) {
-                            throw new HyracksDataException(e1);
+                            out.writeByte(ATypeTag.SERIALIZED_STRING_TYPE_TAG);
+                            int cbytes = UTF8StringUtil.encodeUTF8Length(utf8Len, tempLengthArray, 0);
+                            out.write(tempLengthArray, 0, cbytes);
+                            for (int i = 0; i < listAccessor.size(); i++) {
+                                int itemOffset = listAccessor.getItemOffset(i);
+                                if (listAccessor.itemsAreSelfDescribing()) {
+                                    itemOffset += 1;
+                                }
+                                utf8Len = UTF8StringUtil.getUTFLength(listBytes, itemOffset);
+                                out.write(listBytes, UTF8StringUtil.getNumBytesToStoreLength(utf8Len) + itemOffset,
+                                        utf8Len);
+                            }
+                        } catch (IOException e) {
+                            throw HyracksDataException.create(e);
                         }
                         result.set(resultStorage);
                     }

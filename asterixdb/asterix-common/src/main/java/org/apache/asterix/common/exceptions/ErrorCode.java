@@ -62,6 +62,7 @@ public class ErrorCode {
     public static final int TYPE_CONVERT_INTEGER_SOURCE = 19;
     public static final int TYPE_CONVERT_INTEGER_TARGET = 20;
     public static final int TYPE_CONVERT_OUT_OF_BOUND = 21;
+    public static final int FIELD_SHOULD_BE_TYPED = 22;
     public static final int INSTANTIATION_ERROR = 100;
 
     // Compilation errors

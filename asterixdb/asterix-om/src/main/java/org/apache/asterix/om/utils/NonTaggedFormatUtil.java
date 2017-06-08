@@ -19,7 +19,7 @@
 package org.apache.asterix.om.utils;
 
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt16SerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AIntervalSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AOrderedListSerializerDeserializer;
@@ -39,6 +39,7 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.primitive.ByteArrayPointable;
 import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizerFactory;
 import org.apache.hyracks.util.string.UTF8StringUtil;
@@ -106,12 +107,12 @@ public final class NonTaggedFormatUtil {
     }
 
     public static int getFieldValueLength(byte[] serNonTaggedAObject, int offset, ATypeTag typeTag, boolean tagged)
-            throws AsterixException {
+            throws HyracksDataException {
         switch (typeTag) {
             case ANY:
                 ATypeTag tag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serNonTaggedAObject[offset]);
                 if (tag == ATypeTag.ANY) {
-                    throw new AsterixException("Field value has type tag ANY, but it should have a concrete type.");
+                    throw HyracksDataException.create(ErrorCode.FIELD_SHOULD_BE_TYPED);
                 }
                 return getFieldValueLength(serNonTaggedAObject, offset, tag, true) + 1;
             case MISSING:

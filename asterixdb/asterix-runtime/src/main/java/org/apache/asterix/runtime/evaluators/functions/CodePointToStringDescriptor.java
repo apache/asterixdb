@@ -21,7 +21,6 @@ package org.apache.asterix.runtime.evaluators.functions;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.dataflow.data.nontagged.serde.AOrderedListSerializerDeserializer;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
@@ -99,39 +98,32 @@ public class CodePointToStringDescriptor extends AbstractScalarFunctionDynamicDe
                                         throw new UnsupportedTypeException(getIdentifier(), serOrderedList[offset]);
                                 }
                             }
-
-                            try {
-                                // calculate length first
-                                int utf_8_len = 0;
-                                for (int i = 0; i < size; i++) {
-                                    int itemOffset = AOrderedListSerializerDeserializer.getItemOffset(serOrderedList,
-                                            offset, i);
-                                    int codePoint = 0;
-                                    codePoint = ATypeHierarchy.getIntegerValueWithDifferentTypeTagPosition(
-                                            getIdentifier().getName(), 0,
-                                            serOrderedList, itemOffset, offset + 1);
-                                    utf_8_len += UTF8StringUtil.codePointToUTF8(codePoint, currentUTF8);
-                                }
-                                out.writeByte(stringTypeTag);
-                                UTF8StringUtil.writeUTF8Length(utf_8_len, tempStoreForLength, out);
-                                for (int i = 0; i < size; i++) {
-                                    int itemOffset = AOrderedListSerializerDeserializer.getItemOffset(serOrderedList,
-                                            offset, i);
-                                    int codePoint = 0;
-                                    codePoint = ATypeHierarchy.getIntegerValueWithDifferentTypeTagPosition(
-                                            getIdentifier().getName(), 0,
-                                            serOrderedList, itemOffset, offset + 1);
-                                    utf_8_len = UTF8StringUtil.codePointToUTF8(codePoint, currentUTF8);
-                                    for (int j = 0; j < utf_8_len; j++) {
-                                        out.writeByte(currentUTF8[j]);
-                                    }
-                                }
-                                result.set(resultStorage);
-                            } catch (AsterixException ex) {
-                                throw new HyracksDataException(ex);
+                            // calculate length first
+                            int utf_8_len = 0;
+                            for (int i = 0; i < size; i++) {
+                                int itemOffset =
+                                        AOrderedListSerializerDeserializer.getItemOffset(serOrderedList, offset, i);
+                                int codePoint = 0;
+                                codePoint = ATypeHierarchy.getIntegerValueWithDifferentTypeTagPosition(
+                                        getIdentifier().getName(), 0, serOrderedList, itemOffset, offset + 1);
+                                utf_8_len += UTF8StringUtil.codePointToUTF8(codePoint, currentUTF8);
                             }
-                        } catch (IOException e1) {
-                            throw new HyracksDataException(e1);
+                            out.writeByte(stringTypeTag);
+                            UTF8StringUtil.writeUTF8Length(utf_8_len, tempStoreForLength, out);
+                            for (int i = 0; i < size; i++) {
+                                int itemOffset =
+                                        AOrderedListSerializerDeserializer.getItemOffset(serOrderedList, offset, i);
+                                int codePoint = 0;
+                                codePoint = ATypeHierarchy.getIntegerValueWithDifferentTypeTagPosition(
+                                        getIdentifier().getName(), 0, serOrderedList, itemOffset, offset + 1);
+                                utf_8_len = UTF8StringUtil.codePointToUTF8(codePoint, currentUTF8);
+                                for (int j = 0; j < utf_8_len; j++) {
+                                    out.writeByte(currentUTF8[j]);
+                                }
+                            }
+                            result.set(resultStorage);
+                        } catch (IOException e) {
+                            throw HyracksDataException.create(e);
                         }
                     }
                 };

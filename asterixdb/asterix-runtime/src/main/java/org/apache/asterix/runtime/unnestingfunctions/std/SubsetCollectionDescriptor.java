@@ -20,7 +20,6 @@ package org.apache.asterix.runtime.unnestingfunctions.std;
 
 import java.io.IOException;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.dataflow.data.nontagged.serde.AOrderedListSerializerDeserializer;
@@ -80,8 +79,7 @@ public class SubsetCollectionDescriptor extends AbstractUnnestingFunctionDynamic
                         try {
                             evalStart.evaluate(tuple, inputVal);
                             posStart = ATypeHierarchy.getIntegerValue(getIdentifier().getName(), 0,
-                                    inputVal.getByteArray(),
-                                    inputVal.getStartOffset());
+                                    inputVal.getByteArray(), inputVal.getStartOffset());
 
                             evalLen.evaluate(tuple, inputVal);
                             numItems = ATypeHierarchy.getIntegerValue(getIdentifier().getName(), 1,
@@ -128,8 +126,8 @@ public class SubsetCollectionDescriptor extends AbstractUnnestingFunctionDynamic
                             int offset = inputVal.getStartOffset();
                             int itemLength = 0;
                             try {
-                                int itemOffset = AOrderedListSerializerDeserializer.getItemOffset(serList, offset,
-                                        posCrt);
+                                int itemOffset =
+                                        AOrderedListSerializerDeserializer.getItemOffset(serList, offset, posCrt);
                                 if (selfDescList) {
                                     itemTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serList[itemOffset]);
                                 }
@@ -141,9 +139,7 @@ public class SubsetCollectionDescriptor extends AbstractUnnestingFunctionDynamic
                                 resultStorage.getDataOutput().write(serList, itemOffset,
                                         itemLength + (!selfDescList ? 0 : 1));
                             } catch (IOException e) {
-                                throw new HyracksDataException(e);
-                            } catch (AsterixException e) {
-                                throw new HyracksDataException(e);
+                                throw HyracksDataException.create(e);
                             }
                             result.set(resultStorage);
                             ++posCrt;
