@@ -48,7 +48,7 @@ public class TreeIndexDiskOrderScanOperatorNodePushable extends AbstractUnaryOut
             IIndexDataflowHelperFactory indexHelperFactory, ISearchOperationCallbackFactory searchCallbackFactory)
             throws HyracksDataException {
         this.ctx = ctx;
-        this.treeIndexHelper = indexHelperFactory.create(ctx, partition);
+        this.treeIndexHelper = indexHelperFactory.create(ctx.getJobletContext().getServiceContext(), partition);
         this.searchCallbackFactory = searchCallbackFactory;
     }
 

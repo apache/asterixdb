@@ -18,9 +18,16 @@
  */
 package org.apache.asterix.common.messaging.api;
 
+import java.util.List;
+
 import org.apache.hyracks.api.messages.IMessageBroker;
 
 public interface ICCMessageBroker extends IMessageBroker {
+    public enum ResponseState {
+        UNINITIALIZED,
+        SUCCESS,
+        FAILURE
+    }
 
     /**
      * Sends the passed message to the specified {@code nodeId}
@@ -29,5 +36,24 @@ public interface ICCMessageBroker extends IMessageBroker {
      * @param nodeId
      * @throws Exception
      */
-    public void sendApplicationMessageToNC(INcAddressedMessage msg, String nodeId) throws Exception;
+    void sendApplicationMessageToNC(INcAddressedMessage msg, String nodeId) throws Exception;
+
+    /**
+     * Sends the passed requests to all NCs and wait for the response
+     *
+     * @param ncs
+     * @param requests
+     * @param timeout
+     * @throws Exception
+     */
+    Object sendSyncRequestToNCs(long reqId, List<String> ncs, List<? extends INcAddressedMessage> requests,
+            long timeout) throws Exception;
+
+    /**
+     * respond to a sync request
+     *
+     * @param reqId
+     * @param response
+     */
+    void respond(Long reqId, INcResponse response);
 }

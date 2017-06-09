@@ -31,7 +31,7 @@ public class IndexDropOperatorNodePushable extends AbstractOperatorNodePushable 
 
     public IndexDropOperatorNodePushable(IIndexDataflowHelperFactory indexHelperFactory, IHyracksTaskContext ctx,
             int partition) throws HyracksDataException {
-        this.indexHelper = indexHelperFactory.create(ctx, partition);
+        this.indexHelper = indexHelperFactory.create(ctx.getJobletContext().getServiceContext(), partition);
     }
 
     @Override

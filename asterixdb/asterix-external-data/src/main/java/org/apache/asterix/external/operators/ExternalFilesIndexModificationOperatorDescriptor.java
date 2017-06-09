@@ -62,7 +62,8 @@ public class ExternalFilesIndexModificationOperatorDescriptor extends AbstractSi
         return new AbstractOperatorNodePushable() {
             @Override
             public void initialize() throws HyracksDataException {
-                final IIndexDataflowHelper indexHelper = dataflowHelperFactory.create(ctx, partition);
+                final IIndexDataflowHelper indexHelper =
+                        dataflowHelperFactory.create(ctx.getJobletContext().getServiceContext(), partition);
                 FileIndexTupleTranslator filesTupleTranslator = new FileIndexTupleTranslator();
                 // Open and get
                 indexHelper.open();

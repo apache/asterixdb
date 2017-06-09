@@ -35,7 +35,7 @@ public class LSMIndexCompactOperatorNodePushable extends AbstractOperatorNodePus
 
     public LSMIndexCompactOperatorNodePushable(IHyracksTaskContext ctx, int partition,
             IIndexDataflowHelperFactory indexHelperFactory) throws HyracksDataException {
-        this.indexHelper = indexHelperFactory.create(ctx, partition);
+        this.indexHelper = indexHelperFactory.create(ctx.getJobletContext().getServiceContext(), partition);
     }
 
     @Override

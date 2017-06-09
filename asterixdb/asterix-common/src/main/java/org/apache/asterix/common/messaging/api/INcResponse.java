@@ -16,16 +16,19 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.asterix.common.messaging.api;
 
-package org.apache.hyracks.storage.am.common.dataflow;
-
-import java.io.Serializable;
-
-import org.apache.hyracks.api.application.INCServiceContext;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.storage.am.common.api.IIndexDataflowHelper;
+import org.apache.asterix.common.messaging.api.ICCMessageBroker.ResponseState;
+import org.apache.commons.lang3.tuple.MutablePair;
 
 @FunctionalInterface
-public interface IIndexDataflowHelperFactory extends Serializable {
-    IIndexDataflowHelper create(final INCServiceContext ctx, int partition) throws HyracksDataException;
+public interface INcResponse {
+    /**
+     * Sets the response in the result mutable place holder
+     * adjust the response state as needed
+     *
+     * @param result
+     */
+    void setResult(MutablePair<ResponseState, Object> result);
+
 }

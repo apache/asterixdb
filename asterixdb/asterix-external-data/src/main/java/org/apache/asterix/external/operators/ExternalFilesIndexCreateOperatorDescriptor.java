@@ -66,7 +66,8 @@ public class ExternalFilesIndexCreateOperatorDescriptor extends AbstractSingleAc
             @Override
             public void initialize() throws HyracksDataException {
                 IIndexBuilder indexBuilder = indexBuilderFactory.create(ctx, partition);
-                IIndexDataflowHelper indexHelper = dataflowHelperFactory.create(ctx, partition);
+                IIndexDataflowHelper indexHelper =
+                        dataflowHelperFactory.create(ctx.getJobletContext().getServiceContext(), partition);
                 FileIndexTupleTranslator filesTupleTranslator = new FileIndexTupleTranslator();
                 // Build the index
                 indexBuilder.build();

@@ -18,7 +18,7 @@
  */
 package org.apache.hyracks.storage.am.common.dataflow;
 
-import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.FileSplit;
@@ -38,9 +38,9 @@ public class IndexDataflowHelperFactory implements IIndexDataflowHelperFactory {
     }
 
     @Override
-    public IIndexDataflowHelper create(IHyracksTaskContext ctx, int partition) throws HyracksDataException {
+    public IIndexDataflowHelper create(INCServiceContext ctx, int partition) throws HyracksDataException {
         FileSplit fileSplit = fileSplitProvider.getFileSplits()[partition];
         FileReference resourceRef = fileSplit.getFileReference(ctx.getIoManager());
-        return new IndexDataflowHelper(ctx.getJobletContext().getServiceContext(), storageMgr, resourceRef);
+        return new IndexDataflowHelper(ctx, storageMgr, resourceRef);
     }
 }

@@ -23,9 +23,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 import org.apache.hyracks.api.comm.IFrameTupleAppender;
 import org.apache.hyracks.api.comm.IFrameWriter;
+import org.apache.hyracks.api.context.IHyracksJobletContext;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.ActivityId;
 import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
@@ -301,11 +303,15 @@ public class FramewriterTest {
 
     private IHyracksTaskContext[] mockIHyracksTaskContext() throws HyracksDataException {
         IHyracksTaskContext ctx = Mockito.mock(IHyracksTaskContext.class);
+        IHyracksJobletContext jobletCtx = Mockito.mock(IHyracksJobletContext.class);
+        INCServiceContext serviceCtx = Mockito.mock(INCServiceContext.class);
         Mockito.when(ctx.allocateFrame()).thenReturn(mockByteBuffer());
         Mockito.when(ctx.allocateFrame(Mockito.anyInt())).thenReturn(mockByteBuffer());
         Mockito.when(ctx.getInitialFrameSize()).thenReturn(BUFFER_SIZE);
         Mockito.when(ctx.reallocateFrame(Mockito.any(), Mockito.anyInt(), Mockito.anyBoolean()))
                 .thenReturn(mockByteBuffer());
+        Mockito.when(ctx.getJobletContext()).thenReturn(jobletCtx);
+        Mockito.when(jobletCtx.getServiceContext()).thenReturn(serviceCtx);
         return new IHyracksTaskContext[] { ctx };
     }
 

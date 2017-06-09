@@ -63,7 +63,7 @@ public class IndexInsertUpdateDeleteOperatorNodePushable extends AbstractUnaryIn
             IndexOperation op, IModificationOperationCallbackFactory modOpCallbackFactory,
             ITupleFilterFactory tupleFilterFactory) throws HyracksDataException {
         this.ctx = ctx;
-        this.indexHelper = indexHelperFactory.create(ctx, partition);
+        this.indexHelper = indexHelperFactory.create(ctx.getJobletContext().getServiceContext(), partition);
         this.modOpCallbackFactory = modOpCallbackFactory;
         this.tupleFilterFactory = tupleFilterFactory;
         this.inputRecDesc = inputRecDesc;

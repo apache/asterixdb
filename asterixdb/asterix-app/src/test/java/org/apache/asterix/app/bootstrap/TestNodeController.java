@@ -447,7 +447,8 @@ public class TestNodeController {
 
     public IndexDataflowHelperFactory getPrimaryIndexDataflowHelperFactory(PrimaryIndexInfo primaryIndexInfo,
             IStorageComponentProvider storageComponentProvider) throws AlgebricksException {
-        return new IndexDataflowHelperFactory(storageComponentProvider.getStorageManager(), primaryIndexInfo.fileSplitProvider);
+        return new IndexDataflowHelperFactory(storageComponentProvider.getStorageManager(),
+                primaryIndexInfo.fileSplitProvider);
     }
 
     public IIndexDataflowHelper getPrimaryIndexDataflowHelper(Dataset dataset, IAType[] primaryKeyTypes,
@@ -459,6 +460,6 @@ public class TestNodeController {
                 mergePolicyFactory, mergePolicyProperties, filterFields, primaryKeyIndexes, primaryKeyIndicators,
                 storageComponentProvider);
         return getPrimaryIndexDataflowHelperFactory(primaryIndexInfo, storageComponentProvider)
-                .create(createTestContext(true), PARTITION);
+                .create(createTestContext(true).getJobletContext().getServiceContext(), PARTITION);
     }
 }

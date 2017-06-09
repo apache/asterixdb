@@ -63,8 +63,8 @@ public abstract class AbstractExternalDatasetIndexesOperatorDescriptor
                 try {
                     // perform operation on btrees
                     for (int i = 0; i < treeIndexesDataflowHelperFactories.size(); i++) {
-                        IIndexDataflowHelper indexHelper =
-                                treeIndexesDataflowHelperFactories.get(i).create(ctx, partition);
+                        IIndexDataflowHelper indexHelper = treeIndexesDataflowHelperFactories.get(i)
+                                .create(ctx.getJobletContext().getServiceContext(), partition);
                         performOpOnIndex(indexHelper, ctx);
                     }
                 } catch (Exception e) {

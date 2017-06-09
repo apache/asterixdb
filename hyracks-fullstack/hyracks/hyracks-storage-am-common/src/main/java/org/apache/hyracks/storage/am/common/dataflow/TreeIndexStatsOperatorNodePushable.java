@@ -49,7 +49,7 @@ public class TreeIndexStatsOperatorNodePushable extends AbstractUnaryOutputSourc
             IIndexDataflowHelperFactory indexHelperFactory, IStorageManager storageManager)
             throws HyracksDataException {
         this.ctx = ctx;
-        this.treeIndexHelper = indexHelperFactory.create(ctx, partition);
+        this.treeIndexHelper = indexHelperFactory.create(ctx.getJobletContext().getServiceContext(), partition);
         this.storageManager = storageManager;
     }
 
