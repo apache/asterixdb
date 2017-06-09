@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.InvocationTargetException;
@@ -453,25 +454,50 @@ public class TestExecutor {
             throws Exception {
         if (!responseCodeValidator.test(httpResponse.getStatusLine().getStatusCode())) {
             String errorBody = EntityUtils.toString(httpResponse.getEntity());
-            String exceptionMsg;
+            String[] errors;
             try {
                 // First try to parse the response for a JSON error response.
                 ObjectMapper om = new ObjectMapper();
                 JsonNode result = om.readTree(errorBody);
-                String[] errors = { result.get("error-code").asText(), result.get("summary").asText(),
+                errors = new String[] { result.get("error-code").get(1).asText(), result.get("summary").asText(),
                         result.get("stacktrace").asText() };
-                GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, errors[2]);
-                exceptionMsg = "HTTP operation failed: " + errors[0] + "\nSTATUS LINE: " + httpResponse.getStatusLine()
-                        + "\nSUMMARY: " + errors[1] + "\nSTACKTRACE: " + errors[2];
             } catch (Exception e) {
                 // whoops, not JSON (e.g. 404) - just include the body
                 GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, errorBody);
-                exceptionMsg = "HTTP operation failed:" + "\nSTATUS LINE: " + httpResponse.getStatusLine()
-                        + "\nERROR_BODY: " + errorBody;
+                throw new Exception("HTTP operation failed:" + "\nSTATUS LINE: " + httpResponse.getStatusLine()
+                        + "\nERROR_BODY: " + errorBody, e);
             }
-            throw new Exception(exceptionMsg);
+            throw new ParsedException("HTTP operation failed: " + errors[0] + "\nSTATUS LINE: "
+                    + httpResponse.getStatusLine() + "\nSUMMARY: " + errors[2].split("\n")[0], errors[2]);
         }
         return httpResponse;
+    }
+
+    static class ParsedException extends Exception {
+
+        private final String savedStack;
+
+        ParsedException(String message, String stackTrace) {
+            super(message);
+            savedStack = stackTrace;
+        }
+
+        @Override
+        public String toString() {
+            return getMessage();
+        }
+
+        @Override
+        public void printStackTrace(PrintStream s) {
+            super.printStackTrace(s);
+            s.println("Caused by: " + savedStack);
+        }
+
+        @Override
+        public void printStackTrace(PrintWriter s) {
+            super.printStackTrace(s);
+            s.println("Caused by: " + savedStack);
+        }
     }
 
     public InputStream executeQuery(String str, OutputFormat fmt, URI uri, List<CompilationUnit.Parameter> params)
@@ -1260,7 +1286,7 @@ public class TestExecutor {
                         if (failedGroup != null) {
                             failedGroup.getTestCase().add(testCaseCtx.getTestCase());
                         }
-                        throw new Exception("Test \"" + testFile + "\" FAILED!", e);
+                        throw new Exception("Test \"" + testFile + "\" FAILED!");
                     }
                 } finally {
                     if (numOfFiles == testFileCtxs.size()) {
