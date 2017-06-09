@@ -86,7 +86,7 @@ public class AsterixHyracksIntegrationUtil {
         final List<NodeControllerService> nodeControllers = new ArrayList<>();
         for (String nodeId : nodeNames) {
             // mark this NC as virtual in the CC's config manager, so he doesn't try to contact NCService...
-            configManager.set(nodeId, NCConfig.Option.VIRTUAL_NC, true);
+            configManager.set(nodeId, NCConfig.Option.NCSERVICE_PORT, NCConfig.NCSERVICE_PORT_DISABLED);
             final INCApplication ncApplication = createNCApplication();
             ConfigManager ncConfigManager = new ConfigManager();
             ncApplication.registerConfig(ncConfigManager);
@@ -149,7 +149,7 @@ public class AsterixHyracksIntegrationUtil {
         ncConfig.setMessagingListenAddress(Inet4Address.getLoopbackAddress().getHostAddress());
         ncConfig.setResultTTL(120000L);
         ncConfig.setResultSweepThreshold(1000L);
-        ncConfig.setVirtualNC(true);
+        ncConfig.setVirtualNC();
         configManager.set(ControllerConfig.Option.DEFAULT_DIR, joinPath(getDefaultStoragePath(), "asterixdb", ncName));
         return ncConfig;
     }

@@ -20,7 +20,6 @@ package org.apache.hyracks.control.cc;
 
 import java.io.File;
 import java.io.FileReader;
-import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.net.InetAddress;
@@ -229,11 +228,11 @@ public class ClusterControllerService implements IControllerService {
         }
     }
 
-    private Map<String, Pair<String, Integer>> getNCServices() throws IOException {
+    private Map<String, Pair<String, Integer>> getNCServices() {
         Map<String, Pair<String, Integer>> ncMap = new TreeMap<>();
         for (String ncId : configManager.getNodeNames()) {
             IApplicationConfig ncConfig = configManager.getNodeEffectiveConfig(ncId);
-            if (!ncConfig.getBoolean(NCConfig.Option.VIRTUAL_NC)) {
+            if (ncConfig.getInt(NCConfig.Option.NCSERVICE_PORT) != NCConfig.NCSERVICE_PORT_DISABLED) {
                 ncMap.put(ncId, Pair.of(ncConfig.getString(NCConfig.Option.NCSERVICE_ADDRESS),
                         ncConfig.getInt(NCConfig.Option.NCSERVICE_PORT)));
             }
@@ -241,7 +240,7 @@ public class ClusterControllerService implements IControllerService {
         return ncMap;
     }
 
-    private void connectNCs() throws IOException {
+    private void connectNCs() {
         getNCServices().entrySet().forEach(ncService -> {
             final TriggerNCWork triggerWork = new TriggerNCWork(ClusterControllerService.this,
                     ncService.getValue().getLeft(), ncService.getValue().getRight(), ncService.getKey());

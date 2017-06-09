@@ -110,6 +110,6 @@ public class NodeProperties extends AbstractProperties {
     }
 
     public boolean isVirtualNc() {
-        return accessor.getBoolean(NCConfig.Option.VIRTUAL_NC);
+        return accessor.getInt(NCConfig.Option.NCSERVICE_PORT) == NCConfig.NCSERVICE_PORT_DISABLED;
     }
 }

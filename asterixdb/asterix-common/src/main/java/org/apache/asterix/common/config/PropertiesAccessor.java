@@ -137,11 +137,10 @@ public class PropertiesAccessor implements IApplicationConfig {
                 }
                 stores.put(store.getNcId(), nodeStores);
                 nodePartitionsMap.put(store.getNcId(), nodePartitions);
-                configManager.registerVirtualNode(store.getNcId());
                 // push the store info to the config manager
                 configManager.set(store.getNcId(), NCConfig.Option.IODEVICES, nodeStores);
                 // marking node as virtual, as we're not using NCServices with old-style config
-                configManager.set(store.getNcId(), NCConfig.Option.VIRTUAL_NC, true);
+                configManager.set(store.getNcId(), NCConfig.Option.NCSERVICE_PORT, NCConfig.NCSERVICE_PORT_DISABLED);
             }
             // Get extensions
             if (asterixConfiguration.getExtensions() != null) {

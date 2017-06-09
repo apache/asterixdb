@@ -231,7 +231,7 @@ public class NCApplication extends BaseNCApplication {
                 throw new IllegalStateException("No cluster configuration found for this instance");
             }
             NCConfig ncConfig = ((NodeControllerService) ncServiceCtx.getControllerService()).getConfiguration();
-            ncConfig.getConfigManager().registerVirtualNode(nodeId);
+            ncConfig.getConfigManager().ensureNode(nodeId);
             String asterixInstanceName = metadataProperties.getInstanceName();
             TransactionProperties txnProperties = runtimeContext.getTransactionProperties();
             Node self = null;

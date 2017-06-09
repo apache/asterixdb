@@ -159,8 +159,8 @@ public class ConfigManager implements IConfigManager, Serializable {
                 : nodeSpecificMap.computeIfAbsent(node, this::createNodeSpecificMap);
     }
 
-    public void registerVirtualNode(String nodeId) {
-        LOGGER.fine("registerVirtualNode: " + nodeId);
+    public void ensureNode(String nodeId) {
+        LOGGER.fine("ensureNode: " + nodeId);
         nodeSpecificMap.computeIfAbsent(nodeId, this::createNodeSpecificMap);
     }
 

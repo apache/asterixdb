@@ -375,11 +375,16 @@ public class ClusterStateManager implements IClusterStateManager {
     @Override
     public synchronized void deregisterNodePartitions(String nodeId) {
         ClusterPartition [] nodePartitions = node2PartitionsMap.remove(nodeId);
-        if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("Deregistering node partitions for node " + nodeId + ": " + Arrays.toString(nodePartitions));
-        }
-        for (ClusterPartition nodePartition : nodePartitions) {
-            clusterPartitions.remove(nodePartition.getPartitionId());
+        if (nodePartitions == null) {
+            LOGGER.info("deregisterNodePartitions unknown node " + nodeId + " (already removed?)");
+        } else {
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.info("deregisterNodePartitions for node " + nodeId + ": " +
+                        Arrays.toString(nodePartitions));
+            }
+            for (ClusterPartition nodePartition : nodePartitions) {
+                clusterPartitions.remove(nodePartition.getPartitionId());
+            }
         }
     }
 }

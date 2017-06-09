@@ -18,7 +18,6 @@
  */
 package org.apache.hyracks.control.common.controllers;
 
-import static org.apache.hyracks.control.common.config.OptionTypes.BOOLEAN;
 import static org.apache.hyracks.control.common.config.OptionTypes.INTEGER;
 import static org.apache.hyracks.control.common.config.OptionTypes.INTEGER_BYTE_UNIT;
 import static org.apache.hyracks.control.common.config.OptionTypes.LONG;
@@ -77,8 +76,7 @@ public class NCConfig extends ControllerConfig {
         APP_CLASS(STRING, (String) null),
         NCSERVICE_PID(INTEGER, -1),
         COMMAND(STRING, "hyracksnc"),
-        JVM_ARGS(STRING, (String) null),
-        VIRTUAL_NC(BOOLEAN, false);
+        JVM_ARGS(STRING, (String) null);
 
         private final IOptionType parser;
         private final String defaultValueDescription;
@@ -127,7 +125,8 @@ public class NCConfig extends ControllerConfig {
                 case NCSERVICE_ADDRESS:
                     return "Address the CC should use to contact the NCService associated with this NC";
                 case NCSERVICE_PORT:
-                    return "Port the CC should use to contact the NCService associated with this NC";
+                    return "Port the CC should use to contact the NCService associated with this NC (-1 to not use " +
+                            "NCService to start this NC)";
                 case CLUSTER_ADDRESS:
                     return "Cluster Controller address (required unless specified in config file)";
                 case CLUSTER_PORT:
@@ -189,8 +188,6 @@ public class NCConfig extends ControllerConfig {
                     return "Command NCService should invoke to start the NCDriver";
                 case JVM_ARGS:
                     return "JVM args to pass to the NCDriver";
-                case VIRTUAL_NC:
-                    return "A flag indicating if this NC is running on virtual cluster";
                 default:
                     throw new IllegalStateException("NYI: " + this);
             }
@@ -211,16 +208,13 @@ public class NCConfig extends ControllerConfig {
         }
 
         @Override
-        public boolean hidden() {
-            return this == VIRTUAL_NC;
-        }
-
-        @Override
         public String usageDefaultOverride(IApplicationConfig accessor, Function<IOption, String> optionPrinter) {
             return defaultValueDescription;
         }
 
     }
+
+    public static final int NCSERVICE_PORT_DISABLED = -1;
 
     private List<String> appArgs = new ArrayList<>();
 
@@ -504,11 +498,11 @@ public class NCConfig extends ControllerConfig {
         configManager.set(nodeId, Option.NCSERVICE_PID, ncservicePid);
     }
 
-    public boolean getVirtualNC() {
-        return appConfig.getBoolean(Option.VIRTUAL_NC);
+    public boolean isVirtualNC() {
+        return appConfig.getInt(NCConfig.Option.NCSERVICE_PORT) == NCConfig.NCSERVICE_PORT_DISABLED;
     }
 
-    public void setVirtualNC(boolean virtualNC) {
-        configManager.set(nodeId, Option.VIRTUAL_NC, virtualNC);
+    public void setVirtualNC() {
+        configManager.set(nodeId, Option.NCSERVICE_PORT, NCSERVICE_PORT_DISABLED);
     }
 }
