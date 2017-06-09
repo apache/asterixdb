@@ -91,6 +91,7 @@ public class ErrorCode {
     public static final int RESOURCE_DOES_NOT_EXIST = 55;
     public static final int DISK_COMPONENT_SCAN_NOT_ALLOWED_FOR_SECONDARY_INDEX = 56;
     public static final int CANNOT_FIND_MATTER_TUPLE_FOR_ANTI_MATTER_TUPLE = 57;
+    public static final int TASK_ABORTED = 58;
 
     // Compilation error codes.
     public static final int RULECOLLECTION_NOT_INSTANCE_OF_LIST = 10000;
