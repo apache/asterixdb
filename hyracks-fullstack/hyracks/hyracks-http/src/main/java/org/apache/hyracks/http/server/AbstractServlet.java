@@ -139,7 +139,8 @@ public abstract class AbstractServlet implements IServlet {
 
     public String localPath(IServletRequest request) {
         final String uri = request.getHttpRequest().uri();
-        return uri.substring(trim(uri));
+        int queryStart = uri.indexOf("?");
+        return queryStart == -1 ? uri.substring(trim(uri)) : uri.substring(trim(uri), queryStart);
     }
 
     public String servletPath(IServletRequest request) {
