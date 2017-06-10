@@ -99,7 +99,7 @@ public class IPCConnectionManager {
         while (true) {
             synchronized (this) {
                 handle = ipcHandleMap.get(remoteAddress);
-                if (handle == null) {
+                if (handle == null || !handle.isConnected()) {
                     handle = new IPCHandle(system, remoteAddress);
                     pendingConnections.add(handle);
                     networkThread.selector.wakeup();
