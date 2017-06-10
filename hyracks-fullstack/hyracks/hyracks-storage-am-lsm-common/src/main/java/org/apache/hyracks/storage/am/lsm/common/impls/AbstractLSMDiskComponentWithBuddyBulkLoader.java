@@ -35,10 +35,10 @@ public abstract class AbstractLSMDiskComponentWithBuddyBulkLoader extends Abstra
     //with filter
     public AbstractLSMDiskComponentWithBuddyBulkLoader(ILSMDiskComponent component,
             BloomFilterSpecification bloomFilterSpec, float fillFactor, boolean verifyInput, long numElementsHint,
-            boolean checkIfEmptyIndex, ILSMComponentFilterManager filterManager, int[] indexFields, int[] filterFields,
-            MultiComparator filterCmp) throws HyracksDataException {
-        super(component, bloomFilterSpec, fillFactor, verifyInput, numElementsHint, checkIfEmptyIndex, filterManager,
-                indexFields, filterFields, filterCmp);
+            boolean checkIfEmptyIndex, boolean cleanupEmptyComponent, ILSMComponentFilterManager filterManager,
+            int[] indexFields, int[] filterFields, MultiComparator filterCmp) throws HyracksDataException {
+        super(component, bloomFilterSpec, fillFactor, verifyInput, numElementsHint, checkIfEmptyIndex,
+                cleanupEmptyComponent, filterManager, indexFields, filterFields, filterCmp);
 
         // BuddyBTree must be created even if it could be empty,
         // since without it the component is not considered as valid.
@@ -124,7 +124,7 @@ public abstract class AbstractLSMDiskComponentWithBuddyBulkLoader extends Abstra
             indexBulkLoader.end();
             buddyBTreeBulkLoader.end();
 
-            if (isEmptyComponent) {
+            if (isEmptyComponent && cleanupEmptyComponent) {
                 cleanupArtifacts();
             }
         }

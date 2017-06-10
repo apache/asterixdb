@@ -33,8 +33,8 @@ public class LSMBTreeBulkLoader implements IIndexBulkLoader {
             throws HyracksDataException {
         this.lsmIndex = lsmIndex;
         this.component = lsmIndex.createBulkLoadTarget();
-        this.componentBulkLoader =
-                lsmIndex.createComponentBulkLoader(component, fillFactor, verifyInput, numElementsHint, false, true);
+        this.componentBulkLoader = lsmIndex.createComponentBulkLoader(component, fillFactor, verifyInput,
+                numElementsHint, false, true, true);
     }
 
     @Override

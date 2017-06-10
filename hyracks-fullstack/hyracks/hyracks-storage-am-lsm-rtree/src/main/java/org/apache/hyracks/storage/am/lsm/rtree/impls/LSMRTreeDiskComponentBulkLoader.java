@@ -33,18 +33,18 @@ public class LSMRTreeDiskComponentBulkLoader extends AbstractLSMDiskComponentWit
     //with filter
     public LSMRTreeDiskComponentBulkLoader(LSMRTreeDiskComponent component, BloomFilterSpecification bloomFilterSpec,
             float fillFactor, boolean verifyInput, long numElementsHint, boolean checkIfEmptyIndex,
-            ILSMComponentFilterManager filterManager, int[] indexFields, int[] filterFields, MultiComparator filterCmp)
-            throws HyracksDataException {
-        super(component, bloomFilterSpec, fillFactor, verifyInput, numElementsHint, checkIfEmptyIndex, filterManager,
-                indexFields, filterFields, filterCmp);
+            boolean cleanupEmptyComponent, ILSMComponentFilterManager filterManager, int[] indexFields,
+            int[] filterFields, MultiComparator filterCmp) throws HyracksDataException {
+        super(component, bloomFilterSpec, fillFactor, verifyInput, numElementsHint, checkIfEmptyIndex,
+                cleanupEmptyComponent, filterManager, indexFields, filterFields, filterCmp);
     }
 
     //without filter
     public LSMRTreeDiskComponentBulkLoader(LSMRTreeDiskComponent component, BloomFilterSpecification bloomFilterSpec,
-            float fillFactor, boolean verifyInput, long numElementsHint, boolean checkIfEmptyIndex)
-            throws HyracksDataException {
-        super(component, bloomFilterSpec, fillFactor, verifyInput, numElementsHint, checkIfEmptyIndex, null, null, null,
-                null);
+            float fillFactor, boolean verifyInput, long numElementsHint, boolean checkIfEmptyIndex,
+            boolean cleanupEmptyComponent) throws HyracksDataException {
+        super(component, bloomFilterSpec, fillFactor, verifyInput, numElementsHint, checkIfEmptyIndex,
+                cleanupEmptyComponent, null, null, null, null);
     }
 
     @Override

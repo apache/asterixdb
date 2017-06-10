@@ -137,7 +137,7 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
         memRTreeAccessor.search(rtreeScanCursor, rtreeNullPredicate);
         LSMRTreeDiskComponent component = createDiskComponent(componentFactory, flushOp.getTarget(), null, null, true);
         ILSMDiskComponentBulkLoader componentBulkLoader =
-                createComponentBulkLoader(component, 1.0f, false, 0L, false, false);
+                createComponentBulkLoader(component, 1.0f, false, 0L, false, false, false);
 
         // Since the LSM-RTree is used as a secondary assumption, the
         // primary key will be the last comparator in the BTree comparators
@@ -224,7 +224,7 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
         LSMRTreeDiskComponent component = createDiskComponent(componentFactory, mergeOp.getTarget(), null, null, true);
 
         ILSMDiskComponentBulkLoader componentBulkLoader =
-                createComponentBulkLoader(component, 1.0f, false, 0L, false, false);
+                createComponentBulkLoader(component, 1.0f, false, 0L, false, false, false);
         try {
             while (cursor.hasNext()) {
                 cursor.next();
@@ -258,15 +258,16 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
 
     @Override
     public ILSMDiskComponentBulkLoader createComponentBulkLoader(ILSMDiskComponent component, float fillFactor,
-            boolean verifyInput, long numElementsHint, boolean checkIfEmptyIndex, boolean withFilter)
-            throws HyracksDataException {
+            boolean verifyInput, long numElementsHint, boolean checkIfEmptyIndex, boolean withFilter,
+            boolean cleanupEmptyComponent) throws HyracksDataException {
         if (withFilter && filterFields != null) {
             return new LSMRTreeWithAntiMatterTuplesDiskComponentBulkLoader((LSMRTreeDiskComponent) component, null,
-                    fillFactor, verifyInput, numElementsHint, checkIfEmptyIndex, filterManager, treeFields,
-                    filterFields, MultiComparator.create(component.getLSMComponentFilter().getFilterCmpFactories()));
+                    fillFactor, verifyInput, numElementsHint, checkIfEmptyIndex, cleanupEmptyComponent, filterManager,
+                    treeFields, filterFields,
+                    MultiComparator.create(component.getLSMComponentFilter().getFilterCmpFactories()));
         } else {
             return new LSMRTreeWithAntiMatterTuplesDiskComponentBulkLoader((LSMRTreeDiskComponent) component, null,
-                    fillFactor, verifyInput, numElementsHint, checkIfEmptyIndex);
+                    fillFactor, verifyInput, numElementsHint, checkIfEmptyIndex, cleanupEmptyComponent);
         }
     }
 
@@ -285,7 +286,7 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
             component = createBulkLoadTarget();
 
             componentBulkLoader =
-                    createComponentBulkLoader(component, fillFactor, verifyInput, numElementsHint, false, true);
+                    createComponentBulkLoader(component, fillFactor, verifyInput, numElementsHint, false, true, true);
         }
 
         @Override

@@ -34,18 +34,18 @@ public class LSMInvertedIndexDiskComponentBulkLoader extends AbstractLSMDiskComp
     //with filter
     public LSMInvertedIndexDiskComponentBulkLoader(LSMInvertedIndexDiskComponent component,
             BloomFilterSpecification bloomFilterSpec, float fillFactor, boolean verifyInput, long numElementsHint,
-            boolean checkIfEmptyIndex, ILSMComponentFilterManager filterManager, int[] indexFields, int[] filterFields,
-            MultiComparator filterCmp) throws HyracksDataException {
-        super(component, bloomFilterSpec, fillFactor, verifyInput, numElementsHint, checkIfEmptyIndex, filterManager,
-                indexFields, filterFields, filterCmp);
+            boolean checkIfEmptyIndex, boolean cleanupEmptyComponent, ILSMComponentFilterManager filterManager,
+            int[] indexFields, int[] filterFields, MultiComparator filterCmp) throws HyracksDataException {
+        super(component, bloomFilterSpec, fillFactor, verifyInput, numElementsHint, checkIfEmptyIndex,
+                cleanupEmptyComponent, filterManager, indexFields, filterFields, filterCmp);
     }
 
     //without filter
     public LSMInvertedIndexDiskComponentBulkLoader(LSMInvertedIndexDiskComponent component,
             BloomFilterSpecification bloomFilterSpec, float fillFactor, boolean verifyInput, long numElementsHint,
-            boolean checkIfEmptyIndex) throws HyracksDataException {
-        super(component, bloomFilterSpec, fillFactor, verifyInput, numElementsHint, checkIfEmptyIndex, null, null, null,
-                null);
+            boolean checkIfEmptyIndex, boolean cleanupEmptyComponent) throws HyracksDataException {
+        super(component, bloomFilterSpec, fillFactor, verifyInput, numElementsHint, checkIfEmptyIndex,
+                cleanupEmptyComponent, null, null, null, null);
     }
 
     @Override

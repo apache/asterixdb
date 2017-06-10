@@ -43,6 +43,7 @@ public abstract class AbstractLSMDiskComponentBulkLoader implements ILSMDiskComp
     protected final PermutingTupleReference indexTuple;
     protected final PermutingTupleReference filterTuple;
     protected final MultiComparator filterCmp;
+    protected final boolean cleanupEmptyComponent;
 
     protected boolean cleanedUpArtifacts = false;
     protected boolean isEmptyComponent = true;
@@ -51,8 +52,8 @@ public abstract class AbstractLSMDiskComponentBulkLoader implements ILSMDiskComp
     //with filter
     public AbstractLSMDiskComponentBulkLoader(ILSMDiskComponent component, BloomFilterSpecification bloomFilterSpec,
             float fillFactor, boolean verifyInput, long numElementsHint, boolean checkIfEmptyIndex,
-            ILSMComponentFilterManager filterManager, int[] indexFields, int[] filterFields, MultiComparator filterCmp)
-            throws HyracksDataException {
+            boolean cleanupEmptyComponent, ILSMComponentFilterManager filterManager, int[] indexFields,
+            int[] filterFields, MultiComparator filterCmp) throws HyracksDataException {
         this.component = component;
         this.indexBulkLoader =
                 getIndex(component).createBulkLoader(fillFactor, verifyInput, numElementsHint, checkIfEmptyIndex);
@@ -62,6 +63,7 @@ public abstract class AbstractLSMDiskComponentBulkLoader implements ILSMDiskComp
         } else {
             this.bloomFilterBuilder = null;
         }
+        this.cleanupEmptyComponent = cleanupEmptyComponent;
         if (filterManager != null) {
             this.filterManager = filterManager;
             this.indexTuple = new PermutingTupleReference(indexFields);
@@ -154,7 +156,7 @@ public abstract class AbstractLSMDiskComponentBulkLoader implements ILSMDiskComp
             }
             indexBulkLoader.end();
 
-            if (isEmptyComponent) {
+            if (isEmptyComponent && cleanupEmptyComponent) {
                 cleanupArtifacts();
             }
         }

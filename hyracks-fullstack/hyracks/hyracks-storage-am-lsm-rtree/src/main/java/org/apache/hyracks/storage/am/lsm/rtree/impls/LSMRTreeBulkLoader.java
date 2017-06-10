@@ -35,8 +35,8 @@ public class LSMRTreeBulkLoader implements IIndexBulkLoader {
         // Note that by using a flush target file name, we state that the
         // new bulk loaded tree is "newer" than any other merged tree.
         this.component = lsmIndex.createBulkLoadTarget();
-        this.componentBulkLoader =
-                lsmIndex.createComponentBulkLoader(component, fillFactor, verifyInput, numElementsHint, false, true);
+        this.componentBulkLoader = lsmIndex.createComponentBulkLoader(component, fillFactor, verifyInput,
+                numElementsHint, false, true, true);
     }
 
     @Override

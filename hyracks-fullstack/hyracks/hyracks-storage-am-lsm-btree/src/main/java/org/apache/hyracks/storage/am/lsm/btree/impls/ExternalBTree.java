@@ -462,7 +462,7 @@ public class ExternalBTree extends LSMBTree implements ITwoPCIndex {
             }
 
             componentBulkLoader =
-                    createComponentBulkLoader(component, fillFactor, verifyInput, numElementsHint, false, true);
+                    createComponentBulkLoader(component, fillFactor, verifyInput, numElementsHint, false, true, true);
         }
 
         // It is expected that the mode was set to insert operation before

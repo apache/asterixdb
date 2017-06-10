@@ -326,7 +326,7 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
                 createDiskComponent(componentFactory, flushOp.getTarget(), flushOp.getBloomFilterTarget(), true);
 
         ILSMDiskComponentBulkLoader componentBulkLoader =
-                createComponentBulkLoader(component, 1.0f, false, numElements, false, false);
+                createComponentBulkLoader(component, 1.0f, false, numElements, false, false, false);
 
         IIndexCursor scanCursor = accessor.createSearchCursor(false);
         accessor.search(scanCursor, nullPred);
@@ -380,7 +380,7 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
                 createDiskComponent(componentFactory, mergeOp.getTarget(), mergeOp.getBloomFilterTarget(), true);
 
         ILSMDiskComponentBulkLoader componentBulkLoader =
-                createComponentBulkLoader(mergedComponent, 1.0f, false, numElements, false, false);
+                createComponentBulkLoader(mergedComponent, 1.0f, false, numElements, false, false, false);
         try {
             while (cursor.hasNext()) {
                 cursor.next();
@@ -430,8 +430,8 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
 
     @Override
     public ILSMDiskComponentBulkLoader createComponentBulkLoader(ILSMDiskComponent component, float fillFactor,
-            boolean verifyInput, long numElementsHint, boolean checkIfEmptyIndex, boolean withFilter)
-            throws HyracksDataException {
+            boolean verifyInput, long numElementsHint, boolean checkIfEmptyIndex, boolean withFilter,
+            boolean cleanupEmptyComponent) throws HyracksDataException {
         BloomFilterSpecification bloomFilterSpec = null;
         if (hasBloomFilter) {
             int maxBucketsPerElement = BloomCalculations.maxBucketsPerElement(numElementsHint);
@@ -440,11 +440,11 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
 
         if (withFilter && filterFields != null) {
             return new LSMBTreeDiskComponentBulkLoader((LSMBTreeDiskComponent) component, bloomFilterSpec, fillFactor,
-                    verifyInput, numElementsHint, checkIfEmptyIndex, filterManager, treeFields, filterFields,
-                    MultiComparator.create(component.getLSMComponentFilter().getFilterCmpFactories()));
+                    verifyInput, numElementsHint, checkIfEmptyIndex, cleanupEmptyComponent, filterManager, treeFields,
+                    filterFields, MultiComparator.create(component.getLSMComponentFilter().getFilterCmpFactories()));
         } else {
             return new LSMBTreeDiskComponentBulkLoader((LSMBTreeDiskComponent) component, bloomFilterSpec, fillFactor,
-                    verifyInput, numElementsHint, checkIfEmptyIndex);
+                    verifyInput, numElementsHint, checkIfEmptyIndex, cleanupEmptyComponent);
         }
 
     }

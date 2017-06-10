@@ -277,8 +277,8 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
 
     @Override
     public ILSMDiskComponentBulkLoader createComponentBulkLoader(ILSMDiskComponent component, float fillFactor,
-            boolean verifyInput, long numElementsHint, boolean checkIfEmptyIndex, boolean withFilter)
-            throws HyracksDataException {
+            boolean verifyInput, long numElementsHint, boolean checkIfEmptyIndex, boolean withFilter,
+            boolean cleanupEmptyComponent) throws HyracksDataException {
         BloomFilterSpecification bloomFilterSpec = null;
         if (numElementsHint > 0) {
             int maxBucketsPerElement = BloomCalculations.maxBucketsPerElement(numElementsHint);
@@ -286,12 +286,13 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
         }
         if (withFilter && filterFields != null) {
             return new LSMBTreeWithBuddyDiskComponentBulkLoader((LSMBTreeWithBuddyDiskComponent) component,
-                    bloomFilterSpec, fillFactor, verifyInput, numElementsHint, checkIfEmptyIndex, filterManager,
-                    treeFields, filterFields,
+                    bloomFilterSpec, fillFactor, verifyInput, numElementsHint, checkIfEmptyIndex, cleanupEmptyComponent,
+                    filterManager, treeFields, filterFields,
                     MultiComparator.create(component.getLSMComponentFilter().getFilterCmpFactories()));
         } else {
             return new LSMBTreeWithBuddyDiskComponentBulkLoader((LSMBTreeWithBuddyDiskComponent) component,
-                    bloomFilterSpec, fillFactor, verifyInput, numElementsHint, checkIfEmptyIndex);
+                    bloomFilterSpec, fillFactor, verifyInput, numElementsHint, checkIfEmptyIndex,
+                    cleanupEmptyComponent);
         }
     }
 
@@ -412,7 +413,8 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
                         .getNumElements();
             }
 
-            componentBulkLoader = createComponentBulkLoader(mergedComponent, 1.0f, false, numElements, false, false);
+            componentBulkLoader =
+                    createComponentBulkLoader(mergedComponent, 1.0f, false, numElements, false, false, false);
 
             try {
                 while (buddyBtreeCursor.hasNext()) {
@@ -424,7 +426,7 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
                 buddyBtreeCursor.close();
             }
         } else {
-            componentBulkLoader = createComponentBulkLoader(mergedComponent, 1.0f, false, 0L, false, false);
+            componentBulkLoader = createComponentBulkLoader(mergedComponent, 1.0f, false, 0L, false, false, false);
         }
 
         try {
@@ -617,7 +619,7 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
             }
 
             componentBulkLoader =
-                    createComponentBulkLoader(component, fillFactor, verifyInput, numElementsHint, false, true);
+                    createComponentBulkLoader(component, fillFactor, verifyInput, numElementsHint, false, true, false);
         }
 
         @Override

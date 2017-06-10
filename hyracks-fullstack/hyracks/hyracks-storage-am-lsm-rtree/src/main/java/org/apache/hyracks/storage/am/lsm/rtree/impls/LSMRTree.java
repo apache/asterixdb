@@ -197,7 +197,7 @@ public class LSMRTree extends AbstractLSMRTree {
         }
 
         ILSMDiskComponentBulkLoader componentBulkLoader =
-                createComponentBulkLoader(component, 1.0f, false, numBTreeTuples, false, false);
+                createComponentBulkLoader(component, 1.0f, false, numBTreeTuples, false, false, false);
 
         ITreeIndexCursor cursor;
         IBinaryComparatorFactory[] linearizerArray = { linearizer };
@@ -286,7 +286,8 @@ public class LSMRTree extends AbstractLSMRTree {
                 numElements += ((LSMRTreeDiskComponent) mergeOp.getMergingComponents().get(i)).getBloomFilter()
                         .getNumElements();
             }
-            componentBulkLoader = createComponentBulkLoader(mergedComponent, 1.0f, false, numElements, false, false);
+            componentBulkLoader =
+                    createComponentBulkLoader(mergedComponent, 1.0f, false, numElements, false, false, false);
 
             LSMRTreeDeletedKeysBTreeMergeCursor btreeCursor = new LSMRTreeDeletedKeysBTreeMergeCursor(opCtx);
             search(opCtx, btreeCursor, rtreeSearchPred);
@@ -301,7 +302,7 @@ public class LSMRTree extends AbstractLSMRTree {
             }
         } else {
             //no buddy-btree needed
-            componentBulkLoader = createComponentBulkLoader(mergedComponent, 1.0f, false, 0L, false, false);
+            componentBulkLoader = createComponentBulkLoader(mergedComponent, 1.0f, false, 0L, false, false, false);
         }
 
         //search old rtree components
@@ -345,8 +346,8 @@ public class LSMRTree extends AbstractLSMRTree {
 
     @Override
     public ILSMDiskComponentBulkLoader createComponentBulkLoader(ILSMDiskComponent component, float fillFactor,
-            boolean verifyInput, long numElementsHint, boolean checkIfEmptyIndex, boolean withFilter)
-            throws HyracksDataException {
+            boolean verifyInput, long numElementsHint, boolean checkIfEmptyIndex, boolean withFilter,
+            boolean cleanupEmptyComponent) throws HyracksDataException {
         BloomFilterSpecification bloomFilterSpec = null;
         if (numElementsHint > 0) {
             int maxBucketsPerElement = BloomCalculations.maxBucketsPerElement(numElementsHint);
@@ -354,11 +355,11 @@ public class LSMRTree extends AbstractLSMRTree {
         }
         if (withFilter && filterFields != null) {
             return new LSMRTreeDiskComponentBulkLoader((LSMRTreeDiskComponent) component, bloomFilterSpec, fillFactor,
-                    verifyInput, numElementsHint, checkIfEmptyIndex, filterManager, treeFields, filterFields,
-                    MultiComparator.create(component.getLSMComponentFilter().getFilterCmpFactories()));
+                    verifyInput, numElementsHint, checkIfEmptyIndex, cleanupEmptyComponent, filterManager, treeFields,
+                    filterFields, MultiComparator.create(component.getLSMComponentFilter().getFilterCmpFactories()));
         } else {
             return new LSMRTreeDiskComponentBulkLoader((LSMRTreeDiskComponent) component, bloomFilterSpec, fillFactor,
-                    verifyInput, numElementsHint, checkIfEmptyIndex);
+                    verifyInput, numElementsHint, checkIfEmptyIndex, cleanupEmptyComponent);
         }
     }
 
