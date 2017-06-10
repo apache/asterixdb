@@ -37,6 +37,7 @@ import org.apache.hyracks.api.io.FileSplit;
 import org.apache.hyracks.api.io.ManagedFileSplit;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
+import org.apache.hyracks.api.job.JobStatus;
 import org.apache.hyracks.api.job.resource.ClusterCapacity;
 import org.apache.hyracks.api.job.resource.IClusterCapacity;
 import org.apache.hyracks.data.std.accessors.PointableBinaryHashFunctionFactory;
@@ -59,6 +60,14 @@ import org.junit.Assert;
 import org.junit.Test;
 
 public class CancelJobTest extends AbstractMultiNCIntegrationTest {
+
+    @Test
+    public void interruptJobClientAfterWaitForCompletion() throws Exception {
+        // Interrupts the job client after waitForCompletion() is called.
+        for (JobSpecification spec : testJobs()) {
+            interruptAfterWaitForCompletion(spec);
+        }
+    }
 
     @Test
     public void cancelExecutingJobAfterWaitForCompletion() throws Exception {
@@ -165,6 +174,38 @@ public class CancelJobTest extends AbstractMultiNCIntegrationTest {
         } finally {
             Assert.assertTrue(exceptionMatched);
         }
+    }
+
+    private void interruptAfterWaitForCompletion(JobSpecification spec) throws Exception {
+        // Submits the job
+        final JobId jobIdForInterruptTest = startJob(spec);
+
+        // Waits for completion in anther thread
+        Thread thread = new Thread(() -> {
+            try {
+                waitForCompletion(jobIdForInterruptTest);
+            } catch (Exception e) {
+                Assert.assertTrue(e instanceof InterruptedException);
+            }
+        });
+        thread.start();
+
+        // Interrupts the wait-for-completion thread.
+        thread.interrupt();
+
+        // Waits until the thread terminates.
+        thread.join();
+
+        // Verifies the job status.
+        JobStatus jobStatus = getJobStatus(jobIdForInterruptTest);
+        while (jobStatus == JobStatus.RUNNING) {
+            synchronized (this) {
+                // Since job cancellation is asynchronous on NCs, we have to wait there.
+                wait(1000);
+            }
+            jobStatus = getJobStatus(jobIdForInterruptTest);
+        }
+        Assert.assertTrue(jobStatus == JobStatus.FAILURE);
     }
 
     private void cancelWithoutWait(JobSpecification spec) throws Exception {

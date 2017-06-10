@@ -138,7 +138,13 @@ public final class HyracksConnection implements IHyracksClientConnection {
 
     @Override
     public void waitForCompletion(JobId jobId) throws Exception {
-        hci.waitForCompletion(jobId);
+        try {
+            hci.waitForCompletion(jobId);
+        } catch (InterruptedException e) {
+            // Cancels an on-going job if the current thread gets interrupted.
+            hci.cancelJob(jobId);
+            throw e;
+        }
     }
 
     @Override

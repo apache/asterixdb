@@ -26,8 +26,6 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import org.apache.commons.io.FileUtils;
 import org.apache.hyracks.api.client.HyracksConnection;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
@@ -40,6 +38,7 @@ import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.job.JobFlag;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
+import org.apache.hyracks.api.job.JobStatus;
 import org.apache.hyracks.api.job.resource.IJobCapacityController;
 import org.apache.hyracks.client.dataset.HyracksDataset;
 import org.apache.hyracks.control.cc.BaseCCApplication;
@@ -52,8 +51,9 @@ import org.apache.hyracks.dataflow.common.comm.io.ResultFrameTupleAccessor;
 import org.apache.hyracks.dataflow.common.comm.util.ByteBufferInputStream;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Rule;
-import org.junit.rules.TemporaryFolder;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 
 public abstract class AbstractMultiNCIntegrationTest {
 
@@ -69,9 +69,6 @@ public abstract class AbstractMultiNCIntegrationTest {
     private static IHyracksClientConnection hcc;
 
     private final List<File> outputFiles;
-
-    @Rule
-    public TemporaryFolder outputFolder = new TemporaryFolder();
 
     public AbstractMultiNCIntegrationTest() {
         outputFiles = new ArrayList<>();
@@ -131,6 +128,10 @@ public abstract class AbstractMultiNCIntegrationTest {
 
     protected void waitForCompletion(JobId jobId) throws Exception {
         hcc.waitForCompletion(jobId);
+    }
+
+    protected JobStatus getJobStatus(JobId jobId) throws Exception {
+        return hcc.getJobStatus(jobId);
     }
 
     protected void cancelJob(JobId jobId) throws Exception {
@@ -205,15 +206,6 @@ public abstract class AbstractMultiNCIntegrationTest {
                 }
             }
         }
-    }
-
-    protected File createTempFile() throws IOException {
-        File tempFile = File.createTempFile(getClass().getName(), ".tmp", outputFolder.getRoot());
-        if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("Output file: " + tempFile.getAbsolutePath());
-        }
-        outputFiles.add(tempFile);
-        return tempFile;
     }
 
     public static class DummyApplication extends BaseCCApplication {
