@@ -91,10 +91,25 @@ public abstract class AbstractServlet implements IServlet {
         }
     }
 
-    protected void notAllowed(HttpMethod method, IServletResponse response) throws IOException {
-        response.setStatus(HttpResponseStatus.METHOD_NOT_ALLOWED);
+    protected void sendError(IServletResponse response, HttpResponseStatus status, String message)
+            throws IOException {
+        response.setStatus(status);
         HttpUtil.setContentType(response, HttpUtil.ContentType.TEXT_PLAIN, HttpUtil.Encoding.UTF8);
-        response.writer().write("Method " + method + " not allowed for the requested resource.\n");
+        if (message != null) {
+            response.writer().println(message);
+        }
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("sendError: status=" + status + ", message=" + message);
+        }
+    }
+
+    protected void sendError(IServletResponse response, HttpResponseStatus status) throws IOException {
+        sendError(response, status, null);
+    }
+
+    protected void notAllowed(HttpMethod method, IServletResponse response) throws IOException {
+        sendError(response, HttpResponseStatus.METHOD_NOT_ALLOWED,
+                "Method " + method + " not allowed for the requested resource.");
     }
 
     @SuppressWarnings("squid:S1172")
@@ -168,4 +183,5 @@ public abstract class AbstractServlet implements IServlet {
     public String toString() {
         return this.getClass().getSimpleName() + Arrays.toString(paths);
     }
+
 }
