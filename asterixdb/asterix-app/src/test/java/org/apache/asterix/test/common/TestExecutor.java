@@ -224,7 +224,7 @@ public class TestExecutor {
             }
             lineActual = readerActual.readLine();
             if (lineActual != null) {
-                throw createLineChangedException(scriptFile, "<EOF>", lineActual, num);
+                throw createLineChangedException(scriptFile, "expected <EOF>", lineActual, num);
             }
         } catch (Exception e) {
             System.err.println("Actual results file: " + actualFile.toString());
