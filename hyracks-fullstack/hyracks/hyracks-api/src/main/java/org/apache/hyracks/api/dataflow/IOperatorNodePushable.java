@@ -23,16 +23,15 @@ import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public interface IOperatorNodePushable {
-    public void initialize() throws HyracksDataException;
+    void initialize() throws HyracksDataException;
 
-    public void deinitialize() throws HyracksDataException;
+    void deinitialize() throws HyracksDataException;
 
-    public int getInputArity();
+    int getInputArity();
 
-    public void setOutputFrameWriter(int index, IFrameWriter writer, RecordDescriptor recordDesc)
-            throws HyracksDataException;
+    void setOutputFrameWriter(int index, IFrameWriter writer, RecordDescriptor recordDesc) throws HyracksDataException;
 
-    public IFrameWriter getInputFrameWriter(int index);
+    IFrameWriter getInputFrameWriter(int index);
 
-    public String getDisplayName();
+    String getDisplayName();
 }

@@ -81,6 +81,7 @@ public class SinkWriterRuntime extends AbstractOneInputSinkPushRuntime {
 
     @Override
     public void fail() throws HyracksDataException {
+        // fail() is a no op. in close we will cleanup
     }
 
     @Override

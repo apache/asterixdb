@@ -20,8 +20,10 @@ package org.apache.hyracks.test.support;
 
 import java.io.Serializable;
 import java.nio.ByteBuffer;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 
 import org.apache.hyracks.api.context.IHyracksJobletContext;
@@ -33,6 +35,7 @@ import org.apache.hyracks.api.deployment.DeploymentId;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
+import org.apache.hyracks.api.job.JobFlag;
 import org.apache.hyracks.api.job.profiling.counters.ICounterContext;
 import org.apache.hyracks.api.resources.IDeallocatable;
 import org.apache.hyracks.control.nc.io.WorkspaceFileFactory;
@@ -154,5 +157,10 @@ public class TestTaskContext implements IHyracksTaskContext {
     @Override
     public Object getSharedObject() {
         return sharedObject;
+    }
+
+    @Override
+    public Set<JobFlag> getJobFlags() {
+        return EnumSet.noneOf(JobFlag.class);
     }
 }

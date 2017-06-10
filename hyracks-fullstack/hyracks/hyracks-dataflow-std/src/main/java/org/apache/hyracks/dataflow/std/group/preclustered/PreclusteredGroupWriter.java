@@ -190,6 +190,9 @@ public class PreclusteredGroupWriter implements IFrameWriter {
             }
             aggregator.close();
             aggregateState.close();
+        } catch (Exception e) {
+            appenderWrapper.fail();
+            throw e;
         } finally {
             appenderWrapper.close();
         }

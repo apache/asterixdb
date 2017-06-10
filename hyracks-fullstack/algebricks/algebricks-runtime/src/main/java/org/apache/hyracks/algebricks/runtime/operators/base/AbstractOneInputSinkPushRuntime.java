@@ -26,7 +26,7 @@ public abstract class AbstractOneInputSinkPushRuntime implements IPushRuntime {
     protected RecordDescriptor inputRecordDesc;
 
     @Override
-    public void setFrameWriter(int index, IFrameWriter writer, RecordDescriptor recordDesc) {
+    public void setOutputFrameWriter(int index, IFrameWriter writer, RecordDescriptor recordDesc) {
         throw new IllegalStateException();
     }
 

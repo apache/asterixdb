@@ -112,6 +112,7 @@ public class AlgebricksMetaOperatorDescriptor extends AbstractSingleActivityOper
         return new AbstractUnaryInputUnaryOutputOperatorNodePushable() {
 
             private IFrameWriter startOfPipeline;
+            private boolean opened = false;
 
             @Override
             public void open() throws HyracksDataException {
@@ -124,6 +125,7 @@ public class AlgebricksMetaOperatorDescriptor extends AbstractSingleActivityOper
                             pipelineInputRecordDescriptor, pipelineOutputRecordDescriptor);
                     startOfPipeline = pa.assemblePipeline(writer, ctx);
                 }
+                opened = true;
                 startOfPipeline.open();
             }
 
@@ -134,12 +136,16 @@ public class AlgebricksMetaOperatorDescriptor extends AbstractSingleActivityOper
 
             @Override
             public void close() throws HyracksDataException {
-                startOfPipeline.close();
+                if (opened) {
+                    startOfPipeline.close();
+                }
             }
 
             @Override
             public void fail() throws HyracksDataException {
-                startOfPipeline.fail();
+                if (opened) {
+                    startOfPipeline.fail();
+                }
             }
 
             @Override

@@ -52,6 +52,7 @@ import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.io.IWorkspaceFileFactory;
 import org.apache.hyracks.api.job.IOperatorEnvironment;
+import org.apache.hyracks.api.job.JobFlag;
 import org.apache.hyracks.api.job.profiling.counters.ICounter;
 import org.apache.hyracks.api.job.profiling.counters.ICounterContext;
 import org.apache.hyracks.api.partitions.PartitionId;
@@ -104,9 +105,13 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
 
     private Object sharedObject;
 
-    public Task(Joblet joblet, TaskAttemptId taskId, String displayName, ExecutorService executor,
-            NodeControllerService ncs, List<List<PartitionChannel>> inputChannelsFromConnectors) {
+    private final Set<JobFlag> jobFlags;
+
+    public Task(Joblet joblet, Set<JobFlag> jobFlags, TaskAttemptId taskId, String displayName,
+            ExecutorService executor, NodeControllerService ncs,
+            List<List<PartitionChannel>> inputChannelsFromConnectors) {
         this.joblet = joblet;
+        this.jobFlags = jobFlags;
         this.taskAttemptId = taskId;
         this.displayName = displayName;
         this.executorService = executor;
@@ -425,5 +430,10 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
     @Override
     public Object getSharedObject() {
         return sharedObject;
+    }
+
+    @Override
+    public Set<JobFlag> getJobFlags() {
+        return jobFlags;
     }
 }

@@ -16,27 +16,33 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.algebricks.runtime.operators.base;
 
-import org.apache.hyracks.algebricks.runtime.base.IPushRuntime;
-import org.apache.hyracks.api.comm.IFrameWriter;
-import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
+package org.apache.hyracks.dataflow.std.misc;
+
+import java.nio.ByteBuffer;
+
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodePushable;
 
-public abstract class AbstractOneInputPushRuntime implements IPushRuntime {
-    protected IFrameWriter writer;
-    protected RecordDescriptor outputRecordDesc;
-    protected boolean failed;
+public class SinkOperatorNodePushable extends AbstractUnaryInputSinkOperatorNodePushable {
 
     @Override
-    public void setOutputFrameWriter(int index, IFrameWriter writer, RecordDescriptor recordDesc) {
-        this.writer = writer;
-        this.outputRecordDesc = recordDesc;
+    public void open() throws HyracksDataException {
+        // Does nothing.
+    }
+
+    @Override
+    public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
+        // Does nothing.
+    }
+
+    @Override
+    public void close() throws HyracksDataException {
+        // Does nothing.
     }
 
     @Override
     public void fail() throws HyracksDataException {
-        failed = true;
-        writer.fail();
+        // Does nothing.
     }
 }

@@ -92,6 +92,14 @@ public class ErrorCode {
     public static final int DISK_COMPONENT_SCAN_NOT_ALLOWED_FOR_SECONDARY_INDEX = 56;
     public static final int CANNOT_FIND_MATTER_TUPLE_FOR_ANTI_MATTER_TUPLE = 57;
     public static final int TASK_ABORTED = 58;
+    public static final int OPEN_ON_OPEN_WRITER = 59;
+    public static final int OPEN_ON_FAILED_WRITER = 60;
+    public static final int NEXT_FRAME_ON_FAILED_WRITER = 61;
+    public static final int NEXT_FRAME_ON_CLOSED_WRITER = 62;
+    public static final int FLUSH_ON_FAILED_WRITER = 63;
+    public static final int FLUSH_ON_CLOSED_WRITER = 64;
+    public static final int FAIL_ON_FAILED_WRITER = 65;
+    public static final int MISSED_FAIL_CALL = 66;
 
     // Compilation error codes.
     public static final int RULECOLLECTION_NOT_INSTANCE_OF_LIST = 10000;

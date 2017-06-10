@@ -18,6 +18,7 @@
  */
 package org.apache.hyracks.control.common.controllers;
 
+import static org.apache.hyracks.control.common.config.OptionTypes.BOOLEAN;
 import static org.apache.hyracks.control.common.config.OptionTypes.INTEGER;
 import static org.apache.hyracks.control.common.config.OptionTypes.LONG;
 import static org.apache.hyracks.control.common.config.OptionTypes.STRING;
@@ -64,7 +65,8 @@ public class CCConfig extends ControllerConfig {
         CLUSTER_TOPOLOGY(STRING),
         JOB_QUEUE_CLASS(STRING, "org.apache.hyracks.control.cc.scheduler.FIFOJobQueue"),
         JOB_QUEUE_CAPACITY(INTEGER, 4096),
-        JOB_MANAGER_CLASS(STRING, "org.apache.hyracks.control.cc.job.JobManager");
+        JOB_MANAGER_CLASS(STRING, "org.apache.hyracks.control.cc.job.JobManager"),
+        ENFORCE_FRAME_WRITER_PROTOCOL(BOOLEAN, false);
 
         private final IOptionType parser;
         private Object defaultValue;
@@ -156,6 +158,9 @@ public class CCConfig extends ControllerConfig {
                     return "The maximum number of jobs to queue before rejecting new jobs";
                 case JOB_MANAGER_CLASS:
                     return "Specify the implementation class name for the job manager";
+                case ENFORCE_FRAME_WRITER_PROTOCOL:
+                    return "A flag indicating if runtime should enforce frame writer protocol and detect "
+                            + "bad behaving operators";
                 default:
                     throw new IllegalStateException("NYI: " + this);
             }
@@ -356,5 +361,13 @@ public class CCConfig extends ControllerConfig {
 
     public int getJobQueueCapacity() {
         return getAppConfig().getInt(Option.JOB_QUEUE_CAPACITY);
+    }
+
+    public boolean getEnforceFrameWriterProtocol() {
+        return getAppConfig().getBoolean(Option.ENFORCE_FRAME_WRITER_PROTOCOL);
+    }
+
+    public void setEnforceFrameWriterProtocol(boolean enforce) {
+        configManager.set(Option.ENFORCE_FRAME_WRITER_PROTOCOL, enforce);
     }
 }

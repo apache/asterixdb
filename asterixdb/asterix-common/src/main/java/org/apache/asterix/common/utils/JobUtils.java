@@ -19,7 +19,10 @@
 
 package org.apache.asterix.common.utils;
 
+import java.util.EnumSet;
+
 import org.apache.hyracks.api.client.IHyracksClientConnection;
+import org.apache.hyracks.api.job.JobFlag;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
 
@@ -32,8 +35,13 @@ public class JobUtils {
 
     public static JobId runJob(IHyracksClientConnection hcc, JobSpecification spec, boolean waitForCompletion)
             throws Exception {
+        return runJob(hcc, spec, EnumSet.noneOf(JobFlag.class), waitForCompletion);
+    }
+
+    public static JobId runJob(IHyracksClientConnection hcc, JobSpecification spec, EnumSet<JobFlag> jobFlags,
+            boolean waitForCompletion) throws Exception {
         spec.setMaxReattempts(0);
-        final JobId jobId = hcc.startJob(spec);
+        final JobId jobId = hcc.startJob(spec, jobFlags);
         if (waitForCompletion) {
             hcc.waitForCompletion(jobId);
         }

@@ -56,6 +56,11 @@ public class EmptyTupleSourceRuntimeFactory implements IPushRuntimeFactory {
             }
 
             @Override
+            public void fail() throws HyracksDataException {
+                writer.fail();
+            }
+
+            @Override
             public void close() throws HyracksDataException {
                 writer.close();
             }

@@ -79,11 +79,6 @@ public class InMemorySortRuntimeFactory extends AbstractOneInputOneOutputRuntime
             }
 
             @Override
-            public void fail() throws HyracksDataException {
-                writer.fail();
-            }
-
-            @Override
             public void close() throws HyracksDataException {
                 try {
                     frameSorter.sort();

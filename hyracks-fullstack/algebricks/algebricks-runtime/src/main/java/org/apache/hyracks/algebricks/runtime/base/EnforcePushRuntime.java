@@ -16,27 +16,34 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.algebricks.runtime.operators.base;
+package org.apache.hyracks.algebricks.runtime.base;
 
-import org.apache.hyracks.algebricks.runtime.base.IPushRuntime;
+import org.apache.hyracks.algebricks.runtime.operators.std.NestedTupleSourceRuntimeFactory.NestedTupleSourceRuntime;
 import org.apache.hyracks.api.comm.IFrameWriter;
+import org.apache.hyracks.api.dataflow.EnforceFrameWriter;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-public abstract class AbstractOneInputPushRuntime implements IPushRuntime {
-    protected IFrameWriter writer;
-    protected RecordDescriptor outputRecordDesc;
-    protected boolean failed;
+public class EnforcePushRuntime extends EnforceFrameWriter implements IPushRuntime {
 
-    @Override
-    public void setOutputFrameWriter(int index, IFrameWriter writer, RecordDescriptor recordDesc) {
-        this.writer = writer;
-        this.outputRecordDesc = recordDesc;
+    private final IPushRuntime pushRuntime;
+
+    private EnforcePushRuntime(IPushRuntime pushRuntime) {
+        super(pushRuntime);
+        this.pushRuntime = pushRuntime;
     }
 
     @Override
-    public void fail() throws HyracksDataException {
-        failed = true;
-        writer.fail();
+    public void setOutputFrameWriter(int index, IFrameWriter writer, RecordDescriptor recordDesc) {
+        pushRuntime.setOutputFrameWriter(index, writer, recordDesc);
+    }
+
+    @Override
+    public void setInputRecordDescriptor(int index, RecordDescriptor recordDescriptor) {
+        pushRuntime.setInputRecordDescriptor(index, recordDescriptor);
+    }
+
+    public static IPushRuntime enforce(IPushRuntime pushRuntime) {
+        return pushRuntime instanceof EnforcePushRuntime || pushRuntime instanceof NestedTupleSourceRuntime
+                ? pushRuntime : new EnforcePushRuntime(pushRuntime);
     }
 }

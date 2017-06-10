@@ -85,7 +85,6 @@ public class StreamSelectRuntimeFactory extends AbstractOneInputOneOutputRuntime
             private IScalarEvaluator eval;
             private IMissingWriter missingWriter = null;
             private ArrayTupleBuilder missingTupleBuilder = null;
-            private boolean isOpen = false;
 
             @Override
             public void open() throws HyracksDataException {
@@ -93,7 +92,6 @@ public class StreamSelectRuntimeFactory extends AbstractOneInputOneOutputRuntime
                     initAccessAppendFieldRef(ctx);
                     eval = cond.createScalarEvaluator(ctx);
                 }
-                isOpen = true;
                 writer.open();
 
                 //prepare nullTupleBuilder
@@ -107,20 +105,11 @@ public class StreamSelectRuntimeFactory extends AbstractOneInputOneOutputRuntime
             }
 
             @Override
-            public void fail() throws HyracksDataException {
-                if (isOpen) {
-                    super.fail();
-                }
-            }
-
-            @Override
             public void close() throws HyracksDataException {
-                if (isOpen) {
-                    try {
-                        flushIfNotFailed();
-                    } finally {
-                        writer.close();
-                    }
+                try {
+                    flushIfNotFailed();
+                } finally {
+                    writer.close();
                 }
             }
 

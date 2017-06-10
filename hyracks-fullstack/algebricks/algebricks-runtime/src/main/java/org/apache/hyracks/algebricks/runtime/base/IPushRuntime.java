@@ -22,7 +22,26 @@ import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 
 public interface IPushRuntime extends IFrameWriter {
-    public void setFrameWriter(int index, IFrameWriter writer, RecordDescriptor recordDesc);
 
-    public void setInputRecordDescriptor(int index, RecordDescriptor recordDescriptor);
+    /**
+     * Sets the output frame writer for this writer.
+     *
+     * @param index,
+     *            the index of the output channel.
+     * @param writer,
+     *            the writer for writing output.
+     * @param recordDesc,
+     *            the output record descriptor.
+     */
+    void setOutputFrameWriter(int index, IFrameWriter writer, RecordDescriptor recordDesc);
+
+    /**
+     * Sets the input record descriptor for this writer.
+     *
+     * @param index,
+     *            the index of the input channel.
+     * @param recordDescriptor,
+     *            the corresponding input record descriptor.
+     */
+    void setInputRecordDescriptor(int index, RecordDescriptor recordDescriptor);
 }

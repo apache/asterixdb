@@ -40,6 +40,9 @@ import org.apache.asterix.lang.common.statement.RunStatement;
 import org.apache.asterix.runtime.utils.CcApplicationContext;
 import org.apache.asterix.translator.IStatementExecutor;
 import org.apache.asterix.translator.SessionOutput;
+import org.apache.hyracks.api.application.ICCServiceContext;
+import org.apache.hyracks.api.config.IApplicationConfig;
+import org.apache.hyracks.control.common.controllers.CCConfig;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -59,6 +62,11 @@ public class QueryTranslatorTest {
         ExternalProperties mockAsterixExternalProperties = mock(ExternalProperties.class);
         when(mockAsterixAppContextInfo.getExternalProperties()).thenReturn(mockAsterixExternalProperties);
         when(mockAsterixExternalProperties.getAPIServerPort()).thenReturn(19002);
+        ICCServiceContext mockServiceContext = mock(ICCServiceContext.class);
+        when(mockAsterixAppContextInfo.getServiceContext()).thenReturn(mockServiceContext);
+        IApplicationConfig mockApplicationConfig = mock(IApplicationConfig.class);
+        when(mockServiceContext.getAppConfig()).thenReturn(mockApplicationConfig);
+        when(mockApplicationConfig.getBoolean(CCConfig.Option.ENFORCE_FRAME_WRITER_PROTOCOL)).thenReturn(true);
 
         // Mocks AsterixClusterProperties.
         Cluster mockCluster = mock(Cluster.class);

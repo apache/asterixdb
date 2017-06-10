@@ -37,6 +37,7 @@ import org.apache.hyracks.api.comm.PartitionChannel;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.ActivityId;
 import org.apache.hyracks.api.dataflow.ConnectorDescriptorId;
+import org.apache.hyracks.api.dataflow.EnforceFrameWriter;
 import org.apache.hyracks.api.dataflow.IActivity;
 import org.apache.hyracks.api.dataflow.IConnectorDescriptor;
 import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
@@ -131,12 +132,10 @@ public class StartTasksWork extends AbstractWork {
                 }
                 final int partition = tid.getPartition();
                 List<IConnectorDescriptor> inputs = ac.getActivityInputMap().get(aid);
-                task = new Task(joblet, taId, han.getClass().getName(), ncs.getExecutor(), ncs,
+                task = new Task(joblet, flags, taId, han.getClass().getName(), ncs.getExecutor(), ncs,
                         createInputChannels(td, inputs));
                 IOperatorNodePushable operator = han.createPushRuntime(task, rdp, partition, td.getPartitionCount());
-
                 List<IPartitionCollector> collectors = new ArrayList<>();
-
                 if (inputs != null) {
                     for (int i = 0; i < inputs.size(); ++i) {
                         IConnectorDescriptor conn = inputs.get(i);
@@ -145,26 +144,28 @@ public class StartTasksWork extends AbstractWork {
                             LOGGER.info("input: " + i + ": " + conn.getConnectorId());
                         }
                         RecordDescriptor recordDesc = ac.getConnectorRecordDescriptorMap().get(conn.getConnectorId());
-                        IPartitionCollector collector = createPartitionCollector(td, partition, task, i, conn,
-                                recordDesc, cPolicy);
+                        IPartitionCollector collector =
+                                createPartitionCollector(td, partition, task, i, conn, recordDesc, cPolicy);
                         collectors.add(collector);
                     }
                 }
                 List<IConnectorDescriptor> outputs = ac.getActivityOutputMap().get(aid);
                 if (outputs != null) {
+                    final boolean enforce = flags.contains(JobFlag.ENFORCE_CONTRACT);
                     for (int i = 0; i < outputs.size(); ++i) {
                         final IConnectorDescriptor conn = outputs.get(i);
                         RecordDescriptor recordDesc = ac.getConnectorRecordDescriptorMap().get(conn.getConnectorId());
                         IConnectorPolicy cPolicy = connectorPoliciesMap.get(conn.getConnectorId());
 
-                        IPartitionWriterFactory pwFactory = createPartitionWriterFactory(task, cPolicy, jobId, conn,
-                                partition, taId, flags);
+                        IPartitionWriterFactory pwFactory =
+                                createPartitionWriterFactory(task, cPolicy, jobId, conn, partition, taId, flags);
 
                         if (LOGGER.isLoggable(Level.INFO)) {
                             LOGGER.info("output: " + i + ": " + conn.getConnectorId());
                         }
-                        IFrameWriter writer = conn.createPartitioner(task, recordDesc, pwFactory, partition, td
-                                .getPartitionCount(), td.getOutputPartitionCounts()[i]);
+                        IFrameWriter writer = conn.createPartitioner(task, recordDesc, pwFactory, partition,
+                                td.getPartitionCount(), td.getOutputPartitionCounts()[i]);
+                        writer = enforce ? EnforceFrameWriter.enforce(writer) : writer;
                         operator.setOutputFrameWriter(i, writer, recordDesc);
                     }
                 }
@@ -203,11 +204,11 @@ public class StartTasksWork extends AbstractWork {
     private IPartitionCollector createPartitionCollector(TaskAttemptDescriptor td, final int partition, Task task,
             int i, IConnectorDescriptor conn, RecordDescriptor recordDesc, IConnectorPolicy cPolicy)
             throws HyracksDataException {
-        IPartitionCollector collector = conn.createPartitionCollector(task, recordDesc, partition, td
-                .getInputPartitionCounts()[i], td.getPartitionCount());
+        IPartitionCollector collector = conn.createPartitionCollector(task, recordDesc, partition,
+                td.getInputPartitionCounts()[i], td.getPartitionCount());
         if (cPolicy.materializeOnReceiveSide()) {
-            return new ReceiveSideMaterializingCollector(task, ncs.getPartitionManager(), collector, task
-                    .getTaskAttemptId(), ncs.getExecutor());
+            return new ReceiveSideMaterializingCollector(task, ncs.getPartitionManager(), collector,
+                    task.getTaskAttemptId(), ncs.getExecutor());
         } else {
             return collector;
         }
@@ -222,8 +223,9 @@ public class StartTasksWork extends AbstractWork {
                 factory = new IPartitionWriterFactory() {
                     @Override
                     public IFrameWriter createFrameWriter(int receiverIndex) throws HyracksDataException {
-                        return new MaterializedPartitionWriter(ctx, ncs.getPartitionManager(), new PartitionId(jobId,
-                                conn.getConnectorId(), senderIndex, receiverIndex), taId, ncs.getExecutor());
+                        return new MaterializedPartitionWriter(ctx, ncs.getPartitionManager(),
+                                new PartitionId(jobId, conn.getConnectorId(), senderIndex, receiverIndex), taId,
+                                ncs.getExecutor());
                     }
                 };
             } else {
@@ -231,9 +233,9 @@ public class StartTasksWork extends AbstractWork {
 
                     @Override
                     public IFrameWriter createFrameWriter(int receiverIndex) throws HyracksDataException {
-                        return new MaterializingPipelinedPartition(ctx, ncs.getPartitionManager(), new PartitionId(
-                                jobId, conn.getConnectorId(), senderIndex, receiverIndex), taId, ncs
-                                        .getExecutor());
+                        return new MaterializingPipelinedPartition(ctx, ncs.getPartitionManager(),
+                                new PartitionId(jobId, conn.getConnectorId(), senderIndex, receiverIndex), taId,
+                                ncs.getExecutor());
                     }
                 };
             }
@@ -241,8 +243,8 @@ public class StartTasksWork extends AbstractWork {
             factory = new IPartitionWriterFactory() {
                 @Override
                 public IFrameWriter createFrameWriter(int receiverIndex) throws HyracksDataException {
-                    return new PipelinedPartition(ctx, ncs.getPartitionManager(), new PartitionId(jobId, conn
-                            .getConnectorId(), senderIndex, receiverIndex), taId);
+                    return new PipelinedPartition(ctx, ncs.getPartitionManager(),
+                            new PartitionId(jobId, conn.getConnectorId(), senderIndex, receiverIndex), taId);
                 }
             };
         }
@@ -272,11 +274,14 @@ public class StartTasksWork extends AbstractWork {
                 if (inputAddresses[i] != null) {
                     for (int j = 0; j < inputAddresses[i].length; j++) {
                         NetworkAddress networkAddress = inputAddresses[i][j];
-                        PartitionId pid = new PartitionId(jobId, inputs.get(i).getConnectorId(), j, td
-                                .getTaskAttemptId().getTaskId().getPartition());
-                        PartitionChannel channel = new PartitionChannel(pid, new NetworkInputChannel(ncs
-                                .getNetworkManager(), new InetSocketAddress(InetAddress.getByAddress(networkAddress
-                                        .lookupIpAddress()), networkAddress.getPort()), pid, 5));
+                        PartitionId pid = new PartitionId(jobId, inputs.get(i).getConnectorId(), j,
+                                td.getTaskAttemptId().getTaskId().getPartition());
+                        PartitionChannel channel = new PartitionChannel(pid,
+                                new NetworkInputChannel(ncs.getNetworkManager(),
+                                        new InetSocketAddress(
+                                                InetAddress.getByAddress(networkAddress.lookupIpAddress()),
+                                                networkAddress.getPort()),
+                                        pid, 5));
                         channels.add(channel);
                     }
                 }

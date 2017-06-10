@@ -118,7 +118,7 @@ public class RunningAggregateRuntimeFactory extends AbstractOneInputOneOutputRun
             @Override
             public void fail() throws HyracksDataException {
                 if (isOpen) {
-                    super.fail();
+                    writer.fail();
                 }
             }
 

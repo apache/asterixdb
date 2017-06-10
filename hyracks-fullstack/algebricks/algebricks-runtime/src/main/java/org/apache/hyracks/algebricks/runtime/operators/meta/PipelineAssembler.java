@@ -19,11 +19,14 @@
 package org.apache.hyracks.algebricks.runtime.operators.meta;
 
 import org.apache.hyracks.algebricks.runtime.base.AlgebricksPipeline;
+import org.apache.hyracks.algebricks.runtime.base.EnforcePushRuntime;
 import org.apache.hyracks.algebricks.runtime.base.IPushRuntime;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.dataflow.EnforceFrameWriter;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.job.JobFlag;
 
 public class PipelineAssembler {
 
@@ -44,18 +47,21 @@ public class PipelineAssembler {
         this.outputArity = outputArity;
     }
 
-    public IFrameWriter assemblePipeline(IFrameWriter writer, IHyracksTaskContext ctx) throws
-            HyracksDataException {
+    public IFrameWriter assemblePipeline(IFrameWriter writer, IHyracksTaskContext ctx) throws HyracksDataException {
+        // should enforce protocol
+        boolean enforce = ctx.getJobFlags().contains(JobFlag.ENFORCE_CONTRACT);
         // plug the operators
         IFrameWriter start = writer;// this.writer;
         for (int i = pipeline.getRuntimeFactories().length - 1; i >= 0; i--) {
             IPushRuntime newRuntime = pipeline.getRuntimeFactories()[i].createPushRuntime(ctx);
+            newRuntime = enforce ? EnforcePushRuntime.enforce(newRuntime) : newRuntime;
+            start = enforce ? EnforceFrameWriter.enforce(start) : start;
             if (i == pipeline.getRuntimeFactories().length - 1) {
                 if (outputArity == 1) {
-                    newRuntime.setFrameWriter(0, start, pipelineOutputRecordDescriptor);
+                    newRuntime.setOutputFrameWriter(0, start, pipelineOutputRecordDescriptor);
                 }
             } else {
-                newRuntime.setFrameWriter(0, start, pipeline.getRecordDescriptors()[i]);
+                newRuntime.setOutputFrameWriter(0, start, pipeline.getRecordDescriptors()[i]);
             }
             if (i > 0) {
                 newRuntime.setInputRecordDescriptor(0, pipeline.getRecordDescriptors()[i - 1]);

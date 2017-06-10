@@ -63,6 +63,9 @@ public abstract class AbstractSortRunGenerator implements IRunGenerator {
         flushWriter.open();
         try {
             getSorter().flush(flushWriter);
+        } catch (Exception e) {
+            flushWriter.fail();
+            throw e;
         } finally {
             flushWriter.close();
         }

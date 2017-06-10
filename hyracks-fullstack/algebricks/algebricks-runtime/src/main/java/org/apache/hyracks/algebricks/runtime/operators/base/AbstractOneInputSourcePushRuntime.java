@@ -27,20 +27,29 @@ public abstract class AbstractOneInputSourcePushRuntime extends AbstractOneInput
 
     @Override
     public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
+        // nextFrame will never be called on this runtime
         throw new UnsupportedOperationException();
     }
 
     @Override
     public void close() throws HyracksDataException {
+        // close is a no op since this operator completes operating in open()
     }
 
     @Override
     public void fail() throws HyracksDataException {
-        writer.fail();
+        // fail is a no op since if a failure happened, the operator would've already called fail() on downstream
+    }
+
+    @Override
+    public void flush() throws HyracksDataException {
+        // flush will never be called on this runtime
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public void setInputRecordDescriptor(int index, RecordDescriptor recordDescriptor) {
+        // setInputRecordDescriptor will never be called on this runtime since it has no input
         throw new UnsupportedOperationException();
     }
 }

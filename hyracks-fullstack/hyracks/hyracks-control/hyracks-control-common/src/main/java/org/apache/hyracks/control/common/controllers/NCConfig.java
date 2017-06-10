@@ -64,8 +64,10 @@ public class NCConfig extends ControllerConfig {
         MESSAGING_PUBLIC_ADDRESS(STRING, PUBLIC_ADDRESS),
         MESSAGING_PUBLIC_PORT(INTEGER, MESSAGING_LISTEN_PORT),
         CLUSTER_CONNECT_RETRIES(INTEGER, 5),
-        IODEVICES(STRING_ARRAY, appConfig -> new String[] {
-                FileUtil.joinPath(appConfig.getString(ControllerConfig.Option.DEFAULT_DIR), "iodevice") },
+        IODEVICES(
+                STRING_ARRAY,
+                appConfig -> new String[] {
+                        FileUtil.joinPath(appConfig.getString(ControllerConfig.Option.DEFAULT_DIR), "iodevice") },
                 "<value of " + ControllerConfig.Option.DEFAULT_DIR.cmdline() + ">/iodevice"),
         NET_THREAD_COUNT(INTEGER, 1),
         NET_BUFFER_COUNT(INTEGER, 1),
@@ -95,7 +97,7 @@ public class NCConfig extends ControllerConfig {
         }
 
         <T> Option(IOptionType<T> parser, Function<IApplicationConfig, T> defaultValue,
-                   String defaultValueDescription) {
+                String defaultValueDescription) {
             this.parser = parser;
             this.defaultValue = defaultValue;
             this.defaultValueDescription = defaultValueDescription;
@@ -246,6 +248,7 @@ public class NCConfig extends ControllerConfig {
         return configManager;
     }
 
+    @Override
     public IApplicationConfig getAppConfig() {
         return appConfig;
     }
