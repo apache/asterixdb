@@ -135,7 +135,8 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         ELAPSED_TIME("elapsedTime"),
         EXECUTION_TIME("executionTime"),
         RESULT_COUNT("resultCount"),
-        RESULT_SIZE("resultSize");
+        RESULT_SIZE("resultSize"),
+        ERROR_COUNT("errorCount");
 
         private final String str;
 
@@ -285,7 +286,8 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
     }
 
     private static void printMetrics(PrintWriter pw, long elapsedTime, long executionTime, long resultCount,
-            long resultSize) {
+            long resultSize, long errorCount) {
+        boolean hasErrors = errorCount != 0;
         pw.print("\t\"");
         pw.print(ResultFields.METRICS.str());
         pw.print("\": {\n");
@@ -296,7 +298,11 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         pw.print("\t");
         ResultUtil.printField(pw, Metrics.RESULT_COUNT.str(), resultCount, true);
         pw.print("\t");
-        ResultUtil.printField(pw, Metrics.RESULT_SIZE.str(), resultSize, false);
+        ResultUtil.printField(pw, Metrics.RESULT_SIZE.str(), resultSize, hasErrors);
+        if (hasErrors) {
+            pw.print("\t");
+            ResultUtil.printField(pw, Metrics.ERROR_COUNT.str(), errorCount, false);
+        }
         pw.print("\t}\n");
     }
 
@@ -403,6 +409,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         printClientContextID(resultWriter, param);
         printSignature(resultWriter);
         printType(resultWriter, sessionConfig);
+        long errorCount = 1; // so far we just return 1 error
         try {
             if (param.statement == null || param.statement.isEmpty()) {
                 throw new AsterixException("Empty request, no statement provided");
@@ -412,6 +419,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
             if (ResultDelivery.IMMEDIATE == delivery || ResultDelivery.DEFERRED == delivery) {
                 ResultUtil.printStatus(sessionOutput, ResultStatus.SUCCESS);
             }
+            errorCount = 0;
         } catch (AlgebricksException | TokenMgrError | org.apache.asterix.aqlplus.parser.TokenMgrError pe) {
             GlobalConfig.ASTERIX_LOGGER.log(Level.INFO, pe.getMessage(), pe);
             ResultUtil.printError(resultWriter, pe);
@@ -435,7 +443,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
             }
         }
         printMetrics(resultWriter, System.nanoTime() - elapsedStart, execStartEnd[1] - execStartEnd[0],
-                stats.getCount(), stats.getSize());
+                stats.getCount(), stats.getSize(), errorCount);
         resultWriter.print("}\n");
         resultWriter.flush();
         String result = stringWriter.toString();
