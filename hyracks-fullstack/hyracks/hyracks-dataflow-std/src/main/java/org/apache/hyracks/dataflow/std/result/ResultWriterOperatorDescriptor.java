@@ -117,15 +117,17 @@ public class ResultWriterOperatorDescriptor extends AbstractSingleActivityOperat
 
             @Override
             public void close() throws HyracksDataException {
-                try {
-                    if (!failed && frameOutputStream.getTupleCount() > 0) {
-                        frameOutputStream.flush(datasetPartitionWriter);
+                if (datasetPartitionWriter != null) {
+                    try {
+                        if (!failed && frameOutputStream.getTupleCount() > 0) {
+                            frameOutputStream.flush(datasetPartitionWriter);
+                        }
+                    } catch (Exception e) {
+                        datasetPartitionWriter.fail();
+                        throw e;
+                    } finally {
+                        datasetPartitionWriter.close();
                     }
-                } catch (Exception e) {
-                    datasetPartitionWriter.fail();
-                    throw e;
-                } finally {
-                    datasetPartitionWriter.close();
                 }
             }
 
