@@ -164,6 +164,8 @@ public class ChunkedResponse implements IServletResponse {
     private void fullResponse(HttpVersion version, HttpResponseStatus status, ByteBuf buffer, HttpHeaders headers) {
         DefaultFullHttpResponse fullResponse = new DefaultFullHttpResponse(version, status, buffer);
         fullResponse.headers().set(headers);
+        // for a full response remove chunked transfer-encoding and set the content length instead
+        fullResponse.headers().remove(HttpHeaderNames.TRANSFER_ENCODING);
         fullResponse.headers().setInt(HttpHeaderNames.CONTENT_LENGTH, buffer.readableBytes());
         future = ctx.writeAndFlush(fullResponse);
         headerSent = true;

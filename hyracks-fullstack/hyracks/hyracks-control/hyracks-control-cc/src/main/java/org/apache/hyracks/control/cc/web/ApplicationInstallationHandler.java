@@ -71,6 +71,7 @@ public class ApplicationInstallationHandler extends AbstractServlet {
                 : rootDir + File.separator + "/applications/" + File.separator + deployIdString;
         final HttpMethod method = request.getHttpRequest().method();
         try {
+            response.setStatus(HttpResponseStatus.OK);
             if (method == HttpMethod.PUT) {
                 final ByteBuf content = request.getHttpRequest().content();
                 writeToFile(content, deploymentDir, fileName);
