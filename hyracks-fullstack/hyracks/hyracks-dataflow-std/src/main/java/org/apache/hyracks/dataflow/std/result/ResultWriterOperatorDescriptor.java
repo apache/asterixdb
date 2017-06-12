@@ -112,7 +112,9 @@ public class ResultWriterOperatorDescriptor extends AbstractSingleActivityOperat
             @Override
             public void fail() throws HyracksDataException {
                 failed = true;
-                datasetPartitionWriter.fail();
+                if (datasetPartitionWriter != null) {
+                    datasetPartitionWriter.fail();
+                }
             }
 
             @Override
