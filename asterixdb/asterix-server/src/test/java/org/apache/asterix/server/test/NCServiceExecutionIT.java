@@ -22,6 +22,8 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Random;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 import org.apache.asterix.test.common.TestExecutor;
@@ -30,8 +32,11 @@ import org.apache.asterix.testframework.context.TestCaseContext;
 import org.apache.asterix.testframework.xml.TestGroup;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.hyracks.server.process.HyracksCCProcess;
+import org.apache.hyracks.server.process.HyracksNCServiceProcess;
 import org.apache.hyracks.server.process.HyracksVirtualCluster;
 import org.junit.AfterClass;
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
@@ -92,11 +97,27 @@ public class NCServiceExecutionIT {
 
     private static final Logger LOGGER = Logger.getLogger(NCServiceExecutionIT.class.getName());
 
+    enum KillCommand {
+        CC,
+        NC1,
+        NC2;
+
+        @Override
+        public String toString() {
+            return "<kill " + name().toLowerCase() + ">";
+        }
+    }
+
+    private static HyracksCCProcess cc;
+    private static HyracksNCServiceProcess nc1;
+    private static HyracksNCServiceProcess nc2;
+
     private final TestCaseContext tcCtx;
     private static final TestExecutor testExecutor = new TestExecutor();
 
     private static final List<String> badTestCases = new ArrayList<>();
     private static HyracksVirtualCluster cluster;
+    private final KillCommand killType;
 
     @BeforeClass
     public static void setUp() throws Exception {
@@ -114,28 +135,20 @@ public class NCServiceExecutionIT {
         HDFSCluster.getInstance().setup(ASTERIX_APP_DIR + File.separator);
 
         cluster = new HyracksVirtualCluster(new File(APP_HOME), new File(ASTERIX_APP_DIR));
-        cluster.addNCService(
+        nc1 = cluster.addNCService(
                 new File(CONF_DIR, "ncservice1.conf"),
                 new File(LOG_DIR, "ncservice1.log"));
-        cluster.addNCService(
+
+        nc2 = cluster.addNCService(
                 new File(CONF_DIR, "ncservice2.conf"),
                 new File(LOG_DIR, "ncservice2.log"));
 
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException ignored) {
-        }
-
         // Start CC
-        cluster.start(
+        cc = cluster.start(
                 new File(CONF_DIR, "cc.conf"),
                 new File(LOG_DIR, "cc.log"));
 
-        LOGGER.info("Sleeping while cluster comes online...");
-        try {
-            Thread.sleep(6000);
-        } catch (InterruptedException ignored) {
-        }
+        testExecutor.waitForClusterActive(30, TimeUnit.SECONDS);
     }
 
     @AfterClass
@@ -157,14 +170,38 @@ public class NCServiceExecutionIT {
 
     @Parameters(name = "NCServiceExecutionTest {index}: {0}")
     public static Collection<Object[]> tests() throws Exception {
-        Collection<Object[]> testArgs = new ArrayList<Object[]>();
+        Collection<Object[]> testArgs = new ArrayList<>();
+        Random random = getRandom();
         TestCaseContext.Builder b = new TestCaseContext.Builder();
         for (TestCaseContext ctx : b.build(new File(TESTS_DIR))) {
             if (!skip(ctx)) {
-                testArgs.add(new Object[] { ctx });
+                testArgs.add(new Object[] { ctx, ctx, null });
+            }
+            // let's kill something every 50 tests
+            if (testArgs.size() % 50 == 0) {
+                final KillCommand killCommand = KillCommand.values()[random.nextInt(KillCommand.values().length)];
+                testArgs.add(new Object[] { killCommand, null, killCommand});
             }
         }
         return testArgs;
+    }
+
+    private static Random getRandom() {
+        Random random;
+        if (System.getProperty("random.seed") == null) {
+            random = new Random() {
+                @Override
+                public synchronized void setSeed(long seed) {
+                    super.setSeed(seed);
+                    System.err.println("using generated seed: " + seed + "; use -Drandom.seed to use specific seed");
+                }
+            };
+        } else {
+            final long seed = Long.getLong("random.seed");
+            System.err.println("using provided seed (-Drandom.seed): " + seed);
+            random = new Random(seed);
+        }
+        return random;
     }
 
     private static boolean skip(TestCaseContext tcCtx) {
@@ -180,13 +217,42 @@ public class NCServiceExecutionIT {
         return false;
     }
 
-    public NCServiceExecutionIT(TestCaseContext ctx) {
-        this.tcCtx = ctx;
+    public NCServiceExecutionIT(Object description, TestCaseContext tcCtx, KillCommand killType) {
+        this.tcCtx = tcCtx;
+        this.killType = killType;
     }
 
     @Test
     public void test() throws Exception {
-        testExecutor.executeTest(ACTUAL_RESULTS_DIR, tcCtx, null, false);
-        testExecutor.cleanup(tcCtx.toString(), badTestCases);
+        if (tcCtx != null) {
+            testExecutor.executeTest(ACTUAL_RESULTS_DIR, tcCtx, null, false);
+            testExecutor.cleanup(tcCtx.toString(), badTestCases);
+        } else {
+            switch (killType) {
+                case CC:
+                    LOGGER.info("Killing CC...");
+                    cc.stop(true);
+                    cc.start();
+                    break;
+
+                case NC1:
+                    LOGGER.info("Killing NC1...");
+                    nc1.stop(); // we can't kill due to ASTERIXDB-1941
+                    testExecutor.waitForClusterState("UNUSABLE", 60, TimeUnit.SECONDS); // wait for missed heartbeats...
+                    nc1.start(); // this restarts the NC service
+                    break;
+
+                case NC2:
+                    LOGGER.info("Killing NC2...");
+                    nc2.stop(); // we can't kill due to ASTERIXDB-1941
+                    testExecutor.waitForClusterState("UNUSABLE", 60, TimeUnit.SECONDS); // wait for missed heartbeats...
+                    nc2.start(); // this restarts the NC service
+                    break;
+
+                default:
+                    Assert.fail("killType: " + killType);
+            }
+            testExecutor.waitForClusterActive(30, TimeUnit.SECONDS);
+        }
     }
 }

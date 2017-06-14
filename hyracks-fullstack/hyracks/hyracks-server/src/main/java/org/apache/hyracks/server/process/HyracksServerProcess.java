@@ -19,10 +19,8 @@
 package org.apache.hyracks.server.process;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -51,7 +49,9 @@ abstract class HyracksServerProcess {
                 LOGGER.info("Logging to: " + logFile.getCanonicalPath());
             }
             logFile.getParentFile().mkdirs();
-            logFile.delete();
+            try (FileWriter writer = new FileWriter(logFile, true)) {
+                writer.write("---------------------\n");
+            }
             pb.redirectOutput(ProcessBuilder.Redirect.appendTo(logFile));
         } else {
             if (LOGGER.isLoggable(Level.INFO)) {
@@ -64,6 +64,19 @@ abstract class HyracksServerProcess {
 
     public void stop() {
         process.destroy();
+        try {
+            process.waitFor();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    public void stop(boolean forcibly) {
+        if (forcibly) {
+            process.destroyForcibly();
+        } else {
+            process.destroy();
+        }
         try {
             process.waitFor();
         } catch (InterruptedException e) {

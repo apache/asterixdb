@@ -103,6 +103,7 @@ public class StartTasksWork extends AbstractWork {
     public void run() {
         Task task = null;
         try {
+            ncs.updateMaxJobId(jobId);
             NCServiceContext serviceCtx = ncs.getContext();
             Joblet joblet = getOrCreateLocalJoblet(deploymentId, jobId, serviceCtx, acgBytes);
             final ActivityClusterGraph acg = joblet.getActivityClusterGraph();

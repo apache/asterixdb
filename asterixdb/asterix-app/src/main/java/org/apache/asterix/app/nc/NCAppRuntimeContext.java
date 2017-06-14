@@ -120,6 +120,7 @@ public class NCAppRuntimeContext implements INcApplicationContext {
     private IFileMapManager fileMapManager;
     private IBufferCache bufferCache;
     private ITransactionSubsystem txnSubsystem;
+    private IMetadataNode metadataNodeStub;
 
     private ILSMIOOperationScheduler lsmIOScheduler;
     private PersistentLocalResourceRepository localResourceRepository;
@@ -464,9 +465,11 @@ public class NCAppRuntimeContext implements INcApplicationContext {
 
     @Override
     public void exportMetadataNodeStub() throws RemoteException {
-        IMetadataNode stub = (IMetadataNode) UnicastRemoteObject.exportObject(MetadataNode.INSTANCE,
-                getMetadataProperties().getMetadataPort());
-        ((IAsterixStateProxy) getServiceContext().getDistributedState()).setMetadataNode(stub);
+        if (metadataNodeStub == null) {
+            metadataNodeStub = (IMetadataNode) UnicastRemoteObject.exportObject(MetadataNode.INSTANCE,
+                    getMetadataProperties().getMetadataPort());
+        }
+        ((IAsterixStateProxy) getServiceContext().getDistributedState()).setMetadataNode(metadataNodeStub);
     }
 
     @Override

@@ -69,6 +69,7 @@ public class RegisterNodeWork extends SynchronizableWork {
             params.setHeartbeatPeriod(ccs.getCCConfig().getHeartbeatPeriod());
             params.setProfileDumpPeriod(ccs.getCCConfig().getProfileDumpPeriod());
             result = new CCNCFunctions.NodeRegistrationResult(params, null);
+            ccs.getJobIdFactory().ensureMinimumId(reg.getMaxJobId() + 1);
         } catch (Exception e) {
             result = new CCNCFunctions.NodeRegistrationResult(null, e);
         }

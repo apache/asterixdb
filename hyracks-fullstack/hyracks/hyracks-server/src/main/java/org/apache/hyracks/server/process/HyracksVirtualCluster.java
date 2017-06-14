@@ -51,10 +51,11 @@ public class HyracksVirtualCluster {
      * @param configFile - full path to an ncservice.conf. May be null to accept all defaults.
      * @throws IOException - if there are errors starting the process.
      */
-    public void addNCService(File configFile, File logFile) throws IOException {
+    public HyracksNCServiceProcess addNCService(File configFile, File logFile) throws IOException {
         HyracksNCServiceProcess proc = new HyracksNCServiceProcess(configFile, logFile, appHome, workingDir);
         proc.start();
         ncProcs.add(proc);
+        return proc;
     }
 
     /**
@@ -64,9 +65,10 @@ public class HyracksVirtualCluster {
      *                     defaults, although this is seldom useful since there are no NCs.
      * @throws IOException - if there are errors starting the process.
      */
-    public void start(File ccConfigFile, File logFile) throws IOException {
+    public HyracksCCProcess start(File ccConfigFile, File logFile) throws IOException {
         ccProc = new HyracksCCProcess(ccConfigFile, logFile, appHome, workingDir);
         ccProc.start();
+        return ccProc;
     }
 
     /**

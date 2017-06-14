@@ -40,6 +40,11 @@ public class TestNCApplication implements INCApplication {
     }
 
     @Override
+    public void onRegisterNode() throws Exception {
+        // No-op
+    }
+
+    @Override
     public void stop() throws Exception {
         // No-op
     }

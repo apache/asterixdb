@@ -67,7 +67,8 @@ public class NCApplication extends BaseNCApplication {
     protected INCServiceContext ncServiceCtx;
     private INcApplicationContext runtimeContext;
     private String nodeId;
-    private boolean stopInitiated = false;
+    private boolean stopInitiated;
+    private boolean startupCompleted;
     private SystemState systemState;
     protected WebManager webManager;
 
@@ -190,6 +191,15 @@ public class NCApplication extends BaseNCApplication {
         }
         // Request startup tasks from CC
         StartupTaskRequestMessage.send((NodeControllerService) ncServiceCtx.getControllerService(), systemState);
+        startupCompleted = true;
+    }
+
+    @Override
+    public void onRegisterNode() throws Exception {
+        if (startupCompleted) {
+            // Request startup tasks from CC
+            StartupTaskRequestMessage.send((NodeControllerService) ncServiceCtx.getControllerService(), systemState);
+        }
     }
 
     @Override

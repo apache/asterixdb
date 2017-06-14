@@ -44,8 +44,9 @@ public class ClusterControllerRemoteProxy extends ControllerRemoteProxy implemen
 
     private final int clusterConnectRetries;
 
-    public ClusterControllerRemoteProxy(IPCSystem ipc, InetSocketAddress inetSocketAddress, int clusterConnectRetries) {
-        super(ipc, inetSocketAddress);
+    public ClusterControllerRemoteProxy(IPCSystem ipc, InetSocketAddress inetSocketAddress, int clusterConnectRetries,
+                                        IControllerRemoteProxyIPCEventListener eventListener) {
+        super(ipc, inetSocketAddress, eventListener);
         this.clusterConnectRetries = clusterConnectRetries;
     }
 

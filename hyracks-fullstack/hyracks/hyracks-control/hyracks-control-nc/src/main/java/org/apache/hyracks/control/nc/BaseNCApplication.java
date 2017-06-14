@@ -53,6 +53,11 @@ public class BaseNCApplication implements INCApplication {
     }
 
     @Override
+    public void onRegisterNode() throws Exception {
+        // no-op
+    }
+
+    @Override
     public void stop() throws Exception {
         // no-op
     }

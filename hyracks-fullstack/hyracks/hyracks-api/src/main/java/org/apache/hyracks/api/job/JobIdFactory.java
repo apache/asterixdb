@@ -18,10 +18,16 @@
  */
 package org.apache.hyracks.api.job;
 
+import java.util.concurrent.atomic.AtomicLong;
+
 public class JobIdFactory {
-    private long id = 0;
+    private final AtomicLong id = new AtomicLong(0);
 
     public JobId create() {
-        return new JobId(id++);
+        return new JobId(id.getAndIncrement());
+    }
+
+    public void ensureMinimumId(long id) {
+        this.id.updateAndGet(current -> Math.max(current, id));
     }
 }

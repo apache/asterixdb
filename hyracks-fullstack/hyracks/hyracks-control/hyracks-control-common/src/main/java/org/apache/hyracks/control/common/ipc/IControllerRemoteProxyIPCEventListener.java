@@ -16,22 +16,22 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.api.application;
+package org.apache.hyracks.control.common.ipc;
 
-import org.apache.hyracks.api.io.IFileDeviceResolver;
-import org.apache.hyracks.api.job.resource.NodeCapacity;
+import org.apache.hyracks.ipc.api.IIPCHandle;
+import org.apache.hyracks.ipc.exceptions.IPCException;
 
-public interface INCApplication extends IApplication {
+public interface IControllerRemoteProxyIPCEventListener {
 
-    void preStop() throws Exception; //NOSONAR
+    default void ipcHandleConnected(IIPCHandle handle) throws IPCException {
+        // no-op
+    }
 
-    NodeCapacity getCapacity();
+    default void ipcHandleDisconnected(IIPCHandle handle) throws IPCException {
+        // no-op
+    }
 
-    /**
-     * @return the file device resolver which resolves the relative path of a storage
-     *         file into an io device.
-     */
-    IFileDeviceResolver getFileDeviceResolver();
-
-    void onRegisterNode() throws Exception;
+    default void ipcHandleRestored(IIPCHandle handle) throws IPCException {
+        // no-op
+    }
 }

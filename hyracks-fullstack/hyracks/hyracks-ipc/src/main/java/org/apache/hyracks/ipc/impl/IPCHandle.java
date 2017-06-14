@@ -192,4 +192,9 @@ final class IPCHandle implements IIPCHandle {
     boolean full() {
         return full;
     }
+
+    @Override
+    public String toString() {
+        return "IPCHandle [addr=" + remoteAddress + " state=" + state + "]";
+    }
 }

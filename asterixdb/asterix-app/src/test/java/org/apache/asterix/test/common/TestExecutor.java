@@ -72,6 +72,7 @@ import org.apache.commons.lang3.mutable.MutableInt;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.methods.RequestBuilder;
 import org.apache.http.entity.ContentType;
@@ -1397,6 +1398,48 @@ public class TestExecutor {
     //This method is here to enable extension
     protected String getPath(String servlet) {
         return servlet;
+    }
+
+    public void waitForClusterActive(int timeoutSecs, TimeUnit timeUnit) throws Exception {
+        waitForClusterState("ACTIVE", timeoutSecs, timeUnit);
+    }
+
+    public void waitForClusterState(String desiredState, int timeout, TimeUnit timeUnit) throws Exception {
+        LOGGER.info("Waiting for cluster state " + desiredState + "...");
+        Thread t = new Thread(() -> {
+            while (true) {
+                try {
+                    final HttpClient client = HttpClients.createDefault();
+
+                    final HttpGet get = new HttpGet(createEndpointURI("/admin/cluster", null));
+                    final HttpResponse httpResponse = client.execute(get);
+                    final int statusCode = httpResponse.getStatusLine().getStatusCode();
+                    final String response = EntityUtils.toString(httpResponse.getEntity());
+                    if (statusCode != HttpStatus.SC_OK) {
+                        throw new Exception("HTTP error " + statusCode + ":\n" + response);
+                    }
+                    ObjectMapper om = new ObjectMapper();
+                    ObjectNode result = (ObjectNode) om.readTree(response);
+                    if (desiredState.equals(result.get("state").asText())) {
+                        break;
+                    }
+                } catch (Exception e) {
+                    // ignore, try again
+                }
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException e) {
+                    break;
+                }
+            }
+        });
+        t.start();
+        timeUnit.timedJoin(t, timeout);
+        if (t.isAlive()) {
+            throw new Exception("Cluster did not become " + desiredState + " within " + timeout + " "
+                    + timeUnit.name().toLowerCase());
+        }
+        LOGGER.info("Cluster state now " + desiredState);
     }
 
 }

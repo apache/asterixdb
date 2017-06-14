@@ -46,6 +46,7 @@ public class DistributeJobWork extends AbstractWork {
     public void run() {
         try {
             ncs.checkForDuplicateDistributedJob(jobId);
+            ncs.updateMaxJobId(jobId);
             ActivityClusterGraph acg =
                     (ActivityClusterGraph) DeploymentUtils.deserialize(acgBytes, null, ncs.getContext());
             ncs.storeActivityClusterGraph(jobId, acg);

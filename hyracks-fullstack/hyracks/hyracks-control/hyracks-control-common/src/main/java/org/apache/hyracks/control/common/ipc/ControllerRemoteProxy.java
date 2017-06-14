@@ -28,11 +28,18 @@ import org.apache.hyracks.ipc.impl.IPCSystem;
 public abstract class ControllerRemoteProxy {
     protected final IPCSystem ipc;
     protected final InetSocketAddress inetSocketAddress;
+    private final IControllerRemoteProxyIPCEventListener eventListener;
     private IIPCHandle ipcHandle;
 
     protected ControllerRemoteProxy(IPCSystem ipc, InetSocketAddress inetSocketAddress) {
+        this(ipc, inetSocketAddress, null);
+    }
+
+    protected ControllerRemoteProxy(IPCSystem ipc, InetSocketAddress inetSocketAddress,
+                                    IControllerRemoteProxyIPCEventListener eventListener) {
         this.ipc = ipc;
         this.inetSocketAddress = inetSocketAddress;
+        this.eventListener = eventListener == null ? new IControllerRemoteProxyIPCEventListener() {} : eventListener;
     }
 
     protected IIPCHandle ensureIpcHandle() throws IPCException {
@@ -40,10 +47,16 @@ public abstract class ControllerRemoteProxy {
         if (first || !ipcHandle.isConnected()) {
             if (!first) {
                 getLogger().warning("ipcHandle " + ipcHandle + " disconnected; retrying connection");
+                eventListener.ipcHandleDisconnected(ipcHandle);
             }
             ipcHandle = ipc.getHandle(inetSocketAddress, getRetries(first));
-            if (!first && ipcHandle.isConnected()) {
-                getLogger().warning("ipcHandle " + ipcHandle + " restored");
+            if (ipcHandle.isConnected()) {
+                if (first) {
+                    eventListener.ipcHandleConnected(ipcHandle);
+                } else {
+                    getLogger().warning("ipcHandle " + ipcHandle + " restored");
+                    eventListener.ipcHandleRestored(ipcHandle);
+                }
             }
         }
         return ipcHandle;

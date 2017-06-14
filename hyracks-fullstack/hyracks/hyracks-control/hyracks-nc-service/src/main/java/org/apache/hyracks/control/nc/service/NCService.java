@@ -19,6 +19,7 @@
 package org.apache.hyracks.control.nc.service;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -30,6 +31,7 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -170,8 +172,11 @@ public class NCService {
                     // If the directory IS there, all is well
                 }
                 File logfile = new File(config.logdir, "nc-" + ncId + ".log");
-                // Don't care if this succeeds or fails:
-                logfile.delete();
+                try (FileWriter writer = new FileWriter(logfile, true)) {
+                    writer.write("---------------------\n");
+                    writer.write(new Date() + "\n");
+                    writer.write("---------------------\n");
+                }
                 pb.redirectOutput(ProcessBuilder.Redirect.appendTo(logfile));
                 if (LOGGER.isLoggable(Level.INFO)) {
                     LOGGER.info("Logging to " + logfile.getCanonicalPath());
@@ -254,6 +259,11 @@ public class NCService {
             public void run() {
                 if (proc != null) {
                     proc.destroy();
+                    try {
+                        proc.waitFor();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         });
