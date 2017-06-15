@@ -45,9 +45,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -1136,12 +1138,26 @@ public class TestExecutor {
         boolean expectedException = false;
         Exception finalException;
         LOGGER.fine("polling for up to " + timeoutSecs + " seconds w/ " + retryDelaySecs + " second(s) delay");
+        int responsesReceived = 0;
+        final ExecutorService executorService = Executors.newSingleThreadExecutor();
         while (true) {
             try {
-                executeTestFile(testCaseCtx, ctx, variableCtx, statement, isDmlRecoveryTest, pb, cUnit, queryCount,
-                        expectedResultFileCtxs, testFile, actualPath);
+                Future<Void> execution = executorService.submit(() -> {
+                    executeTestFile(testCaseCtx, ctx, variableCtx, statement, isDmlRecoveryTest, pb, cUnit, queryCount,
+                            expectedResultFileCtxs, testFile, actualPath);
+                    return null;
+                });
+                execution.get(limitTime - System.currentTimeMillis(), TimeUnit.MILLISECONDS);
+                responsesReceived++;
                 finalException = null;
                 break;
+            } catch (TimeoutException e) {
+                if (responsesReceived == 0) {
+                    throw new Exception("Poll limit (" + timeoutSecs + "s) exceeded without obtaining *any* result from server");
+                } else {
+                    throw new Exception("Poll limit (" + timeoutSecs + "s) exceeded without obtaining expected result");
+
+                }
             } catch (Exception e) {
                 if (isExpected(e, cUnit)) {
                     expectedException = true;
@@ -1153,7 +1169,7 @@ public class TestExecutor {
                     break;
                 }
                 LOGGER.fine("sleeping " + retryDelaySecs + " second(s) before polling again");
-                Thread.sleep(TimeUnit.SECONDS.toMillis(retryDelaySecs));
+                TimeUnit.SECONDS.sleep(retryDelaySecs);
             }
         }
         if (expectedException) {
@@ -1411,7 +1427,7 @@ public class TestExecutor {
                 try {
                     final HttpClient client = HttpClients.createDefault();
 
-                    final HttpGet get = new HttpGet(createEndpointURI("/admin/cluster", null));
+                    final HttpGet get = new HttpGet(getEndpoint(Servlets.CLUSTER_STATE));
                     final HttpResponse httpResponse = client.execute(get);
                     final int statusCode = httpResponse.getStatusLine().getStatusCode();
                     final String response = EntityUtils.toString(httpResponse.getEntity());
