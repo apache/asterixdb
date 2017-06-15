@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
@@ -34,14 +35,24 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 
 public class PrefixMergePolicy implements ILSMMergePolicy {
-
     private long maxMergableComponentSize;
     private int maxToleranceComponentCount;
+
+    /**
+     * This parameter is used to avoid merging a big component with a sequence of small components.
+     * If a component is larger than ratio * all younger disk components in the merge list, then
+     * this old (large) component is ignored in this round.
+     * Since it's a temporary fix, we don't set this parameter as configurable in order not to
+     * disturb the users.
+     * This number is taken from HBase compaction policy
+     * see https://www.ngdata.com/visualizing-hbase-flushes-and-compactions/
+     */
+    private final static double MAX_MERGABLE_COMPONENT_SIZE_RATIO = 1.2;
 
     @Override
     public void diskComponentAdded(final ILSMIndex index, boolean fullMergeIsRequested) throws HyracksDataException {
 
-        ArrayList<ILSMDiskComponent> immutableComponents = new ArrayList<>(index.getImmutableComponents());
+        List<ILSMDiskComponent> immutableComponents = new ArrayList<>(index.getImmutableComponents());
 
         if (!areComponentsReadableWritableState(immutableComponents)) {
             return;
@@ -129,7 +140,9 @@ public class PrefixMergePolicy implements ILSMMergePolicy {
          * there will be no new merge either in this situation.
          */
 
-        List<ILSMDiskComponent> immutableComponents = index.getImmutableComponents();
+        List<ILSMDiskComponent> immutableComponents = new ArrayList<>(index.getImmutableComponents());
+        // reverse the list so that we look from the oldest to the newest components
+        Collections.reverse(immutableComponents);
         int mergableImmutableComponentCount = getMergableImmutableComponentCount(immutableComponents);
 
         // [case 1]
@@ -177,23 +190,15 @@ public class PrefixMergePolicy implements ILSMMergePolicy {
 
     /**
      * This method returns the number of mergable components among the given list
-     * of immutable components that are ordered from the latest component to order ones. A caller
+     * of immutable components that are ordered from the oldest component to newer ones. A caller
      * need to make sure the order in the list.
      *
      * @param immutableComponents
      * @return the number of mergable component
      */
     private int getMergableImmutableComponentCount(List<ILSMDiskComponent> immutableComponents) {
-        int count = 0;
-        for (ILSMComponent c : immutableComponents) {
-            long componentSize = ((ILSMDiskComponent) c).getComponentSize();
-            //stop when the first non-mergable component is found.
-            if (c.getState() != ComponentState.READABLE_UNWRITABLE || componentSize > maxMergableComponentSize) {
-                break;
-            }
-            ++count;
-        }
-        return count;
+        Pair<Integer, Integer> mergableIndexes = getMergableComponentsIndex(immutableComponents);
+        return mergableIndexes == null ? 0 : mergableIndexes.getRight() - mergableIndexes.getLeft() + 1;
     }
 
     /**
@@ -220,41 +225,94 @@ public class PrefixMergePolicy implements ILSMMergePolicy {
      * @throws IndexException
      */
     private boolean scheduleMerge(final ILSMIndex index) throws HyracksDataException {
-        // 1.  Look at the candidate components for merging in oldest-first order.  If one exists, identify the prefix of the sequence of
-        // all such components for which the sum of their sizes exceeds MaxMrgCompSz.  Schedule a merge of those components into a new component.
-        // 2.  If a merge from 1 doesn't happen, see if the set of candidate components for merging exceeds MaxTolCompCnt.  If so, schedule
-        // a merge all of the current candidates into a new single component.
         List<ILSMDiskComponent> immutableComponents = new ArrayList<>(index.getImmutableComponents());
         // Reverse the components order so that we look at components from oldest to newest.
         Collections.reverse(immutableComponents);
 
-        long totalSize = 0;
-        int startIndex = -1;
-        for (int i = 0; i < immutableComponents.size(); i++) {
-            ILSMComponent c = immutableComponents.get(i);
-            long componentSize = ((ILSMDiskComponent) c).getComponentSize();
-            if (componentSize > maxMergableComponentSize) {
-                startIndex = i;
-                totalSize = 0;
+        Pair<Integer, Integer> mergeableIndexes = getMergableComponentsIndex(immutableComponents);
+        if (mergeableIndexes != null) {
+            scheduleMerge(index, immutableComponents, mergeableIndexes.getLeft(), mergeableIndexes.getRight());
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    private void scheduleMerge(ILSMIndex index, List<ILSMDiskComponent> immutableComponents, int startIndex,
+            int endIndex) throws HyracksDataException {
+        List<ILSMDiskComponent> mergableComponents =
+                new ArrayList<>(immutableComponents.subList(startIndex, endIndex + 1));
+
+        // Reverse the components order back to its original order
+        Collections.reverse(mergableComponents);
+        ILSMIndexAccessor accessor =
+                index.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+        accessor.scheduleMerge(index.getIOOperationCallback(), mergableComponents);
+    }
+
+    /**
+     * Given a list of disk components (ordered from oldest to newest), this function
+     * identify a sequence of components to be merged. It works logically as follows:
+     * 1. Look at the candidate components for merging in oldest-first order. If one exists, identify the
+     * prefix of the sequence of all such components for which the sum of their sizes exceeds MaxMrgCompSz.
+     * 2. If a merge from 1 doesn't happen, see if the set of candidate components for merging exceeds
+     * MaxTolCompCnt.
+     * 3. If we find a sequence from 1 or 2, and the first (oldest) component in the sequence is smaller than
+     * ratio * total size of the younger components in the sequence, schedule a merge of all sequences.
+     * Otherwise, go back to step 1 with the next component.
+     *
+     * @param immutableComponents
+     * @return a pair of indexes indicating the start and end position of the sequence
+     *         otherwise, return null if no sequence is found
+     */
+    private Pair<Integer, Integer> getMergableComponentsIndex(List<ILSMDiskComponent> immutableComponents) {
+        int numComponents = immutableComponents.size();
+        for (int i = 0; i < numComponents; i++) {
+            if (immutableComponents.get(i).getComponentSize() > maxMergableComponentSize
+                    || immutableComponents.get(i).getState() != ComponentState.READABLE_UNWRITABLE) {
                 continue;
             }
-            totalSize += componentSize;
-            boolean isLastComponent = i + 1 == immutableComponents.size() ? true : false;
-            if (totalSize > maxMergableComponentSize
-                    || (isLastComponent && i - startIndex >= maxToleranceComponentCount)) {
-                List<ILSMDiskComponent> mergableComponents = new ArrayList<>();
-                for (int j = startIndex + 1; j <= i; j++) {
-                    mergableComponents.add(immutableComponents.get(j));
+            long startComponentSize = immutableComponents.get(i).getComponentSize();
+
+            long totalSize = startComponentSize;
+            int j = i + 1;
+            boolean mergeable = true;
+            for (; j < numComponents; j++) {
+                long componentSize = immutableComponents.get(j).getComponentSize();
+                if (componentSize > maxMergableComponentSize
+                        || immutableComponents.get(j).getState() != ComponentState.READABLE_UNWRITABLE) {
+                    // skip unmergeable components if any
+                    break;
                 }
-                // Reverse the components order back to its original order
-                Collections.reverse(mergableComponents);
-                ILSMIndexAccessor accessor =
-                        index.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
-                accessor.scheduleMerge(index.getIOOperationCallback(), mergableComponents);
-                return true;
+                totalSize += componentSize;
+                mergeable = startComponentSize < MAX_MERGABLE_COMPONENT_SIZE_RATIO * (totalSize - startComponentSize);
+                if (totalSize > maxMergableComponentSize && mergeable) {
+                    // If the ratio check passes and total size exceeds the threshold, we return this sequence
+                    return Pair.of(i, j);
+                }
+                // Stops search if the ratio threshold cannot be met.
+                // Since components are ordered from older to newer, newer (later) components
+                // would have smaller sizes than the current component size.
+                if (startComponentSize >= MAX_MERGABLE_COMPONENT_SIZE_RATIO
+                        * (totalSize + componentSize * (numComponents - j - 1) - startComponentSize)) {
+                    break;
+                }
+            }
+            if (j != numComponents) {
+                continue;
+            }
+            if (numComponents - i >= maxToleranceComponentCount && mergeable) {
+                // If it's the last component, component count exceeds the threshold, the ratio check passes,
+                // then we return this sequence.
+                return Pair.of(i, numComponents - 1);
+            }
+            // if we reach the last component, but there are not enough components to merge,
+            // then we don't need to check i+1 th component
+            if (numComponents - i < maxToleranceComponentCount) {
+                return null;
             }
         }
-        return false;
+        return null;
     }
 
 }
