@@ -27,6 +27,10 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <appendedResourcesDirectory>${basedir}/src/main/appended-resources</appendedResourcesDirectory>
+
+    <failsafe.test.excludes>**/DmlRecoveryIT.java</failsafe.test.excludes>
+    <cluster.test.excludes>**/AsterixClusterLifeCycleIT.java</cluster.test.excludes>
+    <cluster.extest.excludes>**/ClusterExecutionIT.java</cluster.extest.excludes>
   </properties>
 
   <licenses>
@@ -304,6 +308,17 @@
             <exclude>src/test/resources/docker/id_rsa.pub</exclude>
             <exclude>src/test/resources/transactionts/results/query_after_restart/big_object_20M/big_object_20M.1.adm.template</exclude>
             <exclude>src/test/resources/integrationts/restart/tweets.json</exclude> <!-- https://issues.apache.org/jira/browse/ASTERIXDB-1850 -->
+          </excludes>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-failsafe-plugin</artifactId>
+        <configuration>
+          <excludes combine.children="append">
+            <exclude>${failsafe.test.excludes}</exclude>
+            <exclude>${cluster.test.excludes}</exclude>
+            <exclude>${cluster.extest.excludes}</exclude>
           </excludes>
         </configuration>
       </plugin>

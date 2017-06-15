@@ -58,10 +58,6 @@
     <global.test.includes>**/*TestSuite.java,**/*Test.java</global.test.includes>
     <global.test.excludes>${invalid.tests},${repeated.tests}</global.test.excludes>
 
-    <failsafe.test.excludes>**/DmlRecoveryIT.java</failsafe.test.excludes>
-    <cluster.test.excludes>**/AsterixClusterLifeCycleIT.java</cluster.test.excludes>
-    <cluster.extest.excludes>**/ClusterExecutionIT.java</cluster.extest.excludes>
-
     <!-- Versions under dependencymanagement or used in many projects via properties -->
     <algebricks.version>0.3.2-SNAPSHOT</algebricks.version>
     <hyracks.version>0.3.2-SNAPSHOT</hyracks.version>
@@ -117,11 +113,6 @@
           <forkCount>1</forkCount>
           <reuseForks>false</reuseForks>
           <argLine>${coverageArgLine}</argLine>
-          <excludes>
-            <exclude>${failsafe.test.excludes}</exclude>
-            <exclude>${cluster.test.excludes}</exclude>
-            <exclude>${cluster.extest.excludes}</exclude>
-          </excludes>
         </configuration>
         <executions>
           <execution>
