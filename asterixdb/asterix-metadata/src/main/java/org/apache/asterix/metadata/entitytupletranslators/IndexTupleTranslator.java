@@ -144,6 +144,7 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
             IAType fieldType = BuiltinTypeMap.getTypeFromTypeName(metadataNode, jobId, dvName, typeName, false);
             searchKeyType.add(fieldType);
         }
+        boolean isOverridingKeyTypes = !searchKeyType.isEmpty();
 
         int isEnforcedFieldPos = rec.getType().getFieldIndex(INDEX_ISENFORCED_FIELD_NAME);
         Boolean isEnforcingKeys = false;
@@ -200,7 +201,7 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
             }
         }
         return new Index(dvName, dsName, indexName, indexStructure, searchKey, keyFieldSourceIndicator, searchKeyType,
-                gramLength, isEnforcingKeys, isPrimaryIndex, pendingOp);
+                gramLength, isOverridingKeyTypes, isEnforcingKeys, isPrimaryIndex, pendingOp);
     }
 
     @Override
@@ -293,7 +294,7 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
             recordBuilder.addField(nameValue, fieldValue);
         }
 
-        if (instance.isEnforcingKeyFields()) {
+        if (instance.isOverridingKeyFieldTypes()) {
             // write optional field 9
             OrderedListBuilder typeListBuilder = new OrderedListBuilder();
             typeListBuilder.reset(new AOrderedListType(BuiltinType.ANY, null));
@@ -312,7 +313,9 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
             fieldValue.reset();
             typeListBuilder.write(fieldValue.getDataOutput(), true);
             recordBuilder.addField(nameValue, fieldValue);
+        }
 
+        if (instance.isEnforced()) {
             // write optional field 10
             fieldValue.reset();
             nameValue.reset();

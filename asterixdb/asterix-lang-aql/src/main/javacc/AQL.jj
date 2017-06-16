@@ -90,6 +90,7 @@ import org.apache.asterix.lang.common.expression.FieldBinding;
 import org.apache.asterix.lang.common.expression.GbyVariableExpressionPair;
 import org.apache.asterix.lang.common.expression.IfExpr;
 import org.apache.asterix.lang.common.expression.IndexAccessor;
+import org.apache.asterix.lang.common.expression.IndexedTypeExpression;
 import org.apache.asterix.lang.common.expression.ListConstructor;
 import org.apache.asterix.lang.common.expression.LiteralExpr;
 import org.apache.asterix.lang.common.expression.OperatorExpr;
@@ -576,7 +577,7 @@ CreateIndexStatement IndexSpecification() throws ParseException:
   String indexName = null;
   boolean ifNotExists = false;
   Pair<Identifier,Identifier> nameComponents = null;
-  Pair<Integer, Pair<List<String>, TypeExpression>> fieldPair = null;
+  Pair<Integer, Pair<List<String>, IndexedTypeExpression>> fieldPair = null;
   IndexParams indexType = null;
   boolean enforced = false;
 }
@@ -1264,9 +1265,10 @@ Pair<String, String> Property() throws ParseException:
     }
 }
 
-TypeExpression IndexedTypeExpr() throws ParseException:
+IndexedTypeExpression IndexedTypeExpr() throws ParseException:
 {
   TypeExpression typeExpr = null;
+  boolean isUnknownable = false;
 }
 {
   (
@@ -1274,8 +1276,9 @@ TypeExpression IndexedTypeExpr() throws ParseException:
     | typeExpr = OrderedListTypeDef()
     | typeExpr = UnorderedListTypeDef()
   )
+  ( <QUES> { isUnknownable = true; } )?
   {
-    return typeExpr;
+    return new IndexedTypeExpression(typeExpr, isUnknownable);
   }
 }
 
@@ -1473,17 +1476,17 @@ String Identifier() throws ParseException:
   )
 }
 
-Pair<Integer, Pair<List<String>, TypeExpression>> OpenField() throws ParseException:
+Pair<Integer, Pair<List<String>, IndexedTypeExpression>> OpenField() throws ParseException:
 {
-  TypeExpression fieldType = null;
+  IndexedTypeExpression fieldType = null;
   Pair<Integer, List<String>> fieldList = null;
 }
 {
   fieldList = NestedField()
-  ( <COLON> fieldType =  IndexedTypeExpr() <QUES>)?
+  ( <COLON> fieldType = IndexedTypeExpr() )?
   {
-    return new Pair<Integer, Pair<List<String>, TypeExpression>>
-           (fieldList.first, new Pair<List<String>, TypeExpression>(fieldList.second, fieldType));
+    return new Pair<Integer, Pair<List<String>, IndexedTypeExpression>>
+            (fieldList.first, new Pair<List<String>, IndexedTypeExpression>(fieldList.second, fieldType));
   }
 }
 

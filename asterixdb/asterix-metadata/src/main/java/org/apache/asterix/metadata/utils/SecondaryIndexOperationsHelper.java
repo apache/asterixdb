@@ -19,6 +19,7 @@
 
 package org.apache.asterix.metadata.utils;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -40,13 +41,14 @@ import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails;
 import org.apache.asterix.metadata.lock.ExternalDatasetsRegistry;
+import org.apache.asterix.om.functions.BuiltinFunctions;
+import org.apache.asterix.om.functions.FunctionManagerHolder;
+import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.evaluators.functions.AndDescriptor;
-import org.apache.asterix.runtime.evaluators.functions.CastTypeDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.IsUnknownDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.NotDescriptor;
-import org.apache.commons.collections4.IteratorUtils;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraintHelper;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -130,11 +132,9 @@ public abstract class SecondaryIndexOperationsHelper {
 
     private static Pair<ARecordType, ARecordType> getEnforcedType(Index index, ARecordType aRecordType,
             ARecordType metaRecordType) throws AlgebricksException {
-        return index.isEnforcingKeyFields()
-                ? TypeUtil.createEnforcedType(aRecordType, metaRecordType,
-                        IteratorUtils.toList(IteratorUtils.singletonIterator(index)))
+        return index.isOverridingKeyFieldTypes()
+                ? TypeUtil.createEnforcedType(aRecordType, metaRecordType, Collections.singletonList(index))
                 : new Pair<>(null, null);
-
     }
 
     public static SecondaryIndexOperationsHelper createIndexOperationsHelper(Dataset dataset, Index index,
@@ -292,8 +292,10 @@ public abstract class SecondaryIndexOperationsHelper {
         return asterixAssignOp;
     }
 
-    protected AlgebricksMetaOperatorDescriptor createCastOp(JobSpecification spec, DatasetType dsType) {
-        CastTypeDescriptor castFuncDesc = (CastTypeDescriptor) CastTypeDescriptor.FACTORY.createFunctionDescriptor();
+    protected AlgebricksMetaOperatorDescriptor createCastOp(JobSpecification spec, DatasetType dsType,
+            boolean strictCast) throws AlgebricksException {
+        IFunctionDescriptor castFuncDesc = FunctionManagerHolder.getFunctionManager()
+                .lookupFunction(strictCast ? BuiltinFunctions.CAST_TYPE : BuiltinFunctions.CAST_TYPE_LAX);
         castFuncDesc.setImmutableStates(enforcedItemType, itemType);
 
         int[] outColumns = new int[1];

@@ -207,8 +207,8 @@ public class RTreeAccessMethod implements IAccessMethod {
         ArrayList<LogicalVariable> keyVarList = new ArrayList<>();
         // List of expressions for the assign.
         ArrayList<Mutable<ILogicalExpression>> keyExprList = new ArrayList<>();
-        Pair<ILogicalExpression, Boolean> returnedSearchKeyExpr = AccessMethodUtils.createSearchKeyExpr(optFuncExpr,
-                indexSubTree, probeSubTree);
+        Pair<ILogicalExpression, Boolean> returnedSearchKeyExpr =
+                AccessMethodUtils.createSearchKeyExpr(chosenIndex, optFuncExpr, indexSubTree, probeSubTree);
         ILogicalExpression searchKeyExpr = returnedSearchKeyExpr.first;
 
         for (int i = 0; i < numSecondaryKeys; i++) {

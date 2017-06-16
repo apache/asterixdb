@@ -23,9 +23,9 @@ import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 
 public interface IFunctionManager extends Iterable<IFunctionDescriptorFactory> {
 
-    public void registerFunction(IFunctionDescriptorFactory descriptorFactory) throws AlgebricksException;
+    public void registerFunction(IFunctionDescriptorFactory descriptorFactory);
 
-    public void unregisterFunction(IFunctionDescriptorFactory descriptorFactory) throws AlgebricksException;
+    public void unregisterFunction(IFunctionDescriptorFactory descriptorFactory);
 
     public IFunctionDescriptor lookupFunction(FunctionIdentifier fid) throws AlgebricksException;
 }

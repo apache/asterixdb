@@ -47,6 +47,7 @@ import org.apache.asterix.lang.common.expression.FieldBinding;
 import org.apache.asterix.lang.common.expression.GbyVariableExpressionPair;
 import org.apache.asterix.lang.common.expression.IfExpr;
 import org.apache.asterix.lang.common.expression.IndexAccessor;
+import org.apache.asterix.lang.common.expression.IndexedTypeExpression;
 import org.apache.asterix.lang.common.expression.ListConstructor;
 import org.apache.asterix.lang.common.expression.LiteralExpr;
 import org.apache.asterix.lang.common.expression.OperatorExpr;
@@ -660,14 +661,18 @@ public class FormatPrintVisitor implements ILangVisitor<Void, Integer> {
         out.print(generateFullName(cis.getDataverseName(), cis.getDatasetName()));
 
         out.print(" (");
-        List<Pair<List<String>, TypeExpression>> fieldExprs = cis.getFieldExprs();
+        List<Pair<List<String>, IndexedTypeExpression>> fieldExprs = cis.getFieldExprs();
         int index = 0;
         int size = fieldExprs.size();
-        for (Pair<List<String>, TypeExpression> entry : fieldExprs) {
+        for (Pair<List<String>, IndexedTypeExpression> entry : fieldExprs) {
             printNestField(entry.first);
-            if (entry.second != null) {
+            IndexedTypeExpression typeExpr = entry.second;
+            if (typeExpr != null) {
                 out.print(":");
-                entry.second.accept(this, step);
+                typeExpr.getType().accept(this, step);
+                if (typeExpr.isUnknownable()) {
+                    out.print('?');
+                }
             }
             if (++index < size) {
                 out.print(",");

@@ -108,6 +108,8 @@ public class ErrorCode {
     public static final int COMPILATION_ILLEGAL_STATE = 1038;
     public static final int COMPILATION_TWO_PHASE_LOCKING_VIOLATION = 1039;
     public static final int DATASET_ID_EXHAUSTED = 1040;
+    public static final int INDEX_ILLEGAL_ENFORCED_NON_OPTIONAL = 1041;
+    public static final int INDEX_ILLEGAL_NON_ENFORCED_TYPED = 1042;
 
     // Feed errors
     public static final int DATAFLOW_ILLEGAL_STATE = 3001;

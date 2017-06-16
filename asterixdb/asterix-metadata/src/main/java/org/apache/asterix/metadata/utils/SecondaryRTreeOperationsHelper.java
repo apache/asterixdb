@@ -83,7 +83,7 @@ public class SecondaryRTreeOperationsHelper extends SecondaryTreeIndexOperations
     protected void setSecondaryRecDescAndComparators() throws AlgebricksException {
         List<List<String>> secondaryKeyFields = index.getKeyFieldNames();
         int numSecondaryKeys = secondaryKeyFields.size();
-        boolean isEnforcingKeyTypes = index.isEnforcingKeyFields();
+        boolean isOverridingKeyFieldTypes = index.isOverridingKeyFieldTypes();
         if (numSecondaryKeys != 1) {
             throw new AsterixException("Cannot use " + numSecondaryKeys + " fields as a key for the R-tree index. "
                     + "There can be only one field as a key for the R-tree index.");
@@ -100,7 +100,7 @@ public class SecondaryRTreeOperationsHelper extends SecondaryTreeIndexOperations
         numNestedSecondaryKeyFields = numDimensions * 2;
         int recordColumn = dataset.getDatasetType() == DatasetType.INTERNAL ? numPrimaryKeys : 0;
         secondaryFieldAccessEvalFactories =
-                metadataProvider.getFormat().createMBRFactory(isEnforcingKeyTypes ? enforcedItemType : itemType,
+                metadataProvider.getFormat().createMBRFactory(isOverridingKeyFieldTypes ? enforcedItemType : itemType,
                         secondaryKeyFields.get(0), recordColumn, numDimensions, filterFieldName, isPointMBR);
         secondaryComparatorFactories = new IBinaryComparatorFactory[numNestedSecondaryKeyFields];
         valueProviderFactories = new IPrimitiveValueProviderFactory[numNestedSecondaryKeyFields];
@@ -195,7 +195,7 @@ public class SecondaryRTreeOperationsHelper extends SecondaryTreeIndexOperations
                 isPointMBR ? numNestedSecondaryKeyFields / 2 : numNestedSecondaryKeyFields;
         RecordDescriptor secondaryRecDescConsideringPointMBR =
                 isPointMBR ? secondaryRecDescForPointMBR : secondaryRecDesc;
-        boolean isEnforcingKeyTypes = index.isEnforcingKeyFields();
+        boolean isOverridingKeyFieldTypes = index.isOverridingKeyFieldTypes();
         IIndexDataflowHelperFactory indexDataflowHelperFactory = new IndexDataflowHelperFactory(
                 metadataProvider.getStorageComponentProvider().getStorageManager(), secondaryFileSplitProvider);
         if (dataset.getDatasetType() == DatasetType.INTERNAL) {
@@ -209,8 +209,8 @@ public class SecondaryRTreeOperationsHelper extends SecondaryTreeIndexOperations
 
             // Assign op.
             IOperatorDescriptor sourceOp = primaryScanOp;
-            if (isEnforcingKeyTypes && !enforcedItemType.equals(itemType)) {
-                sourceOp = createCastOp(spec, dataset.getDatasetType());
+            if (isOverridingKeyFieldTypes && !enforcedItemType.equals(itemType)) {
+                sourceOp = createCastOp(spec, dataset.getDatasetType(), index.isEnforced());
                 spec.connect(new OneToOneConnectorDescriptor(spec), primaryScanOp, 0, sourceOp, 0);
             }
             AlgebricksMetaOperatorDescriptor asterixAssignOp = createAssignOp(spec,
@@ -218,7 +218,7 @@ public class SecondaryRTreeOperationsHelper extends SecondaryTreeIndexOperations
 
             // If any of the secondary fields are nullable, then add a select op that filters nulls.
             AlgebricksMetaOperatorDescriptor selectOp = null;
-            if (anySecondaryKeyIsNullable || isEnforcingKeyTypes) {
+            if (anySecondaryKeyIsNullable || isOverridingKeyFieldTypes) {
                 selectOp = createFilterNullsSelectOp(spec, numNestedSecondaryKeFieldsConsideringPointMBR,
                         secondaryRecDescConsideringPointMBR);
             }
@@ -236,7 +236,7 @@ public class SecondaryRTreeOperationsHelper extends SecondaryTreeIndexOperations
             // Connect the operators.
             spec.connect(new OneToOneConnectorDescriptor(spec), keyProviderOp, 0, primaryScanOp, 0);
             spec.connect(new OneToOneConnectorDescriptor(spec), sourceOp, 0, asterixAssignOp, 0);
-            if (anySecondaryKeyIsNullable || isEnforcingKeyTypes) {
+            if (anySecondaryKeyIsNullable || isOverridingKeyFieldTypes) {
                 spec.connect(new OneToOneConnectorDescriptor(spec), asterixAssignOp, 0, selectOp, 0);
                 spec.connect(new OneToOneConnectorDescriptor(spec), selectOp, 0, sortOp, 0);
             } else {
@@ -256,8 +256,8 @@ public class SecondaryRTreeOperationsHelper extends SecondaryTreeIndexOperations
             // Create external indexing scan operator
             ExternalScanOperatorDescriptor primaryScanOp = createExternalIndexingOp(spec);
             AbstractOperatorDescriptor sourceOp = primaryScanOp;
-            if (isEnforcingKeyTypes && !enforcedItemType.equals(itemType)) {
-                sourceOp = createCastOp(spec, dataset.getDatasetType());
+            if (isOverridingKeyFieldTypes && !enforcedItemType.equals(itemType)) {
+                sourceOp = createCastOp(spec, dataset.getDatasetType(), index.isEnforced());
                 spec.connect(new OneToOneConnectorDescriptor(spec), primaryScanOp, 0, sourceOp, 0);
             }
             // Assign op.
@@ -266,7 +266,7 @@ public class SecondaryRTreeOperationsHelper extends SecondaryTreeIndexOperations
 
             // If any of the secondary fields are nullable, then add a select op that filters nulls.
             AlgebricksMetaOperatorDescriptor selectOp = null;
-            if (anySecondaryKeyIsNullable || isEnforcingKeyTypes) {
+            if (anySecondaryKeyIsNullable || isOverridingKeyFieldTypes) {
                 selectOp = createFilterNullsSelectOp(spec, numNestedSecondaryKeFieldsConsideringPointMBR,
                         secondaryRecDescConsideringPointMBR);
             }
@@ -294,7 +294,7 @@ public class SecondaryRTreeOperationsHelper extends SecondaryTreeIndexOperations
             spec.connect(new OneToOneConnectorDescriptor(spec), secondaryBulkLoadOp, 0, metaOp, 0);
             root = metaOp;
             spec.connect(new OneToOneConnectorDescriptor(spec), sourceOp, 0, asterixAssignOp, 0);
-            if (anySecondaryKeyIsNullable || isEnforcingKeyTypes) {
+            if (anySecondaryKeyIsNullable || isOverridingKeyFieldTypes) {
                 spec.connect(new OneToOneConnectorDescriptor(spec), asterixAssignOp, 0, selectOp, 0);
                 spec.connect(new OneToOneConnectorDescriptor(spec), selectOp, 0, sortOp, 0);
             } else {

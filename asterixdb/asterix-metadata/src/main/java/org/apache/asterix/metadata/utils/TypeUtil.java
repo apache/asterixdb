@@ -54,7 +54,7 @@ public class TypeUtil {
         ARecordType enforcedRecordType = recordType;
         ARecordType enforcedMetaType = metaType;
         for (Index index : indexes) {
-            if (!index.isSecondaryIndex() || !index.isEnforcingKeyFields()) {
+            if (!index.isSecondaryIndex() || !index.isOverridingKeyFieldTypes()) {
                 continue;
             }
             if (index.hasMetaFields()) {

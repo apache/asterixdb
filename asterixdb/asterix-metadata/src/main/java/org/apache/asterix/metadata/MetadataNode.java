@@ -325,7 +325,7 @@ public class MetadataNode implements IMetadataNode {
                 InternalDatasetDetails id = (InternalDatasetDetails) dataset.getDatasetDetails();
                 Index primaryIndex = new Index(dataset.getDataverseName(), dataset.getDatasetName(),
                         dataset.getDatasetName(), IndexType.BTREE, id.getPrimaryKey(), id.getKeySourceIndicator(),
-                        id.getPrimaryKeyType(), false, true, dataset.getPendingOp());
+                        id.getPrimaryKeyType(), false, false, true, dataset.getPendingOp());
 
                 addIndex(jobId, primaryIndex);
             }

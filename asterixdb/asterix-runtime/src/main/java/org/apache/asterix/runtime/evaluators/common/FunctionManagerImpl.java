@@ -49,14 +49,13 @@ public class FunctionManagerImpl implements IFunctionManager {
     }
 
     @Override
-    public synchronized void registerFunction(IFunctionDescriptorFactory descriptorFactory) throws AlgebricksException {
+    public synchronized void registerFunction(IFunctionDescriptorFactory descriptorFactory) {
         FunctionIdentifier fid = descriptorFactory.createFunctionDescriptor().getIdentifier();
         functions.put(new Pair<FunctionIdentifier, Integer>(fid, fid.getArity()), descriptorFactory);
     }
 
     @Override
-    public synchronized void unregisterFunction(IFunctionDescriptorFactory descriptorFactory)
-            throws AlgebricksException {
+    public synchronized void unregisterFunction(IFunctionDescriptorFactory descriptorFactory) {
         FunctionIdentifier fid = descriptorFactory.createFunctionDescriptor().getIdentifier();
         Pair<FunctionIdentifier, Integer> key = new Pair<>(fid, fid.getArity());
         functions.remove(key);

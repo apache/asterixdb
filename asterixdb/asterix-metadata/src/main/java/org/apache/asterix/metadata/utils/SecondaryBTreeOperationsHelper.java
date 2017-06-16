@@ -66,7 +66,7 @@ public class SecondaryBTreeOperationsHelper extends SecondaryTreeIndexOperations
     @Override
     public JobSpecification buildLoadingJobSpec() throws AlgebricksException {
         JobSpecification spec = RuntimeUtils.createJobSpecification(metadataProvider.getApplicationContext());
-        boolean isEnforcingKeyTypes = index.isEnforcingKeyFields();
+        boolean isOverridingKeyFieldTypes = index.isOverridingKeyFieldTypes();
         int[] fieldPermutation = createFieldPermutationForBulkLoadOp(index.getKeyFieldNames().size());
         IIndexDataflowHelperFactory dataflowHelperFactory = new IndexDataflowHelperFactory(
                 metadataProvider.getStorageComponentProvider().getStorageManager(), secondaryFileSplitProvider);
@@ -82,8 +82,8 @@ public class SecondaryBTreeOperationsHelper extends SecondaryTreeIndexOperations
 
             // Assign op.
             AbstractOperatorDescriptor sourceOp = primaryScanOp;
-            if (isEnforcingKeyTypes && !enforcedItemType.equals(itemType)) {
-                sourceOp = createCastOp(spec, dataset.getDatasetType());
+            if (isOverridingKeyFieldTypes && !enforcedItemType.equals(itemType)) {
+                sourceOp = createCastOp(spec, dataset.getDatasetType(), index.isEnforced());
                 spec.connect(new OneToOneConnectorDescriptor(spec), primaryScanOp, 0, sourceOp, 0);
             }
             AlgebricksMetaOperatorDescriptor asterixAssignOp =
@@ -91,7 +91,7 @@ public class SecondaryBTreeOperationsHelper extends SecondaryTreeIndexOperations
 
             // If any of the secondary fields are nullable, then add a select op that filters nulls.
             AlgebricksMetaOperatorDescriptor selectOp = null;
-            if (anySecondaryKeyIsNullable || isEnforcingKeyTypes) {
+            if (anySecondaryKeyIsNullable || isOverridingKeyFieldTypes) {
                 selectOp = createFilterNullsSelectOp(spec, index.getKeyFieldNames().size(), secondaryRecDesc);
             }
 
@@ -115,7 +115,7 @@ public class SecondaryBTreeOperationsHelper extends SecondaryTreeIndexOperations
             spec.connect(new OneToOneConnectorDescriptor(spec), secondaryBulkLoadOp, 0, metaOp, 0);
             root = metaOp;
             spec.connect(new OneToOneConnectorDescriptor(spec), sourceOp, 0, asterixAssignOp, 0);
-            if (anySecondaryKeyIsNullable || isEnforcingKeyTypes) {
+            if (anySecondaryKeyIsNullable || isOverridingKeyFieldTypes) {
                 spec.connect(new OneToOneConnectorDescriptor(spec), asterixAssignOp, 0, selectOp, 0);
                 spec.connect(new OneToOneConnectorDescriptor(spec), selectOp, 0, sortOp, 0);
             } else {
@@ -137,8 +137,8 @@ public class SecondaryBTreeOperationsHelper extends SecondaryTreeIndexOperations
 
             // Assign op.
             IOperatorDescriptor sourceOp = primaryScanOp;
-            if (isEnforcingKeyTypes && !enforcedItemType.equals(itemType)) {
-                sourceOp = createCastOp(spec, dataset.getDatasetType());
+            if (isOverridingKeyFieldTypes && !enforcedItemType.equals(itemType)) {
+                sourceOp = createCastOp(spec, dataset.getDatasetType(), index.isEnforced());
                 spec.connect(new OneToOneConnectorDescriptor(spec), primaryScanOp, 0, sourceOp, 0);
             }
             AlgebricksMetaOperatorDescriptor asterixAssignOp =
@@ -146,7 +146,7 @@ public class SecondaryBTreeOperationsHelper extends SecondaryTreeIndexOperations
 
             // If any of the secondary fields are nullable, then add a select op that filters nulls.
             AlgebricksMetaOperatorDescriptor selectOp = null;
-            if (anySecondaryKeyIsNullable || isEnforcingKeyTypes) {
+            if (anySecondaryKeyIsNullable || isOverridingKeyFieldTypes) {
                 selectOp = createFilterNullsSelectOp(spec, index.getKeyFieldNames().size(), secondaryRecDesc);
             }
 
@@ -162,7 +162,7 @@ public class SecondaryBTreeOperationsHelper extends SecondaryTreeIndexOperations
             // Connect the operators.
             spec.connect(new OneToOneConnectorDescriptor(spec), keyProviderOp, 0, primaryScanOp, 0);
             spec.connect(new OneToOneConnectorDescriptor(spec), sourceOp, 0, asterixAssignOp, 0);
-            if (anySecondaryKeyIsNullable || isEnforcingKeyTypes) {
+            if (anySecondaryKeyIsNullable || isOverridingKeyFieldTypes) {
                 spec.connect(new OneToOneConnectorDescriptor(spec), asterixAssignOp, 0, selectOp, 0);
                 spec.connect(new OneToOneConnectorDescriptor(spec), selectOp, 0, sortOp, 0);
             } else {
@@ -201,7 +201,7 @@ public class SecondaryBTreeOperationsHelper extends SecondaryTreeIndexOperations
                 metadataProvider.getFormat().getBinaryComparatorFactoryProvider();
         // Record column is 0 for external datasets, numPrimaryKeys for internal ones
         int recordColumn = dataset.getDatasetType() == DatasetType.INTERNAL ? numPrimaryKeys : 0;
-        boolean isEnforcingKeyTypes = index.isEnforcingKeyFields();
+        boolean isOverridingKeyFieldTypes = index.isOverridingKeyFieldTypes();
         for (int i = 0; i < numSecondaryKeys; i++) {
             ARecordType sourceType;
             int sourceColumn;
@@ -214,7 +214,8 @@ public class SecondaryBTreeOperationsHelper extends SecondaryTreeIndexOperations
                 sourceColumn = recordColumn + 1;
             }
             secondaryFieldAccessEvalFactories[i] = metadataProvider.getFormat().getFieldAccessEvaluatorFactory(
-                    isEnforcingKeyTypes ? enforcedItemType : sourceType, index.getKeyFieldNames().get(i), sourceColumn);
+                    isOverridingKeyFieldTypes ? enforcedItemType : sourceType, index.getKeyFieldNames().get(i),
+                    sourceColumn);
             Pair<IAType, Boolean> keyTypePair = Index.getNonNullableOpenFieldType(index.getKeyFieldTypes().get(i),
                     index.getKeyFieldNames().get(i), sourceType);
             IAType keyType = keyTypePair.first;

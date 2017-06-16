@@ -24,7 +24,7 @@ import java.util.List;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.base.Statement;
-import org.apache.asterix.lang.common.expression.TypeExpression;
+import org.apache.asterix.lang.common.expression.IndexedTypeExpression;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 import org.apache.hyracks.algebricks.common.utils.Pair;
@@ -34,7 +34,7 @@ public class CreateIndexStatement implements Statement {
     private Identifier indexName;
     private Identifier dataverseName;
     private Identifier datasetName;
-    private List<Pair<List<String>, TypeExpression>> fieldExprs = new ArrayList<>();
+    private List<Pair<List<String>, IndexedTypeExpression>> fieldExprs = new ArrayList<>();
     private List<Integer> fieldIndexIndicators = new ArrayList<>();
     private IndexType indexType = IndexType.BTREE;
     private boolean enforced;
@@ -78,11 +78,11 @@ public class CreateIndexStatement implements Statement {
         this.datasetName = datasetName;
     }
 
-    public List<Pair<List<String>, TypeExpression>> getFieldExprs() {
+    public List<Pair<List<String>, IndexedTypeExpression>> getFieldExprs() {
         return fieldExprs;
     }
 
-    public void addFieldExprPair(Pair<List<String>, TypeExpression> fp) {
+    public void addFieldExprPair(Pair<List<String>, IndexedTypeExpression> fp) {
         this.fieldExprs.add(fp);
     }
 

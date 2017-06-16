@@ -3486,13 +3486,13 @@
       <test-case FilePath="open-index-enforced/error-checking">
         <compilation-unit name="missing-enforce-statement">
           <output-dir compare="Text">missing-enforce-statement</output-dir>
-          <expected-error>Cannot create typed index on "[value]" field without enforcing it's type</expected-error>
+          <expected-error>ASX1042: Cannot create non-enforced typed index of this kind: RTREE</expected-error>
         </compilation-unit>
       </test-case>
       <test-case FilePath="open-index-enforced/error-checking">
         <compilation-unit name="missing-optionality">
           <output-dir compare="Text">missing-optionality</output-dir>
-          <expected-error>"?"</expected-error>
+          <expected-error>Cannot create enforced index on "[value]" field with non-optional type</expected-error>
         </compilation-unit>
       </test-case>
       <test-case FilePath="open-index-enforced/error-checking">

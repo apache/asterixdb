@@ -385,7 +385,7 @@ public class AccessMethodUtils {
      *
      * @throws AlgebricksException
      */
-    public static Pair<ILogicalExpression, Boolean> createSearchKeyExpr(IOptimizableFuncExpr optFuncExpr,
+    public static Pair<ILogicalExpression, Boolean> createSearchKeyExpr(Index index, IOptimizableFuncExpr optFuncExpr,
             OptimizableOperatorSubTree indexSubTree, OptimizableOperatorSubTree probeSubTree)
             throws AlgebricksException {
         if (probeSubTree == null) {
@@ -422,7 +422,7 @@ public class AccessMethodUtils {
             if (constantValueTag != fieldType.getTypeTag() && constantValue != null) {
                 try {
                     replacedConstantValue = ATypeHierarchy.getAsterixConstantValueFromNumericTypeObject(
-                            constantValue.getObject(), fieldType.getTypeTag(), true);
+                            constantValue.getObject(), fieldType.getTypeTag(), index.isEnforced());
                 } catch (HyracksDataException e) {
                     throw new AlgebricksException(e);
                 }

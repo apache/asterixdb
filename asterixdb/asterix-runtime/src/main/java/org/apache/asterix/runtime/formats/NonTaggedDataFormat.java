@@ -26,6 +26,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.common.config.GlobalConfig;
+import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.dataflow.data.nontagged.MissingWriterFactory;
 import org.apache.asterix.formats.base.IDataFormat;
 import org.apache.asterix.formats.nontagged.ADMPrinterFactoryProvider;
@@ -63,9 +65,6 @@ import org.apache.asterix.om.utils.ConstantExpressionUtil;
 import org.apache.asterix.om.utils.RecordUtil;
 import org.apache.asterix.runtime.evaluators.common.CreateMBREvalFactory;
 import org.apache.asterix.runtime.evaluators.common.FunctionManagerImpl;
-import org.apache.asterix.runtime.evaluators.functions.records.FieldAccessByIndexEvalFactory;
-import org.apache.asterix.runtime.evaluators.functions.records.FieldAccessByNameDescriptor;
-import org.apache.asterix.runtime.evaluators.functions.records.FieldAccessNestedEvalFactory;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -132,7 +131,7 @@ public class NonTaggedDataFormat implements IDataFormat {
     }
 
     @Override
-    public void registerRuntimeFunctions(List<IFunctionDescriptorFactory> funcDescriptors) throws AlgebricksException {
+    public void registerRuntimeFunctions(List<IFunctionDescriptorFactory> funcDescriptors) {
 
         if (registered) {
             return;
@@ -150,6 +149,15 @@ public class NonTaggedDataFormat implements IDataFormat {
         FunctionManagerHolder.setFunctionManager(mgr);
 
         registerTypeInferers();
+    }
+
+    private IFunctionDescriptor lookupRuntimeFunction(FunctionIdentifier funcId)
+            throws AlgebricksException {
+        IFunctionManager mgr = FunctionManagerHolder.getFunctionManager();
+        if (mgr == null) {
+            throw new AsterixException(ErrorCode.COMPILATION_ILLEGAL_STATE, funcId);
+        }
+        return mgr.lookupFunction(funcId);
     }
 
     @Override
@@ -181,17 +189,16 @@ public class NonTaggedDataFormat implements IDataFormat {
     @Override
     public IScalarEvaluatorFactory getFieldAccessEvaluatorFactory(ARecordType recType, List<String> fldName,
             int recordColumn) throws AlgebricksException {
-        String[] names = recType.getFieldNames();
-        int n = names.length;
-        boolean fieldFound = false;
         IScalarEvaluatorFactory recordEvalFactory = new ColumnAccessEvalFactory(recordColumn);
-        ArrayBackedValueStorage abvs = new ArrayBackedValueStorage();
-        DataOutput dos = abvs.getDataOutput();
-        IScalarEvaluatorFactory evalFactory = null;
+
         if (fldName.size() == 1) {
-            for (int i = 0; i < n; i++) {
-                if (names[i].equals(fldName.get(0))) {
-                    fieldFound = true;
+            String[] names = recType.getFieldNames();
+            ArrayBackedValueStorage abvs = new ArrayBackedValueStorage();
+            DataOutput dos = abvs.getDataOutput();
+
+            String fieldName = fldName.get(0);
+            for (int i = 0; i < names.length; i++) {
+                if (names[i].equals(fieldName)) {
                     try {
                         AInt32 ai = new AInt32(i);
                         SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(ai.getType()).serialize(ai,
@@ -201,42 +208,35 @@ public class NonTaggedDataFormat implements IDataFormat {
                     }
                     IScalarEvaluatorFactory fldIndexEvalFactory =
                             new ConstantEvalFactory(Arrays.copyOf(abvs.getByteArray(), abvs.getLength()));
+                    IFunctionDescriptor fDesc = lookupRuntimeFunction(BuiltinFunctions.FIELD_ACCESS_BY_INDEX);
+                    fDesc.setImmutableStates(recType);
+                    return fDesc.createEvaluatorFactory(
+                            new IScalarEvaluatorFactory[] { recordEvalFactory, fldIndexEvalFactory });
+                }
+            }
 
-                    evalFactory = new FieldAccessByIndexEvalFactory(recordEvalFactory, fldIndexEvalFactory, recType);
-                    return evalFactory;
-                }
-            }
-        }
-        if (fldName.size() > 1 || (!fieldFound && recType.isOpen())) {
-            if (fldName.size() == 1) {
-                AString as = new AString(fldName.get(0));
+            if (recType.isOpen()) {
+                AString as = new AString(fieldName);
                 try {
-                    SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(as.getType()).serialize(as,
-                            dos);
+                    SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(as.getType()).serialize(as, dos);
                 } catch (HyracksDataException e) {
                     throw new AlgebricksException(e);
                 }
-            } else {
-                AOrderedList as = new AOrderedList(fldName);
-                try {
-                    SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(as.getType()).serialize(as,
-                            dos);
-                } catch (HyracksDataException e) {
-                    throw new AlgebricksException(e);
-                }
+                IScalarEvaluatorFactory fldNameEvalFactory =
+                        new ConstantEvalFactory(Arrays.copyOf(abvs.getByteArray(), abvs.getLength()));
+                IFunctionDescriptor fDesc = lookupRuntimeFunction(BuiltinFunctions.FIELD_ACCESS_BY_NAME);
+                return fDesc.createEvaluatorFactory(
+                        new IScalarEvaluatorFactory[] { recordEvalFactory, fldNameEvalFactory });
             }
-            IScalarEvaluatorFactory[] factories = new IScalarEvaluatorFactory[2];
-            factories[0] = recordEvalFactory;
-            if (fldName.size() > 1) {
-                evalFactory = new FieldAccessNestedEvalFactory(recordEvalFactory, recType, fldName);
-            } else {
-                evalFactory = FieldAccessByNameDescriptor.FACTORY.createFunctionDescriptor()
-                        .createEvaluatorFactory(factories);
-            }
-            return evalFactory;
-        } else {
-            throw new AlgebricksException("Could not find field " + fldName + " in the schema.");
         }
+
+        if (fldName.size() > 1) {
+            IFunctionDescriptor fDesc = lookupRuntimeFunction(BuiltinFunctions.FIELD_ACCESS_NESTED);
+            fDesc.setImmutableStates(recType, fldName);
+            return fDesc.createEvaluatorFactory(new IScalarEvaluatorFactory[] { recordEvalFactory });
+        }
+
+        throw new AlgebricksException("Could not find field " + fldName + " in the schema.");
     }
 
     @SuppressWarnings("unchecked")
@@ -301,10 +301,12 @@ public class NonTaggedDataFormat implements IDataFormat {
                     }
                     IScalarEvaluatorFactory fldIndexEvalFactory =
                             new ConstantEvalFactory(Arrays.copyOf(abvs.getByteArray(), abvs.getLength()));
-                    IScalarEvaluatorFactory evalFactory =
-                            new FieldAccessByIndexEvalFactory(recordEvalFactory, fldIndexEvalFactory, recType);
-                    IFunctionInfo finfoAccess = BuiltinFunctions
-                            .getAsterixFunctionInfo(BuiltinFunctions.FIELD_ACCESS_BY_INDEX);
+                    IFunctionDescriptor fDesc = lookupRuntimeFunction(BuiltinFunctions.FIELD_ACCESS_BY_INDEX);
+                    fDesc.setImmutableStates(recType);
+                    IScalarEvaluatorFactory evalFactory = fDesc.createEvaluatorFactory(
+                            new IScalarEvaluatorFactory[] { recordEvalFactory, fldIndexEvalFactory });
+                    IFunctionInfo finfoAccess =
+                            BuiltinFunctions.getAsterixFunctionInfo(BuiltinFunctions.FIELD_ACCESS_BY_INDEX);
 
                     ScalarFunctionCallExpression partitionFun = new ScalarFunctionCallExpression(finfoAccess,
                             new MutableObject<ILogicalExpression>(new VariableReferenceExpression(METADATA_DUMMY_VAR)),
@@ -325,9 +327,11 @@ public class NonTaggedDataFormat implements IDataFormat {
             } catch (HyracksDataException e) {
                 throw new AlgebricksException(e);
             }
-            IScalarEvaluatorFactory evalFactory = new FieldAccessNestedEvalFactory(recordEvalFactory, recType, fldName);
-            IFunctionInfo finfoAccess =
-                    BuiltinFunctions.getAsterixFunctionInfo(BuiltinFunctions.FIELD_ACCESS_NESTED);
+            IFunctionDescriptor fDesc = lookupRuntimeFunction(BuiltinFunctions.FIELD_ACCESS_NESTED);
+            fDesc.setImmutableStates(recType, fldName);
+            IScalarEvaluatorFactory evalFactory =
+                    fDesc.createEvaluatorFactory(new IScalarEvaluatorFactory[] { recordEvalFactory });
+            IFunctionInfo finfoAccess = BuiltinFunctions.getAsterixFunctionInfo(BuiltinFunctions.FIELD_ACCESS_NESTED);
 
             ScalarFunctionCallExpression partitionFun = new ScalarFunctionCallExpression(finfoAccess,
                     new MutableObject<ILogicalExpression>(new VariableReferenceExpression(METADATA_DUMMY_VAR)),

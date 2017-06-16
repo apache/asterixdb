@@ -60,7 +60,7 @@ public class IndexUtil {
         InternalDatasetDetails id = (InternalDatasetDetails) dataset.getDatasetDetails();
         return new Index(dataset.getDataverseName(), dataset.getDatasetName(), dataset.getDatasetName(),
                 DatasetConfig.IndexType.BTREE, id.getPartitioningKey(), id.getKeySourceIndicator(),
-                id.getPrimaryKeyType(), false, true, dataset.getPendingOp());
+                id.getPrimaryKeyType(), false, false, true, dataset.getPendingOp());
     }
 
     public static int[] getBtreeFieldsIfFiltered(Dataset dataset, Index index) throws AlgebricksException {

@@ -3339,13 +3339,13 @@
       <test-case FilePath="open-index-enforced/error-checking">
         <compilation-unit name="missing-enforce-statement">
           <output-dir compare="Text">missing-enforce-statement</output-dir>
-          <expected-error>Cannot create typed index on "[value]" field without enforcing it's type</expected-error>
+          <expected-error>ASX1042: Cannot create non-enforced typed index of this kind: RTREE</expected-error>
         </compilation-unit>
       </test-case>
       <test-case FilePath="open-index-enforced/error-checking">
         <compilation-unit name="missing-optionality">
           <output-dir compare="Text">missing-optionality</output-dir>
-          <expected-error>string) enforced</expected-error>
+          <expected-error>Cannot create enforced index on "[value]" field with non-optional type</expected-error>
         </compilation-unit>
       </test-case>
       <test-case FilePath="open-index-enforced/error-checking">
@@ -3537,6 +3537,20 @@
       <test-case FilePath="open-index-enforced/type-checking">
         <compilation-unit name="enforced-type-upsert">
           <output-dir compare="Text">enforced-type-upsert</output-dir>
+        </compilation-unit>
+      </test-case>
+    </test-group>
+    <test-group name="open-index-non-enforced/index-selection">
+      <test-case FilePath="open-index-non-enforced/index-selection">
+        <compilation-unit name="btree-index-01">
+          <output-dir compare="Text">btree-index-01</output-dir>
+        </compilation-unit>
+      </test-case>
+    </test-group>
+    <test-group name="open-index-non-enforced/index-join">
+      <test-case FilePath="open-index-non-enforced/index-join">
+        <compilation-unit name="btree-equi-join-01">
+          <output-dir compare="Text">btree-equi-join-01</output-dir>
         </compilation-unit>
       </test-case>
     </test-group>
