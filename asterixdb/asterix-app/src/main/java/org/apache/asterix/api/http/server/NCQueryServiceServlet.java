@@ -20,12 +20,16 @@
 package org.apache.asterix.api.http.server;
 
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.TimeoutException;
+import java.util.logging.Level;
 
+import io.netty.handler.codec.http.HttpResponseStatus;
 import org.apache.asterix.algebra.base.ILangExtension;
 import org.apache.asterix.app.message.ExecuteStatementRequestMessage;
 import org.apache.asterix.app.message.ExecuteStatementResponseMessage;
 import org.apache.asterix.app.result.ResultReader;
 import org.apache.asterix.common.api.IApplicationContext;
+import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.messaging.api.INCMessageBroker;
 import org.apache.asterix.common.messaging.api.MessageFuture;
 import org.apache.asterix.om.types.ARecordType;
@@ -35,6 +39,7 @@ import org.apache.commons.lang3.tuple.Triple;
 import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.dataset.ResultSetId;
 import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.ipc.exceptions.IPCException;
 
 /**
  * Query service servlet that can run on NC nodes.
@@ -89,6 +94,16 @@ public class NCQueryServiceServlet extends QueryServiceServlet {
             }
         } else {
             sessionOutput.out().append(responseMsg.getResult());
+        }
+    }
+
+    @Override
+    protected HttpResponseStatus handleExecuteStatementException(Throwable t) {
+        if (t instanceof IPCException || t instanceof TimeoutException) {
+            GlobalConfig.ASTERIX_LOGGER.log(Level.WARNING, t.toString(), t);
+            return HttpResponseStatus.SERVICE_UNAVAILABLE;
+        } else {
+            return super.handleExecuteStatementException(t);
         }
     }
 }

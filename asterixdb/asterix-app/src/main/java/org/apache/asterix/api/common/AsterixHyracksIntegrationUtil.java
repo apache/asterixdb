@@ -202,13 +202,18 @@ public class AsterixHyracksIntegrationUtil {
             stopNcTheard.join();
         }
 
-        if (cc != null) {
-            cc.stop();
-        }
+        stopCC(false);
 
         if (deleteOldInstanceData) {
             deleteTransactionLogs();
             removeTestStorageFiles();
+        }
+    }
+
+    public void stopCC(boolean terminateNCService) throws Exception {
+        if (cc != null) {
+            cc.stop(terminateNCService);
+            cc = null;
         }
     }
 

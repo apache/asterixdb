@@ -420,21 +420,10 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
                 ResultUtil.printStatus(sessionOutput, ResultStatus.SUCCESS);
             }
             errorCount = 0;
-        } catch (AlgebricksException | TokenMgrError | org.apache.asterix.aqlplus.parser.TokenMgrError pe) {
-            GlobalConfig.ASTERIX_LOGGER.log(Level.INFO, pe.getMessage(), pe);
-            ResultUtil.printError(resultWriter, pe);
-            ResultUtil.printStatus(sessionOutput, ResultStatus.FATAL);
-            status = HttpResponseStatus.BAD_REQUEST;
-        } catch (HyracksException pe) {
-            GlobalConfig.ASTERIX_LOGGER.log(Level.WARNING, pe.getMessage(), pe);
-            ResultUtil.printError(resultWriter, pe);
-            ResultUtil.printStatus(sessionOutput, ResultStatus.FATAL);
-            status = HttpResponseStatus.INTERNAL_SERVER_ERROR;
-        } catch (Exception e) {
-            GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, "Unexpected exception", e);
+        } catch (Exception | TokenMgrError | org.apache.asterix.aqlplus.parser.TokenMgrError e) {
+            status = handleExecuteStatementException(e);
             ResultUtil.printError(resultWriter, e);
             ResultUtil.printStatus(sessionOutput, ResultStatus.FATAL);
-            status = HttpResponseStatus.INTERNAL_SERVER_ERROR;
         } finally {
             if (execStartEnd[0] == -1) {
                 execStartEnd[1] = -1;
@@ -474,5 +463,19 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         translator.compileAndExecute(getHyracksClientConnection(), getHyracksDataset(), delivery, null, stats,
                 param.clientContextID, queryCtx);
         outExecStartEnd[1] = System.nanoTime();
+    }
+
+    protected HttpResponseStatus handleExecuteStatementException(Throwable t) {
+        if (t instanceof org.apache.asterix.aqlplus.parser.TokenMgrError || t instanceof TokenMgrError
+                || t instanceof AlgebricksException) {
+            GlobalConfig.ASTERIX_LOGGER.log(Level.INFO, t.getMessage(), t);
+            return HttpResponseStatus.BAD_REQUEST;
+        } else if (t instanceof HyracksException) {
+            GlobalConfig.ASTERIX_LOGGER.log(Level.WARNING, t.getMessage(), t);
+            return HttpResponseStatus.INTERNAL_SERVER_ERROR;
+        } else {
+            GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, "Unexpected exception", t);
+            return HttpResponseStatus.INTERNAL_SERVER_ERROR;
+        }
     }
 }

@@ -518,17 +518,27 @@ public class TestExecutor {
 
     public InputStream executeQueryService(String str, OutputFormat fmt, URI uri,
             List<CompilationUnit.Parameter> params, boolean jsonEncoded) throws Exception {
-        return executeQueryService(str, fmt, uri, params, jsonEncoded, false);
+        return executeQueryService(str, fmt, uri, params, jsonEncoded, null, false);
+    }
+
+    public InputStream executeQueryService(String str, OutputFormat fmt, URI uri,
+            List<CompilationUnit.Parameter> params, boolean jsonEncoded, Predicate<Integer> responseCodeValidator)
+            throws Exception {
+        return executeQueryService(str, fmt, uri, params, jsonEncoded, responseCodeValidator, false);
     }
 
     protected InputStream executeQueryService(String str, OutputFormat fmt, URI uri,
-            List<CompilationUnit.Parameter> params, boolean jsonEncoded, boolean cancellable) throws Exception {
+            List<CompilationUnit.Parameter> params, boolean jsonEncoded, Predicate<Integer> responseCodeValidator,
+            boolean cancellable) throws Exception {
         final List<CompilationUnit.Parameter> newParams = upsertParam(params, "format", fmt.mimeType());
         HttpUriRequest method = jsonEncoded ? constructPostMethodJson(str, uri, "statement", newParams)
                 : constructPostMethodUrl(str, uri, "statement", newParams);
         // Set accepted output response type
         method.setHeader("Accept", OutputFormat.CLEAN_JSON.mimeType());
         HttpResponse response = executeHttpRequest(method);
+        if (responseCodeValidator != null) {
+            checkResponse(response, responseCodeValidator);
+        }
         return response.getEntity().getContent();
     }
 
@@ -637,8 +647,13 @@ public class TestExecutor {
     }
 
     public InputStream executeJSONGet(OutputFormat fmt, URI uri) throws Exception {
+        return executeJSONGet(fmt, uri, code -> code == HttpStatus.SC_OK);
+    }
+
+    public InputStream executeJSONGet(OutputFormat fmt, URI uri, Predicate<Integer> responseCodeValidator)
+            throws Exception {
         HttpUriRequest request = constructGetMethod(uri, fmt, new ArrayList<>());
-        HttpResponse response = executeAndCheckHttpRequest(request);
+        HttpResponse response = executeAndCheckHttpRequest(request, responseCodeValidator);
         return response.getEntity().getContent();
     }
 
@@ -1101,7 +1116,7 @@ public class TestExecutor {
             }
             final URI uri = getEndpoint(Servlets.QUERY_SERVICE);
             if (DELIVERY_IMMEDIATE.equals(delivery)) {
-                resultStream = executeQueryService(statement, fmt, uri, params, true, true);
+                resultStream = executeQueryService(statement, fmt, uri, params, true, null, true);
                 resultStream = ResultExtractor.extract(resultStream);
             } else {
                 String handleVar = getHandleVariable(statement);
@@ -1355,7 +1370,7 @@ public class TestExecutor {
         return uri;
     }
 
-    protected URI getEndpoint(String servlet) throws URISyntaxException {
+    public URI getEndpoint(String servlet) throws URISyntaxException {
         return createEndpointURI(getPath(servlet).replaceAll("/\\*$", ""), null);
     }
 

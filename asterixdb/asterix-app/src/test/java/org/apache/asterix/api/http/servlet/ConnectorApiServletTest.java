@@ -48,7 +48,11 @@ import org.apache.hyracks.api.io.FileSplit;
 import org.apache.hyracks.api.io.ManagedFileSplit;
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
+import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Assert;
+import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -61,10 +65,20 @@ import junit.extensions.PA;
 
 public class ConnectorApiServletTest {
 
-    @Test
-    public void testGet() throws Exception {
+    @BeforeClass
+    public static void setup() throws Exception {
         // Starts test asterixdb cluster.
         SqlppExecutionTest.setUp();
+    }
+
+    @AfterClass
+    public static void teardown() throws Exception {
+        // Tears down the asterixdb cluster.
+        SqlppExecutionTest.tearDown();
+    }
+
+    @Test
+    public void testGet() throws Exception {
         // Configures a test connector api servlet.
         ConnectorApiServlet let = new ConnectorApiServlet(new ConcurrentHashMap<>(), new String[] { "/" },
                 (ICcApplicationContext) ExecutionTestUtil.integrationUtil.cc.getApplicationContext());
@@ -113,9 +127,6 @@ public class ConnectorApiServletTest {
         ArrayNode splits = (ArrayNode) actualResponse.get("splits");
         String path = (splits.get(0)).get("path").asText();
         Assert.assertTrue(path.endsWith("Metadata/Dataset_idx_Dataset"));
-
-        // Tears down the asterixdb cluster.
-        SqlppExecutionTest.tearDown();
     }
 
     @Test

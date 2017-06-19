@@ -29,6 +29,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.function.Predicate;
 
 import org.apache.asterix.common.utils.Servlets;
 import org.apache.asterix.test.runtime.SqlppExecutionWithCancellationTest;
@@ -46,14 +47,15 @@ public class CancellationTestExecutor extends TestExecutor {
 
     @Override
     public InputStream executeQueryService(String str, TestCaseContext.OutputFormat fmt, URI uri,
-            List<TestCase.CompilationUnit.Parameter> params, boolean jsonEncoded, boolean cancellable)
-            throws Exception {
+            List<TestCase.CompilationUnit.Parameter> params, boolean jsonEncoded,
+            Predicate<Integer> responseCodeValidator, boolean cancellable) throws Exception {
         String clientContextId = UUID.randomUUID().toString();
         final List<TestCase.CompilationUnit.Parameter> newParams =
                 cancellable ? upsertParam(params, "client_context_id", clientContextId) : params;
         Callable<InputStream> query = () -> {
             try {
-                return CancellationTestExecutor.super.executeQueryService(str, fmt, uri, newParams, jsonEncoded, true);
+                return CancellationTestExecutor.super.executeQueryService(str, fmt, uri, newParams, jsonEncoded,
+                        responseCodeValidator, true);
             } catch (Exception e) {
                 e.printStackTrace();
                 throw e;
