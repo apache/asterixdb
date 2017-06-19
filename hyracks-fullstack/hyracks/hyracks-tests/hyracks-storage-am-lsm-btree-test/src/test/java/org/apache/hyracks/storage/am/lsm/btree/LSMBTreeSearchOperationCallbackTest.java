@@ -52,15 +52,13 @@ public class LSMBTreeSearchOperationCallbackTest extends AbstractSearchOperation
 
     @Override
     protected void createIndexInstance() throws Exception {
-        index = LSMBTreeUtil.createLSMTree(harness.getIOManager(), harness.getVirtualBufferCaches(), harness
-                .getFileReference(),
-                harness.getDiskBufferCache(), harness.getDiskFileMapProvider(),
-                SerdeUtils.serdesToTypeTraits(keySerdes),
+        index = LSMBTreeUtil.createLSMTree(harness.getIOManager(), harness.getVirtualBufferCaches(),
+                harness.getFileReference(), harness.getDiskBufferCache(), SerdeUtils.serdesToTypeTraits(keySerdes),
                 SerdeUtils.serdesToComparatorFactories(keySerdes, keySerdes.length), bloomFilterKeyFields,
                 harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(),
                 NoOpOperationTrackerFactory.INSTANCE.getOperationTracker(null), harness.getIOScheduler(),
-                harness.getIOOperationCallback(), true, null, null, null, null, true, harness
-                        .getMetadataPageManagerFactory());
+                harness.getIOOperationCallback(), true, null, null, null, null, true,
+                harness.getMetadataPageManagerFactory());
     }
 
     @Override

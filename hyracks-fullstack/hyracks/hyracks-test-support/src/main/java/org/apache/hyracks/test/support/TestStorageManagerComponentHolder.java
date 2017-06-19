@@ -43,12 +43,12 @@ import org.apache.hyracks.storage.common.buffercache.HeapBufferAllocator;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICacheMemoryAllocator;
 import org.apache.hyracks.storage.common.buffercache.IPageReplacementStrategy;
+import org.apache.hyracks.storage.common.file.FileMapManager;
 import org.apache.hyracks.storage.common.file.IFileMapManager;
 import org.apache.hyracks.storage.common.file.IFileMapProvider;
 import org.apache.hyracks.storage.common.file.ILocalResourceRepositoryFactory;
 import org.apache.hyracks.storage.common.file.ResourceIdFactory;
 import org.apache.hyracks.storage.common.file.ResourceIdFactoryProvider;
-import org.apache.hyracks.storage.common.file.TransientFileMapManager;
 import org.apache.hyracks.storage.common.file.TransientLocalResourceRepositoryFactory;
 
 public class TestStorageManagerComponentHolder {
@@ -98,9 +98,9 @@ public class TestStorageManagerComponentHolder {
         return bufferCache;
     }
 
-    public synchronized static IFileMapProvider getFileMapProvider() {
+    private synchronized static IFileMapProvider getFileMapProvider() {
         if (fileMapProvider == null) {
-            fileMapProvider = new TransientFileMapManager();
+            fileMapProvider = new FileMapManager();
         }
         return fileMapProvider;
     }

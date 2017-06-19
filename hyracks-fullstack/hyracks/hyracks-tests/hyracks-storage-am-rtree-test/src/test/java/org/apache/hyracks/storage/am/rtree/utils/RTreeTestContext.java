@@ -33,7 +33,6 @@ import org.apache.hyracks.storage.am.rtree.frames.RTreePolicyType;
 import org.apache.hyracks.storage.am.rtree.impls.RTree;
 import org.apache.hyracks.storage.am.rtree.util.RTreeUtils;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
-import org.apache.hyracks.storage.common.file.IFileMapProvider;
 
 @SuppressWarnings("rawtypes")
 public class RTreeTestContext extends AbstractRTreeTestContext {
@@ -54,15 +53,14 @@ public class RTreeTestContext extends AbstractRTreeTestContext {
         return rtree.getComparatorFactories();
     }
 
-    public static RTreeTestContext create(IBufferCache bufferCache, IFileMapProvider fileMapProvider,
-            FileReference file, ISerializerDeserializer[] fieldSerdes,
-            IPrimitiveValueProviderFactory[] valueProviderFactories, int numKeyFields, RTreePolicyType rtreePolicyType,
-            IPageManagerFactory pageManagerFactory)
+    public static RTreeTestContext create(IBufferCache bufferCache, FileReference file,
+            ISerializerDeserializer[] fieldSerdes, IPrimitiveValueProviderFactory[] valueProviderFactories,
+            int numKeyFields, RTreePolicyType rtreePolicyType, IPageManagerFactory pageManagerFactory)
             throws Exception {
         ITypeTraits[] typeTraits = SerdeUtils.serdesToTypeTraits(fieldSerdes);
         IBinaryComparatorFactory[] cmpFactories = SerdeUtils.serdesToComparatorFactories(fieldSerdes, numKeyFields);
-        RTree rtree = RTreeUtils.createRTree(bufferCache, fileMapProvider, typeTraits, valueProviderFactories,
-                cmpFactories, rtreePolicyType, file, false, pageManagerFactory);
+        RTree rtree = RTreeUtils.createRTree(bufferCache, typeTraits, valueProviderFactories, cmpFactories,
+                rtreePolicyType, file, false, pageManagerFactory);
         RTreeTestContext testCtx = new RTreeTestContext(fieldSerdes, rtree);
         return testCtx;
     }

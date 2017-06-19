@@ -37,7 +37,6 @@ import org.apache.hyracks.storage.am.common.util.TreeIndexStatsGatherer;
 import org.apache.hyracks.storage.common.IStorageManager;
 import org.apache.hyracks.storage.common.LocalResource;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
-import org.apache.hyracks.storage.common.file.IFileMapProvider;
 
 public class TreeIndexStatsOperatorNodePushable extends AbstractUnaryOutputSourceOperatorNodePushable {
     private final IHyracksTaskContext ctx;
@@ -69,14 +68,11 @@ public class TreeIndexStatsOperatorNodePushable extends AbstractUnaryOutputSourc
         try {
             writer.open();
             IBufferCache bufferCache = storageManager.getBufferCache(ctx.getJobletContext().getServiceContext());
-            IFileMapProvider fileMapProvider =
-                    storageManager.getFileMapProvider(ctx.getJobletContext().getServiceContext());
             LocalResource resource = treeIndexHelper.getResource();
             IIOManager ioManager = ctx.getIoManager();
             FileReference fileRef = ioManager.resolve(resource.getPath());
-            int indexFileId = fileMapProvider.lookupFileId(fileRef);
             TreeIndexStatsGatherer statsGatherer = new TreeIndexStatsGatherer(bufferCache, treeIndex.getPageManager(),
-                    indexFileId, treeIndex.getRootPageId());
+                    fileRef, treeIndex.getRootPageId());
             TreeIndexStats stats = statsGatherer.gatherStats(treeIndex.getLeafFrameFactory().createFrame(),
                     treeIndex.getInteriorFrameFactory().createFrame(),
                     treeIndex.getPageManager().createMetadataFrame());

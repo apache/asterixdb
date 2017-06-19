@@ -53,12 +53,12 @@ public class LSMBTreeMultiBulkLoadTest extends OrderedIndexBulkLoadTest {
 
     @Override
     protected OrderedIndexTestContext createTestContext(ISerializerDeserializer[] fieldSerdes, int numKeys,
-                                                        BTreeLeafFrameType leafType, boolean filtered) throws Exception {
-        return LSMBTreeTestContext.create(harness.getIOManager(), harness.getVirtualBufferCaches(), harness
-                .getFileReference(),
-                harness.getDiskBufferCache(), harness.getDiskFileMapProvider(), fieldSerdes, numKeys,
+            BTreeLeafFrameType leafType, boolean filtered) throws Exception {
+        return LSMBTreeTestContext.create(harness.getIOManager(), harness.getVirtualBufferCaches(),
+                harness.getFileReference(), harness.getDiskBufferCache(), fieldSerdes, numKeys,
                 harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(), harness.getOperationTracker(),
-                harness.getIOScheduler(), harness.getIOOperationCallback(), harness.getMetadataPageManagerFactory(), false);
+                harness.getIOScheduler(), harness.getIOOperationCallback(), harness.getMetadataPageManagerFactory(),
+                false);
     }
 
     @Override

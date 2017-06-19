@@ -49,7 +49,6 @@ import org.apache.hyracks.storage.common.MultiComparator;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
-import org.apache.hyracks.storage.common.file.IFileMapProvider;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -128,10 +127,8 @@ public class FieldPrefixNSMTest extends AbstractBTreeTest {
         rnd.setSeed(50);
 
         IBufferCache bufferCache = harness.getBufferCache();
-        IFileMapProvider fileMapProvider = harness.getFileMapProvider();
         bufferCache.createFile(harness.getFileReference());
-        int btreeFileId = fileMapProvider.lookupFileId(harness.getFileReference());
-        bufferCache.openFile(btreeFileId);
+        int btreeFileId = bufferCache.openFile(harness.getFileReference());
         IHyracksTaskContext ctx = harness.getHyracksTaskContext();
         ICachedPage page = bufferCache.pin(BufferedFileHandle.getDiskPageId(btreeFileId, 0), true);
         try {

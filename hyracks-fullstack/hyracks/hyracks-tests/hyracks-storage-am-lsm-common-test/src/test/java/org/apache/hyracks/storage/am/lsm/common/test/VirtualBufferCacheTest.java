@@ -121,7 +121,7 @@ public class VirtualBufferCacheTest {
 
     private void deleteFiles() throws Exception {
         for (int i = 0; i < NUM_FILES; i++) {
-            vbc.deleteFile(fileStates[i].fileId, false);
+            vbc.deleteFile(fileStates[i].fileId);
         }
     }
 

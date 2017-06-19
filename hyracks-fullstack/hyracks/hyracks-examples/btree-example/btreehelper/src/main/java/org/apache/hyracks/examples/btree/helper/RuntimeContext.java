@@ -39,7 +39,7 @@ import org.apache.hyracks.storage.common.file.IFileMapProvider;
 import org.apache.hyracks.storage.common.file.ILocalResourceRepositoryFactory;
 import org.apache.hyracks.storage.common.file.ResourceIdFactory;
 import org.apache.hyracks.storage.common.file.ResourceIdFactoryProvider;
-import org.apache.hyracks.storage.common.file.TransientFileMapManager;
+import org.apache.hyracks.storage.common.file.FileMapManager;
 import org.apache.hyracks.storage.common.file.TransientLocalResourceRepositoryFactory;
 
 public class RuntimeContext {
@@ -56,7 +56,7 @@ public class RuntimeContext {
     };
 
     public RuntimeContext(INCServiceContext appCtx) throws HyracksDataException {
-        fileMapManager = new TransientFileMapManager();
+        fileMapManager = new FileMapManager();
         ICacheMemoryAllocator allocator = new HeapBufferAllocator();
         IPageReplacementStrategy prs = new ClockPageReplacementStrategy(allocator, 32768, 50);
         bufferCache = new BufferCache(appCtx.getIoManager(), prs, new DelayPageCleanerPolicy(1000), fileMapManager, 100,

@@ -143,36 +143,34 @@ public class LSMInvertedIndexTestContext extends OrderedIndexTestContext {
             }
             case ONDISK: {
                 invIndex = InvertedIndexUtils.createOnDiskInvertedIndex(ioManager, harness.getDiskBufferCache(),
-                        harness.getDiskFileMapProvider(), invListTypeTraits, invListCmpFactories, tokenTypeTraits,
-                        tokenCmpFactories, harness.getInvListsFileRef(), harness.getMetadataPageManagerFactory());
+                        invListTypeTraits, invListCmpFactories, tokenTypeTraits, tokenCmpFactories,
+                        harness.getInvListsFileRef(), harness.getMetadataPageManagerFactory());
                 break;
             }
             case PARTITIONED_ONDISK: {
                 invIndex = InvertedIndexUtils.createPartitionedOnDiskInvertedIndex(ioManager,
-                        harness.getDiskBufferCache(), harness.getDiskFileMapProvider(), invListTypeTraits,
-                        invListCmpFactories, tokenTypeTraits, tokenCmpFactories, harness.getInvListsFileRef(),
-                        harness.getMetadataPageManagerFactory());
+                        harness.getDiskBufferCache(), invListTypeTraits, invListCmpFactories, tokenTypeTraits,
+                        tokenCmpFactories, harness.getInvListsFileRef(), harness.getMetadataPageManagerFactory());
                 break;
             }
             case LSM: {
                 invIndex = InvertedIndexUtils.createLSMInvertedIndex(ioManager, harness.getVirtualBufferCaches(),
-                        harness.getDiskFileMapProvider(), invListTypeTraits, invListCmpFactories, tokenTypeTraits,
-                        tokenCmpFactories, tokenizerFactory, harness.getDiskBufferCache(), harness.getOnDiskDir(),
-                        harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(),
-                        harness.getOperationTracker(), harness.getIOScheduler(), harness.getIOOperationCallback(),
-                        invertedIndexFields, filterTypeTraits, filterCmpFactories, filterFields,
-                        filterFieldsForNonBulkLoadOps, invertedIndexFieldsForNonBulkLoadOps, true,
+                        invListTypeTraits, invListCmpFactories, tokenTypeTraits, tokenCmpFactories, tokenizerFactory,
+                        harness.getDiskBufferCache(), harness.getOnDiskDir(), harness.getBoomFilterFalsePositiveRate(),
+                        harness.getMergePolicy(), harness.getOperationTracker(), harness.getIOScheduler(),
+                        harness.getIOOperationCallback(), invertedIndexFields, filterTypeTraits, filterCmpFactories,
+                        filterFields, filterFieldsForNonBulkLoadOps, invertedIndexFieldsForNonBulkLoadOps, true,
                         harness.getMetadataPageManagerFactory());
                 break;
             }
             case PARTITIONED_LSM: {
                 invIndex = InvertedIndexUtils.createPartitionedLSMInvertedIndex(ioManager,
-                        harness.getVirtualBufferCaches(), harness.getDiskFileMapProvider(), invListTypeTraits,
-                        invListCmpFactories, tokenTypeTraits, tokenCmpFactories, tokenizerFactory,
-                        harness.getDiskBufferCache(), harness.getOnDiskDir(), harness.getBoomFilterFalsePositiveRate(),
-                        harness.getMergePolicy(), harness.getOperationTracker(), harness.getIOScheduler(),
-                        harness.getIOOperationCallback(), invertedIndexFields, filterTypeTraits, filterCmpFactories,
-                        filterFields, filterFieldsForNonBulkLoadOps, invertedIndexFieldsForNonBulkLoadOps, true,
+                        harness.getVirtualBufferCaches(), invListTypeTraits, invListCmpFactories, tokenTypeTraits,
+                        tokenCmpFactories, tokenizerFactory, harness.getDiskBufferCache(), harness.getOnDiskDir(),
+                        harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(),
+                        harness.getOperationTracker(), harness.getIOScheduler(), harness.getIOOperationCallback(),
+                        invertedIndexFields, filterTypeTraits, filterCmpFactories, filterFields,
+                        filterFieldsForNonBulkLoadOps, invertedIndexFieldsForNonBulkLoadOps, true,
                         harness.getMetadataPageManagerFactory());
                 break;
             }

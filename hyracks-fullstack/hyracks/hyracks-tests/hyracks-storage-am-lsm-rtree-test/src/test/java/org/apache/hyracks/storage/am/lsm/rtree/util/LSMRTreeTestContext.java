@@ -43,7 +43,6 @@ import org.apache.hyracks.storage.am.rtree.AbstractRTreeTestContext;
 import org.apache.hyracks.storage.am.rtree.RTreeCheckTuple;
 import org.apache.hyracks.storage.am.rtree.frames.RTreePolicyType;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
-import org.apache.hyracks.storage.common.file.IFileMapProvider;
 
 @SuppressWarnings("rawtypes")
 public final class LSMRTreeTestContext extends AbstractRTreeTestContext {
@@ -75,15 +74,14 @@ public final class LSMRTreeTestContext extends AbstractRTreeTestContext {
     }
 
     public static LSMRTreeTestContext create(IIOManager ioManager, List<IVirtualBufferCache> virtualBufferCaches,
-            FileReference file,
-            IBufferCache diskBufferCache, IFileMapProvider diskFileMapProvider, ISerializerDeserializer[] fieldSerdes,
+            FileReference file, IBufferCache diskBufferCache, ISerializerDeserializer[] fieldSerdes,
             IPrimitiveValueProviderFactory[] valueProviderFactories, int numKeyFields, RTreePolicyType rtreePolicyType,
             double bloomFilterFalsePositiveRate, ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker,
             ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallback ioOpCallback,
             IMetadataPageManagerFactory metadataPageManagerFactory) throws Exception {
         ITypeTraits[] typeTraits = SerdeUtils.serdesToTypeTraits(fieldSerdes);
-        IBinaryComparatorFactory[] rtreeCmpFactories = SerdeUtils.serdesToComparatorFactories(fieldSerdes,
-                numKeyFields);
+        IBinaryComparatorFactory[] rtreeCmpFactories =
+                SerdeUtils.serdesToComparatorFactories(fieldSerdes, numKeyFields);
         int numBtreeFields = fieldSerdes.length - numKeyFields;
         ISerializerDeserializer[] btreeFieldSerdes = new ISerializerDeserializer[numBtreeFields];
         int[] btreeFields = new int[numBtreeFields];
@@ -91,11 +89,10 @@ public final class LSMRTreeTestContext extends AbstractRTreeTestContext {
             btreeFields[i] = numKeyFields + i;
             btreeFieldSerdes[i] = fieldSerdes[numKeyFields + i];
         }
-        IBinaryComparatorFactory[] btreeCmpFactories = SerdeUtils.serdesToComparatorFactories(btreeFieldSerdes,
-                numBtreeFields);
+        IBinaryComparatorFactory[] btreeCmpFactories =
+                SerdeUtils.serdesToComparatorFactories(btreeFieldSerdes, numBtreeFields);
         LSMRTree lsmTree = LSMRTreeUtils.createLSMTree(ioManager, virtualBufferCaches, file, diskBufferCache,
-                diskFileMapProvider, typeTraits, rtreeCmpFactories, btreeCmpFactories, valueProviderFactories,
-                rtreePolicyType,
+                typeTraits, rtreeCmpFactories, btreeCmpFactories, valueProviderFactories, rtreePolicyType,
                 bloomFilterFalsePositiveRate, mergePolicy, opTracker, ioScheduler, ioOpCallback,
                 LSMRTreeUtils.proposeBestLinearizer(typeTraits, rtreeCmpFactories.length), null, btreeFields, null,
                 null, null, true, false, metadataPageManagerFactory);

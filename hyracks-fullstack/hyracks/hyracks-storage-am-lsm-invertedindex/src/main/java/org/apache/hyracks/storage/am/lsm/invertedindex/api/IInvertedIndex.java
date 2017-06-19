@@ -39,4 +39,13 @@ public interface IInvertedIndex extends IIndex {
     ITypeTraits[] getTokenTypeTraits();
 
     IBinaryComparatorFactory[] getTokenCmpFactories();
+
+    /**
+     * Purge the index files out of the buffer cache.
+     * Can only be called if the caller is absolutely sure the files don't contain dirty pages
+     *
+     * @throws HyracksDataException
+     *             if the index is active
+     */
+    void purge() throws HyracksDataException;
 }

@@ -42,8 +42,8 @@ public class RTreeLifecycleTest extends AbstractIndexLifecycleTest {
     private final ISerializerDeserializer[] fieldSerdes = { IntegerSerializerDeserializer.INSTANCE,
             IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE,
             IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE };
-    private final IPrimitiveValueProviderFactory[] valueProviderFactories = RTreeUtils
-            .createPrimitiveValueProviderFactories(4, IntegerPointable.FACTORY);
+    private final IPrimitiveValueProviderFactory[] valueProviderFactories =
+            RTreeUtils.createPrimitiveValueProviderFactories(4, IntegerPointable.FACTORY);
     private final int numKeys = 4;
 
     @SuppressWarnings("rawtypes")
@@ -53,20 +53,13 @@ public class RTreeLifecycleTest extends AbstractIndexLifecycleTest {
     @Override
     public void setup() throws Exception {
         harness.setUp();
-        testCtx = RTreeTestContext.create(harness.getBufferCache(), harness.getFileMapProvider(),
-                harness.getFileReference(), fieldSerdes, valueProviderFactories, numKeys, RTreePolicyType.RTREE,
-                harness.getMetadataManagerFactory());
+        testCtx = RTreeTestContext.create(harness.getBufferCache(), harness.getFileReference(), fieldSerdes,
+                valueProviderFactories, numKeys, RTreePolicyType.RTREE, harness.getMetadataManagerFactory());
         index = testCtx.getIndex();
     }
 
     @Override
     public void tearDown() throws HyracksDataException {
-        try {
-            testCtx.getIndex().deactivate();
-        } catch (Exception e) {
-        } finally {
-            testCtx.getIndex().destroy();
-        }
         harness.tearDown();
     }
 

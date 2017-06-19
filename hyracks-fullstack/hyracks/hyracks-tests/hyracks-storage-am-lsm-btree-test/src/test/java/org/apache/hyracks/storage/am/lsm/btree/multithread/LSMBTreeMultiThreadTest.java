@@ -53,8 +53,8 @@ public class LSMBTreeMultiThreadTest extends OrderedIndexMultiThreadTest {
     protected ITreeIndex createIndex(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories,
             int[] bloomFilterKeyFields) throws HyracksDataException {
         return LSMBTreeUtil.createLSMTree(harness.getIOManager(), harness.getVirtualBufferCaches(),
-                harness.getFileReference(), harness.getDiskBufferCache(), harness.getDiskFileMapProvider(), typeTraits,
-                cmpFactories, bloomFilterKeyFields, harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(),
+                harness.getFileReference(), harness.getDiskBufferCache(), typeTraits, cmpFactories,
+                bloomFilterKeyFields, harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(),
                 harness.getOperationTracker(), harness.getIOScheduler(), harness.getIOOperationCallback(), true, null,
                 null, null, null, true, harness.getMetadataPageManagerFactory());
     }

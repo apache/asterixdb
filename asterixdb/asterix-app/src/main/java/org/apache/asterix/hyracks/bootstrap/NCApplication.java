@@ -46,16 +46,17 @@ import org.apache.asterix.event.schema.cluster.Node;
 import org.apache.asterix.messaging.MessagingChannelInterfaceFactory;
 import org.apache.asterix.messaging.NCMessageBroker;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepository;
-import org.apache.commons.io.FileUtils;
 import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.client.ClusterControllerInfo;
 import org.apache.hyracks.api.client.HyracksConnection;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.config.IConfigManager;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.IFileDeviceResolver;
 import org.apache.hyracks.api.job.resource.NodeCapacity;
 import org.apache.hyracks.api.messages.IMessageBroker;
+import org.apache.hyracks.api.util.IoUtil;
 import org.apache.hyracks.control.common.controllers.NCConfig;
 import org.apache.hyracks.control.nc.BaseNCApplication;
 import org.apache.hyracks.control.nc.NodeControllerService;
@@ -214,7 +215,7 @@ public class NCApplication extends BaseNCApplication {
         return new NodeCapacity(memorySize, maximumCoresForComputation);
     }
 
-    private void performLocalCleanUp() {
+    private void performLocalCleanUp() throws HyracksDataException {
         //Delete working area files from failed jobs
         runtimeContext.getIoManager().deleteWorkspaceFiles();
 
@@ -225,7 +226,10 @@ public class NCApplication extends BaseNCApplication {
         for (String ioDevice : ioDevices) {
             String tempDatasetsDir =
                     ioDevice + storageDirName + File.separator + StoragePathUtil.TEMP_DATASETS_STORAGE_FOLDER;
-            FileUtils.deleteQuietly(new File(tempDatasetsDir));
+            File tmpDsDir = new File(tempDatasetsDir);
+            if (tmpDsDir.exists()) {
+                IoUtil.delete(tmpDsDir);
+            }
         }
 
         //TODO

@@ -19,9 +19,9 @@
 package org.apache.asterix.api.common;
 
 import org.apache.asterix.app.nc.NCAppRuntimeContext;
-import org.apache.asterix.common.api.ThreadExecutor;
-import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
+import org.apache.asterix.common.api.INcApplicationContext;
+import org.apache.asterix.common.api.ThreadExecutor;
 import org.apache.asterix.common.transactions.IAppRuntimeContextProvider;
 import org.apache.asterix.common.transactions.ITransactionSubsystem;
 import org.apache.hyracks.api.io.IIOManager;
@@ -29,7 +29,6 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import org.apache.hyracks.storage.common.ILocalResourceRepository;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
-import org.apache.hyracks.storage.common.file.IFileMapProvider;
 
 public class AppRuntimeContextProviderForRecovery implements IAppRuntimeContextProvider {
 
@@ -42,11 +41,6 @@ public class AppRuntimeContextProviderForRecovery implements IAppRuntimeContextP
     @Override
     public IBufferCache getBufferCache() {
         return asterixAppRuntimeContext.getBufferCache();
-    }
-
-    @Override
-    public IFileMapProvider getFileMapManager() {
-        return asterixAppRuntimeContext.getFileMapManager();
     }
 
     @Override

@@ -28,13 +28,65 @@ public interface IBufferCache {
     int INVALID_PAGEID = -1;
     int RESERVED_HEADER_BYTES = 8;
 
-    void createFile(FileReference fileRef) throws HyracksDataException;
+    /**
+     * Create file on disk
+     *
+     * @param fileRef
+     *            the file to create
+     * @return the file id
+     * @throws HyracksDataException
+     *             if the file already exists or attempt to create the file failed
+     */
+    int createFile(FileReference fileRef) throws HyracksDataException;
 
+    /**
+     * Open the file and register it (if not registered) with the file map manager
+     *
+     * @param fileRef
+     *            the file to open
+     * @return the file id
+     * @throws HyracksDataException
+     *             if the file doesn't exist or buffer cache failed to open the file
+     */
+    int openFile(FileReference fileRef) throws HyracksDataException;
+
+    /**
+     * Open the mapped file with the passed file id
+     *
+     * @param fileId
+     *            the file id
+     * @throws HyracksDataException
+     *             if the file doesn't exist or buffer cache fails to open the file
+     */
     void openFile(int fileId) throws HyracksDataException;
 
+    /**
+     * close the file
+     *
+     * @param fileId
+     *            the file id
+     * @throws HyracksDataException
+     *             if file doesn't exist or is not open
+     */
     void closeFile(int fileId) throws HyracksDataException;
 
-    void deleteFile(int fileId, boolean flushDirtyPages) throws HyracksDataException;
+    /**
+     * delete the file from memory and disk
+     *
+     * @param fileId
+     *            the file id
+     * @throws HyracksDataException
+     *             if the file doesn't exist or if a failure to delete takes place
+     */
+    void deleteFile(int fileId) throws HyracksDataException;
+
+    /**
+     * Delete from memory if registered and from disk
+     *
+     * @param file
+     * @throws HyracksDataException
+     */
+    void deleteFile(FileReference file) throws HyracksDataException;
 
     ICachedPage tryPin(long dpid) throws HyracksDataException;
 
@@ -74,9 +126,9 @@ public interface IBufferCache {
 
     void setPageDiskId(ICachedPage page, long dpid);
 
-    public boolean isReplicationEnabled();
+    boolean isReplicationEnabled();
 
-    public IIOReplicationManager getIOReplicationManager();
+    IIOReplicationManager getIOReplicationManager();
 
     void purgeHandle(int fileId) throws HyracksDataException;
 

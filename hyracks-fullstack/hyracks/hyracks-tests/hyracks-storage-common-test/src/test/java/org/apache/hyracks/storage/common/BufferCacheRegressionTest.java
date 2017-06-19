@@ -34,10 +34,10 @@ import org.apache.hyracks.storage.common.buffercache.BufferCache;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
-import org.apache.hyracks.storage.common.file.IFileMapProvider;
 import org.apache.hyracks.test.support.TestStorageManagerComponentHolder;
 import org.apache.hyracks.test.support.TestUtils;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -73,7 +73,13 @@ public class BufferCacheRegressionTest {
     @Test
     public void testFlushBehaviorOnFileEviction() throws IOException {
         flushBehaviorTest(true);
-        flushBehaviorTest(false);
+        boolean exceptionCaught = false;
+        try {
+            flushBehaviorTest(false);
+        } catch (Exception e) {
+            exceptionCaught = true;
+        }
+        Assert.assertTrue(exceptionCaught);
     }
 
     private void flushBehaviorTest(boolean deleteFile) throws IOException {
@@ -81,12 +87,10 @@ public class BufferCacheRegressionTest {
 
         IBufferCache bufferCache =
                 TestStorageManagerComponentHolder.getBufferCache(ctx.getJobletContext().getServiceContext());
-        IFileMapProvider fmp = TestStorageManagerComponentHolder.getFileMapProvider();
         IOManager ioManager = TestStorageManagerComponentHolder.getIOManager();
 
         FileReference firstFileRef = ioManager.resolve(fileName);
-        bufferCache.createFile(firstFileRef);
-        int firstFileId = fmp.lookupFileId(firstFileRef);
+        int firstFileId = bufferCache.createFile(firstFileRef);
         bufferCache.openFile(firstFileId);
 
         // Fill the first page with known data and make it dirty by write
@@ -104,13 +108,12 @@ public class BufferCacheRegressionTest {
         }
         bufferCache.closeFile(firstFileId);
         if (deleteFile) {
-            bufferCache.deleteFile(firstFileId, false);
+            bufferCache.deleteFile(firstFileId);
         }
 
         // Create a file with the same name.
         FileReference secondFileRef = ioManager.resolve(fileName);
-        bufferCache.createFile(secondFileRef);
-        int secondFileId = fmp.lookupFileId(secondFileRef);
+        int secondFileId = bufferCache.createFile(secondFileRef);
 
         // This open will replace the firstFileRef's slot in the BufferCache,
         // causing it's pages to be cleaned up. We want to make sure that those
@@ -147,7 +150,7 @@ public class BufferCacheRegressionTest {
         ioManager.close(testFileHandle);
         bufferCache.closeFile(secondFileId);
         if (deleteFile) {
-            bufferCache.deleteFile(secondFileId, false);
+            bufferCache.deleteFile(secondFileId);
         }
         bufferCache.close();
     }

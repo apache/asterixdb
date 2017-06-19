@@ -26,7 +26,6 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationSchedulerProv
 import org.apache.hyracks.storage.common.ILocalResourceRepository;
 import org.apache.hyracks.storage.common.IStorageManager;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
-import org.apache.hyracks.storage.common.file.IFileMapProvider;
 import org.apache.hyracks.storage.common.file.IResourceIdFactory;
 
 public class RuntimeComponentsProvider implements IStorageManager, ILSMIOOperationSchedulerProvider {
@@ -46,11 +45,6 @@ public class RuntimeComponentsProvider implements IStorageManager, ILSMIOOperati
     @Override
     public IBufferCache getBufferCache(INCServiceContext ctx) {
         return ((INcApplicationContext) ctx.getApplicationContext()).getBufferCache();
-    }
-
-    @Override
-    public IFileMapProvider getFileMapProvider(INCServiceContext ctx) {
-        return ((INcApplicationContext) ctx.getApplicationContext()).getFileMapManager();
     }
 
     @Override

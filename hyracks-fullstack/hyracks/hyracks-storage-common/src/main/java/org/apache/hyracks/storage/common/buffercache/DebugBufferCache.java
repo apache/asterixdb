@@ -52,9 +52,10 @@ public class DebugBufferCache implements IBufferCache {
     }
 
     @Override
-    public void createFile(FileReference fileRef) throws HyracksDataException {
-        bufferCache.createFile(fileRef);
+    public int createFile(FileReference fileRef) throws HyracksDataException {
+        int fileId = bufferCache.createFile(fileRef);
         createFileCount.addAndGet(1);
+        return fileId;
     }
 
     @Override
@@ -70,8 +71,8 @@ public class DebugBufferCache implements IBufferCache {
     }
 
     @Override
-    public void deleteFile(int fileId, boolean flushDirtyPages) throws HyracksDataException {
-        bufferCache.deleteFile(fileId, flushDirtyPages);
+    public void deleteFile(int fileId) throws HyracksDataException {
+        bufferCache.deleteFile(fileId);
         deleteFileCount.addAndGet(1);
     }
 
@@ -248,5 +249,17 @@ public class DebugBufferCache implements IBufferCache {
     public void resizePage(ICachedPage page, int multiplier, IExtraPageBlockHelper extraPageBlockHelper)
             throws HyracksDataException {
         bufferCache.resizePage(page, multiplier, extraPageBlockHelper);
+    }
+
+    @Override
+    public int openFile(FileReference fileRef) throws HyracksDataException {
+        openFileCount.incrementAndGet();
+        return bufferCache.openFile(fileRef);
+    }
+
+    @Override
+    public void deleteFile(FileReference file) throws HyracksDataException {
+        deleteFileCount.incrementAndGet();
+        bufferCache.deleteFile(file);
     }
 }

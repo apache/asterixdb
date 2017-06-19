@@ -34,8 +34,9 @@ public interface IFileMapManager extends IFileMapProvider {
      *            - file reference to register
      * @throws HyracksDataException
      *             - if a mapping for the file already exists.
+     * @return the file id
      */
-    public void registerFile(FileReference fileRef) throws HyracksDataException;
+    int registerFile(FileReference fileRef) throws HyracksDataException;
 
     /**
      * Unregister a file mapping
@@ -44,7 +45,8 @@ public interface IFileMapManager extends IFileMapProvider {
      *            - The file id whose mapping is to be unregistered.
      * @throws HyracksDataException
      *             - If the fileid is not mapped currently in this manager.
+     * @return the file reference
      */
-    public void unregisterFile(int fileId) throws HyracksDataException;
+    FileReference unregisterFile(int fileId) throws HyracksDataException;
 
 }

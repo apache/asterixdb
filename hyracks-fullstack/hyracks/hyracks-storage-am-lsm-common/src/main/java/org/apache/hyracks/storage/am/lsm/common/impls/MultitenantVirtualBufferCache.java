@@ -18,6 +18,8 @@
  */
 package org.apache.hyracks.storage.am.lsm.common.impls;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -29,6 +31,7 @@ import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.storage.common.buffercache.IExtraPageBlockHelper;
 import org.apache.hyracks.storage.common.buffercache.IFIFOPageQueue;
 import org.apache.hyracks.storage.common.file.IFileMapManager;
+import org.apache.hyracks.util.JSONUtil;
 
 public class MultitenantVirtualBufferCache implements IVirtualBufferCache {
     private static final Logger LOGGER = Logger.getLogger(ExternalIndexHarness.class.getName());
@@ -42,8 +45,8 @@ public class MultitenantVirtualBufferCache implements IVirtualBufferCache {
     }
 
     @Override
-    public void createFile(FileReference fileRef) throws HyracksDataException {
-        vbc.createFile(fileRef);
+    public int createFile(FileReference fileRef) throws HyracksDataException {
+        return vbc.createFile(fileRef);
     }
 
     @Override
@@ -57,8 +60,8 @@ public class MultitenantVirtualBufferCache implements IVirtualBufferCache {
     }
 
     @Override
-    public void deleteFile(int fileId, boolean flushDirtyPages) throws HyracksDataException {
-        vbc.deleteFile(fileId, flushDirtyPages);
+    public void deleteFile(int fileId) throws HyracksDataException {
+        vbc.deleteFile(fileId);
     }
 
     @Override
@@ -91,6 +94,7 @@ public class MultitenantVirtualBufferCache implements IVirtualBufferCache {
         return vbc.getPageSize();
     }
 
+    @Override
     public int getPageSizeWithHeader() {
         return vbc.getPageSizeWithHeader();
     }
@@ -133,7 +137,7 @@ public class MultitenantVirtualBufferCache implements IVirtualBufferCache {
 
     @Override
     public int getNumPagesOfFile(int fileId) throws HyracksDataException {
-        throw new UnsupportedOperationException();
+        return vbc.getNumPagesOfFile(fileId);
     }
 
     @Override
@@ -205,4 +209,28 @@ public class MultitenantVirtualBufferCache implements IVirtualBufferCache {
             throws HyracksDataException {
         vbc.resizePage(page, multiplier, extraPageBlockHelper);
     }
+
+    @Override
+    public String toString() {
+        return JSONUtil.fromMap(toMap());
+    }
+
+    private Map<String, Object> toMap() {
+        HashMap<String, Object> map = new HashMap<>();
+        map.put("class", getClass().getSimpleName());
+        map.put("vbc", vbc.toString());
+        map.put("openCount", openCount);
+        return map;
+    }
+
+    @Override
+    public int openFile(FileReference fileRef) throws HyracksDataException {
+        return vbc.openFile(fileRef);
+    }
+
+    @Override
+    public void deleteFile(FileReference file) throws HyracksDataException {
+        vbc.deleteFile(file);
+    }
+
 }

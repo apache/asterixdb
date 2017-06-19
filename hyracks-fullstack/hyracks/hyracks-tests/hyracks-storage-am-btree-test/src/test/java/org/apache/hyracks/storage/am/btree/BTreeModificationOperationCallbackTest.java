@@ -37,9 +37,9 @@ public class BTreeModificationOperationCallbackTest extends AbstractModification
     protected void createIndexInstance() throws Exception {
         IMetadataPageManagerFactory freePageManagerFactory = new LinkedMetadataPageManagerFactory();
         IMetadataPageManager freePageManager = freePageManagerFactory.createPageManager(harness.getBufferCache());
-        index = BTreeUtils.createBTree(harness.getBufferCache(), harness.getFileMapProvider(), SerdeUtils
-                .serdesToTypeTraits(keySerdes), SerdeUtils.serdesToComparatorFactories(keySerdes, keySerdes.length),
-                BTreeLeafFrameType.REGULAR_NSM, harness.getFileReference(), freePageManager);
+        index = BTreeUtils.createBTree(harness.getBufferCache(), SerdeUtils.serdesToTypeTraits(keySerdes),
+                SerdeUtils.serdesToComparatorFactories(keySerdes, keySerdes.length), BTreeLeafFrameType.REGULAR_NSM,
+                harness.getFileReference(), freePageManager);
     }
 
     @Override
