@@ -32,6 +32,7 @@ import org.apache.hyracks.storage.am.common.api.IPageManagerFactory;
 import org.apache.hyracks.storage.am.common.freepage.LinkedMetadataPageManagerFactory;
 import org.apache.hyracks.storage.am.config.AccessMethodTestsConfig;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
+import org.apache.hyracks.storage.common.file.IFileMapProvider;
 import org.apache.hyracks.test.support.TestStorageManagerComponentHolder;
 import org.apache.hyracks.test.support.TestUtils;
 
@@ -46,6 +47,7 @@ public class RTreeTestHarness {
 
     protected IHyracksTaskContext ctx;
     protected IBufferCache bufferCache;
+    protected IFileMapProvider fileMapProvider;
     protected int treeFileId;
 
     protected final Random rnd = new Random();
@@ -76,6 +78,7 @@ public class RTreeTestHarness {
         file = ioManager.resolve(fileName);
         ctx = TestUtils.create(getHyracksFrameSize());
         bufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx.getJobletContext().getServiceContext());
+        fileMapProvider = TestStorageManagerComponentHolder.getFileMapProvider();
         rnd.setSeed(RANDOM_SEED);
     }
 
@@ -91,6 +94,10 @@ public class RTreeTestHarness {
 
     public IBufferCache getBufferCache() {
         return bufferCache;
+    }
+
+    public IFileMapProvider getFileMapProvider() {
+        return fileMapProvider;
     }
 
     public String getFileName() {

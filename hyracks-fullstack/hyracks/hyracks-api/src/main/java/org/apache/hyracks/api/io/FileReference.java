@@ -56,12 +56,12 @@ public final class FileReference implements Serializable {
         if (!(o instanceof FileReference)) {
             return false;
         }
-        return path.equals(((FileReference) o).path) && dev.equals(((FileReference) o).dev);
+        return file.equals(((FileReference) o).file);
     }
 
     @Override
     public int hashCode() {
-        return path.hashCode();
+        return file.hashCode();
     }
 
     /**

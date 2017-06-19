@@ -19,7 +19,6 @@
 package org.apache.hyracks.storage.am.common.util;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.storage.am.common.api.IPageManager;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexMetadataFrame;
@@ -32,21 +31,25 @@ public class TreeIndexStatsGatherer {
     private final TreeIndexStats treeIndexStats = new TreeIndexStats();
     private final IBufferCache bufferCache;
     private final IPageManager freePageManager;
-    private final FileReference fileRef;
+    private final int fileId;
     private final int rootPage;
 
-    public TreeIndexStatsGatherer(IBufferCache bufferCache, IPageManager freePageManager, FileReference fileRef,
-            int rootPage) {
+    public TreeIndexStatsGatherer(IBufferCache bufferCache,
+            IPageManager freePageManager, int fileId, int rootPage) {
         this.bufferCache = bufferCache;
         this.freePageManager = freePageManager;
-        this.fileRef = fileRef;
+        this.fileId = fileId;
         this.rootPage = rootPage;
     }
 
-    public TreeIndexStats gatherStats(ITreeIndexFrame leafFrame, ITreeIndexFrame interiorFrame,
-            ITreeIndexMetadataFrame metaFrame) throws HyracksDataException {
-        int fileId = bufferCache.openFile(fileRef);
+    public TreeIndexStats gatherStats(ITreeIndexFrame leafFrame,
+            ITreeIndexFrame interiorFrame, ITreeIndexMetadataFrame metaFrame)
+            throws HyracksDataException {
+
+        bufferCache.openFile(fileId);
+
         treeIndexStats.begin();
+
         int maxPageId = freePageManager.getMaxPageId(metaFrame);
         for (int pageId = 0; pageId <= maxPageId; pageId++) {
             ICachedPage page = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, pageId), false);

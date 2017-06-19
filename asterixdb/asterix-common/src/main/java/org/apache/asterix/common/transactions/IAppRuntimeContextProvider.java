@@ -18,34 +18,37 @@
  */
 package org.apache.asterix.common.transactions;
 
-import org.apache.asterix.common.api.IDatasetLifecycleManager;
-import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.api.ThreadExecutor;
+import org.apache.asterix.common.api.INcApplicationContext;
+import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import org.apache.hyracks.storage.common.ILocalResourceRepository;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
+import org.apache.hyracks.storage.common.file.IFileMapProvider;
 
 public interface IAppRuntimeContextProvider {
 
-    ThreadExecutor getThreadExecutor();
+    public ThreadExecutor getThreadExecutor();
 
-    IBufferCache getBufferCache();
+    public IBufferCache getBufferCache();
 
-    ITransactionSubsystem getTransactionSubsystem();
+    public IFileMapProvider getFileMapManager();
 
-    IDatasetLifecycleManager getDatasetLifecycleManager();
+    public ITransactionSubsystem getTransactionSubsystem();
 
-    double getBloomFilterFalsePositiveRate();
+    public IDatasetLifecycleManager getDatasetLifecycleManager();
 
-    ILSMOperationTracker getLSMBTreeOperationTracker(int datasetID);
+    public double getBloomFilterFalsePositiveRate();
 
-    ILSMIOOperationScheduler getLSMIOScheduler();
+    public ILSMOperationTracker getLSMBTreeOperationTracker(int datasetID);
 
-    ILocalResourceRepository getLocalResourceRepository();
+    public ILSMIOOperationScheduler getLSMIOScheduler();
 
-    IIOManager getIOManager();
+    public ILocalResourceRepository getLocalResourceRepository();
 
-    INcApplicationContext getAppContext();
+    public IIOManager getIOManager();
+
+    public INcApplicationContext getAppContext();
 }

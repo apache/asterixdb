@@ -54,7 +54,6 @@ public class LSMComponentProperties {
                 job.getLSMIndexOperationContext());
         opType = job.getLSMOpType();
     }
-
     public LSMComponentProperties() {
     }
 
@@ -133,7 +132,7 @@ public class LSMComponentProperties {
         componentId.append(File.separator);
         componentId.append(idxName);
         componentId.append(File.separator);
-        componentId.append(fileName.substring(0, fileName.lastIndexOf(AbstractLSMIndexFileManager.DELIMITER)));
+        componentId.append(fileName.substring(0, fileName.lastIndexOf(AbstractLSMIndexFileManager.SPLIT_STRING)));
         return componentId.toString();
     }
 

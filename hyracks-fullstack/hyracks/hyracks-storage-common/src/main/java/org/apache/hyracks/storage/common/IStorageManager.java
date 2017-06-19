@@ -22,6 +22,7 @@ import java.io.Serializable;
 
 import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
+import org.apache.hyracks.storage.common.file.IFileMapProvider;
 import org.apache.hyracks.storage.common.file.IResourceIdFactory;
 
 /**
@@ -34,6 +35,13 @@ public interface IStorageManager extends Serializable {
      * @return the disk buffer cache {@link org.apache.hyracks.storage.common.buffercache.IBufferCache}
      */
     IBufferCache getBufferCache(INCServiceContext ctx);
+
+    /**
+     * @param ctx
+     *            the nc service context
+     * @return the file map provider {@link org.apache.hyracks.storage.common.file.IFileMapProvider}
+     */
+    IFileMapProvider getFileMapProvider(INCServiceContext ctx);
 
     /**
      * @param ctx

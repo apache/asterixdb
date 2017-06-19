@@ -34,6 +34,7 @@ import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexFileManage
 import org.apache.hyracks.storage.am.lsm.common.impls.BTreeFactory;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexFileNameMapper;
+import org.apache.hyracks.storage.common.file.IFileMapProvider;
 
 // TODO: Refactor for better code sharing with other file managers.
 public class LSMInvertedIndexFileManager extends AbstractLSMIndexFileManager implements IInvertedIndexFileNameMapper {
@@ -65,32 +66,33 @@ public class LSMInvertedIndexFileManager extends AbstractLSMIndexFileManager imp
         }
     };
 
-    public LSMInvertedIndexFileManager(IIOManager ioManager, FileReference file, BTreeFactory btreeFactory) {
-        super(ioManager, file, null);
+    public LSMInvertedIndexFileManager(IIOManager ioManager, IFileMapProvider fileMapProvider, FileReference file,
+            BTreeFactory btreeFactory) {
+        super(ioManager, fileMapProvider, file, null);
         this.btreeFactory = btreeFactory;
     }
 
     @Override
     public LSMComponentFileReferences getRelFlushFileReference() throws HyracksDataException {
         String ts = getCurrentTimestamp();
-        String baseName = baseDir + ts + DELIMITER + ts;
+        String baseName = baseDir + ts + SPLIT_STRING + ts;
         // Begin timestamp and end timestamp are identical since it is a flush
-        return new LSMComponentFileReferences(createFlushFile(baseName + DELIMITER + DICT_BTREE_SUFFIX),
-                createFlushFile(baseName + DELIMITER + DELETED_KEYS_BTREE_SUFFIX),
-                createFlushFile(baseName + DELIMITER + BLOOM_FILTER_SUFFIX));
+        return new LSMComponentFileReferences(createFlushFile(baseName + SPLIT_STRING + DICT_BTREE_SUFFIX),
+                createFlushFile(baseName + SPLIT_STRING + DELETED_KEYS_BTREE_SUFFIX),
+                createFlushFile(baseName + SPLIT_STRING + BLOOM_FILTER_STRING));
     }
 
     @Override
     public LSMComponentFileReferences getRelMergeFileReference(String firstFileName, String lastFileName)
             throws HyracksDataException {
-        String[] firstTimestampRange = firstFileName.split(DELIMITER);
-        String[] lastTimestampRange = lastFileName.split(DELIMITER);
+        String[] firstTimestampRange = firstFileName.split(SPLIT_STRING);
+        String[] lastTimestampRange = lastFileName.split(SPLIT_STRING);
 
-        String baseName = baseDir + firstTimestampRange[0] + DELIMITER + lastTimestampRange[1];
+        String baseName = baseDir + firstTimestampRange[0] + SPLIT_STRING + lastTimestampRange[1];
         // Get the range of timestamps by taking the earliest and the latest timestamps
-        return new LSMComponentFileReferences(createMergeFile(baseName + DELIMITER + DICT_BTREE_SUFFIX),
-                createMergeFile(baseName + DELIMITER + DELETED_KEYS_BTREE_SUFFIX),
-                createMergeFile(baseName + DELIMITER + BLOOM_FILTER_SUFFIX));
+        return new LSMComponentFileReferences(createMergeFile(baseName + SPLIT_STRING + DICT_BTREE_SUFFIX),
+                createMergeFile(baseName + SPLIT_STRING + DELETED_KEYS_BTREE_SUFFIX),
+                createMergeFile(baseName + SPLIT_STRING + BLOOM_FILTER_STRING));
     }
 
     @Override
@@ -105,7 +107,7 @@ public class LSMInvertedIndexFileManager extends AbstractLSMIndexFileManager imp
         cleanupAndGetValidFilesInternal(deletedKeysBTreeFilter, btreeFactory, allDeletedKeysBTreeFiles);
         HashSet<String> deletedKeysBTreeFilesSet = new HashSet<>();
         for (ComparableFileName cmpFileName : allDeletedKeysBTreeFiles) {
-            int index = cmpFileName.fileName.lastIndexOf(DELIMITER);
+            int index = cmpFileName.fileName.lastIndexOf(SPLIT_STRING);
             deletedKeysBTreeFilesSet.add(cmpFileName.fileName.substring(0, index));
         }
 
@@ -208,8 +210,8 @@ public class LSMInvertedIndexFileManager extends AbstractLSMIndexFileManager imp
 
     @Override
     public String getInvListsFilePath(String dictBTreeFilePath) {
-        int index = dictBTreeFilePath.lastIndexOf(DELIMITER);
+        int index = dictBTreeFilePath.lastIndexOf(SPLIT_STRING);
         String file = dictBTreeFilePath.substring(0, index);
-        return file + DELIMITER + INVLISTS_SUFFIX;
+        return file + SPLIT_STRING + INVLISTS_SUFFIX;
     }
 }

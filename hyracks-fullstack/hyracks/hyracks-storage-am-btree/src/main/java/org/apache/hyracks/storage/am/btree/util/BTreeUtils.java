@@ -35,26 +35,29 @@ import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleWriterFactory;
 import org.apache.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
 import org.apache.hyracks.storage.common.MultiComparator;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
+import org.apache.hyracks.storage.common.file.IFileMapProvider;
 
 public class BTreeUtils {
-    public static BTree createBTree(IBufferCache bufferCache, ITypeTraits[] typeTraits,
-            IBinaryComparatorFactory[] cmpFactories, BTreeLeafFrameType leafType, FileReference file,
-            IPageManager freePageManager) throws HyracksDataException {
+    public static BTree createBTree(IBufferCache bufferCache, IFileMapProvider fileMapProvider,
+            ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories, BTreeLeafFrameType leafType,
+            FileReference file, IPageManager freePageManager) throws HyracksDataException {
         TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(typeTraits);
         ITreeIndexFrameFactory leafFrameFactory = getLeafFrameFactory(tupleWriterFactory, leafType);
         ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(tupleWriterFactory);
-        return new BTree(bufferCache, freePageManager, interiorFrameFactory, leafFrameFactory, cmpFactories,
-                typeTraits.length, file);
+        BTree btree = new BTree(bufferCache, fileMapProvider, freePageManager, interiorFrameFactory, leafFrameFactory,
+                cmpFactories, typeTraits.length, file);
+        return btree;
     }
 
-    public static BTree createBTree(IBufferCache bufferCache, IPageManager freePageManager, ITypeTraits[] typeTraits,
-            IBinaryComparatorFactory[] cmpFactories, BTreeLeafFrameType leafType, FileReference file)
-            throws HyracksDataException {
+    public static BTree createBTree(IBufferCache bufferCache, IPageManager freePageManager,
+            IFileMapProvider fileMapProvider, ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories,
+            BTreeLeafFrameType leafType, FileReference file) throws HyracksDataException {
         TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(typeTraits);
         ITreeIndexFrameFactory leafFrameFactory = getLeafFrameFactory(tupleWriterFactory, leafType);
         ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(tupleWriterFactory);
-        return new BTree(bufferCache, freePageManager, interiorFrameFactory, leafFrameFactory, cmpFactories,
-                typeTraits.length, file);
+        BTree btree = new BTree(bufferCache, fileMapProvider, freePageManager, interiorFrameFactory, leafFrameFactory,
+                cmpFactories, typeTraits.length, file);
+        return btree;
     }
 
     // Creates a new MultiComparator by constructing new IBinaryComparators.

@@ -49,6 +49,7 @@ import org.apache.hyracks.storage.am.lsm.common.impls.ThreadCountingTracker;
 import org.apache.hyracks.storage.am.lsm.common.impls.VirtualBufferCache;
 import org.apache.hyracks.storage.common.buffercache.HeapBufferAllocator;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
+import org.apache.hyracks.storage.common.file.IFileMapProvider;
 import org.apache.hyracks.test.support.TestStorageManagerComponentHolder;
 import org.apache.hyracks.test.support.TestUtils;
 
@@ -72,6 +73,7 @@ public class LSMBTreeTestHarness {
     protected IOManager ioManager;
     protected int ioDeviceId;
     protected IBufferCache diskBufferCache;
+    protected IFileMapProvider diskFileMapProvider;
     protected List<IVirtualBufferCache> virtualBufferCaches;
     protected IHyracksTaskContext ctx;
     protected ILSMIOOperationScheduler ioScheduler;
@@ -111,6 +113,7 @@ public class LSMBTreeTestHarness {
         TestStorageManagerComponentHolder.init(diskPageSize, diskNumPages, diskMaxOpenFiles);
         file = ioManager.resolveAbsolutePath(onDiskDir);
         diskBufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx.getJobletContext().getServiceContext());
+        diskFileMapProvider = TestStorageManagerComponentHolder.getFileMapProvider();
         virtualBufferCaches = new ArrayList<>();
         for (int i = 0; i < numMutableComponents; i++) {
             IVirtualBufferCache virtualBufferCache =
@@ -174,6 +177,10 @@ public class LSMBTreeTestHarness {
 
     public IBufferCache getDiskBufferCache() {
         return diskBufferCache;
+    }
+
+    public IFileMapProvider getDiskFileMapProvider() {
+        return diskFileMapProvider;
     }
 
     public List<IVirtualBufferCache> getVirtualBufferCaches() {

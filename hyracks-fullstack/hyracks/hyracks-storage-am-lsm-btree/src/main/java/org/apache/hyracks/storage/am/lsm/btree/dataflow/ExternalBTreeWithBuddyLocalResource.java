@@ -61,7 +61,7 @@ public class ExternalBTreeWithBuddyLocalResource extends LSMBTreeLocalResource {
         IIOManager ioManager = serviceCtx.getIoManager();
         FileReference file = ioManager.resolve(path);
         return LSMBTreeUtil.createExternalBTreeWithBuddy(ioManager, file, storageManager.getBufferCache(serviceCtx),
-                typeTraits, cmpFactories, bloomFilterFalsePositiveRate,
+                storageManager.getFileMapProvider(serviceCtx), typeTraits, cmpFactories, bloomFilterFalsePositiveRate,
                 mergePolicyFactory.createMergePolicy(mergePolicyProperties, serviceCtx),
                 opTrackerProvider.getOperationTracker(serviceCtx), ioSchedulerProvider.getIoScheduler(serviceCtx),
                 ioOpCallbackFactory.createIoOpCallback(), bloomFilterKeyFields, durable, metadataPageManagerFactory);

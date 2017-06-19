@@ -22,8 +22,6 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.channels.FileChannel;
 
-import org.apache.hyracks.api.exceptions.ErrorCode;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IFileHandle;
 import org.apache.hyracks.api.io.IIOManager;
@@ -39,23 +37,15 @@ public class FileHandle implements IFileHandle {
         this.fileRef = fileRef;
     }
 
-    /**
-     * Open the file
-     *
-     * @param rwMode
-     * @param syncMode
-     * @throws IOException
-     */
     public void open(IIOManager.FileReadWriteMode rwMode, IIOManager.FileSyncMode syncMode) throws IOException {
         String mode;
-        if (!fileRef.getFile().exists()) {
-            throw HyracksDataException.create(ErrorCode.FILE_DOES_NOT_EXIST, fileRef.getAbsolutePath());
-        }
         switch (rwMode) {
             case READ_ONLY:
                 mode = "r";
                 break;
+
             case READ_WRITE:
+                fileRef.getFile().getAbsoluteFile().getParentFile().mkdirs();
                 switch (syncMode) {
                     case METADATA_ASYNC_DATA_ASYNC:
                         mode = "rw";
@@ -88,7 +78,6 @@ public class FileHandle implements IFileHandle {
         raf = null;
     }
 
-    @Override
     public FileReference getFileReference() {
         return fileRef;
     }

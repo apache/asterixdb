@@ -24,13 +24,14 @@ import java.util.List;
 import java.util.Random;
 import java.util.logging.Level;
 
+import org.junit.Test;
+
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.btree.util.AbstractBTreeTest;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
 import org.apache.hyracks.storage.common.sync.LatchType;
-import org.junit.Test;
 
 public class StorageFileAccessTest extends AbstractBTreeTest {
     public class PinnedLatchedPage {
@@ -65,7 +66,7 @@ public class StorageFileAccessTest extends AbstractBTreeTest {
         private int loopCount = 0;
         private boolean fileIsOpen = false;
         private Random rnd = new Random(50);
-        private List<PinnedLatchedPage> pinnedPages = new LinkedList<>();
+        private List<PinnedLatchedPage> pinnedPages = new LinkedList<PinnedLatchedPage>();
 
         public FileAccessWorker(int workerId, IBufferCache bufferCache, FileAccessType fta, int fileId, int maxPages,
                 int maxPinnedPages, int maxLoopCount, int closeFileChance, long thinkTime) {
@@ -258,7 +259,8 @@ public class StorageFileAccessTest extends AbstractBTreeTest {
     public void oneThreadOneFileTest() throws Exception {
         IBufferCache bufferCache = harness.getBufferCache();
         bufferCache.createFile(harness.getFileReference());
-        int btreeFileId = bufferCache.openFile(harness.getFileReference());
+        int btreeFileId = harness.getFileMapProvider().lookupFileId(harness.getFileReference());
+        bufferCache.openFile(btreeFileId);
         Thread worker = new Thread(new FileAccessWorker(0, harness.getBufferCache(), FileAccessType.FTA_UNLATCHED,
                 btreeFileId, 10, 10, 100, 10, 0));
         worker.start();

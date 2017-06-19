@@ -59,7 +59,7 @@ public interface IIOManager {
 
     public long getSize(IFileHandle fileHandle);
 
-    public void deleteWorkspaceFiles() throws HyracksDataException;
+    public void deleteWorkspaceFiles();
 
     /**
      * @param ioDeviceId
@@ -79,7 +79,6 @@ public interface IIOManager {
 
     /**
      * Gets a file reference from an absolute path
-     *
      * @deprecated
      *             use getFileRef(int ioDeviceId, String path) instead
      * @param path
@@ -91,7 +90,6 @@ public interface IIOManager {
 
     /**
      * Create a workspace file with the given prefix
-     *
      * @param prefix
      * @return A FileReference for the created workspace file
      * @throws HyracksDataException

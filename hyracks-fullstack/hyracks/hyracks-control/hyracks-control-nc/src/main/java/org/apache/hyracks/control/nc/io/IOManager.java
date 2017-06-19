@@ -38,7 +38,6 @@ import org.apache.hyracks.api.io.IFileHandle;
 import org.apache.hyracks.api.io.IIOFuture;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.io.IODeviceHandle;
-import org.apache.hyracks.api.util.IoUtil;
 
 public class IOManager implements IIOManager {
     /*
@@ -131,7 +130,8 @@ public class IOManager implements IIOManager {
             while (remaining > 0) {
                 int len = ((FileHandle) fHandle).getFileChannel().write(data, offset);
                 if (len < 0) {
-                    throw new HyracksDataException("Error writing to file: " + fHandle.getFileReference().toString());
+                    throw new HyracksDataException(
+                            "Error writing to file: " + ((FileHandle) fHandle).getFileReference().toString());
                 }
                 remaining -= len;
                 offset += len;
@@ -164,7 +164,8 @@ public class IOManager implements IIOManager {
                     len = fileChannel.write(dataArray);
                 }
                 if (len < 0) {
-                    throw new HyracksDataException("Error writing to file: " + fHandle.getFileReference().toString());
+                    throw new HyracksDataException(
+                            "Error writing to file: " + ((FileHandle) fHandle).getFileReference().toString());
                 }
                 remaining -= len;
                 offset += len;
@@ -332,17 +333,17 @@ public class IOManager implements IIOManager {
 
     @Override
     public long getSize(IFileHandle fileHandle) {
-        return fileHandle.getFileReference().getFile().length();
+        return ((FileHandle) fileHandle).getFileReference().getFile().length();
     }
 
     @Override
-    public void deleteWorkspaceFiles() throws HyracksDataException {
+    public void deleteWorkspaceFiles() {
         for (IODeviceHandle ioDevice : workspaces) {
             File workspaceFolder = new File(ioDevice.getMount(), ioDevice.getWorkspace());
             if (workspaceFolder.exists() && workspaceFolder.isDirectory()) {
                 File[] workspaceFiles = workspaceFolder.listFiles(WORKSPACE_FILES_FILTER);
                 for (File workspaceFile : workspaceFiles) {
-                    IoUtil.delete(workspaceFile);
+                    workspaceFile.delete();
                 }
             }
         }

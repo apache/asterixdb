@@ -31,6 +31,7 @@ import org.apache.hyracks.storage.am.btree.util.BTreeUtils;
 import org.apache.hyracks.storage.am.common.api.IIndexOperationContext;
 import org.apache.hyracks.storage.am.common.api.IPageManager;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
+import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndex;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedListCursor;
 import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizerFactory;
@@ -73,8 +74,9 @@ public class InMemoryInvertedIndex implements IInvertedIndex {
             btreeTypeTraits[tokenTypeTraits.length + i] = invListTypeTraits[i];
             btreeCmpFactories[tokenTypeTraits.length + i] = invListCmpFactories[i];
         }
-        this.btree = BTreeUtils.createBTree(virtualBufferCache, virtualFreePageManager, btreeTypeTraits,
-                btreeCmpFactories, BTreeLeafFrameType.REGULAR_NSM, btreeFileRef);
+        this.btree = BTreeUtils.createBTree(virtualBufferCache, virtualFreePageManager,
+                ((IVirtualBufferCache) virtualBufferCache).getFileMapProvider(), btreeTypeTraits, btreeCmpFactories,
+                BTreeLeafFrameType.REGULAR_NSM, btreeFileRef);
     }
 
     @Override
@@ -216,10 +218,5 @@ public class InMemoryInvertedIndex implements IInvertedIndex {
     @Override
     public int getNumOfFilterFields() {
         return 0;
-    }
-
-    @Override
-    public void purge() throws HyracksDataException {
-        btree.purge();
     }
 }

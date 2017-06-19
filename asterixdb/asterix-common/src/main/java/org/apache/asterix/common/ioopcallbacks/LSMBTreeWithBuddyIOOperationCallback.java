@@ -29,7 +29,7 @@ public class LSMBTreeWithBuddyIOOperationCallback extends AbstractLSMIOOperation
     @Override
     public long getComponentFileLSNOffset(ILSMDiskComponent diskComponent, String diskComponentFilePath)
             throws HyracksDataException {
-        if (diskComponentFilePath.endsWith(LSMBTreeWithBuddyFileManager.BTREE_SUFFIX)) {
+        if (diskComponentFilePath.endsWith(LSMBTreeWithBuddyFileManager.BTREE_STRING)) {
             LSMBTreeWithBuddyDiskComponent btreeComponent = (LSMBTreeWithBuddyDiskComponent) diskComponent;
             IMetadataPageManager metadataPageManager =
                     (IMetadataPageManager) btreeComponent.getBTree().getPageManager();

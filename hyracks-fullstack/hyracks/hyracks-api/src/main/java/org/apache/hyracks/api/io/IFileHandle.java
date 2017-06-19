@@ -18,8 +18,9 @@
  */
 package org.apache.hyracks.api.io;
 
-@FunctionalInterface
+/**
+ * IFileHandle is an interface that exists only for Java compilers to perform static typing
+ * when handling file handle objects. Users must not implement this interface.
+ */
 public interface IFileHandle {
-
-    FileReference getFileReference();
 }

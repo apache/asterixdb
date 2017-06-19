@@ -30,6 +30,7 @@ import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexFileNam
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedListBuilder;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedListBuilderFactory;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
+import org.apache.hyracks.storage.common.file.IFileMapProvider;
 
 public class OnDiskInvertedIndexFactory extends IndexFactory<IInvertedIndex> {
 
@@ -40,12 +41,12 @@ public class OnDiskInvertedIndexFactory extends IndexFactory<IInvertedIndex> {
     protected final IBinaryComparatorFactory[] tokenCmpFactories;
     protected final IInvertedIndexFileNameMapper fileNameMapper;
 
-    public OnDiskInvertedIndexFactory(IIOManager ioManager, IBufferCache bufferCache,
+    public OnDiskInvertedIndexFactory(IIOManager ioManager, IBufferCache bufferCache, IFileMapProvider fileMapProvider,
             IInvertedListBuilderFactory invListBuilderFactory, ITypeTraits[] invListTypeTraits,
             IBinaryComparatorFactory[] invListCmpFactories, ITypeTraits[] tokenTypeTraits,
             IBinaryComparatorFactory[] tokenCmpFactories, IInvertedIndexFileNameMapper fileNameMapper,
             IPageManagerFactory pageManagerFactory) {
-        super(ioManager, bufferCache, pageManagerFactory);
+        super(ioManager, bufferCache, fileMapProvider, pageManagerFactory);
         this.invListBuilderFactory = invListBuilderFactory;
         this.invListTypeTraits = invListTypeTraits;
         this.invListCmpFactories = invListCmpFactories;
@@ -59,7 +60,8 @@ public class OnDiskInvertedIndexFactory extends IndexFactory<IInvertedIndex> {
         String invListsFilePath = fileNameMapper.getInvListsFilePath(dictBTreeFile.getFile().getAbsolutePath());
         FileReference invListsFile = ioManager.resolveAbsolutePath(invListsFilePath);
         IInvertedListBuilder invListBuilder = invListBuilderFactory.create();
-        return new OnDiskInvertedIndex(bufferCache, invListBuilder, invListTypeTraits, invListCmpFactories,
-                tokenTypeTraits, tokenCmpFactories, dictBTreeFile, invListsFile, freePageManagerFactory);
+        return new OnDiskInvertedIndex(bufferCache, fileMapProvider, invListBuilder, invListTypeTraits,
+                invListCmpFactories, tokenTypeTraits, tokenCmpFactories, dictBTreeFile, invListsFile,
+                freePageManagerFactory);
     }
 }
