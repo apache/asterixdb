@@ -311,12 +311,13 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
             }
         }
 
-        private ILSMDiskComponent createBulkLoadTarget() throws HyracksDataException {
-            LSMComponentFileReferences relFlushFileRefs = fileManager.getRelFlushFileReference();
-            return createDiskComponent(bulkLoaComponentFactory, relFlushFileRefs.getInsertIndexFileReference(), null,
-                    null, true);
-        }
+    }
 
+    @Override
+    public ILSMDiskComponent createBulkLoadTarget() throws HyracksDataException {
+        LSMComponentFileReferences relFlushFileRefs = fileManager.getRelFlushFileReference();
+        return createDiskComponent(bulkLoaComponentFactory, relFlushFileRefs.getInsertIndexFileReference(), null, null,
+                true);
     }
 
     @Override

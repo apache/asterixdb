@@ -455,7 +455,8 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
         return new LSMBTreeBulkLoader(this, fillLevel, verifyInput, numElementsHint);
     }
 
-    protected ILSMDiskComponent createBulkLoadTarget() throws HyracksDataException {
+    @Override
+    public ILSMDiskComponent createBulkLoadTarget() throws HyracksDataException {
         LSMComponentFileReferences componentFileRefs = fileManager.getRelFlushFileReference();
         return createDiskComponent(bulkLoadComponentFactory, componentFileRefs.getInsertIndexFileReference(),
                 componentFileRefs.getBloomFilterFileReference(), true);

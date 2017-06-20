@@ -549,12 +549,13 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
             componentBulkLoader.abort();
         }
 
-        private ILSMDiskComponent createBulkLoadTarget() throws HyracksDataException {
-            LSMComponentFileReferences componentFileRefs = fileManager.getRelFlushFileReference();
-            return createDiskInvIndexComponent(componentFactory, componentFileRefs.getInsertIndexFileReference(),
-                    componentFileRefs.getDeleteIndexFileReference(), componentFileRefs.getBloomFilterFileReference(),
-                    true);
-        }
+    }
+
+    @Override
+    public ILSMDiskComponent createBulkLoadTarget() throws HyracksDataException {
+        LSMComponentFileReferences componentFileRefs = fileManager.getRelFlushFileReference();
+        return createDiskInvIndexComponent(componentFactory, componentFileRefs.getInsertIndexFileReference(),
+                componentFileRefs.getDeleteIndexFileReference(), componentFileRefs.getBloomFilterFileReference(), true);
     }
 
     protected InMemoryInvertedIndex createInMemoryInvertedIndex(IVirtualBufferCache virtualBufferCache,

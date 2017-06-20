@@ -675,7 +675,8 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
         }
     }
 
-    protected ILSMDiskComponent createBulkLoadTarget() throws HyracksDataException {
+    @Override
+    public ILSMDiskComponent createBulkLoadTarget() throws HyracksDataException {
         LSMComponentFileReferences componentFileRefs = fileManager.getRelFlushFileReference();
         return createDiskComponent(bulkComponentFactory, componentFileRefs.getInsertIndexFileReference(),
                 componentFileRefs.getDeleteIndexFileReference(), componentFileRefs.getBloomFilterFileReference(), true);

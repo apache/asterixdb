@@ -19,7 +19,6 @@
 
 package org.apache.hyracks.storage.am.lsm.btree.impls;
 
-import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.data.std.primitive.BooleanPointable;
@@ -107,13 +106,17 @@ public class LSMBTreeDiskComponentScanCursor extends LSMIndexSearchCursor {
             super.next();
             LSMBTreeTupleReference diskTuple = (LSMBTreeTupleReference) super.getTuple();
             if (diskTuple.isAntimatter()) {
-                setAntiMatterTuple(diskTuple, outputElement.getCursorIndex());
+                if (setAntiMatterTuple(diskTuple, outputElement.getCursorIndex())) {
+                    foundNext = true;
+                    return true;
+                }
             } else {
                 //matter tuple
                 setMatterTuple(diskTuple, outputElement.getCursorIndex());
+                foundNext = true;
+                return true;
             }
-            foundNext = true;
-            return true;
+
         }
 
         return false;
@@ -139,21 +142,23 @@ public class LSMBTreeDiskComponentScanCursor extends LSMIndexSearchCursor {
             }
             originalTuple = new PermutingTupleReference(permutation);
         }
-
         //build the matter tuple
         buildTuple(tupleBuilder, diskTuple, cursorIndex, MATTER_TUPLE_FLAG);
         outputTuple.reset(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray());
         originalTuple.reset(outputTuple);
     }
 
-    private void setAntiMatterTuple(ITupleReference diskTuple, int cursorIndex) throws HyracksDataException {
+    private boolean setAntiMatterTuple(ITupleReference diskTuple, int cursorIndex) throws HyracksDataException {
         if (originalTuple == null || cmp.compare(diskTuple, originalTuple) != 0) {
-            //This shouldn't happen, because we shouldn't place an anti-matter tuple
-            //into the primary index if that tuple is not there
-            throw HyracksDataException.create(ErrorCode.CANNOT_FIND_MATTER_TUPLE_FOR_ANTI_MATTER_TUPLE);
+            // This could happen sometimes...
+            // Consider insert tuple A into the memory component, and then delete it immediately.
+            // We would have -A in the memory component, but there is no tuple A in the previous disk components.
+            // But in this case, we can simply ignore it for the scan purpose
+            return false;
         }
         buildTuple(antiMatterTupleBuilder, originalTuple, cursorIndex, ANTIMATTER_TUPLE_FLAG);
         outputTuple.reset(antiMatterTupleBuilder.getFieldEndOffsets(), antiMatterTupleBuilder.getByteArray());
+        return true;
     }
 
     private void buildTuple(ArrayTupleBuilder builder, ITupleReference diskTuple, int cursorIndex,

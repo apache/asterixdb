@@ -952,6 +952,11 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             // #. create the index artifact in NC.
             runJob(hcc, spec);
 
+            // #. flush the internal dataset for correlated policy
+            if (ds.isCorrelated() && ds.getDatasetType() == DatasetType.INTERNAL) {
+                FlushDatasetUtil.flushDataset(hcc, metadataProvider, dataverseName, datasetName, datasetName);
+            }
+
             mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
             bActiveTxn = true;
             metadataProvider.setMetadataTxnContext(mdTxnCtx);

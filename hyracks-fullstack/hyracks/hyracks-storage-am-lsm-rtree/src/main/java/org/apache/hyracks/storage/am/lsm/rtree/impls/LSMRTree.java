@@ -338,7 +338,8 @@ public class LSMRTree extends AbstractLSMRTree {
                 buddyBTreeFields);
     }
 
-    protected ILSMDiskComponent createBulkLoadTarget() throws HyracksDataException {
+    @Override
+    public ILSMDiskComponent createBulkLoadTarget() throws HyracksDataException {
         LSMComponentFileReferences componentFileRefs = fileManager.getRelFlushFileReference();
         return createDiskComponent(componentFactory, componentFileRefs.getInsertIndexFileReference(),
                 componentFileRefs.getDeleteIndexFileReference(), componentFileRefs.getBloomFilterFileReference(), true);
