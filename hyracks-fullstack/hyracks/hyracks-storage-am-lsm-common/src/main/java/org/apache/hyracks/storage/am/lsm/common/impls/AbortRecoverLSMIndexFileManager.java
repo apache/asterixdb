@@ -23,6 +23,6 @@ import org.apache.hyracks.api.io.IIOManager;
 
 public class AbortRecoverLSMIndexFileManager extends AbstractLSMIndexFileManager {
     public AbortRecoverLSMIndexFileManager(IIOManager ioManager, FileReference file) {
-        super(ioManager, null, file, null);
+        super(ioManager, file, null);
     }
 }

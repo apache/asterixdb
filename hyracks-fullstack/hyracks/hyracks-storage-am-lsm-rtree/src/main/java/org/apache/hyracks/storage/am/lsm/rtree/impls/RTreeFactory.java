@@ -27,25 +27,24 @@ import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import org.apache.hyracks.storage.am.lsm.common.impls.TreeIndexFactory;
 import org.apache.hyracks.storage.am.rtree.impls.RTree;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
-import org.apache.hyracks.storage.common.file.IFileMapProvider;
 
 public class RTreeFactory extends TreeIndexFactory<RTree> {
 
     private final boolean isPointMBR;
 
-    public RTreeFactory(IIOManager ioManager, IBufferCache bufferCache, IFileMapProvider fileMapProvider,
+    public RTreeFactory(IIOManager ioManager, IBufferCache bufferCache,
             IMetadataPageManagerFactory freePageManagerFactory, ITreeIndexFrameFactory interiorFrameFactory,
             ITreeIndexFrameFactory leafFrameFactory, IBinaryComparatorFactory[] cmpFactories, int fieldCount,
             boolean isPointMBR) {
-        super(ioManager, bufferCache, fileMapProvider, freePageManagerFactory, interiorFrameFactory, leafFrameFactory,
-                cmpFactories, fieldCount);
+        super(ioManager, bufferCache, freePageManagerFactory, interiorFrameFactory, leafFrameFactory, cmpFactories,
+                fieldCount);
         this.isPointMBR = isPointMBR;
     }
 
     @Override
     public RTree createIndexInstance(FileReference file) {
-        return new RTree(bufferCache, fileMapProvider, freePageManagerFactory.createPageManager(bufferCache),
-                interiorFrameFactory, leafFrameFactory, cmpFactories, fieldCount, file, isPointMBR);
+        return new RTree(bufferCache, freePageManagerFactory.createPageManager(bufferCache), interiorFrameFactory,
+                leafFrameFactory, cmpFactories, fieldCount, file, isPointMBR);
     }
 
 }

@@ -59,10 +59,9 @@ public class BTreeSortedInsertTest extends OrderedIndexSortedInsertTest {
     @SuppressWarnings("rawtypes")
     @Override
     protected OrderedIndexTestContext createTestContext(ISerializerDeserializer[] fieldSerdes, int numKeys,
-                                                        BTreeLeafFrameType leafType, boolean filtered) throws Exception {
-        return BTreeTestContext.create(harness.getBufferCache(), harness.getFileMapProvider(),
-                harness.getFileReference(), fieldSerdes, numKeys, leafType, harness.getPageManagerFactory()
-                        .createPageManager(harness.getBufferCache()));
+            BTreeLeafFrameType leafType, boolean filtered) throws Exception {
+        return BTreeTestContext.create(harness.getBufferCache(), harness.getFileReference(), fieldSerdes, numKeys,
+                leafType, harness.getPageManagerFactory().createPageManager(harness.getBufferCache()));
     }
 
     @Override

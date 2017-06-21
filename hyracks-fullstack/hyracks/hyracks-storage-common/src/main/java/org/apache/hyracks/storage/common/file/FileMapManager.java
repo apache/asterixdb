@@ -21,21 +21,22 @@ package org.apache.hyracks.storage.common.file;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 
-public class TransientFileMapManager implements IFileMapManager {
+public class FileMapManager implements IFileMapManager {
     private static final long serialVersionUID = 1L;
 
-    private Map<Integer, FileReference> id2nameMap = new HashMap<Integer, FileReference>();
-    private Map<FileReference, Integer> name2IdMap = new HashMap<FileReference, Integer>();
+    private Map<Integer, FileReference> id2nameMap = new HashMap<>();
+    private Map<FileReference, Integer> name2IdMap = new HashMap<>();
     private int idCounter = 0;
 
     @Override
     public FileReference lookupFileName(int fileId) throws HyracksDataException {
         FileReference fRef = id2nameMap.get(fileId);
         if (fRef == null) {
-            throw new HyracksDataException("No mapping found for id: " + fileId);
+            throw HyracksDataException.create(ErrorCode.NO_MAPPING_FOR_FILE_ID, fileId);
         }
         return fRef;
     }
@@ -44,7 +45,7 @@ public class TransientFileMapManager implements IFileMapManager {
     public int lookupFileId(FileReference fileRef) throws HyracksDataException {
         Integer fileId = name2IdMap.get(fileRef);
         if (fileId == null) {
-            throw new HyracksDataException("No mapping found for name: " + fileRef);
+            throw HyracksDataException.create(ErrorCode.NO_MAPPING_FOR_FILENAME, fileRef);
         }
         return fileId;
     }
@@ -60,16 +61,24 @@ public class TransientFileMapManager implements IFileMapManager {
     }
 
     @Override
-    public void unregisterFile(int fileId) throws HyracksDataException {
+    public FileReference unregisterFile(int fileId) throws HyracksDataException {
         FileReference fileRef = id2nameMap.remove(fileId);
+        if (fileRef == null) {
+            throw HyracksDataException.create(ErrorCode.NO_MAPPING_FOR_FILE_ID, fileId);
+        }
         name2IdMap.remove(fileRef);
+        return fileRef;
     }
 
     @Override
-    public void registerFile(FileReference fileRef) throws HyracksDataException {
-        Integer fileId = idCounter++;
+    public int registerFile(FileReference fileRef) throws HyracksDataException {
+        if (isMapped(fileRef)) {
+            throw HyracksDataException.create(ErrorCode.FILE_ALREADY_MAPPED, fileRef);
+        }
+        int fileId = idCounter++;
         id2nameMap.put(fileId, fileRef);
         name2IdMap.put(fileRef, fileId);
+        return fileId;
     }
 
 }

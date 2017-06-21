@@ -61,10 +61,10 @@ public class LSMRTreeMultiThreadTest extends AbstractRTreeMultiThreadTest {
             IBinaryComparatorFactory[] btreeCmpFactories, IPrimitiveValueProviderFactory[] valueProviderFactories,
             RTreePolicyType rtreePolicyType, int[] btreeFields) throws HyracksDataException {
         return LSMRTreeUtils.createLSMTree(harness.getIOManager(), harness.getVirtualBufferCaches(),
-                harness.getFileReference(), harness.getDiskBufferCache(), harness.getDiskFileMapProvider(), typeTraits,
-                rtreeCmpFactories, btreeCmpFactories, valueProviderFactories, rtreePolicyType,
-                harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(), harness.getOperationTracker(),
-                harness.getIOScheduler(), harness.getIOOperationCallback(),
+                harness.getFileReference(), harness.getDiskBufferCache(), typeTraits, rtreeCmpFactories,
+                btreeCmpFactories, valueProviderFactories, rtreePolicyType, harness.getBoomFilterFalsePositiveRate(),
+                harness.getMergePolicy(), harness.getOperationTracker(), harness.getIOScheduler(),
+                harness.getIOOperationCallback(),
                 LSMRTreeUtils.proposeBestLinearizer(typeTraits, rtreeCmpFactories.length), null, btreeFields, null,
                 null, null, true, false, harness.getMetadataPageManagerFactory());
     }

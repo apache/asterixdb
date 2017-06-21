@@ -79,8 +79,8 @@ public class LSMRTreeWithAntiMatterLocalResource extends LsmResource {
         FileReference file = ioManager.resolve(path);
         List<IVirtualBufferCache> virtualBufferCaches = vbcProvider.getVirtualBufferCaches(serviceCtx, file);
         return LSMRTreeUtils.createLSMTreeWithAntiMatterTuples(ioManager, virtualBufferCaches, file,
-                storageManager.getBufferCache(serviceCtx), storageManager.getFileMapProvider(serviceCtx), typeTraits,
-                cmpFactories, btreeComparatorFactories, valueProviderFactories, rtreePolicyType,
+                storageManager.getBufferCache(serviceCtx), typeTraits, cmpFactories, btreeComparatorFactories,
+                valueProviderFactories, rtreePolicyType,
                 mergePolicyFactory.createMergePolicy(mergePolicyProperties, serviceCtx),
                 opTrackerProvider.getOperationTracker(serviceCtx), ioSchedulerProvider.getIoScheduler(serviceCtx),
                 ioOpCallbackFactory.createIoOpCallback(), linearizeCmpFactory, rtreeFields, filterTypeTraits,

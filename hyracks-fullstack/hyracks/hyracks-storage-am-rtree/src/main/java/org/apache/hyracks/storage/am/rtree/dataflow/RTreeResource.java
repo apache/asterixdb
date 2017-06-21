@@ -59,9 +59,8 @@ public class RTreeResource implements IResource {
     public IIndex createInstance(INCServiceContext ctx) throws HyracksDataException {
         IIOManager ioManager = ctx.getIoManager();
         FileReference resourceRef = ioManager.resolve(path);
-        return RTreeUtils.createRTree(storageManager.getBufferCache(ctx), storageManager.getFileMapProvider(ctx),
-                typeTraits, valueProviderFactories, comparatorFactories, rtreePolicyType, resourceRef, false,
-                pageManagerFactory);
+        return RTreeUtils.createRTree(storageManager.getBufferCache(ctx), typeTraits, valueProviderFactories,
+                comparatorFactories, rtreePolicyType, resourceRef, false, pageManagerFactory);
     }
 
     @Override

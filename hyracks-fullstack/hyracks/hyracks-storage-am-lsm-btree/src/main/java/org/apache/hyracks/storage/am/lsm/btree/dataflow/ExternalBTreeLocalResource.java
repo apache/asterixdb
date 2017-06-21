@@ -57,9 +57,9 @@ public class ExternalBTreeLocalResource extends LSMBTreeLocalResource {
     public ILSMIndex createInstance(INCServiceContext serviceCtx) throws HyracksDataException {
         IIOManager ioManager = serviceCtx.getIoManager();
         FileReference file = ioManager.resolve(path);
-        return LSMBTreeUtil.createExternalBTree(ioManager, file, storageManager.getBufferCache(serviceCtx),
-                storageManager.getFileMapProvider(serviceCtx), typeTraits, cmpFactories, bloomFilterKeyFields,
-                bloomFilterFalsePositiveRate, mergePolicyFactory.createMergePolicy(mergePolicyProperties, serviceCtx),
+        return LSMBTreeUtil.createExternalBTree(ioManager, file, storageManager.getBufferCache(serviceCtx), typeTraits,
+                cmpFactories, bloomFilterKeyFields, bloomFilterFalsePositiveRate,
+                mergePolicyFactory.createMergePolicy(mergePolicyProperties, serviceCtx),
                 opTrackerProvider.getOperationTracker(serviceCtx), ioSchedulerProvider.getIoScheduler(serviceCtx),
                 ioOpCallbackFactory.createIoOpCallback(), durable, metadataPageManagerFactory);
     }

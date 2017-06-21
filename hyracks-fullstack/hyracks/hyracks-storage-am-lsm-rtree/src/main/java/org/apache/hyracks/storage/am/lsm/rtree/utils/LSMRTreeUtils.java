@@ -68,15 +68,14 @@ import org.apache.hyracks.storage.am.rtree.linearize.HilbertDoubleComparatorFact
 import org.apache.hyracks.storage.am.rtree.linearize.ZCurveDoubleComparatorFactory;
 import org.apache.hyracks.storage.am.rtree.linearize.ZCurveIntComparatorFactory;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
-import org.apache.hyracks.storage.common.file.IFileMapProvider;
 
 public class LSMRTreeUtils {
     public static LSMRTree createLSMTree(IIOManager ioManager, List<IVirtualBufferCache> virtualBufferCaches,
-            FileReference file, IBufferCache diskBufferCache, IFileMapProvider diskFileMapProvider,
-            ITypeTraits[] typeTraits, IBinaryComparatorFactory[] rtreeCmpFactories,
-            IBinaryComparatorFactory[] btreeCmpFactories, IPrimitiveValueProviderFactory[] valueProviderFactories,
-            RTreePolicyType rtreePolicyType, double bloomFilterFalsePositiveRate, ILSMMergePolicy mergePolicy,
-            ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallback ioOpCallback,
+            FileReference file, IBufferCache diskBufferCache, ITypeTraits[] typeTraits,
+            IBinaryComparatorFactory[] rtreeCmpFactories, IBinaryComparatorFactory[] btreeCmpFactories,
+            IPrimitiveValueProviderFactory[] valueProviderFactories, RTreePolicyType rtreePolicyType,
+            double bloomFilterFalsePositiveRate, ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker,
+            ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallback ioOpCallback,
             ILinearizeComparatorFactory linearizeCmpFactory, int[] rtreeFields, int[] buddyBTreeFields,
             ITypeTraits[] filterTypeTraits, IBinaryComparatorFactory[] filterCmpFactories, int[] filterFields,
             boolean durable, boolean isPointMBR, IMetadataPageManagerFactory freePageManagerFactory)
@@ -104,12 +103,10 @@ public class LSMRTreeUtils {
                 valueProviderFactories, rtreePolicyType, isPointMBR);
         ITreeIndexFrameFactory btreeInteriorFrameFactory = new BTreeNSMInteriorFrameFactory(btreeTupleWriterFactory);
         ITreeIndexFrameFactory btreeLeafFrameFactory = new BTreeNSMLeafFrameFactory(btreeTupleWriterFactory);
-        TreeIndexFactory<RTree> diskRTreeFactory = new RTreeFactory(ioManager, diskBufferCache, diskFileMapProvider,
-                freePageManagerFactory, rtreeInteriorFrameFactory, rtreeLeafFrameFactory, rtreeCmpFactories,
-                typeTraits.length, isPointMBR);
-        TreeIndexFactory<BTree> diskBTreeFactory =
-                new BTreeFactory(ioManager, diskBufferCache, diskFileMapProvider, freePageManagerFactory,
-                        btreeInteriorFrameFactory, btreeLeafFrameFactory, btreeCmpFactories, btreeTypeTraits.length);
+        TreeIndexFactory<RTree> diskRTreeFactory = new RTreeFactory(ioManager, diskBufferCache, freePageManagerFactory,
+                rtreeInteriorFrameFactory, rtreeLeafFrameFactory, rtreeCmpFactories, typeTraits.length, isPointMBR);
+        TreeIndexFactory<BTree> diskBTreeFactory = new BTreeFactory(ioManager, diskBufferCache, freePageManagerFactory,
+                btreeInteriorFrameFactory, btreeLeafFrameFactory, btreeCmpFactories, btreeTypeTraits.length);
 
         int[] comparatorFields = { 0 };
         IBinaryComparatorFactory[] linearizerArray = { linearizeCmpFactory };
@@ -118,8 +115,7 @@ public class LSMRTreeUtils {
         for (int i = 0; i < btreeCmpFactories.length; i++) {
             bloomFilterKeyFields[i] = i;
         }
-        BloomFilterFactory bloomFilterFactory =
-                new BloomFilterFactory(diskBufferCache, diskFileMapProvider, bloomFilterKeyFields);
+        BloomFilterFactory bloomFilterFactory = new BloomFilterFactory(diskBufferCache, bloomFilterKeyFields);
 
         ComponentFilterHelper filterHelper = null;
         LSMComponentFilterFrameFactory filterFrameFactory = null;
@@ -131,19 +127,19 @@ public class LSMRTreeUtils {
             filterManager = new LSMComponentFilterManager(filterFrameFactory);
         }
         ILSMIndexFileManager fileNameManager =
-                new LSMRTreeFileManager(ioManager, diskFileMapProvider, file, diskRTreeFactory, diskBTreeFactory);
+                new LSMRTreeFileManager(ioManager, file, diskRTreeFactory, diskBTreeFactory);
         return new LSMRTree(ioManager, virtualBufferCaches, rtreeInteriorFrameFactory, rtreeLeafFrameFactory,
                 btreeInteriorFrameFactory, btreeLeafFrameFactory, fileNameManager, diskRTreeFactory, diskBTreeFactory,
                 bloomFilterFactory, filterHelper, filterFrameFactory, filterManager, bloomFilterFalsePositiveRate,
-                diskFileMapProvider, typeTraits.length, rtreeCmpFactories, btreeCmpFactories, linearizeCmpFactory,
-                comparatorFields, linearizerArray, mergePolicy, opTracker, ioScheduler, ioOpCallback, rtreeFields,
-                buddyBTreeFields, filterFields, durable, isPointMBR);
+                typeTraits.length, rtreeCmpFactories, btreeCmpFactories, linearizeCmpFactory, comparatorFields,
+                linearizerArray, mergePolicy, opTracker, ioScheduler, ioOpCallback, rtreeFields, buddyBTreeFields,
+                filterFields, durable, isPointMBR);
     }
 
     public static LSMRTreeWithAntiMatterTuples createLSMTreeWithAntiMatterTuples(IIOManager ioManager,
             List<IVirtualBufferCache> virtualBufferCaches, FileReference file, IBufferCache diskBufferCache,
-            IFileMapProvider diskFileMapProvider, ITypeTraits[] typeTraits,
-            IBinaryComparatorFactory[] rtreeCmpFactories, IBinaryComparatorFactory[] btreeComparatorFactories,
+            ITypeTraits[] typeTraits, IBinaryComparatorFactory[] rtreeCmpFactories,
+            IBinaryComparatorFactory[] btreeComparatorFactories,
             IPrimitiveValueProviderFactory[] valueProviderFactories, RTreePolicyType rtreePolicyType,
             ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler,
             ILSMIOOperationCallback ioOpCallback, ILinearizeComparatorFactory linearizerCmpFactory, int[] rtreeFields,
@@ -184,13 +180,12 @@ public class LSMRTreeUtils {
 
         ITreeIndexFrameFactory copyTupleLeafFrameFactory = new RTreeNSMLeafFrameFactory(
                 rtreeLeafFrameCopyTupleWriterFactory, valueProviderFactories, rtreePolicyType, isPointMBR);
-        TreeIndexFactory<RTree> diskRTreeFactory = new RTreeFactory(ioManager, diskBufferCache, diskFileMapProvider,
-                freePageManagerFactory, rtreeInteriorFrameFactory, copyTupleLeafFrameFactory, rtreeCmpFactories,
-                typeTraits.length, isPointMBR);
+        TreeIndexFactory<RTree> diskRTreeFactory = new RTreeFactory(ioManager, diskBufferCache, freePageManagerFactory,
+                rtreeInteriorFrameFactory, copyTupleLeafFrameFactory, rtreeCmpFactories, typeTraits.length, isPointMBR);
 
-        TreeIndexFactory<RTree> bulkLoadRTreeFactory = new RTreeFactory(ioManager, diskBufferCache, diskFileMapProvider,
-                freePageManagerFactory, rtreeInteriorFrameFactory, rtreeLeafFrameBulkLoadFactory, rtreeCmpFactories,
-                typeTraits.length, isPointMBR);
+        TreeIndexFactory<RTree> bulkLoadRTreeFactory =
+                new RTreeFactory(ioManager, diskBufferCache, freePageManagerFactory, rtreeInteriorFrameFactory,
+                        rtreeLeafFrameBulkLoadFactory, rtreeCmpFactories, typeTraits.length, isPointMBR);
 
         // The first field is for the sorted curve (e.g. Hilbert curve), and the
         // second field is for the primary key.
@@ -219,21 +214,20 @@ public class LSMRTreeUtils {
             filterManager = new LSMComponentFilterManager(filterFrameFactory);
         }
         ILSMIndexFileManager fileNameManager =
-                new LSMRTreeWithAntiMatterTuplesFileManager(ioManager, diskFileMapProvider, file, diskRTreeFactory);
+                new LSMRTreeWithAntiMatterTuplesFileManager(ioManager, file, diskRTreeFactory);
         return new LSMRTreeWithAntiMatterTuples(ioManager, virtualBufferCaches, rtreeInteriorFrameFactory,
                 rtreeLeafFrameFactory, btreeInteriorFrameFactory, btreeLeafFrameFactory, fileNameManager,
                 diskRTreeFactory, bulkLoadRTreeFactory, filterHelper, filterFrameFactory, filterManager,
-                diskFileMapProvider, typeTraits.length, rtreeCmpFactories, btreeComparatorFactories,
-                linearizerCmpFactory, comparatorFields, linearizerArray, mergePolicy, opTracker, ioScheduler,
-                ioOpCallback, rtreeFields, filterFields, durable, isPointMBR);
+                typeTraits.length, rtreeCmpFactories, btreeComparatorFactories, linearizerCmpFactory, comparatorFields,
+                linearizerArray, mergePolicy, opTracker, ioScheduler, ioOpCallback, rtreeFields, filterFields, durable,
+                isPointMBR);
     }
 
     public static ExternalRTree createExternalRTree(IIOManager ioManager, FileReference file,
-            IBufferCache diskBufferCache, IFileMapProvider diskFileMapProvider, ITypeTraits[] typeTraits,
-            IBinaryComparatorFactory[] rtreeCmpFactories, IBinaryComparatorFactory[] btreeCmpFactories,
-            IPrimitiveValueProviderFactory[] valueProviderFactories, RTreePolicyType rtreePolicyType,
-            double bloomFilterFalsePositiveRate, ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker,
-            ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallback ioOpCallback,
+            IBufferCache diskBufferCache, ITypeTraits[] typeTraits, IBinaryComparatorFactory[] rtreeCmpFactories,
+            IBinaryComparatorFactory[] btreeCmpFactories, IPrimitiveValueProviderFactory[] valueProviderFactories,
+            RTreePolicyType rtreePolicyType, double bloomFilterFalsePositiveRate, ILSMMergePolicy mergePolicy,
+            ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallback ioOpCallback,
             ILinearizeComparatorFactory linearizeCmpFactory, int[] buddyBTreeFields, boolean durable,
             boolean isPointMBR, IMetadataPageManagerFactory freePageManagerFactory) throws HyracksDataException {
 
@@ -260,12 +254,10 @@ public class LSMRTreeUtils {
                 valueProviderFactories, rtreePolicyType, isPointMBR);
         ITreeIndexFrameFactory btreeInteriorFrameFactory = new BTreeNSMInteriorFrameFactory(btreeTupleWriterFactory);
         ITreeIndexFrameFactory btreeLeafFrameFactory = new BTreeNSMLeafFrameFactory(btreeTupleWriterFactory);
-        TreeIndexFactory<RTree> diskRTreeFactory = new RTreeFactory(ioManager, diskBufferCache, diskFileMapProvider,
-                freePageManagerFactory, rtreeInteriorFrameFactory, rtreeLeafFrameFactory, rtreeCmpFactories,
-                typeTraits.length, isPointMBR);
-        TreeIndexFactory<BTree> diskBTreeFactory =
-                new BTreeFactory(ioManager, diskBufferCache, diskFileMapProvider, freePageManagerFactory,
-                        btreeInteriorFrameFactory, btreeLeafFrameFactory, btreeCmpFactories, btreeTypeTraits.length);
+        TreeIndexFactory<RTree> diskRTreeFactory = new RTreeFactory(ioManager, diskBufferCache, freePageManagerFactory,
+                rtreeInteriorFrameFactory, rtreeLeafFrameFactory, rtreeCmpFactories, typeTraits.length, isPointMBR);
+        TreeIndexFactory<BTree> diskBTreeFactory = new BTreeFactory(ioManager, diskBufferCache, freePageManagerFactory,
+                btreeInteriorFrameFactory, btreeLeafFrameFactory, btreeCmpFactories, btreeTypeTraits.length);
         int[] comparatorFields = { 0 };
         IBinaryComparatorFactory[] linearizerArray = { linearizeCmpFactory };
 
@@ -273,17 +265,15 @@ public class LSMRTreeUtils {
         for (int i = 0; i < btreeCmpFactories.length; i++) {
             bloomFilterKeyFields[i] = i;
         }
-        BloomFilterFactory bloomFilterFactory =
-                new BloomFilterFactory(diskBufferCache, diskFileMapProvider, bloomFilterKeyFields);
+        BloomFilterFactory bloomFilterFactory = new BloomFilterFactory(diskBufferCache, bloomFilterKeyFields);
 
         ILSMIndexFileManager fileNameManager =
-                new LSMRTreeFileManager(ioManager, diskFileMapProvider, file, diskRTreeFactory, diskBTreeFactory);
-        ExternalRTree lsmTree = new ExternalRTree(ioManager, rtreeInteriorFrameFactory, rtreeLeafFrameFactory,
-                btreeInteriorFrameFactory, btreeLeafFrameFactory, fileNameManager, diskRTreeFactory, diskBTreeFactory,
-                bloomFilterFactory, bloomFilterFalsePositiveRate, diskFileMapProvider, typeTraits.length,
-                rtreeCmpFactories, btreeCmpFactories, linearizeCmpFactory, comparatorFields, linearizerArray,
-                mergePolicy, opTracker, ioScheduler, ioOpCallback, buddyBTreeFields, durable, isPointMBR);
-        return lsmTree;
+                new LSMRTreeFileManager(ioManager, file, diskRTreeFactory, diskBTreeFactory);
+        return new ExternalRTree(ioManager, rtreeInteriorFrameFactory, rtreeLeafFrameFactory, btreeInteriorFrameFactory,
+                btreeLeafFrameFactory, fileNameManager, diskRTreeFactory, diskBTreeFactory, bloomFilterFactory,
+                bloomFilterFalsePositiveRate, typeTraits.length, rtreeCmpFactories, btreeCmpFactories,
+                linearizeCmpFactory, comparatorFields, linearizerArray, mergePolicy, opTracker, ioScheduler,
+                ioOpCallback, buddyBTreeFields, durable, isPointMBR);
     }
 
     public static ILinearizeComparatorFactory proposeBestLinearizer(ITypeTraits[] typeTraits, int numKeyFields)

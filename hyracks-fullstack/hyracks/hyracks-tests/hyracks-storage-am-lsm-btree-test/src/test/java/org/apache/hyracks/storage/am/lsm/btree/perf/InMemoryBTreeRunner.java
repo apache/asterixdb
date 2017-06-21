@@ -41,7 +41,6 @@ import org.apache.hyracks.storage.am.lsm.common.freepage.VirtualFreePageManager;
 import org.apache.hyracks.storage.am.lsm.common.impls.VirtualBufferCache;
 import org.apache.hyracks.storage.common.buffercache.HeapBufferAllocator;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
-import org.apache.hyracks.storage.common.file.TransientFileMapManager;
 import org.apache.hyracks.test.support.TestStorageManagerComponentHolder;
 
 public class InMemoryBTreeRunner extends Thread implements IExperimentRunner {
@@ -73,8 +72,8 @@ public class InMemoryBTreeRunner extends Thread implements IExperimentRunner {
         ITreeIndexFrameFactory leafFrameFactory = new BTreeNSMLeafFrameFactory(tupleWriterFactory);
         ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(tupleWriterFactory);
         IPageManager freePageManager = new VirtualFreePageManager(bufferCache);
-        btree = new BTree(bufferCache, new TransientFileMapManager(), freePageManager, interiorFrameFactory,
-                leafFrameFactory, cmpFactories, typeTraits.length, file);
+        btree = new BTree(bufferCache, freePageManager, interiorFrameFactory, leafFrameFactory, cmpFactories,
+                typeTraits.length, file);
     }
 
     @Override

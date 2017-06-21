@@ -33,10 +33,10 @@ import org.junit.Before;
  * Tests the BTree insert operation with strings and integer fields using
  * various numbers of key and payload fields. Each tests first fills a BTree with
  * randomly generated tuples. We compare the following operations against expected results:
- *      1) Point searches for all tuples
- *      2) Ordered scan
- *      3) Disk-order scan
- *      4) Range search (and prefix search for composite keys)
+ * 1) Point searches for all tuples
+ * 2) Ordered scan
+ * 3) Disk-order scan
+ * 4) Range search (and prefix search for composite keys)
  */
 public class BTreeInsertTest extends OrderedIndexInsertTest {
 
@@ -59,10 +59,9 @@ public class BTreeInsertTest extends OrderedIndexInsertTest {
     @SuppressWarnings("rawtypes")
     @Override
     protected OrderedIndexTestContext createTestContext(ISerializerDeserializer[] fieldSerdes, int numKeys,
-                                                        BTreeLeafFrameType leafType, boolean filtered) throws Exception {
-        return BTreeTestContext.create(harness.getBufferCache(), harness.getFileMapProvider(),
-                harness.getFileReference(), fieldSerdes, numKeys, leafType, harness.getPageManagerFactory()
-                        .createPageManager(harness.getBufferCache()));
+            BTreeLeafFrameType leafType, boolean filtered) throws Exception {
+        return BTreeTestContext.create(harness.getBufferCache(), harness.getFileReference(), fieldSerdes, numKeys,
+                leafType, harness.getPageManagerFactory().createPageManager(harness.getBufferCache()));
     }
 
     @Override

@@ -63,7 +63,7 @@ public class ErrorCode {
     public static final int FILE_IS_NOT_DIRECTORY = 27;
     public static final int CANNOT_READ_FILE = 28;
     public static final int UNIDENTIFIED_IO_ERROR_READING_FILE = 29;
-    public static final int FILE_DOES_NOT_EXISTS = 30;
+    public static final int FILE_DOES_NOT_EXIST = 30;
     public static final int UNIDENTIFIED_IO_ERROR_DELETING_DIR = 31;
     public static final int RESULT_NO_RECORD = 32;
     public static final int DUPLICATE_KEY = 33;
@@ -100,6 +100,22 @@ public class ErrorCode {
     public static final int FLUSH_ON_CLOSED_WRITER = 64;
     public static final int FAIL_ON_FAILED_WRITER = 65;
     public static final int MISSED_FAIL_CALL = 66;
+    public static final int CANNOT_CREATE_FILE = 67;
+    public static final int NO_MAPPING_FOR_FILE_ID = 68;
+    public static final int NO_MAPPING_FOR_FILENAME = 69;
+    public static final int CANNOT_GET_NUMBER_OF_ELEMENT_FROM_INACTIVE_FILTER = 70;
+    public static final int CANNOT_CREATE_BLOOM_FILTER_BUILDER_FOR_INACTIVE_FILTER = 71;
+    public static final int CANNOT_CREATE_BLOOM_FILTER_WITH_NUMBER_OF_PAGES = 72;
+    public static final int CANNOT_ADD_TUPLES_TO_DUMMY_BLOOM_FILTER = 73;
+    public static final int CANNOT_CREATE_ACTIVE_BLOOM_FILTER = 74;
+    public static final int CANNOT_DEACTIVATE_INACTIVE_BLOOM_FILTER = 75;
+    public static final int CANNOT_DESTROY_ACTIVE_BLOOM_FILTER = 76;
+    public static final int CANNOT_PURGE_ACTIVE_INDEX = 77;
+    public static final int CANNOT_PURGE_ACTIVE_BLOOM_FILTER = 78;
+    public static final int CANNOT_BULK_LOAD_NON_EMPTY_TREE = 79;
+    public static final int CANNOT_CREATE_EXISTING_INDEX = 80;
+    public static final int FILE_ALREADY_MAPPED = 81;
+    public static final int FILE_ALREADY_EXISTS = 82;
 
     // Compilation error codes.
     public static final int RULECOLLECTION_NOT_INSTANCE_OF_LIST = 10000;

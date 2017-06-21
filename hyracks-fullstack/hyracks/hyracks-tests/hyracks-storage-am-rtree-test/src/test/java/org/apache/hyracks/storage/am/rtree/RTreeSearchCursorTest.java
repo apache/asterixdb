@@ -121,8 +121,8 @@ public class RTreeSearchCursorTest extends AbstractRTreeTest {
         IRTreeLeafFrame leafFrame = (IRTreeLeafFrame) leafFrameFactory.createFrame();
         IMetadataPageManager freePageManager = new LinkedMetaDataPageManager(bufferCache, metaFrameFactory);
 
-        RTree rtree = new RTree(bufferCache, harness.getFileMapProvider(), freePageManager, interiorFrameFactory,
-                leafFrameFactory, cmpFactories, fieldCount, harness.getFileReference(), false);
+        RTree rtree = new RTree(bufferCache, freePageManager, interiorFrameFactory, leafFrameFactory, cmpFactories,
+                fieldCount, harness.getFileReference(), false);
         rtree.create();
         rtree.activate();
 

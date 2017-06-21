@@ -22,21 +22,18 @@ package org.apache.hyracks.storage.am.bloomfilter.impls;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
-import org.apache.hyracks.storage.common.file.IFileMapProvider;
 
 public class BloomFilterFactory {
     private final IBufferCache bufferCache;
-    private final IFileMapProvider fileMapProvider;
     private final int[] bloomFilterKeyFields;
 
-    public BloomFilterFactory(IBufferCache bufferCache, IFileMapProvider fileMapProvider, int[] bloomFilterKeyFields) {
+    public BloomFilterFactory(IBufferCache bufferCache, int[] bloomFilterKeyFields) {
         this.bufferCache = bufferCache;
-        this.fileMapProvider = fileMapProvider;
         this.bloomFilterKeyFields = bloomFilterKeyFields;
     }
 
     public BloomFilter createBloomFiltertInstance(FileReference file) throws HyracksDataException {
-        return new BloomFilter(bufferCache, fileMapProvider, file, bloomFilterKeyFields);
+        return new BloomFilter(bufferCache, file, bloomFilterKeyFields);
     }
 
     public int[] getBloomFilterKeyFields() {

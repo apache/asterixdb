@@ -32,7 +32,6 @@ import org.apache.hyracks.storage.am.common.api.IPageManagerFactory;
 import org.apache.hyracks.storage.am.common.freepage.LinkedMetadataPageManagerFactory;
 import org.apache.hyracks.storage.am.config.AccessMethodTestsConfig;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
-import org.apache.hyracks.storage.common.file.IFileMapProvider;
 import org.apache.hyracks.test.support.TestStorageManagerComponentHolder;
 import org.apache.hyracks.test.support.TestUtils;
 
@@ -49,7 +48,6 @@ public class BTreeTestHarness {
 
     protected IHyracksTaskContext ctx;
     protected IBufferCache bufferCache;
-    protected IFileMapProvider fileMapProvider;
     protected FileReference file;
     protected IMetadataPageManagerFactory pageManagerFactory;
 
@@ -76,7 +74,6 @@ public class BTreeTestHarness {
         ctx = TestUtils.create(getHyracksFrameSize());
         TestStorageManagerComponentHolder.init(pageSize, numPages, maxOpenFiles);
         bufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx.getJobletContext().getServiceContext());
-        fileMapProvider = TestStorageManagerComponentHolder.getFileMapProvider();
         file = ctx.getIoManager().getFileReference(0, simpleDateFormat.format(new Date()));
         pageManagerFactory = new LinkedMetadataPageManagerFactory();
         rnd.setSeed(RANDOM_SEED);
@@ -93,10 +90,6 @@ public class BTreeTestHarness {
 
     public IBufferCache getBufferCache() {
         return bufferCache;
-    }
-
-    public IFileMapProvider getFileMapProvider() {
-        return fileMapProvider;
     }
 
     public FileReference getFileReference() {

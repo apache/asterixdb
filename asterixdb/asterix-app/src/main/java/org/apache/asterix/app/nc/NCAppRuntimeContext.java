@@ -47,7 +47,6 @@ import org.apache.asterix.common.config.ReplicationProperties;
 import org.apache.asterix.common.config.StorageProperties;
 import org.apache.asterix.common.config.TransactionProperties;
 import org.apache.asterix.common.context.DatasetLifecycleManager;
-import org.apache.asterix.common.context.FileMapManager;
 import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.AsterixException;
@@ -94,8 +93,7 @@ import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICacheMemoryAllocator;
 import org.apache.hyracks.storage.common.buffercache.IPageCleanerPolicy;
 import org.apache.hyracks.storage.common.buffercache.IPageReplacementStrategy;
-import org.apache.hyracks.storage.common.file.IFileMapManager;
-import org.apache.hyracks.storage.common.file.IFileMapProvider;
+import org.apache.hyracks.storage.common.file.FileMapManager;
 import org.apache.hyracks.storage.common.file.ILocalResourceRepositoryFactory;
 import org.apache.hyracks.storage.common.file.IResourceIdFactory;
 
@@ -117,7 +115,6 @@ public class NCAppRuntimeContext implements INcApplicationContext {
     private final NodeProperties nodeProperties;
     private ThreadExecutor threadExecutor;
     private IDatasetLifecycleManager datasetLifecycleManager;
-    private IFileMapManager fileMapManager;
     private IBufferCache bufferCache;
     private ITransactionSubsystem txnSubsystem;
     private IMetadataNode metadataNodeStub;
@@ -168,7 +165,6 @@ public class NCAppRuntimeContext implements INcApplicationContext {
     public void initialize(boolean initialRun) throws IOException, ACIDException {
         ioManager = getServiceContext().getIoManager();
         threadExecutor = new ThreadExecutor(getServiceContext().getThreadFactory());
-        fileMapManager = new FileMapManager(ioManager);
         ICacheMemoryAllocator allocator = new HeapBufferAllocator();
         IPageCleanerPolicy pcp = new DelayPageCleanerPolicy(600000);
         IPageReplacementStrategy prs = new ClockPageReplacementStrategy(allocator,
@@ -236,16 +232,15 @@ public class NCAppRuntimeContext implements INcApplicationContext {
 
             //initialize replication channel
             replicationChannel = new ReplicationChannel(nodeId, replicationProperties, txnSubsystem.getLogManager(),
-                    replicaResourcesManager, replicationManager, getServiceContext(),
-                    asterixAppRuntimeContextProvider);
+                    replicaResourcesManager, replicationManager, getServiceContext(), asterixAppRuntimeContextProvider);
 
             remoteRecoveryManager = new RemoteRecoveryManager(replicationManager, this, replicationProperties);
 
-            bufferCache = new BufferCache(ioManager, prs, pcp, fileMapManager,
+            bufferCache = new BufferCache(ioManager, prs, pcp, new FileMapManager(),
                     storageProperties.getBufferCacheMaxOpenFiles(), getServiceContext().getThreadFactory(),
                     replicationManager);
         } else {
-            bufferCache = new BufferCache(ioManager, prs, pcp, fileMapManager,
+            bufferCache = new BufferCache(ioManager, prs, pcp, new FileMapManager(),
                     storageProperties.getBufferCacheMaxOpenFiles(), getServiceContext().getThreadFactory());
         }
 
@@ -299,11 +294,6 @@ public class NCAppRuntimeContext implements INcApplicationContext {
     @Override
     public IBufferCache getBufferCache() {
         return bufferCache;
-    }
-
-    @Override
-    public IFileMapProvider getFileMapManager() {
-        return fileMapManager;
     }
 
     @Override

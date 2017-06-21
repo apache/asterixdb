@@ -33,11 +33,11 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
+import org.apache.hyracks.api.util.IoUtil;
 import org.apache.hyracks.storage.am.common.api.ITreeIndex;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexMetadataFrame;
@@ -45,13 +45,8 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexFileManager;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
-import org.apache.hyracks.storage.common.file.IFileMapProvider;
 
 public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManager {
-
-    public static final String SPLIT_STRING = "_";
-    protected static final String BLOOM_FILTER_STRING = "f";
-    protected static final String TRANSACTION_PREFIX = ".T";
 
     public enum TreeIndexState {
         INVALID,
@@ -59,34 +54,53 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
         VALID
     }
 
+    /**
+     * Split different parts of the file name
+     */
+    public static final String DELIMITER = "_";
+    /**
+     * Indicates a B tree
+     */
+    public static final String BTREE_SUFFIX = "b";
+    /**
+     * Indicates an R tree
+     */
+    public static final String RTREE_SUFFIX = "r";
+    /**
+     * Indicates a bloom filter
+     */
+    public static final String BLOOM_FILTER_SUFFIX = "f";
+    /**
+     * Indicates a delete tree
+     */
+    public static final String DELETE_TREE_SUFFIX = "d";
+    /**
+     * Hides transaction components until they are either committed by removing this file or deleted along with the file
+     */
+    public static final String TXN_PREFIX = ".T";
+
+    protected static final FilenameFilter fileNameFilter = (dir, name) -> !name.startsWith(".");
+    protected static final FilenameFilter txnFileNameFilter = (dir, name) -> name.startsWith(TXN_PREFIX);
+    protected static FilenameFilter bloomFilterFilter =
+            (dir, name) -> !name.startsWith(".") && name.endsWith(BLOOM_FILTER_SUFFIX);
+    protected static final FilenameFilter dummyFilter = (dir, name) -> true;
+    protected static final Comparator<String> cmp = new FileNameComparator();
+
     protected final IIOManager ioManager;
-    protected final IFileMapProvider fileMapProvider;
     // baseDir should reflect dataset name and partition name and be absolute
-    protected String baseDir;
+    protected final String baseDir;
     protected final Format formatter = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss-SSS");
-    protected final Comparator<String> cmp = new FileNameComparator();
     protected final Comparator<ComparableFileName> recencyCmp = new RecencyComparator();
     protected final TreeIndexFactory<? extends ITreeIndex> treeFactory;
-
     private String prevTimestamp = null;
 
-    public AbstractLSMIndexFileManager(IIOManager ioManager, IFileMapProvider fileMapProvider, FileReference file,
+    public AbstractLSMIndexFileManager(IIOManager ioManager, FileReference file,
             TreeIndexFactory<? extends ITreeIndex> treeFactory) {
         this.ioManager = ioManager;
-        this.baseDir = file.getFile().getAbsolutePath();
-        if (!baseDir.endsWith(System.getProperty("file.separator"))) {
-            baseDir += System.getProperty("file.separator");
-        }
-        this.fileMapProvider = fileMapProvider;
+        this.baseDir = file.getFile().getAbsolutePath().endsWith(File.separator) ? file.getFile().getAbsolutePath()
+                : file.getFile().getAbsolutePath() + File.separator;
         this.treeFactory = treeFactory;
     }
-
-    private static FilenameFilter fileNameFilter = new FilenameFilter() {
-        @Override
-        public boolean accept(File dir, String name) {
-            return !name.startsWith(".");
-        }
-    };
 
     protected TreeIndexState isValidTreeIndex(ITreeIndex treeIndex) throws HyracksDataException {
         IBufferCache bufferCache = treeIndex.getBufferCache();
@@ -148,7 +162,7 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
             if (!dir.canRead()) {
                 throw HyracksDataException.create(ErrorCode.CANNOT_READ_FILE, path);
             } else if (!dir.exists()) {
-                throw HyracksDataException.create(ErrorCode.FILE_DOES_NOT_EXISTS, path);
+                throw HyracksDataException.create(ErrorCode.FILE_DOES_NOT_EXIST, path);
             } else if (!dir.isDirectory()) {
                 throw HyracksDataException.create(ErrorCode.FILE_IS_NOT_DIRECTORY, path);
             }
@@ -162,43 +176,30 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
         ArrayList<ComparableFileName> tmpAllInvListsFiles = new ArrayList<>();
         cleanupAndGetValidFilesInternal(filter, treeFactory, tmpAllInvListsFiles);
         for (ComparableFileName cmpFileName : tmpAllInvListsFiles) {
-            int index = cmpFileName.fileName.lastIndexOf(SPLIT_STRING);
+            int index = cmpFileName.fileName.lastIndexOf(DELIMITER);
             String file = cmpFileName.fileName.substring(0, index);
             if (groundTruth.contains(file)) {
                 validFiles.add(cmpFileName);
             } else {
                 File invalidFile = new File(cmpFileName.fullPath);
-                invalidFile.delete();
+                IoUtil.delete(invalidFile);
             }
         }
     }
 
     @Override
-    public void createDirs() {
+    public void createDirs() throws HyracksDataException {
         File f = new File(baseDir);
+        if (f.exists()) {
+            throw HyracksDataException.create(ErrorCode.CANNOT_CREATE_EXISTING_INDEX);
+        }
         f.mkdirs();
     }
 
     @Override
     public void deleteDirs() throws HyracksDataException {
-        File f = new File(baseDir);
-        if (f.exists()) {
-            delete(f);
-        }
+        IoUtil.delete(new File(baseDir));
     }
-
-    private void delete(File f) throws HyracksDataException {
-        if (!FileUtils.deleteQuietly(f)) {
-            throw HyracksDataException.create(ErrorCode.UNIDENTIFIED_IO_ERROR_DELETING_DIR, f.getPath());
-        }
-    }
-
-    protected static FilenameFilter bloomFilterFilter = new FilenameFilter() {
-        @Override
-        public boolean accept(File dir, String name) {
-            return !name.startsWith(".") && name.endsWith(BLOOM_FILTER_STRING);
-        }
-    };
 
     protected FileReference createFlushFile(String flushFileName) throws HyracksDataException {
         return ioManager.resolveAbsolutePath(flushFileName);
@@ -212,17 +213,17 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
     public LSMComponentFileReferences getRelFlushFileReference() throws HyracksDataException {
         String ts = getCurrentTimestamp();
         // Begin timestamp and end timestamp are identical since it is a flush
-        return new LSMComponentFileReferences(createFlushFile(baseDir + ts + SPLIT_STRING + ts), null, null);
+        return new LSMComponentFileReferences(createFlushFile(baseDir + ts + DELIMITER + ts), null, null);
     }
 
     @Override
     public LSMComponentFileReferences getRelMergeFileReference(String firstFileName, String lastFileName)
             throws HyracksDataException {
-        String[] firstTimestampRange = firstFileName.split(SPLIT_STRING);
-        String[] lastTimestampRange = lastFileName.split(SPLIT_STRING);
+        String[] firstTimestampRange = firstFileName.split(DELIMITER);
+        String[] lastTimestampRange = lastFileName.split(DELIMITER);
         // Get the range of timestamps by taking the earliest and the latest timestamps
         return new LSMComponentFileReferences(
-                createMergeFile(baseDir + firstTimestampRange[0] + SPLIT_STRING + lastTimestampRange[1]), null, null);
+                createMergeFile(baseDir + firstTimestampRange[0] + DELIMITER + lastTimestampRange[1]), null, null);
     }
 
     @Override
@@ -292,7 +293,7 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
      * 2. Flushed files are sorted from newest to oldest (based on the timestamp
      * string)
      */
-    private class FileNameComparator implements Comparator<String> {
+    private static class FileNameComparator implements Comparator<String> {
         @Override
         public int compare(String a, String b) {
             // Consciously ignoring locale.
@@ -307,7 +308,7 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
 
     @Override
     public void recoverTransaction() throws HyracksDataException {
-        String[] files = listDirFiles(baseDir, transactionFileNameFilter);
+        String[] files = listDirFiles(baseDir, txnFileNameFilter);
         File dir = new File(baseDir);
         try {
             if (files.length == 0) {
@@ -334,7 +335,7 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
             this.fileRef = fileRef;
             this.fullPath = fileRef.getFile().getAbsolutePath();
             this.fileName = fileRef.getFile().getName();
-            interval = fileName.split(SPLIT_STRING);
+            interval = fileName.split(DELIMITER);
         }
 
         @Override
@@ -361,7 +362,7 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
     // This function is used to delete transaction files for aborted transactions
     @Override
     public void deleteTransactionFiles() throws HyracksDataException {
-        String[] files = listDirFiles(baseDir, transactionFileNameFilter);
+        String[] files = listDirFiles(baseDir, txnFileNameFilter);
         if (files.length == 0) {
             // Do nothing
         } else if (files.length > 1) {
@@ -399,23 +400,9 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
         return null;
     }
 
-    protected static FilenameFilter transactionFileNameFilter = new FilenameFilter() {
-        @Override
-        public boolean accept(File dir, String name) {
-            return name.startsWith(".T");
-        }
-    };
-
-    protected static FilenameFilter dummyFilter = new FilenameFilter() {
-        @Override
-        public boolean accept(File dir, String name) {
-            return true;
-        }
-    };
-
     protected static FilenameFilter createTransactionFilter(String transactionFileName, final boolean inclusive) {
-        final String timeStamp = transactionFileName
-                .substring(transactionFileName.indexOf(TRANSACTION_PREFIX) + TRANSACTION_PREFIX.length());
+        final String timeStamp =
+                transactionFileName.substring(transactionFileName.indexOf(TXN_PREFIX) + TXN_PREFIX.length());
         return new FilenameFilter() {
             @Override
             public boolean accept(File dir, String name) {
@@ -429,7 +416,7 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
     }
 
     protected FilenameFilter getTransactionFileFilter(boolean inclusive) throws HyracksDataException {
-        String[] files = listDirFiles(baseDir, transactionFileNameFilter);
+        String[] files = listDirFiles(baseDir, txnFileNameFilter);
         if (files.length == 0) {
             return dummyFilter;
         } else {

@@ -39,19 +39,17 @@ import org.apache.hyracks.storage.common.IIndexAccessor;
 import org.apache.hyracks.storage.common.IModificationOperationCallback;
 import org.apache.hyracks.storage.common.ISearchOperationCallback;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
-import org.apache.hyracks.storage.common.file.IFileMapProvider;
 
 public class PartitionedOnDiskInvertedIndex extends OnDiskInvertedIndex implements IPartitionedInvertedIndex {
 
     protected final int PARTITIONING_NUM_TOKENS_FIELD = 1;
 
-    public PartitionedOnDiskInvertedIndex(IBufferCache bufferCache, IFileMapProvider fileMapProvider,
-            IInvertedListBuilder invListBuilder, ITypeTraits[] invListTypeTraits,
-            IBinaryComparatorFactory[] invListCmpFactories, ITypeTraits[] tokenTypeTraits,
-            IBinaryComparatorFactory[] tokenCmpFactories, FileReference btreeFile, FileReference invListsFile,
-            IPageManagerFactory pageManagerFactory) throws HyracksDataException {
-        super(bufferCache, fileMapProvider, invListBuilder, invListTypeTraits, invListCmpFactories, tokenTypeTraits,
-                tokenCmpFactories, btreeFile, invListsFile, pageManagerFactory);
+    public PartitionedOnDiskInvertedIndex(IBufferCache bufferCache, IInvertedListBuilder invListBuilder,
+            ITypeTraits[] invListTypeTraits, IBinaryComparatorFactory[] invListCmpFactories,
+            ITypeTraits[] tokenTypeTraits, IBinaryComparatorFactory[] tokenCmpFactories, FileReference btreeFile,
+            FileReference invListsFile, IPageManagerFactory pageManagerFactory) throws HyracksDataException {
+        super(bufferCache, invListBuilder, invListTypeTraits, invListCmpFactories, tokenTypeTraits, tokenCmpFactories,
+                btreeFile, invListsFile, pageManagerFactory);
     }
 
     public class PartitionedOnDiskInvertedIndexAccessor extends OnDiskInvertedIndexAccessor {

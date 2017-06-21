@@ -29,7 +29,6 @@ import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.storage.am.config.AccessMethodTestsConfig;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
-import org.apache.hyracks.storage.common.file.IFileMapProvider;
 import org.apache.hyracks.test.support.TestStorageManagerComponentHolder;
 import org.apache.hyracks.test.support.TestUtils;
 
@@ -45,7 +44,6 @@ public class BloomFilterTestHarness {
     protected IIOManager ioManager;
     protected IHyracksTaskContext ctx;
     protected IBufferCache bufferCache;
-    protected IFileMapProvider fileMapProvider;
     protected FileReference file;
 
     protected final Random rnd = new Random();
@@ -70,7 +68,6 @@ public class BloomFilterTestHarness {
         TestStorageManagerComponentHolder.init(pageSize, numPages, maxOpenFiles);
         ioManager = ctx.getIoManager();
         bufferCache = TestStorageManagerComponentHolder.getBufferCache(ctx.getJobletContext().getServiceContext());
-        fileMapProvider = TestStorageManagerComponentHolder.getFileMapProvider();
         file = ioManager.getFileReference(0, simpleDateFormat.format(new Date()));
         rnd.setSeed(RANDOM_SEED);
     }
@@ -86,10 +83,6 @@ public class BloomFilterTestHarness {
 
     public IBufferCache getBufferCache() {
         return bufferCache;
-    }
-
-    public IFileMapProvider getFileMapProvider() {
-        return fileMapProvider;
     }
 
     public Random getRandom() {

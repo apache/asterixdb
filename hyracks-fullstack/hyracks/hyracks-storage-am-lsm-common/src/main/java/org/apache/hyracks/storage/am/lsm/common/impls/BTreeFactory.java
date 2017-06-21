@@ -26,21 +26,20 @@ import org.apache.hyracks.storage.am.btree.impls.BTree;
 import org.apache.hyracks.storage.am.common.api.IPageManagerFactory;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
-import org.apache.hyracks.storage.common.file.IFileMapProvider;
 
 public class BTreeFactory extends TreeIndexFactory<BTree> {
 
-    public BTreeFactory(IIOManager ioManager, IBufferCache bufferCache, IFileMapProvider fileMapProvider,
-            IPageManagerFactory freePageManagerFactory, ITreeIndexFrameFactory interiorFrameFactory,
-            ITreeIndexFrameFactory leafFrameFactory, IBinaryComparatorFactory[] cmpFactories, int fieldCount) {
-        super(ioManager, bufferCache, fileMapProvider, freePageManagerFactory, interiorFrameFactory, leafFrameFactory,
-                cmpFactories, fieldCount);
+    public BTreeFactory(IIOManager ioManager, IBufferCache bufferCache, IPageManagerFactory freePageManagerFactory,
+            ITreeIndexFrameFactory interiorFrameFactory, ITreeIndexFrameFactory leafFrameFactory,
+            IBinaryComparatorFactory[] cmpFactories, int fieldCount) {
+        super(ioManager, bufferCache, freePageManagerFactory, interiorFrameFactory, leafFrameFactory, cmpFactories,
+                fieldCount);
     }
 
     @Override
     public BTree createIndexInstance(FileReference file) {
-        return new BTree(bufferCache, fileMapProvider, freePageManagerFactory.createPageManager(bufferCache),
-                interiorFrameFactory, leafFrameFactory, cmpFactories, fieldCount, file);
+        return new BTree(bufferCache, freePageManagerFactory.createPageManager(bufferCache), interiorFrameFactory,
+                leafFrameFactory, cmpFactories, fieldCount, file);
     }
 
 }

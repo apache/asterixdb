@@ -29,12 +29,11 @@ import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.storage.am.common.api.ITreeIndex;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexFileManager;
 import org.apache.hyracks.storage.am.lsm.common.impls.TreeIndexFactory;
-import org.apache.hyracks.storage.common.file.IFileMapProvider;
 
 public class TestLsmIndexFileManager extends AbstractLSMIndexFileManager {
 
-    public TestLsmIndexFileManager(IIOManager ioManager, IFileMapProvider fileMapProvider, FileReference file) {
-        super(ioManager, fileMapProvider, file, null);
+    public TestLsmIndexFileManager(IIOManager ioManager, FileReference file) {
+        super(ioManager, file, null);
     }
 
     @Override

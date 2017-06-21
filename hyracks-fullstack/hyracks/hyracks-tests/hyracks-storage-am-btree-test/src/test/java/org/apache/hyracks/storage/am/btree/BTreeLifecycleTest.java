@@ -36,7 +36,8 @@ public class BTreeLifecycleTest extends AbstractIndexLifecycleTest {
     private final TreeIndexTestUtils titu = new OrderedIndexTestUtils();
 
     @SuppressWarnings("rawtypes")
-    private final ISerializerDeserializer[] fieldSerdes = new ISerializerDeserializer[] { IntegerSerializerDeserializer.INSTANCE };
+    private final ISerializerDeserializer[] fieldSerdes =
+            new ISerializerDeserializer[] { IntegerSerializerDeserializer.INSTANCE };
 
     private ITreeIndexFrame frame = null;
 
@@ -46,20 +47,14 @@ public class BTreeLifecycleTest extends AbstractIndexLifecycleTest {
     @Override
     public void setup() throws Exception {
         harness.setUp();
-        testCtx = BTreeTestContext.create(harness.getBufferCache(), harness.getFileMapProvider(),
-                harness.getFileReference(), fieldSerdes, fieldSerdes.length, BTreeLeafFrameType.REGULAR_NSM, harness
-                        .getPageManagerFactory().createPageManager(harness.getBufferCache()));
+        testCtx = BTreeTestContext.create(harness.getBufferCache(), harness.getFileReference(), fieldSerdes,
+                fieldSerdes.length, BTreeLeafFrameType.REGULAR_NSM,
+                harness.getPageManagerFactory().createPageManager(harness.getBufferCache()));
         index = testCtx.getIndex();
     }
 
     @Override
     public void tearDown() throws HyracksDataException {
-        try {
-            testCtx.getIndex().deactivate();
-        } catch (Exception e) {
-        } finally {
-            testCtx.getIndex().destroy();
-        }
         harness.tearDown();
     }
 

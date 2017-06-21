@@ -19,7 +19,7 @@
 
 package org.apache.hyracks.storage.am.lsm.btree;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.fail;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInput;
@@ -78,10 +78,10 @@ public class LSMBTreeScanDiskComponentsTest extends OrderedIndexTestDriver {
     protected OrderedIndexTestContext createTestContext(ISerializerDeserializer[] fieldSerdes, int numKeys,
             BTreeLeafFrameType leafType, boolean filtered) throws Exception {
         return LSMBTreeTestContext.create(harness.getIOManager(), harness.getVirtualBufferCaches(),
-                harness.getFileReference(), harness.getDiskBufferCache(), harness.getDiskFileMapProvider(), fieldSerdes,
-                numKeys, harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(),
-                harness.getOperationTracker(), harness.getIOScheduler(), harness.getIOOperationCallback(),
-                harness.getMetadataPageManagerFactory(), false);
+                harness.getFileReference(), harness.getDiskBufferCache(), fieldSerdes, numKeys,
+                harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(), harness.getOperationTracker(),
+                harness.getIOScheduler(), harness.getIOOperationCallback(), harness.getMetadataPageManagerFactory(),
+                false);
     }
 
     @Override

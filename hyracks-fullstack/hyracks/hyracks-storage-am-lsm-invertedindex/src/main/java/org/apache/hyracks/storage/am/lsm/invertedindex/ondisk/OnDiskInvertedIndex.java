@@ -26,6 +26,7 @@ import java.nio.ByteBuffer;
 import org.apache.hyracks.api.context.IHyracksCommonContext;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
@@ -60,7 +61,6 @@ import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.storage.common.buffercache.IFIFOPageQueue;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
-import org.apache.hyracks.storage.common.file.IFileMapProvider;
 
 /**
  * An inverted index consists of two files: 1. a file storing (paginated)
@@ -94,7 +94,6 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
     protected BTree btree;
     protected int rootPageId = 0;
     protected IBufferCache bufferCache;
-    protected IFileMapProvider fileMapProvider;
     protected int fileId = -1;
     protected final ITypeTraits[] invListTypeTraits;
     protected final IBinaryComparatorFactory[] invListCmpFactories;
@@ -109,21 +108,18 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
     protected boolean isOpen = false;
     protected boolean wasOpen = false;
 
-    public OnDiskInvertedIndex(IBufferCache bufferCache, IFileMapProvider fileMapProvider,
-            IInvertedListBuilder invListBuilder, ITypeTraits[] invListTypeTraits,
-            IBinaryComparatorFactory[] invListCmpFactories, ITypeTraits[] tokenTypeTraits,
-            IBinaryComparatorFactory[] tokenCmpFactories, FileReference btreeFile, FileReference invListsFile,
-            IPageManagerFactory pageManagerFactory) throws HyracksDataException {
+    public OnDiskInvertedIndex(IBufferCache bufferCache, IInvertedListBuilder invListBuilder,
+            ITypeTraits[] invListTypeTraits, IBinaryComparatorFactory[] invListCmpFactories,
+            ITypeTraits[] tokenTypeTraits, IBinaryComparatorFactory[] tokenCmpFactories, FileReference btreeFile,
+            FileReference invListsFile, IPageManagerFactory pageManagerFactory) throws HyracksDataException {
         this.bufferCache = bufferCache;
-        this.fileMapProvider = fileMapProvider;
         this.invListBuilder = invListBuilder;
         this.invListTypeTraits = invListTypeTraits;
         this.invListCmpFactories = invListCmpFactories;
         this.tokenTypeTraits = tokenTypeTraits;
         this.tokenCmpFactories = tokenCmpFactories;
-        this.btree = BTreeUtils.createBTree(bufferCache, fileMapProvider, getBTreeTypeTraits(tokenTypeTraits),
-                tokenCmpFactories, BTreeLeafFrameType.REGULAR_NSM, btreeFile,
-                pageManagerFactory.createPageManager(bufferCache));
+        this.btree = BTreeUtils.createBTree(bufferCache, getBTreeTypeTraits(tokenTypeTraits), tokenCmpFactories,
+                BTreeLeafFrameType.REGULAR_NSM, btreeFile, pageManagerFactory.createPageManager(bufferCache));
         this.numTokenFields = btree.getComparatorFactories().length;
         this.numInvListKeys = invListCmpFactories.length;
         this.invListsFile = invListsFile;
@@ -139,25 +135,7 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
             throw new HyracksDataException("Failed to create since index is already open.");
         }
         btree.create();
-        boolean fileIsMapped = false;
-        synchronized (fileMapProvider) {
-            fileIsMapped = fileMapProvider.isMapped(invListsFile);
-            if (!fileIsMapped) {
-                bufferCache.createFile(invListsFile);
-            }
-            fileId = fileMapProvider.lookupFileId(invListsFile);
-            try {
-                // Also creates the file if it doesn't exist yet.
-                bufferCache.openFile(fileId);
-            } catch (HyracksDataException e) {
-                // Revert state of buffer cache since file failed to open.
-                if (!fileIsMapped) {
-                    bufferCache.deleteFile(fileId, false);
-                }
-                throw e;
-            }
-        }
-        bufferCache.closeFile(fileId);
+        fileId = bufferCache.createFile(invListsFile);
     }
 
     @Override
@@ -166,25 +144,11 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
             throw new HyracksDataException("Failed to activate the index since it is already activated.");
         }
         btree.activate();
-        boolean fileIsMapped = false;
-        synchronized (fileMapProvider) {
-            fileIsMapped = fileMapProvider.isMapped(invListsFile);
-            if (!fileIsMapped) {
-                bufferCache.createFile(invListsFile);
-            }
-            fileId = fileMapProvider.lookupFileId(invListsFile);
-            try {
-                // Also creates the file if it doesn't exist yet.
-                bufferCache.openFile(fileId);
-            } catch (HyracksDataException e) {
-                // Revert state of buffer cache since file failed to open.
-                if (!fileIsMapped) {
-                    bufferCache.deleteFile(fileId, false);
-                }
-                throw e;
-            }
+        if (fileId >= 0) {
+            bufferCache.openFile(fileId);
+        } else {
+            fileId = bufferCache.openFile(invListsFile);
         }
-
         isOpen = true;
         wasOpen = true;
     }
@@ -194,10 +158,8 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
         if (!isOpen && wasOpen) {
             throw new HyracksDataException("Failed to deactivate the index since it is already deactivated.");
         }
-
         btree.deactivate();
         bufferCache.closeFile(fileId);
-
         isOpen = false;
     }
 
@@ -206,15 +168,8 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
         if (isOpen) {
             throw new HyracksDataException("Failed to destroy since index is already open.");
         }
-
         btree.destroy();
-        invListsFile.delete();
-        if (fileId == -1) {
-            return;
-        }
-
-        bufferCache.deleteFile(fileId, false);
-        fileId = -1;
+        bufferCache.deleteFile(invListsFile);
     }
 
     @Override
@@ -224,27 +179,9 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
         }
         btree.clear();
         bufferCache.closeFile(fileId);
-        bufferCache.deleteFile(fileId, false);
-        invListsFile.getFile().delete();
-
-        boolean fileIsMapped = false;
-        synchronized (fileMapProvider) {
-            fileIsMapped = fileMapProvider.isMapped(invListsFile);
-            if (!fileIsMapped) {
-                bufferCache.createFile(invListsFile);
-            }
-            fileId = fileMapProvider.lookupFileId(invListsFile);
-            try {
-                // Also creates the file if it doesn't exist yet.
-                bufferCache.openFile(fileId);
-            } catch (HyracksDataException e) {
-                // Revert state of buffer cache since file failed to open.
-                if (!fileIsMapped) {
-                    bufferCache.deleteFile(fileId, false);
-                }
-                throw e;
-            }
-        }
+        bufferCache.deleteFile(fileId);
+        fileId = bufferCache.createFile(invListsFile);
+        bufferCache.openFile(fileId);
     }
 
     @Override
@@ -696,5 +633,15 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
     @Override
     public int getNumOfFilterFields() {
         return 0;
+    }
+
+    @Override
+    public synchronized void purge() throws HyracksDataException {
+        if (isOpen) {
+            throw HyracksDataException.create(ErrorCode.CANNOT_PURGE_ACTIVE_INDEX);
+        }
+        btree.purge();
+        bufferCache.purgeHandle(fileId);
+        fileId = -1;
     }
 }

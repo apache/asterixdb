@@ -49,8 +49,8 @@ public class LSMBTreeExamplesTest extends OrderedIndexExamplesTest {
             int[] bloomFilterKeyFields, ITypeTraits[] filterTypeTraits, IBinaryComparatorFactory[] filterCmpFactories,
             int[] btreeFields, int[] filterFields) throws HyracksDataException {
         return LSMBTreeUtil.createLSMTree(harness.getIOManager(), harness.getVirtualBufferCaches(),
-                harness.getFileReference(), harness.getDiskBufferCache(), harness.getDiskFileMapProvider(), typeTraits,
-                cmpFactories, bloomFilterKeyFields, harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(),
+                harness.getFileReference(), harness.getDiskBufferCache(), typeTraits, cmpFactories,
+                bloomFilterKeyFields, harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(),
                 harness.getOperationTracker(), harness.getIOScheduler(), harness.getIOOperationCallback(), true,
                 filterTypeTraits, filterCmpFactories, btreeFields, filterFields, true,
                 harness.getMetadataPageManagerFactory());

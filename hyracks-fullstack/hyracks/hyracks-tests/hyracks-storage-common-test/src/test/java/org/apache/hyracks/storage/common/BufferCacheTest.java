@@ -35,7 +35,6 @@ import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
-import org.apache.hyracks.storage.common.file.IFileMapProvider;
 import org.apache.hyracks.test.support.TestStorageManagerComponentHolder;
 import org.apache.hyracks.test.support.TestUtils;
 import org.junit.AfterClass;
@@ -65,12 +64,11 @@ public class BufferCacheTest {
         TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES, MAX_OPEN_FILES);
         IBufferCache bufferCache =
                 TestStorageManagerComponentHolder.getBufferCache(ctx.getJobletContext().getServiceContext());
-        IFileMapProvider fmp = TestStorageManagerComponentHolder.getFileMapProvider();
+
         IIOManager ioManager = TestStorageManagerComponentHolder.getIOManager();
         String fileName = getFileName();
         FileReference file = ioManager.resolve(fileName);
-        bufferCache.createFile(file);
-        int fileId = fmp.lookupFileId(file);
+        int fileId = bufferCache.createFile(file);
         int num = 10;
         int testPageId = 0;
 
@@ -148,7 +146,6 @@ public class BufferCacheTest {
         TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES, MAX_OPEN_FILES);
         IBufferCache bufferCache =
                 TestStorageManagerComponentHolder.getBufferCache(ctx.getJobletContext().getServiceContext());
-        IFileMapProvider fmp = TestStorageManagerComponentHolder.getFileMapProvider();
         IIOManager ioManager = TestStorageManagerComponentHolder.getIOManager();
 
         List<Integer> fileIds = new ArrayList<>();
@@ -157,8 +154,7 @@ public class BufferCacheTest {
             String fileName = getFileName();
 
             FileReference file = ioManager.resolve(fileName);
-            bufferCache.createFile(file);
-            int fileId = fmp.lookupFileId(file);
+            int fileId = bufferCache.createFile(file);
             bufferCache.openFile(fileId);
             fileIds.add(fileId);
         }
@@ -169,8 +165,7 @@ public class BufferCacheTest {
         try {
             String fileName = getFileName();
             FileReference file = ioManager.resolve(fileName);
-            bufferCache.createFile(file);
-            int fileId = fmp.lookupFileId(file);
+            int fileId = bufferCache.createFile(file);
             bufferCache.openFile(fileId);
         } catch (HyracksDataException e) {
             exceptionThrown = true;
@@ -187,8 +182,7 @@ public class BufferCacheTest {
         try {
             String fileName = getFileName();
             FileReference file = ioManager.resolve(fileName);
-            bufferCache.createFile(file);
-            int fileId = fmp.lookupFileId(file);
+            int fileId = bufferCache.createFile(file);
             bufferCache.openFile(fileId);
             fileIds.add(fileId);
 
@@ -209,7 +203,6 @@ public class BufferCacheTest {
         TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES, MAX_OPEN_FILES);
         IBufferCache bufferCache =
                 TestStorageManagerComponentHolder.getBufferCache(ctx.getJobletContext().getServiceContext());
-        IFileMapProvider fmp = TestStorageManagerComponentHolder.getFileMapProvider();
         IIOManager ioManager = TestStorageManagerComponentHolder.getIOManager();
 
         List<Integer> fileIds = new ArrayList<>();
@@ -221,8 +214,7 @@ public class BufferCacheTest {
         for (int i = 0; i < MAX_OPEN_FILES; i++) {
             String fileName = getFileName();
             FileReference file = ioManager.resolve(fileName);
-            bufferCache.createFile(file);
-            int fileId = fmp.lookupFileId(file);
+            int fileId = bufferCache.createFile(file);
             bufferCache.openFile(fileId);
             fileIds.add(fileId);
 
@@ -249,8 +241,7 @@ public class BufferCacheTest {
         try {
             String fileName = getFileName();
             FileReference file = ioManager.resolve(fileName);
-            bufferCache.createFile(file);
-            int fileId = fmp.lookupFileId(file);
+            int fileId = bufferCache.createFile(file);
             bufferCache.openFile(fileId);
         } catch (HyracksDataException e) {
             exceptionThrown = true;
@@ -271,8 +262,7 @@ public class BufferCacheTest {
         for (int i = 0; i < filesToClose; i++) {
             String fileName = getFileName();
             FileReference file = ioManager.resolve(fileName);
-            bufferCache.createFile(file);
-            int fileId = fmp.lookupFileId(file);
+            int fileId = bufferCache.createFile(file);
             bufferCache.openFile(fileId);
             fileIds.add(fileId);
         }
@@ -281,8 +271,7 @@ public class BufferCacheTest {
         try {
             String fileName = getFileName();
             FileReference file = ioManager.resolve(fileName);
-            bufferCache.createFile(file);
-            int fileId = fmp.lookupFileId(file);
+            int fileId = bufferCache.createFile(file);
             bufferCache.openFile(fileId);
         } catch (HyracksDataException e) {
             exceptionThrown = true;

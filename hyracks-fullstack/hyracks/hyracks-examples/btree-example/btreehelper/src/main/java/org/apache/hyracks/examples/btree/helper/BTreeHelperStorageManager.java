@@ -25,7 +25,6 @@ import org.apache.hyracks.storage.common.ILocalResourceRepository;
 import org.apache.hyracks.storage.common.IResourceLifecycleManager;
 import org.apache.hyracks.storage.common.IStorageManager;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
-import org.apache.hyracks.storage.common.file.IFileMapProvider;
 import org.apache.hyracks.storage.common.file.ResourceIdFactory;
 
 public class BTreeHelperStorageManager implements IStorageManager {
@@ -39,11 +38,6 @@ public class BTreeHelperStorageManager implements IStorageManager {
     @Override
     public IBufferCache getBufferCache(INCServiceContext ctx) {
         return RuntimeContext.get(ctx).getBufferCache();
-    }
-
-    @Override
-    public IFileMapProvider getFileMapProvider(INCServiceContext ctx) {
-        return RuntimeContext.get(ctx).getFileMapManager();
     }
 
     @Override

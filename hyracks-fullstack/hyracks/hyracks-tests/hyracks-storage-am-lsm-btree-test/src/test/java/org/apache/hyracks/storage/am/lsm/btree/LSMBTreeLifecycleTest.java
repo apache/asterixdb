@@ -32,7 +32,8 @@ import org.apache.hyracks.storage.am.lsm.btree.util.LSMBTreeTestHarness;
 public class LSMBTreeLifecycleTest extends AbstractIndexLifecycleTest {
 
     @SuppressWarnings("rawtypes")
-    private final ISerializerDeserializer[] fieldSerdes = new ISerializerDeserializer[] { IntegerSerializerDeserializer.INSTANCE };
+    private final ISerializerDeserializer[] fieldSerdes =
+            new ISerializerDeserializer[] { IntegerSerializerDeserializer.INSTANCE };
     private final LSMBTreeTestHarness harness = new LSMBTreeTestHarness();
     private final TreeIndexTestUtils titu = new OrderedIndexTestUtils();
 
@@ -56,22 +57,16 @@ public class LSMBTreeLifecycleTest extends AbstractIndexLifecycleTest {
     @Override
     public void setup() throws Exception {
         harness.setUp();
-        testCtx = LSMBTreeTestContext.create(harness.getIOManager(), harness.getVirtualBufferCaches(), harness
-                .getFileReference(),
-                harness.getDiskBufferCache(), harness.getDiskFileMapProvider(), fieldSerdes, fieldSerdes.length,
+        testCtx = LSMBTreeTestContext.create(harness.getIOManager(), harness.getVirtualBufferCaches(),
+                harness.getFileReference(), harness.getDiskBufferCache(), fieldSerdes, fieldSerdes.length,
                 harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(), harness.getOperationTracker(),
-                harness.getIOScheduler(), harness.getIOOperationCallback(), harness.getMetadataPageManagerFactory(), false);
+                harness.getIOScheduler(), harness.getIOOperationCallback(), harness.getMetadataPageManagerFactory(),
+                false);
         index = testCtx.getIndex();
     }
 
     @Override
     public void tearDown() throws Exception {
-        try {
-            index.deactivate();
-        } catch (Exception e) {
-        } finally {
-            index.destroy();
-        }
         harness.tearDown();
     }
 
