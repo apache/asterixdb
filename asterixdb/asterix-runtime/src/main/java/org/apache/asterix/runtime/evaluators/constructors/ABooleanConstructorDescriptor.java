@@ -71,35 +71,36 @@ public class ABooleanConstructorDescriptor extends AbstractScalarFunctionDynamic
                     IBinaryComparator utf8BinaryComparator =
                             BinaryComparatorFactoryProvider.UTF8STRING_POINTABLE_INSTANCE.createBinaryComparator();
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ABoolean> booleanSerde = SerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ABOOLEAN);
+                    private ISerializerDeserializer<ABoolean> booleanSerde =
+                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ABOOLEAN);
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                         try {
-                            resultStorage.reset();
                             eval.evaluate(tuple, inputArg);
                             byte[] serString = inputArg.getByteArray();
                             int startOffset = inputArg.getStartOffset();
                             int len = inputArg.getLength();
 
-                            if (serString[startOffset] == ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
+                            byte tt = serString[startOffset];
+                            if (tt == ATypeTag.SERIALIZED_BOOLEAN_TYPE_TAG) {
+                                result.set(inputArg);
+                            } else if (tt == ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
+                                resultStorage.reset();
                                 if (utf8BinaryComparator.compare(serString, startOffset + 1, len - 1, TRUE, 0,
                                         TRUE.length) == 0) {
                                     booleanSerde.serialize(ABoolean.TRUE, out);
                                     result.set(resultStorage);
-                                    return;
                                 } else if (utf8BinaryComparator.compare(serString, startOffset + 1, len - 1, FALSE, 0,
                                         FALSE.length) == 0) {
                                     booleanSerde.serialize(ABoolean.FALSE, out);
                                     result.set(resultStorage);
-                                    return;
                                 } else {
                                     throw new InvalidDataFormatException(getIdentifier(),
                                             ATypeTag.SERIALIZED_BOOLEAN_TYPE_TAG);
                                 }
                             } else {
-                                throw new TypeMismatchException(getIdentifier(), 0, serString[startOffset],
+                                throw new TypeMismatchException(getIdentifier(), 0, tt,
                                         ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                             }
                         } catch (IOException e) {

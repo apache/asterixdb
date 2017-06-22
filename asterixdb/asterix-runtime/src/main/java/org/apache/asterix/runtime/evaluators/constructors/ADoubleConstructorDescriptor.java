@@ -75,21 +75,24 @@ public class ADoubleConstructorDescriptor extends AbstractScalarFunctionDynamicD
                             BinaryComparatorFactoryProvider.UTF8STRING_POINTABLE_INSTANCE.createBinaryComparator();
                     private AMutableDouble aDouble = new AMutableDouble(0);
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ADouble> doubleSerde = SerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ADOUBLE);
+                    private ISerializerDeserializer<ADouble> doubleSerde =
+                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ADOUBLE);
 
                     private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                         try {
-                            resultStorage.reset();
                             eval.evaluate(tuple, inputArg);
                             byte[] serString = inputArg.getByteArray();
                             int offset = inputArg.getStartOffset();
                             int len = inputArg.getLength();
 
-                            if (serString[offset] == ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
+                            byte tt = serString[offset];
+                            if (tt == ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG) {
+                                result.set(inputArg);
+                            } else if (tt == ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
+                                resultStorage.reset();
                                 if (utf8BinaryComparator.compare(serString, offset + 1, len - 1, POSITIVE_INF, 0,
                                         5) == 0) {
                                     aDouble.setValue(Double.POSITIVE_INFINITY);
@@ -104,11 +107,11 @@ public class ADoubleConstructorDescriptor extends AbstractScalarFunctionDynamicD
                                     aDouble.setValue(Double.parseDouble(utf8Ptr.toString()));
                                 }
                                 doubleSerde.serialize(aDouble, out);
+                                result.set(resultStorage);
                             } else {
-                                throw new TypeMismatchException(getIdentifier(), 0, serString[offset],
+                                throw new TypeMismatchException(getIdentifier(), 0, tt,
                                         ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                             }
-                            result.set(resultStorage);
                         } catch (IOException e) {
                             throw new InvalidDataFormatException(getIdentifier(), e,
                                     ATypeTag.SERIALIZED_DATETIME_TYPE_TAG);

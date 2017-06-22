@@ -71,24 +71,27 @@ public class AFloatConstructorDescriptor extends AbstractScalarFunctionDynamicDe
                     private final byte[] POSITIVE_INF = UTF8StringUtil.writeStringToBytes("INF");
                     private final byte[] NEGATIVE_INF = UTF8StringUtil.writeStringToBytes("-INF");
                     private final byte[] NAN = UTF8StringUtil.writeStringToBytes("NaN");
-                    private IBinaryComparator utf8BinaryComparator = BinaryComparatorFactoryProvider.
-                            UTF8STRING_POINTABLE_INSTANCE.createBinaryComparator();
+                    private IBinaryComparator utf8BinaryComparator =
+                            BinaryComparatorFactoryProvider.UTF8STRING_POINTABLE_INSTANCE.createBinaryComparator();
                     private AMutableFloat aFloat = new AMutableFloat(0);
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<AFloat> floatSerde = SerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.AFLOAT);
+                    private ISerializerDeserializer<AFloat> floatSerde =
+                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AFLOAT);
                     private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                         try {
-                            resultStorage.reset();
                             eval.evaluate(tuple, inputArg);
                             byte[] serString = inputArg.getByteArray();
                             int offset = inputArg.getStartOffset();
                             int len = inputArg.getLength();
 
-                            if (serString[offset] == ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
+                            byte tt = serString[offset];
+                            if (tt == ATypeTag.SERIALIZED_FLOAT_TYPE_TAG) {
+                                result.set(inputArg);
+                            } else if (tt == ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
+                                resultStorage.reset();
                                 if (utf8BinaryComparator.compare(serString, offset + 1, len - 1, POSITIVE_INF, 0,
                                         5) == 0) {
                                     aFloat.setValue(Float.POSITIVE_INFINITY);
@@ -103,11 +106,11 @@ public class AFloatConstructorDescriptor extends AbstractScalarFunctionDynamicDe
                                     aFloat.setValue(Float.parseFloat(utf8Ptr.toString()));
                                 }
                                 floatSerde.serialize(aFloat, out);
+                                result.set(resultStorage);
                             } else {
-                                throw new TypeMismatchException(getIdentifier(), 0, serString[offset],
+                                throw new TypeMismatchException(getIdentifier(), 0, tt,
                                         ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                             }
-                            result.set(resultStorage);
                         } catch (IOException e) {
                             throw new InvalidDataFormatException(getIdentifier(), e,
                                     ATypeTag.SERIALIZED_FLOAT_TYPE_TAG);

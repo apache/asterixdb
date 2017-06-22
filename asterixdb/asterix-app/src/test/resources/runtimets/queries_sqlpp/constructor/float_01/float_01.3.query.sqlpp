@@ -19,5 +19,11 @@
 
 use test;
 
-
-{'float1':test.float('NaN'),'float2':test.float('INF'),'float3':test.float('-INF'),'float4':test.float('-80.20'),'float5':test.float('-20.56e-30')};
+{
+    'float1':test.float('NaN'),
+    'float2':test.float('INF'),
+    'float3':test.float('-INF'),
+    'float4':test.float('-80.20'),
+    'float5':test.float('-20.56e-30'),
+    'float6':test.float(test.float('-20.56e-30'))
+};

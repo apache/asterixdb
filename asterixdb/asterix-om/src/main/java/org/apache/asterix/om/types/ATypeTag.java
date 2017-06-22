@@ -87,6 +87,7 @@ public enum ATypeTag implements IEnumSerializer {
     public static final byte SERIALIZED_DURATION_TYPE_TAG = DURATION.serialize();
     public static final byte SERIALIZED_DAY_TIME_DURATION_TYPE_TAG = DAYTIMEDURATION.serialize();
     public static final byte SERIALIZED_POINT_TYPE_TAG = POINT.serialize();
+    public static final byte SERIALIZED_POINT3D_TYPE_TAG = POINT3D.serialize();
     public static final byte SERIALIZED_INTERVAL_TYPE_TAG = INTERVAL.serialize();
     public static final byte SERIALIZED_CIRCLE_TYPE_TAG = CIRCLE.serialize();
     public static final byte SERIALIZED_YEAR_MONTH_DURATION_TYPE_TAG = YEARMONTHDURATION.serialize();

@@ -25,5 +25,8 @@
 
 use test;
 
-
-{'rectangle1':test.rectangle('5.1,11.8 87.6,15.6548'),'rectangle2':test.rectangle('0.1234,-1.00e-10 5.5487,0.48765')};
+{
+    'rectangle1':test.rectangle('5.1,11.8 87.6,15.6548'),
+    'rectangle2':test.rectangle('0.1234,-1.00e-10 5.5487,0.48765'),
+    'rectangle3':test.rectangle(test.rectangle('5.1,11.8 87.6,15.6548'))
+};

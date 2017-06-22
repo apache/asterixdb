@@ -16,6 +16,11 @@ OrderedListConstructor [
   FunctionCall test.hex@1[
     LiteralExpr [STRING] []
   ]
+  FunctionCall test.hex@1[
+    FunctionCall test.hex@1[
+      LiteralExpr [STRING] [ABCDEF0123456789]
+    ]
+  ]
   FunctionCall test.base64@1[
     LiteralExpr [STRING] [0123456789qwertyuiopasdfghjklzxcvbnmQWERTYUIOPLKJHGFDSAZXCVBNM+/]
   ]
@@ -30,5 +35,10 @@ OrderedListConstructor [
   ]
   FunctionCall test.base64@1[
     LiteralExpr [STRING] [QXN0ZXJpeAE8]
+  ]
+  FunctionCall test.base64@1[
+    FunctionCall test.base64@1[
+      LiteralExpr [STRING] [QXN0ZXJpeAE8]
+    ]
   ]
 ]

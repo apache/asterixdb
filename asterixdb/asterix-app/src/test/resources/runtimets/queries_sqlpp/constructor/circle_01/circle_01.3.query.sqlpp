@@ -19,5 +19,8 @@
 
 use test;
 
-
-{'circle1':test.circle('10.1234,11.1e-1 +10.2E-2'),'circle2':test.circle('0.1234,-1.00e-10 +10.5E-2')};
+{
+    'circle1':test.circle('10.1234,11.1e-1 +10.2E-2'),
+    'circle2':test.circle('0.1234,-1.00e-10 +10.5E-2'),
+    'circle3':test.circle(test.circle('0.1234,-1.00e-10 +10.5E-2'))
+};

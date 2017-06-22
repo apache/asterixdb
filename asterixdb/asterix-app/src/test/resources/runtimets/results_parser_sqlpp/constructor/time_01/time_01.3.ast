@@ -78,4 +78,13 @@ RecordConstructor [
       LiteralExpr [STRING] [125900019+0100]
     ]
   )
+  (
+    LiteralExpr [STRING] [time12]
+    :
+    FunctionCall test.time@1[
+      FunctionCall test.time@1[
+        LiteralExpr [STRING] [125900019+0100]
+      ]
+    ]
+  )
 ]

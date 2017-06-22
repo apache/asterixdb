@@ -31,6 +31,7 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.asterix.runtime.exceptions.InvalidDataFormatException;
+import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
@@ -70,20 +71,23 @@ public class AInt8ConstructorDescriptor extends AbstractScalarFunctionDynamicDes
                     private boolean positive;
                     private AMutableInt8 aInt8 = new AMutableInt8((byte) 0);
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<AInt8> int8Serde = SerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.AINT8);
+                    private ISerializerDeserializer<AInt8> int8Serde =
+                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT8);
                     private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                         try {
-                            resultStorage.reset();
                             eval.evaluate(tuple, inputArg);
                             byte[] serString = inputArg.getByteArray();
                             int startOffset = inputArg.getStartOffset();
                             int len = inputArg.getLength();
 
-                            if (serString[startOffset] == ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
+                            byte tt = serString[startOffset];
+                            if (tt == ATypeTag.SERIALIZED_INT8_TYPE_TAG) {
+                                result.set(inputArg);
+                            } else if (tt == ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
+                                resultStorage.reset();
                                 utf8Ptr.set(serString, startOffset + 1, len - 1);
                                 offset = utf8Ptr.getCharStartOffset();
                                 //accumulating value in negative domain
@@ -127,11 +131,11 @@ public class AInt8ConstructorDescriptor extends AbstractScalarFunctionDynamicDes
 
                                 aInt8.setValue(value);
                                 int8Serde.serialize(aInt8, out);
+                                result.set(resultStorage);
                             } else {
-                                throw new InvalidDataFormatException(getIdentifier(),
-                                        ATypeTag.SERIALIZED_INT8_TYPE_TAG);
+                                throw new TypeMismatchException(getIdentifier(), 0, tt,
+                                        ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                             }
-                            result.set(resultStorage);
                         } catch (IOException e1) {
                             throw new InvalidDataFormatException(getIdentifier(), e1,
                                     ATypeTag.SERIALIZED_INT8_TYPE_TAG);

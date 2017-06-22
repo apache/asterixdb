@@ -19,5 +19,8 @@
 
 use test;
 
-
-{'boolean1':test.boolean('true'),'boolean2':test.boolean('false')};
+{
+    'boolean1':test.boolean('true'),
+    'boolean2':test.boolean('false'),
+    'boolean3':test.boolean(test.boolean('false'))
+};

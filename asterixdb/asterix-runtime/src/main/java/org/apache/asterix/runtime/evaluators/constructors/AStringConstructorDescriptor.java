@@ -76,8 +76,6 @@ public class AStringConstructorDescriptor extends AbstractScalarFunctionDynamicD
                     @Override
                     public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                         try {
-                            resultStorage.reset();
-                            baaos.reset();
                             eval.evaluate(tuple, inputArg);
                             byte[] serString = inputArg.getByteArray();
                             int offset = inputArg.getStartOffset();
@@ -87,6 +85,8 @@ public class AStringConstructorDescriptor extends AbstractScalarFunctionDynamicD
                             if (tt == ATypeTag.STRING) {
                                 result.set(inputArg);
                             } else {
+                                resultStorage.reset();
+                                baaos.reset();
                                 builder.reset(baaos, len);
                                 int startOffset = offset + 1;
                                 switch (tt) {

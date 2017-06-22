@@ -43,4 +43,13 @@ RecordConstructor [
       LiteralExpr [STRING] [-20.56e-300]
     ]
   )
+  (
+    LiteralExpr [STRING] [double7]
+    :
+    FunctionCall test.double@1[
+      FunctionCall test.double@1[
+        LiteralExpr [STRING] [-20.56e-300]
+      ]
+    ]
+  )
 ]

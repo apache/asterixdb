@@ -20,5 +20,22 @@ use dataverse test;
 
 let $c1 := string("true")
 let $c2 := string("false\"")
-return {"string1": $c1,"string2": $c2}
+let $c3 := string(int8("8"))
+let $c4 := string(int16("16"))
+let $c5 := string(int32("32"))
+let $c6 := string(int64("64"))
+let $c7 := string(float("1.25"))
+let $c8 := string(double("2.5"))
+
+return
+{
+    "string1": $c1,
+    "string2": $c2,
+    "string3": $c3,
+    "string4": $c4,
+    "string5": $c5,
+    "string6": $c6,
+    "string7": $c7,
+    "string8": $c8
+}
 

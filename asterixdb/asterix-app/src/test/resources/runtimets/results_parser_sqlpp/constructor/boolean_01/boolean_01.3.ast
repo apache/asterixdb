@@ -15,4 +15,13 @@ RecordConstructor [
       LiteralExpr [STRING] [false]
     ]
   )
+  (
+    LiteralExpr [STRING] [boolean3]
+    :
+    FunctionCall test.boolean@1[
+      FunctionCall test.boolean@1[
+        LiteralExpr [STRING] [false]
+      ]
+    ]
+  )
 ]

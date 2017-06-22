@@ -19,5 +19,13 @@
 
 use test;
 
-
-{'string1':test.string('true'),'string2':test.string('false"')};
+{
+    'string1':test.string('true'),
+    'string2':test.string('false"'),
+    'string3':test.string(test.int8('8')),
+    'string4':test.string(test.int16('16')),
+    'string5':test.string(test.int32('32')),
+    'string6':test.string(test.int64('64')),
+    'string7':test.string(test.float('1.25')),
+    'string8':test.string(test.double('2.5'))
+};

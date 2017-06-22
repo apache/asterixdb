@@ -31,6 +31,7 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.asterix.runtime.exceptions.InvalidDataFormatException;
+import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
@@ -77,13 +78,16 @@ public class AInt64ConstructorDescriptor extends AbstractScalarFunctionDynamicDe
                     @Override
                     public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                         try {
-                            resultStorage.reset();
                             eval.evaluate(tuple, inputArg);
                             byte[] serString = inputArg.getByteArray();
                             int startOffset = inputArg.getStartOffset();
                             int len = inputArg.getLength();
 
-                            if (serString[startOffset] == ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
+                            byte tt = serString[startOffset];
+                            if (tt == ATypeTag.SERIALIZED_INT64_TYPE_TAG) {
+                                result.set(inputArg);
+                            } else if (tt == ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
+                                resultStorage.reset();
                                 utf8Ptr.set(serString, startOffset + 1, len - 1);
                                 offset = utf8Ptr.getCharStartOffset();
                                 //accumulating value in negative domain
@@ -127,11 +131,11 @@ public class AInt64ConstructorDescriptor extends AbstractScalarFunctionDynamicDe
 
                                 aInt64.setValue(value);
                                 int64Serde.serialize(aInt64, out);
+                                result.set(resultStorage);
                             } else {
-                                throw new InvalidDataFormatException(getIdentifier(),
-                                        ATypeTag.SERIALIZED_INT64_TYPE_TAG);
+                                throw new TypeMismatchException(getIdentifier(), 0, tt,
+                                        ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                             }
-                            result.set(resultStorage);
                         } catch (IOException e) {
                             throw new InvalidDataFormatException(getIdentifier(), e,
                                     ATypeTag.SERIALIZED_INT64_TYPE_TAG);

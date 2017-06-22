@@ -91,9 +91,10 @@ public class ABinaryHexStringConstructorDescriptor extends AbstractScalarFunctio
                 int startOffset = inputArg.getStartOffset();
                 int len = inputArg.getLength();
 
-                if (binary[startOffset] == ATypeTag.SERIALIZED_BINARY_TYPE_TAG) {
+                byte tt = binary[startOffset];
+                if (tt == ATypeTag.SERIALIZED_BINARY_TYPE_TAG) {
                     result.set(inputArg);
-                } else if (binary[startOffset] == ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
+                } else if (tt == ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
                     resultStorage.reset();
                     utf8Ptr.set(inputArg.getByteArray(), startOffset + 1, len - 1);
                     char[] buffer = utf8Ptr.toString().toCharArray();
@@ -101,9 +102,8 @@ public class ABinaryHexStringConstructorDescriptor extends AbstractScalarFunctio
                     byteArrayParser.parse(buffer, 0, buffer.length, out);
                     result.set(resultStorage);
                 } else {
-                    throw new TypeMismatchException(BuiltinFunctions.BINARY_HEX_CONSTRUCTOR, 0,
-                            binary[startOffset], ATypeTag.SERIALIZED_BINARY_TYPE_TAG,
-                            ATypeTag.SERIALIZED_STRING_TYPE_TAG);
+                    throw new TypeMismatchException(BuiltinFunctions.BINARY_HEX_CONSTRUCTOR, 0, tt,
+                            ATypeTag.SERIALIZED_BINARY_TYPE_TAG, ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                 }
             } catch (IOException e) {
                 throw new InvalidDataFormatException(BuiltinFunctions.BINARY_HEX_CONSTRUCTOR, e,

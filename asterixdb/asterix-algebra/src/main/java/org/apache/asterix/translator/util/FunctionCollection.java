@@ -120,7 +120,6 @@ import org.apache.asterix.runtime.evaluators.constructors.AIntervalStartFromDate
 import org.apache.asterix.runtime.evaluators.constructors.AIntervalStartFromDateTimeConstructorDescriptor;
 import org.apache.asterix.runtime.evaluators.constructors.AIntervalStartFromTimeConstructorDescriptor;
 import org.apache.asterix.runtime.evaluators.constructors.ALineConstructorDescriptor;
-import org.apache.asterix.runtime.evaluators.constructors.ANullConstructorDescriptor;
 import org.apache.asterix.runtime.evaluators.constructors.APoint3DConstructorDescriptor;
 import org.apache.asterix.runtime.evaluators.constructors.APointConstructorDescriptor;
 import org.apache.asterix.runtime.evaluators.constructors.APolygonConstructorDescriptor;
@@ -545,7 +544,6 @@ public class FunctionCollection {
 
         // Constructors
         functionsToInjectUnkownHandling.add(ABooleanConstructorDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(ANullConstructorDescriptor.FACTORY);
         functionsToInjectUnkownHandling.add(ABinaryHexStringConstructorDescriptor.FACTORY);
         functionsToInjectUnkownHandling.add(ABinaryBase64StringConstructorDescriptor.FACTORY);
         functionsToInjectUnkownHandling.add(AStringConstructorDescriptor.FACTORY);

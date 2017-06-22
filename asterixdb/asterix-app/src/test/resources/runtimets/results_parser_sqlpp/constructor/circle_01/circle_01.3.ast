@@ -15,4 +15,13 @@ RecordConstructor [
       LiteralExpr [STRING] [0.1234,-1.00e-10 +10.5E-2]
     ]
   )
+  (
+    LiteralExpr [STRING] [circle3]
+    :
+    FunctionCall test.circle@1[
+      FunctionCall test.circle@1[
+        LiteralExpr [STRING] [0.1234,-1.00e-10 +10.5E-2]
+      ]
+    ]
+  )
 ]

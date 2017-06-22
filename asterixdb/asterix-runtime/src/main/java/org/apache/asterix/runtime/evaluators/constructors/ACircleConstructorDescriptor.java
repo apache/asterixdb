@@ -70,22 +70,24 @@ public class ACircleConstructorDescriptor extends AbstractScalarFunctionDynamicD
                     private final AMutablePoint aPoint = new AMutablePoint(0, 0);
                     private AMutableCircle aCircle = new AMutableCircle(null, 0);
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ACircle> circleSerde = SerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ACIRCLE);
+                    private ISerializerDeserializer<ACircle> circleSerde =
+                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ACIRCLE);
 
                     private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                         try {
-                            resultStorage.reset();
                             eval.evaluate(tuple, inputArg);
-
                             byte[] serString = inputArg.getByteArray();
                             int offset = inputArg.getStartOffset();
                             int len = inputArg.getLength();
 
-                            if (serString[offset] == ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
+                            byte tt = serString[offset];
+                            if (tt == ATypeTag.SERIALIZED_CIRCLE_TYPE_TAG) {
+                                result.set(inputArg);
+                            } else if (tt == ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
+                                resultStorage.reset();
                                 utf8Ptr.set(serString, offset + 1, len - 1);
                                 String s = utf8Ptr.toString();
                                 int commaIndex = s.indexOf(',');
@@ -94,11 +96,11 @@ public class ACircleConstructorDescriptor extends AbstractScalarFunctionDynamicD
                                         Double.parseDouble(s.substring(commaIndex + 1, spaceIndex)));
                                 aCircle.setValue(aPoint, Double.parseDouble(s.substring(spaceIndex + 1, s.length())));
                                 circleSerde.serialize(aCircle, out);
+                                result.set(resultStorage);
                             } else {
-                                throw new TypeMismatchException(getIdentifier(), 0, serString[offset],
+                                throw new TypeMismatchException(getIdentifier(), 0, tt,
                                         ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                             }
-                            result.set(resultStorage);
                         } catch (IOException e) {
                             throw new InvalidDataFormatException(getIdentifier(), e,
                                     ATypeTag.SERIALIZED_CIRCLE_TYPE_TAG);
