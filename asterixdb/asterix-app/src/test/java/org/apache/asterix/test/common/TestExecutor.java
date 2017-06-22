@@ -1058,9 +1058,9 @@ public class TestExecutor {
         }
     }
 
-    private void executeHttpRequest(OutputFormat fmt, String statement, Map<String, Object> variableCtx, String reqType,
-            File testFile, File expectedResultFile, File actualResultFile, MutableInt queryCount, int numResultFiles,
-            String extension, ComparisonEnum compare) throws Exception {
+    protected void executeHttpRequest(OutputFormat fmt, String statement, Map<String, Object> variableCtx,
+            String reqType, File testFile, File expectedResultFile, File actualResultFile, MutableInt queryCount,
+            int numResultFiles, String extension, ComparisonEnum compare) throws Exception {
         String handleVar = getHandleVariable(statement);
         final String trimmedPathAndQuery = stripLineComments(stripJavaComments(statement)).trim();
         final String variablesReplaced = replaceVarRef(trimmedPathAndQuery, variableCtx);

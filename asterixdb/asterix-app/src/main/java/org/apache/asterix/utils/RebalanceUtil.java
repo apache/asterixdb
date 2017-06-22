@@ -24,6 +24,8 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.IntStream;
 
 import org.apache.asterix.common.exceptions.AsterixException;
@@ -61,6 +63,7 @@ import org.apache.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor;
  * A utility class for the rebalance operation.
  */
 public class RebalanceUtil {
+    private static final Logger LOGGER = Logger.getLogger(RebalanceUtil.class.getName());
 
     private RebalanceUtil() {
 
@@ -83,12 +86,13 @@ public class RebalanceUtil {
      */
     public static void rebalance(String dataverseName, String datasetName, Set<String> targetNcNames,
             MetadataProvider metadataProvider, IHyracksClientConnection hcc) throws Exception {
-        MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
-        metadataProvider.setMetadataTxnContext(mdTxnCtx);
         Dataset sourceDataset;
         Dataset targetDataset;
+        // Executes the first Metadata transaction.
         // Generates the rebalance target files. While doing that, hold read locks on the dataset so
         // that no one can drop the rebalance source dataset.
+        MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+        metadataProvider.setMetadataTxnContext(mdTxnCtx);
         try {
             // The source dataset.
             sourceDataset = metadataProvider.findDataset(dataverseName, datasetName);
@@ -125,13 +129,57 @@ public class RebalanceUtil {
             metadataProvider.getLocks().reset();
         }
 
-        // Starts another transaction for switching the metadata entity.
-        mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+        // Up to this point, since the bulk part of a rebalance operation is done,
+        // the following two operations will retry after interrupt and finally rethrow InterruptedException,
+        // which means that they will always succeed and could possibly throw InterruptedException as the last step.
+        // TODO(yingyi): ASTERIXDB-1948, in case a crash happens, currently the system will either:
+        // 1. (crash before metadata switch) think the rebalance is not done, and the target data files are leaked until
+        // the next rebalance request.
+        // 2. (crash after metadata switch) think the rebalance is done, and the source data files are leaked;
+        runWithRetryAfterInterrupt(() -> {
+            // Executes the 2nd Metadata transaction for switching the metadata entity.
+            // It detaches the source dataset and attaches the target dataset to metadata's point of view.
+            runMetadataTransaction(metadataProvider,
+                () -> rebalanceSwitch(sourceDataset, targetDataset, metadataProvider, hcc));
+            // Executes the 3rd Metadata transaction to drop the source dataset files and the node group for
+            // the source dataset.
+            runMetadataTransaction(metadataProvider, () -> dropSourceDataset(sourceDataset, metadataProvider, hcc));
+        });
+    }
+
+    @FunctionalInterface
+    private interface Work {
+        void run() throws Exception;
+    }
+
+    // Runs works.run() and lets it sustain interrupts.
+    private static void runWithRetryAfterInterrupt(Work work) throws Exception {
+        int retryCount = 0;
+        InterruptedException interruptedException = null;
+        boolean done = false;
+        do {
+            try {
+                work.run();
+                done = true;
+            } catch (InterruptedException e) {
+                LOGGER.log(Level.WARNING, "Retry with attempt " + (++retryCount), e);
+                interruptedException = e;
+            }
+        } while (!done);
+
+        // Rethrows the interrupted exception.
+        if (interruptedException != null) {
+            throw interruptedException;
+        }
+    }
+
+    // Executes a metadata transaction.
+    private static void runMetadataTransaction(MetadataProvider metadataProvider, Work work) throws Exception {
+        MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
         try {
-            // Atomically switches the rebalance target to become the source dataset.
-            rebalanceSwitch(sourceDataset, targetDataset, metadataProvider, hcc);
-
+            // Performs the actual work.
+            work.run();
             // Complete the metadata transaction.
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
         } catch (Exception e) {
@@ -145,6 +193,9 @@ public class RebalanceUtil {
     // Rebalances from the source to the target.
     private static void rebalance(Dataset source, Dataset target, MetadataProvider metadataProvider,
             IHyracksClientConnection hcc) throws Exception {
+        // Drops the target dataset files (if any) to make rebalance idempotent.
+        dropDatasetFiles(target, metadataProvider, hcc);
+
         // Creates the rebalance target.
         createRebalanceTarget(target, metadataProvider, hcc);
 
@@ -155,6 +206,7 @@ public class RebalanceUtil {
         createAndLoadSecondaryIndexesForTarget(source, target, metadataProvider, hcc);
     }
 
+    // Switches the metadata entity from the source dataset to the target dataset.
     private static void rebalanceSwitch(Dataset source, Dataset target, MetadataProvider metadataProvider,
             IHyracksClientConnection hcc) throws Exception {
         MetadataTransactionContext mdTxnCtx = metadataProvider.getMetadataTxnContext();
@@ -164,6 +216,7 @@ public class RebalanceUtil {
 
         Dataset sourceDataset = MetadataManagerUtil.findDataset(mdTxnCtx, source.getDataverseName(),
                 source.getDatasetName());
+
         if (sourceDataset == null) {
             // The dataset has already been dropped.
             // In this case, we should drop the generated target dataset files.
@@ -171,17 +224,23 @@ public class RebalanceUtil {
             return;
         }
 
-        // Drops the source dataset files.
-        dropDatasetFiles(source, metadataProvider, hcc);
-
         // Updates the dataset entry in the metadata storage
         MetadataManager.INSTANCE.updateDataset(mdTxnCtx, target);
+    }
+
+    // Drops the source dataset.
+    private static void dropSourceDataset(Dataset source, MetadataProvider metadataProvider,
+            IHyracksClientConnection hcc) throws Exception {
+        // Drops the source dataset files. No need to lock the dataset entity here because the source dataset has
+        // been detached at this point.
+        dropDatasetFiles(source, metadataProvider, hcc);
 
         // Drops the metadata entry of source dataset's node group.
         String sourceNodeGroup = source.getNodeGroupName();
         MetadataLockManager.INSTANCE.acquireNodeGroupWriteLock(metadataProvider.getLocks(), sourceNodeGroup);
-        MetadataManager.INSTANCE.dropNodegroup(mdTxnCtx, sourceNodeGroup, true);
+        MetadataManager.INSTANCE.dropNodegroup(metadataProvider.getMetadataTxnContext(), sourceNodeGroup, true);
     }
+
 
     // Creates the files for the rebalance target dataset.
     private static void createRebalanceTarget(Dataset target, MetadataProvider metadataProvider,
@@ -254,12 +313,13 @@ public class RebalanceUtil {
                 new RecordDescriptor[] { target.getPrimaryRecordDescriptor(metadataProvider) });
     }
 
+    // Drops dataset files of a given dataset.
     private static void dropDatasetFiles(Dataset dataset, MetadataProvider metadataProvider,
             IHyracksClientConnection hcc) throws Exception {
         List<JobSpecification> jobs = new ArrayList<>();
         List<Index> indexes = metadataProvider.getDatasetIndexes(dataset.getDataverseName(), dataset.getDatasetName());
         for (Index index : indexes) {
-            jobs.add(IndexUtil.buildDropIndexJobSpec(index, metadataProvider, dataset));
+            jobs.add(IndexUtil.buildDropIndexJobSpec(index, metadataProvider, dataset, true));
         }
         for (JobSpecification jobSpec : jobs) {
             JobUtils.runJob(hcc, jobSpec, true);

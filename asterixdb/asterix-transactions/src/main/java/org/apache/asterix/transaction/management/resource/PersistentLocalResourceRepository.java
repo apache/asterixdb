@@ -213,13 +213,18 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
     public synchronized void delete(String relativePath) throws HyracksDataException {
         FileReference resourceFile = getLocalResourceFileByName(ioManager, relativePath);
         if (resourceFile.getFile().exists()) {
-            resourceFile.delete();
-            resourceCache.invalidate(relativePath);
-
-            //if replication enabled, delete resource from remote replicas
-            if (isReplicationEnabled
-                    && !resourceFile.getFile().getName().startsWith(STORAGE_METADATA_FILE_NAME_PREFIX)) {
-                createReplicationJob(ReplicationOperation.DELETE, resourceFile);
+            try {
+                // Invalidate before deleting the file just in case file deletion throws some exception.
+                // Since it's just a cache invalidation, it should not affect correctness.
+                resourceCache.invalidate(relativePath);
+                resourceFile.delete();
+            } finally {
+                // Regardless of successfully deleted or not, the operation should be replicated.
+                //if replication enabled, delete resource from remote replicas
+                if (isReplicationEnabled
+                        && !resourceFile.getFile().getName().startsWith(STORAGE_METADATA_FILE_NAME_PREFIX)) {
+                    createReplicationJob(ReplicationOperation.DELETE, resourceFile);
+                }
             }
         } else {
             throw HyracksDataException.create(org.apache.hyracks.api.exceptions.ErrorCode.RESOURCE_DOES_NOT_EXIST,

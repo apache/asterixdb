@@ -116,6 +116,7 @@ public class ErrorCode {
     public static final int CANNOT_CREATE_EXISTING_INDEX = 80;
     public static final int FILE_ALREADY_MAPPED = 81;
     public static final int FILE_ALREADY_EXISTS = 82;
+    public static final int NO_INDEX_FOUND_WITH_RESOURCE_ID = 83;
 
     // Compilation error codes.
     public static final int RULECOLLECTION_NOT_INSTANCE_OF_LIST = 10000;

@@ -31,6 +31,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.function.Predicate;
 
+import org.apache.asterix.common.exceptions.ExceptionUtils;
 import org.apache.asterix.common.utils.Servlets;
 import org.apache.asterix.test.runtime.SqlppExecutionWithCancellationTest;
 import org.apache.asterix.testframework.context.TestCaseContext;
@@ -104,7 +105,7 @@ public class CancellationTestExecutor extends TestExecutor {
                 return false;
             }
         }
-        String errorMsg = getErrorMessage(e);
+        String errorMsg = ExceptionUtils.getErrorMessage(e);
         // Expected, "HYR0025" means a user cancelled the query.)
         if (errorMsg.startsWith("HYR0025")) {
             SqlppExecutionWithCancellationTest.numCancelledQueries++;
@@ -114,22 +115,5 @@ public class CancellationTestExecutor extends TestExecutor {
             System.err.println("Expected to find one of the following in error text:\n+++++\n" + expectedErrors + "\n+++++");
             return true;
         }
-    }
-
-    public static String getErrorMessage(Throwable th) {
-        Throwable cause = getRootCause(th);
-        return cause.getMessage();
-    }
-
-    // Finds the root cause of Throwable.
-    private static Throwable getRootCause(Throwable e) {
-        Throwable current = e;
-        Throwable cause = e.getCause();
-        while (cause != null && cause != current) {
-            Throwable nextCause = current.getCause();
-            current = cause;
-            cause = nextCause;
-        }
-        return current;
     }
 }

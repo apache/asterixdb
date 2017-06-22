@@ -20,7 +20,6 @@ package org.apache.asterix.common.exceptions;
 
 public class ExceptionUtils {
     public static final String INCORRECT_PARAMETER = "Incorrect parameter.\n";
-    public static final String MISSING_PARAMETER = "Missing parameter.\n";
     public static final String PARAMETER_NAME = "Parameter name: ";
     public static final String EXPECTED_VALUE = "Expected value: ";
     public static final String PASSED_VALUE = "Passed value: ";
@@ -31,5 +30,23 @@ public class ExceptionUtils {
     public static String incorrectParameterMessage(String parameterName, String expectedValue, String passedValue) {
         return INCORRECT_PARAMETER + PARAMETER_NAME + parameterName + System.lineSeparator() + EXPECTED_VALUE
                 + expectedValue + System.lineSeparator() + PASSED_VALUE + passedValue;
+    }
+
+    // Gets the error message for the root cause of a given Throwable instance.
+    public static String getErrorMessage(Throwable th) {
+        Throwable cause = getRootCause(th);
+        return cause.getMessage();
+    }
+
+    // Finds the root cause of a given Throwable instance.
+    public static Throwable getRootCause(Throwable e) {
+        Throwable current = e;
+        Throwable cause = e.getCause();
+        while (cause != null && cause != current) {
+            Throwable nextCause = current.getCause();
+            current = cause;
+            cause = nextCause;
+        }
+        return current;
     }
 }

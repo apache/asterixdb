@@ -103,7 +103,14 @@ public class IndexUtil {
             Dataset dataset) throws AlgebricksException {
         SecondaryIndexOperationsHelper secondaryIndexHelper = SecondaryIndexOperationsHelper
                 .createIndexOperationsHelper(dataset, index, metadataProvider, physicalOptimizationConfig);
-        return secondaryIndexHelper.buildDropJobSpec();
+        return secondaryIndexHelper.buildDropJobSpec(false);
+    }
+
+    public static JobSpecification buildDropIndexJobSpec(Index index, MetadataProvider metadataProvider,
+            Dataset dataset, boolean failSilently) throws AlgebricksException {
+        SecondaryIndexOperationsHelper secondaryIndexHelper = SecondaryIndexOperationsHelper
+                .createIndexOperationsHelper(dataset, index, metadataProvider, physicalOptimizationConfig);
+        return secondaryIndexHelper.buildDropJobSpec(failSilently);
     }
 
     public static JobSpecification buildSecondaryIndexCreationJobSpec(Dataset dataset, Index index,
