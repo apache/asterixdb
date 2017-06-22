@@ -65,6 +65,7 @@ public class ClusterStateManager implements IClusterStateManager {
     private static final Logger LOGGER = Logger.getLogger(ClusterStateManager.class.getName());
     public static final ClusterStateManager INSTANCE = new ClusterStateManager();
     private final Map<String, Map<IOption, Object>> activeNcConfiguration = new HashMap<>();
+    private Set<String> pendingRemoval = new HashSet<>();
 
     private final Cluster cluster;
     private ClusterState state = ClusterState.UNUSABLE;
@@ -73,8 +74,8 @@ public class ClusterStateManager implements IClusterStateManager {
 
     private boolean globalRecoveryCompleted = false;
 
-    private Map<String, ClusterPartition[]> node2PartitionsMap = null;
-    private SortedMap<Integer, ClusterPartition> clusterPartitions = null;
+    private Map<String, ClusterPartition[]> node2PartitionsMap;
+    private SortedMap<Integer, ClusterPartition> clusterPartitions;
 
     private String currentMetadataNode = null;
     private boolean metadataNodeActive = false;
@@ -101,6 +102,7 @@ public class ClusterStateManager implements IClusterStateManager {
         }
         failedNodes.add(nodeId);
         ftStrategy.notifyNodeFailure(nodeId);
+        pendingRemoval.remove(nodeId);
     }
 
     public synchronized void addNCConfiguration(String nodeId, Map<IOption, Object> configuration)
@@ -234,6 +236,14 @@ public class ClusterStateManager implements IClusterStateManager {
         Set<String> participantNodes = new HashSet<>();
         for (String pNode : activeNcConfiguration.keySet()) {
             participantNodes.add(pNode);
+        }
+        return participantNodes;
+    }
+
+    public synchronized Set<String> getParticipantNodes(boolean excludePendingRemoval) {
+        Set<String> participantNodes = getParticipantNodes();
+        if (excludePendingRemoval) {
+            participantNodes.removeAll(pendingRemoval);
         }
         return participantNodes;
     }
@@ -387,4 +397,31 @@ public class ClusterStateManager implements IClusterStateManager {
             }
         }
     }
+
+    public synchronized void removePending(String nodeId) {
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("Registering intention to remove node id " + nodeId);
+        }
+        if (!activeNcConfiguration.containsKey(nodeId)) {
+            LOGGER.warning("Cannot register unknown node " + nodeId + " for pending removal");
+        }
+        pendingRemoval.add(nodeId);
+    }
+
+    public synchronized boolean cancelRemovePending(String nodeId) {
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("Deregistering intention to remove node id " + nodeId);
+        }
+        if (!pendingRemoval.remove(nodeId)) {
+            LOGGER.warning("Cannot deregister intention to remove node id " + nodeId  + " that was not registered");
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    public synchronized Set<String> getNodesPendingRemoval() {
+        return new HashSet<>(pendingRemoval);
+    }
+
 }

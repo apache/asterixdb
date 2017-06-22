@@ -709,17 +709,19 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
 
     protected static String configureNodegroupForDataset(ICcApplicationContext appCtx, Map<String, String> hints,
             String dataverseName, String datasetName, MetadataProvider metadataProvider) throws Exception {
-        Set<String> allNodes = ClusterStateManager.INSTANCE.getParticipantNodes();
+        Set<String> allNodes = ClusterStateManager.INSTANCE.getParticipantNodes(true);
         Set<String> selectedNodes = new LinkedHashSet<>();
         String hintValue = hints.get(DatasetNodegroupCardinalityHint.NAME);
         if (hintValue == null) {
             selectedNodes.addAll(allNodes);
         } else {
             int nodegroupCardinality;
-            boolean valid = DatasetHints.validate(appCtx, DatasetNodegroupCardinalityHint.NAME,
-                    hints.get(DatasetNodegroupCardinalityHint.NAME)).first;
+            final Pair<Boolean, String> validation = DatasetHints.validate(appCtx, DatasetNodegroupCardinalityHint.NAME,
+                    hints.get(DatasetNodegroupCardinalityHint.NAME));
+            boolean valid = validation.first;
             if (!valid) {
-                throw new CompilationException("Incorrect use of hint:" + DatasetNodegroupCardinalityHint.NAME);
+                throw new CompilationException("Incorrect use of hint '" + DatasetNodegroupCardinalityHint.NAME +
+                        "': " + validation.second);
             } else {
                 nodegroupCardinality = Integer.parseInt(hints.get(DatasetNodegroupCardinalityHint.NAME));
             }
