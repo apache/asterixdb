@@ -339,7 +339,7 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
             ILSMIOOperationCallback callback) throws HyracksDataException {
         ILSMIndexAccessor accessor = new LSMTreeIndexAccessor(getLsmHarness(), opCtx, cursorFactory);
         return new LSMRTreeFlushOperation(accessor, flushingComponent, componentFileRefs.getInsertIndexFileReference(),
-                null, null, callback, fileManager.getBaseDir());
+                null, null, callback, fileManager.getBaseDir().getAbsolutePath());
     }
 
     @Override
@@ -353,6 +353,6 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
         ITreeIndexCursor cursor = new LSMRTreeWithAntiMatterTuplesSearchCursor(opCtx, returnDeletedTuples);
         ILSMIndexAccessor accessor = new LSMTreeIndexAccessor(getLsmHarness(), opCtx, cursorFactory);
         return new MergeOperation(accessor, mergeFileRefs.getInsertIndexFileReference(), callback,
-                fileManager.getBaseDir(), mergingComponents, cursor);
+                fileManager.getBaseDir().getAbsolutePath(), mergingComponents, cursor);
     }
 }

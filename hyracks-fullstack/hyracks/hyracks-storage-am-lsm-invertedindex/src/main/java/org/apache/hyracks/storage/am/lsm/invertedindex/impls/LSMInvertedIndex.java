@@ -724,7 +724,7 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
         return new LSMInvertedIndexFlushOperation(new LSMInvertedIndexAccessor(getLsmHarness(), opCtx),
                 flushingComponent, componentFileRefs.getInsertIndexFileReference(),
                 componentFileRefs.getDeleteIndexFileReference(), componentFileRefs.getBloomFilterFileReference(),
-                callback, fileManager.getBaseDir());
+                callback, fileManager.getBaseDir().getAbsolutePath());
     }
 
     @Override
@@ -735,7 +735,7 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
         IIndexCursor cursor = new LSMInvertedIndexRangeSearchCursor(opCtx);
         return new LSMInvertedIndexMergeOperation(accessor, mergingComponents, cursor,
                 mergeFileRefs.getInsertIndexFileReference(), mergeFileRefs.getDeleteIndexFileReference(),
-                mergeFileRefs.getBloomFilterFileReference(), callback, fileManager.getBaseDir());
+                mergeFileRefs.getBloomFilterFileReference(), callback, fileManager.getBaseDir().getAbsolutePath());
     }
 
     @Override

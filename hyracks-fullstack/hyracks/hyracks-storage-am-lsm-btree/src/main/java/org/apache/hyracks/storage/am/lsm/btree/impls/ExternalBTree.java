@@ -197,7 +197,7 @@ public class ExternalBTree extends LSMBTree implements ITwoPCIndex {
         ILSMIndexAccessor accessor = new LSMTreeIndexAccessor(getLsmHarness(), opCtx, cursorFactory);
         ioScheduler.scheduleOperation(new LSMBTreeMergeOperation(accessor, mergingComponents, cursor,
                 relMergeFileRefs.getInsertIndexFileReference(), relMergeFileRefs.getBloomFilterFileReference(),
-                callback, fileManager.getBaseDir()));
+                callback, fileManager.getBaseDir().getAbsolutePath()));
     }
 
     // This function should only be used when a transaction fail. it doesn't

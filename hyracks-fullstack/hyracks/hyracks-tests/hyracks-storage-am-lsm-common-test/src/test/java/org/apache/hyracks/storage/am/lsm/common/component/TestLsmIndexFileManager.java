@@ -19,7 +19,6 @@
 
 package org.apache.hyracks.storage.am.lsm.common.component;
 
-import java.io.File;
 import java.io.FilenameFilter;
 import java.util.ArrayList;
 
@@ -40,11 +39,9 @@ public class TestLsmIndexFileManager extends AbstractLSMIndexFileManager {
     protected void cleanupAndGetValidFilesInternal(FilenameFilter filter,
             TreeIndexFactory<? extends ITreeIndex> treeFactory, ArrayList<ComparableFileName> allFiles)
             throws HyracksDataException {
-        File dir = new File(baseDir);
-        String[] files = dir.list(filter);
+        String[] files = baseDir.getFile().list(filter);
         for (String fileName : files) {
-            File file = new File(dir.getPath() + File.separator + fileName);
-            FileReference fileRef = ioManager.resolveAbsolutePath(file.getAbsolutePath());
+            FileReference fileRef = baseDir.getChild(fileName);
             allFiles.add(new ComparableFileName(fileRef));
         }
     }

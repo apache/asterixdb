@@ -642,7 +642,7 @@ public class ExternalRTree extends LSMRTree implements ITwoPCIndex {
         // create the merge operation.
         LSMRTreeMergeOperation mergeOp = new LSMRTreeMergeOperation(accessor, mergingComponents, cursor,
                 relMergeFileRefs.getInsertIndexFileReference(), relMergeFileRefs.getDeleteIndexFileReference(),
-                relMergeFileRefs.getBloomFilterFileReference(), callback, fileManager.getBaseDir());
+                relMergeFileRefs.getBloomFilterFileReference(), callback, fileManager.getBaseDir().getAbsolutePath());
         ioScheduler.scheduleOperation(mergeOp);
     }
 

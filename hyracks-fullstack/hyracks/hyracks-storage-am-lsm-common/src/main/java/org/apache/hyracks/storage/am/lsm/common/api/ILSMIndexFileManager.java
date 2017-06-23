@@ -24,6 +24,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
 
 /**
@@ -43,7 +44,7 @@ public interface ILSMIndexFileManager {
     LSMComponentFileReferences getRelMergeFileReference(String firstFileName, String lastFileName)
             throws HyracksDataException;
 
-    String getBaseDir();
+    FileReference getBaseDir();
 
     // Deletes invalid files, and returns list of valid files from baseDir.
     // The returned valid files are correctly sorted (based on the recency of data).

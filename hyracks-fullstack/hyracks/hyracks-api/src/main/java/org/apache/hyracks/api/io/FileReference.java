@@ -86,4 +86,8 @@ public final class FileReference implements Serializable {
     public String getAbsolutePath() {
         return file.getAbsolutePath();
     }
+
+    public FileReference getChild(String name) {
+        return new FileReference(dev, path + File.separator + name);
+    }
 }

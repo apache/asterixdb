@@ -366,7 +366,8 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
 
         ioScheduler.scheduleOperation(new LSMBTreeWithBuddyMergeOperation(accessor, mergingComponents, cursor,
                 relMergeFileRefs.getInsertIndexFileReference(), relMergeFileRefs.getDeleteIndexFileReference(),
-                relMergeFileRefs.getBloomFilterFileReference(), callback, fileManager.getBaseDir(), keepDeleteTuples));
+                relMergeFileRefs.getBloomFilterFileReference(), callback, fileManager.getBaseDir().getAbsolutePath(),
+                keepDeleteTuples));
     }
 
     // This method creates the appropriate opContext for the targeted version
