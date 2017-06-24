@@ -43,8 +43,8 @@ import org.apache.hyracks.storage.am.common.api.IIndexOperationContext;
 import org.apache.hyracks.storage.am.common.api.IPageManagerFactory;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import org.apache.hyracks.storage.am.common.tuples.PermutingTupleReference;
-import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndex;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexAccessor;
+import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInPlaceInvertedIndex;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexSearcher;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedListBuilder;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedListCursor;
@@ -69,7 +69,7 @@ import org.apache.hyracks.storage.common.file.BufferedFileHandle;
  * implemented features: updates (insert/update/delete) Limitations: a query
  * cannot exceed the size of a Hyracks frame.
  */
-public class OnDiskInvertedIndex implements IInvertedIndex {
+public class OnDiskInvertedIndex implements IInPlaceInvertedIndex {
     protected final IHyracksCommonContext ctx = new DefaultHyracksCommonContext();
 
     // Schema of BTree tuples, set in constructor.

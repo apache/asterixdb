@@ -24,7 +24,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.storage.am.common.api.IPageManagerFactory;
-import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndex;
+import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInPlaceInvertedIndex;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexFileNameMapper;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedListBuilder;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedListBuilderFactory;
@@ -42,7 +42,7 @@ public class PartitionedOnDiskInvertedIndexFactory extends OnDiskInvertedIndexFa
     }
 
     @Override
-    public IInvertedIndex createIndexInstance(FileReference dictBTreeFile) throws HyracksDataException {
+    public IInPlaceInvertedIndex createIndexInstance(FileReference dictBTreeFile) throws HyracksDataException {
         String invListsFilePath = fileNameMapper.getInvListsFilePath(dictBTreeFile.getFile().getAbsolutePath());
         FileReference invListsFile = ioManager.resolveAbsolutePath(invListsFilePath);
         IInvertedListBuilder invListBuilder = invListBuilderFactory.create();

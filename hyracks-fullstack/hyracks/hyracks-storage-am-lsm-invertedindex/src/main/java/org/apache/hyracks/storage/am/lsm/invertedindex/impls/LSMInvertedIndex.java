@@ -70,7 +70,6 @@ import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentFilterManager;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMIndexSearchCursor;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndex;
-import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedListCursor;
 import org.apache.hyracks.storage.am.lsm.invertedindex.inmemory.InMemoryInvertedIndex;
 import org.apache.hyracks.storage.am.lsm.invertedindex.inmemory.InMemoryInvertedIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.invertedindex.ondisk.OnDiskInvertedIndex;
@@ -595,17 +594,6 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
     }
 
     @Override
-    public IInvertedListCursor createInvertedListCursor() {
-        throw new UnsupportedOperationException("Cannot create inverted list cursor on lsm inverted index.");
-    }
-
-    @Override
-    public void openInvertedListCursor(IInvertedListCursor listCursor, ITupleReference searchKey,
-            IIndexOperationContext ictx) throws HyracksDataException {
-        throw new UnsupportedOperationException("Cannot open inverted list cursor on lsm inverted index.");
-    }
-
-    @Override
     public ITypeTraits[] getInvListTypeTraits() {
         return invListTypeTraits;
     }
@@ -736,10 +724,5 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
         return new LSMInvertedIndexMergeOperation(accessor, mergingComponents, cursor,
                 mergeFileRefs.getInsertIndexFileReference(), mergeFileRefs.getDeleteIndexFileReference(),
                 mergeFileRefs.getBloomFilterFileReference(), callback, fileManager.getBaseDir().getAbsolutePath());
-    }
-
-    @Override
-    public void purge() throws HyracksDataException {
-        throw new UnsupportedOperationException();
     }
 }

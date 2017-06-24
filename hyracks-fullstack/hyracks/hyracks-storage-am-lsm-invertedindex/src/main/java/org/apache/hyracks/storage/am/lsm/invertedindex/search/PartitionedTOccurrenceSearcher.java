@@ -31,7 +31,7 @@ import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleReference;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.common.api.IIndexOperationContext;
 import org.apache.hyracks.storage.am.common.tuples.ConcatenatingTupleReference;
-import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndex;
+import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInPlaceInvertedIndex;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexSearchModifier;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedListCursor;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IPartitionedInvertedIndex;
@@ -52,7 +52,7 @@ public class PartitionedTOccurrenceSearcher extends AbstractTOccurrenceSearcher 
     protected final ArrayList<IInvertedListCursor> cursorsOrderedByTokens = new ArrayList<>();
     protected final InvertedListPartitions partitions = new InvertedListPartitions();
 
-    public PartitionedTOccurrenceSearcher(IHyracksCommonContext ctx, IInvertedIndex invIndex)
+    public PartitionedTOccurrenceSearcher(IHyracksCommonContext ctx, IInPlaceInvertedIndex invIndex)
             throws HyracksDataException {
         super(ctx, invIndex);
         initHelperTuples();

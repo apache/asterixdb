@@ -24,17 +24,17 @@ import org.apache.hyracks.storage.am.btree.impls.BTree;
 import org.apache.hyracks.storage.am.common.api.IMetadataPageManager;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilter;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMDiskComponent;
-import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndex;
+import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInPlaceInvertedIndex;
 import org.apache.hyracks.storage.am.lsm.invertedindex.ondisk.OnDiskInvertedIndex;
 
 public class LSMInvertedIndexDiskComponent extends AbstractLSMDiskComponent {
 
-    private final IInvertedIndex invIndex;
+    private final IInPlaceInvertedIndex invIndex;
     private final BTree deletedKeysBTree;
     private final BloomFilter bloomFilter;
 
-    public LSMInvertedIndexDiskComponent(IInvertedIndex invIndex, BTree deletedKeysBTree, BloomFilter bloomFilter,
-            ILSMComponentFilter filter) throws HyracksDataException {
+    public LSMInvertedIndexDiskComponent(IInPlaceInvertedIndex invIndex, BTree deletedKeysBTree,
+            BloomFilter bloomFilter, ILSMComponentFilter filter) throws HyracksDataException {
         super((IMetadataPageManager) deletedKeysBTree.getPageManager(), filter);
         this.invIndex = invIndex;
         this.deletedKeysBTree = deletedKeysBTree;
@@ -51,7 +51,7 @@ public class LSMInvertedIndexDiskComponent extends AbstractLSMDiskComponent {
         bloomFilter.destroy();
     }
 
-    public IInvertedIndex getInvIndex() {
+    public IInPlaceInvertedIndex getInvIndex() {
         return invIndex;
     }
 

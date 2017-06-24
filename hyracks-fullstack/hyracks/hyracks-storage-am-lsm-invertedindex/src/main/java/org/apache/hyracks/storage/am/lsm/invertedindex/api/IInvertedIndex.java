@@ -21,16 +21,9 @@ package org.apache.hyracks.storage.am.lsm.invertedindex.api;
 
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
-import org.apache.hyracks.storage.am.common.api.IIndexOperationContext;
 import org.apache.hyracks.storage.common.IIndex;
 
 public interface IInvertedIndex extends IIndex {
-    IInvertedListCursor createInvertedListCursor();
-
-    void openInvertedListCursor(IInvertedListCursor listCursor, ITupleReference searchKey, IIndexOperationContext ictx)
-            throws HyracksDataException;
 
     ITypeTraits[] getInvListTypeTraits();
 
@@ -39,13 +32,4 @@ public interface IInvertedIndex extends IIndex {
     ITypeTraits[] getTokenTypeTraits();
 
     IBinaryComparatorFactory[] getTokenCmpFactories();
-
-    /**
-     * Purge the index files out of the buffer cache.
-     * Can only be called if the caller is absolutely sure the files don't contain dirty pages
-     *
-     * @throws HyracksDataException
-     *             if the index is active
-     */
-    void purge() throws HyracksDataException;
 }

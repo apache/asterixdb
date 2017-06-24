@@ -37,7 +37,7 @@ import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppenderAccessor;
 import org.apache.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
-import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndex;
+import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInPlaceInvertedIndex;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexSearcher;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedListCursor;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IObjectFactory;
@@ -61,7 +61,7 @@ public abstract class AbstractTOccurrenceSearcher implements IInvertedIndexSearc
 
     protected final InvertedListMerger invListMerger;
     protected final SearchResult searchResult;
-    protected final IInvertedIndex invIndex;
+    protected final IInPlaceInvertedIndex invIndex;
     protected final MultiComparator invListCmp;
 
     protected final ArrayTupleBuilder queryTokenBuilder = new ArrayTupleBuilder(QUERY_TOKEN_REC_DESC.getFieldCount());
@@ -74,15 +74,16 @@ public abstract class AbstractTOccurrenceSearcher implements IInvertedIndexSearc
     protected final IObjectFactory<IInvertedListCursor> invListCursorFactory;
     protected final ObjectCache<IInvertedListCursor> invListCursorCache;
 
-    public AbstractTOccurrenceSearcher(IHyracksCommonContext ctx, IInvertedIndex invIndex) throws HyracksDataException {
+    public AbstractTOccurrenceSearcher(IHyracksCommonContext ctx, IInPlaceInvertedIndex invIndex)
+            throws HyracksDataException {
         this.ctx = ctx;
         this.invListMerger = new InvertedListMerger(ctx, invIndex);
         this.searchResult = new SearchResult(invIndex.getInvListTypeTraits(), ctx);
         this.invIndex = invIndex;
         this.invListCmp = MultiComparator.create(invIndex.getInvListCmpFactories());
         this.invListCursorFactory = new InvertedListCursorFactory(invIndex);
-        this.invListCursorCache = new ObjectCache<>(invListCursorFactory, OBJECT_CACHE_INIT_SIZE,
-                OBJECT_CACHE_EXPAND_SIZE);
+        this.invListCursorCache =
+                new ObjectCache<>(invListCursorFactory, OBJECT_CACHE_INIT_SIZE, OBJECT_CACHE_EXPAND_SIZE);
         this.queryTokenFrame = new VSizeFrame(ctx);
         this.queryTokenAppender = new FrameTupleAppenderAccessor(QUERY_TOKEN_REC_DESC);
         this.queryTokenAppender.reset(queryTokenFrame, true);
