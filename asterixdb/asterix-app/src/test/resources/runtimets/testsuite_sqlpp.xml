@@ -1685,6 +1685,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="dml">
+      <compilation-unit name="recreate-index">
+        <output-dir compare="Text">recreate-index</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
       <compilation-unit name="insert-and-scan-joined-datasets">
         <output-dir compare="Text">insert-and-scan-joined-datasets</output-dir>
       </compilation-unit>
