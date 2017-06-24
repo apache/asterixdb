@@ -18,12 +18,16 @@
  */
 package org.apache.asterix.metadata.lock;
 
+import java.util.Objects;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import org.apache.asterix.metadata.lock.IMetadataLock.Mode;
-
 public class MetadataLock implements IMetadataLock {
+    private final String key;
     private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock(true);
+
+    public MetadataLock(String key) {
+        this.key = key;
+    }
 
     @Override
     public void acquire(IMetadataLock.Mode mode) {
@@ -47,5 +51,26 @@ public class MetadataLock implements IMetadataLock {
                 lock.readLock().unlock();
                 break;
         }
+    }
+
+    @Override
+    public String getKey() {
+        return key;
+    }
+
+    @Override
+    public int hashCode() {
+        return key.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof MetadataLock)) {
+            return false;
+        }
+        if (o == this) {
+            return true;
+        }
+        return Objects.equals(key, ((MetadataLock) o).key);
     }
 }

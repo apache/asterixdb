@@ -29,131 +29,156 @@ import org.apache.asterix.metadata.utils.DatasetUtil;
 public class MetadataLockManager {
 
     public static final MetadataLockManager INSTANCE = new MetadataLockManager();
-    private static final Function<String, MetadataLock> LOCK_FUNCTION = key -> new MetadataLock();
-    private static final Function<String, DatasetLock> DATASET_LOCK_FUNCTION = key -> new DatasetLock();
+    private static final Function<String, MetadataLock> LOCK_FUNCTION = MetadataLock::new;
+    private static final Function<String, DatasetLock> DATASET_LOCK_FUNCTION = DatasetLock::new;
 
-    private final ConcurrentHashMap<String, MetadataLock> dataversesLocks;
-    private final ConcurrentHashMap<String, DatasetLock> datasetsLocks;
-    private final ConcurrentHashMap<String, MetadataLock> functionsLocks;
-    private final ConcurrentHashMap<String, MetadataLock> nodeGroupsLocks;
-    private final ConcurrentHashMap<String, MetadataLock> feedsLocks;
-    private final ConcurrentHashMap<String, MetadataLock> feedPolicyLocks;
-    private final ConcurrentHashMap<String, MetadataLock> compactionPolicyLocks;
-    private final ConcurrentHashMap<String, MetadataLock> dataTypeLocks;
-    private final ConcurrentHashMap<String, MetadataLock> extensionLocks;
+    private final ConcurrentHashMap<String, IMetadataLock> mdlocks;
+
+    private static final String DATAVERSE_PREFIX = "Dataverse:";
+    private static final String DATASET_PREFIX = "Dataset:";
+    private static final String FUNCTION_PREFIX = "Function:";
+    private static final String NODE_GROUP_PREFIX = "NodeGroup:";
+    private static final String FEED_PREFIX = "Feed:";
+    private static final String FEED_POLICY_PREFIX = "FeedPolicy:";
+    private static final String MERGE_POLICY_PREFIX = "MergePolicy:";
+    private static final String DATATYPE_PREFIX = "DataType:";
+    private static final String EXTENSION_PREFIX = "Extension:";
 
     private MetadataLockManager() {
-        dataversesLocks = new ConcurrentHashMap<>();
-        datasetsLocks = new ConcurrentHashMap<>();
-        functionsLocks = new ConcurrentHashMap<>();
-        nodeGroupsLocks = new ConcurrentHashMap<>();
-        feedsLocks = new ConcurrentHashMap<>();
-        feedPolicyLocks = new ConcurrentHashMap<>();
-        compactionPolicyLocks = new ConcurrentHashMap<>();
-        dataTypeLocks = new ConcurrentHashMap<>();
-        extensionLocks = new ConcurrentHashMap<>();
+        mdlocks = new ConcurrentHashMap<>();
     }
 
     // Dataverse
     public void acquireDataverseReadLock(LockList locks, String dataverseName) throws AsterixException {
-        MetadataLock lock = dataversesLocks.computeIfAbsent(dataverseName, LOCK_FUNCTION);
+        String key = DATAVERSE_PREFIX + dataverseName;
+        IMetadataLock lock = mdlocks.computeIfAbsent(key, LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.READ, lock);
     }
 
     public void acquireDataverseWriteLock(LockList locks, String dataverseName) throws AsterixException {
-        MetadataLock lock = dataversesLocks.computeIfAbsent(dataverseName, LOCK_FUNCTION);
+        String key = DATAVERSE_PREFIX + dataverseName;
+        IMetadataLock lock = mdlocks.computeIfAbsent(key, LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.WRITE, lock);
     }
 
     // Dataset
     public void acquireDatasetReadLock(LockList locks, String datasetName) throws AsterixException {
-        DatasetLock lock = datasetsLocks.computeIfAbsent(datasetName, DATASET_LOCK_FUNCTION);
+        String key = DATASET_PREFIX + datasetName;
+        DatasetLock lock = (DatasetLock) mdlocks.computeIfAbsent(key, DATASET_LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.READ, lock);
     }
 
     public void acquireDatasetWriteLock(LockList locks, String datasetName) throws AsterixException {
-        DatasetLock lock = datasetsLocks.computeIfAbsent(datasetName, DATASET_LOCK_FUNCTION);
+        String key = DATASET_PREFIX + datasetName;
+        DatasetLock lock = (DatasetLock) mdlocks.computeIfAbsent(key, DATASET_LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.WRITE, lock);
     }
 
     public void acquireDatasetModifyLock(LockList locks, String datasetName) throws AsterixException {
-        DatasetLock lock = datasetsLocks.computeIfAbsent(datasetName, DATASET_LOCK_FUNCTION);
+        String key = DATASET_PREFIX + datasetName;
+        DatasetLock lock = (DatasetLock) mdlocks.computeIfAbsent(key, DATASET_LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.MODIFY, lock);
     }
 
     public void acquireDatasetCreateIndexLock(LockList locks, String datasetName) throws AsterixException {
-        DatasetLock lock = datasetsLocks.computeIfAbsent(datasetName, DATASET_LOCK_FUNCTION);
+        String key = DATASET_PREFIX + datasetName;
+        DatasetLock lock = (DatasetLock) mdlocks.computeIfAbsent(key, DATASET_LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.INDEX_BUILD, lock);
     }
 
     public void acquireExternalDatasetRefreshLock(LockList locks, String datasetName) throws AsterixException {
-        DatasetLock lock = datasetsLocks.computeIfAbsent(datasetName, DATASET_LOCK_FUNCTION);
+        String key = DATASET_PREFIX + datasetName;
+        DatasetLock lock = (DatasetLock) mdlocks.computeIfAbsent(key, DATASET_LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.INDEX_BUILD, lock);
     }
 
     // Function
-    public void acquireFunctionReadLock(LockList locks, String dataverseName) throws AsterixException {
-        MetadataLock lock = functionsLocks.computeIfAbsent(dataverseName, LOCK_FUNCTION);
+    public void acquireFunctionReadLock(LockList locks, String functionName) throws AsterixException {
+        String key = FUNCTION_PREFIX + functionName;
+        IMetadataLock lock = mdlocks.computeIfAbsent(key, LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.READ, lock);
     }
 
-    public void acquireFunctionWriteLock(LockList locks, String dataverseName) throws AsterixException {
-        MetadataLock lock = functionsLocks.computeIfAbsent(dataverseName, LOCK_FUNCTION);
+    public void acquireFunctionWriteLock(LockList locks, String functionName) throws AsterixException {
+        String key = FUNCTION_PREFIX + functionName;
+        IMetadataLock lock = mdlocks.computeIfAbsent(key, LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.WRITE, lock);
     }
 
     // Node Group
-    public void acquireNodeGroupReadLock(LockList locks, String dataverseName) throws AsterixException {
-        MetadataLock lock = nodeGroupsLocks.computeIfAbsent(dataverseName, LOCK_FUNCTION);
+    public void acquireNodeGroupReadLock(LockList locks, String nodeGroupName) throws AsterixException {
+        String key = NODE_GROUP_PREFIX + nodeGroupName;
+        IMetadataLock lock = mdlocks.computeIfAbsent(key, LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.READ, lock);
     }
 
     public void acquireNodeGroupWriteLock(LockList locks, String nodeGroupName) throws AsterixException {
-        MetadataLock lock = nodeGroupsLocks.computeIfAbsent(nodeGroupName, LOCK_FUNCTION);
+        String key = NODE_GROUP_PREFIX + nodeGroupName;
+        IMetadataLock lock = mdlocks.computeIfAbsent(key, LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.WRITE, lock);
     }
 
     // Feeds
-    public void acquireFeedReadLock(LockList locks, String dataverseName) throws AsterixException {
-        MetadataLock lock = feedsLocks.computeIfAbsent(dataverseName, LOCK_FUNCTION);
+    public void acquireFeedReadLock(LockList locks, String feedName) throws AsterixException {
+        String key = FEED_PREFIX + feedName;
+        IMetadataLock lock = mdlocks.computeIfAbsent(key, LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.READ, lock);
     }
 
-    public void acquireFeedWriteLock(LockList locks, String dataverseName) throws AsterixException {
-        MetadataLock lock = feedsLocks.computeIfAbsent(dataverseName, LOCK_FUNCTION);
+    public void acquireFeedWriteLock(LockList locks, String feedName) throws AsterixException {
+        String key = FEED_PREFIX + feedName;
+        IMetadataLock lock = mdlocks.computeIfAbsent(key, LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.WRITE, lock);
     }
 
-    public void acquireFeedPolicyWriteLock(LockList locks, String dataverseName) throws AsterixException {
-        MetadataLock lock = feedPolicyLocks.computeIfAbsent(dataverseName, LOCK_FUNCTION);
+    public void acquireFeedPolicyWriteLock(LockList locks, String feedPolicyName) throws AsterixException {
+        String key = FEED_POLICY_PREFIX + feedPolicyName;
+        IMetadataLock lock = mdlocks.computeIfAbsent(key, LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.WRITE, lock);
+    }
+
+    public void acquireFeedPolicyReadLock(LockList locks, String feedPolicyName) throws AsterixException {
+        String key = FEED_POLICY_PREFIX + feedPolicyName;
+        IMetadataLock lock = mdlocks.computeIfAbsent(key, LOCK_FUNCTION);
+        locks.add(IMetadataLock.Mode.READ, lock);
     }
 
     // CompactionPolicy
-    public void acquireCompactionPolicyReadLock(LockList locks, String dataverseName) throws AsterixException {
-        MetadataLock lock = compactionPolicyLocks.computeIfAbsent(dataverseName, LOCK_FUNCTION);
+    public void acquireMergePolicyReadLock(LockList locks, String mergePolicyName) throws AsterixException {
+        String key = MERGE_POLICY_PREFIX + mergePolicyName;
+        IMetadataLock lock = mdlocks.computeIfAbsent(key, LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.READ, lock);
+    }
+
+    public void acquireMergePolicyWriteLock(LockList locks, String mergePolicyName) throws AsterixException {
+        String key = MERGE_POLICY_PREFIX + mergePolicyName;
+        IMetadataLock lock = mdlocks.computeIfAbsent(key, LOCK_FUNCTION);
+        locks.add(IMetadataLock.Mode.WRITE, lock);
     }
 
     // DataType
-    public void acquireDataTypeReadLock(LockList locks, String dataverseName) throws AsterixException {
-        MetadataLock lock = dataTypeLocks.computeIfAbsent(dataverseName, LOCK_FUNCTION);
+    public void acquireDataTypeReadLock(LockList locks, String datatypeName) throws AsterixException {
+        String key = DATATYPE_PREFIX + datatypeName;
+        IMetadataLock lock = mdlocks.computeIfAbsent(key, LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.READ, lock);
     }
 
-    public void acquireDataTypeWriteLock(LockList locks, String dataverseName) throws AsterixException {
-        MetadataLock lock = dataTypeLocks.computeIfAbsent(dataverseName, LOCK_FUNCTION);
+    public void acquireDataTypeWriteLock(LockList locks, String datatypeName) throws AsterixException {
+        String key = DATATYPE_PREFIX + datatypeName;
+        IMetadataLock lock = mdlocks.computeIfAbsent(key, LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.WRITE, lock);
     }
 
     // Extensions
-    public void acquireExtensionReadLock(LockList locks, String dataverseName) throws AsterixException {
-        MetadataLock lock = extensionLocks.computeIfAbsent(dataverseName, LOCK_FUNCTION);
+    public void acquireExtensionReadLock(LockList locks, String extensionName) throws AsterixException {
+        String key = EXTENSION_PREFIX + extensionName;
+        IMetadataLock lock = mdlocks.computeIfAbsent(key, LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.READ, lock);
     }
 
-    public void acquireExtensionWriteLock(LockList locks, String dataverseName) throws AsterixException {
-        MetadataLock lock = extensionLocks.computeIfAbsent(dataverseName, LOCK_FUNCTION);
+    public void acquireExtensionWriteLock(LockList locks, String extensionName) throws AsterixException {
+        String key = EXTENSION_PREFIX + extensionName;
+        IMetadataLock lock = mdlocks.computeIfAbsent(key, LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.WRITE, lock);
     }
 
@@ -178,7 +203,7 @@ public class MetadataLockManager {
             acquireNodeGroupReadLock(locks, nodeGroupName);
         }
         if (!isDefaultCompactionPolicy) {
-            acquireCompactionPolicyReadLock(locks, compactionPolicyName);
+            acquireMergePolicyReadLock(locks, compactionPolicyName);
         }
         acquireDatasetWriteLock(locks, datasetFullyQualifiedName);
     }
