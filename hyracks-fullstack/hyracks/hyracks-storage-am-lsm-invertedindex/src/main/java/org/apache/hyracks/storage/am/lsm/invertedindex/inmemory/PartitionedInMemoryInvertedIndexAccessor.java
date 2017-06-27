@@ -31,6 +31,11 @@ public class PartitionedInMemoryInvertedIndexAccessor extends InMemoryInvertedIn
         super(index, opCtx);
     }
 
+    public PartitionedInMemoryInvertedIndexAccessor(InMemoryInvertedIndex index, IIndexOperationContext opCtx,
+            int[] nonIndexFields) throws HyracksDataException {
+        super(index, opCtx, nonIndexFields);
+    }
+
     protected IInvertedIndexSearcher createSearcher() throws HyracksDataException {
         return new PartitionedTOccurrenceSearcher(hyracksCtx, index);
     }

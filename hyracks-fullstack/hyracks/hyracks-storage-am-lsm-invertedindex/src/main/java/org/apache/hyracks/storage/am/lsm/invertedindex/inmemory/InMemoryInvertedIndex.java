@@ -173,6 +173,12 @@ public class InMemoryInvertedIndex implements IInPlaceInvertedIndex {
                 new InMemoryInvertedIndexOpContext(btree, tokenCmpFactories, tokenizerFactory));
     }
 
+    public IIndexAccessor createAccessor(IModificationOperationCallback modificationCallback,
+            ISearchOperationCallback searchCallback, int[] nonIndexFields) throws HyracksDataException {
+        return new InMemoryInvertedIndexAccessor(this,
+                new InMemoryInvertedIndexOpContext(btree, tokenCmpFactories, tokenizerFactory), nonIndexFields);
+    }
+
     @Override
     public IBufferCache getBufferCache() {
         return btree.getBufferCache();

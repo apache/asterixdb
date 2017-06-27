@@ -30,6 +30,7 @@ import org.apache.hyracks.storage.am.common.api.IPageManager;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexCursor;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexMetadataFrame;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
+import org.apache.hyracks.storage.am.common.tuples.PermutingTupleReference;
 import org.apache.hyracks.storage.am.rtree.api.IRTreeInteriorFrame;
 import org.apache.hyracks.storage.am.rtree.api.IRTreeLeafFrame;
 import org.apache.hyracks.storage.common.IModificationOperationCallback;
@@ -60,6 +61,8 @@ public class RTreeOpContext implements IIndexOperationContext, IExtraPageBlockHe
 
     private IModificationOperationCallback modificationCallback;
 
+    private PermutingTupleReference tupleWithNonIndexFields;
+
     public RTreeOpContext(IRTreeLeafFrame leafFrame, IRTreeInteriorFrame interiorFrame, IPageManager freePageManager,
             IBinaryComparatorFactory[] cmpFactories, IModificationOperationCallback modificationCallback) {
 
@@ -77,6 +80,13 @@ public class RTreeOpContext implements IIndexOperationContext, IExtraPageBlockHe
         pathList = new PathList(INITIAL_HEIGHT, INITIAL_HEIGHT);
         NSNUpdates = new ArrayList<>();
         LSNUpdates = new ArrayList<>();
+    }
+
+    public RTreeOpContext(IRTreeLeafFrame leafFrame, IRTreeInteriorFrame interiorFrame, IPageManager freePageManager,
+            IBinaryComparatorFactory[] cmpFactories, IModificationOperationCallback modificationCallback,
+            int[] nonIndexFields) {
+        this(leafFrame, interiorFrame, freePageManager, cmpFactories, modificationCallback);
+        tupleWithNonIndexFields = new PermutingTupleReference(nonIndexFields);
     }
 
     public ITupleReference getTuple() {
@@ -188,5 +198,13 @@ public class RTreeOpContext implements IIndexOperationContext, IExtraPageBlockHe
 
     public RTreeCursorInitialState getCursorInitialState() {
         return cursorInitialState;
+    }
+
+    public ITupleReference getTupleWithNonIndexFields() {
+        return tupleWithNonIndexFields;
+    }
+
+    public void resetNonIndexFieldsTuple(ITupleReference newValue) {
+        tupleWithNonIndexFields.reset(newValue);
     }
 }
