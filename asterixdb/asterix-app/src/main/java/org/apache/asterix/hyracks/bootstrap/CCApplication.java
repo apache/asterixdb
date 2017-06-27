@@ -62,6 +62,7 @@ import org.apache.asterix.common.config.ClusterProperties;
 import org.apache.asterix.common.config.ExternalProperties;
 import org.apache.asterix.common.config.MetadataProperties;
 import org.apache.asterix.common.context.IStorageComponentProvider;
+import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.common.replication.IFaultToleranceStrategy;
 import org.apache.asterix.common.replication.IReplicationStrategy;
@@ -342,7 +343,7 @@ public class CCApplication extends BaseCCApplication {
     }
 
     @Override
-    public CcApplicationContext getApplicationContext() {
+    public ICcApplicationContext getApplicationContext() {
         return appCtx;
     }
 

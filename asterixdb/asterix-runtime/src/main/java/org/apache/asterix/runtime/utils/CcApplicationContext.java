@@ -204,6 +204,7 @@ public class CcApplicationContext implements ICcApplicationContext {
         return metadataBootstrapSupplier.get();
     }
 
+    @Override
     public IFaultToleranceStrategy getFaultToleranceStrategy() {
         return ftStrategy;
     }

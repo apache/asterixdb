@@ -36,7 +36,7 @@ import com.google.common.collect.Iterators;
 /**
  * extracts results from the response of the QueryServiceServlet.
  * As the response is not necessarily valid JSON, non-JSON content has to be extracted in some cases.
- * The current implementation creates a toomany copies of the data to be usable for larger results.
+ * The current implementation creates a too many copies of the data to be usable for larger results.
  */
 public class ResultExtractor {
 

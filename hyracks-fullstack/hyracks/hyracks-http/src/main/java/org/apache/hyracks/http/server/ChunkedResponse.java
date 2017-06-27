@@ -66,6 +66,7 @@ public class ChunkedResponse implements IServletResponse {
     private ByteBuf error;
     private ChannelFuture future;
     private boolean done;
+    private final boolean keepAlive;
 
     public ChunkedResponse(ChannelHandlerContext ctx, FullHttpRequest request, int chunkSize) {
         this.ctx = ctx;
@@ -73,7 +74,8 @@ public class ChunkedResponse implements IServletResponse {
         writer = new PrintWriter(outputStream);
         response = new DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.INTERNAL_SERVER_ERROR);
         response.headers().set(HttpHeaderNames.TRANSFER_ENCODING, HttpHeaderValues.CHUNKED);
-        if (HttpUtil.isKeepAlive(request)) {
+        keepAlive = HttpUtil.isKeepAlive(request);
+        if (keepAlive) {
             response.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderValues.KEEP_ALIVE);
         }
     }
@@ -112,13 +114,17 @@ public class ChunkedResponse implements IServletResponse {
                 }
                 future = ctx.channel().close();
             } else {
+                if (keepAlive && response.status() != HttpResponseStatus.UNAUTHORIZED) {
+                    response.headers().remove(HttpHeaderNames.CONNECTION);
+                }
                 // we didn't send anything to the user, we need to send an unchunked error response
                 fullResponse(response.protocolVersion(), response.status(),
                         error == null ? ctx.alloc().buffer(0, 0) : error, response.headers());
             }
-
-            // since the request failed, we need to close the channel on complete
-            future.addListener(ChannelFutureListener.CLOSE);
+            if (response.status() != HttpResponseStatus.UNAUTHORIZED) {
+                // since the request failed, we need to close the channel on complete
+                future.addListener(ChannelFutureListener.CLOSE);
+            }
         }
         done = true;
     }

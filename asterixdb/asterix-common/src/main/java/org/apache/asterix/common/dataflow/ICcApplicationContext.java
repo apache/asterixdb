@@ -21,6 +21,7 @@ package org.apache.asterix.common.dataflow;
 import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.cluster.IGlobalRecoveryManager;
 import org.apache.asterix.common.context.IStorageComponentProvider;
+import org.apache.asterix.common.replication.IFaultToleranceStrategy;
 import org.apache.asterix.common.transactions.IResourceIdManager;
 import org.apache.hyracks.api.application.ICCServiceContext;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
@@ -55,6 +56,11 @@ public interface ICcApplicationContext extends IApplicationContext {
      *         {@link org.apache.asterix.common.cluster.IGlobalRecoveryManager}
      */
     IGlobalRecoveryManager getGlobalRecoveryManager();
+
+    /**
+     * @return the fault tolerance strategy in use for the cluster
+     */
+    IFaultToleranceStrategy getFaultToleranceStrategy();
 
     /**
      * @return the active lifecycle listener at Cluster controller
