@@ -18,10 +18,6 @@
  */
 package org.apache.asterix.api.java;
 
-import java.io.PrintWriter;
-import java.io.Reader;
-import java.util.List;
-
 import org.apache.asterix.api.common.APIFramework;
 import org.apache.asterix.app.translator.QueryTranslator;
 import org.apache.asterix.common.context.IStorageComponentProvider;
@@ -36,9 +32,14 @@ import org.apache.asterix.translator.IStatementExecutor;
 import org.apache.asterix.translator.IStatementExecutorFactory;
 import org.apache.asterix.translator.SessionConfig;
 import org.apache.asterix.translator.SessionConfig.OutputFormat;
+import org.apache.asterix.translator.SessionConfig.PlanFormat;
 import org.apache.asterix.translator.SessionOutput;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.job.JobSpecification;
+
+import java.io.PrintWriter;
+import java.io.Reader;
+import java.util.List;
 
 public class AsterixJavaClient {
     private IHyracksClientConnection hcc;
@@ -100,7 +101,7 @@ public class AsterixJavaClient {
         List<Statement> statements = parser.parse();
         MetadataManager.INSTANCE.init();
 
-        SessionConfig conf = new SessionConfig(OutputFormat.ADM, optimize, true, generateBinaryRuntime);
+        SessionConfig conf = new SessionConfig(OutputFormat.ADM, optimize, true, generateBinaryRuntime,PlanFormat.CLEAN_JSON,PlanFormat.CLEAN_JSON);
         conf.setOOBData(false, printRewrittenExpressions, printLogicalPlan, printOptimizedPlan, printJob);
         if (printPhysicalOpsOnly) {
             conf.set(SessionConfig.FORMAT_ONLY_PHYSICAL_OPS, true);

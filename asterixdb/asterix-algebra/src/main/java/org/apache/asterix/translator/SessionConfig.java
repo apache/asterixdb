@@ -48,6 +48,11 @@ public class SessionConfig implements Serializable {
         CLEAN_JSON,
         LOSSLESS_JSON
     };
+    public enum PlanFormat {
+        JSON,
+        CLEAN_JSON,
+        STRING
+    };
 
     /**
      * Produce out-of-band output for Hyracks Job.
@@ -106,6 +111,8 @@ public class SessionConfig implements Serializable {
 
     // Output format.
     private final OutputFormat fmt;
+    private final PlanFormat lpfmt;
+    private final PlanFormat oplpfmt;
 
     // Standard execution flags.
     private final boolean executeQuery;
@@ -115,8 +122,8 @@ public class SessionConfig implements Serializable {
     // Flags.
     private final Map<String, Boolean> flags;
 
-    public SessionConfig(OutputFormat fmt) {
-        this(fmt, true, true, true);
+    public SessionConfig(OutputFormat fmt, PlanFormat lpfmt,PlanFormat oplpfmt) {
+        this(fmt, true, true, true,lpfmt,oplpfmt);
     }
 
     /**
@@ -131,13 +138,19 @@ public class SessionConfig implements Serializable {
      *            Whether to execute the query or not.
      * @param generateJobSpec
      *            Whether to generate the Hyracks job specification (if
+     * @param lpfmt
+     *            Plan format for logical plan.
+     * @param oplpfmt
+     *            Plan format for optimized logical plan.
      */
-    public SessionConfig(OutputFormat fmt, boolean optimize, boolean executeQuery, boolean generateJobSpec) {
+    public SessionConfig(OutputFormat fmt, boolean optimize, boolean executeQuery, boolean generateJobSpec,PlanFormat lpfmt,PlanFormat oplpfmt) {
         this.fmt = fmt;
         this.optimize = optimize;
         this.executeQuery = executeQuery;
         this.generateJobSpec = generateJobSpec;
         this.flags = new HashMap<>();
+        this.lpfmt = lpfmt;
+        this.oplpfmt = oplpfmt;
     }
 
     /**
@@ -146,7 +159,16 @@ public class SessionConfig implements Serializable {
     public OutputFormat fmt() {
         return this.fmt;
     }
-
+    /**
+     * Retrieve the PlanFormat for this execution.
+     */
+    public PlanFormat getLpfmt() {
+        return this.lpfmt;
+    }
+    /**
+     * Retrieve the OptimizedPlanFormat for this execution.
+     */
+    public PlanFormat getOplpfmt() {return this.oplpfmt;}
     /**
      * Retrieve the value of the "execute query" flag.
      */

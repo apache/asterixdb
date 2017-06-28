@@ -18,14 +18,15 @@
  */
 package org.apache.asterix.api.http.server;
 
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.util.List;
-import java.util.concurrent.ConcurrentMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.util.MinimalPrettyPrinter;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import io.netty.handler.codec.http.HttpHeaderNames;
+import io.netty.handler.codec.http.HttpResponseStatus;
 import org.apache.asterix.algebra.base.ILangExtension;
 import org.apache.asterix.api.http.servlet.ServletConstants;
 import org.apache.asterix.common.api.IApplicationContext;
@@ -40,13 +41,9 @@ import org.apache.asterix.lang.common.base.IParser;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.runtime.utils.ClusterStateManager;
-import org.apache.asterix.translator.IStatementExecutor;
+import org.apache.asterix.translator.*;
 import org.apache.asterix.translator.IStatementExecutor.ResultDelivery;
 import org.apache.asterix.translator.IStatementExecutor.Stats;
-import org.apache.asterix.translator.IStatementExecutorContext;
-import org.apache.asterix.translator.IStatementExecutorFactory;
-import org.apache.asterix.translator.SessionConfig;
-import org.apache.asterix.translator.SessionOutput;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.exceptions.HyracksException;
@@ -55,16 +52,13 @@ import org.apache.hyracks.http.api.IServletResponse;
 import org.apache.hyracks.http.server.utils.HttpUtil;
 import org.apache.hyracks.util.JSONUtil;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.util.MinimalPrettyPrinter;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
-import io.netty.handler.codec.http.HttpHeaderNames;
-import io.netty.handler.codec.http.HttpResponseStatus;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.util.List;
+import java.util.concurrent.ConcurrentMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class QueryServiceServlet extends AbstractQueryApiServlet {
     private static final Logger LOGGER = Logger.getLogger(QueryServiceServlet.class.getName());
@@ -103,7 +97,9 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         FORMAT("format"),
         CLIENT_ID("client_context_id"),
         PRETTY("pretty"),
-        MODE("mode");
+        MODE("mode"),
+        PLAN_FORMAT("plan-format"),
+        OPTIMIZED_PLAN_FORMAT("optimized-plan-format");
 
         private final String str;
 
@@ -182,6 +178,8 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         String path;
         String statement;
         String format;
+        String lpfmt;
+        String oplpfmt;
         boolean pretty;
         String clientContextID;
         String mode;
@@ -250,7 +248,8 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         SessionOutput.ResultAppender appendStatus = ResultUtil.createResultStatusAppender();
 
         SessionConfig.OutputFormat format = getFormat(param.format);
-        SessionConfig sessionConfig = new SessionConfig(format);
+        //TODO:Shiva
+        SessionConfig sessionConfig = new SessionConfig(format, SessionConfig.PlanFormat.CLEAN_JSON, SessionConfig.PlanFormat.CLEAN_JSON);
         sessionConfig.set(SessionConfig.FORMAT_WRAPPER_ARRAY, true);
         sessionConfig.set(SessionConfig.FORMAT_INDENT_JSON, param.pretty);
         sessionConfig.set(SessionConfig.FORMAT_QUOTE_RECORD,

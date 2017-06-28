@@ -18,23 +18,7 @@
  */
 package org.apache.asterix.api.http.server;
 
-import static org.apache.asterix.api.http.servlet.ServletConstants.HYRACKS_CONNECTION_ATTR;
-import static org.apache.asterix.api.http.servlet.ServletConstants.HYRACKS_DATASET_ATTR;
-
-import java.awt.image.BufferedImage;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.PrintWriter;
-import java.util.List;
-import java.util.concurrent.ConcurrentMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import javax.imageio.ImageIO;
-
+import io.netty.handler.codec.http.HttpResponseStatus;
 import org.apache.asterix.app.result.ResultReader;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.context.IStorageComponentProvider;
@@ -50,6 +34,7 @@ import org.apache.asterix.translator.IStatementExecutor;
 import org.apache.asterix.translator.IStatementExecutorFactory;
 import org.apache.asterix.translator.SessionConfig;
 import org.apache.asterix.translator.SessionConfig.OutputFormat;
+import org.apache.asterix.translator.SessionConfig.PlanFormat;
 import org.apache.asterix.translator.SessionOutput;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.dataset.IHyracksDataset;
@@ -62,10 +47,20 @@ import org.apache.hyracks.http.server.utils.HttpUtil;
 import org.apache.hyracks.http.server.utils.HttpUtil.ContentType;
 import org.apache.hyracks.http.server.utils.HttpUtil.Encoding;
 
-import io.netty.handler.codec.http.HttpResponseStatus;
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.*;
+import java.util.List;
+import java.util.concurrent.ConcurrentMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import static org.apache.asterix.api.http.servlet.ServletConstants.HYRACKS_CONNECTION_ATTR;
+import static org.apache.asterix.api.http.servlet.ServletConstants.HYRACKS_DATASET_ATTR;
 
 public class ApiServlet extends AbstractServlet {
-
+    public  static  PlanFormat planFormat;
+    public  static PlanFormat opPlanFormat;
     private static final Logger LOGGER = Logger.getLogger(ApiServlet.class.getName());
     public static final String HTML_STATEMENT_SEPARATOR = "<!-- BEGIN -->";
 
@@ -96,8 +91,11 @@ public class ApiServlet extends AbstractServlet {
         // Output format.
         PrintWriter out = response.writer();
         OutputFormat format;
+
         boolean csvAndHeader = false;
         String output = request.getParameter("output-format");
+        String plan = request.getParameter("plan-format");
+        String opPlan = request.getParameter("optimizedPlanFormat");
         try {
             format = OutputFormat.valueOf(output);
         } catch (IllegalArgumentException e) {
@@ -106,7 +104,22 @@ public class ApiServlet extends AbstractServlet {
             // Default output format
             format = OutputFormat.CLEAN_JSON;
         }
-
+        try {
+            planFormat = PlanFormat.valueOf(plan);
+        } catch (IllegalArgumentException e) {
+            LOGGER.log(Level.INFO,
+                    plan + ": unsupported plan-format, using " + PlanFormat.CLEAN_JSON + " instead", e);
+            // Default output format
+            planFormat = PlanFormat.CLEAN_JSON;
+        }
+        try {
+            opPlanFormat = PlanFormat.valueOf(opPlan);
+        } catch (IllegalArgumentException e) {
+            LOGGER.log(Level.INFO,
+                    opPlan + ": unsupported optimized-plan-format, using " + PlanFormat.CLEAN_JSON + " instead", e);
+            // Default output format
+            opPlanFormat = PlanFormat.CLEAN_JSON;
+        }
         String query = request.getParameter("query");
         String wrapperArray = request.getParameter("wrapper-array");
         String printExprParam = request.getParameter("print-expr-tree");
@@ -138,7 +151,7 @@ public class ApiServlet extends AbstractServlet {
             }
             IParser parser = parserFactory.createParser(query);
             List<Statement> aqlStatements = parser.parse();
-            SessionConfig sessionConfig = new SessionConfig(format, true, isSet(executeQuery), true);
+            SessionConfig sessionConfig = new SessionConfig(format, true, isSet(executeQuery), true,planFormat,opPlanFormat);
             sessionConfig.set(SessionConfig.FORMAT_HTML, true);
             sessionConfig.set(SessionConfig.FORMAT_CSV_HEADER, csvAndHeader);
             sessionConfig.set(SessionConfig.FORMAT_WRAPPER_ARRAY, isSet(wrapperArray));
