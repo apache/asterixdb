@@ -137,6 +137,7 @@ public class LogicalOperatorPrettyPrintVisitorJson implements ILogicalOperatorVi
         if(op.getNestedPlans().size()>0) {
             buffer.append(",\n");
             addIndent(indent).append("\"subplan\":");
+            PlanPrettyPrinter.reset(op);
             printNestedPlans(op, indent);
         }
         return null;
@@ -278,6 +279,7 @@ public class LogicalOperatorPrettyPrintVisitorJson implements ILogicalOperatorVi
     public Void visitSubplanOperator(SubplanOperator op, Integer indent) throws AlgebricksException {
         if(!op.getNestedPlans().isEmpty()) {
             addIndent(indent).append("\"subplan\":");
+            PlanPrettyPrinter.reset(op);
             printNestedPlans(op, indent);
         }
         return null;
@@ -384,7 +386,8 @@ public class LogicalOperatorPrettyPrintVisitorJson implements ILogicalOperatorVi
             }
             buffer.append("]");
         }
-        buffer.append(",\n\"expressions\":\""+op.getExpressionRef().getValue().accept(exprVisitor, indent).replace('"',' ')+"\"");
+        buffer.append(",\n");
+        addIndent(indent).append("\"expressions\":\""+op.getExpressionRef().getValue().accept(exprVisitor, indent).replace('"',' ')+"\"");
         appendFilterInformation(plan, op.getMinFilterVars(), op.getMaxFilterVars(),indent);
         return null;
     }
@@ -627,13 +630,13 @@ public class LogicalOperatorPrettyPrintVisitorJson implements ILogicalOperatorVi
     }
 
     protected void printNestedPlans(AbstractOperatorWithNestedPlans op, Integer indent) throws AlgebricksException {
-        buffer.append("\n");
-        addIndent(indent).append("[");
+        PlanPrettyPrinter.reset(op);
+        buffer.append("[\n");
         boolean first=true;
         for (ILogicalPlan p : op.getNestedPlans()) {
             if(!first)
                 buffer.append(",");
-            PlanPrettyPrinter.printPlanJson(p, this, indent+10);
+            PlanPrettyPrinter.printPlanJson(p, this, indent+4);
             first=false;
 
         }

@@ -101,10 +101,10 @@ public class PlanPrettyPrinter {
                 if (moreInputes) {
                     append(out, ",");
                 }
-                printOperatorJson((AbstractLogicalOperator) k.getValue(), pvisitor, indent +10);
+                printOperatorJson((AbstractLogicalOperator) k.getValue(), pvisitor, indent +4);
                 moreInputes = true;
             }
-            pad(out, indent+9);
+            pad(out, indent+2);
             appendln(out, "]");
         }
         out.append("\n");
@@ -150,7 +150,7 @@ public class PlanPrettyPrinter {
             reset(op);
         }
     }
-    private static void reset(AbstractLogicalOperator op){
+    public static void reset(AbstractLogicalOperator op){
         op.setOperatorID(0);
         for (Mutable<ILogicalOperator> k : op.getInputs()) {
             reset((AbstractLogicalOperator) k.getValue());

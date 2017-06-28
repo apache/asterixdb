@@ -66,7 +66,6 @@ public abstract class AbstractLogicalOperator implements ILogicalOperator {
     protected List<LogicalVariable> schema;
 public void setOperatorID(int id){
         operatorID = id;
-
 }
 public int getOperatorID(){
     return operatorID;
