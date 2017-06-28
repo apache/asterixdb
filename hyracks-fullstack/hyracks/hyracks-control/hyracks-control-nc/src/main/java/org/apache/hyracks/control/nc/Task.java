@@ -280,6 +280,7 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
         }
         ct.setName(displayName + ":" + taskAttemptId + ":" + 0);
         try {
+            Exception operatorException = null;
             try {
                 operator.initialize();
                 if (collectors.length > 0) {
@@ -318,8 +319,22 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
                         sem.acquire(collectors.length - 1);
                     }
                 }
+            } catch (Exception e) {
+                // Store the operator exception
+                operatorException = e;
+                throw e;
             } finally {
-                operator.deinitialize();
+                try {
+                    operator.deinitialize();
+                } catch (Exception e) {
+                    if (operatorException != null) {
+                        // Add deinitialize exception to the operator exception to keep track of both
+                        operatorException.addSuppressed(e);
+                    } else {
+                        operatorException = e;
+                    }
+                    throw operatorException;
+                }
             }
             NodeControllerService ncs = joblet.getNodeController();
             ncs.getWorkQueue().schedule(new NotifyTaskCompleteWork(ncs, this));
