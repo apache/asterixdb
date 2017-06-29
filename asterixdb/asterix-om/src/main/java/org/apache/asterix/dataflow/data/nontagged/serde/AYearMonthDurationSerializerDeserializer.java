@@ -20,41 +20,33 @@ package org.apache.asterix.dataflow.data.nontagged.serde;
 
 import java.io.DataInput;
 import java.io.DataOutput;
-import java.io.IOException;
 
 import org.apache.asterix.om.base.AYearMonthDuration;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 
 public class AYearMonthDurationSerializerDeserializer implements ISerializerDeserializer<AYearMonthDuration> {
 
     private static final long serialVersionUID = 1L;
 
-    public static final AYearMonthDurationSerializerDeserializer INSTANCE = new AYearMonthDurationSerializerDeserializer();
+    public static final AYearMonthDurationSerializerDeserializer INSTANCE =
+            new AYearMonthDurationSerializerDeserializer();
 
     private AYearMonthDurationSerializerDeserializer() {
     }
 
     @Override
     public AYearMonthDuration deserialize(DataInput in) throws HyracksDataException {
-        try {
-            return new AYearMonthDuration(in.readInt());
-        } catch (IOException e) {
-            throw new HyracksDataException(e);
-        }
+        return new AYearMonthDuration(IntegerSerializerDeserializer.read(in));
     }
 
     @Override
     public void serialize(AYearMonthDuration instance, DataOutput out) throws HyracksDataException {
-        try {
-            out.writeInt(instance.getMonths());
-        } catch (IOException e) {
-            throw new HyracksDataException(e);
-        }
+        IntegerSerializerDeserializer.write(instance.getMonths(), out);
     }
 
     public static int getYearMonth(byte[] data, int offset) {
         return AInt32SerializerDeserializer.getInt(data, offset);
     }
-
 }

@@ -40,7 +40,7 @@ public class AInt8SerializerDeserializer implements ISerializerDeserializer<AInt
         try {
             return new AInt8(in.readByte());
         } catch (IOException ioe) {
-            throw new HyracksDataException(ioe);
+            throw HyracksDataException.create(ioe);
         }
     }
 
@@ -49,12 +49,11 @@ public class AInt8SerializerDeserializer implements ISerializerDeserializer<AInt
         try {
             out.writeByte(instance.getByteValue());
         } catch (IOException ioe) {
-            throw new HyracksDataException(ioe);
+            throw HyracksDataException.create(ioe);
         }
     }
 
     public static byte getByte(byte[] bytes, int offset) {
         return bytes[offset];
     }
-
 }

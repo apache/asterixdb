@@ -64,6 +64,10 @@ public class ErrorCode {
     public static final int TYPE_CONVERT_OUT_OF_BOUND = 21;
     public static final int FIELD_SHOULD_BE_TYPED = 22;
     public static final int NC_REQUEST_TIMEOUT = 23;
+    public static final int POLYGON_INVALID_COORDINATE = 24;
+    public static final int POLYGON_3_POINTS = 25;
+    public static final int POLYGON_INVALID = 26;
+
 
     public static final int INSTANTIATION_ERROR = 100;
 

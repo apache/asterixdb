@@ -20,11 +20,12 @@ package org.apache.asterix.dataflow.data.nontagged.serde;
 
 import java.io.DataInput;
 import java.io.DataOutput;
-import java.io.IOException;
 
 import org.apache.asterix.om.base.ADuration;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.dataflow.common.data.marshalling.Integer64SerializerDeserializer;
+import org.apache.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 
 public class ADurationSerializerDeserializer implements ISerializerDeserializer<ADuration> {
 
@@ -37,21 +38,15 @@ public class ADurationSerializerDeserializer implements ISerializerDeserializer<
 
     @Override
     public ADuration deserialize(DataInput in) throws HyracksDataException {
-        try {
-            return new ADuration(in.readInt(), in.readLong());
-        } catch (IOException e) {
-            throw new HyracksDataException(e);
-        }
+        final int months = IntegerSerializerDeserializer.read(in);
+        final long seconds = Integer64SerializerDeserializer.read(in);
+        return new ADuration(months, seconds);
     }
 
     @Override
     public void serialize(ADuration instance, DataOutput out) throws HyracksDataException {
-        try {
-            out.writeInt(instance.getMonths());
-            out.writeLong(instance.getMilliseconds());
-        } catch (IOException e) {
-            throw new HyracksDataException(e);
-        }
+        IntegerSerializerDeserializer.write(instance.getMonths(), out);
+        Integer64SerializerDeserializer.write(instance.getMilliseconds(), out);
     }
 
     /**

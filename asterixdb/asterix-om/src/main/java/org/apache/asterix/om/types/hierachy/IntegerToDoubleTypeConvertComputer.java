@@ -53,7 +53,7 @@ public class IntegerToDoubleTypeConvertComputer implements ITypeConvertComputer 
     public void convertType(byte[] data, int start, int length, DataOutput out) throws IOException {
         long val = AbstractIntegerTypeConvertComputer.asLong(data, start, length);
         out.writeByte(ATypeTag.DOUBLE.serialize());
-        DoubleSerializerDeserializer.INSTANCE.serialize((double) val, out);
+        DoubleSerializerDeserializer.write((double) val, out);
     }
 
     double convertType(byte[] data, int start, ATypeTag sourceTypeTag) throws HyracksDataException {

@@ -20,11 +20,11 @@ package org.apache.asterix.dataflow.data.nontagged.serde;
 
 import java.io.DataInput;
 import java.io.DataOutput;
-import java.io.IOException;
 
 import org.apache.asterix.om.base.AInt16;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.dataflow.common.data.marshalling.ShortSerializerDeserializer;
 
 public class AInt16SerializerDeserializer implements ISerializerDeserializer<AInt16> {
 
@@ -37,20 +37,12 @@ public class AInt16SerializerDeserializer implements ISerializerDeserializer<AIn
 
     @Override
     public AInt16 deserialize(DataInput in) throws HyracksDataException {
-        try {
-            return new AInt16(in.readShort());
-        } catch (IOException ioe) {
-            throw new HyracksDataException(ioe);
-        }
+        return new AInt16(ShortSerializerDeserializer.read(in));
     }
 
     @Override
     public void serialize(AInt16 instance, DataOutput out) throws HyracksDataException {
-        try {
-            out.writeShort(instance.getShortValue());
-        } catch (IOException ioe) {
-            throw new HyracksDataException(ioe);
-        }
+        ShortSerializerDeserializer.write(instance.getShortValue(), out);
     }
 
     public static short getShort(byte[] bytes, int offset) {
@@ -60,5 +52,4 @@ public class AInt16SerializerDeserializer implements ISerializerDeserializer<AIn
     public static int getUnsignedShort(byte[] bytes, int offset) {
         return ((bytes[offset] & 0xff) << 8) + ((bytes[offset + 1] & 0xff) << 0);
     }
-
 }

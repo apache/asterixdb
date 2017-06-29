@@ -37,13 +37,11 @@ public class ABinarySerializerDeserializer implements ISerializerDeserializer<AB
 
     @Override
     public ABinary deserialize(DataInput in) throws HyracksDataException {
-        return new ABinary(ByteArraySerializerDeserializer.INSTANCE.deserialize(in));
+        return new ABinary(ByteArraySerializerDeserializer.read(in));
     }
 
     @Override
     public void serialize(ABinary binary, DataOutput out) throws HyracksDataException {
-        ByteArraySerializerDeserializer.INSTANCE.serialize(binary.getBytes(), binary.getStart(), binary.getLength(),
-                out);
+        ByteArraySerializerDeserializer.serialize(binary.getBytes(), binary.getStart(), binary.getLength(), out);
     }
-
 }

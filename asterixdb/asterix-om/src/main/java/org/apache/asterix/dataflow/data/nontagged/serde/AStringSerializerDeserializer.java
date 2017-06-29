@@ -57,7 +57,7 @@ public class AStringSerializerDeserializer implements ISerializerDeserializer<AS
         try {
             return new AString(UTF8StringUtil.readUTF8(in, utf8StringReader));
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 
@@ -66,7 +66,7 @@ public class AStringSerializerDeserializer implements ISerializerDeserializer<AS
         try {
             UTF8StringUtil.writeUTF8(instance.getStringValue(), out, utf8StringWriter);
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 }

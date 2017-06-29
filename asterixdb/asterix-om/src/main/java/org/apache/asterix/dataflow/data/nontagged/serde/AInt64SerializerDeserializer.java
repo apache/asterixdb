@@ -20,11 +20,12 @@ package org.apache.asterix.dataflow.data.nontagged.serde;
 
 import java.io.DataInput;
 import java.io.DataOutput;
-import java.io.IOException;
 
 import org.apache.asterix.om.base.AInt64;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.primitive.LongPointable;
+import org.apache.hyracks.dataflow.common.data.marshalling.Integer64SerializerDeserializer;
 
 public class AInt64SerializerDeserializer implements ISerializerDeserializer<AInt64> {
 
@@ -37,28 +38,16 @@ public class AInt64SerializerDeserializer implements ISerializerDeserializer<AIn
 
     @Override
     public AInt64 deserialize(DataInput in) throws HyracksDataException {
-        try {
-            return new AInt64(in.readLong());
-        } catch (IOException ioe) {
-            throw new HyracksDataException(ioe);
-        }
-
+        return new AInt64(Integer64SerializerDeserializer.read(in));
     }
 
     @Override
     public void serialize(AInt64 instance, DataOutput out) throws HyracksDataException {
-        try {
-            out.writeLong(instance.getLongValue());
-        } catch (IOException ioe) {
-            throw new HyracksDataException(ioe);
-        }
+        Integer64SerializerDeserializer.write(instance.getLongValue(), out);
     }
 
     public static long getLong(byte[] bytes, int offset) {
-        return (((long) (bytes[offset] & 0xff)) << 56) + (((long) (bytes[offset + 1] & 0xff)) << 48)
-                + (((long) (bytes[offset + 2] & 0xff)) << 40) + (((long) (bytes[offset + 3] & 0xff)) << 32)
-                + (((long) (bytes[offset + 4] & 0xff)) << 24) + (((long) (bytes[offset + 5] & 0xff)) << 16)
-                + (((long) (bytes[offset + 6] & 0xff)) << 8) + (bytes[offset + 7] & 0xff);
+        return LongPointable.getLong(bytes, offset);
     }
 
 }

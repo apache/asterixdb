@@ -39,29 +39,16 @@ public class ARectangleSerializerDeserializer implements ISerializerDeserializer
 
     @Override
     public ARectangle deserialize(DataInput in) throws HyracksDataException {
-        try {
-            APoint p1 = APointSerializerDeserializer.INSTANCE.deserialize(in);
-            APoint p2 = APointSerializerDeserializer.INSTANCE.deserialize(in);
-            return new ARectangle(p1, p2);
-        } catch (IOException e) {
-            throw new HyracksDataException(e);
-        }
+        return new ARectangle(APointSerializerDeserializer.read(in), APointSerializerDeserializer.read(in));
     }
 
     @Override
     public void serialize(ARectangle instance, DataOutput out) throws HyracksDataException {
-        try {
-            out.writeDouble(instance.getP1().getX());
-            out.writeDouble(instance.getP1().getY());
-            out.writeDouble(instance.getP2().getX());
-            out.writeDouble(instance.getP2().getY());
-        } catch (IOException e) {
-            throw new HyracksDataException(e);
-        }
+        APointSerializerDeserializer.write(instance.getP1(), out);
+        APointSerializerDeserializer.write(instance.getP2(), out);
     }
 
     public final static int getBottomLeftCoordinateOffset(Coordinate coordinate) throws HyracksDataException {
-
         switch (coordinate) {
             case X:
                 return 1;
@@ -73,7 +60,6 @@ public class ARectangleSerializerDeserializer implements ISerializerDeserializer
     }
 
     public final static int getUpperRightCoordinateOffset(Coordinate coordinate) throws HyracksDataException {
-
         switch (coordinate) {
             case X:
                 return 17;

@@ -20,9 +20,11 @@ package org.apache.asterix.dataflow.data.nontagged.serde;
 
 import java.io.DataInput;
 import java.io.DataOutput;
+import java.io.IOException;
 import java.util.ArrayList;
 
 import org.apache.asterix.builders.UnorderedListBuilder;
+import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AUnorderedList;
 import org.apache.asterix.om.base.IACursor;
@@ -96,8 +98,8 @@ public class AUnorderedListSerializerDeserializer implements ISerializerDeserial
             }
             AUnorderedListType type = new AUnorderedListType(currentItemType, "unorderedlist");
             return new AUnorderedList(type, items);
-        } catch (Exception e) {
-            throw new HyracksDataException(e);
+        } catch (AsterixException | IOException e) {
+            throw HyracksDataException.create(e);
         }
     }
 
@@ -144,5 +146,4 @@ public class AUnorderedListSerializerDeserializer implements ISerializerDeserial
             return -1;
         }
     }
-
 }

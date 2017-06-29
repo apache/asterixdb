@@ -119,7 +119,7 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
                 return new ARecord(this.recordType, schemaFields);
             }
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 

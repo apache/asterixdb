@@ -35,19 +35,27 @@ public class BooleanSerializerDeserializer implements ISerializerDeserializer<Bo
 
     @Override
     public Boolean deserialize(DataInput in) throws HyracksDataException {
-        try {
-            return in.readBoolean();
-        } catch (IOException e) {
-            throw new HyracksDataException(e);
-        }
+        return read(in);
     }
 
     @Override
     public void serialize(Boolean instance, DataOutput out) throws HyracksDataException {
+        write(instance, out);
+    }
+
+    public static boolean read(DataInput in) throws HyracksDataException {
         try {
-            out.writeBoolean(instance.booleanValue());
+            return in.readBoolean();
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
+        }
+    }
+
+    public static void write(boolean instance, DataOutput out) throws HyracksDataException {
+        try {
+            out.writeBoolean(instance);
+        } catch (IOException e) {
+            throw HyracksDataException.create(e);
         }
     }
 }

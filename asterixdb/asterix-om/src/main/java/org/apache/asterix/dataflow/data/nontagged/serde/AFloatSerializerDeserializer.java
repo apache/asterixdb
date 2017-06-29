@@ -20,7 +20,6 @@ package org.apache.asterix.dataflow.data.nontagged.serde;
 
 import java.io.DataInput;
 import java.io.DataOutput;
-import java.io.IOException;
 
 import org.apache.asterix.om.base.AFloat;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -39,20 +38,15 @@ public class AFloatSerializerDeserializer implements ISerializerDeserializer<AFl
 
     @Override
     public AFloat deserialize(DataInput in) throws HyracksDataException {
-        return new AFloat(FloatSerializerDeserializer.INSTANCE.deserialize(in));
+        return new AFloat(FloatSerializerDeserializer.read(in));
     }
 
     @Override
     public void serialize(AFloat instance, DataOutput out) throws HyracksDataException {
-        try {
-            out.writeFloat(instance.getFloatValue());
-        } catch (IOException ioe) {
-            throw new HyracksDataException(ioe);
-        }
+        FloatSerializerDeserializer.write(instance.getFloatValue(), out);
     }
 
     public static float getFloat(byte[] bytes, int offset) {
         return FloatPointable.getFloat(bytes, offset);
     }
-
 }

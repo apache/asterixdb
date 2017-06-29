@@ -20,11 +20,11 @@ package org.apache.asterix.dataflow.data.nontagged.serde;
 
 import java.io.DataInput;
 import java.io.DataOutput;
-import java.io.IOException;
 
 import org.apache.asterix.om.base.ADayTimeDuration;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.dataflow.common.data.marshalling.Integer64SerializerDeserializer;
 
 public class ADayTimeDurationSerializerDeserializer implements ISerializerDeserializer<ADayTimeDuration> {
 
@@ -37,20 +37,12 @@ public class ADayTimeDurationSerializerDeserializer implements ISerializerDeseri
 
     @Override
     public ADayTimeDuration deserialize(DataInput in) throws HyracksDataException {
-        try {
-            return new ADayTimeDuration(in.readLong());
-        } catch (IOException e) {
-            throw new HyracksDataException(e);
-        }
+        return new ADayTimeDuration(Integer64SerializerDeserializer.read(in));
     }
 
     @Override
     public void serialize(ADayTimeDuration instance, DataOutput out) throws HyracksDataException {
-        try {
-            out.writeLong(instance.getMilliseconds());
-        } catch (IOException e) {
-            throw new HyracksDataException(e);
-        }
+        Integer64SerializerDeserializer.write(instance.getMilliseconds(), out);
     }
 
     public static long getDayTime(byte[] data, int offset) {

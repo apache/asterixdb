@@ -27,6 +27,7 @@ import org.apache.asterix.om.base.APoint3D;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.dataflow.common.data.marshalling.DoubleSerializerDeserializer;
 
 public class APoint3DSerializerDeserializer implements ISerializerDeserializer<APoint3D> {
 
@@ -39,35 +40,17 @@ public class APoint3DSerializerDeserializer implements ISerializerDeserializer<A
 
     @Override
     public APoint3D deserialize(DataInput in) throws HyracksDataException {
-        try {
-            return new APoint3D(in.readDouble(), in.readDouble(), in.readDouble());
-        } catch (IOException e) {
-            throw new HyracksDataException(e);
-        }
+        final double x = DoubleSerializerDeserializer.read(in);
+        final double y = DoubleSerializerDeserializer.read(in);
+        final double z = DoubleSerializerDeserializer.read(in);
+        return new APoint3D(x, y, z);
     }
 
     @Override
     public void serialize(APoint3D instance, DataOutput out) throws HyracksDataException {
-        try {
-            out.writeDouble(instance.getX());
-            out.writeDouble(instance.getY());
-            out.writeDouble(instance.getZ());
-        } catch (IOException e) {
-            throw new HyracksDataException(e);
-        }
-    }
-
-    public static void stringToPoint3d(String instance, DataOutput out) throws HyracksDataException {
-        try {
-            int firstCommaIndex = instance.indexOf(',');
-            int secondCommaIndex = instance.indexOf(',', firstCommaIndex + 1);
-            out.writeByte(ATypeTag.POINT3D.serialize());
-            out.writeDouble(Double.parseDouble(instance.substring(0, firstCommaIndex)));
-            out.writeDouble(Double.parseDouble(instance.substring(firstCommaIndex + 1, secondCommaIndex)));
-            out.writeDouble(Double.parseDouble(instance.substring(secondCommaIndex + 1, instance.length())));
-        } catch (IOException e) {
-            throw new HyracksDataException(e);
-        }
+        DoubleSerializerDeserializer.write(instance.getX(), out);
+        DoubleSerializerDeserializer.write(instance.getY(), out);
+        DoubleSerializerDeserializer.write(instance.getZ(), out);
     }
 
     public final static int getCoordinateOffset(Coordinate coordinate) throws HyracksDataException {
@@ -82,5 +65,4 @@ public class APoint3DSerializerDeserializer implements ISerializerDeserializer<A
                 throw new HyracksDataException("Wrong coordinate");
         }
     }
-
 }

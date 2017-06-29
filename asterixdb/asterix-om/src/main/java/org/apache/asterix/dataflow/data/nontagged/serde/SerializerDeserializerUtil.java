@@ -66,7 +66,7 @@ public final class SerializerDeserializerUtil {
         try {
             out.writeByte(tag.serialize());
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 
@@ -74,7 +74,7 @@ public final class SerializerDeserializerUtil {
         try {
             return EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(in.readByte());
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 }
