@@ -38,6 +38,7 @@ import org.apache.asterix.api.http.server.ClusterControllerDetailsApiServlet;
 import org.apache.asterix.api.http.server.ConnectorApiServlet;
 import org.apache.asterix.api.http.server.DdlApiServlet;
 import org.apache.asterix.api.http.server.DiagnosticsApiServlet;
+import org.apache.asterix.api.http.server.ActiveStatsApiServlet;
 import org.apache.asterix.api.http.server.FullApiServlet;
 import org.apache.asterix.api.http.server.NodeControllerDetailsApiServlet;
 import org.apache.asterix.api.http.server.QueryApiServlet;
@@ -233,6 +234,7 @@ public class CCApplication extends BaseCCApplication {
         addServlet(jsonAPIServer, Servlets.CLUSTER_STATE_NODE_DETAIL); // must not precede add of CLUSTER_STATE
         addServlet(jsonAPIServer, Servlets.CLUSTER_STATE_CC_DETAIL); // must not precede add of CLUSTER_STATE
         addServlet(jsonAPIServer, Servlets.DIAGNOSTICS);
+        addServlet(jsonAPIServer, Servlets.ACTIVE_STATS);
         return jsonAPIServer;
     }
 
@@ -305,6 +307,8 @@ public class CCApplication extends BaseCCApplication {
                 return new ClusterControllerDetailsApiServlet(ctx, paths);
             case Servlets.DIAGNOSTICS:
                 return new DiagnosticsApiServlet(ctx, paths, appCtx);
+            case Servlets.ACTIVE_STATS:
+                return new ActiveStatsApiServlet(ctx, paths, appCtx);
             default:
                 throw new IllegalStateException(String.valueOf(key));
         }

@@ -34,6 +34,7 @@ public class AdapterExecutor implements Runnable {
     // increase or decrease at any time)
     private final FeedAdapter adapter; // The adapter
     private final AdapterRuntimeManager adapterManager;// The runtime manager <-- two way visibility -->
+    private int restartCount = 0;
 
     public AdapterExecutor(IFrameWriter writer, FeedAdapter adapter, AdapterRuntimeManager adapterManager) {
         this.writer = writer;
@@ -81,8 +82,13 @@ public class AdapterExecutor implements Runnable {
                 LOGGER.error("Exception during feed ingestion ", e);
                 continueIngestion = adapter.handleException(e);
                 failedIngestion = !continueIngestion;
+                restartCount++;
             }
         }
         return failedIngestion;
+    }
+
+    public String getStats() {
+        return "{\"adapter-stats\": " + adapter.getStats() + ", \"executor-restart-times\": " + restartCount + "}";
     }
 }

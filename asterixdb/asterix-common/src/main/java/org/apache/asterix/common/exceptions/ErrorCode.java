@@ -191,10 +191,12 @@ public class ErrorCode {
     public static final int FEED_METADATA_SOCKET_ADAPTOR_SOCKET_NOT_PROPERLY_CONFIGURED = 3081;
     public static final int FEED_METADATA_SOCKET_ADAPTOR_SOCKET_INVALID_HOST_NC = 3082;
     public static final int PROVIDER_DATASOURCE_FACTORY_DUPLICATE_FORMAT_MAPPING = 3083;
-    public static final int PROVIDER_STREAM_RECORD_READER_DUPLICATE_FORMAT_MAPPING = 3084;
+    public static final int CANNOT_WAIT_FOR_STATE = 3084;
     public static final int FEED_UNKNOWN_ADAPTER_NAME = 3085;
     public static final int PROVIDER_STREAM_RECORD_READER_WRONG_CONFIGURATION = 3086;
     public static final int FEED_CONNECT_FEED_APPLIED_INVALID_FUNCTION = 3087;
+    public static final int ACTIVE_MANAGER_INVALID_RUNTIME = 3088;
+    public static final int CANNOT_SUBSCRIBE_TO_FAILED_ACTIVE_ENTITY = 3089;
 
     // Lifecycle management errors
     public static final int DUPLICATE_PARTITION_ID = 4000;

@@ -19,42 +19,40 @@
 package org.apache.asterix.external.feed.watch;
 
 import org.apache.asterix.active.ActiveEvent;
+import org.apache.asterix.active.ActivityState;
 import org.apache.asterix.active.IActiveEntityEventsListener;
-import org.apache.asterix.active.IActiveEventSubscriber;
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-/**
- * An event subscriber that does not listen to any events
- */
-public class NoOpSubscriber implements IActiveEventSubscriber {
+public class WaitForStateSubscriber extends AbstractSubscriber {
 
-    public static final NoOpSubscriber INSTANCE = new NoOpSubscriber();
+    private final ActivityState targetState;
 
-    private NoOpSubscriber() {
+    public WaitForStateSubscriber(IActiveEntityEventsListener listener, ActivityState targetState)
+            throws HyracksDataException {
+        super(listener);
+        this.targetState = targetState;
+        if (targetState != ActivityState.STARTED && targetState != ActivityState.STOPPED) {
+            throw new RuntimeDataException(ErrorCode.CANNOT_WAIT_FOR_STATE, targetState);
+        }
+        listener.subscribe(this);
     }
 
     @Override
-    public void notify(ActiveEvent event) {
-        // no op
-    }
-
-    @Override
-    public boolean isDone() {
-        return true;
-    }
-
-    @Override
-    public void sync() {
-        // no op
-    }
-
-    @Override
-    public void unsubscribe() {
-        // no op
+    public void notify(ActiveEvent event) throws HyracksDataException {
+        if (listener.getState() == targetState) {
+            complete();
+        }
     }
 
     @Override
     public void subscribed(IActiveEntityEventsListener eventsListener) throws HyracksDataException {
-        // no op
+        if (eventsListener.getState() == ActivityState.FAILED) {
+            throw new RuntimeDataException(ErrorCode.CANNOT_SUBSCRIBE_TO_FAILED_ACTIVE_ENTITY);
+        }
+        if (listener.getState() == targetState) {
+            complete();
+        }
     }
 }

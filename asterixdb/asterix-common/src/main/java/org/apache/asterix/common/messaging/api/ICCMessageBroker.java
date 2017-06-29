@@ -56,4 +56,9 @@ public interface ICCMessageBroker extends IMessageBroker {
      * @param response
      */
     void respond(Long reqId, INcResponse response);
+
+    /**
+     * @return a new request id
+     */
+    long newRequestId();
 }

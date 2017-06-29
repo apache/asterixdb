@@ -18,35 +18,27 @@
  */
 package org.apache.asterix.external.feed.watch;
 
-import org.apache.asterix.active.ActiveEvent;
-import org.apache.asterix.active.ActivityState;
+import org.apache.asterix.active.IActiveEntityEventsListener;
 import org.apache.asterix.active.IActiveEventSubscriber;
-import org.apache.asterix.external.feed.management.FeedEventsListener;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-public class FeedEventSubscriber implements IActiveEventSubscriber {
+public abstract class AbstractSubscriber implements IActiveEventSubscriber {
 
-    private final FeedEventsListener listener;
-    private final ActivityState state;
+    protected final IActiveEntityEventsListener listener;
     private boolean done = false;
 
-    public FeedEventSubscriber(FeedEventsListener listener, ActivityState state) {
+    public AbstractSubscriber(IActiveEntityEventsListener listener) {
         this.listener = listener;
-        this.state = state;
-
     }
 
     @Override
-    public synchronized void notify(ActiveEvent event) {
-        if (listener.getState() == state || listener.getState() == ActivityState.FAILED
-                || listener.getState() == ActivityState.STOPPED) {
-            done = true;
-            notifyAll();
-        }
-    }
-
-    @Override
-    public synchronized boolean done() {
+    public synchronized boolean isDone() {
         return done;
+    }
+
+    public synchronized void complete() throws HyracksDataException {
+        done = true;
+        notifyAll();
     }
 
     @Override

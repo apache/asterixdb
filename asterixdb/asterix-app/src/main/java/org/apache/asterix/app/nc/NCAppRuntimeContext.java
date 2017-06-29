@@ -200,7 +200,8 @@ public class NCAppRuntimeContext implements INcApplicationContext {
         isShuttingdown = false;
 
         activeManager = new ActiveManager(threadExecutor, getServiceContext().getNodeId(),
-                activeProperties.getMemoryComponentGlobalBudget(), compilerProperties.getFrameSize());
+                activeProperties.getMemoryComponentGlobalBudget(), compilerProperties.getFrameSize(),
+                this.ncServiceContext);
 
         if (replicationProperties.isParticipant(getServiceContext().getNodeId())) {
             String nodeId = getServiceContext().getNodeId();

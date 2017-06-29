@@ -16,31 +16,20 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.active;
+package org.apache.asterix.active.message;
 
-public enum ActivityState {
-    /**
-     * The initial state of an activity.
-     */
-    CREATED,
-    /**
-     * The starting state and a possible terminal state. Next state can only be {@code ActivityState.STARTING}
-     */
-    STOPPED,
-    /**
-     * A terminal state
-     */
-    FAILED,
-    /**
-     * An intermediate state. Next state can only be {@code ActivityState.STARTED} or {@code ActivityState.FAILED}
-     */
-    STARTING,
-    /**
-     * An intermediate state. Next state can only be {@code ActivityState.STOPPING} or {@code ActivityState.FAILED}
-     */
-    STARTED,
-    /**
-     * An intermediate state. Next state can only be {@code ActivityState.STOPPED} or {@code ActivityState.FAILED}
-     */
-    STOPPING
+import java.io.Serializable;
+
+public class StatsRequestMessage extends ActiveManagerMessage {
+    private static final long serialVersionUID = 1L;
+    private final long reqId;
+
+    public StatsRequestMessage(byte kind, Serializable payload, long reqId) {
+        super(kind, payload);
+        this.reqId = reqId;
+    }
+
+    public long getReqId() {
+        return reqId;
+    }
 }

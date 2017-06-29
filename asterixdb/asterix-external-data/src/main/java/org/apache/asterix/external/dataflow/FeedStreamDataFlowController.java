@@ -29,6 +29,7 @@ public class FeedStreamDataFlowController extends AbstractFeedDataFlowController
 
     private final IStreamDataParser dataParser;
     private final AsterixInputStream stream;
+    protected long incomingRecordsCount = 0;
 
     public FeedStreamDataFlowController(IHyracksTaskContext ctx, FeedTupleForwarder tupleForwarder,
             FeedLogManager feedLogManager, IStreamDataParser streamParser, AsterixInputStream inputStream) {
@@ -48,6 +49,7 @@ public class FeedStreamDataFlowController extends AbstractFeedDataFlowController
                 }
                 tb.addFieldEndOffset();
                 tupleForwarder.addTuple(tb);
+                incomingRecordsCount++;
             }
         } catch (Exception e) {
             throw new HyracksDataException(e);
@@ -82,5 +84,9 @@ public class FeedStreamDataFlowController extends AbstractFeedDataFlowController
             return false;
         }
         return handled;
+    }
+
+    public String getStats() {
+        return "{\"incoming-records-number\": " + incomingRecordsCount + "}";
     }
 }

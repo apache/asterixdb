@@ -51,4 +51,8 @@ public class FeedAdapter implements IDataSourceAdapter {
     public boolean resume() throws HyracksDataException {
         return controller.resume();
     }
+
+    public String getStats() {
+        return controller.getStats();
+    }
 }

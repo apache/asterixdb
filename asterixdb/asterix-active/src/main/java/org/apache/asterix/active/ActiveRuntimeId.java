@@ -19,6 +19,7 @@
 package org.apache.asterix.active;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 public class ActiveRuntimeId implements Serializable {
 
@@ -27,13 +28,11 @@ public class ActiveRuntimeId implements Serializable {
     private final EntityId entityId;
     private final String runtimeName;
     private final int partition;
-    private final int hashCode;
 
     public ActiveRuntimeId(EntityId entityId, String runtimeName, int partition) {
         this.entityId = entityId;
         this.runtimeName = runtimeName;
         this.partition = partition;
-        this.hashCode = toString().hashCode();
     }
 
     @Override
@@ -56,7 +55,7 @@ public class ActiveRuntimeId implements Serializable {
 
     @Override
     public int hashCode() {
-        return hashCode;
+        return Objects.hash(entityId, runtimeName, partition);
     }
 
     public String getRuntimeName() {
