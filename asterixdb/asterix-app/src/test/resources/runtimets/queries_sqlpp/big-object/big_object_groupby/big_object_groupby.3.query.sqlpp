@@ -26,8 +26,9 @@
 use test;
 
 
-select element {'partkey':partkey,'lines':i}
+select element {'partkey':partkey,'lines': (from g select value i) }
 from  Line as i
 group by i.l_partkey as partkey
+group as g
 order by partkey
 ;

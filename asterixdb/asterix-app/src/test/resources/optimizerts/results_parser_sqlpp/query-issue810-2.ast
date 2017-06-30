@@ -104,7 +104,9 @@ Let Variable [ Name=$expensives ]
       Field=l_discount
     ]
     ]
-    FROM [      Variable [ Name=$l ]
+    FROM [      FunctionCall Metadata.dataset@1[
+        LiteralExpr [STRING] [l]
+      ]
       AS Variable [ Name=$i ]
     ]
     Where
@@ -123,7 +125,9 @@ Let Variable [ Name=$cheaps ]
     SELECT ELEMENT [
     Variable [ Name=$i ]
     ]
-    FROM [      Variable [ Name=$l ]
+    FROM [      FunctionCall Metadata.dataset@1[
+        LiteralExpr [STRING] [l]
+      ]
       AS Variable [ Name=$i ]
     ]
     Where
@@ -165,7 +169,9 @@ Let Variable [ Name=$charges ]
       ]
     ]
     ]
-    FROM [      Variable [ Name=$l ]
+    FROM [      FunctionCall Metadata.dataset@1[
+        LiteralExpr [STRING] [l]
+      ]
       AS Variable [ Name=$i ]
     ]
   )
@@ -189,7 +195,9 @@ Let Variable [ Name=$disc_prices ]
       ]
     ]
     ]
-    FROM [      Variable [ Name=$l ]
+    FROM [      FunctionCall Metadata.dataset@1[
+        LiteralExpr [STRING] [l]
+      ]
       AS Variable [ Name=$i ]
     ]
   )

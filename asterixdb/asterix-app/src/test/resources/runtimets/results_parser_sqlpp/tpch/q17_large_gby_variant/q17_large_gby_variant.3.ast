@@ -11,7 +11,18 @@ RecordConstructor [
     LiteralExpr [STRING] [t_count]
     :
     FunctionCall tpch.count@1[
-      Variable [ Name=$l ]
+      (
+        SELECT ELEMENT [
+        FunctionCall Metadata.resolve@-1[
+          LiteralExpr [STRING] [l]
+          Variable [ Name=$g ]
+          Variable [ Name=$l_partkey ]
+        ]
+        ]
+        FROM [          Variable [ Name=$g ]
+          AS Variable [ Name=$g ]
+        ]
+      )
     ]
   )
   (
@@ -28,7 +39,18 @@ RecordConstructor [
             Field=l_quantity
           ]
           ]
-          FROM [            Variable [ Name=$l ]
+          FROM [            (
+              SELECT ELEMENT [
+              FunctionCall Metadata.resolve@-1[
+                LiteralExpr [STRING] [l]
+                Variable [ Name=$g ]
+                Variable [ Name=$l_partkey ]
+              ]
+              ]
+              FROM [                Variable [ Name=$g ]
+                AS Variable [ Name=$g ]
+              ]
+            )
             AS Variable [ Name=$i ]
           ]
         )
@@ -46,7 +68,18 @@ RecordConstructor [
           Field=l_suppkey
         ]
         ]
-        FROM [          Variable [ Name=$l ]
+        FROM [          (
+            SELECT ELEMENT [
+            FunctionCall Metadata.resolve@-1[
+              LiteralExpr [STRING] [l]
+              Variable [ Name=$g ]
+              Variable [ Name=$l_partkey ]
+            ]
+            ]
+            FROM [              Variable [ Name=$g ]
+              AS Variable [ Name=$g ]
+            ]
+          )
           AS Variable [ Name=$i ]
         ]
       )
@@ -63,7 +96,18 @@ RecordConstructor [
           Field=l_linenumber
         ]
         ]
-        FROM [          Variable [ Name=$l ]
+        FROM [          (
+            SELECT ELEMENT [
+            FunctionCall Metadata.resolve@-1[
+              LiteralExpr [STRING] [l]
+              Variable [ Name=$g ]
+              Variable [ Name=$l_partkey ]
+            ]
+            ]
+            FROM [              Variable [ Name=$g ]
+              AS Variable [ Name=$g ]
+            ]
+          )
           AS Variable [ Name=$i ]
         ]
       )
@@ -80,7 +124,18 @@ RecordConstructor [
           Field=l_extendedprice
         ]
         ]
-        FROM [          Variable [ Name=$l ]
+        FROM [          (
+            SELECT ELEMENT [
+            FunctionCall Metadata.resolve@-1[
+              LiteralExpr [STRING] [l]
+              Variable [ Name=$g ]
+              Variable [ Name=$l_partkey ]
+            ]
+            ]
+            FROM [              Variable [ Name=$g ]
+              AS Variable [ Name=$g ]
+            ]
+          )
           AS Variable [ Name=$i ]
         ]
       )
@@ -97,7 +152,18 @@ RecordConstructor [
           Field=l_discount
         ]
         ]
-        FROM [          Variable [ Name=$l ]
+        FROM [          (
+            SELECT ELEMENT [
+            FunctionCall Metadata.resolve@-1[
+              LiteralExpr [STRING] [l]
+              Variable [ Name=$g ]
+              Variable [ Name=$l_partkey ]
+            ]
+            ]
+            FROM [              Variable [ Name=$g ]
+              AS Variable [ Name=$g ]
+            ]
+          )
           AS Variable [ Name=$i ]
         ]
       )
@@ -114,7 +180,18 @@ RecordConstructor [
           Field=l_tax
         ]
         ]
-        FROM [          Variable [ Name=$l ]
+        FROM [          (
+            SELECT ELEMENT [
+            FunctionCall Metadata.resolve@-1[
+              LiteralExpr [STRING] [l]
+              Variable [ Name=$g ]
+              Variable [ Name=$l_partkey ]
+            ]
+            ]
+            FROM [              Variable [ Name=$g ]
+              AS Variable [ Name=$g ]
+            ]
+          )
           AS Variable [ Name=$i ]
         ]
       )
@@ -131,7 +208,18 @@ RecordConstructor [
           Field=l_shipdate
         ]
         ]
-        FROM [          Variable [ Name=$l ]
+        FROM [          (
+            SELECT ELEMENT [
+            FunctionCall Metadata.resolve@-1[
+              LiteralExpr [STRING] [l]
+              Variable [ Name=$g ]
+              Variable [ Name=$l_partkey ]
+            ]
+            ]
+            FROM [              Variable [ Name=$g ]
+              AS Variable [ Name=$g ]
+            ]
+          )
           AS Variable [ Name=$i ]
         ]
       )
@@ -148,7 +236,18 @@ RecordConstructor [
           Field=l_commitdate
         ]
         ]
-        FROM [          Variable [ Name=$l ]
+        FROM [          (
+            SELECT ELEMENT [
+            FunctionCall Metadata.resolve@-1[
+              LiteralExpr [STRING] [l]
+              Variable [ Name=$g ]
+              Variable [ Name=$l_partkey ]
+            ]
+            ]
+            FROM [              Variable [ Name=$g ]
+              AS Variable [ Name=$g ]
+            ]
+          )
           AS Variable [ Name=$i ]
         ]
       )
@@ -165,7 +264,18 @@ RecordConstructor [
           Field=l_receiptdate
         ]
         ]
-        FROM [          Variable [ Name=$l ]
+        FROM [          (
+            SELECT ELEMENT [
+            FunctionCall Metadata.resolve@-1[
+              LiteralExpr [STRING] [l]
+              Variable [ Name=$g ]
+              Variable [ Name=$l_partkey ]
+            ]
+            ]
+            FROM [              Variable [ Name=$g ]
+              AS Variable [ Name=$g ]
+            ]
+          )
           AS Variable [ Name=$i ]
         ]
       )
@@ -182,7 +292,18 @@ RecordConstructor [
           Field=l_comment
         ]
         ]
-        FROM [          Variable [ Name=$l ]
+        FROM [          (
+            SELECT ELEMENT [
+            FunctionCall Metadata.resolve@-1[
+              LiteralExpr [STRING] [l]
+              Variable [ Name=$g ]
+              Variable [ Name=$l_partkey ]
+            ]
+            ]
+            FROM [              Variable [ Name=$g ]
+              AS Variable [ Name=$g ]
+            ]
+          )
           AS Variable [ Name=$i ]
         ]
       )
@@ -202,7 +323,7 @@ Groupby
     Variable [ Name=$l ]
     Field=l_partkey
   ]
-  GROUP AS Variable [ Name=#1 ]
+  GROUP AS Variable [ Name=$g ]
   (
     l:=Variable [ Name=$l ]
   )

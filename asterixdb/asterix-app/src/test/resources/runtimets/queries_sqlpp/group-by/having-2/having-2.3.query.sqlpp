@@ -23,6 +23,6 @@ FROM Employee e
     JOIN Incentive i ON e.job_category = i.job_category
     JOIN SuperStars s ON e.id = s.id
 GROUP BY e.department_id GROUP AS g
-HAVING coll_count( ( SELECT VALUE e FROM g) )>0
+HAVING coll_count( ( SELECT VALUE g.e FROM g) )>0
 SELECT e.department_id as deptId, SUM(e.salary + i.bonus) AS star_cost;
 

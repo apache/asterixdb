@@ -29,7 +29,7 @@ USE tpch;
 SELECT  nation_key,
         (
             SELECT od AS orderdate,  sum_price
-            FROM x
+            FROM (FROM g SELECT VALUE g.x) x
             GROUP BY order_date AS od
             LET sum_price = sum(sum_price)
             ORDER BY sum_price desc
@@ -44,5 +44,6 @@ FROM  (
         GROUP BY o_orderdate as orderdate, n_nationkey as nation_key
 ) AS x
 GROUP BY nation_key
+GROUP AS g
 ORDER BY nation_key
 ;

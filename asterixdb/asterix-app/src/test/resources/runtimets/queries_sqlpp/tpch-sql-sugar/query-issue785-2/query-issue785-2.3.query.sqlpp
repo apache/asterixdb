@@ -43,12 +43,13 @@ X as (
 
 SELECT nation_key,
        (
-            SELECT order_date AS orderdate, sum_price
-            FROM  X // the X here refers to implicit variable X defined in the outer FROM.
+            SELECT g.X.order_date AS orderdate, g.X.sum_price
+            FROM  g // the X here refers to implicit variable X defined in the outer FROM.
             ORDER BY sum_price desc
             LIMIT 3
         ) AS sum_price
 FROM  X
 GROUP BY nation_key
+GROUP AS g
 ORDER BY nation_key
 ;

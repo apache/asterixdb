@@ -26,10 +26,11 @@ from  (
     from  (
         select element {'l_partkey':l_partkey,'l_suppkey':l_suppkey,'sum_quantity':(0.5 * COLL_SUM((
                   select element i.l_quantity
-                  from  l as i
+                  from  (from g select value l) as i
               )))}
         from  LineItem as l
         group by l.l_partkey as l_partkey,l.l_suppkey as l_suppkey
+        group as g
     ) as t2,
           (
         select element {'ps_suppkey':ps.ps_suppkey,'ps_partkey':ps.ps_partkey,'ps_availqty':ps.ps_availqty}

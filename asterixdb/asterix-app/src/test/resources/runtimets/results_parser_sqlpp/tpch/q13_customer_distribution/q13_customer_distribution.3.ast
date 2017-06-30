@@ -34,7 +34,18 @@ FROM [  (
               Field=o_orderkey_count
             ]
             ]
-            FROM [              Variable [ Name=$co ]
+            FROM [              (
+                SELECT ELEMENT [
+                FunctionCall Metadata.resolve@-1[
+                  LiteralExpr [STRING] [co]
+                  Variable [ Name=$g2 ]
+                  Variable [ Name=$c_custkey ]
+                ]
+                ]
+                FROM [                  Variable [ Name=$g2 ]
+                  AS Variable [ Name=$g2 ]
+                ]
+              )
               AS Variable [ Name=$i ]
             ]
           )
@@ -112,7 +123,7 @@ FROM [  (
         Variable [ Name=$co ]
         Field=c_custkey
       ]
-      GROUP AS Variable [ Name=#1 ]
+      GROUP AS Variable [ Name=$g2 ]
       (
         co:=Variable [ Name=$co ]
       )
@@ -127,7 +138,7 @@ Groupby
     Variable [ Name=$gco ]
     Field=c_count
   ]
-  GROUP AS Variable [ Name=#2 ]
+  GROUP AS Variable [ Name=$g ]
   (
     gco:=Variable [ Name=$gco ]
   )
@@ -137,13 +148,20 @@ Let Variable [ Name=$custdist ]
   FunctionCall tpch.sql-count@1[
     (
       SELECT ELEMENT [
-      FieldAccessor [
-        Variable [ Name=#3 ]
-        Field=gco
+      (
+        SELECT ELEMENT [
+        FieldAccessor [
+          Variable [ Name=#1 ]
+          Field=gco
+        ]
+        ]
+        FROM [          Variable [ Name=$g ]
+          AS Variable [ Name=$g ]
+        ]
+      )
       ]
-      ]
-      FROM [        Variable [ Name=#2 ]
-        AS Variable [ Name=#3 ]
+      FROM [        Variable [ Name=$g ]
+        AS Variable [ Name=#1 ]
       ]
     )
   ]

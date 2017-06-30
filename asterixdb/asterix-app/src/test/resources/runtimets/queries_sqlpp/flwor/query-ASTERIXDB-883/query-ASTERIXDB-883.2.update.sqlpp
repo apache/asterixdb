@@ -25,7 +25,8 @@ load dataset page_views using localfs
 insert into tmp(
   from page_views as t
   group by t.user
+  group as g
   select value {
-     "groups": t
+     "groups": (select value g.t from g)
   }
 );

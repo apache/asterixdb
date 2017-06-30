@@ -2,7 +2,11 @@ DataverseUse TinySocial
 Query:
 SELECT [
 FieldAccessor [
-  Variable [ Name=$employment ]
+  FunctionCall Metadata.resolve@-1[
+    LiteralExpr [STRING] [employment]
+    Variable [ Name=#1 ]
+    Variable [ Name=$organization-name ]
+  ]
   Field=organization-name
 ]
 organization
@@ -122,7 +126,11 @@ Groupby
 
 Orderby
   FieldAccessor [
-    Variable [ Name=$employment ]
+    FunctionCall Metadata.resolve@-1[
+      LiteralExpr [STRING] [employment]
+      Variable [ Name=#1 ]
+      Variable [ Name=$organization-name ]
+    ]
     Field=organization-name
   ]
   ASC

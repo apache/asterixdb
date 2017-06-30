@@ -39,10 +39,7 @@ Let Variable [ Name=$c ]
   FunctionCall TinySocial.sql-count@1[
     (
       SELECT ELEMENT [
-      FieldAccessor [
-        Variable [ Name=#2 ]
-        Field=t
-      ]
+      LiteralExpr [LONG] [1]
       ]
       FROM [        Variable [ Name=#1 ]
         AS Variable [ Name=#2 ]

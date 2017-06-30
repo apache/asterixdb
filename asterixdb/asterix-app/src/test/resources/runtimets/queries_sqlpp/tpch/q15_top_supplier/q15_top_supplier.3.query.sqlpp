@@ -23,20 +23,21 @@ use tpch;
 declare function revenue() {
 (
     select element {'supplier_no':l_suppkey,'total_revenue':COLL_SUM((
-            select element (i.l_extendedprice * (1 - i.l_discount))
-            from  l as i
+            select element (i.l.l_extendedprice * (1 - i.l.l_discount))
+            from g as i
         ))}
     from  LineItem as l
-    where ((l.l_shipdate >= '1996-01-01') and (l.l_shipdate < '1996-04-01'))
+    where l.l_shipdate >= '1996-01-01' and l.l_shipdate < '1996-04-01'
     group by l.l_suppkey as l_suppkey
+    group as g
 )
 };
 with  m as COLL_MAX((
       select element r2.total_revenue
-      from  tpch.revenue() as r2
+      from  revenue() as r2
   ))
 select element {'s_suppkey':s.s_suppkey,'s_name':s.s_name,'s_address':s.s_address,'s_phone':s.s_phone,'total_revenue':r.total_revenue}
 from  Supplier as s,
       tpch.revenue() as r
-where ((s.s_suppkey = r.supplier_no) and (r.total_revenue < (m + 0.000000001)) and (r.total_revenue > (m - 0.000000001)))
+where s.s_suppkey = r.supplier_no and r.total_revenue < (m + 0.000000001) and r.total_revenue > (m - 0.000000001)
 ;

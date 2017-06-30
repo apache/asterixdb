@@ -21,16 +21,19 @@ use tpch;
 
 
 select element {'l_shipmode':l_shipmode,'high_line_count':COLL_SUM((
-        select element 
+        select element
             CASE i.o_orderpriority = '1-URGENT' OR i.o_orderpriority = '2-HIGH' WHEN true THEN 1 WHEN false THEN 0 END
-        from  o as i
+        from  (select value o from g) as i
     )),'low_line_count':COLL_SUM((
         select element case when i.o_orderpriority = '1-URGENT' OR i.o_orderpriority = '2-HIGH' then 0 else 1 end
-        from  o as i
+        from (select value o from g) as i
     ))}
 from  LineItem as l,
       Orders as o
-where ((o.o_orderkey = l.l_orderkey) and (l.l_commitdate < l.l_receiptdate) and (l.l_shipdate < l.l_commitdate) and (l.l_receiptdate >= '1994-01-01') and (l.l_receiptdate < '1995-01-01') and ((l.l_shipmode = 'MAIL') or (l.l_shipmode = 'SHIP')))
+where o.o_orderkey = l.l_orderkey and l.l_commitdate < l.l_receiptdate and l.l_shipdate < l.l_commitdate
+      and l.l_receiptdate >= '1994-01-01' and l.l_receiptdate < '1995-01-01'
+      and (l.l_shipmode = 'MAIL' or l.l_shipmode = 'SHIP')
 group by l.l_shipmode as l_shipmode
+group as g
 order by l_shipmode
 ;

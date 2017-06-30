@@ -26,7 +26,7 @@ use TinySocial;
 select element {'user':uid,'count':c}
 from  TweetMessages as t
 group by t.user.`screen-name` as uid
-with  c as TinySocial.count(t)
+let  c = TinySocial.count(*)
 order by c,uid desc
 limit 3
 ;

@@ -65,6 +65,6 @@ WHERE i_color = 'orchid'
 GROUP BY c_last_name
         ,c_first_name
         ,s_store_name
-HAVING paid > (SELECT value (0.05*avg(netpaid))
-                                 FROM ssales)[0]
+GROUP AS g
+HAVING paid > (SELECT value 0.05*avg(g.ssales.netpaid) FROM g)[0]
 ;

@@ -17,7 +17,7 @@
  * under the License.
  */
 /*
- * Description  : This test case is to verify the fix from issue601
+ * Description  : This test case is to verify the fix for issue601
  * https://code.google.com/p/asterixdb/issues/detail?id=601
  * Expected Res : SUCCESS
  * Date         : 10th Oct 2014
@@ -26,8 +26,9 @@
 use tpch;
 
 
-select element {'l_linenumber':l_linenumber,'count_order':COLL_COUNT(l)}
+select element {'l_linenumber':l.l_linenumber,'count_order': count((from g select value g))}
 from  LineItem as l
-group by l.l_linenumber as l_linenumber
-order by l_linenumber
+group by l.l_linenumber
+group as g
+order by l.l_linenumber
 ;

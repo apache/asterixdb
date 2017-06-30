@@ -34,11 +34,12 @@ FROM  LineItem as l
 WHERE l.l_shipdate <= '1998-09-02'
 /* +hash */
 GROUP BY l.l_returnflag AS l_returnflag,l.l_linestatus AS l_linestatus
-WITH  cheaps AS (
-      SELECT ELEMENT m
-      FROM  l AS m
-      WHERE m.l_discount > 0.05
+GROUP AS g
+LET  cheaps = (
+      SELECT ELEMENT m.l
+      FROM  g AS m
+      WHERE m.l.l_discount > 0.05
   ),
-total_charges AS sum(l.l_extendedprice * (1 - l.l_discount) * (1 + l.l_tax))
+total_charges = sum(l.l_extendedprice * (1 - l.l_discount) * (1 + l.l_tax))
 ORDER BY l_returnflag,l_linestatus
 ;

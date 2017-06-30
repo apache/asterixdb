@@ -22,7 +22,7 @@ use tpch;
 
 select element {'nation':nation,'o_year':o_year,'sum_profit':tpch.coll_sum((
         select element pr.amount
-        from  profit as pr
+        from (from g select value profit) as pr
     ))}
 from  (
     select element {'nation':l3.n_name,'o_year':o_year,'amount':amount}
@@ -53,5 +53,6 @@ from  (
     where (o.o_orderkey = l3.l_orderkey)
 ) as profit
 group by profit.nation as nation,profit.o_year as o_year
+group as g
 order by nation,o_year desc
 ;

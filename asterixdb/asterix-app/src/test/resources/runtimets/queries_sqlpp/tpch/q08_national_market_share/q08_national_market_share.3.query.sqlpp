@@ -22,10 +22,10 @@ use tpch;
 
 select element {'year':year,'mkt_share':(COLL_SUM((
           select element case i.s_name = 'BRAZIL' when true then i.revenue when false then 0.0 end
-          from  t as i
+          from  (from g select value t) as i
       )) / COLL_SUM((
           select element i.revenue
-          from  t as i
+          from  (from g select value t) as i
       )))}
 from  (
     select element {'year':o_year,'revenue':(slnrcop.l_extendedprice * (1 - slnrcop.l_discount)),'s_name':n2.n_name}
@@ -65,5 +65,6 @@ from  (
     where (slnrcop.s_nationkey = n2.n_nationkey)
 ) as t
 group by t.year as year
+group as g
 order by year
 ;

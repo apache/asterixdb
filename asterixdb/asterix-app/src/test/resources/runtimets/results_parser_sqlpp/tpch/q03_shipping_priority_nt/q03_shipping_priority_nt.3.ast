@@ -115,7 +115,7 @@ Groupby
     Variable [ Name=$o ]
     Field=o_shippriority
   ]
-  GROUP AS Variable [ Name=#1 ]
+  GROUP AS Variable [ Name=$g ]
   (
     c:=Variable [ Name=$c ]
     o:=Variable [ Name=$o ]
@@ -143,7 +143,20 @@ Let Variable [ Name=$revenue ]
         ]
       ]
       ]
-      FROM [        Variable [ Name=$l ]
+      FROM [        (
+          SELECT ELEMENT [
+          FunctionCall Metadata.resolve@-1[
+            LiteralExpr [STRING] [l]
+            Variable [ Name=$o_shippriority ]
+            Variable [ Name=$g ]
+            Variable [ Name=$o_orderdate ]
+            Variable [ Name=$l_orderkey ]
+          ]
+          ]
+          FROM [            Variable [ Name=$g ]
+            AS Variable [ Name=$g ]
+          ]
+        )
         AS Variable [ Name=$i ]
       ]
     )

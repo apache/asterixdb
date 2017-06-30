@@ -42,8 +42,15 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [count]
     :
-    FunctionCall tpch.count@1[
-      Variable [ Name=$o ]
+    FunctionCall tpch.sql-count@1[
+      (
+        SELECT ELEMENT [
+        LiteralExpr [LONG] [1]
+        ]
+        FROM [          Variable [ Name=#1 ]
+          AS Variable [ Name=#2 ]
+        ]
+      )
     ]
   )
 ]

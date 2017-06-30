@@ -1,40 +1,40 @@
-distribute result [$$18]
+distribute result [$$16]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
   exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    project ([$$18])
+    project ([$$16])
     -- STREAM_PROJECT  |PARTITIONED|
-      assign [$$18] <- [{"deptId": $#1, "star_cost": $$21}]
+      assign [$$16] <- [{"deptId": $#1, "star_cost": $$19}]
       -- ASSIGN  |PARTITIONED|
         exchange
         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-          group by ([$#1 := $$25]) decor ([]) {
-                    aggregate [$$21] <- [agg-sql-sum($$24)]
+          group by ([$#1 := $$23]) decor ([]) {
+                    aggregate [$$19] <- [agg-sql-sum($$22)]
                     -- AGGREGATE  |LOCAL|
                       nested tuple source
                       -- NESTED_TUPLE_SOURCE  |LOCAL|
                  }
-          -- SORT_GROUP_BY[$$25]  |PARTITIONED|
+          -- SORT_GROUP_BY[$$23]  |PARTITIONED|
             exchange
-            -- HASH_PARTITION_EXCHANGE [$$25]  |PARTITIONED|
-              group by ([$$25 := $$19]) decor ([]) {
-                        aggregate [$$24] <- [agg-local-sql-sum($$16)]
+            -- HASH_PARTITION_EXCHANGE [$$23]  |PARTITIONED|
+              group by ([$$23 := $$17]) decor ([]) {
+                        aggregate [$$22] <- [agg-local-sql-sum($$14)]
                         -- AGGREGATE  |LOCAL|
                           nested tuple source
                           -- NESTED_TUPLE_SOURCE  |LOCAL|
                      }
-              -- SORT_GROUP_BY[$$19]  |PARTITIONED|
+              -- SORT_GROUP_BY[$$17]  |PARTITIONED|
                 exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  project ([$$16, $$19])
+                  project ([$$17, $$14])
                   -- STREAM_PROJECT  |PARTITIONED|
-                    assign [$$19, $$16] <- [substring($$e.getField(1), 1), $$e.getField(2)]
+                    assign [$$17, $$14] <- [substring($$e.getField(1), 1), $$e.getField(2)]
                     -- ASSIGN  |PARTITIONED|
                       project ([$$e])
                       -- STREAM_PROJECT  |PARTITIONED|
                         exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                          data-scan []<-[$$20, $$e] <- gby.Employee
+                          data-scan []<-[$$18, $$e] <- gby.Employee
                           -- DATASOURCE_SCAN  |PARTITIONED|
                             exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

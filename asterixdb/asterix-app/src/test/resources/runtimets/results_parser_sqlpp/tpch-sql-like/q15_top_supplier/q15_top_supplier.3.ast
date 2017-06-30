@@ -16,7 +16,10 @@ FunctionDecl revenue([]) {
             SELECT ELEMENT [
             OperatorExpr [
               FieldAccessor [
-                Variable [ Name=$i ]
+                FieldAccessor [
+                  Variable [ Name=$i ]
+                  Field=l
+                ]
                 Field=l_extendedprice
               ]
               *
@@ -24,13 +27,16 @@ FunctionDecl revenue([]) {
                 LiteralExpr [LONG] [1]
                 -
                 FieldAccessor [
-                  Variable [ Name=$i ]
+                  FieldAccessor [
+                    Variable [ Name=$i ]
+                    Field=l
+                  ]
                   Field=l_discount
                 ]
               ]
             ]
             ]
-            FROM [              Variable [ Name=$l ]
+            FROM [              Variable [ Name=$g ]
               AS Variable [ Name=$i ]
             ]
           )
@@ -68,6 +74,7 @@ FunctionDecl revenue([]) {
         Variable [ Name=$l ]
         Field=l_suppkey
       ]
+      GROUP AS Variable [ Name=$g ]
 
   )
 }

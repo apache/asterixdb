@@ -46,8 +46,8 @@ declare function tmp1() {
 declare function tmp2() {
 (
     select element {'p_partkey':p_partkey,'ps_min_supplycost':COLL_MIN((
-            select element i.ps_supplycost
-            from  pssrn as i
+            select element i.pssrn.ps_supplycost
+            from  g as i
         ))}
     from  Part as p,
           (
@@ -69,6 +69,7 @@ declare function tmp2() {
     where p.p_partkey = pssrn.p_partkey and p.p_type like '%BRASS'
     /* +hash */
     group by pssrn.p_partkey as p_partkey
+    group as g
 )
 };
 select element {'s_acctbal':t1.s_acctbal,'s_name':t1.s_name,'n_name':t1.n_name,'p_partkey':t1.p_partkey,'p_mfgr':t1.p_mfgr,'s_address':t1.s_address,'s_phone':t1.s_phone,'s_comment':t1.s_comment}

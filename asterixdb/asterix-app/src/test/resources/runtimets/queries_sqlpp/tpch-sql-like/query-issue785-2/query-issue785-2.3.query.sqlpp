@@ -17,7 +17,7 @@
  * under the License.
  */
 /*
- * Description  : This test case is to verify the fix from issue785
+ * Description  : This test case is to verify the fix for issue785
  * https://code.google.com/p/asterixdb/issues/detail?id=785
  * Expected Res : SUCCESS
  * Date         : 2nd Oct. 2014
@@ -27,30 +27,32 @@ use tpch;
 
 
 with  t as (
-      select element {'n_nationkey':nation.n_nationkey,'n_name':nation.n_name}
-      from  Nation as nation,
+       select element {'n_nationkey':nation.n_nationkey,'n_name':nation.n_name}
+       from  Nation as nation,
             SelectedNation as sn
-      where (nation.n_nationkey = sn.n_nationkey)
-  ),
+       where nation.n_nationkey = sn.n_nationkey
+      ),
       X as (
       select element {'nation_key':nation_key,'order_date':orderdate,'sum_price':sum}
       from  t as n,
             Customer as customer,
             Orders as orders
-      where ((orders.o_custkey = customer.c_custkey) and (customer.c_nationkey = n.n_nationkey))
+      where orders.o_custkey = customer.c_custkey and customer.c_nationkey = n.n_nationkey
       group by orders.o_orderdate as orderdate,n.n_nationkey as nation_key
-      with  sum as COLL_SUM((
-            select element o.o_totalprice
-            from  orders as o
-        ))
+      group as g2
+      let  sum = coll_sum((
+            select element g2.orders.o_totalprice
+            from g2
+      ))
   )
-select element {'nation_key':x.nation_key,'sum_price':(
-        select element {'orderdate':y.order_date,'sum_price':y.sum_price}
-        from  x as y
-        order by y.sum_price desc
+select element {'nation_key':nation_key,'sum_price':(
+        select element {'orderdate':g.x.order_date,'sum_price': g.x.sum_price}
+        from  g
+        order by g.x.sum_price desc
         limit 3
     )}
 from  X as x
-group by x.nation_key
-order by x.nation_key
+group by x.nation_key as nation_key
+group as g
+order by nation_key
 ;

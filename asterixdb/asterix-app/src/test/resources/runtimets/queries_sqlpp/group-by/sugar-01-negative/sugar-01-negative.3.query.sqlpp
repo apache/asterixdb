@@ -23,5 +23,5 @@ USE gby;
 // cannot be used like a SQL-92 sugar, e.g., AVG. Its input must be a collection.
 FROM Employee e
 GROUP BY e.deptno AS deptno GROUP AS g
-SELECT deptno AS deptno, COLL_AVG(e.salary) AS avgpay,
+SELECT deptno AS deptno, COLL_AVG(g.e.salary) AS avgpay,
        (SELECT i.e.name AS name, i.e.salary AS salary FROM g AS i) AS workers;

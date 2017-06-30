@@ -37,7 +37,7 @@ Let Variable [ Name=$grid ]
         LiteralExpr [DOUBLE] [5.0]
         LiteralExpr [DOUBLE] [5.0]
       ]
-      GROUP AS Variable [ Name=#1 ]
+      GROUP AS Variable [ Name=$g ]
       (
         o:=Variable [ Name=$o ]
       )
@@ -45,7 +45,18 @@ Let Variable [ Name=$grid ]
     Let Variable [ Name=$num ]
       :=
       FunctionCall test.count@1[
-        Variable [ Name=$o ]
+        (
+          SELECT ELEMENT [
+          FunctionCall Metadata.resolve@-1[
+            LiteralExpr [STRING] [o]
+            Variable [ Name=$g ]
+            Variable [ Name=$c ]
+          ]
+          ]
+          FROM [            Variable [ Name=$g ]
+            AS Variable [ Name=$g ]
+          ]
+        )
       ]
     Orderby
       Variable [ Name=$num ]

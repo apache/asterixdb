@@ -22,7 +22,14 @@ FunctionDecl tmp([]) {
                 Field=l_quantity
               ]
               ]
-              FROM [                Variable [ Name=$l ]
+              FROM [                (
+                  SELECT ELEMENT [
+                  Variable [ Name=$l ]
+                  ]
+                  FROM [                    Variable [ Name=$g ]
+                    AS Variable [ Name=$g ]
+                  ]
+                )
                 AS Variable [ Name=$i ]
               ]
             )
@@ -41,6 +48,7 @@ FunctionDecl tmp([]) {
         Variable [ Name=$l ]
         Field=l_partkey
       ]
+      GROUP AS Variable [ Name=$g ]
 
   )
 }
@@ -56,7 +64,11 @@ OperatorExpr [
         Field=l_extendedprice
       ]
       ]
-      FROM [        FunctionCall Metadata.dataset@1[
+      FROM [        FunctionCall tpch.tmp@0[
+        ]
+        AS Variable [ Name=$t ]
+,
+        FunctionCall Metadata.dataset@1[
           LiteralExpr [STRING] [LineItem]
         ]
         AS Variable [ Name=$l ]
@@ -65,59 +77,51 @@ OperatorExpr [
           LiteralExpr [STRING] [Part]
         ]
         AS Variable [ Name=$p ]
-,
-        FunctionCall tpch.tmp@0[
-        ]
-        AS Variable [ Name=$t ]
       ]
       Where
         OperatorExpr [
           OperatorExpr [
-            OperatorExpr [
-              FieldAccessor [
-                Variable [ Name=$p ]
-                Field=p_partkey
-              ]
-              =
-              FieldAccessor [
-                Variable [ Name=$l ]
-                Field=l_partkey
-              ]
+            FieldAccessor [
+              Variable [ Name=$p ]
+              Field=p_partkey
             ]
-            and
-            OperatorExpr [
-              FieldAccessor [
-                Variable [ Name=$p ]
-                Field=p_container
-              ]
-              =
-              LiteralExpr [STRING] [MED BOX]
+            =
+            FieldAccessor [
+              Variable [ Name=$l ]
+              Field=l_partkey
             ]
           ]
           and
           OperatorExpr [
-            OperatorExpr [
-              FieldAccessor [
-                Variable [ Name=$l ]
-                Field=l_partkey
-              ]
-              =
-              FieldAccessor [
-                Variable [ Name=$t ]
-                Field=t_partkey
-              ]
+            FieldAccessor [
+              Variable [ Name=$p ]
+              Field=p_container
             ]
-            and
-            OperatorExpr [
-              FieldAccessor [
-                Variable [ Name=$l ]
-                Field=l_quantity
-              ]
-              <
-              FieldAccessor [
-                Variable [ Name=$t ]
-                Field=t_avg_quantity
-              ]
+            =
+            LiteralExpr [STRING] [MED BOX]
+          ]
+          and
+          OperatorExpr [
+            FieldAccessor [
+              Variable [ Name=$l ]
+              Field=l_partkey
+            ]
+            =
+            FieldAccessor [
+              Variable [ Name=$t ]
+              Field=t_partkey
+            ]
+          ]
+          and
+          OperatorExpr [
+            FieldAccessor [
+              Variable [ Name=$l ]
+              Field=l_quantity
+            ]
+            <
+            FieldAccessor [
+              Variable [ Name=$t ]
+              Field=t_avg_quantity
             ]
           ]
         ]

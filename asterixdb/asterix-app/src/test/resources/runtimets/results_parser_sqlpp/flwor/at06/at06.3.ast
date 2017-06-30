@@ -55,7 +55,11 @@ FROM [  (
         LiteralExpr [STRING] [partkey]
         :
         FieldAccessor [
-          Variable [ Name=$i ]
+          FunctionCall Metadata.resolve@-1[
+            LiteralExpr [STRING] [i]
+            Variable [ Name=$g ]
+            Variable [ Name=$l_partkey ]
+          ]
           Field=l_partkey
         ]
       )

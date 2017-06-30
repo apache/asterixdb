@@ -39,7 +39,18 @@ FROM [  (
       (
         LiteralExpr [STRING] [i]
         :
-        Variable [ Name=$i ]
+        (
+          SELECT ELEMENT [
+          FunctionCall Metadata.resolve@-1[
+            LiteralExpr [STRING] [i]
+            Variable [ Name=$g ]
+            Variable [ Name=$bin ]
+          ]
+          ]
+          FROM [            Variable [ Name=$g ]
+            AS Variable [ Name=$g ]
+          ]
+        )
       )
     ]
     ]
@@ -86,7 +97,7 @@ FROM [  (
       Variable [ Name=$bin ]
       :=
       Variable [ Name=$j ]
-      GROUP AS Variable [ Name=#1 ]
+      GROUP AS Variable [ Name=$g ]
       (
         i:=Variable [ Name=$i ]
         j:=Variable [ Name=$j ]

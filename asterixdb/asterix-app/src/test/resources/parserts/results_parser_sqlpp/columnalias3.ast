@@ -7,12 +7,22 @@ RecordConstructor [
     FunctionCall null.sqrt@1[
       OperatorExpr [
         FieldAccessor [
-          Variable [ Name=$t ]
+          FunctionCall Metadata.resolve@-1[
+            LiteralExpr [STRING] [t]
+            Variable [ Name=$u ]
+            Variable [ Name=$root ]
+            Variable [ Name=#1 ]
+          ]
           Field=a
         ]
         *
         FieldAccessor [
-          Variable [ Name=$t ]
+          FunctionCall Metadata.resolve@-1[
+            LiteralExpr [STRING] [t]
+            Variable [ Name=$u ]
+            Variable [ Name=$root ]
+            Variable [ Name=#1 ]
+          ]
           Field=b
         ]
       ]

@@ -55,7 +55,7 @@ Groupby
     Variable [ Name=$l ]
     Field=l_linestatus
   ]
-  GROUP AS Variable [ Name=#1 ]
+  GROUP AS Variable [ Name=$g ]
   (
     l:=Variable [ Name=$l ]
   )
@@ -64,15 +64,21 @@ Let Variable [ Name=$cheaps ]
   :=
   (
     SELECT ELEMENT [
-    Variable [ Name=$m ]
+    FieldAccessor [
+      Variable [ Name=$m ]
+      Field=l
     ]
-    FROM [      Variable [ Name=$l ]
+    ]
+    FROM [      Variable [ Name=$g ]
       AS Variable [ Name=$m ]
     ]
     Where
       OperatorExpr [
         FieldAccessor [
-          Variable [ Name=$m ]
+          FieldAccessor [
+            Variable [ Name=$m ]
+            Field=l
+          ]
           Field=l_discount
         ]
         >
@@ -85,7 +91,10 @@ Let Variable [ Name=$charges ]
     SELECT ELEMENT [
     OperatorExpr [
       FieldAccessor [
-        Variable [ Name=$a ]
+        FieldAccessor [
+          Variable [ Name=$a ]
+          Field=l
+        ]
         Field=l_extendedprice
       ]
       *
@@ -93,7 +102,10 @@ Let Variable [ Name=$charges ]
         LiteralExpr [LONG] [1]
         -
         FieldAccessor [
-          Variable [ Name=$a ]
+          FieldAccessor [
+            Variable [ Name=$a ]
+            Field=l
+          ]
           Field=l_discount
         ]
       ]
@@ -102,13 +114,16 @@ Let Variable [ Name=$charges ]
         LiteralExpr [LONG] [1]
         +
         FieldAccessor [
-          Variable [ Name=$a ]
+          FieldAccessor [
+            Variable [ Name=$a ]
+            Field=l
+          ]
           Field=l_tax
         ]
       ]
     ]
     ]
-    FROM [      Variable [ Name=$l ]
+    FROM [      Variable [ Name=$g ]
       AS Variable [ Name=$a ]
     ]
   )

@@ -6,7 +6,6 @@ FunctionCall null.sqrt@1[
       FunctionCall Metadata.resolve@-1[
         LiteralExpr [STRING] [t]
         Variable [ Name=$u ]
-        Variable [ Name=$root ]
         Variable [ Name=#1 ]
         Variable [ Name=$id ]
       ]
@@ -17,7 +16,6 @@ FunctionCall null.sqrt@1[
       FunctionCall Metadata.resolve@-1[
         LiteralExpr [STRING] [t]
         Variable [ Name=$u ]
-        Variable [ Name=$root ]
         Variable [ Name=#1 ]
         Variable [ Name=$id ]
       ]
@@ -47,13 +45,22 @@ Groupby
 Let Variable [ Name=$u ]
   :=
   FieldAccessor [
-    Variable [ Name=$root ]
+    FunctionCall Metadata.resolve@-1[
+      LiteralExpr [STRING] [root]
+      Variable [ Name=#1 ]
+      Variable [ Name=$id ]
+    ]
     Field=time
   ]
  HAVING
   OperatorExpr [
     FieldAccessor [
-      Variable [ Name=$root ]
+      FunctionCall Metadata.resolve@-1[
+        LiteralExpr [STRING] [root]
+        Variable [ Name=$u ]
+        Variable [ Name=#1 ]
+        Variable [ Name=$id ]
+      ]
       Field=orders
     ]
     >

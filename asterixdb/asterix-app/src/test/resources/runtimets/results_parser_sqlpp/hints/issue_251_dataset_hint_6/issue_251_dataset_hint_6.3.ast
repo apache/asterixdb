@@ -11,7 +11,18 @@ RecordConstructor [
     LiteralExpr [STRING] [count]
     :
     FunctionCall test.count@1[
-      Variable [ Name=$token ]
+      (
+        SELECT ELEMENT [
+        FunctionCall Metadata.resolve@-1[
+          LiteralExpr [STRING] [token]
+          Variable [ Name=$g ]
+          Variable [ Name=$tok ]
+        ]
+        ]
+        FROM [          Variable [ Name=$g ]
+          AS Variable [ Name=$g ]
+        ]
+      )
     ]
   )
 ]
@@ -33,7 +44,7 @@ Groupby
   Variable [ Name=$tok ]
   :=
   Variable [ Name=$token ]
-  GROUP AS Variable [ Name=#1 ]
+  GROUP AS Variable [ Name=$g ]
   (
     line:=Variable [ Name=$line ]
     token:=Variable [ Name=$token ]

@@ -28,14 +28,15 @@ use test;
 select element {'group':g,'item':(
         select element {'num':p,'mid':a.`message-id`}
         from  (
-            select element ii
-            from  m as ii
-            order by ii.`message-id`
+            select element ii.m
+            from  gr as ii
+            order by ii.m.`message-id`
         ) as a at p
     )}
 from  FacebookUsers as u,
       FacebookMessages as m
-where (u.id = m.`author-id`)
+where u.id = m.`author-id`
 group by u.id as g
+group as gr
 order by g
 ;

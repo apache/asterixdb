@@ -23,8 +23,9 @@ use test;
 with  grid as (
       select element {'cell':c,'count':num}
       from  MyData as o
-      group by test.`spatial-cell`(o.loc,test.`create-point`(0.0,0.0),5.0,5.0) as c
-      with  num as test.coll_count(o)
+      group by `spatial-cell`(o.loc, `create-point`(0.0,0.0),5.0,5.0) as c
+      group as g
+      let  num = coll_count(( from g select value o ))
       order by num
   )
 select element g

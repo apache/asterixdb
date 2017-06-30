@@ -5,13 +5,34 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [l_linenumber]
     :
-    Variable [ Name=$l_linenumber ]
+    FieldAccessor [
+      FunctionCall Metadata.resolve@-1[
+        LiteralExpr [STRING] [l]
+        Variable [ Name=$g ]
+        Variable [ Name=$l_linenumber ]
+      ]
+      Field=l_linenumber
+    ]
   )
   (
     LiteralExpr [STRING] [count_order]
     :
-    FunctionCall tpch.count@1[
-      Variable [ Name=$l ]
+    FunctionCall tpch.sql-count@1[
+      (
+        SELECT ELEMENT [
+        (
+          SELECT ELEMENT [
+          Variable [ Name=$g ]
+          ]
+          FROM [            Variable [ Name=$g ]
+            AS Variable [ Name=$g ]
+          ]
+        )
+        ]
+        FROM [          Variable [ Name=$g ]
+          AS Variable [ Name=#1 ]
+        ]
+      )
     ]
   )
 ]
@@ -28,12 +49,19 @@ Groupby
     Variable [ Name=$l ]
     Field=l_linenumber
   ]
-  GROUP AS Variable [ Name=#1 ]
+  GROUP AS Variable [ Name=$g ]
   (
     l:=Variable [ Name=$l ]
   )
 
 Orderby
-  Variable [ Name=$l_linenumber ]
+  FieldAccessor [
+    FunctionCall Metadata.resolve@-1[
+      LiteralExpr [STRING] [l]
+      Variable [ Name=$g ]
+      Variable [ Name=$l_linenumber ]
+    ]
+    Field=l_linenumber
+  ]
   ASC
 

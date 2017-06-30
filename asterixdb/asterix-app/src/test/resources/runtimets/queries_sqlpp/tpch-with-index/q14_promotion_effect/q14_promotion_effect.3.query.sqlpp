@@ -19,16 +19,15 @@
 
 use tpch;
 
-
 select element (100.0 * tpch.coll_sum((
       select element case
-                       when i.p_type like 'PROMO%' then i.l_extendedprice * (1 - i.l_discount)
+                       when i.lp.p_type like 'PROMO%' then i.lp.l_extendedprice * (1 - i.lp.l_discount)
                        else 0.0
                      end
-      from  lp as i
+      from  g as i
   )) / tpch.coll_sum((
-      select element (i.l_extendedprice * (1 - i.l_discount))
-      from  lp as i
+      select element (i.lp.l_extendedprice * (1 - i.lp.l_discount))
+      from  g as i
   )))
 from  LineItem as l,
       Part as p

@@ -22,21 +22,25 @@ use tpch;
 
 select element {'c_name':c_name,'c_custkey':c_custkey,'o_orderkey':o_orderkey,'o_orderdate':o_orderdate,'o_totalprice':o_totalprice,'sum_quantity':tpch.coll_sum((
         select element j.l_quantity
-        from  l as j
+        from  (from g select value l) as j
     ))}
 from  Customer as c,
       Orders as o,
       (
     select element {'l_orderkey':l_orderkey,'t_sum_quantity':tpch.coll_sum((
             select element i.l_quantity
-            from  l as i
+            from  (select value l from g2) as i
         ))}
     from  LineItem as l
     group by l.l_orderkey as l_orderkey
+    group as g2
 ) as t,
       LineItem as l
-where ((c.c_custkey = o.o_custkey) and (o.o_orderkey = t.l_orderkey) and (t.t_sum_quantity > 30) and (l.l_orderkey = t.l_orderkey))
-group by c.c_name as c_name,c.c_custkey as c_custkey,o.o_orderkey as o_orderkey,o.o_orderdate as o_orderdate,o.o_totalprice as o_totalprice
+where c.c_custkey = o.o_custkey and o.o_orderkey = t.l_orderkey and t.t_sum_quantity > 30
+      and l.l_orderkey = t.l_orderkey
+group by c.c_name as c_name,c.c_custkey as c_custkey,o.o_orderkey as o_orderkey,o.o_orderdate as o_orderdate,
+         o.o_totalprice as o_totalprice
+group as g
 order by o_totalprice desc,o_orderdate
 limit 100
 ;

@@ -19,12 +19,15 @@ RecordConstructor [
       (
         SELECT ELEMENT [
         FieldAccessor [
-          Variable [ Name=$pr ]
+          FieldAccessor [
+            Variable [ Name=$g ]
+            Field=profit
+          ]
           Field=amount
         ]
         ]
-        FROM [          Variable [ Name=$profit ]
-          AS Variable [ Name=$pr ]
+        FROM [          Variable [ Name=$g ]
+          AS Variable [ Name=$g ]
         ]
       )
     ]
@@ -431,7 +434,7 @@ Groupby
     Variable [ Name=$profit ]
     Field=o_year
   ]
-  GROUP AS Variable [ Name=#1 ]
+  GROUP AS Variable [ Name=$g ]
   (
     profit:=Variable [ Name=$profit ]
   )

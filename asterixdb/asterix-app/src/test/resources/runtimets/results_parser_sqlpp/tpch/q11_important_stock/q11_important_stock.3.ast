@@ -110,17 +110,23 @@ FROM [  (
             SELECT ELEMENT [
             OperatorExpr [
               FieldAccessor [
-                Variable [ Name=$i ]
+                FieldAccessor [
+                  Variable [ Name=$i ]
+                  Field=ps
+                ]
                 Field=ps_supplycost
               ]
               *
               FieldAccessor [
-                Variable [ Name=$i ]
+                FieldAccessor [
+                  Variable [ Name=$i ]
+                  Field=ps
+                ]
                 Field=ps_availqty
               ]
             ]
             ]
-            FROM [              Variable [ Name=$ps ]
+            FROM [              Variable [ Name=$g ]
               AS Variable [ Name=$i ]
             ]
           )
@@ -190,7 +196,7 @@ FROM [  (
         Variable [ Name=$ps ]
         Field=ps_partkey
       ]
-      GROUP AS Variable [ Name=#1 ]
+      GROUP AS Variable [ Name=$g ]
       (
         ps:=Variable [ Name=$ps ]
         sn:=Variable [ Name=$sn ]

@@ -2585,7 +2585,7 @@
     <test-case FilePath="global-aggregate">
       <compilation-unit name="q05_error">
         <output-dir compare="Text">q01</output-dir>
-        <expected-error>Type mismatch: function field-access-by-name expects its 1st input parameter to be type object, but the actual input type is array</expected-error>
+        <expected-error>Cannot find dataset u in dataverse TinySocial nor an alias with name u</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="global-aggregate">
@@ -2646,6 +2646,18 @@
     <test-case FilePath="group-by">
       <compilation-unit name="core-01">
         <output-dir compare="Text">core-01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="group-by">
+      <compilation-unit name="core-01-error">
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>Cannot find dataset e in dataverse gby nor an alias with name e</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="group-by">
+      <compilation-unit name="core-02-error">
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>Cannot find dataset f in dataverse gby nor an alias with name f</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="group-by">

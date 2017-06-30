@@ -365,7 +365,7 @@ Groupby
   Variable [ Name=$l_year ]
   :=
   Variable [ Name=$l_year0 ]
-  GROUP AS Variable [ Name=#1 ]
+  GROUP AS Variable [ Name=$g ]
   (
     locs:=Variable [ Name=$locs ]
     t:=Variable [ Name=$t ]
@@ -378,7 +378,10 @@ Let Variable [ Name=$revenue ]
       SELECT ELEMENT [
       OperatorExpr [
         FieldAccessor [
-          Variable [ Name=$i ]
+          FieldAccessor [
+            Variable [ Name=$i ]
+            Field=locs
+          ]
           Field=l_extendedprice
         ]
         *
@@ -386,13 +389,16 @@ Let Variable [ Name=$revenue ]
           LiteralExpr [LONG] [1]
           -
           FieldAccessor [
-            Variable [ Name=$i ]
+            FieldAccessor [
+              Variable [ Name=$i ]
+              Field=locs
+            ]
             Field=l_discount
           ]
         ]
       ]
       ]
-      FROM [        Variable [ Name=$locs ]
+      FROM [        Variable [ Name=$g ]
         AS Variable [ Name=$i ]
       ]
     )

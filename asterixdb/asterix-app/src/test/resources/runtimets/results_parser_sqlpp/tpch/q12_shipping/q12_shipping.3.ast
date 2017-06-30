@@ -43,7 +43,18 @@ RecordConstructor [
 
         END
         ]
-        FROM [          Variable [ Name=$o ]
+        FROM [          (
+            SELECT ELEMENT [
+            FunctionCall Metadata.resolve@-1[
+              LiteralExpr [STRING] [o]
+              Variable [ Name=$g ]
+              Variable [ Name=$l_shipmode ]
+            ]
+            ]
+            FROM [              Variable [ Name=$g ]
+              AS Variable [ Name=$g ]
+            ]
+          )
           AS Variable [ Name=$i ]
         ]
       )
@@ -82,7 +93,18 @@ RecordConstructor [
 
         END
         ]
-        FROM [          Variable [ Name=$o ]
+        FROM [          (
+            SELECT ELEMENT [
+            FunctionCall Metadata.resolve@-1[
+              LiteralExpr [STRING] [o]
+              Variable [ Name=$g ]
+              Variable [ Name=$l_shipmode ]
+            ]
+            ]
+            FROM [              Variable [ Name=$g ]
+              AS Variable [ Name=$g ]
+            ]
+          )
           AS Variable [ Name=$i ]
         ]
       )
@@ -183,7 +205,7 @@ Groupby
     Variable [ Name=$l ]
     Field=l_shipmode
   ]
-  GROUP AS Variable [ Name=#1 ]
+  GROUP AS Variable [ Name=$g ]
   (
     l:=Variable [ Name=$l ]
     o:=Variable [ Name=$o ]

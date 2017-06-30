@@ -26,7 +26,7 @@ select element {'c_count':c_count,'custdist':custdist}
 from  (
     select element {'c_custkey':c_custkey,'c_count':COLL_SUM((
             select element i.o_orderkey_count
-            from  co as i
+            from (select value co from g2) as i
         ))}
     from  (
         select element {'c_custkey':c.c_custkey,'o_orderkey_count':coll_count((
@@ -37,8 +37,10 @@ from  (
         from  Customer as c
     ) as co
     group by co.c_custkey as c_custkey
+    group as g2
 ) as gco
 group by gco.c_count as c_count
-with  custdist as tpch.count(gco)
+group as g
+let  custdist = count(( select value gco from g ))
 order by custdist desc,c_count desc
 ;

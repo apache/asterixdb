@@ -413,7 +413,9 @@ Let Variable [ Name=$revenue ]
         ]
       ]
       ]
-      FROM [        Variable [ Name=$o1 ]
+      FROM [        FunctionCall Metadata.dataset@1[
+          LiteralExpr [STRING] [o1]
+        ]
         AS Variable [ Name=$i ]
       ]
     )

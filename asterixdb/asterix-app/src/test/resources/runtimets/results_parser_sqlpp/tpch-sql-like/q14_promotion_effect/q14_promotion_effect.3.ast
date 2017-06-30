@@ -33,14 +33,24 @@ OperatorExpr [
             ]
           ]
 
-      WHEN           LiteralExpr [FALSE]
-      THEN           LiteralExpr [DOUBLE] [0.0]
-
-      ELSE           LiteralExpr [NULL]
+      ELSE           LiteralExpr [DOUBLE] [0.0]
 
       END
       ]
-      FROM [        Variable [ Name=$lp ]
+      FROM [        (
+          SELECT ELEMENT [
+          FunctionCall Metadata.resolve@-1[
+            LiteralExpr [STRING] [lp]
+            Variable [ Name=$g ]
+            Variable [ Name=$l ]
+            Variable [ Name=$p ]
+            Variable [ Name=$t ]
+          ]
+          ]
+          FROM [            Variable [ Name=$g ]
+            AS Variable [ Name=$g ]
+          ]
+        )
         AS Variable [ Name=$i ]
       ]
     )
@@ -65,7 +75,20 @@ OperatorExpr [
         ]
       ]
       ]
-      FROM [        Variable [ Name=$lp ]
+      FROM [        (
+          SELECT ELEMENT [
+          FunctionCall Metadata.resolve@-1[
+            LiteralExpr [STRING] [lp]
+            Variable [ Name=$g ]
+            Variable [ Name=$l ]
+            Variable [ Name=$p ]
+            Variable [ Name=$t ]
+          ]
+          ]
+          FROM [            Variable [ Name=$g ]
+            AS Variable [ Name=$g ]
+          ]
+        )
         AS Variable [ Name=$i ]
       ]
     )

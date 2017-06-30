@@ -31,23 +31,24 @@ from  LineItem as l
 where (l.l_shipdate <= '1998-09-02')
 /* +hash */
 group by l.l_returnflag as l_returnflag,l.l_linestatus as l_linestatus
-with  expensives as (
-      select element i.l_discount
-      from  l as i
-      where (i.l_discount <= 0.05)
+group as g
+let expensives = (
+      select element i.l.l_discount
+      from  g as i
+      where (i.l.l_discount <= 0.05)
   ),
-      cheaps as (
-      select element i
-      from  l as i
-      where (i.l_discount > 0.05)
+      cheaps = (
+      select element i.l
+      from  g as i
+      where (i.l.l_discount > 0.05)
   ),
-      charges as (
-      select element (i.l_extendedprice * (1 - i.l_discount) * (1 + i.l_tax))
-      from  l as i
+      charges = (
+      select element (i.l.l_extendedprice * (1 - i.l.l_discount) * (1 + i.l.l_tax))
+      from g as i
   ),
-      disc_prices as (
-      select element (i.l_extendedprice * (1 - i.l_discount))
-      from  l as i
+      disc_prices = (
+      select element (i.l.l_extendedprice * (1 - i.l.l_discount))
+      from g as i
   )
 order by l_returnflag,l_linestatus
 ;

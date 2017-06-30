@@ -14,7 +14,17 @@ FROM [  (
       (
         LiteralExpr [STRING] [x]
         :
-        Variable [ Name=$x ]
+        (
+          SELECT ELEMENT [
+          FieldAccessor [
+            Variable [ Name=$g ]
+            Field=x
+          ]
+          ]
+          FROM [            Variable [ Name=$g ]
+            AS Variable [ Name=$g ]
+          ]
+        )
       )
       (
         LiteralExpr [STRING] [uid]
@@ -44,7 +54,7 @@ FROM [  (
         Variable [ Name=$x ]
         Field=o_custkey
       ]
-      GROUP AS Variable [ Name=#1 ]
+      GROUP AS Variable [ Name=$g ]
       (
         x:=Variable [ Name=$x ]
       )
@@ -76,14 +86,20 @@ FROM [  (
         ]
         FROM [          (
             SELECT ELEMENT [
-            Variable [ Name=$xxx ]
+            FieldAccessor [
+              Variable [ Name=$xxx ]
+              Field=x
             ]
-            FROM [              Variable [ Name=$x ]
+            ]
+            FROM [              Variable [ Name=$g ]
               AS Variable [ Name=$xxx ]
             ]
             Orderby
               FieldAccessor [
-                Variable [ Name=$xxx ]
+                FieldAccessor [
+                  Variable [ Name=$xxx ]
+                  Field=x
+                ]
                 Field=o_orderkey
               ]
               ASC

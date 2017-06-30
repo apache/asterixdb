@@ -77,7 +77,18 @@ RecordConstructor [
     LiteralExpr [STRING] [numcust]
     :
     FunctionCall tpch.count@1[
-      Variable [ Name=$ct ]
+      (
+        SELECT ELEMENT [
+        FunctionCall Metadata.resolve@-1[
+          LiteralExpr [STRING] [ct]
+          Variable [ Name=$g ]
+          Variable [ Name=$cntrycode ]
+        ]
+        ]
+        FROM [          Variable [ Name=$g ]
+          AS Variable [ Name=$g ]
+        ]
+      )
     ]
   )
   (
@@ -91,7 +102,18 @@ RecordConstructor [
           Field=c_acctbal
         ]
         ]
-        FROM [          Variable [ Name=$ct ]
+        FROM [          (
+            SELECT ELEMENT [
+            FunctionCall Metadata.resolve@-1[
+              LiteralExpr [STRING] [ct]
+              Variable [ Name=$g ]
+              Variable [ Name=$cntrycode ]
+            ]
+            ]
+            FROM [              Variable [ Name=$g ]
+              AS Variable [ Name=$g ]
+            ]
+          )
           AS Variable [ Name=$i ]
         ]
       )
@@ -119,7 +141,7 @@ Groupby
     Variable [ Name=$ct ]
     Field=cntrycode
   ]
-  GROUP AS Variable [ Name=#1 ]
+  GROUP AS Variable [ Name=$g ]
   (
     ct:=Variable [ Name=$ct ]
   )

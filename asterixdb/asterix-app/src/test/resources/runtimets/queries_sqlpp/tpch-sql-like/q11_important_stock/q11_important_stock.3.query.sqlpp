@@ -20,32 +20,33 @@
 use tpch;
 
 
-with  sum as tpch.coll_sum((
+with  sum as COLL_SUM((
       select element (ps.ps_supplycost * ps.ps_availqty)
       from  Partsupp as ps,
             (
           select element {'s_suppkey':s.s_suppkey}
           from  Supplier as s,
                 Nation as n
-          where (s.s_nationkey = n.n_nationkey)
+          where s.s_nationkey = n.n_nationkey
       ) as sn
-      where (ps.ps_suppkey = sn.s_suppkey)
+      where ps.ps_suppkey = sn.s_suppkey
   ))
 select element {'partkey':t1.ps_partkey,'part_value':t1.part_value}
 from  (
-    select element {'ps_partkey':ps_partkey,'part_value':tpch.coll_sum((
-            select element (i.ps_supplycost * i.ps_availqty)
-            from  ps as i
+    select element {'ps_partkey':ps_partkey,'part_value':COLL_SUM((
+            select element (i.ps.ps_supplycost * i.ps.ps_availqty)
+            from  g as i
         ))}
     from  Partsupp as ps,
           (
         select element {'s_suppkey':s.s_suppkey}
         from  Supplier as s,
               Nation as n
-        where (s.s_nationkey = n.n_nationkey)
+        where s.s_nationkey = n.n_nationkey
     ) as sn
-    where (ps.ps_suppkey = sn.s_suppkey)
+    where ps.ps_suppkey = sn.s_suppkey
     group by ps.ps_partkey as ps_partkey
+    group as g
 ) as t1
 where (t1.part_value > (sum * 0.00001))
 order by t1.part_value desc
