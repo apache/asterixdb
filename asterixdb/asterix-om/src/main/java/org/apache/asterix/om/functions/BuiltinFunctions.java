@@ -804,6 +804,15 @@ public class BuiltinFunctions {
     public static final FunctionIdentifier IF_MISSING_OR_NULL = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "if-missing-or-null", FunctionIdentifier.VARARGS);
 
+    public static final FunctionIdentifier TO_BOOLEAN =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "to-boolean", 1);
+    public static final FunctionIdentifier TO_STRING =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "to-string", 1);
+    public static final FunctionIdentifier TO_DOUBLE =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "to-double", 1);
+    public static final FunctionIdentifier TO_BIGINT =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "to-bigint", 1);
+
     public static final FunctionIdentifier EXTERNAL_LOOKUP = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "external-lookup", FunctionIdentifier.VARARGS);
 
@@ -981,6 +990,11 @@ public class BuiltinFunctions {
         addPrivateFunction(PREFIX_LEN_JACCARD, AInt32TypeComputer.INSTANCE, true);
         addFunction(RANGE, AInt64TypeComputer.INSTANCE, true);
         addFunction(RECTANGLE_CONSTRUCTOR, ARectangleTypeComputer.INSTANCE, true);
+
+        addFunction(TO_BOOLEAN, ABooleanTypeComputer.INSTANCE, true);
+        addFunction(TO_STRING, AStringTypeComputer.INSTANCE, true);
+        addFunction(TO_DOUBLE, ADoubleTypeComputer.INSTANCE, true);
+        addFunction(TO_BIGINT, AInt64TypeComputer.INSTANCE, true);
 
         // Aggregate Functions
         addFunction(MAX, MinMaxAggTypeComputer.INSTANCE, true);

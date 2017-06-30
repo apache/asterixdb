@@ -7198,6 +7198,50 @@
         <output-dir compare="Text">promotion_opentype_field_vs_opentype_field_02</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="types">
+      <compilation-unit name="to_boolean_01">
+        <output-dir compare="Text">to_boolean_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="types">
+      <compilation-unit name="to_boolean_02">
+        <output-dir compare="Text">to_boolean_02</output-dir>
+        <expected-error>ASX0002: Type mismatch</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="types">
+      <compilation-unit name="to_string_01">
+        <output-dir compare="Text">to_string_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="types">
+      <compilation-unit name="to_string_02">
+        <output-dir compare="Text">to_string_02</output-dir>
+        <expected-error>ASX0004: Unsupported type</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="types">
+      <compilation-unit name="to_double_01">
+        <output-dir compare="Text">to_double_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="types">
+      <compilation-unit name="to_double_02">
+        <output-dir compare="Text">to_double_02</output-dir>
+        <expected-error>ASX0002: Type mismatch</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="types">
+      <compilation-unit name="to_bigint_01">
+        <output-dir compare="Text">to_bigint_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="types">
+      <compilation-unit name="to_bigint_02">
+        <output-dir compare="Text">to_bigint_02</output-dir>
+        <expected-error>ASX0002: Type mismatch</expected-error>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="materialization">
     <test-case FilePath="materialization">

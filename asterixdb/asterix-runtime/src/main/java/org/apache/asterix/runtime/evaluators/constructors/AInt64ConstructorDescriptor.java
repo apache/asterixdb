@@ -18,31 +18,15 @@
  */
 package org.apache.asterix.runtime.evaluators.constructors;
 
-import java.io.DataOutput;
-import java.io.IOException;
-
-import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
-import org.apache.asterix.om.base.AInt64;
-import org.apache.asterix.om.base.AMutableInt64;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
-import org.apache.asterix.om.types.ATypeTag;
-import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
-import org.apache.asterix.runtime.exceptions.InvalidDataFormatException;
-import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
-import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.api.IPointable;
-import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
-import org.apache.hyracks.data.std.primitive.VoidPointable;
-import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
-import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class AInt64ConstructorDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
@@ -60,96 +44,18 @@ public class AInt64ConstructorDescriptor extends AbstractScalarFunctionDynamicDe
 
             @Override
             public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
-                return new IScalarEvaluator() {
-
-                    private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
-                    private DataOutput out = resultStorage.getDataOutput();
-                    private IPointable inputArg = new VoidPointable();
-                    private IScalarEvaluator eval = args[0].createScalarEvaluator(ctx);
-                    private long value;
-                    private int offset;
-                    private boolean positive;
-                    private AMutableInt64 aInt64 = new AMutableInt64(0);
-                    @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<AInt64> int64Serde = SerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.AINT64);
-                    private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();
-
+                return new AbstractInt64ConstructorEvaluator(args[0].createScalarEvaluator(ctx)) {
                     @Override
-                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
-                        try {
-                            eval.evaluate(tuple, inputArg);
-                            byte[] serString = inputArg.getByteArray();
-                            int startOffset = inputArg.getStartOffset();
-                            int len = inputArg.getLength();
-
-                            byte tt = serString[startOffset];
-                            if (tt == ATypeTag.SERIALIZED_INT64_TYPE_TAG) {
-                                result.set(inputArg);
-                            } else if (tt == ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-                                resultStorage.reset();
-                                utf8Ptr.set(serString, startOffset + 1, len - 1);
-                                offset = utf8Ptr.getCharStartOffset();
-                                //accumulating value in negative domain
-                                //otherwise Long.MIN_VALUE = -(Long.MAX_VALUE + 1) would have caused overflow
-                                value = 0;
-                                positive = true;
-                                long limit = -Long.MAX_VALUE;
-                                if (serString[offset] == '+') {
-                                    offset++;
-                                } else if (serString[offset] == '-') {
-                                    offset++;
-                                    positive = false;
-                                    limit = Long.MIN_VALUE;
-                                }
-                                int end = startOffset + len;
-                                for (; offset < end; offset++) {
-                                    int digit;
-                                    if (serString[offset] >= '0' && serString[offset] <= '9') {
-                                        value *= 10;
-                                        digit = serString[offset] - '0';
-                                    } else if (serString[offset] == 'i' && serString[offset + 1] == '6'
-                                            && serString[offset + 2] == '4' && offset + 3 == end) {
-                                        break;
-                                    } else {
-                                        throw new InvalidDataFormatException(getIdentifier(),
-                                                ATypeTag.SERIALIZED_INT64_TYPE_TAG);
-                                    }
-                                    if (value < limit + digit) {
-                                        throw new InvalidDataFormatException(getIdentifier(),
-                                                ATypeTag.SERIALIZED_INT64_TYPE_TAG);
-                                    }
-                                    value -= digit;
-                                }
-                                if (value > 0) {
-                                    throw new InvalidDataFormatException(getIdentifier(),
-                                            ATypeTag.SERIALIZED_INT64_TYPE_TAG);
-                                }
-                                if (value < 0 && positive) {
-                                    value *= -1;
-                                }
-
-                                aInt64.setValue(value);
-                                int64Serde.serialize(aInt64, out);
-                                result.set(resultStorage);
-                            } else {
-                                throw new TypeMismatchException(getIdentifier(), 0, tt,
-                                        ATypeTag.SERIALIZED_STRING_TYPE_TAG);
-                            }
-                        } catch (IOException e) {
-                            throw new InvalidDataFormatException(getIdentifier(), e,
-                                    ATypeTag.SERIALIZED_INT64_TYPE_TAG);
-                        }
+                    public FunctionIdentifier getIdentifier() {
+                        return AInt64ConstructorDescriptor.this.getIdentifier();
                     }
                 };
             }
         };
-
     }
 
     @Override
     public FunctionIdentifier getIdentifier() {
         return BuiltinFunctions.INT64_CONSTRUCTOR;
     }
-
 }

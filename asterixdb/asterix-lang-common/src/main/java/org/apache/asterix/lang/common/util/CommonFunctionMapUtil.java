@@ -65,6 +65,10 @@ public class CommonFunctionMapUtil {
         FUNCTION_NAME_MAP.put("ifmissing", "if-missing"); // ifmissing, internal: if-missing
         FUNCTION_NAME_MAP.put("ifnull", "if-null"); // ifnull, internal: if-null
         FUNCTION_NAME_MAP.put("ifmissingornull", "if-missing-or-null"); // ifmissingornull, internal: is-missing-or-null
+        FUNCTION_NAME_MAP.put("toboolean", "to-boolean"); // toboolean, internal: to-boolean
+        FUNCTION_NAME_MAP.put("tostring", "to-string"); // tostring, internal: to-string
+        FUNCTION_NAME_MAP.put("todouble", "to-double"); // todouble, internal: to-double
+        FUNCTION_NAME_MAP.put("tobigint", "to-bigint"); // tobigint, internal: to-bigint
 
         // Object functions
         FUNCTION_NAME_MAP.put("record-merge", "object-merge"); // record-merge, internal: object-merge

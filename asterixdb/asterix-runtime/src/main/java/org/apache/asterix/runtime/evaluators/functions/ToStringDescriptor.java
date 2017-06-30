@@ -16,25 +16,34 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.runtime.evaluators.constructors;
 
+package org.apache.asterix.runtime.evaluators.functions;
+
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
+import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
+import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
+import org.apache.asterix.runtime.evaluators.constructors.AbstractStringConstructorEvaluator;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.api.IPointable;
 
-public class AStringConstructorDescriptor extends AbstractScalarFunctionDynamicDescriptor {
+import java.io.IOException;
 
+public class ToStringDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         @Override
         public IFunctionDescriptor createFunctionDescriptor() {
-            return new AStringConstructorDescriptor();
+            return new ToStringDescriptor();
         }
     };
 
@@ -44,11 +53,37 @@ public class AStringConstructorDescriptor extends AbstractScalarFunctionDynamicD
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
+            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
                 return new AbstractStringConstructorEvaluator(args[0].createScalarEvaluator(ctx)) {
+                    @SuppressWarnings("unchecked")
+                    private final ISerializerDeserializer<ANull> nullSerde =
+                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ANULL);
+
+                    @Override
+                    protected void evaluateImpl(IPointable result) throws IOException {
+                        byte[] bytes = inputArg.getByteArray();
+                        int offset = inputArg.getStartOffset();
+                        ATypeTag tt = ATypeTag.VALUE_TYPE_MAPPING[bytes[offset]];
+                        switch (tt) {
+                            case ARRAY:
+                            case MULTISET:
+                            case OBJECT:
+                                setNull(result);
+                                break;
+                            default:
+                                super.evaluateImpl(result);
+                                break;
+                        }
+                    }
+
+                    private void setNull(IPointable result) throws HyracksDataException {
+                        nullSerde.serialize(ANull.NULL, out);
+                        result.set(resultStorage);
+                    }
+
                     @Override
                     protected FunctionIdentifier getIdentifier() {
-                        return AStringConstructorDescriptor.this.getIdentifier();
+                        return ToStringDescriptor.this.getIdentifier();
                     }
                 };
             }
@@ -57,6 +92,6 @@ public class AStringConstructorDescriptor extends AbstractScalarFunctionDynamicD
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return BuiltinFunctions.STRING_CONSTRUCTOR;
+        return BuiltinFunctions.TO_STRING;
     }
 }

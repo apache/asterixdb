@@ -1,0 +1,61 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+{
+ "t1": toboolean(false),
+ "t2": to_boolean(true),
+
+ "t3": to_boolean(int8("0")),
+ "t4": to_boolean(int8("10")),
+
+ "t5": to_boolean(int16("0")),
+ "t6": to_boolean(int16("10")),
+
+ "t7": to_boolean(int32("0")),
+ "t8": to_boolean(int32("10")),
+
+ "t9": to_boolean(int64("0")),
+ "t10": to_boolean(int64("10")),
+
+ "t11": to_boolean(float("NaN")),
+ "t12": to_boolean(float("0.0")),
+ "t13": to_boolean(float("-0.0")),
+ "t14": to_boolean(float("2.5")),
+
+ "t15": to_boolean(double("NaN")),
+ "t16": to_boolean(double("0.0")),
+ "t17": to_boolean(double("-0.0")),
+ "t18": to_boolean(double("2.5")),
+
+ "t19": to_boolean(""),
+ "t20": to_boolean(" "),
+ "t21": to_boolean("false"),
+
+ "t22": to_boolean([]),
+ "t23": to_boolean([0]),
+
+ "t24": to_boolean({{}}),
+ "t25": to_boolean({{0}}),
+
+ "t26": to_boolean({}),
+ "t27": to_boolean({ "foo":0 }),
+
+ "t28": is_null(to_boolean(null)),
+ "t29": is_missing(to_boolean(missing))
+}
+
