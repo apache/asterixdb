@@ -79,10 +79,10 @@ public class ActiveEntityEventsListener implements IActiveEntityEventsListener {
         this.entityId = entityId;
         this.datasets = datasets;
         this.state = ActivityState.STOPPED;
-        this.statsTimestamp = Long.MIN_VALUE;
+        this.statsTimestamp = -1;
         this.statsRequestState = RequestState.INIT;
         this.statsUpdatedEvent = new ActiveEvent(null, Kind.STATS_UPDATED, entityId);
-        this.stats = "N/A";
+        this.stats = "{\"Stats\":\"N/A\"}";
         this.runtimeName = runtimeName;
         this.locations = locations;
         this.numRegistered = 0;
@@ -180,10 +180,9 @@ public class ActiveEntityEventsListener implements IActiveEntityEventsListener {
 
     public String formatStats(List<String> responses) {
         StringBuilder strBuilder = new StringBuilder();
-        strBuilder.append("{" + "\"EntityId\": \"" + entityId + "\", ");
-        strBuilder.append("\"Stats\": [").append("\"" + responses.get(0) + "\"");
+        strBuilder.append("{\"Stats\": [").append(responses.get(0));
         for (int i = 1; i < responses.size(); i++) {
-            strBuilder.append(", ").append("\"" + responses.get(i) + "\"");
+            strBuilder.append(", ").append(responses.get(i));
         }
         strBuilder.append("]}");
         return strBuilder.toString();

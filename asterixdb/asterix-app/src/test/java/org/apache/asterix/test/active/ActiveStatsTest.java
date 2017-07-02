@@ -52,7 +52,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class ActiveStatsTest {
 
     protected boolean cleanUp = true;
-    private static String EXPECTED_STATS = "Mock stats";
+    private static String EXPECTED_STATS = "\"Mock stats\"";
 
     @Before
     public void setUp() throws Exception {
@@ -97,12 +97,12 @@ public class ActiveStatsTest {
 
         // Check init stats
         requestedStats = eventsListener.getStats();
-        Assert.assertTrue(requestedStats.equals("N/A"));
+        Assert.assertTrue(requestedStats.contains("N/A"));
 
         // Update stats of not-started job
         eventsListener.refreshStats(1000);
         requestedStats = eventsListener.getStats();
-        Assert.assertTrue(requestedStats.equals("N/A"));
+        Assert.assertTrue(requestedStats.contains("N/A"));
         WaitForStateSubscriber startingSubscriber = new WaitForStateSubscriber(eventsListener, ActivityState.STARTING);
         eventsListener.subscribe(startingSubscriber);
         // Update stats of created/started job without joined partition
@@ -111,7 +111,8 @@ public class ActiveStatsTest {
         startingSubscriber.sync();
         eventsListener.refreshStats(1000);
         requestedStats = eventsListener.getStats();
-        Assert.assertTrue(requestedStats.equals("N/A"));
+        Assert.assertTrue(requestedStats.contains("N/A"));
+
         // Fake partition message and notify eventListener
         WaitForStateSubscriber startedSubscriber = new WaitForStateSubscriber(eventsListener, ActivityState.STARTED);
         eventsListener.subscribe(startedSubscriber);

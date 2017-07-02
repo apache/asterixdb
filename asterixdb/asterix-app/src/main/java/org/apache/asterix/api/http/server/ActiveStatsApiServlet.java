@@ -21,7 +21,10 @@ package org.apache.asterix.api.http.server;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.concurrent.ConcurrentMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
+import io.netty.handler.codec.http.HttpResponseStatus;
 import org.apache.asterix.active.ActiveLifecycleListener;
 import org.apache.asterix.active.IActiveEntityEventsListener;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
@@ -37,6 +40,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class ActiveStatsApiServlet extends AbstractServlet {
 
+    private static final Logger LOGGER = Logger.getLogger(ActiveStatsApiServlet.class.getName());
     private static final int DEFAULT_EXPIRE_TIME = 2000;
     private final ActiveLifecycleListener activeLifecycleListener;
 
@@ -66,21 +70,26 @@ public class ActiveStatsApiServlet extends AbstractServlet {
         ObjectMapper om = new ObjectMapper();
         om.enable(SerializationFeature.INDENT_OUTPUT);
         ObjectNode resNode = om.createObjectNode();
-
-        if (localPath.length() == 0 || localPath.length() == 1) {
-            expireTime = DEFAULT_EXPIRE_TIME;
-        } else {
-            expireTime = Integer.valueOf(localPath.substring(1));
-        }
-        long currentTime = System.currentTimeMillis();
-        for (int iter1 = 0; iter1 < listeners.length; iter1++) {
-            resNode.putPOJO(listeners[iter1].getEntityId().toString(),
-                    constructNode(om, listeners[iter1], currentTime, expireTime));
-        }
-
-        // Construct Response
         PrintWriter responseWriter = response.writer();
-        responseWriter.write(om.writerWithDefaultPrettyPrinter().writeValueAsString(resNode));
+        try {
+            response.setStatus(HttpResponseStatus.OK);
+            if (localPath.length() == 0 || localPath.length() == 1) {
+                expireTime = DEFAULT_EXPIRE_TIME;
+            } else {
+                expireTime = Integer.valueOf(localPath.substring(1));
+            }
+            long currentTime = System.currentTimeMillis();
+            for (int iter1 = 0; iter1 < listeners.length; iter1++) {
+                resNode.putPOJO(listeners[iter1].getEntityId().toString(),
+                        constructNode(om, listeners[iter1], currentTime, expireTime));
+            }
+            // Construct Response
+            responseWriter.write(om.writerWithDefaultPrettyPrinter().writeValueAsString(resNode));
+        } catch (Exception e) {
+            LOGGER.log(Level.INFO, "exception thrown for " + request, e);
+            response.setStatus(HttpResponseStatus.INTERNAL_SERVER_ERROR);
+            responseWriter.write(e.toString());
+        }
         responseWriter.flush();
     }
 }

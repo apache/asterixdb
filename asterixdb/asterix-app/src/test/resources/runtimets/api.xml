@@ -113,5 +113,10 @@
         <expected-error>HTTP/1.1 400 Bad Request</expected-error>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="api">
+      <compilation-unit name="feed-stats">
+        <output-dir compare="Text">feed-stats</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
 </test-suite>
