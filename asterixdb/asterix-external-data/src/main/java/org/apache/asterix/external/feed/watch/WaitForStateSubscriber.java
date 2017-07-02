@@ -33,9 +33,6 @@ public class WaitForStateSubscriber extends AbstractSubscriber {
             throws HyracksDataException {
         super(listener);
         this.targetState = targetState;
-        if (targetState != ActivityState.STARTED && targetState != ActivityState.STOPPED) {
-            throw new RuntimeDataException(ErrorCode.CANNOT_WAIT_FOR_STATE, targetState);
-        }
         listener.subscribe(this);
     }
 

@@ -19,11 +19,14 @@
 
 package org.apache.asterix.test.active;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.asterix.active.ActiveEvent;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.asterix.active.ActiveJobNotificationHandler;
 import org.apache.asterix.active.ActiveLifecycleListener;
 import org.apache.asterix.active.ActiveRuntimeId;
+import org.apache.asterix.active.ActivityState;
 import org.apache.asterix.active.EntityId;
 import org.apache.asterix.active.IActiveRuntime;
 import org.apache.asterix.active.message.ActivePartitionMessage;
@@ -31,12 +34,12 @@ import org.apache.asterix.app.nc.NCAppRuntimeContext;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.metadata.IDataset;
 import org.apache.asterix.external.feed.management.ActiveEntityEventsListener;
+import org.apache.asterix.external.feed.watch.WaitForStateSubscriber;
 import org.apache.asterix.external.operators.FeedIntakeOperatorNodePushable;
 import org.apache.asterix.runtime.utils.CcApplicationContext;
 import org.apache.asterix.test.runtime.ExecutionTestUtil;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.junit.Assert;
@@ -44,11 +47,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
-public class ActiveMessageTest {
+public class ActiveStatsTest {
 
     protected boolean cleanUp = true;
     private static String EXPECTED_STATS = "Mock stats";
@@ -59,7 +60,7 @@ public class ActiveMessageTest {
     }
 
     @Test
-    public void refreshStatsTest() throws HyracksException {
+    public void refreshStatsTest() throws Exception {
         // Entities to be used
         EntityId entityId = new EntityId("MockExtension", "MockDataverse", "MockEntity");
         ActiveRuntimeId activeRuntimeId =
@@ -85,9 +86,8 @@ public class ActiveMessageTest {
                 .thenReturn(entityId);
 
         // Add event listener
-        ActiveEntityEventsListener eventsListener =
-                new ActiveEntityEventsListener(appCtx, entityId, datasetList, partitionConstraint,
-                        FeedIntakeOperatorNodePushable.class.getSimpleName());
+        ActiveEntityEventsListener eventsListener = new ActiveEntityEventsListener(appCtx, entityId, datasetList,
+                partitionConstraint, FeedIntakeOperatorNodePushable.class.getSimpleName());
         activeJobNotificationHandler.registerListener(eventsListener);
 
         // Register mock runtime
@@ -103,19 +103,22 @@ public class ActiveMessageTest {
         eventsListener.refreshStats(1000);
         requestedStats = eventsListener.getStats();
         Assert.assertTrue(requestedStats.equals("N/A"));
-
+        WaitForStateSubscriber startingSubscriber = new WaitForStateSubscriber(eventsListener, ActivityState.STARTING);
+        eventsListener.subscribe(startingSubscriber);
         // Update stats of created/started job without joined partition
         activeJobNotificationHandler.notifyJobCreation(jobId, jobSpec);
         activeLifecycleListener.notifyJobStart(jobId);
+        startingSubscriber.sync();
         eventsListener.refreshStats(1000);
         requestedStats = eventsListener.getStats();
         Assert.assertTrue(requestedStats.equals("N/A"));
-
         // Fake partition message and notify eventListener
-        ActivePartitionMessage partitionMessage =
-                new ActivePartitionMessage(activeRuntimeId, jobId, ActivePartitionMessage.ACTIVE_RUNTIME_REGISTERED,
-                        null);
-        eventsListener.notify(new ActiveEvent(jobId, ActiveEvent.Kind.PARTITION_EVENT, entityId, partitionMessage));
+        WaitForStateSubscriber startedSubscriber = new WaitForStateSubscriber(eventsListener, ActivityState.STARTED);
+        eventsListener.subscribe(startedSubscriber);
+        ActivePartitionMessage partitionMessage = new ActivePartitionMessage(activeRuntimeId, jobId,
+                ActivePartitionMessage.ACTIVE_RUNTIME_REGISTERED, null);
+        partitionMessage.handle(appCtx);
+        startedSubscriber.sync();
         eventsListener.refreshStats(100000);
         requestedStats = eventsListener.getStats();
         Assert.assertTrue(requestedStats.contains(EXPECTED_STATS));
@@ -134,8 +137,8 @@ public class ActiveMessageTest {
         } catch (HyracksDataException e) {
             expectedException = e;
         }
-        Assert.assertTrue(expectedException != null
-                && expectedException.getErrorCode() == ErrorCode.ACTIVE_MANAGER_INVALID_RUNTIME);
+        Assert.assertNotNull(expectedException);
+        Assert.assertEquals(ErrorCode.ACTIVE_MANAGER_INVALID_RUNTIME, expectedException.getErrorCode());
     }
 
 }

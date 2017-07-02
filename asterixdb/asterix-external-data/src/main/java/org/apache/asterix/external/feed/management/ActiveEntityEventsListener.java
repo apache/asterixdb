@@ -88,6 +88,7 @@ public class ActiveEntityEventsListener implements IActiveEntityEventsListener {
         this.numRegistered = 0;
     }
 
+    @Override
     public synchronized void notify(ActiveEvent event) {
         try {
             LOGGER.finer("EventListener is notified.");
@@ -191,8 +192,11 @@ public class ActiveEntityEventsListener implements IActiveEntityEventsListener {
     @SuppressWarnings("unchecked")
     @Override
     public void refreshStats(long timeout) throws HyracksDataException {
+        LOGGER.log(Level.INFO, "refreshStats called");
         synchronized (this) {
             if (state != ActivityState.STARTED || statsRequestState == RequestState.STARTED) {
+                LOGGER.log(Level.INFO, "returning immediately since state = " + state + " and statsRequestState = "
+                        + statsRequestState);
                 return;
             } else {
                 statsRequestState = RequestState.STARTED;
