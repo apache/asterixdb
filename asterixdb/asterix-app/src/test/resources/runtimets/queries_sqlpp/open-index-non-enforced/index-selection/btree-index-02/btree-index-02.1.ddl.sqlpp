@@ -17,9 +17,10 @@
  * under the License.
  */
 /*
-* Description  : Index join for non-enforced indexes
+* Description  : Index selection for non-enforced indexes
+*                Multiple indexes match.
 * Expected Res : Success
-* Date         : 20 Jun 2017
+* Date         : 29 Jun 2017
 */
 drop dataverse test if exists;
 create dataverse test;
@@ -29,8 +30,5 @@ create type TestOpenType as open {
   c_id: int64
 }
 
-create dataset TestOpen1(TestOpenType)
-primary key c_id;
-
-create dataset TestOpen2(TestOpenType)
+create dataset TestOpen(TestOpenType)
 primary key c_id;

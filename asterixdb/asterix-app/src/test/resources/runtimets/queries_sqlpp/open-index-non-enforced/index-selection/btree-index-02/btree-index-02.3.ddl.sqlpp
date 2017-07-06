@@ -16,21 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/*
-* Description  : Index join for non-enforced indexes
-* Expected Res : Success
-* Date         : 20 Jun 2017
-*/
-drop dataverse test if exists;
-create dataverse test;
+
 use test;
 
-create type TestOpenType as open {
-  c_id: int64
-}
+create index idx_2 on TestOpen(c_s:string, c_i64:int64);
 
-create dataset TestOpen1(TestOpenType)
-primary key c_id;
+create index idx_1 on TestOpen(c_s:string, c_d:double);
 
-create dataset TestOpen2(TestOpenType)
-primary key c_id;
+create index idx_3 on TestOpen(c_i64:int64);
+
+create index idx_4 on TestOpen(c_i8:int8);

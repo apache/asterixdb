@@ -192,25 +192,6 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
     }
 
     /**
-     * Removes non-enforced indexes on open types
-     */
-    protected void pruneIndexCandidatesOpenNonEnforced(Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs) {
-        for (Map.Entry<IAccessMethod, AccessMethodAnalysisContext> entry : analyzedAMs.entrySet()) {
-            AccessMethodAnalysisContext amCtx = entry.getValue();
-
-            // Fetch index
-            Iterator<Map.Entry<Index, List<Pair<Integer, Integer>>>> indexIt = amCtx.getIteratorForIndexExprsAndVars();
-
-            while (indexIt.hasNext()) {
-                Index index = indexIt.next().getKey();
-                if (index.isOverridingKeyFieldTypes() && !index.isEnforced()) {
-                    indexIt.remove();
-                }
-            }
-        }
-    }
-
-    /**
      * Checks whether the given operator is LEFTOUTERJOIN.
      * If so, also checks that GROUPBY is placed after LEFTOUTERJOIN.
      */
@@ -365,9 +346,6 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
                 // If the right subtree (inner branch) has indexes, one of those indexes will be used.
                 // Remove the indexes from the outer branch in the optimizer's consideration list for this rule.
                 pruneIndexCandidatesFromOuterBranch(analyzedAMs);
-
-                // Remove non-enforced indexes on open types as they currently can't be used with joins
-                pruneIndexCandidatesOpenNonEnforced(analyzedAMs);
 
                 // We are going to use indexes from the inner branch.
                 // If no index is available, then we stop here.

@@ -16,21 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/*
-* Description  : Index join for non-enforced indexes
-* Expected Res : Success
-* Date         : 20 Jun 2017
-*/
-drop dataverse test if exists;
-create dataverse test;
+
 use test;
 
-create type TestOpenType as open {
-  c_id: int64
-}
-
-create dataset TestOpen1(TestOpenType)
-primary key c_id;
-
-create dataset TestOpen2(TestOpenType)
-primary key c_id;
+select t.c_x as res
+from TestOpen t
+where t.c_i8 > 2 and t.c_i64 < 3
+order by t.c_x;

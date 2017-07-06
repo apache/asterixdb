@@ -273,8 +273,9 @@ public class BTreeAccessMethod implements IAccessMethod {
             if (keyPos < 0) {
                 throw CompilationException.create(ErrorCode.NO_INDEX_FIELD_NAME_FOR_GIVEN_FUNC_EXPR);
             }
-            Pair<ILogicalExpression, Boolean> returnedSearchKeyExpr =
-                    AccessMethodUtils.createSearchKeyExpr(chosenIndex, optFuncExpr, indexSubTree, probeSubTree);
+            IAType indexedFieldType = chosenIndex.getKeyFieldTypes().get(keyPos);
+            Pair<ILogicalExpression, Boolean> returnedSearchKeyExpr = AccessMethodUtils.createSearchKeyExpr(chosenIndex,
+                    optFuncExpr, indexedFieldType, indexSubTree, probeSubTree);
             ILogicalExpression searchKeyExpr = returnedSearchKeyExpr.first;
             if (searchKeyExpr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
                 constantAtRuntimeExpressions[keyPos] = searchKeyExpr;
@@ -469,15 +470,21 @@ public class BTreeAccessMethod implements IAccessMethod {
         jobGenParams.setLowKeyVarList(keyVarList, 0, numLowKeys);
         jobGenParams.setHighKeyVarList(keyVarList, numLowKeys, numHighKeys);
 
-        ILogicalOperator inputOp = null;
+        ILogicalOperator inputOp;
         if (!assignKeyVarList.isEmpty()) {
             // Assign operator that sets the constant secondary-index search-key fields if necessary.
-            AssignOperator assignConstantSearchKeys = new AssignOperator(assignKeyVarList, assignKeyExprList);
-            // Input to this assign is the EmptyTupleSource (which the dataSourceScan also must have had as input).
-            assignConstantSearchKeys.getInputs().add(new MutableObject<>(
-                    OperatorManipulationUtil.deepCopy(dataSourceOp.getInputs().get(0).getValue())));
-            assignConstantSearchKeys.setExecutionMode(dataSourceOp.getExecutionMode());
-            inputOp = assignConstantSearchKeys;
+            AssignOperator assignSearchKeys = new AssignOperator(assignKeyVarList, assignKeyExprList);
+            if (probeSubTree == null) {
+                // We are optimizing a selection query.
+                // Input to this assign is the EmptyTupleSource (which the dataSourceScan also must have had as input).
+                assignSearchKeys.getInputs().add(new MutableObject<>(
+                        OperatorManipulationUtil.deepCopy(dataSourceOp.getInputs().get(0).getValue())));
+                assignSearchKeys.setExecutionMode(dataSourceOp.getExecutionMode());
+            } else {
+                // We are optimizing a join, place the assign op top of the probe subtree.
+                assignSearchKeys.getInputs().add(probeSubTree.getRootRef());
+            }
+            inputOp = assignSearchKeys;
         } else if (probeSubTree == null) {
             //nonpure case
             //Make sure that the nonpure function is unpartitioned

@@ -15,22 +15,15 @@
  * KIND, either express or implied.  See the License for the
  * specific language governing permissions and limitations
  * under the License.
+ *
+ * Description  : Index join because there's a hint and
+ *                the probe type is known.
+ *                Promotable numeric type.
  */
-/*
-* Description  : Index join for non-enforced indexes
-* Expected Res : Success
-* Date         : 20 Jun 2017
-*/
-drop dataverse test if exists;
-create dataverse test;
+
 use test;
 
-create type TestOpenType as open {
-  c_id: int64
-}
-
-create dataset TestOpen1(TestOpenType)
-primary key c_id;
-
-create dataset TestOpen2(TestOpenType)
-primary key c_id;
+select t1.c_x as c1, t2.c_x as c2
+from  TestOpen1 as t1, TestOpen2 as t2
+where to_double(t1.c_i8) /*+ indexnl */ = t2.c_i8
+order by t1.c_x, t2.c_x;

@@ -17,13 +17,16 @@
  * under the License.
  */
 /*
-* Description  : Index join for non-enforced indexes
-* Expected Res : Success
-* Date         : 20 Jun 2017
-*/
+ * Description  : No index join because there's no hint and
+ *                the probe type is unknown
+ * Expected Res : Success
+ * Date         : 20 Jun 2017
+ */
 drop dataverse test if exists;
 create dataverse test;
 use test;
+
+write output to asterix_nc1:"rttest/btree-equi-join-non-enforced_btree-equi-join-non-enforced-05.adm"
 
 create type TestOpenType as open {
   c_id: int64
@@ -34,3 +37,16 @@ primary key c_id;
 
 create dataset TestOpen2(TestOpenType)
 primary key c_id;
+
+create index idx_t2_s on TestOpen2(c_s:string);
+
+create index idx_t2_i64 on TestOpen2(c_i64:int64);
+
+create index idx_t2_i8 on TestOpen2(c_i8:int8);
+
+create index idx_t2_d on TestOpen2(c_d:double);
+
+select t1.c_x as c1, t2.c_x as c2
+from  TestOpen1 as t1, TestOpen2 as t2
+where t1.c_s = t2.c_s
+order by t1.c_x, t2.c_x;

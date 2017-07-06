@@ -3584,6 +3584,11 @@
           <output-dir compare="Text">btree-index-01</output-dir>
         </compilation-unit>
       </test-case>
+      <test-case FilePath="open-index-non-enforced/index-selection">
+        <compilation-unit name="btree-index-02">
+          <output-dir compare="Text">btree-index-02</output-dir>
+        </compilation-unit>
+      </test-case>
     <test-case FilePath="open-index-non-enforced/correlated-index-selection">
       <compilation-unit name="btree-index-01">
         <output-dir compare="Text">btree-index-01</output-dir>

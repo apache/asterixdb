@@ -184,8 +184,9 @@ public class RTreeAccessMethod implements IAccessMethod {
         ARecordType metaRecordType = indexSubTree.getMetaRecordType();
 
         int optFieldIdx = AccessMethodUtils.chooseFirstOptFuncVar(chosenIndex, analysisCtx);
-        Pair<IAType, Boolean> keyPairType = Index.getNonNullableOpenFieldType(optFuncExpr.getFieldType(optFieldIdx),
-                optFuncExpr.getFieldName(optFieldIdx), recordType);
+        IAType optFieldType = optFuncExpr.getFieldType(optFieldIdx);
+        List<String> optFieldName = optFuncExpr.getFieldName(optFieldIdx);
+        Pair<IAType, Boolean> keyPairType = Index.getNonNullableOpenFieldType(optFieldType, optFieldName, recordType);
         if (keyPairType == null) {
             return null;
         }
@@ -207,8 +208,8 @@ public class RTreeAccessMethod implements IAccessMethod {
         ArrayList<LogicalVariable> keyVarList = new ArrayList<>();
         // List of expressions for the assign.
         ArrayList<Mutable<ILogicalExpression>> keyExprList = new ArrayList<>();
-        Pair<ILogicalExpression, Boolean> returnedSearchKeyExpr =
-                AccessMethodUtils.createSearchKeyExpr(chosenIndex, optFuncExpr, indexSubTree, probeSubTree);
+        Pair<ILogicalExpression, Boolean> returnedSearchKeyExpr = AccessMethodUtils.createSearchKeyExpr(chosenIndex,
+                optFuncExpr, optFieldType, indexSubTree, probeSubTree);
         ILogicalExpression searchKeyExpr = returnedSearchKeyExpr.first;
 
         for (int i = 0; i < numSecondaryKeys; i++) {

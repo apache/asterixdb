@@ -16,11 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  *
+ * Description  : No index join because there's no hint
  */
 
 use test;
 
 select t1.c_x as c1, t2.c_x as c2
 from  TestOpen1 as t1, TestOpen2 as t2
-where (t1.c_s /*+ indexnl */ = t2.c_s)
+where t1.c_s = t2.c_s
 order by t1.c_x, t2.c_x;
