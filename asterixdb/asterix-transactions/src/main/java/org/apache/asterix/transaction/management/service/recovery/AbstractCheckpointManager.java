@@ -88,13 +88,26 @@ public abstract class AbstractCheckpointManager implements ICheckpointManager {
         List<Checkpoint> checkpointObjectList = new ArrayList<>();
         for (File file : checkpoints) {
             try {
-                LOGGER.log(Level.WARNING, "Reading snapshot file: " + file.getAbsolutePath());
+                LOGGER.log(Level.WARNING, "Reading checkpoint file: " + file.getAbsolutePath());
                 String jsonString = new String(Files.readAllBytes(Paths.get(file.getAbsolutePath())));
                 checkpointObjectList.add(Checkpoint.fromJson(jsonString));
             } catch (IOException e) {
-                throw new ACIDException("Failed to read a checkpoint file", e);
+                // ignore corrupted checkpoint file
+                LOGGER.log(Level.WARNING, "Failed to read checkpoint file: " + file.getAbsolutePath(), e);
+                file.delete();
+                LOGGER.log(Level.INFO, "Deleted corrupted checkpoint file: " + file.getAbsolutePath());
             }
         }
+        /**
+         * If all checkpoint files are corrupted, we have no option but to try to perform recovery.
+         * We will forge a checkpoint that forces recovery to start from the beginning of the log.
+         * This shouldn't happen unless a hardware corruption happens.
+         */
+        if (checkpointObjectList.isEmpty()) {
+            LOGGER.severe("All checkpoint files are corrupted. Forcing recovery from the beginning of the log");
+            checkpointObjectList.add(forgeForceRecoveryCheckpoint());
+        }
+
         // Sort checkpointObjects in descending order by timeStamp to find out the most recent one.
         Collections.sort(checkpointObjectList);
 
@@ -125,6 +138,11 @@ public abstract class AbstractCheckpointManager implements ICheckpointManager {
         // Nothing to dump
     }
 
+    public Path getCheckpointPath(long checkpointTimestamp) {
+        return Paths.get(checkpointDir.getAbsolutePath() + File.separator + CHECKPOINT_FILENAME_PREFIX + Long
+                .toString(checkpointTimestamp));
+    }
+
     protected void capture(long minMCTFirstLSN, boolean sharp) throws HyracksDataException {
         ILogManager logMgr = txnSubsystem.getLogManager();
         ITransactionManager txnMgr = txnSubsystem.getTransactionManager();
@@ -134,14 +152,24 @@ public abstract class AbstractCheckpointManager implements ICheckpointManager {
         cleanup();
     }
 
+    protected Checkpoint forgeForceRecoveryCheckpoint() {
+        /**
+         * By setting the checkpoint first LSN (low watermark) to Long.MIN_VALUE, the recovery manager will start from
+         * the first available log.
+         * We set the storage version to the current version. If there is a version mismatch, it will be detected
+         * during recovery.
+         */
+        return new Checkpoint(Long.MIN_VALUE, Long.MIN_VALUE, Integer.MIN_VALUE, System.currentTimeMillis(), false,
+                StorageConstants.VERSION);
+    }
+
     private void persist(Checkpoint checkpoint) throws HyracksDataException {
-        // Construct checkpoint file name
-        String fileName = checkpointDir.getAbsolutePath() + File.separator + CHECKPOINT_FILENAME_PREFIX
-                + Long.toString(checkpoint.getTimeStamp());
+        // Get checkpoint file path
+        Path path = getCheckpointPath(checkpoint.getTimeStamp());
         // Write checkpoint file to disk
-        Path path = Paths.get(fileName);
         try (BufferedWriter writer = Files.newBufferedWriter(path)) {
             writer.write(checkpoint.asJson());
+            writer.flush();
         } catch (IOException e) {
             throw new HyracksDataException("Failed to write checkpoint to disk", e);
         }

@@ -158,27 +158,6 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
         return state;
     }
 
-    //This method is used only when replication is disabled.
-    @Override
-    public void startRecovery(boolean synchronous) throws IOException, ACIDException {
-        state = SystemState.RECOVERING;
-        LOGGER.log(Level.INFO, "starting recovery ...");
-
-        long readableSmallestLSN = logMgr.getReadableSmallestLSN();
-        Checkpoint checkpointObject = checkpointManager.getLatest();
-        long lowWaterMarkLSN = checkpointObject.getMinMCTFirstLsn();
-        if (lowWaterMarkLSN < readableSmallestLSN) {
-            lowWaterMarkLSN = readableSmallestLSN;
-        }
-
-        //delete any recovery files from previous failed recovery attempts
-        deleteRecoveryTemporaryFiles();
-
-        //get active partitions on this node
-        Set<Integer> activePartitions = localResourceRepository.getNodeOrignalPartitions();
-        replayPartitionsLogs(activePartitions, logMgr.getLogReader(true), lowWaterMarkLSN);
-    }
-
     @Override
     public void startLocalRecovery(Set<Integer> partitions) throws IOException, ACIDException {
         state = SystemState.RECOVERING;

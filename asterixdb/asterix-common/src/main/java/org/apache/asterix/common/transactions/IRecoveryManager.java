@@ -33,7 +33,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
  */
 public interface IRecoveryManager {
 
-    public enum SystemState {
+    enum SystemState {
         BOOTSTRAPPING, // The first time the NC is bootstrapped.
         PERMANENT_DATA_LOSS, // No checkpoint files found on NC and it is not BOOTSTRAPPING (data loss).
         RECOVERING, // Recovery process is on-going.
@@ -41,7 +41,10 @@ public interface IRecoveryManager {
         CORRUPTED // Some txn logs need to be replayed (need to perform recover).
     }
 
-    public class ResourceType {
+    class ResourceType {
+        private ResourceType() {
+        }
+
         public static final byte LSM_BTREE = 0;
         public static final byte LSM_RTREE = 1;
         public static final byte LSM_INVERTED_INDEX = 2;
@@ -61,38 +64,25 @@ public interface IRecoveryManager {
     SystemState getSystemState() throws ACIDException;
 
     /**
-     * Initiates a crash recovery.
-     *
-     * @param synchronous
-     *            indicates if the recovery is to be done in a synchronous
-     *            manner. In asynchronous mode, the recovery will happen as part
-     *            of a separate thread.
-     * @return SystemState the state of the system (@see SystemState) post
-     *         recovery.
-     * @throws ACIDException
-     */
-    public void startRecovery(boolean synchronous) throws IOException, ACIDException;
-
-    /**
      * Rolls back a transaction.
      *
      * @param txnContext
      *            the transaction context associated with the transaction
      * @throws ACIDException
      */
-    public void rollbackTransaction(ITransactionContext txnContext) throws ACIDException;
+    void rollbackTransaction(ITransactionContext txnContext) throws ACIDException;
 
     /**
      * @return min first LSN of the open indexes (including remote indexes if replication is enabled)
      * @throws HyracksDataException
      */
-    public long getMinFirstLSN() throws HyracksDataException;
+    long getMinFirstLSN() throws HyracksDataException;
 
     /**
      * @return min first LSN of the open indexes
      * @throws HyracksDataException
      */
-    public long getLocalMinFirstLSN() throws HyracksDataException;
+    long getLocalMinFirstLSN() throws HyracksDataException;
 
     /**
      * Replay the logs that belong to the passed {@code partitions} starting from the {@code lowWaterMarkLSN}
@@ -102,7 +92,7 @@ public interface IRecoveryManager {
      * @throws IOException
      * @throws ACIDException
      */
-    public void replayPartitionsLogs(Set<Integer> partitions, ILogReader logReader, long lowWaterMarkLSN)
+    void replayPartitionsLogs(Set<Integer> partitions, ILogReader logReader, long lowWaterMarkLSN)
             throws IOException, ACIDException;
 
     /**
@@ -114,12 +104,12 @@ public interface IRecoveryManager {
      * @throws IOException
      *             if the file for the specified {@code jobId} with the {@code fileName} already exists
      */
-    public File createJobRecoveryFile(int jobId, String fileName) throws IOException;
+    File createJobRecoveryFile(int jobId, String fileName) throws IOException;
 
     /**
      * Deletes all temporary recovery files
      */
-    public void deleteRecoveryTemporaryFiles();
+    void deleteRecoveryTemporaryFiles();
 
     /**
      * Performs the local recovery process on {@code partitions}
