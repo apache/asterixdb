@@ -32,13 +32,30 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <version>2.10</version>
+        <configuration>
+          <ignoredUnusedDeclaredDependencies combine.children="append">
+            <ignoredUnusedDeclaredDependency>org.apache.asterix:asterix-om:*</ignoredUnusedDeclaredDependency>
+          </ignoredUnusedDeclaredDependencies>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
   <dependencies>
     <dependency>
       <groupId>org.apache.asterix</groupId>
-      <artifactId>asterix-runtime</artifactId>
-      <type>jar</type>
+      <artifactId>asterix-common</artifactId>
       <version>${project.version}</version>
-      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.asterix</groupId>
+      <artifactId>asterix-om</artifactId>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.maven</groupId>
@@ -58,6 +75,16 @@
       <groupId>org.apache.maven</groupId>
       <artifactId>maven-model</artifactId>
       <version>3.3.9</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
+      <version>3.5</version>
+    </dependency>
+    <dependency>
+      <groupId>org.ow2.asm</groupId>
+      <artifactId>asm-all</artifactId>
+      <version>5.1</version>
     </dependency>
   </dependencies>
 </project>

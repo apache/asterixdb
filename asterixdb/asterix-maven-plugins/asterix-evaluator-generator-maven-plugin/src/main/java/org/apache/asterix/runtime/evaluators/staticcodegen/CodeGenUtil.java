@@ -27,6 +27,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.asterix.common.utils.CodeGenHelper;
 import org.apache.commons.lang3.tuple.Pair;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
@@ -36,15 +37,12 @@ import org.objectweb.asm.ClassWriter;
  */
 public class CodeGenUtil {
 
-    public final static String DEFAULT_SUFFIX_FOR_GENERATED_CLASS = "Gen";
     private final static String OBJECT_CLASS_NAME = "java/lang/Object";
-    private final static String DESCRIPTOR_SUPER_CLASS_NAME = "org/apache/asterix/runtime/"
-            + "evaluators/base/AbstractScalarFunctionDynamicDescriptor";
+    public final static String DESCRIPTOR_SUPER_CLASS_NAME =
+            "org/apache/asterix/runtime/evaluators/base/AbstractScalarFunctionDynamicDescriptor";
     private final static String EVALUATOR_FACTORY = "EvaluatorFactory";
     private final static String EVALUATOR = "Evaluator";
     private final static String INNER = "Inner";
-    private final static String DOLLAR = "$";
-    private final static String NESTED_CLASSNAME_PREFIX = "_";
 
     /**
      * The callback interface for a caller to determine what it needs to do for
@@ -81,31 +79,31 @@ public class CodeGenUtil {
     public static List<Pair<String, String>> generateScalarFunctionDescriptorBinary(String packagePrefix,
             String originalFuncDescriptorClassName, String suffixForGeneratedClass, ClassLoader classLoader,
             ClassByteCodeAction action) throws IOException, ClassNotFoundException {
-        originalFuncDescriptorClassName = toInternalClassName(originalFuncDescriptorClassName);
-        if (originalFuncDescriptorClassName.equals(DESCRIPTOR_SUPER_CLASS_NAME)) {
+        String internalFuncDescriptorClassName = CodeGenHelper.toInternalClassName(originalFuncDescriptorClassName);
+        if (internalFuncDescriptorClassName.equals(DESCRIPTOR_SUPER_CLASS_NAME)) {
             return Collections.emptyList();
         }
 
-        String targetFuncDescriptorClassName = getGeneratedFunctionDescriptorInternalClassName(
-                originalFuncDescriptorClassName, suffixForGeneratedClass);
+        String targetFuncDescriptorClassName =
+                CodeGenHelper.getGeneratedInternalClassName(internalFuncDescriptorClassName, suffixForGeneratedClass);
 
         // Adds the mapping of the old/new names of the function descriptor.
         List<Pair<String, String>> nameMappings = new ArrayList<>();
 
         // Generates code for super classes except java.lang.Object.
-        Class<?> evaluatorClass = CodeGenUtil.class.getClassLoader()
-                .loadClass(toJdkStandardName(originalFuncDescriptorClassName));
+        Class<?> evaluatorClass =
+                classLoader.loadClass(CodeGenHelper.toJdkStandardName(internalFuncDescriptorClassName));
         nameMappings.addAll(generateScalarFunctionDescriptorBinary(packagePrefix,
                 evaluatorClass.getSuperclass().getName(), suffixForGeneratedClass, classLoader, action));
 
-        nameMappings.add(Pair.of(originalFuncDescriptorClassName, targetFuncDescriptorClassName));
-        nameMappings.add(Pair.of(toJdkStandardName(originalFuncDescriptorClassName),
-                toJdkStandardName(targetFuncDescriptorClassName)));
+        nameMappings.add(Pair.of(internalFuncDescriptorClassName, targetFuncDescriptorClassName));
+        nameMappings.add(Pair.of(CodeGenHelper.toJdkStandardName(internalFuncDescriptorClassName),
+                CodeGenHelper.toJdkStandardName(targetFuncDescriptorClassName)));
 
         // Gathers evaluator factory classes that are created in the function descriptor.
-        ClassReader reader = new ClassReader(getResourceStream(originalFuncDescriptorClassName, classLoader));
-        GatherEvaluatorFactoryCreationVisitor evalFactoryCreationVisitor = new GatherEvaluatorFactoryCreationVisitor(
-                toInternalClassName(packagePrefix));
+        ClassReader reader = new ClassReader(getResourceStream(internalFuncDescriptorClassName, classLoader));
+        GatherEvaluatorFactoryCreationVisitor evalFactoryCreationVisitor =
+                new GatherEvaluatorFactoryCreationVisitor(CodeGenHelper.toInternalClassName(packagePrefix));
         reader.accept(evalFactoryCreationVisitor, 0);
         Set<String> evaluatorFactoryClassNames = evalFactoryCreationVisitor.getCreatedEvaluatorFactoryClassNames();
 
@@ -126,20 +124,6 @@ public class CodeGenUtil {
         reader.accept(renamingVisitor, 0);
         action.runAction(targetFuncDescriptorClassName, writer.toByteArray());
         return nameMappings;
-    }
-
-    public static String getGeneratedFunctionDescriptorClassName(String originalFuncDescriptorClassName,
-            String suffixForGeneratedClass) {
-        return toJdkStandardName(getGeneratedFunctionDescriptorInternalClassName(originalFuncDescriptorClassName,
-                suffixForGeneratedClass));
-    }
-
-    private static String getGeneratedFunctionDescriptorInternalClassName(String originalFuncDescriptorClassName,
-            String suffixForGeneratedClass) {
-        String originalFuncDescriptorClassInternalName = toInternalClassName(originalFuncDescriptorClassName);
-        String targetFuncDescriptorClassName = getGeneratedClassName(originalFuncDescriptorClassInternalName,
-                suffixForGeneratedClass, 0);
-        return targetFuncDescriptorClassName;
     }
 
     /**
@@ -193,19 +177,19 @@ public class CodeGenUtil {
             String originalEvaluatorFactoryClassName, String suffixForGeneratedClass, int factoryCounter,
             List<Pair<String, String>> nameMappings, ClassLoader classLoader, ClassByteCodeAction action)
             throws IOException, ClassNotFoundException {
-        originalEvaluatorFactoryClassName = toInternalClassName(originalEvaluatorFactoryClassName);
-        String targetEvaluatorFactoryClassName = getGeneratedClassName(originalEvaluatorFactoryClassName,
+        String internalEvaluatorFactoryClassName = CodeGenHelper.toInternalClassName(originalEvaluatorFactoryClassName);
+        String targetEvaluatorFactoryClassName = CodeGenHelper.generateClassName(internalEvaluatorFactoryClassName,
                 EVALUATOR_FACTORY + suffixForGeneratedClass, factoryCounter);
 
         // Adds the old/new names of the evaluator factory into the mapping.
-        nameMappings.add(Pair.of(originalEvaluatorFactoryClassName, targetEvaluatorFactoryClassName));
-        nameMappings.add(Pair.of(toJdkStandardName(originalEvaluatorFactoryClassName),
-                toJdkStandardName(targetEvaluatorFactoryClassName)));
+        nameMappings.add(Pair.of(internalEvaluatorFactoryClassName, targetEvaluatorFactoryClassName));
+        nameMappings.add(Pair.of(CodeGenHelper.toJdkStandardName(internalEvaluatorFactoryClassName),
+                CodeGenHelper.toJdkStandardName(targetEvaluatorFactoryClassName)));
 
         // Gathers the class names of the evaluators that are created in the evaluator factory.
-        ClassReader reader = new ClassReader(getResourceStream(originalEvaluatorFactoryClassName, classLoader));
-        GatherEvaluatorCreationVisitor evalCreationVisitor = new GatherEvaluatorCreationVisitor(
-                toInternalClassName(packagePrefix));
+        ClassReader reader = new ClassReader(getResourceStream(internalEvaluatorFactoryClassName, classLoader));
+        GatherEvaluatorCreationVisitor evalCreationVisitor =
+                new GatherEvaluatorCreationVisitor(CodeGenHelper.toInternalClassName(packagePrefix));
         reader.accept(evalCreationVisitor, 0);
         Set<String> evaluatorClassNames = evalCreationVisitor.getCreatedEvaluatorClassNames();
 
@@ -249,25 +233,24 @@ public class CodeGenUtil {
             int evalCounter, List<Pair<String, String>> nameMappings, ClassLoader classLoader,
             ClassByteCodeAction action) throws IOException, ClassNotFoundException {
         // Convert class names.
-        originalEvaluatorClassName = toInternalClassName(originalEvaluatorClassName);
-        if (originalEvaluatorClassName.equals(OBJECT_CLASS_NAME)) {
+        String internalEvaluatorClassName = CodeGenHelper.toInternalClassName(originalEvaluatorClassName);
+        if (internalEvaluatorClassName.equals(OBJECT_CLASS_NAME)) {
             return;
         }
-        String targetEvaluatorClassName = getGeneratedClassName(originalEvaluatorClassName,
+        String targetEvaluatorClassName = CodeGenHelper.generateClassName(internalEvaluatorClassName,
                 EVALUATOR + suffixForGeneratedClass, evalCounter);
 
         // Generates code for super classes except java.lang.Object.
-        Class<?> evaluatorClass = CodeGenUtil.class.getClassLoader()
-                .loadClass(toJdkStandardName(originalEvaluatorClassName));
+        Class<?> evaluatorClass = classLoader.loadClass(CodeGenHelper.toJdkStandardName(internalEvaluatorClassName));
         generateEvaluatorClassBinary(evaluatorClass.getSuperclass().getName(), suffixForGeneratedClass, evalCounter,
                 nameMappings, classLoader, action);
 
         // Adds name mapping.
-        nameMappings.add(Pair.of(originalEvaluatorClassName, targetEvaluatorClassName));
-        nameMappings.add(
-                Pair.of(toJdkStandardName(originalEvaluatorClassName), toJdkStandardName(targetEvaluatorClassName)));
+        nameMappings.add(Pair.of(internalEvaluatorClassName, targetEvaluatorClassName));
+        nameMappings.add(Pair.of(CodeGenHelper.toJdkStandardName(internalEvaluatorClassName),
+                CodeGenHelper.toJdkStandardName(targetEvaluatorClassName)));
 
-        ClassReader firstPassReader = new ClassReader(getResourceStream(originalEvaluatorClassName, classLoader));
+        ClassReader firstPassReader = new ClassReader(getResourceStream(internalEvaluatorClassName, classLoader));
         // Generates inner classes other than the evaluator.
         Set<String> excludedNames = new HashSet<>();
         for (Pair<String, String> entry : nameMappings) {
@@ -285,11 +268,11 @@ public class CodeGenUtil {
         // Injects null-handling byte code and output the class binary.
         // Since we're going to add jump instructions, we have to let the ClassWriter to
         // automatically generate frames for JVM to verify the class.
-        ClassWriter secondPassWriter = new ClassWriter(secondPassReader,
-                ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS);
+        ClassWriter secondPassWriter =
+                new ClassWriter(secondPassReader, ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS);
         RenameClassVisitor renamingVisitor = new RenameClassVisitor(secondPassWriter, nameMappings);
-        EvaluatorNullCheckVisitor nullHandlingVisitor = new EvaluatorNullCheckVisitor(renamingVisitor,
-                missingHandlingVisitor.getLastAddedLabel());
+        EvaluatorNullCheckVisitor nullHandlingVisitor =
+                new EvaluatorNullCheckVisitor(renamingVisitor, missingHandlingVisitor.getLastAddedLabel());
         secondPassReader.accept(nullHandlingVisitor, 0);
         action.runAction(targetEvaluatorClassName, secondPassWriter.toByteArray());
     }
@@ -325,9 +308,10 @@ public class CodeGenUtil {
         String suffix = INNER + suffixForGeneratedClass;
         for (String innerClassName : innerClassNames) {
             // adds name mapping.
-            String targetInnerClassName = getGeneratedClassName(innerClassName, suffix, counter++);
+            String targetInnerClassName = CodeGenHelper.generateClassName(innerClassName, suffix, counter++);
             nameMappings.add(Pair.of(innerClassName, targetInnerClassName));
-            nameMappings.add(Pair.of(toJdkStandardName(innerClassName), toJdkStandardName(targetInnerClassName)));
+            nameMappings.add(Pair.of(CodeGenHelper.toJdkStandardName(innerClassName),
+                    CodeGenHelper.toJdkStandardName(targetInnerClassName)));
 
             // Renaming appearances of original class names.
             ClassReader innerClassReader = new ClassReader(getResourceStream(innerClassName, classLoader));
@@ -336,58 +320,6 @@ public class CodeGenUtil {
             innerClassReader.accept(renamingVisitor, 0);
             action.runAction(targetInnerClassName, writer.toByteArray());
         }
-    }
-
-    /**
-     * Converts a JDK class name to the class naming format of ASM.
-     *
-     * @param name,
-     *            a class name following the JDK convention.
-     * @return a "/"-separated class name assumed by ASM.
-     */
-    private static String toInternalClassName(String name) {
-        return name.replace(".", "/");
-    }
-
-    /**
-     * Converts an ASM class name to the JDK class naming format.
-     *
-     * @param name,
-     *            a class name following the ASM convention.
-     * @return a "."-separated class name for JDK.
-     */
-    private static String toJdkStandardName(String name) {
-        return name.replace("/", ".");
-    }
-
-    /**
-     * Gets the name of a generated class.
-     *
-     * @param originalClassName,
-     *            the original class, i.e., the source of the generated class.
-     * @param suffix,
-     *            the suffix for the generated class.
-     * @param counter,
-     *            a counter that appearing at the end of the name of the generated class.
-     * @return the name of the generated class.
-     */
-    private static String getGeneratedClassName(String originalClassName, String suffix, int counter) {
-        StringBuilder sb = new StringBuilder();
-        int end = originalClassName.indexOf(DOLLAR);
-        if (end < 0) {
-            end = originalClassName.length();
-        }
-
-        String name = originalClassName.substring(0, end);
-        sb.append(name);
-        sb.append(DOLLAR);
-        sb.append(NESTED_CLASSNAME_PREFIX);
-        sb.append(suffix);
-
-        if (counter > 0) {
-            sb.append(counter);
-        }
-        return sb.toString();
     }
 
     /**
@@ -401,5 +333,8 @@ public class CodeGenUtil {
      */
     private static InputStream getResourceStream(String className, ClassLoader classLoader) {
         return classLoader.getResourceAsStream(className.replace('.', '/') + ".class");
+    }
+
+    private CodeGenUtil() {
     }
 }

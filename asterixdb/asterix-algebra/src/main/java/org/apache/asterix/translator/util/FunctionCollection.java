@@ -23,6 +23,7 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.asterix.common.utils.CodeGenHelper;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.runtime.aggregates.collections.FirstElementAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.collections.ListifyAggregateDescriptor;
@@ -324,7 +325,6 @@ import org.apache.asterix.runtime.evaluators.functions.temporal.UnixTimeFromDate
 import org.apache.asterix.runtime.evaluators.functions.temporal.UnixTimeFromTimeInMsDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.temporal.YearMonthDurationGreaterThanComparatorDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.temporal.YearMonthDurationLessThanComparatorDescriptor;
-import org.apache.asterix.runtime.evaluators.staticcodegen.CodeGenUtil;
 import org.apache.asterix.runtime.runningaggregates.std.TidRunningAggregateDescriptor;
 import org.apache.asterix.runtime.unnestingfunctions.std.RangeDescriptor;
 import org.apache.asterix.runtime.unnestingfunctions.std.ScanCollectionDescriptor;
@@ -731,8 +731,8 @@ public class FunctionCollection {
      */
     private static IFunctionDescriptorFactory getGeneratedFunctionDescriptorFactory(Class<?> cl) {
         try {
-            String className = CodeGenUtil.getGeneratedFunctionDescriptorClassName(cl.getName(),
-                    CodeGenUtil.DEFAULT_SUFFIX_FOR_GENERATED_CLASS);
+            String className = CodeGenHelper.getGeneratedClassName(cl.getName(),
+                    CodeGenHelper.DEFAULT_SUFFIX_FOR_GENERATED_CLASS);
             Class<?> generatedCl = cl.getClassLoader().loadClass(className);
             Field factory = generatedCl.getDeclaredField(FACTORY);
             return (IFunctionDescriptorFactory) factory.get(null);

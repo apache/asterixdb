@@ -35,6 +35,55 @@
       <comments>A business-friendly OSS license</comments>
     </license>
   </licenses>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.asterix</groupId>
+        <artifactId>asterix-evaluator-generator-maven-plugin</artifactId>
+        <version>${project.version}</version>
+        <configuration>
+          <evaluatorPackagePrefix>org.apache.asterix.runtime.evaluators</evaluatorPackagePrefix>
+        </configuration>
+        <executions>
+          <execution>
+            <id>generate-evaluator</id>
+            <phase>process-classes</phase>
+            <goals>
+              <goal>generate-evaluator</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.eclipse.m2e</groupId>
+          <artifactId>lifecycle-mapping</artifactId>
+          <version>1.0.0</version>
+          <configuration>
+            <lifecycleMappingMetadata>
+              <pluginExecutions>
+                <pluginExecution>
+                  <pluginExecutionFilter>
+                    <groupId>org.apache.asterix</groupId>
+                    <artifactId>asterix-evaluator-generator-maven-plugin</artifactId>
+                    <versionRange>(0.8.8-incubating,)</versionRange>
+                    <goals>
+                      <goal>generate-evaluator</goal>
+                    </goals>
+                  </pluginExecutionFilter>
+                  <action>
+                    <ignore />
+                  </action>
+                </pluginExecution>
+              </pluginExecutions>
+            </lifecycleMappingMetadata>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build>
   <dependencies>
     <dependency>
       <groupId>org.apache.asterix</groupId>
@@ -133,11 +182,6 @@
       <groupId>org.apache.asterix</groupId>
       <artifactId>asterix-transactions</artifactId>
       <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.ow2.asm</groupId>
-      <artifactId>asm-all</artifactId>
-      <version>5.1</version>
     </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>

@@ -97,23 +97,6 @@
           </execution>
         </executions>
       </plugin>
-      <plugin>
-        <groupId>org.apache.asterix</groupId>
-        <artifactId>asterix-evaluator-generator-maven-plugin</artifactId>
-        <version>${project.version}</version>
-        <configuration>
-          <evaluatorPackagePrefix>org.apache.asterix.runtime.evaluators</evaluatorPackagePrefix>
-        </configuration>
-        <executions>
-          <execution>
-            <id>generate-evaluator</id>
-            <phase>compile</phase>
-            <goals>
-              <goal>generate-evaluator</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
     </plugins>
     <pluginManagement>
       <plugins>
@@ -129,19 +112,6 @@
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>javacc-maven-plugin</artifactId>
                     <versionRange>[2.6,)</versionRange>
-                    <goals>
-                      <goal>javacc</goal>
-                    </goals>
-                  </pluginExecutionFilter>
-                  <action>
-                    <ignore />
-                  </action>
-                </pluginExecution>
-                <pluginExecution>
-                  <pluginExecutionFilter>
-                    <groupId>org.apache.asterix</groupId>
-                    <artifactId>asterix-evaluator-generator-maven-plugin</artifactId>
-                    <versionRange>(0.8.8-incubating,)</versionRange>
                     <goals>
                       <goal>javacc</goal>
                     </goals>
@@ -220,10 +190,6 @@
     </dependency>
     <dependency>
       <groupId>org.apache.hyracks</groupId>
-      <artifactId>hyracks-util</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.hyracks</groupId>
       <artifactId>hyracks-dataflow-common</artifactId>
     </dependency>
     <dependency>
@@ -260,11 +226,6 @@
     <dependency>
       <groupId>org.apache.hyracks</groupId>
       <artifactId>hyracks-dataflow-std</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.asterix</groupId>
-      <artifactId>asterix-fuzzyjoin</artifactId>
-      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.hyracks</groupId>

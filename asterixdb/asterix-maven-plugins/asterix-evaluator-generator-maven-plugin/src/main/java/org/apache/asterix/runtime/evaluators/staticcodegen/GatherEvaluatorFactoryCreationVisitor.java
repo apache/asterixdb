@@ -27,15 +27,15 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
 /**
- * This visitor gathers all created evaluators in an evaluator factory.
+ * This visitor gathers all created evaluator factories in a scalar function descriptor.
  */
-public class GatherEvaluatorCreationVisitor extends ClassVisitor {
+public class GatherEvaluatorFactoryCreationVisitor extends ClassVisitor {
 
-    private static String METHOD_NAME = "createScalarEvaluator";
-    private Set<String> createdEvaluatorClassNames = new HashSet<>();
+    private static final String METHOD_NAME = "createEvaluatorFactory";
+    private final Set<String> createdEvaluatorFactoryClassNames = new HashSet<>();
     private String ownerPrefix;
 
-    public GatherEvaluatorCreationVisitor(String ownerPrefix) {
+    public GatherEvaluatorFactoryCreationVisitor(String ownerPrefix) {
         super(Opcodes.ASM5);
         this.ownerPrefix = ownerPrefix;
     }
@@ -53,15 +53,14 @@ public class GatherEvaluatorCreationVisitor extends ClassVisitor {
                     return;
                 }
                 if (owner.startsWith(ownerPrefix)) {
-                    createdEvaluatorClassNames.add(owner);
+                    createdEvaluatorFactoryClassNames.add(owner);
                 }
             }
         };
-
     }
 
-    public Set<String> getCreatedEvaluatorClassNames() {
-        return createdEvaluatorClassNames;
+    public Set<String> getCreatedEvaluatorFactoryClassNames() {
+        return createdEvaluatorFactoryClassNames;
     }
 
 }
