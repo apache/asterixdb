@@ -45,8 +45,6 @@ import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
 import org.apache.hyracks.api.dataflow.value.IPredicateEvaluatorFactoryProvider;
 
 public interface IDataFormat {
-    public void registerRuntimeFunctions(List<IFunctionDescriptorFactory> funcDescriptor);
-
     public ISerializerDeserializerProvider getSerdeProvider();
 
     public IBinaryHashFunctionFactoryProvider getBinaryHashFunctionFactoryProvider();

@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.asterix.translator.util;
+package org.apache.asterix.runtime.functions;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -333,7 +333,7 @@ import org.apache.asterix.runtime.unnestingfunctions.std.SubsetCollectionDescrip
 /**
  * This class (statically) holds a list of function descriptor factories.
  */
-public class FunctionCollection {
+public final class FunctionCollection {
 
     private static final String FACTORY = "FACTORY";
     private static final List<IFunctionDescriptorFactory> temp = new ArrayList<>();
@@ -741,4 +741,6 @@ public class FunctionCollection {
         }
     }
 
+    private FunctionCollection() {
+    }
 }
