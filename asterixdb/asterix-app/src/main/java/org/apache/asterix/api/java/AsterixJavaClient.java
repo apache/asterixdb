@@ -80,7 +80,7 @@ public class AsterixJavaClient {
     }
 
     public void compile() throws Exception {
-        compile(true, false, false, false, false, false, false);
+        compile(true, false, true, false, false, false, false);
     }
 
     public void compile(boolean optimize, boolean printRewrittenExpressions, boolean printLogicalPlan,

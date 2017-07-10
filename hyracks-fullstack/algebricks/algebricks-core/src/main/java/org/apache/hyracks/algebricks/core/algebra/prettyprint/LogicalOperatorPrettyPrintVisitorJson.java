@@ -184,7 +184,7 @@ public class LogicalOperatorPrettyPrintVisitorJson implements ILogicalOperatorVi
             }
             String fst = getOrderString(p.first);
             addIndent(indent).append("\"first\":" + fst + ",\n");
-            addIndent(indent).append("\"second\":\""+p.second.getValue().accept(exprVisitor, indent) + "\"");
+            addIndent(indent).append("\"second\":\""+p.second.getValue().accept(exprVisitor, indent).replace('"',' ') + "\"");
         }
         return null;
     }
@@ -205,7 +205,7 @@ public class LogicalOperatorPrettyPrintVisitorJson implements ILogicalOperatorVi
         addIndent(indent).append("\"operator\":\"assign\"");
         if(op.getVariables().size() > 0) {
             addIndent(0).append(",\n");
-            addIndent(indent).append("\"variables\" :[");
+            addIndent(indent).append("\"variables\":[");
             boolean first = true;
             for (LogicalVariable v : op.getVariables()){
                 if(!first)
@@ -241,12 +241,15 @@ public class LogicalOperatorPrettyPrintVisitorJson implements ILogicalOperatorVi
         }
         return null;
     }
-//TODO:Shiva
+
     @Override
     public Void visitWriteResultOperator(WriteResultOperator op, Integer indent) throws AlgebricksException {
-        addIndent(indent).append("load ").append(str(op.getDataSource())).append(" from ")
-                .append(op.getPayloadExpression().getValue().accept(exprVisitor, indent)).append(" partitioned by ");
+        addIndent(indent).append("\"operator\":\"load\",\n");
+        addIndent(indent).append(str(op.getDataSource())).append("\"from\":")
+                .append(op.getPayloadExpression().getValue().accept(exprVisitor, indent)+",\n");
+        addIndent(indent).append("\"partitioned-by\":{");
         pprintExprList(op.getKeyExpressions(), indent);
+        addIndent(indent).append("}");
         return null;
     }
 
@@ -262,7 +265,7 @@ public class LogicalOperatorPrettyPrintVisitorJson implements ILogicalOperatorVi
         addIndent(indent).append("\"operator\":\"project\"");
         if(op.getVariables().size() > 0) {
             addIndent(0).append(",\n");
-            addIndent(indent).append("\"variables\" :[");
+            addIndent(indent).append("\"variables\":[");
             boolean first = true;
             for (LogicalVariable v : op.getVariables()){
                 if(!first)
@@ -289,37 +292,38 @@ public class LogicalOperatorPrettyPrintVisitorJson implements ILogicalOperatorVi
         addIndent(indent).append("\"operator\":\"union\"");
         for (Triple<LogicalVariable, LogicalVariable, LogicalVariable> v : op.getVariableMappings()) {
             buffer.append(",\n");
-            addIndent(indent).append("\"values\":{" +"\""+ v.first + ",\" " + "\""+v.second + ",\"" + "\""+v.third + "\"}");
+            addIndent(indent).append("\"values\":[" +"\""+ v.first + "\"," + "\""+v.second + "\"," + "\""+v.third + "\"]");
         }
         return null;
     }
-//TODO:Shiva
+
     @Override
     public Void visitIntersectOperator(IntersectOperator op, Integer indent) throws AlgebricksException {
-        addIndent(indent).append("intersect (");
+        addIndent(indent).append("\"operator\":\"intersect\",\n");
 
-        buffer.append('[');
+        addIndent(indent).append("\"output-variables\":[");
         for (int i = 0; i < op.getOutputVars().size(); i++) {
             if (i > 0) {
                 buffer.append(", ");
             }
-            buffer.append(str(op.getOutputVars().get(i)));
+            buffer.append("\""+str(op.getOutputVars().get(i))+"\"");
         }
-        buffer.append("] <- [");
+        buffer.append("],");
+        addIndent(indent).append("\"input_variables\":[");
         for (int i = 0; i < op.getNumInput(); i++) {
             if (i > 0) {
-                buffer.append(", ");
+                buffer.append(",\n");
             }
-            buffer.append('[');
+            buffer.append("[");
             for (int j = 0; j < op.getInputVariables(i).size(); j++) {
                 if (j > 0) {
                     buffer.append(", ");
                 }
-                buffer.append(str(op.getInputVariables(i).get(j)));
+                buffer.append("\""+str(op.getInputVariables(i).get(j))+"\"");
             }
             buffer.append(']');
         }
-        buffer.append("])");
+        buffer.append("]");
         return null;
     }
 
@@ -340,7 +344,7 @@ public class LogicalOperatorPrettyPrintVisitorJson implements ILogicalOperatorVi
         }
         if (op.getPositionalVariable() != null) {
             buffer.append(",\n");
-            addIndent(indent).append("\"position\":" + op.getPositionalVariable());
+            addIndent(indent).append("\"position\":\"" + op.getPositionalVariable()+"\"");
         }
         buffer.append(",\n");
         addIndent(indent).append("\"expressions\":\""+op.getExpressionRef().getValue().accept(exprVisitor, indent).replace('"',' ')+"\"");
@@ -350,7 +354,7 @@ public class LogicalOperatorPrettyPrintVisitorJson implements ILogicalOperatorVi
     @Override
     public Void visitLeftOuterUnnestOperator(LeftOuterUnnestOperator op, Integer indent) throws AlgebricksException {
         addIndent(indent).append("\"operator\":\"outer-unnest\",\n");
-        addIndent(indent).append("\"variable(s)\":"+ op.getVariable());
+        addIndent(indent).append("\"variables\":[\""+ op.getVariable()+"\"]");
         if (op.getPositionalVariable() != null) {
             buffer.append(",\n");
             addIndent(indent).append("\"position\":" + op.getPositionalVariable());
@@ -460,15 +464,21 @@ public class LogicalOperatorPrettyPrintVisitorJson implements ILogicalOperatorVi
             }
             buffer.append("]");
         }
+        if (minFilterVars != null || maxFilterVars != null) {
+            plan.append("\n");
+            addIndent(indent).append("}");
+        }
         return null;
     }
-    //TODO:Shiva
+
     @Override
     public Void visitLimitOperator(LimitOperator op, Integer indent) throws AlgebricksException {
-        addIndent(indent).append("limit " + op.getMaxObjects().getValue().accept(exprVisitor, indent));
+        addIndent(indent).append("\"operator\":\"limit\",\n");
+        addIndent(indent).append("\"value\":\""+op.getMaxObjects().getValue().accept(exprVisitor, indent)+"\"");
         ILogicalExpression offset = op.getOffset().getValue();
         if (offset != null) {
-            buffer.append(", " + offset.accept(exprVisitor, indent));
+            buffer.append(",\n");
+            addIndent(indent).append("\"offset\":\""+offset.accept(exprVisitor, indent)+"\"");
         }
         return null;
     }
@@ -528,50 +538,65 @@ public class LogicalOperatorPrettyPrintVisitorJson implements ILogicalOperatorVi
         addIndent(indent).append("\"operator\":\"materialize\"");
         return null;
     }
-    //TODO:Shiva
+
     @Override
     public Void visitInsertDeleteUpsertOperator(InsertDeleteUpsertOperator op, Integer indent)
             throws AlgebricksException {
-        String header = "\"operator\":"+getIndexOpString(op.getOperation())+",\n";
+        String header = "\"operator\":\""+getIndexOpString(op.getOperation())+"\",\n";
         addIndent(indent).append(header);
-        addIndent(indent).append(str(op.getDataSource())).append(" from record: ")
-                .append(op.getPayloadExpression().getValue().accept(exprVisitor, indent));
+        addIndent(indent).append(str("\"data-source\":\""+op.getDataSource()+"\",\n"));
+        addIndent(indent).append("\"from-record\":\"")
+                .append(op.getPayloadExpression().getValue().accept(exprVisitor, indent)+"\"");
         if (op.getAdditionalNonFilteringExpressions() != null) {
-            buffer.append(", meta: ");
-            pprintExprList(op.getAdditionalNonFilteringExpressions(), indent);
+            buffer.append(",\n\"meta\":\"");
+            pprintExprList(op.getAdditionalNonFilteringExpressions(), 0);
+            buffer.append("\"");
         }
-        buffer.append(" partitioned by ");
-        pprintExprList(op.getPrimaryKeyExpressions(), indent);
+        buffer.append(",\n");
+        addIndent(indent).append("\"partitioned-by\":{");
+        pprintExprList(op.getPrimaryKeyExpressions(), 0);
+        buffer.append("}");
         if (op.getOperation() == Kind.UPSERT) {
-            buffer.append(
-                    " out: ([record-before-upsert:" + op.getBeforeOpRecordVar()
-                            + ((op.getBeforeOpAdditionalNonFilteringVars() != null)
-                            ? (", additional-before-upsert: " + op.getBeforeOpAdditionalNonFilteringVars())
-                            : "")
-                            + "]) ");
+            addIndent(indent).append(",\n\"out\":{\n");
+            addIndent(indent).append("\"record-before-upsert\":\"" + op.getBeforeOpRecordVar()+"\"");
+            if((op.getBeforeOpAdditionalNonFilteringVars() != null)){
+                buffer.append(",\n");
+                addIndent(indent).append("\"additional-before-upsert\":\"" + op.getBeforeOpAdditionalNonFilteringVars()+"\"");
+            }
+            addIndent(indent).append("},\n");
         }
         if (op.isBulkload()) {
-            buffer.append(" [bulkload]");
+            addIndent(indent).append(",\n\"bulkload\":\"true\"");
         }
         return null;
     }
-    //TODO:Shiva
+
     @Override
     public Void visitIndexInsertDeleteUpsertOperator(IndexInsertDeleteUpsertOperator op, Integer indent)
             throws AlgebricksException {
         String header = getIndexOpString(op.getOperation());
-        addIndent(indent).append(header).append(op.getIndexName()).append(" on ")
-                .append(str(op.getDataSourceIndex().getDataSource())).append(" from ");
+        addIndent(indent).append("\"operator\":\""+header+"\",\n");
+        addIndent(indent).append("\"index\":\""+op.getIndexName()+"\",\n");
+        addIndent(indent).append("\"on\":\"")
+                .append(str(op.getDataSourceIndex().getDataSource())+"\",\n");
+        addIndent(indent).append("\"from\":{");
+
         if (op.getOperation() == Kind.UPSERT) {
-            buffer.append(" replace:");
-            pprintExprList(op.getPrevSecondaryKeyExprs(), indent);
-            buffer.append(" with:");
-            pprintExprList(op.getSecondaryKeyExpressions(), indent);
+
+            addIndent(indent).append("[\"replace\":\"");
+            pprintExprList(op.getPrevSecondaryKeyExprs(), 0);
+            buffer.append("\",\n");
+            addIndent(indent).append("\"with\":\"");
+            pprintExprList(op.getSecondaryKeyExpressions(), 0);
+            buffer.append("\"}");
         } else {
-            pprintExprList(op.getSecondaryKeyExpressions(), indent);
+            pprintExprList(op.getSecondaryKeyExpressions(), 0);
         }
+        buffer.append("\n");
+        addIndent(indent).append("}");
         if (op.isBulkload()) {
-            buffer.append(" [bulkload]");
+            buffer.append(",\n");
+            buffer.append("\"bulkload\":\"true\"");
         }
         return null;
     }
@@ -579,11 +604,11 @@ public class LogicalOperatorPrettyPrintVisitorJson implements ILogicalOperatorVi
     public String getIndexOpString(Kind opKind) {
         switch (opKind) {
             case DELETE:
-                return "\"delete-from\"";
+                return "delete-from";
             case INSERT:
-                return "\"insert-into\"";
+                return "insert-into";
             case UPSERT:
-                return "\"upsert-into\"";
+                return "upsert-into";
         }
         return null;
     }

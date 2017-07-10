@@ -18,8 +18,6 @@
  */
 package org.apache.asterix.drivers;
 
-import java.io.FileReader;
-
 import org.apache.asterix.api.common.AsterixClientConfig;
 import org.apache.asterix.api.java.AsterixJavaClient;
 import org.apache.asterix.app.translator.DefaultStatementExecutorFactory;
@@ -29,6 +27,8 @@ import org.apache.asterix.file.StorageComponentProvider;
 import org.apache.hyracks.api.client.HyracksConnection;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.kohsuke.args4j.CmdLineParser;
+
+import java.io.FileReader;
 
 public class AsterixClientDriver {
 
@@ -53,8 +53,10 @@ public class AsterixClientDriver {
         }
         boolean exec = new Boolean(acc.execute);
         IHyracksClientConnection hcc = exec ? new HyracksConnection("localhost", acc.hyracksPort) : null;
+//        AsterixJavaClient q = compileQuery(hcc, acc.getArguments().get(0), new Boolean(acc.optimize),
+//                new Boolean(acc.onlyPhysical), exec || new Boolean(acc.hyracksJob));
         AsterixJavaClient q = compileQuery(hcc, acc.getArguments().get(0), new Boolean(acc.optimize),
-                new Boolean(acc.onlyPhysical), exec || new Boolean(acc.hyracksJob));
+                false, exec || new Boolean(acc.hyracksJob));
         if (exec) {
             q.execute();
         }
