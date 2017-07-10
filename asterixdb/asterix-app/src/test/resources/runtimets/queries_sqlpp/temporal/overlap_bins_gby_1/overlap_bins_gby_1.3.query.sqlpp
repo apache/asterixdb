@@ -24,16 +24,19 @@
 use test;
 
 
-select element {'timebin':bin,'count':count(i2),'total_ms':coll_sum((
-        select element `ms_from_day_time_duration`(`duration-from-interval`(`get-overlapping-interval`(bin,i3.interval)))
-        from  i2 as i3
+select element {'timebin':bin,
+    'count':count((select value 1 from g)),
+    'total_ms':coll_sum((
+        select element
+        `ms_from_day_time_duration`(`duration-from-interval`(`get-overlapping-interval`(bin, g.i2.interval)))
+        from g
     ))}
 from  (
     select element {'interval':`interval-start-from-time`(i1.time,i1.duration)}
     from  tsdata as i1
     order by i1.time
-) as i2,
-      `overlap-bins`(i2.interval,time('00:00:00'),`day_time_duration`('PT1H30M')) as j
+) as i2, `overlap-bins`(i2.interval,time('00:00:00'),`day_time_duration`('PT1H30M')) as j
 group by j as bin
+group as g
 order by `get-interval-start`(bin)
 ;

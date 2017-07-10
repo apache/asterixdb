@@ -35,19 +35,27 @@ public class FloatSerializerDeserializer implements ISerializerDeserializer<Floa
 
     @Override
     public Float deserialize(DataInput in) throws HyracksDataException {
-        try {
-            return in.readFloat();
-        } catch (IOException e) {
-            throw new HyracksDataException(e);
-        }
+        return read(in);
     }
 
     @Override
     public void serialize(Float instance, DataOutput out) throws HyracksDataException {
+        write(instance, out);
+    }
+
+    public static float read(DataInput in) throws HyracksDataException {
         try {
-            out.writeFloat(instance.floatValue());
+            return in.readFloat();
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
+        }
+    }
+
+    public static void write(float instance, DataOutput out) throws HyracksDataException {
+        try {
+            out.writeFloat(instance);
+        } catch (IOException e) {
+            throw HyracksDataException.create(e);
         }
     }
 }

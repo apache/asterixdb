@@ -1,5 +1,5 @@
 DataverseUse tpch
-Set import-private-functions=true
+Set hash_merge=true
 Query:
 SELECT ELEMENT [
 RecordConstructor [
@@ -20,11 +20,14 @@ RecordConstructor [
       (
         SELECT ELEMENT [
         FieldAccessor [
-          Variable [ Name=$i ]
+          FieldAccessor [
+            Variable [ Name=$i ]
+            Field=l
+          ]
           Field=l_quantity
         ]
         ]
-        FROM [          Variable [ Name=$l ]
+        FROM [          Variable [ Name=$g ]
           AS Variable [ Name=$i ]
         ]
       )
@@ -37,11 +40,14 @@ RecordConstructor [
       (
         SELECT ELEMENT [
         FieldAccessor [
-          Variable [ Name=$i ]
+          FieldAccessor [
+            Variable [ Name=$i ]
+            Field=l
+          ]
           Field=l_extendedprice
         ]
         ]
-        FROM [          Variable [ Name=$l ]
+        FROM [          Variable [ Name=$g ]
           AS Variable [ Name=$i ]
         ]
       )
@@ -55,7 +61,10 @@ RecordConstructor [
         SELECT ELEMENT [
         OperatorExpr [
           FieldAccessor [
-            Variable [ Name=$i ]
+            FieldAccessor [
+              Variable [ Name=$i ]
+              Field=l
+            ]
             Field=l_extendedprice
           ]
           *
@@ -63,13 +72,16 @@ RecordConstructor [
             LiteralExpr [LONG] [1]
             -
             FieldAccessor [
-              Variable [ Name=$i ]
+              FieldAccessor [
+                Variable [ Name=$i ]
+                Field=l
+              ]
               Field=l_discount
             ]
           ]
         ]
         ]
-        FROM [          Variable [ Name=$l ]
+        FROM [          Variable [ Name=$g ]
           AS Variable [ Name=$i ]
         ]
       )
@@ -83,7 +95,10 @@ RecordConstructor [
         SELECT ELEMENT [
         OperatorExpr [
           FieldAccessor [
-            Variable [ Name=$i ]
+            FieldAccessor [
+              Variable [ Name=$i ]
+              Field=l
+            ]
             Field=l_extendedprice
           ]
           *
@@ -91,7 +106,10 @@ RecordConstructor [
             LiteralExpr [LONG] [1]
             -
             FieldAccessor [
-              Variable [ Name=$i ]
+              FieldAccessor [
+                Variable [ Name=$i ]
+                Field=l
+              ]
               Field=l_discount
             ]
           ]
@@ -100,13 +118,16 @@ RecordConstructor [
             LiteralExpr [LONG] [1]
             +
             FieldAccessor [
-              Variable [ Name=$i ]
+              FieldAccessor [
+                Variable [ Name=$i ]
+                Field=l
+              ]
               Field=l_tax
             ]
           ]
         ]
         ]
-        FROM [          Variable [ Name=$l ]
+        FROM [          Variable [ Name=$g ]
           AS Variable [ Name=$i ]
         ]
       )
@@ -119,11 +140,14 @@ RecordConstructor [
       (
         SELECT ELEMENT [
         FieldAccessor [
-          Variable [ Name=$i ]
+          FieldAccessor [
+            Variable [ Name=$i ]
+            Field=l
+          ]
           Field=l_quantity
         ]
         ]
-        FROM [          Variable [ Name=$l ]
+        FROM [          Variable [ Name=$g ]
           AS Variable [ Name=$i ]
         ]
       )
@@ -136,11 +160,14 @@ RecordConstructor [
       (
         SELECT ELEMENT [
         FieldAccessor [
-          Variable [ Name=$i ]
+          FieldAccessor [
+            Variable [ Name=$i ]
+            Field=l
+          ]
           Field=l_extendedprice
         ]
         ]
-        FROM [          Variable [ Name=$l ]
+        FROM [          Variable [ Name=$g ]
           AS Variable [ Name=$i ]
         ]
       )
@@ -153,11 +180,14 @@ RecordConstructor [
       (
         SELECT ELEMENT [
         FieldAccessor [
-          Variable [ Name=$i ]
+          FieldAccessor [
+            Variable [ Name=$i ]
+            Field=l
+          ]
           Field=l_discount
         ]
         ]
-        FROM [          Variable [ Name=$l ]
+        FROM [          Variable [ Name=$g ]
           AS Variable [ Name=$i ]
         ]
       )
@@ -166,16 +196,18 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [count_order]
     :
-    FunctionCall tpch.sql-count@1[
+    FunctionCall tpch.count@1[
       (
         SELECT ELEMENT [
-        FieldAccessor [
-          Variable [ Name=#2 ]
-          Field=l
+        FunctionCall Metadata.resolve@-1[
+          LiteralExpr [STRING] [l]
+          Variable [ Name=$g ]
+          Variable [ Name=$l_linestatus ]
+          Variable [ Name=$l_returnflag ]
         ]
         ]
-        FROM [          Variable [ Name=#1 ]
-          AS Variable [ Name=#2 ]
+        FROM [          Variable [ Name=$g ]
+          AS Variable [ Name=$g ]
         ]
       )
     ]
@@ -209,7 +241,7 @@ Groupby
     Variable [ Name=$l ]
     Field=l_linestatus
   ]
-  GROUP AS Variable [ Name=#1 ]
+  GROUP AS Variable [ Name=$g ]
   (
     l:=Variable [ Name=$l ]
   )

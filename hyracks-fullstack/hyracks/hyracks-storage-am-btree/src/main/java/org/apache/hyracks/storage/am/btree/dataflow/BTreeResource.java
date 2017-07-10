@@ -55,9 +55,8 @@ public class BTreeResource implements IResource {
         IBufferCache bufferCache = storageManager.getBufferCache(ctx);
         IIOManager ioManager = ctx.getIoManager();
         FileReference resourceRef = ioManager.resolve(path);
-        return BTreeUtils.createBTree(bufferCache, storageManager.getFileMapProvider(ctx), typeTraits,
-                comparatorFactories, BTreeLeafFrameType.REGULAR_NSM, resourceRef,
-                pageManagerFactory.createPageManager(bufferCache));
+        return BTreeUtils.createBTree(bufferCache, typeTraits, comparatorFactories, BTreeLeafFrameType.REGULAR_NSM,
+                resourceRef, pageManagerFactory.createPageManager(bufferCache));
     }
 
     @Override

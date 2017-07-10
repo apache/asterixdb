@@ -91,8 +91,7 @@ public abstract class AbstractServlet implements IServlet {
         }
     }
 
-    protected void sendError(IServletResponse response, HttpResponseStatus status, String message)
-            throws IOException {
+    protected void sendError(IServletResponse response, HttpResponseStatus status, String message) throws IOException {
         response.setStatus(status);
         HttpUtil.setContentType(response, HttpUtil.ContentType.TEXT_PLAIN, HttpUtil.Encoding.UTF8);
         if (message != null) {
@@ -154,7 +153,7 @@ public abstract class AbstractServlet implements IServlet {
 
     public String localPath(IServletRequest request) {
         final String uri = request.getHttpRequest().uri();
-        int queryStart = uri.indexOf("?");
+        int queryStart = uri.indexOf('?');
         return queryStart == -1 ? uri.substring(trim(uri)) : uri.substring(trim(uri), queryStart);
     }
 

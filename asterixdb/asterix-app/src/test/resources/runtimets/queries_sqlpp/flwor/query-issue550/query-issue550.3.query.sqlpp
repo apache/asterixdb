@@ -25,9 +25,10 @@
 
 with  sample as {{{'r':1,'uid':'1a2b','t':datetime('2000-01-01T01:00:00'),'event':'e1'},{'r':2,'uid':'1a2b','t':datetime('2000-01-01T01:01:00'),'event':'e2'},{'r':3,'uid':'3c4d','t':datetime('2000-01-01T01:02:00'),'event':'e1'},{'r':4,'uid':'3c4d','t':datetime('2000-01-01T01:03:00'),'event':'e3'},{'r':5,'uid':'1a2b','t':datetime('2000-01-01T01:04:00'),'event':'e1'},{'r':6,'uid':'1a2b','t':datetime('2000-01-01T01:05:00'),'event':'e4'}}}
 select element {'u':u,'recs':(
-        select element srec
-        from  s as srec
+        select element srec.s
+        from  g as srec
     )}
 from  sample as s
 group by s.uid as u
+group as g
 ;

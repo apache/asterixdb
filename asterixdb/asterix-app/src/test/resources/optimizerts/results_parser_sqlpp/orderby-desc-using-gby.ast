@@ -36,7 +36,6 @@ RecordConstructor [
       LiteralExpr [STRING] [age]
       Variable [ Name=$name ]
       Variable [ Name=#1 ]
-      Variable [ Name=$c ]
     ]
   )
 ]
@@ -65,7 +64,6 @@ Orderby
     LiteralExpr [STRING] [age]
     Variable [ Name=$name ]
     Variable [ Name=#1 ]
-    Variable [ Name=$c ]
   ]
   ASC
 

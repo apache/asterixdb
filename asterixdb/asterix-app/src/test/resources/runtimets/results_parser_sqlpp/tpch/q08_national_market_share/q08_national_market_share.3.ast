@@ -36,7 +36,18 @@ RecordConstructor [
 
           END
           ]
-          FROM [            Variable [ Name=$t ]
+          FROM [            (
+              SELECT ELEMENT [
+              FunctionCall Metadata.resolve@-1[
+                LiteralExpr [STRING] [t]
+                Variable [ Name=$g ]
+                Variable [ Name=$year ]
+              ]
+              ]
+              FROM [                Variable [ Name=$g ]
+                AS Variable [ Name=$g ]
+              ]
+            )
             AS Variable [ Name=$i ]
           ]
         )
@@ -50,7 +61,18 @@ RecordConstructor [
             Field=revenue
           ]
           ]
-          FROM [            Variable [ Name=$t ]
+          FROM [            (
+              SELECT ELEMENT [
+              FunctionCall Metadata.resolve@-1[
+                LiteralExpr [STRING] [t]
+                Variable [ Name=$g ]
+                Variable [ Name=$year ]
+              ]
+              ]
+              FROM [                Variable [ Name=$g ]
+                AS Variable [ Name=$g ]
+              ]
+            )
             AS Variable [ Name=$i ]
           ]
         )
@@ -472,7 +494,7 @@ Groupby
     Variable [ Name=$t ]
     Field=year
   ]
-  GROUP AS Variable [ Name=#1 ]
+  GROUP AS Variable [ Name=$g ]
   (
     t:=Variable [ Name=$t ]
   )

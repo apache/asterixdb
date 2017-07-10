@@ -72,6 +72,7 @@ public class CCMessageBroker implements ICCMessageBroker {
         state.getNodeController().sendApplicationMessageToNC(JavaSerializationUtils.serialize(msg), null, nodeId);
     }
 
+    @Override
     public long newRequestId() {
         return REQUEST_ID_GENERATOR.incrementAndGet();
     }

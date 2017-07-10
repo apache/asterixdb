@@ -27,16 +27,17 @@ use test;
 
 select element si
 from
-    ( select element {'xx':xx,'x':x,'uid':uid}
+    ( select element {'xx':xx,'x': (from g select value g.x),'uid':uid}
       from  Orders as x
-      where (x.o_custkey < 4)
+      where x.o_custkey < 4
       group by x.o_custkey as uid
-      with  xx as (
+      group as g
+      let  xx = (
             select element {'uid':uid,'seq':i,'item':y.o_orderkey}
             from  (
-                select element xxx
-                from  x as xxx
-                order by xxx.o_orderkey
+                select element xxx.x
+                from  g as xxx
+                order by xxx.x.o_orderkey
             ) as y at i
         )
       order by uid

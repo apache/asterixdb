@@ -44,11 +44,12 @@ X as (
 SELECT x.nation_key As nation_key,
        (
             SELECT y.order_date AS orderdate, y.sum_price As sum_price
-            FROM  x AS y
+            FROM  (FROM g SELECT VALUE x) AS y
             ORDER BY y.sum_price desc
             LIMIT 3
         ) AS sum_price
 FROM  X AS x
 GROUP BY x.nation_key
+GROUP AS g
 ORDER BY x.nation_key
 ;

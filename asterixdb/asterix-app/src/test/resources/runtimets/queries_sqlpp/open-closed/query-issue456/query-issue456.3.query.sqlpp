@@ -26,9 +26,10 @@
 use test;
 
 
-select element [x.int_m,test.count(id)]
+select element [x.int_m, coll_count(( from g select value x ))]
 from  DataOpen as x
-with  id as x.id
+let id = x.id
 group by x.int_m
+group as g
 order by x.int_m
 ;

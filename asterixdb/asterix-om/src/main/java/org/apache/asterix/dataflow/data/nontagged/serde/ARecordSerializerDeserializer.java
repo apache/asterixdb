@@ -119,7 +119,7 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
                 return new ARecord(this.recordType, schemaFields);
             }
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 
@@ -308,8 +308,7 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
     public static int getFieldOffsetByName(byte[] serRecord, int start, int len, byte[] fieldName, int nstart)
             throws HyracksDataException {
         // 5 is the index of the byte that determines whether the record is expanded or not, i.e. it has an open part.
-        // a record with len < 5 is empty
-        if (serRecord[start] != ATypeTag.SERIALIZED_RECORD_TYPE_TAG || len <= 5 || serRecord[start + 5] != 1) {
+        if (hasNoFields(serRecord, start, len) || serRecord[start + 5] != 1) {
             return -1;
         }
         // 6 is the index of the first byte of the openPartOffset value.
@@ -365,6 +364,11 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
 
         }
         return -1; // no field with this name.
+    }
+
+    public static boolean hasNoFields(byte[] serRecord, int start, int len) {
+        // a record with len <= 6 is empty
+        return serRecord[start] != ATypeTag.SERIALIZED_RECORD_TYPE_TAG || len <= 6;
     }
 
     @Override

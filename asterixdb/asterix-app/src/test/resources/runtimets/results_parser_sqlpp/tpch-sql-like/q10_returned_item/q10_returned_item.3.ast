@@ -328,7 +328,7 @@ Groupby
     Variable [ Name=$locn ]
     Field=c_comment
   ]
-  GROUP AS Variable [ Name=#1 ]
+  GROUP AS Variable [ Name=$g ]
   (
     locn:=Variable [ Name=$locn ]
   )
@@ -354,7 +354,24 @@ Let Variable [ Name=$revenue ]
         ]
       ]
       ]
-      FROM [        Variable [ Name=$locn ]
+      FROM [        (
+          SELECT ELEMENT [
+          FunctionCall Metadata.resolve@-1[
+            LiteralExpr [STRING] [locn]
+            Variable [ Name=$c_address ]
+            Variable [ Name=$g ]
+            Variable [ Name=$c_name ]
+            Variable [ Name=$c_phone ]
+            Variable [ Name=$c_acctbal ]
+            Variable [ Name=$n_name ]
+            Variable [ Name=$c_custkey ]
+            Variable [ Name=$c_comment ]
+          ]
+          ]
+          FROM [            Variable [ Name=$g ]
+            AS Variable [ Name=$g ]
+          ]
+        )
         AS Variable [ Name=$i ]
       ]
     )

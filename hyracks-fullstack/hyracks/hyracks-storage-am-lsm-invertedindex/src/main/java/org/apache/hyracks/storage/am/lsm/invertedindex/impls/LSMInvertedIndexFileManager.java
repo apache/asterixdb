@@ -27,14 +27,15 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
+import org.apache.hyracks.api.util.IoUtil;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexFileManager;
 import org.apache.hyracks.storage.am.lsm.common.impls.BTreeFactory;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexFileNameMapper;
-import org.apache.hyracks.storage.common.file.IFileMapProvider;
 
 // TODO: Refactor for better code sharing with other file managers.
 public class LSMInvertedIndexFileManager extends AbstractLSMIndexFileManager implements IInvertedIndexFileNameMapper {
@@ -44,55 +45,38 @@ public class LSMInvertedIndexFileManager extends AbstractLSMIndexFileManager imp
 
     // We only need a BTree factory because the inverted indexes consistency is validated against its dictionary BTree.
     private final BTreeFactory btreeFactory;
+    private static final FilenameFilter dictBTreeFilter =
+            (dir, name) -> !name.startsWith(".") && name.endsWith(DICT_BTREE_SUFFIX);
+    private static final FilenameFilter invListFilter =
+            (dir, name) -> !name.startsWith(".") && name.endsWith(INVLISTS_SUFFIX);
+    private static final FilenameFilter deletedKeysBTreeFilter =
+            (dir, name) -> !name.startsWith(".") && name.endsWith(DELETED_KEYS_BTREE_SUFFIX);
 
-    private static FilenameFilter dictBTreeFilter = new FilenameFilter() {
-        @Override
-        public boolean accept(File dir, String name) {
-            return !name.startsWith(".") && name.endsWith(DICT_BTREE_SUFFIX);
-        }
-    };
-
-    private static FilenameFilter invListFilter = new FilenameFilter() {
-        @Override
-        public boolean accept(File dir, String name) {
-            return !name.startsWith(".") && name.endsWith(INVLISTS_SUFFIX);
-        }
-    };
-
-    private static FilenameFilter deletedKeysBTreeFilter = new FilenameFilter() {
-        @Override
-        public boolean accept(File dir, String name) {
-            return !name.startsWith(".") && name.endsWith(DELETED_KEYS_BTREE_SUFFIX);
-        }
-    };
-
-    public LSMInvertedIndexFileManager(IIOManager ioManager, IFileMapProvider fileMapProvider, FileReference file,
-            BTreeFactory btreeFactory) {
-        super(ioManager, fileMapProvider, file, null);
+    public LSMInvertedIndexFileManager(IIOManager ioManager, FileReference file, BTreeFactory btreeFactory) {
+        super(ioManager, file, null);
         this.btreeFactory = btreeFactory;
     }
 
     @Override
     public LSMComponentFileReferences getRelFlushFileReference() throws HyracksDataException {
         String ts = getCurrentTimestamp();
-        String baseName = baseDir + ts + SPLIT_STRING + ts;
+        String baseName = ts + DELIMITER + ts;
         // Begin timestamp and end timestamp are identical since it is a flush
-        return new LSMComponentFileReferences(createFlushFile(baseName + SPLIT_STRING + DICT_BTREE_SUFFIX),
-                createFlushFile(baseName + SPLIT_STRING + DELETED_KEYS_BTREE_SUFFIX),
-                createFlushFile(baseName + SPLIT_STRING + BLOOM_FILTER_STRING));
+        return new LSMComponentFileReferences(baseDir.getChild(baseName + DELIMITER + DICT_BTREE_SUFFIX),
+                baseDir.getChild(baseName + DELIMITER + DELETED_KEYS_BTREE_SUFFIX),
+                baseDir.getChild(baseName + DELIMITER + BLOOM_FILTER_SUFFIX));
     }
 
     @Override
     public LSMComponentFileReferences getRelMergeFileReference(String firstFileName, String lastFileName)
             throws HyracksDataException {
-        String[] firstTimestampRange = firstFileName.split(SPLIT_STRING);
-        String[] lastTimestampRange = lastFileName.split(SPLIT_STRING);
-
-        String baseName = baseDir + firstTimestampRange[0] + SPLIT_STRING + lastTimestampRange[1];
+        String[] firstTimestampRange = firstFileName.split(DELIMITER);
+        String[] lastTimestampRange = lastFileName.split(DELIMITER);
+        String baseName = firstTimestampRange[0] + DELIMITER + lastTimestampRange[1];
         // Get the range of timestamps by taking the earliest and the latest timestamps
-        return new LSMComponentFileReferences(createMergeFile(baseName + SPLIT_STRING + DICT_BTREE_SUFFIX),
-                createMergeFile(baseName + SPLIT_STRING + DELETED_KEYS_BTREE_SUFFIX),
-                createMergeFile(baseName + SPLIT_STRING + BLOOM_FILTER_STRING));
+        return new LSMComponentFileReferences(baseDir.getChild(baseName + DELIMITER + DICT_BTREE_SUFFIX),
+                baseDir.getChild(baseName + DELIMITER + DELETED_KEYS_BTREE_SUFFIX),
+                baseDir.getChild(baseName + DELIMITER + BLOOM_FILTER_SUFFIX));
     }
 
     @Override
@@ -107,7 +91,7 @@ public class LSMInvertedIndexFileManager extends AbstractLSMIndexFileManager imp
         cleanupAndGetValidFilesInternal(deletedKeysBTreeFilter, btreeFactory, allDeletedKeysBTreeFiles);
         HashSet<String> deletedKeysBTreeFilesSet = new HashSet<>();
         for (ComparableFileName cmpFileName : allDeletedKeysBTreeFiles) {
-            int index = cmpFileName.fileName.lastIndexOf(SPLIT_STRING);
+            int index = cmpFileName.fileName.lastIndexOf(DELIMITER);
             deletedKeysBTreeFilesSet.add(cmpFileName.fileName.substring(0, index));
         }
 
@@ -120,8 +104,7 @@ public class LSMInvertedIndexFileManager extends AbstractLSMIndexFileManager imp
         if (allDictBTreeFiles.size() != allInvListsFiles.size()
                 || allDictBTreeFiles.size() != allDeletedKeysBTreeFiles.size()
                 || allDictBTreeFiles.size() != allBloomFilterFiles.size()) {
-            throw new HyracksDataException(
-                    "Unequal number of valid Dictionary BTree, Inverted Lists, Deleted BTree, and Bloom Filter files found. Aborting cleanup.");
+            throw HyracksDataException.create(ErrorCode.UNEQUAL_NUM_FILTERS_TREES, baseDir);
         }
 
         // Trivial cases.
@@ -156,35 +139,31 @@ public class LSMInvertedIndexFileManager extends AbstractLSMIndexFileManager imp
 
         for (int i = 1; i < allDictBTreeFiles.size(); i++) {
             ComparableFileName currentDeletedKeysBTree = allDeletedKeysBTreeFiles.get(i);
-            ComparableFileName CurrentDictBTree = allDictBTreeFiles.get(i);
+            ComparableFileName currentDictBTree = allDictBTreeFiles.get(i);
             ComparableFileName currentBloomFilter = allBloomFilterFiles.get(i);
             // Current start timestamp is greater than last stop timestamp.
             if (currentDeletedKeysBTree.interval[0].compareTo(lastDeletedKeysBTree.interval[1]) > 0
-                    && CurrentDictBTree.interval[0].compareTo(lastDictBTree.interval[1]) > 0
+                    && currentDictBTree.interval[0].compareTo(lastDictBTree.interval[1]) > 0
                     && currentBloomFilter.interval[0].compareTo(lastBloomFilter.interval[1]) > 0) {
-                validComparableDictBTreeFiles.add(CurrentDictBTree);
+                validComparableDictBTreeFiles.add(currentDictBTree);
                 validComparableDeletedKeysBTreeFiles.add(currentDeletedKeysBTree);
                 validComparableBloomFilterFiles.add(currentBloomFilter);
-                lastDictBTree = CurrentDictBTree;
+                lastDictBTree = currentDictBTree;
                 lastDeletedKeysBTree = currentDeletedKeysBTree;
                 lastBloomFilter = currentBloomFilter;
             } else if (currentDeletedKeysBTree.interval[0].compareTo(lastDeletedKeysBTree.interval[0]) >= 0
                     && currentDeletedKeysBTree.interval[1].compareTo(lastDeletedKeysBTree.interval[1]) <= 0
-                    && CurrentDictBTree.interval[0].compareTo(lastDictBTree.interval[0]) >= 0
-                    && CurrentDictBTree.interval[1].compareTo(lastDictBTree.interval[1]) <= 0
+                    && currentDictBTree.interval[0].compareTo(lastDictBTree.interval[0]) >= 0
+                    && currentDictBTree.interval[1].compareTo(lastDictBTree.interval[1]) <= 0
                     && currentBloomFilter.interval[0].compareTo(lastBloomFilter.interval[0]) >= 0
                     && currentBloomFilter.interval[1].compareTo(lastBloomFilter.interval[1]) <= 0) {
                 // Invalid files are completely contained in last interval.
-                File invalidDeletedBTreeFile = new File(currentDeletedKeysBTree.fullPath);
-                invalidDeletedBTreeFile.delete();
-                File invalidDictBTreeFile = new File(CurrentDictBTree.fullPath);
-                invalidDictBTreeFile.delete();
-                File invalidBloomFilterFile = new File(currentBloomFilter.fullPath);
-                invalidBloomFilterFile.delete();
+                IoUtil.delete(new File(currentDeletedKeysBTree.fullPath));
+                IoUtil.delete(new File(currentDictBTree.fullPath));
+                IoUtil.delete(new File(currentBloomFilter.fullPath));
             } else {
                 // This scenario should not be possible.
-                throw new HyracksDataException(
-                        "Found LSM files with overlapping but not contained timetamp intervals.");
+                throw HyracksDataException.create(ErrorCode.FOUND_OVERLAPPING_LSM_FILES, baseDir);
             }
         }
 
@@ -210,8 +189,8 @@ public class LSMInvertedIndexFileManager extends AbstractLSMIndexFileManager imp
 
     @Override
     public String getInvListsFilePath(String dictBTreeFilePath) {
-        int index = dictBTreeFilePath.lastIndexOf(SPLIT_STRING);
+        int index = dictBTreeFilePath.lastIndexOf(DELIMITER);
         String file = dictBTreeFilePath.substring(0, index);
-        return file + SPLIT_STRING + INVLISTS_SUFFIX;
+        return file + DELIMITER + INVLISTS_SUFFIX;
     }
 }

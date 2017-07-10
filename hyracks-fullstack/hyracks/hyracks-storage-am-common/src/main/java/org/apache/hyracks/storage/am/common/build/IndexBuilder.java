@@ -19,10 +19,13 @@
 package org.apache.hyracks.storage.am.common.build;
 
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.util.IoUtil;
 import org.apache.hyracks.storage.am.common.api.IIndexBuilder;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
 import org.apache.hyracks.storage.common.IIndex;
@@ -35,6 +38,7 @@ import org.apache.hyracks.storage.common.LocalResource;
 import org.apache.hyracks.storage.common.file.IResourceIdFactory;
 
 public class IndexBuilder implements IIndexBuilder {
+    private static final Logger LOGGER = Logger.getLogger(IndexBuilder.class.getName());
 
     protected final INCServiceContext ctx;
     protected final IStorageManager storageManager;
@@ -81,8 +85,22 @@ public class IndexBuilder implements IIndexBuilder {
                 //The reason for this is to handle many cases such as:
                 //1. Crash while delete index is running (we don't do global cleanup on restart)
                 //2. Node leaves and then join with old data
+                LOGGER.log(Level.WARNING,
+                        "Removing existing index on index create for the index: " + resourceRef.getRelativePath());
                 lcManager.unregister(resourceRef.getRelativePath());
+                index.destroy();
             } else {
+                if (resourceRef.getFile().exists()) {
+                    // Index is not registered but the index file exists
+                    // This is another big problem that we need to disallow soon
+                    // We can only disallow this if we have a global cleanup after crash
+                    // on reboot
+                    LOGGER.log(Level.WARNING,
+                            "Deleting " + resourceRef.getRelativePath()
+                                    + " on index create. The index is not registered"
+                                    + " but the file exists in the filesystem");
+                    IoUtil.delete(resourceRef);
+                }
                 index = resource.createInstance(ctx);
             }
             index.create();

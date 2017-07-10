@@ -11,7 +11,18 @@ RecordConstructor [
     LiteralExpr [STRING] [count]
     :
     FunctionCall test.count@1[
-      Variable [ Name=$c ]
+      (
+        SELECT ELEMENT [
+        FunctionCall Metadata.resolve@-1[
+          LiteralExpr [STRING] [c]
+          Variable [ Name=$g ]
+          Variable [ Name=$age ]
+        ]
+        ]
+        FROM [          Variable [ Name=$g ]
+          AS Variable [ Name=$g ]
+        ]
+      )
     ]
   )
 ]
@@ -28,7 +39,7 @@ Groupby
     Variable [ Name=$c ]
     Field=age
   ]
-  GROUP AS Variable [ Name=#1 ]
+  GROUP AS Variable [ Name=$g ]
   (
     c:=Variable [ Name=$c ]
   )

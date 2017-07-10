@@ -30,16 +30,23 @@ public class IndexDropOperatorDescriptor extends AbstractSingleActivityOperatorD
 
     private static final long serialVersionUID = 1L;
     private final IIndexDataflowHelperFactory dataflowHelperFactory;
+    private final boolean failSilently;
 
     public IndexDropOperatorDescriptor(IOperatorDescriptorRegistry spec,
             IIndexDataflowHelperFactory dataflowHelperFactory) {
+        this(spec, dataflowHelperFactory, false);
+    }
+
+    public IndexDropOperatorDescriptor(IOperatorDescriptorRegistry spec,
+            IIndexDataflowHelperFactory dataflowHelperFactory, boolean failSilently) {
         super(spec, 0, 0);
         this.dataflowHelperFactory = dataflowHelperFactory;
+        this.failSilently = failSilently;
     }
 
     @Override
     public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) throws HyracksDataException {
-        return new IndexDropOperatorNodePushable(dataflowHelperFactory, ctx, partition);
+        return new IndexDropOperatorNodePushable(dataflowHelperFactory, failSilently, ctx, partition);
     }
 }

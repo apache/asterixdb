@@ -61,11 +61,15 @@ public class FullResponse implements IServletResponse {
     public void close() throws IOException {
         writer.close();
         FullHttpResponse fullResponse = response.replace(Unpooled.copiedBuffer(baos.toByteArray()));
-        if (keepAlive && response.status() == HttpResponseStatus.OK) {
-            fullResponse.headers().setInt(HttpHeaderNames.CONTENT_LENGTH, fullResponse.content().readableBytes());
+        if (keepAlive) {
+            if (response.status() == HttpResponseStatus.OK || response.status() == HttpResponseStatus.UNAUTHORIZED) {
+                fullResponse.headers().setInt(HttpHeaderNames.CONTENT_LENGTH, fullResponse.content().readableBytes());
+            } else {
+                fullResponse.headers().remove(HttpHeaderNames.CONNECTION);
+            }
         }
         future = ctx.writeAndFlush(fullResponse);
-        if (response.status() != HttpResponseStatus.OK) {
+        if (response.status() != HttpResponseStatus.OK && response.status() != HttpResponseStatus.UNAUTHORIZED) {
             future.addListener(ChannelFutureListener.CLOSE);
         }
     }

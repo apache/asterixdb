@@ -183,12 +183,12 @@ RecordConstructor [
       (
         SELECT ELEMENT [
         FieldAccessor [
-          Variable [ Name=#2 ]
+          Variable [ Name=#1 ]
           Field=ct
         ]
         ]
-        FROM [          Variable [ Name=#1 ]
-          AS Variable [ Name=#2 ]
+        FROM [          Variable [ Name=$g ]
+          AS Variable [ Name=#1 ]
         ]
       )
     ]
@@ -204,7 +204,18 @@ RecordConstructor [
           Field=c_acctbal
         ]
         ]
-        FROM [          Variable [ Name=$ct ]
+        FROM [          (
+            SELECT ELEMENT [
+            FunctionCall Metadata.resolve@-1[
+              LiteralExpr [STRING] [ct]
+              Variable [ Name=$g ]
+              Variable [ Name=$cntrycode ]
+            ]
+            ]
+            FROM [              Variable [ Name=$g ]
+              AS Variable [ Name=$g ]
+            ]
+          )
           AS Variable [ Name=$i ]
         ]
       )
@@ -252,7 +263,7 @@ Groupby
     Variable [ Name=$ct ]
     Field=cntrycode
   ]
-  GROUP AS Variable [ Name=#1 ]
+  GROUP AS Variable [ Name=$g ]
   (
     ct:=Variable [ Name=$ct ]
   )

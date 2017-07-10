@@ -39,8 +39,8 @@ public class LSMRTreeWithAntiMatterTuplesLifecycleTest extends AbstractIndexLife
     private final ISerializerDeserializer[] fieldSerdes = { IntegerSerializerDeserializer.INSTANCE,
             IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE,
             IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE };
-    private final IPrimitiveValueProviderFactory[] valueProviderFactories = RTreeUtils
-            .createPrimitiveValueProviderFactories(4, IntegerPointable.FACTORY);
+    private final IPrimitiveValueProviderFactory[] valueProviderFactories =
+            RTreeUtils.createPrimitiveValueProviderFactories(4, IntegerPointable.FACTORY);
     private final int numKeys = 4;
 
     private final LSMRTreeTestHarness harness = new LSMRTreeTestHarness();
@@ -66,22 +66,16 @@ public class LSMRTreeWithAntiMatterTuplesLifecycleTest extends AbstractIndexLife
     @Override
     public void setup() throws Exception {
         harness.setUp();
-        testCtx = LSMRTreeWithAntiMatterTuplesTestContext.create(harness.getIOManager(), harness
-                .getVirtualBufferCaches(), harness.getFileReference(), harness.getDiskBufferCache(), harness
-                        .getDiskFileMapProvider(), fieldSerdes, valueProviderFactories, numKeys, RTreePolicyType.RTREE,
-                harness.getMergePolicy(), harness.getOperationTracker(), harness.getIOScheduler(), harness
-                        .getIOOperationCallback(), harness.getMetadataPageManagerFactory());
+        testCtx = LSMRTreeWithAntiMatterTuplesTestContext.create(harness.getIOManager(),
+                harness.getVirtualBufferCaches(), harness.getFileReference(), harness.getDiskBufferCache(), fieldSerdes,
+                valueProviderFactories, numKeys, RTreePolicyType.RTREE, harness.getMergePolicy(),
+                harness.getOperationTracker(), harness.getIOScheduler(), harness.getIOOperationCallback(),
+                harness.getMetadataPageManagerFactory());
         index = testCtx.getIndex();
     }
 
     @Override
     public void tearDown() throws Exception {
-        try {
-            index.deactivate();
-        } catch (Exception e) {
-        } finally {
-            index.destroy();
-        }
         harness.tearDown();
     }
 

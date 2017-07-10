@@ -41,9 +41,10 @@ from  (
     group by t.p_brand as p_brand1,t.p_type as p_type1,t.p_size as p_size1,t.ps_suppkey as ps_suppkey1
 ) as t2
 group by t2.p_brand as p_brand,t2.p_type as p_type,t2.p_size as p_size
-with  supplier_cnt as coll_count((
+group as g
+let  supplier_cnt = COLL_COUNT((
       select element i.ps_suppkey
-      from  t2 as i
+      from  (from g select value t2) as i
   ))
 order by supplier_cnt desc,p_brand,p_type,p_size
 ;

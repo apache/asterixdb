@@ -22,9 +22,35 @@ let $c1 := int8("+80i8")
 let $c2 := int16("160")
 let $c3 := int32("+320i32")
 let $c4 := int64("640")
+
 let $c5 := int8("-80")
 let $c6 := int16("-160i16")
 let $c7 := int32("-320")
 let $c8 := int64("-640i64")
+
 let $c9 := int64("-9223372036854775808")
-return {"int8": $c1,"int16": $c2,"int32": $c3, "int64": $c4, "int8_2": $c5,"int16_2": $c6,"int32_2": $c7, "int64_2": $c8, "int64_min" : $c9}
+
+let $c10 := int8($c1)
+let $c11 := int16($c2)
+let $c12 := int32($c3)
+let $c13 := int64($c4)
+
+return
+{
+    "int8": $c1,
+    "int16": $c2,
+    "int32": $c3,
+    "int64": $c4,
+
+    "int8_2": $c5,
+    "int16_2": $c6,
+    "int32_2": $c7,
+    "int64_2": $c8,
+
+    "int64_min" : $c9,
+
+    "int8_3": $c10,
+    "int16_3": $c11,
+    "int32_3": $c12,
+    "int64_3": $c13
+}

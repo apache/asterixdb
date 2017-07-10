@@ -35,19 +35,27 @@ public class IntegerSerializerDeserializer implements ISerializerDeserializer<In
 
     @Override
     public Integer deserialize(DataInput in) throws HyracksDataException {
-        try {
-            return in.readInt();
-        } catch (IOException e) {
-            throw new HyracksDataException(e);
-        }
+        return read(in);
     }
 
     @Override
     public void serialize(Integer instance, DataOutput out) throws HyracksDataException {
+        write(instance, out);
+    }
+
+    public static int read(DataInput in) throws HyracksDataException {
         try {
-            out.writeInt(instance.intValue());
+            return in.readInt();
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
+        }
+    }
+
+    public static void write(int instance, DataOutput out) throws HyracksDataException {
+        try {
+            out.writeInt(instance);
+        } catch (IOException e) {
+            throw HyracksDataException.create(e);
         }
     }
 }

@@ -49,7 +49,7 @@ public class UTF8StringSerializerDeserializer implements ISerializerDeserializer
         try {
             return UTF8StringUtil.readUTF8(in, utf8StringReader);
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 
@@ -58,7 +58,7 @@ public class UTF8StringSerializerDeserializer implements ISerializerDeserializer
         try {
             UTF8StringUtil.writeUTF8(instance, out, utf8StringWriter);
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 }

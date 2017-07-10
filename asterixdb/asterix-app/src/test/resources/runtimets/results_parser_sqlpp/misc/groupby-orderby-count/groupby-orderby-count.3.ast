@@ -11,7 +11,18 @@ RecordConstructor [
     LiteralExpr [STRING] [count]
     :
     FunctionCall twitter.count@1[
-      Variable [ Name=$token ]
+      (
+        SELECT ELEMENT [
+        FunctionCall Metadata.resolve@-1[
+          LiteralExpr [STRING] [token]
+          Variable [ Name=$g ]
+          Variable [ Name=$tok ]
+        ]
+        ]
+        FROM [          Variable [ Name=$g ]
+          AS Variable [ Name=$g ]
+        ]
+      )
     ]
   )
 ]
@@ -33,7 +44,7 @@ Groupby
   Variable [ Name=$tok ]
   :=
   Variable [ Name=$token ]
-  GROUP AS Variable [ Name=#1 ]
+  GROUP AS Variable [ Name=$g ]
   (
     t:=Variable [ Name=$t ]
     token:=Variable [ Name=$token ]
@@ -41,7 +52,18 @@ Groupby
 
 Orderby
   FunctionCall twitter.count@1[
-    Variable [ Name=$token ]
+    (
+      SELECT ELEMENT [
+      FunctionCall Metadata.resolve@-1[
+        LiteralExpr [STRING] [token]
+        Variable [ Name=$g ]
+        Variable [ Name=$tok ]
+      ]
+      ]
+      FROM [        Variable [ Name=$g ]
+        AS Variable [ Name=$g ]
+      ]
+    )
   ]
   DESC
   Variable [ Name=$tok ]

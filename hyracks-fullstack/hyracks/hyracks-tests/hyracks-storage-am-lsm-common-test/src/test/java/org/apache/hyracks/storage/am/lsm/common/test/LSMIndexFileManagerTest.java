@@ -36,12 +36,12 @@ import java.util.concurrent.Executors;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IODeviceHandle;
+import org.apache.hyracks.api.util.IoUtil;
 import org.apache.hyracks.control.nc.io.DefaultDeviceResolver;
 import org.apache.hyracks.control.nc.io.IOManager;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexFileManager;
 import org.apache.hyracks.storage.am.lsm.common.component.TestLsmIndexFileManager;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
-import org.apache.hyracks.storage.common.file.IFileMapProvider;
 import org.apache.hyracks.test.support.TestStorageManagerComponentHolder;
 import org.junit.After;
 import org.junit.Before;
@@ -55,7 +55,6 @@ public class LSMIndexFileManagerTest {
     protected final static SimpleDateFormat simpleDateFormat = new SimpleDateFormat("ddMMyy-hhmmssSS");
     protected final static String sep = System.getProperty("file.separator");
     protected IOManager ioManager;
-    protected IFileMapProvider fileMapProvider;
     protected String baseDir;
     protected FileReference file;
 
@@ -63,7 +62,6 @@ public class LSMIndexFileManagerTest {
     public void setUp() throws HyracksDataException {
         TestStorageManagerComponentHolder.init(DEFAULT_PAGE_SIZE, DEFAULT_NUM_PAGES, DEFAULT_MAX_OPEN_FILES);
         ioManager = TestStorageManagerComponentHolder.getIOManager();
-        fileMapProvider = TestStorageManagerComponentHolder.getFileMapProvider();
         baseDir = ioManager.getIODevices().get(DEFAULT_IO_DEVICE_ID).getMount() + sep + "lsm_tree"
                 + simpleDateFormat.format(new Date()) + sep;
         File f = new File(baseDir);
@@ -78,7 +76,7 @@ public class LSMIndexFileManagerTest {
     }
 
     public void sortOrderTest(boolean testFlushFileName) throws InterruptedException, HyracksDataException {
-        ILSMIndexFileManager fileManager = new TestLsmIndexFileManager(ioManager, fileMapProvider, file);
+        ILSMIndexFileManager fileManager = new TestLsmIndexFileManager(ioManager, file);
         LinkedList<String> fileNames = new LinkedList<>();
 
         int numFileNames = 100;
@@ -121,9 +119,11 @@ public class LSMIndexFileManagerTest {
         String dirPath = ioManager.getIODevices().get(DEFAULT_IO_DEVICE_ID).getMount() + sep + "lsm_tree"
                 + simpleDateFormat.format(new Date()) + sep;
         File f = new File(dirPath);
-        f.mkdirs();
+        if (f.exists()) {
+            IoUtil.delete(f);
+        }
         FileReference file = ioManager.resolveAbsolutePath(f.getAbsolutePath());
-        ILSMIndexFileManager fileManager = new TestLsmIndexFileManager(ioManager, fileMapProvider, file);
+        ILSMIndexFileManager fileManager = new TestLsmIndexFileManager(ioManager, file);
         fileManager.createDirs();
 
         List<FileReference> flushFiles = new ArrayList<>();

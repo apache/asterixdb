@@ -17,9 +17,9 @@
  * under the License.
  */
 /*
-* Description  : Index join is currently disabled for non-enforced indexes
+* Description  : Index join for non-enforced indexes
 * Expected Res : Success
-* Date         : 7 Jun 2017
+* Date         : 20 Jun 2017
 */
 drop dataverse test if exists;
 create dataverse test;

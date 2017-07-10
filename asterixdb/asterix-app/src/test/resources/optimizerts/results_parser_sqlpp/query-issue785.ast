@@ -194,7 +194,9 @@ Let Variable [ Name=$X ]
             Field=o_totalprice
           ]
           ]
-          FROM [            Variable [ Name=$orders ]
+          FROM [            FunctionCall Metadata.dataset@1[
+              LiteralExpr [STRING] [orders]
+            ]
             AS Variable [ Name=$o ]
           ]
         )
@@ -231,7 +233,9 @@ RecordConstructor [
         )
       ]
       ]
-      FROM [        Variable [ Name=$x ]
+      FROM [        FunctionCall Metadata.dataset@1[
+          LiteralExpr [STRING] [x]
+        ]
         AS Variable [ Name=$y ]
       ]
       Orderby

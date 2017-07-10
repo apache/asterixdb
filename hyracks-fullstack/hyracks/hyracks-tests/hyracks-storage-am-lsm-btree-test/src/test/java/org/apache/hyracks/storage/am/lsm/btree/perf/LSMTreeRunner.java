@@ -46,7 +46,6 @@ import org.apache.hyracks.storage.am.lsm.common.impls.VirtualBufferCache;
 import org.apache.hyracks.storage.common.IIndexAccessor;
 import org.apache.hyracks.storage.common.buffercache.HeapBufferAllocator;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
-import org.apache.hyracks.storage.common.file.IFileMapProvider;
 import org.apache.hyracks.test.support.TestStorageManagerComponentHolder;
 import org.apache.hyracks.test.support.TestUtils;
 
@@ -95,7 +94,6 @@ public class LSMTreeRunner implements IExperimentRunner {
 
         ioDeviceId = 0;
         file = ioManager.resolveAbsolutePath(onDiskDir);
-        IFileMapProvider fmp = TestStorageManagerComponentHolder.getFileMapProvider();
 
         List<IVirtualBufferCache> virtualBufferCaches = new ArrayList<>();
         for (int i = 0; i < 2; i++) {
@@ -107,7 +105,7 @@ public class LSMTreeRunner implements IExperimentRunner {
         this.ioScheduler = AsynchronousScheduler.INSTANCE;
         AsynchronousScheduler.INSTANCE.init(threadFactory);
 
-        lsmtree = LSMBTreeUtil.createLSMTree(ioManager, virtualBufferCaches, file, bufferCache, fmp, typeTraits,
+        lsmtree = LSMBTreeUtil.createLSMTree(ioManager, virtualBufferCaches, file, bufferCache, typeTraits,
                 cmpFactories, bloomFilterKeyFields, bloomFilterFalsePositiveRate, new NoMergePolicy(),
                 new ThreadCountingTracker(), ioScheduler, NoOpIOOperationCallbackFactory.INSTANCE.createIoOpCallback(),
                 true, null, null, null, null, true, TestStorageManagerComponentHolder.getMetadataPageManagerFactory());

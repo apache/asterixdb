@@ -324,7 +324,7 @@ Groupby
     Variable [ Name=$t2 ]
     Field=p_size
   ]
-  GROUP AS Variable [ Name=#2 ]
+  GROUP AS Variable [ Name=$g ]
   (
     t2:=Variable [ Name=$t2 ]
   )
@@ -339,7 +339,20 @@ Let Variable [ Name=$supplier_cnt ]
         Field=ps_suppkey
       ]
       ]
-      FROM [        Variable [ Name=$t2 ]
+      FROM [        (
+          SELECT ELEMENT [
+          FunctionCall Metadata.resolve@-1[
+            LiteralExpr [STRING] [t2]
+            Variable [ Name=$g ]
+            Variable [ Name=$p_brand ]
+            Variable [ Name=$p_size ]
+            Variable [ Name=$p_type ]
+          ]
+          ]
+          FROM [            Variable [ Name=$g ]
+            AS Variable [ Name=$g ]
+          ]
+        )
         AS Variable [ Name=$i ]
       ]
     )

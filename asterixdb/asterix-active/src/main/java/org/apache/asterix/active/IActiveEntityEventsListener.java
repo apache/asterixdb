@@ -41,16 +41,6 @@ public interface IActiveEntityEventsListener {
     ActivityState getState();
 
     /**
-     * get a subscriber that waits till state has been reached.
-     *
-     * @param state
-     *            the desired state
-     * @throws HyracksDataException
-     *             a failure happened while waiting for the state
-     */
-    IActiveEventSubscriber subscribe(ActivityState state) throws HyracksDataException;
-
-    /**
      * @return the active entity id
      */
     EntityId getEntityId();
@@ -62,4 +52,31 @@ public interface IActiveEntityEventsListener {
      */
     boolean isEntityUsingDataset(IDataset dataset);
 
+    /**
+     * subscribe to events. subscription ends when subscriber.done() returns true
+     *
+     * @param subscriber
+     * @throws HyracksDataException
+     */
+    void subscribe(IActiveEventSubscriber subscriber) throws HyracksDataException;
+
+    /**
+     * The most recent acquired stats for the active entity
+     *
+     * @return
+     */
+    String getStats();
+
+    /**
+     * @return The timestamp of the most recent acquired stats for the active entity
+     */
+    long getStatsTimeStamp();
+
+    /**
+     * refresh the stats
+     *
+     * @param timeout
+     * @throws HyracksDataException
+     */
+    void refreshStats(long timeout) throws HyracksDataException;
 }

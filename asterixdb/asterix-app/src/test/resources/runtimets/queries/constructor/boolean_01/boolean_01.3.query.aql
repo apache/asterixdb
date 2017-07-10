@@ -20,5 +20,12 @@ use dataverse test;
 
 let $c1 := boolean("true")
 let $c2 := boolean("false")
-return {"boolean1": $c1,"boolean2": $c2}
+let $c3 := boolean($c2)
+
+return
+{
+    "boolean1": $c1,
+    "boolean2": $c2,
+    "boolean3": $c3
+}
 

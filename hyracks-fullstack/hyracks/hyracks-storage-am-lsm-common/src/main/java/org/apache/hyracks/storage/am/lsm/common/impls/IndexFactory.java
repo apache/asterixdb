@@ -25,20 +25,16 @@ import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.storage.am.common.api.IPageManagerFactory;
 import org.apache.hyracks.storage.common.IIndex;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
-import org.apache.hyracks.storage.common.file.IFileMapProvider;
 
 public abstract class IndexFactory<T extends IIndex> {
 
     protected final IIOManager ioManager;
     protected final IBufferCache bufferCache;
-    protected final IFileMapProvider fileMapProvider;
     protected final IPageManagerFactory freePageManagerFactory;
 
-    public IndexFactory(IIOManager ioManager, IBufferCache bufferCache, IFileMapProvider fileMapProvider,
-            IPageManagerFactory freePageManagerFactory) {
+    public IndexFactory(IIOManager ioManager, IBufferCache bufferCache, IPageManagerFactory freePageManagerFactory) {
         this.ioManager = ioManager;
         this.bufferCache = bufferCache;
-        this.fileMapProvider = fileMapProvider;
         this.freePageManagerFactory = freePageManagerFactory;
     }
 

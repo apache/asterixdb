@@ -116,23 +116,34 @@ public class ResultUtil {
     }
 
     public static void printError(PrintWriter pw, Throwable e, boolean comma) {
+        printError(pw, e, 1, comma);
+    }
+
+    public static void printError(PrintWriter pw, Throwable e, int code, boolean comma) {
         Throwable rootCause = getRootCause(e);
-        final boolean addStack = false;
-        pw.print("\t\"");
-        pw.print(AbstractQueryApiServlet.ResultFields.ERRORS.str());
-        pw.print("\": [{ \n");
-        printField(pw, QueryServiceServlet.ErrorField.CODE.str(), "1");
         String msg = rootCause.getMessage();
         if (!(rootCause instanceof AlgebricksException || rootCause instanceof HyracksException
                 || rootCause instanceof TokenMgrError
                 || rootCause instanceof org.apache.asterix.aqlplus.parser.TokenMgrError)) {
             msg = rootCause.getClass().getSimpleName() + (msg == null ? "" : ": " + msg);
         }
-        printField(pw, QueryServiceServlet.ErrorField.MSG.str(), JSONUtil.escape(msg), addStack);
+        printError(pw, msg, code, comma);
+    }
+
+    public static void printError(PrintWriter pw, String msg, int code, boolean comma) {
+        pw.print("\t\"");
+        pw.print(AbstractQueryApiServlet.ResultFields.ERRORS.str());
+        pw.print("\": [{ \n");
+        printField(pw, QueryServiceServlet.ErrorField.CODE.str(), code);
+        printField(pw, QueryServiceServlet.ErrorField.MSG.str(), JSONUtil.escape(msg), false);
         pw.print(comma ? "\t}],\n" : "\t}]\n");
     }
 
     public static void printField(PrintWriter pw, String name, String value) {
+        printField(pw, name, value, true);
+    }
+
+    public static void printField(PrintWriter pw, String name, long value) {
         printField(pw, name, value, true);
     }
 

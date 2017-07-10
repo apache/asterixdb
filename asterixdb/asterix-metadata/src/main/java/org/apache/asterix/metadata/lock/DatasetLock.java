@@ -18,18 +18,20 @@
  */
 package org.apache.asterix.metadata.lock;
 
+import java.util.Objects;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import org.apache.asterix.metadata.lock.IMetadataLock.Mode;
 import org.apache.asterix.om.base.AMutableInt32;
 
 public class DatasetLock implements IMetadataLock {
 
-    private ReentrantReadWriteLock dsLock;
-    private ReentrantReadWriteLock dsModifyLock;
-    private AMutableInt32 indexBuildCounter;
+    private final String key;
+    private final ReentrantReadWriteLock dsLock;
+    private final ReentrantReadWriteLock dsModifyLock;
+    private final AMutableInt32 indexBuildCounter;
 
-    public DatasetLock() {
+    public DatasetLock(String key) {
+        this.key = key;
         dsLock = new ReentrantReadWriteLock(true);
         dsModifyLock = new ReentrantReadWriteLock(true);
         indexBuildCounter = new AMutableInt32(0);
@@ -153,5 +155,26 @@ public class DatasetLock implements IMetadataLock {
                 releaseReadLock();
                 break;
         }
+    }
+
+    @Override
+    public String getKey() {
+        return key;
+    }
+
+    @Override
+    public int hashCode() {
+        return key.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof DatasetLock)) {
+            return false;
+        }
+        if (o == this) {
+            return true;
+        }
+        return Objects.equals(key, ((DatasetLock) o).key);
     }
 }

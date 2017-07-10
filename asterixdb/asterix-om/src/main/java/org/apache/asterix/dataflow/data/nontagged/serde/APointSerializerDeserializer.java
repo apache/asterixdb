@@ -20,12 +20,12 @@ package org.apache.asterix.dataflow.data.nontagged.serde;
 
 import java.io.DataInput;
 import java.io.DataOutput;
-import java.io.IOException;
 
 import org.apache.asterix.dataflow.data.nontagged.Coordinate;
 import org.apache.asterix.om.base.APoint;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.dataflow.common.data.marshalling.DoubleSerializerDeserializer;
 
 public class APointSerializerDeserializer implements ISerializerDeserializer<APoint> {
 
@@ -38,34 +38,28 @@ public class APointSerializerDeserializer implements ISerializerDeserializer<APo
 
     @Override
     public APoint deserialize(DataInput in) throws HyracksDataException {
-        try {
-            return new APoint(in.readDouble(), in.readDouble());
-        } catch (IOException e) {
-            throw new HyracksDataException(e);
-        }
+        return read(in);
     }
 
     @Override
     public void serialize(APoint instance, DataOutput out) throws HyracksDataException {
-        try {
-            out.writeDouble(instance.getX());
-            out.writeDouble(instance.getY());
-        } catch (IOException e) {
-            throw new HyracksDataException(e);
-        }
+        write(instance, out);
+    }
+
+    public static APoint read(DataInput in) throws HyracksDataException {
+        return new APoint(DoubleSerializerDeserializer.read(in), DoubleSerializerDeserializer.read(in));
+    }
+
+    public static void write(APoint instance, DataOutput out) throws HyracksDataException {
+        serialize(instance.getX(), instance.getY(), out);
     }
 
     public static void serialize(double x, double y, DataOutput out) throws HyracksDataException {
-        try {
-            out.writeDouble(x);
-            out.writeDouble(y);
-        } catch (IOException e) {
-            throw new HyracksDataException(e);
-        }
+        DoubleSerializerDeserializer.write(x, out);
+        DoubleSerializerDeserializer.write(y, out);
     }
 
     public final static int getCoordinateOffset(Coordinate coordinate) throws HyracksDataException {
-
         switch (coordinate) {
             case X:
                 return 1;
@@ -74,7 +68,5 @@ public class APointSerializerDeserializer implements ISerializerDeserializer<APo
             default:
                 throw new HyracksDataException("Wrong coordinate");
         }
-
     }
-
 }

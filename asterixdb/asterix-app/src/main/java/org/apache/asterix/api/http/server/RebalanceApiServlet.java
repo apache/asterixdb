@@ -21,12 +21,18 @@ package org.apache.asterix.api.http.server;
 import static org.apache.asterix.api.http.servlet.ServletConstants.HYRACKS_CONNECTION_ATTR;
 
 import java.io.PrintWriter;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Queue;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -61,20 +67,39 @@ public class RebalanceApiServlet extends AbstractServlet {
     private static final String METADATA = "Metadata";
     private final ICcApplicationContext appCtx;
 
+    // One-at-a-time thread executor, for rebalance tasks.
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
+
+    // A queue that maintains submitted rebalance requests.
+    private final Queue<Future> rebalanceTasks = new ArrayDeque<>();
+
+    // A queue that tracks the termination of rebalance threads.
+    private final Queue<CountDownLatch> rebalanceFutureTerminated = new ArrayDeque<>();
+
     public RebalanceApiServlet(ConcurrentMap<String, Object> ctx, String[] paths, ICcApplicationContext appCtx) {
         super(ctx, paths);
         this.appCtx = appCtx;
     }
 
     @Override
-    protected void post(IServletRequest request, IServletResponse response) {
-        PrintWriter out = response.writer();
-        ObjectMapper om = new ObjectMapper();
-        ObjectNode jsonResponse = om.createObjectNode();
+    protected void delete(IServletRequest request, IServletResponse response) {
         try {
             // Sets the content type.
             HttpUtil.setContentType(response, HttpUtil.ContentType.APPLICATION_JSON, HttpUtil.Encoding.UTF8);
+            // Cancels all rebalance requests.
+            cancelRebalance();
+            // Sends the response back.
+            sendResponse(response, HttpResponseStatus.OK, "rebalance tasks are cancelled");
+        } catch (Exception e) {
+            // Sends back and logs internal error if any exception happens during cancellation.
+            sendResponse(response, HttpResponseStatus.INTERNAL_SERVER_ERROR, e.getMessage(), e);
+        }
 
+    }
+
+    @Override
+    protected void post(IServletRequest request, IServletResponse response) {
+        try {
             // Gets dataverse, dataset, and target nodes for rebalance.
             String dataverseName = request.getParameter("dataverseName");
             String datasetName = request.getParameter("datasetName");
@@ -82,31 +107,66 @@ public class RebalanceApiServlet extends AbstractServlet {
 
             // Parses and check target nodes.
             if (nodes == null) {
-                sendResponse(out, jsonResponse, response, HttpResponseStatus.BAD_REQUEST,
-                        "nodes are not given");
+                sendResponse(response, HttpResponseStatus.BAD_REQUEST, "nodes are not given");
                 return;
             }
             String nodesString = StringUtils.strip(nodes, "\"'").trim();
             String[] targetNodes = nodesString.split(",");
             if ("".equals(nodesString)) {
-                sendResponse(out, jsonResponse, response, HttpResponseStatus.BAD_REQUEST,
-                        "target nodes should not be empty");
+                sendResponse(response, HttpResponseStatus.BAD_REQUEST, "target nodes should not be empty");
                 return;
             }
 
             // If a user gives parameter datasetName, she should give dataverseName as well.
             if (dataverseName == null && datasetName != null) {
-                sendResponse(out, jsonResponse, response, HttpResponseStatus.BAD_REQUEST,
+                sendResponse(response, HttpResponseStatus.BAD_REQUEST,
                         "to rebalance a particular dataset, the parameter dataverseName must be given");
                 return;
             }
 
             // Does not allow rebalancing a metadata dataset.
             if (METADATA.equals(dataverseName)) {
-                sendResponse(out, jsonResponse, response, HttpResponseStatus.BAD_REQUEST,
-                        "cannot rebalance a metadata dataset");
+                sendResponse(response, HttpResponseStatus.BAD_REQUEST, "cannot rebalance a metadata dataset");
                 return;
             }
+            // Schedules a rebalance task and wait for its completion.
+            CountDownLatch terminated = scheduleRebalance(dataverseName, datasetName, targetNodes, response);
+            terminated.await();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            sendResponse(response, HttpResponseStatus.INTERNAL_SERVER_ERROR, "the rebalance service is interrupted", e);
+        }
+    }
+
+    // Cancels all rebalance tasks.
+    private synchronized void cancelRebalance() throws InterruptedException {
+        for (Future rebalanceTask : rebalanceTasks) {
+            rebalanceTask.cancel(true);
+        }
+    }
+
+    // Removes a terminated task and its termination latch -- the heads.
+    private synchronized void removeTermintedTask() {
+        rebalanceTasks.remove();
+        rebalanceFutureTerminated.remove();
+    }
+
+    // Schedules a rebalance task.
+    private synchronized CountDownLatch scheduleRebalance(String dataverseName, String datasetName,
+            String[] targetNodes, IServletResponse response) {
+        CountDownLatch terminated = new CountDownLatch(1);
+        Future task = executor.submit(() -> doRebalance(dataverseName, datasetName, targetNodes, response, terminated));
+        rebalanceTasks.add(task);
+        rebalanceFutureTerminated.add(terminated);
+        return terminated;
+    }
+
+    // Performs the actual rebalance.
+    private void doRebalance(String dataverseName, String datasetName, String[] targetNodes, IServletResponse response,
+            CountDownLatch terminated) {
+        try {
+            // Sets the content type.
+            HttpUtil.setContentType(response, HttpUtil.ContentType.APPLICATION_JSON, HttpUtil.Encoding.UTF8);
 
             if (datasetName == null) {
                 // Rebalances datasets in a given dataverse or all non-metadata datasets.
@@ -123,10 +183,19 @@ public class RebalanceApiServlet extends AbstractServlet {
             }
 
             // Sends response.
-            sendResponse(out, jsonResponse, response, HttpResponseStatus.OK, "successful");
+            sendResponse(response, HttpResponseStatus.OK, "successful");
+        } catch (InterruptedException e) {
+            sendResponse(response, HttpResponseStatus.INTERNAL_SERVER_ERROR,
+                    "the rebalance task is cancelled by a user", e);
         } catch (Exception e) {
-            sendResponse(out, jsonResponse, response, HttpResponseStatus.INTERNAL_SERVER_ERROR, e.getMessage());
-            LOGGER.log(Level.WARNING, e.getMessage(), e);
+            sendResponse(response, HttpResponseStatus.INTERNAL_SERVER_ERROR, e.toString(), e);
+        } finally {
+            // Removes the heads of the task queue and the latch queue.
+            // Since the ExecutorService is one-at-a-time, the execution order of rebalance tasks is
+            // the same as the request submission order.
+            removeTermintedTask();
+            // Notify that the rebalance task is terminated.
+            terminated.countDown();
         }
     }
 
@@ -177,10 +246,24 @@ public class RebalanceApiServlet extends AbstractServlet {
     }
 
     // Sends HTTP response to the request client.
-    private void sendResponse(PrintWriter out, ObjectNode jsonResponse, IServletResponse response,
-            HttpResponseStatus status, String message) {
+    private void sendResponse(IServletResponse response, HttpResponseStatus status, String message, Exception e) {
+        if (status != HttpResponseStatus.OK) {
+            if (e != null) {
+                LOGGER.log(Level.WARNING, message, e);
+            } else {
+                LOGGER.log(Level.WARNING, message);
+            }
+        }
+        PrintWriter out = response.writer();
+        ObjectMapper om = new ObjectMapper();
+        ObjectNode jsonResponse = om.createObjectNode();
         jsonResponse.put("results", message);
         response.setStatus(status);
         out.write(jsonResponse.toString());
+    }
+
+    // Sends HTTP response to the request client.
+    private void sendResponse(IServletResponse response, HttpResponseStatus status, String message) {
+        sendResponse(response, status, message, null);
     }
 }

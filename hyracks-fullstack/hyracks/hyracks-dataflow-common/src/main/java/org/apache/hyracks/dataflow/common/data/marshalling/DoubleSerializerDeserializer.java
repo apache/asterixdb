@@ -35,19 +35,27 @@ public class DoubleSerializerDeserializer implements ISerializerDeserializer<Dou
 
     @Override
     public Double deserialize(DataInput in) throws HyracksDataException {
-        try {
-            return in.readDouble();
-        } catch (IOException e) {
-            throw new HyracksDataException(e);
-        }
+        return read(in);
     }
 
     @Override
     public void serialize(Double instance, DataOutput out) throws HyracksDataException {
+        write(instance, out);
+    }
+
+    public static double read(DataInput in) throws HyracksDataException {
         try {
-            out.writeDouble(instance.doubleValue());
+            return in.readDouble();
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
+        }
+    }
+
+    public static void write(double instance, DataOutput out) throws HyracksDataException {
+        try {
+            out.writeDouble(instance);
+        } catch (IOException e) {
+            throw HyracksDataException.create(e);
         }
     }
 }

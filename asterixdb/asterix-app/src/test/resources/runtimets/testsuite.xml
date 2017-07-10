@@ -337,6 +337,11 @@
         <output-dir compare="Text">primary-secondary-btree</output-dir>
       </compilation-unit>
     </test-case>
+     <test-case FilePath="upsert">
+      <compilation-unit name="primary-correlated-secondary-btree">
+        <output-dir compare="Text">primary-secondary-btree</output-dir>
+      </compilation-unit>
+    </test-case>
     <test-case FilePath="upsert">
       <compilation-unit name="primary-secondary-inverted">
         <output-dir compare="Text">primary-secondary-inverted</output-dir>
@@ -1696,6 +1701,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="dml">
+      <compilation-unit name="using-correlated-prefix-merge-policy-with-feed">
+        <output-dir compare="Text">using-correlated-prefix-merge-policy</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
       <compilation-unit name="using-no-merge-policy">
         <output-dir compare="Text">using-no-merge-policy</output-dir>
       </compilation-unit>
@@ -1989,6 +1999,12 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="dml">
+      <compilation-unit
+        name="scan-delete-btree-correlated-secondary-index-nullable">
+        <output-dir compare="Text">scan-delete-btree-secondary-index-nullable</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
       <compilation-unit name="scan-delete-rtree-secondary-index-nullable">
         <output-dir compare="Text">scan-delete-rtree-secondary-index-nullable</output-dir>
       </compilation-unit>
@@ -2001,6 +2017,12 @@
     <test-case FilePath="dml">
       <compilation-unit name="scan-insert-btree-secondary-index-nullable">
         <output-dir compare="Text">scan-insert-btree-secondary-index-nullable</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit
+        name="scan-insert-btree-correlated-secondary-index-nullable">
+        <output-dir compare="Text">scan-delete-btree-secondary-index-nullable</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="dml">
@@ -2083,6 +2105,12 @@
         <output-dir compare="Text">scan-delete-btree-secondary-index-open</output-dir>
       </compilation-unit>
     </test-case>
+     <test-case FilePath="dml">
+      <compilation-unit
+        name="scan-delete-btree-correlated-secondary-index-open">
+        <output-dir compare="Text">scan-delete-btree-secondary-index-open</output-dir>
+      </compilation-unit>
+    </test-case>
     <test-case FilePath="dml">
       <compilation-unit name="scan-delete-inverted-index-ngram-secondary-index-open">
         <output-dir compare="Text">scan-delete-inverted-index-ngram-secondary-index-open</output-dir>
@@ -2101,6 +2129,11 @@
     <test-case FilePath="dml">
       <compilation-unit name="scan-insert-btree-secondary-index-open">
         <output-dir compare="Text">scan-insert-btree-secondary-index-open</output-dir>
+      </compilation-unit>
+    </test-case>
+     <test-case FilePath="dml">
+      <compilation-unit name="scan-insert-btree-correlated-secondary-index-open">
+        <output-dir compare="Text">scan-delete-btree-secondary-index-open</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="dml">
@@ -7165,6 +7198,50 @@
         <output-dir compare="Text">promotion_opentype_field_vs_opentype_field_02</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="types">
+      <compilation-unit name="to_boolean_01">
+        <output-dir compare="Text">to_boolean_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="types">
+      <compilation-unit name="to_boolean_02">
+        <output-dir compare="Text">to_boolean_02</output-dir>
+        <expected-error>ASX0002: Type mismatch</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="types">
+      <compilation-unit name="to_string_01">
+        <output-dir compare="Text">to_string_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="types">
+      <compilation-unit name="to_string_02">
+        <output-dir compare="Text">to_string_02</output-dir>
+        <expected-error>ASX0004: Unsupported type</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="types">
+      <compilation-unit name="to_double_01">
+        <output-dir compare="Text">to_double_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="types">
+      <compilation-unit name="to_double_02">
+        <output-dir compare="Text">to_double_02</output-dir>
+        <expected-error>ASX0002: Type mismatch</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="types">
+      <compilation-unit name="to_bigint_01">
+        <output-dir compare="Text">to_bigint_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="types">
+      <compilation-unit name="to_bigint_02">
+        <output-dir compare="Text">to_bigint_02</output-dir>
+        <expected-error>ASX0002: Type mismatch</expected-error>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="materialization">
     <test-case FilePath="materialization">
@@ -7211,6 +7288,11 @@
     </test-case>
     <test-case FilePath="filters">
       <compilation-unit name="insert-with-secondary-btree">
+        <output-dir compare="Text">insert-with-secondary-btree</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="filters">
+      <compilation-unit name="insert-with-secondary-correlated-btree">
         <output-dir compare="Text">insert-with-secondary-btree</output-dir>
       </compilation-unit>
     </test-case>
@@ -7391,6 +7473,11 @@
     </test-case>
     <test-case FilePath="temp-dataset">
       <compilation-unit name="insert-and-scan-dataset-with-index">
+        <output-dir compare="Text">insert-and-scan-dataset-with-index</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="temp-dataset">
+      <compilation-unit name="insert-and-scan-dataset-with-correlated-index">
         <output-dir compare="Text">insert-and-scan-dataset-with-index</output-dir>
       </compilation-unit>
     </test-case>

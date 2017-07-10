@@ -31,8 +31,7 @@ import org.apache.hyracks.storage.am.btree.util.BTreeUtils;
 import org.apache.hyracks.storage.am.common.api.IIndexOperationContext;
 import org.apache.hyracks.storage.am.common.api.IPageManager;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
-import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
-import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndex;
+import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInPlaceInvertedIndex;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedListCursor;
 import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizerFactory;
 import org.apache.hyracks.storage.common.IIndexAccessor;
@@ -41,7 +40,7 @@ import org.apache.hyracks.storage.common.IModificationOperationCallback;
 import org.apache.hyracks.storage.common.ISearchOperationCallback;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 
-public class InMemoryInvertedIndex implements IInvertedIndex {
+public class InMemoryInvertedIndex implements IInPlaceInvertedIndex {
 
     protected final BTree btree;
     protected final ITypeTraits[] tokenTypeTraits;
@@ -74,9 +73,8 @@ public class InMemoryInvertedIndex implements IInvertedIndex {
             btreeTypeTraits[tokenTypeTraits.length + i] = invListTypeTraits[i];
             btreeCmpFactories[tokenTypeTraits.length + i] = invListCmpFactories[i];
         }
-        this.btree = BTreeUtils.createBTree(virtualBufferCache, virtualFreePageManager,
-                ((IVirtualBufferCache) virtualBufferCache).getFileMapProvider(), btreeTypeTraits, btreeCmpFactories,
-                BTreeLeafFrameType.REGULAR_NSM, btreeFileRef);
+        this.btree = BTreeUtils.createBTree(virtualBufferCache, virtualFreePageManager, btreeTypeTraits,
+                btreeCmpFactories, BTreeLeafFrameType.REGULAR_NSM, btreeFileRef);
     }
 
     @Override
@@ -175,6 +173,12 @@ public class InMemoryInvertedIndex implements IInvertedIndex {
                 new InMemoryInvertedIndexOpContext(btree, tokenCmpFactories, tokenizerFactory));
     }
 
+    public IIndexAccessor createAccessor(IModificationOperationCallback modificationCallback,
+            ISearchOperationCallback searchCallback, int[] nonIndexFields) throws HyracksDataException {
+        return new InMemoryInvertedIndexAccessor(this,
+                new InMemoryInvertedIndexOpContext(btree, tokenCmpFactories, tokenizerFactory), nonIndexFields);
+    }
+
     @Override
     public IBufferCache getBufferCache() {
         return btree.getBufferCache();
@@ -218,5 +222,10 @@ public class InMemoryInvertedIndex implements IInvertedIndex {
     @Override
     public int getNumOfFilterFields() {
         return 0;
+    }
+
+    @Override
+    public void purge() throws HyracksDataException {
+        btree.purge();
     }
 }

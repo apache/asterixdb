@@ -20,6 +20,7 @@ package org.apache.asterix.test.runtime;
 
 import java.util.Collection;
 
+import org.apache.asterix.common.exceptions.ExceptionUtils;
 import org.apache.asterix.test.common.CancellationTestExecutor;
 import org.apache.asterix.testframework.context.TestCaseContext;
 import org.junit.AfterClass;
@@ -70,7 +71,7 @@ public class SqlppExecutionWithCancellationTest {
         try {
             LangExecutionUtil.test(tcCtx);
         } catch (Exception e) {
-            String errorMsg = CancellationTestExecutor.getErrorMessage(e);
+            String errorMsg = ExceptionUtils.getErrorMessage(e);
             if (!errorMsg.contains("reference count = 1") // not expected, but is a false alarm.
                     && !errorMsg.contains("pinned and file is being closed") // not expected, but maybe a false alarm.
             ) {

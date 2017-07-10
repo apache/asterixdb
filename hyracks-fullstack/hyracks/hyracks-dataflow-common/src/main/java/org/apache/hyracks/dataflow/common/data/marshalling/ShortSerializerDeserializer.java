@@ -35,19 +35,27 @@ public class ShortSerializerDeserializer implements ISerializerDeserializer<Shor
 
     @Override
     public Short deserialize(DataInput in) throws HyracksDataException {
-        try {
-            return in.readShort();
-        } catch (IOException e) {
-            throw new HyracksDataException(e);
-        }
+        return read(in);
     }
 
     @Override
     public void serialize(Short instance, DataOutput out) throws HyracksDataException {
+        write(instance, out);
+    }
+
+    public static short read(DataInput in) throws HyracksDataException {
         try {
-            out.writeShort(instance.intValue());
+            return in.readShort();
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
+        }
+    }
+
+    public static void write(short instance, DataOutput out) throws HyracksDataException {
+        try {
+            out.writeShort(instance);
+        } catch (IOException e) {
+            throw HyracksDataException.create(e);
         }
     }
 }

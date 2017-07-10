@@ -19,6 +19,7 @@
 package org.apache.asterix.active;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 /**
  * A unique identifier for a data feed.
@@ -30,13 +31,11 @@ public class EntityId implements Serializable {
     private final String extensionName;
     private final String dataverse;
     private final String entityName;
-    private final int hashCode;
 
     public EntityId(String extentionName, String dataverse, String entityName) {
         this.extensionName = extentionName;
         this.dataverse = dataverse;
         this.entityName = entityName;
-        this.hashCode = toString().hashCode();
     }
 
     public String getDataverse() {
@@ -52,17 +51,17 @@ public class EntityId implements Serializable {
         if (o == null || !(o instanceof EntityId)) {
             return false;
         }
-        if (this == o || ((EntityId) o).getExtensionName().equals(extensionName)
-                && ((EntityId) o).getEntityName().equals(entityName)
-                && ((EntityId) o).getDataverse().equals(dataverse)) {
+        if (o == this) {
             return true;
         }
-        return false;
+        EntityId other = (EntityId) o;
+        return Objects.equals(other.dataverse, dataverse) && Objects.equals(other.entityName, entityName) &&
+                Objects.equals(other.extensionName, extensionName);
     }
 
     @Override
     public int hashCode() {
-        return hashCode;
+        return Objects.hash(dataverse, entityName, extensionName);
     }
 
     @Override

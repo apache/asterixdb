@@ -69,7 +69,7 @@ Groupby
     Variable [ Name=$l ]
     Field=l_linestatus
   ]
-  GROUP AS Variable [ Name=#1 ]
+  GROUP AS Variable [ Name=$g ]
   (
     l:=Variable [ Name=$l ]
   )
@@ -83,7 +83,19 @@ Let Variable [ Name=$expensives ]
       Field=l_discount
     ]
     ]
-    FROM [      Variable [ Name=$l ]
+    FROM [      (
+        SELECT ELEMENT [
+        FunctionCall Metadata.resolve@-1[
+          LiteralExpr [STRING] [l]
+          Variable [ Name=$g ]
+          Variable [ Name=$l_linestatus ]
+          Variable [ Name=$l_returnflag ]
+        ]
+        ]
+        FROM [          Variable [ Name=$g ]
+          AS Variable [ Name=$g ]
+        ]
+      )
       AS Variable [ Name=$i ]
     ]
     Where
@@ -102,7 +114,20 @@ Let Variable [ Name=$cheaps ]
     SELECT ELEMENT [
     Variable [ Name=$i ]
     ]
-    FROM [      Variable [ Name=$l ]
+    FROM [      (
+        SELECT ELEMENT [
+        FunctionCall Metadata.resolve@-1[
+          LiteralExpr [STRING] [l]
+          Variable [ Name=$expensives ]
+          Variable [ Name=$g ]
+          Variable [ Name=$l_linestatus ]
+          Variable [ Name=$l_returnflag ]
+        ]
+        ]
+        FROM [          Variable [ Name=$g ]
+          AS Variable [ Name=$g ]
+        ]
+      )
       AS Variable [ Name=$i ]
     ]
     Where
@@ -144,7 +169,21 @@ Let Variable [ Name=$charges ]
       ]
     ]
     ]
-    FROM [      Variable [ Name=$l ]
+    FROM [      (
+        SELECT ELEMENT [
+        FunctionCall Metadata.resolve@-1[
+          LiteralExpr [STRING] [l]
+          Variable [ Name=$expensives ]
+          Variable [ Name=$g ]
+          Variable [ Name=$l_linestatus ]
+          Variable [ Name=$l_returnflag ]
+          Variable [ Name=$cheaps ]
+        ]
+        ]
+        FROM [          Variable [ Name=$g ]
+          AS Variable [ Name=$g ]
+        ]
+      )
       AS Variable [ Name=$i ]
     ]
   )
@@ -168,7 +207,22 @@ Let Variable [ Name=$disc_prices ]
       ]
     ]
     ]
-    FROM [      Variable [ Name=$l ]
+    FROM [      (
+        SELECT ELEMENT [
+        FunctionCall Metadata.resolve@-1[
+          LiteralExpr [STRING] [l]
+          Variable [ Name=$expensives ]
+          Variable [ Name=$g ]
+          Variable [ Name=$l_linestatus ]
+          Variable [ Name=$l_returnflag ]
+          Variable [ Name=$charges ]
+          Variable [ Name=$cheaps ]
+        ]
+        ]
+        FROM [          Variable [ Name=$g ]
+          AS Variable [ Name=$g ]
+        ]
+      )
       AS Variable [ Name=$i ]
     ]
   )

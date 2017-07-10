@@ -46,9 +46,7 @@ RecordConstructor [
     FunctionCall Metadata.resolve@-1[
       LiteralExpr [STRING] [cust]
       Variable [ Name=$cid ]
-      Variable [ Name=$o ]
       Variable [ Name=#1 ]
-      Variable [ Name=$c ]
     ]
   )
   (
@@ -71,7 +69,11 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [orders]
     :
-    Variable [ Name=$o ]
+    FunctionCall Metadata.resolve@-1[
+      LiteralExpr [STRING] [o]
+      Variable [ Name=$cid ]
+      Variable [ Name=#1 ]
+    ]
   )
 ]
 ]

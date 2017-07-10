@@ -46,14 +46,7 @@ public class ByteArraySerializerDeserializer implements ISerializerDeserializer<
      */
     @Override
     public byte[] deserialize(DataInput in) throws HyracksDataException {
-        try {
-            int contentLength = VarLenIntEncoderDecoder.decode(in);
-            byte[] bytes = new byte[contentLength];
-            in.readFully(bytes, 0, contentLength);
-            return bytes;
-        } catch (IOException e) {
-            throw new HyracksDataException(e);
-        }
+        return read(in);
     }
 
     /**
@@ -62,14 +55,22 @@ public class ByteArraySerializerDeserializer implements ISerializerDeserializer<
      */
     @Override
     public void serialize(byte[] instance, DataOutput out) throws HyracksDataException {
+        write(instance, out);
+    }
+
+    public static byte[] read(DataInput in) throws HyracksDataException {
         try {
-            byte[] metaBuffer = new byte[5];
-            int metaLength = VarLenIntEncoderDecoder.encode(instance.length, metaBuffer, 0);
-            out.write(metaBuffer, 0, metaLength);
-            out.write(instance);
+            int contentLength = VarLenIntEncoderDecoder.decode(in);
+            byte[] bytes = new byte[contentLength];
+            in.readFully(bytes, 0, contentLength);
+            return bytes;
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
+    }
+
+    public static void write(byte[] instance, DataOutput out) throws HyracksDataException {
+        serialize(instance, 0, instance.length, out);
     }
 
     public void serialize(ByteArrayPointable byteArrayPtr, DataOutput out) throws HyracksDataException {
@@ -81,7 +82,7 @@ public class ByteArraySerializerDeserializer implements ISerializerDeserializer<
     }
 
     // A pure byte array, which doesn't have the length information encoded at the beginning
-    public void serialize(byte[] instance, int start, int length, DataOutput out) throws HyracksDataException {
+    public static void serialize(byte[] instance, int start, int length, DataOutput out) throws HyracksDataException {
         byte[] metaBuffer = new byte[5];
         int metaLength = VarLenIntEncoderDecoder.encode(length, metaBuffer, 0);
         try {

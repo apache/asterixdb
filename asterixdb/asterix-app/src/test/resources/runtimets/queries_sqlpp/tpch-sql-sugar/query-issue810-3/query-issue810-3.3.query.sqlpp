@@ -36,14 +36,15 @@ FROM  LineItem AS l
 WHERE l_shipdate <= '1998-09-02'
 /* +hash */
 GROUP BY l_returnflag, l_linestatus
+GROUP AS g
 WITH  expensives AS (
       SELECT ELEMENT l_discount
-      FROM  l
+      FROM  (FROM g SELECT VALUE l) l
       WHERE l_discount <= 0.05
       ),
 cheaps as (
       SELECT ELEMENT l
-      FROM  l
+      FROM  (FROM g SELECT VALUE l) l
       WHERE l_discount > 0.05
   ),
 sum_disc_prices AS sum(l_extendedprice * (1 - l_discount)),

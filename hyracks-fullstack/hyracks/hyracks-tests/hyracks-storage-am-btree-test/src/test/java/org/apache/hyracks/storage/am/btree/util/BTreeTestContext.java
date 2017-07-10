@@ -31,7 +31,6 @@ import org.apache.hyracks.storage.am.btree.impls.BTree;
 import org.apache.hyracks.storage.am.common.api.IPageManager;
 import org.apache.hyracks.storage.am.common.api.ITreeIndex;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
-import org.apache.hyracks.storage.common.file.IFileMapProvider;
 
 @SuppressWarnings("rawtypes")
 public class BTreeTestContext extends OrderedIndexTestContext {
@@ -52,14 +51,12 @@ public class BTreeTestContext extends OrderedIndexTestContext {
         return btree.getComparatorFactories();
     }
 
-    public static BTreeTestContext create(IBufferCache bufferCache, IFileMapProvider fileMapProvider,
-            FileReference file, ISerializerDeserializer[] fieldSerdes, int numKeyFields, BTreeLeafFrameType leafType,
-            IPageManager pageManager)
-            throws Exception {
+    public static BTreeTestContext create(IBufferCache bufferCache, FileReference file,
+            ISerializerDeserializer[] fieldSerdes, int numKeyFields, BTreeLeafFrameType leafType,
+            IPageManager pageManager) throws Exception {
         ITypeTraits[] typeTraits = SerdeUtils.serdesToTypeTraits(fieldSerdes);
         IBinaryComparatorFactory[] cmpFactories = SerdeUtils.serdesToComparatorFactories(fieldSerdes, numKeyFields);
-        BTree btree = BTreeUtils.createBTree(bufferCache, fileMapProvider, typeTraits, cmpFactories, leafType, file,
-                pageManager);
+        BTree btree = BTreeUtils.createBTree(bufferCache, typeTraits, cmpFactories, leafType, file, pageManager);
         BTreeTestContext testCtx = new BTreeTestContext(fieldSerdes, btree);
         return testCtx;
     }

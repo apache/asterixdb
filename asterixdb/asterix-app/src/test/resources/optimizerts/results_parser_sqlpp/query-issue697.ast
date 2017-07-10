@@ -25,7 +25,9 @@ RecordConstructor [
           Field=value
         ]
         ]
-        FROM [          Variable [ Name=$i ]
+        FROM [          FunctionCall Metadata.dataset@1[
+            LiteralExpr [STRING] [i]
+          ]
           AS Variable [ Name=$j ]
         ]
         Where

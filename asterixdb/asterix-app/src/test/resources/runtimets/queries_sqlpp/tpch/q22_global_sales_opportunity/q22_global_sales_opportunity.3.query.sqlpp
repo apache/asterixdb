@@ -31,12 +31,13 @@ with  avg as tpch.coll_avg((
       from  Customer as c
       where (c.c_acctbal > 0.0)
   ))
-select element {'cntrycode':cntrycode,'numcust':COLL_COUNT(ct),'totacctbal':COLL_SUM((
+select element {'cntrycode':cntrycode,'numcust':COLL_COUNT(( from g select value ct )),'totacctbal':COLL_SUM((
         select element i.c_acctbal
-        from  ct as i
+        from  (from g select value ct) as i
     ))}
 from  tpch.q22_customer_tmp() as ct
 where (ct.c_acctbal > avg)
 group by ct.cntrycode as cntrycode
+group as g
 order by cntrycode
 ;

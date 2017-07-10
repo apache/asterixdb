@@ -19,5 +19,12 @@
 
 use test;
 
-
-{'double1':test.double('NaN'),'double2':test.double('INF'),'double3':test.double('-INF'),'double4':test.double('-80.20d'),'double5':test.double('-20.56e-30'),'double6':test.double('-20.56e-300')};
+{
+    'double1':test.double('NaN'),
+    'double2':test.double('INF'),
+    'double3':test.double('-INF'),
+    'double4':test.double('-80.20d'),
+    'double5':test.double('-20.56e-30'),
+    'double6':test.double('-20.56e-300'),
+    'double7':test.double(test.double('-20.56e-300'))
+};

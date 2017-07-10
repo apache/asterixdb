@@ -1590,6 +1590,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="dml">
+      <compilation-unit name="using-correlated-prefix-merge-policy-with-feed">
+        <output-dir compare="Text">using-correlated-prefix-merge-policy</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
       <compilation-unit name="using-no-merge-policy">
         <output-dir compare="Text">using-no-merge-policy</output-dir>
       </compilation-unit>
@@ -1677,6 +1682,11 @@
     <test-case FilePath="dml">
       <compilation-unit name="insert-and-scan-dataset-with-index">
         <output-dir compare="Text">insert-and-scan-dataset-with-index</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="recreate-index">
+        <output-dir compare="Text">recreate-index</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="dml">
@@ -1883,6 +1893,12 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="dml">
+      <compilation-unit
+        name="scan-delete-btree-correlated-secondary-index-nullable">
+        <output-dir compare="Text">scan-delete-btree-secondary-index-nullable</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
       <compilation-unit name="scan-delete-rtree-secondary-index-nullable">
         <output-dir compare="Text">scan-delete-rtree-secondary-index-nullable</output-dir>
       </compilation-unit>
@@ -1972,6 +1988,11 @@
         <output-dir compare="Text">scan-delete-btree-secondary-index-open</output-dir>
       </compilation-unit>
     </test-case>
+     <test-case FilePath="dml">
+      <compilation-unit name="scan-delete-btree-correlated-secondary-index-open">
+        <output-dir compare="Text">scan-delete-btree-secondary-index-open</output-dir>
+      </compilation-unit>
+    </test-case>
     <test-case FilePath="dml">
       <compilation-unit name="scan-delete-inverted-index-ngram-secondary-index-open">
         <output-dir compare="Text">scan-delete-inverted-index-ngram-secondary-index-open</output-dir>
@@ -1990,6 +2011,11 @@
     <test-case FilePath="dml">
       <compilation-unit name="scan-insert-btree-secondary-index-open">
         <output-dir compare="Text">scan-insert-btree-secondary-index-open</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="scan-insert-btree-correlated-secondary-index-open">
+        <output-dir compare="Text">scan-delete-btree-secondary-index-open</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="dml">
@@ -2559,7 +2585,7 @@
     <test-case FilePath="global-aggregate">
       <compilation-unit name="q05_error">
         <output-dir compare="Text">q01</output-dir>
-        <expected-error>Type mismatch: function field-access-by-name expects its 1st input parameter to be type object, but the actual input type is array</expected-error>
+        <expected-error>Cannot find dataset u in dataverse TinySocial nor an alias with name u</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="global-aggregate">
@@ -2620,6 +2646,18 @@
     <test-case FilePath="group-by">
       <compilation-unit name="core-01">
         <output-dir compare="Text">core-01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="group-by">
+      <compilation-unit name="core-01-error">
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>Cannot find dataset e in dataverse gby nor an alias with name e</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="group-by">
+      <compilation-unit name="core-02-error">
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>Cannot find dataset f in dataverse gby nor an alias with name f</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="group-by">
@@ -3546,6 +3584,16 @@
           <output-dir compare="Text">btree-index-01</output-dir>
         </compilation-unit>
       </test-case>
+      <test-case FilePath="open-index-non-enforced/index-selection">
+        <compilation-unit name="btree-index-02">
+          <output-dir compare="Text">btree-index-02</output-dir>
+        </compilation-unit>
+      </test-case>
+    <test-case FilePath="open-index-non-enforced/correlated-index-selection">
+      <compilation-unit name="btree-index-01">
+        <output-dir compare="Text">btree-index-01</output-dir>
+      </compilation-unit>
+    </test-case>
     </test-group>
     <test-group name="open-index-non-enforced/index-join">
       <test-case FilePath="open-index-non-enforced/index-join">
@@ -4061,6 +4109,11 @@
     <test-case FilePath="nested-index-dml">
       <compilation-unit name="scan-insert-btree-secondary-index-nullable">
         <output-dir compare="Text">scan-insert-btree-secondary-index-nullable</output-dir>
+      </compilation-unit>
+    </test-case>
+     <test-case FilePath="dml">
+      <compilation-unit name="scan-insert-btree-correlated-secondary-index-nullable">
+        <output-dir compare="Text">scan-delete-btree-secondary-index-nullable</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="nested-index-dml">
@@ -8456,6 +8509,50 @@
         <output-dir compare="Text">ifmissingornull</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="types">
+      <compilation-unit name="to_boolean_01">
+        <output-dir compare="Text">to_boolean_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="types">
+      <compilation-unit name="to_boolean_02">
+        <output-dir compare="Text">to_boolean_02</output-dir>
+        <expected-error>ASX0002: Type mismatch</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="types">
+      <compilation-unit name="to_string_01">
+        <output-dir compare="Text">to_string_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="types">
+      <compilation-unit name="to_string_02">
+        <output-dir compare="Text">to_string_02</output-dir>
+        <expected-error>ASX0004: Unsupported type</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="types">
+      <compilation-unit name="to_double_01">
+        <output-dir compare="Text">to_double_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="types">
+      <compilation-unit name="to_double_02">
+        <output-dir compare="Text">to_double_02</output-dir>
+        <expected-error>ASX0002: Type mismatch</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="types">
+      <compilation-unit name="to_bigint_01">
+        <output-dir compare="Text">to_bigint_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="types">
+      <compilation-unit name="to_bigint_02">
+        <output-dir compare="Text">to_bigint_02</output-dir>
+        <expected-error>ASX0002: Type mismatch</expected-error>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="materialization">
     <test-case FilePath="materialization">
@@ -8502,6 +8599,11 @@
     </test-case>
     <test-case FilePath="filters">
       <compilation-unit name="insert-with-secondary-btree">
+        <output-dir compare="Text">insert-with-secondary-btree</output-dir>
+      </compilation-unit>
+    </test-case>
+     <test-case FilePath="filters">
+      <compilation-unit name="insert-with-secondary-correlated-btree">
         <output-dir compare="Text">insert-with-secondary-btree</output-dir>
       </compilation-unit>
     </test-case>
@@ -8670,6 +8772,11 @@
         <output-dir compare="Text">insert-and-scan-dataset-with-index</output-dir>
       </compilation-unit>
     </test-case>
+        <test-case FilePath="temp-dataset">
+      <compilation-unit name="insert-and-scan-dataset-with-correlated-index">
+        <output-dir compare="Text">insert-and-scan-dataset-with-index</output-dir>
+      </compilation-unit>
+    </test-case>
     <test-case FilePath="unnest">
       <compilation-unit name="left-outer-unnest">
         <output-dir compare="Text">left-outer-unnest</output-dir>
@@ -8784,6 +8891,11 @@
     </test-case>
     <test-case FilePath="upsert">
       <compilation-unit name="primary-secondary-btree">
+        <output-dir compare="Text">primary-secondary-btree</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="upsert">
+      <compilation-unit name="primary-correlated-secondary-btree">
         <output-dir compare="Text">primary-secondary-btree</output-dir>
       </compilation-unit>
     </test-case>

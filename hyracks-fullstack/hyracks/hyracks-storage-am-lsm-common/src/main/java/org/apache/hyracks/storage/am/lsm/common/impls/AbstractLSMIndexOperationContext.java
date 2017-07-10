@@ -38,6 +38,7 @@ public abstract class AbstractLSMIndexOperationContext implements ILSMIndexOpera
     protected final PermutingTupleReference indexTuple;
     protected final MultiComparator filterCmp;
     protected final PermutingTupleReference filterTuple;
+    protected final int[] allFields;
     protected final List<ILSMComponent> componentHolder;
     protected final List<ILSMDiskComponent> componentsToBeMerged;
     protected final List<ILSMDiskComponent> componentsToBeReplicated;
@@ -59,10 +60,18 @@ public abstract class AbstractLSMIndexOperationContext implements ILSMIndexOpera
             indexTuple = new PermutingTupleReference(treeFields);
             filterCmp = MultiComparator.create(filterCmpFactories);
             filterTuple = new PermutingTupleReference(filterFields);
+            allFields = new int[treeFields.length + filterFields.length];
+            for (int i = 0; i < treeFields.length; i++) {
+                allFields[i] = treeFields[i];
+            }
+            for (int i = treeFields.length; i < treeFields.length + filterFields.length; i++) {
+                allFields[i] = filterFields[i - treeFields.length];
+            }
         } else {
             indexTuple = null;
             filterCmp = null;
             filterTuple = null;
+            allFields = null;
         }
     }
 

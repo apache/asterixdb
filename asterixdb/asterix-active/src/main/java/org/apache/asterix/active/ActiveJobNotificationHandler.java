@@ -107,6 +107,7 @@ public class ActiveJobNotificationHandler implements Runnable {
         LOGGER.log(Level.FINER, "Job was found to be: " + (found ? "Active" : "Inactive"));
         IActiveEntityEventsListener listener = entityEventListeners.get(entityId);
         if (listener != null) {
+            // It is okay to bypass the event inbox in this case because we know this is the first event for this entity
             listener.notify(new ActiveEvent(jobId, Kind.JOB_CREATED, entityId, jobSpecification));
         }
         LOGGER.log(Level.FINER, "Listener was notified" + jobId);

@@ -71,7 +71,7 @@ public class IntegerToFloatTypeConvertComputer implements ITypeConvertComputer {
                         new ATypeTag[] { ATypeTag.TINYINT, ATypeTag.SMALLINT, ATypeTag.INTEGER, ATypeTag.BIGINT }));
         }
         out.writeByte(ATypeTag.FLOAT.serialize());
-        FloatSerializerDeserializer.INSTANCE.serialize(val, out);
+        FloatSerializerDeserializer.write(val, out);
     }
 
     @Override

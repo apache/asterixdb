@@ -30,14 +30,20 @@ RecordConstructor [
       ]
       FROM [        (
           SELECT ELEMENT [
-          Variable [ Name=$i1 ]
+          FieldAccessor [
+            Variable [ Name=$i1 ]
+            Field=i
           ]
-          FROM [            Variable [ Name=$i ]
+          ]
+          FROM [            Variable [ Name=$g ]
             AS Variable [ Name=$i1 ]
           ]
           Orderby
             FieldAccessor [
-              Variable [ Name=$i1 ]
+              FieldAccessor [
+                Variable [ Name=$i1 ]
+                Field=i
+              ]
               Field=name
             ]
             ASC
@@ -72,7 +78,7 @@ Groupby
       Field=user-since
     ]
   ]
-  GROUP AS Variable [ Name=#1 ]
+  GROUP AS Variable [ Name=$g ]
   (
     i:=Variable [ Name=$i ]
   )

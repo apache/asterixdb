@@ -15,4 +15,13 @@ RecordConstructor [
       LiteralExpr [STRING] [0.1234,-1.00e-10 +10.5E-2,-01.02]
     ]
   )
+  (
+    LiteralExpr [STRING] [line3]
+    :
+    FunctionCall test.line@1[
+      FunctionCall test.line@1[
+        LiteralExpr [STRING] [0.1234,-1.00e-10 +10.5E-2,-01.02]
+      ]
+    ]
+  )
 ]

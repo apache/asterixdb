@@ -71,4 +71,13 @@ RecordConstructor [
       LiteralExpr [STRING] [20000229]
     ]
   )
+  (
+    LiteralExpr [STRING] [date11]
+    :
+    FunctionCall test.date@1[
+      FunctionCall test.date@1[
+        LiteralExpr [STRING] [20000229]
+      ]
+    ]
+  )
 ]

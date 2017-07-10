@@ -6,19 +6,13 @@ OrderedListConstructor [
     Variable [ Name=$x ]
     Field=int_m
   ]
-  FunctionCall test.sql-count@1[
+  FunctionCall test.count@1[
     (
       SELECT ELEMENT [
-      FunctionCall Metadata.resolve@-1[
-        LiteralExpr [STRING] [id]
-        Variable [ Name=$int_m ]
-        Variable [ Name=$x ]
-        Variable [ Name=#1 ]
-        Variable [ Name=#2 ]
+      Variable [ Name=$x ]
       ]
-      ]
-      FROM [        Variable [ Name=#1 ]
-        AS Variable [ Name=#2 ]
+      FROM [        Variable [ Name=$g ]
+        AS Variable [ Name=$g ]
       ]
     )
   ]
@@ -42,7 +36,7 @@ Groupby
     Variable [ Name=$x ]
     Field=int_m
   ]
-  GROUP AS Variable [ Name=#1 ]
+  GROUP AS Variable [ Name=$g ]
   (
     x:=Variable [ Name=$x ]
   )

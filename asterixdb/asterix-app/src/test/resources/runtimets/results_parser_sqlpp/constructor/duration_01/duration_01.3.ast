@@ -85,4 +85,13 @@ RecordConstructor [
       LiteralExpr [STRING] [P300Y15M60DT300H98M482.435S]
     ]
   )
+  (
+    LiteralExpr [STRING] [duration13]
+    :
+    FunctionCall test.duration@1[
+      FunctionCall test.duration@1[
+        LiteralExpr [STRING] [P300Y15M60DT300H98M482.435S]
+      ]
+    ]
+  )
 ]

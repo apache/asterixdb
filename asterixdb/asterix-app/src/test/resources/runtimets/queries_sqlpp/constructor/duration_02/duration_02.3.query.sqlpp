@@ -25,5 +25,18 @@
 
 use test;
 
-
-{'duration1':test.`year_month_duration`('P30Y10M'),'duration2':test.`day_time_duration`('P25DT13H12M50S'),'duration3':test.`day_time_duration`('PT13H12M50S'),'duration4':test.`year_month_duration`('P30Y'),'duration5':test.`day_time_duration`('PT13H'),'duration6':test.`year_month_duration`('-P30Y10M'),'duration7':test.`day_time_duration`('-P25DT13H12M50S'),'duration8':test.`day_time_duration`('-PT13H50S'),'duration9':test.`day_time_duration`('P120D'),'duration10':test.`year_month_duration`('-P28M'),'duration11':test.`day_time_duration`('PT29M90.937S'),'duration12':test.`year_month_duration`('P300Y15M')};
+{
+    'duration1':test.`year_month_duration`('P30Y10M'),
+    'duration2':test.`day_time_duration`('P25DT13H12M50S'),
+    'duration3':test.`day_time_duration`('PT13H12M50S'),
+    'duration4':test.`year_month_duration`('P30Y'),
+    'duration5':test.`day_time_duration`('PT13H'),
+    'duration6':test.`year_month_duration`('-P30Y10M'),
+    'duration7':test.`day_time_duration`('-P25DT13H12M50S'),
+    'duration8':test.`day_time_duration`('-PT13H50S'),
+    'duration9':test.`day_time_duration`('P120D'),
+    'duration10':test.`year_month_duration`('-P28M'),
+    'duration11':test.`day_time_duration`('PT29M90.937S'),
+    'duration12':test.`year_month_duration`('P300Y15M'),
+    'duration13':test.`year_month_duration`(test.`year_month_duration`('P300Y15M'))
+};

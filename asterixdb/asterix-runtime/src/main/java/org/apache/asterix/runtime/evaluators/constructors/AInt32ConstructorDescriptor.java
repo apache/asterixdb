@@ -70,20 +70,23 @@ public class AInt32ConstructorDescriptor extends AbstractScalarFunctionDynamicDe
                     private boolean positive;
                     private AMutableInt32 aInt32 = new AMutableInt32(0);
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<AInt32> int32Serde = SerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.AINT32);
+                    private ISerializerDeserializer<AInt32> int32Serde =
+                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT32);
                     private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                         try {
-                            resultStorage.reset();
                             eval.evaluate(tuple, inputArg);
                             byte[] serString = inputArg.getByteArray();
                             int startOffset = inputArg.getStartOffset();
                             int len = inputArg.getLength();
 
-                            if (serString[startOffset] == ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
+                            byte tt = serString[startOffset];
+                            if (tt == ATypeTag.SERIALIZED_INT32_TYPE_TAG) {
+                                result.set(inputArg);
+                            } else if (tt == ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
+                                resultStorage.reset();
                                 utf8Ptr.set(serString, startOffset + 1, len - 1);
                                 offset = utf8Ptr.getCharStartOffset();
                                 //accumulating value in negative domain
@@ -127,11 +130,11 @@ public class AInt32ConstructorDescriptor extends AbstractScalarFunctionDynamicDe
 
                                 aInt32.setValue(value);
                                 int32Serde.serialize(aInt32, out);
+                                result.set(resultStorage);
                             } else {
-                                throw new TypeMismatchException(getIdentifier(), 0, serString[offset],
+                                throw new TypeMismatchException(getIdentifier(), 0, tt,
                                         ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                             }
-                            result.set(resultStorage);
                         } catch (IOException e) {
                             throw new InvalidDataFormatException(getIdentifier(), e,
                                     ATypeTag.SERIALIZED_INT32_TYPE_TAG);

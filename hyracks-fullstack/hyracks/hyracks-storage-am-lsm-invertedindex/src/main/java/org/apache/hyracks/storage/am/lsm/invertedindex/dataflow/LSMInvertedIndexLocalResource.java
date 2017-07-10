@@ -42,7 +42,6 @@ import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokeniz
 import org.apache.hyracks.storage.am.lsm.invertedindex.util.InvertedIndexUtils;
 import org.apache.hyracks.storage.common.IStorageManager;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
-import org.apache.hyracks.storage.common.file.IFileMapProvider;
 
 public class LSMInvertedIndexLocalResource extends LsmResource {
 
@@ -86,25 +85,23 @@ public class LSMInvertedIndexLocalResource extends LsmResource {
         FileReference file = ioManager.resolve(path);
         List<IVirtualBufferCache> virtualBufferCaches = vbcProvider.getVirtualBufferCaches(serviceCtx, file);
         IBufferCache bufferCache = storageManager.getBufferCache(serviceCtx);
-        IFileMapProvider fileMapManager = storageManager.getFileMapProvider(serviceCtx);
         ILSMMergePolicy mergePolicy = mergePolicyFactory.createMergePolicy(mergePolicyProperties, serviceCtx);
         ILSMIOOperationScheduler ioScheduler = ioSchedulerProvider.getIoScheduler(serviceCtx);
         if (isPartitioned) {
-            return InvertedIndexUtils.createPartitionedLSMInvertedIndex(ioManager, virtualBufferCaches, fileMapManager,
-                    typeTraits, cmpFactories, tokenTypeTraits, tokenCmpFactories, tokenizerFactory, bufferCache,
-                    file.getAbsolutePath(), bloomFilterFalsePositiveRate, mergePolicy,
-                    opTrackerProvider.getOperationTracker(serviceCtx), ioScheduler,
-                    ioOpCallbackFactory.createIoOpCallback(), invertedIndexFields, filterTypeTraits, filterCmpFactories,
-                    filterFields, filterFieldsForNonBulkLoadOps, invertedIndexFieldsForNonBulkLoadOps, durable,
-                    metadataPageManagerFactory);
-        } else {
-            return InvertedIndexUtils.createLSMInvertedIndex(ioManager, virtualBufferCaches, fileMapManager, typeTraits,
+            return InvertedIndexUtils.createPartitionedLSMInvertedIndex(ioManager, virtualBufferCaches, typeTraits,
                     cmpFactories, tokenTypeTraits, tokenCmpFactories, tokenizerFactory, bufferCache,
                     file.getAbsolutePath(), bloomFilterFalsePositiveRate, mergePolicy,
                     opTrackerProvider.getOperationTracker(serviceCtx), ioScheduler,
                     ioOpCallbackFactory.createIoOpCallback(), invertedIndexFields, filterTypeTraits, filterCmpFactories,
                     filterFields, filterFieldsForNonBulkLoadOps, invertedIndexFieldsForNonBulkLoadOps, durable,
                     metadataPageManagerFactory);
+        } else {
+            return InvertedIndexUtils.createLSMInvertedIndex(ioManager, virtualBufferCaches, typeTraits, cmpFactories,
+                    tokenTypeTraits, tokenCmpFactories, tokenizerFactory, bufferCache, file.getAbsolutePath(),
+                    bloomFilterFalsePositiveRate, mergePolicy, opTrackerProvider.getOperationTracker(serviceCtx),
+                    ioScheduler, ioOpCallbackFactory.createIoOpCallback(), invertedIndexFields, filterTypeTraits,
+                    filterCmpFactories, filterFields, filterFieldsForNonBulkLoadOps,
+                    invertedIndexFieldsForNonBulkLoadOps, durable, metadataPageManagerFactory);
         }
     }
 }

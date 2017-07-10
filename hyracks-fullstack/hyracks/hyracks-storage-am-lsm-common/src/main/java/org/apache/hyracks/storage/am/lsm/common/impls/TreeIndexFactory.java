@@ -25,7 +25,6 @@ import org.apache.hyracks.storage.am.common.api.IPageManagerFactory;
 import org.apache.hyracks.storage.am.common.api.ITreeIndex;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
-import org.apache.hyracks.storage.common.file.IFileMapProvider;
 
 public abstract class TreeIndexFactory<T extends ITreeIndex> extends IndexFactory<T> {
 
@@ -34,10 +33,10 @@ public abstract class TreeIndexFactory<T extends ITreeIndex> extends IndexFactor
     protected final IBinaryComparatorFactory[] cmpFactories;
     protected final int fieldCount;
 
-    public TreeIndexFactory(IIOManager ioManager, IBufferCache bufferCache, IFileMapProvider fileMapProvider,
-            IPageManagerFactory freePageManagerFactory, ITreeIndexFrameFactory interiorFrameFactory,
-            ITreeIndexFrameFactory leafFrameFactory, IBinaryComparatorFactory[] cmpFactories, int fieldCount) {
-        super(ioManager, bufferCache, fileMapProvider, freePageManagerFactory);
+    public TreeIndexFactory(IIOManager ioManager, IBufferCache bufferCache, IPageManagerFactory freePageManagerFactory,
+            ITreeIndexFrameFactory interiorFrameFactory, ITreeIndexFrameFactory leafFrameFactory,
+            IBinaryComparatorFactory[] cmpFactories, int fieldCount) {
+        super(ioManager, bufferCache, freePageManagerFactory);
         this.interiorFrameFactory = interiorFrameFactory;
         this.leafFrameFactory = leafFrameFactory;
         this.cmpFactories = cmpFactories;

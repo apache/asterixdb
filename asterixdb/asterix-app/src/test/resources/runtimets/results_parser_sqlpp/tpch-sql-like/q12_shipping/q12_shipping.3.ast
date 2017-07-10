@@ -16,7 +16,10 @@ RecordConstructor [
         CASE            OperatorExpr [
               OperatorExpr [
                 FieldAccessor [
-                  Variable [ Name=$i ]
+                  FieldAccessor [
+                    Variable [ Name=$i ]
+                    Field=o
+                  ]
                   Field=o_orderpriority
                 ]
                 =
@@ -25,7 +28,10 @@ RecordConstructor [
               or
               OperatorExpr [
                 FieldAccessor [
-                  Variable [ Name=$i ]
+                  FieldAccessor [
+                    Variable [ Name=$i ]
+                    Field=o
+                  ]
                   Field=o_orderpriority
                 ]
                 =
@@ -43,7 +49,7 @@ RecordConstructor [
 
         END
         ]
-        FROM [          Variable [ Name=$o ]
+        FROM [          Variable [ Name=$g ]
           AS Variable [ Name=$i ]
         ]
       )
@@ -58,7 +64,10 @@ RecordConstructor [
         CASE            OperatorExpr [
               OperatorExpr [
                 FieldAccessor [
-                  Variable [ Name=$i ]
+                  FieldAccessor [
+                    Variable [ Name=$i ]
+                    Field=o
+                  ]
                   Field=o_orderpriority
                 ]
                 =
@@ -67,7 +76,10 @@ RecordConstructor [
               or
               OperatorExpr [
                 FieldAccessor [
-                  Variable [ Name=$i ]
+                  FieldAccessor [
+                    Variable [ Name=$i ]
+                    Field=o
+                  ]
                   Field=o_orderpriority
                 ]
                 =
@@ -85,7 +97,7 @@ RecordConstructor [
 
         END
         ]
-        FROM [          Variable [ Name=$o ]
+        FROM [          Variable [ Name=$g ]
           AS Variable [ Name=$i ]
         ]
       )
@@ -186,7 +198,7 @@ Groupby
     Variable [ Name=$l ]
     Field=l_shipmode
   ]
-  GROUP AS Variable [ Name=#1 ]
+  GROUP AS Variable [ Name=$g ]
   (
     l:=Variable [ Name=$l ]
     o:=Variable [ Name=$o ]

@@ -25,7 +25,7 @@ import org.apache.hyracks.api.context.IHyracksCommonContext;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.common.api.IIndexOperationContext;
-import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndex;
+import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInPlaceInvertedIndex;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexSearchModifier;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedListCursor;
 import org.apache.hyracks.storage.am.lsm.invertedindex.ondisk.OnDiskInvertedIndexSearchCursor;
@@ -34,7 +34,8 @@ public class TOccurrenceSearcher extends AbstractTOccurrenceSearcher {
 
     protected final ArrayList<IInvertedListCursor> invListCursors = new ArrayList<>();
 
-    public TOccurrenceSearcher(IHyracksCommonContext ctx, IInvertedIndex invIndex) throws HyracksDataException {
+    public TOccurrenceSearcher(IHyracksCommonContext ctx, IInPlaceInvertedIndex invIndex)
+            throws HyracksDataException {
         super(ctx, invIndex);
     }
 

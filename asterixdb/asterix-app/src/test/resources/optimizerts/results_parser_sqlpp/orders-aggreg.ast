@@ -23,7 +23,11 @@ RecordConstructor [
     LiteralExpr [STRING] [ordpercust]
     :
     FunctionCall orders-aggreg.count@1[
-      Variable [ Name=$o ]
+      FunctionCall Metadata.resolve@-1[
+        LiteralExpr [STRING] [o]
+        Variable [ Name=$cid ]
+        Variable [ Name=#1 ]
+      ]
     ]
   )
   (
@@ -37,7 +41,9 @@ RecordConstructor [
           Field=total
         ]
         ]
-        FROM [          Variable [ Name=$o ]
+        FROM [          FunctionCall Metadata.dataset@1[
+            LiteralExpr [STRING] [o]
+          ]
           AS Variable [ Name=$i ]
         ]
       )
@@ -54,7 +60,9 @@ RecordConstructor [
           Field=total
         ]
         ]
-        FROM [          Variable [ Name=$o ]
+        FROM [          FunctionCall Metadata.dataset@1[
+            LiteralExpr [STRING] [o]
+          ]
           AS Variable [ Name=$i ]
         ]
       )

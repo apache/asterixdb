@@ -65,6 +65,7 @@ import org.apache.asterix.transaction.management.service.recovery.TxnId;
 import org.apache.asterix.transaction.management.service.transaction.TransactionManagementConstants;
 import org.apache.commons.io.FileUtils;
 import org.apache.hyracks.api.application.INCServiceContext;
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.lifecycle.ILifeCycleComponent;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
@@ -155,27 +156,6 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
             }
         }
         return state;
-    }
-
-    //This method is used only when replication is disabled.
-    @Override
-    public void startRecovery(boolean synchronous) throws IOException, ACIDException {
-        state = SystemState.RECOVERING;
-        LOGGER.log(Level.INFO, "starting recovery ...");
-
-        long readableSmallestLSN = logMgr.getReadableSmallestLSN();
-        Checkpoint checkpointObject = checkpointManager.getLatest();
-        long lowWaterMarkLSN = checkpointObject.getMinMCTFirstLsn();
-        if (lowWaterMarkLSN < readableSmallestLSN) {
-            lowWaterMarkLSN = readableSmallestLSN;
-        }
-
-        //delete any recovery files from previous failed recovery attempts
-        deleteRecoveryTemporaryFiles();
-
-        //get active partitions on this node
-        Set<Integer> activePartitions = localResourceRepository.getNodeOrignalPartitions();
-        replayPartitionsLogs(activePartitions, logMgr.getLogReader(true), lowWaterMarkLSN);
     }
 
     @Override
@@ -691,7 +671,15 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
             } else if (logRecord.getNewOp() == AbstractIndexModificationOperationCallback.UPSERT_BYTE) {
                 // undo, upsert the old value if found, otherwise, physical delete
                 if (logRecord.getOldValue() == null) {
-                    indexAccessor.forcePhysicalDelete(logRecord.getNewValue());
+                    try {
+                        indexAccessor.forcePhysicalDelete(logRecord.getNewValue());
+                    } catch (HyracksDataException hde) {
+                        // Since we're undoing according the write-ahead log, the actual upserting tuple
+                        // might not have been written to memory yet.
+                        if (hde.getErrorCode() != ErrorCode.UPDATE_OR_DELETE_NON_EXISTENT_KEY) {
+                            throw hde;
+                        }
+                    }
                 } else {
                     indexAccessor.forceUpsert(logRecord.getOldValue());
                 }

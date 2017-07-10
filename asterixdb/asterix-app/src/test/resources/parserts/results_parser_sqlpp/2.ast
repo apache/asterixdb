@@ -94,7 +94,6 @@ Let Variable [ Name=$by_chapter ]
             FunctionCall Metadata.resolve@-1[
               LiteralExpr [STRING] [es]
               Variable [ Name=#4 ]
-              Variable [ Name=$e ]
               Variable [ Name=$sponsor ]
               Variable [ Name=$sig_sponsorship_count ]
               Variable [ Name=$chapter_name ]

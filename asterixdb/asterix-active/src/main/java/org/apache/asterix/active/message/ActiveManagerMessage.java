@@ -27,15 +27,14 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class ActiveManagerMessage implements INcAddressedMessage {
     public static final byte STOP_ACTIVITY = 0x00;
+    public static final byte REQUEST_STATS = 0x01;
 
     private static final long serialVersionUID = 1L;
     private final byte kind;
-    private final String src;
     private final Serializable payload;
 
-    public ActiveManagerMessage(byte kind, String src, Serializable payload) {
+    public ActiveManagerMessage(byte kind, Serializable payload) {
         this.kind = kind;
-        this.src = src;
         this.payload = payload;
     }
 
@@ -45,10 +44,6 @@ public class ActiveManagerMessage implements INcAddressedMessage {
 
     public byte getKind() {
         return kind;
-    }
-
-    public String getSrc() {
-        return src;
     }
 
     @Override

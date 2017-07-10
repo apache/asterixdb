@@ -132,7 +132,7 @@ public class AObjectSerializerDeserializer implements ISerializerDeserializer<IA
         try {
             out.writeByte(tag.serialize());
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
         switch (tag) {
             case MISSING:
@@ -214,7 +214,7 @@ public class AObjectSerializerDeserializer implements ISerializerDeserializer<IA
                 ATypeSerializerDeserializer.INSTANCE.serialize((IAType) instance, out);
                 break;
             default:
-                throw new NotImplementedException(
+                throw new HyracksDataException(
                         "No serializer/deserializer implemented for type " + t.getTypeTag() + " .");
         }
     }

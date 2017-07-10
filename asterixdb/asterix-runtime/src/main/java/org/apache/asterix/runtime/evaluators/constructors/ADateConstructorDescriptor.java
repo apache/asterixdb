@@ -70,8 +70,8 @@ public class ADateConstructorDescriptor extends AbstractScalarFunctionDynamicDes
                     private IScalarEvaluator eval = args[0].createScalarEvaluator(ctx);
                     private AMutableDate aDate = new AMutableDate(0);
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ADate> dateSerde = SerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ADATE);
+                    private ISerializerDeserializer<ADate> dateSerde =
+                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ADATE);
 
                     private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();
 
@@ -84,7 +84,10 @@ public class ADateConstructorDescriptor extends AbstractScalarFunctionDynamicDes
                             int offset = inputArg.getStartOffset();
                             int len = inputArg.getLength();
 
-                            if (serString[offset] == ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
+                            byte tt = serString[offset];
+                            if (tt == ATypeTag.SERIALIZED_DATE_TYPE_TAG) {
+                                result.set(inputArg);
+                            } else if (tt == ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
                                 utf8Ptr.set(serString, offset + 1, len - 1);
                                 int stringLength = utf8Ptr.getUTF8Length();
 
@@ -112,11 +115,11 @@ public class ADateConstructorDescriptor extends AbstractScalarFunctionDynamicDes
                                 }
                                 aDate.setValue((int) (chrononTimeInMs / GregorianCalendarSystem.CHRONON_OF_DAY) - temp);
                                 dateSerde.serialize(aDate, out);
+                                result.set(resultStorage);
                             } else {
-                                throw new TypeMismatchException(getIdentifier(), 0, serString[offset],
+                                throw new TypeMismatchException(getIdentifier(), 0, tt,
                                         ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                             }
-                            result.set(resultStorage);
                         } catch (IOException e) {
                             throw new InvalidDataFormatException(getIdentifier(), e, ATypeTag.SERIALIZED_DATE_TYPE_TAG);
                         }

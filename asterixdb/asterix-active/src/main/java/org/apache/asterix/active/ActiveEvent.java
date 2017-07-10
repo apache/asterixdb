@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.active;
 
+import java.util.Objects;
+
 import org.apache.hyracks.api.job.JobId;
 
 public class ActiveEvent {
@@ -27,7 +29,8 @@ public class ActiveEvent {
         JOB_STARTED,
         JOB_FINISHED,
         PARTITION_EVENT,
-        EXTENSION_EVENT
+        EXTENSION_EVENT,
+        STATS_UPDATED
     }
 
     private final JobId jobId;
@@ -64,6 +67,24 @@ public class ActiveEvent {
 
     @Override
     public String toString() {
-        return "JobId:" + jobId + ", " + "EntityId:" + entityId + ", " + "Kind" + eventKind;
+        return "JobId:" + jobId + "," + "EntityId:" + entityId + ", " + "Kind" + eventKind;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || !(o instanceof ActiveEvent)) {
+            return false;
+        }
+        if (this == o) {
+            return true;
+        }
+        ActiveEvent other = (ActiveEvent) o;
+        return Objects.equals(entityId, other.entityId) && Objects.equals(eventKind, other.eventKind) && Objects
+                .equals(eventObject, other.eventObject);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(jobId, entityId, eventKind, eventObject);
     }
 }

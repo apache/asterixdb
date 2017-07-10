@@ -29,4 +29,22 @@ RecordConstructor [
       LiteralExpr [STRING] [0.5e+2d, -10.0E+5d, +10.05e-10]
     ]
   )
+  (
+    LiteralExpr [STRING] [point3]
+    :
+    FunctionCall test.point@1[
+      FunctionCall test.point@1[
+        LiteralExpr [STRING] [5.10E-10d, -10E5]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [point3d3]
+    :
+    FunctionCall test.point3d@1[
+      FunctionCall test.point3d@1[
+        LiteralExpr [STRING] [0.5e+2d, -10.0E+5d, +10.05e-10]
+      ]
+    ]
+  )
 ]

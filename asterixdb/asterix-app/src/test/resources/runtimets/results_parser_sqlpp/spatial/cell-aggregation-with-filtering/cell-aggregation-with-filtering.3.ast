@@ -86,7 +86,7 @@ Groupby
     LiteralExpr [DOUBLE] [3.0]
     LiteralExpr [DOUBLE] [3.0]
   ]
-  GROUP AS Variable [ Name=#1 ]
+  GROUP AS Variable [ Name=$g ]
   (
     t:=Variable [ Name=$t ]
   )
@@ -94,7 +94,14 @@ Groupby
 Let Variable [ Name=$num ]
   :=
   FunctionCall test.count@1[
-    Variable [ Name=$t ]
+    (
+      SELECT ELEMENT [
+      Variable [ Name=$t ]
+      ]
+      FROM [        Variable [ Name=$g ]
+        AS Variable [ Name=$g ]
+      ]
+    )
   ]
 Orderby
   Variable [ Name=$num ]

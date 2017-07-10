@@ -23,7 +23,19 @@ RecordConstructor [
           Field=amount
         ]
         ]
-        FROM [          Variable [ Name=$profit ]
+        FROM [          (
+            SELECT ELEMENT [
+            FunctionCall Metadata.resolve@-1[
+              LiteralExpr [STRING] [profit]
+              Variable [ Name=$g ]
+              Variable [ Name=$nation ]
+              Variable [ Name=$o_year ]
+            ]
+            ]
+            FROM [              Variable [ Name=$g ]
+              AS Variable [ Name=$g ]
+            ]
+          )
           AS Variable [ Name=$pr ]
         ]
       )
@@ -431,7 +443,7 @@ Groupby
     Variable [ Name=$profit ]
     Field=o_year
   ]
-  GROUP AS Variable [ Name=#1 ]
+  GROUP AS Variable [ Name=$g ]
   (
     profit:=Variable [ Name=$profit ]
   )

@@ -22,6 +22,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
+import org.apache.asterix.runtime.utils.ClusterStateManager;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 
 /**
@@ -106,22 +107,20 @@ public class DatasetHints {
 
         @Override
         public Pair<Boolean, String> validateValue(ICcApplicationContext appCtx, String value) {
-            boolean valid = true;
             int intValue;
             try {
                 intValue = Integer.parseInt(value);
                 if (intValue < 0) {
                     return new Pair<>(false, "Value must be >= 0");
                 }
-                int numNodesInCluster = appCtx.getMetadataProperties().getNodeNames().size();
+                int numNodesInCluster = ClusterStateManager.INSTANCE.getParticipantNodes(true).size();
                 if (numNodesInCluster < intValue) {
                     return new Pair<>(false,
-                            "Value must be greater or equal to the existing number of nodes in cluster ("
+                            "Value must be less than or equal to the available number of nodes in cluster ("
                                     + numNodesInCluster + ")");
                 }
             } catch (NumberFormatException nfe) {
-                valid = false;
-                return new Pair<>(valid, "Inappropriate value");
+                return new Pair<>(false, "Inappropriate value");
             }
             return new Pair<>(true, null);
         }

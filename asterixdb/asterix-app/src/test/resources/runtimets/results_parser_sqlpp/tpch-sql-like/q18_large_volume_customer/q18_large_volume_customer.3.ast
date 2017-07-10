@@ -38,7 +38,22 @@ RecordConstructor [
           Field=l_quantity
         ]
         ]
-        FROM [          Variable [ Name=$l ]
+        FROM [          (
+            SELECT ELEMENT [
+            FunctionCall Metadata.resolve@-1[
+              LiteralExpr [STRING] [l]
+              Variable [ Name=$g ]
+              Variable [ Name=$o_orderdate ]
+              Variable [ Name=$c_name ]
+              Variable [ Name=$o_orderkey ]
+              Variable [ Name=$o_totalprice ]
+              Variable [ Name=$c_custkey ]
+            ]
+            ]
+            FROM [              Variable [ Name=$g ]
+              AS Variable [ Name=$g ]
+            ]
+          )
           AS Variable [ Name=$j ]
         ]
       )
@@ -75,7 +90,20 @@ FROM [  FunctionCall Metadata.dataset@1[
               Field=l_quantity
             ]
             ]
-            FROM [              Variable [ Name=$l ]
+            FROM [              (
+                SELECT ELEMENT [
+                FunctionCall Metadata.resolve@-1[
+                  LiteralExpr [STRING] [l]
+                  Variable [ Name=$o ]
+                  Variable [ Name=$l_orderkey ]
+                  Variable [ Name=$g2 ]
+                  Variable [ Name=$c ]
+                ]
+                ]
+                FROM [                  Variable [ Name=$g2 ]
+                  AS Variable [ Name=$g2 ]
+                ]
+              )
               AS Variable [ Name=$i ]
             ]
           )
@@ -95,7 +123,7 @@ FROM [  FunctionCall Metadata.dataset@1[
         Variable [ Name=$l ]
         Field=l_orderkey
       ]
-      GROUP AS Variable [ Name=#1 ]
+      GROUP AS Variable [ Name=$g2 ]
       (
         l:=Variable [ Name=$l ]
       )
@@ -123,26 +151,24 @@ Where
     ]
     and
     OperatorExpr [
-      OperatorExpr [
-        FieldAccessor [
-          Variable [ Name=$o ]
-          Field=o_orderkey
-        ]
-        =
-        FieldAccessor [
-          Variable [ Name=$t ]
-          Field=l_orderkey
-        ]
+      FieldAccessor [
+        Variable [ Name=$o ]
+        Field=o_orderkey
       ]
-      and
-      OperatorExpr [
-        FieldAccessor [
-          Variable [ Name=$t ]
-          Field=t_sum_quantity
-        ]
-        >
-        LiteralExpr [LONG] [30]
+      =
+      FieldAccessor [
+        Variable [ Name=$t ]
+        Field=l_orderkey
       ]
+    ]
+    and
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=$t ]
+        Field=t_sum_quantity
+      ]
+      >
+      LiteralExpr [LONG] [30]
     ]
     and
     OperatorExpr [
@@ -152,8 +178,8 @@ Where
       ]
       =
       FieldAccessor [
-        Variable [ Name=$o ]
-        Field=o_orderkey
+        Variable [ Name=$t ]
+        Field=l_orderkey
       ]
     ]
   ]
@@ -188,7 +214,7 @@ Groupby
     Variable [ Name=$o ]
     Field=o_totalprice
   ]
-  GROUP AS Variable [ Name=#2 ]
+  GROUP AS Variable [ Name=$g ]
   (
     c:=Variable [ Name=$c ]
     o:=Variable [ Name=$o ]

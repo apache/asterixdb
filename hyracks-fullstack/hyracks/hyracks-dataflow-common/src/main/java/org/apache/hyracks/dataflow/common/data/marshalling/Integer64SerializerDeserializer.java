@@ -36,19 +36,27 @@ public class Integer64SerializerDeserializer implements ISerializerDeserializer<
 
     @Override
     public Long deserialize(DataInput in) throws HyracksDataException {
-        try {
-            return in.readLong();
-        } catch (IOException e) {
-            throw new HyracksDataException(e);
-        }
+        return read(in);
     }
 
     @Override
     public void serialize(Long instance, DataOutput out) throws HyracksDataException {
+        write(instance, out);
+    }
+
+    public static long read(DataInput in) throws HyracksDataException {
         try {
-            out.writeLong(instance.longValue());
-        } catch (IOException ioe) {
-            throw new HyracksDataException(ioe);
+            return in.readLong();
+        } catch (IOException e) {
+            throw HyracksDataException.create(e);
+        }
+    }
+
+    public static void write(long instance, DataOutput out) throws HyracksDataException {
+        try {
+            out.writeLong(instance);
+        } catch (IOException e) {
+            throw HyracksDataException.create(e);
         }
     }
 }

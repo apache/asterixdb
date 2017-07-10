@@ -18,14 +18,20 @@ RecordConstructor [
 
           WHEN               OperatorExpr [
                 FieldAccessor [
-                  Variable [ Name=$i ]
+                  FieldAccessor [
+                    Variable [ Name=$i ]
+                    Field=t
+                  ]
                   Field=s_name
                 ]
                 =
                 LiteralExpr [STRING] [BRAZIL]
               ]
           THEN               FieldAccessor [
-                Variable [ Name=$i ]
+                FieldAccessor [
+                  Variable [ Name=$i ]
+                  Field=t
+                ]
                 Field=revenue
               ]
 
@@ -33,7 +39,7 @@ RecordConstructor [
 
           END
           ]
-          FROM [            Variable [ Name=$t ]
+          FROM [            Variable [ Name=$g ]
             AS Variable [ Name=$i ]
           ]
         )
@@ -43,11 +49,14 @@ RecordConstructor [
         (
           SELECT ELEMENT [
           FieldAccessor [
-            Variable [ Name=$i ]
+            FieldAccessor [
+              Variable [ Name=$i ]
+              Field=t
+            ]
             Field=revenue
           ]
           ]
-          FROM [            Variable [ Name=$t ]
+          FROM [            Variable [ Name=$g ]
             AS Variable [ Name=$i ]
           ]
         )
@@ -469,7 +478,7 @@ Groupby
     Variable [ Name=$t ]
     Field=year
   ]
-  GROUP AS Variable [ Name=#1 ]
+  GROUP AS Variable [ Name=$g ]
   (
     t:=Variable [ Name=$t ]
   )

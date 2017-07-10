@@ -473,16 +473,15 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
             OptimizableOperatorSubTree matchedSubTree, AccessMethodAnalysisContext analysisCtx)
             throws AlgebricksException {
         List<Index> indexCandidates = new ArrayList<>();
-        // Add an index to the candidates if one of the indexed fields is
-        // fieldName
+        // Add an index to the candidates if one of the indexed fields is fieldName
         for (Index index : datasetIndexes) {
             // Need to also verify the index is pending no op
             if (index.getKeyFieldNames().contains(fieldName) && index.getPendingOp() == MetadataUtil.PENDING_NO_OP) {
                 indexCandidates.add(index);
-                if (optFuncExpr.getFieldType(varIdx) == BuiltinType.AMISSING
-                        || optFuncExpr.getFieldType(varIdx) == BuiltinType.ANY) {
-                    optFuncExpr.setFieldType(varIdx,
-                            index.getKeyFieldTypes().get(index.getKeyFieldNames().indexOf(fieldName)));
+                boolean isFieldTypeUnknown = fieldType == BuiltinType.AMISSING || fieldType == BuiltinType.ANY;
+                if (isFieldTypeUnknown && (!index.isOverridingKeyFieldTypes() || index.isEnforced())) {
+                    IAType indexedType = index.getKeyFieldTypes().get(index.getKeyFieldNames().indexOf(fieldName));
+                    optFuncExpr.setFieldType(varIdx, indexedType);
                 }
                 analysisCtx.addIndexExpr(matchedSubTree.getDataset(), index, matchedFuncExprIndex, varIdx);
             }

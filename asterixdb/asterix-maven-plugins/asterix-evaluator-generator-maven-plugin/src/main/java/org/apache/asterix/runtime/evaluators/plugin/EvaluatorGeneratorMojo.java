@@ -22,21 +22,25 @@ package org.apache.asterix.runtime.evaluators.plugin;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.Set;
 
-import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
+import org.apache.asterix.common.utils.CodeGenHelper;
 import org.apache.asterix.runtime.evaluators.staticcodegen.CodeGenUtil;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.project.MavenProject;
 import org.reflections.Reflections;
+import org.reflections.util.ConfigurationBuilder;
 
 /**
  * Statically generates null-handling byte code for scalar functions.
  *
  * @goal generate-evaluator
- * @phase compile
+ * @phase process-classes
  */
 public class EvaluatorGeneratorMojo extends AbstractMojo {
 
@@ -62,23 +66,41 @@ public class EvaluatorGeneratorMojo extends AbstractMojo {
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
         baseDir = project.getBuild().getDirectory() + File.separator + "classes";
-        try {
-            // Finds all sub-classes of AbstractScalarFunctionDynamicDescriptor with in the package
-            // org.apache.asterix.runtime.evaluators.
-            Reflections reflections = new Reflections(evaluatorPackagePrefix);
-            Set<Class<? extends AbstractScalarFunctionDynamicDescriptor>> allClasses = reflections
-                    .getSubTypesOf(AbstractScalarFunctionDynamicDescriptor.class);
 
-            // Generates byte code for all sub-classes of AbstractScalarFunctionDynamicDescriptor.
+        URLClassLoader classLoader = null;
+        try {
+            URI baseURI = new File(baseDir).toURI();
+            classLoader = new URLClassLoader(new URL[] { baseURI.toURL() }, getClass().getClassLoader());
+
+            String superClassName = CodeGenHelper.toJdkStandardName(CodeGenUtil.DESCRIPTOR_SUPER_CLASS_NAME);
+            Class superClass = Class.forName(superClassName, false, classLoader);
+
+            // Finds all sub-classes of the given root class within the specified package
+            ConfigurationBuilder config = ConfigurationBuilder.build(classLoader, evaluatorPackagePrefix);
+            String genSuffix = CodeGenHelper.DEFAULT_SUFFIX_FOR_GENERATED_CLASS + ".class";
+            config.setInputsFilter(path -> path != null && !path.endsWith(genSuffix));
+
+            Reflections reflections = new Reflections(config);
+            Set<Class<?>> allClasses = reflections.getSubTypesOf(superClass);
+
+            // Generates byte code for all sub-classes
             for (Class<?> cl : allClasses) {
                 getLog().info("Generating byte code for " + cl.getName());
                 CodeGenUtil.generateScalarFunctionDescriptorBinary(evaluatorPackagePrefix, cl.getName(),
-                        CodeGenUtil.DEFAULT_SUFFIX_FOR_GENERATED_CLASS, reflections.getClass().getClassLoader(),
+                        CodeGenHelper.DEFAULT_SUFFIX_FOR_GENERATED_CLASS, classLoader,
                         (name, bytes) -> writeFile(name, bytes));
             }
         } catch (Exception e) {
             getLog().error(e);
             throw new MojoFailureException(e.toString());
+        } finally {
+            if (classLoader != null) {
+                try {
+                    classLoader.close();
+                } catch (IOException e) {
+                    getLog().error(e);
+                }
+            }
         }
     }
 

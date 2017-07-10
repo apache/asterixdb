@@ -62,7 +62,6 @@ import org.apache.hyracks.storage.common.IIndexCursor;
 import org.apache.hyracks.storage.common.IModificationOperationCallback;
 import org.apache.hyracks.storage.common.ISearchOperationCallback;
 import org.apache.hyracks.storage.common.ISearchPredicate;
-import org.apache.hyracks.storage.common.file.IFileMapProvider;
 
 /**
  * This is an lsm r-tree that does not have memory component and is modified
@@ -86,17 +85,16 @@ public class ExternalRTree extends LSMRTree implements ITwoPCIndex {
             ITreeIndexFrameFactory rtreeLeafFrameFactory, ITreeIndexFrameFactory btreeInteriorFrameFactory,
             ITreeIndexFrameFactory btreeLeafFrameFactory, ILSMIndexFileManager fileNameManager,
             TreeIndexFactory<RTree> diskRTreeFactory, TreeIndexFactory<BTree> diskBTreeFactory,
-            BloomFilterFactory bloomFilterFactory, double bloomFilterFalsePositiveRate,
-            IFileMapProvider diskFileMapProvider, int fieldCount, IBinaryComparatorFactory[] rtreeCmpFactories,
-            IBinaryComparatorFactory[] btreeCmpFactories, ILinearizeComparatorFactory linearizer,
-            int[] comparatorFields, IBinaryComparatorFactory[] linearizerArray, ILSMMergePolicy mergePolicy,
-            ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallback ioOpCallback,
-            int[] buddyBTreeFields, boolean durable, boolean isPointMBR) {
+            BloomFilterFactory bloomFilterFactory, double bloomFilterFalsePositiveRate, int fieldCount,
+            IBinaryComparatorFactory[] rtreeCmpFactories, IBinaryComparatorFactory[] btreeCmpFactories,
+            ILinearizeComparatorFactory linearizer, int[] comparatorFields, IBinaryComparatorFactory[] linearizerArray,
+            ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler,
+            ILSMIOOperationCallback ioOpCallback, int[] buddyBTreeFields, boolean durable, boolean isPointMBR) {
         super(ioManager, rtreeInteriorFrameFactory, rtreeLeafFrameFactory, btreeInteriorFrameFactory,
                 btreeLeafFrameFactory, fileNameManager, diskRTreeFactory, diskBTreeFactory, bloomFilterFactory,
-                bloomFilterFalsePositiveRate, diskFileMapProvider, rtreeCmpFactories, btreeCmpFactories, linearizer,
-                comparatorFields, linearizerArray, mergePolicy, opTracker, ioScheduler, ioOpCallback, buddyBTreeFields,
-                durable, isPointMBR);
+                bloomFilterFalsePositiveRate, rtreeCmpFactories, btreeCmpFactories, linearizer, comparatorFields,
+                linearizerArray, mergePolicy, opTracker, ioScheduler, ioOpCallback, buddyBTreeFields, durable,
+                isPointMBR);
         this.secondDiskComponents = new LinkedList<>();
         this.fieldCount = fieldCount;
     }
@@ -345,25 +343,12 @@ public class ExternalRTree extends LSMRTree implements ITwoPCIndex {
             cb.afterFinalize(LSMOperationType.FLUSH, null);
         }
 
-        for (ILSMComponent c : diskComponents) {
-            LSMRTreeDiskComponent component = (LSMRTreeDiskComponent) c;
-            RTree rtree = component.getRTree();
-            BTree btree = component.getBTree();
-            BloomFilter bloomFilter = component.getBloomFilter();
-            rtree.deactivateCloseHandle();
-            btree.deactivateCloseHandle();
-            bloomFilter.deactivate();
+        for (ILSMDiskComponent c : diskComponents) {
+            deactivateDiskComponent(c);
         }
-        for (ILSMComponent c : secondDiskComponents) {
-            // Only deactivate non shared components
+        for (ILSMDiskComponent c : secondDiskComponents) {
             if (!diskComponents.contains(c)) {
-                LSMRTreeDiskComponent component = (LSMRTreeDiskComponent) c;
-                RTree rtree = component.getRTree();
-                BTree btree = component.getBTree();
-                BloomFilter bloomFilter = component.getBloomFilter();
-                rtree.deactivateCloseHandle();
-                btree.deactivateCloseHandle();
-                bloomFilter.deactivate();
+                deactivateDiskComponent(c);
             }
         }
         isActive = false;
@@ -410,19 +395,13 @@ public class ExternalRTree extends LSMRTree implements ITwoPCIndex {
         if (isActive) {
             throw new HyracksDataException("Failed to destroy the index since it is activated.");
         }
-        for (ILSMComponent c : diskComponents) {
-            LSMRTreeDiskComponent component = (LSMRTreeDiskComponent) c;
-            component.getRTree().destroy();
-            component.getBTree().destroy();
-            component.getBloomFilter().destroy();
+        for (ILSMDiskComponent c : diskComponents) {
+            destroyDiskComponent(c);
             // Remove from second list to avoid destroying twice
             secondDiskComponents.remove(c);
         }
-        for (ILSMComponent c : secondDiskComponents) {
-            LSMRTreeDiskComponent component = (LSMRTreeDiskComponent) c;
-            component.getRTree().destroy();
-            component.getBTree().destroy();
-            component.getBloomFilter().destroy();
+        for (ILSMDiskComponent c : secondDiskComponents) {
+            destroyDiskComponent(c);
         }
         diskComponents.clear();
         secondDiskComponents.clear();
@@ -663,7 +642,7 @@ public class ExternalRTree extends LSMRTree implements ITwoPCIndex {
         // create the merge operation.
         LSMRTreeMergeOperation mergeOp = new LSMRTreeMergeOperation(accessor, mergingComponents, cursor,
                 relMergeFileRefs.getInsertIndexFileReference(), relMergeFileRefs.getDeleteIndexFileReference(),
-                relMergeFileRefs.getBloomFilterFileReference(), callback, fileManager.getBaseDir());
+                relMergeFileRefs.getBloomFilterFileReference(), callback, fileManager.getBaseDir().getAbsolutePath());
         ioScheduler.scheduleOperation(mergeOp);
     }
 

@@ -20,11 +20,12 @@ package org.apache.asterix.dataflow.data.nontagged.serde;
 
 import java.io.DataInput;
 import java.io.DataOutput;
-import java.io.IOException;
 
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.primitive.BooleanPointable;
+import org.apache.hyracks.dataflow.common.data.marshalling.BooleanSerializerDeserializer;
 
 public class ABooleanSerializerDeserializer implements ISerializerDeserializer<ABoolean> {
 
@@ -36,23 +37,15 @@ public class ABooleanSerializerDeserializer implements ISerializerDeserializer<A
 
     @Override
     public ABoolean deserialize(DataInput in) throws HyracksDataException {
-        try {
-            return (in.readBoolean()) ? ABoolean.TRUE : ABoolean.FALSE;
-        } catch (IOException ioe) {
-            throw new HyracksDataException(ioe);
-        }
+        return BooleanSerializerDeserializer.read(in) ? ABoolean.TRUE : ABoolean.FALSE;
     }
 
     @Override
     public void serialize(ABoolean instance, DataOutput out) throws HyracksDataException {
-        try {
-            out.writeBoolean(instance.getBoolean());
-        } catch (IOException ioe) {
-            throw new HyracksDataException(ioe);
-        }
+        BooleanSerializerDeserializer.write(instance.getBoolean(), out);
     }
 
     public static boolean getBoolean(byte[] bytes, int offset) {
-        return bytes[offset] != 0;
+        return BooleanPointable.getBoolean(bytes, offset);
     }
 }

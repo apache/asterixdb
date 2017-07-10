@@ -20,11 +20,11 @@ package org.apache.asterix.dataflow.data.nontagged.serde;
 
 import java.io.DataInput;
 import java.io.DataOutput;
-import java.io.IOException;
 
 import org.apache.asterix.om.base.ADouble;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.dataflow.common.data.marshalling.DoubleSerializerDeserializer;
 
 public class ADoubleSerializerDeserializer implements ISerializerDeserializer<ADouble> {
 
@@ -37,20 +37,12 @@ public class ADoubleSerializerDeserializer implements ISerializerDeserializer<AD
 
     @Override
     public ADouble deserialize(DataInput in) throws HyracksDataException {
-        try {
-            return new ADouble(in.readDouble());
-        } catch (IOException e) {
-            throw new HyracksDataException(e);
-        }
+        return new ADouble(DoubleSerializerDeserializer.read(in));
     }
 
     @Override
     public void serialize(ADouble instance, DataOutput out) throws HyracksDataException {
-        try {
-            out.writeDouble(instance.getDoubleValue());
-        } catch (IOException ioe) {
-            throw new HyracksDataException(ioe);
-        }
+        DoubleSerializerDeserializer.write(instance.getDoubleValue(), out);
     }
 
     public static double getDouble(byte[] bytes, int offset) {
@@ -60,5 +52,4 @@ public class ADoubleSerializerDeserializer implements ISerializerDeserializer<AD
     public static long getLongBits(byte[] bytes, int offset) {
         return AInt64SerializerDeserializer.getLong(bytes, offset);
     }
-
 }

@@ -21,8 +21,8 @@ use tpch;
 
 
 select element {'nation':nation,'o_year':o_year,'sum_profit':COLL_SUM((
-        select element pr.amount
-        from  profit as pr
+        select element pr.profit.amount
+        from  g as pr
     ))}
 from  (
     select element {'nation':l3.n_name,'o_year':o_year,'amount':amount}
@@ -48,10 +48,11 @@ from  (
         ) as l2
         where (tpch.contains(p.p_name,'green') and (p.p_partkey = l2.l_partkey))
     ) as l3
-    with  amount as ((l3.l_extendedprice * (1 - l3.l_discount)) - (l3.ps_supplycost * l3.l_quantity)),
-          o_year as tpch.`get-year`(o.o_orderdate)
+    let  amount = ((l3.l_extendedprice * (1 - l3.l_discount)) - (l3.ps_supplycost * l3.l_quantity)),
+          o_year = tpch.`get-year`(o.o_orderdate)
     where (o.o_orderkey = l3.l_orderkey)
 ) as profit
 group by profit.nation as nation,profit.o_year as o_year
+group as g
 order by nation,o_year desc
 ;

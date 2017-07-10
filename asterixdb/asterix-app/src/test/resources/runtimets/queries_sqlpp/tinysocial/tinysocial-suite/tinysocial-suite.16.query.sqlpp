@@ -23,7 +23,7 @@
 use TinySocial;
 
 
-select element {'user':uid,'count':TinySocial.count(t)}
+select element {'user':uid,'count':TinySocial.count(*)}
 from  TweetMessages as t
 /* +hash */
 group by t.user.`screen-name` as uid

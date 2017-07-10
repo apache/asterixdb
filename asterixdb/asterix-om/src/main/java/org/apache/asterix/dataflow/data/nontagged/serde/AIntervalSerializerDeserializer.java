@@ -63,7 +63,7 @@ public class AIntervalSerializerDeserializer implements ISerializerDeserializer<
             }
             return new AInterval(start, end, tag);
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
 
     }
@@ -80,7 +80,7 @@ public class AIntervalSerializerDeserializer implements ISerializerDeserializer<
                 out.writeInt((int) instance.getIntervalEnd());
             }
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 
@@ -141,5 +141,4 @@ public class AIntervalSerializerDeserializer implements ISerializerDeserializer<
     public static int getIntervalLength(byte[] data, int start) {
         return getTypeSize() + getStartSize(data, start) + getEndSize(data, start);
     }
-
 }

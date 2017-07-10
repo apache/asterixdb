@@ -28,5 +28,19 @@ let $c7 := date("-19280329")
 let $c8 := date("19280329")
 let $c9 := date("19000228")
 let $c10 := date("20000229")
+let $c11 := date($c10)
 
-return {"date1": $c1, "date2": $c2, "date3": $c3, "date4": $c4, "date5": $c5, "date6": $c6, "date7": $c7, "date8": $c8, "date9": $c9, "date10": $c10}
+return
+{
+    "date1": $c1,
+    "date2": $c2,
+    "date3": $c3,
+    "date4": $c4,
+    "date5": $c5,
+    "date6": $c6,
+    "date7": $c7,
+    "date8": $c8,
+    "date9": $c9,
+    "date10": $c10,
+    "date11": $c11
+}

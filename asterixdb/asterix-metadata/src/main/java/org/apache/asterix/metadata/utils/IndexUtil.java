@@ -101,42 +101,50 @@ public class IndexUtil {
 
     public static JobSpecification buildDropIndexJobSpec(Index index, MetadataProvider metadataProvider,
             Dataset dataset) throws AlgebricksException {
-        SecondaryIndexOperationsHelper secondaryIndexHelper =
-                SecondaryIndexOperationsHelper.createIndexOperationsHelper(dataset, index, metadataProvider,
-                        physicalOptimizationConfig);
-        return secondaryIndexHelper.buildDropJobSpec();
+        SecondaryIndexOperationsHelper secondaryIndexHelper = SecondaryIndexOperationsHelper
+                .createIndexOperationsHelper(dataset, index, metadataProvider, physicalOptimizationConfig);
+        return secondaryIndexHelper.buildDropJobSpec(false);
+    }
+
+    public static JobSpecification buildDropIndexJobSpec(Index index, MetadataProvider metadataProvider,
+            Dataset dataset, boolean failSilently) throws AlgebricksException {
+        SecondaryIndexOperationsHelper secondaryIndexHelper = SecondaryIndexOperationsHelper
+                .createIndexOperationsHelper(dataset, index, metadataProvider, physicalOptimizationConfig);
+        return secondaryIndexHelper.buildDropJobSpec(failSilently);
     }
 
     public static JobSpecification buildSecondaryIndexCreationJobSpec(Dataset dataset, Index index,
             MetadataProvider metadataProvider) throws AlgebricksException {
-        SecondaryIndexOperationsHelper secondaryIndexHelper =
-                SecondaryIndexOperationsHelper.createIndexOperationsHelper(dataset, index, metadataProvider,
-                        physicalOptimizationConfig);
+        SecondaryIndexOperationsHelper secondaryIndexHelper = SecondaryIndexOperationsHelper
+                .createIndexOperationsHelper(dataset, index, metadataProvider, physicalOptimizationConfig);
         return secondaryIndexHelper.buildCreationJobSpec();
     }
 
     public static JobSpecification buildSecondaryIndexLoadingJobSpec(Dataset dataset, Index index,
             MetadataProvider metadataProvider) throws AlgebricksException {
-        SecondaryIndexOperationsHelper secondaryIndexHelper =
-                SecondaryIndexOperationsHelper.createIndexOperationsHelper(dataset, index, metadataProvider,
-                        physicalOptimizationConfig);
-        return secondaryIndexHelper.buildLoadingJobSpec();
+        return buildSecondaryIndexLoadingJobSpec(dataset, index, metadataProvider, null);
     }
 
     public static JobSpecification buildSecondaryIndexLoadingJobSpec(Dataset dataset, Index index,
             MetadataProvider metadataProvider, List<ExternalFile> files) throws AlgebricksException {
-        SecondaryIndexOperationsHelper secondaryIndexHelper =
-                SecondaryIndexOperationsHelper.createIndexOperationsHelper(dataset, index, metadataProvider,
-                        physicalOptimizationConfig);
-        secondaryIndexHelper.setExternalFiles(files);
+        SecondaryIndexOperationsHelper secondaryIndexHelper;
+        if (dataset.isCorrelated()) {
+            secondaryIndexHelper = SecondaryCorrelatedTreeIndexOperationsHelper.createIndexOperationsHelper(dataset,
+                    index, metadataProvider, physicalOptimizationConfig);
+        } else {
+            secondaryIndexHelper = SecondaryTreeIndexOperationsHelper.createIndexOperationsHelper(dataset, index,
+                    metadataProvider, physicalOptimizationConfig);
+        }
+        if (files != null) {
+            secondaryIndexHelper.setExternalFiles(files);
+        }
         return secondaryIndexHelper.buildLoadingJobSpec();
     }
 
     public static JobSpecification buildSecondaryIndexCompactJobSpec(Dataset dataset, Index index,
             MetadataProvider metadataProvider) throws AlgebricksException {
-        SecondaryIndexOperationsHelper secondaryIndexHelper =
-                SecondaryIndexOperationsHelper.createIndexOperationsHelper(dataset, index, metadataProvider,
-                        physicalOptimizationConfig);
+        SecondaryIndexOperationsHelper secondaryIndexHelper = SecondaryIndexOperationsHelper
+                .createIndexOperationsHelper(dataset, index, metadataProvider, physicalOptimizationConfig);
         return secondaryIndexHelper.buildCompactJobSpec();
     }
 

@@ -20,6 +20,8 @@ package org.apache.hyracks.util;
 
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.logging.Logger;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -173,5 +175,46 @@ public class JSONUtil {
             default:
                 return null;
         }
+    }
+
+    /**
+     * Write map as a json string. if an object is a string and starts with a { or [
+     * then it assumes that it is a json object or a json array and so it doesn't surround
+     * it with "
+     *
+     * @param map
+     *            a map representing the json object
+     * @return
+     *         a String representation of the json object
+     */
+    public static String fromMap(Map<String, Object> map) {
+        StringBuilder aString = new StringBuilder();
+        aString.append("{ ");
+        boolean first = true;
+        for (Entry<String, Object> entry : map.entrySet()) {
+            if (!first) {
+                aString.append(", ");
+            }
+            aString.append("\"");
+            aString.append(entry.getKey());
+            aString.append("\"");
+            aString.append(" : ");
+            Object value = entry.getValue();
+            if (value instanceof String) {
+                String strValue = (String) value;
+                if (strValue.startsWith("{") || strValue.startsWith("[")) {
+                    aString.append(value);
+                } else {
+                    aString.append("\"");
+                    aString.append(value);
+                    aString.append("\"");
+                }
+            } else {
+                aString.append(value);
+            }
+            first = false;
+        }
+        aString.append(" }");
+        return aString.toString();
     }
 }

@@ -159,4 +159,11 @@ public interface ILSMIndex extends IIndex {
             boolean verifyInput, long numElementsHint, boolean checkIfEmptyIndex, boolean withFilter,
             boolean cleanupEmptyComponent) throws HyracksDataException;
 
+    /**
+     * Creates a disk component for the bulk load operation
+     *
+     * @return
+     * @throws HyracksDataException
+     */
+    ILSMDiskComponent createBulkLoadTarget() throws HyracksDataException;
 }

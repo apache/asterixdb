@@ -34,14 +34,15 @@ FROM LineItem AS l
 WHERE l.l_shipdate <= '1998-09-02'
 /* +hash */
 GROUP BY l.l_returnflag AS l_returnflag,l.l_linestatus AS l_linestatus
-with  cheap as (
+GROUP AS g
+LET  cheap = (
       SELECT ELEMENT m
-      FROM l AS m
+      FROM (FROM g SELECT VALUE l) AS m
       WHERE m.l_discount > 0.05
 ),
-expensive AS (
+expensive = (
       SELECT ELEMENT a
-      FROM l AS a
+      FROM (FROM g SELECT VALUE l) AS a
       WHERE a.l_discount <= 0.05
 )
 ORDER BY l_returnflag,l_linestatus

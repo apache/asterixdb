@@ -79,7 +79,7 @@ RecordConstructor [
           Variable [ Name=$orders ]
           Field=o_orderdate
         ]
-        GROUP AS Variable [ Name=#1 ]
+        GROUP AS Variable [ Name=$g ]
         (
           orders:=Variable [ Name=$orders ]
           customer:=Variable [ Name=$customer ]
@@ -91,12 +91,15 @@ RecordConstructor [
           (
             SELECT ELEMENT [
             FieldAccessor [
-              Variable [ Name=$o ]
+              FieldAccessor [
+                Variable [ Name=$g ]
+                Field=orders
+              ]
               Field=o_totalprice
             ]
             ]
-            FROM [              Variable [ Name=$orders ]
-              AS Variable [ Name=$o ]
+            FROM [              Variable [ Name=$g ]
+              AS Variable [ Name=$g ]
             ]
           )
         ]

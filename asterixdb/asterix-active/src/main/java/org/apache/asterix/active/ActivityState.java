@@ -20,6 +20,10 @@ package org.apache.asterix.active;
 
 public enum ActivityState {
     /**
+     * The initial state of an activity.
+     */
+    CREATED,
+    /**
      * The starting state and a possible terminal state. Next state can only be {@code ActivityState.STARTING}
      */
     STOPPED,

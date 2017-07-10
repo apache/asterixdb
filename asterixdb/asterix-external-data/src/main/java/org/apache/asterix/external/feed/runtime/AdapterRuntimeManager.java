@@ -137,4 +137,8 @@ public class AdapterRuntimeManager {
     public void setDone(boolean done) {
         this.done = done;
     }
+
+    public String getStats() {
+        return adapterExecutor.getStats();
+    }
 }

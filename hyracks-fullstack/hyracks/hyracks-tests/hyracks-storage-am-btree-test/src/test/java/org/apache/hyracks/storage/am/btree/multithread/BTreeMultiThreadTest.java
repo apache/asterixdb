@@ -52,7 +52,7 @@ public class BTreeMultiThreadTest extends OrderedIndexMultiThreadTest {
     @Override
     protected ITreeIndex createIndex(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories,
             int[] bloomFilterKeyFields) throws HyracksDataException {
-        return BTreeUtils.createBTree(harness.getBufferCache(), harness.getFileMapProvider(), typeTraits, cmpFactories,
+        return BTreeUtils.createBTree(harness.getBufferCache(), typeTraits, cmpFactories,
                 BTreeLeafFrameType.REGULAR_NSM, harness.getFileReference(),
                 harness.getPageManagerFactory().createPageManager(harness.getBufferCache()));
     }
@@ -84,9 +84,8 @@ public class BTreeMultiThreadTest extends OrderedIndexMultiThreadTest {
                 ProbabilityHelper.getUniformProbDist(insertDeleteUpdateUpsertOps.length)));
 
         // All operations mixed.
-        TestOperation[] allOps = new TestOperation[] { TestOperation.INSERT, TestOperation.DELETE,
-                TestOperation.UPDATE, TestOperation.UPSERT, TestOperation.POINT_SEARCH, TestOperation.SCAN,
-                TestOperation.DISKORDER_SCAN };
+        TestOperation[] allOps = new TestOperation[] { TestOperation.INSERT, TestOperation.DELETE, TestOperation.UPDATE,
+                TestOperation.UPSERT, TestOperation.POINT_SEARCH, TestOperation.SCAN, TestOperation.DISKORDER_SCAN };
         workloadConfs.add(new TestWorkloadConf(allOps, ProbabilityHelper.getUniformProbDist(allOps.length)));
 
         return workloadConfs;

@@ -137,10 +137,14 @@ public abstract class LSMIndexSearchCursor implements ITreeIndexCursor {
             if (outputPriorityQueue != null) {
                 outputPriorityQueue.clear();
             }
-            for (int i = 0; i < rangeCursors.length; i++) {
-                rangeCursors[i].close();
+            if (rangeCursors != null) {
+                for (int i = 0; i < rangeCursors.length; i++) {
+                    if (rangeCursors[i] != null) {
+                        rangeCursors[i].close();
+                    }
+                }
+                rangeCursors = null;
             }
-            rangeCursors = null;
         } finally {
             if (lsmHarness != null) {
                 lsmHarness.endSearch(opCtx);

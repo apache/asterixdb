@@ -20,7 +20,6 @@ package org.apache.asterix.dataflow.data.nontagged.serde;
 
 import java.io.DataInput;
 import java.io.DataOutput;
-import java.io.IOException;
 
 import org.apache.asterix.dataflow.data.nontagged.Coordinate;
 import org.apache.asterix.om.base.ALine;
@@ -39,29 +38,18 @@ public class ALineSerializerDeserializer implements ISerializerDeserializer<ALin
 
     @Override
     public ALine deserialize(DataInput in) throws HyracksDataException {
-        try {
-            APoint p1 = APointSerializerDeserializer.INSTANCE.deserialize(in);
-            APoint p2 = APointSerializerDeserializer.INSTANCE.deserialize(in);
-            return new ALine(p1, p2);
-        } catch (IOException e) {
-            throw new HyracksDataException(e);
-        }
+        APoint p1 = APointSerializerDeserializer.read(in);
+        APoint p2 = APointSerializerDeserializer.read(in);
+        return new ALine(p1, p2);
     }
 
     @Override
     public void serialize(ALine instance, DataOutput out) throws HyracksDataException {
-        try {
-            out.writeDouble(instance.getP1().getX());
-            out.writeDouble(instance.getP1().getY());
-            out.writeDouble(instance.getP2().getX());
-            out.writeDouble(instance.getP2().getY());
-        } catch (IOException e) {
-            throw new HyracksDataException(e);
-        }
+        APointSerializerDeserializer.write(instance.getP1(), out);
+        APointSerializerDeserializer.write(instance.getP2(), out);
     }
 
     public final static int getStartPointCoordinateOffset(Coordinate coordinate) throws HyracksDataException {
-
         switch (coordinate) {
             case X:
                 return 1;
@@ -73,7 +61,6 @@ public class ALineSerializerDeserializer implements ISerializerDeserializer<ALin
     }
 
     public final static int getEndPointCoordinateOffset(Coordinate coordinate) throws HyracksDataException {
-
         switch (coordinate) {
             case X:
                 return 17;
@@ -83,5 +70,4 @@ public class ALineSerializerDeserializer implements ISerializerDeserializer<ALin
                 throw new HyracksDataException("Wrong coordinate");
         }
     }
-
 }

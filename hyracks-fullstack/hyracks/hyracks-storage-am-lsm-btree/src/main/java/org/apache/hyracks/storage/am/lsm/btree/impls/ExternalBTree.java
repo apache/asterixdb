@@ -62,7 +62,6 @@ import org.apache.hyracks.storage.common.IIndexCursor;
 import org.apache.hyracks.storage.common.IModificationOperationCallback;
 import org.apache.hyracks.storage.common.ISearchOperationCallback;
 import org.apache.hyracks.storage.common.ISearchPredicate;
-import org.apache.hyracks.storage.common.file.IFileMapProvider;
 
 /**
  * This is an lsm b-tree that does not have memory component and is modified
@@ -93,13 +92,12 @@ public class ExternalBTree extends LSMBTree implements ITwoPCIndex {
             ITreeIndexFrameFactory insertLeafFrameFactory, ITreeIndexFrameFactory deleteLeafFrameFactory,
             ILSMIndexFileManager fileManager, TreeIndexFactory<BTree> diskBTreeFactory,
             TreeIndexFactory<BTree> bulkLoadBTreeFactory, BloomFilterFactory bloomFilterFactory,
-            double bloomFilterFalsePositiveRate, IFileMapProvider diskFileMapProvider, int fieldCount,
-            IBinaryComparatorFactory[] cmpFactories, ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker,
-            ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallback ioOpCallback,
+            double bloomFilterFalsePositiveRate, IBinaryComparatorFactory[] cmpFactories, ILSMMergePolicy mergePolicy,
+            ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallback ioOpCallback,
             TreeIndexFactory<BTree> transactionBTreeFactory, boolean durable) {
         super(ioManager, insertLeafFrameFactory, deleteLeafFrameFactory, fileManager, diskBTreeFactory,
-                bulkLoadBTreeFactory, bloomFilterFactory, bloomFilterFalsePositiveRate, diskFileMapProvider, fieldCount,
-                cmpFactories, mergePolicy, opTracker, ioScheduler, ioOpCallback, false, durable);
+                bulkLoadBTreeFactory, bloomFilterFactory, bloomFilterFalsePositiveRate, cmpFactories, mergePolicy,
+                opTracker, ioScheduler, ioOpCallback, false, durable);
         this.transactionComponentFactory =
                 new LSMBTreeDiskComponentFactory(transactionBTreeFactory, bloomFilterFactory, null);
         this.secondDiskComponents = new LinkedList<>();
@@ -199,7 +197,7 @@ public class ExternalBTree extends LSMBTree implements ITwoPCIndex {
         ILSMIndexAccessor accessor = new LSMTreeIndexAccessor(getLsmHarness(), opCtx, cursorFactory);
         ioScheduler.scheduleOperation(new LSMBTreeMergeOperation(accessor, mergingComponents, cursor,
                 relMergeFileRefs.getInsertIndexFileReference(), relMergeFileRefs.getBloomFilterFileReference(),
-                callback, fileManager.getBaseDir()));
+                callback, fileManager.getBaseDir().getAbsolutePath()));
     }
 
     // This function should only be used when a transaction fail. it doesn't
@@ -301,21 +299,13 @@ public class ExternalBTree extends LSMBTree implements ITwoPCIndex {
             BlockingIOOperationCallbackWrapper cb = new BlockingIOOperationCallbackWrapper(ioOpCallback);
             cb.afterFinalize(LSMOperationType.FLUSH, null);
         }
-        for (ILSMComponent c : diskComponents) {
-            LSMBTreeDiskComponent component = (LSMBTreeDiskComponent) c;
-            BTree btree = component.getBTree();
-            BloomFilter bloomFilter = component.getBloomFilter();
-            btree.deactivateCloseHandle();
-            bloomFilter.deactivate();
+        for (ILSMDiskComponent c : diskComponents) {
+            deactivateDiskComponent(c);
         }
-        for (ILSMComponent c : secondDiskComponents) {
-            // Only deactivate non shared components (So components are not de-activated twice)
+        for (ILSMDiskComponent c : secondDiskComponents) {
+            // Only deactivate non shared components
             if (!diskComponents.contains(c)) {
-                LSMBTreeDiskComponent component = (LSMBTreeDiskComponent) c;
-                BTree btree = component.getBTree();
-                BloomFilter bloomFilter = component.getBloomFilter();
-                btree.deactivateCloseHandle();
-                bloomFilter.deactivate();
+                deactivateDiskComponent(c);
             }
         }
         isActive = false;
@@ -357,17 +347,13 @@ public class ExternalBTree extends LSMBTree implements ITwoPCIndex {
         if (isActive) {
             throw new HyracksDataException("Failed to destroy the index since it is activated.");
         }
-        for (ILSMComponent c : diskComponents) {
-            LSMBTreeDiskComponent component = (LSMBTreeDiskComponent) c;
-            component.getBTree().destroy();
-            component.getBloomFilter().destroy();
+        for (ILSMDiskComponent c : diskComponents) {
+            destroyDiskComponent(c);
             // Remove from second list to avoid destroying twice
             secondDiskComponents.remove(c);
         }
-        for (ILSMComponent c : secondDiskComponents) {
-            LSMBTreeDiskComponent component = (LSMBTreeDiskComponent) c;
-            component.getBTree().destroy();
-            component.getBloomFilter().destroy();
+        for (ILSMDiskComponent c : secondDiskComponents) {
+            destroyDiskComponent(c);
         }
         diskComponents.clear();
         secondDiskComponents.clear();

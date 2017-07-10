@@ -23,6 +23,7 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.asterix.common.utils.CodeGenHelper;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.runtime.aggregates.collections.FirstElementAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.collections.ListifyAggregateDescriptor;
@@ -120,7 +121,6 @@ import org.apache.asterix.runtime.evaluators.constructors.AIntervalStartFromDate
 import org.apache.asterix.runtime.evaluators.constructors.AIntervalStartFromDateTimeConstructorDescriptor;
 import org.apache.asterix.runtime.evaluators.constructors.AIntervalStartFromTimeConstructorDescriptor;
 import org.apache.asterix.runtime.evaluators.constructors.ALineConstructorDescriptor;
-import org.apache.asterix.runtime.evaluators.constructors.ANullConstructorDescriptor;
 import org.apache.asterix.runtime.evaluators.constructors.APoint3DConstructorDescriptor;
 import org.apache.asterix.runtime.evaluators.constructors.APointConstructorDescriptor;
 import org.apache.asterix.runtime.evaluators.constructors.APolygonConstructorDescriptor;
@@ -131,9 +131,12 @@ import org.apache.asterix.runtime.evaluators.constructors.AUUIDFromStringConstru
 import org.apache.asterix.runtime.evaluators.constructors.AYearMonthDurationConstructorDescriptor;
 import org.apache.asterix.runtime.evaluators.constructors.ClosedRecordConstructorDescriptor;
 import org.apache.asterix.runtime.evaluators.constructors.OpenRecordConstructorDescriptor;
+import org.apache.asterix.runtime.evaluators.constructors.OrderedListConstructorDescriptor;
+import org.apache.asterix.runtime.evaluators.constructors.UnorderedListConstructorDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.AndDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.AnyCollectionMemberDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.CastTypeDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.CastTypeLaxDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.CheckUnknownDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.CodePointToStringDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.CountHashedGramTokensDescriptor;
@@ -161,7 +164,6 @@ import org.apache.asterix.runtime.evaluators.functions.HashedWordTokensDescripto
 import org.apache.asterix.runtime.evaluators.functions.IfMissingDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.IfMissingOrNullDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.IfNullDescriptor;
-import org.apache.asterix.runtime.evaluators.functions.CastTypeLaxDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.InjectFailureDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.IsArrayDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.IsBooleanDescriptor;
@@ -201,7 +203,6 @@ import org.apache.asterix.runtime.evaluators.functions.NumericTanDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.NumericTruncDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.NumericUnaryMinusDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.OrDescriptor;
-import org.apache.asterix.runtime.evaluators.constructors.OrderedListConstructorDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.PrefixLenJaccardDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.SimilarityJaccardCheckDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.SimilarityJaccardDescriptor;
@@ -248,8 +249,11 @@ import org.apache.asterix.runtime.evaluators.functions.SubstringAfterDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.SubstringBeforeDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.SubstringDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.SwitchCaseDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.ToBigIntDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.ToBooleanDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.ToDoubleDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.ToStringDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.UUIDDescriptor;
-import org.apache.asterix.runtime.evaluators.constructors.UnorderedListConstructorDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.WordTokensDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.binary.BinaryConcatDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.binary.BinaryLengthDescriptor;
@@ -321,7 +325,6 @@ import org.apache.asterix.runtime.evaluators.functions.temporal.UnixTimeFromDate
 import org.apache.asterix.runtime.evaluators.functions.temporal.UnixTimeFromTimeInMsDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.temporal.YearMonthDurationGreaterThanComparatorDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.temporal.YearMonthDurationLessThanComparatorDescriptor;
-import org.apache.asterix.runtime.evaluators.staticcodegen.CodeGenUtil;
 import org.apache.asterix.runtime.runningaggregates.std.TidRunningAggregateDescriptor;
 import org.apache.asterix.runtime.unnestingfunctions.std.RangeDescriptor;
 import org.apache.asterix.runtime.unnestingfunctions.std.ScanCollectionDescriptor;
@@ -545,7 +548,6 @@ public class FunctionCollection {
 
         // Constructors
         functionsToInjectUnkownHandling.add(ABooleanConstructorDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(ANullConstructorDescriptor.FACTORY);
         functionsToInjectUnkownHandling.add(ABinaryHexStringConstructorDescriptor.FACTORY);
         functionsToInjectUnkownHandling.add(ABinaryBase64StringConstructorDescriptor.FACTORY);
         functionsToInjectUnkownHandling.add(AStringConstructorDescriptor.FACTORY);
@@ -695,6 +697,10 @@ public class FunctionCollection {
         functionsToInjectUnkownHandling.add(IsStringDescriptor.FACTORY);
         functionsToInjectUnkownHandling.add(IsArrayDescriptor.FACTORY);
         functionsToInjectUnkownHandling.add(IsObjectDescriptor.FACTORY);
+        functionsToInjectUnkownHandling.add(ToBooleanDescriptor.FACTORY);
+        functionsToInjectUnkownHandling.add(ToStringDescriptor.FACTORY);
+        functionsToInjectUnkownHandling.add(ToDoubleDescriptor.FACTORY);
+        functionsToInjectUnkownHandling.add(ToBigIntDescriptor.FACTORY);
 
         // Cast function
         functionsToInjectUnkownHandling.add(CastTypeDescriptor.FACTORY);
@@ -725,8 +731,8 @@ public class FunctionCollection {
      */
     private static IFunctionDescriptorFactory getGeneratedFunctionDescriptorFactory(Class<?> cl) {
         try {
-            String className = CodeGenUtil.getGeneratedFunctionDescriptorClassName(cl.getName(),
-                    CodeGenUtil.DEFAULT_SUFFIX_FOR_GENERATED_CLASS);
+            String className = CodeGenHelper.getGeneratedClassName(cl.getName(),
+                    CodeGenHelper.DEFAULT_SUFFIX_FOR_GENERATED_CLASS);
             Class<?> generatedCl = cl.getClassLoader().loadClass(className);
             Field factory = generatedCl.getDeclaredField(FACTORY);
             return (IFunctionDescriptorFactory) factory.get(null);

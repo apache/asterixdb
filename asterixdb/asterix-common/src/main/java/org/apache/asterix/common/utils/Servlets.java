@@ -41,6 +41,7 @@ public class Servlets {
     public static final String CLUSTER_STATE_NODE_DETAIL = "/admin/cluster/node/*";
     public static final String CLUSTER_STATE_CC_DETAIL = "/admin/cluster/cc/*";
     public static final String DIAGNOSTICS = "/admin/diagnostics";
+    public static final String ACTIVE_STATS = "/admin/active/*";
 
     private Servlets() {
     }

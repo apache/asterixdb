@@ -24,5 +24,18 @@
 
 use test;
 
-
-{'duration1':test.duration('P30Y10M25DT13H12M50S'),'duration2':test.duration('P25DT13H12M50S'),'duration3':test.duration('PT13H12M50S'),'duration4':test.duration('P30YT12MS'),'duration5':test.duration('PT13H'),'duration6':test.duration('-P30Y10M25DT13H12M50S'),'duration7':test.duration('-P25DT13H12M50S'),'duration8':test.duration('-PT13H50S'),'duration9':test.duration('P120D'),'duration10':test.duration('-P28M'),'duration11':test.duration('PT29M90.937S'),'duration12':test.duration('P300Y15M60DT300H98M482.435S')};
+{
+    'duration1':test.duration('P30Y10M25DT13H12M50S'),
+    'duration2':test.duration('P25DT13H12M50S'),
+    'duration3':test.duration('PT13H12M50S'),
+    'duration4':test.duration('P30YT12MS'),
+    'duration5':test.duration('PT13H'),
+    'duration6':test.duration('-P30Y10M25DT13H12M50S'),
+    'duration7':test.duration('-P25DT13H12M50S'),
+    'duration8':test.duration('-PT13H50S'),
+    'duration9':test.duration('P120D'),
+    'duration10':test.duration('-P28M'),
+    'duration11':test.duration('PT29M90.937S'),
+    'duration12':test.duration('P300Y15M60DT300H98M482.435S'),
+    'duration13':test.duration(test.duration('P300Y15M60DT300H98M482.435S'))
+};

@@ -44,5 +44,4 @@ public class AUUIDSerializerDeserializer implements ISerializerDeserializer<AUUI
     public void serialize(AUUID instance, DataOutput out) throws HyracksDataException {
         instance.writeTo(out);
     }
-
 }

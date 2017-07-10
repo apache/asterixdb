@@ -53,29 +53,22 @@ public class OnDiskInvertedIndexLifecycleTest extends AbstractIndexLifecycleTest
     public void setup() throws Exception {
         harness.setUp();
         ITypeTraits[] tokenTypeTraits = new ITypeTraits[] { UTF8StringPointable.TYPE_TRAITS };
-        IBinaryComparatorFactory[] tokenCmpFactories = new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory
-                .of(UTF8StringPointable.FACTORY) };
+        IBinaryComparatorFactory[] tokenCmpFactories =
+                new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) };
         ITypeTraits[] invListTypeTraits = new ITypeTraits[] { IntegerPointable.TYPE_TRAITS };
-        IBinaryComparatorFactory[] invListCmpFactories = new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory
-                .of(IntegerPointable.FACTORY) };
+        IBinaryComparatorFactory[] invListCmpFactories =
+                new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY) };
         IInvertedListBuilder invListBuilder = new FixedSizeElementInvertedListBuilder(invListTypeTraits);
-        FileReference btreeFile = harness.getIOManager().resolveAbsolutePath(harness.getInvListsFileRef().getFile()
-                .getAbsolutePath()
-                + "_btree");
-        index = new OnDiskInvertedIndex(harness.getDiskBufferCache(), harness.getDiskFileMapProvider(), invListBuilder,
-                invListTypeTraits, invListCmpFactories, tokenTypeTraits, tokenCmpFactories,
-                harness.getInvListsFileRef(), btreeFile, harness.getMetadataPageManagerFactory());
+        FileReference btreeFile = harness.getIOManager()
+                .resolveAbsolutePath(harness.getInvListsFileRef().getFile().getAbsolutePath() + "_btree");
+        index = new OnDiskInvertedIndex(harness.getDiskBufferCache(), invListBuilder, invListTypeTraits,
+                invListCmpFactories, tokenTypeTraits, tokenCmpFactories, harness.getInvListsFileRef(), btreeFile,
+                harness.getMetadataPageManagerFactory());
 
     }
 
     @Override
     public void tearDown() throws Exception {
-        try {
-            index.deactivate();
-        } catch (Exception e) {
-        } finally {
-            index.destroy();
-        }
         harness.tearDown();
     }
 

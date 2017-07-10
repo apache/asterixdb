@@ -60,7 +60,19 @@ FROM [  (
                     Field=l_quantity
                   ]
                   ]
-                  FROM [                    Variable [ Name=$l ]
+                  FROM [                    (
+                      SELECT ELEMENT [
+                      FunctionCall Metadata.resolve@-1[
+                        LiteralExpr [STRING] [l]
+                        Variable [ Name=$l_suppkey ]
+                        Variable [ Name=$g ]
+                        Variable [ Name=$l_partkey ]
+                      ]
+                      ]
+                      FROM [                        Variable [ Name=$g ]
+                        AS Variable [ Name=$g ]
+                      ]
+                    )
                     AS Variable [ Name=$i ]
                   ]
                 )
@@ -87,7 +99,7 @@ FROM [  (
             Variable [ Name=$l ]
             Field=l_suppkey
           ]
-          GROUP AS Variable [ Name=#1 ]
+          GROUP AS Variable [ Name=$g ]
           (
             l:=Variable [ Name=$l ]
           )

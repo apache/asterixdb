@@ -22,7 +22,7 @@ use tpch;
 
 declare function q22_customer_tmp() {
 (
-    select element {'c_acctbal':c.c_acctbal,'c_custkey':c.c_custkey,'cntrycode':tpch.substring(c.c_phone,1,2)}
+    select element {'c_acctbal':c.c_acctbal,'c_custkey':c.c_custkey,'cntrycode':SUBSTR(c.c_phone,1,2)}
     from  Customer as c
 )
 };
@@ -31,12 +31,13 @@ with  avg as tpch.coll_avg((
       from  Customer as c
       where (c.c_acctbal > 0.0)
   ))
-select element {'cntrycode':cntrycode,'numcust':tpch.count(ct),'totacctbal':tpch.coll_sum((
+select element {'cntrycode':cntrycode,'numcust':COLL_COUNT(( from g select value ct )),'totacctbal':COLL_SUM((
         select element i.c_acctbal
-        from  ct as i
+        from  (from g select value ct) as i
     ))}
 from  tpch.q22_customer_tmp() as ct
 where (ct.c_acctbal > avg)
 group by ct.cntrycode as cntrycode
+group as g
 order by cntrycode
 ;

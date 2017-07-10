@@ -77,13 +77,16 @@ public class ARectangleConstructorDescriptor extends AbstractScalarFunctionDynam
                     @Override
                     public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                         try {
-                            resultStorage.reset();
                             eval.evaluate(tuple, inputArg);
                             byte[] serString = inputArg.getByteArray();
                             int offset = inputArg.getStartOffset();
                             int len = inputArg.getLength();
 
-                            if (serString[offset] == ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
+                            byte tt = serString[offset];
+                            if (tt == ATypeTag.SERIALIZED_RECTANGLE_TYPE_TAG) {
+                                result.set(inputArg);
+                            } else if (tt == ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
+                                resultStorage.reset();
                                 utf8Ptr.set(serString, offset + 1, len - 1);
                                 String s = utf8Ptr.toString();
                                 int commaIndex = s.indexOf(',');
@@ -102,11 +105,11 @@ public class ARectangleConstructorDescriptor extends AbstractScalarFunctionDynam
                                             ATypeTag.SERIALIZED_RECTANGLE_TYPE_TAG);
                                 }
                                 rectangle2DSerde.serialize(aRectangle, out);
+                                result.set(resultStorage);
                             } else {
-                                throw new TypeMismatchException(getIdentifier(), 0, serString[offset],
+                                throw new TypeMismatchException(getIdentifier(), 0, tt,
                                         ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                             }
-                            result.set(resultStorage);
                         } catch (IOException e) {
                             throw new InvalidDataFormatException(getIdentifier(), e,
                                     ATypeTag.SERIALIZED_RECTANGLE_TYPE_TAG);

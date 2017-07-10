@@ -87,7 +87,9 @@ RecordConstructor [
           Field=l_quantity
         ]
         ]
-        FROM [          Variable [ Name=$l ]
+        FROM [          FunctionCall Metadata.dataset@1[
+            LiteralExpr [STRING] [l]
+          ]
           AS Variable [ Name=$j ]
         ]
       )
@@ -124,7 +126,9 @@ FROM [  FunctionCall Metadata.dataset@1[
               Field=l_quantity
             ]
             ]
-            FROM [              Variable [ Name=$l ]
+            FROM [              FunctionCall Metadata.dataset@1[
+                LiteralExpr [STRING] [l]
+              ]
               AS Variable [ Name=$i ]
             ]
           )

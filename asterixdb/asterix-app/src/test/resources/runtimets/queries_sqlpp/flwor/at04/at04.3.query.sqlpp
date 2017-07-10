@@ -28,9 +28,9 @@ use test;
 select element {'o_custkey':ckey,'users':(
         select element {'num':ip,'orderkey':f.o_orderkey}
         from  (
-            select element i1
-            from  i as i1
-            order by i1.o_orderkey
+            select element i1.i
+            from  g as i1
+            order by i1.i.o_orderkey
         ) as f at ip
     )}
 from  (
@@ -38,6 +38,7 @@ from  (
     from  Orders as o
 ) as i
 group by i.o_custkey as ckey
+group as g
 order by ckey
 limit 3
 ;

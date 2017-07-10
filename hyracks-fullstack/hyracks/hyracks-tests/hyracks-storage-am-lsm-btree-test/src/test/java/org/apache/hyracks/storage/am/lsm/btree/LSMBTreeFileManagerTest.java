@@ -18,6 +18,8 @@
  */
 package org.apache.hyracks.storage.am.lsm.btree;
 
+import java.io.File;
+
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
@@ -33,8 +35,6 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.io.File;
 
 public class LSMBTreeFileManagerTest {
 
@@ -53,12 +53,11 @@ public class LSMBTreeFileManagerTest {
     @Test
     public void deleteOrphanedFilesTest() throws Exception {
         ISerializerDeserializer[] fieldSerdes = { IntegerSerializerDeserializer.INSTANCE };
-        LSMBTreeTestContext ctx =
-                LSMBTreeTestContext.create(harness.getIOManager(), harness.getVirtualBufferCaches(), harness
-                                .getFileReference(), harness.getDiskBufferCache(), harness.getDiskFileMapProvider(),
-                        fieldSerdes, 1, harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(), harness
-                                .getOperationTracker(), harness.getIOScheduler(), harness.getIOOperationCallback(),
-                        harness.getMetadataPageManagerFactory(), false);
+        LSMBTreeTestContext ctx = LSMBTreeTestContext.create(harness.getIOManager(), harness.getVirtualBufferCaches(),
+                harness.getFileReference(), harness.getDiskBufferCache(), fieldSerdes, 1,
+                harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(), harness.getOperationTracker(),
+                harness.getIOScheduler(), harness.getIOOperationCallback(), harness.getMetadataPageManagerFactory(),
+                false);
         ctx.getIndex().create();
         ctx.getIndex().activate();
 

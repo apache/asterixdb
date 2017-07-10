@@ -22,10 +22,11 @@ USE gby;
 FROM  Employee e, Incentive i
 WHERE e.job_category = i.job_category
 GROUP BY e.department_id
+GROUP AS g
 SELECT e.department_id AS deptId,
-     (  FROM i AS i
-        SELECT i.job_category AS category, i.bonus AS bonus
-        ORDER BY i.bonus DESC LIMIT 3
+     (  FROM g AS g
+        SELECT g.i.job_category AS category, g.i.bonus AS bonus
+        ORDER BY g.i.bonus DESC LIMIT 3
       ) AS job_category_details
 ORDER BY deptId DESC;
 

@@ -20,11 +20,11 @@ package org.apache.asterix.dataflow.data.nontagged.serde;
 
 import java.io.DataInput;
 import java.io.DataOutput;
-import java.io.IOException;
 
 import org.apache.asterix.om.base.ATime;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 
 public class ATimeSerializerDeserializer implements ISerializerDeserializer<ATime> {
 
@@ -37,26 +37,15 @@ public class ATimeSerializerDeserializer implements ISerializerDeserializer<ATim
 
     @Override
     public ATime deserialize(DataInput in) throws HyracksDataException {
-        try {
-            return new ATime(in.readInt());
-
-        } catch (IOException e) {
-            throw new HyracksDataException(e);
-        }
+        return new ATime(IntegerSerializerDeserializer.read(in));
     }
 
     @Override
     public void serialize(ATime instance, DataOutput out) throws HyracksDataException {
-        try {
-            out.writeInt(instance.getChrononTime());
-
-        } catch (IOException e) {
-            throw new HyracksDataException(e);
-        }
+        IntegerSerializerDeserializer.write(instance.getChrononTime(), out);
     }
 
     public static int getChronon(byte[] byteArray, int offset) {
         return AInt32SerializerDeserializer.getInt(byteArray, offset);
     }
-
 }

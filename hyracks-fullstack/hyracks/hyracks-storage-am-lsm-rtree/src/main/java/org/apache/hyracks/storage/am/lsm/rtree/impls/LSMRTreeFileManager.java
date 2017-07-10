@@ -30,39 +30,29 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
+import org.apache.hyracks.api.util.IoUtil;
 import org.apache.hyracks.storage.am.common.api.ITreeIndex;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexFileManager;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
 import org.apache.hyracks.storage.am.lsm.common.impls.TreeIndexFactory;
-import org.apache.hyracks.storage.common.file.IFileMapProvider;
 
 public class LSMRTreeFileManager extends AbstractLSMIndexFileManager {
-    public static final String RTREE_STRING = "r";
-    public static final String BTREE_STRING = "b";
 
     private final TreeIndexFactory<? extends ITreeIndex> rtreeFactory;
     private final TreeIndexFactory<? extends ITreeIndex> btreeFactory;
 
-    private static FilenameFilter btreeFilter = new FilenameFilter() {
-        @Override
-        public boolean accept(File dir, String name) {
-            return !name.startsWith(".") && name.endsWith(BTREE_STRING);
-        }
-    };
+    private static final FilenameFilter btreeFilter =
+            (dir, name) -> !name.startsWith(".") && name.endsWith(BTREE_SUFFIX);
+    private static final FilenameFilter rtreeFilter =
+            (dir, name) -> !name.startsWith(".") && name.endsWith(RTREE_SUFFIX);
 
-    private static FilenameFilter rtreeFilter = new FilenameFilter() {
-        @Override
-        public boolean accept(File dir, String name) {
-            return !name.startsWith(".") && name.endsWith(RTREE_STRING);
-        }
-    };
-
-    public LSMRTreeFileManager(IIOManager ioManager, IFileMapProvider fileMapProvider, FileReference file,
+    public LSMRTreeFileManager(IIOManager ioManager, FileReference file,
             TreeIndexFactory<? extends ITreeIndex> rtreeFactory, TreeIndexFactory<? extends ITreeIndex> btreeFactory) {
-        super(ioManager, fileMapProvider, file, null);
+        super(ioManager, file, null);
         this.rtreeFactory = rtreeFactory;
         this.btreeFactory = btreeFactory;
     }
@@ -70,25 +60,24 @@ public class LSMRTreeFileManager extends AbstractLSMIndexFileManager {
     @Override
     public LSMComponentFileReferences getRelFlushFileReference() throws HyracksDataException {
         String ts = getCurrentTimestamp();
-        String baseName = baseDir + ts + SPLIT_STRING + ts;
+        String baseName = ts + DELIMITER + ts;
         // Begin timestamp and end timestamp are identical since it is a flush
-        return new LSMComponentFileReferences(createFlushFile(baseName + SPLIT_STRING + RTREE_STRING),
-                createFlushFile(baseName + SPLIT_STRING + BTREE_STRING),
-                createFlushFile(baseName + SPLIT_STRING + BLOOM_FILTER_STRING));
+        return new LSMComponentFileReferences(baseDir.getChild(baseName + DELIMITER + RTREE_SUFFIX),
+                baseDir.getChild(baseName + DELIMITER + BTREE_SUFFIX),
+                baseDir.getChild(baseName + DELIMITER + BLOOM_FILTER_SUFFIX));
     }
 
     @Override
     public LSMComponentFileReferences getRelMergeFileReference(String firstFileName, String lastFileName)
             throws HyracksDataException {
-        String[] firstTimestampRange = firstFileName.split(SPLIT_STRING);
-        String[] lastTimestampRange = lastFileName.split(SPLIT_STRING);
-
-        String baseName = baseDir + firstTimestampRange[0] + SPLIT_STRING + lastTimestampRange[1];
+        String[] firstTimestampRange = firstFileName.split(DELIMITER);
+        String[] lastTimestampRange = lastFileName.split(DELIMITER);
+        String baseName = firstTimestampRange[0] + DELIMITER + lastTimestampRange[1];
         // Get the range of timestamps by taking the earliest and the latest
         // timestamps
-        return new LSMComponentFileReferences(createMergeFile(baseName + SPLIT_STRING + RTREE_STRING),
-                createMergeFile(baseName + SPLIT_STRING + BTREE_STRING),
-                createMergeFile(baseName + SPLIT_STRING + BLOOM_FILTER_STRING));
+        return new LSMComponentFileReferences(baseDir.getChild(baseName + DELIMITER + RTREE_SUFFIX),
+                baseDir.getChild(baseName + DELIMITER + BTREE_SUFFIX),
+                baseDir.getChild(baseName + DELIMITER + BLOOM_FILTER_SUFFIX));
     }
 
     @Override
@@ -105,7 +94,7 @@ public class LSMRTreeFileManager extends AbstractLSMIndexFileManager {
         cleanupAndGetValidFilesInternal(getCompoundFilter(transactionFilter, btreeFilter), btreeFactory, allBTreeFiles);
         HashSet<String> btreeFilesSet = new HashSet<>();
         for (ComparableFileName cmpFileName : allBTreeFiles) {
-            int index = cmpFileName.fileName.lastIndexOf(SPLIT_STRING);
+            int index = cmpFileName.fileName.lastIndexOf(DELIMITER);
             btreeFilesSet.add(cmpFileName.fileName.substring(0, index));
         }
         validateFiles(btreeFilesSet, allRTreeFiles, getCompoundFilter(transactionFilter, rtreeFilter), rtreeFactory);
@@ -114,8 +103,7 @@ public class LSMRTreeFileManager extends AbstractLSMIndexFileManager {
 
         // Sanity check.
         if (allRTreeFiles.size() != allBTreeFiles.size() || allBTreeFiles.size() != allBloomFilterFiles.size()) {
-            throw new HyracksDataException(
-                    "Unequal number of valid RTree, BTree, and Bloom Filter files found. Aborting cleanup.");
+            throw HyracksDataException.create(ErrorCode.UNEQUAL_NUM_FILTERS_TREES, baseDir);
         }
 
         // Trivial cases.
@@ -167,16 +155,12 @@ public class LSMRTreeFileManager extends AbstractLSMIndexFileManager {
                     && currentBloomFilter.interval[0].compareTo(lastBloomFilter.interval[0]) >= 0
                     && currentBloomFilter.interval[1].compareTo(lastBloomFilter.interval[1]) <= 0) {
                 // Invalid files are completely contained in last interval.
-                File invalidRTreeFile = new File(currentRTree.fullPath);
-                invalidRTreeFile.delete();
-                File invalidBTreeFile = new File(currentBTree.fullPath);
-                invalidBTreeFile.delete();
-                File invalidBloomFilterFile = new File(currentBloomFilter.fullPath);
-                invalidBloomFilterFile.delete();
+                IoUtil.delete(new File(currentRTree.fullPath));
+                IoUtil.delete(new File(currentBTree.fullPath));
+                IoUtil.delete(new File(currentBloomFilter.fullPath));
             } else {
                 // This scenario should not be possible.
-                throw new HyracksDataException(
-                        "Found LSM files with overlapping but not contained timetamp intervals.");
+                throw HyracksDataException.create(ErrorCode.FOUND_OVERLAPPING_LSM_FILES, baseDir);
             }
         }
 
@@ -203,55 +187,45 @@ public class LSMRTreeFileManager extends AbstractLSMIndexFileManager {
     public LSMComponentFileReferences getNewTransactionFileReference() throws IOException {
         String ts = getCurrentTimestamp();
         // Create transaction lock file
-        Files.createFile(Paths.get(baseDir + TRANSACTION_PREFIX + ts));
-
-        String baseName = baseDir + ts + SPLIT_STRING + ts;
-        return new LSMComponentFileReferences(createFlushFile(baseName + SPLIT_STRING + RTREE_STRING),
-                createFlushFile(baseName + SPLIT_STRING + BTREE_STRING),
-                createFlushFile(baseName + SPLIT_STRING + BLOOM_FILTER_STRING));
+        Files.createFile(Paths.get(baseDir + TXN_PREFIX + ts));
+        String baseName = ts + DELIMITER + ts;
+        return new LSMComponentFileReferences(baseDir.getChild(baseName + DELIMITER + RTREE_SUFFIX),
+                baseDir.getChild(baseName + DELIMITER + BTREE_SUFFIX),
+                baseDir.getChild(baseName + DELIMITER + BLOOM_FILTER_SUFFIX));
     }
 
     @Override
     public LSMComponentFileReferences getTransactionFileReferenceForCommit() throws HyracksDataException {
         FilenameFilter transactionFilter;
-        File dir = new File(baseDir);
-        String[] files = dir.list(transactionFileNameFilter);
+        String[] files = baseDir.getFile().list(txnFileNameFilter);
         if (files.length == 0) {
             return null;
         }
         if (files.length != 1) {
-            throw new HyracksDataException("More than one transaction lock found:" + files.length);
+            throw HyracksDataException.create(ErrorCode.FOUND_MULTIPLE_TRANSACTIONS, baseDir);
         } else {
             transactionFilter = getTransactionFileFilter(true);
-            String txnFileName = dir.getPath() + File.separator + files[0];
             // get the actual transaction files
-            files = dir.list(transactionFilter);
+            files = baseDir.getFile().list(transactionFilter);
             if (files.length < 3) {
-                throw new HyracksDataException("LSM Rtree transaction has less than 3 files :" + files.length);
+                throw HyracksDataException.create(ErrorCode.UNEQUAL_NUM_FILTERS_TREES, baseDir);
             }
-            try {
-                Files.delete(Paths.get(txnFileName));
-            } catch (IOException e) {
-                throw new HyracksDataException("Failed to delete transaction lock :" + txnFileName);
-            }
+            IoUtil.delete(baseDir.getChild(files[0]));
         }
-        File rTreeFile = null;
-        File bTreeFile = null;
-        File bloomFilterFile = null;
+        FileReference rTreeFileRef = null;
+        FileReference bTreeFileRef = null;
+        FileReference bloomFilterFileRef = null;
         for (String fileName : files) {
-            if (fileName.endsWith(BTREE_STRING)) {
-                bTreeFile = new File(dir.getPath() + File.separator + fileName);
-            } else if (fileName.endsWith(RTREE_STRING)) {
-                rTreeFile = new File(dir.getPath() + File.separator + fileName);
-            } else if (fileName.endsWith(BLOOM_FILTER_STRING)) {
-                bloomFilterFile = new File(dir.getPath() + File.separator + fileName);
+            if (fileName.endsWith(BTREE_SUFFIX)) {
+                bTreeFileRef = baseDir.getChild(fileName);
+            } else if (fileName.endsWith(RTREE_SUFFIX)) {
+                rTreeFileRef = baseDir.getChild(fileName);
+            } else if (fileName.endsWith(BLOOM_FILTER_SUFFIX)) {
+                bloomFilterFileRef = baseDir.getChild(fileName);
             } else {
-                throw new HyracksDataException("unrecognized file found = " + fileName);
+                throw HyracksDataException.create(ErrorCode.UNRECOGNIZED_INDEX_COMPONENT_FILE, fileName);
             }
         }
-        FileReference rTreeFileRef = ioManager.resolveAbsolutePath(rTreeFile.getAbsolutePath());
-        FileReference bTreeFileRef = ioManager.resolveAbsolutePath(bTreeFile.getAbsolutePath());
-        FileReference bloomFilterFileRef = ioManager.resolveAbsolutePath(bloomFilterFile.getAbsolutePath());
         return new LSMComponentFileReferences(rTreeFileRef, bTreeFileRef, bloomFilterFileRef);
     }
 }

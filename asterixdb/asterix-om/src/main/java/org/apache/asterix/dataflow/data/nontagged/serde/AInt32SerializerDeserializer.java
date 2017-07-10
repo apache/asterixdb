@@ -24,6 +24,7 @@ import java.io.DataOutput;
 import org.apache.asterix.om.base.AInt32;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 
 public class AInt32SerializerDeserializer implements ISerializerDeserializer<AInt32> {
@@ -37,17 +38,15 @@ public class AInt32SerializerDeserializer implements ISerializerDeserializer<AIn
 
     @Override
     public AInt32 deserialize(DataInput in) throws HyracksDataException {
-        Integer i = IntegerSerializerDeserializer.INSTANCE.deserialize(in);
-        return new AInt32(i);
+        return new AInt32(IntegerSerializerDeserializer.read(in));
     }
 
     @Override
     public void serialize(AInt32 instance, DataOutput out) throws HyracksDataException {
-        IntegerSerializerDeserializer.INSTANCE.serialize(instance.getIntegerValue(), out);
+        IntegerSerializerDeserializer.write(instance.getIntegerValue(), out);
     }
 
     public static int getInt(byte[] bytes, int offset) {
-        return ((bytes[offset] & 0xff) << 24) + ((bytes[offset + 1] & 0xff) << 16) + ((bytes[offset + 2] & 0xff) << 8)
-                + ((bytes[offset + 3] & 0xff) << 0);
+        return IntegerPointable.getInteger(bytes, offset);
     }
 }

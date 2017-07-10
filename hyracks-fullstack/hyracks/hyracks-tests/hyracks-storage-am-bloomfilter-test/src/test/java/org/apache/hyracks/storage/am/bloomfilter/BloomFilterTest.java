@@ -62,13 +62,12 @@ public class BloomFilterTest extends AbstractBloomFilterTest {
         int numElements = 100;
         int[] keyFields = { 0 };
 
-        BloomFilter bf = new BloomFilter(bufferCache, harness.getFileMapProvider(), harness.getFileReference(),
-                keyFields);
+        BloomFilter bf = new BloomFilter(bufferCache, harness.getFileReference(), keyFields);
 
         double acceptanleFalsePositiveRate = 0.1;
         int maxBucketsPerElement = BloomCalculations.maxBucketsPerElement(numElements);
-        BloomFilterSpecification bloomFilterSpec = BloomCalculations.computeBloomSpec(maxBucketsPerElement,
-                acceptanleFalsePositiveRate);
+        BloomFilterSpecification bloomFilterSpec =
+                BloomCalculations.computeBloomSpec(maxBucketsPerElement, acceptanleFalsePositiveRate);
 
         bf.create();
         bf.activate();
@@ -121,13 +120,12 @@ public class BloomFilterTest extends AbstractBloomFilterTest {
         int numElements = 10000;
         int[] keyFields = { 2, 4, 1 };
 
-        BloomFilter bf = new BloomFilter(bufferCache, harness.getFileMapProvider(), harness.getFileReference(),
-                keyFields);
+        BloomFilter bf = new BloomFilter(bufferCache, harness.getFileReference(), keyFields);
 
         double acceptanleFalsePositiveRate = 0.1;
         int maxBucketsPerElement = BloomCalculations.maxBucketsPerElement(numElements);
-        BloomFilterSpecification bloomFilterSpec = BloomCalculations.computeBloomSpec(maxBucketsPerElement,
-                acceptanleFalsePositiveRate);
+        BloomFilterSpecification bloomFilterSpec =
+                BloomCalculations.computeBloomSpec(maxBucketsPerElement, acceptanleFalsePositiveRate);
 
         bf.create();
         bf.activate();

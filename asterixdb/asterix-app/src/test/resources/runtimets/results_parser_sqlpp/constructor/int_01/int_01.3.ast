@@ -64,4 +64,40 @@ RecordConstructor [
       LiteralExpr [STRING] [-9223372036854775808]
     ]
   )
+  (
+    LiteralExpr [STRING] [int8_3]
+    :
+    FunctionCall test.int8@1[
+      FunctionCall test.int8@1[
+        LiteralExpr [STRING] [+80i8]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [int16_3]
+    :
+    FunctionCall test.int16@1[
+      FunctionCall test.int16@1[
+        LiteralExpr [STRING] [160]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [int32_3]
+    :
+    FunctionCall test.int32@1[
+      FunctionCall test.int32@1[
+        LiteralExpr [STRING] [+320i32]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [int64_3]
+    :
+    FunctionCall test.int64@1[
+      FunctionCall test.int64@1[
+        LiteralExpr [STRING] [640]
+      ]
+    ]
+  )
 ]

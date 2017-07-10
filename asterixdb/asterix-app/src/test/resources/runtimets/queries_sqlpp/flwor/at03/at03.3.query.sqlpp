@@ -28,15 +28,16 @@ use test;
 select element {'user-since':fus,'users':(
         select element {'num':ip,'name':f.name}
         from  (
-            select element i1
-            from  i as i1
-            order by i1.name
+            select element i1.i
+            from  g as i1
+            order by i1.i.name
         ) as f at ip
     )}
 from  (
     select element fb
     from  FacebookUsers as fb
 ) as i
-group by test.`get-year`(i.`user-since`) as fus
+group by `get-year`(i.`user-since`) as fus
+group as g
 order by fus
 ;

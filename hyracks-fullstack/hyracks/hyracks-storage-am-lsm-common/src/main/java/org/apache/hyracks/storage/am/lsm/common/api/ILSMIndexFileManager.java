@@ -24,6 +24,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
 
 /**
@@ -34,28 +35,28 @@ import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences
  * merge).
  */
 public interface ILSMIndexFileManager {
-    public void createDirs();
+    void createDirs() throws HyracksDataException;
 
-    public void deleteDirs() throws HyracksDataException;
+    void deleteDirs() throws HyracksDataException;
 
-    public LSMComponentFileReferences getRelFlushFileReference() throws HyracksDataException;
+    LSMComponentFileReferences getRelFlushFileReference() throws HyracksDataException;
 
-    public LSMComponentFileReferences getRelMergeFileReference(String firstFileName, String lastFileName)
+    LSMComponentFileReferences getRelMergeFileReference(String firstFileName, String lastFileName)
             throws HyracksDataException;
 
-    public String getBaseDir();
+    FileReference getBaseDir();
 
     // Deletes invalid files, and returns list of valid files from baseDir.
     // The returned valid files are correctly sorted (based on the recency of data).
-    public List<LSMComponentFileReferences> cleanupAndGetValidFiles() throws HyracksDataException;
+    List<LSMComponentFileReferences> cleanupAndGetValidFiles() throws HyracksDataException;
 
-    public Comparator<String> getFileNameComparator();
+    Comparator<String> getFileNameComparator();
 
     /**
      * @return delete existing transaction disk component file reference
      * @throws HyracksDataException
      */
-    public void deleteTransactionFiles() throws HyracksDataException;
+    void deleteTransactionFiles() throws HyracksDataException;
 
     /**
      * Rename files of a transaction removing the transaction prefix and return the component file reference in order to be committed
@@ -63,18 +64,18 @@ public interface ILSMIndexFileManager {
      * @return the renamed component file references
      * @throws HyracksDataException
      */
-    public LSMComponentFileReferences getTransactionFileReferenceForCommit() throws HyracksDataException;
+    LSMComponentFileReferences getTransactionFileReferenceForCommit() throws HyracksDataException;
 
     /**
      * Recover transaction files without returning them
      *
      * @throws HyracksDataException
      */
-    public void recoverTransaction() throws HyracksDataException;
+    void recoverTransaction() throws HyracksDataException;
 
     /**
      * @return a reference to the transaction disk component file reference
      * @throws IOException
      */
-    public LSMComponentFileReferences getNewTransactionFileReference() throws IOException;
+    LSMComponentFileReferences getNewTransactionFileReference() throws IOException;
 }

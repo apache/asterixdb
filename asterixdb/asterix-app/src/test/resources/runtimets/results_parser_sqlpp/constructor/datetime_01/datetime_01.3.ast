@@ -99,4 +99,13 @@ RecordConstructor [
       LiteralExpr [STRING] [-19280301T05493737+0630]
     ]
   )
+  (
+    LiteralExpr [STRING] [datetime15]
+    :
+    FunctionCall test.datetime@1[
+      FunctionCall test.datetime@1[
+        LiteralExpr [STRING] [-19280301T05493737+0630]
+      ]
+    ]
+  )
 ]

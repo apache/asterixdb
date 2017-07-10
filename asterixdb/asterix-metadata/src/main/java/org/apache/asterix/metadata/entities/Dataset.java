@@ -30,6 +30,7 @@ import java.util.stream.IntStream;
 import org.apache.asterix.active.ActiveLifecycleListener;
 import org.apache.asterix.active.IActiveEntityEventsListener;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
+import org.apache.asterix.common.context.CorrelatedPrefixMergePolicyFactory;
 import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.dataflow.NoOpFrameOperationCallbackFactory;
 import org.apache.asterix.common.exceptions.CompilationException;
@@ -655,6 +656,10 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
 
     public boolean isTemp() {
         return getDatasetDetails().isTemp();
+    }
+
+    public boolean isCorrelated() {
+        return CorrelatedPrefixMergePolicyFactory.NAME.equals(compactionPolicyFactory);
     }
 
     @Override

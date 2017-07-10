@@ -159,9 +159,12 @@ RecordConstructor [
     :
     (
       SELECT ELEMENT [
-      Variable [ Name=$srec ]
+      FieldAccessor [
+        Variable [ Name=$srec ]
+        Field=s
       ]
-      FROM [        Variable [ Name=$s ]
+      ]
+      FROM [        Variable [ Name=$g ]
         AS Variable [ Name=$srec ]
       ]
     )
@@ -178,7 +181,7 @@ Groupby
     Variable [ Name=$s ]
     Field=uid
   ]
-  GROUP AS Variable [ Name=#1 ]
+  GROUP AS Variable [ Name=$g ]
   (
     s:=Variable [ Name=$s ]
   )

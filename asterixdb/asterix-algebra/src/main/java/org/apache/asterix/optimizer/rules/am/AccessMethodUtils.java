@@ -44,6 +44,8 @@ import org.apache.asterix.om.base.IACursor;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.BuiltinFunctions;
+import org.apache.asterix.om.typecomputer.base.TypeCastUtils;
+import org.apache.asterix.om.typecomputer.impl.TypeComputeUtils;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
@@ -379,19 +381,21 @@ public class AccessMethodUtils {
     }
 
     /**
-     * Returns the search key expression which feeds a secondary-index search. If we are optimizing a selection query then this method returns
-     * the a ConstantExpression from the first constant value in the optimizable function expression.
-     * If we are optimizing a join, then this method returns the VariableReferenceExpression that should feed the secondary index probe.
+     * Returns the search key expression which feeds a secondary-index search. If we are optimizing a selection query
+     * then this method returns the a ConstantExpression from the first constant value in the optimizable function
+     * expression.
+     * If we are optimizing a join, then this method returns the VariableReferenceExpression that should feed the
+     * secondary index probe.
      *
      * @throws AlgebricksException
      */
     public static Pair<ILogicalExpression, Boolean> createSearchKeyExpr(Index index, IOptimizableFuncExpr optFuncExpr,
-            OptimizableOperatorSubTree indexSubTree, OptimizableOperatorSubTree probeSubTree)
+            IAType indexedFieldType, OptimizableOperatorSubTree indexSubTree, OptimizableOperatorSubTree probeSubTree)
             throws AlgebricksException {
+
         if (probeSubTree == null) {
             // We are optimizing a selection query. Search key is a constant.
             // Type Checking and type promotion is done here
-            IAType fieldType = optFuncExpr.getFieldType(0);
 
             if (optFuncExpr.getNumConstantExpr() == 0) {
                 //We are looking at a selection case, but using two variables
@@ -400,69 +404,80 @@ public class AccessMethodUtils {
                 return new Pair<>(new VariableReferenceExpression(optFuncExpr.getLogicalVar(1)), false);
             }
 
-            ILogicalExpression constantAtRuntimeExpression = null;
+            ILogicalExpression constantAtRuntimeExpression = optFuncExpr.getConstantExpr(0);
             AsterixConstantValue constantValue = null;
-            ATypeTag constantValueTag = null;
-
-            constantAtRuntimeExpression = optFuncExpr.getConstantExpr(0);
-
             if (constantAtRuntimeExpression.getExpressionTag() == LogicalExpressionTag.CONSTANT) {
                 constantValue = (AsterixConstantValue) ((ConstantExpression) constantAtRuntimeExpression).getValue();
             }
 
-            constantValueTag = optFuncExpr.getConstantType(0).getTypeTag();
-
-            // type casting applied?
-            boolean typeCastingApplied = false;
-            // type casting happened from real (FLOAT, DOUBLE) value -> INT value?
-            boolean realTypeConvertedToIntegerType = false;
-            AsterixConstantValue replacedConstantValue = null;
+            ATypeTag constantValueTag = optFuncExpr.getConstantType(0).getTypeTag();
+            ATypeTag indexedFieldTypeTag = TypeComputeUtils.getActualType(indexedFieldType).getTypeTag();
 
             // if the constant type and target type does not match, we do a type conversion
-            if (constantValueTag != fieldType.getTypeTag() && constantValue != null) {
+            AsterixConstantValue replacedConstantValue = null;
+            // type casting happened from real (FLOAT, DOUBLE) value -> INT value?
+            boolean realTypeConvertedToIntegerType = false;
+
+            if (constantValueTag != indexedFieldTypeTag && constantValue != null) {
                 try {
                     replacedConstantValue = ATypeHierarchy.getAsterixConstantValueFromNumericTypeObject(
-                            constantValue.getObject(), fieldType.getTypeTag(), index.isEnforced());
+                            constantValue.getObject(), indexedFieldTypeTag, index.isEnforced());
+                    realTypeConvertedToIntegerType =
+                            isRealTypeConvertedToIntegerType(constantValueTag, indexedFieldTypeTag);
                 } catch (HyracksDataException e) {
                     throw new AlgebricksException(e);
                 }
-                if (replacedConstantValue != null) {
-                    typeCastingApplied = true;
-                }
+            }
 
-                // To check whether the constant is REAL values, and target field is an INT type field.
-                // In this case, we need to change the search parameter. Refer to the caller section for the detail.
-                switch (constantValueTag) {
-                    case DOUBLE:
-                    case FLOAT:
-                        switch (fieldType.getTypeTag()) {
-                            case TINYINT:
-                            case SMALLINT:
-                            case INTEGER:
-                            case BIGINT:
-                                realTypeConvertedToIntegerType = true;
-                                break;
-                            default:
-                                break;
-                        }
+            return replacedConstantValue != null
+                    ? new Pair<>(new ConstantExpression(replacedConstantValue), realTypeConvertedToIntegerType)
+                    : new Pair<>(constantAtRuntimeExpression, false);
+        } else {
+            // We are optimizing a join query. Determine which variable feeds the secondary index.
+            OptimizableOperatorSubTree opSubTree0 = optFuncExpr.getOperatorSubTree(0);
+            int probeVarIndex = opSubTree0 == null || opSubTree0 == probeSubTree ? 0 : 1;
+            LogicalVariable probeVar = optFuncExpr.getLogicalVar(probeVarIndex);
+            ILogicalExpression probeExpr = new VariableReferenceExpression(probeVar);
+
+            ATypeTag indexedFieldTypeTag = TypeComputeUtils.getActualType(indexedFieldType).getTypeTag();
+            if (ATypeHierarchy.getTypeDomain(indexedFieldTypeTag) == ATypeHierarchy.Domain.NUMERIC) {
+                IAType probeType = TypeComputeUtils.getActualType(optFuncExpr.getFieldType(probeVarIndex));
+                ATypeTag probeTypeTypeTag = probeType.getTypeTag();
+                if (probeTypeTypeTag != indexedFieldTypeTag) {
+                    ScalarFunctionCallExpression castFunc =
+                            new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(BuiltinFunctions.CAST_TYPE_LAX));
+                    castFunc.getArguments().add(new MutableObject<>(probeExpr));
+                    TypeCastUtils.setRequiredAndInputTypes(castFunc, indexedFieldType, probeType);
+                    boolean realTypeConvertedToIntegerType =
+                            isRealTypeConvertedToIntegerType(probeTypeTypeTag, indexedFieldTypeTag);
+                    return new Pair<>(castFunc, realTypeConvertedToIntegerType);
+                }
+            }
+
+            return new Pair<>(probeExpr, false);
+        }
+    }
+
+    private static boolean isRealTypeConvertedToIntegerType(ATypeTag probeTypeTag, ATypeTag indexedFieldTypeTag) {
+        // To check whether the constant is REAL values, and target field is an INT type field.
+        // In this case, we need to change the search parameter. Refer to the caller section for the detail.
+        switch (probeTypeTag) {
+            case DOUBLE:
+            case FLOAT:
+                switch (indexedFieldTypeTag) {
+                    case TINYINT:
+                    case SMALLINT:
+                    case INTEGER:
+                    case BIGINT:
+                        return true;
                     default:
                         break;
                 }
-            }
-
-            if (typeCastingApplied) {
-                return new Pair<>(new ConstantExpression(replacedConstantValue), realTypeConvertedToIntegerType);
-            } else {
-                return new Pair<>(optFuncExpr.getConstantExpr(0), false);
-            }
-        } else {
-            // We are optimizing a join query. Determine which variable feeds the secondary index.
-            if (optFuncExpr.getOperatorSubTree(0) == null || optFuncExpr.getOperatorSubTree(0) == probeSubTree) {
-                return new Pair<>(new VariableReferenceExpression(optFuncExpr.getLogicalVar(0)), false);
-            } else {
-                return new Pair<>(new VariableReferenceExpression(optFuncExpr.getLogicalVar(1)), false);
-            }
+                break;
+            default:
+                break;
         }
+        return false;
     }
 
     /**

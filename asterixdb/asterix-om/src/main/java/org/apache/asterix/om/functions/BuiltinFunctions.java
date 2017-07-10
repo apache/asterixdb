@@ -42,7 +42,6 @@ import org.apache.asterix.om.typecomputer.impl.AInt64TypeComputer;
 import org.apache.asterix.om.typecomputer.impl.AInt8TypeComputer;
 import org.apache.asterix.om.typecomputer.impl.AIntervalTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.ALineTypeComputer;
-import org.apache.asterix.om.typecomputer.impl.AMissingTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.APoint3DTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.APointTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.APolygonTypeComputer;
@@ -519,8 +518,6 @@ public class BuiltinFunctions {
     // constructors:
     public static final FunctionIdentifier BOOLEAN_CONSTRUCTOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "boolean", 1);
-    public static final FunctionIdentifier NULL_CONSTRUCTOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "null", 1);
     public static final FunctionIdentifier STRING_CONSTRUCTOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "string", 1);
     public static final FunctionIdentifier BINARY_HEX_CONSTRUCTOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
@@ -807,6 +804,15 @@ public class BuiltinFunctions {
     public static final FunctionIdentifier IF_MISSING_OR_NULL = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "if-missing-or-null", FunctionIdentifier.VARARGS);
 
+    public static final FunctionIdentifier TO_BOOLEAN =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "to-boolean", 1);
+    public static final FunctionIdentifier TO_STRING =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "to-string", 1);
+    public static final FunctionIdentifier TO_DOUBLE =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "to-double", 1);
+    public static final FunctionIdentifier TO_BIGINT =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "to-bigint", 1);
+
     public static final FunctionIdentifier EXTERNAL_LOOKUP = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "external-lookup", FunctionIdentifier.VARARGS);
 
@@ -855,7 +861,7 @@ public class BuiltinFunctions {
         // and then, Asterix builtin functions
         addPrivateFunction(CHECK_UNKNOWN, NotUnknownTypeComputer.INSTANCE, true);
         addPrivateFunction(ANY_COLLECTION_MEMBER, CollectionMemberResultType.INSTANCE, true);
-        addFunction(BOOLEAN_CONSTRUCTOR, StringBooleanTypeComputer.INSTANCE, true);
+        addFunction(BOOLEAN_CONSTRUCTOR, ABooleanTypeComputer.INSTANCE, true);
         addFunction(CARET, NumericAddSubMulDivTypeComputer.INSTANCE, true);
         addFunction(CIRCLE_CONSTRUCTOR, ACircleTypeComputer.INSTANCE, true);
         addPrivateFunction(CONCAT_NON_NULL, ConcatNonNullTypeComputer.INSTANCE, true);
@@ -906,7 +912,6 @@ public class BuiltinFunctions {
         addPrivateFunction(LISTIFY, OrderedListConstructorTypeComputer.INSTANCE, true);
         addPrivateFunction(MAKE_FIELD_INDEX_HANDLE, null, true);
         addPrivateFunction(MAKE_FIELD_NAME_HANDLE, null, true);
-        addFunction(NULL_CONSTRUCTOR, AMissingTypeComputer.INSTANCE, true);
 
         addPrivateFunction(NUMERIC_UNARY_MINUS, UnaryMinusTypeComputer.INSTANCE, true);
         addPrivateFunction(NUMERIC_SUBTRACT, NumericAddSubMulDivTypeComputer.INSTANCE, true);
@@ -943,6 +948,7 @@ public class BuiltinFunctions {
         addFunction(FIND_BINARY, AInt64TypeComputer.INSTANCE, true);
         addFunction(FIND_BINARY_FROM, AInt64TypeComputer.INSTANCE, true);
 
+        addFunction(STRING_CONSTRUCTOR, AStringTypeComputer.INSTANCE, true);
         addFunction(STRING_LIKE, BooleanFunctionTypeComputer.INSTANCE, true);
         addFunction(STRING_CONTAINS, ABooleanTypeComputer.INSTANCE, true);
         addFunction(STRING_TO_CODEPOINT, StringToInt64ListTypeComputer.INSTANCE, true);
@@ -984,6 +990,11 @@ public class BuiltinFunctions {
         addPrivateFunction(PREFIX_LEN_JACCARD, AInt32TypeComputer.INSTANCE, true);
         addFunction(RANGE, AInt64TypeComputer.INSTANCE, true);
         addFunction(RECTANGLE_CONSTRUCTOR, ARectangleTypeComputer.INSTANCE, true);
+
+        addFunction(TO_BOOLEAN, ABooleanTypeComputer.INSTANCE, true);
+        addFunction(TO_STRING, AStringTypeComputer.INSTANCE, true);
+        addFunction(TO_DOUBLE, ADoubleTypeComputer.INSTANCE, true);
+        addFunction(TO_BIGINT, AInt64TypeComputer.INSTANCE, true);
 
         // Aggregate Functions
         addFunction(MAX, MinMaxAggTypeComputer.INSTANCE, true);
@@ -1068,7 +1079,6 @@ public class BuiltinFunctions {
         addFunction(GET_CIRCLE_RADIUS_ACCESSOR, ADoubleTypeComputer.INSTANCE, true);
         addFunction(GET_CIRCLE_CENTER_ACCESSOR, APointTypeComputer.INSTANCE, true);
         addFunction(GET_POINTS_LINE_RECTANGLE_POLYGON_ACCESSOR, OrderedListOfAPointTypeComputer.INSTANCE, true);
-        addFunction(STRING_CONSTRUCTOR, AStringTypeComputer.INSTANCE, true);
 
         // Binary functions
         addFunction(BINARY_HEX_CONSTRUCTOR, ABinaryTypeComputer.INSTANCE, true);

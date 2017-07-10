@@ -19,5 +19,17 @@
 
 use test;
 
-
-{'time1':test.time('10:50:56.200+05:00'),'time2':test.time('10:50:56.200-10:15'),'time3':test.time('10:50:56'),'time4':test.time('10:50:56.200Z'),'time5':test.time('23:59:59.999-13:30'),'time6':test.time('00:00:00.000+14:45'),'time7':test.time('12:59:00.019-01:00'),'time8':test.time('12:59:00.01-01:00'),'time9':test.time('12:59:00.019-01:00'),'time10':test.time('12590001-0100'),'time11':test.time('125900019+0100')};
+{
+    'time1':test.time('10:50:56.200+05:00'),
+    'time2':test.time('10:50:56.200-10:15'),
+    'time3':test.time('10:50:56'),
+    'time4':test.time('10:50:56.200Z'),
+    'time5':test.time('23:59:59.999-13:30'),
+    'time6':test.time('00:00:00.000+14:45'),
+    'time7':test.time('12:59:00.019-01:00'),
+    'time8':test.time('12:59:00.01-01:00'),
+    'time9':test.time('12:59:00.019-01:00'),
+    'time10':test.time('12590001-0100'),
+    'time11':test.time('125900019+0100'),
+    'time12':test.time(test.time('125900019+0100'))
+};

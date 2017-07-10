@@ -47,4 +47,11 @@ public interface IMetadataLock {
      *            lock mode
      */
     void release(IMetadataLock.Mode mode);
+
+    /**
+     * Get the lock's key
+     *
+     * @return the key identiying the lock
+     */
+    String getKey();
 }

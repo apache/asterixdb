@@ -120,7 +120,7 @@ Let Variable [ Name=$X ]
         Variable [ Name=$n ]
         Field=n_nationkey
       ]
-      GROUP AS Variable [ Name=#1 ]
+      GROUP AS Variable [ Name=$g2 ]
       (
         n:=Variable [ Name=$n ]
         customer:=Variable [ Name=$customer ]
@@ -133,12 +133,15 @@ Let Variable [ Name=$X ]
         (
           SELECT ELEMENT [
           FieldAccessor [
-            Variable [ Name=$o ]
+            FieldAccessor [
+              Variable [ Name=$g2 ]
+              Field=orders
+            ]
             Field=o_totalprice
           ]
           ]
-          FROM [            Variable [ Name=$orders ]
-            AS Variable [ Name=$o ]
+          FROM [            Variable [ Name=$g2 ]
+            AS Variable [ Name=$g2 ]
           ]
         )
       ]
@@ -148,10 +151,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [nation_key]
     :
-    FieldAccessor [
-      Variable [ Name=$x ]
-      Field=nation_key
-    ]
+    Variable [ Name=$nation_key ]
   )
   (
     LiteralExpr [STRING] [sum_price]
@@ -163,7 +163,10 @@ RecordConstructor [
           LiteralExpr [STRING] [orderdate]
           :
           FieldAccessor [
-            Variable [ Name=$y ]
+            FieldAccessor [
+              Variable [ Name=$g ]
+              Field=x
+            ]
             Field=order_date
           ]
         )
@@ -171,18 +174,24 @@ RecordConstructor [
           LiteralExpr [STRING] [sum_price]
           :
           FieldAccessor [
-            Variable [ Name=$y ]
+            FieldAccessor [
+              Variable [ Name=$g ]
+              Field=x
+            ]
             Field=sum_price
           ]
         )
       ]
       ]
-      FROM [        Variable [ Name=$x ]
-        AS Variable [ Name=$y ]
+      FROM [        Variable [ Name=$g ]
+        AS Variable [ Name=$g ]
       ]
       Orderby
         FieldAccessor [
-          Variable [ Name=$y ]
+          FieldAccessor [
+            Variable [ Name=$g ]
+            Field=x
+          ]
           Field=sum_price
         ]
         DESC
@@ -203,15 +212,12 @@ Groupby
     Variable [ Name=$x ]
     Field=nation_key
   ]
-  GROUP AS Variable [ Name=#2 ]
+  GROUP AS Variable [ Name=$g ]
   (
     x:=Variable [ Name=$x ]
   )
 
 Orderby
-  FieldAccessor [
-    Variable [ Name=$x ]
-    Field=nation_key
-  ]
+  Variable [ Name=$nation_key ]
   ASC
 

@@ -44,7 +44,7 @@ public class FloatToDoubleTypeConvertComputer implements ITypeConvertComputer {
     public void convertType(byte[] data, int start, int length, DataOutput out) throws IOException {
         double targetValue = convertType(data, start);
         out.writeByte(ATypeTag.DOUBLE.serialize());
-        DoubleSerializerDeserializer.INSTANCE.serialize(targetValue, out);
+        DoubleSerializerDeserializer.write(targetValue, out);
     }
 
     @Override

@@ -19,6 +19,7 @@
 package org.apache.asterix.runtime.evaluators.constructors;
 
 import java.io.DataOutput;
+import java.io.IOException;
 
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMutableYearMonthDuration;
@@ -78,24 +79,27 @@ public class AYearMonthDurationConstructorDescriptor extends AbstractScalarFunct
                     @Override
                     public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                         try {
-                            resultStorage.reset();
                             eval.evaluate(tuple, inputArg);
                             byte[] serString = inputArg.getByteArray();
                             int offset = inputArg.getStartOffset();
                             int len = inputArg.getLength();
 
-                            if (serString[offset] == ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
+                            byte tt = serString[offset];
+                            if (tt == ATypeTag.SERIALIZED_YEAR_MONTH_DURATION_TYPE_TAG) {
+                                result.set(inputArg);
+                            } else if (tt == ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
+                                resultStorage.reset();
                                 utf8Ptr.set(serString, offset + 1, len - 1);
                                 int stringLength = utf8Ptr.getUTF8Length();
                                 ADurationParserFactory.parseDuration(serString, utf8Ptr.getCharStartOffset(),
                                         stringLength, aYearMonthDuration, ADurationParseOption.YEAR_MONTH);
                                 yearMonthDurationSerde.serialize(aYearMonthDuration, out);
+                                result.set(resultStorage);
                             } else {
-                                throw new TypeMismatchException(getIdentifier(), 0, serString[offset],
+                                throw new TypeMismatchException(getIdentifier(), 0, tt,
                                         ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                             }
-                            result.set(resultStorage);
-                        } catch (Exception e) {
+                        } catch (IOException e) {
                             throw new InvalidDataFormatException(getIdentifier(), e,
                                     ATypeTag.SERIALIZED_YEAR_MONTH_DURATION_TYPE_TAG);
                         }

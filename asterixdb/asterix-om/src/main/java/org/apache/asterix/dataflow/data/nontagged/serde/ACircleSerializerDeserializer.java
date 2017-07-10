@@ -20,13 +20,13 @@ package org.apache.asterix.dataflow.data.nontagged.serde;
 
 import java.io.DataInput;
 import java.io.DataOutput;
-import java.io.IOException;
 
 import org.apache.asterix.dataflow.data.nontagged.Coordinate;
 import org.apache.asterix.om.base.ACircle;
 import org.apache.asterix.om.base.APoint;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.dataflow.common.data.marshalling.DoubleSerializerDeserializer;
 
 public class ACircleSerializerDeserializer implements ISerializerDeserializer<ACircle> {
 
@@ -39,24 +39,15 @@ public class ACircleSerializerDeserializer implements ISerializerDeserializer<AC
 
     @Override
     public ACircle deserialize(DataInput in) throws HyracksDataException {
-        try {
-            APoint center = APointSerializerDeserializer.INSTANCE.deserialize(in);
-            double radius = ADoubleSerializerDeserializer.INSTANCE.deserialize(in).getDoubleValue();
-            return new ACircle(center, radius);
-        } catch (IOException e) {
-            throw new HyracksDataException(e);
-        }
+        APoint center = APointSerializerDeserializer.read(in);
+        double radius = DoubleSerializerDeserializer.read(in);
+        return new ACircle(center, radius);
     }
 
     @Override
     public void serialize(ACircle instance, DataOutput out) throws HyracksDataException {
-        try {
-            out.writeDouble(instance.getP().getX());
-            out.writeDouble(instance.getP().getY());
-            out.writeDouble(instance.getRadius());
-        } catch (IOException e) {
-            throw new HyracksDataException(e);
-        }
+        APointSerializerDeserializer.write(instance.getP(), out);
+        DoubleSerializerDeserializer.write(instance.getRadius(), out);
     }
 
     public final static int getCenterPointCoordinateOffset(Coordinate coordinate) throws HyracksDataException {

@@ -35,6 +35,15 @@ public class IntArraySerializerDeserializer implements ISerializerDeserializer<i
 
     @Override
     public int[] deserialize(DataInput in) throws HyracksDataException {
+        return read(in);
+    }
+
+    @Override
+    public void serialize(int[] instance, DataOutput out) throws HyracksDataException {
+        write(instance, out);
+    }
+
+    public static int[] read(DataInput in) throws HyracksDataException {
         try {
             int len = in.readInt();
             int[] array = new int[len];
@@ -43,19 +52,18 @@ public class IntArraySerializerDeserializer implements ISerializerDeserializer<i
             }
             return array;
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 
-    @Override
-    public void serialize(int[] instance, DataOutput out) throws HyracksDataException {
+    public static void write(int[] instance, DataOutput out) throws HyracksDataException {
         try {
             out.writeInt(instance.length);
             for (int i = 0; i < instance.length; ++i) {
                 out.writeInt(instance[i]);
             }
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 }

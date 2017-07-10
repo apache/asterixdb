@@ -31,15 +31,16 @@ from  LineItem as l
 where (l.l_shipdate <= '1998-09-02')
 /* +hash */
 group by l.l_returnflag as l_returnflag,l.l_linestatus as l_linestatus
-with  cheap as (
-      select element m
-      from  l as m
-      where (m.l_discount > 0.05)
+group as g
+let  cheap = (
+      select element m.l
+      from  g as m
+      where (m.l.l_discount > 0.05)
   ),
-      expensive as (
-      select element a
-      from  l as a
-      where (a.l_discount <= 0.05)
+      expensive = (
+      select element a.l
+      from  g as a
+      where (a.l.l_discount <= 0.05)
   )
 order by l_returnflag,l_linestatus
 ;

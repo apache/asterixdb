@@ -19,6 +19,7 @@
 package org.apache.asterix.active;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.job.JobId;
 
 public interface IActiveRuntime {
 
@@ -34,4 +35,16 @@ public interface IActiveRuntime {
      * @throws InterruptedException
      */
     void stop() throws HyracksDataException, InterruptedException;
+
+    /**
+     * @return the job id associated with this active runtime
+     */
+    JobId getJobId();
+
+    /**
+     * @return the runtime stats for monitoring purposes
+     */
+    default String getStats() {
+        return "\"Runtime stats is not available.\"";
+    }
 }

@@ -176,7 +176,9 @@ RecordConstructor [
               Field=o_totalprice
             ]
             ]
-            FROM [              Variable [ Name=$orders ]
+            FROM [              FunctionCall Metadata.dataset@1[
+                LiteralExpr [STRING] [orders]
+              ]
               AS Variable [ Name=$o ]
             ]
           )

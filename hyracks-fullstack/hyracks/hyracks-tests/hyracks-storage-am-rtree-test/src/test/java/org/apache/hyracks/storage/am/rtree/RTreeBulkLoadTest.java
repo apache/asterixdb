@@ -54,9 +54,8 @@ public class RTreeBulkLoadTest extends AbstractRTreeBulkLoadTest {
     protected AbstractRTreeTestContext createTestContext(ISerializerDeserializer[] fieldSerdes,
             IPrimitiveValueProviderFactory[] valueProviderFactories, int numKeys, RTreePolicyType rtreePolicyType)
             throws Exception {
-        return RTreeTestContext.create(harness.getBufferCache(), harness.getFileMapProvider(),
-                harness.getFileReference(), fieldSerdes, valueProviderFactories, numKeys, rtreePolicyType,
-                harness.getMetadataManagerFactory());
+        return RTreeTestContext.create(harness.getBufferCache(), harness.getFileReference(), fieldSerdes,
+                valueProviderFactories, numKeys, rtreePolicyType, harness.getMetadataManagerFactory());
     }
 
     @Override

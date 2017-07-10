@@ -15,4 +15,13 @@ RecordConstructor [
       LiteralExpr [STRING] [8cea25ab-55f8-467e-929d-94888f754832]
     ]
   )
+  (
+    LiteralExpr [STRING] [uuid3]
+    :
+    FunctionCall test.uuid@1[
+      FunctionCall test.uuid@1[
+        LiteralExpr [STRING] [8cea25ab-55f8-467e-929d-94888f754832]
+      ]
+    ]
+  )
 ]

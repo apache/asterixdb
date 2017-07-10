@@ -73,31 +73,35 @@ public class AUUIDFromStringConstructorDescriptor extends AbstractScalarFunction
                     private IScalarEvaluator eval = args[0].createScalarEvaluator(ctx);
                     private AMutableUUID uuid = new AMutableUUID();
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<AUUID> uuidSerde = SerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.AUUID);
+                    private ISerializerDeserializer<AUUID> uuidSerde =
+                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AUUID);
 
                     private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                         try {
-                            resultStorage.reset();
                             eval.evaluate(tuple, inputArg);
                             byte[] serString = inputArg.getByteArray();
                             int start = inputArg.getStartOffset();
                             int len = inputArg.getLength();
-                            if (serString[start] == ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
+
+                            byte tt = serString[start];
+                            if (tt == ATypeTag.SERIALIZED_UUID_TYPE_TAG) {
+                                result.set(inputArg);
+                            } else if (tt == ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
+                                resultStorage.reset();
                                 utf8Ptr.set(serString, start + 1, len - 1);
 
                                 // first byte: tag, next x bytes: length
                                 int offset = utf8Ptr.getCharStartOffset();
                                 uuid.parseUUIDHexBytes(serString, offset);
                                 uuidSerde.serialize(uuid, out);
+                                result.set(resultStorage);
                             } else {
-                                throw new TypeMismatchException(getIdentifier(), 0, serString[start],
+                                throw new TypeMismatchException(getIdentifier(), 0, tt,
                                         ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                             }
-                            result.set(resultStorage);
                         } catch (IOException e) {
                             throw new InvalidDataFormatException(getIdentifier(), e, ATypeTag.SERIALIZED_UUID_TYPE_TAG);
                         }

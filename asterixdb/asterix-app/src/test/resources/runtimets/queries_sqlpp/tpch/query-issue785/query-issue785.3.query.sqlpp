@@ -27,27 +27,31 @@ use tpch;
 
 
 select element {'nation_key':nation_key,'sum_price':(
-        select element {'orderdate':od,'sum_price':sum}
-        from  x as i
-        group by i.order_date as od
-        with  sum as tpch.coll_sum((
-              select element s.sum_price
-              from  i as s
+        select element {'orderdate': od,'sum_price':sum}
+        from  g as i
+        group by i.x.order_date as od
+        group as g2
+        let sum = coll_sum((
+              select element g2.i.x.sum_price
+              from g2
           ))
         order by sum desc
         limit 3
     )}
 from  (
-    select element {'nation_key':nation_key,'order_date':orderdate,'sum_price':tpch.coll_sum((
-            select element o.o_totalprice
-            from  orders as o
-        ))}
+    select element {'nation_key':nation_key,'order_date':orderdate,
+                    'sum_price': coll_sum((
+                        select value g3.orders.o_totalprice
+                        from g3
+                    ))}
     from  Nation as n,
           Customer as customer,
           Orders as orders
-    where ((orders.o_custkey = customer.c_custkey) and (customer.c_nationkey = n.n_nationkey))
+    where orders.o_custkey = customer.c_custkey and customer.c_nationkey = n.n_nationkey
     group by orders.o_orderdate as orderdate,n.n_nationkey as nation_key
+    group as g3
 ) as x
 group by x.nation_key as nation_key
+group as g
 order by nation_key
 ;

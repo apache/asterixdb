@@ -19,5 +19,8 @@
 
 use test;
 
-
-{'uuid1':test.uuid('02a199ca-bf58-412e-bd9f-60a0c975a8ac'),'uuid2':test.uuid('8cea25ab-55f8-467e-929d-94888f754832')};
+{
+    'uuid1':test.uuid('02a199ca-bf58-412e-bd9f-60a0c975a8ac'),
+    'uuid2':test.uuid('8cea25ab-55f8-467e-929d-94888f754832'),
+    'uuid3':test.uuid(test.uuid('8cea25ab-55f8-467e-929d-94888f754832'))
+};

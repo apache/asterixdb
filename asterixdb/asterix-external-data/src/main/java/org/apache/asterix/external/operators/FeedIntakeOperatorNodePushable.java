@@ -105,4 +105,13 @@ public class FeedIntakeOperatorNodePushable extends ActiveSourceOperatorNodePush
             adapterRuntimeManager.stop();
         }
     }
+
+    @Override
+    public String getStats() {
+        if (adapterRuntimeManager != null) {
+            return adapterRuntimeManager.getStats();
+        } else {
+            return "\"Runtime stats is not available.\"";
+        }
+    }
 }

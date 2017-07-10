@@ -19,7 +19,9 @@
 package org.apache.asterix.external.feed.watch;
 
 import org.apache.asterix.active.ActiveEvent;
+import org.apache.asterix.active.IActiveEntityEventsListener;
 import org.apache.asterix.active.IActiveEventSubscriber;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 /**
  * An event subscriber that does not listen to any events
@@ -33,22 +35,26 @@ public class NoOpSubscriber implements IActiveEventSubscriber {
 
     @Override
     public void notify(ActiveEvent event) {
-        // do nothing
+        // no op
     }
 
     @Override
-    public boolean done() {
+    public boolean isDone() {
         return true;
     }
 
     @Override
     public void sync() {
-        // do nothing
+        // no op
     }
 
     @Override
     public void unsubscribe() {
-        // do nothing
+        // no op
     }
 
+    @Override
+    public void subscribed(IActiveEntityEventsListener eventsListener) throws HyracksDataException {
+        // no op
+    }
 }

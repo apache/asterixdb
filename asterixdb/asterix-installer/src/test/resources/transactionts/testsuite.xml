@@ -56,6 +56,12 @@
     </test-case>
 
     <test-case FilePath="recover_after_abort">
+      <compilation-unit name="primary_plus_default_correlated_secondary_index">
+        <output-dir compare="Text">primary_plus_default_secondary_index</output-dir>
+      </compilation-unit>
+    </test-case>
+
+    <test-case FilePath="recover_after_abort">
       <compilation-unit name="primary_plus_rtree_index">
         <output-dir compare="Text">primary_plus_rtree_index</output-dir>
       </compilation-unit>
@@ -82,6 +88,48 @@
     <test-case FilePath="recover_after_abort">
       <compilation-unit name="primary_plus_multiple_secondary_indices">
         <output-dir compare="Text">primary_plus_multiple_secondary_indices</output-dir>
+      </compilation-unit>
+    </test-case>
+
+    <test-case FilePath="recover_after_abort">
+      <compilation-unit name="primary_index_only_filtered">
+        <output-dir compare="Text">primary_index_only_filtered</output-dir>
+      </compilation-unit>
+    </test-case>
+
+    <test-case FilePath="recover_after_abort">
+      <compilation-unit name="primary_plus_default_secondary_index_filtered">
+        <output-dir compare="Text">primary_plus_default_secondary_index_filtered</output-dir>
+      </compilation-unit>
+    </test-case>
+
+    <test-case FilePath="recover_after_abort">
+      <compilation-unit name="primary_plus_rtree_index_filtered">
+        <output-dir compare="Text">primary_plus_rtree_index_filtered</output-dir>
+      </compilation-unit>
+    </test-case>
+
+    <test-case FilePath="recover_after_abort">
+      <compilation-unit name="primary_plus_rtree_index_insert_and_delete_filtered">
+        <output-dir compare="Text">primary_plus_rtree_index_insert_and_delete_filtered</output-dir>
+      </compilation-unit>
+    </test-case>
+
+    <test-case FilePath="recover_after_abort">
+      <compilation-unit name="primary_plus_keyword_secondary_index_filtered">
+        <output-dir compare="Text">primary_plus_keyword_secondary_index_filtered</output-dir>
+      </compilation-unit>
+    </test-case>
+
+    <test-case FilePath="recover_after_abort">
+      <compilation-unit name="primary_plus_ngram_index">
+        <output-dir compare="Text">primary_plus_ngram_index_filtered</output-dir>
+      </compilation-unit>
+    </test-case>
+
+    <test-case FilePath="recover_after_abort">
+      <compilation-unit name="primary_plus_multiple_secondary_indices">
+        <output-dir compare="Text">primary_plus_multiple_secondary_indices_filtered</output-dir>
       </compilation-unit>
     </test-case>
 

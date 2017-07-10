@@ -184,7 +184,7 @@ public class SqlppGroupByVisitor extends AbstractSqlppExpressionScopingVisitor {
             if (needResolution) {
                 // Tracks used variables, including WITH variables.
                 decorVars.retainAll(freeVariables);
-                // Adds all non-WITH outer scope variables, for path resolution.
+                // Adds all outer scope variables, for path resolution.
                 Collection<VariableExpr> visibleOuterScopeNonWithVars = SqlppVariableUtil.getLiveVariables(
                         scopeChecker.getCurrentScope(), false);
                 visibleOuterScopeNonWithVars.removeAll(visibleVarsInCurrentScope);
@@ -220,18 +220,9 @@ public class SqlppGroupByVisitor extends AbstractSqlppExpressionScopingVisitor {
 
     @Override
     public Expression visit(GroupbyClause gc, ILangExpression arg) throws CompilationException {
-        // Puts all FROM binding variables into withVarList.
         FromClause fromClause = (FromClause) arg;
         Collection<VariableExpr> fromBindingVars =
                 fromClause == null ? new ArrayList<>() : SqlppVariableUtil.getBindingVariables(fromClause);
-        Map<Expression, VariableExpr> withVarMap = new HashMap<>();
-        for (VariableExpr fromBindingVar : fromBindingVars) {
-            VariableExpr varExpr = new VariableExpr();
-            varExpr.setIsNewVar(false);
-            varExpr.setVar(fromBindingVar.getVar());
-            VariableExpr newVarExpr = (VariableExpr) SqlppRewriteUtil.deepCopy(varExpr);
-            withVarMap.put(varExpr, newVarExpr);
-        }
         // Sets the field list for the group variable.
         List<Pair<Expression, Identifier>> groupFieldList = new ArrayList<>();
         if (!gc.hasGroupFieldList()) {
@@ -245,12 +236,9 @@ public class SqlppGroupByVisitor extends AbstractSqlppExpressionScopingVisitor {
             for (Pair<Expression, Identifier> groupField : gc.getGroupFieldList()) {
                 Expression newFieldExpr = groupField.first.accept(this, arg);
                 groupFieldList.add(new Pair<>(newFieldExpr, groupField.second));
-                // Adds a field binding variable into withVarList.
-                VariableExpr bindingVar = new VariableExpr(
-                        new VarIdentifier(SqlppVariableUtil.toInternalVariableName(groupField.second.getValue())));
-                withVarMap.put(newFieldExpr, bindingVar);
             }
         }
+
         gc.setGroupFieldList(groupFieldList);
 
         // Sets the group variable.
@@ -262,6 +250,7 @@ public class SqlppGroupByVisitor extends AbstractSqlppExpressionScopingVisitor {
         // Adds the group variable into the "with" (i.e., re-binding) variable list.
         VariableExpr gbyVarRef = new VariableExpr(gc.getGroupVar().getVar());
         gbyVarRef.setIsNewVar(false);
+        Map<Expression, VariableExpr> withVarMap = new HashMap<>();
         withVarMap.put(gbyVarRef, (VariableExpr) SqlppRewriteUtil.deepCopy(gbyVarRef));
         gc.setWithVarMap(withVarMap);
 

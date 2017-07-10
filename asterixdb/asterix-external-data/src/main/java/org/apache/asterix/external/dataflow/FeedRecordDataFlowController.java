@@ -39,6 +39,8 @@ public class FeedRecordDataFlowController<T> extends AbstractFeedDataFlowControl
     protected final AtomicBoolean closed = new AtomicBoolean(false);
     protected static final long INTERVAL = 1000;
     protected boolean failed = false;
+    protected long incomingRecordsCount = 0;
+    protected long failedRecordsCount = 0;
 
     public FeedRecordDataFlowController(IHyracksTaskContext ctx, FeedTupleForwarder tupleForwarder,
             FeedLogManager feedLogManager, int numOfOutputFields, IRecordDataParser<T> dataParser,
@@ -63,7 +65,10 @@ public class FeedRecordDataFlowController<T> extends AbstractFeedDataFlowControl
                     continue;
                 }
                 tb.reset();
-                parseAndForward(record);
+                incomingRecordsCount++;
+                if (!parseAndForward(record)) {
+                    failedRecordsCount++;
+                }
             }
         } catch (InterruptedException e) {
             //TODO: Find out what could cause an interrupted exception beside termination of a job/feed
@@ -104,19 +109,20 @@ public class FeedRecordDataFlowController<T> extends AbstractFeedDataFlowControl
         }
     }
 
-    private void parseAndForward(IRawRecord<? extends T> record) throws IOException {
+    private boolean parseAndForward(IRawRecord<? extends T> record) throws IOException {
         try {
             dataParser.parse(record, tb.getDataOutput());
         } catch (Exception e) {
             LOGGER.warn(ExternalDataConstants.ERROR_PARSE_RECORD, e);
             feedLogManager.logRecord(record.toString(), ExternalDataConstants.ERROR_PARSE_RECORD);
             // continue the outer loop
-            return;
+            return false;
         }
         tb.addFieldEndOffset();
         addMetaPart(tb, record);
         addPrimaryKeys(tb, record);
         tupleForwarder.addTuple(tb);
+        return true;
     }
 
     protected void addMetaPart(ArrayTupleBuilder tb, IRawRecord<? extends T> record) throws IOException {
@@ -186,5 +192,10 @@ public class FeedRecordDataFlowController<T> extends AbstractFeedDataFlowControl
 
     public IRecordDataParser<T> getParser() {
         return dataParser;
+    }
+
+    public String getStats() {
+        return "{\"incoming-records-count\": " + incomingRecordsCount + ", \"failed-at-parser-records-count\": "
+                + failedRecordsCount + "}";
     }
 }

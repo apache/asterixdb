@@ -28,10 +28,12 @@ import org.apache.hyracks.storage.am.common.api.IIndexDataflowHelper;
 
 public class IndexDropOperatorNodePushable extends AbstractOperatorNodePushable {
     private final IIndexDataflowHelper indexHelper;
+    private final boolean failSliently;
 
-    public IndexDropOperatorNodePushable(IIndexDataflowHelperFactory indexHelperFactory, IHyracksTaskContext ctx,
-            int partition) throws HyracksDataException {
+    public IndexDropOperatorNodePushable(IIndexDataflowHelperFactory indexHelperFactory, boolean failSilently,
+            IHyracksTaskContext ctx, int partition) throws HyracksDataException {
         this.indexHelper = indexHelperFactory.create(ctx.getJobletContext().getServiceContext(), partition);
+        this.failSliently = failSilently;
     }
 
     @Override
@@ -50,7 +52,13 @@ public class IndexDropOperatorNodePushable extends AbstractOperatorNodePushable 
 
     @Override
     public void initialize() throws HyracksDataException {
-        indexHelper.destroy();
+        try {
+            indexHelper.destroy();
+        } catch (HyracksDataException e) {
+            if (!failSliently) {
+                throw e;
+            }
+        }
     }
 
     @Override

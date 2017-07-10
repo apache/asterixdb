@@ -18,34 +18,15 @@
  */
 package org.apache.asterix.runtime.evaluators.constructors;
 
-import java.io.DataOutput;
-import java.io.IOException;
-
-import org.apache.asterix.dataflow.data.nontagged.serde.ABooleanSerializerDeserializer;
-import org.apache.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
-import org.apache.asterix.dataflow.data.nontagged.serde.AFloatSerializerDeserializer;
-import org.apache.asterix.dataflow.data.nontagged.serde.AInt16SerializerDeserializer;
-import org.apache.asterix.dataflow.data.nontagged.serde.AInt32SerializerDeserializer;
-import org.apache.asterix.dataflow.data.nontagged.serde.AInt64SerializerDeserializer;
-import org.apache.asterix.dataflow.data.nontagged.serde.AInt8SerializerDeserializer;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
-import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
-import org.apache.asterix.runtime.exceptions.InvalidDataFormatException;
-import org.apache.asterix.runtime.exceptions.UnsupportedTypeException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.api.IPointable;
-import org.apache.hyracks.data.std.primitive.VoidPointable;
-import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
-import org.apache.hyracks.data.std.util.GrowableArray;
-import org.apache.hyracks.data.std.util.UTF8StringBuilder;
-import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class AStringConstructorDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
@@ -64,98 +45,10 @@ public class AStringConstructorDescriptor extends AbstractScalarFunctionDynamicD
 
             @Override
             public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
-                return new IScalarEvaluator() {
-
-                    private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
-                    private DataOutput out = resultStorage.getDataOutput();
-                    private IPointable inputArg = new VoidPointable();
-                    private IScalarEvaluator eval = args[0].createScalarEvaluator(ctx);
-                    private UTF8StringBuilder builder = new UTF8StringBuilder();
-                    private GrowableArray baaos = new GrowableArray();
-
+                return new AbstractStringConstructorEvaluator(args[0].createScalarEvaluator(ctx)) {
                     @Override
-                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
-                        try {
-                            resultStorage.reset();
-                            baaos.reset();
-                            eval.evaluate(tuple, inputArg);
-                            byte[] serString = inputArg.getByteArray();
-                            int offset = inputArg.getStartOffset();
-                            int len = inputArg.getLength();
-
-                            ATypeTag tt = ATypeTag.VALUE_TYPE_MAPPING[serString[offset]];
-                            if (tt == ATypeTag.STRING) {
-                                result.set(inputArg);
-                            } else {
-                                builder.reset(baaos, len);
-                                int startOffset = offset + 1;
-                                switch (tt) {
-                                    case TINYINT: {
-                                        int i = AInt8SerializerDeserializer.getByte(serString, startOffset);
-                                        builder.appendString(String.valueOf(i));
-                                        break;
-                                    }
-                                    case SMALLINT: {
-                                        int i = AInt16SerializerDeserializer.getShort(serString, startOffset);
-                                        builder.appendString(String.valueOf(i));
-                                        break;
-                                    }
-                                    case INTEGER: {
-                                        int i = AInt32SerializerDeserializer.getInt(serString, startOffset);
-                                        builder.appendString(String.valueOf(i));
-                                        break;
-                                    }
-                                    case BIGINT: {
-                                        long l = AInt64SerializerDeserializer.getLong(serString, startOffset);
-                                        builder.appendString(String.valueOf(l));
-                                        break;
-                                    }
-                                    case DOUBLE: {
-                                        double d = ADoubleSerializerDeserializer.getDouble(serString, startOffset);
-                                        builder.appendString(String.valueOf(d));
-                                        break;
-                                    }
-                                    case FLOAT: {
-                                        float f = AFloatSerializerDeserializer.getFloat(serString, startOffset);
-                                        builder.appendString(String.valueOf(f));
-                                        break;
-                                    }
-                                    case BOOLEAN: {
-                                        boolean b = ABooleanSerializerDeserializer.getBoolean(serString, startOffset);
-                                        builder.appendString(String.valueOf(b));
-                                        break;
-                                    }
-
-                                    // NotYetImplemented
-                                    case CIRCLE:
-                                    case DATE:
-                                    case DATETIME:
-                                    case LINE:
-                                    case TIME:
-                                    case DURATION:
-                                    case YEARMONTHDURATION:
-                                    case DAYTIMEDURATION:
-                                    case INTERVAL:
-                                    case ARRAY:
-                                    case POINT:
-                                    case POINT3D:
-                                    case RECTANGLE:
-                                    case POLYGON:
-                                    case OBJECT:
-                                    case MULTISET:
-                                    case UUID:
-                                    default:
-                                        throw new UnsupportedTypeException(getIdentifier(), serString[offset]);
-                                }
-                                builder.finish();
-                                out.write(ATypeTag.SERIALIZED_STRING_TYPE_TAG);
-                                out.write(baaos.getByteArray(), 0, baaos.getLength());
-                                result.set(resultStorage);
-                            }
-                        } catch (IOException e) {
-                            throw new InvalidDataFormatException(getIdentifier(), e,
-                                    ATypeTag.SERIALIZED_STRING_TYPE_TAG);
-                        }
+                    protected FunctionIdentifier getIdentifier() {
+                        return AStringConstructorDescriptor.this.getIdentifier();
                     }
                 };
             }
@@ -166,5 +59,4 @@ public class AStringConstructorDescriptor extends AbstractScalarFunctionDynamicD
     public FunctionIdentifier getIdentifier() {
         return BuiltinFunctions.STRING_CONSTRUCTOR;
     }
-
 }

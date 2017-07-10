@@ -10,7 +10,18 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [lines]
     :
-    Variable [ Name=$i ]
+    (
+      SELECT ELEMENT [
+      FunctionCall Metadata.resolve@-1[
+        LiteralExpr [STRING] [i]
+        Variable [ Name=$partkey ]
+        Variable [ Name=$g ]
+      ]
+      ]
+      FROM [        Variable [ Name=$g ]
+        AS Variable [ Name=$g ]
+      ]
+    )
   )
 ]
 ]
@@ -26,7 +37,7 @@ Groupby
     Variable [ Name=$i ]
     Field=l_partkey
   ]
-  GROUP AS Variable [ Name=#1 ]
+  GROUP AS Variable [ Name=$g ]
   (
     i:=Variable [ Name=$i ]
   )

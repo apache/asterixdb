@@ -67,9 +67,8 @@ public class ExternalRTreeLocalResource extends LSMRTreeLocalResource {
         IIOManager ioManager = ncServiceCtx.getIoManager();
         FileReference fileRef = ioManager.resolve(path);
         return LSMRTreeUtils.createExternalRTree(ioManager, fileRef, storageManager.getBufferCache(ncServiceCtx),
-                storageManager.getFileMapProvider(ncServiceCtx), typeTraits, cmpFactories, btreeCmpFactories,
-                valueProviderFactories, rtreePolicyType, bloomFilterFalsePositiveRate,
-                mergePolicyFactory.createMergePolicy(mergePolicyProperties, ncServiceCtx),
+                typeTraits, cmpFactories, btreeCmpFactories, valueProviderFactories, rtreePolicyType,
+                bloomFilterFalsePositiveRate, mergePolicyFactory.createMergePolicy(mergePolicyProperties, ncServiceCtx),
                 opTrackerProvider.getOperationTracker(ncServiceCtx), ioSchedulerProvider.getIoScheduler(ncServiceCtx),
                 ioOpCallbackFactory.createIoOpCallback(), linearizeCmpFactory, buddyBTreeFields, durable, isPointMBR,
                 metadataPageManagerFactory);

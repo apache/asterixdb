@@ -69,8 +69,8 @@ public class ADateTimeConstructorDescriptor extends AbstractScalarFunctionDynami
                     private IScalarEvaluator eval = args[0].createScalarEvaluator(ctx);
                     private AMutableDateTime aDateTime = new AMutableDateTime(0L);
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ADateTime> datetimeSerde = SerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ADATETIME);
+                    private ISerializerDeserializer<ADateTime> datetimeSerde =
+                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ADATETIME);
                     private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();
 
                     @Override
@@ -82,7 +82,10 @@ public class ADateTimeConstructorDescriptor extends AbstractScalarFunctionDynami
                             int offset = inputArg.getStartOffset();
                             int len = inputArg.getLength();
 
-                            if (serString[offset] == ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
+                            byte tt = serString[offset];
+                            if (tt == ATypeTag.SERIALIZED_DATETIME_TYPE_TAG) {
+                                result.set(inputArg);
+                            } else if (tt == ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
                                 utf8Ptr.set(serString, offset + 1, len - 1);
                                 int stringLength = utf8Ptr.getUTF8Length();
                                 int startOffset = utf8Ptr.getCharStartOffset();
@@ -104,19 +107,19 @@ public class ADateTimeConstructorDescriptor extends AbstractScalarFunctionDynami
                                     }
                                 }
 
-                                long chrononTimeInMs = ADateParserFactory.parseDatePart(serString, startOffset,
-                                        timeOffset);
+                                long chrononTimeInMs =
+                                        ADateParserFactory.parseDatePart(serString, startOffset, timeOffset);
 
                                 chrononTimeInMs += ATimeParserFactory.parseTimePart(serString,
                                         startOffset + timeOffset + 1, stringLength - timeOffset - 1);
 
                                 aDateTime.setValue(chrononTimeInMs);
                                 datetimeSerde.serialize(aDateTime, out);
+                                result.set(resultStorage);
                             } else {
-                                throw new TypeMismatchException(getIdentifier(), 0, serString[offset],
+                                throw new TypeMismatchException(getIdentifier(), 0, tt,
                                         ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                             }
-                            result.set(resultStorage);
                         } catch (IOException e) {
                             throw new InvalidDataFormatException(getIdentifier(), e,
                                     ATypeTag.SERIALIZED_DATETIME_TYPE_TAG);

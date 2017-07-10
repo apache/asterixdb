@@ -72,7 +72,6 @@ import org.apache.hyracks.storage.common.ISearchOperationCallback;
 import org.apache.hyracks.storage.common.ISearchPredicate;
 import org.apache.hyracks.storage.common.MultiComparator;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
-import org.apache.hyracks.storage.common.file.IFileMapProvider;
 
 public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeIndex, ITwoPCIndex {
 
@@ -100,12 +99,12 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
             IBufferCache diskBufferCache, ILSMIndexFileManager fileManager,
             TreeIndexFactory<BTree> bulkLoadBTreeFactory, TreeIndexFactory<BTree> copyBtreeFactory,
             TreeIndexFactory<BTree> buddyBtreeFactory, BloomFilterFactory bloomFilterFactory,
-            IFileMapProvider diskFileMapProvider, double bloomFilterFalsePositiveRate, ILSMMergePolicy mergePolicy,
-            ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallback ioOpCallback,
+            double bloomFilterFalsePositiveRate, ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker,
+            ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallback ioOpCallback,
             IBinaryComparatorFactory[] btreeCmpFactories, IBinaryComparatorFactory[] buddyBtreeCmpFactories,
             int[] buddyBTreeFields, boolean durable) {
-        super(ioManager, diskBufferCache, fileManager, diskFileMapProvider, bloomFilterFalsePositiveRate, mergePolicy,
-                opTracker, ioScheduler, ioOpCallback, durable);
+        super(ioManager, diskBufferCache, fileManager, bloomFilterFalsePositiveRate, mergePolicy, opTracker,
+                ioScheduler, ioOpCallback, durable);
         this.btreeCmpFactories = btreeCmpFactories;
         this.buddyBtreeCmpFactories = buddyBtreeCmpFactories;
         this.buddyBTreeFields = buddyBTreeFields;
@@ -121,12 +120,7 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
 
     @Override
     public void create() throws HyracksDataException {
-        if (isActive) {
-            throw new HyracksDataException("Failed to create the index since it is activated.");
-        }
-        fileManager.deleteDirs();
-        fileManager.createDirs();
-        diskComponents.clear();
+        super.create();
         secondDiskComponents.clear();
     }
 
@@ -372,7 +366,8 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
 
         ioScheduler.scheduleOperation(new LSMBTreeWithBuddyMergeOperation(accessor, mergingComponents, cursor,
                 relMergeFileRefs.getInsertIndexFileReference(), relMergeFileRefs.getDeleteIndexFileReference(),
-                relMergeFileRefs.getBloomFilterFileReference(), callback, fileManager.getBaseDir(), keepDeleteTuples));
+                relMergeFileRefs.getBloomFilterFileReference(), callback, fileManager.getBaseDir().getAbsolutePath(),
+                keepDeleteTuples));
     }
 
     // This method creates the appropriate opContext for the targeted version
@@ -675,7 +670,8 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
         }
     }
 
-    protected ILSMDiskComponent createBulkLoadTarget() throws HyracksDataException {
+    @Override
+    public ILSMDiskComponent createBulkLoadTarget() throws HyracksDataException {
         LSMComponentFileReferences componentFileRefs = fileManager.getRelFlushFileReference();
         return createDiskComponent(bulkComponentFactory, componentFileRefs.getInsertIndexFileReference(),
                 componentFileRefs.getDeleteIndexFileReference(), componentFileRefs.getBloomFilterFileReference(), true);
@@ -773,14 +769,12 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
         BTree btree = component.getBTree();
         BTree buddyBtree = component.getBuddyBTree();
         BloomFilter bloomFilter = component.getBloomFilter();
-        btree.deactivateCloseHandle();
-        buddyBtree.deactivateCloseHandle();
+        btree.deactivate();
+        buddyBtree.deactivate();
         bloomFilter.deactivate();
-    }
-
-    @Override
-    protected void destroyMemoryComponent(ILSMMemoryComponent c) throws HyracksDataException {
-        //do nothing since external index never use memory components
+        btree.purge();
+        buddyBtree.purge();
+        bloomFilter.purge();
     }
 
     @Override

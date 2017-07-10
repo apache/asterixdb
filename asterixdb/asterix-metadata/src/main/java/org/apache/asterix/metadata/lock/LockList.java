@@ -19,7 +19,9 @@
 package org.apache.asterix.metadata.lock;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.ErrorCode;
@@ -29,7 +31,8 @@ import org.apache.commons.lang3.tuple.Pair;
  * The LockList is used for two phase locking.
  */
 public class LockList {
-    private List<Pair<IMetadataLock.Mode, IMetadataLock>> locks = new ArrayList<>();
+    private final List<Pair<IMetadataLock.Mode, IMetadataLock>> locks = new ArrayList<>();
+    private final Set<String> lockSet = new HashSet<>();
     private boolean lockPhase = true;
 
     /**
@@ -44,8 +47,12 @@ public class LockList {
         if (!lockPhase) {
             throw new AsterixException(ErrorCode.COMPILATION_TWO_PHASE_LOCKING_VIOLATION);
         }
+        if (lockSet.contains(lock.getKey())) {
+            return;
+        }
         lock.acquire(mode);
         locks.add(Pair.of(mode, lock));
+        lockSet.add(lock.getKey());
     }
 
     /**
@@ -58,6 +65,7 @@ public class LockList {
             pair.getRight().release(pair.getLeft());
         }
         locks.clear();
+        lockSet.clear();
         lockPhase = false;
     }
 

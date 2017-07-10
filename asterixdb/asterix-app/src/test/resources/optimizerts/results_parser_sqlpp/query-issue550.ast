@@ -161,7 +161,9 @@ RecordConstructor [
       SELECT ELEMENT [
       Variable [ Name=$srec ]
       ]
-      FROM [        Variable [ Name=$s ]
+      FROM [        FunctionCall Metadata.dataset@1[
+          LiteralExpr [STRING] [s]
+        ]
         AS Variable [ Name=$srec ]
       ]
     )

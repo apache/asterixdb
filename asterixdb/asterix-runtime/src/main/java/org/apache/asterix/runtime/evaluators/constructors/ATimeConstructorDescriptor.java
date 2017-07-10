@@ -77,13 +77,16 @@ public class ATimeConstructorDescriptor extends AbstractScalarFunctionDynamicDes
                     @Override
                     public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                         try {
-                            resultStorage.reset();
                             eval.evaluate(tuple, inputArg);
                             byte[] serString = inputArg.getByteArray();
                             int offset = inputArg.getStartOffset();
                             int len = inputArg.getLength();
 
-                            if (serString[offset] == ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
+                            byte tt = serString[offset];
+                            if (tt == ATypeTag.SERIALIZED_TIME_TYPE_TAG) {
+                                result.set(inputArg);
+                            } else if (tt == ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
+                                resultStorage.reset();
                                 utf8Ptr.set(serString, offset + 1, len - 1);
                                 int stringLength = utf8Ptr.getUTF8Length();
                                 int startOffset = utf8Ptr.getCharStartOffset();
@@ -103,11 +106,11 @@ public class ATimeConstructorDescriptor extends AbstractScalarFunctionDynamicDes
 
                                 aTime.setValue(chrononTimeInMs);
                                 timeSerde.serialize(aTime, out);
+                                result.set(resultStorage);
                             } else {
-                                throw new TypeMismatchException(getIdentifier(), 0, serString[offset],
+                                throw new TypeMismatchException(getIdentifier(), 0, tt,
                                         ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                             }
-                            result.set(resultStorage);
                         } catch (IOException e) {
                             throw new InvalidDataFormatException(getIdentifier(), e,
                                     ATypeTag.SERIALIZED_POLYGON_TYPE_TAG);

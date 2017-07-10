@@ -19,15 +19,15 @@
 
 package org.apache.hyracks.storage.am.lsm.invertedindex.search;
 
-import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndex;
+import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInPlaceInvertedIndex;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedListCursor;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IObjectFactory;
 
 public class InvertedListCursorFactory implements IObjectFactory<IInvertedListCursor> {
 
-    private final IInvertedIndex invIndex;
+    private final IInPlaceInvertedIndex invIndex;
 
-    public InvertedListCursorFactory(IInvertedIndex invIndex) {
+    public InvertedListCursorFactory(IInPlaceInvertedIndex invIndex) {
         this.invIndex = invIndex;
     }
 
