@@ -266,6 +266,7 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
             hasSecondaryIndex = true;
             // Get the secondary fields names and types
             List<List<String>> secondaryKeyFields = index.getKeyFieldNames();
+            List<IAType> secondaryKeyTypes = index.getKeyFieldTypes();
             List<LogicalVariable> secondaryKeyVars = new ArrayList<>();
             List<Mutable<ILogicalExpression>> secondaryExpressions = new ArrayList<>();
             List<Mutable<ILogicalExpression>> beforeOpSecondaryExpressions = new ArrayList<>();
@@ -273,7 +274,7 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
 
             for (int i = 0; i < secondaryKeyFields.size(); i++) {
                 IndexFieldId indexFieldId = new IndexFieldId(index.getKeyFieldSourceIndicators().get(i),
-                        secondaryKeyFields.get(i));
+                        secondaryKeyFields.get(i), secondaryKeyTypes.get(i).getTypeTag());
                 LogicalVariable skVar = fieldVarsForNewRecord.get(indexFieldId);
                 secondaryKeyVars.add(skVar);
                 secondaryExpressions.add(new MutableObject<ILogicalExpression>(new VariableReferenceExpression(skVar)));
@@ -550,7 +551,8 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
             List<List<String>> skNames = index.getKeyFieldNames();
             List<Integer> indicators = index.getKeyFieldSourceIndicators();
             for (int i = 0; i < index.getKeyFieldNames().size(); i++) {
-                IndexFieldId indexFieldId = new IndexFieldId(indicators.get(i), skNames.get(i));
+                IndexFieldId indexFieldId =
+                        new IndexFieldId(indicators.get(i), skNames.get(i), skTypes.get(i).getTypeTag());
                 if (fieldAccessVars.containsKey(indexFieldId)) {
                     // already handled in a different index
                     continue;
@@ -684,27 +686,41 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
         return filterExpression;
     }
 
-    private class IndexFieldId {
-        private int indicator;
-        private List<String> fieldName;
+    private final class IndexFieldId {
+        private final int indicator;
+        private final List<String> fieldName;
+        private final ATypeTag fieldType;
 
-        public IndexFieldId(int indicator, List<String> fieldName) {
+        private IndexFieldId(int indicator, List<String> fieldName, ATypeTag fieldType) {
             this.indicator = indicator;
             this.fieldName = fieldName;
+            this.fieldType = fieldType;
         }
 
         @Override
         public int hashCode() {
-            return 31 * indicator + fieldName.hashCode();
+            int result = indicator;
+            result = 31 * result + fieldName.hashCode();
+            result = 31 * result + fieldType.hashCode();
+            return result;
         }
 
         @Override
         public boolean equals(Object o) {
-            if (o instanceof IndexFieldId) {
-                IndexFieldId oIndexFieldId = (IndexFieldId) o;
-                return indicator == oIndexFieldId.indicator && fieldName.equals(oIndexFieldId.fieldName);
+            if (this == o) {
+                return true;
             }
-            return false;
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+            IndexFieldId that = (IndexFieldId) o;
+            if (indicator != that.indicator) {
+                return false;
+            }
+            if (!fieldName.equals(that.fieldName)) {
+                return false;
+            }
+            return fieldType == that.fieldType;
         }
     }
 }

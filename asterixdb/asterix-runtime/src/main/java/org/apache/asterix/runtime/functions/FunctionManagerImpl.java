@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.asterix.runtime.evaluators.common;
+package org.apache.asterix.runtime.functions;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -31,10 +31,10 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 
-public class FunctionManagerImpl implements IFunctionManager {
+final class FunctionManagerImpl implements IFunctionManager {
     private final Map<Pair<FunctionIdentifier, Integer>, IFunctionDescriptorFactory> functions;
 
-    public FunctionManagerImpl() {
+    FunctionManagerImpl() {
         functions = new HashMap<>();
     }
 
@@ -51,7 +51,7 @@ public class FunctionManagerImpl implements IFunctionManager {
     @Override
     public synchronized void registerFunction(IFunctionDescriptorFactory descriptorFactory) {
         FunctionIdentifier fid = descriptorFactory.createFunctionDescriptor().getIdentifier();
-        functions.put(new Pair<FunctionIdentifier, Integer>(fid, fid.getArity()), descriptorFactory);
+        functions.put(new Pair<>(fid, fid.getArity()), descriptorFactory);
     }
 
     @Override
@@ -63,6 +63,6 @@ public class FunctionManagerImpl implements IFunctionManager {
 
     @Override
     public synchronized Iterator<IFunctionDescriptorFactory> iterator() {
-        return new ArrayList<IFunctionDescriptorFactory>(functions.values()).iterator();
+        return new ArrayList<>(functions.values()).iterator();
     }
 }

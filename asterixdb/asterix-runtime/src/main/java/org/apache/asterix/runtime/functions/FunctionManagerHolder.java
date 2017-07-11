@@ -16,16 +16,26 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.om.functions;
+package org.apache.asterix.runtime.functions;
 
-public class FunctionManagerHolder {
-    private static IFunctionManager functionManager;
+import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
+import org.apache.asterix.om.functions.IFunctionManager;
+
+public final class FunctionManagerHolder {
+    private static final IFunctionManager functionManager = createFunctionManager();
 
     public static IFunctionManager getFunctionManager() {
         return functionManager;
     }
 
-    public static void setFunctionManager(IFunctionManager manager) {
-        functionManager = manager;
+    private static IFunctionManager createFunctionManager() {
+        FunctionManagerImpl mgr = new FunctionManagerImpl();
+        for (IFunctionDescriptorFactory fdFactory : FunctionCollection.getFunctionDescriptorFactories()) {
+            mgr.registerFunction(fdFactory);
+        }
+        return mgr;
+    }
+
+    private FunctionManagerHolder() {
     }
 }

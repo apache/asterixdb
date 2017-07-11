@@ -444,8 +444,8 @@ public class AccessMethodUtils {
                 IAType probeType = TypeComputeUtils.getActualType(optFuncExpr.getFieldType(probeVarIndex));
                 ATypeTag probeTypeTypeTag = probeType.getTypeTag();
                 if (probeTypeTypeTag != indexedFieldTypeTag) {
-                    ScalarFunctionCallExpression castFunc =
-                            new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(BuiltinFunctions.CAST_TYPE_LAX));
+                    ScalarFunctionCallExpression castFunc = new ScalarFunctionCallExpression(
+                            FunctionUtil.getFunctionInfo(BuiltinFunctions.CAST_TYPE_LAX));
                     castFunc.getArguments().add(new MutableObject<>(probeExpr));
                     TypeCastUtils.setRequiredAndInputTypes(castFunc, indexedFieldType, probeType);
                     boolean realTypeConvertedToIntegerType =
