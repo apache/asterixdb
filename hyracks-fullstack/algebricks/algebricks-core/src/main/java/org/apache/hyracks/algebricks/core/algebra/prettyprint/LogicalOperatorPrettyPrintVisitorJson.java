@@ -440,7 +440,8 @@ public class LogicalOperatorPrettyPrintVisitorJson implements ILogicalOperatorVi
             plan.append("\"with-filter-on\":{");
         }
         if (minFilterVars != null) {
-            plan.append("\"min\":[");
+            buffer.append("\n");
+            addIndent(indent).append("\"min\":[");
             boolean first = true;
             for (LogicalVariable v : minFilterVars){
                 if(!first)
@@ -451,10 +452,11 @@ public class LogicalOperatorPrettyPrintVisitorJson implements ILogicalOperatorVi
             buffer.append("]");
         }
         if(minFilterVars != null && maxFilterVars != null){
-            buffer.append(",\n");
+            buffer.append(",");
         }
         if (maxFilterVars != null) {
-            plan.append("\"max\":[");
+            buffer.append("\n");
+            addIndent(indent).append("\"max\":[");
             boolean first = true;
             for (LogicalVariable v : maxFilterVars){
                 if(!first)
@@ -563,10 +565,11 @@ public class LogicalOperatorPrettyPrintVisitorJson implements ILogicalOperatorVi
                 buffer.append(",\n");
                 addIndent(indent).append("\"additional-before-upsert\":\"" + op.getBeforeOpAdditionalNonFilteringVars()+"\"");
             }
-            addIndent(indent).append("},\n");
+            addIndent(indent).append("}");
         }
         if (op.isBulkload()) {
-            addIndent(indent).append(",\n\"bulkload\":\"true\"");
+            buffer.append(",\n");
+            addIndent(indent).append("\"bulkload\":\"true\"");
         }
         return null;
     }
