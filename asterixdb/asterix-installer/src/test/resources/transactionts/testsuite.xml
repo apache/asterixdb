@@ -68,6 +68,12 @@
     </test-case>
 
     <test-case FilePath="recover_after_abort">
+      <compilation-unit name="primary_plus_correlated_rtree_index">
+        <output-dir compare="Text">primary_plus_rtree_index</output-dir>
+      </compilation-unit>
+    </test-case>
+
+    <test-case FilePath="recover_after_abort">
       <compilation-unit name="primary_plus_rtree_index_insert_and_delete">
         <output-dir compare="Text">primary_plus_rtree_index_insert_and_delete</output-dir>
       </compilation-unit>
@@ -80,13 +86,31 @@
     </test-case>
 
     <test-case FilePath="recover_after_abort">
+      <compilation-unit name="primary_plus_keyword_correlated_secondary_index">
+        <output-dir compare="Text">primary_plus_keyword_secondary_index</output-dir>
+      </compilation-unit>
+    </test-case>
+
+    <test-case FilePath="recover_after_abort">
       <compilation-unit name="primary_plus_ngram_index">
         <output-dir compare="Text">primary_plus_ngram_index</output-dir>
       </compilation-unit>
     </test-case>
 
     <test-case FilePath="recover_after_abort">
+      <compilation-unit name="primary_plus_correlated_ngram_index">
+        <output-dir compare="Text">primary_plus_ngram_index</output-dir>
+      </compilation-unit>
+    </test-case>
+
+    <test-case FilePath="recover_after_abort">
       <compilation-unit name="primary_plus_multiple_secondary_indices">
+        <output-dir compare="Text">primary_plus_multiple_secondary_indices</output-dir>
+      </compilation-unit>
+    </test-case>
+
+    <test-case FilePath="recover_after_abort">
+      <compilation-unit name="primary_plus_multiple_correlated_secondary_indices">
         <output-dir compare="Text">primary_plus_multiple_secondary_indices</output-dir>
       </compilation-unit>
     </test-case>

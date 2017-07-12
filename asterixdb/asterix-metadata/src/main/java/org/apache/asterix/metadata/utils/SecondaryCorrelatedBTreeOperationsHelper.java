@@ -99,8 +99,9 @@ public class SecondaryCorrelatedBTreeOperationsHelper extends SecondaryCorrelate
                 getTaggedSecondaryComparatorFactories(secondaryComparatorFactories), taggedSecondaryRecDesc);
 
         // Create secondary BTree bulk load op.
-        LSMSecondaryIndexBulkLoadOperatorDescriptor secondaryBulkLoadOp = createTreeIndexBulkLoadOp(spec,
-                metadataProvider, taggedSecondaryRecDesc, getNumSecondaryKeys(), numPrimaryKeys, false);
+        LSMSecondaryIndexBulkLoadOperatorDescriptor secondaryBulkLoadOp =
+                createTreeIndexBulkLoadOp(spec, metadataProvider, taggedSecondaryRecDesc,
+                        createFieldPermutationForBulkLoadOp(), getNumSecondaryKeys(), numPrimaryKeys, false);
 
         AlgebricksMetaOperatorDescriptor metaOp =
                 new AlgebricksMetaOperatorDescriptor(spec, 1, 0, new IPushRuntimeFactory[] { new SinkRuntimeFactory() },

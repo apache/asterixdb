@@ -29,6 +29,7 @@ import org.apache.hyracks.data.std.primitive.LongPointable;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.common.api.IIndexDataflowHelper;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
+import org.apache.hyracks.storage.am.common.tuples.PermutingFrameTupleReference;
 import org.apache.hyracks.storage.am.common.tuples.PermutingTupleReference;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponentBulkLoader;
@@ -45,7 +46,7 @@ import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndex;
  */
 public class LSMSecondaryIndexBulkLoadNodePushable extends AbstractLSMSecondaryIndexCreationNodePushable {
     // with tag fields
-
+    private final PermutingFrameTupleReference tuple;
     private final PermutingTupleReference sourceTuple;
     private final PermutingTupleReference deletedKeyTuple;
 
@@ -63,16 +64,17 @@ public class LSMSecondaryIndexBulkLoadNodePushable extends AbstractLSMSecondaryI
 
     public LSMSecondaryIndexBulkLoadNodePushable(IHyracksTaskContext ctx, int partition, RecordDescriptor inputRecDesc,
             IIndexDataflowHelperFactory primaryIndexHelperFactory,
-            IIndexDataflowHelperFactory secondaryIndexHelperFactory, int numTagFields, int numSecondaryKeys,
-            int numPrimaryKeys, boolean hasBuddyBTree) throws HyracksDataException {
+            IIndexDataflowHelperFactory secondaryIndexHelperFactory, int[] fieldPermutation, int numTagFields,
+            int numSecondaryKeys, int numPrimaryKeys, boolean hasBuddyBTree) throws HyracksDataException {
         super(ctx, partition, inputRecDesc, numTagFields, numSecondaryKeys, numPrimaryKeys, hasBuddyBTree);
 
         this.primaryIndexHelper =
                 primaryIndexHelperFactory.create(ctx.getJobletContext().getServiceContext(), partition);
         this.secondaryIndexHelper =
                 secondaryIndexHelperFactory.create(ctx.getJobletContext().getServiceContext(), partition);
+        this.tuple = new PermutingFrameTupleReference(fieldPermutation);
 
-        int[] sourcePermutation = new int[inputRecDesc.getFieldCount() - numTagFields];
+        int[] sourcePermutation = new int[fieldPermutation.length - numTagFields];
         for (int i = 0; i < sourcePermutation.length; i++) {
             sourcePermutation[i] = i + numTagFields;
         }
@@ -170,7 +172,6 @@ public class LSMSecondaryIndexBulkLoadNodePushable extends AbstractLSMSecondaryI
                     loadNewComponent(componentPos);
                     currentComponentPos = componentPos;
                 }
-
                 if (isAntiMatterTuple(tuple)) {
                     addAntiMatterTuple(tuple);
                 } else {

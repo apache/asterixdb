@@ -113,6 +113,7 @@ public class ErrorCode {
     public static final int DATASET_ID_EXHAUSTED = 1040;
     public static final int INDEX_ILLEGAL_ENFORCED_NON_OPTIONAL = 1041;
     public static final int INDEX_ILLEGAL_NON_ENFORCED_TYPED = 1042;
+    public static final int INDEX_RTREE_MULTIPLE_FIELDS_NOT_ALLOWED = 1043;
 
     // Feed errors
     public static final int DATAFLOW_ILLEGAL_STATE = 3001;

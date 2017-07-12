@@ -24,6 +24,8 @@ import java.nio.ByteBuffer;
 
 import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.dataflow.value.IMissingWriter;
+import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.util.GrowableArray;
@@ -31,6 +33,8 @@ import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import org.apache.hyracks.dataflow.common.comm.util.FrameUtils;
+import org.apache.hyracks.dataflow.common.data.accessors.FrameTupleReference;
+import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
 import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizer;
 import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.IToken;
@@ -45,6 +49,9 @@ public class BinaryTokenizerOperatorNodePushable extends AbstractUnaryInputUnary
     private final boolean writeKeyFieldsFirst;
     private final RecordDescriptor inputRecDesc;
     private final RecordDescriptor outputRecDesc;
+    private final boolean writeMissing;
+    private final IMissingWriter missingWriter;
+    private final FrameTupleReference tuple = new FrameTupleReference();
 
     private FrameTupleAccessor accessor;
     private ArrayTupleBuilder builder;
@@ -53,7 +60,8 @@ public class BinaryTokenizerOperatorNodePushable extends AbstractUnaryInputUnary
 
     public BinaryTokenizerOperatorNodePushable(IHyracksTaskContext ctx, RecordDescriptor inputRecDesc,
             RecordDescriptor outputRecDesc, IBinaryTokenizer tokenizer, int docField, int[] keyFields,
-            boolean addNumTokensKey, boolean writeKeyFieldsFirst) {
+            boolean addNumTokensKey, boolean writeKeyFieldsFirst, boolean writeMissing,
+            IMissingWriterFactory missingWriterFactory) {
         this.ctx = ctx;
         this.tokenizer = tokenizer;
         this.docField = docField;
@@ -62,6 +70,8 @@ public class BinaryTokenizerOperatorNodePushable extends AbstractUnaryInputUnary
         this.inputRecDesc = inputRecDesc;
         this.outputRecDesc = outputRecDesc;
         this.writeKeyFieldsFirst = writeKeyFieldsFirst;
+        this.writeMissing = writeMissing;
+        this.missingWriter = missingWriterFactory.createMissingWriter();
     }
 
     @Override
@@ -79,76 +89,85 @@ public class BinaryTokenizerOperatorNodePushable extends AbstractUnaryInputUnary
         int tupleCount = accessor.getTupleCount();
 
         for (int i = 0; i < tupleCount; i++) {
+            tuple.reset(accessor, i);
+
             short numTokens = 0;
 
-            tokenizer.reset(accessor.getBuffer().array(), accessor.getTupleStartOffset(i)
-                    + accessor.getFieldSlotsLength() + accessor.getFieldStartOffset(i, docField),
-                    accessor.getFieldLength(i, docField));
+            if (!isDocFieldMissing(tuple)) {
+                tokenizer.reset(tuple.getFieldData(docField), tuple.getFieldStart(docField),
+                        tuple.getFieldLength(docField));
+                if (addNumTokensKey) {
+                    // Get the total number of tokens.
+                    numTokens = tokenizer.getTokensCount();
+                }
+                // Write token and data into frame by following the order specified
+                // in the writeKeyFieldsFirst field.
+                while (tokenizer.hasNext()) {
+                    tokenizer.next();
+                    IToken token = tokenizer.getToken();
+                    writeTuple(token, numTokens, i);
+                }
+            } else if (writeMissing) {
+                writeTuple(null, 0, i);
+            }
+        }
 
-            if (addNumTokensKey) {
-                // Get the total number of tokens.
-                numTokens = tokenizer.getTokensCount();
+    }
+
+    private void writeTuple(IToken token, int numTokens, int fieldIdx) throws HyracksDataException {
+        builder.reset();
+
+        // Writing Order: token, number of token, keyfield1 ... n
+        if (!writeKeyFieldsFirst) {
+            try {
+                if (token != null) {
+                    token.serializeToken(builderData);
+                    builder.addFieldEndOffset();
+                } else {
+                    missingWriter.writeMissing(builder.getDataOutput());
+                    builder.addFieldEndOffset();
+                }
+
+                // Add number of tokens if requested.
+                if (addNumTokensKey) {
+                    builder.getDataOutput().writeShort(numTokens);
+                    builder.addFieldEndOffset();
+                }
+            } catch (IOException e) {
+                throw HyracksDataException.create(e);
             }
 
-            // Write token and data into frame by following the order specified
-            // in the writeKeyFieldsFirst field.
-            while (tokenizer.hasNext()) {
-
-                tokenizer.next();
-
-                builder.reset();
-
-                // Writing Order: token, number of token, keyfield1 ... n
-                if (!writeKeyFieldsFirst) {
-                    try {
-                        IToken token = tokenizer.getToken();
-                        token.serializeToken(builderData);
-
-                        builder.addFieldEndOffset();
-                        // Add number of tokens if requested.
-                        if (addNumTokensKey) {
-                            builder.getDataOutput().writeShort(numTokens);
-                            builder.addFieldEndOffset();
-                        }
-                    } catch (IOException e) {
-                        throw new HyracksDataException(e.getMessage());
-                    }
-
-                    for (int k = 0; k < keyFields.length; k++) {
-                        builder.addField(accessor, i, keyFields[k]);
-                    }
-
-                }
-                // Writing Order: keyfield1 ... n, token, number of token
-                else {
-
-                    for (int k = 0; k < keyFields.length; k++) {
-                        builder.addField(accessor, i, keyFields[k]);
-                    }
-
-                    try {
-                        IToken token = tokenizer.getToken();
-                        token.serializeToken(builderData);
-
-                        builder.addFieldEndOffset();
-                        // Add number of tokens if requested.
-                        if (addNumTokensKey) {
-                            builder.getDataOutput().writeShort(numTokens);
-                            builder.addFieldEndOffset();
-                        }
-                    } catch (IOException e) {
-                        throw new HyracksDataException(e.getMessage());
-                    }
-
-                }
-
-                FrameUtils.appendToWriter(writer, appender, builder.getFieldEndOffsets(), builder.getByteArray(), 0,
-                        builder.getSize());
-
+            for (int k = 0; k < keyFields.length; k++) {
+                builder.addField(accessor, fieldIdx, keyFields[k]);
             }
 
         }
+        // Writing Order: keyfield1 ... n, token, number of token
+        else {
+            for (int k = 0; k < keyFields.length; k++) {
+                builder.addField(accessor, fieldIdx, keyFields[k]);
+            }
 
+            try {
+                if (token != null) {
+                    token.serializeToken(builderData);
+                    builder.addFieldEndOffset();
+                } else {
+                    missingWriter.writeMissing(builder.getDataOutput());
+                    builder.addFieldEndOffset();
+                }
+                // Add number of tokens if requested.
+                if (addNumTokensKey) {
+                    builder.getDataOutput().writeShort(numTokens);
+                    builder.addFieldEndOffset();
+                }
+            } catch (IOException e) {
+                throw HyracksDataException.create(e);
+            }
+        }
+
+        FrameUtils.appendToWriter(writer, appender, builder.getFieldEndOffsets(), builder.getByteArray(), 0,
+                builder.getSize());
     }
 
     @Override
@@ -168,5 +187,15 @@ public class BinaryTokenizerOperatorNodePushable extends AbstractUnaryInputUnary
     @Override
     public void flush() throws HyracksDataException {
         appender.flush(writer);
+    }
+
+    /**
+     * Returns whether the doc field is missing (only with a type tag)
+     *
+     * @param tuple
+     * @return
+     */
+    private boolean isDocFieldMissing(ITupleReference tuple) {
+        return tuple.getFieldLength(docField) <= 1;
     }
 }

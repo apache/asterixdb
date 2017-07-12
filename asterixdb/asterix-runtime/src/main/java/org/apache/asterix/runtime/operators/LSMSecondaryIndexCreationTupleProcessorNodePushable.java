@@ -36,6 +36,7 @@ import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleReference;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import org.apache.hyracks.dataflow.common.comm.util.FrameUtils;
+import org.apache.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.dataflow.common.data.marshalling.BooleanSerializerDeserializer;
 import org.apache.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
@@ -69,6 +70,7 @@ import org.apache.hyracks.dataflow.std.base.AbstractStateObject;
  * [component pos, anti-matter flag, secondary keys, primary keys, filter values]
  */
 public class LSMSecondaryIndexCreationTupleProcessorNodePushable extends AbstractLSMSecondaryIndexCreationNodePushable {
+    private final FrameTupleReference tuple = new FrameTupleReference();
     // prevSourceTuple stores the previous matter tuple
     private final ArrayTupleBuilder prevMatterTupleBuilder;
     private final ArrayTupleReference prevMatterTuple = new ArrayTupleReference();
