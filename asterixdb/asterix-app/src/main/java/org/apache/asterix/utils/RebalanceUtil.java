@@ -42,6 +42,7 @@ import org.apache.asterix.metadata.lock.LockList;
 import org.apache.asterix.metadata.lock.MetadataLockManager;
 import org.apache.asterix.metadata.utils.DatasetUtil;
 import org.apache.asterix.metadata.utils.IndexUtil;
+import org.apache.asterix.rebalance.IDatasetRebalanceCallback;
 import org.apache.asterix.runtime.job.listener.JobEventListenerFactory;
 import org.apache.asterix.transaction.management.service.transaction.JobIdFactory;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
@@ -85,7 +86,8 @@ public class RebalanceUtil {
      * @throws Exception
      */
     public static void rebalance(String dataverseName, String datasetName, Set<String> targetNcNames,
-            MetadataProvider metadataProvider, IHyracksClientConnection hcc) throws Exception {
+            MetadataProvider metadataProvider, IHyracksClientConnection hcc,
+            IDatasetRebalanceCallback datasetRebalanceCallback) throws Exception {
         Dataset sourceDataset;
         Dataset targetDataset;
         // Executes the first Metadata transaction.
@@ -115,10 +117,11 @@ public class RebalanceUtil {
                     metadataProvider);
 
             // The target dataset for rebalance.
-            targetDataset = new Dataset(sourceDataset, true, nodeGroupName);
+            targetDataset = sourceDataset.getTargetDatasetForRebalance(nodeGroupName);
+
 
             // Rebalances the source dataset into the target dataset.
-            rebalance(sourceDataset, targetDataset, metadataProvider, hcc);
+            rebalance(sourceDataset, targetDataset, metadataProvider, hcc, datasetRebalanceCallback);
 
             // Complete the metadata transaction.
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
@@ -192,9 +195,12 @@ public class RebalanceUtil {
 
     // Rebalances from the source to the target.
     private static void rebalance(Dataset source, Dataset target, MetadataProvider metadataProvider,
-            IHyracksClientConnection hcc) throws Exception {
+            IHyracksClientConnection hcc, IDatasetRebalanceCallback datasetRebalanceCallback) throws Exception {
         // Drops the target dataset files (if any) to make rebalance idempotent.
         dropDatasetFiles(target, metadataProvider, hcc);
+
+        // Performs the specified operation before the target dataset is populated.
+        datasetRebalanceCallback.beforeRebalance(metadataProvider, source, target, hcc);
 
         // Creates the rebalance target.
         createRebalanceTarget(target, metadataProvider, hcc);
@@ -204,6 +210,9 @@ public class RebalanceUtil {
 
         // Creates and loads indexes for the rebalance target.
         createAndLoadSecondaryIndexesForTarget(source, target, metadataProvider, hcc);
+
+        // Performs the specified operation after the target dataset is populated.
+        datasetRebalanceCallback.afterRebalance(metadataProvider, source, target, hcc);
     }
 
     // Switches the metadata entity from the source dataset to the target dataset.
@@ -305,8 +314,7 @@ public class RebalanceUtil {
     // Creates the commit operator for populating the target dataset.
     private static IOperatorDescriptor createUpsertCommitOp(JobSpecification spec, MetadataProvider metadataProvider,
             JobId jobId, Dataset target) throws AlgebricksException {
-        int numKeys = target.getPrimaryKeys().size();
-        int[] primaryKeyFields = IntStream.range(0, numKeys).toArray();
+        int[] primaryKeyFields = getPrimaryKeyPermutationForUpsert(target);
         return new AlgebricksMetaOperatorDescriptor(spec, 1, 0,
                 new IPushRuntimeFactory[] {
                         target.getCommitRuntimeFactory(metadataProvider, jobId, primaryKeyFields, true) },
@@ -350,5 +358,27 @@ public class RebalanceUtil {
                     metadataProvider);
             JobUtils.runJob(hcc, indexLoadingJobSpec, true);
         }
+    }
+
+    // Gets the primary key permutation for upserts.
+    private static int[] getPrimaryKeyPermutationForUpsert(Dataset dataset) {
+        // prev record first
+        int f = 1;
+        // add the previous meta second
+        if (dataset.hasMetaPart()) {
+            f++;
+        }
+        // add the previous filter third
+        int numFilterFields = DatasetUtil.getFilterField(dataset) == null ? 0 : 1;
+        if (numFilterFields > 0) {
+            f++;
+        }
+        int numPrimaryKeys = dataset.getPrimaryKeys().size();
+        int[] pkIndexes = new int[numPrimaryKeys];
+        for (int i = 0; i < pkIndexes.length; i++) {
+            pkIndexes[i] = f;
+            f++;
+        }
+        return pkIndexes;
     }
 }

@@ -43,6 +43,7 @@ import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Dataverse;
+import org.apache.asterix.rebalance.NoOpDatasetRebalanceCallback;
 import org.apache.asterix.utils.RebalanceUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
@@ -242,7 +243,7 @@ public class RebalanceApiServlet extends AbstractServlet {
         IHyracksClientConnection hcc = (IHyracksClientConnection) ctx.get(HYRACKS_CONNECTION_ATTR);
         MetadataProvider metadataProvider = new MetadataProvider(appCtx, null, new StorageComponentProvider());
         RebalanceUtil.rebalance(dataverseName, datasetName, new LinkedHashSet<>(Arrays.asList(targetNodes)),
-                metadataProvider, hcc);
+                metadataProvider, hcc, NoOpDatasetRebalanceCallback.INSTANCE);
     }
 
     // Sends HTTP response to the request client.
