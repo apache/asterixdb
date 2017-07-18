@@ -930,33 +930,22 @@ This variant of the example query returns:
            "uid": 2
        } ]
 
-Because this is a fairly common case, a third variant with output identical to the second variant is also possible:
-
-##### Example
-
-    SELECT uid, msg AS msgs
-    FROM GleambookMessages gbm
-    GROUP BY gbm.authorId AS uid
-    GROUP AS g(gbm as msg);
-
-This variant of the query exploits a bit of SQL-style "syntactic sugar" that SQL++ offers to shorten some user queries.
-In particular, in the `SELECT` list, the reference to the `GROUP` variable field `msg` -- because it references a field of the group variable -- is allowed but is "pluralized". As a result, the `msg` reference in the `SELECT` list is
-implicitly rewritten into the second variant's `SELECT VALUE` subquery.
-
 The next example shows a more interesting case involving the use of a subquery in the `SELECT` list.
 Here the subquery further processes the groups.
+There is no renaming in the declaration of the group variable `g` such that
+`g` only has one field `gbm` which comes from the `FROM` clause.
 
 ##### Example
 
     SELECT uid,
-           (SELECT VALUE g.msg
+           (SELECT VALUE g.gbm
             FROM g
-            WHERE g.msg.message LIKE '% like%'
-            ORDER BY g.msg.messageId
+            WHERE g.gbm.message LIKE '% like%'
+            ORDER BY g.gbm.messageId
             LIMIT 2) AS msgs
     FROM GleambookMessages gbm
     GROUP BY gbm.authorId AS uid
-    GROUP AS g(gbm as msg);
+    GROUP AS g;
 
 This example query returns:
 
@@ -1014,14 +1003,14 @@ The next example illustrates a query that doesn't provide binding variables for 
 ##### Example
 
     SELECT authorId,
-           (SELECT VALUE g.msg
+           (SELECT VALUE g.gbm
             FROM g
-            WHERE g.msg.message LIKE '% like%'
-            ORDER BY g.msg.messageId
+            WHERE g.gbm.message LIKE '% like%'
+            ORDER BY g.gbm.messageId
             LIMIT 2) AS msgs
     FROM GleambookMessages gbm
     GROUP BY gbm.authorId
-    GROUP AS g(gbm as msg);
+    GROUP AS g;
 
 This query returns:
 
@@ -1071,54 +1060,11 @@ is `authorId` (which is how it is referred to in the example's `SELECT` clause).
 ### <a id="Implicit_group_variables">Implicit Group Variables</a>
 The group variable itself is also optional in SQL++'s `GROUP BY` syntax.
 If a user's query does not declare the name and structure of the group variable using `GROUP AS`,
-the query compiler will generate a unique group variable whose fields include all of the
-binding variables defined in the `FROM` clause of the current enclosing `SELECT` statement.
-(In this case the user's query will not be able to refer to the generated group variable.)
+the query compiler will generate a unique group variable whose fields include all of the binding
+variables defined in the `FROM` clause of the current enclosing `SELECT` statement.
+In this case the user's query will not be able to refer to the generated group variable,
+but is able to call SQL-92 aggregation functions as in SQL-92.
 
-##### Example
-
-    SELECT uid,
-           (SELECT m.message
-            FROM message m
-            WHERE m.message LIKE '% like%'
-            ORDER BY m.messageId
-            LIMIT 2) AS msgs
-    FROM GleambookMessages message
-    GROUP BY message.authorId AS uid;
-
-This query returns:
-
-    [ {
-        "msgs": [
-            {
-                "message": " like ccast the 3G is awesome:)"
-            }
-        ],
-        "uid": 1
-    }, {
-        "msgs": [
-            {
-                "message": " like product-y the plan is amazing"
-            },
-            {
-                "message": " like product-z its platform is mind-blowing"
-            }
-        ],
-        "uid": 2
-    } ]
-
-Note that in the query above, in principle, `message` is not an in-scope variable in the `SELECT` clause.
-However, the query above is a syntactically-sugared simplification of the following query and it is thus
-legal, executable, and returns the same result:
-
-    SELECT uid,
-       (SELECT g.msg.message
-        FROM g
-        WHERE g.msg.message LIKE '% like%'
-        ORDER BY g.msg.messageId
-        LIMIT 2) AS msgs
-    FROM GleambookMessages gbm
-    GROUP BY gbm.authorId AS uid GROUP AS g(gbm as msg);
 
 ### <a id="Aggregation_functions">Aggregation Functions</a>
 In the traditional SQL, which doesn't support nested data, grouping always also involves the use of aggregation
@@ -1165,7 +1111,8 @@ This example returns:
 
     SELECT uid AS uid, ARRAY_COUNT(grp) AS msgCnt
     FROM GleambookMessages message
-    GROUP BY message.authorId AS uid GROUP AS grp(message AS msg);
+    GROUP BY message.authorId AS uid
+    GROUP AS grp(message AS msg);
 
 This query returns:
 
@@ -1201,7 +1148,8 @@ will rewrite as follows:
 
     SELECT uid AS uid, ARRAY_COUNT( (SELECT VALUE 1 FROM `$1` as g) ) AS msgCnt
     FROM GleambookMessages msg
-    GROUP BY msg.authorId AS uid GROUP AS `$1`(msg AS msg);
+    GROUP BY msg.authorId AS uid
+    GROUP AS `$1`(msg AS msg);
 
 
 The same sort of rewritings apply to the function symbols `SUM`, `MAX`, `MIN`, and `AVG`.
@@ -1236,7 +1184,8 @@ The following is the equivalent rewritten query that will be generated by the co
 
     SELECT authorId AS authorId, ARRAY_COUNT( (SELECT g.msg FROM `$1` AS g) )
     FROM GleambookMessages msg
-    GROUP BY msg.authorId AS authorId GROUP AS `$1`(msg AS msg);
+    GROUP BY msg.authorId AS authorId
+    GROUP AS `$1`(msg AS msg);
 
 ### <a id="Column_aliases">Column Aliases</a>
 SQL++ also allows column aliases to be used as `GROUP BY` keys or `ORDER BY` keys.

@@ -121,7 +121,7 @@ public class ConnectorApiServlet extends AbstractServlet {
                         hcc.getNodeControllerInfos());
 
                 // Flush the cached contents of the dataset to file system.
-                FlushDatasetUtil.flushDataset(hcc, metadataProvider, dataverseName, datasetName, datasetName);
+                FlushDatasetUtil.flushDataset(hcc, metadataProvider, dataverseName, datasetName);
 
                 // Metadata transaction commits.
                 MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);

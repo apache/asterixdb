@@ -24,7 +24,6 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.primitive.BooleanPointable;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
-import org.apache.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
 
@@ -32,9 +31,6 @@ public abstract class AbstractLSMSecondaryIndexCreationNodePushable
         extends AbstractUnaryInputUnaryOutputOperatorNodePushable {
     protected final IHyracksTaskContext ctx;
     protected final RecordDescriptor inputRecDesc;
-
-    // with tag fields
-    protected final FrameTupleReference tuple;
 
     protected final int partition;
     protected final int numTagFields;
@@ -50,7 +46,6 @@ public abstract class AbstractLSMSecondaryIndexCreationNodePushable
             boolean hasBuddyBTree) {
         this.ctx = ctx;
         this.inputRecDesc = inputRecDesc;
-        this.tuple = new FrameTupleReference();
 
         this.partition = partition;
         this.numTagFields = numTagFields;

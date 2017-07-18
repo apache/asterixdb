@@ -85,6 +85,24 @@ public class ComponentMetadataUtil {
         }
     }
 
+    /**
+     * Put LSM metadata state into the index's current memory component.
+     *
+     * @param index,
+     *            the LSM index.
+     * @param key,
+     *            the key for the metadata state.
+     * @param pointable,
+     *            the value for the metadata state.
+     * @throws HyracksDataException
+     */
+    public static void put(ILSMIndex index, IValueReference key, IPointable pointable) throws HyracksDataException {
+        // write the opTracker to ensure the component layout don't change
+        synchronized (index.getOperationTracker()) {
+            index.getCurrentMemoryComponent().getMetadata().put(key, pointable);
+        }
+    }
+
     private static void fromDiskComponents(ILSMIndex index, IValueReference key, IPointable pointable)
             throws HyracksDataException {
         for (ILSMDiskComponent c : index.getImmutableComponents()) {

@@ -1904,7 +1904,17 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="dml">
+      <compilation-unit name="scan-delete-rtree-correlated-secondary-index-nullable">
+        <output-dir compare="Text">scan-delete-rtree-secondary-index-nullable</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
       <compilation-unit name="scan-delete-rtree-secondary-index">
+        <output-dir compare="Text">scan-delete-rtree-secondary-index</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="scan-delete-rtree-correlated-secondary-index">
         <output-dir compare="Text">scan-delete-rtree-secondary-index</output-dir>
       </compilation-unit>
     </test-case>
@@ -1914,12 +1924,27 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="dml">
+      <compilation-unit name="scan-insert-btree-correlated-secondary-index-nullable">
+        <output-dir compare="Text">scan-delete-btree-secondary-index-nullable</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
       <compilation-unit name="scan-insert-rtree-secondary-index-nullable">
         <output-dir compare="Text">scan-insert-rtree-secondary-index-nullable</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="dml">
+      <compilation-unit name="scan-insert-rtree-correlated-secondary-index-nullable">
+        <output-dir compare="Text">scan-insert-rtree-secondary-index-nullable</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
       <compilation-unit name="scan-insert-rtree-secondary-index">
+        <output-dir compare="Text">scan-insert-rtree-secondary-index</output-dir>
+      </compilation-unit>
+    </test-case>
+     <test-case FilePath="dml">
+      <compilation-unit name="scan-insert-rtree-correlated-secondary-index">
         <output-dir compare="Text">scan-insert-rtree-secondary-index</output-dir>
       </compilation-unit>
     </test-case>
@@ -1929,7 +1954,17 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="dml">
+      <compilation-unit name="scan-insert-inverted-index-ngram-correlated-secondary-index">
+        <output-dir compare="Text">scan-insert-inverted-index-ngram-secondary-index</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
       <compilation-unit name="scan-insert-inverted-index-word-secondary-index">
+        <output-dir compare="Text">scan-insert-inverted-index-word-secondary-index</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="scan-insert-inverted-index-word-correlated-secondary-index">
         <output-dir compare="Text">scan-insert-inverted-index-word-secondary-index</output-dir>
       </compilation-unit>
     </test-case>
@@ -1939,12 +1974,27 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="dml">
+      <compilation-unit name="scan-insert-inverted-index-ngram-correlated-secondary-index-nullable">
+        <output-dir compare="Text">scan-insert-inverted-index-ngram-secondary-index-nullable</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
       <compilation-unit name="scan-insert-inverted-index-word-secondary-index-nullable">
+        <output-dir compare="Text">scan-insert-inverted-index-word-secondary-index-nullable</output-dir>
+      </compilation-unit>
+    </test-case>
+     <test-case FilePath="dml">
+      <compilation-unit name="scan-insert-inverted-index-word-correlated-secondary-index-nullable">
         <output-dir compare="Text">scan-insert-inverted-index-word-secondary-index-nullable</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="dml">
       <compilation-unit name="scan-delete-inverted-index-ngram-secondary-index">
+        <output-dir compare="Text">scan-delete-inverted-index-ngram-secondary-index</output-dir>
+      </compilation-unit>
+    </test-case>
+     <test-case FilePath="dml">
+      <compilation-unit name="scan-delete-inverted-index-ngram-correlated-secondary-index">
         <output-dir compare="Text">scan-delete-inverted-index-ngram-secondary-index</output-dir>
       </compilation-unit>
     </test-case>
@@ -1954,12 +2004,27 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="dml">
+      <compilation-unit name="scan-delete-inverted-index-word-correlated-secondary-index">
+        <output-dir compare="Text">scan-delete-inverted-index-word-secondary-index</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
       <compilation-unit name="scan-delete-inverted-index-ngram-secondary-index-nullable">
+        <output-dir compare="Text">scan-delete-inverted-index-ngram-secondary-index-nullable</output-dir>
+      </compilation-unit>
+    </test-case>
+     <test-case FilePath="dml">
+      <compilation-unit name="scan-delete-inverted-index-ngram-correlated-secondary-index-nullable">
         <output-dir compare="Text">scan-delete-inverted-index-ngram-secondary-index-nullable</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="dml">
       <compilation-unit name="scan-delete-inverted-index-word-secondary-index-nullable">
+        <output-dir compare="Text">scan-delete-inverted-index-word-secondary-index-nullable</output-dir>
+      </compilation-unit>
+    </test-case>
+     <test-case FilePath="dml">
+      <compilation-unit name="scan-delete-inverted-index-word-correlated-secondary-index-nullable">
         <output-dir compare="Text">scan-delete-inverted-index-word-secondary-index-nullable</output-dir>
       </compilation-unit>
     </test-case>
@@ -1999,12 +2064,27 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="dml">
+      <compilation-unit name="scan-delete-inverted-index-ngram-correlated-secondary-index-open">
+        <output-dir compare="Text">scan-delete-inverted-index-ngram-secondary-index-open</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
       <compilation-unit name="scan-delete-inverted-index-word-secondary-index-open">
+        <output-dir compare="Text">scan-delete-inverted-index-word-secondary-index-open</output-dir>
+      </compilation-unit>
+    </test-case>
+     <test-case FilePath="dml">
+      <compilation-unit name="scan-delete-inverted-index-word-correlated-secondary-index-open">
         <output-dir compare="Text">scan-delete-inverted-index-word-secondary-index-open</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="dml">
       <compilation-unit name="scan-delete-rtree-secondary-index-open">
+        <output-dir compare="Text">scan-delete-rtree-secondary-index-open</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="scan-delete-rtree-correlated-secondary-index-open">
         <output-dir compare="Text">scan-delete-rtree-secondary-index-open</output-dir>
       </compilation-unit>
     </test-case>
@@ -2024,12 +2104,27 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="dml">
+      <compilation-unit name="scan-insert-inverted-index-ngram-correlated-secondary-index-open">
+        <output-dir compare="Text">scan-insert-inverted-index-ngram-secondary-index-open</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
       <compilation-unit name="scan-insert-inverted-index-word-secondary-index-open">
         <output-dir compare="Text">scan-insert-inverted-index-word-secondary-index-open</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="dml">
+      <compilation-unit name="scan-insert-inverted-index-word-correlated-secondary-index-open">
+        <output-dir compare="Text">scan-insert-inverted-index-word-secondary-index-open</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
       <compilation-unit name="scan-insert-rtree-secondary-index-open">
+        <output-dir compare="Text">scan-insert-rtree-secondary-index-open</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="scan-insert-rtree-correlated-secondary-index-open">
         <output-dir compare="Text">scan-insert-rtree-secondary-index-open</output-dir>
       </compilation-unit>
     </test-case>
@@ -4114,11 +4209,6 @@
     <test-case FilePath="nested-index-dml">
       <compilation-unit name="scan-insert-btree-secondary-index-nullable">
         <output-dir compare="Text">scan-insert-btree-secondary-index-nullable</output-dir>
-      </compilation-unit>
-    </test-case>
-     <test-case FilePath="dml">
-      <compilation-unit name="scan-insert-btree-correlated-secondary-index-nullable">
-        <output-dir compare="Text">scan-delete-btree-secondary-index-nullable</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="nested-index-dml">
@@ -8607,8 +8697,8 @@
         <output-dir compare="Text">insert-with-secondary-btree</output-dir>
       </compilation-unit>
     </test-case>
-     <test-case FilePath="filters">
-      <compilation-unit name="insert-with-secondary-correlated-btree">
+    <test-case FilePath="filters">
+      <compilation-unit name="insert-with-correlated-secondary-btree">
         <output-dir compare="Text">insert-with-secondary-btree</output-dir>
       </compilation-unit>
     </test-case>
@@ -8618,12 +8708,27 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="filters">
+      <compilation-unit name="insert-with-correlated-secondary-inverted-ngram">
+        <output-dir compare="Text">insert-with-secondary-inverted-ngram</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="filters">
       <compilation-unit name="insert-with-secondary-inverted-word">
+        <output-dir compare="Text">insert-with-secondary-inverted-word</output-dir>
+      </compilation-unit>
+    </test-case>
+      <test-case FilePath="filters">
+      <compilation-unit name="insert-with-correlated-secondary-inverted-word">
         <output-dir compare="Text">insert-with-secondary-inverted-word</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="filters">
       <compilation-unit name="insert-with-secondary-rtree">
+        <output-dir compare="Text">insert-with-secondary-rtree</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="filters">
+      <compilation-unit name="insert-with-correlated-secondary-rtree">
         <output-dir compare="Text">insert-with-secondary-rtree</output-dir>
       </compilation-unit>
     </test-case>
@@ -8875,6 +8980,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="upsert">
+      <compilation-unit name="primary-correlated-secondary-rtree">
+        <output-dir compare="Text">primary-secondary-rtree</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="upsert">
       <compilation-unit name="upsert-with-self-read">
         <output-dir compare="Text">upsert-with-self-read</output-dir>
       </compilation-unit>
@@ -8910,7 +9020,17 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="upsert">
+      <compilation-unit name="primary-correlated-secondary-inverted">
+        <output-dir compare="Text">primary-secondary-inverted</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="upsert">
       <compilation-unit name="multiple-secondaries">
+        <output-dir compare="Text">multiple-secondaries</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="upsert">
+      <compilation-unit name="multiple-correlated-secondaries">
         <output-dir compare="Text">multiple-secondaries</output-dir>
       </compilation-unit>
     </test-case>

@@ -263,8 +263,8 @@ public abstract class SecondaryCorrelatedTreeIndexOperationsHelper extends Secon
     }
 
     protected LSMSecondaryIndexBulkLoadOperatorDescriptor createTreeIndexBulkLoadOp(JobSpecification spec,
-            MetadataProvider metadataProvider, RecordDescriptor taggedSecondaryRecDesc, int numSecondaryKeys,
-            int numPrimaryKeys, boolean hasBuddyBtree) throws AlgebricksException {
+            MetadataProvider metadataProvider, RecordDescriptor taggedSecondaryRecDesc, int[] fieldPermutation,
+            int numSecondaryKeys, int numPrimaryKeys, boolean hasBuddyBtree) throws AlgebricksException {
         IndexDataflowHelperFactory primaryIndexHelperFactory = new IndexDataflowHelperFactory(
                 metadataProvider.getStorageComponentProvider().getStorageManager(), primaryFileSplitProvider);
 
@@ -273,7 +273,8 @@ public abstract class SecondaryCorrelatedTreeIndexOperationsHelper extends Secon
 
         LSMSecondaryIndexBulkLoadOperatorDescriptor treeIndexBulkLoadOp =
                 new LSMSecondaryIndexBulkLoadOperatorDescriptor(spec, taggedSecondaryRecDesc, primaryIndexHelperFactory,
-                        secondaryIndexHelperFactory, NUM_TAG_FIELDS, numSecondaryKeys, numPrimaryKeys, hasBuddyBtree);
+                        secondaryIndexHelperFactory, fieldPermutation, NUM_TAG_FIELDS, numSecondaryKeys,
+                        numPrimaryKeys, hasBuddyBtree);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, treeIndexBulkLoadOp,
                 secondaryPartitionConstraint);
         return treeIndexBulkLoadOp;
@@ -306,19 +307,29 @@ public abstract class SecondaryCorrelatedTreeIndexOperationsHelper extends Secon
                         new SecondaryCorrelatedBTreeOperationsHelper(dataset, index, physOptConf, metadataProvider);
                 break;
             case RTREE:
-                //TODO RTree
+                indexOperationsHelper =
+                        new SecondaryCorrelatedRTreeOperationsHelper(dataset, index, physOptConf, metadataProvider);
+                break;
             case SINGLE_PARTITION_WORD_INVIX:
             case SINGLE_PARTITION_NGRAM_INVIX:
             case LENGTH_PARTITIONED_WORD_INVIX:
             case LENGTH_PARTITIONED_NGRAM_INVIX:
-                //TODO Inverted Index
-                //TODO This will be fixed soon
-                throw new UnsupportedOperationException();
+                indexOperationsHelper = new SecondaryCorrelatedInvertedIndexOperationsHelper(dataset, index,
+                        physOptConf, metadataProvider);
+                break;
             default:
                 throw new CompilationException(ErrorCode.COMPILATION_UNKNOWN_INDEX_TYPE, index.getIndexType());
         }
         indexOperationsHelper.init();
         return indexOperationsHelper;
+    }
+
+    protected int[] createFieldPermutationForBulkLoadOp() {
+        int[] fieldPermutation = new int[NUM_TAG_FIELDS + getNumSecondaryKeys() + numPrimaryKeys + numFilterFields];
+        for (int i = 0; i < fieldPermutation.length; i++) {
+            fieldPermutation[i] = i;
+        }
+        return fieldPermutation;
     }
 
 }

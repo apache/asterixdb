@@ -44,7 +44,13 @@ public class FlushDatasetUtil {
     }
 
     public static void flushDataset(IHyracksClientConnection hcc, MetadataProvider metadataProvider,
-            String dataverseName, String datasetName, String indexName) throws Exception {
+            String dataverseName, String datasetName) throws Exception {
+        Dataset dataset = metadataProvider.findDataset(dataverseName, datasetName);
+        flushDataset(hcc, metadataProvider, dataset);
+    }
+
+    public static void flushDataset(IHyracksClientConnection hcc, MetadataProvider metadataProvider, Dataset dataset)
+            throws Exception {
         CompilerProperties compilerProperties = metadataProvider.getApplicationContext().getCompilerProperties();
         int frameSize = compilerProperties.getFrameSize();
         JobSpecification spec = new JobSpecification(frameSize);
@@ -54,14 +60,13 @@ public class FlushDatasetUtil {
                 new IPushRuntimeFactory[] { new EmptyTupleSourceRuntimeFactory() }, rDescs);
 
         org.apache.asterix.common.transactions.JobId jobId = JobIdFactory.generateJobId();
-        Dataset dataset = metadataProvider.findDataset(dataverseName, datasetName);
-        FlushDatasetOperatorDescriptor flushOperator =
-                new FlushDatasetOperatorDescriptor(spec, jobId, dataset.getDatasetId());
+        FlushDatasetOperatorDescriptor flushOperator = new FlushDatasetOperatorDescriptor(spec, jobId,
+                dataset.getDatasetId());
 
         spec.connect(new OneToOneConnectorDescriptor(spec), emptySource, 0, flushOperator, 0);
 
-        Pair<IFileSplitProvider, AlgebricksPartitionConstraint> primarySplitsAndConstraint =
-                metadataProvider.getSplitProviderAndConstraints(dataset, indexName);
+        Pair<IFileSplitProvider, AlgebricksPartitionConstraint> primarySplitsAndConstraint = metadataProvider
+                .getSplitProviderAndConstraints(dataset, dataset.getDatasetName());
         AlgebricksPartitionConstraint primaryPartitionConstraint = primarySplitsAndConstraint.second;
 
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, emptySource,

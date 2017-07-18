@@ -21,6 +21,7 @@ package org.apache.hyracks.storage.am.lsm.invertedindex.dataflow;
 
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
+import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -47,8 +48,13 @@ public class BinaryTokenizerOperatorDescriptor extends AbstractSingleActivityOpe
     // False: [token, number of token(if a partitioned index), keyfield1, keyfield2 ...]
     private final boolean writeKeyFieldsFirst;
 
+    private final boolean writeMissing;
+
+    private final IMissingWriterFactory missingWriterFactory;
+
     public BinaryTokenizerOperatorDescriptor(IOperatorDescriptorRegistry spec, RecordDescriptor recDesc,
-            IBinaryTokenizerFactory tokenizerFactory, int docField, int[] keyFields, boolean addNumTokensKey, boolean writeKeyFieldsFirst) {
+            IBinaryTokenizerFactory tokenizerFactory, int docField, int[] keyFields, boolean addNumTokensKey,
+            boolean writeKeyFieldsFirst, boolean writeMissing, IMissingWriterFactory missingWriterFactory) {
         super(spec, 1, 1);
         this.tokenizerFactory = tokenizerFactory;
         this.docField = docField;
@@ -56,13 +62,16 @@ public class BinaryTokenizerOperatorDescriptor extends AbstractSingleActivityOpe
         this.addNumTokensKey = addNumTokensKey;
         outRecDescs[0] = recDesc;
         this.writeKeyFieldsFirst = writeKeyFieldsFirst;
+        this.writeMissing = writeMissing;
+        this.missingWriterFactory = missingWriterFactory;
     }
 
     @Override
     public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) throws HyracksDataException {
-        return new BinaryTokenizerOperatorNodePushable(ctx, recordDescProvider.getInputRecordDescriptor(
-                getActivityId(), 0), outRecDescs[0], tokenizerFactory.createTokenizer(), docField, keyFields,
-                addNumTokensKey, writeKeyFieldsFirst);
+        return new BinaryTokenizerOperatorNodePushable(ctx,
+                recordDescProvider.getInputRecordDescriptor(getActivityId(), 0), outRecDescs[0],
+                tokenizerFactory.createTokenizer(), docField, keyFields, addNumTokensKey, writeKeyFieldsFirst,
+                writeMissing, missingWriterFactory);
     }
 }

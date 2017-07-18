@@ -35,6 +35,7 @@ public class LSMSecondaryIndexBulkLoadOperatorDescriptor extends AbstractSingleA
     private final IIndexDataflowHelperFactory primaryIndexHelperFactory;
     private final IIndexDataflowHelperFactory secondaryIndexHelperFactory;
 
+    private final int[] fieldPermutation;
     private final int numTagFields;
     private final int numSecondaryKeys;
     private final int numPrimaryKeys;
@@ -43,12 +44,13 @@ public class LSMSecondaryIndexBulkLoadOperatorDescriptor extends AbstractSingleA
 
     public LSMSecondaryIndexBulkLoadOperatorDescriptor(IOperatorDescriptorRegistry spec, RecordDescriptor outRecDesc,
             IIndexDataflowHelperFactory primaryIndexHelperFactory,
-            IIndexDataflowHelperFactory secondaryIndexHelperFactory, int numTagFields, int numSecondaryKeys,
-            int numPrimaryKeys, boolean hasBuddyBTree) {
+            IIndexDataflowHelperFactory secondaryIndexHelperFactory, int[] fieldPermutation, int numTagFields,
+            int numSecondaryKeys, int numPrimaryKeys, boolean hasBuddyBTree) {
         super(spec, 1, 1);
         this.outRecDescs[0] = outRecDesc;
         this.primaryIndexHelperFactory = primaryIndexHelperFactory;
         this.secondaryIndexHelperFactory = secondaryIndexHelperFactory;
+        this.fieldPermutation = fieldPermutation;
         this.numTagFields = numTagFields;
         this.numSecondaryKeys = numSecondaryKeys;
         this.numPrimaryKeys = numPrimaryKeys;
@@ -61,6 +63,7 @@ public class LSMSecondaryIndexBulkLoadOperatorDescriptor extends AbstractSingleA
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) throws HyracksDataException {
         return new LSMSecondaryIndexBulkLoadNodePushable(ctx, partition,
                 recordDescProvider.getInputRecordDescriptor(getActivityId(), 0), primaryIndexHelperFactory,
-                secondaryIndexHelperFactory, numTagFields, numSecondaryKeys, numPrimaryKeys, hasBuddyBTree);
+                secondaryIndexHelperFactory, fieldPermutation, numTagFields, numSecondaryKeys, numPrimaryKeys,
+                hasBuddyBTree);
     }
 }
