@@ -81,6 +81,7 @@ import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.client.StandardHttpRequestRetryHandler;
+import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
 import org.apache.hyracks.util.StorageUtil;
 import org.junit.Assert;
@@ -445,12 +446,16 @@ public class TestExecutor {
     protected HttpResponse executeHttpRequest(HttpUriRequest method) throws Exception {
         HttpClient client = HttpClients.custom().setRetryHandler(StandardHttpRequestRetryHandler.INSTANCE).build();
         try {
-            return client.execute(method);
+            return client.execute(method, getHttpContext());
         } catch (Exception e) {
             GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, e.getMessage(), e);
             e.printStackTrace();
             throw e;
         }
+    }
+
+    protected HttpContext getHttpContext() {
+        return null;
     }
 
     protected HttpResponse checkResponse(HttpResponse httpResponse, Predicate<Integer> responseCodeValidator)
@@ -1441,9 +1446,8 @@ public class TestExecutor {
             while (true) {
                 try {
                     final HttpClient client = HttpClients.createDefault();
-
                     final HttpGet get = new HttpGet(getEndpoint(Servlets.CLUSTER_STATE));
-                    final HttpResponse httpResponse = client.execute(get);
+                    final HttpResponse httpResponse = client.execute(get, getHttpContext());
                     final int statusCode = httpResponse.getStatusLine().getStatusCode();
                     final String response = EntityUtils.toString(httpResponse.getEntity());
                     if (statusCode != HttpStatus.SC_OK) {
@@ -1451,7 +1455,7 @@ public class TestExecutor {
                     }
                     ObjectMapper om = new ObjectMapper();
                     ObjectNode result = (ObjectNode) om.readTree(response);
-                    if (desiredState.equals(result.get("state").asText())) {
+                    if (result.get("state").asText().matches(desiredState)) {
                         break;
                     }
                 } catch (Exception e) {
