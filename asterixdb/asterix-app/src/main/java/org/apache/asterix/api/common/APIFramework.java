@@ -18,17 +18,8 @@
  */
 package org.apache.asterix.api.common;
 
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.rmi.RemoteException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.Set;
-
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.ImmutableSet;
 import org.apache.asterix.algebra.base.ILangExpressionToPlanTranslator;
 import org.apache.asterix.algebra.base.ILangExpressionToPlanTranslatorFactory;
 import org.apache.asterix.api.http.server.ResultUtil;
@@ -42,20 +33,12 @@ import org.apache.asterix.common.utils.Job;
 import org.apache.asterix.common.utils.Job.SubmissionMode;
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.asterix.compiler.provider.IRuleSetFactory;
-import org.apache.asterix.dataflow.data.common.ConflictingTypeResolver;
-import org.apache.asterix.dataflow.data.common.ExpressionTypeComputer;
-import org.apache.asterix.dataflow.data.common.MergeAggregationExpressionFactory;
-import org.apache.asterix.dataflow.data.common.MissableTypeComputer;
-import org.apache.asterix.dataflow.data.common.PartialAggregationTypeComputer;
+import org.apache.asterix.dataflow.data.common.*;
 import org.apache.asterix.external.feed.watch.FeedActivityDetails;
 import org.apache.asterix.formats.base.IDataFormat;
 import org.apache.asterix.jobgen.QueryLogicalExpressionJobGen;
 import org.apache.asterix.lang.aql.statement.SubscribeFeedStatement;
-import org.apache.asterix.lang.common.base.IAstPrintVisitorFactory;
-import org.apache.asterix.lang.common.base.IQueryRewriter;
-import org.apache.asterix.lang.common.base.IReturningStatement;
-import org.apache.asterix.lang.common.base.IRewriterFactory;
-import org.apache.asterix.lang.common.base.Statement;
+import org.apache.asterix.lang.common.base.*;
 import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
 import org.apache.asterix.lang.common.statement.Query;
@@ -78,14 +61,10 @@ import org.apache.hyracks.algebricks.compiler.api.ICompiler;
 import org.apache.hyracks.algebricks.compiler.api.ICompilerFactory;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
-import org.apache.hyracks.algebricks.core.algebra.expressions.ExpressionRuntimeProvider;
-import org.apache.hyracks.algebricks.core.algebra.expressions.IConflictingTypeResolver;
-import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionEvalSizeComputer;
-import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionTypeComputer;
-import org.apache.hyracks.algebricks.core.algebra.expressions.IMergeAggregationExpressionFactory;
-import org.apache.hyracks.algebricks.core.algebra.expressions.IMissableTypeComputer;
+import org.apache.hyracks.algebricks.core.algebra.expressions.*;
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.AlgebricksAppendable;
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.LogicalOperatorPrettyPrintVisitor;
+import org.apache.hyracks.algebricks.core.algebra.prettyprint.LogicalOperatorPrettyPrintVisitorJson;
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.PlanPrettyPrinter;
 import org.apache.hyracks.algebricks.core.rewriter.base.AlgebricksOptimizationContext;
 import org.apache.hyracks.algebricks.core.rewriter.base.IOptimizationContextFactory;
@@ -99,8 +78,10 @@ import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.control.common.config.OptionTypes;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.ImmutableSet;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.rmi.RemoteException;
+import java.util.*;
 
 /**
  * Provides helper methods for compilation of a query into a JobSpec and submission
@@ -156,10 +137,15 @@ public class APIFramework {
     private void printPlanPrefix(SessionOutput output, String planName) {
         if (output.config().is(SessionConfig.FORMAT_HTML)) {
             output.out().println("<h4>" + planName + ":</h4>");
-            output.out().println("<pre>");
+            if(planName.equalsIgnoreCase("Logical plan"))
+            output.out().println("<pre class = query-plan>");
+            else if(planName.equalsIgnoreCase("Optimized logical plan"))
+                output.out().println("<pre class = query-optimized-plan>");
+            else output.out().println("<pre>");
         } else {
             output.out().println("----------" + planName + ":");
         }
+
     }
 
     private void printPlanPostfix(SessionOutput output) {
@@ -219,8 +205,16 @@ public class APIFramework {
 
             printPlanPrefix(output, "Logical plan");
             if (rwQ != null || (statement != null && statement.getKind() == Statement.Kind.LOAD)) {
-                LogicalOperatorPrettyPrintVisitor pvisitor = new LogicalOperatorPrettyPrintVisitor(output.out());
-                PlanPrettyPrinter.printPlan(plan, pvisitor, 0);
+
+                if(output.config().getLpfmt().equals(SessionConfig.PlanFormat.CLEAN_JSON)||output.config().getLpfmt().equals(SessionConfig.PlanFormat.JSON)) {
+                    LogicalOperatorPrettyPrintVisitorJson pvisitor = new LogicalOperatorPrettyPrintVisitorJson(output.out());
+                    PlanPrettyPrinter.operatorID = 0;
+                    PlanPrettyPrinter.resetOperatorID(plan);
+                    PlanPrettyPrinter.printPlanJson(plan, pvisitor, 0);
+                }else{
+                    LogicalOperatorPrettyPrintVisitor pvisitor = new LogicalOperatorPrettyPrintVisitor(output.out());
+                    PlanPrettyPrinter.printPlan(plan, pvisitor, 0);
+                }
             }
             printPlanPostfix(output);
         }
@@ -273,10 +267,17 @@ public class APIFramework {
                 } else {
                     printPlanPrefix(output, "Optimized logical plan");
                     if (rwQ != null || (statement != null && statement.getKind() == Statement.Kind.LOAD)) {
-                        LogicalOperatorPrettyPrintVisitor pvisitor =
-                                new LogicalOperatorPrettyPrintVisitor(output.out());
+                         if(output.config().getOplpfmt().equals(SessionConfig.PlanFormat.CLEAN_JSON)||output.config().getOplpfmt().equals(SessionConfig.PlanFormat.JSON)) {
+                        LogicalOperatorPrettyPrintVisitorJson pvisitor = new LogicalOperatorPrettyPrintVisitorJson(output.out());
+                        PlanPrettyPrinter.operatorID = 0;
+                             PlanPrettyPrinter.resetOperatorID(plan);
+                        PlanPrettyPrinter.printPlanJson(plan, pvisitor, 0);
+
+                    } else {
+                        LogicalOperatorPrettyPrintVisitor pvisitor = new LogicalOperatorPrettyPrintVisitor(output.out());
                         PlanPrettyPrinter.printPlan(plan, pvisitor, 0);
                     }
+                }
                     printPlanPostfix(output);
                 }
             }

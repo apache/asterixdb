@@ -18,15 +18,15 @@
  */
 package org.apache.hyracks.algebricks.core.algebra.plan;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.LogicalOperatorPrettyPrintVisitor;
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.PlanPrettyPrinter;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class ALogicalPlanImpl implements ILogicalPlan {
     private List<Mutable<ILogicalOperator>> roots;

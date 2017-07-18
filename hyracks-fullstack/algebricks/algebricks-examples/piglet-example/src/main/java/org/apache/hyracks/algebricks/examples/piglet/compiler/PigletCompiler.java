@@ -18,15 +18,6 @@
  */
 package org.apache.hyracks.algebricks.examples.piglet.compiler;
 
-import java.io.Reader;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
@@ -41,39 +32,19 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
-import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
-import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionTypeComputer;
-import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
-import org.apache.hyracks.algebricks.core.algebra.expressions.ExpressionRuntimeProvider;
-import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
-import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.*;
 import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
 import org.apache.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.EmptyTupleSourceOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.*;
 import org.apache.hyracks.algebricks.core.algebra.plan.ALogicalPlanImpl;
-import org.apache.hyracks.algebricks.core.algebra.prettyprint.AlgebricksAppendable;
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.LogicalOperatorPrettyPrintVisitor;
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.PlanPrettyPrinter;
 import org.apache.hyracks.algebricks.core.rewriter.base.AbstractRuleController;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 import org.apache.hyracks.algebricks.data.ISerializerDeserializerProvider;
 import org.apache.hyracks.algebricks.data.ITypeTraitProvider;
-import org.apache.hyracks.algebricks.examples.piglet.ast.ASTNode;
-import org.apache.hyracks.algebricks.examples.piglet.ast.AssignmentNode;
-import org.apache.hyracks.algebricks.examples.piglet.ast.DumpNode;
-import org.apache.hyracks.algebricks.examples.piglet.ast.ExpressionNode;
-import org.apache.hyracks.algebricks.examples.piglet.ast.FieldAccessExpressionNode;
-import org.apache.hyracks.algebricks.examples.piglet.ast.FilterNode;
-import org.apache.hyracks.algebricks.examples.piglet.ast.FunctionTag;
-import org.apache.hyracks.algebricks.examples.piglet.ast.LiteralExpressionNode;
-import org.apache.hyracks.algebricks.examples.piglet.ast.LoadNode;
-import org.apache.hyracks.algebricks.examples.piglet.ast.RelationNode;
-import org.apache.hyracks.algebricks.examples.piglet.ast.ScalarFunctionExpressionNode;
+import org.apache.hyracks.algebricks.examples.piglet.ast.*;
 import org.apache.hyracks.algebricks.examples.piglet.exceptions.PigletException;
 import org.apache.hyracks.algebricks.examples.piglet.metadata.PigletFileDataSink;
 import org.apache.hyracks.algebricks.examples.piglet.metadata.PigletFileDataSource;
@@ -87,6 +58,11 @@ import org.apache.hyracks.algebricks.examples.piglet.types.Type;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.job.JobSpecification;
+
+import java.io.Reader;
+import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class PigletCompiler {
     private static final Logger LOGGER = Logger.getLogger(PigletCompiler.class.getName());

@@ -18,19 +18,9 @@
  */
 package org.apache.hyracks.algebricks.core.algebra.operators.logical;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.core.algebra.base.IHyracksJobBuilder;
-import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
-import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
-import org.apache.hyracks.algebricks.core.algebra.base.IPhysicalOperator;
-import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
-import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
+import org.apache.hyracks.algebricks.core.algebra.base.*;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.properties.IPhysicalPropertiesVector;
 import org.apache.hyracks.algebricks.core.algebra.properties.PhysicalRequirements;
@@ -40,6 +30,11 @@ import org.apache.hyracks.algebricks.core.algebra.typing.ITypingContext;
 import org.apache.hyracks.algebricks.core.algebra.typing.OpRefTypeEnvPointer;
 import org.apache.hyracks.algebricks.core.algebra.typing.PropagatingTypeEnvironment;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenContext;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public abstract class AbstractLogicalOperator implements ILogicalOperator {
 
@@ -65,10 +60,16 @@ public abstract class AbstractLogicalOperator implements ILogicalOperator {
     protected IPhysicalOperator physicalOperator;
     private final Map<String, Object> annotations = new HashMap<>();
     private boolean bJobGenEnabled = true;
+    private int operatorID=0;
 
     protected final List<Mutable<ILogicalOperator>> inputs;
     protected List<LogicalVariable> schema;
-
+public void setOperatorID(int id){
+        operatorID = id;
+}
+public int getOperatorID(){
+    return operatorID;
+    }
     public AbstractLogicalOperator() {
         inputs = new ArrayList<>();
     }
