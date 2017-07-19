@@ -32,27 +32,27 @@ import org.apache.asterix.external.input.record.GenericRecord;
 import org.apache.asterix.external.util.FeedLogManager;
 import org.apache.log4j.Logger;
 
-import com.sun.syndication.feed.synd.SyndEntryImpl;
-import com.sun.syndication.feed.synd.SyndFeed;
-import com.sun.syndication.fetcher.FeedFetcher;
-import com.sun.syndication.fetcher.FetcherEvent;
-import com.sun.syndication.fetcher.FetcherException;
-import com.sun.syndication.fetcher.FetcherListener;
-import com.sun.syndication.fetcher.impl.FeedFetcherCache;
-import com.sun.syndication.fetcher.impl.HashMapFeedInfoCache;
-import com.sun.syndication.fetcher.impl.HttpURLFeedFetcher;
-import com.sun.syndication.io.FeedException;
+import com.rometools.fetcher.FeedFetcher;
+import com.rometools.fetcher.FetcherEvent;
+import com.rometools.fetcher.FetcherException;
+import com.rometools.fetcher.FetcherListener;
+import com.rometools.fetcher.impl.FeedFetcherCache;
+import com.rometools.fetcher.impl.HashMapFeedInfoCache;
+import com.rometools.fetcher.impl.HttpURLFeedFetcher;
+import com.rometools.rome.feed.synd.SyndEntry;
+import com.rometools.rome.feed.synd.SyndFeed;
+import com.rometools.rome.io.FeedException;
 
-public class RSSRecordReader implements IRecordReader<SyndEntryImpl> {
+public class RSSRecordReader implements IRecordReader<SyndEntry> {
 
     private static final Logger LOGGER = Logger.getLogger(RSSRecordReader.class.getName());
     private boolean modified = false;
-    private Queue<SyndEntryImpl> rssFeedBuffer = new LinkedList<SyndEntryImpl>();
+    private Queue<SyndEntry> rssFeedBuffer = new LinkedList<>();
     private FeedFetcherCache feedInfoCache;
     private FeedFetcher fetcher;
     private FetcherEventListenerImpl listener;
     private URL feedUrl;
-    private GenericRecord<SyndEntryImpl> record = new GenericRecord<SyndEntryImpl>();
+    private GenericRecord<SyndEntry> record = new GenericRecord<>();
     private boolean done = false;
 
     public RSSRecordReader(String url) throws MalformedURLException {
@@ -78,12 +78,12 @@ public class RSSRecordReader implements IRecordReader<SyndEntryImpl> {
     }
 
     @Override
-    public IRawRecord<SyndEntryImpl> next() throws IOException {
+    public IRawRecord<SyndEntry> next() throws IOException {
         if (done) {
             return null;
         }
         try {
-            SyndEntryImpl feedEntry;
+            SyndEntry feedEntry;
             feedEntry = getNextRSSFeed();
             if (feedEntry == null) {
                 return null;
@@ -105,7 +105,7 @@ public class RSSRecordReader implements IRecordReader<SyndEntryImpl> {
         this.modified = modified;
     }
 
-    private SyndEntryImpl getNextRSSFeed() throws Exception {
+    private SyndEntry getNextRSSFeed() throws IOException, FeedException, FetcherException  {
         if (rssFeedBuffer.isEmpty()) {
             fetchFeed();
         }
@@ -117,7 +117,7 @@ public class RSSRecordReader implements IRecordReader<SyndEntryImpl> {
     }
 
     @SuppressWarnings("unchecked")
-    private void fetchFeed() throws IllegalArgumentException, IOException, FeedException, FetcherException {
+    private void fetchFeed() throws IOException, FeedException, FetcherException {
         // Retrieve the feed.
         // We will get a Feed Polled Event and then a
         // Feed Retrieved event (assuming the feed is valid)
@@ -128,7 +128,7 @@ public class RSSRecordReader implements IRecordReader<SyndEntryImpl> {
                 LOGGER.info(feedUrl + " has a title: " + feed.getTitle() + " and contains " + feed.getEntries().size()
                         + " entries.");
             }
-            List<? extends SyndEntryImpl> fetchedFeeds = feed.getEntries();
+            List<SyndEntry> fetchedFeeds = feed.getEntries();
             rssFeedBuffer.addAll(fetchedFeeds);
         }
     }
@@ -158,7 +158,7 @@ class FetcherEventListenerImpl implements FetcherListener {
     }
 
     /**
-     * @see com.sun.syndication.fetcher.FetcherListener#fetcherEvent(com.sun.syndication.fetcher.FetcherEvent)
+     * @see com.rometools.fetcher.FetcherListener#fetcherEvent(com.rometools.fetcher.FetcherEvent)
      */
     @Override
     public void fetcherEvent(FetcherEvent event) {

@@ -1052,6 +1052,16 @@
         <version>18.0</version>
       </dependency>
       <dependency>
+        <groupId>com.rometools</groupId>
+        <artifactId>rome-fetcher</artifactId>
+        <version>1.7.4</version>
+      </dependency>
+      <dependency>
+        <groupId>com.rometools</groupId>
+        <artifactId>rome</artifactId>
+        <version>1.7.4</version>
+      </dependency>
+      <dependency>
         <groupId>log4j</groupId>
         <artifactId>log4j</artifactId>
         <version>1.2.17</version>

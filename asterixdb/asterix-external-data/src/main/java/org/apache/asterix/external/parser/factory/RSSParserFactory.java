@@ -29,9 +29,9 @@ import org.apache.asterix.external.parser.RSSParser;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 
-import com.sun.syndication.feed.synd.SyndEntryImpl;
+import com.rometools.rome.feed.synd.SyndEntry;
 
-public class RSSParserFactory implements IRecordDataParserFactory<SyndEntryImpl> {
+public class RSSParserFactory implements IRecordDataParserFactory<SyndEntry> {
 
     private static final long serialVersionUID = 1L;
     private static final List<String> parserFormats = Collections.unmodifiableList(Arrays.asList("rss"));
@@ -48,14 +48,14 @@ public class RSSParserFactory implements IRecordDataParserFactory<SyndEntryImpl>
     }
 
     @Override
-    public IRecordDataParser<SyndEntryImpl> createRecordParser(IHyracksTaskContext ctx) {
+    public IRecordDataParser<SyndEntry> createRecordParser(IHyracksTaskContext ctx) {
         RSSParser dataParser = new RSSParser(recordType);
         return dataParser;
     }
 
     @Override
-    public Class<? extends SyndEntryImpl> getRecordClass() {
-        return SyndEntryImpl.class;
+    public Class<? extends SyndEntry> getRecordClass() {
+        return SyndEntry.class;
     }
 
     @Override
