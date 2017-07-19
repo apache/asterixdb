@@ -111,17 +111,6 @@ public class DatasetPartitionManager implements IDatasetPartitionManager {
     }
 
     @Override
-    public void reportPartitionFailure(JobId jobId, ResultSetId rsId, int partition) throws HyracksException {
-        try {
-            LOGGER.info("Reporting partition failure: JobId: " + jobId + " ResultSetId: " + rsId + " partition: "
-                    + partition);
-            ncs.getClusterController().reportResultPartitionFailure(jobId, rsId, partition);
-        } catch (Exception e) {
-            throw new HyracksException(e);
-        }
-    }
-
-    @Override
     public void initializeDatasetPartitionReader(JobId jobId, ResultSetId resultSetId, int partition,
             IFrameWriter writer) throws HyracksException {
         ResultState resultState = getResultState(jobId, resultSetId, partition);

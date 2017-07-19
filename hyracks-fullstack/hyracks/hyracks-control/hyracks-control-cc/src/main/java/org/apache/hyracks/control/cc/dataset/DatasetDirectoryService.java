@@ -149,16 +149,6 @@ public class DatasetDirectoryService implements IDatasetDirectoryService {
     }
 
     @Override
-    public synchronized void reportResultPartitionFailure(JobId jobId, ResultSetId rsId, int partition) {
-        DatasetJobRecord djr = getDatasetJobRecord(jobId);
-        if (djr != null) {
-            djr.fail(rsId, partition);
-        }
-        jobResultLocations.get(jobId).setException(new Exception());
-        notifyAll();
-    }
-
-    @Override
     public synchronized void reportJobFailure(JobId jobId, List<Exception> exceptions) {
         DatasetJobRecord djr = getDatasetJobRecord(jobId);
         if (djr != null) {
@@ -270,6 +260,7 @@ class JobResultInfo {
 
     private DatasetJobRecord record;
     private Waiters waiters;
+    private Exception exception;
 
     JobResultInfo(DatasetJobRecord record, Waiters waiters) {
         this.record = record;
@@ -286,6 +277,10 @@ class JobResultInfo {
             waiters = new Waiters();
         }
         waiters.put(rsId, new Waiter(knownRecords, callback));
+        if (exception != null) {
+            // Exception was set before the waiter is added.
+            setException(exception);
+        }
     }
 
     Waiter removeWaiter(ResultSetId rsId) {
@@ -302,6 +297,8 @@ class JobResultInfo {
                 waiters.remove(rsId).callback.setException(exception);
             }
         }
+        // Caches the exception anyway for future added waiters.
+        this.exception = exception;
     }
 
     @Override

@@ -41,8 +41,6 @@ public interface IDatasetDirectoryService extends IJobLifecycleListener, IDatase
     public void reportResultPartitionWriteCompletion(JobId jobId, ResultSetId rsId, int partition)
             throws HyracksDataException;
 
-    public void reportResultPartitionFailure(JobId jobId, ResultSetId rsId, int partition);
-
     public void reportJobFailure(JobId jobId, List<Exception> exceptions);
 
     public Status getResultStatus(JobId jobId, ResultSetId rsId) throws HyracksDataException;

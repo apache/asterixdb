@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Queue;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.Semaphore;
 
@@ -213,9 +214,9 @@ public class SuperActivityOperatorNodePushable implements IOperatorNodePushable 
             cancelTasks(tasks, startSemaphore, completeSemaphore);
             Thread.currentThread().interrupt();
             throw HyracksDataException.create(e);
-        } catch (Exception e) {
+        } catch (ExecutionException e) {
             cancelTasks(tasks, startSemaphore, completeSemaphore);
-            throw HyracksDataException.create(e);
+            throw HyracksDataException.create(e.getCause());
         }
     }
 

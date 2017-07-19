@@ -150,13 +150,6 @@ public class ClusterControllerRemoteProxy extends ControllerRemoteProxy implemen
     }
 
     @Override
-    public void reportResultPartitionFailure(JobId jobId, ResultSetId rsId, int partition) throws Exception {
-        ReportResultPartitionFailureFunction fn = new ReportResultPartitionFailureFunction(
-                jobId, rsId, partition);
-        ensureIpcHandle().send(-1, fn, null);
-    }
-
-    @Override
     public void notifyDistributedJobFailure(JobId jobId, String nodeId) throws Exception {
         ReportDistributedJobFailureFunction fn = new ReportDistributedJobFailureFunction(
                 jobId, nodeId);

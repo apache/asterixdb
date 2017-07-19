@@ -36,7 +36,6 @@ import org.apache.hyracks.control.cc.work.RegisterPartitionAvailibilityWork;
 import org.apache.hyracks.control.cc.work.RegisterPartitionRequestWork;
 import org.apache.hyracks.control.cc.work.RegisterResultPartitionLocationWork;
 import org.apache.hyracks.control.cc.work.ReportProfilesWork;
-import org.apache.hyracks.control.cc.work.ReportResultPartitionFailureWork;
 import org.apache.hyracks.control.cc.work.ReportResultPartitionWriteCompletionWork;
 import org.apache.hyracks.control.cc.work.TaskCompleteWork;
 import org.apache.hyracks.control.cc.work.TaskFailureWork;
@@ -129,12 +128,6 @@ class ClusterControllerIPCI implements IIPCI {
                         (CCNCFunctions.ReportResultPartitionWriteCompletionFunction) fn;
                 ccs.getWorkQueue().schedule(new ReportResultPartitionWriteCompletionWork(ccs,
                         rrpwc.getJobId(), rrpwc.getResultSetId(), rrpwc.getPartition()));
-                break;
-            case REPORT_RESULT_PARTITION_FAILURE:
-                CCNCFunctions.ReportResultPartitionFailureFunction rrpf =
-                        (CCNCFunctions.ReportResultPartitionFailureFunction) fn;
-                ccs.getWorkQueue().schedule(new ReportResultPartitionFailureWork(ccs,
-                        rrpf.getJobId(), rrpf.getResultSetId(), rrpf.getPartition()));
                 break;
             case SEND_APPLICATION_MESSAGE:
                 CCNCFunctions.SendApplicationMessageFunction rsf =

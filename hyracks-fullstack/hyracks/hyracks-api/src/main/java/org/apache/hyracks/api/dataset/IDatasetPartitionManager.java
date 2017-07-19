@@ -21,7 +21,6 @@ package org.apache.hyracks.api.dataset;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksException;
-import org.apache.hyracks.api.io.IWorkspaceFileFactory;
 import org.apache.hyracks.api.job.JobId;
 
 public interface IDatasetPartitionManager extends IDatasetManager {
@@ -33,8 +32,6 @@ public interface IDatasetPartitionManager extends IDatasetManager {
 
     public void reportPartitionWriteCompletion(JobId jobId, ResultSetId resultSetId, int partition)
             throws HyracksException;
-
-    public void reportPartitionFailure(JobId jobId, ResultSetId resultSetId, int partition) throws HyracksException;
 
     public void initializeDatasetPartitionReader(JobId jobId, ResultSetId resultSetId, int partition, IFrameWriter noc)
             throws HyracksException;

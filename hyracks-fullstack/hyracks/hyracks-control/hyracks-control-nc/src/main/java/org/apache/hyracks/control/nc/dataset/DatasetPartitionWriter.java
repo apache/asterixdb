@@ -103,7 +103,6 @@ public class DatasetPartitionWriter implements IFrameWriter {
             resultState.closeAndDelete();
             resultState.abort();
             registerResultPartitionLocation(false);
-            manager.reportPartitionFailure(jobId, resultSetId, partition);
         } catch (HyracksException e) {
             throw new HyracksDataException(e);
         }
