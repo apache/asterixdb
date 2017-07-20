@@ -72,27 +72,6 @@
     <root.dir>${basedir}/..</root.dir>
   </properties>
 
-  <repositories>
-    <repository>
-      <id>maven-central</id>
-      <url>http://repo1.maven.org/maven2/</url>
-    </repository>
-    <repository>
-      <id>hyracks-public</id>
-      <url>http://obelix.ics.uci.edu/nexus/content/groups/hyracks-public/</url>
-    </repository>
-  </repositories>
-
-  <pluginRepositories>
-    <pluginRepository>
-      <id>hyracks-public</id>
-      <url>http://obelix.ics.uci.edu/nexus/content/groups/hyracks-public/</url>
-      <releases>
-        <updatePolicy>always</updatePolicy>
-      </releases>
-    </pluginRepository>
-  </pluginRepositories>
-
   <modules>
     <module>hyracks-util</module>
     <module>hyracks-ipc</module>

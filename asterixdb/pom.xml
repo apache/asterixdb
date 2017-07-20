@@ -663,23 +663,6 @@
     <module>asterix-license</module>
   </modules>
 
-  <repositories>
-    <repository>
-      <releases>
-        <enabled>true</enabled>
-        <updatePolicy>always</updatePolicy>
-        <checksumPolicy>warn</checksumPolicy>
-      </releases>
-      <snapshots>
-        <enabled>false</enabled>
-        <updatePolicy>always</updatePolicy>
-        <checksumPolicy>fail</checksumPolicy>
-      </snapshots>
-      <!-- TODO (mblow): copy rome dependency & update this to third-party -->
-      <id>asterix-public</id>
-      <url>http://obelix.ics.uci.edu/nexus/content/repositories/asterix-public/</url>
-    </repository>
-  </repositories>
   <dependencyManagement>
     <dependencies>
       <dependency>
