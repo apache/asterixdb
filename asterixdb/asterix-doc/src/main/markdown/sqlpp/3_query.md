@@ -17,10 +17,6 @@
  ! under the License.
  !-->
 
-A SQL++ query can be any legal SQL++ expression or `SELECT` statement. A SQL++ query always ends with a semicolon.
-
-    Query ::= (Expression | SelectStatement) ";"
-
 ##  <a id="SELECT_statements">SELECT Statements</a>
 
 The following shows the (rich) grammar for the `SELECT` statement in SQL++.

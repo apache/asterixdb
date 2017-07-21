@@ -17,9 +17,17 @@
  ! under the License.
  !-->
 
-# <a id="Queries">3. Queries</a>
+## <a id="Declarations">Declarations</a>
 
-A SQL++ query can be any legal SQL++ expression or `SELECT` statement. A SQL++ query always ends with a semicolon.
+    DatabaseDeclaration ::= "USE" Identifier
 
-    Query ::= (Expression | SelectStatement) ";"
+At the uppermost level, the world of data is organized into data namespaces called **dataverses**.
+To set the default dataverse for a series of statements, the USE statement is provided in SQL++.
+
+As an example, the following statement sets the default dataverse to be "TinySocial".
+
+##### Example
+
+    USE TinySocial;
+
 

@@ -17,9 +17,15 @@
  ! under the License.
  !-->
 
-# <a id="Queries">3. Queries</a>
 
-A SQL++ query can be any legal SQL++ expression or `SELECT` statement. A SQL++ query always ends with a semicolon.
+The following example creates an open btree index called gbReadTimeIdx on the (non-predeclared) readTime
+field of the GleambookMessages dataset having datetime type.
+This index can be useful for accelerating exact-match queries, range search queries,
+and joins involving the `readTime` field.
+The index is not enforced so that records that do not have the `readTime` field or have a mismatched type on the field
+can still be inserted into the dataset.
 
-    Query ::= (Expression | SelectStatement) ";"
+#### Example
+
+    CREATE INDEX gbReadTimeIdx ON GleambookMessages(readTime: datetime?);
 

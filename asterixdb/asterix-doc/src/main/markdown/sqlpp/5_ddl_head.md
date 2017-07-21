@@ -17,9 +17,21 @@
  ! under the License.
  !-->
 
-# <a id="Queries">3. Queries</a>
+# <a id="DDL_and_DML_statements">5. DDL and DML statements</a>
 
-A SQL++ query can be any legal SQL++ expression or `SELECT` statement. A SQL++ query always ends with a semicolon.
+    Statement ::= ( SingleStatement ( ";" )? )* <EOF>
+    SingleStatement ::= DatabaseDeclaration
+                      | FunctionDeclaration
+                      | CreateStatement
+                      | DropStatement
+                      | LoadStatement
+                      | SetStatement
+                      | InsertStatement
+                      | DeleteStatement
+                      | Query ";"
 
-    Query ::= (Expression | SelectStatement) ";"
+In addition to queries, an implementation of SQL++ needs to support statements for data definition
+and manipulation purposes as well as controlling the context to be used in evaluating SQL++ expressions.
+This section details the DDL and DML statements supported in the SQL++ language as realized today in
+Apache AsterixDB.
 

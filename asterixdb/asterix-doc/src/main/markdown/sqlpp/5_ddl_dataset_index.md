@@ -17,63 +17,6 @@
  ! under the License.
  !-->
 
-# <a id="DDL_and_DML_statements">5. DDL and DML statements</a>
-
-    Statement ::= ( SingleStatement ( ";" )? )* <EOF>
-    SingleStatement ::= DatabaseDeclaration
-                      | FunctionDeclaration
-                      | CreateStatement
-                      | DropStatement
-                      | LoadStatement
-                      | SetStatement
-                      | InsertStatement
-                      | DeleteStatement
-                      | Query ";"
-
-In addition to queries, an implementation of SQL++ needs to support statements for data definition
-and manipulation purposes as well as controlling the context to be used in evaluating SQL++ expressions.
-This section details the DDL and DML statements supported in the SQL++ language as realized today in
-Apache AsterixDB.
-
-## <a id="Declarations">Declarations</a>
-
-    DatabaseDeclaration ::= "USE" Identifier
-
-At the uppermost level, the world of data is organized into data namespaces called **dataverses**.
-To set the default dataverse for a series of statements, the USE statement is provided in SQL++.
-
-As an example, the following statement sets the default dataverse to be "TinySocial".
-
-##### Example
-
-    USE TinySocial;
-
-When writing a complex SQL++ query, it can sometimes be helpful to define one or more auxilliary functions
-that each address a sub-piece of the overall query.
-The declare function statement supports the creation of such helper functions.
-In general, the function body (expression) can be any legal SQL++ query expression.
-
-    FunctionDeclaration  ::= "DECLARE" "FUNCTION" Identifier ParameterList "{" Expression "}"
-    ParameterList        ::= "(" ( <VARIABLE> ( "," <VARIABLE> )* )? ")"
-
-The following is a simple example of a temporary SQL++ function definition and its use.
-
-##### Example
-
-    DECLARE FUNCTION friendInfo(userId) {
-        (SELECT u.id, u.name, len(u.friendIds) AS friendCount
-         FROM GleambookUsers u
-         WHERE u.id = userId)[0]
-     };
-
-    SELECT VALUE friendInfo(2);
-
-For our sample data set, this returns:
-
-    [
-      { "id": 2, "name": "IsbelDull", "friendCount": 2 }
-    ]
-
 ## <a id="Lifecycle_management_statements">Lifecycle Management Statements</a>
 
     CreateStatement ::= "CREATE" ( DatabaseSpecification
@@ -119,7 +62,7 @@ The following example creates a new dataverse named TinySocial if one does not a
 
 The CREATE TYPE statement is used to create a new named datatype.
 This type can then be used to create stored collections or utilized when defining one or more other datatypes.
-Much more information about the data model is available in the [data model reference guide](datamodel.html).
+Much more information about the data model is available in the [data model reference guide](../datamodel.html).
 A new type can be a object type, a renaming of another type, an array type, or a multiset type.
 A object type can be defined as being either open or closed.
 Instances of a closed object type are not permitted to contain fields other than those specified in the create type statement.
@@ -205,14 +148,14 @@ The system's default policy is the prefix policy except when there is a filter o
 
 Another advanced option shown in the syntax above, related to performance and mentioned above, is that a **filter** can optionally be created on a field to further optimize range queries with predicates on the filter's field.
 Filters allow some range queries to avoid searching all LSM components when the query conditions match the filter.
-(Refer to [Filter-Based LSM Index Acceleration](filters.html) for more information about filters.)
+(Refer to [Filter-Based LSM Index Acceleration](../filters.html) for more information about filters.)
 
 An External dataset, in contrast to an Internal dataset, has data stored outside of the system's control.
 Files living in HDFS or in the local filesystem(s) of a cluster's nodes are currently supported.
 External dataset support allows SQL++ queries to treat foreign data as though it were stored in the system,
 making it possible to query "legacy" file data (for example, Hive data) without having to physically import it.
 When defining an External dataset, an appropriate adapter type must be selected for the desired external data.
-(See the [Guide to External Data](externaldata.html) for more information on the available adapters.)
+(See the [Guide to External Data](../externaldata.html) for more information on the available adapters.)
 
 The following example creates an Internal dataset for storing FacefookUserType objects.
 It specifies that their id field is their primary key.
@@ -247,12 +190,11 @@ the URL and path needed to locate the data in HDFS and a description of the data
       ("delimiter"="|"));
 
 
-
-#### Indices
+### <a id="Indices">Indices</a>
 
     IndexSpecification ::= <INDEX> Identifier IfNotExists <ON> QualifiedName
                            "(" ( IndexField ) ( "," IndexField )* ")" ( "type" IndexType "?")?
-                           ( <ENFORCED> )?
+                           ( (<NOT>)? <ENFORCED> )?
     IndexType          ::= <BTREE> | <RTREE> | <KEYWORD> | <NGRAM> "(" IntegerLiteral ")"
 
 The CREATE INDEX statement creates a secondary index on one or more fields of a specified dataset.
@@ -276,6 +218,8 @@ field.
 
 The following example creates an open btree index called gbSendTimeIdx on the (non-predeclared) sendTime field of the GleambookMessages dataset having datetime type.
 This index can be useful for accelerating exact-match queries, range search queries, and joins involving the sendTime field.
+The index is enforced so that records that do not have the "sendTime" field or have a mismatched type on the field
+cannot be inserted into the dataset.
 
 #### Example
 
@@ -308,134 +252,3 @@ The following example creates a keyword index called fbMessageIdx on the message
 #### Example
 
     CREATE INDEX fbMessageIdx ON GleambookMessages(message) TYPE KEYWORD;
-
-### <a id="Functions"> Functions</a>
-
-The create function statement creates a **named** function that can then be used and reused in SQL++ queries.
-The body of a function can be any SQL++ expression involving the function's parameters.
-
-    FunctionSpecification ::= "FUNCTION" FunctionOrTypeName IfNotExists ParameterList "{" Expression "}"
-
-The following is an example of a CREATE FUNCTION statement which is similar to our earlier DECLARE FUNCTION example.
-It differs from that example in that it results in a function that is persistently registered by name in the specified dataverse (the current dataverse being used, if not otherwise specified).
-
-##### Example
-
-    CREATE FUNCTION friendInfo(userId) {
-        (SELECT u.id, u.name, len(u.friendIds) AS friendCount
-         FROM GleambookUsers u
-         WHERE u.id = userId)[0]
-     };
-
-#### Removal
-
-    DropStatement       ::= "DROP" ( "DATAVERSE" Identifier IfExists
-                                   | "TYPE" FunctionOrTypeName IfExists
-                                   | "DATASET" QualifiedName IfExists
-                                   | "INDEX" DoubleQualifiedName IfExists
-                                   | "FUNCTION" FunctionSignature IfExists )
-    IfExists            ::= ( "IF" "EXISTS" )?
-
-The DROP statement in SQL++ is the inverse of the CREATE statement. It can be used to drop dataverses, datatypes, datasets, indexes, and functions.
-
-The following examples illustrate some uses of the DROP statement.
-
-##### Example
-
-    DROP DATASET GleambookUsers IF EXISTS;
-
-    DROP INDEX GleambookMessages.gbSenderLocIndex;
-
-    DROP TYPE TinySocial2.GleambookUserType;
-
-    DROP FUNCTION friendInfo@1;
-
-    DROP DATAVERSE TinySocial;
-
-When an artifact is dropped, it will be droppped from the current dataverse if none is specified
-(see the DROP DATASET example above) or from the specified dataverse (see the DROP TYPE example above)
-if one is specified by fully qualifying the artifact name in the DROP statement.
-When specifying an index to drop, the index name must be qualified by the dataset that it indexes.
-When specifying a function to drop, since SQL++ allows functions to be overloaded by their number of arguments,
-the identifying name of the function to be dropped must explicitly include that information.
-(`friendInfo@1` above denotes the 1-argument function named friendInfo in the current dataverse.)
-
-### Import/Export Statements
-
-    LoadStatement  ::= <LOAD> <DATASET> QualifiedName <USING> AdapterName Configuration ( <PRE-SORTED> )?
-
-The LOAD statement is used to initially populate a dataset via bulk loading of data from an external file.
-An appropriate adapter must be selected to handle the nature of the desired external data.
-The LOAD statement accepts the same adapters and the same parameters as discussed earlier for External datasets.
-(See the [guide to external data](externaldata.html) for more information on the available adapters.)
-If a dataset has an auto-generated primary key field, the file to be imported should not include that field in it.
-
-The following example shows how to bulk load the GleambookUsers dataset from an external file containing data that has been prepared in ADM (Asterix Data Model) format.
-
-##### Example
-
-     LOAD DATASET GleambookUsers USING localfs
-        (("path"="127.0.0.1:///Users/bignosqlfan/tinysocialnew/gbu.adm"),("format"="adm"));
-
-## <a id="Modification_statements">Modification statements</a>
-
-### <a id="Inserts">INSERTs</a>
-
-    InsertStatement ::= <INSERT> <INTO> QualifiedName Query
-
-The SQL++ INSERT statement is used to insert new data into a dataset.
-The data to be inserted comes from a SQL++ query expression.
-This expression can be as simple as a constant expression, or in general it can be any legal SQL++ query.
-If the target dataset has an auto-generated primary key field, the insert statement should not include a
-value for that field in it.
-(The system will automatically extend the provided object with this additional field and a corresponding value.)
-Insertion will fail if the dataset already has data with the primary key value(s) being inserted.
-
-Inserts are processed transactionally by the system.
-The transactional scope of each insert transaction is the insertion of a single object plus its affiliated secondary index entries (if any).
-If the query part of an insert returns a single object, then the INSERT statement will be a single, atomic transaction.
-If the query part returns multiple objects, each object being inserted will be treated as a separate tranaction.
-The following example illustrates a query-based insertion.
-
-##### Example
-
-    INSERT INTO UsersCopy (SELECT VALUE user FROM GleambookUsers user)
-
-### <a id="Upserts">UPSERTs</a>
-
-    UpsertStatement ::= <UPSERT> <INTO> QualifiedName Query
-
-The SQL++ UPSERT statement syntactically mirrors the INSERT statement discussed above.
-The difference lies in its semantics, which for UPSERT are "add or replace" instead of the INSERT "add if not present, else error" semantics.
-Whereas an INSERT can fail if another object already exists with the specified key, the analogous UPSERT will replace the previous object's value with that of the new object in such cases.
-
-The following example illustrates a query-based upsert operation.
-
-##### Example
-
-    UPSERT INTO UsersCopy (SELECT VALUE user FROM GleambookUsers user)
-
-*Editor's note: Upserts currently work in AQL but are not yet enabled (at the moment) in SQL++.
-
-### <a id="Deletes">DELETEs</a>
-
-    DeleteStatement ::= <DELETE> <FROM> QualifiedName ( ( <AS> )? Variable )? ( <WHERE> Expression )?
-
-The SQL++ DELETE statement is used to delete data from a target dataset.
-The data to be deleted is identified by a boolean expression involving the variable bound to the target dataset in the DELETE statement.
-
-Deletes are processed transactionally by the system.
-The transactional scope of each delete transaction is the deletion of a single object plus its affiliated secondary index entries (if any).
-If the boolean expression for a delete identifies a single object, then the DELETE statement itself will be a single, atomic transaction.
-If the expression identifies multiple objects, then each object deleted will be handled as a separate transaction.
-
-The following examples illustrate single-object deletions.
-
-##### Example
-
-    DELETE FROM GleambookUsers user WHERE user.id = 8;
-
-##### Example
-
-    DELETE FROM GleambookUsers WHERE id = 5;
-
