@@ -58,7 +58,8 @@ public class StringRegExpPositionDescriptor extends AbstractScalarFunctionDynami
                     protected int compute(UTF8StringPointable srcPtr, UTF8StringPointable patternPtr)
                             throws IOException {
                         matcher.build(srcPtr, patternPtr);
-                        return matcher.postion();
+                        int pos = matcher.postion();
+                        return pos < 0 ? pos : pos + 1;
                     }
                 };
             }

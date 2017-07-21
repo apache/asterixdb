@@ -54,7 +54,8 @@ public class StringPositionDescriptor extends AbstractScalarFunctionDynamicDescr
 
                     @Override
                     protected int compute(UTF8StringPointable left, UTF8StringPointable right) throws IOException {
-                        return UTF8StringPointable.find(left, right, false);
+                        int pos = UTF8StringPointable.find(left, right, false);
+                        return pos < 0 ? pos : pos + 1;
                     }
                 };
             }
