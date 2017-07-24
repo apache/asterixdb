@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.external.input.record.reader;
 
+import com.rometools.rome.feed.synd.SyndEntry;
+import org.apache.asterix.external.api.IRawRecord;
 import org.apache.asterix.external.input.record.reader.rss.RSSRecordReader;
 import org.junit.Assert;
 import org.junit.Test;
@@ -38,5 +40,26 @@ public class RSSRecordReaderTest {
         }
         Assert.assertNotNull(expectedException);
         Assert.assertTrue(expectedException.getMessage().contains("UnknownHostException"));
+    }
+
+    private static final int NO_RECORDS = 10;
+
+    @Test
+    public void fetchFromLoremWebsite() throws MalformedURLException {
+        String dummyRssFeedURL = "http://lorem-rss.herokuapp.com/feed";
+        RSSRecordReader rssRecordReader = new RSSRecordReader(dummyRssFeedURL);
+        Exception expectedException = null;
+        int cnt = 0;
+        try {
+            while (rssRecordReader.hasNext() && cnt < NO_RECORDS) {
+                IRawRecord<SyndEntry> rec = rssRecordReader.next();
+                ++cnt;
+                Assert.assertTrue(rec.get().getTitle().startsWith("Lorem ipsum"));
+            }
+        } catch (Exception e) {
+            expectedException = e;
+        }
+        Assert.assertEquals(cnt, NO_RECORDS);
+        Assert.assertNull(expectedException);
     }
 }
