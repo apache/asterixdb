@@ -56,7 +56,7 @@
     * `missing` if the argument is a `missing` value,
     * `null` if the argument is a `null` value,
     * any other non-numeric input value will cause a type error,
-    * NaN for other legitimate numeric values.
+    * "NaN" for other legitimate numeric values.
 
  * Example:
 
@@ -65,7 +65,7 @@
 
  * The expected result is:
 
-        { "v1": 0.0, "v2": NaN, "v3": 1.5707963267948966, "v4": 1.0471975511965979, "v5": 2.0943951023931957 }
+        { "v1": 0.0, "v2": "NaN", "v3": 1.5707963267948966, "v4": 1.0471975511965979, "v5": 2.0943951023931957 }
 
 
 
@@ -83,7 +83,7 @@
     * `missing` if the argument is a `missing` value,
     * `null` if the argument is a `null` value,
     * any other non-numeric input value will cause a type error,
-    * NaN for other legitimate numeric values.
+    * "NaN" for other legitimate numeric values.
 
  * Example:
 
@@ -92,7 +92,7 @@
 
  * The expected result is:
 
-        { "v1": 1.5707963267948966, "v2": NaN, "v3": 0.0, "v4": 0.5235987755982989, "v5": -0.5235987755982989 }
+        { "v1": 1.5707963267948966, "v2": "NaN", "v3": 0.0, "v4": 0.5235987755982989, "v5": -0.5235987755982989 }
 
 
 ### atan ###
@@ -219,7 +219,7 @@
 
  * The expected result is:
 
-        { "v1": 2.718281828459045, "v2": 7.38905609893065, "v3": 1.0, "v4": 1.6487212707001282, "v5": Infinity }
+        { "v1": 2.718281828459045, "v2": 7.38905609893065, "v3": 1.0, "v4": 1.6487212707001282, "v5": "Infinity" }
 
 
 ### floor ###
@@ -274,7 +274,7 @@
 
  * The expected result is:
 
-        { "v1": 0.0, "v2": 0.6931471805599453, "v3": -Infinity, "v4": -0.6931471805599453, "v5": 6.907755278982137 }
+        { "v1": 0.0, "v2": 0.6931471805599453, "v3": "-Infinity", "v4": -0.6931471805599453, "v5": 6.907755278982137 }
 
 
 
@@ -298,7 +298,7 @@
 
  * The expected result is:
 
-        { "v1": 0.0, "v2": 0.3010299956639812, "v3": -Infinity, "v4": -0.3010299956639812, "v5": 3.0 }
+        { "v1": 0.0, "v2": 0.3010299956639812, "v3": "-Infinity", "v4": -0.3010299956639812, "v5": 3.0 }
 
 
 

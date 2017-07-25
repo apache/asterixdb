@@ -17,7 +17,7 @@
  ! under the License.
  !-->
 
-## <a id="ConditionalFunctions">Conditional Functions</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
+## <a id="ConditionalFunctions">Conditional Functions</a> ##
 
 ### if_null (ifnull) ###
 

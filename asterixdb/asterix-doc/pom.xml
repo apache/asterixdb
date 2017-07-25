@@ -59,7 +59,10 @@
                   <filelist dir="${project.basedir}/src/main/markdown/builtins" files="0_toc.md,1_numeric_common.md,1_numeric_delta.md,2_string_common.md,2_string_delta.md,3_binary.md,4_spatial.md,5_similarity.md,6_tokenizing.md,7_temporal.md,7_allens.md,8_record.md,9_aggregate_sql.md,10_comparison.md,11_type.md,13_conditional.md,12_misc.md" />
                 </concat>
                 <concat destfile="${project.build.directory}/generated-site/markdown/aql/builtins.md">
-                  <filelist dir="${project.basedir}/src/main/markdown/builtins" files="0_toc.md,1_numeric.md,2_string.md,3_binary.md,4_spatial.md,5_similarity.md,6_tokenizing.md,7_temporal.md,7_allens.md,8_record.md,9_aggregate_aql.md,10_comparison.md,11_type.md,13_conditional.md,12_misc.md" />
+                  <filelist dir="${project.basedir}/src/main/markdown/builtins" files="0_toc.md,1_numeric_common.md,1_numeric_delta.md,2_string_common.md,2_string_delta.md,3_binary.md,4_spatial.md,5_similarity.md,6_tokenizing.md,7_temporal.md,7_allens.md,8_record.md,9_aggregate_sql.md,10_comparison.md,11_type.md,13_conditional.md,12_misc.md" />
+                </concat>
+                <concat destfile="${project.build.directory}/generated-site/markdown/datamodel.md">
+                  <filelist dir="${project.basedir}/src/main/markdown/datamodel" files="datamodel_header.md,datamodel_primitive_common.md,datamodel_primitive_delta.md,datamodel_incomplete.md,datamodel_composite.md" />
                 </concat>
                 <concat destfile="${project.build.directory}/generated-site/markdown/ansible.md">
                   <filelist dir="${project.basedir}/src/main/installation/" files="ansible_title.md,ansible.md" />

@@ -17,7 +17,7 @@
  ! under the License.
  !-->
 
-## <a id="TypeFunctions">Type Functions</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
+## <a id="TypeFunctions">Type Functions</a> ##
 
 ### is_array (isarray) ###
  * Syntax:
