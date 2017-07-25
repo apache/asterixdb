@@ -102,6 +102,7 @@ public class StartTasksWork extends AbstractWork {
     @Override
     public void run() {
         Task task = null;
+        int taskIndex = 0;
         try {
             ncs.updateMaxJobId(jobId);
             NCServiceContext serviceCtx = ncs.getContext();
@@ -122,7 +123,8 @@ public class StartTasksWork extends AbstractWork {
                     return ac.getConnectorRecordDescriptorMap().get(conn.getConnectorId());
                 }
             };
-            for (TaskAttemptDescriptor td : taskDescriptors) {
+            while (taskIndex < taskDescriptors.size()) {
+                TaskAttemptDescriptor td = taskDescriptors.get(taskIndex);
                 TaskAttemptId taId = td.getTaskAttemptId();
                 TaskId tid = taId.getTaskId();
                 ActivityId aid = tid.getActivityId();
@@ -133,6 +135,7 @@ public class StartTasksWork extends AbstractWork {
                 }
                 final int partition = tid.getPartition();
                 List<IConnectorDescriptor> inputs = ac.getActivityInputMap().get(aid);
+                task = null;
                 task = new Task(joblet, flags, taId, han.getClass().getName(), ncs.getExecutor(), ncs,
                         createInputChannels(td, inputs));
                 IOperatorNodePushable operator = han.createPushRuntime(task, rdp, partition, td.getPartitionCount());
@@ -174,13 +177,16 @@ public class StartTasksWork extends AbstractWork {
                 task.setTaskRuntime(collectors.toArray(new IPartitionCollector[collectors.size()]), operator);
                 joblet.addTask(task);
                 task.start();
+                taskIndex++;
             }
         } catch (Exception e) {
             LOGGER.log(Level.WARNING, "Failure starting a task", e);
             // notify cc of start task failure
             List<Exception> exceptions = new ArrayList<>();
+            exceptions.add(e);
             ExceptionUtils.setNodeIds(exceptions, ncs.getId());
-            ncs.getWorkQueue().schedule(new NotifyTaskFailureWork(ncs, task, exceptions));
+            TaskAttemptId taskId = taskDescriptors.get(taskIndex).getTaskAttemptId();
+            ncs.getWorkQueue().schedule(new NotifyTaskFailureWork(ncs, task, exceptions, jobId, taskId));
         }
     }
 

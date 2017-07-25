@@ -48,7 +48,7 @@ public class JobFailureTest extends AbstractMultiNCIntegrationTest {
         spec.connect(conn, sourceOpDesc, 0, sinkOpDesc, 0);
         spec.addRoot(sinkOpDesc);
         try {
-            runTest(spec);
+            runTest(spec, ExceptionOnCreatePushRuntimeOperatorDescriptor.ERROR_MESSAGE);
         } catch (Exception e) {
             e.printStackTrace();
             throw e;

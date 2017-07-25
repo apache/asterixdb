@@ -69,15 +69,15 @@ import org.junit.Test;
 
 public class LocalityAwareConnectorTest extends AbstractMultiNCIntegrationTest {
 
-    final IFileSplitProvider splitProvider = new ConstantFileSplitProvider(
-            new FileSplit[] { new ManagedFileSplit(ASTERIX_IDS[0], "data" + File.separator + "tpch0.001"
-                    + File.separator + "lineitem.tbl"),
-                    new ManagedFileSplit(ASTERIX_IDS[1], "data" + File.separator + "tpch0.001" + File.separator
-                            + "lineitem.tbl"),
-                    new ManagedFileSplit(ASTERIX_IDS[2], "data" + File.separator + "tpch0.001" + File.separator
-                            + "lineitem.tbl"),
-                    new ManagedFileSplit(ASTERIX_IDS[3], "data" + File.separator + "tpch0.001" + File.separator
-                            + "lineitem.tbl") });
+    final IFileSplitProvider splitProvider = new ConstantFileSplitProvider(new FileSplit[] {
+            new ManagedFileSplit(ASTERIX_IDS[0],
+                    "data" + File.separator + "tpch0.001" + File.separator + "lineitem.tbl"),
+            new ManagedFileSplit(ASTERIX_IDS[1],
+                    "data" + File.separator + "tpch0.001" + File.separator + "lineitem.tbl"),
+            new ManagedFileSplit(ASTERIX_IDS[2],
+                    "data" + File.separator + "tpch0.001" + File.separator + "lineitem.tbl"),
+            new ManagedFileSplit(ASTERIX_IDS[3],
+                    "data" + File.separator + "tpch0.001" + File.separator + "lineitem.tbl") });
 
     final int fileSize = 800 * 1024 * 4;
 
@@ -112,8 +112,8 @@ public class LocalityAwareConnectorTest extends AbstractMultiNCIntegrationTest {
 
         JobSpecification spec = new JobSpecification();
 
-        FileScanOperatorDescriptor csvScanner = new FileScanOperatorDescriptor(spec, splitProvider, tupleParserFactory,
-                desc);
+        FileScanOperatorDescriptor csvScanner =
+                new FileScanOperatorDescriptor(spec, splitProvider, tupleParserFactory, desc);
 
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, csvScanner, "asterix-001", "asterix-002",
                 "asterix-003", "asterix-004");
@@ -163,7 +163,7 @@ public class LocalityAwareConnectorTest extends AbstractMultiNCIntegrationTest {
         spec.connect(conn2, grouper, 0, printer, 0);
 
         spec.addRoot(printer);
-        runTest(spec);
+        runTest(spec, null);
     }
 
     /**
@@ -177,8 +177,8 @@ public class LocalityAwareConnectorTest extends AbstractMultiNCIntegrationTest {
 
         JobSpecification spec = new JobSpecification();
 
-        FileScanOperatorDescriptor csvScanner = new FileScanOperatorDescriptor(spec, splitProvider, tupleParserFactory,
-                desc);
+        FileScanOperatorDescriptor csvScanner =
+                new FileScanOperatorDescriptor(spec, splitProvider, tupleParserFactory, desc);
 
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, csvScanner, "asterix-001", "asterix-002",
                 "asterix-003", "asterix-004");
@@ -221,7 +221,7 @@ public class LocalityAwareConnectorTest extends AbstractMultiNCIntegrationTest {
         spec.connect(conn2, grouper, 0, printer, 0);
 
         spec.addRoot(printer);
-        runTest(spec);
+        runTest(spec, null);
     }
 
     private AbstractSingleActivityOperatorDescriptor getPrinter(JobSpecification spec, String prefix)

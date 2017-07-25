@@ -19,7 +19,10 @@
 package org.apache.hyracks.control.nc.work;
 
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
+import org.apache.hyracks.api.dataflow.TaskAttemptId;
 import org.apache.hyracks.api.dataset.IDatasetPartitionManager;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.control.common.work.AbstractWork;
@@ -27,30 +30,36 @@ import org.apache.hyracks.control.nc.NodeControllerService;
 import org.apache.hyracks.control.nc.Task;
 
 public class NotifyTaskFailureWork extends AbstractWork {
+    private static final Logger LOGGER = Logger.getLogger(NotifyTaskFailureWork.class.getName());
     private final NodeControllerService ncs;
     private final Task task;
+    private final JobId jobId;
+    private final TaskAttemptId taskId;
 
     private final List<Exception> exceptions;
 
-    public NotifyTaskFailureWork(NodeControllerService ncs, Task task, List<Exception> exceptions) {
+    public NotifyTaskFailureWork(NodeControllerService ncs, Task task, List<Exception> exceptions, JobId jobId,
+            TaskAttemptId taskId) {
         this.ncs = ncs;
         this.task = task;
         this.exceptions = exceptions;
+        this.jobId = jobId;
+        this.taskId = taskId;
     }
 
     @Override
     public void run() {
         try {
-            JobId jobId = task.getJobletContext().getJobId();
             IDatasetPartitionManager dpm = ncs.getDatasetPartitionManager();
             if (dpm != null) {
                 dpm.abortReader(jobId);
             }
-            ncs.getClusterController().notifyTaskFailure(jobId, task.getTaskAttemptId(), ncs.getId(), exceptions);
-            //exceptions.get(0).printStackTrace();
+            ncs.getClusterController().notifyTaskFailure(jobId, taskId, ncs.getId(), exceptions);
         } catch (Exception e) {
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Failure reporting task failure to cluster controller", e);
         }
-        task.getJoblet().removeTask(task);
+        if (task != null) {
+            task.getJoblet().removeTask(task);
+        }
     }
 }

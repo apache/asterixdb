@@ -38,6 +38,7 @@ public class ExceptionOnCreatePushRuntimeOperatorDescriptor extends AbstractSing
     private static AtomicInteger createPushRuntime = new AtomicInteger();
     private static AtomicInteger initializeCounter = new AtomicInteger();
     private static AtomicInteger openCloseCounter = new AtomicInteger();
+    public static final String ERROR_MESSAGE = "I throw exceptions";
     private final int[] exceptionPartitions;
     private final boolean sleepOnInitialize;
 
@@ -56,7 +57,7 @@ public class ExceptionOnCreatePushRuntimeOperatorDescriptor extends AbstractSing
             if (exceptionPartitions != null) {
                 for (int p : exceptionPartitions) {
                     if (p == partition) {
-                        throw new HyracksDataException("I throw exceptions");
+                        throw new HyracksDataException(ERROR_MESSAGE);
                     }
                 }
             }

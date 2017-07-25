@@ -59,8 +59,8 @@ public abstract class AbstractMultiNCIntegrationTest {
 
     private static final Logger LOGGER = Logger.getLogger(AbstractMultiNCIntegrationTest.class.getName());
 
-    public static final String[] ASTERIX_IDS = { "asterix-001", "asterix-002", "asterix-003", "asterix-004",
-            "asterix-005", "asterix-006", "asterix-007" };
+    public static final String[] ASTERIX_IDS =
+            { "asterix-001", "asterix-002", "asterix-003", "asterix-004", "asterix-005", "asterix-006", "asterix-007" };
 
     private static ClusterControllerService cc;
 
@@ -103,7 +103,7 @@ public abstract class AbstractMultiNCIntegrationTest {
             ncConfig.setClusterListenAddress("127.0.0.1");
             ncConfig.setDataListenAddress("127.0.0.1");
             ncConfig.setResultListenAddress("127.0.0.1");
-            ncConfig.setIODevices(new String [] { ioDev.getAbsolutePath() });
+            ncConfig.setIODevices(new String[] { ioDev.getAbsolutePath() });
             asterixNCs[i] = new NodeControllerService(ncConfig);
             asterixNCs[i].start();
         }
@@ -138,7 +138,7 @@ public abstract class AbstractMultiNCIntegrationTest {
         hcc.cancelJob(jobId);
     }
 
-    protected void runTest(JobSpecification spec) throws Exception {
+    protected void runTest(JobSpecification spec, String expectedErrorMessage) throws Exception {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info(spec.toJSON().asText());
         }
@@ -180,14 +180,29 @@ public abstract class AbstractMultiNCIntegrationTest {
                     try {
                         bbis.close();
                     } catch (IOException e) {
-                        throw new HyracksDataException(e);
+                        throw HyracksDataException.create(e);
                     }
                 }
-
                 readSize = reader.read(resultFrame);
             }
         }
-        hcc.waitForCompletion(jobId);
+        boolean expectedExceptionThrown = false;
+        try {
+            hcc.waitForCompletion(jobId);
+        } catch (HyracksDataException hde) {
+            if (expectedErrorMessage != null) {
+                if (hde.toString().contains(expectedErrorMessage)) {
+                    expectedExceptionThrown = true;
+                } else {
+                    throw hde;
+                }
+            } else {
+                throw hde;
+            }
+        }
+        if (expectedErrorMessage != null && !expectedExceptionThrown) {
+            throw new Exception("Expected error (" + expectedErrorMessage + ") was not thrown");
+        }
         dumpOutputFiles();
     }
 

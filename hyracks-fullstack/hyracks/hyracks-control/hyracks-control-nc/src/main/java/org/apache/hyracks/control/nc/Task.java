@@ -275,7 +275,8 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
         if (!addPendingThread(ct)) {
             exceptions.add(HyracksDataException.create(TASK_ABORTED, getTaskAttemptId()));
             ExceptionUtils.setNodeIds(exceptions, ncs.getId());
-            ncs.getWorkQueue().schedule(new NotifyTaskFailureWork(ncs, this, exceptions));
+            ncs.getWorkQueue()
+                    .schedule(new NotifyTaskFailureWork(ncs, this, exceptions, joblet.getJobId(), taskAttemptId));
             return;
         }
         ct.setName(displayName + ":" + taskAttemptId + ":" + 0);
@@ -353,13 +354,14 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
                 for (int i = 0; i < exceptions.size(); i++) {
                     LOGGER.log(Level.WARNING,
                             "Task " + taskAttemptId + " failed with exception"
-                                    + (exceptions.size() > 1 ? "s (" + (i + 1) + "/" + exceptions.size()  + ")" : ""),
+                                    + (exceptions.size() > 1 ? "s (" + (i + 1) + "/" + exceptions.size() + ")" : ""),
                             exceptions.get(i));
                 }
             }
             NodeControllerService ncs = joblet.getNodeController();
             ExceptionUtils.setNodeIds(exceptions, ncs.getId());
-            ncs.getWorkQueue().schedule(new NotifyTaskFailureWork(ncs, this, exceptions));
+            ncs.getWorkQueue()
+                    .schedule(new NotifyTaskFailureWork(ncs, this, exceptions, joblet.getJobId(), taskAttemptId));
         }
     }
 

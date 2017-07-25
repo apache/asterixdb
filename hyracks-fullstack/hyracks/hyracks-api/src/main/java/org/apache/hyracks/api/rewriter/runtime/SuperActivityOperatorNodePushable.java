@@ -61,7 +61,8 @@ public class SuperActivityOperatorNodePushable implements IOperatorNodePushable 
     private int inputArity = 0;
 
     public SuperActivityOperatorNodePushable(SuperActivity parent, Map<ActivityId, IActivity> startActivities,
-            IHyracksTaskContext ctx, IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
+            IHyracksTaskContext ctx, IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions)
+            throws HyracksDataException {
         this.parent = parent;
         this.startActivities = startActivities;
         this.ctx = ctx;
@@ -76,7 +77,7 @@ public class SuperActivityOperatorNodePushable implements IOperatorNodePushable 
         try {
             init();
         } catch (Exception e) {
-            throw new IllegalStateException(e);
+            throw HyracksDataException.create(e);
         }
     }
 
