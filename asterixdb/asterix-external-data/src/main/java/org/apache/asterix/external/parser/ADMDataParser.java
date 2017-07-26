@@ -921,11 +921,23 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
                 parseInt64(unquoted, out);
                 return true;
             case FLOAT:
-                aFloat.setValue(Float.parseFloat(unquoted));
+                if ("INF".equals(unquoted)) {
+                    aFloat.setValue(Float.POSITIVE_INFINITY);
+                } else if ("-INF".equals(unquoted)) {
+                    aFloat.setValue(Float.NEGATIVE_INFINITY);
+                } else {
+                    aFloat.setValue(Float.parseFloat(unquoted));
+                }
                 floatSerde.serialize(aFloat, out);
                 return true;
             case DOUBLE:
-                aDouble.setValue(Double.parseDouble(unquoted));
+                if ("INF".equals(unquoted)) {
+                    aDouble.setValue(Double.POSITIVE_INFINITY);
+                } else if ("-INF".equals(unquoted)) {
+                    aDouble.setValue(Double.NEGATIVE_INFINITY);
+                } else {
+                    aDouble.setValue(Double.parseDouble(unquoted));
+                }
                 doubleSerde.serialize(aDouble, out);
                 return true;
             case STRING:

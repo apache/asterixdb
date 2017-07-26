@@ -4508,6 +4508,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="numeric">
+      <compilation-unit name="infinity">
+        <output-dir compare="Text">infinity</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
       <compilation-unit name="multiply_double">
         <output-dir compare="Text">multiply_double</output-dir>
       </compilation-unit>

@@ -20,7 +20,7 @@ package org.apache.asterix.dataflow.data.nontagged.printers.json.clean;
 
 import java.io.PrintStream;
 
-import org.apache.asterix.dataflow.data.nontagged.serde.AFloatSerializerDeserializer;
+import org.apache.asterix.dataflow.data.nontagged.printers.PrintTools;
 import org.apache.hyracks.algebricks.data.IPrinter;
 import org.apache.hyracks.algebricks.data.IPrinterFactory;
 
@@ -29,16 +29,8 @@ public class AFloatPrinterFactory implements IPrinterFactory {
     private static final long serialVersionUID = 1L;
     public static final AFloatPrinterFactory INSTANCE = new AFloatPrinterFactory();
 
-    public static final IPrinter PRINTER = (byte[] b, int s, int l, PrintStream ps) -> {
-        final float aFloat = AFloatSerializerDeserializer.getFloat(b, s + 1);
-        if (Float.isFinite(aFloat)) {
-            ps.print(aFloat);
-        } else {
-            ps.append('"');
-            ps.print(Float.toString(aFloat));
-            ps.append('"');
-        }
-    };
+    public static final IPrinter PRINTER = (byte[] b, int s, int l, PrintStream ps) -> PrintTools.printFloatForJson(b,
+            s, ps);
 
     @Override
     public IPrinter createPrinter() {

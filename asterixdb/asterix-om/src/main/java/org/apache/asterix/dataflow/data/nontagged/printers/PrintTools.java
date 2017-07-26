@@ -22,6 +22,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
 
+import org.apache.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
+import org.apache.asterix.dataflow.data.nontagged.serde.AFloatSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt32SerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt64SerializerDeserializer;
 import org.apache.asterix.om.base.temporal.GregorianCalendarSystem;
@@ -212,6 +214,46 @@ public class PrintTools {
                     GregorianCalendarSystem.Fields.MILLISECOND, true);
         } catch (IOException e) {
             throw new HyracksDataException(e);
+        }
+    }
+
+    public static void printDoubleForJson(byte[] b, int s, PrintStream ps) throws HyracksDataException {
+        final double d = ADoubleSerializerDeserializer.getDouble(b, s + 1);
+        if (Double.isFinite(d)) {
+            ps.print(d);
+        } else {
+            ps.append('"');
+            ps.print(Double.isNaN(d) ? "NaN" : (d == Double.POSITIVE_INFINITY) ? "INF" : "-INF");
+            ps.append('"');
+        }
+    }
+
+    public static void printDouble(byte[] b, int s, PrintStream ps) throws HyracksDataException {
+        final double d = ADoubleSerializerDeserializer.getDouble(b, s + 1);
+        if (Double.isFinite(d)) {
+            ps.print(d);
+        } else {
+            ps.print(Double.isNaN(d) ? "NaN" : (d == Double.POSITIVE_INFINITY) ? "INF" : "-INF");
+        }
+    }
+
+    public static void printFloatForJson(byte[] b, int s, PrintStream ps) throws HyracksDataException {
+        final float f = AFloatSerializerDeserializer.getFloat(b, s + 1);
+        if (Float.isFinite(f)) {
+            ps.print(f);
+        } else {
+            ps.print('"');
+            ps.print(Float.isNaN(f) ? "NaN" : (f == Float.POSITIVE_INFINITY) ? "INF" : "-INF");
+            ps.print('"');
+        }
+    }
+
+    public static void printFloat(byte[] b, int s, PrintStream ps) throws HyracksDataException {
+        final float f = AFloatSerializerDeserializer.getFloat(b, s + 1);
+        if (Float.isFinite(f)) {
+            ps.print(f);
+        } else {
+            ps.print(Float.isNaN(f) ? "NaN" : (f == Float.POSITIVE_INFINITY) ? "INF" : "-INF");
         }
     }
 

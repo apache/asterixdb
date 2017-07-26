@@ -1,1 +1,1 @@
-{ "float1": NaN, "float2": Infinity, "float3": -Infinity, "float4": -80.2, "float5": -2.056E-29, "float6": -2.056E-29 }
+{ "float1": NaN, "float2": INF, "float3": -INF, "float4": -80.2, "float5": -2.056E-29, "float6": -2.056E-29 }

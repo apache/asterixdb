@@ -83,8 +83,8 @@ DOUBLE_LITERAL       = signOrNothing(), digitSequence(), char(.), digitSequence(
 DOUBLE_LITERAL       = signOrNothing(), digitSequence(), char(.), digitSequence(), token(@EXPONENT)
 DOUBLE_LITERAL       = signOrNothing(), digitSequence(), token(@EXPONENT)
 DOUBLE_LITERAL       = string(NaN)
-DOUBLE_LITERAL       = string(Infinity)
-DOUBLE_LITERAL       = string(-Infinity)
+DOUBLE_LITERAL       = string(INF)
+DOUBLE_LITERAL       = string(-INF)
 
 DOUBLE_LITERAL       = token(DOUBLE_LITERAL), caseInsensitiveChar(d)
 FLOAT_LITERAL        = token(DOUBLE_LITERAL), caseInsensitiveChar(f)

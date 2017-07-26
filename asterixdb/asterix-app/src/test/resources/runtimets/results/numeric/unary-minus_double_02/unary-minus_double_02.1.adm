@@ -1,1 +1,1 @@
-{ "double1": 2.056E-29, "double2": NaN, "double3": -Infinity, "double4": Infinity }
+{ "double1": 2.056E-29, "double2": NaN, "double3": -INF, "double4": INF }
