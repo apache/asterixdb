@@ -30,7 +30,9 @@ public class ActiveEvent {
         JOB_FINISHED,
         PARTITION_EVENT,
         EXTENSION_EVENT,
-        STATS_UPDATED
+        STATS_UPDATED,
+        STATE_CHANGED,
+        FAILURE
     }
 
     private final JobId jobId;
@@ -43,10 +45,6 @@ public class ActiveEvent {
         this.entityId = entityId;
         this.eventKind = eventKind;
         this.eventObject = eventObject;
-    }
-
-    public ActiveEvent(JobId jobId, Kind eventKind, EntityId entityId) {
-        this(jobId, eventKind, entityId, null);
     }
 
     public JobId getJobId() {
@@ -79,8 +77,8 @@ public class ActiveEvent {
             return true;
         }
         ActiveEvent other = (ActiveEvent) o;
-        return Objects.equals(entityId, other.entityId) && Objects.equals(eventKind, other.eventKind) && Objects
-                .equals(eventObject, other.eventObject);
+        return Objects.equals(entityId, other.entityId) && Objects.equals(eventKind, other.eventKind)
+                && Objects.equals(eventObject, other.eventObject);
     }
 
     @Override

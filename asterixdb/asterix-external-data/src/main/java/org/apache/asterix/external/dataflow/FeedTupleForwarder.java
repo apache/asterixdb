@@ -40,6 +40,7 @@ public class FeedTupleForwarder implements ITupleForwarder {
     private IFrameWriter writer;
     private boolean paused = false;
     private boolean initialized;
+    private boolean failed;
 
     public FeedTupleForwarder(FeedLogManager feedLogManager) {
         this.feedLogManager = feedLogManager;
@@ -67,7 +68,8 @@ public class FeedTupleForwarder implements ITupleForwarder {
                     try {
                         wait();
                     } catch (InterruptedException e) {
-                        throw new HyracksDataException(e);
+                        Thread.currentThread().interrupt();
+                        throw HyracksDataException.create(e);
                     }
                 }
             }
@@ -88,7 +90,7 @@ public class FeedTupleForwarder implements ITupleForwarder {
     public void close() throws HyracksDataException {
         Throwable throwable = null;
         try {
-            if (appender.getTupleCount() > 0) {
+            if (!failed && appender.getTupleCount() > 0) {
                 FrameUtils.flushFrame(frame.getBuffer(), writer);
             }
         } catch (Throwable th) {
@@ -115,5 +117,10 @@ public class FeedTupleForwarder implements ITupleForwarder {
 
     public void flush() throws HyracksDataException {
         appender.flush(writer);
+    }
+
+    public void fail() throws HyracksDataException {
+        failed = true;
+        writer.fail();
     }
 }

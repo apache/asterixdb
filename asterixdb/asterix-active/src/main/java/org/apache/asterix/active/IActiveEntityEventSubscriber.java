@@ -21,12 +21,12 @@ package org.apache.asterix.active;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 /**
- * An active event subscriber that subscribe to events related to active entity
+ * An active event subscriber that subscribes to events related to active entity
  */
-public interface IActiveEventSubscriber {
+public interface IActiveEntityEventSubscriber {
 
     /**
-     * Notify the subscriber of a new event
+     * Notifies the subscriber of a new event
      *
      * @param event
      * @throws HyracksDataException
@@ -43,14 +43,9 @@ public interface IActiveEventSubscriber {
     /**
      * Wait until the terminal event has been received
      *
-     * @throws InterruptedException
+     * @throws Exception
      */
-    void sync() throws InterruptedException;
-
-    /**
-     * Stop watching events
-     */
-    void unsubscribe();
+    void sync() throws HyracksDataException, InterruptedException;
 
     /**
      * callback upon successful subscription

@@ -21,6 +21,8 @@ package org.apache.asterix.external.dataflow;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.external.api.IRawRecord;
 import org.apache.asterix.external.api.IRecordDataParser;
 import org.apache.asterix.external.api.IRecordReader;
@@ -30,6 +32,7 @@ import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
+import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 public class FeedRecordDataFlowController<T> extends AbstractFeedDataFlowController {
@@ -57,8 +60,8 @@ public class FeedRecordDataFlowController<T> extends AbstractFeedDataFlowControl
         try {
             failed = false;
             tupleForwarder.initialize(ctx, writer);
-            while (recordReader.hasNext()) {
-                IRawRecord<? extends T> record = recordReader.next();
+            while (hasNext()) {
+                IRawRecord<? extends T> record = next();
                 if (record == null) {
                     flush();
                     Thread.sleep(INTERVAL); // NOSONAR: No one notifies the sleeping thread
@@ -70,23 +73,44 @@ public class FeedRecordDataFlowController<T> extends AbstractFeedDataFlowControl
                     failedRecordsCount++;
                 }
             }
-        } catch (InterruptedException e) {
-            //TODO: Find out what could cause an interrupted exception beside termination of a job/feed
-            LOGGER.warn("Feed has been interrupted. Closing the feed", e);
-            failed = true;
-            try {
-                finish();
-            } catch (HyracksDataException hde) {
-                e.addSuppressed(hde);
+        } catch (HyracksDataException e) {
+            LOGGER.log(Level.WARN, e);
+            //if interrupted while waiting for a new record, then it is safe to not fail forward
+            if (e.getComponent() == ErrorCode.ASTERIX
+                    && e.getErrorCode() == ErrorCode.FEED_STOPPED_WHILE_WAITING_FOR_A_NEW_RECORD) {
+                // Do nothing
+            } else {
+                failed = true;
+                throw e;
             }
-            throw e;
         } catch (Exception e) {
             failed = true;
-            tupleForwarder.flush();
             LOGGER.warn("Failure while operating a feed source", e);
             throw HyracksDataException.create(e);
         }
         finish();
+    }
+
+    private IRawRecord<? extends T> next() throws HyracksDataException {
+        try {
+            return recordReader.next();
+        } catch (InterruptedException e) { // NOSONAR Gracefully handling interrupt to push records in the pipeline
+            throw new RuntimeDataException(ErrorCode.FEED_STOPPED_WHILE_WAITING_FOR_A_NEW_RECORD, e);
+        } catch (Exception e) {
+            throw HyracksDataException.create(e);
+        }
+    }
+
+    private boolean hasNext() throws HyracksDataException {
+        boolean hasNext;
+        try {
+            hasNext = recordReader.hasNext();
+        } catch (InterruptedException e) { // NOSONAR Gracefully handling interrupt to push records in the pipeline
+            throw new RuntimeDataException(ErrorCode.FEED_STOPPED_WHILE_WAITING_FOR_A_NEW_RECORD, e);
+        } catch (Exception e) {
+            throw HyracksDataException.create(e);
+        }
+        return hasNext;
     }
 
     private void finish() throws HyracksDataException {
@@ -194,6 +218,7 @@ public class FeedRecordDataFlowController<T> extends AbstractFeedDataFlowControl
         return dataParser;
     }
 
+    @Override
     public String getStats() {
         return "{\"incoming-records-count\": " + incomingRecordsCount + ", \"failed-at-parser-records-count\": "
                 + failedRecordsCount + "}";

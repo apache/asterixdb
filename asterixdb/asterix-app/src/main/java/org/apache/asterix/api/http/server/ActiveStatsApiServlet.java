@@ -18,15 +18,13 @@
  */
 package org.apache.asterix.api.http.server;
 
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.concurrent.ConcurrentMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import io.netty.handler.codec.http.HttpResponseStatus;
-import org.apache.asterix.active.ActiveLifecycleListener;
 import org.apache.asterix.active.IActiveEntityEventsListener;
+import org.apache.asterix.app.active.ActiveNotificationHandler;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.external.feed.watch.StatsSubscriber;
 import org.apache.hyracks.http.api.IServletRequest;
@@ -38,19 +36,21 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import io.netty.handler.codec.http.HttpResponseStatus;
+
 public class ActiveStatsApiServlet extends AbstractServlet {
 
     private static final Logger LOGGER = Logger.getLogger(ActiveStatsApiServlet.class.getName());
     private static final int DEFAULT_EXPIRE_TIME = 2000;
-    private final ActiveLifecycleListener activeLifecycleListener;
+    private final ActiveNotificationHandler activeNotificationHandler;
 
     public ActiveStatsApiServlet(ConcurrentMap<String, Object> ctx, String[] paths, ICcApplicationContext appCtx) {
         super(ctx, paths);
-        this.activeLifecycleListener = (ActiveLifecycleListener) appCtx.getActiveLifecycleListener();
+        this.activeNotificationHandler = (ActiveNotificationHandler) appCtx.getActiveNotificationHandler();
     }
 
     private JsonNode constructNode(ObjectMapper om, IActiveEntityEventsListener eventListener, long currentTime,
-            long ttl) throws InterruptedException, IOException {
+            long ttl) throws Exception {
         long statsTimeStamp = eventListener.getStatsTimeStamp();
         if (currentTime - statsTimeStamp > ttl) {
             StatsSubscriber subscriber = new StatsSubscriber(eventListener);
@@ -66,7 +66,7 @@ public class ActiveStatsApiServlet extends AbstractServlet {
         // Obtain all feed status
         String localPath = localPath(request);
         int expireTime;
-        IActiveEntityEventsListener[] listeners = activeLifecycleListener.getNotificationHandler().getEventListeners();
+        IActiveEntityEventsListener[] listeners = activeNotificationHandler.getEventListeners();
         ObjectMapper om = new ObjectMapper();
         om.enable(SerializationFeature.INDENT_OUTPUT);
         ObjectNode resNode = om.createObjectNode();

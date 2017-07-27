@@ -20,27 +20,44 @@ package org.apache.asterix.active;
 
 public enum ActivityState {
     /**
-     * The initial state of an activity.
-     */
-    CREATED,
-    /**
-     * The starting state and a possible terminal state. Next state can only be {@code ActivityState.STARTING}
+     * The starting state and a possible terminal state.
      */
     STOPPED,
     /**
-     * A terminal state
+     * Failure to recover from a temporary faliure caused the activity to fail permanantly.
+     * No further recovery attempts will be made.
      */
-    FAILED,
+    PERMANENTLY_FAILED,
     /**
-     * An intermediate state. Next state can only be {@code ActivityState.STARTED} or {@code ActivityState.FAILED}
+     * An unexpected failure caused the activity to fail but recovery attempts will start taking place
+     */
+    TEMPORARILY_FAILED,
+    /**
+     * Attempting to recover from temporary failure.
+     */
+    RECOVERING,
+    /**
+     * During an attempt to start the activity
      */
     STARTING,
     /**
-     * An intermediate state. Next state can only be {@code ActivityState.STOPPING} or {@code ActivityState.FAILED}
+     * The activity has been started successfully and is running
      */
-    STARTED,
+    RUNNING,
     /**
-     * An intermediate state. Next state can only be {@code ActivityState.STOPPED} or {@code ActivityState.FAILED}
+     * During an attempt to gracefully stop the activity
      */
-    STOPPING
+    STOPPING,
+    /**
+     * During an attempt to gracefully suspend the activity
+     */
+    SUSPENDING,
+    /**
+     * The activitiy has been suspended successfully. Next state must be resuming
+     */
+    SUSPENDED,
+    /**
+     * During an attempt to restart the activity after suspension
+     */
+    RESUMING
 }

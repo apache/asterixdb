@@ -22,8 +22,8 @@ package org.apache.asterix.metadata.api;
 import java.io.IOException;
 import java.rmi.RemoteException;
 
+import org.apache.asterix.common.exceptions.MetadataException;
 import org.apache.asterix.common.transactions.JobId;
-import org.apache.asterix.metadata.MetadataException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 

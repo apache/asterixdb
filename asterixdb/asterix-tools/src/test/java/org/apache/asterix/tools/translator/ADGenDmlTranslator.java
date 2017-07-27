@@ -24,10 +24,10 @@ import java.util.Map;
 
 import org.apache.asterix.common.annotations.TypeDataGen;
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.MetadataException;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.statement.DataverseDecl;
 import org.apache.asterix.lang.common.statement.TypeDecl;
-import org.apache.asterix.metadata.MetadataException;
 import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.TypeSignature;

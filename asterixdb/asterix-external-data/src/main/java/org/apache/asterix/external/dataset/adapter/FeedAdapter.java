@@ -55,4 +55,8 @@ public class FeedAdapter implements IDataSourceAdapter {
     public String getStats() {
         return controller.getStats();
     }
+
+    public void fail() throws HyracksDataException {
+        controller.fail();
+    }
 }

@@ -21,8 +21,8 @@ package org.apache.asterix.metadata.valueextractors;
 
 import java.nio.ByteBuffer;
 
+import org.apache.asterix.common.exceptions.MetadataException;
 import org.apache.asterix.common.transactions.JobId;
-import org.apache.asterix.metadata.MetadataException;
 import org.apache.asterix.metadata.api.IValueExtractor;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;

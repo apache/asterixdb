@@ -45,7 +45,7 @@ public class NodeManagerTest {
     @Test
     public void testNormal() throws HyracksException {
         IResourceManager resourceManager = new ResourceManager();
-        INodeManager nodeManager = new NodeManager(makeCCConfig(), resourceManager);
+        INodeManager nodeManager = new NodeManager(null, makeCCConfig(), resourceManager);
         NodeControllerState ncState1 = mockNodeControllerState(NODE1, false);
         NodeControllerState ncState2 = mockNodeControllerState(NODE2, false);
 
@@ -70,7 +70,7 @@ public class NodeManagerTest {
     @Test
     public void testException() throws HyracksException {
         IResourceManager resourceManager = new ResourceManager();
-        INodeManager nodeManager = new NodeManager(makeCCConfig(), resourceManager);
+        INodeManager nodeManager = new NodeManager(null, makeCCConfig(), resourceManager);
         NodeControllerState ncState1 = mockNodeControllerState(NODE1, true);
 
         boolean invalidNetworkAddress = false;
@@ -89,7 +89,7 @@ public class NodeManagerTest {
     @Test
     public void testNullNode() throws HyracksException {
         IResourceManager resourceManager = new ResourceManager();
-        INodeManager nodeManager = new NodeManager(makeCCConfig(), resourceManager);
+        INodeManager nodeManager = new NodeManager(null, makeCCConfig(), resourceManager);
 
         boolean invalidParameter = false;
         // Verifies states after a failure during adding nodes.

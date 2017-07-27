@@ -36,6 +36,7 @@ import org.apache.asterix.common.context.AsterixVirtualBufferCacheProvider;
 import org.apache.asterix.common.context.CorrelatedPrefixMergePolicyFactory;
 import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.exceptions.ACIDException;
+import org.apache.asterix.common.exceptions.MetadataException;
 import org.apache.asterix.common.ioopcallbacks.LSMBTreeIOOperationCallbackFactory;
 import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.asterix.external.adapter.factory.GenericAdapterFactory;
@@ -44,7 +45,6 @@ import org.apache.asterix.external.api.IDataSourceAdapter;
 import org.apache.asterix.external.dataset.adapter.AdapterIdentifier;
 import org.apache.asterix.external.indexing.ExternalFile;
 import org.apache.asterix.metadata.IDatasetDetails;
-import org.apache.asterix.metadata.MetadataException;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.api.IMetadataIndex;
@@ -54,7 +54,6 @@ import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.DatasourceAdapter;
 import org.apache.asterix.metadata.entities.Datatype;
 import org.apache.asterix.metadata.entities.Dataverse;
-import org.apache.asterix.metadata.entities.FeedPolicyEntity;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails.FileStructure;
@@ -160,7 +159,7 @@ public class MetadataBootstrap {
                 insertNodes(mdTxnCtx);
                 insertInitialGroups(mdTxnCtx);
                 insertInitialAdapters(mdTxnCtx);
-                insertInitialFeedPolicies(mdTxnCtx);
+                BuiltinFeedPolicies.insertInitialFeedPolicies(mdTxnCtx);
                 insertInitialCompactionPolicies(mdTxnCtx);
                 if (LOGGER.isLoggable(Level.INFO)) {
                     LOGGER.info("Finished creating metadata B-trees.");
@@ -262,15 +261,6 @@ public class MetadataBootstrap {
         }
     }
 
-    private static void insertInitialFeedPolicies(MetadataTransactionContext mdTxnCtx) throws MetadataException {
-        for (FeedPolicyEntity feedPolicy : BuiltinFeedPolicies.policies) {
-            MetadataManager.INSTANCE.addFeedPolicy(mdTxnCtx, feedPolicy);
-        }
-        if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("Finished adding built-in feed policies.");
-        }
-    }
-
     private static void insertInitialCompactionPolicies(MetadataTransactionContext mdTxnCtx) throws MetadataException {
         String[] builtInCompactionPolicyClassNames =
                 new String[] { ConstantMergePolicyFactory.class.getName(), PrefixMergePolicyFactory.class.getName(),
@@ -358,7 +348,8 @@ public class MetadataBootstrap {
             if (index.getResourceId() != resource.getId()) {
                 throw new HyracksDataException("Resource Id doesn't match expected metadata index resource id");
             }
-            IndexDataflowHelper indexHelper = new IndexDataflowHelper(ncServiceCtx, storageComponentProvider.getStorageManager(), file);
+            IndexDataflowHelper indexHelper =
+                    new IndexDataflowHelper(ncServiceCtx, storageComponentProvider.getStorageManager(), file);
             indexHelper.open(); // Opening the index through the helper will ensure it gets instantiated
             indexHelper.close();
         }

@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.algebra.operators.physical;
 
-import org.apache.asterix.metadata.MetadataException;
+import org.apache.asterix.common.exceptions.MetadataException;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.declared.DataSourceId;
 import org.apache.asterix.metadata.declared.MetadataProvider;

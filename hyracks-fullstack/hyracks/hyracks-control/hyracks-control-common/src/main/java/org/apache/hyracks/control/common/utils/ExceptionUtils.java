@@ -59,10 +59,13 @@ public class ExceptionUtils {
         List<Exception> newExceptions = new ArrayList<>();
         for (Exception e : exceptions) {
             if (e instanceof HyracksDataException) {
-                newExceptions.add(HyracksDataException.create((HyracksDataException) e, nodeId));
+                if (((HyracksDataException) e).getNodeId() == null) {
+                    newExceptions.add(HyracksDataException.create((HyracksDataException) e, nodeId));
+                } else {
+                    newExceptions.add(e);
+                }
             } else {
-                newExceptions.add(new HyracksDataException(ErrorCode.HYRACKS, ErrorCode.FAILURE_ON_NODE, e.getMessage(),
-                        e, nodeId));
+                newExceptions.add(new HyracksDataException(ErrorCode.HYRACKS, ErrorCode.FAILURE_ON_NODE, e, nodeId));
             }
         }
         exceptions.clear();

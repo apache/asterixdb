@@ -227,7 +227,7 @@ public class TestNodeController {
         Index index = primaryIndexInfo.getIndex();
         CcApplicationContext appCtx =
                 (CcApplicationContext) ExecutionTestUtil.integrationUtil.cc.getApplicationContext();
-        MetadataProvider mdProvider = new MetadataProvider(appCtx, dataverse, storageComponentProvider);
+        MetadataProvider mdProvider = new MetadataProvider(appCtx, dataverse);
         try {
             return dataset.getResourceFactory(mdProvider, index, primaryIndexInfo.recordType, primaryIndexInfo.metaType,
                     primaryIndexInfo.mergePolicyFactory, primaryIndexInfo.mergePolicyProperties);
@@ -246,8 +246,7 @@ public class TestNodeController {
         Dataverse dataverse = new Dataverse(dataset.getDataverseName(), NonTaggedDataFormat.class.getName(),
                 MetadataUtil.PENDING_NO_OP);
         MetadataProvider mdProvider = new MetadataProvider(
-                (ICcApplicationContext) ExecutionTestUtil.integrationUtil.cc.getApplicationContext(), dataverse,
-                storageComponentProvider);
+                (ICcApplicationContext) ExecutionTestUtil.integrationUtil.cc.getApplicationContext(), dataverse);
         try {
             IResourceFactory resourceFactory = dataset.getResourceFactory(mdProvider, primaryIndexInfo.index,
                     recordType, metaType, mergePolicyFactory, mergePolicyProperties);

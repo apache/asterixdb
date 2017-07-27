@@ -18,12 +18,38 @@
  */
 package org.apache.hyracks.api.job;
 
+import java.util.List;
+
 import org.apache.hyracks.api.exceptions.HyracksException;
 
+/**
+ * A listener for job related events
+ */
 public interface IJobLifecycleListener {
-    public void notifyJobCreation(JobId jobId, JobSpecification spec) throws HyracksException;
+    /**
+     * Notify the listener that a job has been created
+     *
+     * @param jobId
+     * @param spec
+     * @throws HyracksException
+     */
+    void notifyJobCreation(JobId jobId, JobSpecification spec) throws HyracksException;
 
-    public void notifyJobStart(JobId jobId) throws HyracksException;
+    /**
+     * Notify the listener that the job has started on the cluster controller
+     *
+     * @param jobId
+     * @throws HyracksException
+     */
+    void notifyJobStart(JobId jobId) throws HyracksException;
 
-    public void notifyJobFinish(JobId jobId) throws HyracksException;
+    /**
+     * Notify the listener that the job has been terminated, passing exceptions in case of failure
+     *
+     * @param jobId
+     * @param jobStatus
+     * @param exceptions
+     * @throws HyracksException
+     */
+    void notifyJobFinish(JobId jobId, JobStatus jobStatus, List<Exception> exceptions) throws HyracksException;
 }

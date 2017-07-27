@@ -34,14 +34,15 @@ import org.apache.asterix.common.context.CorrelatedPrefixMergePolicyFactory;
 import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.context.ITransactionSubsystemProvider;
 import org.apache.asterix.common.context.TransactionSubsystemProvider;
+import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.MetadataException;
 import org.apache.asterix.common.transactions.IRecoveryManager;
 import org.apache.asterix.common.transactions.JobId;
 import org.apache.asterix.external.indexing.IndexingConstants;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.formats.nontagged.TypeTraitProvider;
-import org.apache.asterix.metadata.MetadataException;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.declared.MetadataProvider;
@@ -51,7 +52,6 @@ import org.apache.asterix.metadata.entities.Dataverse;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails;
 import org.apache.asterix.metadata.entities.NodeGroup;
-import org.apache.asterix.metadata.lock.MetadataLockManager;
 import org.apache.asterix.om.base.AMutableString;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.types.ARecordType;
@@ -283,22 +283,22 @@ public class DatasetUtil {
             metaItemType = (ARecordType) metadataProvider.findMetaType(dataset);
         }
         JobSpecification spec = RuntimeUtils.createJobSpecification(metadataProvider.getApplicationContext());
-        Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint = metadataProvider
-                .getSplitProviderAndConstraints(dataset);
+        Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint =
+                metadataProvider.getSplitProviderAndConstraints(dataset);
         FileSplit[] fs = splitsAndConstraint.first.getFileSplits();
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < fs.length; i++) {
             sb.append(fs[i] + " ");
         }
         LOGGER.info("CREATING File Splits: " + sb.toString());
-        Pair<ILSMMergePolicyFactory, Map<String, String>> compactionInfo = DatasetUtil.getMergePolicyFactory(dataset,
-                metadataProvider.getMetadataTxnContext());
+        Pair<ILSMMergePolicyFactory, Map<String, String>> compactionInfo =
+                DatasetUtil.getMergePolicyFactory(dataset, metadataProvider.getMetadataTxnContext());
         //prepare a LocalResourceMetadata which will be stored in NC's local resource repository
         IResourceFactory resourceFactory = dataset.getResourceFactory(metadataProvider, index, itemType, metaItemType,
                 compactionInfo.first, compactionInfo.second);
-        IndexBuilderFactory indexBuilderFactory = new IndexBuilderFactory(
-                metadataProvider.getStorageComponentProvider().getStorageManager(), splitsAndConstraint.first,
-                resourceFactory, !dataset.isTemp());
+        IndexBuilderFactory indexBuilderFactory =
+                new IndexBuilderFactory(metadataProvider.getStorageComponentProvider().getStorageManager(),
+                        splitsAndConstraint.first, resourceFactory, !dataset.isTemp());
         IndexCreateOperatorDescriptor indexCreateOp = new IndexCreateOperatorDescriptor(spec, indexBuilderFactory);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, indexCreateOp,
                 splitsAndConstraint.second);
@@ -344,8 +344,8 @@ public class DatasetUtil {
      */
     public static IOperatorDescriptor createPrimaryIndexScanOp(JobSpecification spec, MetadataProvider metadataProvider,
             Dataset dataset, JobId jobId) throws AlgebricksException {
-        Pair<IFileSplitProvider, AlgebricksPartitionConstraint> primarySplitsAndConstraint = metadataProvider
-                .getSplitProviderAndConstraints(dataset);
+        Pair<IFileSplitProvider, AlgebricksPartitionConstraint> primarySplitsAndConstraint =
+                metadataProvider.getSplitProviderAndConstraints(dataset);
         IFileSplitProvider primaryFileSplitProvider = primarySplitsAndConstraint.first;
         AlgebricksPartitionConstraint primaryPartitionConstraint = primarySplitsAndConstraint.second;
         // -Infinity
@@ -396,8 +396,8 @@ public class DatasetUtil {
         try {
             Index primaryIndex = metadataProvider.getIndex(dataset.getDataverseName(), dataset.getDatasetName(),
                     dataset.getDatasetName());
-            Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint = metadataProvider
-                    .getSplitProviderAndConstraints(dataset);
+            Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint =
+                    metadataProvider.getSplitProviderAndConstraints(dataset);
 
             // prepare callback
             JobId jobId = ((JobEventListenerFactory) spec.getJobletEventListenerFactory()).getJobId();
@@ -405,8 +405,8 @@ public class DatasetUtil {
             for (int i = 0; i < numKeys; i++) {
                 primaryKeyFields[i] = i;
             }
-            boolean hasSecondaries = metadataProvider
-                    .getDatasetIndexes(dataset.getDataverseName(), dataset.getDatasetName()).size() > 1;
+            boolean hasSecondaries =
+                    metadataProvider.getDatasetIndexes(dataset.getDataverseName(), dataset.getDatasetName()).size() > 1;
             IStorageComponentProvider storageComponentProvider = metadataProvider.getStorageComponentProvider();
             IModificationOperationCallbackFactory modificationCallbackFactory = dataset.getModificationCallbackFactory(
                     storageComponentProvider, primaryIndex, jobId, IndexOperation.UPSERT, primaryKeyFields);
@@ -426,8 +426,8 @@ public class DatasetUtil {
             f++;
             // add the previous meta second
             if (dataset.hasMetaPart()) {
-                outputSerDes[f] = FormatUtils.getDefaultFormat().getSerdeProvider()
-                        .getSerializerDeserializer(metaItemType);
+                outputSerDes[f] =
+                        FormatUtils.getDefaultFormat().getSerdeProvider().getSerializerDeserializer(metaItemType);
                 outputTypeTraits[f] = FormatUtils.getDefaultFormat().getTypeTraitProvider().getTypeTrait(metaItemType);
                 f++;
             }
@@ -477,8 +477,8 @@ public class DatasetUtil {
      */
     public static IOperatorDescriptor createDummyKeyProviderOp(JobSpecification spec, Dataset dataset,
             MetadataProvider metadataProvider) throws AlgebricksException {
-        Pair<IFileSplitProvider, AlgebricksPartitionConstraint> primarySplitsAndConstraint = metadataProvider
-                .getSplitProviderAndConstraints(dataset);
+        Pair<IFileSplitProvider, AlgebricksPartitionConstraint> primarySplitsAndConstraint =
+                metadataProvider.getSplitProviderAndConstraints(dataset);
         AlgebricksPartitionConstraint primaryPartitionConstraint = primarySplitsAndConstraint.second;
 
         // Build dummy tuple containing one field with a dummy value inside.
@@ -506,9 +506,8 @@ public class DatasetUtil {
         return datasetName.indexOf('.') > 0; //NOSONAR a fully qualified name can't start with a .
     }
 
-    public static String getDataverseFromFullyQualifiedName(String datasetName) {
-        int idx = datasetName.indexOf('.');
-        return datasetName.substring(0, idx);
+    public static String getFullyQualifiedName(Dataset dataset) {
+        return dataset.getDataverseName() + '.' + dataset.getDatasetName();
     }
 
     /***
@@ -548,13 +547,14 @@ public class DatasetUtil {
      */
     public static String createNodeGroupForNewDataset(String dataverseName, String datasetName, long rebalanceCount,
             Set<String> ncNames, MetadataProvider metadataProvider) throws Exception {
+        ICcApplicationContext appCtx = metadataProvider.getApplicationContext();
         String nodeGroup = dataverseName + "." + datasetName + (rebalanceCount == 0L ? "" : "_" + rebalanceCount);
         MetadataTransactionContext mdTxnCtx = metadataProvider.getMetadataTxnContext();
-        MetadataLockManager.INSTANCE.acquireNodeGroupWriteLock(metadataProvider.getLocks(), nodeGroup);
+        appCtx.getMetadataLockManager().acquireNodeGroupWriteLock(metadataProvider.getLocks(), nodeGroup);
         NodeGroup ng = MetadataManager.INSTANCE.getNodegroup(mdTxnCtx, nodeGroup);
         if (ng != null) {
             nodeGroup = nodeGroup + "_" + UUID.randomUUID().toString();
-            MetadataLockManager.INSTANCE.acquireNodeGroupWriteLock(metadataProvider.getLocks(), nodeGroup);
+            appCtx.getMetadataLockManager().acquireNodeGroupWriteLock(metadataProvider.getLocks(), nodeGroup);
         }
         MetadataManager.INSTANCE.addNodegroup(mdTxnCtx, new NodeGroup(nodeGroup, new ArrayList<>(ncNames)));
         return nodeGroup;

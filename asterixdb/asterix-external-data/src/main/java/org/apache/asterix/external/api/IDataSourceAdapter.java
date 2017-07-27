@@ -29,6 +29,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
  * to be implemented by each adapter irrespective of the the kind of
  * adapter(pull or push).
  */
+@FunctionalInterface
 public interface IDataSourceAdapter extends Serializable {
 
     public enum AdapterType {
@@ -38,6 +39,7 @@ public interface IDataSourceAdapter extends Serializable {
 
     /**
      * Triggers the adapter to begin ingesting data from the external source.
+     *
      * @param partition
      *            The adapter could be running with a degree of parallelism.
      *            partition corresponds to the i'th parallel instance.

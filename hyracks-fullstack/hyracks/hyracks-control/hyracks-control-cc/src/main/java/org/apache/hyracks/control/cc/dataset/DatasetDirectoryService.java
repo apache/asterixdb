@@ -41,6 +41,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
+import org.apache.hyracks.api.job.JobStatus;
 import org.apache.hyracks.control.cc.PreDistributedJobStore;
 import org.apache.hyracks.control.common.dataset.ResultStateSweeper;
 import org.apache.hyracks.control.common.work.IResultCallback;
@@ -69,7 +70,7 @@ public class DatasetDirectoryService implements IDatasetDirectoryService {
         this.resultTTL = resultTTL;
         this.resultSweepThreshold = resultSweepThreshold;
         this.preDistributedJobStore = preDistributedJobStore;
-        jobResultLocations = new LinkedHashMap<JobId, JobResultInfo>();
+        jobResultLocations = new LinkedHashMap<>();
     }
 
     @Override
@@ -94,7 +95,7 @@ public class DatasetDirectoryService implements IDatasetDirectoryService {
     }
 
     @Override
-    public void notifyJobFinish(JobId jobId) throws HyracksException {
+    public void notifyJobFinish(JobId jobId, JobStatus jobStatus, List<Exception> exceptions) throws HyracksException {
         // Auto-generated method stub
     }
 
@@ -179,7 +180,7 @@ public class DatasetDirectoryService implements IDatasetDirectoryService {
 
     @Override
     public synchronized long getResultTimestamp(JobId jobId) {
-        if (preDistributedJobStore.jobIsPredistributed(jobId)){
+        if (preDistributedJobStore.jobIsPredistributed(jobId)) {
             return -1;
         }
         return getState(jobId).getTimestamp();

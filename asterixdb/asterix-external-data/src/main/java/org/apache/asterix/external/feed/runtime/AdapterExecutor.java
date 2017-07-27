@@ -77,10 +77,14 @@ public class AdapterExecutor implements Runnable {
                 // Adapter has completed execution
                 continueIngestion = false;
             } catch (InterruptedException e) {
+                adapter.fail();
                 throw e;
             } catch (Exception e) {
                 LOGGER.error("Exception during feed ingestion ", e);
                 continueIngestion = adapter.handleException(e);
+                if (!continueIngestion) {
+                    adapter.fail();
+                }
                 failedIngestion = !continueIngestion;
                 restartCount++;
             }

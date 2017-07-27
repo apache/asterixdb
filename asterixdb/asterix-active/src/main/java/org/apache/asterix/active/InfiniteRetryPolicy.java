@@ -16,42 +16,27 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.metadata.lock;
+package org.apache.asterix.active;
 
-/**
- * A Metadata lock local to compilation node
- */
-public interface IMetadataLock {
+public class InfiniteRetryPolicy implements IRetryPolicy {
 
-    enum Mode {
-        READ,
-        MODIFY,
-        REFRESH,
-        INDEX_BUILD,
-        INDEX_DROP,
-        WRITE
+    private final IActiveEntityEventsListener listener;
+
+    public InfiniteRetryPolicy(IActiveEntityEventsListener listener) {
+        this.listener = listener;
     }
 
-    /**
-     * Acquire a lock
-     *
-     * @param mode
-     *            lock mode
-     */
-    void acquire(IMetadataLock.Mode mode);
+    @Override
+    public boolean retry() {
+        synchronized (listener) {
+            try {
+                listener.wait(5000); //NOSONAR this method is being called in a while loop
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return false;
+            }
+        }
+        return true;
+    }
 
-    /**
-     * Release a lock
-     *
-     * @param mode
-     *            lock mode
-     */
-    void release(IMetadataLock.Mode mode);
-
-    /**
-     * Get the lock's key
-     *
-     * @return the key identiying the lock
-     */
-    String getKey();
 }

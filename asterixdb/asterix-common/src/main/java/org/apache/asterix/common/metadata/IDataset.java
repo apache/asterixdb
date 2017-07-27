@@ -23,6 +23,16 @@ import java.util.List;
 public interface IDataset {
 
     /**
+     * @return the dataverse name
+     */
+    String getDataverseName();
+
+    /**
+     * @return the dataset name
+     */
+    String getDatasetName();
+
+    /**
      * @return the list of primary keys for the dataset
      */
     List<List<String>> getPrimaryKeys();
@@ -31,5 +41,4 @@ public interface IDataset {
      * @return the bloom filter fields indexes for the primary index of the dataset
      */
     int[] getPrimaryBloomFilterFields();
-
 }

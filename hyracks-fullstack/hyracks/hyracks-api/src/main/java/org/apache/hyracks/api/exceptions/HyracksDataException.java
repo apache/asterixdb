@@ -53,11 +53,6 @@ public class HyracksDataException extends HyracksException {
         return new HyracksDataException(ErrorCode.HYRACKS, code, ErrorCode.getErrorMessage(code), cause, params);
     }
 
-    public static HyracksDataException create(HyracksDataException e, String nodeId) {
-        return new HyracksDataException(e.getComponent(), e.getErrorCode(), e.getMessage(), e.getCause(), nodeId,
-                e.getParams());
-    }
-
     public static HyracksDataException suppress(HyracksDataException root, Throwable th) {
         if (root == null) {
             return HyracksDataException.create(th);
@@ -124,7 +119,7 @@ public class HyracksDataException extends HyracksException {
     }
 
     public HyracksDataException(String component, int errorCode, Throwable cause, Serializable... params) {
-        super(component, errorCode, cause.getMessage(), cause, null, params);
+        super(component, errorCode, cause, params);
     }
 
     public HyracksDataException(String component, int errorCode, String message, Throwable cause,
@@ -132,4 +127,8 @@ public class HyracksDataException extends HyracksException {
         super(component, errorCode, message, cause, null, params);
     }
 
+    public static HyracksDataException create(HyracksDataException e, String nodeId) {
+        return new HyracksDataException(e.getComponent(), e.getErrorCode(), e.getMessage(), e.getCause(), nodeId,
+                e.getParams());
+    }
 }

@@ -29,7 +29,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
-import org.apache.asterix.file.StorageComponentProvider;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.declared.MetadataProvider;
@@ -93,7 +92,7 @@ public class ConnectorApiServlet extends AbstractServlet {
             MetadataManager.INSTANCE.init();
             MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
             // Retrieves file splits of the dataset.
-            MetadataProvider metadataProvider = new MetadataProvider(appCtx, null, new StorageComponentProvider());
+            MetadataProvider metadataProvider = new MetadataProvider(appCtx, null);
             try {
                 metadataProvider.setMetadataTxnContext(mdTxnCtx);
                 Dataset dataset = metadataProvider.findDataset(dataverseName, datasetName);

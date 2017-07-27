@@ -28,18 +28,19 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.IntStream;
 
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.active.IActiveEntityEventsListener;
+import org.apache.asterix.app.active.ActiveNotificationHandler;
+import org.apache.asterix.common.api.IMetadataLockManager;
+import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.transactions.JobId;
 import org.apache.asterix.common.utils.JobUtils;
 import org.apache.asterix.dataflow.data.nontagged.MissingWriterFactory;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
-import org.apache.asterix.metadata.declared.MetadataManagerUtil;
+import org.apache.asterix.metadata.api.IActiveEntityController;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
-import org.apache.asterix.metadata.lock.LockList;
-import org.apache.asterix.metadata.lock.MetadataLockManager;
 import org.apache.asterix.metadata.utils.DatasetUtil;
 import org.apache.asterix.metadata.utils.IndexUtil;
 import org.apache.asterix.rebalance.IDatasetRebalanceCallback;
@@ -119,7 +120,6 @@ public class RebalanceUtil {
             // The target dataset for rebalance.
             targetDataset = sourceDataset.getTargetDatasetForRebalance(nodeGroupName);
 
-
             // Rebalances the source dataset into the target dataset.
             rebalance(sourceDataset, targetDataset, metadataProvider, hcc, datasetRebalanceCallback);
 
@@ -128,8 +128,6 @@ public class RebalanceUtil {
         } catch (Exception e) {
             abort(e, e, mdTxnCtx);
             throw e;
-        } finally {
-            metadataProvider.getLocks().reset();
         }
 
         // Up to this point, since the bulk part of a rebalance operation is done,
@@ -143,7 +141,7 @@ public class RebalanceUtil {
             // Executes the 2nd Metadata transaction for switching the metadata entity.
             // It detaches the source dataset and attaches the target dataset to metadata's point of view.
             runMetadataTransaction(metadataProvider,
-                () -> rebalanceSwitch(sourceDataset, targetDataset, metadataProvider, hcc));
+                    () -> rebalanceSwitch(sourceDataset, targetDataset, metadataProvider, hcc));
             // Executes the 3rd Metadata transaction to drop the source dataset files and the node group for
             // the source dataset.
             runMetadataTransaction(metadataProvider, () -> dropSourceDataset(sourceDataset, metadataProvider, hcc));
@@ -188,8 +186,6 @@ public class RebalanceUtil {
         } catch (Exception e) {
             abort(e, e, mdTxnCtx);
             throw e;
-        } finally {
-            metadataProvider.getLocks().reset();
         }
     }
 
@@ -219,22 +215,25 @@ public class RebalanceUtil {
     private static void rebalanceSwitch(Dataset source, Dataset target, MetadataProvider metadataProvider,
             IHyracksClientConnection hcc) throws Exception {
         MetadataTransactionContext mdTxnCtx = metadataProvider.getMetadataTxnContext();
-
-        // Acquires the metadata write lock for the source/target dataset.
-        writeLockDataset(metadataProvider.getLocks(), source);
-
-        Dataset sourceDataset = MetadataManagerUtil.findDataset(mdTxnCtx, source.getDataverseName(),
-                source.getDatasetName());
-
-        if (sourceDataset == null) {
-            // The dataset has already been dropped.
-            // In this case, we should drop the generated target dataset files.
-            dropDatasetFiles(target, metadataProvider, hcc);
-            return;
+        // upgrade lock
+        ICcApplicationContext appCtx = metadataProvider.getApplicationContext();
+        ActiveNotificationHandler activeNotificationHandler =
+                (ActiveNotificationHandler) appCtx.getActiveNotificationHandler();
+        IMetadataLockManager lockManager = appCtx.getMetadataLockManager();
+        lockManager.upgradeDatasetLockToWrite(metadataProvider.getLocks(), DatasetUtil.getFullyQualifiedName(target));
+        try {
+            // Updates the dataset entry in the metadata storage
+            MetadataManager.INSTANCE.updateDataset(mdTxnCtx, target);
+            for (IActiveEntityEventsListener listener : activeNotificationHandler.getEventListeners()) {
+                if (listener instanceof IActiveEntityController) {
+                    IActiveEntityController controller = (IActiveEntityController) listener;
+                    controller.replace(target);
+                }
+            }
+        } finally {
+            lockManager.downgradeDatasetLockToExclusiveModify(metadataProvider.getLocks(),
+                    DatasetUtil.getFullyQualifiedName(target));
         }
-
-        // Updates the dataset entry in the metadata storage
-        MetadataManager.INSTANCE.updateDataset(mdTxnCtx, target);
     }
 
     // Drops the source dataset.
@@ -245,11 +244,11 @@ public class RebalanceUtil {
         dropDatasetFiles(source, metadataProvider, hcc);
 
         // Drops the metadata entry of source dataset's node group.
+        ICcApplicationContext appCtx = metadataProvider.getApplicationContext();
         String sourceNodeGroup = source.getNodeGroupName();
-        MetadataLockManager.INSTANCE.acquireNodeGroupWriteLock(metadataProvider.getLocks(), sourceNodeGroup);
+        appCtx.getMetadataLockManager().acquireNodeGroupWriteLock(metadataProvider.getLocks(), sourceNodeGroup);
         MetadataManager.INSTANCE.dropNodegroup(metadataProvider.getMetadataTxnContext(), sourceNodeGroup, true);
     }
-
 
     // Creates the files for the rebalance target dataset.
     private static void createRebalanceTarget(Dataset target, MetadataProvider metadataProvider,
@@ -301,8 +300,8 @@ public class RebalanceUtil {
         int numKeys = source.getPrimaryKeys().size();
         int numValues = source.hasMetaPart() ? 2 : 1;
         int[] fieldPermutation = IntStream.range(0, numKeys + numValues).toArray();
-        Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> upsertOpAndConstraints = DatasetUtil
-                .createPrimaryIndexUpsertOp(spec, metadataProvider, target,
+        Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> upsertOpAndConstraints =
+                DatasetUtil.createPrimaryIndexUpsertOp(spec, metadataProvider, target,
                         source.getPrimaryRecordDescriptor(metadataProvider), fieldPermutation,
                         MissingWriterFactory.INSTANCE);
         IOperatorDescriptor upsertOp = upsertOpAndConstraints.first;
@@ -334,13 +333,6 @@ public class RebalanceUtil {
         }
     }
 
-    // Acquires a read lock for the dataverse and a write lock for the dataset, in order to populate the dataset.
-    private static void writeLockDataset(LockList locks, Dataset dataset) throws AsterixException {
-        MetadataLockManager.INSTANCE.acquireDataverseReadLock(locks, dataset.getDataverseName());
-        MetadataLockManager.INSTANCE.acquireDatasetWriteLock(locks,
-                dataset.getDataverseName() + "." + dataset.getDatasetName());
-    }
-
     // Creates and loads all secondary indexes for the rebalance target dataset.
     private static void createAndLoadSecondaryIndexesForTarget(Dataset source, Dataset target,
             MetadataProvider metadataProvider, IHyracksClientConnection hcc) throws Exception {
@@ -349,13 +341,13 @@ public class RebalanceUtil {
                 continue;
             }
             // Creates the secondary index.
-            JobSpecification indexCreationJobSpec = IndexUtil.buildSecondaryIndexCreationJobSpec(target, index,
-                    metadataProvider);
+            JobSpecification indexCreationJobSpec =
+                    IndexUtil.buildSecondaryIndexCreationJobSpec(target, index, metadataProvider);
             JobUtils.runJob(hcc, indexCreationJobSpec, true);
 
             // Loads the secondary index.
-            JobSpecification indexLoadingJobSpec = IndexUtil.buildSecondaryIndexLoadingJobSpec(target, index,
-                    metadataProvider);
+            JobSpecification indexLoadingJobSpec =
+                    IndexUtil.buildSecondaryIndexLoadingJobSpec(target, index, metadataProvider);
             JobUtils.runJob(hcc, indexLoadingJobSpec, true);
         }
     }

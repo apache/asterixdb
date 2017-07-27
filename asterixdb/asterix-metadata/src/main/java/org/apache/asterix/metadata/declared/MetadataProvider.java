@@ -35,6 +35,8 @@ import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.dataflow.LSMTreeInsertDeleteOperatorDescriptor;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.exceptions.MetadataException;
+import org.apache.asterix.common.metadata.LockList;
 import org.apache.asterix.common.transactions.JobId;
 import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.asterix.dataflow.data.nontagged.MissingWriterFactory;
@@ -56,7 +58,6 @@ import org.apache.asterix.formats.base.IDataFormat;
 import org.apache.asterix.formats.nontagged.BinaryComparatorFactoryProvider;
 import org.apache.asterix.formats.nontagged.LinearizeComparatorFactoryProvider;
 import org.apache.asterix.formats.nontagged.TypeTraitProvider;
-import org.apache.asterix.metadata.MetadataException;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.dataset.hints.DatasetHints.DatasetCardinalityHint;
@@ -70,8 +71,6 @@ import org.apache.asterix.metadata.entities.FeedPolicyEntity;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.feeds.FeedMetadataUtil;
 import org.apache.asterix.metadata.lock.ExternalDatasetsRegistry;
-import org.apache.asterix.metadata.lock.LockList;
-import org.apache.asterix.metadata.lock.MetadataLockManager;
 import org.apache.asterix.metadata.utils.DatasetUtil;
 import org.apache.asterix.metadata.utils.MetadataConstants;
 import org.apache.asterix.metadata.utils.SplitsAndConstraintsUtil;
@@ -140,7 +139,7 @@ import org.apache.hyracks.storage.common.IStorageManager;
 public class MetadataProvider implements IMetadataProvider<DataSourceId, String> {
 
     private final ICcApplicationContext appCtx;
-    private final IStorageComponentProvider storaegComponentProvider;
+    private final IStorageComponentProvider storageComponentProvider;
     private final StorageProperties storageProperties;
     private final Dataverse defaultDataverse;
     private final LockList locks;
@@ -158,11 +157,10 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
     private boolean isTemporaryDatasetWriteJob = true;
     private boolean blockingOperatorDisabled = false;
 
-    public MetadataProvider(ICcApplicationContext appCtx, Dataverse defaultDataverse,
-            IStorageComponentProvider componentProvider) {
+    public MetadataProvider(ICcApplicationContext appCtx, Dataverse defaultDataverse) {
         this.appCtx = appCtx;
         this.defaultDataverse = defaultDataverse;
-        this.storaegComponentProvider = componentProvider;
+        this.storageComponentProvider = appCtx.getStorageComponentProvider();
         storageProperties = appCtx.getStorageProperties();
         locks = new LockList();
     }
@@ -293,8 +291,8 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             return null;
         }
         String fqName = dv + '.' + dataset;
-        MetadataLockManager.INSTANCE.acquireDataverseReadLock(locks, dv);
-        MetadataLockManager.INSTANCE.acquireDatasetReadLock(locks, fqName);
+        appCtx.getMetadataLockManager().acquireDataverseReadLock(locks, dv);
+        appCtx.getMetadataLockManager().acquireDatasetReadLock(locks, fqName);
         return MetadataManagerUtil.findDataset(mdTxnCtx, dv, dataset);
     }
 
@@ -398,23 +396,23 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
     }
 
     public Triple<IOperatorDescriptor, AlgebricksPartitionConstraint, IAdapterFactory> buildFeedIntakeRuntime(
-            JobSpecification jobSpec, Feed primaryFeed, FeedPolicyAccessor policyAccessor) throws Exception {
+            JobSpecification jobSpec, Feed feed, FeedPolicyAccessor policyAccessor) throws Exception {
         Triple<IAdapterFactory, RecordDescriptor, IDataSourceAdapter.AdapterType> factoryOutput;
-        factoryOutput = FeedMetadataUtil.getPrimaryFeedFactoryAndOutput(primaryFeed, policyAccessor, mdTxnCtx,
+        factoryOutput = FeedMetadataUtil.getPrimaryFeedFactoryAndOutput(feed, policyAccessor, mdTxnCtx,
                 getApplicationContext());
-        ARecordType recordType = FeedMetadataUtil.getOutputType(primaryFeed, primaryFeed.getAdapterConfiguration(),
+        ARecordType recordType = FeedMetadataUtil.getOutputType(feed, feed.getAdapterConfiguration(),
                 ExternalDataConstants.KEY_TYPE_NAME);
         IAdapterFactory adapterFactory = factoryOutput.first;
         FeedIntakeOperatorDescriptor feedIngestor = null;
         switch (factoryOutput.third) {
             case INTERNAL:
-                feedIngestor = new FeedIntakeOperatorDescriptor(jobSpec, primaryFeed, adapterFactory, recordType,
+                feedIngestor = new FeedIntakeOperatorDescriptor(jobSpec, feed, adapterFactory, recordType,
                         policyAccessor, factoryOutput.second);
                 break;
             case EXTERNAL:
-                String libraryName = primaryFeed.getAdapterName().trim()
-                        .split(FeedConstants.NamingConstants.LIBRARY_NAME_SEPARATOR)[0];
-                feedIngestor = new FeedIntakeOperatorDescriptor(jobSpec, primaryFeed, libraryName,
+                String libraryName =
+                        feed.getAdapterName().trim().split(FeedConstants.NamingConstants.LIBRARY_NAME_SEPARATOR)[0];
+                feedIngestor = new FeedIntakeOperatorDescriptor(jobSpec, feed, libraryName,
                         adapterFactory.getClass().getName(), recordType, policyAccessor, factoryOutput.second);
                 break;
             default:
@@ -449,7 +447,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             }
 
             ISearchOperationCallbackFactory searchCallbackFactory = dataset.getSearchCallbackFactory(
-                    storaegComponentProvider, theIndex, jobId, IndexOperation.SEARCH, primaryKeyFields);
+                    storageComponentProvider, theIndex, jobId, IndexOperation.SEARCH, primaryKeyFields);
             IStorageManager storageManager = getStorageComponentProvider().getStorageManager();
             IIndexDataflowHelperFactory indexHelperFactory = new IndexDataflowHelperFactory(storageManager, spPc.first);
             BTreeSearchOperatorDescriptor btreeSearchOp;
@@ -493,10 +491,10 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             }
 
             ISearchOperationCallbackFactory searchCallbackFactory = dataset.getSearchCallbackFactory(
-                    storaegComponentProvider, secondaryIndex, jobId, IndexOperation.SEARCH, primaryKeyFields);
+                    storageComponentProvider, secondaryIndex, jobId, IndexOperation.SEARCH, primaryKeyFields);
             RTreeSearchOperatorDescriptor rtreeSearchOp;
             IIndexDataflowHelperFactory indexDataflowHelperFactory =
-                    new IndexDataflowHelperFactory(storaegComponentProvider.getStorageManager(), spPc.first);
+                    new IndexDataflowHelperFactory(storageComponentProvider.getStorageManager(), spPc.first);
             if (dataset.getDatasetType() == DatasetType.INTERNAL) {
                 rtreeSearchOp = new RTreeSearchOperatorDescriptor(jobSpec, outputRecDesc, keyFields, true, true,
                         indexDataflowHelperFactory, retainInput, retainMissing, context.getMissingWriterFactory(),
@@ -585,8 +583,8 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             // right callback
             // (ex. what's the expected behavior when there is an error during
             // bulkload?)
-            IIndexDataflowHelperFactory indexHelperFactory =
-                    new IndexDataflowHelperFactory(storaegComponentProvider.getStorageManager(), splitsAndConstraint.first);
+            IIndexDataflowHelperFactory indexHelperFactory = new IndexDataflowHelperFactory(
+                    storageComponentProvider.getStorageManager(), splitsAndConstraint.first);
             TreeIndexBulkLoadOperatorDescriptor btreeBulkLoad =
                     new TreeIndexBulkLoadOperatorDescriptor(spec, null, fieldPermutation,
                             GlobalConfig.DEFAULT_TREE_FILL_FACTOR, false, numElementsHint, true, indexHelperFactory);
@@ -804,11 +802,11 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
                     dataset.getDatasetName(), fileIndexName);
             // Create the file index data flow helper
             IIndexDataflowHelperFactory indexDataflowHelperFactory =
-                    new IndexDataflowHelperFactory(storaegComponentProvider.getStorageManager(), spPc.first);
+                    new IndexDataflowHelperFactory(storageComponentProvider.getStorageManager(), spPc.first);
             // Create the out record descriptor, appContext and fileSplitProvider for the files index
             RecordDescriptor outRecDesc = JobGenHelper.mkRecordDescriptor(typeEnv, opSchema, context);
             ISearchOperationCallbackFactory searchOpCallbackFactory = dataset
-                    .getSearchCallbackFactory(storaegComponentProvider, fileIndex, jobId, IndexOperation.SEARCH, null);
+                    .getSearchCallbackFactory(storageComponentProvider, fileIndex, jobId, IndexOperation.SEARCH, null);
             // Create the operator
             ExternalLookupOperatorDescriptor op = new ExternalLookupOperatorDescriptor(jobSpec, adapterFactory,
                     outRecDesc, indexDataflowHelperFactory, searchOpCallbackFactory,
@@ -864,7 +862,6 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         return DatasetUtil.createPrimaryIndexUpsertOp(spec, this, dataset, recordDesc, fieldPermutation,
                 context.getMissingWriterFactory());
     }
-
 
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> buildExternalDatasetDataScannerRuntime(
             JobSpecification jobSpec, IAType itemType, IAdapterFactory adapterFactory, IDataFormat format)
@@ -985,9 +982,9 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
                 primaryKeyFields[i] = i;
             }
             IModificationOperationCallbackFactory modificationCallbackFactory = dataset.getModificationCallbackFactory(
-                    storaegComponentProvider, primaryIndex, jobId, indexOp, primaryKeyFields);
-            IIndexDataflowHelperFactory idfh =
-                    new IndexDataflowHelperFactory(storaegComponentProvider.getStorageManager(), splitsAndConstraint.first);
+                    storageComponentProvider, primaryIndex, jobId, indexOp, primaryKeyFields);
+            IIndexDataflowHelperFactory idfh = new IndexDataflowHelperFactory(
+                    storageComponentProvider.getStorageManager(), splitsAndConstraint.first);
             IOperatorDescriptor op;
             if (bulkload) {
                 long numElementsHint = getCardinalityPerPartitionHint(dataset);
@@ -1119,9 +1116,9 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             // prepare callback
             JobId jobId = ((JobEventListenerFactory) spec.getJobletEventListenerFactory()).getJobId();
             IModificationOperationCallbackFactory modificationCallbackFactory = dataset.getModificationCallbackFactory(
-                    storaegComponentProvider, secondaryIndex, jobId, indexOp, modificationCallbackPrimaryKeyFields);
-            IIndexDataflowHelperFactory idfh =
-                    new IndexDataflowHelperFactory(storaegComponentProvider.getStorageManager(), splitsAndConstraint.first);
+                    storageComponentProvider, secondaryIndex, jobId, indexOp, modificationCallbackPrimaryKeyFields);
+            IIndexDataflowHelperFactory idfh = new IndexDataflowHelperFactory(
+                    storageComponentProvider.getStorageManager(), splitsAndConstraint.first);
             IOperatorDescriptor op;
             if (bulkload) {
                 long numElementsHint = getCardinalityPerPartitionHint(dataset);
@@ -1221,9 +1218,9 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             // prepare callback
             JobId jobId = ((JobEventListenerFactory) spec.getJobletEventListenerFactory()).getJobId();
             IModificationOperationCallbackFactory modificationCallbackFactory = dataset.getModificationCallbackFactory(
-                    storaegComponentProvider, secondaryIndex, jobId, indexOp, modificationCallbackPrimaryKeyFields);
-            IIndexDataflowHelperFactory indexDataflowHelperFactory =
-                    new IndexDataflowHelperFactory(storaegComponentProvider.getStorageManager(), splitsAndConstraint.first);
+                    storageComponentProvider, secondaryIndex, jobId, indexOp, modificationCallbackPrimaryKeyFields);
+            IIndexDataflowHelperFactory indexDataflowHelperFactory = new IndexDataflowHelperFactory(
+                    storageComponentProvider.getStorageManager(), splitsAndConstraint.first);
             IOperatorDescriptor op;
             if (bulkload) {
                 long numElementsHint = getCardinalityPerPartitionHint(dataset);
@@ -1337,9 +1334,9 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             // prepare callback
             JobId jobId = ((JobEventListenerFactory) spec.getJobletEventListenerFactory()).getJobId();
             IModificationOperationCallbackFactory modificationCallbackFactory = dataset.getModificationCallbackFactory(
-                    storaegComponentProvider, secondaryIndex, jobId, indexOp, modificationCallbackPrimaryKeyFields);
-            IIndexDataflowHelperFactory indexDataFlowFactory =
-                    new IndexDataflowHelperFactory(storaegComponentProvider.getStorageManager(), splitsAndConstraint.first);
+                    storageComponentProvider, secondaryIndex, jobId, indexOp, modificationCallbackPrimaryKeyFields);
+            IIndexDataflowHelperFactory indexDataFlowFactory = new IndexDataflowHelperFactory(
+                    storageComponentProvider.getStorageManager(), splitsAndConstraint.first);
             IOperatorDescriptor op;
             if (bulkload) {
                 long numElementsHint = getCardinalityPerPartitionHint(dataset);
@@ -1562,7 +1559,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
     }
 
     public IStorageComponentProvider getStorageComponentProvider() {
-        return storaegComponentProvider;
+        return storageComponentProvider;
     }
 
     public Pair<IFileSplitProvider, AlgebricksPartitionConstraint> getSplitProviderAndConstraints(Dataset ds)

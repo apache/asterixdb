@@ -18,39 +18,48 @@
  */
 package org.apache.asterix.external.feed.watch;
 
+import org.apache.asterix.active.IActiveEntityEventSubscriber;
 import org.apache.asterix.active.IActiveEntityEventsListener;
-import org.apache.asterix.active.IActiveEventSubscriber;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-public abstract class AbstractSubscriber implements IActiveEventSubscriber {
+public abstract class AbstractSubscriber implements IActiveEntityEventSubscriber {
 
     protected final IActiveEntityEventsListener listener;
-    private boolean done = false;
+    private volatile boolean done = false;
+    private volatile Exception failure = null;
 
     public AbstractSubscriber(IActiveEntityEventsListener listener) {
         this.listener = listener;
     }
 
     @Override
-    public synchronized boolean isDone() {
+    public boolean isDone() {
         return done;
     }
 
-    public synchronized void complete() throws HyracksDataException {
-        done = true;
-        notifyAll();
-    }
-
-    @Override
-    public synchronized void sync() throws InterruptedException {
-        while (!done) {
-            wait();
+    public void complete(Exception failure) {
+        synchronized (listener) {
+            if (failure != null) {
+                this.failure = failure;
+            }
+            done = true;
+            listener.notifyAll();
         }
     }
 
     @Override
-    public synchronized void unsubscribe() {
-        done = true;
-        notifyAll();
+    public void sync() throws HyracksDataException, InterruptedException {
+        synchronized (listener) {
+            while (!done) {
+                if (failure != null) {
+                    throw HyracksDataException.create(failure);
+                }
+                listener.wait();
+            }
+        }
+    }
+
+    public Exception getFailure() {
+        return failure;
     }
 }

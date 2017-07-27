@@ -275,4 +275,9 @@ public class Index implements IMetadataEntity<Index>, Comparable<Index> {
                 throw new CompilationException(ErrorCode.COMPILATION_UNKNOWN_INDEX_TYPE, indexType);
         }
     }
+
+    @Override
+    public String toString() {
+        return dataverseName + '.' + datasetName + '.' + indexName;
+    }
 }

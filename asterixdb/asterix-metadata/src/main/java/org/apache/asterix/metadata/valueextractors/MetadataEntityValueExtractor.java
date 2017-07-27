@@ -21,8 +21,8 @@ package org.apache.asterix.metadata.valueextractors;
 
 import java.rmi.RemoteException;
 
+import org.apache.asterix.common.exceptions.MetadataException;
 import org.apache.asterix.common.transactions.JobId;
-import org.apache.asterix.metadata.MetadataException;
 import org.apache.asterix.metadata.api.IMetadataEntityTupleTranslator;
 import org.apache.asterix.metadata.api.IValueExtractor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;

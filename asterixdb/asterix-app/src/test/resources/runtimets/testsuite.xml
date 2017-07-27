@@ -237,13 +237,13 @@
     <test-case FilePath="feeds">
       <compilation-unit name="start-started-feed">
         <output-dir compare="Text">start-started-feed</output-dir>
-        <expected-error>Feed TweetFeed is started already.</expected-error>
+        <expected-error>experiments.TweetFeed(Feed) is already started</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="feeds">
       <compilation-unit name="stop-stopped-feed">
         <output-dir compare="Text">stop-stopped-feed</output-dir>
-        <expected-error>Feed TweetFeed is not started.</expected-error>
+        <expected-error>new_experiments.TweetFeed(Feed) cannot be stopped because its state is STOPPED</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="feeds">
@@ -6421,7 +6421,7 @@
     <test-case FilePath="cross-dataverse">
       <compilation-unit name="drop-dataverse">
         <output-dir compare="Text">drop-dataverse</output-dir>
-        <expected-error>org.apache.asterix.metadata.MetadataException: Cannot drop dataverse. Type a.a used by dataset b.b1</expected-error>
+        <expected-error>Cannot drop dataverse. Type a.a used by dataset b.b1</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="cross-dataverse">

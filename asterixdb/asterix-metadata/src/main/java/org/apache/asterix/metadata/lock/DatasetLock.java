@@ -21,65 +21,83 @@ package org.apache.asterix.metadata.lock;
 import java.util.Objects;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import org.apache.asterix.om.base.AMutableInt32;
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.MetadataException;
+import org.apache.asterix.common.metadata.IMetadataLock;
+import org.apache.commons.lang3.mutable.MutableInt;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 
 public class DatasetLock implements IMetadataLock {
 
     private final String key;
-    private final ReentrantReadWriteLock dsLock;
+    private final ReentrantReadWriteLock lock;
+    private final ReentrantReadWriteLock dsReadLock;
     private final ReentrantReadWriteLock dsModifyLock;
-    private final AMutableInt32 indexBuildCounter;
+    private final MutableInt indexBuildCounter;
 
     public DatasetLock(String key) {
         this.key = key;
-        dsLock = new ReentrantReadWriteLock(true);
+        lock = new ReentrantReadWriteLock(true);
+        dsReadLock = new ReentrantReadWriteLock(true);
         dsModifyLock = new ReentrantReadWriteLock(true);
-        indexBuildCounter = new AMutableInt32(0);
+        indexBuildCounter = new MutableInt(0);
     }
 
-    private void acquireReadLock() {
+    private void readLock() {
         // query
         // build index
         // insert
-        dsLock.readLock().lock();
+        lock.readLock().lock();
     }
 
-    private void releaseReadLock() {
+    private void readUnlock() {
         // query
         // build index
         // insert
-        dsLock.readLock().unlock();
+        lock.readLock().unlock();
     }
 
-    private void acquireWriteLock() {
+    private void writeLock() {
         // create ds
         // delete ds
         // drop index
-        dsLock.writeLock().lock();
+        lock.writeLock().lock();
     }
 
-    private void releaseWriteLock() {
+    private void writeUnlock() {
         // create ds
         // delete ds
         // drop index
-        dsLock.writeLock().unlock();
+        lock.writeLock().unlock();
     }
 
-    private void acquireReadModifyLock() {
+    private void readReadLock() {
+        dsReadLock.readLock().lock();
+    }
+
+    private void modifyReadLock() {
         // insert
         dsModifyLock.readLock().lock();
     }
 
-    private void releaseReadModifyLock() {
+    private void modifyReadUnlock() {
         // insert
         dsModifyLock.readLock().unlock();
     }
 
-    private void acquireWriteModifyLock() {
+    private void readReadUnlock() {
+        dsReadLock.readLock().unlock();
+    }
+
+    private void readWriteUnlock() {
+        dsReadLock.writeLock().unlock();
+    }
+
+    private void modifySharedWriteLock() {
         // Build index statement
         synchronized (indexBuildCounter) {
-            if (indexBuildCounter.getIntegerValue() > 0) {
-                indexBuildCounter.setValue(indexBuildCounter.getIntegerValue() + 1);
+            if (indexBuildCounter.getValue() > 0) {
+                indexBuildCounter.setValue(indexBuildCounter.getValue() + 1);
             } else {
                 dsModifyLock.writeLock().lock();
                 indexBuildCounter.setValue(1);
@@ -87,73 +105,104 @@ public class DatasetLock implements IMetadataLock {
         }
     }
 
-    private void releaseWriteModifyLock() {
+    private void modifySharedWriteUnlock() {
         // Build index statement
         synchronized (indexBuildCounter) {
-            if (indexBuildCounter.getIntegerValue() == 1) {
+            if (indexBuildCounter.getValue() == 1) {
                 dsModifyLock.writeLock().unlock();
             }
-            indexBuildCounter.setValue(indexBuildCounter.getIntegerValue() - 1);
+            indexBuildCounter.setValue(indexBuildCounter.getValue() - 1);
         }
     }
 
-    private void acquireRefreshLock() {
-        // Refresh External Dataset statement
+    private void modifyExclusiveWriteLock() {
         dsModifyLock.writeLock().lock();
     }
 
-    private void releaseRefreshLock() {
-        // Refresh External Dataset statement
+    private void modifyExclusiveWriteUnlock() {
         dsModifyLock.writeLock().unlock();
     }
 
     @Override
-    public void acquire(IMetadataLock.Mode mode) {
-        switch (mode) {
-            case INDEX_BUILD:
-                acquireReadLock();
-                acquireWriteModifyLock();
-                break;
-            case MODIFY:
-                acquireReadLock();
-                acquireReadModifyLock();
-                break;
-            case REFRESH:
-                acquireReadLock();
-                acquireRefreshLock();
-                break;
-            case INDEX_DROP:
-            case WRITE:
-                acquireWriteLock();
-                break;
-            default:
-                acquireReadLock();
-                break;
+    public void upgrade(IMetadataLock.Mode from, IMetadataLock.Mode to) throws AlgebricksException {
+        if (from == IMetadataLock.Mode.EXCLUSIVE_MODIFY && to == IMetadataLock.Mode.UPGRADED_WRITE) {
+            dsReadLock.readLock().unlock();
+            dsReadLock.writeLock().lock();
+        } else {
+            throw new MetadataException(ErrorCode.ILLEGAL_LOCK_UPGRADE_OPERATION, from, to);
         }
     }
 
     @Override
-    public void release(IMetadataLock.Mode mode) {
+    public void downgrade(IMetadataLock.Mode from, IMetadataLock.Mode to) throws AlgebricksException {
+        if (from == IMetadataLock.Mode.UPGRADED_WRITE && to == IMetadataLock.Mode.EXCLUSIVE_MODIFY) {
+            dsReadLock.writeLock().unlock();
+            dsReadLock.readLock().lock();
+        } else {
+            throw new MetadataException(ErrorCode.ILLEGAL_LOCK_DOWNGRADE_OPERATION, from, to);
+        }
+    }
+
+    @Override
+    public void lock(IMetadataLock.Mode mode) {
         switch (mode) {
             case INDEX_BUILD:
-                releaseWriteModifyLock();
-                releaseReadLock();
+                readLock();
+                modifySharedWriteLock();
                 break;
             case MODIFY:
-                releaseReadModifyLock();
-                releaseReadLock();
+                readLock();
+                readReadLock();
+                modifyReadLock();
                 break;
-            case REFRESH:
-                releaseRefreshLock();
-                releaseReadLock();
+            case EXCLUSIVE_MODIFY:
+                readLock();
+                readReadLock();
+                modifyExclusiveWriteLock();
                 break;
-            case INDEX_DROP:
             case WRITE:
-                releaseWriteLock();
+                writeLock();
+                break;
+            case READ:
+                readLock();
+                readReadLock();
                 break;
             default:
-                releaseReadLock();
+                throw new IllegalStateException("locking mode " + mode + " is not supported");
+        }
+    }
+
+    @Override
+    public void unlock(IMetadataLock.Mode mode) {
+        switch (mode) {
+            case INDEX_BUILD:
+                modifySharedWriteUnlock();
+                readUnlock();
                 break;
+            case MODIFY:
+                modifyReadUnlock();
+                readReadUnlock();
+                readUnlock();
+                break;
+            case EXCLUSIVE_MODIFY:
+                modifyExclusiveWriteUnlock();
+                readReadUnlock();
+                readUnlock();
+                break;
+            case WRITE:
+                writeUnlock();
+                break;
+            case READ:
+                readReadUnlock();
+                readUnlock();
+                break;
+            case UPGRADED_WRITE:
+                readWriteUnlock();
+                modifyExclusiveWriteUnlock();
+                readUnlock();
+                break;
+            default:
+                throw new IllegalStateException("unlocking mode " + mode + " is not supported");
         }
     }
 
@@ -176,5 +225,10 @@ public class DatasetLock implements IMetadataLock {
             return true;
         }
         return Objects.equals(key, ((DatasetLock) o).key);
+    }
+
+    @Override
+    public String toString() {
+        return key;
     }
 }

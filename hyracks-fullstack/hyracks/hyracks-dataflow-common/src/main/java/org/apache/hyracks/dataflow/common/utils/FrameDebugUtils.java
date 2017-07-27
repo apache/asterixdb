@@ -39,11 +39,12 @@ public class FrameDebugUtils {
 
     /**
      * Debugging method
+     *
      * @param fta
      * @param recordDescriptor
      * @param prefix
      */
-    public void prettyPrint(IFrameTupleAccessor fta, RecordDescriptor recordDescriptor, String prefix) {
+    public static void prettyPrint(IFrameTupleAccessor fta, RecordDescriptor recordDescriptor, String prefix) {
         try (ByteBufferInputStream bbis = new ByteBufferInputStream();
                 DataInputStream dis = new DataInputStream(bbis)) {
             int tc = fta.getTupleCount();
@@ -60,19 +61,21 @@ public class FrameDebugUtils {
 
     /**
      * Debugging method
+     *
      * @param fta
      * @param recordDescriptor
      */
-    public void prettyPrint(IFrameTupleAccessor fta, RecordDescriptor recordDescriptor) {
+    public static void prettyPrint(IFrameTupleAccessor fta, RecordDescriptor recordDescriptor) {
         prettyPrint(fta, recordDescriptor, "");
     }
 
     /**
      * Debugging method
+     *
      * @param fta
      * @param operator
      */
-    public void prettyPrintTags(IFrameTupleAccessor fta, String operator) {
+    public static void prettyPrintTags(IFrameTupleAccessor fta, String operator) {
         try (ByteBufferInputStream bbis = new ByteBufferInputStream();
                 DataInputStream dis = new DataInputStream(bbis)) {
             int tc = fta.getTupleCount();
@@ -90,14 +93,15 @@ public class FrameDebugUtils {
 
     /**
      * Debugging method
+     *
      * @param fta
      * @param tid
      * @param bbis
      * @param dis
      * @param sb
      */
-    protected void prettyPrintTag(IFrameTupleAccessor fta, int tid, ByteBufferInputStream bbis, DataInputStream dis,
-            StringBuilder sb) {
+    protected static void prettyPrintTag(IFrameTupleAccessor fta, int tid, ByteBufferInputStream bbis,
+            DataInputStream dis, StringBuilder sb) {
         sb.append(" tid" + tid + ":(" + fta.getTupleStartOffset(tid) + ", " + fta.getTupleEndOffset(tid) + ")[");
         for (int j = 0; j < fta.getFieldCount(); ++j) {
             sb.append(" ");
@@ -115,6 +119,7 @@ public class FrameDebugUtils {
 
     /**
      * Debugging method
+     *
      * @param fta
      * @param recordDescriptor
      * @param tid
@@ -122,9 +127,8 @@ public class FrameDebugUtils {
      * @param dis
      * @param sb
      */
-    protected void prettyPrint(IFrameTupleAccessor fta, RecordDescriptor recordDescriptor, int tid,
-            ByteBufferInputStream bbis, DataInputStream dis,
-            StringBuilder sb) {
+    protected static void prettyPrint(IFrameTupleAccessor fta, RecordDescriptor recordDescriptor, int tid,
+            ByteBufferInputStream bbis, DataInputStream dis, StringBuilder sb) {
         sb.append(" tid" + tid + ":(" + fta.getTupleStartOffset(tid) + ", " + fta.getTupleEndOffset(tid) + ")[");
         for (int j = 0; j < fta.getFieldCount(); ++j) {
             sb.append(" ");
@@ -133,8 +137,8 @@ public class FrameDebugUtils {
             }
             sb.append("f" + j + ":(" + fta.getFieldStartOffset(tid, j) + ", " + fta.getFieldEndOffset(tid, j) + ") ");
             sb.append("{");
-            bbis.setByteBuffer(fta.getBuffer(), fta.getTupleStartOffset(tid) + fta.getFieldSlotsLength() + fta
-                    .getFieldStartOffset(tid, j));
+            bbis.setByteBuffer(fta.getBuffer(),
+                    fta.getTupleStartOffset(tid) + fta.getFieldSlotsLength() + fta.getFieldStartOffset(tid, j));
             try {
                 sb.append(recordDescriptor.getFields()[j].deserialize(dis));
             } catch (Exception e) {
@@ -146,14 +150,14 @@ public class FrameDebugUtils {
         sb.append("\n");
     }
 
-
     /**
      * Debugging method
+     *
      * @param fta
      * @param recordDescriptor
      * @param tid
      */
-    public void prettyPrint(IFrameTupleAccessor fta, RecordDescriptor recordDescriptor, int tid) {
+    public static void prettyPrint(IFrameTupleAccessor fta, RecordDescriptor recordDescriptor, int tid) {
         try (ByteBufferInputStream bbis = new ByteBufferInputStream();
                 DataInputStream dis = new DataInputStream(bbis)) {
             StringBuilder sb = new StringBuilder();
@@ -169,13 +173,14 @@ public class FrameDebugUtils {
      * They are safe as they don't print records. Printing records
      * using IserializerDeserializer can print incorrect results or throw exceptions.
      * A better way yet would be to use record pointable.
+     *
      * @param fta
      * @param recordDescriptor
      * @param prefix
      * @param recordFields
      * @throws IOException
      */
-    public void prettyPrint(IFrameTupleAccessor fta, RecordDescriptor recordDescriptor, String prefix,
+    public static void prettyPrint(IFrameTupleAccessor fta, RecordDescriptor recordDescriptor, String prefix,
             int[] recordFields) throws IOException {
         try (ByteBufferInputStream bbis = new ByteBufferInputStream();
                 DataInputStream dis = new DataInputStream(bbis)) {
@@ -191,14 +196,15 @@ public class FrameDebugUtils {
 
     /**
      * Debugging method
+     *
      * @param fta
      * @param recordDescriptor
      * @param tIdx
      * @param recordFields
      * @throws IOException
      */
-    public void prettyPrint(IFrameTupleAccessor fta, RecordDescriptor recordDescriptor, int tIdx, int[] recordFields)
-            throws IOException {
+    public static void prettyPrint(IFrameTupleAccessor fta, RecordDescriptor recordDescriptor, int tIdx,
+            int[] recordFields) throws IOException {
         try (ByteBufferInputStream bbis = new ByteBufferInputStream();
                 DataInputStream dis = new DataInputStream(bbis)) {
             StringBuilder sb = new StringBuilder();
@@ -209,14 +215,14 @@ public class FrameDebugUtils {
 
     /**
      * Debugging method
+     *
      * @param tuple
      * @param fieldsIdx
      * @param descIdx
      * @throws HyracksDataException
      */
-    public void prettyPrint(IFrameTupleAccessor fta, RecordDescriptor recordDescriptor, ITupleReference tuple,
-            int fieldsIdx, int descIdx)
-            throws HyracksDataException {
+    public static void prettyPrint(IFrameTupleAccessor fta, RecordDescriptor recordDescriptor, ITupleReference tuple,
+            int fieldsIdx, int descIdx) throws HyracksDataException {
         try (ByteBufferInputStream bbis = new ByteBufferInputStream();
                 DataInputStream dis = new DataInputStream(bbis)) {
             StringBuilder sb = new StringBuilder();
@@ -237,11 +243,12 @@ public class FrameDebugUtils {
 
     /**
      * Debugging method
+     *
      * @param tuple
      * @param descF
      * @throws HyracksDataException
      */
-    public void prettyPrint(IFrameTupleAccessor fta, RecordDescriptor recordDescriptor, ITupleReference tuple,
+    public static void prettyPrint(IFrameTupleAccessor fta, RecordDescriptor recordDescriptor, ITupleReference tuple,
             int[] descF) throws HyracksDataException {
         try (ByteBufferInputStream bbis = new ByteBufferInputStream();
                 DataInputStream dis = new DataInputStream(bbis)) {
@@ -265,6 +272,7 @@ public class FrameDebugUtils {
 
     /**
      * Debugging method
+     *
      * @param fta
      * @param recordDescriptor
      * @param tid
@@ -274,17 +282,15 @@ public class FrameDebugUtils {
      * @param recordFields
      * @throws IOException
      */
-    protected void prettyPrint(IFrameTupleAccessor fta, RecordDescriptor recordDescriptor, int tid,
-            ByteBufferInputStream bbis, DataInputStream dis,
-            StringBuilder sb,
-            int[] recordFields) throws IOException {
+    protected static void prettyPrint(IFrameTupleAccessor fta, RecordDescriptor recordDescriptor, int tid,
+            ByteBufferInputStream bbis, DataInputStream dis, StringBuilder sb, int[] recordFields) throws IOException {
         Arrays.sort(recordFields);
         sb.append(" tid" + tid + ":(" + fta.getTupleStartOffset(tid) + ", " + fta.getTupleEndOffset(tid) + ")[");
         for (int j = 0; j < fta.getFieldCount(); ++j) {
             sb.append("f" + j + ":(" + fta.getFieldStartOffset(tid, j) + ", " + fta.getFieldEndOffset(tid, j) + ") ");
             sb.append("{");
-            bbis.setByteBuffer(fta.getBuffer(), fta.getTupleStartOffset(tid) + fta
-                    .getFieldSlotsLength() + fta.getFieldStartOffset(tid, j));
+            bbis.setByteBuffer(fta.getBuffer(),
+                    fta.getTupleStartOffset(tid) + fta.getFieldSlotsLength() + fta.getFieldStartOffset(tid, j));
             if (Arrays.binarySearch(recordFields, j) >= 0) {
                 sb.append("{a record field: only print using pointable:");
                 sb.append("tag->" + dis.readByte() + "}");

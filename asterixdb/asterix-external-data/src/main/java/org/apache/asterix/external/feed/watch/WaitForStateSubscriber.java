@@ -18,38 +18,46 @@
  */
 package org.apache.asterix.external.feed.watch;
 
+import java.util.Set;
+
 import org.apache.asterix.active.ActiveEvent;
 import org.apache.asterix.active.ActivityState;
 import org.apache.asterix.active.IActiveEntityEventsListener;
-import org.apache.asterix.common.exceptions.ErrorCode;
-import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class WaitForStateSubscriber extends AbstractSubscriber {
 
-    private final ActivityState targetState;
+    private final Set<ActivityState> targetStates;
 
-    public WaitForStateSubscriber(IActiveEntityEventsListener listener, ActivityState targetState)
+    public WaitForStateSubscriber(IActiveEntityEventsListener listener, Set<ActivityState> targetStates)
             throws HyracksDataException {
         super(listener);
-        this.targetState = targetState;
+        this.targetStates = targetStates;
         listener.subscribe(this);
     }
 
     @Override
     public void notify(ActiveEvent event) throws HyracksDataException {
-        if (listener.getState() == targetState) {
-            complete();
+        if (targetStates.contains(listener.getState())) {
+            if (listener.getState() == ActivityState.PERMANENTLY_FAILED
+                    || listener.getState() == ActivityState.TEMPORARILY_FAILED) {
+                complete(listener.getJobFailure());
+            } else {
+                complete(null);
+            }
+        } else if (event != null && event.getEventKind() == ActiveEvent.Kind.FAILURE) {
+            try {
+                complete((Exception) event.getEventObject());
+            } catch (Exception e) {
+                throw HyracksDataException.create(e);
+            }
         }
     }
 
     @Override
     public void subscribed(IActiveEntityEventsListener eventsListener) throws HyracksDataException {
-        if (eventsListener.getState() == ActivityState.FAILED) {
-            throw new RuntimeDataException(ErrorCode.CANNOT_SUBSCRIBE_TO_FAILED_ACTIVE_ENTITY);
-        }
-        if (listener.getState() == targetState) {
-            complete();
+        if (targetStates.contains(listener.getState())) {
+            complete(null);
         }
     }
 }

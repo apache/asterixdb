@@ -46,7 +46,7 @@ public class UpsertOperationCallback extends AbstractIndexModificationOperationC
             int pkHash = computePrimaryKeyHashValue(after, primaryKeyFields);
             log(pkHash, after, before);
         } catch (ACIDException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 }

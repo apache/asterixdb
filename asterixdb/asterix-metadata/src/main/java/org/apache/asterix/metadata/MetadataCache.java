@@ -57,8 +57,7 @@ public class MetadataCache {
     // Key is dataverse name. Key of value map is dataset name.
     protected final Map<String, Map<String, Dataset>> datasets = new HashMap<>();
     // Key is dataverse name. Key of value map is dataset name. Key of value map of value map is index name.
-    protected final Map<String, Map<String, Map<String, Index>>> indexes =
-            new HashMap<>();
+    protected final Map<String, Map<String, Map<String, Index>>> indexes = new HashMap<>();
     // Key is dataverse name. Key of value map is datatype name.
     protected final Map<String, Map<String, Datatype>> datatypes = new HashMap<>();
     // Key is dataverse name.
@@ -66,19 +65,16 @@ public class MetadataCache {
     // Key is function Identifier . Key of value map is function name.
     protected final Map<FunctionSignature, Function> functions = new HashMap<>();
     // Key is adapter dataverse. Key of value map is the adapter name
-    protected final Map<String, Map<String, DatasourceAdapter>> adapters =
-            new HashMap<>();
+    protected final Map<String, Map<String, DatasourceAdapter>> adapters = new HashMap<>();
 
     // Key is DataverseName, Key of the value map is the Policy name
-    protected final Map<String, Map<String, FeedPolicyEntity>> feedPolicies =
-            new HashMap<>();
+    protected final Map<String, Map<String, FeedPolicyEntity>> feedPolicies = new HashMap<>();
     // Key is library dataverse. Key of value map is the library name
     protected final Map<String, Map<String, Library>> libraries = new HashMap<>();
     // Key is library dataverse. Key of value map is the feed name
     protected final Map<String, Map<String, Feed>> feeds = new HashMap<>();
     // Key is DataverseName, Key of the value map is the Policy name
-    protected final Map<String, Map<String, CompactionPolicy>> compactionPolicies =
-            new HashMap<>();
+    protected final Map<String, Map<String, CompactionPolicy>> compactionPolicies = new HashMap<>();
     // Key is DataverseName, Key of value map is feedConnectionId
     protected final Map<String, Map<String, FeedConnection>> feedConnections = new HashMap<>();
 
@@ -247,8 +243,7 @@ public class MetadataCache {
                                             datatypes.remove(dataverse.getDataverseName());
                                             adapters.remove(dataverse.getDataverseName());
                                             compactionPolicies.remove(dataverse.getDataverseName());
-                                            List<FunctionSignature> markedFunctionsForRemoval =
-                                                    new ArrayList<>();
+                                            List<FunctionSignature> markedFunctionsForRemoval = new ArrayList<>();
                                             for (FunctionSignature signature : functions.keySet()) {
                                                 if (signature.getNamespace().equals(dataverse.getDataverseName())) {
                                                     markedFunctionsForRemoval.add(signature);

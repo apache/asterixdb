@@ -27,8 +27,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.IntStream;
 
-import org.apache.asterix.active.ActiveLifecycleListener;
 import org.apache.asterix.active.IActiveEntityEventsListener;
+import org.apache.asterix.active.IActiveNotificationHandler;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.context.CorrelatedPrefixMergePolicyFactory;
 import org.apache.asterix.common.context.IStorageComponentProvider;
@@ -40,8 +40,8 @@ import org.apache.asterix.common.ioopcallbacks.LSMBTreeWithBuddyIOOperationCallb
 import org.apache.asterix.common.ioopcallbacks.LSMInvertedIndexIOOperationCallbackFactory;
 import org.apache.asterix.common.ioopcallbacks.LSMRTreeIOOperationCallbackFactory;
 import org.apache.asterix.common.metadata.IDataset;
-import org.apache.asterix.common.transactions.JobId;
 import org.apache.asterix.common.transactions.IRecoveryManager.ResourceType;
+import org.apache.asterix.common.transactions.JobId;
 import org.apache.asterix.common.utils.JobUtils;
 import org.apache.asterix.common.utils.JobUtils.ProgressState;
 import org.apache.asterix.external.feed.management.FeedConnectionId;
@@ -57,7 +57,6 @@ import org.apache.asterix.metadata.api.IMetadataEntity;
 import org.apache.asterix.metadata.declared.BTreeResourceFactoryProvider;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.lock.ExternalDatasetsRegistry;
-import org.apache.asterix.metadata.lock.MetadataLockManager;
 import org.apache.asterix.metadata.utils.DatasetUtil;
 import org.apache.asterix.metadata.utils.ExternalIndexingOperations;
 import org.apache.asterix.metadata.utils.IndexUtil;
@@ -67,6 +66,7 @@ import org.apache.asterix.metadata.utils.RTreeResourceFactoryProvider;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.utils.RecordUtil;
+import org.apache.asterix.transaction.management.opcallbacks.AbstractIndexModificationOperationCallback.Operation;
 import org.apache.asterix.transaction.management.opcallbacks.LockThenSearchOperationCallbackFactory;
 import org.apache.asterix.transaction.management.opcallbacks.PrimaryIndexInstantSearchOperationCallbackFactory;
 import org.apache.asterix.transaction.management.opcallbacks.PrimaryIndexModificationOperationCallbackFactory;
@@ -77,7 +77,6 @@ import org.apache.asterix.transaction.management.opcallbacks.SecondaryIndexSearc
 import org.apache.asterix.transaction.management.opcallbacks.TempDatasetPrimaryIndexModificationOperationCallbackFactory;
 import org.apache.asterix.transaction.management.opcallbacks.TempDatasetSecondaryIndexModificationOperationCallbackFactory;
 import org.apache.asterix.transaction.management.opcallbacks.UpsertOperationCallbackFactory;
-import org.apache.asterix.transaction.management.opcallbacks.AbstractIndexModificationOperationCallback.Operation;
 import org.apache.asterix.transaction.management.resource.DatasetLocalResourceFactory;
 import org.apache.asterix.transaction.management.runtime.CommitRuntimeFactory;
 import org.apache.asterix.transaction.management.service.transaction.DatasetIdFactory;
@@ -197,10 +196,12 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
         this.rebalanceCount = rebalanceCount;
     }
 
+    @Override
     public String getDataverseName() {
         return dataverseName;
     }
 
+    @Override
     public String getDatasetName() {
         return datasetName;
     }
@@ -316,9 +317,9 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
         Map<FeedConnectionId, Pair<JobSpecification, Boolean>> disconnectJobList = new HashMap<>();
         if (getDatasetType() == DatasetType.INTERNAL) {
             // prepare job spec(s) that would disconnect any active feeds involving the dataset.
-            ActiveLifecycleListener activeListener =
-                    (ActiveLifecycleListener) metadataProvider.getApplicationContext().getActiveLifecycleListener();
-            IActiveEntityEventsListener[] activeListeners = activeListener.getNotificationHandler().getEventListeners();
+            IActiveNotificationHandler activeListener = (IActiveNotificationHandler) metadataProvider
+                    .getApplicationContext().getActiveNotificationHandler();
+            IActiveEntityEventsListener[] activeListeners = activeListener.getEventListeners();
             for (IActiveEntityEventsListener listener : activeListeners) {
                 if (listener.isEntityUsingDataset(this)) {
                     throw new CompilationException(ErrorCode.COMPILATION_CANT_DROP_ACTIVE_DATASET,
@@ -403,7 +404,8 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
 
         // Drops the associated nodegroup if it is no longer used by any other dataset.
         if (dropCorrespondingNodeGroup) {
-            MetadataLockManager.INSTANCE.acquireNodeGroupWriteLock(metadataProvider.getLocks(), nodeGroupName);
+            metadataProvider.getApplicationContext().getMetadataLockManager()
+                    .acquireNodeGroupWriteLock(metadataProvider.getLocks(), nodeGroupName);
             MetadataManager.INSTANCE.dropNodegroup(mdTxnCtx.getValue(), nodeGroupName, true);
         }
     }
@@ -697,8 +699,8 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
     public RecordDescriptor getPrimaryRecordDescriptor(MetadataProvider metadataProvider) throws AlgebricksException {
         List<List<String>> partitioningKeys = getPrimaryKeys();
         int numPrimaryKeys = partitioningKeys.size();
-        ISerializerDeserializer[] primaryRecFields = new ISerializerDeserializer[numPrimaryKeys + 1
-                + (hasMetaPart() ? 1 : 0)];
+        ISerializerDeserializer[] primaryRecFields =
+                new ISerializerDeserializer[numPrimaryKeys + 1 + (hasMetaPart() ? 1 : 0)];
         ITypeTraits[] primaryTypeTraits = new ITypeTraits[numPrimaryKeys + 1 + (hasMetaPart() ? 1 : 0)];
         ISerializerDeserializerProvider serdeProvider = metadataProvider.getFormat().getSerdeProvider();
         List<Integer> indicators = null;
@@ -710,9 +712,9 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
 
         // Set the serde/traits for primary keys
         for (int i = 0; i < numPrimaryKeys; i++) {
-            IAType keyType = (indicators == null || indicators.get(i) == 0)
-                    ? itemType.getSubFieldType(partitioningKeys.get(i))
-                    : metaType.getSubFieldType(partitioningKeys.get(i));
+            IAType keyType =
+                    (indicators == null || indicators.get(i) == 0) ? itemType.getSubFieldType(partitioningKeys.get(i))
+                            : metaType.getSubFieldType(partitioningKeys.get(i));
             primaryRecFields[i] = serdeProvider.getSerializerDeserializer(keyType);
             primaryTypeTraits[i] = TypeTraitProvider.INSTANCE.getTypeTrait(keyType);
         }
@@ -722,8 +724,8 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
         primaryTypeTraits[numPrimaryKeys] = TypeTraitProvider.INSTANCE.getTypeTrait(itemType);
         if (hasMetaPart()) {
             // Set the serde and traits for the meta record field
-            primaryRecFields[numPrimaryKeys + 1] = SerializerDeserializerProvider.INSTANCE
-                    .getSerializerDeserializer(metaType);
+            primaryRecFields[numPrimaryKeys + 1] =
+                    SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(metaType);
             primaryTypeTraits[numPrimaryKeys + 1] = TypeTraitProvider.INSTANCE.getTypeTrait(itemType);
         }
         return new RecordDescriptor(primaryRecFields, primaryTypeTraits);
@@ -749,9 +751,9 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
             indicators = ((InternalDatasetDetails) getDatasetDetails()).getKeySourceIndicator();
         }
         for (int i = 0; i < numPrimaryKeys; i++) {
-            IAType keyType = (indicators == null || indicators.get(i) == 0)
-                    ? recordType.getSubFieldType(partitioningKeys.get(i))
-                    : metaType.getSubFieldType(partitioningKeys.get(i));
+            IAType keyType =
+                    (indicators == null || indicators.get(i) == 0) ? recordType.getSubFieldType(partitioningKeys.get(i))
+                            : metaType.getSubFieldType(partitioningKeys.get(i));
             cmpFactories[i] = cmpFactoryProvider.getBinaryComparatorFactory(keyType, true);
         }
         return cmpFactories;
@@ -802,8 +804,8 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
 
     // Gets an array of partition numbers for this dataset.
     protected int[] getDatasetPartitions(MetadataProvider metadataProvider) throws AlgebricksException {
-        FileSplit[] splitsForDataset = metadataProvider.splitsForIndex(metadataProvider.getMetadataTxnContext(), this,
-                getDatasetName());
+        FileSplit[] splitsForDataset =
+                metadataProvider.splitsForIndex(metadataProvider.getMetadataTxnContext(), this, getDatasetName());
         return IntStream.range(0, splitsForDataset.length).toArray();
     }
 }

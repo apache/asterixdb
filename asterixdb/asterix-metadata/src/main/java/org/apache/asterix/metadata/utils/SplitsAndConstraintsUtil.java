@@ -24,11 +24,12 @@ import java.util.List;
 
 import org.apache.asterix.common.cluster.ClusterPartition;
 import org.apache.asterix.common.config.ClusterProperties;
+import org.apache.asterix.common.exceptions.MetadataException;
 import org.apache.asterix.common.utils.StoragePathUtil;
-import org.apache.asterix.metadata.MetadataException;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.entities.Dataset;
+import org.apache.asterix.metadata.entities.NodeGroup;
 import org.apache.asterix.runtime.utils.ClusterStateManager;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -59,12 +60,12 @@ public class SplitsAndConstraintsUtil {
     public static FileSplit[] getIndexSplits(Dataset dataset, String indexName, MetadataTransactionContext mdTxnCtx)
             throws AlgebricksException {
         try {
-            List<String> nodeGroup =
-                    MetadataManager.INSTANCE.getNodegroup(mdTxnCtx, dataset.getNodeGroupName()).getNodeNames();
+            NodeGroup nodeGroup = MetadataManager.INSTANCE.getNodegroup(mdTxnCtx, dataset.getNodeGroupName());
             if (nodeGroup == null) {
                 throw new AlgebricksException("Couldn't find node group " + dataset.getNodeGroupName());
             }
-            return getIndexSplits(dataset, indexName, nodeGroup);
+            List<String> nodeList = nodeGroup.getNodeNames();
+            return getIndexSplits(dataset, indexName, nodeList);
         } catch (MetadataException me) {
             throw new AlgebricksException(me);
         }
@@ -85,11 +86,10 @@ public class SplitsAndConstraintsUtil {
 
             for (int k = 0; k < numPartitions; k++) {
                 // format: 'storage dir name'/partition_#/dataverse/dataset_idx_index
-                File f = new File(
-                        StoragePathUtil.prepareStoragePartitionPath(storageDirName, nodePartitions[k].getPartitionId())
-                                + (dataset.isTemp() ? (File.separator + StoragePathUtil.TEMP_DATASETS_STORAGE_FOLDER)
-                                        : "")
-                                + File.separator + relPathFile);
+                File f = new File(StoragePathUtil.prepareStoragePartitionPath(storageDirName,
+                        nodePartitions[k].getPartitionId())
+                        + (dataset.isTemp() ? (File.separator + StoragePathUtil.TEMP_DATASETS_STORAGE_FOLDER) : "")
+                        + File.separator + relPathFile);
                 splits.add(StoragePathUtil.getFileSplitForClusterPartition(nodePartitions[k], f.getPath()));
             }
         }

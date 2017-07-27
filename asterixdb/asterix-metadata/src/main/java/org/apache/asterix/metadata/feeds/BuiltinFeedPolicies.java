@@ -20,12 +20,19 @@ package org.apache.asterix.metadata.feeds;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
+import org.apache.asterix.common.exceptions.MetadataException;
 import org.apache.asterix.external.feed.policy.FeedPolicyAccessor;
+import org.apache.asterix.metadata.MetadataManager;
+import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.entities.FeedPolicyEntity;
 import org.apache.asterix.metadata.utils.MetadataConstants;
 
 public class BuiltinFeedPolicies {
+
+    private static final Logger LOGGER = Logger.getLogger(BuiltinFeedPolicies.class.getName());
 
     public static final FeedPolicyEntity BASIC = initializeBasicPolicy();
 
@@ -35,15 +42,18 @@ public class BuiltinFeedPolicies {
 
     public static final FeedPolicyEntity ELASTIC = initializeAdvancedFTElasticPolicy();
 
-    public static final FeedPolicyEntity[] policies = new FeedPolicyEntity[] { BASIC, ADVANCED_FT_DISCARD,
-            ADVANCED_FT_SPILL, ELASTIC };
+    private static final FeedPolicyEntity[] POLICIES =
+            new FeedPolicyEntity[] { BASIC, ADVANCED_FT_DISCARD, ADVANCED_FT_SPILL, ELASTIC };
 
     public static final FeedPolicyEntity DEFAULT_POLICY = BASIC;
 
     public static final String CONFIG_FEED_POLICY_KEY = "policy";
 
+    private BuiltinFeedPolicies() {
+    }
+
     public static FeedPolicyEntity getFeedPolicy(String policyName) {
-        for (FeedPolicyEntity policy : policies) {
+        for (FeedPolicyEntity policy : POLICIES) {
             if (policy.getPolicyName().equalsIgnoreCase(policyName)) {
                 return policy;
             }
@@ -53,8 +63,8 @@ public class BuiltinFeedPolicies {
 
     //Basic
     private static FeedPolicyEntity initializeBasicPolicy() {
-        Map<String, String> policyParams = new HashMap<String, String>();
-        policyParams.put(FeedPolicyAccessor.ELASTIC, "false");
+        Map<String, String> policyParams = new HashMap<>();
+        policyParams.put(FeedPolicyAccessor.ELASTIC, Boolean.toString(false));
 
         String description = "Basic";
         return new FeedPolicyEntity(MetadataConstants.METADATA_DATAVERSE_NAME, "Basic", description, policyParams);
@@ -62,40 +72,47 @@ public class BuiltinFeedPolicies {
 
     // Discard
     private static FeedPolicyEntity initializeAdvancedFTDiscardPolicy() {
-        Map<String, String> policyParams = new HashMap<String, String>();
-        policyParams.put(FeedPolicyAccessor.ELASTIC, "false");
-        policyParams.put(FeedPolicyAccessor.FLOWCONTROL_ENABLED, "true");
-        policyParams.put(FeedPolicyAccessor.MAX_SPILL_SIZE_ON_DISK, "false");
+        Map<String, String> policyParams = new HashMap<>();
+        policyParams.put(FeedPolicyAccessor.ELASTIC, Boolean.toString(false));
+        policyParams.put(FeedPolicyAccessor.FLOWCONTROL_ENABLED, Boolean.toString(true));
+        policyParams.put(FeedPolicyAccessor.MAX_SPILL_SIZE_ON_DISK, Boolean.toString(false));
         policyParams.put(FeedPolicyAccessor.MAX_FRACTION_DISCARD, "100");
-        policyParams.put(FeedPolicyAccessor.LOGGING_STATISTICS, "true");
+        policyParams.put(FeedPolicyAccessor.LOGGING_STATISTICS, Boolean.toString(true));
 
         String description = "FlowControl 100% Discard during congestion";
-        return new FeedPolicyEntity(MetadataConstants.METADATA_DATAVERSE_NAME, "Discard", description,
-                policyParams);
+        return new FeedPolicyEntity(MetadataConstants.METADATA_DATAVERSE_NAME, "Discard", description, policyParams);
     }
 
     // Spill
     private static FeedPolicyEntity initializeAdvancedFTSpillPolicy() {
-        Map<String, String> policyParams = new HashMap<String, String>();
-        policyParams.put(FeedPolicyAccessor.ELASTIC, "false");
-        policyParams.put(FeedPolicyAccessor.FLOWCONTROL_ENABLED, "true");
+        Map<String, String> policyParams = new HashMap<>();
+        policyParams.put(FeedPolicyAccessor.ELASTIC, Boolean.toString(false));
+        policyParams.put(FeedPolicyAccessor.FLOWCONTROL_ENABLED, Boolean.toString(true));
         policyParams.put(FeedPolicyAccessor.SPILL_TO_DISK_ON_CONGESTION, "" + Boolean.TRUE);
-        policyParams.put(FeedPolicyAccessor.MAX_SPILL_SIZE_ON_DISK, "" + FeedPolicyAccessor.NO_LIMIT);
+        policyParams.put(FeedPolicyAccessor.MAX_SPILL_SIZE_ON_DISK, "" + Long.toString(FeedPolicyAccessor.NO_LIMIT));
 
         String description = "FlowControl 100% Spill during congestion";
-        return new FeedPolicyEntity(MetadataConstants.METADATA_DATAVERSE_NAME, "Spill", description,
-                policyParams);
+        return new FeedPolicyEntity(MetadataConstants.METADATA_DATAVERSE_NAME, "Spill", description, policyParams);
     }
 
     // AdvancedFT_Elastic
     private static FeedPolicyEntity initializeAdvancedFTElasticPolicy() {
-        Map<String, String> policyParams = new HashMap<String, String>();
-        policyParams.put(FeedPolicyAccessor.ELASTIC, "true");
-        policyParams.put(FeedPolicyAccessor.FLOWCONTROL_ENABLED, "true");
-        policyParams.put(FeedPolicyAccessor.LOGGING_STATISTICS, "true");
+        Map<String, String> policyParams = new HashMap<>();
+        policyParams.put(FeedPolicyAccessor.ELASTIC, Boolean.toString(true));
+        policyParams.put(FeedPolicyAccessor.FLOWCONTROL_ENABLED, Boolean.toString(true));
+        policyParams.put(FeedPolicyAccessor.LOGGING_STATISTICS, Boolean.toString(true));
         String description = "Basic Monitored Fault-Tolerant Elastic";
         return new FeedPolicyEntity(MetadataConstants.METADATA_DATAVERSE_NAME, "AdvancedFT_Elastic", description,
                 policyParams);
+    }
+
+    public static void insertInitialFeedPolicies(MetadataTransactionContext mdTxnCtx) throws MetadataException {
+        for (FeedPolicyEntity feedPolicy : BuiltinFeedPolicies.POLICIES) {
+            MetadataManager.INSTANCE.addFeedPolicy(mdTxnCtx, feedPolicy);
+        }
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("Finished adding built-in feed policies.");
+        }
     }
 
 }

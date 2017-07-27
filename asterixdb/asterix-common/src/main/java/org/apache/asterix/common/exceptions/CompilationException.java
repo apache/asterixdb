@@ -31,8 +31,7 @@ public class CompilationException extends AlgebricksException {
     }
 
     public CompilationException(int errorCode, Throwable cause, Serializable... params) {
-        super(ErrorCode.ASTERIX, errorCode, ErrorCode.getErrorMessage(errorCode), params);
-        addSuppressed(cause);
+        super(ErrorCode.ASTERIX, errorCode, ErrorCode.getErrorMessage(errorCode), cause, params);
     }
 
     /**

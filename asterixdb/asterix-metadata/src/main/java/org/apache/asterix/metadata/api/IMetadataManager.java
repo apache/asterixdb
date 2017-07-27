@@ -23,10 +23,10 @@ import java.rmi.RemoteException;
 import java.util.List;
 
 import org.apache.asterix.common.exceptions.ACIDException;
+import org.apache.asterix.common.exceptions.MetadataException;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.metadata.IMetadataBootstrap;
 import org.apache.asterix.external.indexing.ExternalFile;
-import org.apache.asterix.metadata.MetadataException;
 import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.entities.CompactionPolicy;
 import org.apache.asterix.metadata.entities.Dataset;
@@ -668,6 +668,16 @@ public interface IMetadataManager extends IMetadataBootstrap {
      * @throws MetadataException
      */
     <T extends IExtensionMetadataEntity> void addEntity(MetadataTransactionContext mdTxnCtx, T entity)
+            throws MetadataException;
+
+    /**
+     * Upsert an extension entity to its extension dataset under the ongoing metadata transaction
+     *
+     * @param mdTxnCtx
+     * @param entity
+     * @throws MetadataException
+     */
+    <T extends IExtensionMetadataEntity> void upsertEntity(MetadataTransactionContext mdTxnCtx, T entity)
             throws MetadataException;
 
     /**

@@ -472,8 +472,10 @@ public class TestExecutor {
             } catch (Exception e) {
                 // whoops, not JSON (e.g. 404) - just include the body
                 GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, errorBody);
-                throw new Exception("HTTP operation failed:" + "\nSTATUS LINE: " + httpResponse.getStatusLine()
-                        + "\nERROR_BODY: " + errorBody, e);
+                Exception failure = new Exception("HTTP operation failed:" + "\nSTATUS LINE: "
+                        + httpResponse.getStatusLine() + "\nERROR_BODY: " + errorBody);
+                failure.addSuppressed(e);
+                throw failure;
             }
             throw new ParsedException("HTTP operation failed: " + errors[0] + "\nSTATUS LINE: "
                     + httpResponse.getStatusLine() + "\nSUMMARY: " + errors[2].split("\n")[0], errors[2]);
@@ -1173,7 +1175,8 @@ public class TestExecutor {
                 break;
             } catch (TimeoutException e) {
                 if (responsesReceived == 0) {
-                    throw new Exception("Poll limit (" + timeoutSecs + "s) exceeded without obtaining *any* result from server");
+                    throw new Exception(
+                            "Poll limit (" + timeoutSecs + "s) exceeded without obtaining *any* result from server");
                 } else {
                     throw new Exception("Poll limit (" + timeoutSecs + "s) exceeded without obtaining expected result");
 

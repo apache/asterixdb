@@ -44,7 +44,7 @@ public class DatasetPartitionManager implements IDatasetPartitionManager {
 
     private final Executor executor;
 
-    private final Map<JobId, IDatasetStateRecord> partitionResultStateMap;
+    private final Map<JobId, ResultSetMap> partitionResultStateMap;
 
     private final DefaultDeallocatableRegistry deallocatableRegistry;
 
@@ -76,8 +76,7 @@ public class DatasetPartitionManager implements IDatasetPartitionManager {
             dpw = new DatasetPartitionWriter(ctx, this, jobId, rsId, asyncMode, orderedResult, partition, nPartitions,
                     datasetMemoryManager, fileFactory);
 
-            ResultSetMap rsIdMap = (ResultSetMap) partitionResultStateMap.computeIfAbsent(jobId,
-                    k -> new ResultSetMap());
+            ResultSetMap rsIdMap = partitionResultStateMap.computeIfAbsent(jobId, k -> new ResultSetMap());
 
             ResultState[] resultStates = rsIdMap.createOrGetResultStates(rsId, nPartitions);
             resultStates[partition] = dpw.getResultState();
@@ -122,7 +121,7 @@ public class DatasetPartitionManager implements IDatasetPartitionManager {
 
     protected synchronized ResultState getResultState(JobId jobId, ResultSetId resultSetId, int partition)
             throws HyracksException {
-        ResultSetMap rsIdMap = (ResultSetMap) partitionResultStateMap.get(jobId);
+        ResultSetMap rsIdMap = partitionResultStateMap.get(jobId);
         if (rsIdMap == null) {
             throw new HyracksException("Unknown JobId " + jobId);
         }
@@ -139,7 +138,7 @@ public class DatasetPartitionManager implements IDatasetPartitionManager {
 
     @Override
     public synchronized void removePartition(JobId jobId, ResultSetId resultSetId, int partition) {
-        ResultSetMap rsIdMap = (ResultSetMap) partitionResultStateMap.get(jobId);
+        ResultSetMap rsIdMap = partitionResultStateMap.get(jobId);
         if (rsIdMap != null && rsIdMap.removePartition(jobId, resultSetId, partition)) {
             partitionResultStateMap.remove(jobId);
         }
@@ -147,8 +146,15 @@ public class DatasetPartitionManager implements IDatasetPartitionManager {
 
     @Override
     public synchronized void abortReader(JobId jobId) {
-        ResultSetMap rsIdMap = (ResultSetMap) partitionResultStateMap.get(jobId);
+        ResultSetMap rsIdMap = partitionResultStateMap.get(jobId);
         if (rsIdMap != null) {
+            rsIdMap.abortAll();
+        }
+    }
+
+    @Override
+    public synchronized void abortAllReaders() {
+        for (ResultSetMap rsIdMap : partitionResultStateMap.values()) {
             rsIdMap.abortAll();
         }
     }
@@ -167,7 +173,7 @@ public class DatasetPartitionManager implements IDatasetPartitionManager {
     }
 
     @Override
-    public IDatasetStateRecord getState(JobId jobId) {
+    public ResultSetMap getState(JobId jobId) {
         return partitionResultStateMap.get(jobId);
     }
 
@@ -187,7 +193,7 @@ public class DatasetPartitionManager implements IDatasetPartitionManager {
     }
 
     private synchronized void deinit(JobId jobId) {
-        ResultSetMap rsIdMap = (ResultSetMap) partitionResultStateMap.get(jobId);
+        ResultSetMap rsIdMap = partitionResultStateMap.get(jobId);
         if (rsIdMap != null) {
             rsIdMap.closeAndDeleteAll();
         }

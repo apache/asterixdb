@@ -55,7 +55,7 @@ public interface IClusterEventsSubscriber {
      * @param previousState
      * @param newState
      */
-    default void notifyStateChange(ClusterState previousState, ClusterState newState) {
+    default void notifyStateChange(ClusterState newState) {
         // default is no-op
     }
 

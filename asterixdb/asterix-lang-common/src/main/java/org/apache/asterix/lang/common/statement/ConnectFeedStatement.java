@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.lang.common.statement;
 
+import java.util.List;
+
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.common.base.Statement;
@@ -25,9 +27,6 @@ import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 import org.apache.asterix.metadata.feeds.BuiltinFeedPolicies;
 import org.apache.hyracks.algebricks.common.utils.Pair;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class ConnectFeedStatement implements Statement {
 

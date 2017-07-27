@@ -179,8 +179,8 @@ public class NodeControllerService implements IControllerService {
         this.application = application;
         id = ncConfig.getNodeId();
 
-        ioManager = new IOManager(IODeviceHandle.getDevices(ncConfig.getIODevices()),
-                application.getFileDeviceResolver());
+        ioManager =
+                new IOManager(IODeviceHandle.getDevices(ncConfig.getIODevices()), application.getFileDeviceResolver());
         if (id == null) {
             throw new HyracksException("id not set");
         }
@@ -274,8 +274,7 @@ public class NodeControllerService implements IControllerService {
         partitionManager = new PartitionManager(this);
         netManager = new NetworkManager(ncConfig.getDataListenAddress(), ncConfig.getDataListenPort(), partitionManager,
                 ncConfig.getNetThreadCount(), ncConfig.getNetBufferCount(), ncConfig.getDataPublicAddress(),
-                ncConfig.getDataPublicPort(),
-                FullFrameChannelInterfaceFactory.INSTANCE);
+                ncConfig.getDataPublicPort(), FullFrameChannelInterfaceFactory.INSTANCE);
         netManager.start();
 
         startApplication();
@@ -288,16 +287,17 @@ public class NodeControllerService implements IControllerService {
         this.ccs = new ClusterControllerRemoteProxy(ipc,
                 new InetSocketAddress(ncConfig.getClusterAddress(), ncConfig.getClusterPort()),
                 ncConfig.getClusterConnectRetries(), new IControllerRemoteProxyIPCEventListener() {
-            @Override
-            public void ipcHandleRestored(IIPCHandle handle) throws IPCException {
-                // we need to re-register in case the NC -> CC connection reset was due to CC shutdown
-                try {
-                    registerNode();
-                } catch (Exception e) {
-                    throw new IPCException(e);
-                }
-            }
-        });
+                    @Override
+                    public void ipcHandleRestored(IIPCHandle handle) throws IPCException {
+                        // we need to re-register in case of NC -> CC connection reset
+                        try {
+                            registerNode();
+                        } catch (Exception e) {
+                            LOGGER.log(Level.WARNING, "Failed Registering with cc", e);
+                            throw new IPCException(e);
+                        }
+                    }
+                });
         registerNode();
 
         workQueue.start();
@@ -332,15 +332,15 @@ public class NodeControllerService implements IControllerService {
         // Use "public" versions of network addresses and ports
         NetworkAddress datasetAddress = datasetNetworkManager.getPublicNetworkAddress();
         NetworkAddress netAddress = netManager.getPublicNetworkAddress();
-        NetworkAddress meesagingPort = messagingNetManager != null ? messagingNetManager.getPublicNetworkAddress()
-                : null;
+        NetworkAddress meesagingPort =
+                messagingNetManager != null ? messagingNetManager.getPublicNetworkAddress() : null;
         int allCores = osMXBean.getAvailableProcessors();
         nodeRegistration = new NodeRegistration(ipc.getSocketAddress(), id, ncConfig, netAddress, datasetAddress,
-                osMXBean.getName(), osMXBean.getArch(), osMXBean.getVersion(), allCores,
-                runtimeMXBean.getVmName(), runtimeMXBean.getVmVersion(), runtimeMXBean.getVmVendor(),
-                runtimeMXBean.getClassPath(), runtimeMXBean.getLibraryPath(), runtimeMXBean.getBootClassPath(),
-                runtimeMXBean.getInputArguments(), runtimeMXBean.getSystemProperties(), hbSchema, meesagingPort,
-                application.getCapacity(), PidHelper.getPid(), maxJobId.get());
+                osMXBean.getName(), osMXBean.getArch(), osMXBean.getVersion(), allCores, runtimeMXBean.getVmName(),
+                runtimeMXBean.getVmVersion(), runtimeMXBean.getVmVendor(), runtimeMXBean.getClassPath(),
+                runtimeMXBean.getLibraryPath(), runtimeMXBean.getBootClassPath(), runtimeMXBean.getInputArguments(),
+                runtimeMXBean.getSystemProperties(), hbSchema, meesagingPort, application.getCapacity(),
+                PidHelper.getPid(), maxJobId.get());
 
         ccs.registerNode(nodeRegistration);
 
@@ -572,12 +572,12 @@ public class NodeControllerService implements IControllerService {
 
     private static INCApplication getApplication(NCConfig config)
             throws ClassNotFoundException, IllegalAccessException, InstantiationException {
-            if (config.getAppClass() != null) {
-                Class<?> c = Class.forName(config.getAppClass());
-                return (INCApplication) c.newInstance();
-            } else {
-                return BaseNCApplication.INSTANCE;
-            }
+        if (config.getAppClass() != null) {
+            Class<?> c = Class.forName(config.getAppClass());
+            return (INCApplication) c.newInstance();
+        } else {
+            return BaseNCApplication.INSTANCE;
+        }
     }
 
     @Override

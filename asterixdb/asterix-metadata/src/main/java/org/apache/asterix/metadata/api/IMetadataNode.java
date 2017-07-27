@@ -25,10 +25,10 @@ import java.rmi.RemoteException;
 import java.util.List;
 
 import org.apache.asterix.common.exceptions.ACIDException;
+import org.apache.asterix.common.exceptions.MetadataException;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.transactions.JobId;
 import org.apache.asterix.external.indexing.ExternalFile;
-import org.apache.asterix.metadata.MetadataException;
 import org.apache.asterix.metadata.entities.CompactionPolicy;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.DatasourceAdapter;
@@ -749,6 +749,17 @@ public interface IMetadataNode extends Remote, Serializable {
             throws MetadataException, RemoteException;
 
     /**
+     * Upserts an extension entity under the ongoing transaction job id
+     *
+     * @param jobId
+     * @param entity
+     * @throws MetadataException
+     * @throws RemoteException
+     */
+    <T extends IExtensionMetadataEntity> void upsertEntity(JobId jobId, T entity)
+            throws MetadataException, RemoteException;
+
+    /**
      * Deletes an extension entity under the ongoing transaction job id
      *
      * @param jobId
@@ -781,4 +792,5 @@ public interface IMetadataNode extends Remote, Serializable {
 
     List<FeedConnection> getFeedConnections(JobId jobId, String dataverseName, String feedName)
             throws MetadataException, RemoteException;
+
 }

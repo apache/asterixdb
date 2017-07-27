@@ -30,15 +30,14 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.asterix.active.ActiveLifecycleListener;
 import org.apache.asterix.api.http.ctx.StatementExecutorContext;
+import org.apache.asterix.api.http.server.ActiveStatsApiServlet;
 import org.apache.asterix.api.http.server.ApiServlet;
 import org.apache.asterix.api.http.server.ClusterApiServlet;
 import org.apache.asterix.api.http.server.ClusterControllerDetailsApiServlet;
 import org.apache.asterix.api.http.server.ConnectorApiServlet;
 import org.apache.asterix.api.http.server.DdlApiServlet;
 import org.apache.asterix.api.http.server.DiagnosticsApiServlet;
-import org.apache.asterix.api.http.server.ActiveStatsApiServlet;
 import org.apache.asterix.api.http.server.FullApiServlet;
 import org.apache.asterix.api.http.server.NodeControllerDetailsApiServlet;
 import org.apache.asterix.api.http.server.QueryApiServlet;
@@ -52,6 +51,7 @@ import org.apache.asterix.api.http.server.ShutdownApiServlet;
 import org.apache.asterix.api.http.server.UpdateApiServlet;
 import org.apache.asterix.api.http.server.VersionApiServlet;
 import org.apache.asterix.api.http.servlet.ServletConstants;
+import org.apache.asterix.app.active.ActiveNotificationHandler;
 import org.apache.asterix.app.cc.CCExtensionManager;
 import org.apache.asterix.app.cc.ResourceIdManager;
 import org.apache.asterix.app.external.ExternalLibraryUtils;
@@ -65,6 +65,7 @@ import org.apache.asterix.common.config.MetadataProperties;
 import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.library.ILibraryManager;
+import org.apache.asterix.metadata.lock.MetadataLockManager;
 import org.apache.asterix.common.replication.IFaultToleranceStrategy;
 import org.apache.asterix.common.replication.IReplicationStrategy;
 import org.apache.asterix.common.utils.Servlets;
@@ -130,11 +131,11 @@ public class CCApplication extends BaseCCApplication {
                 .create(ClusterProperties.INSTANCE.getCluster(), repStrategy, ccServiceCtx);
         ExternalLibraryUtils.setUpExternaLibraries(libraryManager, false);
         componentProvider = new StorageComponentProvider();
-        GlobalRecoveryManager.instantiate(ccServiceCtx, getHcc(), componentProvider);
+        GlobalRecoveryManager globalRecoveryManager = createGlobalRecoveryManager();
         statementExecutorCtx = new StatementExecutorContext();
         appCtx = new CcApplicationContext(ccServiceCtx, getHcc(), libraryManager, resourceIdManager,
-                () -> MetadataManager.INSTANCE, GlobalRecoveryManager.instance(), ftStrategy,
-                new ActiveLifecycleListener(), componentProvider);
+                () -> MetadataManager.INSTANCE, globalRecoveryManager, ftStrategy, new ActiveNotificationHandler(),
+                componentProvider, new MetadataLockManager());
         ClusterStateManager.INSTANCE.setCcAppCtx(appCtx);
         ccExtensionManager = new CCExtensionManager(getExtensions());
         appCtx.setExtensionManager(ccExtensionManager);
@@ -147,16 +148,20 @@ public class CCApplication extends BaseCCApplication {
         setAsterixStateProxy(AsterixStateProxy.registerRemoteObject(metadataProperties.getMetadataCallbackPort()));
         ccServiceCtx.setDistributedState(proxy);
         MetadataManager.initialize(proxy, metadataProperties);
-        ccServiceCtx.addJobLifecycleListener(appCtx.getActiveLifecycleListener());
+        ccServiceCtx.addJobLifecycleListener(appCtx.getActiveNotificationHandler());
 
         // create event loop groups
         webManager = new WebManager();
         configureServers();
         webManager.start();
-        ClusterManagerProvider.getClusterManager().registerSubscriber(GlobalRecoveryManager.instance());
+        ClusterManagerProvider.getClusterManager().registerSubscriber(globalRecoveryManager);
         ccServiceCtx.addClusterLifecycleListener(new ClusterLifecycleListener(appCtx));
 
         jobCapacityController = new JobCapacityController(controllerService.getResourceManager());
+    }
+
+    protected GlobalRecoveryManager createGlobalRecoveryManager() throws Exception {
+        return new GlobalRecoveryManager(ccServiceCtx, getHcc(), componentProvider);
     }
 
     @Override
@@ -178,7 +183,7 @@ public class CCApplication extends BaseCCApplication {
 
     @Override
     public void stop() throws Exception {
-        ((ActiveLifecycleListener) appCtx.getActiveLifecycleListener()).stop();
+        ((ActiveNotificationHandler) appCtx.getActiveNotificationHandler()).stop();
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Stopping Asterix cluster controller");
         }
@@ -288,9 +293,8 @@ public class CCApplication extends BaseCCApplication {
                         ccExtensionManager.getCompilationProvider(SQLPP), getStatementExecutorFactory(),
                         componentProvider);
             case Servlets.QUERY_AQL:
-                return new QueryServiceServlet(ctx, paths, appCtx, AQL,
-                        ccExtensionManager.getCompilationProvider(AQL), getStatementExecutorFactory(),
-                        componentProvider);
+                return new QueryServiceServlet(ctx, paths, appCtx, AQL, ccExtensionManager.getCompilationProvider(AQL),
+                        getStatementExecutorFactory(), componentProvider);
             case Servlets.CONNECTOR:
                 return new ConnectorApiServlet(ctx, paths, appCtx);
             case Servlets.REBALANCE:

@@ -65,8 +65,8 @@ public class AbortTasksWork extends AbstractWork {
                 }
             }
         } else {
-            LOGGER.log(Level.WARNING, "Joblet couldn't be found. Tasks of job " + jobId
-                    + " have all either completed or failed");
+            LOGGER.log(Level.WARNING,
+                    "Joblet couldn't be found. Tasks of job " + jobId + " have all either completed or failed");
         }
     }
 }

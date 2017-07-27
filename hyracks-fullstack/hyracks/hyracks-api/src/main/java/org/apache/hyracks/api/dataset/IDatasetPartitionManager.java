@@ -24,21 +24,23 @@ import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.job.JobId;
 
 public interface IDatasetPartitionManager extends IDatasetManager {
-    public IFrameWriter createDatasetPartitionWriter(IHyracksTaskContext ctx, ResultSetId rsId, boolean orderedResult,
+    IFrameWriter createDatasetPartitionWriter(IHyracksTaskContext ctx, ResultSetId rsId, boolean orderedResult,
             boolean asyncMode, int partition, int nPartitions) throws HyracksException;
 
-    public void registerResultPartitionLocation(JobId jobId, ResultSetId rsId, int partition, int nPartitions,
+    void registerResultPartitionLocation(JobId jobId, ResultSetId rsId, int partition, int nPartitions,
             boolean orderedResult, boolean emptyResult) throws HyracksException;
 
-    public void reportPartitionWriteCompletion(JobId jobId, ResultSetId resultSetId, int partition)
+    void reportPartitionWriteCompletion(JobId jobId, ResultSetId resultSetId, int partition) throws HyracksException;
+
+    void initializeDatasetPartitionReader(JobId jobId, ResultSetId resultSetId, int partition, IFrameWriter noc)
             throws HyracksException;
 
-    public void initializeDatasetPartitionReader(JobId jobId, ResultSetId resultSetId, int partition, IFrameWriter noc)
-            throws HyracksException;
+    void removePartition(JobId jobId, ResultSetId resultSetId, int partition);
 
-    public void removePartition(JobId jobId, ResultSetId resultSetId, int partition);
+    void abortReader(JobId jobId);
 
-    public void abortReader(JobId jobId);
+    void abortAllReaders();
 
-    public void close();
+    void close();
+
 }

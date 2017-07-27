@@ -24,9 +24,7 @@ import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.external.util.FeedUtils;
 import org.apache.asterix.metadata.MetadataCache;
 import org.apache.asterix.metadata.api.IMetadataEntity;
-import org.apache.asterix.metadata.feeds.BuiltinFeedPolicies;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**

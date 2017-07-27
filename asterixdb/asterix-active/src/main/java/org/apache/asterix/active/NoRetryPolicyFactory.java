@@ -16,29 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.asterix.active;
 
-package org.apache.asterix.metadata;
+public class NoRetryPolicyFactory implements IRetryPolicyFactory {
+    public static final NoRetryPolicyFactory INSTANCE = new NoRetryPolicyFactory();
+    private static final IRetryPolicy policy = () -> false;
 
-import org.apache.asterix.common.exceptions.CompilationException;
-
-import java.io.Serializable;
-
-public class MetadataException extends CompilationException {
-    private static final long serialVersionUID = 1L;
-
-    public MetadataException(String message) {
-        super(message);
+    private NoRetryPolicyFactory() {
     }
 
-    public MetadataException(Throwable cause) {
-        super(cause);
-    }
-
-    public MetadataException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
-    public MetadataException(int errorCode, Serializable... params) {
-        super(errorCode, params);
+    @Override
+    public IRetryPolicy create(IActiveEntityEventsListener listener) {
+        return policy;
     }
 }

@@ -38,19 +38,24 @@ import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.resource.NodeCapacity;
+import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.cc.NodeControllerState;
+import org.apache.hyracks.control.cc.job.IJobManager;
+import org.apache.hyracks.control.cc.job.JobRun;
 import org.apache.hyracks.control.cc.scheduler.IResourceManager;
 import org.apache.hyracks.control.common.controllers.CCConfig;
 
 public class NodeManager implements INodeManager {
     private static final Logger LOGGER = Logger.getLogger(NodeManager.class.getName());
 
+    private final ClusterControllerService ccs;
     private final CCConfig ccConfig;
     private final IResourceManager resourceManager;
     private final Map<String, NodeControllerState> nodeRegistry;
     private final Map<InetAddress, Set<String>> ipAddressNodeNameMap;
 
-    public NodeManager(CCConfig ccConfig, IResourceManager resourceManager) {
+    public NodeManager(ClusterControllerService ccs, CCConfig ccConfig, IResourceManager resourceManager) {
+        this.ccs = ccs;
         this.ccConfig = ccConfig;
         this.resourceManager = resourceManager;
         this.nodeRegistry = new LinkedHashMap<>();
@@ -79,15 +84,18 @@ public class NodeManager implements INodeManager {
 
     @Override
     public void addNode(String nodeId, NodeControllerState ncState) throws HyracksException {
+        LOGGER.warning("addNode(" + nodeId + ") called");
         if (nodeId == null || ncState == null) {
             throw HyracksException.create(ErrorCode.INVALID_INPUT_PARAMETER);
         }
         // Updates the node registry.
         if (nodeRegistry.containsKey(nodeId)) {
-            LOGGER.warning("Node with name " + nodeId + " has already registered; re-registering");
+            LOGGER.warning(
+                    "Node with name " + nodeId + " has already registered; failing the node then re-registering.");
+            removeDeadNode(nodeId);
         }
+        LOGGER.warning("adding node to registry");
         nodeRegistry.put(nodeId, ncState);
-
         // Updates the IP address to node names map.
         try {
             InetAddress ipAddress = getIpAddress(ncState);
@@ -98,8 +106,8 @@ public class NodeManager implements INodeManager {
             nodeRegistry.remove(nodeId);
             throw e;
         }
-
         // Updates the cluster capacity.
+        LOGGER.warning("updating cluster capacity");
         resourceManager.update(nodeId, ncState.getCapacity());
     }
 
@@ -145,6 +153,27 @@ public class NodeManager implements INodeManager {
             }
         }
         return Pair.of(deadNodes, affectedJobIds);
+    }
+
+    public void removeDeadNode(String nodeId) throws HyracksException {
+        NodeControllerState state = nodeRegistry.get(nodeId);
+        Set<JobId> affectedJobIds = state.getActiveJobIds();
+        // Removes the node from node map.
+        nodeRegistry.remove(nodeId);
+        // Removes the node from IP map.
+        removeNodeFromIpAddressMap(nodeId, state);
+        // Updates the cluster capacity.
+        resourceManager.update(nodeId, new NodeCapacity(0L, 0));
+        LOGGER.info(nodeId + " considered dead");
+        IJobManager jobManager = ccs.getJobManager();
+        Set<String> collection = Collections.singleton(nodeId);
+        for (JobId jobId : affectedJobIds) {
+            JobRun run = jobManager.get(jobId);
+            if (run != null) {
+                run.getExecutor().notifyNodeFailures(collection);
+            }
+        }
+        ccs.getContext().notifyNodeFailure(collection);
     }
 
     @Override

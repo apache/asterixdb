@@ -38,4 +38,9 @@ public class MetadataUtil {
                 return "Unknown Pending Operation";
         }
     }
+
+    public static String getDataverseFromFullyQualifiedName(String datasetName) {
+        int idx = datasetName.indexOf('.');
+        return datasetName.substring(0, idx);
+    }
 }

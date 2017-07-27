@@ -27,6 +27,7 @@ import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.MetadataException;
 import org.apache.asterix.external.api.IAdapterFactory;
 import org.apache.asterix.external.api.IDataSourceAdapter;
 import org.apache.asterix.external.api.IDataSourceAdapter.AdapterType;
@@ -36,7 +37,6 @@ import org.apache.asterix.external.provider.AdapterFactoryProvider;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
-import org.apache.asterix.metadata.MetadataException;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.declared.MetadataProvider;
@@ -59,8 +59,11 @@ import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
  */
 public class FeedMetadataUtil {
 
+    private FeedMetadataUtil() {
+    }
+
     public static Dataset validateIfDatasetExists(MetadataProvider metadataProvider, String dataverse,
-            String datasetName, MetadataTransactionContext ctx) throws AlgebricksException {
+            String datasetName) throws AlgebricksException {
         Dataset dataset = metadataProvider.findDataset(dataverse, datasetName);
         if (dataset == null) {
             throw new CompilationException("Unknown target dataset :" + datasetName);

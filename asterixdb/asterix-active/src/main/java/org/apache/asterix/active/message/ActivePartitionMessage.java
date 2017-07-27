@@ -21,8 +21,8 @@ package org.apache.asterix.active.message;
 import java.io.Serializable;
 import java.util.Objects;
 
-import org.apache.asterix.active.ActiveLifecycleListener;
 import org.apache.asterix.active.ActiveRuntimeId;
+import org.apache.asterix.active.IActiveNotificationHandler;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.messaging.api.ICcAddressedMessage;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -64,7 +64,7 @@ public class ActivePartitionMessage implements ICcAddressedMessage {
 
     @Override
     public void handle(ICcApplicationContext appCtx) throws HyracksDataException, InterruptedException {
-        ActiveLifecycleListener activeListener = (ActiveLifecycleListener) appCtx.getActiveLifecycleListener();
+        IActiveNotificationHandler activeListener = (IActiveNotificationHandler) appCtx.getActiveNotificationHandler();
         activeListener.receive(this);
     }
 
@@ -87,7 +87,7 @@ public class ActivePartitionMessage implements ICcAddressedMessage {
             return true;
         }
         ActivePartitionMessage other = (ActivePartitionMessage) o;
-        return Objects.equals(other.activeRuntimeId, activeRuntimeId) && Objects.equals(other.jobId, jobId) && Objects
-                .equals(other.payload, payload);
+        return Objects.equals(other.activeRuntimeId, activeRuntimeId) && Objects.equals(other.jobId, jobId)
+                && Objects.equals(other.payload, payload);
     }
 }

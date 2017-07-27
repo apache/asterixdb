@@ -21,6 +21,8 @@ package org.apache.asterix.runtime.utils;
 import java.io.IOException;
 import java.util.function.Supplier;
 
+import org.apache.asterix.common.api.IMetadataLockManager;
+import org.apache.asterix.common.cluster.IClusterStateManager;
 import org.apache.asterix.common.cluster.IGlobalRecoveryManager;
 import org.apache.asterix.common.config.ActiveProperties;
 import org.apache.asterix.common.config.BuildProperties;
@@ -74,12 +76,13 @@ public class CcApplicationContext implements ICcApplicationContext {
     private Object extensionManager;
     private IFaultToleranceStrategy ftStrategy;
     private IJobLifecycleListener activeLifeCycleListener;
+    private IMetadataLockManager mdLockManager;
 
     public CcApplicationContext(ICCServiceContext ccServiceCtx, IHyracksClientConnection hcc,
             ILibraryManager libraryManager, IResourceIdManager resourceIdManager,
             Supplier<IMetadataBootstrap> metadataBootstrapSupplier, IGlobalRecoveryManager globalRecoveryManager,
             IFaultToleranceStrategy ftStrategy, IJobLifecycleListener activeLifeCycleListener,
-            IStorageComponentProvider storageComponentProvider)
+            IStorageComponentProvider storageComponentProvider, IMetadataLockManager mdLockManager)
             throws AsterixException, IOException {
         this.ccServiceCtx = ccServiceCtx;
         this.hcc = hcc;
@@ -105,6 +108,7 @@ public class CcApplicationContext implements ICcApplicationContext {
         this.metadataBootstrapSupplier = metadataBootstrapSupplier;
         this.globalRecoveryManager = globalRecoveryManager;
         this.storageComponentProvider = storageComponentProvider;
+        this.mdLockManager = mdLockManager;
     }
 
     @Override
@@ -210,12 +214,22 @@ public class CcApplicationContext implements ICcApplicationContext {
     }
 
     @Override
-    public IJobLifecycleListener getActiveLifecycleListener() {
+    public IJobLifecycleListener getActiveNotificationHandler() {
         return activeLifeCycleListener;
     }
 
     @Override
     public IStorageComponentProvider getStorageComponentProvider() {
         return storageComponentProvider;
+    }
+
+    @Override
+    public IMetadataLockManager getMetadataLockManager() {
+        return mdLockManager;
+    }
+
+    @Override
+    public IClusterStateManager getClusterStateManager() {
+        return ClusterStateManager.INSTANCE;
     }
 }

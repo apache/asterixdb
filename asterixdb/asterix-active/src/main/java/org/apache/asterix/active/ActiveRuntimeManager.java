@@ -28,6 +28,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+
 public class ActiveRuntimeManager {
 
     private static final Logger LOGGER = Logger.getLogger(ActiveRuntimeManager.class.getName());
@@ -65,11 +69,18 @@ public class ActiveRuntimeManager {
         return activeRuntimes.get(runtimeId);
     }
 
-    public void registerRuntime(ActiveRuntimeId runtimeId, ActiveSourceOperatorNodePushable feedRuntime) {
+    public void registerRuntime(ActiveRuntimeId runtimeId, ActiveSourceOperatorNodePushable feedRuntime)
+            throws HyracksDataException {
+        if (activeRuntimes.containsKey(runtimeId)) {
+            throw new RuntimeDataException(ErrorCode.ACTIVE_RUNTIME_IS_ALREADY_REGISTERED, runtimeId);
+        }
         activeRuntimes.put(runtimeId, feedRuntime);
     }
 
-    public synchronized void deregisterRuntime(ActiveRuntimeId runtimeId) {
+    public void deregisterRuntime(ActiveRuntimeId runtimeId) throws HyracksDataException {
+        if (!activeRuntimes.containsKey(runtimeId)) {
+            throw new RuntimeDataException(ErrorCode.ACTIVE_RUNTIME_IS_NOT_REGISTERED, runtimeId);
+        }
         activeRuntimes.remove(runtimeId);
     }
 

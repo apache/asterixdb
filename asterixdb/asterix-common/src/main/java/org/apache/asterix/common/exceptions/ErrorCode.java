@@ -67,6 +67,7 @@ public class ErrorCode {
     public static final int POLYGON_INVALID_COORDINATE = 24;
     public static final int POLYGON_3_POINTS = 25;
     public static final int POLYGON_INVALID = 26;
+    public static final int OPERATION_NOT_SUPPORTED = 27;
 
     public static final int INSTANTIATION_ERROR = 100;
 
@@ -114,6 +115,12 @@ public class ErrorCode {
     public static final int INDEX_ILLEGAL_ENFORCED_NON_OPTIONAL = 1041;
     public static final int INDEX_ILLEGAL_NON_ENFORCED_TYPED = 1042;
     public static final int INDEX_RTREE_MULTIPLE_FIELDS_NOT_ALLOWED = 1043;
+    public static final int REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE = 1044;
+    public static final int ILLEGAL_LOCK_UPGRADE_OPERATION = 1045;
+    public static final int ILLEGAL_LOCK_DOWNGRADE_OPERATION = 1046;
+    public static final int UPGRADE_FAILED_LOCK_WAS_NOT_ACQUIRED = 1047;
+    public static final int DOWNGRADE_FAILED_LOCK_WAS_NOT_ACQUIRED = 1048;
+    public static final int LOCK_WAS_ACQUIRED_DIFFERENT_OPERATION = 1049;
 
     // Feed errors
     public static final int DATAFLOW_ILLEGAL_STATE = 3001;
@@ -200,6 +207,26 @@ public class ErrorCode {
     public static final int PROVIDER_STREAM_RECORD_READER_WRONG_CONFIGURATION = 3086;
     public static final int FEED_CONNECT_FEED_APPLIED_INVALID_FUNCTION = 3087;
     public static final int ACTIVE_MANAGER_INVALID_RUNTIME = 3088;
+    public static final int ACTIVE_ENTITY_ALREADY_STARTED = 3089;
+    public static final int ACTIVE_ENTITY_CANNOT_BE_STOPPED = 3090;
+    public static final int CANNOT_ADD_DATASET_TO_ACTIVE_ENTITY = 3091;
+    public static final int CANNOT_REMOVE_DATASET_FROM_ACTIVE_ENTITY = 3092;
+    public static final int ACTIVE_ENTITY_IS_ALREADY_REGISTERED = 3093;
+    public static final int CANNOT_ADD_INDEX_TO_DATASET_CONNECTED_TO_ACTIVE_ENTITY = 3094;
+    public static final int CANNOT_REMOVE_INDEX_FROM_DATASET_CONNECTED_TO_ACTIVE_ENTITY = 3095;
+    public static final int ACTIVE_NOTIFICATION_HANDLER_IS_SUSPENDED = 3096;
+    public static final int ACTIVE_ENTITY_LISTENER_IS_NOT_REGISTERED = 3097;
+    public static final int CANNOT_DERIGESTER_ACTIVE_ENTITY_LISTENER = 3098;
+    public static final int DOUBLE_INITIALIZATION_OF_ACTIVE_NOTIFICATION_HANDLER = 3099;
+    public static final int FAILED_TO_SHUTDOWN_EVENT_PROCESSOR = 3100;
+    public static final int DOUBLE_RECOVERY_ATTEMPTS = 3101;
+    public static final int UNREPORTED_TASK_FAILURE_EXCEPTION = 3102;
+    public static final int ACTIVE_ENTITY_ALREADY_SUSPENDED = 3103;
+    public static final int ACTIVE_ENTITY_CANNOT_RESUME_FROM_STATE = 3104;
+    public static final int ACTIVE_RUNTIME_IS_ALREADY_REGISTERED = 3105;
+    public static final int ACTIVE_RUNTIME_IS_NOT_REGISTERED = 3106;
+    public static final int ACTIVE_EVENT_HANDLER_ALREADY_SUSPENDED = 3107;
+    public static final int FEED_STOPPED_WHILE_WAITING_FOR_A_NEW_RECORD = 3108;
 
     // Lifecycle management errors
     public static final int DUPLICATE_PARTITION_ID = 4000;

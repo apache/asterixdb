@@ -19,6 +19,8 @@
 package org.apache.asterix.common.dataflow;
 
 import org.apache.asterix.common.api.IApplicationContext;
+import org.apache.asterix.common.api.IMetadataLockManager;
+import org.apache.asterix.common.cluster.IClusterStateManager;
 import org.apache.asterix.common.cluster.IGlobalRecoveryManager;
 import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.replication.IFaultToleranceStrategy;
@@ -63,9 +65,9 @@ public interface ICcApplicationContext extends IApplicationContext {
     IFaultToleranceStrategy getFaultToleranceStrategy();
 
     /**
-     * @return the active lifecycle listener at Cluster controller
+     * @return the active notification handler at Cluster controller
      */
-    IJobLifecycleListener getActiveLifecycleListener();
+    IJobLifecycleListener getActiveNotificationHandler();
 
     /**
      * @return a new instance of {@link IHyracksClientConnection}
@@ -90,4 +92,14 @@ public interface ICcApplicationContext extends IApplicationContext {
      * @return the extension manager instance
      */
     Object getExtensionManager();
+
+    /**
+     * @return the metadata lock manager
+     */
+    IMetadataLockManager getMetadataLockManager();
+
+    /**
+     * @return the cluster state manager
+     */
+    IClusterStateManager getClusterStateManager();
 }

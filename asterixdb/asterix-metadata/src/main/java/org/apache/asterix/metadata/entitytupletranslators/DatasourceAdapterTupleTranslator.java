@@ -24,10 +24,10 @@ import java.io.DataInput;
 import java.io.DataInputStream;
 import java.util.Calendar;
 
+import org.apache.asterix.common.exceptions.MetadataException;
 import org.apache.asterix.external.api.IDataSourceAdapter;
 import org.apache.asterix.external.dataset.adapter.AdapterIdentifier;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
-import org.apache.asterix.metadata.MetadataException;
 import org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
 import org.apache.asterix.metadata.bootstrap.MetadataRecordTypes;
 import org.apache.asterix.metadata.entities.DatasourceAdapter;

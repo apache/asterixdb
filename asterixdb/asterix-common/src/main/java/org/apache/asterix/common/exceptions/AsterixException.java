@@ -25,6 +25,10 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 public class AsterixException extends AlgebricksException {
     private static final long serialVersionUID = 1L;
 
+    /**
+     * @deprecated Instead, use a constructor with error code
+     */
+    @Deprecated
     public AsterixException(String message) {
         super(message);
     }
@@ -34,10 +38,11 @@ public class AsterixException extends AlgebricksException {
 
     }
 
-    public static AsterixException create(int errorCode, Serializable... params) {
-        return new AsterixException(errorCode, params);
-    }
-
+    /**
+     * @deprecated When creating a constructor with cause,
+     *             create AlgebricksException using AlgebricksException.create(Throwable th);
+     */
+    @Deprecated
     public AsterixException(Throwable cause) {
         super(cause);
     }
@@ -47,7 +52,15 @@ public class AsterixException extends AlgebricksException {
         addSuppressed(cause);
     }
 
+    /**
+     * @deprecated Instead, use a constructor with error code
+     */
+    @Deprecated
     public AsterixException(String message, Throwable cause) {
         super(message, cause);
+    }
+
+    public static AsterixException create(int errorCode, Serializable... params) {
+        return new AsterixException(errorCode, params);
     }
 }

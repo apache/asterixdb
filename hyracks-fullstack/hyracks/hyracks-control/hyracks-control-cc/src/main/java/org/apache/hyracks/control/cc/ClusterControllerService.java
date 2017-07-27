@@ -167,7 +167,7 @@ public class ClusterControllerService implements IControllerService {
         threadDumpRunMap = Collections.synchronizedMap(new HashMap<>());
 
         // Node manager is in charge of cluster membership management.
-        nodeManager = new NodeManager(ccConfig, resourceManager);
+        nodeManager = new NodeManager(this, ccConfig, resourceManager);
 
         jobIdFactory = new JobIdFactory();
     }
@@ -193,9 +193,9 @@ public class ClusterControllerService implements IControllerService {
         clusterIPC = new IPCSystem(new InetSocketAddress(ccConfig.getClusterListenPort()), ccIPCI,
                 new CCNCFunctions.SerializerDeserializer());
         IIPCI ciIPCI = new ClientInterfaceIPCI(this, jobIdFactory);
-        clientIPC = new IPCSystem(
-                new InetSocketAddress(ccConfig.getClientListenAddress(), ccConfig.getClientListenPort()),
-                ciIPCI, new JavaSerializationBasedPayloadSerializerDeserializer());
+        clientIPC =
+                new IPCSystem(new InetSocketAddress(ccConfig.getClientListenAddress(), ccConfig.getClientListenPort()),
+                        ciIPCI, new JavaSerializationBasedPayloadSerializerDeserializer());
         webServer = new WebServer(this, ccConfig.getConsoleListenPort());
         clusterIPC.start();
         clientIPC.start();
@@ -222,9 +222,9 @@ public class ClusterControllerService implements IControllerService {
 
         // Job manager is in charge of job lifecycle management.
         try {
-            Constructor<?> jobManagerConstructor = this.getClass().getClassLoader()
-                    .loadClass(ccConfig.getJobManagerClass())
-                    .getConstructor(CCConfig.class, ClusterControllerService.class, IJobCapacityController.class);
+            Constructor<?> jobManagerConstructor =
+                    this.getClass().getClassLoader().loadClass(ccConfig.getJobManagerClass()).getConstructor(
+                            CCConfig.class, ClusterControllerService.class, IJobCapacityController.class);
             jobManager = (IJobManager) jobManagerConstructor.newInstance(ccConfig, this, jobCapacityController);
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | NoSuchMethodException
                 | InvocationTargetException e) {
@@ -263,13 +263,14 @@ public class ClusterControllerService implements IControllerService {
             @Override
             public void notifyNodeJoin(String nodeId, Map<IOption, Object> ncConfiguration) throws HyracksException {
                 // no-op, we don't care
+                LOGGER.log(Level.WARNING, "Getting notified that node: " + nodeId + " has joined. and we don't care");
             }
 
             @Override
             public void notifyNodeFailure(Collection<String> deadNodeIds) throws HyracksException {
+                LOGGER.log(Level.WARNING, "Getting notified that nodes: " + deadNodeIds + " has failed");
                 for (String nodeId : deadNodeIds) {
                     Pair<String, Integer> ncService = getNCService(nodeId);
-
                     final TriggerNCWork triggerWork = new TriggerNCWork(ClusterControllerService.this,
                             ncService.getLeft(), ncService.getRight(), nodeId);
                     workQueue.schedule(triggerWork);
@@ -396,8 +397,8 @@ public class ClusterControllerService implements IControllerService {
 
         @Override
         public void getIPAddressNodeMap(Map<InetAddress, Set<String>> map) throws HyracksDataException {
-            GetIpAddressNodeNameMapWork ginmw = new GetIpAddressNodeNameMapWork(
-                    ClusterControllerService.this.getNodeManager(), map);
+            GetIpAddressNodeNameMapWork ginmw =
+                    new GetIpAddressNodeNameMapWork(ClusterControllerService.this.getNodeManager(), map);
             try {
                 workQueue.scheduleAndSync(ginmw);
             } catch (Exception e) {

@@ -66,17 +66,11 @@ public class ClusterStateManager implements IClusterStateManager {
     public static final ClusterStateManager INSTANCE = new ClusterStateManager();
     private final Map<String, Map<IOption, Object>> activeNcConfiguration = new HashMap<>();
     private Set<String> pendingRemoval = new HashSet<>();
-
     private final Cluster cluster;
     private ClusterState state = ClusterState.UNUSABLE;
-
     private AlgebricksAbsolutePartitionConstraint clusterPartitionConstraint;
-
-    private boolean globalRecoveryCompleted = false;
-
     private Map<String, ClusterPartition[]> node2PartitionsMap;
     private SortedMap<Integer, ClusterPartition> clusterPartitions;
-
     private String currentMetadataNode = null;
     private boolean metadataNodeActive = false;
     private Set<String> failedNodes = new HashSet<>();
@@ -117,7 +111,9 @@ public class ClusterStateManager implements IClusterStateManager {
 
     @Override
     public synchronized void setState(ClusterState state) {
+        LOGGER.info("updating cluster state from " + this.state + " to " + state.name());
         this.state = state;
+        appCtx.getGlobalRecoveryManager().notifyStateChange(state);
         LOGGER.info("Cluster State is now " + state.name());
         // Notify any waiting threads for the cluster state to change.
         notifyAll();
@@ -262,16 +258,8 @@ public class ClusterStateManager implements IClusterStateManager {
                 clusterActiveLocations.add(p.getActiveNodeId());
             }
         }
-        clusterPartitionConstraint = new AlgebricksAbsolutePartitionConstraint(
-                clusterActiveLocations.toArray(new String[] {}));
-    }
-
-    public boolean isGlobalRecoveryCompleted() {
-        return globalRecoveryCompleted;
-    }
-
-    public void setGlobalRecoveryCompleted(boolean globalRecoveryCompleted) {
-        this.globalRecoveryCompleted = globalRecoveryCompleted;
+        clusterPartitionConstraint =
+                new AlgebricksAbsolutePartitionConstraint(clusterActiveLocations.toArray(new String[] {}));
     }
 
     public boolean isClusterActive() {
@@ -384,13 +372,12 @@ public class ClusterStateManager implements IClusterStateManager {
 
     @Override
     public synchronized void deregisterNodePartitions(String nodeId) {
-        ClusterPartition [] nodePartitions = node2PartitionsMap.remove(nodeId);
+        ClusterPartition[] nodePartitions = node2PartitionsMap.remove(nodeId);
         if (nodePartitions == null) {
             LOGGER.info("deregisterNodePartitions unknown node " + nodeId + " (already removed?)");
         } else {
             if (LOGGER.isLoggable(Level.INFO)) {
-                LOGGER.info("deregisterNodePartitions for node " + nodeId + ": " +
-                        Arrays.toString(nodePartitions));
+                LOGGER.info("deregisterNodePartitions for node " + nodeId + ": " + Arrays.toString(nodePartitions));
             }
             for (ClusterPartition nodePartition : nodePartitions) {
                 clusterPartitions.remove(nodePartition.getPartitionId());
@@ -413,7 +400,7 @@ public class ClusterStateManager implements IClusterStateManager {
             LOGGER.info("Deregistering intention to remove node id " + nodeId);
         }
         if (!pendingRemoval.remove(nodeId)) {
-            LOGGER.warning("Cannot deregister intention to remove node id " + nodeId  + " that was not registered");
+            LOGGER.warning("Cannot deregister intention to remove node id " + nodeId + " that was not registered");
             return false;
         } else {
             return true;

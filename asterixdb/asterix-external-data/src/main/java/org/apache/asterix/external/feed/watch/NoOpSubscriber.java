@@ -19,14 +19,14 @@
 package org.apache.asterix.external.feed.watch;
 
 import org.apache.asterix.active.ActiveEvent;
+import org.apache.asterix.active.IActiveEntityEventSubscriber;
 import org.apache.asterix.active.IActiveEntityEventsListener;
-import org.apache.asterix.active.IActiveEventSubscriber;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 /**
  * An event subscriber that does not listen to any events
  */
-public class NoOpSubscriber implements IActiveEventSubscriber {
+public class NoOpSubscriber implements IActiveEntityEventSubscriber {
 
     public static final NoOpSubscriber INSTANCE = new NoOpSubscriber();
 
@@ -45,11 +45,6 @@ public class NoOpSubscriber implements IActiveEventSubscriber {
 
     @Override
     public void sync() {
-        // no op
-    }
-
-    @Override
-    public void unsubscribe() {
         // no op
     }
 

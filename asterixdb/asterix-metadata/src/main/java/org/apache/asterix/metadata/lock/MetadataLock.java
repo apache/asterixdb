@@ -21,6 +21,8 @@ package org.apache.asterix.metadata.lock;
 import java.util.Objects;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import org.apache.asterix.common.metadata.IMetadataLock;
+
 public class MetadataLock implements IMetadataLock {
     private final String key;
     private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock(true);
@@ -30,7 +32,7 @@ public class MetadataLock implements IMetadataLock {
     }
 
     @Override
-    public void acquire(IMetadataLock.Mode mode) {
+    public void lock(IMetadataLock.Mode mode) {
         switch (mode) {
             case WRITE:
                 lock.writeLock().lock();
@@ -42,7 +44,7 @@ public class MetadataLock implements IMetadataLock {
     }
 
     @Override
-    public void release(IMetadataLock.Mode mode) {
+    public void unlock(IMetadataLock.Mode mode) {
         switch (mode) {
             case WRITE:
                 lock.writeLock().unlock();
@@ -72,5 +74,10 @@ public class MetadataLock implements IMetadataLock {
             return true;
         }
         return Objects.equals(key, ((MetadataLock) o).key);
+    }
+
+    @Override
+    public String toString() {
+        return key;
     }
 }

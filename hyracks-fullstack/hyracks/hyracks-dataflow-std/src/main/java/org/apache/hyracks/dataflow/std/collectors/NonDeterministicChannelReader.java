@@ -123,14 +123,15 @@ public class NonDeterministicChannelReader implements IInputChannelMonitor, IPar
             try {
                 wait();
             } catch (InterruptedException e) {
-                throw new HyracksDataException(e);
+                Thread.currentThread().interrupt();
+                throw HyracksDataException.create(e);
             }
         }
     }
 
     public synchronized void close() throws HyracksDataException {
-        for (int i = closedSenders.nextClearBit(0); i >= 0
-                && i < nSenderPartitions; i = closedSenders.nextClearBit(i + 1)) {
+        for (int i = closedSenders.nextClearBit(0); i >= 0 && i < nSenderPartitions; i =
+                closedSenders.nextClearBit(i + 1)) {
             if (channels[i] != null) {
                 channels[i].close();
                 channels[i] = null;
