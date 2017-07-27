@@ -64,6 +64,8 @@ public class AsterixHyracksIntegrationUtil {
     public NodeControllerService[] ncs = new NodeControllerService[0];
     public IHyracksClientConnection hcc;
 
+    private static final String DEFAULT_STORAGE_PATH = joinPath("target", "io", "dir");
+    private static String storagePath = DEFAULT_STORAGE_PATH;
     private ConfigManager configManager;
     private List<String> nodeNames;
 
@@ -217,8 +219,16 @@ public class AsterixHyracksIntegrationUtil {
         }
     }
 
+    public static void setStoragePath(String path) {
+        storagePath = path;
+    }
+
+    public static void restoreDefaultStoragePath() {
+        storagePath = DEFAULT_STORAGE_PATH;
+    }
+
     protected String getDefaultStoragePath() {
-        return joinPath("target", "io", "dir");
+        return storagePath;
     }
 
     public void removeTestStorageFiles() {

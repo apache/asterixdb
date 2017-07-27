@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.transaction.management.resource;
 
+import static org.apache.hyracks.api.exceptions.ErrorCode.CANNOT_CREATE_FILE;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -190,10 +192,12 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
         FileReference resourceFile = ioManager.resolve(relativePath);
         if (resourceFile.getFile().exists()) {
             throw new HyracksDataException("Duplicate resource: " + resourceFile.getAbsolutePath());
-        } else {
-            resourceFile.getFile().getParentFile().mkdirs();
         }
-        resourceCache.put(resource.getPath(), resource);
+
+        final File parent = resourceFile.getFile().getParentFile();
+        if (!parent.exists() && !parent.mkdirs()) {
+            throw HyracksDataException.create(CANNOT_CREATE_FILE, parent.getAbsolutePath());
+        }
 
         try (FileOutputStream fos = new FileOutputStream(resourceFile.getFile());
                 ObjectOutputStream oosToFos = new ObjectOutputStream(fos)) {
@@ -202,6 +206,8 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
         } catch (IOException e) {
             throw new HyracksDataException(e);
         }
+
+        resourceCache.put(resource.getPath(), resource);
 
         //if replication enabled, send resource metadata info to remote nodes
         if (isReplicationEnabled) {

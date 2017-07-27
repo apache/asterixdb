@@ -66,7 +66,9 @@ public class MaterializerTaskState extends AbstractStateObject {
     }
 
     public void close() throws HyracksDataException {
-        out.close();
+        if (out != null) {
+            out.close();
+        }
     }
 
     public void appendFrame(ByteBuffer buffer) throws HyracksDataException {
@@ -74,20 +76,25 @@ public class MaterializerTaskState extends AbstractStateObject {
     }
 
     public void writeOut(IFrameWriter writer, IFrame frame, boolean failed) throws HyracksDataException {
-        RunFileReader in = out.createReader();
+        RunFileReader in = null;
+        if (out != null) {
+            in = out.createReader();
+        }
         writer.open();
         try {
             if (failed) {
                 writer.fail();
                 return;
             }
-            in.open();
-            try {
-                while (in.nextFrame(frame)) {
-                    writer.nextFrame(frame.getBuffer());
+            if (in != null) {
+                in.open();
+                try {
+                    while (in.nextFrame(frame)) {
+                        writer.nextFrame(frame.getBuffer());
+                    }
+                } finally {
+                    in.close();
                 }
-            } finally {
-                in.close();
             }
         } catch (Exception e) {
             writer.fail();
@@ -96,7 +103,7 @@ public class MaterializerTaskState extends AbstractStateObject {
             try {
                 writer.close();
             } finally {
-                if (numConsumers.decrementAndGet() == 0) {
+                if (numConsumers.decrementAndGet() == 0 && out != null) {
                     out.getFileReference().delete();
                 }
             }

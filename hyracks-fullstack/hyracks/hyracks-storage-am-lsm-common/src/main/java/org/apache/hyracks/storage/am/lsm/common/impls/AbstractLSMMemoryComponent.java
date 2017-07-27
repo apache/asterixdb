@@ -144,6 +144,11 @@ public abstract class AbstractLSMMemoryComponent extends AbstractLSMComponent im
                     throw new IllegalStateException("Flush sees an illegal LSM memory compoenent state: " + state);
                 }
                 readerCount--;
+                if (failedOperation) {
+                    // if flush failed, return the component state to READABLE_UNWRITABLE
+                    state = ComponentState.READABLE_UNWRITABLE;
+                    return;
+                }
                 if (readerCount == 0) {
                     state = ComponentState.INACTIVE;
                 } else {
