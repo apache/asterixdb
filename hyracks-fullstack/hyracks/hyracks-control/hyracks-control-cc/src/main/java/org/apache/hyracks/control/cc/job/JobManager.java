@@ -45,7 +45,6 @@ import org.apache.hyracks.control.cc.application.CCServiceContext;
 import org.apache.hyracks.control.cc.cluster.INodeManager;
 import org.apache.hyracks.control.cc.scheduler.FIFOJobQueue;
 import org.apache.hyracks.control.cc.scheduler.IJobQueue;
-import org.apache.hyracks.control.cc.work.JobCleanupWork;
 import org.apache.hyracks.control.common.controllers.CCConfig;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -318,8 +317,12 @@ public class JobManager implements IJobManager {
         try {
             run.getExecutor().startJob();
         } catch (Exception e) {
-            ccs.getWorkQueue().schedule(new JobCleanupWork(ccs.getJobManager(), run.getJobId(), JobStatus.FAILURE,
-                    Collections.singletonList(e)));
+            LOGGER.log(Level.SEVERE, "Aborting " + run.getJobId() + " due to failure during job start", e);
+            final List<Exception> exceptions = Collections.singletonList(e);
+            // fail the job then abort it
+            run.setStatus(JobStatus.FAILURE, exceptions);
+            // abort job will trigger JobCleanupWork
+            run.getExecutor().abortJob(exceptions);
         }
     }
 

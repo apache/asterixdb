@@ -18,6 +18,7 @@
  */
 package org.apache.hyracks.control.cc.work;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -55,8 +56,12 @@ public class JobCleanupWork extends AbstractWork {
         } catch (HyracksException e) {
             // Fail the job with the caught exception during final completion.
             JobRun run = jobManager.get(jobId);
-            run.getExceptions().add(e);
-            run.setStatus(JobStatus.FAILURE, run.getExceptions());
+            List<Exception> completionException = new ArrayList<>();
+            if (run.getExceptions() != null && !run.getExceptions().isEmpty()) {
+                completionException.addAll(run.getExceptions());
+            }
+            completionException.add(0, e);
+            run.setStatus(JobStatus.FAILURE, completionException);
         }
     }
 
