@@ -130,7 +130,7 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
     }
 
     protected synchronized void setState(ActivityState newState) {
-        LOGGER.log(Level.WARNING, "State is being set to " + newState + " from " + state);
+        LOGGER.log(Level.FINE, "State is being set to " + newState + " from " + state);
         this.prevState = state;
         this.state = newState;
         if (newState == ActivityState.SUSPENDED) {
@@ -142,7 +142,7 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
     @Override
     public synchronized void notify(ActiveEvent event) {
         try {
-            LOGGER.warning("EventListener is notified.");
+            LOGGER.fine("EventListener is notified.");
             ActiveEvent.Kind eventKind = event.getEventKind();
             switch (eventKind) {
                 case JOB_CREATED:
@@ -158,7 +158,7 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
                     handle((ActivePartitionMessage) event.getEventObject());
                     break;
                 default:
-                    LOGGER.log(Level.WARNING, "Unhandled feed event notification: " + event);
+                    LOGGER.log(Level.FINE, "Unhandled feed event notification: " + event);
                     break;
             }
             notifySubscribers(event);
@@ -271,10 +271,10 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
     @SuppressWarnings("unchecked")
     @Override
     public void refreshStats(long timeout) throws HyracksDataException {
-        LOGGER.log(Level.WARNING, "refreshStats called");
+        LOGGER.log(Level.FINE, "refreshStats called");
         synchronized (this) {
             if (state != ActivityState.RUNNING || isFetchingStats) {
-                LOGGER.log(Level.WARNING,
+                LOGGER.log(Level.FINE,
                         "returning immediately since state = " + state + " and fetchingStats = " + isFetchingStats);
                 return;
             } else {
@@ -348,33 +348,32 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
 
     @Override
     public synchronized void recover() throws HyracksDataException {
-        LOGGER.log(Level.WARNING, "Recover is called on " + entityId);
+        LOGGER.log(Level.FINE, "Recover is called on " + entityId);
         if (recoveryTask != null) {
-            LOGGER.log(Level.WARNING,
-                    "But recovery task for " + entityId + " is already there!! throwing an exception");
+            LOGGER.log(Level.FINE, "But recovery task for " + entityId + " is already there!! throwing an exception");
             throw new RuntimeDataException(ErrorCode.DOUBLE_RECOVERY_ATTEMPTS);
         }
         if (retryPolicyFactory == NoRetryPolicyFactory.INSTANCE) {
-            LOGGER.log(Level.WARNING, "But it has no recovery policy, so it is set to permanent failure");
+            LOGGER.log(Level.FINE, "But it has no recovery policy, so it is set to permanent failure");
             setState(ActivityState.PERMANENTLY_FAILED);
         } else {
             ExecutorService executor = appCtx.getServiceContext().getControllerService().getExecutor();
             IRetryPolicy policy = retryPolicyFactory.create(this);
             cancelRecovery = false;
             setState(ActivityState.TEMPORARILY_FAILED);
-            LOGGER.log(Level.WARNING, "Recovery task has been submitted");
+            LOGGER.log(Level.FINE, "Recovery task has been submitted");
             recoveryTask = executor.submit(() -> doRecover(policy));
         }
     }
 
     protected Void doRecover(IRetryPolicy policy)
             throws AlgebricksException, HyracksDataException, InterruptedException {
-        LOGGER.log(Level.WARNING, "Actual Recovery task has started");
+        LOGGER.log(Level.FINE, "Actual Recovery task has started");
         if (getState() != ActivityState.TEMPORARILY_FAILED) {
-            LOGGER.log(Level.WARNING, "but its state is not temp failure and so we're just returning");
+            LOGGER.log(Level.FINE, "but its state is not temp failure and so we're just returning");
             return null;
         }
-        LOGGER.log(Level.WARNING, "calling the policy");
+        LOGGER.log(Level.FINE, "calling the policy");
         while (policy.retry()) {
             synchronized (this) {
                 if (cancelRecovery) {
@@ -516,10 +515,10 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
         WaitForStateSubscriber subscriber;
         Future<Void> suspendTask;
         synchronized (this) {
-            LOGGER.log(Level.WARNING, "suspending entity " + entityId);
-            LOGGER.log(Level.WARNING, "Waiting for ongoing activities");
+            LOGGER.log(Level.FINE, "suspending entity " + entityId);
+            LOGGER.log(Level.FINE, "Waiting for ongoing activities");
             waitForNonTransitionState();
-            LOGGER.log(Level.WARNING, "Proceeding with suspension. Current state is " + state);
+            LOGGER.log(Level.FINE, "Proceeding with suspension. Current state is " + state);
             if (state == ActivityState.STOPPED || state == ActivityState.PERMANENTLY_FAILED) {
                 suspended = true;
                 return;
@@ -537,12 +536,12 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
                     EnumSet.of(ActivityState.SUSPENDED, ActivityState.TEMPORARILY_FAILED));
             suspendTask = metadataProvider.getApplicationContext().getServiceContext().getControllerService()
                     .getExecutor().submit(() -> doSuspend(metadataProvider));
-            LOGGER.log(Level.WARNING, "Suspension task has been submitted");
+            LOGGER.log(Level.FINE, "Suspension task has been submitted");
         }
         try {
-            LOGGER.log(Level.WARNING, "Waiting for suspension task to complete");
+            LOGGER.log(Level.FINE, "Waiting for suspension task to complete");
             suspendTask.get();
-            LOGGER.log(Level.WARNING, "waiting for state to become SUSPENDED or TEMPORARILY_FAILED");
+            LOGGER.log(Level.FINE, "waiting for state to become SUSPENDED or TEMPORARILY_FAILED");
             subscriber.sync();
         } catch (Exception e) {
             synchronized (this) {
