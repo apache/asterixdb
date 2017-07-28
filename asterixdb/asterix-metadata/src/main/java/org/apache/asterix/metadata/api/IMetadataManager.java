@@ -391,6 +391,8 @@ public interface IMetadataManager extends IMetadataBootstrap {
 
     Function getFunction(MetadataTransactionContext ctx, FunctionSignature functionSignature) throws MetadataException;
 
+    List<Function> getFunctions(MetadataTransactionContext ctx, String dataverseName) throws MetadataException;
+
     /**
      * @param ctx
      *            MetadataTransactionContext of an active metadata transaction.
@@ -399,8 +401,6 @@ public interface IMetadataManager extends IMetadataBootstrap {
      * @throws MetadataException
      */
     void dropFunction(MetadataTransactionContext ctx, FunctionSignature functionSignature) throws MetadataException;
-
-    void updateFunction(MetadataTransactionContext ctx, Function function) throws MetadataException;
 
     /**
      * @param mdTxnCtx
@@ -487,6 +487,8 @@ public interface IMetadataManager extends IMetadataBootstrap {
      * @throws MetadataException
      */
     Feed getFeed(MetadataTransactionContext ctx, String dataverse, String feedName) throws MetadataException;
+
+    List<Feed> getFeeds(MetadataTransactionContext ctx, String dataverse) throws MetadataException;
 
     /**
      * @param ctx

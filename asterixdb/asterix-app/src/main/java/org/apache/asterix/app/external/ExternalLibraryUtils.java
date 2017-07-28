@@ -247,7 +247,7 @@ public class ExternalLibraryUtils {
                     }
                     Function f = new Function(dataverse, libraryName + "#" + function.getName().trim(), args.size(),
                             args, function.getReturnType().trim(), function.getDefinition().trim(),
-                            library.getLanguage().trim(), function.getFunctionType().trim(), 0);
+                            library.getLanguage().trim(), function.getFunctionType().trim());
                     MetadataManager.INSTANCE.addFunction(mdTxnCtx, f);
                     if (LOGGER.isLoggable(Level.INFO)) {
                         LOGGER.info("Installed function: " + libraryName + "#" + function.getName().trim());

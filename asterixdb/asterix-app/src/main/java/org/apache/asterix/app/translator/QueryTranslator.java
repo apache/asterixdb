@@ -1161,6 +1161,16 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     throw new AlgebricksException("There is no dataverse with this name " + dataverseName + ".");
                 }
             }
+            // # check whether any function in current dataverse is being used by others
+            List<Function> functionsInDataverse = MetadataManager.INSTANCE.getDataverseFunctions(mdTxnCtx,
+                    dataverseName);
+            for (Function function : functionsInDataverse) {
+                if (checkWhetherFunctionIsBeingUsed(mdTxnCtx, function.getDataverseName(), function.getName(),
+                        function.getArity(), dataverseName)) {
+                    throw new MetadataException(ErrorCode.METADATA_DROP_FUCTION_IN_USE,
+                            function.getDataverseName() + "." + function.getName() + "@" + function.getArity());
+                }
+            }
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             bActiveTxn = false;
             // # disconnect all feeds from any datasets in the dataverse.
@@ -1624,10 +1634,9 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             if (dv == null) {
                 throw new AlgebricksException("There is no dataverse with this name " + dataverse + ".");
             }
-            // If the function body contains function calls, theirs reference count won't be increased.
             Function function = new Function(dataverse, functionName, cfs.getaAterixFunction().getArity(),
                     cfs.getParamList(), Function.RETURNTYPE_VOID, cfs.getFunctionBody(), Function.LANGUAGE_AQL,
-                    FunctionKind.SCALAR.toString(), 0);
+                    FunctionKind.SCALAR.toString());
             MetadataManager.INSTANCE.addFunction(mdTxnCtx, function);
 
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
@@ -1637,6 +1646,27 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         } finally {
             metadataProvider.getLocks().unlock();
         }
+    }
+
+    protected boolean checkWhetherFunctionIsBeingUsed(MetadataTransactionContext ctx, String dataverseName,
+            String functionName, int arity, String currentDataverse) throws MetadataException {
+        List<Dataverse> allDataverses = MetadataManager.INSTANCE.getDataverses(ctx);
+        for (Dataverse dataverse : allDataverses) {
+            if (currentDataverse != null && dataverse.getDataverseName().equals(currentDataverse)) {
+                continue;
+            }
+            List<Feed> feeds = MetadataManager.INSTANCE.getFeeds(ctx, dataverse.getDataverseName());
+            for (Feed feed : feeds) {
+                List<FeedConnection> feedConnections = MetadataManager.INSTANCE.getFeedConections(ctx,
+                        dataverse.getDataverseName(), feed.getFeedName());
+                for (FeedConnection conn : feedConnections) {
+                    if (conn.containsFunction(dataverseName, functionName, arity)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     protected void handleFunctionDropStatement(MetadataProvider metadataProvider, Statement stmt) throws Exception {
@@ -1649,12 +1679,11 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 signature.getNamespace() + "." + signature.getName());
         try {
             Function function = MetadataManager.INSTANCE.getFunction(mdTxnCtx, signature);
-            if (function == null) {
-                if (!stmtDropFunction.getIfExists()) {
-                    throw new AlgebricksException("Unknonw function " + signature);
-                }
-            } else if (function.getReferenceCount() != 0) {
-                throw new AlgebricksException("Function " + signature + " is being used. It cannot be dropped.");
+            if (function == null && !stmtDropFunction.getIfExists()) {
+                throw new AlgebricksException("Unknonw function " + signature);
+            } else if (checkWhetherFunctionIsBeingUsed(mdTxnCtx, signature.getNamespace(), signature.getName(),
+                    signature.getArity(), null)) {
+                throw new MetadataException(ErrorCode.METADATA_DROP_FUCTION_IN_USE, signature);
             } else {
                 MetadataManager.INSTANCE.dropFunction(mdTxnCtx, signature);
             }
@@ -2123,13 +2152,6 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             fc = new FeedConnection(dataverseName, feedName, datasetName, appliedFunctions, policyName,
                     outputType.toString());
             MetadataManager.INSTANCE.addFeedConnection(metadataProvider.getMetadataTxnContext(), fc);
-            // Increase function reference count.
-            for (FunctionSignature funcSig : appliedFunctions) {
-                // The function should be cached in Metadata manager, so this operation is not that expensive.
-                Function func = MetadataManager.INSTANCE.getFunction(mdTxnCtx, funcSig);
-                func.reference();
-                MetadataManager.INSTANCE.updateFunction(mdTxnCtx, func);
-            }
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             if (listener != null) {
                 listener.add(dataset);
@@ -2174,11 +2196,6 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         + cfs.getDatasetName().getValue() + ". Invalid operation!");
             }
             MetadataManager.INSTANCE.dropFeedConnection(mdTxnCtx, dataverseName, feedName, datasetName);
-            for (FunctionSignature functionSignature : fc.getAppliedFunctions()) {
-                Function function = MetadataManager.INSTANCE.getFunction(mdTxnCtx, functionSignature);
-                function.dereference();
-                MetadataManager.INSTANCE.updateFunction(mdTxnCtx, function);
-            }
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             if (listener != null) {
                 listener.remove(ds);

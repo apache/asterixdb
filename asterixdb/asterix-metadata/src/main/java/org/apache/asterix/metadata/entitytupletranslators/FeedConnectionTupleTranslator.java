@@ -95,8 +95,8 @@ public class FeedConnectionTupleTranslator extends AbstractTupleTranslator<FeedC
             cursor = ((AUnorderedList) feedConnRecord
                     .getValueByPos(MetadataRecordTypes.FEED_CONN_APPLIED_FUNCTIONS_FIELD_INDEX)).getCursor();
             while (cursor.next()) {
-                //TODO: allow different arity
-                functionSignature = new FunctionSignature(dataverseName, ((AString) cursor.get()).getStringValue(), 1);
+                String[] functionFullName = ((AString) cursor.get()).getStringValue().split("\\.");
+                functionSignature = new FunctionSignature(functionFullName[0], functionFullName[1], 1);
                 appliedFunctions.add(functionSignature);
             }
         }
@@ -177,7 +177,7 @@ public class FeedConnectionTupleTranslator extends AbstractTupleTranslator<FeedC
             List<FunctionSignature> appliedFunctions = fc.getAppliedFunctions();
             for (FunctionSignature af : appliedFunctions) {
                 listEleBuffer.reset();
-                aString.setValue(af.getName());
+                aString.setValue(af.getNamespace() + "." + af.getName());
                 stringSerde.serialize(aString, listEleBuffer.getDataOutput());
                 listBuilder.addItem(listEleBuffer);
             }

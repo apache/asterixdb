@@ -1,1 +1,1 @@
-{ "DataverseName": "feeds", "FeedName": "TweetFeed", "DatasetName": "Tweets", "ReturnType": "TweetType: closed {\n  id: string,\n  username: string,\n  location: string,\n  text: string,\n  timestamp: string\n}\n", "AppliedFunctions": {{ "feed_processor" }}, "PolicyName": "Basic" }
+{ "DataverseName": "feeds", "FeedName": "TweetFeed", "DatasetName": "Tweets", "ReturnType": "TweetType: closed {\n  id: string,\n  username: string,\n  location: string,\n  text: string,\n  timestamp: string\n}\n", "AppliedFunctions": {{ "feeds.feed_processor" }}, "PolicyName": "Basic" }

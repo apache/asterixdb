@@ -403,6 +403,8 @@ public interface IMetadataNode extends Remote, Serializable {
      */
     Function getFunction(JobId jobId, FunctionSignature functionSignature) throws MetadataException, RemoteException;
 
+    List<Function> getFunctions(JobId jobId, String dataverseName) throws MetadataException, RemoteException;
+
     /**
      * Deletes a function, acquiring local locks on behalf of the given
      * transaction id.
@@ -429,8 +431,6 @@ public interface IMetadataNode extends Remote, Serializable {
      * @throws RemoteException
      */
     void addFunction(JobId jobId, Function function) throws MetadataException, RemoteException;
-
-    void updateFunction(JobId jobId, Function function) throws MetadataException, RemoteException;
 
     /**
      * @param ctx
@@ -538,6 +538,8 @@ public interface IMetadataNode extends Remote, Serializable {
      * @throws RemoteException
      */
     Feed getFeed(JobId jobId, String dataverse, String feedName) throws MetadataException, RemoteException;
+
+    List<Feed> getFeeds(JobId jobId, String dataverse) throws MetadataException, RemoteException;
 
     /**
      * @param jobId

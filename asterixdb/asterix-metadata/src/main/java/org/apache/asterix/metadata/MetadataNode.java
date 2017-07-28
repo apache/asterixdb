@@ -1162,6 +1162,20 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
+    public List<Function> getFunctions(JobId jobId, String dataverseName) throws MetadataException, RemoteException {
+        try {
+            ITupleReference searchKey = createTuple(dataverseName);
+            FunctionTupleTranslator tupleReaderWriter = tupleTranslatorProvider.getFunctionTupleTranslator(false);
+            List<Function> results = new ArrayList<>();
+            IValueExtractor<Function> valueExtractor = new MetadataEntityValueExtractor<>(tupleReaderWriter);
+            searchIndex(jobId, MetadataPrimaryIndexes.FUNCTION_DATASET, searchKey, valueExtractor, results);
+            return results;
+        } catch (HyracksDataException e) {
+            throw new MetadataException(e);
+        }
+    }
+
+    @Override
     public void dropFunction(JobId jobId, FunctionSignature functionSignature)
             throws MetadataException, RemoteException {
 
@@ -1741,6 +1755,20 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
+    public List<Feed> getFeeds(JobId jobId, String dataverse) throws MetadataException, RemoteException {
+        try {
+            ITupleReference searchKey = createTuple(dataverse);
+            FeedTupleTranslator tupleReaderWriter = tupleTranslatorProvider.getFeedTupleTranslator(false);
+            List<Feed> results = new ArrayList<>();
+            IValueExtractor<Feed> valueExtractor = new MetadataEntityValueExtractor<>(tupleReaderWriter);
+            searchIndex(jobId, MetadataPrimaryIndexes.FEED_DATASET, searchKey, valueExtractor, results);
+            return results;
+        } catch (HyracksDataException e) {
+            throw new MetadataException(e);
+        }
+    }
+
+    @Override
     public void dropFeed(JobId jobId, String dataverse, String feedName) throws MetadataException, RemoteException {
         try {
             ITupleReference searchKey = createTuple(dataverse, feedName);
@@ -1935,25 +1963,5 @@ public class MetadataNode implements IMetadataNode {
         } catch (HyracksDataException | ACIDException e) {
             throw new MetadataException(e);
         }
-    }
-
-    @Override
-    public void updateFunction(JobId jobId, Function function) throws MetadataException, RemoteException {
-        try {
-            // remove old function
-            ITupleReference searchKey;
-            searchKey =
-                    createTuple(function.getDataverseName(), function.getName(), Integer.toString(function.getArity()));
-            ITupleReference functionTuple =
-                    getTupleToBeDeleted(jobId, MetadataPrimaryIndexes.FUNCTION_DATASET, searchKey);
-            deleteTupleFromIndex(jobId, MetadataPrimaryIndexes.FUNCTION_DATASET, functionTuple);
-            // add new function
-            FunctionTupleTranslator functionTupleTranslator = tupleTranslatorProvider.getFunctionTupleTranslator(true);
-            functionTuple = functionTupleTranslator.getTupleFromMetadataEntity(function);
-            insertTupleIntoIndex(jobId, MetadataPrimaryIndexes.FUNCTION_DATASET, functionTuple);
-        } catch (HyracksDataException | ACIDException e) {
-            throw new MetadataException(e);
-        }
-
     }
 }

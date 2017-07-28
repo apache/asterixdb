@@ -565,17 +565,6 @@ public class MetadataManager implements IMetadataManager {
     }
 
     @Override
-    public void updateFunction(MetadataTransactionContext mdTxnCtx, Function function) throws MetadataException {
-        try {
-            metadataNode.updateFunction(mdTxnCtx.getJobId(), function);
-        } catch (RemoteException e) {
-            throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
-        }
-        mdTxnCtx.dropFunction(function);
-        mdTxnCtx.addFunction(function);
-    }
-
-    @Override
     public void addFunction(MetadataTransactionContext mdTxnCtx, Function function) throws MetadataException {
         try {
             metadataNode.addFunction(mdTxnCtx.getJobId(), function);
@@ -634,6 +623,15 @@ public class MetadataManager implements IMetadataManager {
         }
         return function;
 
+    }
+
+    @Override
+    public List<Function> getFunctions(MetadataTransactionContext ctx, String dataverseName) throws MetadataException {
+        try {
+           return metadataNode.getFunctions(ctx.getJobId(), dataverseName);
+        } catch (RemoteException e) {
+            throw new MetadataException(e);
+        }
     }
 
     @Override
@@ -794,6 +792,17 @@ public class MetadataManager implements IMetadataManager {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
         return feed;
+    }
+
+    @Override
+    public List<Feed> getFeeds(MetadataTransactionContext ctx, String dataverse) throws MetadataException {
+        List<Feed> feeds;
+        try {
+            feeds = metadataNode.getFeeds(ctx.getJobId(), dataverse);
+        } catch (RemoteException e) {
+            throw new MetadataException(e);
+        }
+        return feeds;
     }
 
     @Override

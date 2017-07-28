@@ -99,7 +99,6 @@ public final class MetadataRecordTypes {
     public static final String FIELD_NAME_VALUE = "Value";
     public static final String FIELD_NAME_WORKING_MEMORY_SIZE = "WorkingMemorySize";
     public static final String FIELD_NAME_APPLIED_FUNCTIONS = "AppliedFunctions";
-    public static final String FIELD_NAME_REFERENCE_COUNT = "ReferenceCount";
 
     //---------------------------------- Record Types Creation ----------------------------------//
     //--------------------------------------- Properties ----------------------------------------//
@@ -322,18 +321,16 @@ public final class MetadataRecordTypes {
     public static final int FUNCTION_ARECORD_FUNCTION_DEFINITION_FIELD_INDEX = 5;
     public static final int FUNCTION_ARECORD_FUNCTION_LANGUAGE_FIELD_INDEX = 6;
     public static final int FUNCTION_ARECORD_FUNCTION_KIND_FIELD_INDEX = 7;
-    public static final int FUNCTION_ARECORD_FUNCTION_REFERENCE_COUNT_INDEX = 8;
     public static final ARecordType FUNCTION_RECORDTYPE = createRecordType(
             // RecordTypeName
             RECORD_NAME_FUNCTION,
             // FieldNames
             new String[] { FIELD_NAME_DATAVERSE_NAME, FIELD_NAME_NAME, FIELD_NAME_ARITY, FIELD_NAME_PARAMS,
-                    FIELD_NAME_RETURN_TYPE, FIELD_NAME_DEFINITION, FIELD_NAME_LANGUAGE, FIELD_NAME_KIND,
-                    FIELD_NAME_REFERENCE_COUNT },
+                    FIELD_NAME_RETURN_TYPE, FIELD_NAME_DEFINITION, FIELD_NAME_LANGUAGE, FIELD_NAME_KIND },
             // FieldTypes
             new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING,
                     new AOrderedListType(BuiltinType.ASTRING, null), BuiltinType.ASTRING, BuiltinType.ASTRING,
-                    BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING },
+                    BuiltinType.ASTRING, BuiltinType.ASTRING },
             //IsOpen?
             true);
     //------------------------------------------ Adapter ----------------------------------------//
