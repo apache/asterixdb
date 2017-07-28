@@ -39,7 +39,10 @@ public interface IMetadataLock {
             if (mode == this) {
                 return true;
             }
-            if (this == Mode.WRITE) {
+            if (this == Mode.WRITE || this == Mode.UPGRADED_WRITE) {
+                return true;
+            }
+            if (this == Mode.EXCLUSIVE_MODIFY && (mode == Mode.MODIFY || mode == Mode.INDEX_BUILD)) {
                 return true;
             }
             return mode == Mode.READ;
