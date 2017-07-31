@@ -132,7 +132,7 @@ public class TCPEndpoint {
                             } catch (IOException e) {
                                 failure = true;
                                 synchronized (connectionListener) {
-                                    connectionListener.connectionFailure(address);
+                                    connectionListener.connectionFailure(address, e);
                                 }
                             }
                             if (!failure) {
@@ -188,11 +188,10 @@ public class TCPEndpoint {
                                 boolean finishConnect = false;
                                 try {
                                     finishConnect = channel.finishConnect();
-                                } catch (Exception e) {
-                                    e.printStackTrace();
+                                } catch (IOException e) {
                                     key.cancel();
                                     synchronized (connectionListener) {
-                                        connectionListener.connectionFailure((InetSocketAddress) key.attachment());
+                                        connectionListener.connectionFailure((InetSocketAddress) key.attachment(), e);
                                     }
                                 }
                                 if (finishConnect) {

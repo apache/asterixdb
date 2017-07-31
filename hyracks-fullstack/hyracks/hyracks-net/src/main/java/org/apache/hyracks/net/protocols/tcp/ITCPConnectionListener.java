@@ -18,6 +18,7 @@
  */
 package org.apache.hyracks.net.protocols.tcp;
 
+import java.io.IOException;
 import java.net.InetSocketAddress;
 
 public interface ITCPConnectionListener {
@@ -25,5 +26,5 @@ public interface ITCPConnectionListener {
 
     public void connectionEstablished(TCPConnection connection);
 
-    public void connectionFailure(InetSocketAddress remoteAddress);
+    public void connectionFailure(InetSocketAddress remoteAddress, IOException error);
 }

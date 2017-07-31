@@ -110,8 +110,9 @@ public class MultiplexedConnection implements ITCPConnectionEventListener {
         notifyAll();
     }
 
-    synchronized void setConnectionFailure() {
+    synchronized void setConnectionFailure(Exception e) {
         this.connectionFailure = true;
+        this.error = e;
         notifyAll();
     }
 
@@ -120,7 +121,7 @@ public class MultiplexedConnection implements ITCPConnectionEventListener {
             wait();
         }
         if (connectionFailure) {
-            throw new NetException("Connection failure");
+            throw new NetException("Connection failure", error);
         }
     }
 
