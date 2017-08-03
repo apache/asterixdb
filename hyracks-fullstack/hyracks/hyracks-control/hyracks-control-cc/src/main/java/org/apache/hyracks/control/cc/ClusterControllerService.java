@@ -257,7 +257,7 @@ public class ClusterControllerService implements IControllerService {
         getNCServices().entrySet().forEach(ncService -> {
             final TriggerNCWork triggerWork = new TriggerNCWork(ClusterControllerService.this,
                     ncService.getValue().getLeft(), ncService.getValue().getRight(), ncService.getKey());
-            workQueue.schedule(triggerWork);
+            executor.submit(triggerWork);
         });
         serviceCtx.addClusterLifecycleListener(new IClusterLifecycleListener() {
             @Override
@@ -271,9 +271,11 @@ public class ClusterControllerService implements IControllerService {
                 LOGGER.log(Level.WARNING, "Getting notified that nodes: " + deadNodeIds + " has failed");
                 for (String nodeId : deadNodeIds) {
                     Pair<String, Integer> ncService = getNCService(nodeId);
-                    final TriggerNCWork triggerWork = new TriggerNCWork(ClusterControllerService.this,
-                            ncService.getLeft(), ncService.getRight(), nodeId);
-                    workQueue.schedule(triggerWork);
+                    if (ncService.getRight() != NCConfig.NCSERVICE_PORT_DISABLED) {
+                        final TriggerNCWork triggerWork = new TriggerNCWork(ClusterControllerService.this,
+                                ncService.getLeft(), ncService.getRight(), nodeId);
+                        executor.submit(triggerWork);
+                    }
                 }
             }
         });
@@ -282,10 +284,12 @@ public class ClusterControllerService implements IControllerService {
     private void terminateNCServices() throws Exception {
         List<ShutdownNCServiceWork> shutdownNCServiceWorks = new ArrayList<>();
         getNCServices().entrySet().forEach(ncService -> {
-            ShutdownNCServiceWork shutdownWork = new ShutdownNCServiceWork(ncService.getValue().getLeft(),
-                    ncService.getValue().getRight(), ncService.getKey());
-            workQueue.schedule(shutdownWork);
-            shutdownNCServiceWorks.add(shutdownWork);
+            if (ncService.getValue().getRight() != NCConfig.NCSERVICE_PORT_DISABLED) {
+                ShutdownNCServiceWork shutdownWork = new ShutdownNCServiceWork(ncService.getValue().getLeft(),
+                        ncService.getValue().getRight(), ncService.getKey());
+                workQueue.schedule(shutdownWork);
+                shutdownNCServiceWorks.add(shutdownWork);
+            }
         });
         for (ShutdownNCServiceWork shutdownWork : shutdownNCServiceWorks) {
             shutdownWork.sync();
