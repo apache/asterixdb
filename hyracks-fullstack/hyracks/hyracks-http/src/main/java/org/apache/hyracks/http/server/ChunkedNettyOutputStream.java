@@ -40,6 +40,12 @@ public class ChunkedNettyOutputStream extends OutputStream {
         this.response = response;
         this.ctx = ctx;
         buffer = ctx.alloc().buffer(chunkSize);
+        // register listener for channel closed
+        ctx.channel().closeFuture().addListener(futureListener -> {
+            synchronized (ChunkedNettyOutputStream.this) {
+                ChunkedNettyOutputStream.this.notifyAll();
+            }
+        });
     }
 
     @Override
@@ -76,8 +82,11 @@ public class ChunkedNettyOutputStream extends OutputStream {
     public void close() throws IOException {
         if (!closed) {
             if (response.isHeaderSent() || response.status() != HttpResponseStatus.OK) {
-                flush();
-                buffer.release();
+                try {
+                    flush();
+                } finally {
+                    buffer.release();
+                }
             } else {
                 response.fullReponse(buffer);
             }
@@ -121,6 +130,9 @@ public class ChunkedNettyOutputStream extends OutputStream {
         while (!ctx.channel().isWritable()) {
             try {
                 ctx.flush();
+                if (!ctx.channel().isOpen()) {
+                    throw new IOException("Closed channel");
+                }
                 wait();
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
