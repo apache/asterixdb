@@ -20,10 +20,12 @@ package org.apache.hyracks.http.server;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.Set;
 
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.server.utils.HttpUtil;
@@ -35,9 +37,7 @@ import io.netty.handler.codec.http.multipart.HttpPostRequestDecoder;
 import io.netty.handler.codec.http.multipart.InterfaceHttpData;
 import io.netty.handler.codec.http.multipart.MixedAttribute;
 
-public class PostRequest extends BaseRequest implements IServletRequest {
-
-    private static final Logger LOGGER = Logger.getLogger(PostRequest.class.getName());
+public class FormUrlEncodedRequest extends BaseRequest implements IServletRequest {
 
     private final List<String> names;
     private final List<String> values;
@@ -45,33 +45,24 @@ public class PostRequest extends BaseRequest implements IServletRequest {
     public static IServletRequest create(FullHttpRequest request) throws IOException {
         List<String> names = new ArrayList<>();
         List<String> values = new ArrayList<>();
-        HttpPostRequestDecoder decoder = null;
+        HttpPostRequestDecoder decoder = new HttpPostRequestDecoder(request);
         try {
-            decoder = new HttpPostRequestDecoder(request);
-        } catch (Exception e) {
-            //ignore. this means that the body of the POST request does not have key value pairs
-            LOGGER.log(Level.WARNING, "Failed to decode a post message. Fix the API not to have queries as POST body",
-                    e);
-        }
-        if (decoder != null) {
-            try {
-                List<InterfaceHttpData> bodyHttpDatas = decoder.getBodyHttpDatas();
-                for (InterfaceHttpData data : bodyHttpDatas) {
-                    if (data.getHttpDataType().equals(InterfaceHttpData.HttpDataType.Attribute)) {
-                        Attribute attr = (MixedAttribute) data;
-                        names.add(data.getName());
-                        values.add(attr.getValue());
-                    }
+            List<InterfaceHttpData> bodyHttpDatas = decoder.getBodyHttpDatas();
+            for (InterfaceHttpData data : bodyHttpDatas) {
+                if (data.getHttpDataType().equals(InterfaceHttpData.HttpDataType.Attribute)) {
+                    Attribute attr = (MixedAttribute) data;
+                    names.add(data.getName());
+                    values.add(attr.getValue());
                 }
-            } finally {
-                decoder.destroy();
             }
+        } finally {
+            decoder.destroy();
         }
-        return new PostRequest(request, new QueryStringDecoder(request.uri()).parameters(), names, values);
+        return new FormUrlEncodedRequest(request, new QueryStringDecoder(request.uri()).parameters(), names, values);
     }
 
-    protected PostRequest(FullHttpRequest request, Map<String, List<String>> parameters, List<String> names,
-            List<String> values) {
+    protected FormUrlEncodedRequest(FullHttpRequest request, Map<String, List<String>> parameters, List<String> names,
+                                    List<String> values) {
         super(request, parameters);
         this.names = names;
         this.values = values;
@@ -85,5 +76,24 @@ public class PostRequest extends BaseRequest implements IServletRequest {
             }
         }
         return HttpUtil.getParameter(parameters, name);
+    }
+
+    @Override
+    public Set<String> getParameterNames() {
+        HashSet<String> paramNames = new HashSet<>();
+        paramNames.addAll(parameters.keySet());
+        paramNames.addAll(names);
+        return Collections.unmodifiableSet(paramNames);
+    }
+
+    @Override
+    public Map<String, String> getParameters() {
+        HashMap<String, String> paramMap = new HashMap<>();
+        paramMap.putAll(super.getParameters());
+        for (int i = 0; i < names.size(); i++) {
+            paramMap.put(names.get(i), values.get(i));
+        }
+
+        return Collections.unmodifiableMap(paramMap);
     }
 }

@@ -19,8 +19,11 @@
 package org.apache.hyracks.http.server;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.server.utils.HttpUtil;
@@ -51,6 +54,21 @@ public class BaseRequest implements IServletRequest {
     @Override
     public String getParameter(CharSequence name) {
         return HttpUtil.getParameter(parameters, name);
+    }
+
+    @Override
+    public Set<String> getParameterNames() {
+        return Collections.unmodifiableSet(parameters.keySet());
+    }
+
+    @Override
+    public Map<String, String> getParameters() {
+        HashMap<String, String> paramMap = new HashMap<>();
+        for (String name : parameters.keySet()) {
+            paramMap.put(name, HttpUtil.getParameter(parameters, name));
+
+        }
+        return Collections.unmodifiableMap(paramMap);
     }
 
     @Override

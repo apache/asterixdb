@@ -21,14 +21,20 @@ package org.apache.hyracks.control.common.config;
 import java.net.MalformedURLException;
 import java.util.logging.Level;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hyracks.api.config.IOptionType;
 import org.apache.hyracks.util.StorageUtil;
+
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class OptionTypes {
 
     public static final IOptionType<Integer> INTEGER_BYTE_UNIT = new IOptionType<Integer>() {
         @Override
         public Integer parse(String s) {
+            if (s == null) {
+                return null;
+            }
             long result1 = StorageUtil.getByteValue(s);
             if (result1 > Integer.MAX_VALUE || result1 < Integer.MIN_VALUE) {
                 throw new IllegalArgumentException(
@@ -46,12 +52,17 @@ public class OptionTypes {
         public String serializeToHumanReadable(Object value) {
             return value + " (" + StorageUtil.toHumanReadableSize((int)value) + ")";
         }
+
+        @Override
+        public void serializeJSONField(String fieldName, Object value, ObjectNode node) {
+            node.put(fieldName, (int)value);
+        }
     };
 
     public static final IOptionType<Long> LONG_BYTE_UNIT = new IOptionType<Long>() {
         @Override
         public Long parse(String s) {
-            return StorageUtil.getByteValue(s);
+            return s == null ? null : StorageUtil.getByteValue(s);
         }
 
         @Override
@@ -62,6 +73,11 @@ public class OptionTypes {
         @Override
         public String serializeToHumanReadable(Object value) {
             return value + " (" + StorageUtil.toHumanReadableSize((long)value) + ")";
+        }
+
+        @Override
+        public void serializeJSONField(String fieldName, Object value, ObjectNode node) {
+            node.put(fieldName, (long)value);
         }
     };
 
@@ -75,6 +91,11 @@ public class OptionTypes {
         public Class<Integer> targetType() {
             return Integer.class;
         }
+
+        @Override
+        public void serializeJSONField(String fieldName, Object value, ObjectNode node) {
+            node.put(fieldName, (int)value);
+        }
     };
 
     public static final IOptionType<Double> DOUBLE = new IOptionType<Double>() {
@@ -86,6 +107,11 @@ public class OptionTypes {
         @Override
         public Class<Double> targetType() {
             return Double.class;
+        }
+
+        @Override
+        public void serializeJSONField(String fieldName, Object value, ObjectNode node) {
+            node.put(fieldName, (double)value);
         }
     };
 
@@ -99,6 +125,11 @@ public class OptionTypes {
         public Class<String> targetType() {
             return String.class;
         }
+
+        @Override
+        public void serializeJSONField(String fieldName, Object value, ObjectNode node) {
+            node.put(fieldName, (String)value);
+        }
     };
 
     public static final IOptionType<Long> LONG = new IOptionType<Long>() {
@@ -110,6 +141,11 @@ public class OptionTypes {
         @Override
         public Class<Long> targetType() {
             return Long.class;
+        }
+
+        @Override
+        public void serializeJSONField(String fieldName, Object value, ObjectNode node) {
+            node.put(fieldName, (long)value);
         }
     };
 
@@ -123,12 +159,17 @@ public class OptionTypes {
         public Class<Boolean> targetType() {
             return Boolean.class;
         }
+
+        @Override
+        public void serializeJSONField(String fieldName, Object value, ObjectNode node) {
+            node.put(fieldName, (boolean)value);
+        }
     };
 
     public static final IOptionType<Level> LEVEL = new IOptionType<Level>() {
         @Override
         public Level parse(String s) {
-            return Level.parse(s);
+            return s == null ? null : Level.parse(s);
         }
 
         @Override
@@ -137,20 +178,25 @@ public class OptionTypes {
         }
 
         @Override
-        public Object serializeToJSON(Object value) {
-            return ((Level)value).getName();
+        public String serializeToJSON(Object value) {
+            return value == null ? null : ((Level)value).getName();
         }
 
         @Override
         public String serializeToIni(Object value) {
             return ((Level)value).getName();
         }
+
+        @Override
+        public void serializeJSONField(String fieldName, Object value, ObjectNode node) {
+            node.put(fieldName, serializeToJSON(value));
+        }
     };
 
     public static final IOptionType<String []> STRING_ARRAY = new IOptionType<String []>() {
         @Override
         public String [] parse(String s) {
-            return s.split("\\s*,\\s*");
+            return s == null ? null : s.split("\\s*,\\s*");
         }
 
         @Override
@@ -162,13 +208,18 @@ public class OptionTypes {
         public String serializeToIni(Object value) {
             return String.join(",", (String [])value);
         }
+
+        @Override
+        public void serializeJSONField(String fieldName, Object value, ObjectNode node) {
+            node.put(fieldName, value == null ? null : StringUtils.join((String [])value, ','));
+        }
     };
 
     public static final IOptionType<java.net.URL> URL = new IOptionType<java.net.URL>() {
         @Override
         public java.net.URL parse(String s) {
             try {
-                return new java.net.URL(s);
+                return s == null ? null : new java.net.URL(s);
             } catch (MalformedURLException e) {
                 throw new IllegalArgumentException(e);
             }
@@ -178,8 +229,12 @@ public class OptionTypes {
         public Class<java.net.URL> targetType() {
             return java.net.URL.class;
         }
-    };
 
+        @Override
+        public void serializeJSONField(String fieldName, Object value, ObjectNode node) {
+            node.put(fieldName, value == null ? null : String.valueOf(value));
+        }
+    };
 
     private OptionTypes() {
     }

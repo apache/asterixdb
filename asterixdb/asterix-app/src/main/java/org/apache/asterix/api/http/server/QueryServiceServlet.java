@@ -62,8 +62,6 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-
-import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpResponseStatus;
 
 public class QueryServiceServlet extends AbstractQueryApiServlet {
@@ -317,9 +315,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
     }
 
     private RequestParameters getRequestParameters(IServletRequest request) throws IOException {
-        final String contentTypeParam = request.getHttpRequest().headers().get(HttpHeaderNames.CONTENT_TYPE);
-        int sep = contentTypeParam.indexOf(';');
-        final String contentType = sep < 0 ? contentTypeParam.trim() : contentTypeParam.substring(0, sep).trim();
+        final String contentType = HttpUtil.getContentTypeOnly(request);
         RequestParameters param = new RequestParameters();
         param.host = host(request);
         param.path = servletPath(request);

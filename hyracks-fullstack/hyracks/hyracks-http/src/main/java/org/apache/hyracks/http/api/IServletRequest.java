@@ -18,6 +18,9 @@
  */
 package org.apache.hyracks.http.api;
 
+import java.util.Map;
+import java.util.Set;
+
 import io.netty.handler.codec.http.FullHttpRequest;
 
 /**
@@ -36,6 +39,20 @@ public interface IServletRequest {
      * @return the parameter or null if not found
      */
     String getParameter(CharSequence name);
+
+    /**
+     * Get the names of all request parameters
+     *
+     * @return the list of parameter names
+     */
+    Set<String> getParameterNames();
+
+    /**
+     * Get the all request parameters
+     *
+     * @return the parameters
+     */
+    Map<String, String> getParameters();
 
     /**
      * Get a request header

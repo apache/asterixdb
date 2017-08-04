@@ -26,11 +26,11 @@ import java.util.Map;
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
 import org.apache.hyracks.http.server.BaseRequest;
-import org.apache.hyracks.http.server.PostRequest;
+import org.apache.hyracks.http.server.FormUrlEncodedRequest;
 
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.HttpHeaderNames;
-import io.netty.handler.codec.http.HttpMethod;
+import io.netty.handler.codec.http.HttpRequest;
 
 public class HttpUtil {
 
@@ -47,6 +47,7 @@ public class HttpUtil {
     public static class ContentType {
         public static final String APPLICATION_ADM = "application/x-adm";
         public static final String APPLICATION_JSON = "application/json";
+        public static final String APPLICATION_X_WWW_FORM_URLENCODED = "application/x-www-form-urlencoded";
         public static final String CSV = "text/csv";
         public static final String IMG_PNG = "image/png";
         public static final String TEXT_HTML = "text/html";
@@ -57,7 +58,7 @@ public class HttpUtil {
     }
 
     public static String getParameter(Map<String, List<String>> parameters, CharSequence name) {
-        List<String> parameter = parameters.get(name);
+        List<String> parameter = parameters.get(String.valueOf(name));
         if (parameter == null) {
             return null;
         } else if (parameter.size() == 1) {
@@ -72,7 +73,17 @@ public class HttpUtil {
     }
 
     public static IServletRequest toServletRequest(FullHttpRequest request) throws IOException {
-        return request.method() == HttpMethod.POST ? PostRequest.create(request) : BaseRequest.create(request);
+        return ContentType.APPLICATION_X_WWW_FORM_URLENCODED.equals(getContentTypeOnly(request))
+                ? FormUrlEncodedRequest.create(request) : BaseRequest.create(request);
+    }
+
+    public static String getContentTypeOnly(IServletRequest request) {
+        return getContentTypeOnly(request.getHttpRequest());
+    }
+
+    public static String getContentTypeOnly(HttpRequest request) {
+        String contentType = request.headers().get(HttpHeaderNames.CONTENT_TYPE);
+        return contentType == null ? null : contentType.split(";")[0];
     }
 
     public static String getRequestBody(IServletRequest request) {

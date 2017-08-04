@@ -41,7 +41,7 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 public class QueryResultApiServlet extends AbstractQueryApiServlet {
     private static final Logger LOGGER = Logger.getLogger(QueryResultApiServlet.class.getName());
 
-    public QueryResultApiServlet(ConcurrentMap<String, Object> ctx, String[] paths, IApplicationContext appCtx) {
+    public QueryResultApiServlet(ConcurrentMap<String, Object> ctx, IApplicationContext appCtx, String... paths) {
         super(appCtx, ctx, paths);
     }
 

@@ -287,9 +287,9 @@ public class CCApplication extends BaseCCApplication {
             case Servlets.RUNNING_REQUESTS:
                 return new QueryCancellationServlet(ctx, paths);
             case Servlets.QUERY_STATUS:
-                return new QueryStatusApiServlet(ctx, paths, appCtx);
+                return new QueryStatusApiServlet(ctx, appCtx, paths);
             case Servlets.QUERY_RESULT:
-                return new QueryResultApiServlet(ctx, paths, appCtx);
+                return new QueryResultApiServlet(ctx, appCtx, paths);
             case Servlets.QUERY_SERVICE:
                 return new QueryServiceServlet(ctx, paths, appCtx, SQLPP,
                         ccExtensionManager.getCompilationProvider(SQLPP), getStatementExecutorFactory(),
