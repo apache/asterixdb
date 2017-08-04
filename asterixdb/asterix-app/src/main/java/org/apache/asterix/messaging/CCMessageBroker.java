@@ -69,7 +69,13 @@ public class CCMessageBroker implements ICCMessageBroker {
     public void sendApplicationMessageToNC(INcAddressedMessage msg, String nodeId) throws Exception {
         INodeManager nodeManager = ccs.getNodeManager();
         NodeControllerState state = nodeManager.getNodeControllerState(nodeId);
-        state.getNodeController().sendApplicationMessageToNC(JavaSerializationUtils.serialize(msg), null, nodeId);
+        if (state != null) {
+            state.getNodeController().sendApplicationMessageToNC(JavaSerializationUtils.serialize(msg), null, nodeId);
+        } else {
+            if (LOGGER.isLoggable(Level.WARNING)) {
+                LOGGER.warning("Couldn't send message to unregistered node (" + nodeId + ")");
+            }
+        }
     }
 
     @Override

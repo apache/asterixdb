@@ -92,6 +92,11 @@ public final class ExecuteStatementRequestMessage implements ICcAddressedMessage
         ClusterControllerService ccSrv = (ClusterControllerService) ccSrvContext.getControllerService();
         CCApplication ccApp = (CCApplication) ccSrv.getApplication();
         CCMessageBroker messageBroker = (CCMessageBroker) ccSrvContext.getMessageBroker();
+        final String rejectionReason = getRejectionReason(ccSrv);
+        if (rejectionReason != null) {
+            sendRejection(rejectionReason, messageBroker);
+            return;
+        }
         CCExtensionManager ccExtMgr = (CCExtensionManager) ccAppCtx.getExtensionManager();
         ILangCompilationProvider compilationProvider = ccExtMgr.getCompilationProvider(lang);
         IStorageComponentProvider storageComponentProvider = ccAppCtx.getStorageComponentProvider();
@@ -100,16 +105,9 @@ public final class ExecuteStatementRequestMessage implements ICcAddressedMessage
 
         ccSrv.getExecutor().submit(() -> {
             ExecuteStatementResponseMessage responseMsg = new ExecuteStatementResponseMessage(requestMessageId);
-
             try {
-                final IClusterManagementWork.ClusterState clusterState = ClusterStateManager.INSTANCE.getState();
-                if (clusterState != IClusterManagementWork.ClusterState.ACTIVE) {
-                    throw new IllegalStateException("Cannot execute request, cluster is " + clusterState);
-                }
-
                 IParser parser = compilationProvider.getParserFactory().createParser(statementsText);
                 List<Statement> statements = parser.parse();
-
                 StringWriter outWriter = new StringWriter(256);
                 PrintWriter outPrinter = new PrintWriter(outWriter);
                 SessionOutput.ResultDecorator resultPrefix = ResultUtil.createPreResultDecorator();
@@ -146,6 +144,27 @@ public final class ExecuteStatementRequestMessage implements ICcAddressedMessage
                 LOGGER.log(Level.WARNING, e.toString(), e);
             }
         });
+    }
+
+    private String getRejectionReason(ClusterControllerService ccSrv) {
+        if (ccSrv.getNodeManager().getNodeControllerState(requestNodeId) == null) {
+            return "Node is not registerted with the CC";
+        }
+        final IClusterManagementWork.ClusterState clusterState = ClusterStateManager.INSTANCE.getState();
+        if (clusterState != IClusterManagementWork.ClusterState.ACTIVE) {
+            return "Cannot execute request, cluster is " + clusterState;
+        }
+        return null;
+    }
+
+    private void sendRejection(String reason, CCMessageBroker messageBroker) {
+        ExecuteStatementResponseMessage responseMsg = new ExecuteStatementResponseMessage(requestMessageId);
+        responseMsg.setError(new Exception(reason));
+        try {
+            messageBroker.sendApplicationMessageToNC(responseMsg, requestNodeId);
+        } catch (Exception e) {
+            LOGGER.log(Level.WARNING, e.toString(), e);
+        }
     }
 
     @Override

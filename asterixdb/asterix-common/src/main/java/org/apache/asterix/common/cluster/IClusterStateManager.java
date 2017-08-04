@@ -100,11 +100,20 @@ public interface IClusterStateManager {
 
     /**
      * Register the specified node partitions with the specified nodeId with this cluster state manager
+     * then calls {@link IClusterStateManager#refreshState()}
+     *
+     * @param nodeId
+     * @param nodePartitions
+     * @throws AsterixException
      */
     void registerNodePartitions(String nodeId, ClusterPartition[] nodePartitions) throws AsterixException;
 
     /**
      * De-register the specified node's partitions from this cluster state manager
+     * then calls {@link IClusterStateManager#refreshState()}
+     *
+     * @param nodeId
+     * @throws HyracksDataException
      */
-    void deregisterNodePartitions(String nodeId);
+    void deregisterNodePartitions(String nodeId) throws HyracksDataException;
 }

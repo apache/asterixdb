@@ -154,6 +154,12 @@ public class ClusterStateManager implements IClusterStateManager {
     @Override
     public synchronized void refreshState() throws HyracksDataException {
         resetClusterPartitionConstraint();
+        if (clusterPartitions.isEmpty()) {
+            LOGGER.info("Cluster does not have any registered partitions");
+            setState(ClusterState.UNUSABLE);
+            return;
+        }
+
         for (ClusterPartition p : clusterPartitions.values()) {
             if (!p.isActive()) {
                 setState(ClusterState.UNUSABLE);
@@ -368,10 +374,16 @@ public class ClusterStateManager implements IClusterStateManager {
             clusterPartitions.put(nodePartition.getPartitionId(), nodePartition);
         }
         node2PartitionsMap.put(nodeId, nodePartitions);
+        //TODO fix exception propagation from refreshState
+        try {
+            refreshState();
+        } catch (HyracksDataException e) {
+            throw new AsterixException(e);
+        }
     }
 
     @Override
-    public synchronized void deregisterNodePartitions(String nodeId) {
+    public synchronized void deregisterNodePartitions(String nodeId) throws HyracksDataException {
         ClusterPartition[] nodePartitions = node2PartitionsMap.remove(nodeId);
         if (nodePartitions == null) {
             LOGGER.info("deregisterNodePartitions unknown node " + nodeId + " (already removed?)");
@@ -382,6 +394,7 @@ public class ClusterStateManager implements IClusterStateManager {
             for (ClusterPartition nodePartition : nodePartitions) {
                 clusterPartitions.remove(nodePartition.getPartitionId());
             }
+            refreshState();
         }
     }
 
