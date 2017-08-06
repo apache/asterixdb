@@ -225,7 +225,7 @@ public class ClusterStateManager implements IClusterStateManager {
     }
 
     @Override
-    public ClusterState getState() {
+    public synchronized ClusterState getState() {
         return state;
     }
 
@@ -268,7 +268,7 @@ public class ClusterStateManager implements IClusterStateManager {
                 new AlgebricksAbsolutePartitionConstraint(clusterActiveLocations.toArray(new String[] {}));
     }
 
-    public boolean isClusterActive() {
+    public synchronized boolean isClusterActive() {
         if (cluster == null) {
             // this is a virtual cluster
             return true;
@@ -374,12 +374,6 @@ public class ClusterStateManager implements IClusterStateManager {
             clusterPartitions.put(nodePartition.getPartitionId(), nodePartition);
         }
         node2PartitionsMap.put(nodeId, nodePartitions);
-        //TODO fix exception propagation from refreshState
-        try {
-            refreshState();
-        } catch (HyracksDataException e) {
-            throw new AsterixException(e);
-        }
     }
 
     @Override
@@ -394,7 +388,6 @@ public class ClusterStateManager implements IClusterStateManager {
             for (ClusterPartition nodePartition : nodePartitions) {
                 clusterPartitions.remove(nodePartition.getPartitionId());
             }
-            refreshState();
         }
     }
 
