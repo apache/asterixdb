@@ -36,8 +36,10 @@ public class HyracksDataException extends HyracksException {
     public static HyracksDataException create(Throwable cause) {
         if (cause instanceof HyracksDataException || cause == null) {
             return (HyracksDataException) cause;
-        }
-        if (cause instanceof InterruptedException && !Thread.currentThread().isInterrupted()) {
+        } else if (cause instanceof Error) {
+            // don't wrap errors, allow them to propagate
+            throw (Error)cause;
+        } else if (cause instanceof InterruptedException && !Thread.currentThread().isInterrupted()) {
             LOGGER.log(Level.WARNING,
                     "Wrapping an InterruptedException in HyracksDataException and current thread is not interrupted",
                     cause);
