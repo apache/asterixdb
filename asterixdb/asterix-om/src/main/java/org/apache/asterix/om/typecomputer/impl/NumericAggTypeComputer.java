@@ -22,6 +22,7 @@ import org.apache.asterix.om.exceptions.UnsupportedTypeException;
 import org.apache.asterix.om.typecomputer.base.AbstractResultTypeComputer;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
+import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
@@ -52,7 +53,6 @@ public class NumericAggTypeComputer extends AbstractResultTypeComputer {
     @Override
     protected IAType getResultType(ILogicalExpression expr, IAType... strippedInputTypes) throws AlgebricksException {
         ATypeTag tag = strippedInputTypes[0].getTypeTag();
-        IAType type = null;
         switch (tag) {
             case DOUBLE:
             case FLOAT:
@@ -61,11 +61,12 @@ public class NumericAggTypeComputer extends AbstractResultTypeComputer {
             case SMALLINT:
             case TINYINT:
             case ANY:
-                type = strippedInputTypes[0];
-                break;
+                IAType type = strippedInputTypes[0];
+                return AUnionType.createNullableType(type, "AggResult");
             default:
-                break;
+                // All other possible cases.
+                return BuiltinType.ANULL;
         }
-        return AUnionType.createNullableType(type, "AggResult");
+
     }
 }

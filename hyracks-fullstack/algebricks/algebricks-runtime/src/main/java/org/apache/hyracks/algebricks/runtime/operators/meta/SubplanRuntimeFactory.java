@@ -91,7 +91,8 @@ public class SubplanRuntimeFactory extends AbstractOneInputOneOutputRuntimeFacto
                 private boolean smthWasWritten = false;
                 private FrameTupleAccessor ta = new FrameTupleAccessor(
                         pipeline.getRecordDescriptors()[pipeline.getRecordDescriptors().length - 1]);
-                private ArrayTupleBuilder tb = new ArrayTupleBuilder(nullWriters.length);
+                private ArrayTupleBuilder tb = new ArrayTupleBuilder(
+                        nullWriters.length + SubplanRuntimeFactory.this.inputRecordDesc.getFieldCount());
 
                 @Override
                 public void open() throws HyracksDataException {
@@ -110,17 +111,16 @@ public class SubplanRuntimeFactory extends AbstractOneInputOneOutputRuntimeFacto
 
                 @Override
                 public void close() throws HyracksDataException {
-                    if (!smthWasWritten) {
+                    if (!smthWasWritten && !failed) {
                         // the case when we need to write nulls
                         appendNullsToTuple();
                         appendToFrameFromTupleBuilder(tb);
                     }
-
                 }
 
                 @Override
                 public void fail() throws HyracksDataException {
-                    writer.fail();
+                    // writer.fail() is called by the outer class' writer.fail().
                 }
 
                 private void appendNullsToTuple() throws HyracksDataException {

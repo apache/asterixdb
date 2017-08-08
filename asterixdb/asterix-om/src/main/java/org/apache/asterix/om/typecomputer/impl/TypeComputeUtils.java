@@ -22,7 +22,6 @@ import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
-import org.apache.asterix.om.types.AUnorderedListType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.utils.RecordUtil;
@@ -100,6 +99,21 @@ public class TypeComputeUtils {
                 return BuiltinType.AMISSING;
             }
             if (category == NULL) {
+                return BuiltinType.ANULL;
+            }
+            boolean metNull = false;
+            for (IAType knownInputType : knownInputTypes) {
+                ATypeTag typeTag = knownInputType.getTypeTag();
+                // Returns missing if there is one missing.
+                if (typeTag == ATypeTag.MISSING) {
+                    return knownInputType;
+                }
+                if (typeTag == ATypeTag.NULL) {
+                    metNull = true;
+                }
+            }
+            // Returns null if there is one null but there is no missing.
+            if (metNull) {
                 return BuiltinType.ANULL;
             }
             return TypeComputeUtils.getResultType(resultTypeGenerator.getResultType(expr, knownInputTypes), category);
@@ -215,21 +229,6 @@ public class TypeComputeUtils {
                 return (AOrderedListType) innerType;
             }
         }
-        return null;
-    }
-
-    public static AUnorderedListType extractUnorderedListType(IAType t) {
-        if (t.getTypeTag() == ATypeTag.MULTISET) {
-            return (AUnorderedListType) t;
-        }
-        if (t.getTypeTag() == ATypeTag.UNION) {
-            AUnionType unionType = (AUnionType) t;
-            IAType innerType = unionType.getActualType();
-            if (innerType.getTypeTag() == ATypeTag.MULTISET) {
-                return (AUnorderedListType) innerType;
-            }
-        }
-
         return null;
     }
 
