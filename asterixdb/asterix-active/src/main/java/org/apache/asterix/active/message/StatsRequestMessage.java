@@ -24,8 +24,8 @@ public class StatsRequestMessage extends ActiveManagerMessage {
     private static final long serialVersionUID = 1L;
     private final long reqId;
 
-    public StatsRequestMessage(byte kind, Serializable payload, long reqId) {
-        super(kind, payload);
+    public StatsRequestMessage(Serializable payload, long reqId) {
+        super(Kind.REQUEST_STATS, payload);
         this.reqId = reqId;
     }
 

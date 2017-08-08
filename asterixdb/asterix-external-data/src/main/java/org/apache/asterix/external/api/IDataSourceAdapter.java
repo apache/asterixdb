@@ -18,8 +18,6 @@
  */
 package org.apache.asterix.external.api;
 
-import java.io.Serializable;
-
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
@@ -30,7 +28,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
  * adapter(pull or push).
  */
 @FunctionalInterface
-public interface IDataSourceAdapter extends Serializable {
+public interface IDataSourceAdapter {
 
     public enum AdapterType {
         INTERNAL,

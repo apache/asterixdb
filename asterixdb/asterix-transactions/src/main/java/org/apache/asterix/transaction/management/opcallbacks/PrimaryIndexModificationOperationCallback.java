@@ -89,7 +89,7 @@ public class PrimaryIndexModificationOperationCallback extends AbstractIndexModi
                 lockManager.lock(datasetId, pkHash, LockMode.X, txnCtx);
             }
         } catch (ACIDException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 
@@ -99,7 +99,7 @@ public class PrimaryIndexModificationOperationCallback extends AbstractIndexModi
             int pkHash = computePrimaryKeyHashValue(after, primaryKeyFields);
             log(pkHash, after, before);
         } catch (ACIDException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 

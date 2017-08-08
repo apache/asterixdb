@@ -103,7 +103,7 @@ public class FeedTupleForwarder implements ITupleForwarder {
                 if (throwable != null) {
                     throwable.addSuppressed(e);
                 } else {
-                    throw new HyracksDataException(e);
+                    throw HyracksDataException.create(e);
                 }
             } catch (Throwable th) {
                 if (throwable != null) {

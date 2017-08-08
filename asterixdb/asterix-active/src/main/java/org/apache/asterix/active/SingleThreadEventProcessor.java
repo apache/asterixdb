@@ -18,15 +18,12 @@
  */
 package org.apache.asterix.active;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public abstract class SingleThreadEventProcessor<T> implements Runnable {
@@ -34,20 +31,20 @@ public abstract class SingleThreadEventProcessor<T> implements Runnable {
     private static final Logger LOGGER = Logger.getLogger(SingleThreadEventProcessor.class.getName());
     private final String name;
     private final LinkedBlockingQueue<T> eventInbox;
-    private final ExecutorService executorService;
-    private final Future<?> future;
+    private volatile Thread executorThread;
+    private volatile boolean stopped = false;
 
     public SingleThreadEventProcessor(String threadName) {
         this.name = threadName;
         eventInbox = new LinkedBlockingQueue<>();
-        executorService = Executors.newSingleThreadExecutor(r -> new Thread(r, threadName));
-        future = executorService.submit(this);
+        executorThread = new Thread(this, threadName);
+        executorThread.start();
     }
 
     @Override
     public final void run() {
         LOGGER.log(Level.INFO, "Started " + Thread.currentThread().getName());
-        while (!Thread.currentThread().isInterrupted()) {
+        while (!stopped) {
             try {
                 T event = eventInbox.take();
                 handle(event);
@@ -69,10 +66,19 @@ public abstract class SingleThreadEventProcessor<T> implements Runnable {
     }
 
     public void stop() throws HyracksDataException, InterruptedException {
-        future.cancel(true);
-        executorService.shutdown();
-        if (!executorService.awaitTermination(10, TimeUnit.SECONDS)) {
-            throw HyracksDataException.create(ErrorCode.FAILED_TO_SHUTDOWN_EVENT_PROCESSOR, name);
+        stopped = true;
+        executorThread.interrupt();
+        executorThread.join(1000);
+        int attempt = 0;
+        while (executorThread.isAlive()) {
+            attempt++;
+            LOGGER.log(Level.WARNING,
+                    "Failed to stop event processor after " + attempt + " attempts. Interrupted exception swallowed?");
+            if (attempt == 10) {
+                throw new RuntimeDataException(ErrorCode.FAILED_TO_SHUTDOWN_EVENT_PROCESSOR, name);
+            }
+            executorThread.interrupt();
+            executorThread.join(1000);
         }
     }
 }

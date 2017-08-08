@@ -18,27 +18,29 @@
  */
 package org.apache.asterix.external.api;
 
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
+@FunctionalInterface
 public interface IDataFlowController {
 
-    //TODO: Refactor this interface. Remove writer from start() signature
     public void start(IFrameWriter writer) throws HyracksDataException, InterruptedException;
 
     public default boolean pause() throws HyracksDataException {
-        throw new HyracksDataException("Method not implemented");
+        throw new RuntimeDataException(ErrorCode.OPERATION_NOT_SUPPORTED);
     }
 
     public default boolean resume() throws HyracksDataException {
-        throw new HyracksDataException("Method not implemented");
+        throw new RuntimeDataException(ErrorCode.OPERATION_NOT_SUPPORTED);
     }
 
     public default void flush() throws HyracksDataException {
-        throw new HyracksDataException("Method not implemented");
+        throw new RuntimeDataException(ErrorCode.OPERATION_NOT_SUPPORTED);
     }
 
     public default boolean stop() throws HyracksDataException {
-        throw new HyracksDataException("Method not implemented");
+        throw new RuntimeDataException(ErrorCode.OPERATION_NOT_SUPPORTED);
     }
 }

@@ -59,7 +59,7 @@ public class IoUtil {
     public static void delete(File file) throws HyracksDataException {
         try {
             if (file.isDirectory()) {
-                FileUtils.deleteDirectory(file);
+                deleteDirectory(file);
             } else {
                 Files.delete(file.toPath());
             }
@@ -88,5 +88,40 @@ public class IoUtil {
         } catch (IOException e) {
             throw HyracksDataException.create(ErrorCode.CANNOT_CREATE_FILE, e, fileRef.getAbsolutePath());
         }
+    }
+
+    public static void deleteDirectory(File directory) throws IOException {
+        if (!directory.exists()) {
+            return;
+        }
+        if (!FileUtils.isSymlink(directory)) {
+            cleanDirectory(directory);
+        }
+        Files.delete(directory.toPath());
+    }
+
+    public static void cleanDirectory(final File directory) throws IOException {
+        final File[] files = verifiedListFiles(directory);
+        for (final File file : files) {
+            delete(file);
+        }
+    }
+
+    private static File[] verifiedListFiles(File directory) throws IOException {
+        if (!directory.exists()) {
+            final String message = directory + " does not exist";
+            throw new IllegalArgumentException(message);
+        }
+
+        if (!directory.isDirectory()) {
+            final String message = directory + " is not a directory";
+            throw new IllegalArgumentException(message);
+        }
+
+        final File[] files = directory.listFiles();
+        if (files == null) { // null if security restricted
+            throw new IOException("Failed to list contents of " + directory);
+        }
+        return files;
     }
 }

@@ -23,6 +23,7 @@ import org.apache.asterix.active.ActiveEvent.Kind;
 import org.apache.asterix.active.ActiveRuntimeId;
 import org.apache.asterix.active.EntityId;
 import org.apache.asterix.active.message.ActivePartitionMessage;
+import org.apache.asterix.active.message.ActivePartitionMessage.Event;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.hyracks.api.job.JobId;
 
@@ -41,9 +42,8 @@ public class TestNodeControllerActor extends Actor {
         Action registration = new Action() {
             @Override
             protected void doExecute(MetadataProvider actorMdProvider) throws Exception {
-                ActiveEvent event = new ActiveEvent(jobId, Kind.PARTITION_EVENT, entityId,
-                        new ActivePartitionMessage(new ActiveRuntimeId(entityId, id, partition), jobId,
-                                ActivePartitionMessage.ACTIVE_RUNTIME_REGISTERED, null));
+                ActiveEvent event = new ActiveEvent(jobId, Kind.PARTITION_EVENT, entityId, new ActivePartitionMessage(
+                        new ActiveRuntimeId(entityId, id, partition), jobId, Event.RUNTIME_REGISTERED, null));
                 clusterController.activeEvent(event);
             }
         };
@@ -55,9 +55,8 @@ public class TestNodeControllerActor extends Actor {
         Action registration = new Action() {
             @Override
             protected void doExecute(MetadataProvider actorMdProvider) throws Exception {
-                ActiveEvent event = new ActiveEvent(jobId, Kind.PARTITION_EVENT, entityId,
-                        new ActivePartitionMessage(new ActiveRuntimeId(entityId, id, partition), jobId,
-                                ActivePartitionMessage.ACTIVE_RUNTIME_DEREGISTERED, null));
+                ActiveEvent event = new ActiveEvent(jobId, Kind.PARTITION_EVENT, entityId, new ActivePartitionMessage(
+                        new ActiveRuntimeId(entityId, id, partition), jobId, Event.RUNTIME_DEREGISTERED, null));
                 clusterController.activeEvent(event);
             }
         };

@@ -18,6 +18,8 @@
  */
 package org.apache.hyracks.algebricks.common.constraints;
 
+import java.util.Arrays;
+
 public class AlgebricksAbsolutePartitionConstraint extends AlgebricksPartitionConstraint {
     private final String[] locations;
 
@@ -33,4 +35,10 @@ public class AlgebricksAbsolutePartitionConstraint extends AlgebricksPartitionCo
     public String[] getLocations() {
         return locations;
     }
+
+    @Override
+    public String toString() {
+        return Arrays.toString(locations);
+    }
+
 }

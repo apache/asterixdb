@@ -39,7 +39,7 @@ public class ConfFactory implements Serializable {
             confBytes = bos.toByteArray();
             dos.close();
         } catch (Exception e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 
@@ -51,7 +51,7 @@ public class ConfFactory implements Serializable {
             dis.close();
             return conf;
         } catch (Exception e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 }

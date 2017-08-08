@@ -114,7 +114,7 @@ public class FeedEventsListener extends ActiveEntityEventsListener {
     @Override
     protected Void doStop(MetadataProvider metadataProvider) throws HyracksDataException, AlgebricksException {
         IActiveEntityEventSubscriber eventSubscriber =
-                new WaitForStateSubscriber(this, Collections.singleton(ActivityState.STOPPED));
+                new WaitForStateSubscriber(this, EnumSet.of(ActivityState.STOPPED, ActivityState.PERMANENTLY_FAILED));
         try {
             // Construct ActiveMessage
             for (int i = 0; i < getLocations().getLocations().length; i++) {

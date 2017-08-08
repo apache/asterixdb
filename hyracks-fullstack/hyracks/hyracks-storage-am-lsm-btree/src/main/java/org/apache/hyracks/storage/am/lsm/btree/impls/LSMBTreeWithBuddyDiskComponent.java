@@ -74,4 +74,8 @@ public class LSMBTreeWithBuddyDiskComponent extends AbstractLSMDiskComponent {
         return btree.getBufferCache().getFileReferenceCount(btree.getFileId());
     }
 
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + ":" + btree.getFileReference().getRelativePath();
+    }
 }

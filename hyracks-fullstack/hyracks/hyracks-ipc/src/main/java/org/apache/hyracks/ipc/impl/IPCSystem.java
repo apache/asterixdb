@@ -74,6 +74,7 @@ public class IPCSystem {
         } catch (IOException e) {
             throw new IPCException(e);
         } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
             throw new IPCException(e);
         }
     }

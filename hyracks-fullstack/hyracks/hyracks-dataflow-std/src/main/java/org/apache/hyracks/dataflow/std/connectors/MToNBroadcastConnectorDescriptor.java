@@ -95,7 +95,7 @@ public class MToNBroadcastConnectorDescriptor extends AbstractMToNConnectorDescr
                             epWriters[i].close();
                         } catch (Throwable th) {
                             if (closeException == null) {
-                                closeException = new HyracksDataException(th);
+                                closeException = HyracksDataException.create(th);
                             } else {
                                 closeException.addSuppressed(th);
                             }
@@ -129,8 +129,8 @@ public class MToNBroadcastConnectorDescriptor extends AbstractMToNConnectorDescr
             int nProducerPartitions, int nConsumerPartitions) throws HyracksDataException {
         BitSet expectedPartitions = new BitSet(nProducerPartitions);
         expectedPartitions.set(0, nProducerPartitions);
-        NonDeterministicChannelReader channelReader = new NonDeterministicChannelReader(nProducerPartitions,
-                expectedPartitions);
+        NonDeterministicChannelReader channelReader =
+                new NonDeterministicChannelReader(nProducerPartitions, expectedPartitions);
         NonDeterministicFrameReader frameReader = new NonDeterministicFrameReader(channelReader);
         return new PartitionCollector(ctx, getConnectorId(), index, expectedPartitions, frameReader, channelReader);
     }

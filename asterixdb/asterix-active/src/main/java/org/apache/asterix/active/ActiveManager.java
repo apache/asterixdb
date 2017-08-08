@@ -23,14 +23,16 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.apache.asterix.active.message.ActiveManagerMessage;
 import org.apache.asterix.active.message.ActiveStatsResponse;
 import org.apache.asterix.active.message.StatsRequestMessage;
-import org.apache.asterix.common.api.ThreadExecutor;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.common.memory.ConcurrentFramePool;
@@ -38,21 +40,20 @@ import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.util.JavaSerializationUtils;
 import org.apache.hyracks.control.nc.NodeControllerService;
-import org.apache.log4j.Logger;
 
 public class ActiveManager {
 
     private static final Logger LOGGER = Logger.getLogger(ActiveManager.class.getName());
     private static final int SHUTDOWN_TIMEOUT_SECS = 60;
 
-    private final ThreadExecutor executor;
+    private final ExecutorService executor;
     private final ConcurrentMap<ActiveRuntimeId, IActiveRuntime> runtimes;
     private final ConcurrentFramePool activeFramePool;
     private final String nodeId;
     private final INCServiceContext serviceCtx;
     private volatile boolean shutdown;
 
-    public ActiveManager(ThreadExecutor executor, String nodeId, long activeMemoryBudget, int frameSize,
+    public ActiveManager(ExecutorService executor, String nodeId, long activeMemoryBudget, int frameSize,
             INCServiceContext serviceCtx) throws HyracksDataException {
         this.executor = executor;
         this.nodeId = nodeId;
@@ -86,15 +87,16 @@ public class ActiveManager {
     }
 
     public void submit(ActiveManagerMessage message) throws HyracksDataException {
+        LOGGER.log(Level.INFO, "Message of type " + message.getKind() + " received in " + nodeId);
         switch (message.getKind()) {
-            case ActiveManagerMessage.STOP_ACTIVITY:
+            case STOP_ACTIVITY:
                 stopRuntime(message);
                 break;
-            case ActiveManagerMessage.REQUEST_STATS:
+            case REQUEST_STATS:
                 requestStats((StatsRequestMessage) message);
                 break;
             default:
-                LOGGER.warn("Unknown message type received: " + message.getKind());
+                LOGGER.warning("Unknown message type received: " + message.getKind());
         }
     }
 
@@ -104,7 +106,7 @@ public class ActiveManager {
             IActiveRuntime runtime = runtimes.get(runtimeId);
             long reqId = message.getReqId();
             if (runtime == null) {
-                LOGGER.warn("Request stats of a runtime that is not registered " + runtimeId);
+                LOGGER.warning("Request stats of a runtime that is not registered " + runtimeId);
                 // Send a failure message
                 ((NodeControllerService) serviceCtx.getControllerService())
                         .sendApplicationMessageToCC(
@@ -124,7 +126,7 @@ public class ActiveManager {
     }
 
     public void shutdown() {
-        LOGGER.warn("Shutting down ActiveManager on node " + nodeId);
+        LOGGER.warning("Shutting down ActiveManager on node " + nodeId);
         Map<ActiveRuntimeId, Future<Void>> stopFutures = new HashMap<>();
         shutdown = true;
         runtimes.forEach((runtimeId, runtime) -> stopFutures.put(runtimeId, executor.submit(() -> {
@@ -136,29 +138,29 @@ public class ActiveManager {
             try {
                 entry.getValue().get(SHUTDOWN_TIMEOUT_SECS, TimeUnit.SECONDS);
             } catch (InterruptedException e) {
-                LOGGER.warn("Interrupted waiting to stop runtime: " + entry.getKey());
+                LOGGER.warning("Interrupted waiting to stop runtime: " + entry.getKey());
                 Thread.currentThread().interrupt();
             } catch (ExecutionException e) {
-                LOGGER.warn("Exception while stopping runtime: " + entry.getKey(), e);
+                LOGGER.log(Level.WARNING, "Exception while stopping runtime: " + entry.getKey(), e);
             } catch (TimeoutException e) {
-                LOGGER.warn("Timed out waiting to stop runtime: " + entry.getKey(), e);
+                LOGGER.log(Level.WARNING, "Timed out waiting to stop runtime: " + entry.getKey(), e);
             }
         });
-        LOGGER.warn("Shutdown ActiveManager on node " + nodeId + " complete");
+        LOGGER.warning("Shutdown ActiveManager on node " + nodeId + " complete");
     }
 
     private void stopRuntime(ActiveManagerMessage message) {
         ActiveRuntimeId runtimeId = (ActiveRuntimeId) message.getPayload();
         IActiveRuntime runtime = runtimes.get(runtimeId);
         if (runtime == null) {
-            LOGGER.warn("Request to stop a runtime that is not registered " + runtimeId);
+            LOGGER.warning("Request to stop a runtime that is not registered " + runtimeId);
         } else {
             executor.execute(() -> {
                 try {
                     stopIfRunning(runtimeId, runtime);
                 } catch (Exception e) {
                     // TODO(till) Figure out a better way to handle failure to stop a runtime
-                    LOGGER.warn("Failed to stop runtime: " + runtimeId, e);
+                    LOGGER.log(Level.WARNING, "Failed to stop runtime: " + runtimeId, e);
                 }
             });
         }

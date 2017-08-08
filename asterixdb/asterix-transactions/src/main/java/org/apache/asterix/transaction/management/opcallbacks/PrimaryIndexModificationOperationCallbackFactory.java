@@ -74,7 +74,7 @@ public class PrimaryIndexModificationOperationCallbackFactory extends AbstractOp
             txnCtx.registerIndexAndCallback(resource.getId(), index, (AbstractOperationCallback) modCallback, true);
             return modCallback;
         } catch (ACIDException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 }

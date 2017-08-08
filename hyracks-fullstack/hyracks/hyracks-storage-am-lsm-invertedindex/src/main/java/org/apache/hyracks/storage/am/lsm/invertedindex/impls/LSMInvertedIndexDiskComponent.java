@@ -75,4 +75,9 @@ public class LSMInvertedIndexDiskComponent extends AbstractLSMDiskComponent {
     public int getFileReferenceCount() {
         return deletedKeysBTree.getBufferCache().getFileReferenceCount(deletedKeysBTree.getFileId());
     }
+
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + ":" + ((OnDiskInvertedIndex) invIndex).getInvListsFile().getRelativePath();
+    }
 }

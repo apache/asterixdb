@@ -24,6 +24,8 @@ import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -31,7 +33,6 @@ import org.apache.asterix.active.ActiveManager;
 import org.apache.asterix.api.common.AppRuntimeContextProviderForRecovery;
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.api.INcApplicationContext;
-import org.apache.asterix.common.api.ThreadExecutor;
 import org.apache.asterix.common.cluster.ClusterPartition;
 import org.apache.asterix.common.config.ActiveProperties;
 import org.apache.asterix.common.config.AsterixExtension;
@@ -113,7 +114,7 @@ public class NCAppRuntimeContext implements INcApplicationContext {
     private ReplicationProperties replicationProperties;
     private MessagingProperties messagingProperties;
     private final NodeProperties nodeProperties;
-    private ThreadExecutor threadExecutor;
+    private ExecutorService threadExecutor;
     private IDatasetLifecycleManager datasetLifecycleManager;
     private IBufferCache bufferCache;
     private ITransactionSubsystem txnSubsystem;
@@ -164,7 +165,7 @@ public class NCAppRuntimeContext implements INcApplicationContext {
     @Override
     public void initialize(boolean initialRun) throws IOException, ACIDException {
         ioManager = getServiceContext().getIoManager();
-        threadExecutor = new ThreadExecutor(getServiceContext().getThreadFactory());
+        threadExecutor = Executors.newCachedThreadPool(getServiceContext().getThreadFactory());
         ICacheMemoryAllocator allocator = new HeapBufferAllocator();
         IPageCleanerPolicy pcp = new DelayPageCleanerPolicy(600000);
         IPageReplacementStrategy prs = new ClockPageReplacementStrategy(allocator,
@@ -383,7 +384,7 @@ public class NCAppRuntimeContext implements INcApplicationContext {
     }
 
     @Override
-    public ThreadExecutor getThreadExecutor() {
+    public ExecutorService getThreadExecutor() {
         return threadExecutor;
     }
 

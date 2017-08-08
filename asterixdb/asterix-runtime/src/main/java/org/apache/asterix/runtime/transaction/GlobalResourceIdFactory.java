@@ -65,12 +65,12 @@ public class GlobalResourceIdFactory implements IResourceIdFactory {
                 ((INCMessageBroker) serviceCtx.getMessageBroker()).sendMessageToCC(msg);
                 reponse = resourceIdResponseQ.take();
                 if (reponse.getException() != null) {
-                    throw new HyracksDataException(reponse.getException().getMessage());
+                    throw HyracksDataException.create(reponse.getException());
                 }
             }
             return reponse.getResourceId();
         } catch (Exception e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 }

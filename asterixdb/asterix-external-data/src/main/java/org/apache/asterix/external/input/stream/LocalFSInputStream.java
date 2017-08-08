@@ -21,16 +21,17 @@ package org.apache.asterix.external.input.stream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.apache.asterix.common.exceptions.ErrorCode;
-import org.apache.asterix.common.exceptions.RuntimeDataException;
+import org.apache.asterix.common.exceptions.ExceptionUtils;
 import org.apache.asterix.external.api.AsterixInputStream;
 import org.apache.asterix.external.dataflow.AbstractFeedDataFlowController;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.FeedLogManager;
 import org.apache.asterix.external.util.FileSystemWatcher;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.log4j.Logger;
 
 public class LocalFSInputStream extends AsterixInputStream {
 
@@ -155,24 +156,25 @@ public class LocalFSInputStream extends AsterixInputStream {
         if (in == null) {
             return false;
         }
-        if (th instanceof HyracksDataException
-                && ((HyracksDataException) th).getErrorCode() == ErrorCode.RECORD_READER_MALFORMED_INPUT_STREAM) {
+        Throwable root = ExceptionUtils.getRootCause(th);
+        if (root instanceof HyracksDataException
+                && ((HyracksDataException) root).getErrorCode() == ErrorCode.RECORD_READER_MALFORMED_INPUT_STREAM) {
             if (currentFile != null) {
                 try {
                     logManager.logRecord(currentFile.getAbsolutePath(), "Corrupted input file");
                 } catch (IOException e) {
-                    LOGGER.warn("Filed to write to feed log file", e);
+                    LOGGER.log(Level.WARNING, "Filed to write to feed log file", e);
                 }
-                LOGGER.warn("Corrupted input file: " + currentFile.getAbsolutePath());
+                LOGGER.log(Level.WARNING, "Corrupted input file: " + currentFile.getAbsolutePath());
             }
             try {
                 advance();
                 return true;
             } catch (Exception e) {
-                LOGGER.warn("An exception was thrown while trying to skip a file", e);
+                LOGGER.log(Level.WARNING, "An exception was thrown while trying to skip a file", e);
             }
         }
-        LOGGER.warn("Failed to recover from failure", th);
+        LOGGER.log(Level.WARNING, "Failed to recover from failure", th);
         return false;
     }
 }

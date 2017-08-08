@@ -33,10 +33,8 @@ public class ReflectionBasedDeserializedMapperFactory implements IDeserializedMa
     public IDeserializedMapper createMapper() throws HyracksDataException {
         try {
             return mapperClass.newInstance();
-        } catch (InstantiationException e) {
-            throw new HyracksDataException(e);
-        } catch (IllegalAccessException e) {
-            throw new HyracksDataException(e);
+        } catch (Exception e) {
+            throw HyracksDataException.create(e);
         }
     }
 }

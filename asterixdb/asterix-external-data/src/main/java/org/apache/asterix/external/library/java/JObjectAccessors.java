@@ -23,6 +23,8 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.ErrorCode;
@@ -94,6 +96,11 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.util.string.UTF8StringReader;
 
 public class JObjectAccessors {
+
+    private static final Logger LOGGER = Logger.getLogger(JObjectAccessors.class.getName());
+
+    private JObjectAccessors() {
+    }
 
     public static IJObjectAccessor createFlatJObjectAccessor(ATypeTag aTypeTag) {
         IJObjectAccessor accessor = null;
@@ -200,18 +207,16 @@ public class JObjectAccessors {
         @Override
         public IJObject access(IVisitablePointable pointable, IObjectPool<IJObject, IAType> objPool)
                 throws HyracksDataException {
-            IJObject jObject = objPool.allocate(BuiltinType.ANULL);
-            return jObject;
+            return objPool.allocate(BuiltinType.ANULL);
         }
     }
 
-    public static class JMissingAccessor implements  IJObjectAccessor {
+    public static class JMissingAccessor implements IJObjectAccessor {
 
         @Override
         public IJObject access(IVisitablePointable pointable, IObjectPool<IJObject, IAType> objPool)
                 throws HyracksDataException {
-            IJObject jObject = objPool.allocate(BuiltinType.AMISSING);
-            return jObject;
+            return objPool.allocate(BuiltinType.AMISSING);
         }
     }
 
@@ -271,7 +276,7 @@ public class JObjectAccessors {
             try {
                 v = reader.readUTF(new DataInputStream(new ByteArrayInputStream(b, s + 1, l - 1)));
             } catch (IOException e) {
-                throw new HyracksDataException(e);
+                throw HyracksDataException.create(e);
             }
             JObjectUtil.getNormalizedString(v);
 
@@ -539,8 +544,8 @@ public class JObjectAccessors {
                 }
 
             } catch (Exception e) {
-                e.printStackTrace();
-                throw new HyracksDataException(e);
+                LOGGER.log(Level.WARNING, "Failure while accessing a java record", e);
+                throw HyracksDataException.create(e);
             }
             return jRecord;
         }
@@ -593,7 +598,7 @@ public class JObjectAccessors {
                     list.add(listItem);
                 }
             } catch (AsterixException exception) {
-                throw new HyracksDataException(exception);
+                throw HyracksDataException.create(exception);
             }
             return list;
         }

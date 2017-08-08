@@ -89,17 +89,20 @@ public class ExternalLookupOperatorDescriptor extends AbstractSingleActivityOper
                     try {
                         snapshotAccessor.close();
                     } catch (Throwable th) {
-                        hde = new HyracksDataException(th);
+                        hde = HyracksDataException.create(th);
                     }
                     try {
                         adapter.close();
                     } catch (Throwable th) {
                         if (hde == null) {
-                            hde = new HyracksDataException(th);
+                            hde = HyracksDataException.create(th);
                         } else {
                             hde.addSuppressed(th);
                         }
                     }
+                }
+                if (hde != null) {
+                    throw hde;
                 }
             }
 

@@ -18,10 +18,11 @@
  */
 package org.apache.asterix.api.common;
 
+import java.util.concurrent.ExecutorService;
+
 import org.apache.asterix.app.nc.NCAppRuntimeContext;
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.api.INcApplicationContext;
-import org.apache.asterix.common.api.ThreadExecutor;
 import org.apache.asterix.common.transactions.IAppRuntimeContextProvider;
 import org.apache.asterix.common.transactions.ITransactionSubsystem;
 import org.apache.hyracks.api.io.IIOManager;
@@ -84,7 +85,7 @@ public class AppRuntimeContextProviderForRecovery implements IAppRuntimeContextP
     }
 
     @Override
-    public ThreadExecutor getThreadExecutor() {
+    public ExecutorService getThreadExecutor() {
         return asterixAppRuntimeContext.getThreadExecutor();
     }
 }

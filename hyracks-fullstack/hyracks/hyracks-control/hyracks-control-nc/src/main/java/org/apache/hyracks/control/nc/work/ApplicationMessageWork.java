@@ -28,9 +28,6 @@ import org.apache.hyracks.control.common.work.AbstractWork;
 import org.apache.hyracks.control.nc.NodeControllerService;
 import org.apache.hyracks.control.nc.application.NCServiceContext;
 
-/**
- * @author rico
- */
 public class ApplicationMessageWork extends AbstractWork {
     private static final Logger LOGGER = Logger.getLogger(ApplicationMessageWork.class.getName());
     private byte[] message;
@@ -63,6 +60,6 @@ public class ApplicationMessageWork extends AbstractWork {
 
     @Override
     public String toString() {
-        return getName() + ": nodeID: " + nodeId;
+        return getName() + ": nodeId: " + nodeId;
     }
 }

@@ -27,7 +27,6 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
-
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
@@ -123,7 +122,7 @@ public class HDFSWriteOperatorDescriptor extends AbstractSingleActivityOperatorD
                     tupleWriter.close(dos);
                     dos.close();
                 } catch (Exception e) {
-                    throw new HyracksDataException(e);
+                    throw HyracksDataException.create(e);
                 } finally {
                     Thread.currentThread().setContextClassLoader(ctxCL);
                 }

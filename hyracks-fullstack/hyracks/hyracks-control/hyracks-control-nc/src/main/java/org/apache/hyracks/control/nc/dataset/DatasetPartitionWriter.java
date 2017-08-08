@@ -120,7 +120,7 @@ public class DatasetPartitionWriter implements IFrameWriter {
                 manager.reportPartitionWriteCompletion(jobId, resultSetId, partition);
             }
         } catch (HyracksException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 

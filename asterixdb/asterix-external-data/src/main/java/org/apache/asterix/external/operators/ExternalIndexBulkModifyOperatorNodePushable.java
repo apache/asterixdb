@@ -89,7 +89,7 @@ public class ExternalIndexBulkModifyOperatorNodePushable extends IndexBulkLoadOp
             try {
                 bulkLoader.end();
             } catch (Throwable th) {
-                throw new HyracksDataException(th);
+                throw HyracksDataException.create(th);
             } finally {
                 try {
                     indexHelper.close();

@@ -395,10 +395,11 @@ public class ClusterStateManager implements IClusterStateManager {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Registering intention to remove node id " + nodeId);
         }
-        if (!activeNcConfiguration.containsKey(nodeId)) {
+        if (activeNcConfiguration.containsKey(nodeId)) {
+            pendingRemoval.add(nodeId);
+        } else {
             LOGGER.warning("Cannot register unknown node " + nodeId + " for pending removal");
         }
-        pendingRemoval.add(nodeId);
     }
 
     public synchronized boolean cancelRemovePending(String nodeId) {

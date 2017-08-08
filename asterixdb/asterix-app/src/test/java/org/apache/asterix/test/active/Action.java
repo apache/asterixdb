@@ -21,7 +21,7 @@ package org.apache.asterix.test.active;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-abstract class Action {
+public abstract class Action {
     boolean done = false;
     HyracksDataException failure;
 
@@ -39,21 +39,21 @@ abstract class Action {
 
     protected abstract void doExecute(MetadataProvider mdProvider) throws Exception;
 
-    boolean hasFailed() {
+    public boolean hasFailed() {
         return failure != null;
     }
 
-    HyracksDataException getFailure() {
+    public HyracksDataException getFailure() {
         return failure;
     }
 
-    synchronized void sync() throws InterruptedException {
+    public synchronized void sync() throws InterruptedException {
         while (!done) {
             wait();
         }
     }
 
-    boolean isDone() {
+    public boolean isDone() {
         return done;
     }
 }

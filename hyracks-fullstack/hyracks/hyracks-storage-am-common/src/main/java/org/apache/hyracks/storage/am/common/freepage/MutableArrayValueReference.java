@@ -18,6 +18,8 @@
  */
 package org.apache.hyracks.storage.am.common.freepage;
 
+import java.nio.charset.StandardCharsets;
+
 import org.apache.hyracks.data.std.api.IValueReference;
 
 public class MutableArrayValueReference implements IValueReference {
@@ -44,6 +46,11 @@ public class MutableArrayValueReference implements IValueReference {
     @Override
     public int getLength() {
         return array == null ? 0 : array.length;
+    }
+
+    @Override
+    public String toString() {
+        return new String(array, StandardCharsets.UTF_8);
     }
 
 }

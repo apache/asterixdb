@@ -35,7 +35,6 @@ public class NotifyTaskFailureWork extends AbstractWork {
     private final Task task;
     private final JobId jobId;
     private final TaskAttemptId taskId;
-
     private final List<Exception> exceptions;
 
     public NotifyTaskFailureWork(NodeControllerService ncs, Task task, List<Exception> exceptions, JobId jobId,
@@ -49,6 +48,8 @@ public class NotifyTaskFailureWork extends AbstractWork {
 
     @Override
     public void run() {
+        LOGGER.log(Level.WARNING, ncs.getId() + " is sending a notification to cc that task " + taskId + " has failed",
+                exceptions.get(0));
         try {
             IDatasetPartitionManager dpm = ncs.getDatasetPartitionManager();
             if (dpm != null) {

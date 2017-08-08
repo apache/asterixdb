@@ -215,7 +215,7 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
                     }
                 } catch (Throwable th) {
                     writer.fail();
-                    closeException = new HyracksDataException(th);
+                    closeException = HyracksDataException.create(th);
                 }
             }
 
@@ -223,7 +223,7 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
                 cursor.close();
             } catch (Throwable th) {
                 if (closeException == null) {
-                    closeException = new HyracksDataException(th);
+                    closeException = HyracksDataException.create(th);
                 } else {
                     closeException.addSuppressed(th);
                 }

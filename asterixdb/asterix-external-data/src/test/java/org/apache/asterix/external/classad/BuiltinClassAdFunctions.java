@@ -1849,7 +1849,7 @@ public class BuiltinClassAdFunctions {
             result.setBooleanValue(false);
 
             List<String> list0 = objectPool.stringArrayListPool.get();
-            Set<String> set1 = new HashSet<String>();
+            Set<String> set1 = new HashSet<>();
 
             split_string_list(str0, have_delimiter ? delimiter_string.charAt(0) : ',', list0);
             split_string_set(str1, have_delimiter ? delimiter_string.charAt(0) : ',', set1);
@@ -1943,7 +1943,7 @@ public class BuiltinClassAdFunctions {
                     return true;
                 }
             } catch (IOException e) {
-                throw new HyracksDataException(e);
+                throw HyracksDataException.create(e);
             }
             state.decrementDepth();
             expr.setParentScope(state.getCurAd());

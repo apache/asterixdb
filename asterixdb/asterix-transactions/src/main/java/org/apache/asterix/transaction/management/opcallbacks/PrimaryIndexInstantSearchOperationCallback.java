@@ -56,7 +56,7 @@ public class PrimaryIndexInstantSearchOperationCallback extends AbstractOperatio
         try {
             lockManager.lock(datasetId, pkHash, LockMode.S, txnCtx);
         } catch (ACIDException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 
@@ -70,7 +70,7 @@ public class PrimaryIndexInstantSearchOperationCallback extends AbstractOperatio
         try {
             lockManager.unlock(datasetId, pkHash, LockMode.S, txnCtx);
         } catch (ACIDException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 
@@ -80,7 +80,7 @@ public class PrimaryIndexInstantSearchOperationCallback extends AbstractOperatio
         try {
             lockManager.unlock(datasetId, pkHash, LockMode.S, txnCtx);
         } catch (ACIDException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 

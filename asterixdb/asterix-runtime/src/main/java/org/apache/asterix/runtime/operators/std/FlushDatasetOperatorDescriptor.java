@@ -72,8 +72,8 @@ public class FlushDatasetOperatorDescriptor extends AbstractSingleActivityOperat
             @Override
             public void close() throws HyracksDataException {
                 try {
-                    INcApplicationContext appCtx = (INcApplicationContext) ctx.getJobletContext()
-                            .getServiceContext().getApplicationContext();
+                    INcApplicationContext appCtx =
+                            (INcApplicationContext) ctx.getJobletContext().getServiceContext().getApplicationContext();
                     IDatasetLifecycleManager datasetLifeCycleManager = appCtx.getDatasetLifecycleManager();
                     ILockManager lockManager = appCtx.getTransactionSubsystem().getLockManager();
                     ITransactionManager txnManager = appCtx.getTransactionSubsystem().getTransactionManager();
@@ -84,7 +84,7 @@ public class FlushDatasetOperatorDescriptor extends AbstractSingleActivityOperat
                     // flush the dataset synchronously
                     datasetLifeCycleManager.flushDataset(datasetId.getId(), false);
                 } catch (ACIDException e) {
-                    throw new HyracksDataException(e);
+                    throw HyracksDataException.create(e);
                 }
             }
 

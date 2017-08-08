@@ -137,7 +137,6 @@ public final class ExecuteStatementRequestMessage implements ICcAddressedMessage
                 GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, "Unexpected exception", e);
                 responseMsg.setError(new Exception(e.toString()));
             }
-
             try {
                 messageBroker.sendApplicationMessageToNC(responseMsg, requestNodeId);
             } catch (Exception e) {

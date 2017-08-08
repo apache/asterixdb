@@ -84,7 +84,7 @@ public class SocketClientInputStreamFactory implements IInputStreamFactory {
         try {
             return new SocketClientInputStream(sockets.get(partition));
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 }

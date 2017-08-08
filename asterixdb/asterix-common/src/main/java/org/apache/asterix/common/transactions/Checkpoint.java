@@ -120,7 +120,7 @@ public class Checkpoint implements Comparable<Checkpoint> {
         try {
             return new ObjectMapper().writeValueAsString(this);
         } catch (JsonProcessingException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 
@@ -128,7 +128,7 @@ public class Checkpoint implements Comparable<Checkpoint> {
         try {
             return new ObjectMapper().readValue(json, Checkpoint.class);
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 }

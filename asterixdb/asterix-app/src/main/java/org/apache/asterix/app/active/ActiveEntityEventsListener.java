@@ -38,8 +38,8 @@ import org.apache.asterix.active.IActiveEntityEventSubscriber;
 import org.apache.asterix.active.IRetryPolicy;
 import org.apache.asterix.active.IRetryPolicyFactory;
 import org.apache.asterix.active.NoRetryPolicyFactory;
-import org.apache.asterix.active.message.ActiveManagerMessage;
 import org.apache.asterix.active.message.ActivePartitionMessage;
+import org.apache.asterix.active.message.ActivePartitionMessage.Event;
 import org.apache.asterix.active.message.StatsRequestMessage;
 import org.apache.asterix.common.api.IClusterManagementWork.ClusterState;
 import org.apache.asterix.common.api.IMetadataLockManager;
@@ -68,6 +68,7 @@ import org.apache.hyracks.api.job.JobStatus;
 public abstract class ActiveEntityEventsListener implements IActiveEntityController {
 
     private static final Logger LOGGER = Logger.getLogger(ActiveEntityEventsListener.class.getName());
+    private static final Level level = Level.INFO;
     private static final ActiveEvent STATE_CHANGED = new ActiveEvent(null, Kind.STATE_CHANGED, null, null);
     private static final EnumSet<ActivityState> TRANSITION_STATES = EnumSet.of(ActivityState.RESUMING,
             ActivityState.STARTING, ActivityState.STOPPING, ActivityState.RECOVERING);
@@ -130,7 +131,7 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
     }
 
     protected synchronized void setState(ActivityState newState) {
-        LOGGER.log(Level.FINE, "State is being set to " + newState + " from " + state);
+        LOGGER.log(level, "State of " + getEntityId() + "is being set to " + newState + " from " + state);
         this.prevState = state;
         this.state = newState;
         if (newState == ActivityState.SUSPENDED) {
@@ -142,7 +143,7 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
     @Override
     public synchronized void notify(ActiveEvent event) {
         try {
-            LOGGER.fine("EventListener is notified.");
+            LOGGER.log(level, "EventListener is notified.");
             ActiveEvent.Kind eventKind = event.getEventKind();
             switch (eventKind) {
                 case JOB_CREATED:
@@ -172,22 +173,24 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
     }
 
     protected synchronized void handle(ActivePartitionMessage message) {
-        if (message.getEvent() == ActivePartitionMessage.ACTIVE_RUNTIME_REGISTERED) {
+        if (message.getEvent() == Event.RUNTIME_REGISTERED) {
             numRegistered++;
             if (numRegistered == locations.getLocations().length) {
                 setState(ActivityState.RUNNING);
             }
-        } else if (message.getEvent() == ActivePartitionMessage.ACTIVE_RUNTIME_DEREGISTERED) {
+        } else if (message.getEvent() == Event.RUNTIME_DEREGISTERED) {
             numRegistered--;
         }
     }
 
     @SuppressWarnings("unchecked")
     protected void finish(ActiveEvent event) throws HyracksDataException {
+        LOGGER.log(level, "the job " + jobId + " finished");
         jobId = null;
         Pair<JobStatus, List<Exception>> status = (Pair<JobStatus, List<Exception>>) event.getEventObject();
         JobStatus jobStatus = status.getLeft();
         List<Exception> exceptions = status.getRight();
+        LOGGER.log(level, "The job finished with status: " + jobStatus);
         if (jobStatus.equals(JobStatus.FAILURE)) {
             jobFailure = exceptions.isEmpty() ? new RuntimeDataException(ErrorCode.UNREPORTED_TASK_FAILURE_EXCEPTION)
                     : exceptions.get(0);
@@ -271,10 +274,10 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
     @SuppressWarnings("unchecked")
     @Override
     public void refreshStats(long timeout) throws HyracksDataException {
-        LOGGER.log(Level.FINE, "refreshStats called");
+        LOGGER.log(level, "refreshStats called");
         synchronized (this) {
             if (state != ActivityState.RUNNING || isFetchingStats) {
-                LOGGER.log(Level.FINE,
+                LOGGER.log(level,
                         "returning immediately since state = " + state + " and fetchingStats = " + isFetchingStats);
                 return;
             } else {
@@ -287,8 +290,7 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
         List<INcAddressedMessage> requests = new ArrayList<>();
         List<String> ncs = Arrays.asList(locations.getLocations());
         for (int i = 0; i < ncs.size(); i++) {
-            requests.add(new StatsRequestMessage(ActiveManagerMessage.REQUEST_STATS,
-                    new ActiveRuntimeId(entityId, runtimeName, i), reqId));
+            requests.add(new StatsRequestMessage(new ActiveRuntimeId(entityId, runtimeName, i), reqId));
         }
         try {
             List<String> responses = (List<String>) messageBroker.sendSyncRequestToNCs(reqId, ncs, requests, timeout);
@@ -348,32 +350,32 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
 
     @Override
     public synchronized void recover() throws HyracksDataException {
-        LOGGER.log(Level.FINE, "Recover is called on " + entityId);
+        LOGGER.log(level, "Recover is called on " + entityId);
         if (recoveryTask != null) {
-            LOGGER.log(Level.FINE, "But recovery task for " + entityId + " is already there!! throwing an exception");
+            LOGGER.log(level, "But recovery task for " + entityId + " is already there!! throwing an exception");
             throw new RuntimeDataException(ErrorCode.DOUBLE_RECOVERY_ATTEMPTS);
         }
         if (retryPolicyFactory == NoRetryPolicyFactory.INSTANCE) {
-            LOGGER.log(Level.FINE, "But it has no recovery policy, so it is set to permanent failure");
+            LOGGER.log(level, "But it has no recovery policy, so it is set to permanent failure");
             setState(ActivityState.PERMANENTLY_FAILED);
         } else {
             ExecutorService executor = appCtx.getServiceContext().getControllerService().getExecutor();
             IRetryPolicy policy = retryPolicyFactory.create(this);
             cancelRecovery = false;
             setState(ActivityState.TEMPORARILY_FAILED);
-            LOGGER.log(Level.FINE, "Recovery task has been submitted");
+            LOGGER.log(level, "Recovery task has been submitted");
             recoveryTask = executor.submit(() -> doRecover(policy));
         }
     }
 
     protected Void doRecover(IRetryPolicy policy)
             throws AlgebricksException, HyracksDataException, InterruptedException {
-        LOGGER.log(Level.FINE, "Actual Recovery task has started");
+        LOGGER.log(level, "Actual Recovery task has started");
         if (getState() != ActivityState.TEMPORARILY_FAILED) {
-            LOGGER.log(Level.FINE, "but its state is not temp failure and so we're just returning");
+            LOGGER.log(level, "but its state is not temp failure and so we're just returning");
             return null;
         }
-        LOGGER.log(Level.FINE, "calling the policy");
+        LOGGER.log(level, "calling the policy");
         while (policy.retry()) {
             synchronized (this) {
                 if (cancelRecovery) {
@@ -402,7 +404,7 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
                     doStart(metadataProvider);
                     return null;
                 } catch (Exception e) {
-                    LOGGER.log(Level.WARNING, "Attempt to revive " + entityId + " failed", e);
+                    LOGGER.log(level, "Attempt to revive " + entityId + " failed", e);
                     setState(ActivityState.TEMPORARILY_FAILED);
                     recoverFailure = e;
                 } finally {
@@ -515,10 +517,10 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
         WaitForStateSubscriber subscriber;
         Future<Void> suspendTask;
         synchronized (this) {
-            LOGGER.log(Level.FINE, "suspending entity " + entityId);
-            LOGGER.log(Level.FINE, "Waiting for ongoing activities");
+            LOGGER.log(level, "suspending entity " + entityId);
+            LOGGER.log(level, "Waiting for ongoing activities");
             waitForNonTransitionState();
-            LOGGER.log(Level.FINE, "Proceeding with suspension. Current state is " + state);
+            LOGGER.log(level, "Proceeding with suspension. Current state is " + state);
             if (state == ActivityState.STOPPED || state == ActivityState.PERMANENTLY_FAILED) {
                 suspended = true;
                 return;
@@ -536,12 +538,12 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
                     EnumSet.of(ActivityState.SUSPENDED, ActivityState.TEMPORARILY_FAILED));
             suspendTask = metadataProvider.getApplicationContext().getServiceContext().getControllerService()
                     .getExecutor().submit(() -> doSuspend(metadataProvider));
-            LOGGER.log(Level.FINE, "Suspension task has been submitted");
+            LOGGER.log(level, "Suspension task has been submitted");
         }
         try {
-            LOGGER.log(Level.FINE, "Waiting for suspension task to complete");
+            LOGGER.log(level, "Waiting for suspension task to complete");
             suspendTask.get();
-            LOGGER.log(Level.FINE, "waiting for state to become SUSPENDED or TEMPORARILY_FAILED");
+            LOGGER.log(level, "waiting for state to become SUSPENDED or TEMPORARILY_FAILED");
             subscriber.sync();
         } catch (Exception e) {
             synchronized (this) {

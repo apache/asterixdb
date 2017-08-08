@@ -118,17 +118,17 @@ public class RecordAddFieldsDescriptor extends AbstractScalarFunctionDynamicDesc
                     private final RecordBuilder recordBuilder = new RecordBuilder();
                     private final RuntimeRecordTypeInfo requiredRecordTypeInfo = new RuntimeRecordTypeInfo();
 
-                    private final IBinaryHashFunction putHashFunc = ListItemBinaryHashFunctionFactory.INSTANCE
-                            .createBinaryHashFunction();
-                    private final IBinaryHashFunction getHashFunc = ListItemBinaryHashFunctionFactory.INSTANCE
-                            .createBinaryHashFunction();
+                    private final IBinaryHashFunction putHashFunc =
+                            ListItemBinaryHashFunctionFactory.INSTANCE.createBinaryHashFunction();
+                    private final IBinaryHashFunction getHashFunc =
+                            ListItemBinaryHashFunctionFactory.INSTANCE.createBinaryHashFunction();
                     private final BinaryEntry keyEntry = new BinaryEntry();
                     private final BinaryEntry valEntry = new BinaryEntry();
                     private final IVisitablePointable tempValReference = allocator.allocateEmpty();
-                    private final IBinaryComparator cmp = ListItemBinaryComparatorFactory.INSTANCE
-                            .createBinaryComparator();
-                    private BinaryHashMap hashMap = new BinaryHashMap(TABLE_SIZE, TABLE_FRAME_SIZE, putHashFunc,
-                            getHashFunc, cmp);
+                    private final IBinaryComparator cmp =
+                            ListItemBinaryComparatorFactory.INSTANCE.createBinaryComparator();
+                    private BinaryHashMap hashMap =
+                            new BinaryHashMap(TABLE_SIZE, TABLE_FRAME_SIZE, putHashFunc, getHashFunc, cmp);
                     private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
                     private DataOutput out = resultStorage.getDataOutput();
 
@@ -156,7 +156,6 @@ public class RecordAddFieldsDescriptor extends AbstractScalarFunctionDynamicDesc
 
                         vp0.set(argPtr0);
                         vp1.set(argPtr1);
-
 
                         ARecordVisitablePointable recordPointable = (ARecordVisitablePointable) vp0;
                         AListVisitablePointable listPointable = (AListVisitablePointable) vp1;
@@ -207,10 +206,10 @@ public class RecordAddFieldsDescriptor extends AbstractScalarFunctionDynamicDesc
                                     throw new AsterixException("Expected list of record, got "
                                             + PointableHelper.getTypeTag(inputFields.get(i)));
                                 }
-                                List<IVisitablePointable> names = ((ARecordVisitablePointable) inputFields.get(i))
-                                        .getFieldNames();
-                                List<IVisitablePointable> values = ((ARecordVisitablePointable) inputFields.get(i))
-                                        .getFieldValues();
+                                List<IVisitablePointable> names =
+                                        ((ARecordVisitablePointable) inputFields.get(i)).getFieldNames();
+                                List<IVisitablePointable> values =
+                                        ((ARecordVisitablePointable) inputFields.get(i)).getFieldValues();
 
                                 // Get name and value of the field to be added
                                 // Use loop to account for the cases where users switches the order of the fields
@@ -241,8 +240,7 @@ public class RecordAddFieldsDescriptor extends AbstractScalarFunctionDynamicDesc
                                     tempValReference.set(entry.getBuf(), entry.getOffset(), entry.getLength());
                                     // If value is not equal throw conflicting duplicate field, otherwise ignore
                                     if (!PointableHelper.byteArrayEqual(valuePointable, tempValReference)) {
-                                        throw new RuntimeDataException(ErrorCode.DUPLICATE_FIELD_NAME,
-                                                getIdentifier());
+                                        throw new RuntimeDataException(ErrorCode.DUPLICATE_FIELD_NAME, getIdentifier());
                                     }
                                 } else {
                                     if (pos > -1) {
@@ -256,7 +254,7 @@ public class RecordAddFieldsDescriptor extends AbstractScalarFunctionDynamicDesc
                                 }
                             }
                         } catch (AsterixException e) {
-                            throw new HyracksDataException(e);
+                            throw HyracksDataException.create(e);
                         }
                     }
                 };

@@ -221,6 +221,7 @@ public class LSMHarness implements ILSMHarness {
                      * See PrefixMergePolicy.isMergeLagging() for more details.
                      */
                     if (opType == LSMOperationType.FLUSH) {
+                        opTracker.notifyAll();
                         while (mergePolicy.isMergeLagging(lsmIndex)) {
                             try {
                                 opTracker.wait();
@@ -672,16 +673,27 @@ public class LSMHarness implements ILSMHarness {
     }
 
     /***
-     * Ensures the index is in a modifiable state
-     * @throws HyracksDataException if the index is not in a modifiable state
+     * Ensures the index is in a modifiable state (no failed flushes)
+     *
+     * @throws HyracksDataException
+     *             if the index is not in a modifiable state
      */
     private void ensureIndexModifiable() throws HyracksDataException {
+        // if current memory component has a flush request, it means that flush didn't start for it
+        if (lsmIndex.hasFlushRequestForCurrentMutableComponent()) {
+            return;
+        }
         // find if there is any memory component which is in a writable state or eventually will be in a writable state
         for (ILSMMemoryComponent memoryComponent : lsmIndex.getMemoryComponents()) {
             switch (memoryComponent.getState()) {
                 case INACTIVE:
+                    // will be activated on next modification
+                case UNREADABLE_UNWRITABLE:
+                    // flush completed successfully but readers are still inside
                 case READABLE_WRITABLE:
+                    // writable
                 case READABLE_UNWRITABLE_FLUSHING:
+                    // flush is ongoing
                     return;
                 default:
                     // continue to the next component

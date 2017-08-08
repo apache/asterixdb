@@ -74,7 +74,7 @@ public class LookupAdapterFactory<T> implements Serializable {
             return new LookupAdapter<>(dataParser, reader, inRecDesc, ridReader, retainInput, retainMissing,
                     isMissingWriterFactory, ctx, writer);
         } catch (Exception e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 

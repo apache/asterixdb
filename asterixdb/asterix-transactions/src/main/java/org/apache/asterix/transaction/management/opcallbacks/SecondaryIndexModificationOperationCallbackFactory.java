@@ -70,7 +70,7 @@ public class SecondaryIndexModificationOperationCallbackFactory extends Abstract
             txnCtx.registerIndexAndCallback(resource.getId(), index, (AbstractOperationCallback) modCallback, false);
             return modCallback;
         } catch (ACIDException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 }

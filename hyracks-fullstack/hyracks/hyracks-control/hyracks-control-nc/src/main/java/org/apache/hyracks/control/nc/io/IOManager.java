@@ -229,7 +229,7 @@ public class IOManager implements IIOManager {
         try {
             ((FileHandle) fHandle).close();
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 
@@ -242,7 +242,7 @@ public class IOManager implements IIOManager {
         try {
             waf = File.createTempFile(prefix, WORKSPACE_FILE_SUFFIX, new File(dev.getMount(), waPath));
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
         return dev.createFileRef(waPath + File.separator + waf.getName());
     }

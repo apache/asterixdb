@@ -95,14 +95,14 @@ public abstract class AbstractListBuilder implements IAsterixListBuilder {
                 this.outputStream.write(data, start + 1, len - 1);
             }
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 
     private boolean toWriteTag(byte serializedTypeTag) {
         boolean toWriteTag = itemTypeTag == ATypeTag.ANY;
-        toWriteTag = toWriteTag
-                || (itemTypeTag == ATypeTag.NULL && serializedTypeTag == ATypeTag.SERIALIZED_NULL_TYPE_TAG);
+        toWriteTag =
+                toWriteTag || (itemTypeTag == ATypeTag.NULL && serializedTypeTag == ATypeTag.SERIALIZED_NULL_TYPE_TAG);
         return toWriteTag
                 || (itemTypeTag == ATypeTag.MISSING && serializedTypeTag == ATypeTag.SERIALIZED_MISSING_TYPE_TAG);
     }

@@ -18,12 +18,16 @@
  */
 package org.apache.hyracks.control.nc.work;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import org.apache.hyracks.control.common.job.profiling.om.TaskProfile;
 import org.apache.hyracks.control.common.work.AbstractWork;
 import org.apache.hyracks.control.nc.NodeControllerService;
 import org.apache.hyracks.control.nc.Task;
 
 public class NotifyTaskCompleteWork extends AbstractWork {
+    private static final Logger LOGGER = Logger.getLogger(NotifyTaskCompleteWork.class.getName());
     private final NodeControllerService ncs;
     private final Task task;
 
@@ -40,8 +44,13 @@ public class NotifyTaskCompleteWork extends AbstractWork {
             ncs.getClusterController().notifyTaskComplete(task.getJobletContext().getJobId(), task.getTaskAttemptId(),
                     ncs.getId(), taskProfile);
         } catch (Exception e) {
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Failed notifying task complete for " + task.getTaskAttemptId(), e);
         }
         task.getJoblet().removeTask(task);
+    }
+
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + ":" + task.getTaskAttemptId();
     }
 }

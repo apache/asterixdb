@@ -103,7 +103,7 @@ public class InputSplitsFactory implements Serializable {
             dis.close();
             return splits;
         } catch (Exception e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 }

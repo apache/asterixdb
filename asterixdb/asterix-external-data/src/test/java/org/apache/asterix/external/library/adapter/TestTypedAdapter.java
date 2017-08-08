@@ -39,8 +39,6 @@ import org.apache.hyracks.dataflow.std.file.ITupleParserFactory;
 
 public class TestTypedAdapter extends FeedAdapter {
 
-    private static final long serialVersionUID = 1L;
-
     private final PipedOutputStream pos;
 
     private final PipedInputStream pis;
@@ -142,11 +140,6 @@ public class TestTypedAdapter extends FeedAdapter {
     public boolean stop() {
         generator.stop();
         return true;
-    }
-
-    @Override
-    public boolean handleException(Throwable e) {
-        return false;
     }
 
     @Override

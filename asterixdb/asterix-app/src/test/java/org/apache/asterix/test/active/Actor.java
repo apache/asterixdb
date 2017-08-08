@@ -21,7 +21,7 @@ package org.apache.asterix.test.active;
 import org.apache.asterix.active.SingleThreadEventProcessor;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 
-class Actor extends SingleThreadEventProcessor<Action> {
+public class Actor extends SingleThreadEventProcessor<Action> {
 
     private final MetadataProvider actorMdProvider;
 

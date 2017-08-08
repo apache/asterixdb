@@ -19,6 +19,7 @@
 package org.apache.hyracks.api.test;
 
 import java.util.Collection;
+import java.util.Collections;
 
 public class FrameWriterTestUtils {
     public static final String EXCEPTION_MESSAGE = "IFrameWriter Exception in the call to the method ";
@@ -30,6 +31,10 @@ public class FrameWriterTestUtils {
         Fail,
         Flush,
         Close
+    }
+
+    public static TestFrameWriter create() {
+        return create(Collections.emptyList(), Collections.emptyList(), false);
     }
 
     public static TestFrameWriter create(Collection<FrameWriterOperation> exceptionThrowingOperations,

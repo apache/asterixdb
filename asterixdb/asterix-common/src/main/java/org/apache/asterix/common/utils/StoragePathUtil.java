@@ -126,7 +126,7 @@ public class StoragePathUtil {
             }
             return file;
         } catch (Exception e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 }

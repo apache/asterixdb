@@ -29,17 +29,19 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.JobId;
 
 public class ActivePartitionMessage implements ICcAddressedMessage {
+    public enum Event {
+        RUNTIME_REGISTERED,
+        RUNTIME_DEREGISTERED,
+        GENERIC_EVENT
+    }
 
     private static final long serialVersionUID = 1L;
-    public static final byte ACTIVE_RUNTIME_REGISTERED = 0x00;
-    public static final byte ACTIVE_RUNTIME_DEREGISTERED = 0x01;
-    public static final byte GENERIC_EVENT = 0x02;
     private final ActiveRuntimeId activeRuntimeId;
     private final JobId jobId;
     private final Serializable payload;
-    private final byte event;
+    private final Event event;
 
-    public ActivePartitionMessage(ActiveRuntimeId activeRuntimeId, JobId jobId, byte event, Serializable payload) {
+    public ActivePartitionMessage(ActiveRuntimeId activeRuntimeId, JobId jobId, Event event, Serializable payload) {
         this.activeRuntimeId = activeRuntimeId;
         this.jobId = jobId;
         this.event = event;
@@ -58,7 +60,7 @@ public class ActivePartitionMessage implements ICcAddressedMessage {
         return payload;
     }
 
-    public byte getEvent() {
+    public Event getEvent() {
         return event;
     }
 

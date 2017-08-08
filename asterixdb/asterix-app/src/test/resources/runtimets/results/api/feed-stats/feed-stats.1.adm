@@ -4,8 +4,7 @@
       "adapter-stats" : {
         "incoming-records-count" : 13,
         "failed-at-parser-records-count" : 3
-      },
-      "executor-restart-times" : 0
+      }
     } ]
   }
 }

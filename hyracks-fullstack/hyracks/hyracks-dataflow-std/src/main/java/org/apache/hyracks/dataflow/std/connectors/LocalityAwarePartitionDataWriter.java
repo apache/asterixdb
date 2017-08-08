@@ -130,7 +130,7 @@ public class LocalityAwarePartitionDataWriter implements IFrameWriter {
                     appenders[i].write(pWriters[i], true);
                 } catch (Throwable th) {
                     if (closeException == null) {
-                        closeException = new HyracksDataException(th);
+                        closeException = HyracksDataException.create(th);
                     } else {
                         closeException.addSuppressed(th);
                     }
@@ -139,7 +139,7 @@ public class LocalityAwarePartitionDataWriter implements IFrameWriter {
                         pWriters[i].close();
                     } catch (Throwable th) {
                         if (closeException == null) {
-                            closeException = new HyracksDataException(th);
+                            closeException = HyracksDataException.create(th);
                         } else {
                             closeException.addSuppressed(th);
                         }

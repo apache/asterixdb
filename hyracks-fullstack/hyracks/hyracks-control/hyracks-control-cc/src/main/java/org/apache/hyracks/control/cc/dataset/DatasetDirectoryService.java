@@ -151,12 +151,18 @@ public class DatasetDirectoryService implements IDatasetDirectoryService {
 
     @Override
     public synchronized void reportJobFailure(JobId jobId, List<Exception> exceptions) {
+        LOGGER.log(Level.INFO, "job " + jobId + " failed and is being reported to " + getClass().getSimpleName(),
+                exceptions.get(0));
         DatasetJobRecord djr = getDatasetJobRecord(jobId);
+        LOGGER.log(Level.INFO, "Dataset job record is " + djr);
         if (djr != null) {
+            LOGGER.log(Level.INFO, "Setting exceptions in Dataset job record");
             djr.fail(exceptions);
         }
         final JobResultInfo jobResultInfo = jobResultLocations.get(jobId);
+        LOGGER.log(Level.INFO, "Job result info is " + jobResultInfo);
         if (jobResultInfo != null) {
+            LOGGER.log(Level.INFO, "Setting exceptions in Job result info");
             jobResultInfo.setException(exceptions.isEmpty() ? null : exceptions.get(0));
         }
         notifyAll();

@@ -124,7 +124,7 @@ public class SocketServerInputStreamFactory implements IInputStreamFactory {
             server.bind(new InetSocketAddress(socket.second));
             return new SocketServerInputStream(server);
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 

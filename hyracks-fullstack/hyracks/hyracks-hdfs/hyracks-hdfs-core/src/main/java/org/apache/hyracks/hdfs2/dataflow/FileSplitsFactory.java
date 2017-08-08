@@ -30,7 +30,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
-
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 @SuppressWarnings("rawtypes")
@@ -96,7 +95,7 @@ public class FileSplitsFactory implements Serializable {
             ByteArrayInputStream bis = new ByteArrayInputStream(bytes);
             DataInputStream dis = new DataInputStream(bis);
             int size = dis.readInt();
-            List<FileSplit> splits = new ArrayList<FileSplit>();
+            List<FileSplit> splits = new ArrayList<>();
             for (int i = 0; i < size; i++) {
                 splits.add((FileSplit) defaultConstructor.newInstance());
                 splits.get(i).readFields(dis);
@@ -104,7 +103,7 @@ public class FileSplitsFactory implements Serializable {
             dis.close();
             return splits;
         } catch (Exception e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 }

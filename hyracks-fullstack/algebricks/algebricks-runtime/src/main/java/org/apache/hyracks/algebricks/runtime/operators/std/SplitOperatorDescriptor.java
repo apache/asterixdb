@@ -71,8 +71,8 @@ public class SplitOperatorDescriptor extends AbstractReplicateOperatorDescriptor
 
     @Override
     public void contributeActivities(IActivityGraphBuilder builder) {
-        SplitterMaterializerActivityNode sma = new SplitterMaterializerActivityNode(
-                new ActivityId(odId, SPLITTER_MATERIALIZER_ACTIVITY_ID));
+        SplitterMaterializerActivityNode sma =
+                new SplitterMaterializerActivityNode(new ActivityId(odId, SPLITTER_MATERIALIZER_ACTIVITY_ID));
         builder.addActivity(this, sma);
         builder.addSourceEdge(0, sma, 0);
         for (int i = 0; i < outputArity; i++) {
@@ -168,7 +168,7 @@ public class SplitOperatorDescriptor extends AbstractReplicateOperatorDescriptor
                                 writers[i].close();
                             } catch (Throwable th) {
                                 if (hde == null) {
-                                    hde = new HyracksDataException(th);
+                                    hde = HyracksDataException.create(th);
                                 } else {
                                     hde.addSuppressed(th);
                                 }

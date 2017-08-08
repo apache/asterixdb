@@ -107,7 +107,7 @@ public class ResultPrinter {
             }
             app.append("\r\n");
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 

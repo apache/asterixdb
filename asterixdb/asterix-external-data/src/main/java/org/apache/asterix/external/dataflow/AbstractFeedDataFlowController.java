@@ -57,14 +57,5 @@ public abstract class AbstractFeedDataFlowController implements IDataFlowControl
         tupleForwarder.flush();
     }
 
-    @Override
-    public abstract boolean stop() throws HyracksDataException;
-
-    public abstract boolean handleException(Throwable th) throws HyracksDataException;
-
     public abstract String getStats();
-
-    public void fail() throws HyracksDataException {
-        tupleForwarder.fail();
-    }
 }

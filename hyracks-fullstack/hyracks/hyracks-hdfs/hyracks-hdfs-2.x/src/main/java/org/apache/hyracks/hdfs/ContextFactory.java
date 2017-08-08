@@ -26,7 +26,6 @@ import org.apache.hadoop.mapreduce.TaskAttemptID;
 import org.apache.hadoop.mapreduce.TaskType;
 import org.apache.hadoop.mapreduce.task.JobContextImpl;
 import org.apache.hadoop.mapreduce.task.TaskAttemptContextImpl;
-
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 /**
@@ -38,7 +37,7 @@ public class ContextFactory {
         try {
             return new TaskAttemptContextImpl(conf, tid);
         } catch (Exception e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 
@@ -47,7 +46,7 @@ public class ContextFactory {
             TaskAttemptID tid = new TaskAttemptID("", 0, TaskType.REDUCE, partition, 0);
             return new TaskAttemptContextImpl(conf, tid);
         } catch (Exception e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 

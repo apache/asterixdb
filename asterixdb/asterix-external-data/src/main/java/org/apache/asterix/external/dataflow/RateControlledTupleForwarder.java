@@ -71,7 +71,8 @@ public class RateControlledTupleForwarder implements ITupleForwarder {
             try {
                 Thread.sleep(interTupleInterval);
             } catch (InterruptedException e) {
-                throw new HyracksDataException(e);
+                Thread.currentThread().interrupt();
+                throw HyracksDataException.create(e);
             }
         }
         boolean success = appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize());

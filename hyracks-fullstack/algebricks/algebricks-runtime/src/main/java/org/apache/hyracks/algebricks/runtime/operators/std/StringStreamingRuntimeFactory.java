@@ -137,8 +137,8 @@ public class StringStreamingRuntimeFactory extends AbstractOneInputOneOutputRunt
                     ForwardScriptOutput fso = new ForwardScriptOutput(parser, process.getInputStream());
                     outputPipe = new Thread(fso);
                     outputPipe.start();
-                    DumpInStreamToPrintStream disps = new DumpInStreamToPrintStream(process.getErrorStream(),
-                            System.err);
+                    DumpInStreamToPrintStream disps =
+                            new DumpInStreamToPrintStream(process.getErrorStream(), System.err);
                     dumpStderr = new Thread(disps);
                     dumpStderr.start();
                 } catch (IOException e) {
@@ -174,7 +174,8 @@ public class StringStreamingRuntimeFactory extends AbstractOneInputOneOutputRunt
                     outputPipe.join();
                     dumpStderr.join();
                 } catch (InterruptedException e) {
-                    throw new HyracksDataException(e);
+                    Thread.currentThread().interrupt();
+                    throw HyracksDataException.create(e);
                 }
                 if (ret != 0) {
                     throw new HyracksDataException("Process exit value: " + ret);

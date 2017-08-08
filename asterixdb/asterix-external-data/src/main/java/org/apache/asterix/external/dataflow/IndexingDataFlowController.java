@@ -32,8 +32,8 @@ public class IndexingDataFlowController<T> extends RecordDataFlowController<T> {
     private final IExternalIndexer indexer;
 
     public IndexingDataFlowController(IHyracksTaskContext ctx, ITupleForwarder tupleForwarder,
-            IRecordDataParser<T> dataParser, IRecordReader<? extends T> recordReader,
-            IExternalIndexer indexer) throws IOException {
+            IRecordDataParser<T> dataParser, IRecordReader<? extends T> recordReader, IExternalIndexer indexer)
+            throws IOException {
         super(ctx, tupleForwarder, dataParser, recordReader, 1 + indexer.getNumberOfFields());
         this.indexer = indexer;
     }
@@ -43,7 +43,7 @@ public class IndexingDataFlowController<T> extends RecordDataFlowController<T> {
         try {
             indexer.index(tb);
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 }

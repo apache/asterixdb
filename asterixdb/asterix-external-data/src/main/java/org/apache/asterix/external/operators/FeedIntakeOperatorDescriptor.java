@@ -96,8 +96,7 @@ public class FeedIntakeOperatorDescriptor extends AbstractSingleActivityOperator
         if (adaptorFactory == null) {
             adaptorFactory = createExternalAdapterFactory(ctx);
         }
-        return new FeedIntakeOperatorNodePushable(ctx, feedId, adaptorFactory, partition, policyAccessor,
-                recordDescProvider, this);
+        return new FeedIntakeOperatorNodePushable(ctx, feedId, adaptorFactory, partition, recordDescProvider, this);
     }
 
     private IAdapterFactory createExternalAdapterFactory(IHyracksTaskContext ctx) throws HyracksDataException {
@@ -112,7 +111,7 @@ public class FeedIntakeOperatorDescriptor extends AbstractSingleActivityOperator
                 adapterFactory.setOutputType(adapterOutputType);
                 adapterFactory.configure(ctx.getJobletContext().getServiceContext(), adaptorConfiguration);
             } catch (Exception e) {
-                throw new HyracksDataException(e);
+                throw HyracksDataException.create(e);
             }
         } else {
             RuntimeDataException err = new RuntimeDataException(

@@ -106,7 +106,7 @@ public class TestTypedAdapterFactory implements IAdapterFactory {
                             }
                             forwarder.close();
                         } catch (Exception e) {
-                            throw new HyracksDataException(e);
+                            throw HyracksDataException.create(e);
                         }
                     }
                 };
@@ -115,7 +115,7 @@ public class TestTypedAdapterFactory implements IAdapterFactory {
         try {
             return new TestTypedAdapter(tupleParserFactory, outputType, ctx, configuration, partition);
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 

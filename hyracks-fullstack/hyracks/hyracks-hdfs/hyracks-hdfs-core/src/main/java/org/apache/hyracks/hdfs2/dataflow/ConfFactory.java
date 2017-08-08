@@ -25,7 +25,6 @@ import java.io.DataOutputStream;
 import java.io.Serializable;
 
 import org.apache.hadoop.mapreduce.Job;
-
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class ConfFactory implements Serializable {
@@ -40,7 +39,7 @@ public class ConfFactory implements Serializable {
             confBytes = bos.toByteArray();
             dos.close();
         } catch (Exception e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 
@@ -52,7 +51,7 @@ public class ConfFactory implements Serializable {
             dis.close();
             return conf;
         } catch (Exception e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 }

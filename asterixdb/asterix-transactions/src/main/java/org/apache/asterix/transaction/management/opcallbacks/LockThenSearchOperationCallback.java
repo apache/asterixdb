@@ -46,8 +46,8 @@ public class LockThenSearchOperationCallback extends AbstractOperationCallback i
     private int pkHash;
 
     public LockThenSearchOperationCallback(DatasetId datasetId, int[] entityIdFields,
-            ITransactionSubsystem txnSubsystem,
-            ITransactionContext txnCtx, IOperatorNodePushable operatorNodePushable) {
+            ITransactionSubsystem txnSubsystem, ITransactionContext txnCtx,
+            IOperatorNodePushable operatorNodePushable) {
         super(datasetId, entityIdFields, txnCtx, txnSubsystem.getLockManager());
         this.operatorNodePushable = (LSMIndexInsertUpdateDeleteOperatorNodePushable) operatorNodePushable;
         this.logManager = txnSubsystem.getLogManager();
@@ -118,7 +118,7 @@ public class LockThenSearchOperationCallback extends AbstractOperationCallback i
                 lockManager.lock(datasetId, pkHash, LockMode.X, txnCtx);
             }
         } catch (ACIDException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 

@@ -97,7 +97,7 @@ public class TwitterFirehoseStreamFactory implements IInputStreamFactory {
         try {
             return new TwitterFirehoseInputStream(configuration, partition);
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 }

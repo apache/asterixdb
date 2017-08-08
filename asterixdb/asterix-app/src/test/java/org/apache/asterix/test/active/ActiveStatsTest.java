@@ -30,6 +30,7 @@ import org.apache.asterix.active.EntityId;
 import org.apache.asterix.active.IActiveRuntime;
 import org.apache.asterix.active.NoRetryPolicyFactory;
 import org.apache.asterix.active.message.ActivePartitionMessage;
+import org.apache.asterix.active.message.ActivePartitionMessage.Event;
 import org.apache.asterix.algebra.base.ILangExtension.Language;
 import org.apache.asterix.app.active.ActiveEntityEventsListener;
 import org.apache.asterix.app.active.ActiveNotificationHandler;
@@ -126,8 +127,8 @@ public class ActiveStatsTest {
         requestedStats = eventsListener.getStats();
         Assert.assertTrue(requestedStats.contains("N/A"));
         // Fake partition message and notify eventListener
-        ActivePartitionMessage partitionMessage = new ActivePartitionMessage(activeRuntimeId, jobId,
-                ActivePartitionMessage.ACTIVE_RUNTIME_REGISTERED, null);
+        ActivePartitionMessage partitionMessage =
+                new ActivePartitionMessage(activeRuntimeId, jobId, Event.RUNTIME_REGISTERED, null);
         partitionMessage.handle(appCtx);
         start.sync();
         if (start.hasFailed()) {

@@ -104,7 +104,7 @@ public class ArrayTupleBuilder implements IDataOutputProvider {
                 fieldData.getDataOutput().writeInt(FrameConstants.FRAME_FIELD_MAGIC);
             }
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
         fEndOffsets[nextField++] = fieldData.getLength();
     }
@@ -139,7 +139,7 @@ public class ArrayTupleBuilder implements IDataOutputProvider {
         try {
             fieldData.getDataOutput().write(bytes, start, length);
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
         fEndOffsets[nextField++] = fieldData.getLength();
     }
