@@ -1162,8 +1162,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 }
             }
             // # check whether any function in current dataverse is being used by others
-            List<Function> functionsInDataverse = MetadataManager.INSTANCE.getDataverseFunctions(mdTxnCtx,
-                    dataverseName);
+            List<Function> functionsInDataverse =
+                    MetadataManager.INSTANCE.getDataverseFunctions(mdTxnCtx, dataverseName);
             for (Function function : functionsInDataverse) {
                 if (checkWhetherFunctionIsBeingUsed(mdTxnCtx, function.getDataverseName(), function.getName(),
                         function.getArity(), dataverseName)) {
@@ -1331,8 +1331,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     MetadataManager.INSTANCE.commitTransaction(mdTxnCtx.getValue());
                     return;
                 } else {
-                    throw new AlgebricksException("There is no dataset with this name " + datasetName + " in dataverse "
-                            + dataverseName + ".");
+                    throw new AsterixException(ErrorCode.NO_DATASET_WITH_NAME, dataverseName, datasetName);
                 }
             }
             ds.drop(metadataProvider, mdTxnCtx, jobsToExecute, bActiveTxn, progress, hcc, dropCorrespondingNodeGroup);

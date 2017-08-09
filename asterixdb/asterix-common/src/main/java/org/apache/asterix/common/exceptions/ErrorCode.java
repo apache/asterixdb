@@ -121,6 +121,7 @@ public class ErrorCode {
     public static final int UPGRADE_FAILED_LOCK_WAS_NOT_ACQUIRED = 1047;
     public static final int DOWNGRADE_FAILED_LOCK_WAS_NOT_ACQUIRED = 1048;
     public static final int LOCK_WAS_ACQUIRED_DIFFERENT_OPERATION = 1049;
+    public static final int NO_DATASET_WITH_NAME = 1050;
 
     // Feed errors
     public static final int DATAFLOW_ILLEGAL_STATE = 3001;
