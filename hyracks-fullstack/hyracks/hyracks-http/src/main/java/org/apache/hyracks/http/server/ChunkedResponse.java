@@ -21,6 +21,8 @@ package org.apache.hyracks.http.server;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.apache.hyracks.http.api.IServletResponse;
 
@@ -58,6 +60,8 @@ import io.netty.handler.codec.http.LastHttpContent;
  * 4. larger than chunkSize, no error. -> header, data, empty response
  */
 public class ChunkedResponse implements IServletResponse {
+
+    private static final Logger LOGGER = Logger.getLogger(ChunkedResponse.class.getName());
     private final ChannelHandlerContext ctx;
     private final ChunkedNettyOutputStream outputStream;
     private final PrintWriter writer;
@@ -109,6 +113,7 @@ public class ChunkedResponse implements IServletResponse {
         } else {
             // There was an error
             if (headerSent) {
+                LOGGER.log(Level.WARNING,"Error after header write of chunked response");
                 if (error != null) {
                     error.release();
                 }
