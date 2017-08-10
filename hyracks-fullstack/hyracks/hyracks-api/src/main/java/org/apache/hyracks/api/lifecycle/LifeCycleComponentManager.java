@@ -51,11 +51,10 @@ public class LifeCycleComponentManager implements ILifeCycleComponentManager {
 
     @Override
     public void uncaughtException(Thread t, Throwable e) {
-        LOGGER.log(Level.SEVERE, "Uncaught Exception from thread " + t.getName(), e);
         try {
-            stopAll(true);
-        } catch (IOException e1) {
-            LOGGER.log(Level.SEVERE, "Exception in stopping instance", e1);
+            LOGGER.log(Level.SEVERE, "Uncaught Exception from thread " + t.getName() + ". Calling shutdown hook", e);
+        } finally {
+            Runtime.getRuntime().exit(99);// NOSONAR: It is really required
         }
     }
 
@@ -73,12 +72,13 @@ public class LifeCycleComponentManager implements ILifeCycleComponentManager {
 
     @Override
     public synchronized void stopAll(boolean dumpState) throws IOException {
-        if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("Attempting to stop " + this);
-        }
         if (stopped) {
             LOGGER.info("Lifecycle management was already stopped");
             return;
+        }
+        stopped = true;
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("Attempting to stop " + this);
         }
         if (stopInitiated) {
             LOGGER.info("Stop already in progress");

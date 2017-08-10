@@ -23,6 +23,9 @@ import java.util.Arrays;
 
 public class ByteArrayAccessibleOutputStream extends ByteArrayOutputStream {
 
+    private static final int MAX_SIZE = 1024 * 1024 * 64;
+    private static final double BUFFER_INCREMENT_FACTOR = 1.5;
+
     public ByteArrayAccessibleOutputStream() {
         super();
     }
@@ -94,7 +97,10 @@ public class ByteArrayAccessibleOutputStream extends ByteArrayOutputStream {
     private void grow(int minCapacity) {
         // overflow-conscious code
         int oldCapacity = buf.length;
-        int newCapacity = oldCapacity << 1;
+        if (oldCapacity == MAX_SIZE) {
+            throw new IllegalArgumentException("Buffer is too large...");
+        }
+        int newCapacity = Math.min((int) (oldCapacity * BUFFER_INCREMENT_FACTOR), MAX_SIZE);
         if (newCapacity - minCapacity < 0) {
             newCapacity = minCapacity;
         }

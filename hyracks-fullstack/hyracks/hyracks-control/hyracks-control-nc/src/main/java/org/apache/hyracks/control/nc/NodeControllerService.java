@@ -170,22 +170,27 @@ public class NodeControllerService implements IControllerService {
     }
 
     public NodeControllerService(NCConfig config, INCApplication application) throws IOException, CmdLineException {
-        this.ncConfig = config;
-        this.configManager = ncConfig.getConfigManager();
+        ncConfig = config;
+        configManager = ncConfig.getConfigManager();
         if (application == null) {
             throw new IllegalArgumentException("INCApplication cannot be null");
         }
         configManager.processConfig();
         this.application = application;
         id = ncConfig.getNodeId();
-
-        ioManager =
-                new IOManager(IODeviceHandle.getDevices(ncConfig.getIODevices()), application.getFileDeviceResolver());
         if (id == null) {
             throw new HyracksException("id not set");
         }
-
         lccm = new LifeCycleComponentManager();
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("Setting uncaught exception handler " + getLifeCycleComponentManager());
+        }
+        // Set shutdown hook before so it doesn't have the same uncaught exception handler
+        Runtime.getRuntime().addShutdownHook(new NCShutdownHook(this));
+        Thread.currentThread().setUncaughtExceptionHandler(getLifeCycleComponentManager());
+        ioManager =
+                new IOManager(IODeviceHandle.getDevices(ncConfig.getIODevices()), application.getFileDeviceResolver());
+
         workQueue = new WorkQueue(id, Thread.NORM_PRIORITY); // Reserves MAX_PRIORITY of the heartbeat thread.
         jobletMap = new Hashtable<>();
         preDistributedJobActivityClusterGraphMap = new Hashtable<>();
@@ -263,11 +268,6 @@ public class NodeControllerService implements IControllerService {
     @Override
     public void start() throws Exception {
         LOGGER.log(Level.INFO, "Starting NodeControllerService");
-        if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("Setting uncaught exception handler " + getLifeCycleComponentManager());
-        }
-        Thread.currentThread().setUncaughtExceptionHandler(getLifeCycleComponentManager());
-        Runtime.getRuntime().addShutdownHook(new NCShutdownHook(this));
         ipc = new IPCSystem(new InetSocketAddress(ncConfig.getClusterListenAddress(), ncConfig.getClusterListenPort()),
                 new NodeControllerIPCI(this), new CCNCFunctions.SerializerDeserializer());
         ipc.start();
@@ -276,10 +276,8 @@ public class NodeControllerService implements IControllerService {
                 ncConfig.getNetThreadCount(), ncConfig.getNetBufferCount(), ncConfig.getDataPublicAddress(),
                 ncConfig.getDataPublicPort(), FullFrameChannelInterfaceFactory.INSTANCE);
         netManager.start();
-
         startApplication();
         init();
-
         datasetNetworkManager.start();
         if (messagingNetManager != null) {
             messagingNetManager.start();
@@ -394,6 +392,8 @@ public class NodeControllerService implements IControllerService {
             heartbeatTask.cancel();
             LOGGER.log(Level.INFO, "Stopped NodeControllerService");
             shuttedDown = true;
+        } else {
+            LOGGER.log(Level.SEVERE, "Double shutdown calls!!", new Exception("Double shutdown calls"));
         }
     }
 
