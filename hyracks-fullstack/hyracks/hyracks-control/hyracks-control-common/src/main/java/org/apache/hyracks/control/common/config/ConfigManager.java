@@ -166,7 +166,7 @@ public class ConfigManager implements IConfigManager, Serializable {
 
     private Map<IOption, Object> createNodeSpecificMap(String nodeId) {
         LOGGER.fine("createNodeSpecificMap: " + nodeId);
-        return new HashMap<>();
+        return Collections.synchronizedMap(new HashMap<>());
     }
 
     @Override

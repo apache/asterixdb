@@ -43,8 +43,11 @@ import org.apache.asterix.event.schema.cluster.Cluster;
 import org.apache.asterix.event.schema.cluster.Node;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.api.config.IOption;
+import org.apache.hyracks.api.config.Section;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.HyracksException;
+import org.apache.hyracks.control.common.application.ConfigManagerApplicationConfig;
+import org.apache.hyracks.control.common.config.ConfigManager;
 import org.apache.hyracks.control.common.controllers.NCConfig;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -107,6 +110,7 @@ public class ClusterStateManager implements IClusterStateManager {
         activeNcConfiguration.put(nodeId, configuration);
         failedNodes.remove(nodeId);
         ftStrategy.notifyNodeJoin(nodeId);
+        updateNodeConfig(nodeId, configuration);
     }
 
     @Override
@@ -416,6 +420,16 @@ public class ClusterStateManager implements IClusterStateManager {
 
     public synchronized Set<String> getNodesPendingRemoval() {
         return new HashSet<>(pendingRemoval);
+    }
+
+    private void updateNodeConfig(String nodeId, Map<IOption, Object> configuration) {
+        ConfigManager configManager = ((ConfigManagerApplicationConfig) appCtx.getServiceContext().getAppConfig())
+                .getConfigManager();
+        for (Map.Entry<IOption, Object> entry : configuration.entrySet()) {
+            if (entry.getKey().section() == Section.NC) {
+                configManager.set(nodeId, entry.getKey(), entry.getValue());
+            }
+        }
     }
 
 }
