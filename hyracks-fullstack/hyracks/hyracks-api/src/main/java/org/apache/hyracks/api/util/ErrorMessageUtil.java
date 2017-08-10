@@ -91,6 +91,10 @@ public class ErrorMessageUtil {
             if (!NONE.equals(component)) {
                 fmt.format("%1$s%2$04d: ", component, errorCode);
             }
+            // if the message is already formatted, just return it
+            if (!fmt.toString().isEmpty() && message.startsWith(fmt.toString())) {
+                return message;
+            }
             fmt.format(message == null ? "null" : message, (Object[]) params);
             return fmt.out().toString();
         } catch (Exception e) {
