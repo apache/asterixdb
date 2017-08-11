@@ -68,8 +68,7 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
     public void afterOperation(ILSMIndex index, LSMOperationType opType, ISearchOperationCallback searchCallback,
             IModificationOperationCallback modificationCallback) throws HyracksDataException {
         // Searches are immediately considered complete, because they should not prevent the execution of flushes.
-        if (opType == LSMOperationType.FLUSH || opType == LSMOperationType.MERGE
-                || opType == LSMOperationType.REPLICATE) {
+        if (opType == LSMOperationType.FLUSH || opType == LSMOperationType.REPLICATE) {
             completeOperation(index, opType, searchCallback, modificationCallback);
         }
     }

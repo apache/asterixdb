@@ -138,7 +138,8 @@ public class LSMHarness implements ILSMHarness {
                     }
                     opTracker.wait();
                 } catch (InterruptedException e) {
-                    throw new HyracksDataException(e);
+                    Thread.currentThread().interrupt();
+                    throw HyracksDataException.create(e);
                 }
             }
         }
@@ -346,12 +347,11 @@ public class LSMHarness implements ILSMHarness {
                         lsmIndex.scheduleReplication(null, inactiveDiskComponentsToBeDeleted, false,
                                 ReplicationOperation.DELETE, opType);
                     }
-
                     for (ILSMComponent c : inactiveDiskComponentsToBeDeleted) {
                         ((AbstractLSMDiskComponent) c).destroy();
                     }
                 } catch (Throwable e) {
-                    e.printStackTrace();
+                    LOGGER.log(Level.WARNING, "Failure scheduling replication or destroying merged component", e);
                     throw e;
                 }
             }
@@ -561,10 +561,25 @@ public class LSMHarness implements ILSMHarness {
             lsmIndex.markAsValid(newComponent);
         } catch (Throwable e) {
             failedOperation = true;
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Failed merge operation on " + lsmIndex, e);
             throw e;
         } finally {
             exitComponents(ctx, LSMOperationType.MERGE, newComponent, failedOperation);
+            // Completion of the merge operation is called here to and not on afterOperation because
+            // Deletion of the old components comes after afterOperation is called and the number of
+            // io operation should not be decremented before the operation is complete to avoid
+            // index destroy from competing with the merge on deletion of the files.
+            // The order becomes:
+            // 1. scheduleMerge
+            // 2. enterComponents
+            // 3. beforeOperation (increment the numOfIoOperations)
+            // 4. merge
+            // 5. exitComponents
+            // 6. afterOperation (no op)
+            // 7. delete components
+            // 8. completeOperation (decrement the numOfIoOperations)
+            opTracker.completeOperation(lsmIndex, LSMOperationType.MERGE, ctx.getSearchOperationCallback(),
+                    ctx.getModificationCallback());
             operation.getCallback().afterFinalize(LSMOperationType.MERGE, newComponent);
         }
         if (LOGGER.isLoggable(Level.INFO)) {
@@ -700,5 +715,10 @@ public class LSMHarness implements ILSMHarness {
             }
         }
         throw HyracksDataException.create(ErrorCode.CANNOT_MODIFY_INDEX_DISK_IS_FULL);
+    }
+
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + ":" + lsmIndex;
     }
 }

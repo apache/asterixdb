@@ -219,4 +219,9 @@ public class LSMTreeIndexAccessor implements ILSMIndexAccessor {
         ctx.setOperation(IndexOperation.DISK_COMPONENT_SCAN);
         lsmHarness.scanDiskComponents(ctx, cursor);
     }
+
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + ':' + lsmHarness.toString();
+    }
 }

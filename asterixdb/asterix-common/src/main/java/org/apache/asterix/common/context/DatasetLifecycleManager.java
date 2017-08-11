@@ -147,7 +147,8 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
                     //notification will come from DatasetInfo class (undeclareActiveIOOperation)
                     dsInfo.wait();
                 } catch (InterruptedException e) {
-                    throw new HyracksDataException(e);
+                    Thread.currentThread().interrupt();
+                    throw HyracksDataException.create(e);
                 }
             }
         }

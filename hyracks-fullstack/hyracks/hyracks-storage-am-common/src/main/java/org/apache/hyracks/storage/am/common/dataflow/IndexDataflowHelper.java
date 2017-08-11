@@ -19,6 +19,9 @@
 
 package org.apache.hyracks.storage.am.common.dataflow;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
@@ -32,6 +35,7 @@ import org.apache.hyracks.storage.common.LocalResource;
 
 public class IndexDataflowHelper implements IIndexDataflowHelper {
 
+    private static final Logger LOGGER = Logger.getLogger(IndexDataflowHelper.class.getName());
     private final INCServiceContext ctx;
     private final IResourceLifecycleManager<IIndex> lcManager;
     private final ILocalResourceRepository localResourceRepository;
@@ -85,6 +89,7 @@ public class IndexDataflowHelper implements IIndexDataflowHelper {
 
     @Override
     public void destroy() throws HyracksDataException {
+        LOGGER.log(Level.INFO, "Dropping index " + resourceRef.getRelativePath() + " on node " + ctx.getNodeId());
         synchronized (lcManager) {
             index = lcManager.get(resourceRef.getRelativePath());
             if (index != null) {

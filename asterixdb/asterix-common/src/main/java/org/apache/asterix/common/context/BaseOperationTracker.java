@@ -47,8 +47,7 @@ public class BaseOperationTracker implements ILSMOperationTracker {
     @Override
     public void afterOperation(ILSMIndex index, LSMOperationType opType, ISearchOperationCallback searchCallback,
             IModificationOperationCallback modificationCallback) throws HyracksDataException {
-        if (opType == LSMOperationType.FLUSH || opType == LSMOperationType.MERGE
-                || opType == LSMOperationType.REPLICATE) {
+        if (opType == LSMOperationType.FLUSH || opType == LSMOperationType.REPLICATE) {
             dsInfo.undeclareActiveIOOperation();
         }
     }
@@ -56,6 +55,9 @@ public class BaseOperationTracker implements ILSMOperationTracker {
     @Override
     public void completeOperation(ILSMIndex index, LSMOperationType opType, ISearchOperationCallback searchCallback,
             IModificationOperationCallback modificationCallback) throws HyracksDataException {
+        if (opType == LSMOperationType.MERGE) {
+            dsInfo.undeclareActiveIOOperation();
+        }
     }
 
     public void exclusiveJobCommitted() throws HyracksDataException {

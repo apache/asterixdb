@@ -59,6 +59,7 @@ import org.apache.hyracks.api.io.IODeviceHandle;
 import org.apache.hyracks.api.replication.IReplicationJob.ReplicationExecutionType;
 import org.apache.hyracks.api.replication.IReplicationJob.ReplicationJobType;
 import org.apache.hyracks.api.replication.IReplicationJob.ReplicationOperation;
+import org.apache.hyracks.api.util.IoUtil;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
 import org.apache.hyracks.storage.common.ILocalResourceRepository;
 import org.apache.hyracks.storage.common.LocalResource;
@@ -223,7 +224,7 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
                 // Invalidate before deleting the file just in case file deletion throws some exception.
                 // Since it's just a cache invalidation, it should not affect correctness.
                 resourceCache.invalidate(relativePath);
-                resourceFile.delete();
+                IoUtil.delete(resourceFile);
             } finally {
                 // Regardless of successfully deleted or not, the operation should be replicated.
                 //if replication enabled, delete resource from remote replicas
