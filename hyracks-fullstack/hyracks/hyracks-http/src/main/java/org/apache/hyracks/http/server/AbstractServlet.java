@@ -88,6 +88,12 @@ public abstract class AbstractServlet implements IServlet {
         } catch (Exception e) {
             LOGGER.log(Level.WARNING, "Unhandled exception", e);
             response.setStatus(HttpResponseStatus.INTERNAL_SERVER_ERROR);
+        } catch (Throwable th) { //NOSONAR Just logging and then throwing again
+            try {
+                LOGGER.log(Level.WARNING, "Unhandled throwable", th);
+            } catch (Throwable loggingFailure) {// NOSONAR... swallow logging failure
+            }
+            throw th;
         }
     }
 

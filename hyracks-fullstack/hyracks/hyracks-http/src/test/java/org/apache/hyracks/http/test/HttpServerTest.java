@@ -41,13 +41,16 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.client.StandardHttpRequestRetryHandler;
 import org.apache.hyracks.http.server.HttpServer;
 import org.apache.hyracks.http.server.WebManager;
+import org.apache.hyracks.http.servlet.ChattyServlet;
 import org.apache.hyracks.http.servlet.SlowServlet;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
 
 public class HttpServerTest {
+    static final boolean PRINT_TO_CONSOLE = false;
     static final int PORT = 9898;
     static final int NUM_EXECUTOR_THREADS = 16;
     static final int SERVER_QUEUE_SIZE = 16;
@@ -59,6 +62,13 @@ public class HttpServerTest {
     static final AtomicInteger UNAVAILABLE_COUNT = new AtomicInteger();
     static final AtomicInteger OTHER_COUNT = new AtomicInteger();
     static final List<Thread> THREADS = new ArrayList<>();
+
+    @Before
+    public void setUp() {
+        SUCCESS_COUNT.set(0);
+        UNAVAILABLE_COUNT.set(0);
+        OTHER_COUNT.set(0);
+    }
 
     @Test
     public void testOverloadingServer() throws Exception {
@@ -76,6 +86,31 @@ public class HttpServerTest {
             }
             Assert.assertEquals(32, SUCCESS_COUNT.get());
             Assert.assertEquals(16, UNAVAILABLE_COUNT.get());
+            Assert.assertEquals(0, OTHER_COUNT.get());
+        } finally {
+            webMgr.stop();
+        }
+    }
+
+    @Test
+    public void testChattyServer() throws Exception {
+        int numRequests = 64;
+        int numExecutors = 32;
+        int serverQueueSize = 32;
+        WebManager webMgr = new WebManager();
+        HttpServer server =
+                new HttpServer(webMgr.getBosses(), webMgr.getWorkers(), PORT, numExecutors, serverQueueSize);
+        ChattyServlet servlet = new ChattyServlet(server.ctx(), new String[] { PATH });
+        server.addServlet(servlet);
+        webMgr.add(server);
+        webMgr.start();
+        try {
+            request(numRequests);
+            for (Thread thread : THREADS) {
+                thread.join();
+            }
+            Assert.assertEquals(numRequests, SUCCESS_COUNT.get());
+            Assert.assertEquals(0, UNAVAILABLE_COUNT.get());
             Assert.assertEquals(0, OTHER_COUNT.get());
         } finally {
             webMgr.stop();
@@ -136,8 +171,15 @@ public class HttpServerTest {
                     } else {
                         OTHER_COUNT.incrementAndGet();
                     }
-                    InputStream responseStream = response.getEntity().getContent();
-                    IOUtils.closeQuietly(responseStream);
+                    InputStream in = response.getEntity().getContent();
+                    if (PRINT_TO_CONSOLE) {
+                        BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+                        String line = null;
+                        while ((line = reader.readLine()) != null) {
+                            System.out.println(line);
+                        }
+                    }
+                    IOUtils.closeQuietly(in);
                 } catch (Throwable th) {
                     th.printStackTrace();
                 }

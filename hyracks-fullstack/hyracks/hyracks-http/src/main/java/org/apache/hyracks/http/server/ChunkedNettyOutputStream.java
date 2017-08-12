@@ -27,6 +27,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.DefaultHttpContent;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import io.netty.util.internal.OutOfDirectMemoryError;
 
 public class ChunkedNettyOutputStream extends OutputStream {
 
@@ -50,23 +51,25 @@ public class ChunkedNettyOutputStream extends OutputStream {
 
     @Override
     public void write(byte[] b, int off, int len) throws IOException {
-        if ((off < 0) || (off > b.length) || (len < 0) || ((off + len) > b.length)) {
-            throw new IndexOutOfBoundsException();
-        } else if (len == 0) {
-            return;
-        }
-        if (len > buffer.capacity()) {
-            flush();
-            flush(b, off, len);
-        } else {
-            int space = buffer.writableBytes();
-            if (space >= len) {
-                buffer.writeBytes(b, off, len);
-            } else {
-                buffer.writeBytes(b, off, space);
-                flush();
-                buffer.writeBytes(b, off + space, len - space);
+        try {
+            if ((off < 0) || (off > b.length) || (len < 0) || ((off + len) > b.length)) {
+                throw new IndexOutOfBoundsException();
             }
+            while (len > 0) {
+                int space = buffer.writableBytes();
+                if (space >= len) {
+                    buffer.writeBytes(b, off, len);
+                    len = 0; // NOSONAR
+                } else {
+                    buffer.writeBytes(b, off, space);
+                    len -= space; // NOSONAR
+                    off += space; // NOSONAR
+                    flush();
+                }
+            }
+        } catch (OutOfDirectMemoryError error) {// NOSONAR
+            response.setStatus(HttpResponseStatus.INTERNAL_SERVER_ERROR);
+            throw error;
         }
     }
 
@@ -111,18 +114,6 @@ public class ChunkedNettyOutputStream extends OutputStream {
                 response.error(aBuffer);
                 buffer.clear();
             }
-        }
-    }
-
-    private void flush(byte[] buf, int offset, int len) throws IOException {
-        ensureWritable();
-        ByteBuf aBuffer = ctx.alloc().buffer(len);
-        aBuffer.writeBytes(buf, offset, len);
-        if (response.status() == HttpResponseStatus.OK) {
-            response.beforeFlush();
-            ctx.write(new DefaultHttpContent(aBuffer), ctx.channel().voidPromise());
-        } else {
-            response.error(aBuffer);
         }
     }
 
