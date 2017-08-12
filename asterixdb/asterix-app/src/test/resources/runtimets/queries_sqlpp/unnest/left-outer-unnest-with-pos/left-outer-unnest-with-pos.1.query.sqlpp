@@ -23,7 +23,7 @@ FROM
  {'id': 1, 'list': [2, 3]},
  {'id': 4, 'list': [] },
  {'id': 5, 'list': [6, 7]},
- {'id': 8, 'list': []},
+ {'id': 8, 'list': []}
 ] AS a
 LEFT OUTER UNNEST a.list AS item AT i
 ORDER BY a.id

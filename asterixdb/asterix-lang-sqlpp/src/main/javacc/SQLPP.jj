@@ -291,7 +291,8 @@ class SQLPPParser extends ScopeChecker implements IParser {
         } catch (Error e) {
             // this is here as the JavaCharStream that's below the lexer somtimes throws Errors that are not handled
             // by the ANTLR-generated lexer or parser (e.g it does this for invalid backslash u + 4 hex digits escapes)
-            throw new CompilationException(new ParseException(e.getMessage()));
+            final String msg = e.getClass().getSimpleName() + (e.getMessage() != null ? ": " + e.getMessage() : "");
+            throw new CompilationException(new ParseException(msg));
         } catch (ParseException e) {
             throw new CompilationException("Syntax error: " + getMessage(e));
         }
@@ -2424,19 +2425,19 @@ List<Expression> ExpressionList() throws ParseException:
 }
 {
     (
-      expr = Expression() { exprList.add(expr); }
-      (LOOKAHEAD(1) <COMMA> list = ExpressionList() { exprList.addAll(list); })?
+      expr = Expression()
+      {
+        exprList.add(expr);
+      }
+      ( <COMMA> expr = Expression()
+        {
+          exprList.add(expr);
+        }
+      )*
     )?
-    (LOOKAHEAD(1) Comma())?
     {
-        return exprList;
+      return exprList;
     }
-}
-
-void Comma():
-{}
-{
-   <COMMA>
 }
 
 RecordConstructor RecordConstructor() throws ParseException:
