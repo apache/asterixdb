@@ -261,13 +261,13 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         FileSplit outputFile = null;
         IAWriterFactory writerFactory = PrinterBasedWriterFactory.INSTANCE;
         IResultSerializerFactoryProvider resultSerializerFactoryProvider = ResultSerializerFactoryProvider.INSTANCE;
-        Map<String, String> config = new HashMap<>();
         /* Since the system runs a large number of threads, when HTTP requests don't return, it becomes difficult to
          * find the thread running the request to determine where it has stopped.
          * Setting the thread name helps make that easier
          */
         String threadName = Thread.currentThread().getName();
         Thread.currentThread().setName(QueryTranslator.class.getSimpleName());
+        Map<String, String> config = new HashMap<>();
         try {
             for (Statement stmt : statements) {
                 if (sessionConfig.is(SessionConfig.FORMAT_HTML)) {
@@ -276,10 +276,10 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 validateOperation(appCtx, activeDataverse, stmt);
                 rewriteStatement(stmt); // Rewrite the statement's AST.
                 MetadataProvider metadataProvider = new MetadataProvider(appCtx, activeDataverse);
+                metadataProvider.getConfig().putAll(config);
                 metadataProvider.setWriterFactory(writerFactory);
                 metadataProvider.setResultSerializerFactoryProvider(resultSerializerFactoryProvider);
                 metadataProvider.setOutputFile(outputFile);
-                metadataProvider.setConfig(config);
                 switch (stmt.getKind()) {
                     case Statement.Kind.SET:
                         handleSetStatement(stmt, config);

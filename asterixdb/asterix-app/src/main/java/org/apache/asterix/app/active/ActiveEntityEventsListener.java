@@ -21,7 +21,6 @@ package org.apache.asterix.app.active;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumSet;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -112,7 +111,6 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
         this.appCtx = appCtx;
         this.clusterStateManager = appCtx.getClusterStateManager();
         this.metadataProvider = new MetadataProvider(appCtx, null);
-        metadataProvider.setConfig(new HashMap<>());
         this.hcc = hcc;
         this.entityId = entityId;
         this.datasets = datasets;

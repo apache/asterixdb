@@ -21,7 +21,6 @@ package org.apache.asterix.test.active;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
-import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -117,7 +116,6 @@ public class ActiveEventsListenerTest {
         Mockito.when(ccService.getExecutor()).thenReturn(executor);
         locations = new AlgebricksAbsolutePartitionConstraint(nodes);
         metadataProvider = new MetadataProvider(appCtx, null);
-        metadataProvider.setConfig(new HashMap<>());
         clusterController = new TestClusterControllerActor("CC", handler, allDatasets);
         nodeControllers = new TestNodeControllerActor[2];
         nodeControllers[0] = new TestNodeControllerActor(nodes[0], clusterController);
@@ -133,7 +131,6 @@ public class ActiveEventsListenerTest {
 
     TestUserActor newUser(String name, CcApplicationContext appCtx) {
         MetadataProvider actorMdProvider = new MetadataProvider(appCtx, null);
-        actorMdProvider.setConfig(new HashMap<>());
         return new TestUserActor("User: " + name, actorMdProvider, clusterController);
     }
 
@@ -1387,8 +1384,6 @@ public class ActiveEventsListenerTest {
             Mockito.when(ccService.getExecutor()).thenReturn(executor);
             Mockito.when(ccAppCtx.getStorageComponentProvider()).thenReturn(componentProvider);
             AlgebricksAbsolutePartitionConstraint locations = new AlgebricksAbsolutePartitionConstraint(nodes);
-            MetadataProvider metadataProvider = new MetadataProvider(ccAppCtx, null);
-            metadataProvider.setConfig(new HashMap<>());
             additionalListeners[i] = listener = new TestEventsListener(clusterController, nodeControllers, jobIdFactory,
                     entityId, new ArrayList<>(allDatasets), statementExecutor, ccAppCtx, hcc, locations,
                     new InfiniteRetryPolicyFactory());

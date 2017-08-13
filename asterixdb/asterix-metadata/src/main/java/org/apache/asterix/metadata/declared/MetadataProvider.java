@@ -21,6 +21,7 @@ package org.apache.asterix.metadata.declared;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -143,10 +144,10 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
     private final StorageProperties storageProperties;
     private final Dataverse defaultDataverse;
     private final LockList locks;
+    private final Map<String, String> config;
 
     private MetadataTransactionContext mdTxnCtx;
     private boolean isWriteTransaction;
-    private Map<String, String> config;
     private IAWriterFactory writerFactory;
     private FileSplit outputFile;
     private boolean asyncResults;
@@ -163,14 +164,11 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         this.storageComponentProvider = appCtx.getStorageComponentProvider();
         storageProperties = appCtx.getStorageProperties();
         locks = new LockList();
+        config = new HashMap<>();
     }
 
     public String getPropertyValue(String propertyName) {
         return config.get(propertyName);
-    }
-
-    public void setConfig(Map<String, String> config) {
-        this.config = config;
     }
 
     public void disableBlockingOperator() {
