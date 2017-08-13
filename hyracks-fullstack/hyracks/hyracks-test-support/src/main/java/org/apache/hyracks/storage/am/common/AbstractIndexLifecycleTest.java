@@ -18,11 +18,19 @@
  */
 package org.apache.hyracks.storage.am.common;
 
+import java.nio.file.NoSuchFileException;
+import java.util.logging.Level;
+import java.util.logging.LogRecord;
+
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.util.IoUtil;
 import org.apache.hyracks.storage.common.IIndex;
+import org.apache.hyracks.util.RuntimeLogsMonitor;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 public abstract class AbstractIndexLifecycleTest {
@@ -39,6 +47,16 @@ public abstract class AbstractIndexLifecycleTest {
 
     protected abstract void clearCheckableInsertions() throws Exception;
 
+    @BeforeClass
+    public static void startLogsMonitor() {
+        RuntimeLogsMonitor.monitor("org.apache.hyracks");
+    }
+
+    @AfterClass
+    public static void afterClass() {
+        RuntimeLogsMonitor.stop();
+    }
+
     @Before
     public abstract void setup() throws Exception;
 
@@ -47,6 +65,7 @@ public abstract class AbstractIndexLifecycleTest {
 
     @Test
     public void validSequenceTest() throws Exception {
+        RuntimeLogsMonitor.reset();
         // Double create is invalid
         index.create();
         Assert.assertTrue(persistentStateExists());
@@ -81,16 +100,12 @@ public abstract class AbstractIndexLifecycleTest {
         checkInsertions();
         index.deactivate();
 
-        // Double destroy is invalid
+        // Double destroy is idempotent but should log NoSuchFileException
         index.destroy();
         Assert.assertFalse(persistentStateExists());
-        exceptionCaught = false;
-        try {
-            index.destroy();
-        } catch (Exception e) {
-            exceptionCaught = true;
-        }
-        Assert.assertTrue(exceptionCaught);
+        index.destroy();
+        final LogRecord fileNotFoundWarnLog = new LogRecord(Level.WARNING, IoUtil.FILE_NOT_FOUND_MSG);
+        Assert.assertTrue(RuntimeLogsMonitor.count(fileNotFoundWarnLog) > 0);
         Assert.assertFalse(persistentStateExists());
     }
 
