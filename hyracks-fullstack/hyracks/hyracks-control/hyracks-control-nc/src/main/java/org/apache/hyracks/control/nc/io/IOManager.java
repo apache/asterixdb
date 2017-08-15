@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.channels.ClosedByInterruptException;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -203,10 +204,13 @@ public class IOManager implements IIOManager {
                 n += len;
             }
             return n;
-        } catch (HyracksDataException e) {
-            throw e;
+        } catch (ClosedByInterruptException e) {
+            Thread.currentThread().interrupt();
+            // re-open the closed channel. The channel will be closed during the typical file lifecycle
+            ((FileHandle) fHandle).ensureOpen();
+            throw HyracksDataException.create(e);
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 
