@@ -17,29 +17,12 @@
 # under the License.
 # ------------------------------------------------------------
 
-
-# Compiles data generation source code.
-- hosts: ncs
+- hosts: cc
   tasks:
-    - name: Compile binary
-      include: compile.yml
+    - include_vars: spark_sql_settings.yml
+    - include_vars: "{{ playbook_dir }}/../conf/private_ip.yml"
+    - shell: 'echo {{ item }} >> {{ spark_base }}/conf/slaves'
+      with_items: "{{ nc_ip.split(' ') }}"
 
-# Generates a script for each host.
-- hosts: [localhost,]
-  vars_files:
-    - ../../../conf/benchmark_setting.yml
-  vars:
-      partitions: "{{ groups['ncs'] | length }}"
-  tasks:
-    - name: Generate host-dependent script with sf
-      shell: "ansible-playbook -i {{ node.1}}, genscript.yml \
-              --extra-vars=\"partition={{ node.0 }} partitions={{ partitions }} sf={{ scale }} ansible_ssh_user=ec2-user\""
-      with_indexed_items:  "{{ groups['ncs'] }}"
-      loop_control:
-          loop_var: node
-
-# Generates data and copy them to the data directory.
-- hosts: ncs
-  tasks:
-    - name: Generate data
-      include: gendata.yml
+    - name: Start Sparks
+      shell: "bash {{ spark_base }}/sbin/start-all.sh"

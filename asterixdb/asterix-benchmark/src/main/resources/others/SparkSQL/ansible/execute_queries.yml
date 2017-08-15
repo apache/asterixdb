@@ -1,0 +1,53 @@
+# ------------------------------------------------------------
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+# ------------------------------------------------------------
+
+- hosts: cc
+  tasks:
+    - include_vars: spark_sql_settings.yml
+    - include_vars: "{{ playbook_dir }}/../conf/private_ip.yml"
+    - name: Execute query with Spark
+      shell: bash {{ spark_base }}/bin/spark-shell --executor-memory {{ spark_memory }}m --master spark://{{ cc_ip }}:7077 -i main.scala > ~/sparkLog.txt 2>&1
+      async: 5400
+      poll: 100
+    - name: Fetch the result file from cc
+      fetch:
+        src: "{{ result_file }}"
+        dest: "{{ local_result }}"
+        flat: yes
+
+- hosts: [localhost,]
+  tasks:
+    - include_vars: spark_sql_settings.yml
+    - include_vars: ../../../conf/benchmark_setting.yml
+    - stat:
+        path: "{{ local_result }}"
+      register: p
+    - name: Report result to REST
+      shell: <{{ local_result }} xargs -I % curl -XPOST -m 120 -d % {{ result_url }}
+      when: p.stat.exists
+    - name: Find out what the results are
+      slurp:
+        src: "{{ local_result }}"
+      register: res
+    - debug:
+        msg: "{{ res['content'] | b64decode }}"
+    - name: Remove result
+      file:
+        path: "{{ local_result }}"
+        state: absent

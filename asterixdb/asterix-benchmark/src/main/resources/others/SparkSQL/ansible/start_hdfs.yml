@@ -1,0 +1,80 @@
+# ------------------------------------------------------------
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+# ------------------------------------------------------------
+
+- name: Prepare password-less on master
+  vars:
+
+  hosts: cc
+  tasks:
+    - include_vars: spark_sql_settings.yml
+    - include_vars: "{{ playbook_dir }}/../conf/private_ip.yml"
+    - name: Generate key on master
+      user:
+        name: "{{ user }}"
+        generate_ssh_key: yes
+        ssh_key_bits: 2048
+        ssh_key_file: .ssh/ec2_rsa
+    - name: Make passwordless to current host
+      shell: "cat ~/.ssh/ec2_rsa.pub >> ~/.ssh/authorized_keys"
+    - name: Change permissions on master
+      file:
+        path: ~/.ssh/authorized_keys
+        mode: 0600
+    - name: Download key from master
+      fetch:
+        src: ~/.ssh/ec2_rsa.pub
+        dest: ../conf/master.key
+        flat: yes
+    - file:
+        path: ~/.ssh/config
+        state: absent
+    - name: Bypass host check on master
+      shell: printf "Host *.amazonaws.com 0.0.0.0 {{ cc_ip }}" >> ~/.ssh/config
+    - name: Add hosts to list
+      shell: printf " {{ item }}" >> ~/.ssh/config
+      with_items: "{{ nc_ip.split(' ') }}"
+    - shell: printf "\n    IdentityFile /{{ home_dir }}/.ssh/ec2_rsa\n" >> ~/.ssh/config
+    - shell: printf "\n    StrictHostKeyChecking no\n" >> ~/.ssh/config
+    - file:
+        path: ~/.ssh/config
+        mode: 0600
+
+
+- name: Prepare password-less on slaves
+  hosts: ncs
+  tasks:
+    - name: Ship master key to slaves
+      copy:
+        src: ../conf/master.key
+        dest: "/tmp/master.key"
+        mode: 0600
+    - name: Add master key to authorized_keys list
+      shell: "cat /tmp/master.key >> ~/.ssh/authorized_keys"
+    - name: Change permissions on ncs
+      file:
+        path: ~/.ssh/authorized_keys
+        mode: 0600
+
+- name: Start HDFS
+  hosts: cc
+  tasks:
+    - name: Format HDFS
+      shell: 'bash {{ hadoop_base }}/bin/hdfs namenode -format -force'
+    - name: Start name node
+      shell: 'bash {{ hadoop_base }}/sbin/start-dfs.sh'

@@ -1,0 +1,74 @@
+# ------------------------------------------------------------
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+# ------------------------------------------------------------
+
+
+- name: Create AWS cluster
+  hosts: localhost
+  gather_facts: false
+  vars:
+    inventory: "{{ playbook_dir }}/../conf/inventory"
+    private_ip: "{{ playbook_dir }}/../conf/private_ip.yml"
+    spark_instance_name: "spark_test"
+  tasks:
+    - include_vars: "{{ aws_setting }}"
+
+    - name: Clean inventory file
+      file:
+        path: "{{ inventory }}"
+        state: absent
+
+    - name: Clean private ip file
+      file:
+        path: "{{ private_ip }}"
+        state: absent
+
+    - name: Launch EC2 instances
+      ec2:
+        key_name: "{{ keypair }}"
+        instance_type: "{{ instance_type }}"
+        image: "{{ image }}"
+        count: "{{ count }}"
+        wait: True
+        region: "{{ region }}"
+        instance_tags:
+          Name: "{{ spark_instance_name }}"
+        aws_access_key: "{{ access_key_id }}"
+        aws_secret_key: "{{ secret_access_key }}"
+      register:
+        ec2
+
+    - name: Set name node
+      set_fact:
+        master: "{{ ec2.instances[0] }}"
+
+    - name: Populate inventory file for name node
+      shell: printf "[cc]\n{{ master.public_dns_name }}\n" >> "{{ inventory }}"; printf "cc_ip{{ ":" }} {{ master.private_ip }}\n" >> "{{ private_ip }}";
+
+    - name: Populate section head for slave nodes
+      shell: printf "\n[ncs]\n" >> "{{ inventory }}"; printf "\nnc_ip{{ ":" }}" >> "{{ private_ip }}";
+
+    - name: Populate inventory file for slave nodes
+      shell: printf "{{ node.1.public_dns_name }}\n" >> "{{ inventory }}"; printf " {{ node.1.private_ip }}" >> "{{ private_ip }}"
+      when: node.0 != 0
+      with_indexed_items: "{{ ec2.instances }}"
+      loop_control:
+        loop_var: node
+
+    - name: Setup username
+      shell: printf "\n[all:vars]\nansible_ssh_user={{ user }}\n" >> "{{ inventory }}"

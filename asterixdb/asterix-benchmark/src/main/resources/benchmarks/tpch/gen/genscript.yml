@@ -18,6 +18,8 @@
 # ------------------------------------------------------------
 
 - hosts: all
+  vars:
+      scale_factor: "{{ partitions|float * (ansible_memtotal_mb/1000)|int * sf|float }}"
   tasks:
    - include_vars: settings.yml
 
@@ -26,8 +28,8 @@
         path: "{{ data_dir }}"
         state: directory
 
-   - name: Generate host-dependent data generation script
-     shell: echo "./{{ generator }} -s {{ sf }} -S {{ partition | int + 1 }} -C {{ partitions }}" > "{{ localgen }}"
+   - name: Generate host-dependent data generation script with scale_factor {{ scale_factor }}
+     shell: echo "./{{ generator }} -s {{ scale_factor }} -S {{ partition | int + 1 }} -C {{ partitions }}" > "{{ localgen }}"
 
    - name: Change the permission for data generation script
      file:

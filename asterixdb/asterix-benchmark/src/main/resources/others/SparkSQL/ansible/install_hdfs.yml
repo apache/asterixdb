@@ -1,0 +1,64 @@
+# ------------------------------------------------------------
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+# ------------------------------------------------------------
+
+- name: Install HDFS
+  hosts: all
+  tasks:
+    - include_vars: spark_sql_settings.yml
+    - name: Download Hadoop
+      get_url:
+        url: http://apache.mirrors.hoobly.com/hadoop/common/hadoop-2.8.0/hadoop-2.8.0.tar.gz
+        dest: "{{ home_dir }}/hadoop.tar.gz"
+    - name: Unzip Hadoop
+      unarchive:
+        src: "{{ home_dir }}/hadoop.tar.gz"
+        dest: "{{ home_dir }}"
+        remote_src: yes
+    - name: Remove install package
+      file:
+        state: absent
+        path: "{{ home_dir }}/hadoop.tar.gz"
+
+- name: Add slaves to name node
+  hosts: cc
+  tasks:
+    - include_vars: spark_sql_settings.yml
+    - include_vars: "{{ playbook_dir }}/../conf/private_ip.yml"
+    - file:
+        path: '{{ hadoop_base }}/etc/hadoop/slaves'
+        state: absent
+    - shell: 'echo {{ item }} >> {{ hadoop_base }}/etc/hadoop/slaves'
+      with_items:
+        "{{ nc_ip.split(' ') }}"
+
+- name: Populate configuration file
+  hosts: all
+  tasks:
+    - include_vars: spark_sql_settings.yml
+    - include_vars: "{{ playbook_dir }}/../conf/private_ip.yml"
+    - name: Populate core-site-template.xml
+      template:
+        src: ../conf/core-site-template.xml
+        dest: "{{ hadoop_base }}/etc/hadoop/core-site.xml"
+    - name: Populate hdfs-site-template.xml
+      template:
+        src: ../conf/hdfs-site-template.xml
+        dest: "{{ hadoop_base }}/etc/hadoop/hdfs-site.xml"
+    - name: Add memory constraint on all nodes
+      shell: echo "export HADOOP_HEAPSIZE={{ hdfs_memory }}" >> {{ hadoop_base }}/etc/hadoop/hadoop-env.sh

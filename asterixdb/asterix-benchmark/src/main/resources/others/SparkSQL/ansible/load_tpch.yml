@@ -17,29 +17,17 @@
 # under the License.
 # ------------------------------------------------------------
 
+- hosts: cc
+  tasks:
+    - include_vars: spark_sql_settings.yml
+    - include_vars: ../../../benchmarks/tpch/gen/settings.yml
+    - name: Create TPCH data dir on HDFS
+      shell: 'bash {{ hadoop_base }}/bin/hdfs dfs -mkdir -p {{ data_dir }}'
 
-# Compiles data generation source code.
 - hosts: ncs
   tasks:
-    - name: Compile binary
-      include: compile.yml
-
-# Generates a script for each host.
-- hosts: [localhost,]
-  vars_files:
-    - ../../../conf/benchmark_setting.yml
-  vars:
-      partitions: "{{ groups['ncs'] | length }}"
-  tasks:
-    - name: Generate host-dependent script with sf
-      shell: "ansible-playbook -i {{ node.1}}, genscript.yml \
-              --extra-vars=\"partition={{ node.0 }} partitions={{ partitions }} sf={{ scale }} ansible_ssh_user=ec2-user\""
-      with_indexed_items:  "{{ groups['ncs'] }}"
-      loop_control:
-          loop_var: node
-
-# Generates data and copy them to the data directory.
-- hosts: ncs
-  tasks:
-    - name: Generate data
-      include: gendata.yml
+    - include_vars: spark_sql_settings.yml
+    - include_vars: "{{ playbook_dir }}/../conf/private_ip.yml"
+    - include_vars: ../../../benchmarks/tpch/gen/settings.yml
+    - name: Put data on to HDFS
+      shell: for i in `ls -S {{ data_dir }}/`; do {{ hadoop_base }}/bin/hdfs dfs -put -f {{ data_dir }}/$i hdfs://{{ cc_ip }}:9000/{{ data_dir }}; rm {{ data_dir }}/$i; done

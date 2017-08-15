@@ -72,7 +72,7 @@ for benchmark in $BENCHMARK_PATH/*; do
     for number in 1 2 3
     do
         for query in $queries/*.sqlpp; do
-           ansible-playbook -i $INVENTORY --extra-vars="query_file=${query} report=true metric=${SYSTEM_NAME}" \
+           ansible-playbook -i $INVENTORY --extra-vars="query_file=${query} report=true metric='${SYSTEM_NAME}'" \
                  $ANSIBLE_PATH/runquery.yml
         done
     done

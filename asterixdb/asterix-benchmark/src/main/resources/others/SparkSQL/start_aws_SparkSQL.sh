@@ -17,29 +17,19 @@
 # under the License.
 # ------------------------------------------------------------
 
+#!bin/sh
+pushd `dirname $0` > /dev/null
+SCRIPT_PATH=`pwd -P`
+popd > /dev/null
 
-# Compiles data generation source code.
-- hosts: ncs
-  tasks:
-    - name: Compile binary
-      include: compile.yml
+export ANSIBLE_HOST_KEY_CHECKING=false
+if [[ "$1" = /* ]]; then
+    AWS_SETTING=$1
+else
+    AWS_SETTING=`pwd`/$1
+fi
 
-# Generates a script for each host.
-- hosts: [localhost,]
-  vars_files:
-    - ../../../conf/benchmark_setting.yml
-  vars:
-      partitions: "{{ groups['ncs'] | length }}"
-  tasks:
-    - name: Generate host-dependent script with sf
-      shell: "ansible-playbook -i {{ node.1}}, genscript.yml \
-              --extra-vars=\"partition={{ node.0 }} partitions={{ partitions }} sf={{ scale }} ansible_ssh_user=ec2-user\""
-      with_indexed_items:  "{{ groups['ncs'] }}"
-      loop_control:
-          loop_var: node
+INVENTORY=$SCRIPT_PATH/conf/inventory
 
-# Generates data and copy them to the data directory.
-- hosts: ncs
-  tasks:
-    - name: Generate data
-      include: gendata.yml
+ansible-playbook -i "localhost," --extra-vars="aws_setting=${AWS_SETTING}" $SCRIPT_PATH/ansible/create_aws_cluster.yml
+ansible-playbook -i $INVENTORY $SCRIPT_PATH/ansible/instance_init.yml

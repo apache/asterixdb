@@ -1,0 +1,101 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+import org.apache.spark.sql.Encoders
+import scala.io.Source
+import java.io._
+import org.apache.http.impl.client.DefaultHttpClient
+
+val hdfs_host = "{{ groups['cc'][0] }}:9000"
+val hdfs_data_root = "hdfs://" + hdfs_host + "{{ data_dir }}/"
+val queries_root = "{{ query_files_root }}/"
+val round = {{ test_round }}
+val metric = "{{ metric }}"
+
+// Table Initialization
+case class NATION(N_NATIONKEY: Int, N_NAME: String, N_REGIONKEY: Int,  N_COMMENT: String)
+case class REGION(R_REGIONKEY: Int, R_NAME: String, R_COMMENT: String)
+case class PART(P_PARTKEY: Int, P_NAME: String, P_MFGR: String, P_BRAND: String, P_TYPE: String, P_SIZE: Int, P_CONTAINER: String, P_RETAILPRICE: Float, P_COMMENT: String)
+case class SUPPLIER (S_SUPPKEY: Int, S_NAME: String, S_ADDRESS: String, S_NATIONKEY: Int, S_PHONE: String, S_ACCTBAL: Float, S_COMMENT: String)
+case class PARTSUPP ( S_PARTKEY: Int, PS_SUPPKEY: Int, PS_AVAILQTY: Int, PS_SUPPLYCOST: Float, PS_COMMENT: String)
+case class CUSTOMER (C_CUSTKEY: Int, C_NAME : String, C_ADDRESS : String, C_NATIONKEY: Int, C_PHONE : String, C_ACCTBAL: Float , C_MKTSEGMENT : String , C_COMMENT : String)
+case class ORDERS (O_ORDERKEY: Int, O_CUSTKEY: Int, O_ORDERSTATUS : String, O_TOTALPRICE: Float, O_ORDERDATE: java.sql.Timestamp,
+ O_ORDERPRIORITY: String, O_CLERK : String, O_SHIPPRIORITY: Int, O_COMMENT: String)
+case class LINEITEM (L_ORDERKEY: Int, L_PARTKEY: Int, L_SUPPKEY: Int, L_LINENUMBER: Int, L_QUANTITY: Float,
+ L_EXTENDEDPRICE: Float, L_DISCOUNT: Float, L_TAX: Float, L_RETURNFLAG: String, L_LINESTATUS : String,
+ L_SHIPDATE: java.sql.Timestamp, L_COMMITDATE: java.sql.Timestamp, L_RECEIPTDATE: java.sql.Timestamp, L_SHIPINSTRUCT: String,
+ L_SHIPMODE: String, L_COMMENT: String)
+
+
+val nation = spark.read.option("delimiter","|").schema(Encoders.product[NATION].schema).csv(hdfs_data_root + "nation.*")
+val region = spark.read.option("delimiter","|").schema(Encoders.product[REGION].schema).csv(hdfs_data_root + "region.*")
+val part = spark.read.option("delimiter","|").schema(Encoders.product[PART].schema).csv(hdfs_data_root + "part.*")
+val supp = spark.read.option("delimiter","|").schema(Encoders.product[SUPPLIER].schema).csv(hdfs_data_root + "supplier.*")
+val part_supp = spark.read.option("delimiter","|").schema(Encoders.product[PARTSUPP].schema).csv(hdfs_data_root + "partsupp.*")
+val customer = spark.read.option("delimiter","|").schema(Encoders.product[CUSTOMER].schema).csv(hdfs_data_root + "customer.*")
+val orders = spark.read.option("delimiter","|").schema(Encoders.product[ORDERS].schema).csv(hdfs_data_root + "orders.*")
+val lineitem = spark.read.option("delimiter","|").schema(Encoders.product[LINEITEM].schema).csv(hdfs_data_root + "lineitem.*")
+
+
+nation.createOrReplaceTempView("NATION")
+region.createOrReplaceTempView("REGION")
+part.createOrReplaceTempView("PART")
+supp.createOrReplaceTempView("SUPPLIER")
+part_supp.createOrReplaceTempView("PARTSUPP")
+customer.createOrReplaceTempView("CUSTOMER")
+orders.createOrReplaceTempView("ORDERS")
+lineitem.createOrReplaceTempView("LINEITEM")
+
+spark.sqlContext.cacheTable("NATION")
+spark.sqlContext.cacheTable("REGION")
+spark.sqlContext.cacheTable("PART")
+spark.sqlContext.cacheTable("SUPPLIER")
+spark.sqlContext.cacheTable("PARTSUPP")
+spark.sqlContext.cacheTable("CUSTOMER")
+spark.sqlContext.cacheTable("ORDERS")
+spark.sqlContext.cacheTable("LINEITEM")
+
+// Execute Query
+val queries_dir = new File(queries_root)
+val etime = collection.mutable.Map[String, Float]()
+for (i <- 0 to round) {
+    for (query_file <- queries_dir.listFiles()) {
+        print("Processing Query "+ query_file)
+        val file_name = query_file.getName()
+        val queries = Source.fromFile(query_file)
+        val t0 = System.nanoTime()
+        var query = ""
+        queries.getLines.foreach { line => query += (line + "\n")}
+        spark.sql(query).count()
+        val t1 = System.nanoTime()
+        val elapsed = (t1 - t0) / 1000000000.0f
+        if (i > 0) {
+            if (!etime.contains(file_name)) {
+                etime(file_name) = 0
+            }
+            etime(file_name) += elapsed
+        }
+    }
+}
+
+// Write result
+val writer = new PrintWriter(new File("{{ result_file }}"))
+for ((k, v) <- etime) writer.print("'{\"group\": \""+ k.split('.')(0) + ".sqlpp\", \"metric\": \"" + metric + "\", \"value\": "+ v / round +"}'\n")
+writer.close()
+System.exit(0)

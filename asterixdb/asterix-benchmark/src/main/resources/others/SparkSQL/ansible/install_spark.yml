@@ -17,29 +17,28 @@
 # under the License.
 # ------------------------------------------------------------
 
-
-# Compiles data generation source code.
-- hosts: ncs
+- name: Install Sparks
+  hosts: all
   tasks:
-    - name: Compile binary
-      include: compile.yml
-
-# Generates a script for each host.
-- hosts: [localhost,]
-  vars_files:
-    - ../../../conf/benchmark_setting.yml
-  vars:
-      partitions: "{{ groups['ncs'] | length }}"
-  tasks:
-    - name: Generate host-dependent script with sf
-      shell: "ansible-playbook -i {{ node.1}}, genscript.yml \
-              --extra-vars=\"partition={{ node.0 }} partitions={{ partitions }} sf={{ scale }} ansible_ssh_user=ec2-user\""
-      with_indexed_items:  "{{ groups['ncs'] }}"
-      loop_control:
-          loop_var: node
-
-# Generates data and copy them to the data directory.
-- hosts: ncs
-  tasks:
-    - name: Generate data
-      include: gendata.yml
+    - include_vars: spark_sql_settings.yml
+    - name: Clean old installation if exsits
+      file:
+        path: "{{ spark_base }}"
+        state: absent
+    - name: Download Spark
+      get_url:
+        url: https://d3kbcqa49mib13.cloudfront.net/spark-2.1.1-bin-hadoop2.7.tgz
+        dest: "{{ home_dir }}/spark.tgz"
+    - name: Unzip Spark
+      unarchive:
+        src: "{{ home_dir }}/spark.tgz"
+        dest: "{{ home_dir }}"
+        remote_src: yes
+    - name: Make configuration file
+      shell: "cp {{ spark_base }}/conf/spark-env.sh.template {{ spark_base }}/conf/spark-env.sh"
+    - name: Add memory option
+      shell: echo "SPARK_WORKER_MEMORY={{ spark_memory }}m" >> {{ spark_base }}/conf/spark-env.sh
+    - name: Remove install package
+      file:
+        state: absent
+        path: "{{ home_dir }}/spark.tgz"

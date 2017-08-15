@@ -17,29 +17,28 @@
 # under the License.
 # ------------------------------------------------------------
 
+user: ec2-user
 
-# Compiles data generation source code.
-- hosts: ncs
-  tasks:
-    - name: Compile binary
-      include: compile.yml
+home_dir: "/home/{{ user }}"
 
-# Generates a script for each host.
-- hosts: [localhost,]
-  vars_files:
-    - ../../../conf/benchmark_setting.yml
-  vars:
-      partitions: "{{ groups['ncs'] | length }}"
-  tasks:
-    - name: Generate host-dependent script with sf
-      shell: "ansible-playbook -i {{ node.1}}, genscript.yml \
-              --extra-vars=\"partition={{ node.0 }} partitions={{ partitions }} sf={{ scale }} ansible_ssh_user=ec2-user\""
-      with_indexed_items:  "{{ groups['ncs'] }}"
-      loop_control:
-          loop_var: node
+hadoop_base: "{{ home_dir }}/hadoop-2.8.0"
 
-# Generates data and copy them to the data directory.
-- hosts: ncs
-  tasks:
-    - name: Generate data
-      include: gendata.yml
+spark_base: "{{ home_dir }}/spark-2.1.1-bin-hadoop2.7"
+
+hdfs_memory: "{{ (ansible_memtotal_mb * 0.25)|int|abs }}"
+
+spark_memory: "{{ (ansible_memtotal_mb * 0.5)|int|abs }}"
+
+test_round: 3
+
+query_files_root: "queries"
+
+dfs_replication: 1
+
+result_file: "{{home_dir}}/result.txt"
+
+generator: dbgen
+
+binary_dir: "{{ home_dir }}/{{ generator }}"
+
+local_result: "/tmp/sparkSQL_Result.txt"
