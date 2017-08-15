@@ -29,6 +29,7 @@ import org.apache.asterix.common.messaging.api.INcAddressedMessage;
 import org.apache.asterix.common.replication.INCLifecycleMessage;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.service.IControllerService;
+import org.apache.hyracks.control.nc.NCShutdownHook;
 
 public class StartupTaskResponseMessage implements INCLifecycleMessage, INcAddressedMessage {
 
@@ -47,22 +48,28 @@ public class StartupTaskResponseMessage implements INCLifecycleMessage, INcAddre
         INCMessageBroker broker = (INCMessageBroker) appCtx.getServiceContext().getMessageBroker();
         IControllerService cs = appCtx.getServiceContext().getControllerService();
         boolean success = true;
-        HyracksDataException exception = null;
         try {
-            for (INCLifecycleTask task : tasks) {
-                task.perform(cs);
+            Throwable exception = null;
+            try {
+                for (INCLifecycleTask task : tasks) {
+                    task.perform(cs);
+                }
+            } catch (Throwable e) { //NOSONAR all startup failures should be reported to CC
+                success = false;
+                exception = e;
             }
-        } catch (HyracksDataException e) {
-            success = false;
-            exception = e;
-        }
-        NCLifecycleTaskReportMessage result = new NCLifecycleTaskReportMessage(nodeId, success);
-        result.setException(exception);
-        try {
-            broker.sendMessageToCC(result);
-        } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Failed sending message to cc", e);
-            throw HyracksDataException.create(e);
+            NCLifecycleTaskReportMessage result = new NCLifecycleTaskReportMessage(nodeId, success);
+            result.setException(exception);
+            try {
+                broker.sendMessageToCC(result);
+            } catch (Exception e) {
+                LOGGER.log(Level.SEVERE, "Failed sending message to cc", e);
+            }
+        } finally {
+            if (!success) {
+                // stop NC so that it can be started again
+                Runtime.getRuntime().exit(NCShutdownHook.FAILED_TO_STARTUP_EXIT_CODE); //NOSONAR startup failed
+            }
         }
     }
 

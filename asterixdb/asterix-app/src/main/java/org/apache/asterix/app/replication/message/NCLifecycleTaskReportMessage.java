@@ -28,7 +28,7 @@ public class NCLifecycleTaskReportMessage implements INCLifecycleMessage, ICcAdd
     private static final long serialVersionUID = 1L;
     private final String nodeId;
     private final boolean success;
-    private Exception exception;
+    private Throwable exception;
 
     public NCLifecycleTaskReportMessage(String nodeId, boolean success) {
         this.nodeId = nodeId;
@@ -48,11 +48,11 @@ public class NCLifecycleTaskReportMessage implements INCLifecycleMessage, ICcAdd
         return success;
     }
 
-    public Exception getException() {
+    public Throwable getException() {
         return exception;
     }
 
-    public void setException(Exception exception) {
+    public void setException(Throwable exception) {
         this.exception = exception;
     }
 
