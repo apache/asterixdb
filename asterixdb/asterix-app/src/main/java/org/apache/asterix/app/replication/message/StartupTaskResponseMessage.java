@@ -63,6 +63,7 @@ public class StartupTaskResponseMessage implements INCLifecycleMessage, INcAddre
             try {
                 broker.sendMessageToCC(result);
             } catch (Exception e) {
+                success = false;
                 LOGGER.log(Level.SEVERE, "Failed sending message to cc", e);
             }
         } finally {
