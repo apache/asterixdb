@@ -23,6 +23,7 @@ import java.util.List;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.IHyracksJobBuilder;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
+import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.base.PhysicalOperatorTag;
@@ -70,7 +71,8 @@ public class PreclusteredGroupByPOperator extends AbstractPreclusteredGroupByPOp
         AlgebricksPipeline[] subplans = compileSubplans(inputSchemas[0], gby, opSchema, context);
         IAggregatorDescriptorFactory aggregatorFactory;
 
-        if (gby.getNestedPlans().get(0).getRoots().get(0).getValue()
+        List<ILogicalPlan> nestedPlans = gby.getNestedPlans();
+        if (!nestedPlans.isEmpty() && nestedPlans.get(0).getRoots().get(0).getValue()
                 .getOperatorTag() == LogicalOperatorTag.RUNNINGAGGREGATE) {
             aggregatorFactory = new NestedPlansRunningAggregatorFactory(subplans, keys, fdColumns);
         } else {

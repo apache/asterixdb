@@ -163,6 +163,11 @@ public abstract class AbstractIntroduceGroupByCombinerRule extends AbstractIntro
             }
         }
 
+        // Nothing is pushed.
+        if (bi.modifyGbyMap.isEmpty()) {
+            return null;
+        }
+
         ArrayList<LogicalVariable> newOpGbyList = new ArrayList<LogicalVariable>();
         ArrayList<LogicalVariable> replGbyList = new ArrayList<LogicalVariable>();
         // Find maximal sequence of variable.

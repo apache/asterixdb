@@ -64,6 +64,9 @@ public class PushNestedOrderByUnderPreSortedGroupByRule implements IAlgebraicRew
             return false;
         }
         GroupByOperator gby = (GroupByOperator) op;
+        if (gby.getNestedPlans().isEmpty()) {
+            return false;
+        }
         ILogicalPlan plan = gby.getNestedPlans().get(0);
         AbstractLogicalOperator op1 = (AbstractLogicalOperator) plan.getRoots().get(0).getValue();
         if (op1.getOperatorTag() != LogicalOperatorTag.AGGREGATE) {

@@ -65,27 +65,39 @@ public class EliminateSubplanWithInputCardinalityOneRule implements IAlgebraicRe
             rootRef = opRef;
             invoked = true;
         }
+        return rewriteForOperator(rootRef, opRef, context);
+    }
+
+    private boolean rewriteForOperator(Mutable<ILogicalOperator> rootRef, Mutable<ILogicalOperator> opRef,
+            IOptimizationContext context) throws AlgebricksException {
         AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
         if (op.getInputs().size() <= 0) {
             return false;
         }
         boolean changed = false;
-        for (Mutable<ILogicalOperator> subplanRef : op.getInputs()) {
-            AbstractLogicalOperator op1 = (AbstractLogicalOperator) subplanRef.getValue();
+
+        for (Mutable<ILogicalOperator> currentOpRef : op.getInputs()) {
+            AbstractLogicalOperator op1 = (AbstractLogicalOperator) currentOpRef.getValue();
             if (op1.getOperatorTag() != LogicalOperatorTag.SUBPLAN) {
+                changed |= rewriteForOperator(rootRef, currentOpRef, context);
                 continue;
             }
 
             SubplanOperator subplan = (SubplanOperator) op1;
-            Set<LogicalVariable> usedVarsUp = new ListSet<LogicalVariable>();
+            Set<LogicalVariable> usedVarsUp = new ListSet<>();
             OperatorPropertiesUtil.getFreeVariablesInPath(rootRef.getValue(), subplan, usedVarsUp);
             // TODO(buyingyi): figure out the rewriting for subplan operators with multiple subplans.
             if (subplan.getNestedPlans().size() != 1) {
                 continue;
             }
 
+            // Recursively rewrites the pipelines inside a nested subplan.
+            for (Mutable<ILogicalOperator> nestedRootRef : subplan.getNestedPlans().get(0).getRoots()) {
+                changed |= this.rewriteForOperator(nestedRootRef, nestedRootRef, context);
+            }
+
             ILogicalOperator subplanInputOperator = subplan.getInputs().get(0).getValue();
-            Set<LogicalVariable> subplanInputVars = new ListSet<LogicalVariable>();
+            Set<LogicalVariable> subplanInputVars = new ListSet<>();
             VariableUtilities.getLiveVariables(subplanInputOperator, subplanInputVars);
             int subplanInputVarSize = subplanInputVars.size();
             subplanInputVars.removeAll(usedVarsUp);
@@ -93,31 +105,31 @@ public class EliminateSubplanWithInputCardinalityOneRule implements IAlgebraicRe
             if (subplanInputVars.size() < subplanInputVarSize) {
                 continue;
             }
-            Set<LogicalVariable> freeVars = new ListSet<LogicalVariable>();
+            Set<LogicalVariable> freeVars = new ListSet<>();
             OperatorPropertiesUtil.getFreeVariablesInSubplans(subplan, freeVars);
             boolean cardinalityOne = isCardinalityOne(subplan.getInputs().get(0), freeVars);
-            if (cardinalityOne) {
-                /** If the cardinality of freeVars in the subplan is one, the subplan can be removed. */
-                ILogicalPlan plan = subplan.getNestedPlans().get(0);
-
-                List<Mutable<ILogicalOperator>> rootRefs = plan.getRoots();
-                // TODO(buyingyi): investigate the case of multi-root plans.
-                if (rootRefs.size() != 1) {
-                    continue;
-                }
-
-                // Replaces all Nts' in the nested plan with the Subplan input operator or its deep copy.
-                ILogicalOperator topOperator = rootRefs.get(0).getValue();
-                ReplaceNtsWithSubplanInputOperatorVisitor visitor = new ReplaceNtsWithSubplanInputOperatorVisitor(
-                        context, subplan);
-                ILogicalOperator newTopOperator = topOperator.accept(visitor, null);
-                subplanRef.setValue(newTopOperator);
-                OperatorManipulationUtil.computeTypeEnvironmentBottomUp(newTopOperator, context);
-                changed = true;
-            } else {
+            if (!cardinalityOne) {
                 continue;
             }
+            /** If the cardinality of freeVars in the subplan is one, the subplan can be removed. */
+            ILogicalPlan plan = subplan.getNestedPlans().get(0);
+
+            List<Mutable<ILogicalOperator>> rootRefs = plan.getRoots();
+            // TODO(buyingyi): investigate the case of multi-root plans.
+            if (rootRefs.size() != 1) {
+                continue;
+            }
+
+            // Replaces all Nts' in the nested plan with the Subplan input operator or its deep copy.
+            ILogicalOperator topOperator = rootRefs.get(0).getValue();
+            ReplaceNtsWithSubplanInputOperatorVisitor visitor = new ReplaceNtsWithSubplanInputOperatorVisitor(context,
+                    subplan);
+            ILogicalOperator newTopOperator = topOperator.accept(visitor, null);
+            currentOpRef.setValue(newTopOperator);
+            OperatorManipulationUtil.computeTypeEnvironmentBottomUp(newTopOperator, context);
+            changed = true;
         }
+
         return changed;
     }
 
@@ -133,8 +145,8 @@ public class EliminateSubplanWithInputCardinalityOneRule implements IAlgebraicRe
      */
     private boolean isCardinalityOne(Mutable<ILogicalOperator> opRef, Set<LogicalVariable> freeVars)
             throws AlgebricksException {
-        Set<LogicalVariable> varsWithCardinalityOne = new ListSet<LogicalVariable>();
-        Set<LogicalVariable> varsLiveAtUnnestAndJoin = new ListSet<LogicalVariable>();
+        Set<LogicalVariable> varsWithCardinalityOne = new ListSet<>();
+        Set<LogicalVariable> varsLiveAtUnnestAndJoin = new ListSet<>();
         isCardinalityOne(opRef, freeVars, varsWithCardinalityOne, varsLiveAtUnnestAndJoin);
         varsWithCardinalityOne.removeAll(varsLiveAtUnnestAndJoin);
         return varsWithCardinalityOne.equals(freeVars);
@@ -158,7 +170,7 @@ public class EliminateSubplanWithInputCardinalityOneRule implements IAlgebraicRe
             Set<LogicalVariable> varsWithCardinalityOne, Set<LogicalVariable> varsLiveAtUnnestAndJoin)
                     throws AlgebricksException {
         AbstractLogicalOperator operator = (AbstractLogicalOperator) opRef.getValue();
-        List<LogicalVariable> liveVars = new ArrayList<LogicalVariable>();
+        List<LogicalVariable> liveVars = new ArrayList<>();
         VariableUtilities.getLiveVariables(operator, liveVars);
 
         if (OperatorPropertiesUtil.isCardinalityZeroOrOne(operator)) {
@@ -175,13 +187,6 @@ public class EliminateSubplanWithInputCardinalityOneRule implements IAlgebraicRe
                     || operator.getOperatorTag() == LogicalOperatorTag.LEFTOUTERJOIN) {
                 VariableUtilities.getLiveVariables(operator, varsLiveAtUnnestAndJoin);
             }
-        }
-
-        if (varsWithCardinalityOne.size() == freeVars.size()) {
-            return;
-        }
-        for (Mutable<ILogicalOperator> childRef : operator.getInputs()) {
-            isCardinalityOne(childRef, freeVars, varsWithCardinalityOne, varsLiveAtUnnestAndJoin);
         }
     }
 

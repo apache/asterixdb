@@ -52,11 +52,10 @@ public abstract class AbstractTypeEnvironment implements IVariableTypeEnvironmen
 
     @Override
     public boolean substituteProducedVariable(LogicalVariable v1, LogicalVariable v2) throws AlgebricksException {
-        Object t = varTypeMap.get(v1);
+        Object t = varTypeMap.remove(v1);
         if (t == null) {
             return false;
         }
-        varTypeMap.put(v1, null);
         varTypeMap.put(v2, t);
         return true;
     }

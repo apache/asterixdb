@@ -27,15 +27,10 @@
                                               -- AGGREGATE  |LOCAL|
                                                 -- AGGREGATE  |LOCAL|
                                                   -- STREAM_SELECT  |UNPARTITIONED|
-                                                    -- UNNEST  |UNPARTITIONED|
-                                                      -- SUBPLAN  |UNPARTITIONED|
-                                                              {
-                                                                -- AGGREGATE  |UNPARTITIONED|
-                                                                  -- IN_MEMORY_STABLE_SORT [$$j(ASC)]  |UNPARTITIONED|
-                                                                    -- UNNEST  |UNPARTITIONED|
-                                                                      -- NESTED_TUPLE_SOURCE  |UNPARTITIONED|
-                                                              }
-                                                        -- NESTED_TUPLE_SOURCE  |UNPARTITIONED|
+                                                    -- RUNNING_AGGREGATE  |UNPARTITIONED|
+                                                      -- IN_MEMORY_STABLE_SORT [$$j(ASC)]  |UNPARTITIONED|
+                                                        -- UNNEST  |UNPARTITIONED|
+                                                          -- NESTED_TUPLE_SOURCE  |UNPARTITIONED|
                                             }
                                       -- ASSIGN  |UNPARTITIONED|
                                         -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|
