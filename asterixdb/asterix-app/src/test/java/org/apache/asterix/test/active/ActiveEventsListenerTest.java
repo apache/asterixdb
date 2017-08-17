@@ -302,6 +302,7 @@ public class ActiveEventsListenerTest {
         listener.onStop(Behavior.SUCCEED);
         Action stopAction = users[2].stopActivity(listener);
         stopAction.sync();
+        assertSuccess(stopAction);
         Assert.assertEquals(ActivityState.STOPPED, listener.getState());
     }
 
@@ -423,8 +424,10 @@ public class ActiveEventsListenerTest {
         Assert.assertEquals(ActivityState.RUNNING, listener.getState());
         listener.onStop(Behavior.SUCCEED);
         WaitForStateSubscriber subscriber = new WaitForStateSubscriber(listener, EnumSet.of(ActivityState.STOPPED));
-        users[1].stopActivity(listener);
+        Action stopAction = users[1].stopActivity(listener);
         subscriber.sync();
+        stopAction.sync();
+        assertSuccess(stopAction);
         Assert.assertEquals(ActivityState.STOPPED, listener.getState());
     }
 
@@ -485,10 +488,12 @@ public class ActiveEventsListenerTest {
                 new WaitForStateSubscriber(listener, EnumSet.of(ActivityState.RECOVERING));
         recoveringSubscriber.sync();
         listener.onStop(Behavior.SUCCEED);
-        users[0].stopActivity(listener);
+        Action stopAction = users[0].stopActivity(listener);
         listener.allowStep();
         runningSubscriber.sync();
         stopSubscriber.sync();
+        stopAction.sync();
+        assertSuccess(stopAction);
         Assert.assertEquals(ActivityState.STOPPED, listener.getState());
     }
 
@@ -511,10 +516,12 @@ public class ActiveEventsListenerTest {
                 new WaitForStateSubscriber(listener, EnumSet.of(ActivityState.RECOVERING));
         recoveringSubscriber.sync();
         listener.onStop(Behavior.SUCCEED);
-        users[0].stopActivity(listener);
+        Action stopAction = users[0].stopActivity(listener);
         listener.allowStep();
         secondTempFailSubscriber.sync();
         stopSubscriber.sync();
+        stopAction.sync();
+        assertSuccess(stopAction);
         Assert.assertEquals(ActivityState.STOPPED, listener.getState());
     }
 
@@ -537,10 +544,12 @@ public class ActiveEventsListenerTest {
                 new WaitForStateSubscriber(listener, EnumSet.of(ActivityState.RECOVERING));
         recoveringSubscriber.sync();
         listener.onStop(Behavior.SUCCEED);
-        users[0].stopActivity(listener);
+        Action stopAction = users[0].stopActivity(listener);
         listener.allowStep();
         secondTempFailSubscriber.sync();
         stopSubscriber.sync();
+        stopAction.sync();
+        assertSuccess(stopAction);
         Assert.assertEquals(ActivityState.STOPPED, listener.getState());
     }
 

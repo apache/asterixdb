@@ -94,6 +94,7 @@ public class HttpServerTest {
 
     @Test
     public void testChattyServer() throws Exception {
+        ChattyServlet.printMemUsage();
         int numRequests = 64;
         int numExecutors = 32;
         int serverQueueSize = 32;

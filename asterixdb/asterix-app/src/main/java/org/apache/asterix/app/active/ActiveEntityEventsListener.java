@@ -362,7 +362,16 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
             cancelRecovery = false;
             setState(ActivityState.TEMPORARILY_FAILED);
             LOGGER.log(level, "Recovery task has been submitted");
-            recoveryTask = executor.submit(() -> doRecover(policy));
+            recoveryTask = executor.submit(() -> {
+                String nameBefore = Thread.currentThread().getName();
+                try {
+                    Thread.currentThread().setName("RecoveryTask (" + entityId + ")");
+                    doRecover(policy);
+                } finally {
+                    Thread.currentThread().setName(nameBefore);
+                }
+                return null;
+            });
         }
     }
 
@@ -378,11 +387,13 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
             synchronized (this) {
                 if (cancelRecovery) {
                     recoveryTask = null;
+                    notifyAll();
                     return null;
                 }
                 while (clusterStateManager.getState() != ClusterState.ACTIVE) {
                     if (cancelRecovery) {
                         recoveryTask = null;
+                        notifyAll();
                         return null;
                     }
                     wait();
@@ -398,8 +409,15 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
             }
             synchronized (this) {
                 try {
+                    if (cancelRecovery) {
+                        recoveryTask = null;
+                        notifyAll();
+                        return null;
+                    }
                     setState(ActivityState.RECOVERING);
                     doStart(metadataProvider);
+                    recoveryTask = null;
+                    notifyAll();
                     return null;
                 } catch (Exception e) {
                     LOGGER.log(level, "Attempt to revive " + entityId + " failed", e);
@@ -409,6 +427,14 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
                     metadataProvider.getLocks().reset();
                 }
                 notifyAll();
+            }
+        }
+        // Recovery task is essntially over now either through failure or through cancellation(stop)
+        synchronized (this) {
+            recoveryTask = null;
+            notifyAll();
+            if (state != ActivityState.TEMPORARILY_FAILED) {
+                return null;
             }
         }
         IMetadataLockManager lockManager = metadataProvider.getApplicationContext().getMetadataLockManager();
@@ -422,7 +448,6 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
             synchronized (this) {
                 if (state == ActivityState.TEMPORARILY_FAILED) {
                     setState(ActivityState.PERMANENTLY_FAILED);
-                    recoveryTask = null;
                 }
                 notifyAll();
             }
@@ -464,49 +489,40 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
             throws HyracksDataException, AlgebricksException;
 
     @Override
-    public void stop(MetadataProvider metadataProvider) throws HyracksDataException, InterruptedException {
-        Future<Void> aRecoveryTask = null;
-        synchronized (this) {
-            waitForNonTransitionState();
-            if (state != ActivityState.RUNNING && state != ActivityState.PERMANENTLY_FAILED
-                    && state != ActivityState.TEMPORARILY_FAILED) {
-                throw new RuntimeDataException(ErrorCode.ACTIVE_ENTITY_CANNOT_BE_STOPPED, entityId, state);
-            }
-            if (state == ActivityState.TEMPORARILY_FAILED || state == ActivityState.PERMANENTLY_FAILED) {
-                if (recoveryTask != null) {
-                    aRecoveryTask = recoveryTask;
-                    cancelRecovery = true;
-                    recoveryTask.cancel(true);
-                }
-                setState(ActivityState.STOPPED);
-                try {
-                    setRunning(metadataProvider, false);
-                } catch (Exception e) {
-                    LOGGER.log(Level.SEVERE, "Failed to set the entity state as not running " + entityId, e);
-                    throw HyracksDataException.create(e);
-                }
-            } else if (state == ActivityState.RUNNING) {
-                setState(ActivityState.STOPPING);
-                try {
-                    doStop(metadataProvider);
-                    setRunning(metadataProvider, false);
-                } catch (Exception e) {
-                    setState(ActivityState.PERMANENTLY_FAILED);
-                    LOGGER.log(Level.SEVERE, "Failed to stop the entity " + entityId, e);
-                    throw HyracksDataException.create(e);
-                }
-            } else {
-                throw new RuntimeDataException(ErrorCode.ACTIVE_ENTITY_CANNOT_BE_STOPPED, entityId, state);
-            }
+    public synchronized void stop(MetadataProvider metadataProvider) throws HyracksDataException, InterruptedException {
+        waitForNonTransitionState();
+        if (state != ActivityState.RUNNING && state != ActivityState.PERMANENTLY_FAILED
+                && state != ActivityState.TEMPORARILY_FAILED) {
+            throw new RuntimeDataException(ErrorCode.ACTIVE_ENTITY_CANNOT_BE_STOPPED, entityId, state);
         }
-        try {
-            if (aRecoveryTask != null) {
-                aRecoveryTask.get();
+        if (state == ActivityState.TEMPORARILY_FAILED || state == ActivityState.PERMANENTLY_FAILED) {
+            if (recoveryTask != null) {
+                setState(ActivityState.STOPPING);
+                cancelRecovery = true;
+                recoveryTask.cancel(true);
+                while (recoveryTask != null) {
+                    wait();
+                }
             }
-        } catch (InterruptedException e) {
-            throw e;
-        } catch (Exception e) {
-            throw HyracksDataException.create(e);
+            setState(ActivityState.STOPPED);
+            try {
+                setRunning(metadataProvider, false);
+            } catch (Exception e) {
+                LOGGER.log(Level.SEVERE, "Failed to set the entity state as not running " + entityId, e);
+                throw HyracksDataException.create(e);
+            }
+        } else if (state == ActivityState.RUNNING) {
+            setState(ActivityState.STOPPING);
+            try {
+                doStop(metadataProvider);
+                setRunning(metadataProvider, false);
+            } catch (Exception e) {
+                setState(ActivityState.PERMANENTLY_FAILED);
+                LOGGER.log(Level.SEVERE, "Failed to stop the entity " + entityId, e);
+                throw HyracksDataException.create(e);
+            }
+        } else {
+            throw new RuntimeDataException(ErrorCode.ACTIVE_ENTITY_CANNOT_BE_STOPPED, entityId, state);
         }
     }
 

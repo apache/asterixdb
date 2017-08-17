@@ -34,6 +34,7 @@ import java.util.logging.Logger;
 import org.apache.hyracks.http.api.IServlet;
 
 import io.netty.bootstrap.ServerBootstrap;
+import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
@@ -83,6 +84,8 @@ public class HttpServer {
         executor = new ThreadPoolExecutor(numExecutorThreads, numExecutorThreads, 0L, TimeUnit.MILLISECONDS,
                 new LinkedBlockingQueue<>(requestQueueSize),
                 runnable -> new Thread(runnable, "HttpExecutor(port:" + port + ")-" + threadId.getAndIncrement()));
+        long directMemoryBudget = numExecutorThreads * (long) HIGH_WRITE_BUFFER_WATER_MARK;
+        LOGGER.log(Level.INFO, "The direct memory budget for this server is " + directMemoryBudget + " bytes");
     }
 
     public final void start() throws Exception { // NOSONAR
@@ -194,6 +197,7 @@ public class HttpServer {
         Collections.sort(servlets, (l1, l2) -> l2.getPaths()[0].length() - l1.getPaths()[0].length());
         ServerBootstrap b = new ServerBootstrap();
         b.group(bossGroup, workerGroup).channel(NioServerSocketChannel.class)
+                .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
                 .childOption(ChannelOption.WRITE_BUFFER_WATER_MARK, WRITE_BUFFER_WATER_MARK)
                 .handler(new LoggingHandler(LogLevel.DEBUG)).childHandler(new HttpServerInitializer(this));
         channel = b.bind(port).sync().channel();
@@ -255,7 +259,7 @@ public class HttpServer {
     }
 
     protected HttpServerHandler createHttpHandler(int chunkSize) {
-        return new HttpServerHandler<>(this, chunkSize);
+        return new HttpServerHandler(this, chunkSize);
     }
 
     public ExecutorService getExecutor() {

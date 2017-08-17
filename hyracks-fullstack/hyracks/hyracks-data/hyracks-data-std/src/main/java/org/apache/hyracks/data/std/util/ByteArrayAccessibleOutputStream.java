@@ -23,7 +23,7 @@ import java.util.Arrays;
 
 public class ByteArrayAccessibleOutputStream extends ByteArrayOutputStream {
 
-    private static final int MAX_SIZE = 1024 * 1024 * 64;
+    private static final int MAX_SIZE = 1024 * 1024 * 32;
     private static final double BUFFER_INCREMENT_FACTOR = 1.5;
 
     public ByteArrayAccessibleOutputStream() {
