@@ -120,6 +120,7 @@ public class LSMHarness implements ILSMHarness {
                             // There is only a single component. There is nothing to merge.
                             return false;
                         }
+                        break;
                     default:
                         break;
                 }
@@ -161,7 +162,9 @@ public class LSMHarness implements ILSMHarness {
             }
             entranceSuccessful = numEntered == components.size();
         } catch (Throwable e) {
-            e.printStackTrace();
+            if (LOGGER.isLoggable(Level.SEVERE)) {
+                LOGGER.log(Level.SEVERE, opType.name() + " failed to enter components on " + lsmIndex, e);
+            }
             throw e;
         } finally {
             if (!entranceSuccessful) {
@@ -223,12 +226,8 @@ public class LSMHarness implements ILSMHarness {
                      */
                     if (opType == LSMOperationType.FLUSH) {
                         opTracker.notifyAll();
-                        while (mergePolicy.isMergeLagging(lsmIndex)) {
-                            try {
-                                opTracker.wait();
-                            } catch (InterruptedException e) {
-                                //ignore
-                            }
+                        if (!failedOperation) {
+                            waitForLaggingMerge();
                         }
                     } else if (opType == LSMOperationType.MERGE) {
                         opTracker.notifyAll();
@@ -274,7 +273,7 @@ public class LSMHarness implements ILSMHarness {
                     switch (opType) {
                         case FLUSH:
                             // newComponent is null if the flush op. was not performed.
-                            if (newComponent != null) {
+                            if (!failedOperation && newComponent != null) {
                                 lsmIndex.addDiskComponent(newComponent);
                                 if (replicationEnabled) {
                                     componentsToBeReplicated.clear();
@@ -286,7 +285,7 @@ public class LSMHarness implements ILSMHarness {
                             break;
                         case MERGE:
                             // newComponent is null if the merge op. was not performed.
-                            if (newComponent != null) {
+                            if (!failedOperation && newComponent != null) {
                                 lsmIndex.subsumeMergedComponents(newComponent, ctx.getComponentHolder());
                                 if (replicationEnabled) {
                                     componentsToBeReplicated.clear();
@@ -300,7 +299,9 @@ public class LSMHarness implements ILSMHarness {
                             break;
                     }
                 } catch (Throwable e) {
-                    e.printStackTrace();
+                    if (LOGGER.isLoggable(Level.SEVERE)) {
+                        LOGGER.log(Level.SEVERE, e.getMessage(), e);
+                    }
                     throw e;
                 } finally {
                     if (failedOperation && (opType == LSMOperationType.MODIFICATION
@@ -351,7 +352,9 @@ public class LSMHarness implements ILSMHarness {
                         ((AbstractLSMDiskComponent) c).destroy();
                     }
                 } catch (Throwable e) {
-                    LOGGER.log(Level.WARNING, "Failure scheduling replication or destroying merged component", e);
+                    if (LOGGER.isLoggable(Level.WARNING)) {
+                        LOGGER.log(Level.WARNING, "Failure scheduling replication or destroying merged component", e);
+                    }
                     throw e;
                 }
             }
@@ -456,7 +459,7 @@ public class LSMHarness implements ILSMHarness {
             try {
                 exitComponents(ctx, LSMOperationType.SEARCH, null, false);
             } catch (Exception e) {
-                throw new HyracksDataException(e);
+                throw HyracksDataException.create(e);
             }
         }
     }
@@ -512,7 +515,9 @@ public class LSMHarness implements ILSMHarness {
             lsmIndex.markAsValid(newComponent);
         } catch (Throwable e) {
             failedOperation = true;
-            e.printStackTrace();
+            if (LOGGER.isLoggable(Level.SEVERE)) {
+                LOGGER.log(Level.SEVERE, "Flush failed on " + lsmIndex, e);
+            }
             throw e;
         } finally {
             exitComponents(ctx, LSMOperationType.FLUSH, newComponent, failedOperation);
@@ -561,7 +566,9 @@ public class LSMHarness implements ILSMHarness {
             lsmIndex.markAsValid(newComponent);
         } catch (Throwable e) {
             failedOperation = true;
-            LOGGER.log(Level.SEVERE, "Failed merge operation on " + lsmIndex, e);
+            if (LOGGER.isLoggable(Level.SEVERE)) {
+                LOGGER.log(Level.SEVERE, "Failed merge operation on " + lsmIndex, e);
+            }
             throw e;
         } finally {
             exitComponents(ctx, LSMOperationType.MERGE, newComponent, failedOperation);
@@ -616,12 +623,10 @@ public class LSMHarness implements ILSMHarness {
     @Override
     public void scheduleReplication(ILSMIndexOperationContext ctx, List<ILSMDiskComponent> lsmComponents,
             boolean bulkload, LSMOperationType opType) throws HyracksDataException {
-
         //enter the LSM components to be replicated to prevent them from being deleted until they are replicated
         if (!getAndEnterComponents(ctx, LSMOperationType.REPLICATE, false)) {
             return;
         }
-
         lsmIndex.scheduleReplication(ctx, lsmComponents, bulkload, ReplicationOperation.REPLICATE, opType);
     }
 
@@ -715,6 +720,30 @@ public class LSMHarness implements ILSMHarness {
             }
         }
         throw HyracksDataException.create(ErrorCode.CANNOT_MODIFY_INDEX_DISK_IS_FULL);
+    }
+
+    /**
+     * Waits for any lagging merge operations to finish to avoid breaking
+     * the merge policy (i.e. adding a new disk component can make the
+     * number of mergable immutable components > maxToleranceComponentCount
+     * by the merge policy)
+     *
+     * @throws HyracksDataException
+     */
+    private void waitForLaggingMerge() throws HyracksDataException {
+        synchronized (opTracker) {
+            while (mergePolicy.isMergeLagging(lsmIndex)) {
+                try {
+                    opTracker.wait();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    if (LOGGER.isLoggable(Level.WARNING)) {
+                        LOGGER.log(Level.WARNING, "Ignoring interrupt while waiting for lagging merge on " + lsmIndex,
+                                e);
+                    }
+                }
+            }
+        }
     }
 
     @Override
