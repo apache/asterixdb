@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
@@ -33,6 +34,8 @@ import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpRequest;
 
 public class HttpUtil {
+
+    private static final Pattern PARENT_DIR = Pattern.compile("/[^./]+/\\.\\./");
 
     private HttpUtil() {
     }
@@ -131,4 +134,15 @@ public class HttpUtil {
                 return null;
         }
     }
+
+    public static String canonicalize(CharSequence requestURL) {
+        String clusterURL = "";
+        String newClusterURL = requestURL.toString();
+        while (!clusterURL.equals(newClusterURL)) {
+            clusterURL = newClusterURL;
+            newClusterURL = PARENT_DIR.matcher(clusterURL).replaceAll("/");
+        }
+        return clusterURL;
+    }
+
 }

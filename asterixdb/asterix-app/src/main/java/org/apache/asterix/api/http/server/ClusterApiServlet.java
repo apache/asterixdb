@@ -26,7 +26,6 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Pattern;
 
 import org.apache.asterix.runtime.utils.CcApplicationContext;
 import org.apache.asterix.runtime.utils.ClusterStateManager;
@@ -50,7 +49,6 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 public class ClusterApiServlet extends AbstractServlet {
 
     private static final Logger LOGGER = Logger.getLogger(ClusterApiServlet.class.getName());
-    private static final Pattern PARENT_DIR = Pattern.compile("/[^./]+/\\.\\./");
     protected static final String NODE_ID_KEY = "node_id";
     protected static final String CONFIG_URI_KEY = "configUri";
     protected static final String STATS_URI_KEY = "statsUri";
@@ -104,15 +102,8 @@ public class ClusterApiServlet extends AbstractServlet {
                 Section.COMMON, getConfigSelector()));
 
         ArrayNode ncs = (ArrayNode) json.get("ncs");
-        final StringBuilder requestURL = new StringBuilder("http://");
-        requestURL.append(request.getHeader(HttpHeaderNames.HOST));
-        requestURL.append(request.getHttpRequest().uri());
-        if (requestURL.charAt(requestURL.length() - 1) != '/') {
-            requestURL.append('/');
-        }
-        requestURL.append(pathToNode);
-        String clusterURL = canonicalize(requestURL);
-        String adminURL = canonicalize(clusterURL + "../");
+        String clusterURL = resolveClusterUrl(request, pathToNode);
+        String adminURL = HttpUtil.canonicalize(clusterURL + "../");
         String nodeURL = clusterURL + "node/";
         for (int i = 0; i < ncs.size(); i++) {
             ObjectNode nc = (ObjectNode) ncs.get(i);
@@ -137,18 +128,20 @@ public class ClusterApiServlet extends AbstractServlet {
         return json;
     }
 
+    protected String resolveClusterUrl(IServletRequest request, String pathToNode) {
+        final StringBuilder requestURL = new StringBuilder("http://");
+        requestURL.append(request.getHeader(HttpHeaderNames.HOST));
+        requestURL.append(request.getHttpRequest().uri());
+        if (requestURL.charAt(requestURL.length() - 1) != '/') {
+            requestURL.append('/');
+        }
+        requestURL.append(pathToNode);
+        return HttpUtil.canonicalize(requestURL);
+    }
+
     protected Predicate<IOption> getConfigSelector() {
         return option -> !option.hidden() && option != ControllerConfig.Option.CONFIG_FILE
                 && option != ControllerConfig.Option.CONFIG_FILE_URL;
     }
 
-    private String canonicalize(CharSequence requestURL) {
-        String clusterURL = "";
-        String newClusterURL = requestURL.toString();
-        while (!clusterURL.equals(newClusterURL)) {
-            clusterURL = newClusterURL;
-            newClusterURL = PARENT_DIR.matcher(clusterURL).replaceAll("/");
-        }
-        return clusterURL;
-    }
 }
