@@ -100,7 +100,7 @@
                   <pluginExecutionFilter>
                     <groupId>org.apache.asterix</groupId>
                     <artifactId>license-automation-plugin</artifactId>
-                    <versionRange>${project.version}</versionRange>
+                    <versionRange>[0.0,)</versionRange>
                     <goals>
                       <goal>generate</goal>
                     </goals>

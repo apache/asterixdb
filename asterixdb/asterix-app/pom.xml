@@ -245,7 +245,7 @@
                   <pluginExecutionFilter>
                     <groupId>org.apache.asterix</groupId>
                     <artifactId>asterix-test-datagenerator-maven-plugin</artifactId>
-                    <versionRange>[0.8.9-SNAPSHOT,)</versionRange>
+                    <versionRange>[0.0,)</versionRange>
                     <goals>
                       <goal>generate-testdata</goal>
                     </goals>

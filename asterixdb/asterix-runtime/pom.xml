@@ -68,7 +68,7 @@
                   <pluginExecutionFilter>
                     <groupId>org.apache.asterix</groupId>
                     <artifactId>asterix-evaluator-generator-maven-plugin</artifactId>
-                    <versionRange>(0.8.8-incubating,)</versionRange>
+                    <versionRange>[0.0,)</versionRange>
                     <goals>
                       <goal>generate-evaluator</goal>
                     </goals>

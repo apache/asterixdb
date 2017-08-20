@@ -189,7 +189,7 @@
                   <pluginExecutionFilter>
                     <groupId> org.apache.asterix</groupId>
                     <artifactId> lexer-generator-maven-plugin</artifactId>
-                    <versionRange>[0.1,)</versionRange>
+                    <versionRange>[0.0,)</versionRange>
                     <goals>
                       <goal>generate-lexer</goal>
                     </goals>
@@ -204,7 +204,7 @@
                   <pluginExecutionFilter>
                     <groupId> org.codehaus.mojo</groupId>
                     <artifactId>build-helper-maven-plugin</artifactId>
-                    <versionRange>[1.7,)</versionRange>
+                    <versionRange>[0.0,)</versionRange>
                     <goals>
                       <goal>add-source</goal>
                     </goals>

@@ -58,7 +58,6 @@
       <plugin>
         <groupId>org.apache.hyracks</groupId>
         <artifactId>license-automation-plugin</artifactId>
-        <version>${hyracks.version}</version>
         <executions>
           <execution>
             <phase>generate-resources</phase>
@@ -146,7 +145,7 @@
                   <pluginExecutionFilter>
                     <groupId>org.apache.hyracks</groupId>
                     <artifactId>license-automation-plugin</artifactId>
-                    <versionRange>${hyracks.version}</versionRange>
+                    <versionRange>[0.0,)</versionRange>
                     <goals>
                       <goal>generate</goal>
                     </goals>
