@@ -72,7 +72,7 @@ public class ActivePartitionMessage implements ICcAddressedMessage {
 
     @Override
     public String toString() {
-        return ActivePartitionMessage.class.getSimpleName() + '-' + event;
+        return activeRuntimeId + ":" + ActivePartitionMessage.class.getSimpleName() + '-' + event;
     }
 
     @Override
