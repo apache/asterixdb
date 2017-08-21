@@ -82,7 +82,11 @@ public class HttpRequestHandler implements Callable<Void> {
     }
 
     public void reject() throws IOException {
-        response.setStatus(HttpResponseStatus.SERVICE_UNAVAILABLE);
-        response.close();
+        try {
+            response.setStatus(HttpResponseStatus.SERVICE_UNAVAILABLE);
+            response.close();
+        } finally {
+            request.getHttpRequest().release();
+        }
     }
 }

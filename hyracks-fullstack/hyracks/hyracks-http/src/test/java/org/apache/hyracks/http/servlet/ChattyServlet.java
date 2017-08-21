@@ -54,6 +54,11 @@ public class ChattyServlet extends AbstractServlet {
     }
 
     @Override
+    protected void post(IServletRequest request, IServletResponse response) throws Exception {
+        get(request, response);
+    }
+
+    @Override
     protected void get(IServletRequest request, IServletResponse response) throws Exception {
         response.setStatus(HttpResponseStatus.OK);
         HttpUtil.setContentType(response, HttpUtil.ContentType.TEXT_HTML, HttpUtil.Encoding.UTF8);

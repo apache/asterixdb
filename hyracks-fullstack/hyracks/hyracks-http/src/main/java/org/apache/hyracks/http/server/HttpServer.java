@@ -60,6 +60,7 @@ public class HttpServer {
     private final Object lock = new Object();
     private final AtomicInteger threadId = new AtomicInteger();
     private final ConcurrentMap<String, Object> ctx;
+    private final LinkedBlockingQueue<Runnable> workQueue;
     private final List<IServlet> servlets;
     private final EventLoopGroup bossGroup;
     private final EventLoopGroup workerGroup;
@@ -81,8 +82,8 @@ public class HttpServer {
         this.port = port;
         ctx = new ConcurrentHashMap<>();
         servlets = new ArrayList<>();
-        executor = new ThreadPoolExecutor(numExecutorThreads, numExecutorThreads, 0L, TimeUnit.MILLISECONDS,
-                new LinkedBlockingQueue<>(requestQueueSize),
+        workQueue = new LinkedBlockingQueue<>(requestQueueSize);
+        executor = new ThreadPoolExecutor(numExecutorThreads, numExecutorThreads, 0L, TimeUnit.MILLISECONDS, workQueue,
                 runnable -> new Thread(runnable, "HttpExecutor(port:" + port + ")-" + threadId.getAndIncrement()));
         long directMemoryBudget = numExecutorThreads * (long) HIGH_WRITE_BUFFER_WATER_MARK
                 + numExecutorThreads * HttpServerInitializer.RESPONSE_CHUNK_SIZE;
@@ -269,5 +270,9 @@ public class HttpServer {
 
     protected EventLoopGroup getWorkerGroup() {
         return workerGroup;
+    }
+
+    public int getWorkQueueSize() {
+        return workQueue.size();
     }
 }

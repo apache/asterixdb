@@ -113,7 +113,7 @@ public class ChunkedResponse implements IServletResponse {
         } else {
             // There was an error
             if (headerSent) {
-                LOGGER.log(Level.WARNING,"Error after header write of chunked response");
+                LOGGER.log(Level.WARNING, "Error after header write of chunked response");
                 if (error != null) {
                     error.release();
                 }

@@ -27,6 +27,9 @@
   <artifactId>hyracks-http</artifactId>
   <properties>
     <root.dir>${basedir}/../..</root.dir>
+    <direct.mem>-XX:MaxDirectMemorySize</direct.mem>
+    <num.arenas>-Dio.netty.allocator.numDirectArenas</num.arenas>
+    <max.order>-Dio.netty.allocator.maxOrder</max.order>
   </properties>
   <build>
     <plugins>
@@ -34,7 +37,7 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
-          <argLine>-XX:MaxDirectMemorySize=16M</argLine>
+          <argLine>${direct.mem}=16M ${num.arenas}=4 ${max.order}=7</argLine>
         </configuration>
       </plugin>
     </plugins>

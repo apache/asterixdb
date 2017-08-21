@@ -62,6 +62,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+
 import io.netty.handler.codec.http.HttpResponseStatus;
 
 public class QueryServiceServlet extends AbstractQueryApiServlet {
@@ -93,6 +94,12 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
             // Servlet methods should not throw exceptions
             // http://cwe.mitre.org/data/definitions/600.html
             GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, e.getMessage(), e);
+        } catch (Throwable th) {// NOSONAR: Logging and re-throwing
+            try {
+                GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, th.getMessage(), th);
+            } catch (Throwable ignored) { // NOSONAR: Logging failure
+            }
+            throw th;
         }
     }
 

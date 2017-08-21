@@ -28,16 +28,39 @@ import org.apache.hyracks.http.server.utils.HttpUtil;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
 
-public class SlowServlet extends AbstractServlet {
-    public SlowServlet(ConcurrentMap<String, Object> ctx, String[] paths) {
+public class SleepyServlet extends AbstractServlet {
+
+    private volatile boolean sleep = true;
+
+    public SleepyServlet(ConcurrentMap<String, Object> ctx, String[] paths) {
         super(ctx, paths);
+    }
+
+    @Override
+    protected void post(IServletRequest request, IServletResponse response) throws Exception {
+        get(request, response);
     }
 
     @Override
     protected void get(IServletRequest request, IServletResponse response) throws Exception {
         response.setStatus(HttpResponseStatus.OK);
-        Thread.sleep(5000); // NOSONAR
+        if (sleep) {
+            synchronized (this) {
+                while (sleep) {
+                    this.wait();
+                }
+            }
+        }
         HttpUtil.setContentType(response, HttpUtil.ContentType.TEXT_HTML, HttpUtil.Encoding.UTF8);
         response.outputStream().write("I am playing hard to get".getBytes(StandardCharsets.UTF_8));
+    }
+
+    public synchronized void wakeUp() {
+        sleep = false;
+        notifyAll();
+    }
+
+    public void sleep() {
+        sleep = true;
     }
 }
