@@ -34,12 +34,12 @@ create type tpch.OrderTypetmp as
   o_clerk : string,
   o_shippriority : bigint,
   o_comment : string
-}
+};
 
 create type tpch.OrderType as
  closed {
   nested : OrderTypetmp
-}
+};
 
 create  dataset Orderstmp(OrderTypetmp) primary key o_orderkey;
 

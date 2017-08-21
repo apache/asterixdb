@@ -36,7 +36,7 @@ create type test.EmpType as
   age : bigint?,
   interests : {{string}}?,
   children : [string]?
-}
+};
 
 create external  dataset Emp(EmpType) using localfs((`path`=`asterix_nc1://data/nontagged/employee.json`),(`format`=`adm`));
 

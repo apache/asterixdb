@@ -31,4 +31,4 @@ use test;
 create function printName()
 {
 'AsterixDB Shared nothing parallel BDMS'
-}
+};

@@ -41,7 +41,7 @@ create type tpch.LineItemType as
   l_shipinstruct : string,
   l_shipmode : string,
   l_comment : string
-}
+};
 
 create  nodegroup group1 if not exists  on
     asterix_nc1,
@@ -49,7 +49,7 @@ create  nodegroup group1 if not exists  on
 ;
 create  dataset LineItems_q1(LineItemType) primary key l_orderkey,l_linenumber on group1;
 
-write output to asterix_nc1:"rttest/tpch_q1_pricing_summary_report_nt.adm"
+write output to asterix_nc1:"rttest/tpch_q1_pricing_summary_report_nt.adm";
 select element {'l_returnflag':l_returnflag,'l_linestatus':l_linestatus,'count_suppkey':count(g)}
 from  (
     select element {'l_returnflag':l_returnflag,'l_linestatus':l_linestatus,'l_suppkey':l_suppkey}

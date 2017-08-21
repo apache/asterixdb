@@ -30,7 +30,7 @@ create type `fj-dblp-csx`.DBLPType as
   title : string,
   authors : string,
   misc : string
-}
+};
 
 create type `fj-dblp-csx`.CSXType as
 {
@@ -39,7 +39,7 @@ create type `fj-dblp-csx`.CSXType as
   title : string,
   authors : string,
   misc : string
-}
+};
 
 create  nodegroup group1 if not exists  on
     asterix_nc1,
@@ -49,7 +49,7 @@ create  dataset DBLP(DBLPType) primary key id on group1;
 
 create  dataset CSX(CSXType) primary key id on group1;
 
-write output to asterix_nc1:"rttest/fj-dblp-csx.adm"
+write output to asterix_nc1:"rttest/fj-dblp-csx.adm";
 select element {'idDBLP':idDBLP,'idCSX':idCSX}
 from  DBLP as paperDBLP,
       tokensDBLP as prefixTokenDBLP,

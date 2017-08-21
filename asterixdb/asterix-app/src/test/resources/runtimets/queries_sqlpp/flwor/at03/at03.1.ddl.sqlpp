@@ -33,7 +33,7 @@ create type test.EmploymentType as
   `organization-name` : string,
   `start-date` : date,
   `end-date` : date?
-}
+};
 
 create type test.FacebookUserType as
  closed {
@@ -43,7 +43,7 @@ create type test.FacebookUserType as
   `user-since` : datetime,
   `friend-ids` : {{bigint}},
   employment : [EmploymentType]
-}
+};
 
 create  dataset FacebookUsers(FacebookUserType) primary key id;
 

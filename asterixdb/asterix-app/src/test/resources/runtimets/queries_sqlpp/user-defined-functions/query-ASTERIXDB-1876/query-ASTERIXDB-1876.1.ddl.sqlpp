@@ -24,11 +24,11 @@ use channels;
 create type UserLocation as closed {
 recordId: integer,
 userName: string
-}
+};
 
 create dataset UserLocations(UserLocation)
 primary key recordId;
 
-create function RecentEmergenciesNearUser(userName) { [1] }
+create function RecentEmergenciesNearUser(userName) { [1] };
 
 

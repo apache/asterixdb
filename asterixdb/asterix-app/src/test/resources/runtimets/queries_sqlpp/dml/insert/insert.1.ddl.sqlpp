@@ -41,14 +41,14 @@ create type test.LineItemType as
   l_shipinstruct : string,
   l_shipmode : string,
   l_comment : string
-}
+};
 
 create type test.LineIDType as
  closed {
   l_orderkey : bigint,
   l_linenumber : bigint,
   l_suppkey : bigint
-}
+};
 
 create  dataset LineItem(LineItemType) primary key l_orderkey,l_linenumber;
 

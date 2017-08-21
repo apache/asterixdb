@@ -28,16 +28,16 @@ create type fuzzyjoin.UserType as
   uid : bigint,
   name : string,
   lottery_numbers : [bigint],
-  interests : {{string}}
-}
+  interests : {{string}};
+};
 
 create type fuzzyjoin.VisitorType as
 {
   vid : bigint,
   name : string,
   lottery_numbers : [bigint],
-  interests : {{string}}
-}
+  interests : {{string}};
+};
 
 create  dataset Users(UserType) primary key uid;
 

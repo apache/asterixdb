@@ -34,7 +34,7 @@ create type test.AddressType as
   number : bigint,
   street : string,
   city : string
-}
+};
 
 create type test.CustomerTypetmp as
  closed {
@@ -48,7 +48,7 @@ create type test.CustomerTypetmp as
       total : float
   }
 
-}
+};
 
 create type test.OrderTypetmp as
 {
@@ -59,17 +59,17 @@ create type test.OrderTypetmp as
   clerk : string,
   total : float,
   items : [bigint]
-}
+};
 
 create type test.CustomerType as
  closed {
   nested : CustomerTypetmp
-}
+};
 
 create type test.OrderType as
 {
   nested : OrderTypetmp
-}
+};
 
 create  dataset Customerstmp(CustomerTypetmp) primary key cid;
 

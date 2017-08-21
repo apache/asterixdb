@@ -35,11 +35,11 @@ create type test.DBLPType as
   title : string,
   authors : string,
   misc : string
-}
+};
 
 create  dataset DBLP(DBLPType) primary key id;
 
-write output to asterix_nc1:"rttest/similarity_fuzzyeq-to-edit-distance-check.adm"
+write output to asterix_nc1:"rttest/similarity_fuzzyeq-to-edit-distance-check.adm";
 set `simfunction` `edit-distance`;
 
 set `simthreshold` `1`;

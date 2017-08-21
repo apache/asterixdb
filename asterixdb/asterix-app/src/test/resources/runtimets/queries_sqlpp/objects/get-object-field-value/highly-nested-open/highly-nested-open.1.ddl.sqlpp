@@ -31,53 +31,53 @@ use test;
 create type test.S as
 {
   id : bigint
-}
+};
 
 create type test.GS as
 {
   id : bigint,
   Genus : string
-}
+};
 
 create type test.FGS as
 {
   id : bigint,
   Family : string
-}
+};
 
 create type test.OFGS as
 {
   id : bigint,
   `Order` : string
-}
+};
 
 create type test.COFGS as
 {
   id : bigint,
   Class : string
-}
+};
 
 create type test.PCOFGS as
 {
   id : bigint,
   Phylum : string
-}
+};
 
 create type test.KPCOFGS as
 {
   id : bigint,
   Kingdom : string
-}
+};
 
 create type test.Classification as
 {
   id : bigint
-}
+};
 
 create type test.Animal as
 {
   id : bigint
-}
+};
 
 create  dataset Animals(Animal) primary key id;
 

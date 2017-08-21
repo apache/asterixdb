@@ -41,7 +41,7 @@ create type q5_local_supplier.LineItemType as
   l_shipinstruct : string,
   l_shipmode : string,
   l_comment : string
-}
+};
 
 create type q5_local_supplier.OrderType as
  closed {
@@ -54,7 +54,7 @@ create type q5_local_supplier.OrderType as
   o_clerk : string,
   o_shippriority : integer,
   o_comment : string
-}
+};
 
 create type q5_local_supplier.CustomerType as
  closed {
@@ -66,7 +66,7 @@ create type q5_local_supplier.CustomerType as
   c_acctbal : double,
   c_mktsegment : string,
   c_comment : string
-}
+};
 
 create type q5_local_supplier.SupplierType as
  closed {
@@ -77,7 +77,7 @@ create type q5_local_supplier.SupplierType as
   s_phone : string,
   s_acctbal : double,
   s_comment : string
-}
+};
 
 create type q5_local_supplier.NationType as
  closed {
@@ -85,14 +85,14 @@ create type q5_local_supplier.NationType as
   n_name : string,
   n_regionkey : integer,
   n_comment : string
-}
+};
 
 create type q5_local_supplier.RegionType as
  closed {
   r_regionkey : integer,
   r_name : string,
   r_comment : string
-}
+};
 
 create  nodegroup group1 if not exists  on
     asterix_nc1,
@@ -110,7 +110,7 @@ create  dataset Nations(NationType) primary key n_nationkey on group1;
 
 create  dataset Regions(RegionType) primary key r_regionkey on group1;
 
-write output to asterix_nc1:"/tmp/q5_local_supplier.adm"
+write output to asterix_nc1:"/tmp/q5_local_supplier.adm";
 select element {'n_name':n_name,'revenue':revenue}
 from  Customers as c,
       (

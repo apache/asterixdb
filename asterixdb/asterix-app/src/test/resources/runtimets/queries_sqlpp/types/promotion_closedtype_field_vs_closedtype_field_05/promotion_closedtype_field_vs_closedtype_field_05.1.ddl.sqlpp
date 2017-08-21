@@ -33,14 +33,14 @@ create type test.empInfoType as
   id : bigint,
   empno : bigint,
   name : string
-}
+};
 
 create type test.deptInfoType as
 {
   did : bigint,
   dno : integer,
   dname : string
-}
+};
 
 create  dataset empDataset(empInfoType) primary key id;
 

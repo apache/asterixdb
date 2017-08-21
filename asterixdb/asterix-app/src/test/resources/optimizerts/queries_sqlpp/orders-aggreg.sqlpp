@@ -31,7 +31,7 @@ create type `orders-aggreg`.OrderType as
   orderpriority : string,
   clerk : string,
   total : float
-}
+};
 
 create  nodegroup group1 if not exists  on
     asterix_nc1,
@@ -39,7 +39,7 @@ create  nodegroup group1 if not exists  on
 ;
 create  dataset Orders(OrderType) primary key oid on group1;
 
-write output to asterix_nc1:"/tmp/orders-aggreg.adm"
+write output to asterix_nc1:"/tmp/orders-aggreg.adm";
 select element {'cid':cid,'ordpercust':`orders-aggreg`.coll_count(o),'totalcust':`orders-aggreg`.coll_sum((
         select element i.total
         from  o as i

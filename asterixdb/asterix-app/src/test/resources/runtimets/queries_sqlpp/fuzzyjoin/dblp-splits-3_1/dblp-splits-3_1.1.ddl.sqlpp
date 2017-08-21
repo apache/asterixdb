@@ -30,7 +30,7 @@ create type fuzzyjoin.DBLPType as
   title : string,
   authors : string,
   misc : string
-}
+};
 
 create external  dataset DBLP(DBLPType) using localfs((`path`=`asterix_nc1://data/pub-small/dblp-small-id.txt`),(`format`=`delimited-text`),(`delimiter`=`:`));
 

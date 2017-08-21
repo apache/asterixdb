@@ -29,7 +29,7 @@ create type test.AddressType as
   city : string,
   zip : string,
   latlong : point
-}
+};
 
 create type test.EventType as
  closed {
@@ -49,7 +49,7 @@ create type test.EventType as
   price : double?,
   start_time : datetime,
   end_time : datetime
-}
+};
 
 create external  dataset Event(EventType) using localfs((`path`=`asterix_nc1://data/events/tiny/event.adm`),(`format`=`adm`));
 

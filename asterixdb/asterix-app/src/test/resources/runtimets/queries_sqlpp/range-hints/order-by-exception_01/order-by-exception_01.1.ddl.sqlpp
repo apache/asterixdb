@@ -31,5 +31,5 @@ create type TinySocial.TwitterUserType as
   statuses_count : bigint,
   name : string,
   followers_count : bigint
-}
+};
 

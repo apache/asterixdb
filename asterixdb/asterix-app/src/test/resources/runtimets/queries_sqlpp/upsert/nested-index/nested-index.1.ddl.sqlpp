@@ -30,11 +30,11 @@ create type OrderTypetmp as closed {
   o_clerk: string,
   o_shippriority: int64,
   o_comment: string
-}
+};
 
 create type OrderType as closed {
 nested : OrderTypetmp
-}
+};
 
 create dataset UpsertTo(OrderTypetmp)
   primary key o_orderkey;

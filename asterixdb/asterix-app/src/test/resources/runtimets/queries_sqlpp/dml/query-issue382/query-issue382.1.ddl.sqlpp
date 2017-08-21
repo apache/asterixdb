@@ -28,7 +28,7 @@ create type SocialNetworkData.EmploymentType as
   `organization-name` : string,
   `start-date` : date,
   `end-date` : date?
-}
+};
 
 create type SocialNetworkData.FacebookUserType as
  closed {
@@ -40,7 +40,7 @@ create type SocialNetworkData.FacebookUserType as
   `user-since-copy` : datetime,
   `friend-ids` : {{bigint}},
   employment : [EmploymentType]
-}
+};
 
 create  dataset FacebookUsers(FacebookUserType) primary key id;
 

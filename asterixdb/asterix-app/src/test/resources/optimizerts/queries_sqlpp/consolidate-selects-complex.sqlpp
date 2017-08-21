@@ -30,7 +30,7 @@ create type test.DBLPType as
   title : string,
   authors : string,
   misc : string
-}
+};
 
 create  nodegroup group1 if not exists  on
     asterix_nc1,
@@ -40,7 +40,7 @@ create  dataset DBLP(DBLPType) primary key id on group1;
 
 load  dataset DBLP using localfs ((`path`=`asterix_nc1://data/dblp-small/dblp-small-id.txt`),(`format`=`delimited-text`),(`delimiter`=`:`)) pre-sorted;
 
-write output to asterix_nc1:"rttest/consolidate-complex-selects.aql"
+write output to asterix_nc1:"rttest/consolidate-complex-selects.aql";
 select element {'Paper':paper_tokens,'Query':query_tokens}
 from  DBLP as paper
 with  paper_tokens as test.`word-tokens`(paper.title),

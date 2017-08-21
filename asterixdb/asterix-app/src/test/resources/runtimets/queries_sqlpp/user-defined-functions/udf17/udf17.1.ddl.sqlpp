@@ -31,8 +31,8 @@ use test;
 
 create function test.parent(){
 test.child()
-}
+};
 
 create function test.child() {
 'This data is from the child function'
-}
+};

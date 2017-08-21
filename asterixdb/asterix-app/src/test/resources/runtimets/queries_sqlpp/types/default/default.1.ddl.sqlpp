@@ -20,4 +20,4 @@
 DROP function foo@0 if exists;
 CREATE function foo(){
   1
-}
+};

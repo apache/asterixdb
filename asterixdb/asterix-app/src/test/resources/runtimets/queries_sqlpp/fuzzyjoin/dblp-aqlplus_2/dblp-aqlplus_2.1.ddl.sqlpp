@@ -34,7 +34,7 @@ use fuzzyjoin;
 create type fuzzyjoin.DBLPType as
 {
   id : bigint
-}
+};
 
 create  dataset DBLP(DBLPType) primary key id;
 

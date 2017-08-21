@@ -34,7 +34,7 @@ create type test.Emp as
   lname : string,
   age : bigint,
   dept : string
-}
+};
 
 create temporary dataset test.employee(Emp) primary key id
 using compaction policy `correlated-prefix`

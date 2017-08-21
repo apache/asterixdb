@@ -27,7 +27,7 @@ use test;
 
 create type OrderOpenType as open {
   o_orderkey: int64
-}
+};
 
 create dataset OrdersOpen(OrderOpenType)
 primary key o_orderkey;

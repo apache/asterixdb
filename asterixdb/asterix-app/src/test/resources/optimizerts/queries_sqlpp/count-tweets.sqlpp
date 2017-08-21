@@ -30,11 +30,11 @@ create type twitter.Tweet as
   loc : point,
   time : datetime,
   text : string
-}
+};
 
 create external  dataset TwitterData(Tweet) using localfs((`path`=`asterix_nc1://data/twitter/smalltweets.txt`),("format"="adm"));
 
-write output to asterix_nc1:"/tmp/count-tweets.adm"
+write output to asterix_nc1:"/tmp/count-tweets.adm";
 select element {'word':tok,'count':count(token)}
 from  TwitterData as t,
       tokens as token

@@ -30,13 +30,13 @@ create type fuzzyjoin.DBLPType as
   title : string,
   authors : string,
   misc : string
-}
+};
 
 create type fuzzyjoin.TOKENSRANKEDADMType as
  closed {
   token : bigint,
   rank : bigint
-}
+};
 
 create  dataset DBLP(DBLPType) primary key id;
 

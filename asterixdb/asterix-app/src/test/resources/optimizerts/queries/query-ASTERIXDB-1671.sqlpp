@@ -26,7 +26,7 @@ USE tpch;
 CREATE TYPE LineItemType AS {
   l_orderkey : bigint,
   l_linenumber : bigint
-}
+};
 
 CREATE DATASET LineItem(LineItemType) PRIMARY KEY l_orderkey,l_linenumber;
 

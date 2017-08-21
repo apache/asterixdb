@@ -19,8 +19,8 @@
 
 USE tpch;
 
-SET `compiler.groupmemory` "-10GB"
-SET `compiler.sortmemory` "-7GB"
+SET `compiler.groupmemory` "-10GB";
+SET `compiler.sortmemory` "-7GB";
 
 SELECT  l_returnflag,
         l_linestatus,

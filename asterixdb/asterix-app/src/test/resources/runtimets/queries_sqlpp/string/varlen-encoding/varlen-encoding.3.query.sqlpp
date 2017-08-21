@@ -17,7 +17,7 @@
  * under the License.
  */
 
-set inline_with "false"
+set inline_with "false";
 
 let str127 = 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
 , str128 = `string-concat`([ 'y', str127 ])

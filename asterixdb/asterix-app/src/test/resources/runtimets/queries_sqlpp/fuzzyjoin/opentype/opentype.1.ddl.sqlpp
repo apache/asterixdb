@@ -26,7 +26,7 @@ use TinySocial;
 create type TinySocial.TweetMessageType as
 {
   tweetid : string
-}
+};
 
 create  dataset TweetMessages(TweetMessageType) primary key tweetid hints (`CARDINALITY`=`100`);
 

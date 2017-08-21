@@ -47,7 +47,7 @@ create type tpch.LineItemType as
   l_shipinstruct : string,
   l_shipmode : string,
   l_comment : string
-}
+};
 
 create type tpch.OrderType as
  closed {
@@ -60,7 +60,7 @@ create type tpch.OrderType as
   o_clerk : string,
   o_shippriority : integer,
   o_comment : string
-}
+};
 
 create type tpch.CustomerType as
  closed {
@@ -72,7 +72,7 @@ create type tpch.CustomerType as
   c_acctbal : double,
   c_mktsegment : string,
   c_comment : string
-}
+};
 
 create  dataset Orders(OrderType) primary key o_orderkey;
 

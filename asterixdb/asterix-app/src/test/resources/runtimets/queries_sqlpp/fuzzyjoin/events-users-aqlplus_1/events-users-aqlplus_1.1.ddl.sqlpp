@@ -29,7 +29,7 @@ create type fuzzyjoin.AddressType as
   city : string,
   zip : string,
   latlong : point
-}
+};
 
 create type fuzzyjoin.UserType as
 {
@@ -40,9 +40,9 @@ create type fuzzyjoin.UserType as
           sig_id : bigint,
           chapter_name : string,
           member_since : date
-      }
-}}
-}
+      };
+}};
+};
 
 create  dataset User(UserType) primary key name;
 

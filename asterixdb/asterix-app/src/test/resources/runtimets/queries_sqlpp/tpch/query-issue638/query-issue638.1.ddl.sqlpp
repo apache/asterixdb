@@ -47,7 +47,7 @@ create type tpch.LineItemType as
   l_shipinstruct : string,
   l_shipmode : string,
   l_comment : string
-}
+};
 
 create type tpch.OrderType as
  closed {
@@ -60,7 +60,7 @@ create type tpch.OrderType as
   o_clerk : string,
   o_shippriority : integer,
   o_comment : string
-}
+};
 
 create type tpch.CustomerType as
  closed {
@@ -72,7 +72,7 @@ create type tpch.CustomerType as
   c_acctbal : double,
   c_mktsegment : string,
   c_comment : string
-}
+};
 
 create type tpch.SupplierType as
  closed {
@@ -83,7 +83,7 @@ create type tpch.SupplierType as
   s_phone : string,
   s_acctbal : double,
   s_comment : string
-}
+};
 
 create type tpch.NationType as
  closed {
@@ -91,14 +91,14 @@ create type tpch.NationType as
   n_name : string,
   n_regionkey : integer,
   n_comment : string
-}
+};
 
 create type tpch.RegionType as
  closed {
   r_regionkey : integer,
   r_name : string,
   r_comment : string
-}
+};
 
 create type tpch.PartType as
  closed {
@@ -111,7 +111,7 @@ create type tpch.PartType as
   p_container : string,
   p_retailprice : double,
   p_comment : string
-}
+};
 
 create type tpch.PartSuppType as
  closed {
@@ -120,7 +120,7 @@ create type tpch.PartSuppType as
   ps_availqty : integer,
   ps_supplycost : double,
   ps_comment : string
-}
+};
 
 create external  dataset LineItem(LineItemType) using `localfs`((`path`=`asterix_nc1://data/tpch0.001/lineitem.tbl`),(`format`=`delimited-text`),(`delimiter`=`|`));
 

@@ -29,4 +29,4 @@ use test;
 
 create function test.needs_f1(x){
  x + f1()
-}
+};

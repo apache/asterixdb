@@ -34,7 +34,7 @@ create type tpch.OrderType as
   o_clerk : string,
   o_shippriority : bigint,
   o_comment : string
-}
+};
 
 create type tpch.OrderOpenType as
 {
@@ -46,7 +46,7 @@ create type tpch.OrderOpenType as
   o_clerk : string,
   o_shippriority : bigint,
   o_comment : string
-}
+};
 
 create  dataset Orders(OrderType) primary key o_orderkey;
 

@@ -31,7 +31,7 @@ create type EmergencyReport as
   `id`: int,
   `intensity`: int,
   `message`: string
-}
+};
 
 create dataset EmergencyReports(EmergencyReport)
 primary key id;
@@ -42,4 +42,4 @@ create function mostIntenseEarthquakeNearLocation()
   order by emergency.id
   limit 1
   select element emergency.message
-}
+};

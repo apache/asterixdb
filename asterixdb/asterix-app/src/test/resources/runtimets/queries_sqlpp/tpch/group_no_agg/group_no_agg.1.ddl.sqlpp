@@ -28,7 +28,7 @@ create type tpch.RegionType as
   r_regionkey : integer,
   r_name : string,
   r_comment : string
-}
+};
 
 create  dataset Regions_group_no_agg(RegionType) primary key r_regionkey;
 

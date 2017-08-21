@@ -30,7 +30,7 @@ create type MyRecord as closed {
   poly2: polygon,
   rec: rectangle,
   circle: circle
-}
+};
 
 create dataset UpsertTo(MyRecord)
  primary key id;

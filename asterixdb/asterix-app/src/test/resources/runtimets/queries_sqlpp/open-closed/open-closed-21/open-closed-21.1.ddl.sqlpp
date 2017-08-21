@@ -33,7 +33,7 @@ use test;
 create type test.TestType as
 {
   id : integer
-}
+};
 
 create  dataset dtst01(TestType) primary key id;
 
@@ -44,7 +44,7 @@ create type test.Emp as
   age : tinyint,
   sex : string,
   dob : date
-}
+};
 
 create  dataset employee(Emp) primary key id;
 

@@ -33,7 +33,7 @@ create type test.Schema as
   id : integer,
   age : integer,
   name : string
-}
+};
 
 create  dataset onektup(Schema) primary key id;
 

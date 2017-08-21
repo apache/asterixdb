@@ -35,13 +35,13 @@ create type test.DBLPType as
   title : string,
   authors : string,
   misc : string
-}
+};
 
 create  dataset DBLP(DBLPType) primary key id;
 
 create  index ngram_index  on DBLP (title) type ngram (3);
 
-write output to asterix_nc1:"rttest/inverted-index-join_ngram-contains.adm"
+write output to asterix_nc1:"rttest/inverted-index-join_ngram-contains.adm";
 select element {'title1':o1.title,'title2':o2.title}
 from  DBLP as o1,
       DBLP as o2

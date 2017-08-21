@@ -37,7 +37,7 @@ create type test.TwitterUserType as
   `statuses-count` : bigint,
   name : string,
   `followers-count` : bigint
-}
+};
 
 create type test.TweetMessageNestedType as
 {
@@ -45,12 +45,12 @@ create type test.TweetMessageNestedType as
   `send-time` : datetime,
   `referred-topics` : {{string}},
   `message-text` : string
-}
+};
 
 create type test.TweetMessageType as
  closed {
   nested : TweetMessageNestedType
-}
+};
 
 create external  dataset TweetMessages(TweetMessageType) using `hdfs`((`hdfs`=`hdfs://127.0.0.1:31888`),(`path`=`/asterix/tw_for_indexleftouterjoin_nested.adm`),(`input-format`=`text-input-format`),(`format`=`adm`));
 

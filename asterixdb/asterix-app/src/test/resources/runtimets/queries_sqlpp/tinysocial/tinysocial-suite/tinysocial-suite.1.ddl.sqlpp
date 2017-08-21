@@ -31,7 +31,7 @@ create type TinySocial.TwitterUserType as
   statuses_count : bigint,
   name : string,
   followers_count : bigint
-}
+};
 
 create type TinySocial.TweetMessageType as
  closed {
@@ -41,14 +41,14 @@ create type TinySocial.TweetMessageType as
   `send-time` : datetime,
   `referred-topics` : {{string}},
   `message-text` : string
-}
+};
 
 create type TinySocial.EmploymentType as
 {
   `organization-name` : string,
   `start-date` : date,
   `end-date` : date?
-}
+};
 
 create type TinySocial.FacebookUserType as
  closed {
@@ -58,7 +58,7 @@ create type TinySocial.FacebookUserType as
   `user-since` : datetime,
   `friend-ids` : {{bigint}},
   employment : [EmploymentType]
-}
+};
 
 create type TinySocial.FacebookMessageType as
  closed {
@@ -67,5 +67,5 @@ create type TinySocial.FacebookMessageType as
   `in-response-to` : bigint?,
   `sender-location` : point?,
   message : string
-}
+};
 

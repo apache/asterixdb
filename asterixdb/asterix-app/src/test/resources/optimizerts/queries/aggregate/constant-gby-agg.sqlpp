@@ -26,21 +26,21 @@ use TinySocial;
 create type TinySocial.TwitterUserType as
 {
   `screen-name` : string
-}
+};
 
 create type TinySocial.TweetMessageType as {
   tweetid : string
-}
+};
 
 create type TinySocial.FacebookUserType as
  open {
   id : bigint
-}
+};
 
 create type TinySocial.FacebookMessageType as
  open {
   `message-id` : bigint
-}
+};
 
 create  dataset FacebookUsers(FacebookUserType) primary key id;
 create  dataset FacebookMessages(FacebookMessageType) primary key `message-id`;

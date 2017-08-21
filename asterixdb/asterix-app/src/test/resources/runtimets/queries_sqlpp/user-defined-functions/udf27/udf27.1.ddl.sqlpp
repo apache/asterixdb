@@ -32,6 +32,6 @@ use test;
 
 create function test.f1(){
 100
-}
+};
 
 

@@ -36,7 +36,7 @@ create type test.EmploymentType as
   `organization-name` : string,
   `start-date` : date,
   `end-date` : date?
-}
+};
 
 create type test.FacebookUserType as
  closed {
@@ -48,7 +48,7 @@ create type test.FacebookUserType as
   `user-since-copy` : datetime,
   `friend-ids` : {{integer}},
   employment : [EmploymentType]
-}
+};
 
 create type test.FacebookMessageType as
  closed {
@@ -59,7 +59,7 @@ create type test.FacebookMessageType as
   `in-response-to` : integer?,
   `sender-location` : point?,
   message : string
-}
+};
 
 create  dataset FacebookUsers(FacebookUserType) primary key id;
 
@@ -67,7 +67,7 @@ create  dataset FacebookMessages(FacebookMessageType) primary key `message-id`;
 
 create  index fbmIdxAutId  if not exists  on FacebookMessages (`author-id-copy`) type btree;
 
-write output to asterix_nc1:"rttest/btree-index-join_title-secondary-equi-join-multiindex.adm"
+write output to asterix_nc1:"rttest/btree-index-join_title-secondary-equi-join-multiindex.adm";
 select element {'fbu-ID':user.id,'fbm-auth-ID':message.`author-id`,'uname':user.name,'message':message.message}
 from  FacebookUsers as user,
       FacebookMessages as message

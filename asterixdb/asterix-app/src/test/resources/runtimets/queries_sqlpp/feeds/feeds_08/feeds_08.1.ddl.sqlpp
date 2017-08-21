@@ -30,7 +30,7 @@ create type feeds.TwitterUserType as
   status_count : integer,
   name : string,
   followers_count : integer
-}
+};
 
 create type feeds.TweetMessageType as
  closed {
@@ -41,7 +41,7 @@ create type feeds.TweetMessageType as
   message_text : string,
   created_at : string,
   country : string
-}
+};
 
 create  dataset SyntheticTweets(TweetMessageType) primary key id;
 create  index ngram_index  on SyntheticTweets (message_text) type ngram (3);

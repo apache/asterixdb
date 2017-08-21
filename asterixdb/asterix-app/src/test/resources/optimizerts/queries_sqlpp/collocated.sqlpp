@@ -28,20 +28,20 @@ create type colocated.UserType as
   uid : integer,
   name : string,
   lottery_numbers : {{integer}}
-}
+};
 
 create type colocated.VisitorType as
 {
   vid : integer,
   name : string,
   lottery_numbers : {{integer}}
-}
+};
 
 create  dataset Users(UserType) primary key uid;
 
 create  dataset Visitors(VisitorType) primary key vid;
 
-write output to asterix_nc1:"/tmp/fuzzy1.adm"
+write output to asterix_nc1:"/tmp/fuzzy1.adm";
 select element {'user_name':user.name,'visitor_name':visitor.name}
 from  Users as user,
       Visitors as visitor

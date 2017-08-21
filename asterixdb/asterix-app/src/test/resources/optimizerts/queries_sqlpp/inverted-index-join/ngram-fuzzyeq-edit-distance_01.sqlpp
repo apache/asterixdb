@@ -35,7 +35,7 @@ create type test.DBLPType as
   title : string,
   authors : string,
   misc : string
-}
+};
 
 create type test.CSXType as
  closed {
@@ -44,7 +44,7 @@ create type test.CSXType as
   title : string,
   authors : string,
   misc : string
-}
+};
 
 create  dataset DBLP(DBLPType) primary key id;
 
@@ -52,7 +52,7 @@ create  dataset CSX(CSXType) primary key id;
 
 create  index ngram_index  on CSX (authors) type ngram (3);
 
-write output to asterix_nc1:"rttest/inverted-index-join_ngram-fuzzyeq-edit-distance_01.adm"
+write output to asterix_nc1:"rttest/inverted-index-join_ngram-fuzzyeq-edit-distance_01.adm";
 set `simfunction` `edit-distance`;
 
 set `simthreshold` `3`;

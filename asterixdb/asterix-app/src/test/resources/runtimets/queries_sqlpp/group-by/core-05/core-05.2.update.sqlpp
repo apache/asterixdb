@@ -55,5 +55,5 @@ INSERT INTO Tire (
         'price': 100
     }
  ]
-)
+);
 

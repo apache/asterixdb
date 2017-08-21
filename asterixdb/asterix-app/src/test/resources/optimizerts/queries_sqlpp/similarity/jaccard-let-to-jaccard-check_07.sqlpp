@@ -37,11 +37,11 @@ create type test.DBLPType as
   title : string,
   authors : string,
   misc : string
-}
+};
 
 create  dataset DBLP(DBLPType) primary key id;
 
-write output to asterix_nc1:"rttest/similarity_jaccard-let-to-jaccard-check_01.adm"
+write output to asterix_nc1:"rttest/similarity_jaccard-let-to-jaccard-check_01.adm";
 select element jacc
 from  DBLP as paper
 with  jacc as test.`similarity-jaccard`(test.`word-tokens`(paper.title),test.`word-tokens`('Transactions for Cooperative Environments'))

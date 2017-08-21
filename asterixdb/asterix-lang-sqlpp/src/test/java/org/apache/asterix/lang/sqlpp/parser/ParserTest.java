@@ -25,30 +25,84 @@ import org.junit.Test;
 
 public class ParserTest {
 
-    protected void testLineEnding(String query) throws Exception {
+    protected void assertParseError(String query, int expectedErrorLine) throws Exception {
         IParserFactory factory = new SqlppParserFactory();
         IParser parser = factory.createParser(query);
         try {
             parser.parse();
+            throw new Exception("Expected error at line " + expectedErrorLine + " was not thrown");
         } catch (CompilationException e) {
-            if (!e.getMessage().contains("Syntax error: In line 3")) {
+            if (!e.getMessage().contains("Syntax error: In line " + expectedErrorLine)) {
                 throw new Exception("Unexpected error", e);
             }
         }
     }
 
+    protected void testLineEnding(String query, int expectedErrorLine) throws Exception {
+        assertParseError(query, expectedErrorLine);
+    }
+
     @Test
     public void testCR() throws Exception {
-        testLineEnding("select\rvalue\r1");
+        testLineEnding("select\rvalue\r1", 3);
     }
 
     @Test
     public void testCRLF() throws Exception {
-        testLineEnding("select\r\nvalue\r\n1");
+        testLineEnding("select\r\nvalue\r\n1", 3);
     }
 
     @Test
     public void testLF() throws Exception {
-        testLineEnding("select\nvalue\n1");
+        testLineEnding("select\nvalue\n1", 3);
+    }
+
+    @Test
+    public void testMultipleStatements() throws Exception {
+        String query = "use x;\nselect 1;";
+        IParserFactory factory = new SqlppParserFactory();
+        IParser parser = factory.createParser(query);
+        parser.parse();
+        query = "use x;\n use x;;;;\n use x;\n select 1;";
+        parser = factory.createParser(query);
+        parser.parse();
+    }
+
+    @Test
+    public void testUnseparatedStatements() throws Exception {
+        String query = "create dataverse dv select 1";
+        assertParseError(query, 1);
+        query = "use x\n select 1;";
+        assertParseError(query, 2);
+        query = "use x;\n use x;\n use x\n select 1;";
+        assertParseError(query, 4);
+    }
+
+    @Test
+    public void testEmptyStatement() throws Exception {
+        String query = "";
+        IParserFactory factory = new SqlppParserFactory();
+        IParser parser = factory.createParser(query);
+        parser.parse();
+
+        query = ";";
+        parser = factory.createParser(query);
+        parser.parse();
+
+        query = ";;;";
+        parser = factory.createParser(query);
+        parser.parse();
+
+        query = "\n\n";
+        parser = factory.createParser(query);
+        parser.parse();
+
+        query = "; select 1;";
+        parser = factory.createParser(query);
+        parser.parse();
+
+        query = ";;;;; select 1;;;";
+        parser = factory.createParser(query);
+        parser.parse();
     }
 }

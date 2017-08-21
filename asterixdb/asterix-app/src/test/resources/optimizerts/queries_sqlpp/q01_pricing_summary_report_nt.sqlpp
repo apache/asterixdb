@@ -41,13 +41,13 @@ create type tpch.LineItemType as
   l_shipinstruct : string,
   l_shipmode : string,
   l_comment : string
-}
+};
 
 create  dataset LineItem(LineItemType) primary key l_orderkey,l_linenumber;
 
 load  dataset LineItem using localfs ((`path`=`asterix_nc1://data/tpch0.001/lineitem.tbl`),(`format`=`delimited-text`),(`delimiter`=`|`)) pre-sorted;
 
-write output to asterix_nc1:"rttest/tpch_q1_pricing_summary_report_nt.adm"
+write output to asterix_nc1:"rttest/tpch_q1_pricing_summary_report_nt.adm";
 select element {'l_returnflag':l_returnflag,'l_linestatus':l_linestatus,'sum_qty':tpch.coll_sum((
         select element i.l_quantity
         from  l as i

@@ -35,13 +35,13 @@ create type test.DBLPType as
   title : string,
   authors : string,
   misc : string
-}
+};
 
 create  dataset DBLP(DBLPType) primary key id;
 
 create  index ngram_index  on DBLP (title) type ngram (3);
 
-write output to asterix_nc1:"rttest/inverted-index-basic_ngram-contains-panic.adm"
+write output to asterix_nc1:"rttest/inverted-index-basic_ngram-contains-panic.adm";
 select element o
 from  DBLP as o
 where test.contains(o.title,'Mu')

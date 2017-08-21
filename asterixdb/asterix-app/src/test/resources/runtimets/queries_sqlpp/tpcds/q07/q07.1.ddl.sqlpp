@@ -47,7 +47,7 @@ create type tpcds.item_type as
   i_container : string?,
   i_manager_id : bigint?,
   i_product_name : string?
-}
+};
 
 create type tpcds.customer_demographics_type as
  closed {
@@ -60,7 +60,7 @@ create type tpcds.customer_demographics_type as
   cd_dep_count : bigint?,
   cd_dep_employed_count : bigint?,
   cd_dep_college_count : bigint?
-}
+};
 
 create type tpcds.store_sales_type as
  closed {
@@ -87,7 +87,7 @@ create type tpcds.store_sales_type as
   ss_net_paid:               double?,
   ss_net_paid_inc_tax:       double?,
   ss_net_profit:             double?
-}
+};
 
 create type tpcds.date_dim_type as
  closed {
@@ -119,7 +119,7 @@ create type tpcds.date_dim_type as
   d_current_month : string?,
   d_current_quarter : string?,
   d_current_year : string?
-}
+};
 
 create type tpcds.promotion_type as
  closed {
@@ -142,7 +142,7 @@ create type tpcds.promotion_type as
   p_channel_details : string?,
   p_purpose : string?,
   p_discount_active : string?
-}
+};
 
 create dataset item (item_type) primary key i_item_sk;
 

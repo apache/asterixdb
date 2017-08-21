@@ -24,7 +24,7 @@ create type AddressType as open {
   number: int64,
   street: string,
   city: string
-}
+};
 
 create type CustomerType as open {
   cid: int64,
@@ -33,7 +33,7 @@ create type CustomerType as open {
   address: AddressType?,
   interests: {{string}},
   children: [ { name: string, age: int64? } ]
-}
+};
 
 create dataset Customers(CustomerType) primary key cid;
 create dataset MoreCustomers(CustomerType) primary key cid;

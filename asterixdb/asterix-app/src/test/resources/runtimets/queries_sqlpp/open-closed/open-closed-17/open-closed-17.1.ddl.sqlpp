@@ -41,7 +41,7 @@ create type test.Schema as
   tm : time,
   dt_tm : datetime,
   lat_lon : point
-}
+};
 
 create  dataset tdtst(Schema) primary key id_32;
 

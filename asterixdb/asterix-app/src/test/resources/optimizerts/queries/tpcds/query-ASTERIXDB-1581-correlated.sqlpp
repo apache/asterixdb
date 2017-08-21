@@ -46,7 +46,7 @@ create type tpcds.store_sales_type as closed {
     ss_net_paid:               double?,
     ss_net_paid_inc_tax:       double?,
     ss_net_profit:             double?
-}
+};
 
 
 create type tpcds.item_type as closed {
@@ -72,7 +72,7 @@ create type tpcds.item_type as closed {
     i_container:               string?,
     i_manager_id:              bigint?,
     i_product_name:            string?
-}
+};
 
 create dataset store_sales (store_sales_type)
 primary key ss_item_sk, ss_ticket_number;

@@ -46,7 +46,7 @@ CREATE TYPE LineItemType AS CLOSED {
   l_shipinstruct : string,
   l_shipmode : string,
   l_comment : string
-}
+};
 
 CREATE DATASET LineItem(LineItemType) PRIMARY KEY l_orderkey,l_linenumber;
 

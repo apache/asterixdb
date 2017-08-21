@@ -32,14 +32,14 @@ create type testdv2.AddressType as
 {
   street : string,
   city : string
-}
+};
 
 create type testdv2.testtype as
 {
   name : string,
   id : string,
   address : AddressType?
-}
+};
 
 create  dataset testds(testtype) primary key id;
 

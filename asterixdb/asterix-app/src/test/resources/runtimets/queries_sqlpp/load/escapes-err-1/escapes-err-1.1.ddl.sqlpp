@@ -26,7 +26,7 @@ use TestDataverse;
 create type TestDataverse.TestType as
 {
   id : string
-}
+};
 
 create  dataset TestSet(TestType) primary key id;
 

@@ -19,7 +19,7 @@
 
 USE tpch;
 
-SET `compiler.parallelism` "5"
+SET `compiler.parallelism` "5";
 
 SELECT  l_returnflag,
         l_linestatus,

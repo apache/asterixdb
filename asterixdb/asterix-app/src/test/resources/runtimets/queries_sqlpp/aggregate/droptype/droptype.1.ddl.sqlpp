@@ -32,11 +32,11 @@ use test;
 create type test.footype as
 {
   bar : integer?
-}
+};
 
 drop type test.footype;
 create type test.footype as
 {
   bar : integer?
-}
+};
 

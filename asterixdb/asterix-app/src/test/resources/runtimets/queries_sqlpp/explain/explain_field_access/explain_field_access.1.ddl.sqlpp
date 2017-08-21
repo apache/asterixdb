@@ -24,6 +24,6 @@ USE gby;
 
 CREATE TYPE EmployeeType AS {
   id : string
-}
+};
 
 CREATE DATASET Employee(EmployeeType) PRIMARY KEY id;

@@ -33,7 +33,7 @@ create type test.Emp as
 {
   id : integer,
   name : string
-}
+};
 
 create  dataset Employee(Emp) primary key id;
 

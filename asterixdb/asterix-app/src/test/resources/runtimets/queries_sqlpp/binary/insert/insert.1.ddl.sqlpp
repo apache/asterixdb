@@ -26,14 +26,14 @@ use test;
 create type test.UserTypeOpen as
 {
   id : bigint
-}
+};
 
 create type test.UserTypeClose as
  closed {
   id : bigint,
   name : string,
   md5 : binary
-}
+};
 
 create  dataset UserOpen(UserTypeOpen) primary key id;
 

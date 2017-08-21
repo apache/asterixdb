@@ -28,7 +28,7 @@ create type test.UserType as
   id : bigint,
   name : string,
   md5 : binary
-}
+};
 
 create  dataset User(UserType) primary key id;
 

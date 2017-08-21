@@ -35,7 +35,7 @@ create type TestVerse.Int64TestType as
   myoptdouble : double?,
   myfloat : float,
   myoptfloat : float?
-}
+};
 
 create  dataset Int64Test(Int64TestType) primary key myint64;
 

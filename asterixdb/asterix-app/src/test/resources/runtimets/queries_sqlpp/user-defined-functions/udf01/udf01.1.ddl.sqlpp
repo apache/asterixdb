@@ -31,5 +31,5 @@ use test;
 
 create function test.echo(list){
 list
-}
+};
 

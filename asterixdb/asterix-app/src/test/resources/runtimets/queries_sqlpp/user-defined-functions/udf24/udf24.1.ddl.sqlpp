@@ -26,4 +26,4 @@ use test;
 create function test.myRangeFn(n)
 {
    range(1,n)
-}
+};

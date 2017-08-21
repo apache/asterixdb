@@ -34,58 +34,58 @@ use test;
 create type test.S as
 {
   id : bigint
-}
+};
 
 create type test.GS as
  closed {
   id : bigint,
   Genus : string,
   lower : S
-}
+};
 
 create type test.FGS as
 {
   id : bigint,
   Family : string
-}
+};
 
 create type test.OFGS as
  closed {
   id : bigint,
   `Order` : string,
   lower : FGS
-}
+};
 
 create type test.COFGS as
  closed {
   id : bigint,
   Class : string,
   lower : OFGS
-}
+};
 
 create type test.PCOFGS as
  closed {
   id : bigint,
   Phylum : string,
   lower : COFGS
-}
+};
 
 create type test.KPCOFGS as
 {
   id : bigint,
   Kingdom : string
-}
+};
 
 create type test.Classification as
  closed {
   id : bigint,
   fullClassification : KPCOFGS
-}
+};
 
 create type test.Animal as
 {
   id : bigint
-}
+};
 
 create  dataset Animals(Animal) primary key id;
 

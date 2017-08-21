@@ -41,12 +41,12 @@ create type test.MyRecordNested as
   poly2 : polygon,
   rec : rectangle,
   circle : circle
-}
+};
 
 create type test.MyRecord as
  closed {
   nested : MyRecordNested
-}
+};
 
 create external  dataset MyData(MyRecord) using `hdfs`((`hdfs`=`hdfs://127.0.0.1:31888`),(`path`=`/asterix/spatialDataNested.json`),(`input-format`=`text-input-format`),(`format`=`adm`));
 

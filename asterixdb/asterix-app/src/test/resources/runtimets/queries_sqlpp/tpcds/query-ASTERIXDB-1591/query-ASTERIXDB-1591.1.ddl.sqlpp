@@ -36,7 +36,7 @@ create type customer_address_type as closed {
     ca_country:                 string?,
     ca_gmt_offset:              double?,
     ca_location_type:           string?
-}
+};
 
 create type customer_type as closed {
     c_customer_sk:             bigint,
@@ -57,7 +57,7 @@ create type customer_type as closed {
     c_login:                   string?,
     c_email_address:           string?,
     c_last_review_date:        string?
-}
+};
 
 create type store_sales_type as closed {
     ss_sold_date_sk:           bigint?,
@@ -83,7 +83,7 @@ create type store_sales_type as closed {
     ss_net_paid:               double?,
     ss_net_paid_inc_tax:       double?,
     ss_net_profit:             double?
-}
+};
 
 create type catalog_sales_type as closed {
     cs_sold_date_sk:           bigint?,
@@ -120,7 +120,7 @@ create type catalog_sales_type as closed {
     cs_net_paid_inc_ship:      double?,
     cs_net_paid_inc_ship_tax:  double?,
     cs_net_profit:             double?
-}
+};
 
 create type catalog_returns_type as closed {
     cr_returned_date_sk:       bigint?,
@@ -150,7 +150,7 @@ create type catalog_returns_type as closed {
     cr_reversed_charge:        double?,
     cr_store_credit:           double?,
     cr_net_loss:               double?
-}
+};
 
 create type tpcds.date_dim_type as closed {
     d_date_sk:                 bigint,
@@ -181,7 +181,7 @@ create type tpcds.date_dim_type as closed {
     d_current_month:           string?,
     d_current_quarter:         string?,
     d_current_year:            string?
-}
+};
 
 create type item_type as closed {
     i_item_sk:                 bigint,
@@ -206,7 +206,7 @@ create type item_type as closed {
     i_container:               string?,
     i_manager_id:              bigint?,
     i_product_name:            string?
-}
+};
 
 create type web_sales_type as closed {
     ws_sold_date_sk:           bigint?,
@@ -243,7 +243,7 @@ create type web_sales_type as closed {
     ws_net_paid_inc_ship:      double?,
     ws_net_paid_inc_ship_tax:  double?,
     ws_net_profit:             double?
-}
+};
 
 create dataset customer (customer_type)
 primary key c_customer_sk;

@@ -38,19 +38,19 @@ create type test.EmpTmp as
   lname : string,
   age : bigint,
   dept : string
-}
+};
 
 create type test.Nested as
 {
   id : bigint,
   age : bigint,
   dept : string
-}
+};
 
 create type test.Emp as
  closed {
   nested : Nested
-}
+};
 
 create  dataset employeeTmp(EmpTmp) primary key id;
 

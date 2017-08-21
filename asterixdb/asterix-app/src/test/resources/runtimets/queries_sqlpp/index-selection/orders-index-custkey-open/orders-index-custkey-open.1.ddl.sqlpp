@@ -34,7 +34,7 @@ create type tpch.OrderType as
   o_clerk : string,
   o_shippriority : bigint,
   o_comment : string
-}
+};
 
 create  nodegroup group1 if not exists  on
     asterix_nc1,

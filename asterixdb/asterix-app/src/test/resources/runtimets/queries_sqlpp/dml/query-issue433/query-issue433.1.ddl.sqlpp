@@ -33,14 +33,14 @@ create type insertIssue.subElem as
  closed {
   n : string,
   e : bigint?
-}
+};
 
 create type insertIssue.elem as
  closed {
   id : bigint,
   name : string,
   sub : [subElem]
-}
+};
 
 create  dataset myDataset(elem) primary key id;
 

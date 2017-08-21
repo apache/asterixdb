@@ -33,12 +33,12 @@ create type testdv2.testtype01 as
  closed {
   id : string,
   name : string?
-}
+};
 
 create type testdv2.testtype02 as
  closed {
   id : string
-}
+};
 
 create  dataset testds01(testtype01) primary key id;
 

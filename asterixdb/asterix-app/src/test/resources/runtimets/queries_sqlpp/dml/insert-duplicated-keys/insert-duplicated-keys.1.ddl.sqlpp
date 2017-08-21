@@ -31,7 +31,7 @@ create type STBench.SimpleGeoPlaceType as
   tags : string,
   categories : string,
   phone : string
-}
+};
 
 create  dataset SimpleGeoPlace(SimpleGeoPlaceType) primary key id;
 

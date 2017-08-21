@@ -30,7 +30,7 @@ create type OrderType as closed {
   o_clerk: string,
   o_shippriority: int64,
   o_comment: string
-}
+};
 
 create type OrderOpenType as open {
   o_orderkey: int64,
@@ -41,7 +41,7 @@ create type OrderOpenType as open {
   o_clerk: string,
   o_shippriority: int64,
   o_comment: string
-}
+};
 
 create dataset Orders(OrderType)
   primary key o_orderkey;

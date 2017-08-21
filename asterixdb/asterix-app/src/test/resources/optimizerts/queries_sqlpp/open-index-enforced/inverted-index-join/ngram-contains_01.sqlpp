@@ -33,7 +33,7 @@ create type test.DBLPType as
   id : integer,
   dblpid : string,
   misc : string
-}
+};
 
 create type test.CSXType as
  closed {
@@ -42,7 +42,7 @@ create type test.CSXType as
   title : string,
   authors : string,
   misc : string
-}
+};
 
 create  dataset DBLP(DBLPType) primary key id;
 
@@ -50,7 +50,7 @@ create  dataset CSX(CSXType) primary key id;
 
 create  index ngram_index  on DBLP (title:string?) type ngram (3) enforced;
 
-write output to asterix_nc1:"rttest/inverted-index-join_ngram-contains-01.adm"
+write output to asterix_nc1:"rttest/inverted-index-join_ngram-contains-01.adm";
 select element {'title1':o1.title,'title2':o2.title}
 from  DBLP as o1,
       CSX as o2

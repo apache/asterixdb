@@ -51,7 +51,7 @@ create type MyRecord as closed {
   poly2: polygon,
   rec: rectangle,
   circle: circle
-}
+};
 
 create dataset MyData(MyRecord)
   primary key id;

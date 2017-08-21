@@ -34,7 +34,7 @@ create type test.AddressType as
   number : bigint,
   street : string,
   city : string
-}
+};
 
 create type test.CustomerOpenNestedType as
 {
@@ -47,7 +47,7 @@ create type test.CustomerOpenNestedType as
           age : bigint?
       }
 ]
-}
+};
 
 create type test.CustomerNestedType as
  closed {
@@ -61,17 +61,17 @@ create type test.CustomerNestedType as
           age : bigint?
       }
 ]
-}
+};
 
 create type test.CustomerType as
  closed {
   nested : CustomerNestedType
-}
+};
 
 create type test.CustomerOpenType as
  closed {
   nested : CustomerOpenNestedType
-}
+};
 
 create  dataset Customerstmp(CustomerOpenNestedType) primary key cid;
 

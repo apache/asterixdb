@@ -26,6 +26,6 @@ CREATE TYPE EmployeeType AS {
   id : string,
   department_id: string,
   salary : float
-}
+};
 
 CREATE DATASET Employee(EmployeeType) PRIMARY KEY id;

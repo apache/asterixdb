@@ -30,7 +30,7 @@ create type test.DBLPNestedType as
   title : string,
   authors : string,
   misc : string
-}
+};
 
 create  nodegroup group1 if not exists  on
     asterix_nc1,
@@ -39,7 +39,7 @@ create  nodegroup group1 if not exists  on
 create type test.DBLPType as
  closed {
   nested : DBLPNestedType
-}
+};
 
 create  dataset DBLPtmp(DBLPNestedType) primary key id on group1;
 

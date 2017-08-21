@@ -51,7 +51,7 @@ create type tpcds.date_dim_type as closed {
     d_current_month:           string?,
     d_current_quarter:         string?,
     d_current_year:            string?
-}
+};
 
 create type tpcds.item_type as closed {
     i_item_sk:                 bigint,
@@ -76,7 +76,7 @@ create type tpcds.item_type as closed {
     i_container:               string?,
     i_manager_id:              bigint?,
     i_product_name:            string?
-}
+};
 
 create dataset item (item_type)
 primary key i_item_sk;

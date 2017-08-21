@@ -33,11 +33,11 @@ INSERT INTO Incentive (
   { 'job_category': 'Cook',
     'bonus': 1000
   }
-)
+);
 
 INSERT INTO SuperStars (
   {
     'id': '123'
   }
-)
+);
 

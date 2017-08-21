@@ -31,7 +31,7 @@ create type TweetMessageTypeuuid as closed {
   tweetid: int,
   `message-text`: string,
   location:point
-}
+};
 
 create dataset TweetMessageuuids(TweetMessageTypeuuid)
 primary key tweetid;

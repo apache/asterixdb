@@ -37,14 +37,14 @@ create type OpenSocialNetworkData.TwitterUserType as
   statuses_count : bigint,
   name : string,
   followers_count : bigint
-}
+};
 
 create type OpenSocialNetworkData.TweetMessageType as
 {
   tweetid : string,
   `tweetid-copy` : string,
   `send-time-copy` : datetime
-}
+};
 
 create  dataset TweetMessages(TweetMessageType) primary key tweetid;
 

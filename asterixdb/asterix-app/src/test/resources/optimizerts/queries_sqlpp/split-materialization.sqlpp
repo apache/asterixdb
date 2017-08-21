@@ -28,7 +28,7 @@ create type TinySocial.EmploymentType as
   `organization-name` : string,
   `start-date` : date,
   `end-date` : date?
-}
+};
 
 create type TinySocial.FacebookUserType as
  closed {
@@ -38,7 +38,7 @@ create type TinySocial.FacebookUserType as
   `user-since` : datetime,
   `friend-ids` : {{integer}},
   employment : [EmploymentType]
-}
+};
 
 create  dataset FacebookUsers(FacebookUserType) primary key id;
 

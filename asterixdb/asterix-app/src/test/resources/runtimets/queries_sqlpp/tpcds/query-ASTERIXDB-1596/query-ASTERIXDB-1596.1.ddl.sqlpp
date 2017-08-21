@@ -57,7 +57,7 @@ create type tpcds.catalog_sales_type as closed {
     cs_net_paid_inc_ship:      double?,
     cs_net_paid_inc_ship_tax:  double?,
     cs_net_profit:             double?
-}
+};
 
 create type tpcds.catalog_returns_type as closed {
     cr_returned_date_sk:       bigint?,
@@ -87,7 +87,7 @@ create type tpcds.catalog_returns_type as closed {
     cr_reversed_charge:        double?,
     cr_store_credit:           double?,
     cr_net_loss:               double?
-}
+};
 
 create type tpcds.item_type as closed {
     i_item_sk:                 bigint,
@@ -112,7 +112,7 @@ create type tpcds.item_type as closed {
     i_container:               string?,
     i_manager_id:              bigint?,
     i_product_name:            string?
-}
+};
 
 create dataset catalog_sales (catalog_sales_type)
 primary key cs_item_sk, cs_order_number;

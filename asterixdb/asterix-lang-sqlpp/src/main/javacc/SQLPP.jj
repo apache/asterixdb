@@ -350,12 +350,14 @@ List<Statement> Statement() throws ParseException:
   Statement stmt = null;
 }
 {
-  ( stmt = SingleStatement() (<SEMICOLON>)*
-    {
-      decls.add(stmt);
-    }
+  (
+    (stmt = SingleStatement()
+      {
+        decls.add(stmt);
+      }
+    )?
+    (<SEMICOLON>)+
   )*
-  (<SEMICOLON>)*
   <EOF>
   {
     return decls;
@@ -382,7 +384,7 @@ Statement SingleStatement() throws ParseException:
     | stmt = ConnectionStatement()
     | stmt = CompactStatement()
     | stmt = ExplainStatement()
-    | stmt = Query(false) <SEMICOLON>
+    | stmt = Query(false)
     | stmt = RefreshExternalDatasetStatement()
     | stmt = RunStatement()
   )

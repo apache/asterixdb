@@ -32,13 +32,13 @@ use fooverse;
 create type fooverse.bartype as
 {
   baz : bigint
-}
+};
 
 create type fooverse.footype as
 {
   id : bigint,
   bars : [bartype]?
-}
+};
 
 create  dataset fooset(footype) primary key id;
 

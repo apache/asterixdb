@@ -36,12 +36,12 @@ create type test.FacebookMessageTypeTmp as
   `sender-location` : point?,
   message : string,
   `send-time` : datetime
-}
+};
 
 create type test.FacebookMessageType as
  closed {
   nested : FacebookMessageTypeTmp
-}
+};
 
 create  dataset FacebookMessagesTmp(FacebookMessageTypeTmp) primary key `message-id`;
 

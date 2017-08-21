@@ -30,4 +30,4 @@ use test;
 
 create function test.getFullName(fname,lname){
 `string-concat`([fname,lname])
-}
+};

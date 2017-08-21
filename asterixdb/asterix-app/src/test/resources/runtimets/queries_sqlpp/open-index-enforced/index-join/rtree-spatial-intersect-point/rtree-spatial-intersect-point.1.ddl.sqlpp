@@ -40,7 +40,7 @@ create type test.MyRecord as
   poly2 : polygon,
   rec : rectangle,
   circle : circle
-}
+};
 
 create type test.MyRecordOpen as
 {
@@ -52,7 +52,7 @@ create type test.MyRecordOpen as
   poly2 : polygon,
   rec : rectangle,
   circle : circle
-}
+};
 
 create  dataset MyData1tmp(MyRecord) primary key id;
 

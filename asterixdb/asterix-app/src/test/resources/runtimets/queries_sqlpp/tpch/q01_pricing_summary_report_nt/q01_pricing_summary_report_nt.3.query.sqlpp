@@ -19,7 +19,7 @@
 
 use tpch;
 
-set hash_merge "true"
+set hash_merge "true";
 
 select element {'l_returnflag':l_returnflag,'l_linestatus':l_linestatus,'sum_qty':COLL_SUM((
         select element i.l.l_quantity

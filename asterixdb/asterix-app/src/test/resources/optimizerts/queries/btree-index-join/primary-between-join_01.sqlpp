@@ -26,7 +26,7 @@ create type TestType as open {
     key2: integer,
     fname : string,
     lname : string
-}
+};
 
 create dataset DsOne(TestType) primary key key1;
 create dataset DsTwo(TestType) primary key key1;

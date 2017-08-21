@@ -32,14 +32,14 @@ create type TweetType as closed {
   location : string,
   text : string,
   timestamp : string
-}
+};
 
 create dataset Tweets(TweetType)
 primary key id;
 
 create function feed_processor(x) {
 x
-}
+};
 
 create feed TweetFeed
 using localfs

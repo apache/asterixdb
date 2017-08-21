@@ -37,7 +37,7 @@ create type test.TwitterUserType as
   `statuses-count` : bigint,
   name : string,
   `followers-count` : bigint
-}
+};
 
 create type test.TweetMessageNestedType as
 {
@@ -48,12 +48,12 @@ create type test.TweetMessageNestedType as
   `referred-topics` : {{string}},
   countA : bigint,
   countB : bigint
-}
+};
 
 create type test.TweetMessageType as
  closed {
   nested : TweetMessageNestedType
-}
+};
 
 create  dataset TweetMessages(TweetMessageType) primary key nested.tweetid;
 

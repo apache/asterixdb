@@ -31,7 +31,7 @@ use test;
 create type test.TestType as
 {
   name : string
-}
+};
 
 create  dataset t1(TestType) primary key name;
 

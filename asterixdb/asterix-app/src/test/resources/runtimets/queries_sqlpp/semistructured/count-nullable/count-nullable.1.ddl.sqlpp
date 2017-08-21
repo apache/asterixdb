@@ -28,7 +28,7 @@ create type test.AddressType as
   number : bigint,
   street : string,
   city : string
-}
+};
 
 create type test.CustomerType as
 {
@@ -42,7 +42,7 @@ create type test.CustomerType as
           age : bigint?
       }
 ]
-}
+};
 
 create external  dataset Customers(CustomerType) using localfs((`path`=`asterix_nc1://data/semistructured/tiny01/customer.adm`),(`format`=`adm`));
 

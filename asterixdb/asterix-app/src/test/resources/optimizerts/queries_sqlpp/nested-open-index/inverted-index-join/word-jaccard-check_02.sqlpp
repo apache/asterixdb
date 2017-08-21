@@ -35,7 +35,7 @@ create type test.DBLPTypetmp as
   title : string,
   authors : string,
   misc : string
-}
+};
 
 create type test.CSXTypetmp as
 {
@@ -43,17 +43,17 @@ create type test.CSXTypetmp as
   csxid : string,
   authors : string,
   misc : string
-}
+};
 
 create type test.DBLPType as
  closed {
   nested : DBLPTypetmp
-}
+};
 
 create type test.CSXType as
  closed {
   nested : CSXTypetmp
-}
+};
 
 create  dataset DBLP(DBLPType) primary key nested.id;
 
@@ -61,7 +61,7 @@ create  dataset CSX(CSXType) primary key nested.id;
 
 create  index keyword_index  on CSX (nested.title:string?) type keyword enforced;
 
-write output to asterix_nc1:"rttest/inverted-index-join_word-jaccard-check_01.adm"
+write output to asterix_nc1:"rttest/inverted-index-join_word-jaccard-check_01.adm";
 select element {'arec':a,'brec':b}
 from  CSX as a,
       DBLP as b

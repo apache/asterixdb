@@ -24,6 +24,6 @@ use TinySocial;
 
 create type TweetMessageType as {
   tweetid : string
-}
+};
 
 create dataset TweetMessages(TweetMessageType) primary key tweetid;

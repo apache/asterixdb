@@ -31,7 +31,7 @@ create type test.Schema as
  closed {
   id : bigint,
   timestamp : datetime
-}
+};
 
 create  dataset tsdata(Schema) primary key id;
 

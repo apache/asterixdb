@@ -36,7 +36,7 @@ create type test.DBLPType as
   title : string,
   authors : string,
   misc : string
-}
+};
 
 create type test.DBLPOpenType as
 {
@@ -44,7 +44,7 @@ create type test.DBLPOpenType as
   dblpid : string,
   authors : string,
   misc : string
-}
+};
 
 create  dataset DBLP(DBLPType) primary key id;
 

@@ -28,7 +28,7 @@ create type tpcds.reason_type as
   r_reason_sk : int64,
   r_reason_id : string,
   r_reason_desc : string?
-}
+};
 create type tpcds.store_sales_type as
  closed {
   ss_sold_date_sk:           int64?,
@@ -54,8 +54,8 @@ create type tpcds.store_sales_type as
   ss_net_paid:               double?,
   ss_net_paid_inc_tax:       double?,
   ss_net_profit:             double?
-}
+};
 
-create dataset reason(reason_type) primary key r_reason_sk
+create dataset reason(reason_type) primary key r_reason_sk;
 
 create dataset store_sales (store_sales_type) primary key ss_item_sk, ss_ticket_number;

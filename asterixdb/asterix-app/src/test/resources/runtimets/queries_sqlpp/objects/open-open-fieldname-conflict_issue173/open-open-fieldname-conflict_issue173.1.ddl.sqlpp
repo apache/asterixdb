@@ -32,7 +32,7 @@ create type test.opentype as
 {
   fname1 : string,
   fname2 : string
-}
+};
 
 create  dataset testds(opentype) primary key fname1;
 

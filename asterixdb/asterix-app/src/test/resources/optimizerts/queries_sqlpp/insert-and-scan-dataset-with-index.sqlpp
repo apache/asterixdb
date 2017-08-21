@@ -34,7 +34,7 @@ create type test.Emp as
   lname : string,
   age : integer,
   dept : string
-}
+};
 
 create  dataset test.employee(Emp) primary key id;
 

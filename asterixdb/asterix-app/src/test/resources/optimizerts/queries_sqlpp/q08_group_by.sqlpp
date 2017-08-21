@@ -41,7 +41,7 @@ create type q08_group_by.LineItemType as
   l_shipinstruct : string,
   l_shipmode : string,
   l_comment : string
-}
+};
 
 create type q08_group_by.OrderType as
  closed {
@@ -54,7 +54,7 @@ create type q08_group_by.OrderType as
   o_clerk : string,
   o_shippriority : integer,
   o_comment : string
-}
+};
 
 create type q08_group_by.CustomerType as
  closed {
@@ -66,7 +66,7 @@ create type q08_group_by.CustomerType as
   c_acctbal : double,
   c_mktsegment : string,
   c_comment : string
-}
+};
 
 create type q08_group_by.SupplierType as
  closed {
@@ -77,7 +77,7 @@ create type q08_group_by.SupplierType as
   s_phone : string,
   s_acctbal : double,
   s_comment : string
-}
+};
 
 create type q08_group_by.NationType as
  closed {
@@ -85,14 +85,14 @@ create type q08_group_by.NationType as
   n_name : string,
   n_regionkey : integer,
   n_comment : string
-}
+};
 
 create type q08_group_by.RegionType as
  closed {
   r_regionkey : integer,
   r_name : string,
   r_comment : string
-}
+};
 
 create type q08_group_by.PartType as
  closed {
@@ -105,7 +105,7 @@ create type q08_group_by.PartType as
   p_container : string,
   p_retailprice : double,
   p_comment : string
-}
+};
 
 create  dataset LineItem(LineItemType) primary key l_orderkey,l_linenumber;
 

@@ -30,7 +30,7 @@ create type test.TempType as
   time : time,
   datetime : datetime,
   duration : duration
-}
+};
 
 create  dataset Temp2(TempType) primary key id;
 

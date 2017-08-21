@@ -26,7 +26,7 @@ use test;
 
 create type TestType as {
    b: bigint
-}
+};
 
 create dataset data(TestType) primary key b;
 

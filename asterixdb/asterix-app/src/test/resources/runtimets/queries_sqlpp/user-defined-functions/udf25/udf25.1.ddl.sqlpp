@@ -35,4 +35,4 @@ create function test.computeBonus(pbcRating,salary)
         salary * 0.25
    else
         salary * 0.10
-}
+};

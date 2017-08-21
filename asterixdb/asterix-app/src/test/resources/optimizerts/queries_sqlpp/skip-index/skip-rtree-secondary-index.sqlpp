@@ -39,7 +39,7 @@ create type test.MyRecord as
   poly2 : polygon,
   rec : rectangle,
   circle : circle
-}
+};
 
 create  nodegroup group1 if not exists  on
     asterix_nc1,
@@ -51,7 +51,7 @@ load  dataset MyData using localfs ((`path`=`asterix_nc1://data/spatial/spatialD
 
 create  index rtree_index_point  on MyData (point) type rtree;
 
-write output to asterix_nc1:"rttest/index_rtree-secondary-index.adm"
+write output to asterix_nc1:"rttest/index_rtree-secondary-index.adm";
 select element {'id':o.id}
 from  MyData as o
 where  /*+ skip-index */ test.`spatial-intersect`(o.point,test.`create-polygon`([4.0,1.0,4.0,4.0,12.0,4.0,12.0,1.0]))

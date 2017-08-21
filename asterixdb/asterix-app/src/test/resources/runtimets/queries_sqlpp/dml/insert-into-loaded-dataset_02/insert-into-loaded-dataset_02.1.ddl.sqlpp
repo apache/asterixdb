@@ -41,7 +41,7 @@ create type test.Schema as
   stringu1 : string,
   stringu2 : string,
   string4 : string
-}
+};
 
 create  dataset onektup(Schema) primary key unique2;
 

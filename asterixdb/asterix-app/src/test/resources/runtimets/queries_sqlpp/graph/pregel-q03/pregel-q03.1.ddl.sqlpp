@@ -27,14 +27,14 @@ create type Pregelix.EdgeType as
 {
   destVertexId : bigint,
   cost : float?
-}
+};
 
 create type Pregelix.NodeType as
 {
   id : bigint,
   `value` : double?,
-  edges : {{EdgeType}}
-}
+  edges : {{EdgeType}};
+};
 
 create  dataset InputGraph(NodeType) primary key id;
 

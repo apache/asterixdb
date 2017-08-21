@@ -47,7 +47,7 @@ create type tpcds.item_type as
   i_container : string?,
   i_manager_id : bigint?,
   i_product_name : string?
-}
+};
 
 create type tpcds.date_dim_type as
  closed {
@@ -79,7 +79,7 @@ create type tpcds.date_dim_type as
   d_current_month : string?,
   d_current_quarter : string?,
   d_current_year : string?
-}
+};
 
 create type tpcds.store_sales_type as
  closed {
@@ -106,7 +106,7 @@ create type tpcds.store_sales_type as
   ss_net_paid:               double?,
   ss_net_paid_inc_tax:       double?,
   ss_net_profit:             double?
-}
+};
 
 create type tpcds.inventory_type as
  closed {
@@ -114,7 +114,7 @@ create type tpcds.inventory_type as
   inv_item_sk : bigint,
   inv_warehouse_sk : bigint,
   inv_quantity_on_hand : bigint?
-}
+};
 
 create dataset item (item_type) primary key i_item_sk;
 

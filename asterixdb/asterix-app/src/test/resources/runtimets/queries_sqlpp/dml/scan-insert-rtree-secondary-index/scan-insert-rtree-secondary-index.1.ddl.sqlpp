@@ -34,13 +34,13 @@ create type test.MyRecord as
   poly2 : polygon,
   rec : rectangle,
   circle : circle
-}
+};
 
 create type test.MyMiniRecord as
  closed {
   id : bigint,
   point : point
-}
+};
 
 create  dataset MyData(MyRecord) primary key id;
 

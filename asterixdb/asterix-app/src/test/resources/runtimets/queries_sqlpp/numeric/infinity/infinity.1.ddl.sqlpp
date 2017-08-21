@@ -23,6 +23,6 @@ use test;
 
 create type test as {
    id: int
-}
+};
 
 create dataset test(test) primary key id;

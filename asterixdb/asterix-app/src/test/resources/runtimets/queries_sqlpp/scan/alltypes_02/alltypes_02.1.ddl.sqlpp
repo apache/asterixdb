@@ -34,7 +34,7 @@ create type test.AddressType as
   number : bigint,
   street : string,
   city : string
-}
+};
 
 create type test.AllType as
 {
@@ -62,7 +62,7 @@ create type test.AllType as
   circle : circle,
   binary : binary,
   uuid : uuid
-}
+};
 
 create external  dataset `All`(AllType) using localfs((`path`=`asterix_nc1://data/nontagged/allData.adm`),(`format`=`adm`));
 

@@ -32,7 +32,7 @@ use test;
 create type test.t1 as
  closed {
   id : bigint
-}
+};
 
 create  dataset ds1(t1) primary key id;
 

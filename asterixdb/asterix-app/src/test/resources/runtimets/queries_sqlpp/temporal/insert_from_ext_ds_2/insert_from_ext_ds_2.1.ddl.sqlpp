@@ -39,7 +39,7 @@ create type timeTest.timesType as
   `date-interval` : interval,
   `time-interval` : interval,
   `datetime-interval` : interval
-}
+};
 
 create  dataset timeData(timesType) primary key date;
 

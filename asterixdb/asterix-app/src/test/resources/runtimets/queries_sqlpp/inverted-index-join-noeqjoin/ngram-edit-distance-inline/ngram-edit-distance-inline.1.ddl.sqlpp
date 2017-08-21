@@ -35,7 +35,7 @@ create type test.AddressType as
   number : bigint,
   street : string,
   city : string
-}
+};
 
 create type test.CustomerType as
 {
@@ -49,7 +49,7 @@ create type test.CustomerType as
           age : bigint?
       }
 ]
-}
+};
 
 create  dataset Customers(CustomerType) primary key cid;
 

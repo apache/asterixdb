@@ -30,7 +30,7 @@ declare function q7_volume_shipping_tmp() {
           Nation as n2
     where n2.n_name = 'GERMANY' or n1.n_name = 'GERMANY'
 )
-}
+};
 
 SELECT supp_nation AS supp_nation,
        cust_nation AS cust_nation,

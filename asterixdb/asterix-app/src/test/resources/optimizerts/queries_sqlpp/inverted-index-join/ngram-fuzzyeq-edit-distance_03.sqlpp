@@ -35,13 +35,13 @@ create type test.DBLPType as
   title : string,
   authors : string,
   misc : string
-}
+};
 
 create  dataset DBLP(DBLPType) primary key id;
 
 create  index ngram_index  on DBLP (authors) type ngram (3);
 
-write output to asterix_nc1:"rttest/inverted-index-join_ngram-fuzzyeq-edit-distance_03.adm"
+write output to asterix_nc1:"rttest/inverted-index-join_ngram-fuzzyeq-edit-distance_03.adm";
 set `simfunction` `edit-distance`;
 
 set `simthreshold` `3`;

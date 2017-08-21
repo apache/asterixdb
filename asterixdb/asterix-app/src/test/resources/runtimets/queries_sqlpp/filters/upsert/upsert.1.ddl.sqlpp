@@ -42,7 +42,7 @@ create type typeUser if not exists as open {
     followers_count: int32,
     friends_count: int32,
     statues_count: int64
-}
+};
 
 create type typePlace if not exists as open{
     country : string,
@@ -52,7 +52,7 @@ create type typePlace if not exists as open{
     name : string,
     place_type : string,
     bounding_box : rectangle
-}
+};
 
 create type typeGeoTag if not exists as open {
     stateID: int32,
@@ -61,7 +61,7 @@ create type typeGeoTag if not exists as open {
     countyName: string,
     cityID: int32?,
     cityName: string?
-}
+};
 
 create type typeTweet if not exists as open{
     create_at : datetime,
@@ -79,7 +79,7 @@ create type typeTweet if not exists as open{
     user : typeUser,
     place : typePlace?,
     geo_tag: typeGeoTag
-}
+};
 
 create dataset Tweet(typeTweet) primary key id
 using compaction policy prefix (("max-mergable-component-size"="32768"),("max-tolerance-component-count"="32"))

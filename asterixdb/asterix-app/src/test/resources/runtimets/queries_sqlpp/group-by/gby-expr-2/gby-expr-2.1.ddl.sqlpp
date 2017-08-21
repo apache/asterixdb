@@ -24,15 +24,15 @@ USE gby;
 
 CREATE TYPE EmployeeType AS {
   id : string
-}
+};
 
 CREATE TYPE IncentiveType AS {
   job_category: string
-}
+};
 
 CREATE TYPE SuperStarType AS {
   id : string
-}
+};
 
 CREATE DATASET Employee(EmployeeType) PRIMARY KEY id;
 CREATE DATASET Incentive(IncentiveType) PRIMARY KEY job_category;

@@ -36,7 +36,7 @@ create type test.empInfoType as
   height : float,
   age : bigint,
   worksince : bigint
-}
+};
 
 create type test.deptInfoType as
 {
@@ -46,7 +46,7 @@ create type test.deptInfoType as
   dsince : bigint,
   bossid : bigint,
   bossidint32 : integer
-}
+};
 
 create  dataset empDataset(empInfoType) primary key id;
 

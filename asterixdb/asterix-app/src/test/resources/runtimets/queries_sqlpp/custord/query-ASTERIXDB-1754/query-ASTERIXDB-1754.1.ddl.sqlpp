@@ -25,12 +25,12 @@ use test;
 create type CustomerType as
 {
   cid : bigint
-}
+};
 
 create type OrderType as
 {
   oid : bigint
-}
+};
 
 create external dataset Customers(CustomerType) using localfs((`path`=`asterix_nc1://data/nontagged/customerData.json`),(`format`=`adm`));
 

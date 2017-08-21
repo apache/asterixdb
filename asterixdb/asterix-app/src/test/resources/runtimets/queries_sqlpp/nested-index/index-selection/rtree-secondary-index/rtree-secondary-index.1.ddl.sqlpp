@@ -34,12 +34,12 @@ create type test.MyRecordtmp as
   poly2 : polygon,
   rec : rectangle,
   circle : circle
-}
+};
 
 create type test.MyRecord as
  closed {
   nested : MyRecordtmp
-}
+};
 
 create  dataset MyDatatmp(MyRecordtmp) primary key id;
 

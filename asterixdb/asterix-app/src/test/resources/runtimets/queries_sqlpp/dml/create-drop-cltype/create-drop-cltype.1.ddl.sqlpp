@@ -39,7 +39,7 @@ create type test.TestType as
   dt : date?,
   tm : time,
   pt : point?
-}
+};
 
 drop type test.TestType;
 create type test.TestType as
@@ -52,5 +52,5 @@ create type test.TestType as
   dt : date?,
   tm : time,
   pt : point?
-}
+};
 

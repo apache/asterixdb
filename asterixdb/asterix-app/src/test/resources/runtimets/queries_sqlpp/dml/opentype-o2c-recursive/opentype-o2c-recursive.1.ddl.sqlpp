@@ -32,19 +32,19 @@ create type testdv2.AddressType as
 {
   street : string,
   city : string
-}
+};
 
 create type testdv2.Dept as
  closed {
   name : string,
   id : bigint
-}
+};
 
 create type testdv2.testtype as
 {
   name : string,
   id : string
-}
+};
 
 create type testdv2.testtype2 as
  closed {
@@ -52,7 +52,7 @@ create type testdv2.testtype2 as
   id : string,
   address : AddressType?,
   department : {{Dept}}?
-}
+};
 
 create  dataset testds(testtype) primary key id;
 

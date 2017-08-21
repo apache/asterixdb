@@ -30,8 +30,8 @@ use test;
 
 create function test.pie(){
 3.14
-}
+};
 
 create function test.area(radius){
 test.pie() * radius * radius
-}
+};

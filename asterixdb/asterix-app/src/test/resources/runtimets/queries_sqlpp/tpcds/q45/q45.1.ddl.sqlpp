@@ -38,7 +38,7 @@ create type tpcds.customer_address_type as  closed {
   ca_country : string?,
   ca_gmt_offset : double?,
   ca_location_type : string?
- }
+ };
 
 create type tpcds.item_type as
  closed {
@@ -64,7 +64,7 @@ create type tpcds.item_type as
   i_container : string?,
   i_manager_id : bigint?,
   i_product_name : string?
-}
+};
 
 create type tpcds.web_sales_type as
  closed {
@@ -102,7 +102,7 @@ create type tpcds.web_sales_type as
   ws_net_paid_inc_ship : double?,
   ws_net_paid_inc_ship_tax : double?,
   ws_net_profit : double?
-}
+};
 
 create type tpcds.date_dim_type as
  closed {
@@ -134,7 +134,7 @@ create type tpcds.date_dim_type as
   d_current_month : string?,
   d_current_quarter : string?,
   d_current_year : string?
-}
+};
 
 create type tpcds.customer_type as
  closed {
@@ -156,7 +156,7 @@ create type tpcds.customer_type as
   c_login : string?,
   c_email_address : string?,
   c_last_review_date : string?
-}
+};
 
 create dataset customer_address(customer_address_type) primary key ca_address_sk;
 

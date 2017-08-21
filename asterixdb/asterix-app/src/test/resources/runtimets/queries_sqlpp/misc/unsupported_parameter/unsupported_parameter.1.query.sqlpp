@@ -17,6 +17,6 @@
  * under the License.
  */
 
-SET `compiler.joinmem` "4MB"
+SET `compiler.joinmem` "4MB";
 
 SELECT 1;

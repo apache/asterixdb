@@ -31,6 +31,6 @@ create type testtype as closed {
   id: int64,
   name: string,
   hobbies: {{string}}
-}
+};
 
 create dataset testds(testtype) primary key id;

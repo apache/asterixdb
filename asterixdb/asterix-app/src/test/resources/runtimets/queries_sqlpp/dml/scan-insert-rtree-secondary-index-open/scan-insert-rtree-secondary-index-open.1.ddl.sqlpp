@@ -40,12 +40,12 @@ create type test.MyRecord as
   poly2 : polygon,
   rec : rectangle,
   circle : circle
-}
+};
 
 create type test.MyOpenRecord as
 {
   id : bigint
-}
+};
 
 create  dataset MyData(MyRecord) primary key id;
 

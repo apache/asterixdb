@@ -22,7 +22,7 @@ create dataverse test;
 use test;
 
 create type account as open
-{ id: integer, sum:integer }
+{ id: integer, sum:integer };
 
 create dataset Accounts(account) primary key id;
 

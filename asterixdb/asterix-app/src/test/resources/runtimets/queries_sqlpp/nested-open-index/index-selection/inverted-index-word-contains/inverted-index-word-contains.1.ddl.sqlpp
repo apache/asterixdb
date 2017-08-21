@@ -30,7 +30,7 @@ create type test.DBLPTypetmp as
   title : string,
   authors : string,
   misc : string
-}
+};
 
 create type test.DBLPOpenType as
 {
@@ -38,12 +38,12 @@ create type test.DBLPOpenType as
   dblpid : string,
   authors : string,
   misc : string
-}
+};
 
 create type test.DBLPType as
  closed {
   nested : DBLPOpenType
-}
+};
 
 create  nodegroup group1 if not exists  on
     asterix_nc1,

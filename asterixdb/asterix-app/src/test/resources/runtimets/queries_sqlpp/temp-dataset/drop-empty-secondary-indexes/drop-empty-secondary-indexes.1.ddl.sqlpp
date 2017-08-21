@@ -33,12 +33,12 @@ create type test.Name as
 {
   first : string,
   last : string
-}
+};
 
 create type test.Person as
 {
   name : Name
-}
+};
 
 create type test.TestType as
 {
@@ -47,7 +47,7 @@ create type test.TestType as
   locn : point,
   zip : string,
   person : Person
-}
+};
 
 create temporary dataset t1(TestType) primary key id;
 

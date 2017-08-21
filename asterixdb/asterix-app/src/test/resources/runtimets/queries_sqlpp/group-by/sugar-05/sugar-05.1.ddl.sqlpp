@@ -24,11 +24,11 @@ USE gby;
 
 CREATE TYPE CarType AS {
   cid : string
-}
+};
 
 CREATE TYPE TireType AS {
   tid: string
-}
+};
 
 CREATE DATASET Car(CarType) PRIMARY KEY cid;
 CREATE DATASET Tire(TireType) PRIMARY KEY tid;

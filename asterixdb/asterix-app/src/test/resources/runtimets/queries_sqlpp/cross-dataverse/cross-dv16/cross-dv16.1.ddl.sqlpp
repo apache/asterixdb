@@ -29,18 +29,18 @@ create dataverse testdv1;
 // UDF with no inputs
 create function testdv1.fun01(){
 testdv1.fun02()
-}
+};
 
 // UDF with one input
 create function testdv1.fun02(){
 testdv1.fun03()
-}
+};
 
 // UDF with two inputs
 create function testdv1.fun03(){
 testdv1.fun04()
-}
+};
 
 create function testdv1.fun04(){
 testdv1.fun02()
-}
+};

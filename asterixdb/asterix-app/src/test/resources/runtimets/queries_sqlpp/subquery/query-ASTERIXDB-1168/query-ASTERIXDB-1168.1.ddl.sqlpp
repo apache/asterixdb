@@ -22,6 +22,6 @@ create dataverse test;
 use test;
 
 create type TType as closed
-{ id: bigint, content: string }
+{ id: bigint, content: string };
 
 create dataset TData (TType) primary key id;

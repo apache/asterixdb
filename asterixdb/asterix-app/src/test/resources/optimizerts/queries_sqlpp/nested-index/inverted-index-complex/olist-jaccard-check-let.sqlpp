@@ -34,7 +34,7 @@ create type test.AddressType as
   number : integer,
   street : string,
   city : string
-}
+};
 
 create type test.CustomerTypetmp as
  closed {
@@ -48,18 +48,18 @@ create type test.CustomerTypetmp as
           age : integer?
       }
 ]
-}
+};
 
 create type test.CustomerType as
  closed {
   nested : CustomerTypetmp
-}
+};
 
 create  dataset Customers(CustomerType) primary key nested.cid;
 
 create  index interests_index  on Customers (nested.interests) type keyword;
 
-write output to asterix_nc1:"rttest/inverted-index-complex_olist-jaccard-check-let.adm"
+write output to asterix_nc1:"rttest/inverted-index-complex_olist-jaccard-check-let.adm";
 select element c
 from  Customers as c
 with  jacc as test.`similarity-jaccard-check`(c.nested.interests,['databases','computers','wine'],0.700000f)

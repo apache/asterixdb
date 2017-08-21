@@ -19,7 +19,7 @@
 
 USE tpch;
 
-SET `compiler.joinmemory` "-32GB"
+SET `compiler.joinmemory` "-32GB";
 
 SELECT nation, o_year, sum(amount) AS sum_profit
 FROM

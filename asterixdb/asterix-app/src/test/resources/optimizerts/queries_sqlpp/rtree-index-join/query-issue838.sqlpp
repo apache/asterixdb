@@ -34,13 +34,13 @@ create type twitter.TweetMessageType as
   tweetid : bigint,
   `sender-location` : point,
   text : string
-}
+};
 
 create type twitter.TweetHistorySubscription as
 {
   `subscription-id` : integer,
   location : point
-}
+};
 
 create  dataset TweetHistorySubscriptions(TweetHistorySubscription) primary key `subscription-id`;
 
@@ -50,7 +50,7 @@ create  dataset TweetMessages(TweetMessageType) primary key tweetid;
 
 create  index locationIdx  on TweetMessages (`sender-location`) type rtree;
 
-write output to asterix_nc1:"rttest/query-issue838.adm"
+write output to asterix_nc1:"rttest/query-issue838.adm";
 select element {'subscription-id':sub.`subscription-id`,'changeSet':1,'execution-time':twitter.`current-datetime`(),'message-text':text}
 from  TweetHistorySubscriptions as sub,
       (

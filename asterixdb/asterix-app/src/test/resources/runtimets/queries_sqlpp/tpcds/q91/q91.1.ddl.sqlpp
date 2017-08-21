@@ -38,7 +38,7 @@ create type tpcds.customer_address_type as  closed {
   ca_country : string?,
   ca_gmt_offset : double?,
   ca_location_type : string?
- }
+ };
 
 create type tpcds.call_center_type as
  closed {
@@ -73,7 +73,7 @@ create type tpcds.call_center_type as
   cc_country : string?,
   cc_gmt_offset : double?,
   cc_tax_percentage : double?
-}
+};
 
 create type tpcds.household_demographics_type as
  closed {
@@ -82,7 +82,7 @@ create type tpcds.household_demographics_type as
   hd_buy_potential : string?,
   hd_dep_count : bigint?,
   hd_vehicle_count : bigint?
-}
+};
 create type tpcds.customer_demographics_type as
  closed {
   cd_demo_sk : bigint,
@@ -94,7 +94,7 @@ create type tpcds.customer_demographics_type as
   cd_dep_count : bigint?,
   cd_dep_employed_count : bigint?,
   cd_dep_college_count : bigint?
-}
+};
 create type tpcds.date_dim_type as
  closed {
   d_date_sk : bigint,
@@ -125,7 +125,7 @@ create type tpcds.date_dim_type as
   d_current_month : string?,
   d_current_quarter : string?,
   d_current_year : string?
-}
+};
 
 create type tpcds.catalog_returns_type as
  closed {
@@ -156,7 +156,7 @@ create type tpcds.catalog_returns_type as
   cr_reversed_charge : double?,
   cr_store_credit : double?,
   cr_net_loss : double?
-}
+};
 
 create type tpcds.customer_type as
  closed {
@@ -178,7 +178,7 @@ create type tpcds.customer_type as
   c_login : string?,
   c_email_address : string?,
   c_last_review_date : string?
-}
+};
 
 create dataset customer_address(customer_address_type) primary key ca_address_sk;
 

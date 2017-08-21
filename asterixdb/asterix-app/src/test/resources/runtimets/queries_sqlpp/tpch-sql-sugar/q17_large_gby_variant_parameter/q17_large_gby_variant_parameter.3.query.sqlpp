@@ -19,7 +19,7 @@
 
 use tpch;
 
-SET `compiler.groupmemory` "-10GB"
+SET `compiler.groupmemory` "-10GB";
 
 SELECT l_partkey t_partkey,
        count(1) t_count,

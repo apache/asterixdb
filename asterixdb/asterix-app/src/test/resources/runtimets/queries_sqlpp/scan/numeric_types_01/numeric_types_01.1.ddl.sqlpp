@@ -32,7 +32,7 @@ create type test.NumericType as
   int64Field : bigint?,
   floatField : float?,
   doubleField : double?
-}
+};
 
 create external  dataset Numeric(NumericType) using localfs((`path`=`asterix_nc1://data/nontagged/numericData.adm`),(`format`=`adm`));
 

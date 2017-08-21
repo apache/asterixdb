@@ -22,7 +22,7 @@ use test;
 
 create type testType as open {
    `id`: integer
-}
+};
 
 create dataset testDS(testType) primary key id;
 create index testIdx on testDS(`value`: string) enforced;

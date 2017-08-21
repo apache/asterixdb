@@ -39,13 +39,13 @@ create type test.MyRecord as
   poly1 : polygon,
   poly2 : polygon,
   rec : rectangle
-}
+};
 
 create  dataset MyData(MyRecord) primary key id;
 
 create  index rtree_index  on MyData (point) type rtree;
 
-write output to asterix_nc1:"rttest/rtree-index-join_spatial-intersect-point_03.adm"
+write output to asterix_nc1:"rttest/rtree-index-join_spatial-intersect-point_03.adm";
 select element {'a':a,'b':b}
 from  MyData as a,
       MyData as b

@@ -39,7 +39,7 @@ create type test.MyRecord as
   poly1 : polygon,
   poly2 : polygon,
   rec : rectangle
-}
+};
 
 create type test.MyRecordOpen as
 {
@@ -50,7 +50,7 @@ create type test.MyRecordOpen as
   poly1 : polygon,
   poly2 : polygon,
   rec : rectangle
-}
+};
 
 create  dataset MyData1(MyRecord) primary key id;
 
@@ -58,7 +58,7 @@ create  dataset MyData2(MyRecordOpen) primary key id;
 
 create  index rtree_index  on MyData2 (point:point?) type rtree enforced;
 
-write output to asterix_nc1:"rttest/rtree-index-join_spatial-intersect-point_02.adm"
+write output to asterix_nc1:"rttest/rtree-index-join_spatial-intersect-point_02.adm";
 select element {'a':a,'b':b}
 from  MyData1 as a,
       MyData2 as b

@@ -47,12 +47,12 @@ create type test.Schematmp as
   stringu1 : string,
   stringu2 : string,
   string4 : string
-}
+};
 
 create type test.Schema as
  closed {
   nested : Schematmp
-}
+};
 
 create  dataset t1tmp(Schematmp) primary key unique2;
 

@@ -29,7 +29,7 @@ create type test.UserType as
   name : string,
   lottery_numbers : [bigint],
   interests : {{string}}
-}
+};
 
 create type test.VisitorType as
 {
@@ -37,7 +37,7 @@ create type test.VisitorType as
   name : string,
   lottery_numbers : [bigint],
   interests : {{string}}
-}
+};
 
 create  dataset Users(UserType) primary key uid;
 

@@ -33,7 +33,7 @@ create type fooverse.FooType as
 {
   id : bigint,
   numbers : [bigint]
-}
+};
 
 create  dataset Foo(FooType) primary key id;
 

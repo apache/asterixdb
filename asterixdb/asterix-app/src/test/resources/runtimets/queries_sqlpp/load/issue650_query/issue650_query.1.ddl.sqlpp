@@ -34,7 +34,7 @@ create type fuzzyjoin.UserType as
   name : string,
   lottery_numbers : [integer],
   interests : {{string}}
-}
+};
 
 create  dataset Users(UserType) primary key uid;
 

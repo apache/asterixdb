@@ -29,13 +29,13 @@ use deliber;
 
 // Dish served by a restaurant
 create type DishesType as open
-{ name: string, price: double }
+{ name: string, price: double };
 
 // Bank account type
 create type BankAccountType as open{
  bank_account_number: string,
  bank_account_routing_number: string
-}
+};
 
 // Restaurant's information
 create type RestaurantsType as open {
@@ -46,7 +46,7 @@ bank_account: BankAccountType,
 last_bank_transaction_datetime: datetime,
 cuisine: {{ string }},
 dish: {{ DishesType }}
-}
+};
 
 // Creating datasets for Users, Restaurants, and Orders
 create dataset Restaurants(RestaurantsType)

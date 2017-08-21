@@ -30,12 +30,12 @@ create type test.DBLPTypetmp as
   title : string,
   authors : string,
   misc : string
-}
+};
 
 create type test.DBLPType as
  closed {
   nested : DBLPTypetmp
-}
+};
 
 create  nodegroup group1 if not exists  on
     asterix_nc1,

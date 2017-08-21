@@ -33,14 +33,14 @@ create type testdv2.testtype as
 {
   id : string,
   name : string
-}
+};
 
 create type testdv2.testtype2 as
  closed {
   hobby : {{string}}?,
   id : string,
   name : string
-}
+};
 
 create  dataset testds(testtype) primary key id;
 

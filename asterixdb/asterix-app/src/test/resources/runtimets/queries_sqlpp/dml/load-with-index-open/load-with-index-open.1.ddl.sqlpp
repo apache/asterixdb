@@ -41,7 +41,7 @@ create type test.LineItemType as
   l_shipinstruct : string,
   l_shipmode : string,
   l_comment : string
-}
+};
 
 create type test.LineItemTypeOpen as
 {
@@ -60,7 +60,7 @@ create type test.LineItemTypeOpen as
   l_shipinstruct : string,
   l_shipmode : string,
   l_comment : string
-}
+};
 
 create  dataset LineItemOpen(LineItemTypeOpen) primary key l_orderkey,l_linenumber;
 

@@ -34,7 +34,7 @@ create type test1.testtype as
   name : string,
   loc : point,
   time : datetime
-}
+};
 
 create type test2.testtype as
 {
@@ -42,7 +42,7 @@ create type test2.testtype as
   name : string?,
   loc : point,
   time : datetime
-}
+};
 
 create type test1.Tweet as
 {
@@ -51,7 +51,7 @@ create type test1.Tweet as
   loc : point,
   time : datetime,
   text : string
-}
+};
 
 create  dataset test1.t1(testtype) primary key id;
 

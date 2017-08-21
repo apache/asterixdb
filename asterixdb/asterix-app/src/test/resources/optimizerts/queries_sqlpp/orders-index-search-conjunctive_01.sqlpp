@@ -34,7 +34,7 @@ create type tpch.OrderType as
   o_clerk : string,
   o_shippriority : integer,
   o_comment : string
-}
+};
 
 create  nodegroup group1 if not exists  on
     asterix_nc1,
@@ -46,7 +46,7 @@ load  dataset Orders using localfs ((`path`=`asterix_nc1://data/tpch0.001/orders
 
 create  index idx_Orders_Custkey  on Orders (o_custkey) type btree;
 
-write output to asterix_nc1:"/tmp/index_search-conjunctive.adm"
+write output to asterix_nc1:"/tmp/index_search-conjunctive.adm";
 select element {'o_orderkey':o.o_orderkey,'o_custkey':o.o_custkey}
 from  Orders as o
 where ((o.o_custkey = 40) and (o.o_totalprice > 150000.0))

@@ -41,7 +41,7 @@ create type student.stdType as
   age : integer,
   sex : string,
   dept : string
-}
+};
 
 create type teacher.tchrType as
 {
@@ -50,7 +50,7 @@ create type teacher.tchrType as
   age : integer,
   sex : string,
   dept : string
-}
+};
 
 create  dataset student.ugdstd(stdType) primary key id;
 

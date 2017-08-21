@@ -27,4 +27,4 @@ create dataverse testdv1;
 
 create function testdv1.fun01(){
 100
-}
+};

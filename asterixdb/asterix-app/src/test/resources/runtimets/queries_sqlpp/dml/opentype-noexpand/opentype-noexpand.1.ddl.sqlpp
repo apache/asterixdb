@@ -33,7 +33,7 @@ create type testdv2.testtype as
 {
   name : string?,
   id : string
-}
+};
 
 create  dataset testds(testtype) primary key id;
 

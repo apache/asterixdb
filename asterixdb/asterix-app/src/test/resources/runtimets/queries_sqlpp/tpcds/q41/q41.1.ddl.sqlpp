@@ -47,6 +47,6 @@ create type tpcds.item_type as
   i_container : string?,
   i_manager_id : bigint?,
   i_product_name : string?
-}
+};
 
 create dataset item (item_type) primary key i_item_sk;

@@ -40,13 +40,13 @@ create type test.MyRecord as
   poly1 : polygon,
   poly2 : polygon,
   rec : rectangle
-}
+};
 
 create type test.MyMiniRecord as
  closed {
   id : bigint,
   point : point?
-}
+};
 
 create  dataset MyData(MyRecord) primary key id
 using compaction policy `correlated-prefix`

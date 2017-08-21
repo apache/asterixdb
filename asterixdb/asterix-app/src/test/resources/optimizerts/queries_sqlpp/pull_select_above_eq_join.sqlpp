@@ -29,7 +29,7 @@ create type `pull-select-above-eq-join`.UserType as
   name : string,
   city : string,
   lottery_numbers : {{integer}}
-}
+};
 
 create type `pull-select-above-eq-join`.VisitorType as
 {
@@ -37,7 +37,7 @@ create type `pull-select-above-eq-join`.VisitorType as
   name : string,
   city : string,
   lottery_numbers : {{integer}}
-}
+};
 
 create  nodegroup group1 if not exists  on
     asterix_nc1,
@@ -47,7 +47,7 @@ create  dataset Users(UserType) primary key uid on group1;
 
 create  dataset Visitors(VisitorType) primary key vid on group1;
 
-write output to asterix_nc1:"/tmp/pull-select-above-eq-join.adm"
+write output to asterix_nc1:"/tmp/pull-select-above-eq-join.adm";
 select element {'uid':user.uid,'vid':visitor.vid}
 from  Users as user,
       Visitors as visitor

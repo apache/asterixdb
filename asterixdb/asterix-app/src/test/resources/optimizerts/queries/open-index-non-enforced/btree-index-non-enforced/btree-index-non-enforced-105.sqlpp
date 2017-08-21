@@ -28,11 +28,11 @@ drop dataverse test if exists;
 create dataverse test;
 use test;
 
-write output to asterix_nc1:"rttest/btree-index-non-enforced_btree-index-non-enforced-104.adm"
+write output to asterix_nc1:"rttest/btree-index-non-enforced_btree-index-non-enforced-104.adm";
 
 create type TestOpenType as open {
   c_id: int64
-}
+};
 
 create dataset TestOpen(TestOpenType)
 primary key c_id;

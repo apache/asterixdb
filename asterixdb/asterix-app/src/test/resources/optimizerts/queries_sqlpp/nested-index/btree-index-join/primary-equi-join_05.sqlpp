@@ -34,7 +34,7 @@ create type test.AddressType as
   number : integer,
   street : string,
   city : string
-}
+};
 
 create type test.CustomerTypetmp as
  closed {
@@ -47,16 +47,16 @@ create type test.CustomerTypetmp as
       total : float
   }
 
-}
+};
 
 create type test.CustomerType as
  closed {
   nested : CustomerTypetmp
-}
+};
 
 create  dataset Customers(CustomerType) primary key nested.cid;
 
-write output to asterix_nc1:"rttest/btree-index-join_primary-equi-join_06.adm"
+write output to asterix_nc1:"rttest/btree-index-join_primary-equi-join_06.adm";
 select element {'customer1':c1.nested,'customer2':c2.nested}
 from  Customers as c1,
       Customers as c2

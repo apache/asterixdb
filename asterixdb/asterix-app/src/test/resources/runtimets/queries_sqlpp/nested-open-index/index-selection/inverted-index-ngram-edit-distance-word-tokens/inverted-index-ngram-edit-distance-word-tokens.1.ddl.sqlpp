@@ -29,7 +29,7 @@ create type test.DBLPOpenType as
   dblpid : string,
   authors : string,
   misc : string
-}
+};
 
 create type test.DBLPClosedType as
  closed {
@@ -38,7 +38,7 @@ create type test.DBLPClosedType as
   title : string,
   authors : string,
   misc : string
-}
+};
 
 create  nodegroup group1 if not exists  on
     asterix_nc1,
@@ -47,7 +47,7 @@ create  nodegroup group1 if not exists  on
 create type test.DBLPType as
  closed {
   nested : DBLPOpenType
-}
+};
 
 create  dataset DBLPtmp(DBLPClosedType) primary key id on group1;
 

@@ -30,7 +30,7 @@ create type test.DBLPType as
   title : string,
   authors : string,
   misc : string
-}
+};
 
 create type test.CSXType as
  closed {
@@ -39,7 +39,7 @@ create type test.CSXType as
   title : string,
   authors : string,
   misc : string
-}
+};
 
 create  dataset DBLP(DBLPType) primary key id;
 

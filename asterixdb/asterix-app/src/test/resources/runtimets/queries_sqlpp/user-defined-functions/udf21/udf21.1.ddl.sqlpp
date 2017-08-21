@@ -31,4 +31,4 @@ use test;
 
 create function test.isOdd(b){
 b%2 != 0
-}
+};

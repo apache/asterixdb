@@ -25,11 +25,11 @@ drop dataverse test if exists;
 create dataverse test;
 use test;
 
-write output to asterix_nc1:"rttest/btree-equi-join-non-enforced_btree-equi-join-non-enforced-06.adm"
+write output to asterix_nc1:"rttest/btree-equi-join-non-enforced_btree-equi-join-non-enforced-06.adm";
 
 create type TestOpenType as open {
   c_id: int64
-}
+};
 
 create dataset TestOpen1(TestOpenType)
 primary key c_id;

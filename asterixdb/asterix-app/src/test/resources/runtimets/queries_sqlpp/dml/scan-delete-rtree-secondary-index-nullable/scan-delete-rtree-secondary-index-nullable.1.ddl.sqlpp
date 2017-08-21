@@ -39,7 +39,7 @@ create type test.MyRecord as
   poly1 : polygon,
   poly2 : polygon,
   rec : rectangle
-}
+};
 
 create  dataset MyData(MyRecord) primary key id;
 

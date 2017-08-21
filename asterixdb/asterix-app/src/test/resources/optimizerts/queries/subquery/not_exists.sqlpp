@@ -32,7 +32,7 @@ CREATE TYPE OrderType AS CLOSED {
   o_clerk: string,
   o_shippriority: integer,
   o_comment: string
-}
+};
 
 CREATE TYPE CustomerType AS CLOSED {
   c_custkey: integer,
@@ -43,7 +43,7 @@ CREATE TYPE CustomerType AS CLOSED {
   c_acctbal: double,
   c_mktsegment: string,
   c_comment: string
-}
+};
 
 CREATE EXTERNAL DATASET Customer(CustomerType) USING `localfs`
 ((`path`=`asterix_nc1://data/tpch0.001/customer.tbl`),

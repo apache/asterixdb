@@ -34,7 +34,7 @@ create type test.LineIDType as
   l_orderkey : integer,
   l_linenumber : integer,
   l_suppkey : integer
-}
+};
 
 create  dataset LineID(LineIDType) primary key l_orderkey,l_linenumber;
 

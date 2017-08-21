@@ -31,7 +31,7 @@ create type test.SpatialType as
   line : line,
   polygon : polygon,
   circle : circle
-}
+};
 
 create external  dataset Spatial(SpatialType) using localfs((`path`=`asterix_nc1://data/nontagged/spatialData.json`),(`format`=`adm`));
 

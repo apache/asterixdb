@@ -37,7 +37,7 @@ create type test.TwitterUserType as
   statuses_count : integer,
   name : string,
   followers_count : integer
-}
+};
 
 create type test.TweetMessageType as
 {
@@ -47,13 +47,13 @@ create type test.TweetMessageType as
   send_time : datetime,
   referred_topics : {{string}},
   message_text : string
-}
+};
 
 create  dataset TweetMessages(TweetMessageType) primary key tweetid;
 
 create  index topicIIx  on TweetMessages (referred_topics) type keyword;
 
-write output to asterix_nc1:"rttest/inverted-index-join_issue741.adm"
+write output to asterix_nc1:"rttest/inverted-index-join_issue741.adm";
 select element {'tweet':t.tweetid,'similar-tweets':(
         select element t2.tweetid
         from  TweetMessages as t2

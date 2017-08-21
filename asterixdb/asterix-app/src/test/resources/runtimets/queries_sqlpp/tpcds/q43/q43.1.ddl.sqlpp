@@ -53,7 +53,7 @@ create type tpcds.date_dim_type as
   d_current_month : string?,
   d_current_quarter : string?,
   d_current_year : string?
-}
+};
 
 create type tpcds.store_sales_type as
  closed {
@@ -80,7 +80,7 @@ create type tpcds.store_sales_type as
   ss_net_paid:               double?,
   ss_net_paid_inc_tax:       double?,
   ss_net_profit:             double?
-}
+};
 
 create type tpcds.store_type as
  closed {
@@ -113,7 +113,7 @@ create type tpcds.store_type as
   s_country : string?,
   s_gmt_offset : double?,
   s_tax_precentage : double?
-}
+};
 
 create dataset date_dim(date_dim_type) primary key d_date_sk;
 

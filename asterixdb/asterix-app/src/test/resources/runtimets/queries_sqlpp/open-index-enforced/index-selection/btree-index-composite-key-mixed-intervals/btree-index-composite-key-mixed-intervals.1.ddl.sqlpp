@@ -39,14 +39,14 @@ create type test.Emp as
   lname : string,
   age : bigint,
   dept : string
-}
+};
 
 create type test.EmpOpen as
 {
   id : bigint,
   age : bigint,
   dept : string
-}
+};
 
 create  dataset employee(Emp) primary key id;
 

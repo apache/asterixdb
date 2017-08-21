@@ -30,7 +30,7 @@ create type feeds_10.TweetType as
   location : string,
   text : string,
   timestamp : string
-}
+};
 
 create  dataset Tweets(TweetType) primary key id;
 

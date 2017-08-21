@@ -36,7 +36,7 @@ create type test.FacebookMessageType as
   `sender-location` : point?,
   message : string,
   `send-time` : datetime
-}
+};
 
 create  dataset FacebookMessages(FacebookMessageType) primary key `message-id`;
 

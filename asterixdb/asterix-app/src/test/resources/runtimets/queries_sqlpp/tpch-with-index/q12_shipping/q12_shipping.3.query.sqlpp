@@ -17,7 +17,7 @@
  * under the License.
  */
 
-use tpch
+use tpch;
 
 select element {'l_shipmode':l_shipmode,'high_line_count':tpch.coll_sum((
         select element case

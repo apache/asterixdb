@@ -34,7 +34,7 @@ create type test.BatterType as
 {
   id : bigint,
   descrpt : string
-}
+};
 
 create type test.TestType as
  closed {
@@ -42,7 +42,7 @@ create type test.TestType as
   description : string,
   name : string,
   batters : [[BatterType]]
-}
+};
 
 create  dataset T1(TestType) primary key id;
 

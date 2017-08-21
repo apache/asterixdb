@@ -29,7 +29,7 @@ create type test.AddressType as
   city : string,
   zip : string,
   latlong : point
-}
+};
 
 create type test.UserType as
 {
@@ -43,7 +43,7 @@ create type test.UserType as
           member_since : date
       }
 }}
-}
+};
 
 create external  dataset User(UserType) using localfs((`path`=`asterix_nc1://data/events/tiny/user.adm`),(`format`=`adm`));
 

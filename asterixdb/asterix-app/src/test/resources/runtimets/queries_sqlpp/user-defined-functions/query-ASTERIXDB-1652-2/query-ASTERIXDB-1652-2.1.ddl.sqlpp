@@ -24,5 +24,5 @@ use test;
 
 create function length(foo){
    1
-}
+};
 

@@ -45,11 +45,11 @@ INSERT INTO Incentive (
     'bonus': 2000
   }
  ]
-)
+);
 
 INSERT INTO SuperStars (
   {
     'id': '123'
   }
-)
+);
 

@@ -30,7 +30,7 @@ create type twitter.Tweet as
   loc : point,
   time : datetime,
   text : string
-}
+};
 
 create external  dataset TwitterData(Tweet) using localfs((`path`=`asterix_nc1://data/twitter/extrasmalltweets.txt`),(`format`=`adm`));
 

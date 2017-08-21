@@ -27,7 +27,7 @@ use test;
 
 create type TestOpenType as open {
   c_id: int64
-}
+};
 
 create dataset TestOpen(TestOpenType)
 primary key c_id;

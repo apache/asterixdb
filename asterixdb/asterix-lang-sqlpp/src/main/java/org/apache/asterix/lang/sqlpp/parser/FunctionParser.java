@@ -60,7 +60,7 @@ public class FunctionParser {
         builder.append("\n");
         builder.append(functionBody);
         builder.append("\n");
-        builder.append("}");
+        builder.append("};");
 
         IParser parser = parserFactory.createParser(new StringReader(new String(builder)));
         List<Statement> statements = parser.parse();

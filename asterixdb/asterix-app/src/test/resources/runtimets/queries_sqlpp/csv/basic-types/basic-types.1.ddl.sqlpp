@@ -46,5 +46,5 @@ create type test.AllType as
   circle : circle,
   binary : binary,
   uuid : uuid
-}
+};
 

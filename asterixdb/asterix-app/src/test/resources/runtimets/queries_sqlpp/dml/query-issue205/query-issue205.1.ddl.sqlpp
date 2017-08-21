@@ -33,14 +33,14 @@ create type test.EmployeeStat as
 {
   age : bigint,
   salary : bigint
-}
+};
 
 create type test.EmployeeType as
  closed {
   id : string,
   stat : EmployeeStat,
   deptCode : bigint
-}
+};
 
 create  dataset Employees(EmployeeType) primary key id;
 

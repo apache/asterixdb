@@ -31,7 +31,7 @@ create type test.Schema as
   datetime : datetime,
   dtduration : `day_time_duration`,
   ymduration : `year_month_duration`
-}
+};
 
 create  dataset tsdata(Schema) primary key id;
 

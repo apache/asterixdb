@@ -33,7 +33,7 @@ create type test.testType as
 {
   id : bigint,
   name : string
-}
+};
 
 create  dataset testds(testType) primary key id;
 

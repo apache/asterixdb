@@ -41,7 +41,7 @@ create type test.LineItemTypetmp as
   l_shipinstruct : string,
   l_shipmode : string,
   l_comment : string
-}
+};
 
 create type test.LineItemOpenType as
 {
@@ -60,12 +60,12 @@ create type test.LineItemOpenType as
   l_shipinstruct : string,
   l_shipmode : string,
   l_comment : string
-}
+};
 
 create type test.LineItemType as
  closed {
   nested : LineItemOpenType
-}
+};
 
 create  dataset LineItemtmp(LineItemTypetmp) primary key l_orderkey,l_linenumber;
 

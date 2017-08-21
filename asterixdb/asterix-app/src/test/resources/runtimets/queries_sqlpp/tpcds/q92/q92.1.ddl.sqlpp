@@ -47,7 +47,7 @@ create type tpcds.item_type as
   i_container : string?,
   i_manager_id : int64?,
   i_product_name : string?
-}
+};
 
 create type tpcds.web_sales_type as
  closed {
@@ -85,7 +85,7 @@ create type tpcds.web_sales_type as
   ws_net_paid_inc_ship : double?,
   ws_net_paid_inc_ship_tax : double?,
   ws_net_profit : double?
-}
+};
 
 create type tpcds.date_dim_type as
  closed {
@@ -117,7 +117,7 @@ create type tpcds.date_dim_type as
   d_current_month : string?,
   d_current_quarter : string?,
   d_current_year : string?
-}
+};
 
 create dataset item (item_type) primary key i_item_sk;
 

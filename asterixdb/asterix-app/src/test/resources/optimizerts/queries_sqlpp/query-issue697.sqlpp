@@ -33,7 +33,7 @@ create type test.TestType as
  closed {
   key1 : integer,
   `value` : integer
-}
+};
 
 create  dataset test(TestType) primary key key1;
 

@@ -34,18 +34,18 @@ create type test.DBLPTypetmp as
   dblpid : string,
   title : string,
   misc : string
-}
+};
 
 create type test.DBLPType as
  closed {
   nested : DBLPTypetmp
-}
+};
 
 create  dataset DBLP(DBLPType) primary key nested.id;
 
 create  index ngram_index  on DBLP (nested.authors:string?) type ngram (3) enforced;
 
-write output to asterix_nc1:"rttest/inverted-index-join_ngram-edit-distance_01.adm"
+write output to asterix_nc1:"rttest/inverted-index-join_ngram-edit-distance_01.adm";
 select element {'arec':a,'brec':b}
 from  DBLP as a,
       DBLP as b

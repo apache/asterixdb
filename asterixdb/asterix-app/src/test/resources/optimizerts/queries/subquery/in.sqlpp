@@ -24,11 +24,11 @@ USE test;
 
 CREATE TYPE OrderType AS {
   o_orderkey: integer
-}
+};
 
 CREATE TYPE CustomerType AS {
   c_custkey: integer
-}
+};
 
 
 CREATE COLLECTION Customers(CustomerType) PRIMARY KEY c_custkey;

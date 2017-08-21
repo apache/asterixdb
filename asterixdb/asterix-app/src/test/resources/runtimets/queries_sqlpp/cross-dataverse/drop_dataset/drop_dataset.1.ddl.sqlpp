@@ -28,7 +28,7 @@ create type test.AddressType as
   number : integer,
   street : string,
   city : string
-}
+};
 
 create type test.CustomerType as
  closed {
@@ -40,9 +40,9 @@ create type test.CustomerType as
   lastorder : {
       oid : integer,
       total : float
-  }
+  };
 
-}
+};
 
 create  dataset test.Customers(CustomerType) primary key cid;
 

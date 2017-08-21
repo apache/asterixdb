@@ -32,7 +32,7 @@ use test;
 create type TypeA as open {
     id : bigint,
     name : string
-}
+};
 
 create dataset t1(TypeA) primary key id;
 

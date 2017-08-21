@@ -39,7 +39,7 @@ create type tpcds.web_page_type as
   wp_link_count : int64?,
   wp_image_count : int64?,
   wp_max_ad_count : int64?
-}
+};
 
 
 create type tpcds.customer_address_type as  closed {
@@ -56,14 +56,14 @@ create type tpcds.customer_address_type as  closed {
   ca_country : string?,
   ca_gmt_offset : double?,
   ca_location_type : string?
- }
+ };
 
 create type tpcds.reason_type as
  closed {
   r_reason_sk : int64,
   r_reason_id : string,
   r_reason_desc : string?
-}
+};
 
 create type tpcds.customer_demographics_type as
  closed {
@@ -76,7 +76,7 @@ create type tpcds.customer_demographics_type as
   cd_dep_count : int64?,
   cd_dep_employed_count : int64?,
   cd_dep_college_count : int64?
-}
+};
 
 create type tpcds.web_sales_type as
  closed {
@@ -114,7 +114,7 @@ create type tpcds.web_sales_type as
   ws_net_paid_inc_ship : double?,
   ws_net_paid_inc_ship_tax : double?,
   ws_net_profit : double?
-}
+};
 
 create type tpcds.date_dim_type as
  closed {
@@ -146,7 +146,7 @@ create type tpcds.date_dim_type as
   d_current_month : string?,
   d_current_quarter : string?,
   d_current_year : string?
-}
+};
 
 create type tpcds.web_returns_type as
  closed {
@@ -174,13 +174,13 @@ create type tpcds.web_returns_type as
   wr_reversed_charge: double?,
   wr_account_credit: double?,
   wr_net_loss: double?
-}
+};
 
 create dataset web_page (web_page_type) primary key wp_web_page_sk;
 
 create dataset customer_address(customer_address_type) primary key ca_address_sk;
 
-create dataset reason(reason_type) primary key r_reason_sk
+create dataset reason(reason_type) primary key r_reason_sk;
 
 create dataset customer_demographics(customer_demographics_type) primary key cd_demo_sk;
 

@@ -33,7 +33,7 @@ create type multitask.LogType as
   time : time,
   duration : integer,
   app : string
-}
+};
 
 create  dataset logs(LogType) primary key row_id;
 

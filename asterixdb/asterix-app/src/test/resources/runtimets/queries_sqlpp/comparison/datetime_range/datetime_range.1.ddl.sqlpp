@@ -30,7 +30,7 @@ create type test.Tweet as
   loc : point,
   time : datetime,
   text : string
-}
+};
 
 create  dataset TwitterData(Tweet) primary key id;
 

@@ -31,7 +31,7 @@ create type test.OrderType as
   orderpriority : string,
   clerk : string,
   total : float
-}
+};
 
 create external  dataset Orders(OrderType) using localfs((`path`=`asterix_nc1://data/semistructured/tiny01/orders.adm`),(`format`=`adm`));
 

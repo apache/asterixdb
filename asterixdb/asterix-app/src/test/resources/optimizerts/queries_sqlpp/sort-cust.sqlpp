@@ -28,7 +28,7 @@ create type custlimit.AddressType as
   number : integer,
   street : string,
   city : string
-}
+};
 
 create type custlimit.CustomerType as
  closed {
@@ -41,7 +41,7 @@ create type custlimit.CustomerType as
       total : float
   }
 
-}
+};
 
 create  nodegroup group1 if not exists  on
     asterix_nc1,
@@ -49,7 +49,7 @@ create  nodegroup group1 if not exists  on
 ;
 create  dataset Customers(CustomerType) primary key cid on group1;
 
-write output to asterix_nc1:"/tmp/custlimit.adm"
+write output to asterix_nc1:"/tmp/custlimit.adm";
 select element {'custname':c.name,'custage':c.age}
 from  Customers as c
 order by c.age

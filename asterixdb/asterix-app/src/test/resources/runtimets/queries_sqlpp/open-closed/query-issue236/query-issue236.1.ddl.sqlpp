@@ -37,7 +37,7 @@ create type SocialNetworkData.TwitterUserType as
   statuses_count : bigint,
   name : string,
   followers_count : bigint
-}
+};
 
 create type SocialNetworkData.TweetMessageType as
  closed {
@@ -49,7 +49,7 @@ create type SocialNetworkData.TweetMessageType as
   `send-time-copy` : datetime,
   `referred-topics` : {{string}},
   `message-text` : string
-}
+};
 
 create  dataset TweetMessages(TweetMessageType) primary key tweetid;
 

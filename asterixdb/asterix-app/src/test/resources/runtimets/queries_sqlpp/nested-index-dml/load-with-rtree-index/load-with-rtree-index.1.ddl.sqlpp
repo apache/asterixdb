@@ -32,7 +32,7 @@ create type TinySocial.TwitterUserType as
   name : string,
   followers_count : bigint,
   `sender-location` : point?
-}
+};
 
 create type TinySocial.TweetMessageType as
  closed {
@@ -41,7 +41,7 @@ create type TinySocial.TweetMessageType as
   `send-time` : datetime,
   `referred-topics` : {{string}},
   `message-text` : string
-}
+};
 
 create  dataset TweetMessages(TweetMessageType) primary key tweetid;
 

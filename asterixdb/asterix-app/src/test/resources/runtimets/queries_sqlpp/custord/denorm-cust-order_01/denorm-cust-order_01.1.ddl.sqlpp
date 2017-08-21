@@ -28,7 +28,7 @@ create type test.AddressType as
   number : bigint,
   street : string,
   city : string
-}
+};
 
 create type test.CustomerType as
 {
@@ -39,9 +39,9 @@ create type test.CustomerType as
   lastorder : {
       oid : bigint,
       total : float
-  }
+  };
 
-}
+};
 
 create type test.OrderType as
 {
@@ -51,14 +51,14 @@ create type test.OrderType as
   orderpriority : string,
   clerk : string,
   total : float
-}
+};
 
 create type test.CustomerOrdersType as
 {
   cid : bigint,
   cust : CustomerType,
   orders : [OrderType]
-}
+};
 
 create  dataset Customers1(CustomerType) primary key cid;
 

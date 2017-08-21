@@ -37,11 +37,11 @@ create type test.DBLPType as
   title : string,
   authors : string,
   misc : string
-}
+};
 
 create  dataset DBLP(DBLPType) primary key id;
 
-write output to asterix_nc1:"rttest/similarity_edit-distance-let-to-edit-distance-check_08.adm"
+write output to asterix_nc1:"rttest/similarity_edit-distance-let-to-edit-distance-check_08.adm";
 select element ed
 from  DBLP as o
 with  ed as test.`edit-distance`(o.authors,'Michael J. Carey')

@@ -37,7 +37,7 @@ create type test.TwitterUserType as
   `statuses-count` : bigint,
   name : string,
   `followers-count` : bigint
-}
+};
 
 create type test.TweetMessageType as
  closed {
@@ -49,7 +49,7 @@ create type test.TweetMessageType as
   `message-text` : string,
   countA : bigint,
   countB : bigint
-}
+};
 
 create external  dataset TweetMessages(TweetMessageType) using `hdfs`((`hdfs`=`hdfs://127.0.0.1:31888`),(`path`=`/asterix/tw_for_indexleftouterjoin.adm`),(`input-format`=`text-input-format`),(`format`=`adm`));
 

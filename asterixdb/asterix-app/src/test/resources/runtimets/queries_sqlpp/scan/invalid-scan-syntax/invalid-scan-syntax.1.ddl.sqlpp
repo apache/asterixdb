@@ -33,7 +33,7 @@ create type test.Employee as
   id : integer,
   name : string,
   salary : integer
-}
+};
 
 create  dataset Office(Employee) primary key id;
 

@@ -34,12 +34,12 @@ create type testdv2.testtype as
   id : string,
   name : string,
   hobby : {{string}}?
-}
+};
 
 create type testdv2.testtype2 as
 {
   id : string
-}
+};
 
 create  dataset testds(testtype) primary key id;
 

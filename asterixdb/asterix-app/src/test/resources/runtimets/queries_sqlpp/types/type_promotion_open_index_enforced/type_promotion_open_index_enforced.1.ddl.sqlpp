@@ -27,7 +27,7 @@ create type TestDataverse.TestType as
 {
   id : bigint,
   sec_id : bigint
-}
+};
 
 create  dataset TestSet(TestType) primary key id;
 

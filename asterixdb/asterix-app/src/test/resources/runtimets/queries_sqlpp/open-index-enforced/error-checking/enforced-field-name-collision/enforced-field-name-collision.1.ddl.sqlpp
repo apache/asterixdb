@@ -27,7 +27,7 @@ create type test.testType as
 {
   id : integer,
   `value` : string
-}
+};
 
 create  dataset testDS(testType) primary key id;
 

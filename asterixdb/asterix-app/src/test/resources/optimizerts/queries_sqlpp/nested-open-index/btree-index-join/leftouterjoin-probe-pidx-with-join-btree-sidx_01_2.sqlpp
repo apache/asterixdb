@@ -37,7 +37,7 @@ create type test.TwitterUserType as
   `statuses-count` : integer,
   name : string,
   `followers-count` : integer
-}
+};
 
 create type test.TweetMessageNestedType as
 {
@@ -47,12 +47,12 @@ create type test.TweetMessageNestedType as
   `send-time` : datetime,
   `referred-topics` : {{string}},
   `message-text` : string
-}
+};
 
 create type test.TweetMessageType as
 {
   nested : TweetMessageNestedType
-}
+};
 
 create  dataset TweetMessages(TweetMessageType) primary key nested.tweetid;
 
@@ -60,7 +60,7 @@ create  index msgCountAIx  on TweetMessages (nested.countA:integer?) type btree 
 
 create  index msgCountBIx  on TweetMessages (nested.countB:integer?) type btree enforced;
 
-write output to asterix_nc1:"rttest/btree-index-join_leftouterjoin-probe-pidx-with-join-btree-sidx_01.adm"
+write output to asterix_nc1:"rttest/btree-index-join_leftouterjoin-probe-pidx-with-join-btree-sidx_01.adm";
 select element {'tweetid1':t1.nested.tweetid,'count1':t1.nested.countA,'t2info':(
         select element {'tweetid2':t2.nested.tweetid,'count2':t2.nested.countB}
         from  TweetMessages as t2

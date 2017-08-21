@@ -28,7 +28,7 @@ create type test.AddressType as
   number : bigint,
   street : string,
   city : string
-}
+};
 
 create type test.CustomerType as
  closed {
@@ -42,7 +42,7 @@ create type test.CustomerType as
       total : float
   }
 
-}
+};
 
 create type test.OrderType as
 {
@@ -53,7 +53,7 @@ create type test.OrderType as
   clerk : string,
   total : float,
   items : [bigint]
-}
+};
 
 create external dataset Customers(CustomerType) using localfs((`path`=`asterix_nc1://data/nontagged/customerData.json`),(`format`=`adm`));
 

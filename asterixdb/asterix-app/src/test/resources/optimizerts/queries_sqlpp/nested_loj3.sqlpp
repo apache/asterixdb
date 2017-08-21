@@ -41,7 +41,7 @@ create type tpch.LineItemType as
   l_shipinstruct : string,
   l_shipmode : string,
   l_comment : string
-}
+};
 
 create type tpch.OrderType as
  closed {
@@ -54,7 +54,7 @@ create type tpch.OrderType as
   o_clerk : string,
   o_shippriority : integer,
   o_comment : string
-}
+};
 
 create type tpch.CustomerType as
  closed {
@@ -66,7 +66,7 @@ create type tpch.CustomerType as
   c_acctbal : double,
   c_mktsegment : string,
   c_comment : string
-}
+};
 
 create type tpch.PartSuppType as
  closed {
@@ -75,7 +75,7 @@ create type tpch.PartSuppType as
   ps_availqty : integer,
   ps_supplycost : double,
   ps_comment : string
-}
+};
 
 create  nodegroup group1 if not exists  on
     asterix_nc1,
@@ -89,7 +89,7 @@ create  dataset Customers(CustomerType) primary key c_custkey on group1;
 
 create  dataset PartSupp(PartSuppType) primary key ps_partkey,ps_suppkey on group1;
 
-write output to asterix_nc1:"/tmp/nested_loj.adm"
+write output to asterix_nc1:"/tmp/nested_loj.adm";
 select element {'cust':c,'orders':orders}
 from  Customers as c
 with  orders as (

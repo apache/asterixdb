@@ -30,4 +30,4 @@ use test;
 
 create function test.foo(a,b) {
 a+b
-}
+};

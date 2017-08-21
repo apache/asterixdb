@@ -36,12 +36,12 @@ create type test.DBLPNestedType as
   title : string,
   authors : string,
   misc : string
-}
+};
 
 create type test.DBLPType as
  closed {
   nested : DBLPNestedType
-}
+};
 
 create type test.CSXNestedType as
  closed {
@@ -50,12 +50,12 @@ create type test.CSXNestedType as
   title : string,
   authors : string,
   misc : string
-}
+};
 
 create type test.CSXType as
  closed {
   nested : CSXNestedType
-}
+};
 
 create  dataset DBLPtmp(DBLPNestedType) primary key id;
 

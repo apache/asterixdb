@@ -35,7 +35,7 @@ create type test.DBLPType as
   title : string,
   authors : string,
   misc : string
-}
+};
 
 create type test.CSXType as
 {
@@ -43,7 +43,7 @@ create type test.CSXType as
   csxid : string,
   title : string,
   misc : string
-}
+};
 
 create  dataset DBLP(DBLPType) primary key id;
 
@@ -51,7 +51,7 @@ create  dataset CSX(CSXType) primary key id;
 
 create  index ngram_index  on CSX (authors:string?) type ngram (3) enforced;
 
-write output to asterix_nc1:"rttest/inverted-index-join_ngram-edit-distance_02.adm"
+write output to asterix_nc1:"rttest/inverted-index-join_ngram-edit-distance_02.adm";
 select element {'arec':a,'brec':b}
 from  DBLP as a,
       CSX as b

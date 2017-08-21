@@ -35,7 +35,7 @@ create type test.AddressType as
   number : integer,
   street : string,
   city : string
-}
+};
 
 create type test.CustomerTypetmp as
  closed {
@@ -49,12 +49,12 @@ create type test.CustomerTypetmp as
           age : integer?
       }
 ]
-}
+};
 
 create type test.CustomerType as
  closed {
   nested : CustomerTypetmp
-}
+};
 
 create  dataset Customers(CustomerType) primary key nested.cid;
 
@@ -62,7 +62,7 @@ create  dataset Customers2(CustomerType) primary key nested.cid;
 
 create  index interests_index  on Customers (nested.interests) type keyword;
 
-write output to asterix_nc1:"rttest/inverted-index-join-noeqjoin_ulist-jaccard-inline.adm"
+write output to asterix_nc1:"rttest/inverted-index-join-noeqjoin_ulist-jaccard-inline.adm";
 select element {'ainterests':a.nested.interests,'binterests':b.nested.interests,'jacc':jacc}
 from  Customers as a,
       Customers as b

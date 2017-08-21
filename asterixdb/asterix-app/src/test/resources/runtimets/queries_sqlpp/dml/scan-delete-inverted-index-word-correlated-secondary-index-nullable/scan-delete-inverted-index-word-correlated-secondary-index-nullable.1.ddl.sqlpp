@@ -37,7 +37,7 @@ create type test.DBLPType as
   title : string?,
   authors : string,
   misc : string
-}
+};
 
 create  dataset DBLP(DBLPType) primary key id
 using compaction policy `correlated-prefix`

@@ -39,18 +39,18 @@ create type test.MyRecordtmp as
   poly1 : polygon,
   poly2 : polygon,
   rec : rectangle
-}
+};
 
 create type test.MyMiniRecordtmp as
  closed {
   id : bigint,
   point : point?
-}
+};
 
 create type test.MyMiniRecord as
  closed {
   nested : MyMiniRecordtmp
-}
+};
 
 create  dataset MyDatatmp(MyRecordtmp) primary key id;
 

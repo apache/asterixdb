@@ -31,7 +31,7 @@ create type test.SpatialType as
   line : line,
   polygon : polygon,
   circle : circle
-}
+};
 
 create  dataset Spatial2(SpatialType) primary key id;
 

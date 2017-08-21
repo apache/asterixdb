@@ -42,7 +42,7 @@ create type tpch1.LineItemType as
   l_shipinstruct : string,
   l_shipmode : string,
   l_comment : string
-}
+};
 
 create type tpch2.OrderType as
  closed {
@@ -55,7 +55,7 @@ create type tpch2.OrderType as
   o_clerk : string,
   o_shippriority : bigint,
   o_comment : string
-}
+};
 
 create dataset tpch1.LineItem(LineItemType) primary key l_orderkey,l_linenumber;
 

@@ -31,12 +31,12 @@ create dataverse testdv2;
 
 create function testdv1.fun01(){
 testdv2.fun02()
-}
+};
 
 create function testdv2.fun02(){
 testdv2.fun03()
-}
+};
 
 create function testdv2.fun03(){
 testdv1.fun01()
-}
+};

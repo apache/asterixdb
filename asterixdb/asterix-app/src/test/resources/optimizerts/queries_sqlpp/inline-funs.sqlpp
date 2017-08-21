@@ -23,7 +23,7 @@ create  dataverse test;
 use test;
 
 
-write output to asterix_nc1:"/tmp/inline_funs.adm"
+write output to asterix_nc1:"/tmp/inline_funs.adm";
 declare function f1() {
 (1 + test.f2())
 };

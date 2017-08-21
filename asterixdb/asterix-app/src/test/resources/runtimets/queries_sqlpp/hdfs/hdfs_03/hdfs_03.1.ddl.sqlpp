@@ -34,7 +34,7 @@ use test;
 create type test.LineType as
  closed {
   content : string
-}
+};
 
 create external  dataset TextDataset(LineType) using `hdfs`((`hdfs`=`hdfs://127.0.0.1:31888`),(`path`=`/asterix/large_text`),(`input-format`=`text-input-format`),(`format`=`delimited-text`),(`delimiter`=`.`));
 

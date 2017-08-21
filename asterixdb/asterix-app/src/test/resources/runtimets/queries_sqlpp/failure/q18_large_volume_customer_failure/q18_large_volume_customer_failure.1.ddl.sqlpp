@@ -40,7 +40,7 @@ create type LineItemType as {
   l_shipinstruct : string,
   l_shipmode : string,
   l_comment : string
-}
+};
 
 create type OrderType as {
   o_orderkey : bigint,
@@ -52,7 +52,7 @@ create type OrderType as {
   o_clerk : string,
   o_shippriority : bigint,
   o_comment : string
-}
+};
 
 create type CustomerType as {
   c_custkey : bigint,
@@ -63,7 +63,7 @@ create type CustomerType as {
   c_acctbal : double,
   c_mktsegment : string,
   c_comment : string
-}
+};
 
 create  dataset LineItem(LineItemType) primary key l_orderkey,l_linenumber;
 

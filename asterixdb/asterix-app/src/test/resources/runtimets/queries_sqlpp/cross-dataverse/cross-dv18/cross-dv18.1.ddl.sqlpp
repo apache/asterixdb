@@ -33,12 +33,12 @@ create  dataverse fest;
 create type test.testtype as
 {
   id : integer
-}
+};
 
 create type fest.testtype as
 {
   id : integer
-}
+};
 
 create  dataset test.t1(testtype) primary key id;
 

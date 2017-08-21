@@ -45,7 +45,7 @@ create type tpcds.store_returns_type as
   sr_reversed_charge : double?,
   sr_store_credit : double?,
   sr_net_loss : double?
-}
+};
 
 create type tpcds.store_sales_type as
  closed {
@@ -72,7 +72,7 @@ create type tpcds.store_sales_type as
   ss_net_paid:               double?,
   ss_net_paid_inc_tax:       double?,
   ss_net_profit:             double?
-}
+};
 
 create type tpcds.date_dim_type as
  closed {
@@ -104,7 +104,7 @@ create type tpcds.date_dim_type as
   d_current_month : string?,
   d_current_quarter : string?,
   d_current_year : string?
-}
+};
 
 create type tpcds.store_type as
  closed {
@@ -137,7 +137,7 @@ create type tpcds.store_type as
   s_country : string?,
   s_gmt_offset : double?,
   s_tax_precentage : double?
-}
+};
 
 create dataset store_returns (store_returns_type) primary key sr_item_sk, sr_ticket_number;
 

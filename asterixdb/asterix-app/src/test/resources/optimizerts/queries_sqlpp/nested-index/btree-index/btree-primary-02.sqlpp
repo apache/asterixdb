@@ -29,17 +29,17 @@ create  dataverse test;
 use test;
 
 
-write output to asterix_nc1:"rttest/btree-index_btree-primary-02.adm"
+write output to asterix_nc1:"rttest/btree-index_btree-primary-02.adm";
 create type test.TestTypetmp as
 {
   fname : string,
   lname : string
-}
+};
 
 create type test.TestType as
 {
   nested : TestTypetmp
-}
+};
 
 create  dataset testdst(TestType) primary key nested.fname,nested.lname;
 

@@ -35,13 +35,13 @@ create type test.DBLPType as
   title : string,
   authors : string,
   misc : string
-}
+};
 
 create  dataset DBLP(DBLPType) primary key id;
 
 create  index keyword_index  on DBLP (title) type keyword;
 
-write output to asterix_nc1:"rttest/inverted-index-join_word-jaccard-check_03.adm"
+write output to asterix_nc1:"rttest/inverted-index-join_word-jaccard-check_03.adm";
 select element {'arec':a,'brec':b}
 from  DBLP as a,
       DBLP as b

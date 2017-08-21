@@ -23,4 +23,4 @@ create dataverse channels;
 
 use channels;
 create function cat(str1,str2)
-{ concat(str1,str2) }
+{ concat(str1,str2) };

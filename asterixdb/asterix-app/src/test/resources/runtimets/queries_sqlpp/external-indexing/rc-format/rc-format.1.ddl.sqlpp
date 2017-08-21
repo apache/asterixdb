@@ -35,7 +35,7 @@ create type test.EmployeeType as
   id : bigint,
   name : string,
   age : bigint
-}
+};
 
 create external  dataset EmployeeDataset(EmployeeType) using `hdfs`(
 (`hdfs`=`hdfs://127.0.0.1:31888`),

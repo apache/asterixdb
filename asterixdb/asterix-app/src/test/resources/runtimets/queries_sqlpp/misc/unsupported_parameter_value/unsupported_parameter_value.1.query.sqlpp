@@ -17,6 +17,6 @@
  * under the License.
  */
 
-SET `compiler.joinmemory` "4LS"
+SET `compiler.joinmemory` "4LS";
 
 SELECT 1;
