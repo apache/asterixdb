@@ -153,7 +153,9 @@ public class ActiveManager {
         ActiveRuntimeId runtimeId = (ActiveRuntimeId) message.getPayload();
         IActiveRuntime runtime = runtimes.get(runtimeId);
         if (runtime == null) {
-            LOGGER.warning("Request to stop a runtime that is not registered " + runtimeId);
+            LOGGER.warning("Request to stop runtime: " + runtimeId
+                    + " that is not registered. Could be that the runtime completed execution on"
+                    + " this node before the cluster controller sent the stop request");
         } else {
             executor.execute(() -> {
                 try {

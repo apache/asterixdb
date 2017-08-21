@@ -84,7 +84,8 @@ public class HttpServer {
         executor = new ThreadPoolExecutor(numExecutorThreads, numExecutorThreads, 0L, TimeUnit.MILLISECONDS,
                 new LinkedBlockingQueue<>(requestQueueSize),
                 runnable -> new Thread(runnable, "HttpExecutor(port:" + port + ")-" + threadId.getAndIncrement()));
-        long directMemoryBudget = numExecutorThreads * (long) HIGH_WRITE_BUFFER_WATER_MARK;
+        long directMemoryBudget = numExecutorThreads * (long) HIGH_WRITE_BUFFER_WATER_MARK
+                + numExecutorThreads * HttpServerInitializer.RESPONSE_CHUNK_SIZE;
         LOGGER.log(Level.INFO, "The direct memory budget for this server is " + directMemoryBudget + " bytes");
     }
 
@@ -258,8 +259,8 @@ public class HttpServer {
         return b && (path.length() == cpl || '/' == path.charAt(cpl));
     }
 
-    protected HttpServerHandler createHttpHandler(int chunkSize) {
-        return new HttpServerHandler(this, chunkSize);
+    protected HttpServerHandler<HttpServer> createHttpHandler(int chunkSize) {
+        return new HttpServerHandler<>(this, chunkSize);
     }
 
     public ExecutorService getExecutor() {

@@ -159,6 +159,36 @@ public class ActiveEventsListenerTest {
     }
 
     @Test
+    public void testStartWhenOneNodeFinishesBeforeOtherNodeStarts() throws Exception {
+        Assert.assertEquals(ActivityState.STOPPED, listener.getState());
+        listener.onStart(Behavior.SUCCEED);
+        listener.onStop(Behavior.SUCCEED);
+        ActionSubscriber fastSubscriber = new ActionSubscriber();
+        nodeControllers[0].subscribe(fastSubscriber);
+        ActionSubscriber slowSubscriber = new ActionSubscriber();
+        slowSubscriber.stop();
+        nodeControllers[1].subscribe(slowSubscriber);
+        Action startActivityAction = users[0].startActivity(listener);
+        RuntimeRegistration registration = (RuntimeRegistration) fastSubscriber.get(0);
+        registration.sync();
+        registration.deregister();
+        Action deregistration = fastSubscriber.get(1);
+        deregistration.sync();
+        // Node 0 has completed registration and deregistration.. unblock node 1
+        slowSubscriber.resume();
+        registration = (RuntimeRegistration) slowSubscriber.get(0);
+        registration.sync();
+        // now that node 1 is unblocked and completed registration, ensure that start has completed
+        startActivityAction.sync();
+        assertSuccess(startActivityAction);
+        Assert.assertEquals(ActivityState.RUNNING, listener.getState());
+        Action stopAction = users[0].stopActivity(listener);
+        stopAction.sync();
+        assertSuccess(stopAction);
+        Assert.assertEquals(ActivityState.STOPPED, listener.getState());
+    }
+
+    @Test
     public void testStopWhenStopSucceed() throws Exception {
         testStartWhenStartSucceed();
         Assert.assertEquals(ActivityState.RUNNING, listener.getState());

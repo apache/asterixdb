@@ -93,6 +93,7 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
     protected String stats;
     protected boolean isFetchingStats;
     protected int numRegistered;
+    protected int numDeRegistered;
     protected volatile Future<Void> recoveryTask;
     protected volatile boolean cancelRecovery;
     protected volatile boolean suspended = false;
@@ -123,6 +124,7 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
         this.runtimeName = runtimeName;
         this.locations = locations;
         this.numRegistered = 0;
+        this.numDeRegistered = 0;
         this.handler =
                 (ActiveNotificationHandler) metadataProvider.getApplicationContext().getActiveNotificationHandler();
         handler.registerListener(this);
@@ -177,13 +179,17 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
                 setState(ActivityState.RUNNING);
             }
         } else if (message.getEvent() == Event.RUNTIME_DEREGISTERED) {
-            numRegistered--;
+            numDeRegistered++;
         }
     }
 
     @SuppressWarnings("unchecked")
     protected void finish(ActiveEvent event) throws HyracksDataException {
         LOGGER.log(level, "the job " + jobId + " finished");
+        if (numRegistered != numDeRegistered) {
+            LOGGER.log(Level.WARNING, "the job " + jobId + " finished with reported runtime registrations = "
+                    + numRegistered + " and deregistrations = " + numDeRegistered + " on node controllers");
+        }
         jobId = null;
         Pair<JobStatus, List<Exception>> status = (Pair<JobStatus, List<Exception>>) event.getEventObject();
         JobStatus jobStatus = status.getLeft();
@@ -202,8 +208,9 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
     }
 
     protected void start(ActiveEvent event) {
-        this.jobId = event.getJobId();
+        jobId = event.getJobId();
         numRegistered = 0;
+        numDeRegistered = 0;
     }
 
     @Override

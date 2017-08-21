@@ -18,6 +18,12 @@
  */
 package org.apache.asterix.test.active;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.logging.Logger;
+
 import org.apache.asterix.active.ActiveEvent;
 import org.apache.asterix.active.ActiveEvent.Kind;
 import org.apache.asterix.active.ActiveRuntimeId;
@@ -28,9 +34,12 @@ import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.hyracks.api.job.JobId;
 
 public class TestNodeControllerActor extends Actor {
+    private static final Logger LOGGER = Logger.getLogger(TestNodeControllerActor.class.getName());
 
     private final String id;
     private final TestClusterControllerActor clusterController;
+    private final Set<RuntimeRegistration> registrations = new HashSet<>();
+    private final List<ActionSubscriber> subscribers = new ArrayList<>();
 
     public TestNodeControllerActor(String name, TestClusterControllerActor clusterController) {
         super("NC: " + name, null);
@@ -39,28 +48,77 @@ public class TestNodeControllerActor extends Actor {
     }
 
     public Action registerRuntime(JobId jobId, EntityId entityId, int partition) {
-        Action registration = new Action() {
-            @Override
-            protected void doExecute(MetadataProvider actorMdProvider) throws Exception {
-                ActiveEvent event = new ActiveEvent(jobId, Kind.PARTITION_EVENT, entityId, new ActivePartitionMessage(
-                        new ActiveRuntimeId(entityId, id, partition), jobId, Event.RUNTIME_REGISTERED, null));
-                clusterController.activeEvent(event);
-            }
-        };
+        RuntimeRegistration registration = new RuntimeRegistration(this, jobId, entityId, partition);
+        for (ActionSubscriber subscriber : subscribers) {
+            subscriber.beforeSchedule(registration);
+        }
+        registrations.add(registration);
         add(registration);
         return registration;
     }
 
     public Action deRegisterRuntime(JobId jobId, EntityId entityId, int partition) {
-        Action registration = new Action() {
+        RuntimeRegistration registration = new RuntimeRegistration(this, jobId, entityId, partition);
+        if (registrations.remove(registration)) {
+            return registration.deregister();
+        } else {
+            LOGGER.warning("Request to stop runtime: " + new ActiveRuntimeId(entityId, "Test", partition)
+                    + " that is not registered. Could be that the runtime completed execution on"
+                    + " this node before the cluster controller sent the stop request");
+            return new Action() {
+                @Override
+                protected void doExecute(MetadataProvider mdProvider) throws Exception {
+                }
+
+                @Override
+                public void sync() throws InterruptedException {
+                    return;
+                }
+
+                @Override
+                public boolean isDone() {
+                    return true;
+                }
+            };
+        }
+    }
+
+    public Action doDeRegisterRuntime(JobId jobId, EntityId entityId, int partition) {
+        Action deregistration = new Action() {
             @Override
             protected void doExecute(MetadataProvider actorMdProvider) throws Exception {
+                for (ActionSubscriber subscriber : subscribers) {
+                    subscriber.beforeExecute();
+                }
                 ActiveEvent event = new ActiveEvent(jobId, Kind.PARTITION_EVENT, entityId, new ActivePartitionMessage(
                         new ActiveRuntimeId(entityId, id, partition), jobId, Event.RUNTIME_DEREGISTERED, null));
                 clusterController.activeEvent(event);
             }
         };
-        add(registration);
-        return registration;
+        for (ActionSubscriber subscriber : subscribers) {
+            subscriber.beforeSchedule(deregistration);
+        }
+        add(deregistration);
+        return deregistration;
+    }
+
+    public void subscribe(ActionSubscriber subscriber) {
+        subscribers.add(subscriber);
+    }
+
+    public void unsubscribe() {
+        subscribers.clear();
+    }
+
+    public List<ActionSubscriber> getSubscribers() {
+        return subscribers;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public TestClusterControllerActor getClusterController() {
+        return clusterController;
     }
 }

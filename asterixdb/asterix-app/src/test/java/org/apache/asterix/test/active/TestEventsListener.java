@@ -122,7 +122,7 @@ public class TestEventsListener extends ActiveEntityEventsListener {
                     Collections.singletonList(new HyracksDataException("RuntimeFailure")));
         } else {
             for (int i = 0; i < nodeControllers.length; i++) {
-                TestNodeControllerActor nodeController = nodeControllers[0];
+                TestNodeControllerActor nodeController = nodeControllers[i];
                 nodeController.registerRuntime(jobId, entityId, i);
             }
         }
