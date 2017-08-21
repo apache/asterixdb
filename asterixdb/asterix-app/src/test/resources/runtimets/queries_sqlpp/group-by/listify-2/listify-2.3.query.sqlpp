@@ -16,18 +16,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/*
-* Description  : Create an external dataset that contains long comments fields, 10% of the records have a 32K size comments.
-                 This will trigger into the VSizeFrame path
-* Expected Res : Success
-* Date         : Jun 16 2015
-*/
 
-use dataverse test;
+USE tpch;
 
-set "compiler.groupmemory" "32MB"
+SET `compiler.groupmemory` "576KB"
 
-for $i in dataset('Line')
-group by $partkey := $i.l_partkey with $i
-order by $partkey
-return { "partkey": $partkey, "lines": $i}
+SELECT *
+FROM  LineItem AS l
+WHERE l.l_shipdate <= '1998-09-02'
+/* +hash */
+GROUP BY l.l_returnflag AS l_returnflag, l.l_linestatus AS l_linestatus
+ORDER BY l_returnflag, l_linestatus
+;

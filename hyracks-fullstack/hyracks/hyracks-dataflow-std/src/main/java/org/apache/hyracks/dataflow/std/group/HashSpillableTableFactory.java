@@ -97,7 +97,7 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
                 hashFunctionFamilies).createPartitioner(seed);
 
         final IAggregatorDescriptor aggregator = aggregateFactory.createAggregator(ctx, inRecordDescriptor,
-                outRecordDescriptor, keyFields, intermediateResultKeys, null);
+                outRecordDescriptor, keyFields, intermediateResultKeys, null, -1);
 
         final AggregateState aggregateState = aggregator.createAggregateStates();
 

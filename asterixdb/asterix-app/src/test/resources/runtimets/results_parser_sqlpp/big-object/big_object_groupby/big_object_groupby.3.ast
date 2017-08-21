@@ -1,4 +1,5 @@
 DataverseUse test
+Set compiler.groupmemory=32MB
 Query:
 SELECT ELEMENT [
 RecordConstructor [

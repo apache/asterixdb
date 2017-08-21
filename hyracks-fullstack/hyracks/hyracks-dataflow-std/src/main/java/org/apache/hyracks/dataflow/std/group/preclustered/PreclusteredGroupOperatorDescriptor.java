@@ -35,22 +35,30 @@ public class PreclusteredGroupOperatorDescriptor extends AbstractSingleActivityO
     private final IBinaryComparatorFactory[] comparatorFactories;
     private final IAggregatorDescriptorFactory aggregatorFactory;
     private final boolean groupAll;
+    private final int framesLimit;
 
     public PreclusteredGroupOperatorDescriptor(IOperatorDescriptorRegistry spec, int[] groupFields,
             IBinaryComparatorFactory[] comparatorFactories, IAggregatorDescriptorFactory aggregatorFactory,
             RecordDescriptor recordDescriptor) {
-        this(spec, groupFields, comparatorFactories, aggregatorFactory, recordDescriptor, false);
+        this(spec, groupFields, comparatorFactories, aggregatorFactory, recordDescriptor, false, -1);
     }
 
     public PreclusteredGroupOperatorDescriptor(IOperatorDescriptorRegistry spec, int[] groupFields,
             IBinaryComparatorFactory[] comparatorFactories, IAggregatorDescriptorFactory aggregatorFactory,
-            RecordDescriptor recordDescriptor, boolean groupAll) {
+            RecordDescriptor recordDescriptor, int framesLimit) {
+        this(spec, groupFields, comparatorFactories, aggregatorFactory, recordDescriptor, false, framesLimit);
+    }
+
+    public PreclusteredGroupOperatorDescriptor(IOperatorDescriptorRegistry spec, int[] groupFields,
+            IBinaryComparatorFactory[] comparatorFactories, IAggregatorDescriptorFactory aggregatorFactory,
+            RecordDescriptor recordDescriptor, boolean groupAll, int framesLimit) {
         super(spec, 1, 1);
         this.groupFields = groupFields;
         this.comparatorFactories = comparatorFactories;
         this.aggregatorFactory = aggregatorFactory;
         outRecDescs[0] = recordDescriptor;
         this.groupAll = groupAll;
+        this.framesLimit = framesLimit;
     }
 
     @Override
@@ -58,6 +66,6 @@ public class PreclusteredGroupOperatorDescriptor extends AbstractSingleActivityO
             final IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions)
             throws HyracksDataException {
         return new PreclusteredGroupOperatorNodePushable(ctx, groupFields, comparatorFactories, aggregatorFactory,
-                recordDescProvider.getInputRecordDescriptor(getActivityId(), 0), outRecDescs[0], groupAll);
+                recordDescProvider.getInputRecordDescriptor(getActivityId(), 0), outRecDescs[0], groupAll, framesLimit);
     }
 }

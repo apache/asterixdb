@@ -29,6 +29,7 @@ import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.JobFlag;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
@@ -53,7 +54,8 @@ public class NestedPlansAccumulatingAggregatorFactory extends AbstractAccumulati
 
     @Override
     public IAggregatorDescriptor createAggregator(IHyracksTaskContext ctx, RecordDescriptor inRecordDesc,
-            RecordDescriptor outRecordDescriptor, int[] keys, int[] partialKeys) throws HyracksDataException {
+            RecordDescriptor outRecordDescriptor, int[] keys, int[] partialKeys, long memoryBudget)
+            throws HyracksDataException {
         final AggregatorOutput outputWriter = new AggregatorOutput(subplans, keyFieldIdx.length, decorFieldIdx.length);
         final NestedTupleSourceRuntime[] pipelines = new NestedTupleSourceRuntime[subplans.length];
         for (int i = 0; i < subplans.length; i++) {
@@ -86,6 +88,9 @@ public class NestedPlansAccumulatingAggregatorFactory extends AbstractAccumulati
             @Override
             public void aggregate(IFrameTupleAccessor accessor, int tIndex, IFrameTupleAccessor stateAccessor,
                     int stateTupleIndex, AggregateState state) throws HyracksDataException {
+                // Checks the memory usage.
+                memoryUsageCheck();
+
                 for (int i = 0; i < pipelines.length; i++) {
                     pipelines[i].writeTuple(accessor.getBuffer(), tIndex);
                 }
@@ -98,7 +103,10 @@ public class NestedPlansAccumulatingAggregatorFactory extends AbstractAccumulati
                     outputWriter.setInputIdx(i);
                     pipelines[i].close();
                 }
-                // outputWriter.writeTuple(appender);
+
+                // Checks the memory usage.
+                memoryUsageCheck();
+
                 tupleBuilder.reset();
                 ArrayTupleBuilder tb = outputWriter.getTupleBuilder();
                 byte[] data = tb.getByteArray();
@@ -134,6 +142,18 @@ public class NestedPlansAccumulatingAggregatorFactory extends AbstractAccumulati
             @Override
             public void close() {
 
+            }
+
+            // Checks the memory usage.
+            private void memoryUsageCheck() throws HyracksDataException {
+                if (memoryBudget > 0) {
+                    ArrayTupleBuilder tb = outputWriter.getTupleBuilder();
+                    byte[] data = tb.getByteArray();
+                    if (data.length > memoryBudget) {
+                        throw HyracksDataException.create(ErrorCode.GROUP_BY_MEMORY_BUDGET_EXCEEDS, data.length,
+                                memoryBudget);
+                    }
+                }
             }
 
         };

@@ -2887,6 +2887,18 @@
         <expected-error>Invalid item type: function agg-sum cannot process item type object in an input array (or multiset)</expected-error>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="group-by">
+      <compilation-unit name="listify">
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>The byte size of a single group</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="group-by">
+      <compilation-unit name="listify-2">
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>The byte size of a single group</expected-error>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="index-join">
     <test-case FilePath="index-join">

@@ -43,7 +43,8 @@ public class SimpleAlgebricksAccumulatingAggregatorFactory extends AbstractAccum
 
     @Override
     public IAggregatorDescriptor createAggregator(final IHyracksTaskContext ctx, RecordDescriptor inRecordDesc,
-            RecordDescriptor outRecordDescriptor, int[] aggKeys, int[] partialKeys) throws HyracksDataException {
+            RecordDescriptor outRecordDescriptor, int[] aggKeys, int[] partialKeys, long memoryBudget)
+            throws HyracksDataException {
 
         return new IAggregatorDescriptor() {
 

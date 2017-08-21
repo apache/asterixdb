@@ -44,10 +44,12 @@ import org.apache.hyracks.dataflow.std.group.preclustered.PreclusteredGroupOpera
 public class PreclusteredGroupByPOperator extends AbstractPreclusteredGroupByPOperator {
 
     private final boolean groupAll;
+    private final int framesLimit;
 
-    public PreclusteredGroupByPOperator(List<LogicalVariable> columnList, boolean groupAll) {
+    public PreclusteredGroupByPOperator(List<LogicalVariable> columnList, boolean groupAll, int framesLimit) {
         super(columnList);
         this.groupAll = groupAll;
+        this.framesLimit = framesLimit;
     }
 
     @Override
@@ -86,7 +88,7 @@ public class PreclusteredGroupByPOperator extends AbstractPreclusteredGroupByPOp
                 context);
 
         PreclusteredGroupOperatorDescriptor opDesc = new PreclusteredGroupOperatorDescriptor(spec, keys,
-                comparatorFactories, aggregatorFactory, recordDescriptor, groupAll);
+                comparatorFactories, aggregatorFactory, recordDescriptor, groupAll, framesLimit);
 
         contributeOpDesc(builder, (AbstractLogicalOperator) op, opDesc);
 

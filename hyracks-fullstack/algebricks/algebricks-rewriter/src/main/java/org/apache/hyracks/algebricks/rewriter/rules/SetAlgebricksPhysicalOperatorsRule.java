@@ -167,8 +167,8 @@ public class SetAlgebricksPhysicalOperatorsRule implements IAlgebraicRewriteRule
                                 if (hasIntermediateAgg) {
                                     ExternalGroupByPOperator externalGby = new ExternalGroupByPOperator(
                                             gby.getGroupByList(),
-                                            physicalOptimizationConfig.getMaxFramesExternalGroupBy(),
-                                            (long) physicalOptimizationConfig.getMaxFramesExternalGroupBy()
+                                            physicalOptimizationConfig.getMaxFramesForGroupBy(),
+                                            (long) physicalOptimizationConfig.getMaxFramesForGroupBy()
                                                     * physicalOptimizationConfig.getFrameSize());
                                     op.setPhysicalOperator(externalGby);
                                     break;
@@ -187,7 +187,8 @@ public class SetAlgebricksPhysicalOperatorsRule implements IAlgebraicRewriteRule
                         }
                     }
                     if (topLevelOp) {
-                        op.setPhysicalOperator(new PreclusteredGroupByPOperator(columnList, gby.isGroupAll()));
+                        op.setPhysicalOperator(new PreclusteredGroupByPOperator(columnList, gby.isGroupAll(),
+                                context.getPhysicalOptimizationConfig().getMaxFramesForGroupBy()));
                     } else {
                         op.setPhysicalOperator(new MicroPreclusteredGroupByPOperator(columnList));
                     }

@@ -60,7 +60,7 @@ public class NestedPlansRunningAggregatorFactory implements IAggregatorDescripto
     @Override
     public IAggregatorDescriptor createAggregator(final IHyracksTaskContext ctx, RecordDescriptor inRecordDescriptor,
             RecordDescriptor outRecordDescriptor, int[] keyFields, int[] keyFieldsInPartialResults,
-            final IFrameWriter writer) throws HyracksDataException {
+            final IFrameWriter writer, long memoryBudget) throws HyracksDataException {
         final RunningAggregatorOutput outputWriter =
                 new RunningAggregatorOutput(ctx, subplans, keyFieldIdx.length, decorFieldIdx.length, writer);
         // should enforce protocol

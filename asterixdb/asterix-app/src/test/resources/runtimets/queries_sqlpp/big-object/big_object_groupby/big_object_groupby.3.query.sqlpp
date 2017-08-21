@@ -25,6 +25,7 @@
 
 use test;
 
+set `compiler.groupmemory` `32MB`
 
 select element {'partkey':partkey,'lines': (from g select value i) }
 from  Line as i

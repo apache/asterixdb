@@ -32,14 +32,14 @@ public abstract class AbstractAccumulatingAggregatorDescriptorFactory implements
      */
     @Override
     public IAggregatorDescriptor createAggregator(IHyracksTaskContext ctx, RecordDescriptor inRecordDescriptor,
-            RecordDescriptor outRecordDescriptor, int[] keyFields, int[] keyFieldsInPartialResults, IFrameWriter writer)
-            throws HyracksDataException {
-        return this
-                .createAggregator(ctx, inRecordDescriptor, outRecordDescriptor, keyFields, keyFieldsInPartialResults);
+            RecordDescriptor outRecordDescriptor, int[] keyFields, int[] keyFieldsInPartialResults, IFrameWriter writer,
+            long memoryBudget) throws HyracksDataException {
+        return createAggregator(ctx, inRecordDescriptor, outRecordDescriptor, keyFields, keyFieldsInPartialResults,
+                memoryBudget);
     }
 
     abstract protected IAggregatorDescriptor createAggregator(IHyracksTaskContext ctx,
             RecordDescriptor inRecordDescriptor, RecordDescriptor outRecordDescriptor, int[] keyFields,
-            final int[] keyFieldsInPartialResults) throws HyracksDataException;
+            final int[] keyFieldsInPartialResults, long memoryBudget) throws HyracksDataException;
 
 }

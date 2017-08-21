@@ -42,8 +42,8 @@ public class SerializableAggregatorDescriptorFactory extends AbstractAccumulatin
 
     @Override
     public IAggregatorDescriptor createAggregator(IHyracksTaskContext ctx, RecordDescriptor inRecordDescriptor,
-            RecordDescriptor outRecordDescriptor, int[] keyFields, final int[] keyFieldsInPartialResults)
-                    throws HyracksDataException {
+            RecordDescriptor outRecordDescriptor, int[] keyFields, final int[] keyFieldsInPartialResults,
+            long memoryBudget) throws HyracksDataException {
         final int[] keys = keyFields;
 
         /**

@@ -16,18 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/*
-* Description  : Create an external dataset that contains long comments fields, 10% of the records have a 32K size comments.
-                 This will trigger into the VSizeFrame path
-* Expected Res : Success
-* Date         : Jun 16 2015
-*/
 
-use dataverse test;
+use tpch;
 
-set "compiler.groupmemory" "32MB"
 
-for $i in dataset('Line')
-group by $partkey := $i.l_partkey with $i
-order by $partkey
-return { "partkey": $partkey, "lines": $i}
+load  dataset LineItem using localfs ((`path`=`asterix_nc1://data/tpch0.001/lineitem.tbl`),(`format`=`delimited-text`),(`delimiter`=`|`)) pre-sorted;
+

@@ -91,7 +91,7 @@ public class PhysicalOptimizationConfig {
         setInt(MAX_FRAMES_FOR_JOIN, frameLimit);
     }
 
-    public int getMaxFramesExternalGroupBy() {
+    public int getMaxFramesForGroupBy() {
         int frameSize = getFrameSize();
         return getInt(MAX_FRAMES_EXTERNAL_GROUP_BY, (int) (((long) 256 * MB) / frameSize));
     }

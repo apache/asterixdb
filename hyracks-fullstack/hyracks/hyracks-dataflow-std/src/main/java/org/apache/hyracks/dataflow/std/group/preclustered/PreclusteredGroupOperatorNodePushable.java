@@ -36,12 +36,14 @@ class PreclusteredGroupOperatorNodePushable extends AbstractUnaryInputUnaryOutpu
     private final RecordDescriptor inRecordDescriptor;
     private final RecordDescriptor outRecordDescriptor;
     private final boolean groupAll;
+    private final int frameLimit;
 
     private PreclusteredGroupWriter pgw;
 
     PreclusteredGroupOperatorNodePushable(IHyracksTaskContext ctx, int[] groupFields,
             IBinaryComparatorFactory[] comparatorFactories, IAggregatorDescriptorFactory aggregatorFactory,
-            RecordDescriptor inRecordDescriptor, RecordDescriptor outRecordDescriptor, boolean groupAll) {
+            RecordDescriptor inRecordDescriptor, RecordDescriptor outRecordDescriptor, boolean groupAll,
+            int frameLimit) {
         this.ctx = ctx;
         this.groupFields = groupFields;
         this.comparatorFactories = comparatorFactories;
@@ -49,6 +51,7 @@ class PreclusteredGroupOperatorNodePushable extends AbstractUnaryInputUnaryOutpu
         this.inRecordDescriptor = inRecordDescriptor;
         this.outRecordDescriptor = outRecordDescriptor;
         this.groupAll = groupAll;
+        this.frameLimit = frameLimit;
     }
 
     @Override
@@ -58,7 +61,7 @@ class PreclusteredGroupOperatorNodePushable extends AbstractUnaryInputUnaryOutpu
             comparators[i] = comparatorFactories[i].createBinaryComparator();
         }
         pgw = new PreclusteredGroupWriter(ctx, groupFields, comparators, aggregatorFactory, inRecordDescriptor,
-                outRecordDescriptor, writer, false, groupAll);
+                outRecordDescriptor, writer, false, groupAll, frameLimit);
         pgw.open();
     }
 

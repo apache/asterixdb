@@ -162,8 +162,8 @@ public class SetAsterixPhysicalOperatorsRule implements IAlgebraicRewriteRule {
                                     }
                                     ExternalGroupByPOperator externalGby = new ExternalGroupByPOperator(
                                             gby.getGroupByList(),
-                                            physicalOptimizationConfig.getMaxFramesExternalGroupBy(),
-                                            (long) physicalOptimizationConfig.getMaxFramesExternalGroupBy()
+                                            physicalOptimizationConfig.getMaxFramesForGroupBy(),
+                                            (long) physicalOptimizationConfig.getMaxFramesForGroupBy()
                                                     * physicalOptimizationConfig.getFrameSize());
                                     generateMergeAggregationExpressions(gby, context);
                                     op.setPhysicalOperator(externalGby);
@@ -182,7 +182,8 @@ public class SetAsterixPhysicalOperatorsRule implements IAlgebraicRewriteRule {
                                         columnList.add(varRef.getVariableReference());
                                     }
                                 }
-                                op.setPhysicalOperator(new PreclusteredGroupByPOperator(columnList, gby.isGroupAll()));
+                                op.setPhysicalOperator(new PreclusteredGroupByPOperator(columnList, gby.isGroupAll(),
+                                        context.getPhysicalOptimizationConfig().getMaxFramesForGroupBy()));
                             }
                         }
                     } else if (((AbstractLogicalOperator) (r0.getValue())).getOperatorTag()
@@ -196,7 +197,8 @@ public class SetAsterixPhysicalOperatorsRule implements IAlgebraicRewriteRule {
                                 columnList.add(varRef.getVariableReference());
                             }
                         }
-                        op.setPhysicalOperator(new PreclusteredGroupByPOperator(columnList, gby.isGroupAll()));
+                        op.setPhysicalOperator(new PreclusteredGroupByPOperator(columnList, gby.isGroupAll(),
+                                context.getPhysicalOptimizationConfig().getMaxFramesForGroupBy()));
                     } else {
                         throw new AlgebricksException("Unsupported nested operator within a group-by: "
                                 + ((AbstractLogicalOperator) (r0.getValue())).getOperatorTag().name());
