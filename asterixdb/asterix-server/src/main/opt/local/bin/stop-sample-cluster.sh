@@ -25,16 +25,6 @@ function usage() {
   echo "  -f[orce]  : Forcibly terminates any running ${PRODUCT} processes (after shutting down cluster, if running)"
 }
 
-function kill_procs() {
-  cat /tmp/$$_pids | while read line; do
-    if [ $minus_nine ]; then
-       echo $line | awk '{ print $2 }' | xargs -n1 kill -9
-    else
-       echo $line | awk '{ print $2 }' | xargs -n1 kill
-    fi
-  done
-}
-
 while [ -n "$1" ]; do
   case $1 in
     -f|-force) force=1;;
@@ -68,10 +58,7 @@ CLUSTERDIR=$(cd "$DIRNAME/.."; echo $PWD)
 INSTALLDIR=$(cd "$CLUSTERDIR/../.."; echo $PWD)
 "$INSTALLDIR/bin/${HELPER_COMMAND}" get_cluster_state -quiet
 if [ $? -ne 1 ]; then
-  if ps -ef | grep 'java.*org\.apache\.hyracks\.control\.[cn]c\.\([CN]CDriver\|service\.NCService\)' > /tmp/$$_pids; then
-    minus_nine=0;
-    kill_procs;
-  fi
+  "$INSTALLDIR/bin/${HELPER_COMMAND}" shutdown_cluster_all
   first=1
   tries=0
   echo -n "INFO: Waiting up to 60s for cluster to shutdown"
@@ -92,8 +79,12 @@ fi
 if ps -ef | grep 'java.*org\.apache\.hyracks\.control\.[cn]c\.\([CN]CDriver\|service\.NCService\)' > /tmp/$$_pids; then
   echo -n "WARNING: ${PRODUCT} processes remain after cluster shutdown; "
   if [ $force ]; then
-    minus_nine=1;
-    kill_procs;
+    echo "-f[orce] specified, forcibly terminating ${PRODUCT} processes:"
+    cat /tmp/$$_pids | while read line; do
+      echo -n "   - $line..."
+      echo $line | awk '{ print $2 }' | xargs -n1 kill -9
+      echo "killed"
+    done
   else
     echo "re-run with -f|-force to forcibly terminate all ${PRODUCT} processes:"
     cat /tmp/pids |  sed 's/^ *[0-9]* \([0-9]*\).*org\.apache\.hyracks\.control\.[cn]c[^ ]*\.\([^ ]*\) .*/\1 - \2/'
