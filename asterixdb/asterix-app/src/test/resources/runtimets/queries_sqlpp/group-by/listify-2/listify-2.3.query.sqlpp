@@ -19,7 +19,7 @@
 
 USE tpch;
 
-SET `compiler.groupmemory` "576KB"
+SET `compiler.groupmemory` "576KB";
 
 SELECT *
 FROM  LineItem AS l

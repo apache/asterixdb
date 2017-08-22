@@ -19,7 +19,7 @@
 
 USE tpch;
 
-SET `compiler.groupmemory` "576KB"
+SET `compiler.groupmemory` "576KB";
 
 SELECT  l_returnflag AS l_returnflag,
         l_linestatus AS l_linestatus,
