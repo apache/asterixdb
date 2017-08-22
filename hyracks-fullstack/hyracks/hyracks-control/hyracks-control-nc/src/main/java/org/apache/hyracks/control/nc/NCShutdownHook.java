@@ -68,7 +68,7 @@ public class NCShutdownHook extends Thread {
             shutdownHookThread = Thread.currentThread();
             watchDog.start();
             nodeControllerService.stop();
-        } catch (Throwable th) { // NOSONAR... This is fine since this is shutdwon hook
+        } catch (Throwable th) { // NOSONAR... This is fine since this is shutdown hook
             LOGGER.log(Level.WARNING, "Exception in executing shutdown hook", th);
         }
     }
