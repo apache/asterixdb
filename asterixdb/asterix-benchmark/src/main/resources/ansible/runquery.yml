@@ -34,6 +34,8 @@
         url: "{{ service }}"
         method: POST
         body: "{{ lookup('file', query_file ) }}"
+        headers:
+          Content-Type: "text/plain"
         timeout: 3600
       register: response
 

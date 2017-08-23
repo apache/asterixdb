@@ -72,7 +72,7 @@ public class HttpServerHandler<T extends HttpServer> extends SimpleChannelInboun
             }
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Failure Submitting HTTP Request", e);
-            respond(ctx, request.protocolVersion(), HttpResponseStatus.INTERNAL_SERVER_ERROR);
+            respond(ctx, request.protocolVersion(), new HttpResponseStatus(500, e.getMessage()));
         }
     }
 

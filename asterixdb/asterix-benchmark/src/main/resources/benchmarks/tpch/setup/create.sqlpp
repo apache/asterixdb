@@ -34,7 +34,7 @@ create type LineItemType as {
   l_shipinstruct: string,
   l_shipmode: string,
   l_comment: string
-}
+};
 
 create type OrderType as {
   o_orderkey: int64,
@@ -46,7 +46,7 @@ create type OrderType as {
   o_clerk: string,
   o_shippriority: int32,
   o_comment: string
-}
+};
 
 create type CustomerType as {
   c_custkey: int64,
@@ -57,7 +57,7 @@ create type CustomerType as {
   c_acctbal: double,
   c_mktsegment: string,
   c_comment: string
-}
+};
 
 create type PartType as {
   p_partkey: int64,
@@ -69,7 +69,7 @@ create type PartType as {
   p_container: string,
   p_retailprice: double,
   p_comment: string
-}
+};
 
 create type PartSuppType as {
   ps_partkey: int64,
@@ -77,7 +77,7 @@ create type PartSuppType as {
   ps_availqty: int32,
   ps_supplycost: double,
   ps_comment: string
-}
+};
 
 create type SupplierType as {
   s_suppkey: int64,
@@ -87,20 +87,20 @@ create type SupplierType as {
   s_phone: string,
   s_acctbal: double,
   s_comment: string
-}
+};
 
 create type NationType as {
   n_nationkey: int32,
   n_name: string,
   n_regionkey: int32,
   n_comment: string
-}
+};
 
 create type RegionType as {
   r_regionkey: int32,
   r_name: string,
   r_comment: string
-}
+};
 
 create dataset LineItem(LineItemType) primary key l_orderkey, l_linenumber;
 create dataset Orders(OrderType)      primary key o_orderkey;
