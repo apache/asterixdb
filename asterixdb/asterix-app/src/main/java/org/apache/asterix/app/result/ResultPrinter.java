@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.ByteBuffer;
 
+import org.apache.asterix.api.http.server.ResultUtil;
 import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.translator.IStatementExecutor.Stats;
@@ -179,6 +180,9 @@ public class ResultPrinter {
         if (quoteRecord) {
             // TODO(tillw): this is inefficient as well
             record = JSONUtil.quoteAndEscape(record);
+        }
+        if (conf.is(SessionConfig.FORMAT_HTML)) {
+            record = ResultUtil.escapeHTML(record);
         }
         output.out().print(record);
         stats.setCount(stats.getCount() + 1);

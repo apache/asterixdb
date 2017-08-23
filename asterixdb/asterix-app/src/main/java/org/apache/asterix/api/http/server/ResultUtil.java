@@ -24,14 +24,11 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.AbstractMap;
+import java.util.Arrays;
 import java.util.Collections;
-import java.util.Map;
-import java.util.Map.Entry;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.apache.asterix.app.result.ResultHandle;
 import org.apache.asterix.app.result.ResultPrinter;
@@ -41,6 +38,7 @@ import org.apache.asterix.lang.aql.parser.TokenMgrError;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.translator.IStatementExecutor.Stats;
 import org.apache.asterix.translator.SessionOutput;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.http.ParseException;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.AlgebricksAppendable;
@@ -55,10 +53,9 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class ResultUtil {
     private static final Logger LOGGER = Logger.getLogger(ResultUtil.class.getName());
-    public static final Map<Character, String> HTML_ENTITIES = Collections.unmodifiableMap(Stream.of(
-            new AbstractMap.SimpleImmutableEntry<>('"', "&quot;"), new AbstractMap.SimpleImmutableEntry<>('&', "&amp;"),
-            new AbstractMap.SimpleImmutableEntry<>('<', "&lt;"), new AbstractMap.SimpleImmutableEntry<>('>', "&gt;"))
-            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
+    public static final List<Pair<Character, String>> HTML_ENTITIES = Collections.unmodifiableList(
+            Arrays.asList(Pair.of('&', "&amp;"), Pair.of('"', "&quot;"), Pair.of('<', "&lt;"), Pair.of('>', "&gt;"),
+                    Pair.of('\'', "&apos;")));
 
     private ResultUtil() {
     }
@@ -71,7 +68,7 @@ public class ResultUtil {
      */
     public static String escapeHTML(String aString) {
         String escaped = aString;
-        for (Entry<Character, String> entry : HTML_ENTITIES.entrySet()) {
+        for (Pair<Character, String> entry : HTML_ENTITIES) {
             if (escaped.indexOf(entry.getKey()) >= 0) {
                 escaped = escaped.replace(entry.getKey().toString(), entry.getValue());
             }
@@ -209,8 +206,8 @@ public class ResultUtil {
             errorCode = 4;
         }
 
-        ObjectNode errorResp = ResultUtil.getErrorResponse(errorCode, extractErrorMessage(e), extractErrorSummary(e),
-                extractFullStackTrace(e));
+        ObjectNode errorResp = ResultUtil
+                .getErrorResponse(errorCode, extractErrorMessage(e), extractErrorSummary(e), extractFullStackTrace(e));
         out.write(errorResp.toString());
     }
 
@@ -304,10 +301,8 @@ public class ResultUtil {
      * Read the template file which is stored as a resource and return its content. If the file does not exist or is
      * not readable return the default template string.
      *
-     * @param path
-     *            The path to the resource template file
-     * @param defaultTemplate
-     *            The default template string if the template file does not exist or is not readable
+     * @param path            The path to the resource template file
+     * @param defaultTemplate The default template string if the template file does not exist or is not readable
      * @return The template string to be used to render the output.
      */
     //TODO(till|amoudi|mblow|yingyi|ceej|imaxon): path is ignored completely!!
