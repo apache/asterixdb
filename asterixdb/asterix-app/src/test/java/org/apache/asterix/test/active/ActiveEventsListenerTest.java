@@ -47,6 +47,7 @@ import org.apache.asterix.metadata.entities.Feed;
 import org.apache.asterix.metadata.lock.MetadataLockManager;
 import org.apache.asterix.runtime.utils.CcApplicationContext;
 import org.apache.asterix.test.active.TestEventsListener.Behavior;
+import org.apache.asterix.test.base.TestMethodTracer;
 import org.apache.asterix.translator.IStatementExecutor;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
@@ -58,7 +59,9 @@ import org.apache.hyracks.control.cc.application.CCServiceContext;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestRule;
 import org.mockito.Mockito;
 
 public class ActiveEventsListenerTest {
@@ -85,6 +88,9 @@ public class ActiveEventsListenerTest {
     static IMetadataLockManager lockManager = new MetadataLockManager();
     static AlgebricksAbsolutePartitionConstraint locations;
     static ExecutorService executor;
+
+    @Rule
+    public TestRule watcher = new TestMethodTracer();
 
     @Before
     public void setUp() throws Exception {
@@ -373,6 +379,10 @@ public class ActiveEventsListenerTest {
         ActivityState state = listener.getState();
         Assert.assertTrue(state == ActivityState.RECOVERING || state == ActivityState.TEMPORARILY_FAILED);
         Assert.assertNotNull(listener.getRecoveryTask());
+        Action stopActivity = users[1].stopActivity(listener);
+        stopActivity.sync();
+        assertSuccess(stopActivity);
+        Assert.assertEquals(ActivityState.STOPPED, listener.getState());
     }
 
     @Test
@@ -394,6 +404,10 @@ public class ActiveEventsListenerTest {
         ActivityState state = listener.getState();
         Assert.assertTrue(state == ActivityState.RECOVERING || state == ActivityState.TEMPORARILY_FAILED);
         Assert.assertNotNull(listener.getRecoveryTask());
+        Action stopActivity = users[1].stopActivity(listener);
+        stopActivity.sync();
+        assertSuccess(stopActivity);
+        Assert.assertEquals(ActivityState.STOPPED, listener.getState());
     }
 
     @Test
