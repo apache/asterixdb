@@ -124,6 +124,7 @@ public class ErrorCode {
     public static final int CANNOT_MODIFY_INDEX_DISK_IS_FULL = 88;
     public static final int GROUP_BY_MEMORY_BUDGET_EXCEEDS = 89;
     public static final int ILLEGAL_MEMORY_BUDGET = 90;
+    public static final int TIMEOUT = 91;
 
     // Compilation error codes.
     public static final int RULECOLLECTION_NOT_INSTANCE_OF_LIST = 10000;

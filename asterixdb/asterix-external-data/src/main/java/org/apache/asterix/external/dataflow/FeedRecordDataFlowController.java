@@ -213,16 +213,24 @@ public class FeedRecordDataFlowController<T> extends AbstractFeedDataFlowControl
         }
     }
 
-    private void waitForSignal() throws InterruptedException {
+    private void waitForSignal(long timeout) throws InterruptedException, HyracksDataException {
+        if (timeout <= 0) {
+            throw new IllegalArgumentException("timeout must be greater than 0");
+        }
         synchronized (closed) {
             while (!closed.get()) {
-                closed.wait();
+                long before = System.currentTimeMillis();
+                closed.wait(timeout);
+                timeout -= System.currentTimeMillis() - before;
+                if (!closed.get() && timeout <= 0) {
+                    throw HyracksDataException.create(org.apache.hyracks.api.exceptions.ErrorCode.TIMEOUT);
+                }
             }
         }
     }
 
     @Override
-    public boolean stop() throws HyracksDataException {
+    public boolean stop(long timeout) throws HyracksDataException {
         synchronized (this) {
             switch (state) {
                 case CREATED:
@@ -238,7 +246,7 @@ public class FeedRecordDataFlowController<T> extends AbstractFeedDataFlowControl
         }
         if (recordReader.stop()) {
             try {
-                waitForSignal();
+                waitForSignal(timeout);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 throw HyracksDataException.create(e);

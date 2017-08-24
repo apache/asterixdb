@@ -30,6 +30,7 @@ import org.apache.hyracks.api.comm.IFrame;
 import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.util.HyracksConstants;
 import org.apache.hyracks.dataflow.common.io.MessagingFrameTupleAppender;
@@ -42,6 +43,8 @@ import org.apache.hyracks.dataflow.common.utils.TaskUtil;
  */
 public class FeedIntakeOperatorNodePushable extends ActiveSourceOperatorNodePushable {
     private static final Logger LOGGER = Logger.getLogger(FeedIntakeOperatorNodePushable.class.getName());
+    // TODO: Make configurable https://issues.apache.org/jira/browse/ASTERIXDB-2065
+    public static final int DEFAULT_ABORT_TIMEOUT = 10000;
     private final FeedIntakeOperatorDescriptor opDesc;
     private final FeedAdapter adapter;
     private boolean poisoned = false;
@@ -121,9 +124,19 @@ public class FeedIntakeOperatorNodePushable extends ActiveSourceOperatorNodePush
         LOGGER.info(runtimeId + " aborting...");
         synchronized (this) {
             poisoned = true;
-            if (!adapter.stop()) {
-                LOGGER.info(runtimeId + " failed to stop adapter. interrupting the thread...");
-                taskThread.interrupt();
+            try {
+                if (!adapter.stop(DEFAULT_ABORT_TIMEOUT)) {
+                    LOGGER.info(runtimeId + " failed to stop adapter. interrupting the thread...");
+                    taskThread.interrupt();
+                }
+            } catch (HyracksDataException hde) {
+                if (hde.getComponent() == ErrorCode.HYRACKS && hde.getErrorCode() == ErrorCode.TIMEOUT) {
+                    LOGGER.log(Level.WARNING, runtimeId + " stop adapter timed out. interrupting the thread...", hde);
+                    taskThread.interrupt();
+                } else {
+                    LOGGER.log(Level.WARNING, "Failure during attempt to stop " + runtimeId, hde);
+                    throw hde;
+                }
             }
         }
     }

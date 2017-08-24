@@ -40,7 +40,7 @@ public interface IDataFlowController {
         throw new RuntimeDataException(ErrorCode.OPERATION_NOT_SUPPORTED);
     }
 
-    public default boolean stop() throws HyracksDataException {
+    public default boolean stop(long timeout) throws HyracksDataException {
         throw new RuntimeDataException(ErrorCode.OPERATION_NOT_SUPPORTED);
     }
 }

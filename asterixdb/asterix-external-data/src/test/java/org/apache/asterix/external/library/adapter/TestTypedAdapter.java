@@ -137,7 +137,7 @@ public class TestTypedAdapter extends FeedAdapter {
     }
 
     @Override
-    public boolean stop() {
+    public boolean stop(long timeout) {
         generator.stop();
         return true;
     }

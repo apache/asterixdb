@@ -35,8 +35,8 @@ public class FeedAdapter implements IDataSourceAdapter {
         controller.start(writer);
     }
 
-    public boolean stop() throws HyracksDataException {
-        return controller.stop();
+    public boolean stop(long timeout) throws HyracksDataException {
+        return controller.stop(timeout);
     }
 
     public boolean pause() throws HyracksDataException {

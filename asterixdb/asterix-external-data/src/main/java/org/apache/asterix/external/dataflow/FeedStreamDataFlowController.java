@@ -71,7 +71,7 @@ public class FeedStreamDataFlowController extends AbstractFeedDataFlowController
     }
 
     @Override
-    public boolean stop() throws HyracksDataException {
+    public boolean stop(long timeout) throws HyracksDataException {
         try {
             if (stream.stop()) {
                 return true;
