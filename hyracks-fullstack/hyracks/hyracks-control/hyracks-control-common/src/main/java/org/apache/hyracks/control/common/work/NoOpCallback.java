@@ -16,16 +16,23 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.api.http.servlet;
+package org.apache.hyracks.control.common.work;
 
-public class ServletConstants {
-    public static final String HYRACKS_CONNECTION_ATTR = "org.apache.asterix.HYRACKS_CONNECTION";
-    public static final String HYRACKS_DATASET_ATTR = "org.apache.asterix.HYRACKS_DATASET";
-    public static final String ASTERIX_APP_CONTEXT_INFO_ATTR = "org.apache.asterix.APP_CONTEXT_INFO";
-    public static final String EXECUTOR_SERVICE_ATTR = "org.apache.asterix.EXECUTOR_SERVICE";
-    public static final String RUNNING_QUERIES_ATTR = "org.apache.asterix.RUNINNG_QUERIES";
-    public static final String SERVICE_CONTEXT_ATTR = "org.apache.asterix.SERVICE_CONTEXT";
+public class NoOpCallback implements IResultCallback<Void> {
 
-    private ServletConstants() {
+    public static final NoOpCallback INSTANCE = new NoOpCallback();
+
+    private NoOpCallback() {
     }
+
+    @Override
+    public void setValue(Void result) {
+        // Dummy is used when no callback is provided
+    }
+
+    @Override
+    public void setException(Exception e) {
+        // Dummy is used when no callback is provided
+    }
+
 }

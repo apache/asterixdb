@@ -19,6 +19,7 @@
 package org.apache.hyracks.control.common.work;
 
 public class FutureValue<T> implements IResultCallback<T> {
+
     private boolean done;
 
     private T value;

@@ -65,6 +65,8 @@ import org.apache.hyracks.control.cc.partitions.PartitionMatchMaker;
 import org.apache.hyracks.control.cc.work.JobCleanupWork;
 import org.apache.hyracks.control.common.job.PartitionState;
 import org.apache.hyracks.control.common.job.TaskAttemptDescriptor;
+import org.apache.hyracks.control.common.work.NoOpCallback;
+import org.apache.hyracks.control.common.work.IResultCallback;
 
 public class JobExecutor {
     private static final Logger LOGGER = Logger.getLogger(JobExecutor.class.getName());
@@ -114,9 +116,10 @@ public class JobExecutor {
         ccs.getContext().notifyJobStart(jobRun.getJobId());
     }
 
-    public void cancelJob() throws HyracksException {
+    public void cancelJob(IResultCallback<Void> callback) throws HyracksException {
         // If the job is already terminated or failed, do nothing here.
         if (jobRun.getPendingStatus() != null) {
+            callback.setValue(null);
             return;
         }
         // Sets the cancelled flag.
@@ -124,7 +127,8 @@ public class JobExecutor {
         // Aborts on-ongoing task clusters.
         abortOngoingTaskClusters(ta -> false, ta -> null);
         // Aborts the whole job.
-        abortJob(Collections.singletonList(HyracksException.create(ErrorCode.JOB_CANCELED, jobRun.getJobId())));
+        abortJob(Collections.singletonList(HyracksException.create(ErrorCode.JOB_CANCELED, jobRun.getJobId())),
+                callback);
     }
 
     private void findRunnableTaskClusterRoots(Set<TaskCluster> frontier, Collection<ActivityCluster> roots)
@@ -196,8 +200,8 @@ public class JobExecutor {
                     "Runnable TC roots: " + taskClusterRoots + ", inProgressTaskClusters: " + inProgressTaskClusters);
         }
         if (taskClusterRoots.isEmpty() && inProgressTaskClusters.isEmpty()) {
-            ccs.getWorkQueue()
-                    .schedule(new JobCleanupWork(ccs.getJobManager(), jobRun.getJobId(), JobStatus.TERMINATED, null));
+            ccs.getWorkQueue().schedule(new JobCleanupWork(ccs.getJobManager(), jobRun.getJobId(), JobStatus.TERMINATED,
+                    null, NoOpCallback.INSTANCE));
             return;
         }
         startRunnableTaskClusters(taskClusterRoots);
@@ -520,14 +524,14 @@ public class JobExecutor {
         }
     }
 
-    public void abortJob(List<Exception> exceptions) {
+    public void abortJob(List<Exception> exceptions, IResultCallback<Void> callback) {
         Set<TaskCluster> inProgressTaskClustersCopy = new HashSet<>(inProgressTaskClusters);
         for (TaskCluster tc : inProgressTaskClustersCopy) {
             abortTaskCluster(findLastTaskClusterAttempt(tc), TaskClusterAttempt.TaskClusterStatus.ABORTED);
         }
         assert inProgressTaskClusters.isEmpty();
-        ccs.getWorkQueue()
-                .schedule(new JobCleanupWork(ccs.getJobManager(), jobRun.getJobId(), JobStatus.FAILURE, exceptions));
+        ccs.getWorkQueue().schedule(
+                new JobCleanupWork(ccs.getJobManager(), jobRun.getJobId(), JobStatus.FAILURE, exceptions, callback));
     }
 
     private void abortTaskCluster(TaskClusterAttempt tcAttempt,
@@ -686,7 +690,7 @@ public class JobExecutor {
                         + " as failed and the number of max re-attempts = " + maxReattempts);
                 if (lastAttempt.getAttempt() >= maxReattempts || isCancelled()) {
                     LOGGER.log(Level.INFO, "Aborting the job of " + ta.getTaskAttemptId());
-                    abortJob(exceptions);
+                    abortJob(exceptions, NoOpCallback.INSTANCE);
                     return;
                 }
                 LOGGER.log(Level.INFO, "We will try to start runnable activity clusters of " + ta.getTaskAttemptId());
@@ -696,7 +700,7 @@ public class JobExecutor {
                         "Ignoring task failure notification: " + taId + " -- Current last attempt = " + lastAttempt);
             }
         } catch (Exception e) {
-            abortJob(Collections.singletonList(e));
+            abortJob(Collections.singletonList(e), NoOpCallback.INSTANCE);
         }
     }
 
@@ -720,7 +724,7 @@ public class JobExecutor {
                     ta -> HyracksException.create(ErrorCode.NODE_FAILED, ta.getNodeId()));
             startRunnableActivityClusters();
         } catch (Exception e) {
-            abortJob(Collections.singletonList(e));
+            abortJob(Collections.singletonList(e), NoOpCallback.INSTANCE);
         }
     }
 

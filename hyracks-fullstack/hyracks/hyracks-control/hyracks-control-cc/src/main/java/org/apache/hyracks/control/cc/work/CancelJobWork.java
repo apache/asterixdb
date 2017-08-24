@@ -42,10 +42,7 @@ public class CancelJobWork extends SynchronizableWork {
     @Override
     protected void doRun() throws Exception {
         try {
-            if (jobId != null) {
-                jobManager.cancel(jobId);
-            }
-            callback.setValue(null);
+            jobManager.cancel(jobId, callback);
         } catch (Exception e) {
             callback.setException(e);
         }

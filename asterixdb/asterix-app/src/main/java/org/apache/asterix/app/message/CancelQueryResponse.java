@@ -16,67 +16,29 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.asterix.app.message;
 
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.messaging.api.INcAddressedMessage;
 import org.apache.asterix.common.messaging.api.MessageFuture;
 import org.apache.asterix.messaging.NCMessageBroker;
-import org.apache.asterix.translator.IStatementExecutor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-public final class ExecuteStatementResponseMessage implements INcAddressedMessage {
+public class CancelQueryResponse implements INcAddressedMessage {
+
     private static final long serialVersionUID = 1L;
+    private final long reqId;
 
-    private final long requestMessageId;
-
-    private String result;
-
-    private IStatementExecutor.ResultMetadata metadata;
-
-    private Throwable error;
-
-    public ExecuteStatementResponseMessage(long requestMessageId) {
-        this.requestMessageId = requestMessageId;
+    public CancelQueryResponse(long reqId) {
+        this.reqId = reqId;
     }
 
     @Override
     public void handle(INcApplicationContext appCtx) throws HyracksDataException, InterruptedException {
         NCMessageBroker mb = (NCMessageBroker) appCtx.getServiceContext().getMessageBroker();
-        MessageFuture future = mb.deregisterMessageFuture(requestMessageId);
+        MessageFuture future = mb.deregisterMessageFuture(reqId);
         if (future != null) {
             future.complete(this);
         }
-    }
-
-    public Throwable getError() {
-        return error;
-    }
-
-    public void setError(Throwable error) {
-        this.error = error;
-    }
-
-    public String getResult() {
-        return result;
-    }
-
-    public void setResult(String result) {
-        this.result = result;
-    }
-
-    public IStatementExecutor.ResultMetadata getMetadata() {
-        return metadata;
-    }
-
-    public void setMetadata(IStatementExecutor.ResultMetadata metadata) {
-        this.metadata = metadata;
-    }
-
-    @Override
-    public String toString() {
-        return String.format("%s(id=%s): %d characters", getClass().getSimpleName(), requestMessageId,
-                result != null ? result.length() : 0);
     }
 }

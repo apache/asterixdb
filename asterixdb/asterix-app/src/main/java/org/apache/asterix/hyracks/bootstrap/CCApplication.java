@@ -21,8 +21,8 @@ package org.apache.asterix.hyracks.bootstrap;
 
 import static org.apache.asterix.algebra.base.ILangExtension.Language.AQL;
 import static org.apache.asterix.algebra.base.ILangExtension.Language.SQLPP;
-import static org.apache.asterix.api.http.servlet.ServletConstants.ASTERIX_APP_CONTEXT_INFO_ATTR;
-import static org.apache.asterix.api.http.servlet.ServletConstants.HYRACKS_CONNECTION_ATTR;
+import static org.apache.asterix.api.http.server.ServletConstants.ASTERIX_APP_CONTEXT_INFO_ATTR;
+import static org.apache.asterix.api.http.server.ServletConstants.HYRACKS_CONNECTION_ATTR;
 
 import java.util.Arrays;
 import java.util.List;
@@ -47,10 +47,10 @@ import org.apache.asterix.api.http.server.QueryServiceServlet;
 import org.apache.asterix.api.http.server.QueryStatusApiServlet;
 import org.apache.asterix.api.http.server.QueryWebInterfaceServlet;
 import org.apache.asterix.api.http.server.RebalanceApiServlet;
+import org.apache.asterix.api.http.server.ServletConstants;
 import org.apache.asterix.api.http.server.ShutdownApiServlet;
 import org.apache.asterix.api.http.server.UpdateApiServlet;
 import org.apache.asterix.api.http.server.VersionApiServlet;
-import org.apache.asterix.api.http.servlet.ServletConstants;
 import org.apache.asterix.app.active.ActiveNotificationHandler;
 import org.apache.asterix.app.cc.CCExtensionManager;
 import org.apache.asterix.app.cc.ResourceIdManager;
@@ -106,6 +106,7 @@ public class CCApplication extends BaseCCApplication {
     protected WebManager webManager;
     protected CcApplicationContext appCtx;
     private IJobCapacityController jobCapacityController;
+    private IHyracksClientConnection hcc;
 
     @Override
     public void start(IServiceContext serviceCtx, String[] args) throws Exception {
@@ -124,6 +125,9 @@ public class CCApplication extends BaseCCApplication {
 
         ccServiceCtx.setThreadFactory(
                 new AsterixThreadFactory(ccServiceCtx.getThreadFactory(), new LifeCycleComponentManager()));
+        String strIP = ccServiceCtx.getCCContext().getClusterControllerInfo().getClientNetAddress();
+        int port = ccServiceCtx.getCCContext().getClusterControllerInfo().getClientNetPort();
+        hcc = new HyracksConnection(strIP, port);
         ILibraryManager libraryManager = new ExternalLibraryManager();
         ResourceIdManager resourceIdManager = new ResourceIdManager();
         IReplicationStrategy repStrategy = ClusterProperties.INSTANCE.getReplicationStrategy();
@@ -196,7 +200,6 @@ public class CCApplication extends BaseCCApplication {
     protected HttpServer setupWebServer(ExternalProperties externalProperties) throws Exception {
         HttpServer webServer = new HttpServer(webManager.getBosses(), webManager.getWorkers(),
                 externalProperties.getWebInterfacePort());
-        IHyracksClientConnection hcc = getHcc();
         webServer.setAttribute(HYRACKS_CONNECTION_ATTR, hcc);
         webServer.addServlet(new ApiServlet(webServer.ctx(), new String[] { "/*" }, appCtx,
                 ccExtensionManager.getCompilationProvider(AQL), ccExtensionManager.getCompilationProvider(SQLPP),
@@ -207,7 +210,6 @@ public class CCApplication extends BaseCCApplication {
     protected HttpServer setupJSONAPIServer(ExternalProperties externalProperties) throws Exception {
         HttpServer jsonAPIServer =
                 new HttpServer(webManager.getBosses(), webManager.getWorkers(), externalProperties.getAPIServerPort());
-        IHyracksClientConnection hcc = getHcc();
         jsonAPIServer.setAttribute(HYRACKS_CONNECTION_ATTR, hcc);
         jsonAPIServer.setAttribute(ASTERIX_APP_CONTEXT_INFO_ATTR, appCtx);
         jsonAPIServer.setAttribute(ServletConstants.EXECUTOR_SERVICE_ATTR,
@@ -252,7 +254,6 @@ public class CCApplication extends BaseCCApplication {
     protected HttpServer setupQueryWebServer(ExternalProperties externalProperties) throws Exception {
         HttpServer queryWebServer = new HttpServer(webManager.getBosses(), webManager.getWorkers(),
                 externalProperties.getQueryWebInterfacePort());
-        IHyracksClientConnection hcc = getHcc();
         queryWebServer.setAttribute(HYRACKS_CONNECTION_ATTR, hcc);
         queryWebServer.addServlet(new QueryWebInterfaceServlet(appCtx, queryWebServer.ctx(), new String[] { "/*" }));
         return queryWebServer;
@@ -357,9 +358,7 @@ public class CCApplication extends BaseCCApplication {
         return appCtx;
     }
 
-    protected IHyracksClientConnection getHcc() throws Exception {
-        String strIP = ccServiceCtx.getCCContext().getClusterControllerInfo().getClientNetAddress();
-        int port = ccServiceCtx.getCCContext().getClusterControllerInfo().getClientNetPort();
-        return new HyracksConnection(strIP, port);
+    public IHyracksClientConnection getHcc() {
+        return hcc;
     }
 }

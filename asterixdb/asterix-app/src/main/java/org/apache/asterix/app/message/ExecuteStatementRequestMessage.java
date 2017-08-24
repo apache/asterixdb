@@ -22,6 +22,7 @@ package org.apache.asterix.app.message;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -54,23 +55,18 @@ import org.apache.hyracks.control.cc.ClusterControllerService;
 
 public final class ExecuteStatementRequestMessage implements ICcAddressedMessage {
     private static final long serialVersionUID = 1L;
-
     private static final Logger LOGGER = Logger.getLogger(ExecuteStatementRequestMessage.class.getName());
-
+    //TODO: Make configurable: https://issues.apache.org/jira/browse/ASTERIXDB-2062
+    public static final long DEFAULT_NC_TIMEOUT_MILLIS = TimeUnit.MINUTES.toMillis(5);
+    //TODO: Make configurable: https://issues.apache.org/jira/browse/ASTERIXDB-2063
+    public static final long DEFAULT_QUERY_CANCELLATION_TIMEOUT_MILLIS = TimeUnit.MINUTES.toMillis(1);
     private final String requestNodeId;
-
     private final long requestMessageId;
-
     private final ILangExtension.Language lang;
-
     private final String statementsText;
-
     private final SessionConfig sessionConfig;
-
     private final IStatementExecutor.ResultDelivery delivery;
-
     private final String clientContextID;
-
     private final String handleUrl;
 
     public ExecuteStatementRequestMessage(String requestNodeId, long requestMessageId, ILangExtension.Language lang,
@@ -102,47 +98,41 @@ public final class ExecuteStatementRequestMessage implements ICcAddressedMessage
         IStorageComponentProvider storageComponentProvider = ccAppCtx.getStorageComponentProvider();
         IStatementExecutorFactory statementExecutorFactory = ccApp.getStatementExecutorFactory();
         IStatementExecutorContext statementExecutorContext = ccApp.getStatementExecutorContext();
-
-        ccSrv.getExecutor().submit(() -> {
-            ExecuteStatementResponseMessage responseMsg = new ExecuteStatementResponseMessage(requestMessageId);
-            try {
-                IParser parser = compilationProvider.getParserFactory().createParser(statementsText);
-                List<Statement> statements = parser.parse();
-                StringWriter outWriter = new StringWriter(256);
-                PrintWriter outPrinter = new PrintWriter(outWriter);
-                SessionOutput.ResultDecorator resultPrefix = ResultUtil.createPreResultDecorator();
-                SessionOutput.ResultDecorator resultPostfix = ResultUtil.createPostResultDecorator();
-                SessionOutput.ResultAppender appendHandle = ResultUtil.createResultHandleAppender(handleUrl);
-                SessionOutput.ResultAppender appendStatus = ResultUtil.createResultStatusAppender();
-                SessionOutput sessionOutput = new SessionOutput(sessionConfig, outPrinter, resultPrefix, resultPostfix,
-                        appendHandle, appendStatus);
-
-                IStatementExecutor.ResultMetadata outMetadata = new IStatementExecutor.ResultMetadata();
-
-                MetadataManager.INSTANCE.init();
-                IStatementExecutor translator = statementExecutorFactory.create(ccAppCtx, statements, sessionOutput,
-                        compilationProvider, storageComponentProvider);
-                translator.compileAndExecute(ccAppCtx.getHcc(), null, delivery, outMetadata,
-                        new IStatementExecutor.Stats(), clientContextID, statementExecutorContext);
-
-                outPrinter.close();
-                responseMsg.setResult(outWriter.toString());
-                responseMsg.setMetadata(outMetadata);
-            } catch (AlgebricksException | HyracksException | TokenMgrError
-                    | org.apache.asterix.aqlplus.parser.TokenMgrError pe) {
-                // we trust that "our" exceptions are serializable and have a comprehensible error message
-                GlobalConfig.ASTERIX_LOGGER.log(Level.WARNING, pe.getMessage(), pe);
-                responseMsg.setError(pe);
-            } catch (Exception e) {
-                GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, "Unexpected exception", e);
-                responseMsg.setError(new Exception(e.toString()));
-            }
-            try {
-                messageBroker.sendApplicationMessageToNC(responseMsg, requestNodeId);
-            } catch (Exception e) {
-                LOGGER.log(Level.WARNING, e.toString(), e);
-            }
-        });
+        ExecuteStatementResponseMessage responseMsg = new ExecuteStatementResponseMessage(requestMessageId);
+        try {
+            IParser parser = compilationProvider.getParserFactory().createParser(statementsText);
+            List<Statement> statements = parser.parse();
+            StringWriter outWriter = new StringWriter(256);
+            PrintWriter outPrinter = new PrintWriter(outWriter);
+            SessionOutput.ResultDecorator resultPrefix = ResultUtil.createPreResultDecorator();
+            SessionOutput.ResultDecorator resultPostfix = ResultUtil.createPostResultDecorator();
+            SessionOutput.ResultAppender appendHandle = ResultUtil.createResultHandleAppender(handleUrl);
+            SessionOutput.ResultAppender appendStatus = ResultUtil.createResultStatusAppender();
+            SessionOutput sessionOutput = new SessionOutput(sessionConfig, outPrinter, resultPrefix, resultPostfix,
+                    appendHandle, appendStatus);
+            IStatementExecutor.ResultMetadata outMetadata = new IStatementExecutor.ResultMetadata();
+            MetadataManager.INSTANCE.init();
+            IStatementExecutor translator = statementExecutorFactory.create(ccAppCtx, statements, sessionOutput,
+                    compilationProvider, storageComponentProvider);
+            translator.compileAndExecute(ccAppCtx.getHcc(), null, delivery, outMetadata, new IStatementExecutor.Stats(),
+                    clientContextID, statementExecutorContext);
+            outPrinter.close();
+            responseMsg.setResult(outWriter.toString());
+            responseMsg.setMetadata(outMetadata);
+        } catch (AlgebricksException | HyracksException | TokenMgrError
+                | org.apache.asterix.aqlplus.parser.TokenMgrError pe) {
+            // we trust that "our" exceptions are serializable and have a comprehensible error message
+            GlobalConfig.ASTERIX_LOGGER.log(Level.WARNING, pe.getMessage(), pe);
+            responseMsg.setError(pe);
+        } catch (Exception e) {
+            GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, "Unexpected exception", e);
+            responseMsg.setError(new Exception(e.toString()));
+        }
+        try {
+            messageBroker.sendApplicationMessageToNC(responseMsg, requestNodeId);
+        } catch (Exception e) {
+            LOGGER.log(Level.WARNING, e.toString(), e);
+        }
     }
 
     private String getRejectionReason(ClusterControllerService ccSrv) {

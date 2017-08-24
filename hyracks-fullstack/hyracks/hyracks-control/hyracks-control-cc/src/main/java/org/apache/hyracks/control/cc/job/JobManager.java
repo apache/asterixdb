@@ -46,6 +46,8 @@ import org.apache.hyracks.control.cc.cluster.INodeManager;
 import org.apache.hyracks.control.cc.scheduler.FIFOJobQueue;
 import org.apache.hyracks.control.cc.scheduler.IJobQueue;
 import org.apache.hyracks.control.common.controllers.CCConfig;
+import org.apache.hyracks.control.common.work.NoOpCallback;
+import org.apache.hyracks.control.common.work.IResultCallback;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -115,17 +117,14 @@ public class JobManager implements IJobManager {
     }
 
     @Override
-    public void cancel(JobId jobId) throws HyracksException {
-        if (jobId == null) {
-            return;
-        }
+    public void cancel(JobId jobId, IResultCallback<Void> callback) throws HyracksException {
         // Cancels a running job.
         if (activeRunMap.containsKey(jobId)) {
             JobRun jobRun = activeRunMap.get(jobId);
             // The following call will abort all ongoing tasks and then consequently
             // trigger JobCleanupWork and JobCleanupNotificationWork which will update the lifecyle of the job.
             // Therefore, we do not remove the job out of activeRunMap here.
-            jobRun.getExecutor().cancelJob();
+            jobRun.getExecutor().cancelJob(callback);
             return;
         }
         // Removes a pending job.
@@ -138,6 +137,7 @@ public class JobManager implements IJobManager {
             runMapArchive.put(jobId, jobRun);
             runMapHistory.put(jobId, exceptions);
         }
+        callback.setValue(null);
     }
 
     @Override
@@ -322,7 +322,7 @@ public class JobManager implements IJobManager {
             // fail the job then abort it
             run.setStatus(JobStatus.FAILURE, exceptions);
             // abort job will trigger JobCleanupWork
-            run.getExecutor().abortJob(exceptions);
+            run.getExecutor().abortJob(exceptions, NoOpCallback.INSTANCE);
         }
     }
 

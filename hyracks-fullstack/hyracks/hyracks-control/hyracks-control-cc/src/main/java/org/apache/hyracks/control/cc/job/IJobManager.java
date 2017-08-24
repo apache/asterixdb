@@ -25,6 +25,7 @@ import java.util.List;
 import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobStatus;
+import org.apache.hyracks.control.common.work.IResultCallback;
 
 /**
  * This interface abstracts the job lifecycle management and job scheduling for a cluster.
@@ -47,10 +48,12 @@ public interface IJobManager {
     /**
      * Cancel a job with a given job id.
      *
+     * @param callback
+     *
      * @param jobId,
      *            the id of the job.
      */
-    void cancel(JobId jobId) throws HyracksException;
+    void cancel(JobId jobId, IResultCallback<Void> callback) throws HyracksException;
 
     /**
      * This method is called when the master process decides to complete job.

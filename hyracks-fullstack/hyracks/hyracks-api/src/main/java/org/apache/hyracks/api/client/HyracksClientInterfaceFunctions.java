@@ -130,6 +130,9 @@ public class HyracksClientInterfaceFunctions {
 
         public CancelJobFunction(JobId jobId) {
             this.jobId = jobId;
+            if (jobId == null) {
+                throw new IllegalArgumentException("jobId");
+            }
         }
 
         @Override

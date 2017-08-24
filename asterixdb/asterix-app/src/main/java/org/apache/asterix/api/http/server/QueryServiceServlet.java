@@ -27,7 +27,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.algebra.base.ILangExtension;
-import org.apache.asterix.api.http.servlet.ServletConstants;
 import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.api.IClusterManagementWork;
 import org.apache.asterix.common.config.GlobalConfig;
@@ -108,7 +107,8 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         FORMAT("format"),
         CLIENT_ID("client_context_id"),
         PRETTY("pretty"),
-        MODE("mode");
+        MODE("mode"),
+        TIMEOUT("timeout");
 
         private final String str;
 
@@ -154,39 +154,12 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         }
     }
 
-    public enum TimeUnit {
-        SEC("s", 9),
-        MILLI("ms", 6),
-        MICRO("µs", 3),
-        NANO("ns", 0);
-
-        String unit;
-        int nanoDigits;
-
-        TimeUnit(String unit, int nanoDigits) {
-            this.unit = unit;
-            this.nanoDigits = nanoDigits;
-        }
-
-        public static String formatNanos(long nanoTime) {
-            final String strTime = String.valueOf(nanoTime);
-            final int len = strTime.length();
-            for (TimeUnit tu : TimeUnit.values()) {
-                if (len > tu.nanoDigits) {
-                    final String integer = strTime.substring(0, len - tu.nanoDigits);
-                    final String fractional = strTime.substring(len - tu.nanoDigits);
-                    return integer + (fractional.length() > 0 ? "." + fractional : "") + tu.unit;
-                }
-            }
-            return "illegal string value: " + strTime;
-        }
-    }
-
     static class RequestParameters {
         String host;
         String path;
         String statement;
         String format;
+        String timeout;
         boolean pretty;
         String clientContextID;
         String mode;
@@ -202,6 +175,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
                 on.put("pretty", pretty);
                 on.put("mode", mode);
                 on.put("clientContextID", clientContextID);
+                on.put("format", format);
                 return om.writer(new MinimalPrettyPrinter()).writeValueAsString(on);
             } catch (JsonProcessingException e) { // NOSONAR
                 return e.getMessage();
@@ -297,9 +271,9 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         pw.print(ResultFields.METRICS.str());
         pw.print("\": {\n");
         pw.print("\t");
-        ResultUtil.printField(pw, Metrics.ELAPSED_TIME.str(), TimeUnit.formatNanos(elapsedTime));
+        ResultUtil.printField(pw, Metrics.ELAPSED_TIME.str(), Duration.formatNanos(elapsedTime));
         pw.print("\t");
-        ResultUtil.printField(pw, Metrics.EXECUTION_TIME.str(), TimeUnit.formatNanos(executionTime));
+        ResultUtil.printField(pw, Metrics.EXECUTION_TIME.str(), Duration.formatNanos(executionTime));
         pw.print("\t");
         ResultUtil.printField(pw, Metrics.RESULT_COUNT.str(), resultCount, true);
         pw.print("\t");
@@ -334,6 +308,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
                 param.pretty = getOptBoolean(jsonRequest, Parameter.PRETTY.str(), false);
                 param.mode = toLower(getOptText(jsonRequest, Parameter.MODE.str()));
                 param.clientContextID = getOptText(jsonRequest, Parameter.CLIENT_ID.str());
+                param.timeout = getOptText(jsonRequest, Parameter.TIMEOUT.str());
             } catch (JsonParseException | JsonMappingException e) {
                 // if the JSON parsing fails, the statement is empty and we get an empty statement error
                 GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, e.getMessage(), e);

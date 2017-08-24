@@ -48,6 +48,7 @@ import org.apache.hyracks.control.cc.cluster.NodeManager;
 import org.apache.hyracks.control.common.base.INodeController;
 import org.apache.hyracks.control.common.controllers.CCConfig;
 import org.apache.hyracks.control.common.logs.LogFile;
+import org.apache.hyracks.control.common.work.NoOpCallback;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -207,7 +208,7 @@ public class JobManagerTest {
     }
 
     @Test
-    public void testCancel() throws HyracksException {
+    public void testCancel() throws Exception {
         CCConfig ccConfig = new CCConfig();
         IJobCapacityController jobCapacityController = mock(IJobCapacityController.class);
         IJobManager jobManager = spy(new JobManager(ccConfig, mockClusterControllerService(), jobCapacityController));
@@ -247,12 +248,12 @@ public class JobManagerTest {
 
         // Cancels deferred jobs.
         for (JobRun run : deferredRuns) {
-            jobManager.cancel(run.getJobId());
+            jobManager.cancel(run.getJobId(), NoOpCallback.INSTANCE);
         }
 
         // Cancels runnable jobs.
         for (JobRun run : acceptedRuns) {
-            jobManager.cancel(run.getJobId());
+            jobManager.cancel(run.getJobId(), NoOpCallback.INSTANCE);
         }
 
         Assert.assertTrue(jobManager.getPendingJobs().isEmpty());
