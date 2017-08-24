@@ -30,4 +30,4 @@
     - include_vars: "{{ playbook_dir }}/../conf/private_ip.yml"
     - include_vars: ../../../benchmarks/tpch/gen/settings.yml
     - name: Put data on to HDFS
-      shell: for i in `ls -S {{ data_dir }}/`; do {{ hadoop_base }}/bin/hdfs dfs -put -f {{ data_dir }}/$i hdfs://{{ cc_ip }}:9000/{{ data_dir }}; rm {{ data_dir }}/$i; done
+      shell: for i in `ls -rS {{ data_dir }}/`; do {{ hadoop_base }}/bin/hdfs dfs -put -f {{ data_dir }}/$i hdfs://{{ cc_ip }}:9000/{{ data_dir }}; rm {{ data_dir }}/$i; done

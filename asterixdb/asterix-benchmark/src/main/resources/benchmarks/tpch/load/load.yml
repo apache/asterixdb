@@ -28,8 +28,8 @@
       include: loadgen.yml
 
     - name: Load all datasets
-      shell: "ansible-playbook -i {{ inventory }} {{ runquery }} --extra-vars=\"query_file={{ dml }} report=false\""
-      with_fileglob:
-          - "{{ dml_dir }}/*"
+      shell: "ansible-playbook -i {{ inventory }} {{ runquery }} --extra-vars=\"query_file={{ dml_dir }}/load{{ dataset }}.sqlpp report=false\";
+      ansible ncs -i {{ inventory }} -m shell -a \"rm -f {{ data_dir }}/{{ dataset | lower}}.tbl*\""
+      with_items: "{{ dataset_import_order }}"
       loop_control:
-          loop_var: dml
+          loop_var: dataset

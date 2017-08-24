@@ -23,6 +23,8 @@ partitioned_datasets: ["LineItem", "Orders", "Customer", "Part", "Partsupp", "Su
 # Datasets with a single file.
 centralized_datasets: ["Region", "Nation"]
 
+dataset_import_order: ["Region", "Nation", "Supplier", "Part", "Customer", "Partsupp", "Orders", "LineItem"]
+
 # Temp directory.
 temp_dir: "/tmp/asterixdb"
 

@@ -45,14 +45,14 @@ then
    exit 1
 fi
 # Load data
-ansible-playbook  -i $INVENTORY $SCRIPT_PATH/../../benchmarks/tpch/gen/gen.yml
+ansible-playbook -i $INVENTORY $SCRIPT_PATH/../../benchmarks/tpch/gen/gen.yml
 # Configure HDFS
-ansible-playbook  -i $INVENTORY $SCRIPT_PATH/ansible/install_hdfs.yml
-ansible-playbook  -i $INVENTORY $SCRIPT_PATH/ansible/start_hdfs.yml
+ansible-playbook -i $INVENTORY $SCRIPT_PATH/ansible/install_hdfs.yml
+ansible-playbook -i $INVENTORY $SCRIPT_PATH/ansible/start_hdfs.yml
 # Configure Spark
-ansible-playbook  -i $INVENTORY $SCRIPT_PATH/ansible/install_spark.yml
-ansible-playbook  -i $INVENTORY $SCRIPT_PATH/ansible/start_spark.yml
-ansible-playbook  -i $INVENTORY $SCRIPT_PATH/ansible/load_tpch.yml
+ansible-playbook -i $INVENTORY $SCRIPT_PATH/ansible/install_spark.yml
+ansible-playbook -i $INVENTORY $SCRIPT_PATH/ansible/start_spark.yml
+ansible-playbook -i $INVENTORY $SCRIPT_PATH/ansible/load_tpch.yml
 # Execute queries
-ansible-playbook  -i $INVENTORY --extra-vars="metric='${SYSTEM_NAME}'" $SCRIPT_PATH/ansible/prepare_queries.yml
-ansible-playbook  -i $INVENTORY $SCRIPT_PATH/ansible/execute_queries.yml
+ansible-playbook -i $INVENTORY --extra-vars="metric='${SYSTEM_NAME}'" $SCRIPT_PATH/ansible/prepare_queries.yml
+ansible-playbook -i $INVENTORY $SCRIPT_PATH/ansible/execute_queries.yml
