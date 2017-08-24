@@ -35,11 +35,11 @@ public class Args {
     @Option(name = "-clusterport", metaVar = "<port>", usage = "Port of the cluster to connect to")
     protected int clusterPort = 19002;
 
-    @Option(name = "-clusterstatepath", metaVar = "<path>",
+    @Option(name = "-clusterstatepath", metaVar = "<path>", hidden = true,
             usage = "Path on host:port to check for cluster readiness")
     protected String clusterStatePath = "admin/cluster";
 
-    @Option(name = "-shutdownpath", metaVar = "<path>",
+    @Option(name = "-shutdownpath", metaVar = "<path>", hidden = true,
             usage = "Path on host:port to invoke to initiate shutdown")
     protected String shutdownPath = "admin/shutdown";
 

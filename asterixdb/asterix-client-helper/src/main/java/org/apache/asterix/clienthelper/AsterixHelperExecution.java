@@ -60,14 +60,19 @@ public class AsterixHelperExecution {
             }
         } catch (CmdLineException e) {
             System.err.println("ERROR: " + e.getMessage() + "\n\n"
-                    + "Usage: " + getHelperCommandName() + " [options] <command>\n\n"
-                    + "Commands:");
-            printCommandsUsage(System.err);
-            System.err.println("Options:");
-            parser.printUsage(System.err);
-            System.err.flush();
+                    + "Usage: " + getHelperCommandName() + " [options] <command>");
+
+            printUsageDetails(parser, System.err);
             return 99;
         }
+    }
+
+    protected void printUsageDetails(CmdLineParser parser, PrintStream ps) {
+        ps.println("\nCommands:");
+        printCommandsUsage(ps);
+        ps.println("\nOptions:");
+        parser.printUsage(ps);
+        ps.flush();
     }
 
     protected String getHelperCommandName() {
@@ -76,8 +81,12 @@ public class AsterixHelperExecution {
 
     protected void printCommandsUsage(PrintStream out) {
         for (Command command : Command.values()) {
-            printCommandUsage(out, command.name(), command.usage());
+            printCommandUsage(out, command);
         }
+    }
+
+    protected void printCommandUsage(PrintStream out, Command command) {
+        printCommandUsage(out, command.name(), command.usage());
     }
 
     protected void printCommandUsage(PrintStream out, String name, String usage) {
