@@ -131,12 +131,18 @@ public class FeedRecordDataFlowController<T> extends AbstractFeedDataFlowControl
         return state;
     }
 
-    private IRawRecord<? extends T> next() throws HyracksDataException {
+    private IRawRecord<? extends T> next() throws Exception {
         try {
             return recordReader.next();
         } catch (InterruptedException e) { // NOSONAR Gracefully handling interrupt to push records in the pipeline
+            if (flushing) {
+                throw e;
+            }
             throw new RuntimeDataException(ErrorCode.FEED_STOPPED_WHILE_WAITING_FOR_A_NEW_RECORD, e);
         } catch (Exception e) {
+            if (flushing) {
+                throw e;
+            }
             if (!recordReader.handleException(e)) {
                 throw new RuntimeDataException(ErrorCode.FEED_FAILED_WHILE_GETTING_A_NEW_RECORD, e);
             }
@@ -144,13 +150,19 @@ public class FeedRecordDataFlowController<T> extends AbstractFeedDataFlowControl
         }
     }
 
-    private boolean hasNext() throws HyracksDataException {
+    private boolean hasNext() throws Exception {
         while (true) {
             try {
                 return recordReader.hasNext();
             } catch (InterruptedException e) { // NOSONAR Gracefully handling interrupt to push records in the pipeline
+                if (flushing) {
+                    throw e;
+                }
                 throw new RuntimeDataException(ErrorCode.FEED_STOPPED_WHILE_WAITING_FOR_A_NEW_RECORD, e);
             } catch (Exception e) {
+                if (flushing) {
+                    throw e;
+                }
                 if (!recordReader.handleException(e)) {
                     throw new RuntimeDataException(ErrorCode.FEED_FAILED_WHILE_GETTING_A_NEW_RECORD, e);
                 }

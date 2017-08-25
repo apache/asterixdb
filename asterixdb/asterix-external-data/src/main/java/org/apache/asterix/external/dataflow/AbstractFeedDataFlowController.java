@@ -30,6 +30,7 @@ public abstract class AbstractFeedDataFlowController implements IDataFlowControl
     protected final int numOfFields;
     protected final ArrayTupleBuilder tb;
     protected final FeedLogManager feedLogManager;
+    protected boolean flushing;
 
     public AbstractFeedDataFlowController(IHyracksTaskContext ctx, FeedTupleForwarder tupleForwarder,
             FeedLogManager feedLogManager, int numOfFields) {
@@ -54,7 +55,9 @@ public abstract class AbstractFeedDataFlowController implements IDataFlowControl
 
     @Override
     public void flush() throws HyracksDataException {
+        flushing = true;
         tupleForwarder.flush();
+        flushing = false;
     }
 
     public abstract String getStats();

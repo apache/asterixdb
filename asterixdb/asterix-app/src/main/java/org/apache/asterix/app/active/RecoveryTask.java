@@ -171,6 +171,9 @@ public class RecoveryTask {
                         DatasetUtil.getFullyQualifiedName(dataset));
             }
             synchronized (listener) {
+                if (cancelRecovery) {
+                    return null;
+                }
                 if (listener.getState() == ActivityState.TEMPORARILY_FAILED) {
                     listener.setState(ActivityState.PERMANENTLY_FAILED);
                 }
