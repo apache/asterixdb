@@ -34,25 +34,32 @@ import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.asterix.common.dataflow.ICcApplicationContext;
+import org.apache.asterix.runtime.utils.ClusterStateManager;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
 import org.apache.hyracks.http.server.utils.HttpUtil;
+import org.apache.hyracks.util.JSONUtil;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.TextNode;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
 
 public class DiagnosticsApiServlet extends NodeControllerDetailsApiServlet {
     private static final Logger LOGGER = Logger.getLogger(DiagnosticsApiServlet.class.getName());
-    private final ICcApplicationContext appCtx;
+    protected final ObjectMapper om;
+    protected final IHyracksClientConnection hcc;
+    protected final ExecutorService executor;
 
-    public DiagnosticsApiServlet(ConcurrentMap<String, Object> ctx, String[] paths, ICcApplicationContext appCtx) {
+    public DiagnosticsApiServlet(ConcurrentMap<String, Object> ctx, String[] paths) {
         super(ctx, paths);
-        this.appCtx = appCtx;
+        this.om = new ObjectMapper();
+        this.hcc = (IHyracksClientConnection) ctx.get(HYRACKS_CONNECTION_ATTR);
+        this.executor = (ExecutorService) ctx.get(ServletConstants.EXECUTOR_SERVICE_ATTR);
     }
 
     @Override
@@ -60,15 +67,13 @@ public class DiagnosticsApiServlet extends NodeControllerDetailsApiServlet {
         HttpUtil.setContentType(response, HttpUtil.ContentType.APPLICATION_JSON, HttpUtil.Encoding.UTF8);
         PrintWriter responseWriter = response.writer();
         ObjectNode json;
-        ObjectMapper om = new ObjectMapper();
         response.setStatus(HttpResponseStatus.OK);
         om.enable(SerializationFeature.INDENT_OUTPUT);
         try {
             if (!"".equals(localPath(request))) {
                 throw new IllegalArgumentException();
             }
-            json = getClusterDiagnosticsJSON();
-            responseWriter.write(om.writerWithDefaultPrettyPrinter().writeValueAsString(json));
+            responseWriter.write(JSONUtil.convertNode(getClusterDiagnosticsJSON()));
         } catch (IllegalStateException e) { // NOSONAR - exception not logged or rethrown
             response.setStatus(HttpResponseStatus.SERVICE_UNAVAILABLE);
         } catch (IllegalArgumentException e) { // NOSONAR - exception not logged or rethrown
@@ -81,44 +86,53 @@ public class DiagnosticsApiServlet extends NodeControllerDetailsApiServlet {
         responseWriter.flush();
     }
 
-    private ObjectNode getClusterDiagnosticsJSON() throws Exception {
-        ObjectMapper om = new ObjectMapper();
-        IHyracksClientConnection hcc = (IHyracksClientConnection) ctx.get(HYRACKS_CONNECTION_ATTR);
-        ExecutorService executor = (ExecutorService) ctx.get(ServletConstants.EXECUTOR_SERVICE_ATTR);
-        Map<String, Future<ObjectNode>> ccFutureData = new HashMap<>();
+    protected ObjectNode getClusterDiagnosticsJSON() throws Exception {
+        Map<String, Future<JsonNode>> ccFutureData;
+        ccFutureData = getCcDiagosticsFutures();
+
+        Map<String, Map<String, Future<JsonNode>>> ncDataMap = new HashMap<>();
+        for (String nc : ClusterStateManager.INSTANCE.getParticipantNodes()) {
+            ncDataMap.put(nc, getNcDiagnosticFutures(nc));
+        }
+        ObjectNode result = om.createObjectNode();
+        result.putPOJO("cc", resolveFutures(ccFutureData));
+        List<Map<String, ?>> ncList = new ArrayList<>();
+        for (Map.Entry<String, Map<String, Future<JsonNode>>> entry : ncDataMap.entrySet()) {
+            final Map<String, JsonNode> ncMap = resolveFutures(entry.getValue());
+            ncMap.put("node_id", new TextNode(entry.getKey()));
+            ncList.add(ncMap);
+        }
+        result.putPOJO("ncs", ncList);
+        result.put("date", String.valueOf(new Date()));
+        return result;
+    }
+
+    protected Map<String, Future<JsonNode>> getNcDiagnosticFutures(String nc) {
+        Map<String, Future<JsonNode>> ncData;
+        ncData = new HashMap<>();
+        ncData.put("threaddump", executor.submit(() -> fixupKeys((ObjectNode) om.readTree(hcc.getThreadDump(nc)))));
+        ncData.put("config",
+                executor.submit(() -> fixupKeys((ObjectNode) om.readTree(hcc.getNodeDetailsJSON(nc, false, true)))));
+        ncData.put("stats", executor.submit(() -> fixupKeys(processNodeStats(hcc, nc))));
+        return ncData;
+    }
+
+    protected Map<String, Future<JsonNode>> getCcDiagosticsFutures() {
+        Map<String, Future<JsonNode>> ccFutureData;
+        ccFutureData = new HashMap<>();
         ccFutureData.put("threaddump",
                 executor.submit(() -> fixupKeys((ObjectNode) om.readTree(hcc.getThreadDump(null)))));
         ccFutureData.put("config",
                 executor.submit(() -> fixupKeys((ObjectNode) om.readTree(hcc.getNodeDetailsJSON(null, false, true)))));
         ccFutureData.put("stats",
                 executor.submit(() -> fixupKeys((ObjectNode) om.readTree(hcc.getNodeDetailsJSON(null, true, false)))));
-
-        Map<String, Map<String, Future<ObjectNode>>> ncDataMap = new HashMap<>();
-        for (String nc : appCtx.getMetadataProperties().getNodeNames()) {
-            Map<String, Future<ObjectNode>> ncData = new HashMap<>();
-            ncData.put("threaddump", executor.submit(() -> fixupKeys((ObjectNode) om.readTree(hcc.getThreadDump(nc)))));
-            ncData.put("config", executor
-                    .submit(() -> fixupKeys((ObjectNode) om.readTree(hcc.getNodeDetailsJSON(nc, false, true)))));
-            ncData.put("stats", executor.submit(() -> fixupKeys(processNodeStats(hcc, nc))));
-            ncDataMap.put(nc, ncData);
-        }
-        ObjectNode result = om.createObjectNode();
-        result.putPOJO("cc", resolveFutures(ccFutureData));
-        List<Map<String, ?>> ncList = new ArrayList<>();
-        for (Map.Entry<String, Map<String, Future<ObjectNode>>> entry : ncDataMap.entrySet()) {
-            final Map<String, Object> ncMap = resolveFutures(entry.getValue());
-            ncMap.put("node_id", entry.getKey());
-            ncList.add(ncMap);
-        }
-        result.putPOJO("ncs", ncList);
-        result.putPOJO("date", new Date());
-        return result;
+        return ccFutureData;
     }
 
-    private Map<String, Object> resolveFutures(Map<String, Future<ObjectNode>> futureMap)
+    protected Map<String, JsonNode> resolveFutures(Map<String, Future<JsonNode>> futureMap)
             throws ExecutionException, InterruptedException {
-        Map<String, Object> result = new HashMap<>();
-        for (Map.Entry<String, Future<ObjectNode>> entry : futureMap.entrySet()) {
+        Map<String, JsonNode> result = new HashMap<>();
+        for (Map.Entry<String, Future<JsonNode>> entry : futureMap.entrySet()) {
             result.put(entry.getKey(), entry.getValue().get());
         }
         return result;

@@ -38,7 +38,7 @@ public class ThreadDumpTask implements Runnable {
     public void run() {
         String result;
         try {
-            result = ThreadDumpHelper.takeDumpJSON(ncs.getThreadMXBean());
+            result = ThreadDumpHelper.takeDumpJSONString(ncs.getThreadMXBean());
         } catch (Exception e) {
             LOGGER.log(Level.WARNING, "Exception taking thread dump", e);
             result = null;

@@ -18,12 +18,6 @@
  */
 package org.apache.hyracks.control.common.utils;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
 import java.io.IOException;
 import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
@@ -33,12 +27,23 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 public class ThreadDumpHelper {
+    private static final ObjectMapper om = new ObjectMapper();
 
     private ThreadDumpHelper() {
+        om.enable(SerializationFeature.INDENT_OUTPUT);
     }
 
-    public static String takeDumpJSON(ThreadMXBean threadMXBean) throws IOException {
+    public static String takeDumpJSONString(ThreadMXBean threadMXBean) throws IOException {
+        ObjectNode json = takeDumpJSON(threadMXBean);
+        return om.writerWithDefaultPrettyPrinter().writeValueAsString(json);
+    }
+
+    public static ObjectNode takeDumpJSON(ThreadMXBean threadMXBean) {
         ThreadInfo[] threadInfos = threadMXBean.dumpAllThreads(true, true);
         List<Map<String, Object>> threads = new ArrayList<>();
 
@@ -73,9 +78,8 @@ public class ThreadDumpHelper {
             }
             threads.add(threadMap);
         }
-        ObjectMapper om = new ObjectMapper();
         ObjectNode json = om.createObjectNode();
-        json.put("date", new Date().toString());
+        json.put("date", String.valueOf(new Date()));
         json.putPOJO("threads", threads);
 
         long[] deadlockedThreads = threadMXBean.findDeadlockedThreads();
@@ -86,7 +90,6 @@ public class ThreadDumpHelper {
         if (monitorDeadlockedThreads != null && monitorDeadlockedThreads.length > 0) {
             json.putPOJO("monitor_deadlocked_thread_ids", monitorDeadlockedThreads);
         }
-        om.enable(SerializationFeature.INDENT_OUTPUT);
-        return om.writerWithDefaultPrettyPrinter().writeValueAsString(json);
+        return json;
     }
 }

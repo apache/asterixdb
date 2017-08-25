@@ -313,7 +313,7 @@ public class CCApplication extends BaseCCApplication {
             case Servlets.CLUSTER_STATE_CC_DETAIL:
                 return new ClusterControllerDetailsApiServlet(ctx, paths);
             case Servlets.DIAGNOSTICS:
-                return new DiagnosticsApiServlet(ctx, paths, appCtx);
+                return new DiagnosticsApiServlet(ctx, paths);
             case Servlets.ACTIVE_STATS:
                 return new ActiveStatsApiServlet(ctx, paths, appCtx);
             default:

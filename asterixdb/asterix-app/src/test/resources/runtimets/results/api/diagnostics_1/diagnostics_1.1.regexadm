@@ -1,7 +1,10 @@
 .*"cc" : \{.*
+    "config" : \{.*
+    \},.*
     "stats" : \{.*
     \},.*
     "threaddump" : \{.*
-    \},.*
-    "config" : \{.*
-    \}.*"ncs".*"node_id" : "asterix_nc1".*"threaddump".*"node_id" : "asterix_nc2".*"threaddump".*
+    \}.*
+  },
+  "date" : "[SMTWF][^"]* [^"]*[0-9]{4}",
+  "ncs".*"node_id" : "asterix_nc1".*"threaddump".*"node_id" : "asterix_nc2".*"threaddump".*

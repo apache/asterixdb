@@ -55,7 +55,7 @@ public class GetThreadDumpWork extends AbstractWork {
         if (nodeId == null) {
             // null nodeId means the request is for the cluster controller
             try {
-                callback.setValue(ThreadDumpHelper.takeDumpJSON(ManagementFactory.getThreadMXBean()));
+                callback.setValue(ThreadDumpHelper.takeDumpJSONString(ManagementFactory.getThreadMXBean()));
             } catch (Exception e) {
                 LOGGER.log(Level.WARNING, "Exception taking CC thread dump", e);
                 callback.setException(e);
