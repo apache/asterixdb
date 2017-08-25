@@ -72,6 +72,18 @@ $(document).ready(function() {
         }
     });
 
+    $('#output-format').on('change', function() {
+      var resultFormat = $('#output-format option:checked').text();
+      if (resultFormat == 'JSON (formatted)' || resultFormat == 'CSV (no header)' || resultFormat == 'CSV (with header)') {
+        $('input[name=wrapper-array]').attr('disabled', true);
+        $('input[name=wrapper-array]').prop('checked', false);
+        $('input[name=wrapper-array]').parent().css('color', 'grey');
+      } else {
+        $('input[name=wrapper-array]').attr("disabled", false);
+        $('input[name=wrapper-array]').parent().css('color', '');
+      }
+    });
+
     $("form#queryform").submit(function() {
         $('#output-message').html("");
         $.post("/", $("form#queryform").serialize(), function(data) {

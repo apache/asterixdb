@@ -98,6 +98,10 @@ public class ApiServlet extends AbstractServlet {
         OutputFormat format;
         boolean csvAndHeader = false;
         String output = request.getParameter("output-format");
+        if ("CSV-Header".equals(output)) {
+            output = "CSV";
+            csvAndHeader = true;
+        }
         try {
             format = OutputFormat.valueOf(output);
         } catch (IllegalArgumentException e) {
