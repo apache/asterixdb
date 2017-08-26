@@ -28,6 +28,8 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.hyracks.util.ExitUtil;
+
 public class LifeCycleComponentManager implements ILifeCycleComponentManager {
 
     public static final class Config {
@@ -54,7 +56,7 @@ public class LifeCycleComponentManager implements ILifeCycleComponentManager {
         try {
             LOGGER.log(Level.SEVERE, "Uncaught Exception from thread " + t.getName() + ". Calling shutdown hook", e);
         } finally {
-            Runtime.getRuntime().exit(99);// NOSONAR: It is really required
+            ExitUtil.exit(99);
         }
     }
 

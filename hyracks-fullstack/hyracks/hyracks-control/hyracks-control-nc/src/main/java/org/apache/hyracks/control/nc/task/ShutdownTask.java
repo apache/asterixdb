@@ -24,6 +24,7 @@ import java.util.logging.Logger;
 
 import org.apache.hyracks.control.common.base.IClusterController;
 import org.apache.hyracks.control.nc.NodeControllerService;
+import org.apache.hyracks.util.ExitUtil;
 
 public class ShutdownTask implements Runnable {
     private static final Logger LOGGER = Logger.getLogger(ShutdownTask.class.getName());
@@ -46,15 +47,7 @@ public class ShutdownTask implements Runnable {
             // proceed with shutdown
         }
 
-        //run the shutdown in a new thread, so we don't block this last work task
-        Thread t = new Thread("NC " + ncs.getId() + " Shutdown") {
-            @Override
-            public void run() {
-                LOGGER.info("JVM Exiting.. Bye!");
-                Runtime.getRuntime().exit(terminateNCService ? 99 : 0);
-            }
-        };
-        t.start();
+        ExitUtil.exit(terminateNCService ? 99 : 0);
     }
 
 }

@@ -83,6 +83,7 @@ import org.apache.hyracks.control.common.work.WorkQueue;
 import org.apache.hyracks.ipc.api.IIPCI;
 import org.apache.hyracks.ipc.impl.IPCSystem;
 import org.apache.hyracks.ipc.impl.JavaSerializationBasedPayloadSerializerDeserializer;
+import org.apache.hyracks.util.ExitUtil;
 import org.xml.sax.InputSource;
 
 public class ClusterControllerService implements IControllerService {
@@ -137,6 +138,10 @@ public class ClusterControllerService implements IControllerService {
     private IJobManager jobManager;
 
     private ShutdownRun shutdownCallback;
+
+    static {
+        ExitUtil.init();
+    }
 
     public ClusterControllerService(final CCConfig config) throws Exception {
         this(config, getApplication(config));

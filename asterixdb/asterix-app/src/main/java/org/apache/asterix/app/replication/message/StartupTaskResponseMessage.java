@@ -30,6 +30,7 @@ import org.apache.asterix.common.replication.INCLifecycleMessage;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.service.IControllerService;
 import org.apache.hyracks.control.nc.NCShutdownHook;
+import org.apache.hyracks.util.ExitUtil;
 
 public class StartupTaskResponseMessage implements INCLifecycleMessage, INcAddressedMessage {
 
@@ -69,7 +70,7 @@ public class StartupTaskResponseMessage implements INCLifecycleMessage, INcAddre
         } finally {
             if (!success) {
                 // stop NC so that it can be started again
-                Runtime.getRuntime().exit(NCShutdownHook.FAILED_TO_STARTUP_EXIT_CODE); //NOSONAR startup failed
+                ExitUtil.exit(NCShutdownHook.FAILED_TO_STARTUP_EXIT_CODE);
             }
         }
     }

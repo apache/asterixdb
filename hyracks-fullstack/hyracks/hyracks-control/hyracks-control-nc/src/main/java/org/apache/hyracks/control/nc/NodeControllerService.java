@@ -89,6 +89,7 @@ import org.apache.hyracks.ipc.exceptions.IPCException;
 import org.apache.hyracks.ipc.impl.IPCSystem;
 import org.apache.hyracks.net.protocols.muxdemux.FullFrameChannelInterfaceFactory;
 import org.apache.hyracks.net.protocols.muxdemux.MuxDemuxPerformanceCounters;
+import org.apache.hyracks.util.ExitUtil;
 import org.kohsuke.args4j.CmdLineException;
 
 public class NodeControllerService implements IControllerService {
@@ -165,6 +166,10 @@ public class NodeControllerService implements IControllerService {
     private NodeRegistration nodeRegistration;
 
     private final AtomicLong maxJobId = new AtomicLong(-1);
+
+    static {
+        ExitUtil.init();
+    }
 
     public NodeControllerService(NCConfig config) throws Exception {
         this(config, getApplication(config));
