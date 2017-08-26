@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.channels.ClosedByInterruptException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -91,6 +92,10 @@ public abstract class AbstractCheckpointManager implements ICheckpointManager {
                 LOGGER.log(Level.WARNING, "Reading checkpoint file: " + file.getAbsolutePath());
                 String jsonString = new String(Files.readAllBytes(Paths.get(file.getAbsolutePath())));
                 checkpointObjectList.add(Checkpoint.fromJson(jsonString));
+            } catch (ClosedByInterruptException e) {
+                Thread.currentThread().interrupt();
+                LOGGER.log(Level.WARNING, "Interrupted while reading checkpoint file: " + file.getAbsolutePath(), e);
+                throw new ACIDException(e);
             } catch (IOException e) {
                 // ignore corrupted checkpoint file
                 LOGGER.log(Level.WARNING, "Failed to read checkpoint file: " + file.getAbsolutePath(), e);
