@@ -85,7 +85,7 @@ public class NCQueryServiceServlet extends QueryServiceServlet {
             try {
                 responseMsg = (ExecuteStatementResponseMessage) responseFuture.get(timeout,
                         java.util.concurrent.TimeUnit.MILLISECONDS);
-            } catch (TimeoutException exception) {
+            } catch (InterruptedException | TimeoutException exception) {
                 RuntimeDataException hde = new RuntimeDataException(ErrorCode.QUERY_TIMEOUT, exception);
                 // cancel query
                 cancelQuery(ncMb, ncCtx.getNodeId(), param.clientContextID, hde);
