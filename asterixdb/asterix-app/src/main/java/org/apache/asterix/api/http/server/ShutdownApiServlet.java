@@ -19,6 +19,7 @@
 package org.apache.asterix.api.http.server;
 
 import static org.apache.asterix.api.http.server.ServletConstants.HYRACKS_CONNECTION_ATTR;
+import static org.apache.asterix.common.api.IClusterManagementWork.ClusterState.SHUTTING_DOWN;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -92,6 +93,8 @@ public class ShutdownApiServlet extends AbstractServlet {
             jsonObject.set("cluster", clusterState);
             final PrintWriter writer = response.writer();
             writer.print(JSONUtil.convertNode(jsonObject));
+            // accept no further queries once this servlet returns
+            ClusterStateManager.INSTANCE.setState(SHUTTING_DOWN);
             writer.close();
         } catch (Exception e) {
             GlobalConfig.ASTERIX_LOGGER.log(Level.INFO, "Exception writing response", e);

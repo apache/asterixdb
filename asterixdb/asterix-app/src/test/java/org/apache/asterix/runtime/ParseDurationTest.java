@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.runtime;
 
-import org.apache.asterix.api.http.server.Duration;
+import org.apache.asterix.common.api.Duration;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.junit.Assert;
 import org.junit.Test;

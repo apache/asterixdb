@@ -23,6 +23,7 @@ import static org.apache.asterix.algebra.base.ILangExtension.Language.AQL;
 import static org.apache.asterix.algebra.base.ILangExtension.Language.SQLPP;
 import static org.apache.asterix.api.http.server.ServletConstants.ASTERIX_APP_CONTEXT_INFO_ATTR;
 import static org.apache.asterix.api.http.server.ServletConstants.HYRACKS_CONNECTION_ATTR;
+import static org.apache.asterix.common.api.IClusterManagementWork.ClusterState.SHUTTING_DOWN;
 
 import java.util.Arrays;
 import java.util.List;
@@ -187,11 +188,12 @@ public class CCApplication extends BaseCCApplication {
 
     @Override
     public void stop() throws Exception {
-        if (appCtx != null) {
-            ((ActiveNotificationHandler) appCtx.getActiveNotificationHandler()).stop();
-        }
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Stopping Asterix cluster controller");
+        }
+        ClusterStateManager.INSTANCE.setState(SHUTTING_DOWN);
+        if (appCtx != null) {
+            ((ActiveNotificationHandler) appCtx.getActiveNotificationHandler()).stop();
         }
         AsterixStateProxy.unregisterRemoteObject();
         webManager.stop();

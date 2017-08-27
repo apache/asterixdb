@@ -16,27 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.common.api;
 
-public interface IClusterManagementWork {
-
-    public enum WorkType {
-        ADD_NODE,
-        REMOVE_NODE
-    }
-
-    public enum ClusterState {
-        STARTING,
-        PENDING,
-        ACTIVE,
-        UNUSABLE,
-        REBALANCING,
-        SHUTTING_DOWN
-    }
-
-    public WorkType getClusterManagementWorkType();
-
-    public int getWorkId();
-
-    public IClusterEventsSubscriber getSourceSubscriber();
-}
+target diagnostics_1.1.get.http
+count 2
