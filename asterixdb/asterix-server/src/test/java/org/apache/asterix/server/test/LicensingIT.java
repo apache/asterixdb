@@ -61,21 +61,32 @@ public class LicensingIT {
 
     @Test
     public void testLicenseNoticeFilesPresent() throws IOException {
-        for (String name : Arrays.asList("LICENSE", "NOTICE")) {
+        for (String name : getRequiredArtifactNames()) {
             final String fileName = FileUtil.joinPath(installerDir, pathToLicensingFiles(), name);
             Assert.assertTrue(fileName + " missing", new File(fileName).exists());
         }
     }
 
+    protected String[] getRequiredArtifactNames() {
+        return org.apache.commons.lang3.ArrayUtils.add(getLicenseArtifactNames(), "NOTICE");
+    }
+
     @Test
-    public void testNoMissingLicenses() throws IOException {
-        final File licenseFile = new File(FileUtil.joinPath(installerDir, pathToLicensingFiles(), "LICENSE"));
-        List<String> badLines = new ArrayList<>();
-        for (String line : FileUtils.readLines(licenseFile, StandardCharsets.UTF_8)) {
-            if (line.matches("^\\s*MISSING:.*")) {
-                badLines.add(line.trim());
+    public void ensureNoMissingLicenses() throws IOException {
+        for (String licenseArtifactName : getLicenseArtifactNames()) {
+            final File licenseFile = new File(
+                    FileUtil.joinPath(installerDir, pathToLicensingFiles(), licenseArtifactName));
+            List<String> badLines = new ArrayList<>();
+            for (String line : FileUtils.readLines(licenseFile, StandardCharsets.UTF_8)) {
+                if (line.matches("^\\s*MISSING:.*")) {
+                    badLines.add(line.trim());
+                }
             }
+            Assert.assertEquals("Missing licenses in " + licenseFile + ": " + badLines, 0, badLines.size());
         }
-        Assert.assertEquals("Missing licenses in " + licenseFile + ": " + badLines, 0, badLines.size());
+    }
+
+    protected String[] getLicenseArtifactNames() {
+        return new String[] { "LICENSE" };
     }
 }
