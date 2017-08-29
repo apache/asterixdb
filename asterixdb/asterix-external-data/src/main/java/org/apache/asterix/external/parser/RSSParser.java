@@ -33,7 +33,6 @@ import com.rometools.rome.feed.synd.SyndEntry;
 
 public class RSSParser implements IRecordDataParser<SyndEntry> {
     private long id = 0;
-    private String idPrefix;
     private AMutableString[] mutableFields;
     private String[] tupleFieldValues;
     private AMutableRecord mutableRecord;
@@ -51,7 +50,7 @@ public class RSSParser implements IRecordDataParser<SyndEntry> {
     @Override
     public void parse(IRawRecord<? extends SyndEntry> record, DataOutput out) throws HyracksDataException {
         SyndEntry entry = record.get();
-        tupleFieldValues[0] = idPrefix + ":" + id;
+        tupleFieldValues[0] = String.valueOf(id);
         tupleFieldValues[1] = entry.getTitle();
         tupleFieldValues[2] = entry.getDescription().getValue();
         tupleFieldValues[3] = entry.getLink();

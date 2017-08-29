@@ -282,7 +282,7 @@
     <test-case FilePath="feeds">
       <compilation-unit name="drop-function-used-by-feed">
         <output-dir compare="Text">drop-function-used-by-feed</output-dir>
-        <expected-error>Function experiments.test_func0@1 is being used. It cannot be dropped.</expected-error>
+        <expected-error>Function experiments.test_func0@1 is being used. It cannot be dropped</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="feeds">
@@ -293,7 +293,7 @@
     <test-case FilePath="feeds">
       <compilation-unit name="drop-dataverse-with-function-used-by-feed">
         <output-dir compare="Text">drop-dataverse-with-function-used-by-feed</output-dir>
-        <expected-error>Function fundv.test_func0@1 is being used. It cannot be dropped.</expected-error>
+        <expected-error>Function fundv.test_func0@1 is being used. It cannot be dropped</expected-error>
       </compilation-unit>
     </test-case>
   </test-group>
