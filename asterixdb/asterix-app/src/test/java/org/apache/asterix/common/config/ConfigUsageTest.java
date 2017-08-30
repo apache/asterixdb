@@ -28,10 +28,12 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import org.apache.asterix.hyracks.bootstrap.CCApplication;
+import org.apache.asterix.hyracks.bootstrap.NCApplication;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hyracks.api.config.IOption;
@@ -49,10 +51,10 @@ public class ConfigUsageTest {
     private ConfigManager configManager;
     final EnumMap<Column, Integer> maxWidths = new EnumMap<>(Column.class);
 
-    enum Column {
+    protected enum Column {
         SECTION,
         PARAMETER,
-        MEANING,
+        DESCRIPTION,
         DEFAULT
     }
 
@@ -64,38 +66,52 @@ public class ConfigUsageTest {
     }
 
     @Test
-    public void generateUsage() {
+    public void generateCcUsage() {
+        generateUsage(Section.CC);
+    }
+
+    @Test
+    public void generateNcUsage() {
+        generateUsage(Section.NC);
+    }
+
+    @Test
+    public void generateCommonUsage() {
+        generateUsage(Section.COMMON);
+    }
+
+    protected void generateUsage(Section... sections) {
         final EnumMap<Column, Boolean> align = new EnumMap<>(Column.class);
         align.put(Column.SECTION, true);
         align.put(Column.PARAMETER, true);
         System.err.println();
-        generateUsage("| ", " | ", " |", align, System.err);
+        generateUsage("| ", " | ", " |", align, System.err, sections);
     }
 
     @Test
     public void generateUsageCSV() throws IOException {
         new File(CSV_FILE).getParentFile().mkdirs();
         try (final PrintStream output = new PrintStream(new FileOutputStream(CSV_FILE))) {
-            generateUsage("\"", "\",\"", "\"", new EnumMap<>(Column.class), output);
+            generateUsage("\"", "\",\"", "\"", new EnumMap<>(Column.class), output, getSections(configManager));
             // TODO(mblow): add some validation (in addition to just ensuring no exceptions...)
         }
     }
 
     protected ConfigManager getConfigManager() {
         ConfigManager configManager = new ConfigManager();
-        CCApplication application = new CCApplication();
-        application.registerConfig(configManager);
+        new CCApplication().registerConfig(configManager);
+        new NCApplication().registerConfig(configManager);
         ControllerConfig.Option.DEFAULT_DIR
                 .setDefaultValue(((String) ControllerConfig.Option.DEFAULT_DIR.defaultValue())
                         .replace(System.getProperty("java.io.tmpdir"), "${java.io.tmpdir}/"));
         return configManager;
     }
 
-    protected Set<Section> getSections(ConfigManager configManager) {
+    protected Section[] getSections(ConfigManager configManager) {
         TreeSet<Section> sections = new TreeSet<>(Comparator.comparing(Section::sectionName));
         sections.addAll(configManager.getSections());
         sections.remove(Section.LOCALNC);
-        return sections;
+        return sections.toArray(new Section[0]);
     }
 
     protected Predicate<IOption> optionSelector() {
@@ -108,7 +124,7 @@ public class ConfigUsageTest {
     }
 
     public void generateUsage(String startDelim, String midDelim, String endDelim, EnumMap<Column, Boolean> align,
-            PrintStream output) {
+            PrintStream output, Section... sections) {
         ConfigManager configManager = getConfigManager();
         StringBuilder buf = new StringBuilder();
 
@@ -125,7 +141,7 @@ public class ConfigUsageTest {
         // output header
         for (Column column : columns) {
             buf.append(column.ordinal() == 0 ? startDelim : midDelim);
-            pad(buf, StringUtils.capitalize(column.name().toLowerCase()),
+            pad(buf, getColumnDisplayFunction().apply(column),
                     align.computeIfAbsent(column, c -> false) ? calculateMaxWidth(column, column.name()) : 0);
         }
         buf.append(endDelim).append('\n');
@@ -138,22 +154,36 @@ public class ConfigUsageTest {
         sepLine.append(endDelim).append('\n');
         buf.append(sepLine.toString().replace(' ', '-'));
 
-        for (Section section : getSections(configManager)) {
-            List<IOption> options = new ArrayList<>(getSectionOptions(configManager, section));
-            options.sort(Comparator.comparing(IOption::ini));
-            for (IOption option : options) {
-                for (Column column : columns) {
-                    buf.append(column.ordinal() == 0 ? startDelim : midDelim);
-                    if (column == Column.SECTION) {
-                        center(buf, extractValue(column, option), maxWidths.getOrDefault(column, 0));
-                    } else {
-                        pad(buf, extractValue(column, option), maxWidths.getOrDefault(column, 0));
-                    }
+        List<IOption> options = new ArrayList<>();
+
+        for (Section section : sections) {
+            options.addAll(getSectionOptions(configManager, section));
+        }
+        options.sort(Comparator.comparing(getIOptionNameDisplayFunction()));
+        for (IOption option : options) {
+            for (Column column : columns) {
+                buf.append(column.ordinal() == 0 ? startDelim : midDelim);
+                if (column == Column.SECTION) {
+                    center(buf, extractValue(column, option), maxWidths.getOrDefault(column, 0));
+                } else {
+                    pad(buf, extractValue(column, option), maxWidths.getOrDefault(column, 0));
                 }
-                buf.append(endDelim).append('\n');
             }
+            buf.append(endDelim).append('\n');
         }
         output.println(buf);
+    }
+
+    protected Function<Column, String> getColumnDisplayFunction() {
+        return column -> StringUtils.capitalize(column.name().toLowerCase());
+    }
+
+    protected Function<IOption, String> getIOptionNameDisplayFunction() {
+        return IOption::ini;
+    }
+
+    protected Function<Section, String> getSectionDisplayFunction() {
+        return Section::sectionName;
     }
 
     protected int calculateMaxWidth(IOption option, Column column) {
@@ -170,13 +200,13 @@ public class ConfigUsageTest {
     private String extractValue(Column column, IOption option) {
         switch (column) {
             case SECTION:
-                return option.section().sectionName();
+                return getSectionDisplayFunction().apply(option.section());
             case PARAMETER:
-                return option.ini();
-            case MEANING:
+                return getIOptionNameDisplayFunction().apply(option);
+            case DESCRIPTION:
                 return option.description() == null ? "N/A" : option.description();
             case DEFAULT:
-                return configManager.defaultTextForUsage(option, IOption::ini);
+                return configManager.defaultTextForUsage(option, getIOptionNameDisplayFunction());
             default:
                 throw new IllegalStateException(String.valueOf(column));
         }

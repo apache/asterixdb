@@ -1263,7 +1263,7 @@ public class TestExecutor {
 
                 }
             } catch (Exception e) {
-                LOGGER.log(Level.FINE, "received exception on poll", e);
+                LOGGER.log(Level.INFO, "received exception on poll", e);
                 responsesReceived++;
                 if (isExpected(e, cUnit)) {
                     expectedException = true;
