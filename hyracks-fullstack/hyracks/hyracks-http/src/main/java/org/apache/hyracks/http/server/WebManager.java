@@ -19,6 +19,7 @@
 package org.apache.hyracks.http.server;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import io.netty.channel.EventLoopGroup;
@@ -54,11 +55,27 @@ public class WebManager {
     }
 
     public void stop() throws Exception {
-        for (HttpServer server : servers) {
-            server.stop();
-        }
+        List<Exception> stopExceptions = Collections.synchronizedList(new ArrayList<>());
+        servers.parallelStream().forEach(server -> {
+            try {
+                server.stop();
+            } catch (Exception e) {
+                stopExceptions.add(e);
+            }
+        });
         workers.shutdownGracefully().sync();
         bosses.shutdownGracefully().sync();
+        if (!stopExceptions.isEmpty()) {
+            Exception ex = null;
+            for (Exception stopException : stopExceptions) {
+                if (ex == null) {
+                    ex = stopException;
+                } else {
+                    ex.addSuppressed(stopException);
+                }
+            }
+            throw ex;
+        }
     }
 
     public void add(HttpServer server) {

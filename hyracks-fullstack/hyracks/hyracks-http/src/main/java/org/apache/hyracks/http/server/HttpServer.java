@@ -206,8 +206,6 @@ public class HttpServer {
     }
 
     protected void doStop() throws InterruptedException {
-        channel.close();
-        channel.closeFuture().sync();
         executor.shutdown();
         try {
             executor.awaitTermination(1, TimeUnit.MINUTES);
@@ -217,6 +215,8 @@ public class HttpServer {
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Error while shutting down http server executor", e);
         }
+        channel.close();
+        channel.closeFuture().sync();
     }
 
     public IServlet getServlet(FullHttpRequest request) {
