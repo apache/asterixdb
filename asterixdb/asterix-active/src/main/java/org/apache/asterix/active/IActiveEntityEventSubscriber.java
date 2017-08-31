@@ -43,9 +43,9 @@ public interface IActiveEntityEventSubscriber {
     /**
      * Wait until the terminal event has been received
      *
-     * @throws Exception
+     * @throws InterruptedException
      */
-    void sync() throws HyracksDataException, InterruptedException;
+    void sync() throws InterruptedException;
 
     /**
      * callback upon successful subscription

@@ -20,7 +20,6 @@ package org.apache.asterix.external.feed.watch;
 
 import org.apache.asterix.active.IActiveEntityEventSubscriber;
 import org.apache.asterix.active.IActiveEntityEventsListener;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public abstract class AbstractSubscriber implements IActiveEntityEventSubscriber {
 
@@ -48,12 +47,9 @@ public abstract class AbstractSubscriber implements IActiveEntityEventSubscriber
     }
 
     @Override
-    public void sync() throws HyracksDataException, InterruptedException {
+    public void sync() throws InterruptedException {
         synchronized (listener) {
             while (!done) {
-                if (failure != null) {
-                    throw HyracksDataException.create(failure);
-                }
                 listener.wait();
             }
         }

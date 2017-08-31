@@ -129,7 +129,7 @@ public class TestEventsListener extends ActiveEntityEventsListener {
         try {
             subscriber.sync();
             if (subscriber.getFailure() != null) {
-                throw HyracksDataException.create(subscriber.getFailure());
+                throw subscriber.getFailure();
             }
         } catch (Exception e) {
             throw HyracksDataException.create(e);

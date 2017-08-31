@@ -90,7 +90,7 @@ public class FeedEventsListener extends ActiveEntityEventsListener {
                     ((QueryTranslator) statementExecutor).getSessionOutput(), mdProvider, feed, feedConnections,
                     compilationProvider, storageComponentProvider, statementExecutorFactory, hcc);
             JobSpecification feedJob = jobInfo.getLeft();
-            IActiveEntityEventSubscriber eventSubscriber =
+            WaitForStateSubscriber eventSubscriber =
                     new WaitForStateSubscriber(this, Collections.singleton(ActivityState.RUNNING));
             feedJob.setProperty(ActiveNotificationHandler.ACTIVE_ENTITY_PROPERTY_NAME, entityId);
             // TODO(Yingyi): currently we do not check IFrameWriter protocol violations for Feed jobs.
@@ -99,6 +99,9 @@ public class FeedEventsListener extends ActiveEntityEventsListener {
             boolean wait = Boolean.parseBoolean(mdProvider.getConfig().get(StartFeedStatement.WAIT_FOR_COMPLETION));
             JobUtils.runJob(hcc, feedJob, false);
             eventSubscriber.sync();
+            if (eventSubscriber.getFailure() != null) {
+                throw eventSubscriber.getFailure();
+            }
             if (wait) {
                 IActiveEntityEventSubscriber stoppedSubscriber = new WaitForStateSubscriber(this,
                         EnumSet.of(ActivityState.STOPPED, ActivityState.PERMANENTLY_FAILED));

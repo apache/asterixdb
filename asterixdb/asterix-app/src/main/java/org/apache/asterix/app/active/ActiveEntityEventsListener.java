@@ -507,8 +507,13 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
                     .submit(() -> rt.resumeOrRecover(metadataProvider));
             try {
                 subscriber.sync();
-            } catch (Exception e) {
+                if (subscriber.getFailure() != null) {
+                    LOGGER.log(Level.WARNING, "Failure while attempting to resume " + entityId,
+                            subscriber.getFailure());
+                }
+            } catch (InterruptedException e) {
                 LOGGER.log(Level.WARNING, "Failure while attempting to resume " + entityId, e);
+                Thread.currentThread().interrupt();
                 throw HyracksDataException.create(e);
             }
         } finally {
