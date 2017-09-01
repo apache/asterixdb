@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.test.common.TestExecutor;
@@ -37,6 +38,7 @@ import org.apache.hyracks.server.process.HyracksNCServiceProcess;
 import org.apache.hyracks.server.process.HyracksVirtualCluster;
 import org.junit.AfterClass;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
@@ -118,6 +120,7 @@ public class NCServiceExecutionIT {
     private static final List<String> badTestCases = new ArrayList<>();
     private static HyracksVirtualCluster cluster;
     private final KillCommand killType;
+    private static boolean clusterActive = false;
 
     @BeforeClass
     public static void setUp() throws Exception {
@@ -149,6 +152,7 @@ public class NCServiceExecutionIT {
                 new File(LOG_DIR, "cc.log"));
 
         testExecutor.waitForClusterActive(30, TimeUnit.SECONDS);
+        clusterActive = true;
     }
 
     @AfterClass
@@ -222,6 +226,13 @@ public class NCServiceExecutionIT {
         this.killType = killType;
     }
 
+    @Before
+    public void before() {
+        if (!clusterActive) {
+            Assert.fail("Skipping test since cluster is not ACTIVE");
+        }
+    }
+
     @Test
     public void test() throws Exception {
         if (tcCtx != null) {
@@ -252,7 +263,14 @@ public class NCServiceExecutionIT {
                 default:
                     Assert.fail("killType: " + killType);
             }
-            testExecutor.waitForClusterActive(30, TimeUnit.SECONDS);
+            try {
+                testExecutor.waitForClusterActive(30, TimeUnit.SECONDS);
+            } catch (Exception e) {
+                // stop executing the rest of the tests since the cluster is not ACTIVE
+                LOGGER.log(Level.SEVERE, "Cannot continue since cluster is not ACTIVE", e);
+                clusterActive = false;
+                Assert.fail("Cluster is not ACTIVE");
+            }
         }
     }
 }
