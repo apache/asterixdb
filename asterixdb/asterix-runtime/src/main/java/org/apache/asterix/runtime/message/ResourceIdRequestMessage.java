@@ -20,11 +20,11 @@ package org.apache.asterix.runtime.message;
 
 import java.util.Set;
 
+import org.apache.asterix.common.cluster.IClusterStateManager;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.messaging.api.ICCMessageBroker;
 import org.apache.asterix.common.messaging.api.ICcAddressedMessage;
 import org.apache.asterix.common.transactions.IResourceIdManager;
-import org.apache.asterix.runtime.utils.ClusterStateManager;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class ResourceIdRequestMessage implements ICcAddressedMessage {
@@ -40,7 +40,8 @@ public class ResourceIdRequestMessage implements ICcAddressedMessage {
         try {
             ICCMessageBroker broker = (ICCMessageBroker) appCtx.getServiceContext().getMessageBroker();
             ResourceIdRequestResponseMessage reponse = new ResourceIdRequestResponseMessage();
-            if (!ClusterStateManager.INSTANCE.isClusterActive()) {
+            IClusterStateManager clusterStateManager = appCtx.getClusterStateManager();
+            if (!clusterStateManager.isClusterActive()) {
                 reponse.setResourceId(-1);
                 reponse.setException(new Exception("Cannot generate global resource id when cluster is not active."));
             } else {
@@ -49,7 +50,7 @@ public class ResourceIdRequestMessage implements ICcAddressedMessage {
                 if (reponse.getResourceId() < 0) {
                     reponse.setException(new Exception("One or more nodes has not reported max resource id."));
                 }
-                requestMaxResourceID(resourceIdManager, broker);
+                requestMaxResourceID(clusterStateManager, resourceIdManager, broker);
             }
             broker.sendApplicationMessageToNC(reponse, src);
         } catch (Exception e) {
@@ -57,8 +58,9 @@ public class ResourceIdRequestMessage implements ICcAddressedMessage {
         }
     }
 
-    private void requestMaxResourceID(IResourceIdManager resourceIdManager, ICCMessageBroker broker) throws Exception {
-        Set<String> getParticipantNodes = ClusterStateManager.INSTANCE.getParticipantNodes();
+    private void requestMaxResourceID(IClusterStateManager clusterStateManager, IResourceIdManager resourceIdManager,
+            ICCMessageBroker broker) throws Exception {
+        Set<String> getParticipantNodes = clusterStateManager.getParticipantNodes();
         ReportMaxResourceIdRequestMessage msg = new ReportMaxResourceIdRequestMessage();
         for (String nodeId : getParticipantNodes) {
             if (!resourceIdManager.reported(nodeId)) {

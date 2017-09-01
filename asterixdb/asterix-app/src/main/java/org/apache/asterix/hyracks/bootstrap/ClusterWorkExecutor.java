@@ -25,13 +25,13 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.common.api.IClusterManagementWork;
+import org.apache.asterix.common.cluster.IClusterStateManager;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.event.schema.cluster.Node;
 import org.apache.asterix.metadata.cluster.AddNodeWork;
 import org.apache.asterix.metadata.cluster.ClusterManagerProvider;
 import org.apache.asterix.metadata.cluster.RemoveNodeWork;
-import org.apache.asterix.runtime.utils.ClusterStateManager;
 
 public class ClusterWorkExecutor implements Runnable {
 
@@ -69,9 +69,10 @@ public class ClusterWorkExecutor implements Runnable {
                     }
                 }
 
+                IClusterStateManager csm = appCtx.getClusterStateManager();
                 Set<Node> addedNodes = new HashSet<>();
                 for (int i = 0; i < nodesToAdd; i++) {
-                    Node node = ClusterStateManager.INSTANCE.getAvailableSubstitutionNode();
+                    Node node = csm.getAvailableSubstitutionNode();
                     if (node != null) {
                         try {
                             ClusterManagerProvider.getClusterManager().addNode(appCtx, node);

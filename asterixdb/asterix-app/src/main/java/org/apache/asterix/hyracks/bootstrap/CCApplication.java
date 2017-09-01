@@ -54,7 +54,6 @@ import org.apache.asterix.api.http.server.UpdateApiServlet;
 import org.apache.asterix.api.http.server.VersionApiServlet;
 import org.apache.asterix.app.active.ActiveNotificationHandler;
 import org.apache.asterix.app.cc.CCExtensionManager;
-import org.apache.asterix.app.cc.ResourceIdManager;
 import org.apache.asterix.app.external.ExternalLibraryUtils;
 import org.apache.asterix.app.replication.FaultToleranceStrategyFactory;
 import org.apache.asterix.common.api.AsterixThreadFactory;
@@ -79,7 +78,6 @@ import org.apache.asterix.metadata.cluster.ClusterManagerProvider;
 import org.apache.asterix.metadata.lock.MetadataLockManager;
 import org.apache.asterix.runtime.job.resource.JobCapacityController;
 import org.apache.asterix.runtime.utils.CcApplicationContext;
-import org.apache.asterix.runtime.utils.ClusterStateManager;
 import org.apache.asterix.translator.IStatementExecutorContext;
 import org.apache.asterix.translator.IStatementExecutorFactory;
 import org.apache.hyracks.api.application.ICCServiceContext;
@@ -130,7 +128,7 @@ public class CCApplication extends BaseCCApplication {
         int port = ccServiceCtx.getCCContext().getClusterControllerInfo().getClientNetPort();
         hcc = new HyracksConnection(strIP, port);
         ILibraryManager libraryManager = new ExternalLibraryManager();
-        ResourceIdManager resourceIdManager = new ResourceIdManager();
+
         IReplicationStrategy repStrategy = ClusterProperties.INSTANCE.getReplicationStrategy();
         IFaultToleranceStrategy ftStrategy = FaultToleranceStrategyFactory
                 .create(ClusterProperties.INSTANCE.getCluster(), repStrategy, ccServiceCtx);
@@ -138,10 +136,9 @@ public class CCApplication extends BaseCCApplication {
         componentProvider = new StorageComponentProvider();
         GlobalRecoveryManager globalRecoveryManager = createGlobalRecoveryManager();
         statementExecutorCtx = new StatementExecutorContext();
-        appCtx = new CcApplicationContext(ccServiceCtx, getHcc(), libraryManager, resourceIdManager,
-                () -> MetadataManager.INSTANCE, globalRecoveryManager, ftStrategy, new ActiveNotificationHandler(),
-                componentProvider, new MetadataLockManager());
-        ClusterStateManager.INSTANCE.setCcAppCtx(appCtx);
+        appCtx = new CcApplicationContext(ccServiceCtx, getHcc(), libraryManager, () -> MetadataManager.INSTANCE,
+                globalRecoveryManager, ftStrategy, new ActiveNotificationHandler(), componentProvider,
+                new MetadataLockManager());
         ccExtensionManager = new CCExtensionManager(getExtensions());
         appCtx.setExtensionManager(ccExtensionManager);
         final CCConfig ccConfig = controllerService.getCCConfig();
@@ -191,7 +188,7 @@ public class CCApplication extends BaseCCApplication {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Stopping Asterix cluster controller");
         }
-        ClusterStateManager.INSTANCE.setState(SHUTTING_DOWN);
+        appCtx.getClusterStateManager().setState(SHUTTING_DOWN);
         if (appCtx != null) {
             ((ActiveNotificationHandler) appCtx.getActiveNotificationHandler()).stop();
         }
@@ -305,17 +302,17 @@ public class CCApplication extends BaseCCApplication {
             case Servlets.REBALANCE:
                 return new RebalanceApiServlet(ctx, paths, appCtx);
             case Servlets.SHUTDOWN:
-                return new ShutdownApiServlet(ctx, paths);
+                return new ShutdownApiServlet(appCtx, ctx, paths);
             case Servlets.VERSION:
                 return new VersionApiServlet(ctx, paths);
             case Servlets.CLUSTER_STATE:
-                return new ClusterApiServlet(ctx, paths);
+                return new ClusterApiServlet(appCtx, ctx, paths);
             case Servlets.CLUSTER_STATE_NODE_DETAIL:
-                return new NodeControllerDetailsApiServlet(ctx, paths);
+                return new NodeControllerDetailsApiServlet(appCtx, ctx, paths);
             case Servlets.CLUSTER_STATE_CC_DETAIL:
-                return new ClusterControllerDetailsApiServlet(ctx, paths);
+                return new ClusterControllerDetailsApiServlet(appCtx, ctx, paths);
             case Servlets.DIAGNOSTICS:
-                return new DiagnosticsApiServlet(ctx, paths);
+                return new DiagnosticsApiServlet(appCtx, ctx, paths);
             case Servlets.ACTIVE_STATS:
                 return new ActiveStatsApiServlet(ctx, paths, appCtx);
             default:
@@ -334,7 +331,7 @@ public class CCApplication extends BaseCCApplication {
     @Override
     public void startupCompleted() throws Exception {
         ccServiceCtx.getControllerService().getExecutor().submit(() -> {
-            ClusterStateManager.INSTANCE.waitForState(ClusterState.ACTIVE);
+            appCtx.getClusterStateManager().waitForState(ClusterState.ACTIVE);
             ClusterManagerProvider.getClusterManager().notifyStartupCompleted();
             return null;
         });

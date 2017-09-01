@@ -30,6 +30,7 @@ import org.apache.asterix.algebra.base.ILangExtension;
 import org.apache.asterix.api.http.server.ResultUtil;
 import org.apache.asterix.app.cc.CCExtensionManager;
 import org.apache.asterix.common.api.IClusterManagementWork;
+import org.apache.asterix.common.cluster.IClusterStateManager;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
@@ -41,7 +42,6 @@ import org.apache.asterix.lang.common.base.IParser;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.messaging.CCMessageBroker;
 import org.apache.asterix.metadata.MetadataManager;
-import org.apache.asterix.runtime.utils.ClusterStateManager;
 import org.apache.asterix.translator.IStatementExecutor;
 import org.apache.asterix.translator.IStatementExecutorContext;
 import org.apache.asterix.translator.IStatementExecutorFactory;
@@ -139,7 +139,9 @@ public final class ExecuteStatementRequestMessage implements ICcAddressedMessage
         if (ccSrv.getNodeManager().getNodeControllerState(requestNodeId) == null) {
             return "Node is not registerted with the CC";
         }
-        final IClusterManagementWork.ClusterState clusterState = ClusterStateManager.INSTANCE.getState();
+        ICcApplicationContext appCtx = (ICcApplicationContext) ccSrv.getApplicationContext();
+        IClusterStateManager csm = appCtx.getClusterStateManager();
+        final IClusterManagementWork.ClusterState clusterState = csm.getState();
         if (clusterState != IClusterManagementWork.ClusterState.ACTIVE) {
             return "Cannot execute request, cluster is " + clusterState;
         }

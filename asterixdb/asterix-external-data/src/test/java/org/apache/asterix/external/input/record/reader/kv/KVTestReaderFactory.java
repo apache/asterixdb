@@ -23,9 +23,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.external.api.IRecordReader;
 import org.apache.asterix.external.api.IRecordReaderFactory;
-import org.apache.asterix.runtime.utils.ClusterStateManager;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -43,17 +43,23 @@ public class KVTestReaderFactory implements IRecordReaderFactory<DCPRequest> {
     private int upsertCycle = 0;
     private int numOfReaders;
     private transient AlgebricksAbsolutePartitionConstraint clusterLocations;
+    private transient IServiceContext serviceCtx;
     private static final List<String> recordReaderNames = Collections.unmodifiableList(Arrays.asList());
 
     @Override
     public AlgebricksAbsolutePartitionConstraint getPartitionConstraint() {
-        clusterLocations = ClusterStateManager.INSTANCE.getClusterLocations();
-        numOfReaders = clusterLocations.getLocations().length;
+        if (clusterLocations == null) {
+            ICcApplicationContext appCtx = (ICcApplicationContext) serviceCtx.getApplicationContext();
+            clusterLocations = appCtx.getClusterStateManager().getClusterLocations();
+            numOfReaders = clusterLocations.getLocations().length;
+        }
         return clusterLocations;
+
     }
 
     @Override
     public void configure(IServiceContext serviceCtx, final Map<String, String> configuration) {
+        this.serviceCtx = serviceCtx;
         if (configuration.containsKey("num-of-records")) {
             numOfRecords = Integer.parseInt(configuration.get("num-of-records"));
         }
@@ -83,7 +89,8 @@ public class KVTestReaderFactory implements IRecordReaderFactory<DCPRequest> {
         return DCPRequest.class;
     }
 
-    @Override public List<String> getRecordReaderNames() {
+    @Override
+    public List<String> getRecordReaderNames() {
         return recordReaderNames;
     }
 }

@@ -29,7 +29,9 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.asterix.runtime.utils.ClusterStateManager;
+import org.apache.asterix.common.cluster.ClusterPartition;
+import org.apache.asterix.common.cluster.IClusterStateManager;
+import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
@@ -48,8 +50,9 @@ public class NodeControllerDetailsApiServlet extends ClusterApiServlet {
     private static final Logger LOGGER = Logger.getLogger(NodeControllerDetailsApiServlet.class.getName());
     private final ObjectMapper om = new ObjectMapper();
 
-    public NodeControllerDetailsApiServlet(ConcurrentMap<String, Object> ctx, String... paths) {
-        super(ctx, paths);
+    public NodeControllerDetailsApiServlet(ICcApplicationContext appCtx, ConcurrentMap<String, Object> ctx,
+            String... paths) {
+        super(appCtx, ctx, paths);
         om.enable(SerializationFeature.INDENT_OUTPUT);
     }
 
@@ -205,8 +208,9 @@ public class NodeControllerDetailsApiServlet extends ClusterApiServlet {
         String dump = hcc.getThreadDump(node);
         if (dump == null) {
             // check to see if this is a node that is simply down
-            throw ClusterStateManager.INSTANCE.getNodePartitions(node) != null ? new IllegalStateException()
-                    : new IllegalArgumentException();
+            IClusterStateManager csm = appCtx.getClusterStateManager();
+            ClusterPartition[] cp = csm.getNodePartitions(node);
+            throw cp != null ? new IllegalStateException() : new IllegalArgumentException();
         }
         return (ObjectNode) om.readTree(dump);
     }

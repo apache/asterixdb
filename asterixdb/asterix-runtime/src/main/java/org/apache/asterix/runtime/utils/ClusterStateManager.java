@@ -36,6 +36,7 @@ import org.apache.asterix.common.api.IClusterManagementWork.ClusterState;
 import org.apache.asterix.common.cluster.ClusterPartition;
 import org.apache.asterix.common.cluster.IClusterStateManager;
 import org.apache.asterix.common.config.ClusterProperties;
+import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.replication.IFaultToleranceStrategy;
@@ -66,7 +67,6 @@ public class ClusterStateManager implements IClusterStateManager {
      */
 
     private static final Logger LOGGER = Logger.getLogger(ClusterStateManager.class.getName());
-    public static final ClusterStateManager INSTANCE = new ClusterStateManager();
     private final Map<String, Map<IOption, Object>> activeNcConfiguration = new HashMap<>();
     private Set<String> pendingRemoval = new HashSet<>();
     private final Cluster cluster;
@@ -78,13 +78,14 @@ public class ClusterStateManager implements IClusterStateManager {
     private boolean metadataNodeActive = false;
     private Set<String> failedNodes = new HashSet<>();
     private IFaultToleranceStrategy ftStrategy;
-    private CcApplicationContext appCtx;
+    private ICcApplicationContext appCtx;
 
-    private ClusterStateManager() {
+    public ClusterStateManager() {
         cluster = ClusterProperties.INSTANCE.getCluster();
     }
 
-    public void setCcAppCtx(CcApplicationContext appCtx) {
+    @Override
+    public void setCcAppCtx(ICcApplicationContext appCtx) {
         this.appCtx = appCtx;
         node2PartitionsMap = appCtx.getMetadataProperties().getNodePartitions();
         clusterPartitions = appCtx.getMetadataProperties().getClusterPartitions();
@@ -93,6 +94,7 @@ public class ClusterStateManager implements IClusterStateManager {
         ftStrategy.bindTo(this);
     }
 
+    @Override
     public synchronized void removeNCConfiguration(String nodeId) throws HyracksException {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Removing configuration parameters for node id " + nodeId);
@@ -102,6 +104,7 @@ public class ClusterStateManager implements IClusterStateManager {
         pendingRemoval.remove(nodeId);
     }
 
+    @Override
     public synchronized void addNCConfiguration(String nodeId, Map<IOption, Object> configuration)
             throws HyracksException {
         if (LOGGER.isLoggable(Level.INFO)) {
@@ -209,13 +212,7 @@ public class ClusterStateManager implements IClusterStateManager {
         return true;
     }
 
-    /**
-     * Returns the IO devices configured for a Node Controller
-     *
-     * @param nodeId
-     *            unique identifier of the Node Controller
-     * @return a list of IO devices.
-     */
+    @Override
     public synchronized String[] getIODevices(String nodeId) {
         Map<IOption, Object> ncConfig = activeNcConfiguration.get(nodeId);
         if (ncConfig == null) {
@@ -233,11 +230,13 @@ public class ClusterStateManager implements IClusterStateManager {
         return state;
     }
 
+    @Override
     public synchronized Node getAvailableSubstitutionNode() {
         List<Node> subNodes = cluster.getSubstituteNodes() == null ? null : cluster.getSubstituteNodes().getNode();
         return subNodes == null || subNodes.isEmpty() ? null : subNodes.get(0);
     }
 
+    @Override
     public synchronized Set<String> getParticipantNodes() {
         Set<String> participantNodes = new HashSet<>();
         for (String pNode : activeNcConfiguration.keySet()) {
@@ -246,6 +245,7 @@ public class ClusterStateManager implements IClusterStateManager {
         return participantNodes;
     }
 
+    @Override
     public synchronized Set<String> getParticipantNodes(boolean excludePendingRemoval) {
         Set<String> participantNodes = getParticipantNodes();
         if (excludePendingRemoval) {
@@ -254,6 +254,7 @@ public class ClusterStateManager implements IClusterStateManager {
         return participantNodes;
     }
 
+    @Override
     public synchronized AlgebricksAbsolutePartitionConstraint getClusterLocations() {
         if (clusterPartitionConstraint == null) {
             resetClusterPartitionConstraint();
@@ -272,6 +273,7 @@ public class ClusterStateManager implements IClusterStateManager {
                 new AlgebricksAbsolutePartitionConstraint(clusterActiveLocations.toArray(new String[] {}));
     }
 
+    @Override
     public synchronized boolean isClusterActive() {
         if (cluster == null) {
             // this is a virtual cluster
@@ -280,6 +282,7 @@ public class ClusterStateManager implements IClusterStateManager {
         return state == ClusterState.ACTIVE;
     }
 
+    @Override
     public int getNumberOfNodes() {
         return appCtx.getMetadataProperties().getNodeNames().size();
     }
@@ -289,6 +292,7 @@ public class ClusterStateManager implements IClusterStateManager {
         return node2PartitionsMap.get(nodeId);
     }
 
+    @Override
     public synchronized int getNodePartitionsCount(String node) {
         if (node2PartitionsMap.containsKey(node)) {
             return node2PartitionsMap.get(node).length;
@@ -305,10 +309,12 @@ public class ClusterStateManager implements IClusterStateManager {
         return partitons.toArray(new ClusterPartition[] {});
     }
 
+    @Override
     public synchronized boolean isMetadataNodeActive() {
         return metadataNodeActive;
     }
 
+    @Override
     public synchronized ObjectNode getClusterStateDescription() {
         ObjectMapper om = new ObjectMapper();
         ObjectNode stateDescription = om.createObjectNode();
@@ -342,6 +348,7 @@ public class ClusterStateManager implements IClusterStateManager {
         return stateDescription;
     }
 
+    @Override
     public synchronized ObjectNode getClusterStateSummary() {
         ObjectMapper om = new ObjectMapper();
         ObjectNode stateDescription = om.createObjectNode();
@@ -395,6 +402,7 @@ public class ClusterStateManager implements IClusterStateManager {
         }
     }
 
+    @Override
     public synchronized void removePending(String nodeId) {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Registering intention to remove node id " + nodeId);
@@ -406,6 +414,7 @@ public class ClusterStateManager implements IClusterStateManager {
         }
     }
 
+    @Override
     public synchronized boolean cancelRemovePending(String nodeId) {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Deregistering intention to remove node id " + nodeId);
@@ -423,8 +432,8 @@ public class ClusterStateManager implements IClusterStateManager {
     }
 
     private void updateNodeConfig(String nodeId, Map<IOption, Object> configuration) {
-        ConfigManager configManager = ((ConfigManagerApplicationConfig) appCtx.getServiceContext().getAppConfig())
-                .getConfigManager();
+        ConfigManager configManager =
+                ((ConfigManagerApplicationConfig) appCtx.getServiceContext().getAppConfig()).getConfigManager();
         for (Map.Entry<IOption, Object> entry : configuration.entrySet()) {
             if (entry.getKey().section() == Section.NC) {
                 configManager.set(nodeId, entry.getKey(), entry.getValue());

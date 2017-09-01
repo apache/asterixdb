@@ -32,6 +32,7 @@ import org.apache.asterix.common.api.IClusterEventsSubscriber;
 import org.apache.asterix.common.api.IClusterManagementWork;
 import org.apache.asterix.common.api.IClusterManagementWorkResponse;
 import org.apache.asterix.common.api.IClusterManagementWorkResponse.Status;
+import org.apache.asterix.common.cluster.IClusterStateManager;
 import org.apache.asterix.common.config.ClusterProperties;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.event.schema.cluster.Node;
@@ -42,7 +43,6 @@ import org.apache.asterix.metadata.cluster.ClusterManagerProvider;
 import org.apache.asterix.metadata.cluster.RemoveNodeWork;
 import org.apache.asterix.metadata.cluster.RemoveNodeWorkResponse;
 import org.apache.asterix.runtime.utils.CcApplicationContext;
-import org.apache.asterix.runtime.utils.ClusterStateManager;
 import org.apache.hyracks.api.application.IClusterLifecycleListener;
 import org.apache.hyracks.api.config.IOption;
 import org.apache.hyracks.api.exceptions.HyracksException;
@@ -70,10 +70,11 @@ public class ClusterLifecycleListener implements IClusterLifecycleListener {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("NC: " + nodeId + " joined");
         }
-        ClusterStateManager.INSTANCE.addNCConfiguration(nodeId, ncConfiguration);
+        IClusterStateManager csm = appCtx.getClusterStateManager();
+        csm.addNCConfiguration(nodeId, ncConfiguration);
 
         //if metadata node rejoining, we need to rebind the proxy connection when it is active again.
-        if (!ClusterStateManager.INSTANCE.isMetadataNodeActive()) {
+        if (!csm.isMetadataNodeActive()) {
             MetadataManager.INSTANCE.rebindMetadataNode();
         }
 
@@ -99,10 +100,11 @@ public class ClusterLifecycleListener implements IClusterLifecycleListener {
             if (LOGGER.isLoggable(Level.INFO)) {
                 LOGGER.info("NC: " + deadNode + " left");
             }
-            ClusterStateManager.INSTANCE.removeNCConfiguration(deadNode);
+            IClusterStateManager csm = appCtx.getClusterStateManager();
+            csm.removeNCConfiguration(deadNode);
 
             //if metadata node failed, we need to rebind the proxy connection when it is active again
-            if (!ClusterStateManager.INSTANCE.isMetadataNodeActive()) {
+            if (!csm.isMetadataNodeActive()) {
                 MetadataManager.INSTANCE.rebindMetadataNode();
             }
         }
@@ -171,8 +173,9 @@ public class ClusterLifecycleListener implements IClusterLifecycleListener {
 
         List<String> addedNodes = new ArrayList<>();
         String asterixInstanceName = ClusterProperties.INSTANCE.getCluster().getInstanceName();
+        IClusterStateManager csm = appCtx.getClusterStateManager();
         for (int i = 0; i < nodesToAdd; i++) {
-            Node node = ClusterStateManager.INSTANCE.getAvailableSubstitutionNode();
+            Node node = csm.getAvailableSubstitutionNode();
             if (node != null) {
                 try {
                     ClusterManagerProvider.getClusterManager().addNode(appCtx, node);

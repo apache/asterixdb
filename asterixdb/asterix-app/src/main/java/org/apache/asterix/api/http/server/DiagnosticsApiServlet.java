@@ -34,7 +34,8 @@ import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.asterix.runtime.utils.ClusterStateManager;
+import org.apache.asterix.common.cluster.IClusterStateManager;
+import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
@@ -55,8 +56,8 @@ public class DiagnosticsApiServlet extends NodeControllerDetailsApiServlet {
     protected final IHyracksClientConnection hcc;
     protected final ExecutorService executor;
 
-    public DiagnosticsApiServlet(ConcurrentMap<String, Object> ctx, String[] paths) {
-        super(ctx, paths);
+    public DiagnosticsApiServlet(ICcApplicationContext appCtx, ConcurrentMap<String, Object> ctx, String... paths) {
+        super(appCtx, ctx, paths);
         this.om = new ObjectMapper();
         this.hcc = (IHyracksClientConnection) ctx.get(HYRACKS_CONNECTION_ATTR);
         this.executor = (ExecutorService) ctx.get(ServletConstants.EXECUTOR_SERVICE_ATTR);
@@ -66,7 +67,6 @@ public class DiagnosticsApiServlet extends NodeControllerDetailsApiServlet {
     protected void get(IServletRequest request, IServletResponse response) throws IOException {
         HttpUtil.setContentType(response, HttpUtil.ContentType.APPLICATION_JSON, HttpUtil.Encoding.UTF8);
         PrintWriter responseWriter = response.writer();
-        ObjectNode json;
         response.setStatus(HttpResponseStatus.OK);
         om.enable(SerializationFeature.INDENT_OUTPUT);
         try {
@@ -89,9 +89,9 @@ public class DiagnosticsApiServlet extends NodeControllerDetailsApiServlet {
     protected ObjectNode getClusterDiagnosticsJSON() throws Exception {
         Map<String, Future<JsonNode>> ccFutureData;
         ccFutureData = getCcDiagosticsFutures();
-
+        IClusterStateManager csm = appCtx.getClusterStateManager();
         Map<String, Map<String, Future<JsonNode>>> ncDataMap = new HashMap<>();
-        for (String nc : ClusterStateManager.INSTANCE.getParticipantNodes()) {
+        for (String nc : csm.getParticipantNodes()) {
             ncDataMap.put(nc, getNcDiagnosticFutures(nc));
         }
         ObjectNode result = om.createObjectNode();

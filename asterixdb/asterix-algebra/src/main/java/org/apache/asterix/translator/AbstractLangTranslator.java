@@ -38,7 +38,6 @@ import org.apache.asterix.lang.common.statement.InsertStatement;
 import org.apache.asterix.metadata.dataset.hints.DatasetHints;
 import org.apache.asterix.metadata.entities.Dataverse;
 import org.apache.asterix.metadata.utils.MetadataConstants;
-import org.apache.asterix.runtime.utils.ClusterStateManager;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
@@ -53,7 +52,7 @@ public abstract class AbstractLangTranslator {
     public void validateOperation(ICcApplicationContext appCtx, Dataverse defaultDataverse, Statement stmt)
             throws AsterixException {
 
-        final IClusterStateManager clusterStateManager = ClusterStateManager.INSTANCE;
+        final IClusterStateManager clusterStateManager = appCtx.getClusterStateManager();
         final IGlobalRecoveryManager globalRecoveryManager = appCtx.getGlobalRecoveryManager();
         if (!(clusterStateManager.getState().equals(ClusterState.ACTIVE)
                 && globalRecoveryManager.isRecoveryCompleted())) {

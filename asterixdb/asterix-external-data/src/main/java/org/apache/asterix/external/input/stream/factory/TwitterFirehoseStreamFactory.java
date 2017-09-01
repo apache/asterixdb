@@ -23,10 +23,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.external.api.AsterixInputStream;
 import org.apache.asterix.external.api.IInputStreamFactory;
 import org.apache.asterix.external.input.stream.TwitterFirehoseInputStream;
-import org.apache.asterix.runtime.utils.ClusterStateManager;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -54,6 +54,7 @@ public class TwitterFirehoseStreamFactory implements IInputStreamFactory {
     private static final String KEY_INGESTION_LOCATIONS = "ingestion-location";
 
     private Map<String, String> configuration;
+    private transient IServiceContext serviceCtx;
 
     @Override
     public AlgebricksAbsolutePartitionConstraint getPartitionConstraint() {
@@ -67,10 +68,10 @@ public class TwitterFirehoseStreamFactory implements IInputStreamFactory {
         if (ingestionCardinalityParam != null) {
             count = Integer.parseInt(ingestionCardinalityParam);
         }
-
+        ICcApplicationContext appCtx = (ICcApplicationContext) serviceCtx.getApplicationContext();
         List<String> chosenLocations = new ArrayList<>();
         String[] availableLocations = locations != null ? locations
-                : ClusterStateManager.INSTANCE.getParticipantNodes().toArray(new String[] {});
+                : appCtx.getClusterStateManager().getParticipantNodes().toArray(new String[] {});
         for (int i = 0, k = 0; i < count; i++, k = (k + 1) % availableLocations.length) {
             chosenLocations.add(availableLocations[k]);
         }
@@ -84,6 +85,7 @@ public class TwitterFirehoseStreamFactory implements IInputStreamFactory {
 
     @Override
     public void configure(IServiceContext serviceCtx, Map<String, String> configuration) {
+        this.serviceCtx = serviceCtx;
         this.configuration = configuration;
     }
 

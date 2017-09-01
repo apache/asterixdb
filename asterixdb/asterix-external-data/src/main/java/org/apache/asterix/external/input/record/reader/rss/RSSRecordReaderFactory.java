@@ -25,7 +25,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.asterix.common.api.IApplicationContext;
+import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.external.api.IExternalDataSourceFactory;
 import org.apache.asterix.external.api.IRecordReader;
 import org.apache.asterix.external.api.IRecordReaderFactory;
@@ -55,7 +55,7 @@ public class RSSRecordReaderFactory implements IRecordReaderFactory<SyndEntry> {
     public AlgebricksAbsolutePartitionConstraint getPartitionConstraint() throws AlgebricksException {
         int count = urls.size();
         clusterLocations = IExternalDataSourceFactory.getPartitionConstraints(
-                (IApplicationContext) serviceContext.getApplicationContext(), clusterLocations, count);
+                (ICcApplicationContext) serviceContext.getApplicationContext(), clusterLocations, count);
         return clusterLocations;
     }
 

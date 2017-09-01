@@ -25,7 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.asterix.common.api.IApplicationContext;
+import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.external.api.AsterixInputStream;
 import org.apache.asterix.external.api.IExternalDataSourceFactory;
@@ -50,7 +50,7 @@ public class SocketClientInputStreamFactory implements IInputStreamFactory {
     @Override
     public AlgebricksAbsolutePartitionConstraint getPartitionConstraint() throws AlgebricksException {
         clusterLocations = IExternalDataSourceFactory.getPartitionConstraints(
-                (IApplicationContext) serviceCtx.getApplicationContext(), clusterLocations, sockets.size());
+                (ICcApplicationContext) serviceCtx.getApplicationContext(), clusterLocations, sockets.size());
         return clusterLocations;
     }
 

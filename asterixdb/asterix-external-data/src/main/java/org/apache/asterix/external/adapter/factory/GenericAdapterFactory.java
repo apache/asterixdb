@@ -25,6 +25,7 @@ import java.util.logging.Logger;
 
 import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.api.INcApplicationContext;
+import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.external.api.IAdapterFactory;
 import org.apache.asterix.external.api.IDataFlowController;
@@ -92,8 +93,7 @@ public class GenericAdapterFactory implements IIndexingAdapterFactory, IAdapterF
     public synchronized IDataSourceAdapter createAdapter(IHyracksTaskContext ctx, int partition)
             throws HyracksDataException {
         INCServiceContext serviceCtx = ctx.getJobletContext().getServiceContext();
-        INcApplicationContext appCtx =
-                (INcApplicationContext) serviceCtx.getApplicationContext();
+        INcApplicationContext appCtx = (INcApplicationContext) serviceCtx.getApplicationContext();
         try {
             restoreExternalObjects(serviceCtx, appCtx.getLibraryManager());
         } catch (Exception e) {
@@ -152,15 +152,16 @@ public class GenericAdapterFactory implements IIndexingAdapterFactory, IAdapterF
         dataParserFactory.setMetaType(metaType);
         dataParserFactory.configure(configuration);
         ExternalDataCompatibilityUtils.validateCompatibility(dataSourceFactory, dataParserFactory);
-        configureFeedLogManager();
+        configureFeedLogManager(appCtx);
         nullifyExternalObjects();
     }
 
-    private void configureFeedLogManager() throws HyracksDataException, AlgebricksException {
+    private void configureFeedLogManager(IApplicationContext appCtx) throws HyracksDataException, AlgebricksException {
         this.isFeed = ExternalDataUtils.isFeed(configuration);
         if (isFeed) {
-            feedLogFileSplits = FeedUtils.splitsForAdapter(ExternalDataUtils.getDataverse(configuration),
-                    ExternalDataUtils.getFeedName(configuration), dataSourceFactory.getPartitionConstraint());
+            feedLogFileSplits = FeedUtils.splitsForAdapter((ICcApplicationContext) appCtx,
+                    ExternalDataUtils.getDataverse(configuration), ExternalDataUtils.getFeedName(configuration),
+                    dataSourceFactory.getPartitionConstraint());
         }
     }
 

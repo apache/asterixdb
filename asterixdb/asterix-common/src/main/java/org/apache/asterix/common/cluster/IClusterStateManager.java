@@ -19,12 +19,19 @@
 package org.apache.asterix.common.cluster;
 
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.asterix.common.api.IClusterManagementWork.ClusterState;
+import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.event.schema.cluster.Node;
+import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.api.config.IOption;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.HyracksException;
+
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public interface IClusterStateManager {
 
@@ -49,6 +56,7 @@ public interface IClusterStateManager {
 
     /**
      * Updates all partitions of {@code nodeId} based on the {@code active} flag.
+     *
      * @param nodeId
      * @param active
      * @throws HyracksDataException
@@ -93,6 +101,7 @@ public interface IClusterStateManager {
 
     /**
      * Blocks until the cluster state becomes {@code state}, or timeout is exhausted.
+     *
      * @return true if the desired state was reached before timeout occurred
      */
     boolean waitForState(ClusterState waitForState, long timeout, TimeUnit unit)
@@ -116,4 +125,106 @@ public interface IClusterStateManager {
      * @throws HyracksDataException
      */
     void deregisterNodePartitions(String nodeId) throws HyracksDataException;
+
+    /**
+     * @return true if cluster is active, false otherwise
+     */
+    boolean isClusterActive();
+
+    /**
+     * @return the set of participant nodes
+     */
+    Set<String> getParticipantNodes();
+
+    /**
+     * Returns the IO devices configured for a Node Controller
+     *
+     * @param nodeId
+     *            unique identifier of the Node Controller
+     * @return a list of IO devices.
+     */
+    String[] getIODevices(String nodeId);
+
+    /**
+     * @return the constraint representing all the partitions of the cluster
+     */
+    AlgebricksAbsolutePartitionConstraint getClusterLocations();
+
+    /**
+     * @param excludePendingRemoval
+     *            true, if the desired set shouldn't have pending removal nodes
+     * @return the set of participant nodes
+     */
+    Set<String> getParticipantNodes(boolean excludePendingRemoval);
+
+    /**
+     * @param node
+     *            the node id
+     * @return the number of partitions on that node
+     */
+    int getNodePartitionsCount(String node);
+
+    /**
+     * @return a json object representing the cluster state summary
+     */
+    ObjectNode getClusterStateSummary();
+
+    /**
+     * @return a json object representing the cluster state description
+     */
+    ObjectNode getClusterStateDescription();
+
+    /**
+     * Set the cc application context
+     *
+     * @param appCtx
+     */
+    void setCcAppCtx(ICcApplicationContext appCtx);
+
+    /**
+     * @return the number of cluster nodes
+     */
+    int getNumberOfNodes();
+
+    /**
+     * Add node configuration
+     *
+     * @param nodeId
+     * @param ncConfiguration
+     * @throws HyracksException
+     */
+    void addNCConfiguration(String nodeId, Map<IOption, Object> ncConfiguration) throws HyracksException;
+
+    /**
+     * @return true if metadata node is active, false otherwise
+     */
+    boolean isMetadataNodeActive();
+
+    /**
+     * Remove configuration of a dead node
+     *
+     * @param deadNode
+     * @throws HyracksException
+     */
+    void removeNCConfiguration(String deadNode) throws HyracksException;
+
+    /**
+     * @return a substitution node or null
+     */
+    Node getAvailableSubstitutionNode();
+
+    /**
+     * Add node to the list of nodes pending removal
+     *
+     * @param nodeId
+     */
+    void removePending(String nodeId);
+
+    /**
+     * Deregister intention to remove node id
+     *
+     * @param nodeId
+     * @return
+     */
+    boolean cancelRemovePending(String nodeId);
 }

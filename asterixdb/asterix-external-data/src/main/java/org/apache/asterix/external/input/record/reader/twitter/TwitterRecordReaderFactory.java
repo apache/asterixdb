@@ -25,7 +25,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.asterix.common.api.IApplicationContext;
+import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.external.api.IExternalDataSourceFactory;
@@ -55,19 +55,15 @@ public class TwitterRecordReaderFactory implements IRecordReaderFactory<String> 
     private transient AlgebricksAbsolutePartitionConstraint clusterLocations;
     private transient IServiceContext serviceCtx;
 
-    private static final List<String> recordReaderNames = Collections.unmodifiableList(Arrays.asList(
-            ExternalDataConstants.READER_TWITTER_PULL,
-            ExternalDataConstants.READER_TWITTER_PUSH,
-            ExternalDataConstants.READER_PUSH_TWITTER,
-            ExternalDataConstants.READER_PULL_TWITTER,
-            ExternalDataConstants.READER_USER_STREAM_TWITTER));
-
+    private static final List<String> recordReaderNames =
+            Collections.unmodifiableList(Arrays.asList(ExternalDataConstants.READER_TWITTER_PULL,
+                    ExternalDataConstants.READER_TWITTER_PUSH, ExternalDataConstants.READER_PUSH_TWITTER,
+                    ExternalDataConstants.READER_PULL_TWITTER, ExternalDataConstants.READER_USER_STREAM_TWITTER));
 
     @Override
     public DataSourceType getDataSourceType() {
         return DataSourceType.RECORDS;
     }
-
 
     @Override
     public List<String> getRecordReaderNames() {
@@ -77,8 +73,7 @@ public class TwitterRecordReaderFactory implements IRecordReaderFactory<String> 
     @Override
     public AlgebricksAbsolutePartitionConstraint getPartitionConstraint() throws AlgebricksException {
         clusterLocations = IExternalDataSourceFactory.getPartitionConstraints(
-                (IApplicationContext) serviceCtx.getApplicationContext(),
-                clusterLocations, INTAKE_CARDINALITY);
+                (ICcApplicationContext) serviceCtx.getApplicationContext(), clusterLocations, INTAKE_CARDINALITY);
         return clusterLocations;
     }
 

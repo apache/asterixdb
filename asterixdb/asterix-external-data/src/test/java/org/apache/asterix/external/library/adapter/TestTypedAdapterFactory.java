@@ -24,6 +24,7 @@ import java.util.Map;
 
 import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.cluster.ClusterPartition;
+import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.external.api.IAdapterFactory;
 import org.apache.asterix.external.api.IDataSourceAdapter;
 import org.apache.asterix.external.api.IExternalDataSourceFactory;
@@ -65,7 +66,7 @@ public class TestTypedAdapterFactory implements IAdapterFactory {
     @Override
     public AlgebricksAbsolutePartitionConstraint getPartitionConstraint() throws AlgebricksException {
         clusterLocations = IExternalDataSourceFactory.getPartitionConstraints(
-                (IApplicationContext) serviceContext.getApplicationContext(), clusterLocations, 1);
+                (ICcApplicationContext) serviceContext.getApplicationContext(), clusterLocations, 1);
         return clusterLocations;
     }
 

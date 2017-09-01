@@ -39,7 +39,6 @@ import org.apache.asterix.lang.aql.parser.TokenMgrError;
 import org.apache.asterix.lang.common.base.IParser;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.metadata.MetadataManager;
-import org.apache.asterix.runtime.utils.ClusterStateManager;
 import org.apache.asterix.translator.IStatementExecutor;
 import org.apache.asterix.translator.IStatementExecutor.ResultDelivery;
 import org.apache.asterix.translator.IStatementExecutor.Stats;
@@ -428,7 +427,8 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
     protected void executeStatement(String statementsText, SessionOutput sessionOutput, ResultDelivery delivery,
             IStatementExecutor.Stats stats, RequestParameters param, String handleUrl, long[] outExecStartEnd)
             throws Exception {
-        IClusterManagementWork.ClusterState clusterState = ClusterStateManager.INSTANCE.getState();
+        IClusterManagementWork.ClusterState clusterState =
+                ((ICcApplicationContext) appCtx).getClusterStateManager().getState();
         if (clusterState != IClusterManagementWork.ClusterState.ACTIVE) {
             // using a plain IllegalStateException here to get into the right catch clause for a 500
             throw new IllegalStateException("Cannot execute request, cluster is " + clusterState);

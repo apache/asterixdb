@@ -16,27 +16,32 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.app.cc;
+package org.apache.asterix.runtime.transaction;
 
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.asterix.common.cluster.IClusterStateManager;
 import org.apache.asterix.common.transactions.IResourceIdManager;
-import org.apache.asterix.runtime.utils.ClusterStateManager;
 
 public class ResourceIdManager implements IResourceIdManager {
 
+    private final IClusterStateManager csm;
     private final AtomicLong globalResourceId = new AtomicLong();
     private volatile Set<String> reportedNodes = new HashSet<>();
     private volatile boolean allReported = false;
+
+    public ResourceIdManager(IClusterStateManager csm) {
+        this.csm = csm;
+    }
 
     @Override
     public long createResourceId() {
         if (!allReported) {
             synchronized (this) {
                 if (!allReported) {
-                    if (reportedNodes.size() < ClusterStateManager.INSTANCE.getNumberOfNodes()) {
+                    if (reportedNodes.size() < csm.getNumberOfNodes()) {
                         return -1;
                     } else {
                         reportedNodes = null;
@@ -58,7 +63,7 @@ public class ResourceIdManager implements IResourceIdManager {
         if (!allReported) {
             globalResourceId.set(Math.max(maxResourceId, globalResourceId.get()));
             reportedNodes.add(nodeId);
-            if (reportedNodes.size() == ClusterStateManager.INSTANCE.getNumberOfNodes()) {
+            if (reportedNodes.size() == csm.getNumberOfNodes()) {
                 reportedNodes = null;
                 allReported = true;
             }

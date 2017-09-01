@@ -59,5 +59,4 @@ public interface IApplicationContext {
     public ILibraryManager getLibraryManager();
 
     IServiceContext getServiceContext();
-
 }

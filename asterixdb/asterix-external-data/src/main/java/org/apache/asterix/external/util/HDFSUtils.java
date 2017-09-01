@@ -25,7 +25,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.common.api.IApplicationContext;
+import org.apache.asterix.common.cluster.IClusterStateManager;
 import org.apache.asterix.common.config.DatasetConfig.ExternalFilePendingOp;
+import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.external.indexing.ExternalFile;
@@ -33,7 +35,6 @@ import org.apache.asterix.external.indexing.IndexingScheduler;
 import org.apache.asterix.external.indexing.RecordId.RecordIdType;
 import org.apache.asterix.external.input.stream.HDFSInputStream;
 import org.apache.asterix.hivecompat.io.RCFileInputFormat;
-import org.apache.asterix.runtime.utils.ClusterStateManager;
 import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -207,10 +208,12 @@ public class HDFSUtils {
     public static AlgebricksAbsolutePartitionConstraint getPartitionConstraints(IApplicationContext appCtx,
             AlgebricksAbsolutePartitionConstraint clusterLocations) {
         if (clusterLocations == null) {
+            IClusterStateManager clusterStateManager = ((ICcApplicationContext) appCtx).getClusterStateManager();
             ArrayList<String> locs = new ArrayList<>();
             Map<String, String[]> stores = appCtx.getMetadataProperties().getStores();
             for (String node : stores.keySet()) {
-                int numIODevices = ClusterStateManager.INSTANCE.getIODevices(node).length;
+
+                int numIODevices = clusterStateManager.getIODevices(node).length;
                 for (int k = 0; k < numIODevices; k++) {
                     locs.add(node);
                 }

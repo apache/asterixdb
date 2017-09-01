@@ -21,6 +21,7 @@ package org.apache.asterix.metadata.declared;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.asterix.common.cluster.IClusterStateManager;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.exceptions.MetadataException;
 import org.apache.asterix.metadata.MetadataManager;
@@ -36,7 +37,6 @@ import org.apache.asterix.metadata.entities.NodeGroup;
 import org.apache.asterix.metadata.utils.MetadataConstants;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.IAType;
-import org.apache.asterix.runtime.utils.ClusterStateManager;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.properties.DefaultNodeGroupDomain;
 import org.apache.hyracks.algebricks.core.algebra.properties.INodeDomain;
@@ -111,12 +111,12 @@ public class MetadataManagerUtil {
         return dataset;
     }
 
-    public static INodeDomain findNodeDomain(MetadataTransactionContext mdTxnCtx, String nodeGroupName)
-            throws AlgebricksException {
+    public static INodeDomain findNodeDomain(IClusterStateManager clusterStateManager,
+            MetadataTransactionContext mdTxnCtx, String nodeGroupName) throws AlgebricksException {
         NodeGroup nodeGroup = MetadataManager.INSTANCE.getNodegroup(mdTxnCtx, nodeGroupName);
         List<String> partitions = new ArrayList<>();
         for (String location : nodeGroup.getNodeNames()) {
-            int numPartitions = ClusterStateManager.INSTANCE.getNodePartitionsCount(location);
+            int numPartitions = clusterStateManager.getNodePartitionsCount(location);
             for (int i = 0; i < numPartitions; i++) {
                 partitions.add(location);
             }
@@ -165,24 +165,24 @@ public class MetadataManagerUtil {
         }
     }
 
-    public static DataSource findDataSource(MetadataTransactionContext mdTxnCtx, DataSourceId id)
-            throws AlgebricksException {
+    public static DataSource findDataSource(IClusterStateManager clusterStateManager,
+            MetadataTransactionContext mdTxnCtx, DataSourceId id) throws AlgebricksException {
         try {
-            return lookupSourceInMetadata(mdTxnCtx, id);
+            return lookupSourceInMetadata(clusterStateManager, mdTxnCtx, id);
         } catch (MetadataException e) {
             throw new AlgebricksException(e);
         }
     }
 
-    public static DataSource lookupSourceInMetadata(MetadataTransactionContext mdTxnCtx, DataSourceId aqlId)
-            throws AlgebricksException {
+    public static DataSource lookupSourceInMetadata(IClusterStateManager clusterStateManager,
+            MetadataTransactionContext mdTxnCtx, DataSourceId aqlId) throws AlgebricksException {
         Dataset dataset = findDataset(mdTxnCtx, aqlId.getDataverseName(), aqlId.getDatasourceName());
         if (dataset == null) {
             throw new AlgebricksException("Datasource with id " + aqlId + " was not found.");
         }
         IAType itemType = findType(mdTxnCtx, dataset.getItemTypeDataverseName(), dataset.getItemTypeName());
         IAType metaItemType = findType(mdTxnCtx, dataset.getMetaItemTypeDataverseName(), dataset.getMetaItemTypeName());
-        INodeDomain domain = findNodeDomain(mdTxnCtx, dataset.getNodeGroupName());
+        INodeDomain domain = findNodeDomain(clusterStateManager, mdTxnCtx, dataset.getNodeGroupName());
         byte datasourceType = dataset.getDatasetType().equals(DatasetType.EXTERNAL) ? DataSource.Type.EXTERNAL_DATASET
                 : DataSource.Type.INTERNAL_DATASET;
         return new DatasetDataSource(aqlId, dataset, itemType, metaItemType, datasourceType,

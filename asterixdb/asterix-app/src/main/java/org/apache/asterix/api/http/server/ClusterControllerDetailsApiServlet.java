@@ -26,6 +26,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
@@ -41,8 +42,9 @@ public class ClusterControllerDetailsApiServlet extends ClusterApiServlet {
     private static final Logger LOGGER = Logger.getLogger(ClusterControllerDetailsApiServlet.class.getName());
     private final ObjectMapper om = new ObjectMapper();
 
-    public ClusterControllerDetailsApiServlet(ConcurrentMap<String, Object> ctx, String... paths) {
-        super(ctx, paths);
+    public ClusterControllerDetailsApiServlet(ICcApplicationContext appCtx, ConcurrentMap<String, Object> ctx,
+            String... paths) {
+        super(appCtx, ctx, paths);
     }
 
     @Override

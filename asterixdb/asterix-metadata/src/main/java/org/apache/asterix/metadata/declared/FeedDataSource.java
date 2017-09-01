@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.asterix.active.EntityId;
-import org.apache.asterix.external.feed.api.IFeed;
+import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.external.feed.management.FeedConnectionId;
 import org.apache.asterix.external.operators.FeedCollectOperatorDescriptor;
 import org.apache.asterix.external.util.FeedUtils.FeedRuntimeType;
@@ -34,7 +34,6 @@ import org.apache.asterix.metadata.feeds.BuiltinFeedPolicies;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.formats.NonTaggedDataFormat;
-import org.apache.asterix.runtime.utils.ClusterStateManager;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -63,12 +62,12 @@ public class FeedDataSource extends DataSource implements IMutationDataSource {
     private final List<ScalarFunctionCallExpression> keyAccessExpression;
     private final FeedConnection feedConnection;
 
-    public FeedDataSource(Feed feed, DataSourceId id, String targetDataset, IAType itemType, IAType metaType,
-            List<IAType> pkTypes, List<List<String>> partitioningKeys,
-            List<ScalarFunctionCallExpression> keyAccessExpression, EntityId sourceFeedId,
-            FeedRuntimeType location, String[] locations, INodeDomain domain, FeedConnection feedConnection)
-            throws AlgebricksException {
+    public FeedDataSource(MetadataProvider metadataProvider, Feed feed, DataSourceId id, String targetDataset,
+            IAType itemType, IAType metaType, List<IAType> pkTypes,
+            List<ScalarFunctionCallExpression> keyAccessExpression, EntityId sourceFeedId, FeedRuntimeType location,
+            String[] locations, INodeDomain domain, FeedConnection feedConnection) throws AlgebricksException {
         super(id, itemType, metaType, Type.FEED, domain);
+        ICcApplicationContext appCtx = metadataProvider.getApplicationContext();
         this.feed = feed;
         this.targetDataset = targetDataset;
         this.sourceFeedId = sourceFeedId;
@@ -76,7 +75,7 @@ public class FeedDataSource extends DataSource implements IMutationDataSource {
         this.locations = locations;
         this.pkTypes = pkTypes;
         this.keyAccessExpression = keyAccessExpression;
-        this.computeCardinality = ClusterStateManager.INSTANCE.getParticipantNodes().size();
+        this.computeCardinality = appCtx.getClusterStateManager().getParticipantNodes().size();
         this.feedConnection = feedConnection;
         initFeedDataSource();
     }
@@ -170,8 +169,8 @@ public class FeedDataSource extends DataSource implements IMutationDataSource {
             throws AlgebricksException {
         try {
             ARecordType feedOutputType = (ARecordType) itemType;
-            ISerializerDeserializer payloadSerde = NonTaggedDataFormat.INSTANCE.getSerdeProvider()
-                    .getSerializerDeserializer(feedOutputType);
+            ISerializerDeserializer payloadSerde =
+                    NonTaggedDataFormat.INSTANCE.getSerdeProvider().getSerializerDeserializer(feedOutputType);
             ArrayList<ISerializerDeserializer> serdes = new ArrayList<>();
             serdes.add(payloadSerde);
             if (metaItemType != null) {
@@ -182,16 +181,16 @@ public class FeedDataSource extends DataSource implements IMutationDataSource {
                     serdes.add(SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(type));
                 }
             }
-            RecordDescriptor feedDesc = new RecordDescriptor(
-                    serdes.toArray(new ISerializerDeserializer[serdes.size()]));
-            FeedPolicyEntity feedPolicy = (FeedPolicyEntity) getProperties()
-                    .get(BuiltinFeedPolicies.CONFIG_FEED_POLICY_KEY);
+            RecordDescriptor feedDesc =
+                    new RecordDescriptor(serdes.toArray(new ISerializerDeserializer[serdes.size()]));
+            FeedPolicyEntity feedPolicy =
+                    (FeedPolicyEntity) getProperties().get(BuiltinFeedPolicies.CONFIG_FEED_POLICY_KEY);
             if (feedPolicy == null) {
                 throw new AlgebricksException("Feed not configured with a policy");
             }
             feedPolicy.getProperties().put(BuiltinFeedPolicies.CONFIG_FEED_POLICY_KEY, feedPolicy.getPolicyName());
-            FeedConnectionId feedConnectionId = new FeedConnectionId(getId().getDataverseName(),
-                    getId().getDatasourceName(), getTargetDataset());
+            FeedConnectionId feedConnectionId =
+                    new FeedConnectionId(getId().getDataverseName(), getId().getDatasourceName(), getTargetDataset());
             FeedCollectOperatorDescriptor feedCollector = new FeedCollectOperatorDescriptor(jobSpec, feedConnectionId,
                     feedOutputType, feedDesc, feedPolicy.getProperties(), getLocation());
 
