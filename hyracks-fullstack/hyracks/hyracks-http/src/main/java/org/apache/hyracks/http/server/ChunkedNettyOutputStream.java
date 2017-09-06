@@ -88,7 +88,9 @@ public class ChunkedNettyOutputStream extends OutputStream {
                 try {
                     flush();
                 } finally {
-                    buffer.release();
+                    if (buffer != null) {
+                        buffer.release();
+                    }
                 }
             } else {
                 response.fullReponse(buffer);
@@ -101,12 +103,16 @@ public class ChunkedNettyOutputStream extends OutputStream {
     @Override
     public void flush() throws IOException {
         ensureWritable();
-        if (buffer.readableBytes() > 0) {
+        if (buffer != null && buffer.readableBytes() > 0) {
             if (response.status() == HttpResponseStatus.OK) {
                 int size = buffer.capacity();
                 response.beforeFlush();
                 DefaultHttpContent content = new DefaultHttpContent(buffer);
-                ctx.write(content, ctx.channel().voidPromise());
+                ctx.writeAndFlush(content, ctx.channel().voidPromise());
+                // The responisbility of releasing the buffer is now with the netty pipeline since it is forwarded
+                // within the http content. We must nullify buffer before we allocate the next one to avoid
+                // releasing the buffer twice in case the allocation call fails.
+                buffer = null;
                 buffer = ctx.alloc().buffer(size);
             } else {
                 ByteBuf aBuffer = ctx.alloc().buffer(buffer.readableBytes());
@@ -120,7 +126,6 @@ public class ChunkedNettyOutputStream extends OutputStream {
     private synchronized void ensureWritable() throws IOException {
         while (!ctx.channel().isWritable()) {
             try {
-                ctx.flush();
                 if (!ctx.channel().isOpen()) {
                     throw new IOException("Closed channel");
                 }

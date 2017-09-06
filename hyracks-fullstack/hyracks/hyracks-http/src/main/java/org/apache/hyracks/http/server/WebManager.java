@@ -30,10 +30,38 @@ public class WebManager {
     private final EventLoopGroup bosses;
     private final EventLoopGroup workers;
 
+    /**
+     * Create a web manager with number of bosses = 1
+     * and number of workers = MultithreadEventLoopGroup.DEFAULT_EVENT_LOOP_THREADS
+     * The default can be set using -Dio.netty.eventLoopThreads
+     * Otherwise, it is set to Runtime.getRuntime().availableProcessors() * 2
+     */
     public WebManager() {
+        this(1, 0);
+    }
+
+    /**
+     * Create a web manager with number of bosses = 1 and number of workers = numWorkers
+     *
+     * @param numWorkers
+     *            number of worker threads
+     */
+    public WebManager(int numWorkers) {
+        this(1, numWorkers);
+    }
+
+    /**
+     * Create a web manager with number of bosses = numBosses and number of workers = numWorkers
+     *
+     * @param numBosses
+     *            number of boss threads
+     * @param numWorkers
+     *            number of worker threads
+     */
+    public WebManager(int numBosses, int numWorkers) {
         servers = new ArrayList<>();
-        bosses = new NioEventLoopGroup(1);
-        workers = new NioEventLoopGroup();
+        bosses = new NioEventLoopGroup(numBosses);
+        workers = new NioEventLoopGroup(numWorkers);
     }
 
     public List<HttpServer> getServers() {

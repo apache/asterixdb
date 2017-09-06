@@ -45,6 +45,7 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.client.StandardHttpRequestRetryHandler;
 import org.apache.hyracks.http.server.HttpServer;
 import org.apache.hyracks.http.server.WebManager;
+import org.apache.hyracks.http.server.utils.HttpUtil;
 import org.apache.hyracks.http.servlet.ChattyServlet;
 import org.apache.hyracks.http.servlet.SleepyServlet;
 import org.junit.Assert;
@@ -62,6 +63,7 @@ public class HttpServerTest {
     static final AtomicInteger SUCCESS_COUNT = new AtomicInteger();
     static final AtomicInteger UNAVAILABLE_COUNT = new AtomicInteger();
     static final AtomicInteger OTHER_COUNT = new AtomicInteger();
+    static final AtomicInteger EXCEPTION_COUNT = new AtomicInteger();
     static final List<Future<Void>> FUTURES = new ArrayList<>();
     static final ExecutorService executor = Executors.newCachedThreadPool();
 
@@ -70,6 +72,7 @@ public class HttpServerTest {
         SUCCESS_COUNT.set(0);
         UNAVAILABLE_COUNT.set(0);
         OTHER_COUNT.set(0);
+        EXCEPTION_COUNT.set(0);
     }
 
     @Test
@@ -77,7 +80,7 @@ public class HttpServerTest {
         WebManager webMgr = new WebManager();
         int numExecutors = 16;
         int serverQueueSize = 16;
-        int numRequests = 48;
+        int numRequests = 128;
         HttpServer server =
                 new HttpServer(webMgr.getBosses(), webMgr.getWorkers(), PORT, numExecutors, serverQueueSize);
         SleepyServlet servlet = new SleepyServlet(server.ctx(), new String[] { PATH });
@@ -100,7 +103,9 @@ public class HttpServerTest {
                 f.get();
             }
             Assert.assertEquals(expectedSuccess, SUCCESS_COUNT.get());
-            Assert.assertEquals(expectedUnavailable, UNAVAILABLE_COUNT.get());
+            Assert.assertEquals(expectedUnavailable, UNAVAILABLE_COUNT.get() + EXCEPTION_COUNT.get());
+            System.err.println("Number of rejections: " + UNAVAILABLE_COUNT.get());
+            System.err.println("Number of exceptions: " + EXCEPTION_COUNT.get());
             Assert.assertEquals(0, OTHER_COUNT.get());
         } catch (Throwable th) {
             th.printStackTrace();
@@ -111,7 +116,7 @@ public class HttpServerTest {
     }
 
     private void waitTillQueued(HttpServer server, int expectedQueued) throws Exception {
-        int maxAttempts = 5;
+        int maxAttempts = 15;
         int attempt = 0;
         int queued = server.getWorkQueueSize();
         while (queued != expectedQueued) {
@@ -144,7 +149,7 @@ public class HttpServerTest {
         try {
             try {
                 for (int i = 0; i < numPatches; i++) {
-                    ChattyServlet.printMemUsage();
+                    HttpUtil.printMemUsage();
                     request(numRequests);
                     for (Future<Void> f : FUTURES) {
                         f.get();
@@ -152,14 +157,17 @@ public class HttpServerTest {
                     FUTURES.clear();
                 }
             } finally {
-                ChattyServlet.printMemUsage();
+                HttpUtil.printMemUsage();
                 servlet.wakeUp();
                 for (Future<Void> f : stuck) {
                     f.get();
                 }
             }
         } finally {
+            System.err.println("Number of rejections: " + UNAVAILABLE_COUNT.get());
+            System.err.println("Number of exceptions: " + EXCEPTION_COUNT.get());
             webMgr.stop();
+            HttpUtil.printMemUsage();
         }
     }
 
@@ -174,7 +182,7 @@ public class HttpServerTest {
         int numRequests = 64;
         int numExecutors = 32;
         int serverQueueSize = 32;
-        ChattyServlet.printMemUsage();
+        HttpUtil.printMemUsage();
         WebManager webMgr = new WebManager();
         HttpServer server =
                 new HttpServer(webMgr.getBosses(), webMgr.getWorkers(), PORT, numExecutors, serverQueueSize);
@@ -191,7 +199,9 @@ public class HttpServerTest {
             Assert.assertEquals(0, UNAVAILABLE_COUNT.get());
             Assert.assertEquals(0, OTHER_COUNT.get());
         } finally {
+            HttpUtil.printMemUsage();
             webMgr.stop();
+            HttpUtil.printMemUsage();
         }
     }
 
@@ -261,8 +271,8 @@ public class HttpServerTest {
                     }
                     IOUtils.closeQuietly(in);
                 } catch (Throwable th) {
-                    th.printStackTrace();
-                    throw th;
+                    // Server closed connection before we complete writing..
+                    EXCEPTION_COUNT.incrementAndGet();
                 }
                 return null;
             });
@@ -291,7 +301,7 @@ public class HttpServerTest {
         URI uri = new URI(PROTOCOL, null, HOST, PORT, PATH, query, null);
         RequestBuilder builder = RequestBuilder.post(uri);
         StringBuilder str = new StringBuilder();
-        for (int i = 0; i < 32; i++) {
+        for (int i = 0; i < 2046; i++) {
             str.append("This is a string statement that will be ignored");
             str.append('\n');
         }

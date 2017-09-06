@@ -23,7 +23,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -38,6 +37,7 @@ import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
+import io.netty.channel.FixedRecvByteBufAllocator;
 import io.netty.channel.WriteBufferWaterMark;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.http.FullHttpRequest;
@@ -50,6 +50,9 @@ public class HttpServer {
     private static final int HIGH_WRITE_BUFFER_WATER_MARK = 32 * 1024;
     protected static final WriteBufferWaterMark WRITE_BUFFER_WATER_MARK =
             new WriteBufferWaterMark(LOW_WRITE_BUFFER_WATER_MARK, HIGH_WRITE_BUFFER_WATER_MARK);
+    protected static final int RECEIVE_BUFFER_SIZE = 4096;
+    protected static final int DEFAULT_NUM_EXECUTOR_THREADS = 16;
+    protected static final int DEFAULT_REQUEST_QUEUE_SIZE = 256;
     private static final Logger LOGGER = Logger.getLogger(HttpServer.class.getName());
     private static final int FAILED = -1;
     private static final int STOPPED = 0;
@@ -65,14 +68,14 @@ public class HttpServer {
     private final EventLoopGroup bossGroup;
     private final EventLoopGroup workerGroup;
     private final int port;
-    private final ExecutorService executor;
+    private final ThreadPoolExecutor executor;
     // Mutable members
     private volatile int state = STOPPED;
     private Channel channel;
     private Throwable cause;
 
     public HttpServer(EventLoopGroup bossGroup, EventLoopGroup workerGroup, int port) {
-        this(bossGroup, workerGroup, port, 16, 256);
+        this(bossGroup, workerGroup, port, DEFAULT_NUM_EXECUTOR_THREADS, DEFAULT_REQUEST_QUEUE_SIZE);
     }
 
     public HttpServer(EventLoopGroup bossGroup, EventLoopGroup workerGroup, int port, int numExecutorThreads,
@@ -87,7 +90,14 @@ public class HttpServer {
                 runnable -> new Thread(runnable, "HttpExecutor(port:" + port + ")-" + threadId.getAndIncrement()));
         long directMemoryBudget = numExecutorThreads * (long) HIGH_WRITE_BUFFER_WATER_MARK
                 + numExecutorThreads * HttpServerInitializer.RESPONSE_CHUNK_SIZE;
-        LOGGER.log(Level.INFO, "The direct memory budget for this server is " + directMemoryBudget + " bytes");
+        LOGGER.log(Level.INFO, "The output direct memory budget for this server is " + directMemoryBudget + " bytes");
+        long inputBudgetEstimate =
+                (long) HttpServerInitializer.MAX_REQUEST_INITIAL_LINE_LENGTH * (requestQueueSize + numExecutorThreads);
+        inputBudgetEstimate = inputBudgetEstimate * 2;
+        LOGGER.log(Level.INFO,
+                "The \"estimated\" input direct memory budget for this server is " + inputBudgetEstimate + " bytes");
+        // Having multiple arenas, memory fragments, and local thread cached buffers
+        // can cause the input memory usage to exceed estimate and custom buffer allocator must be used to avoid this
     }
 
     public final void start() throws Exception { // NOSONAR
@@ -199,6 +209,8 @@ public class HttpServer {
         Collections.sort(servlets, (l1, l2) -> l2.getPaths()[0].length() - l1.getPaths()[0].length());
         ServerBootstrap b = new ServerBootstrap();
         b.group(bossGroup, workerGroup).channel(NioServerSocketChannel.class)
+                .childOption(ChannelOption.RCVBUF_ALLOCATOR, new FixedRecvByteBufAllocator(RECEIVE_BUFFER_SIZE))
+                .childOption(ChannelOption.AUTO_READ, Boolean.FALSE)
                 .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
                 .childOption(ChannelOption.WRITE_BUFFER_WATER_MARK, WRITE_BUFFER_WATER_MARK)
                 .handler(new LoggingHandler(LogLevel.DEBUG)).childHandler(new HttpServerInitializer(this));
@@ -264,7 +276,7 @@ public class HttpServer {
         return new HttpServerHandler<>(this, chunkSize);
     }
 
-    public ExecutorService getExecutor() {
+    public ThreadPoolExecutor getExecutor() {
         return executor;
     }
 
