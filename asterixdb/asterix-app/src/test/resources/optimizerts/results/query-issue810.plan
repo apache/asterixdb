@@ -3,7 +3,7 @@
     -- STREAM_PROJECT  |PARTITIONED|
       -- ASSIGN  |PARTITIONED|
         -- SORT_MERGE_EXCHANGE [$$l_returnflag(ASC), $$l_linestatus(ASC) ]  |PARTITIONED|
-          -- PRE_CLUSTERED_GROUP_BY[$$34, $$35]  |PARTITIONED|
+          -- PRE_CLUSTERED_GROUP_BY[$$36, $$37]  |PARTITIONED|
                   {
                     -- AGGREGATE  |LOCAL|
                       -- NESTED_TUPLE_SOURCE  |LOCAL|
@@ -13,8 +13,8 @@
                       -- NESTED_TUPLE_SOURCE  |LOCAL|
                   }
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-              -- STABLE_SORT [$$34(ASC), $$35(ASC)]  |PARTITIONED|
-                -- HASH_PARTITION_EXCHANGE [$$34, $$35]  |PARTITIONED|
+              -- STABLE_SORT [$$36(ASC), $$37(ASC)]  |PARTITIONED|
+                -- HASH_PARTITION_EXCHANGE [$$36, $$37]  |PARTITIONED|
                   -- PRE_CLUSTERED_GROUP_BY[$$23, $$24]  |PARTITIONED|
                           {
                             -- AGGREGATE  |LOCAL|

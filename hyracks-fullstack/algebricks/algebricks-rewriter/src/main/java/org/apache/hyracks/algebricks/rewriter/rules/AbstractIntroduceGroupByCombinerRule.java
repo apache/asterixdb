@@ -322,7 +322,7 @@ public abstract class AbstractIntroduceGroupByCombinerRule extends AbstractIntro
             // Finds the reference of the bottom-most operator in the pipeline that
             // should not be pushed to the combiner group-by.
             Mutable<ILogicalOperator> currentOpRef = new MutableObject<ILogicalOperator>(nestedGby);
-            Mutable<ILogicalOperator> bottomOpRef = findBottomOpRefStayInOldGby(currentOpRef);
+            Mutable<ILogicalOperator> bottomOpRef = findBottomOpRefStayInOldGby(nestedGby, currentOpRef);
 
             // Adds the used variables in the pipeline from <code>currentOpRef</code> to <code>bottomOpRef</code>
             // into the group-by keys for the introduced combiner group-by operator.
@@ -392,16 +392,29 @@ public abstract class AbstractIntroduceGroupByCombinerRule extends AbstractIntro
      * Find the bottom-most nested operator reference in the query pipeline rooted at <code>currentOpRef</code>
      * that cannot be pushed into the combiner group-by operator.
      *
-     * @param currentOpRef
+     * @param nestedGby
+     *            the nested group-by operator.
+     * @param currentOpRef,the
+     *            reference of the current op.
      * @return the bottom-most reference of a select operator
      */
-    private Mutable<ILogicalOperator> findBottomOpRefStayInOldGby(Mutable<ILogicalOperator> currentOpRef)
+    private Mutable<ILogicalOperator> findBottomOpRefStayInOldGby(GroupByOperator nestedGby,
+            Mutable<ILogicalOperator> currentOpRef)
             throws AlgebricksException {
+        Set<LogicalVariable> usedVarsInNestedGby = new HashSet<>();
+        // Collects used variables in nested pipelines.
+        for (ILogicalPlan nestedPlan : nestedGby.getNestedPlans()) {
+            for (Mutable<ILogicalOperator> rootOpRef : nestedPlan.getRoots()) {
+                VariableUtilities.getUsedVariablesInDescendantsAndSelf(rootOpRef.getValue(), usedVarsInNestedGby);
+            }
+        }
         Mutable<ILogicalOperator> bottomOpRef = currentOpRef;
         while (currentOpRef.getValue().getInputs().size() > 0) {
-            Set<LogicalVariable> producedVars = new HashSet<>();
-            VariableUtilities.getProducedVariables(currentOpRef.getValue(), producedVars);
-            if (currentOpRef.getValue().getOperatorTag() == LogicalOperatorTag.SELECT || !producedVars.isEmpty()) {
+            // Used for checking the dependency between nestedGby and the current operator
+            Set<LogicalVariable> dependingVars = new HashSet<>();
+            VariableUtilities.getProducedVariables(currentOpRef.getValue(), dependingVars);
+            dependingVars.removeAll(usedVarsInNestedGby);
+            if (currentOpRef.getValue().getOperatorTag() == LogicalOperatorTag.SELECT || !dependingVars.isEmpty()) {
                 bottomOpRef = currentOpRef;
             }
             currentOpRef = currentOpRef.getValue().getInputs().get(0);

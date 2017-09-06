@@ -75,7 +75,7 @@ public class OperatorPropertiesUtil {
      * collection provided.
      *
      * @param op
-     * @param vars
+     * @param freeVars
      *            - The collection to which the free variables will be added.
      */
     public static void getFreeVariablesInSelfOrDesc(AbstractLogicalOperator op, Set<LogicalVariable> freeVars)

@@ -20,13 +20,18 @@
 
 package org.apache.hyracks.algebricks.rewriter.rules.subplan;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.ListSet;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -40,7 +45,9 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOpera
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.NestedTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SubplanOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
+import org.apache.hyracks.algebricks.core.algebra.plan.ALogicalPlanImpl;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
+import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
 /**
@@ -51,151 +58,209 @@ import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
  */
 
 public class PushSubplanIntoGroupByRule implements IAlgebraicRewriteRule {
-    /** Stores used variables above the current operator. */
-    private final Set<LogicalVariable> usedVarsSoFar = new HashSet<LogicalVariable>();
+    /** The pointer to the topmost operator */
+    private Mutable<ILogicalOperator> rootRef;
+    /** Whether the rule has ever been invoked */
+    private boolean invoked = false;
 
     @Override
-    public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
             throws AlgebricksException {
-        return false;
+        if (!invoked) {
+            rootRef = opRef;
+            invoked = true;
+        }
+        return rewriteForOperator(rootRef, opRef, context);
     }
 
-    @Override
-    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
-        ILogicalOperator parentOperator = opRef.getValue();
-        if (context.checkIfInDontApplySet(this, parentOperator)) {
-            return false;
-        }
-        context.addToDontApplySet(this, parentOperator);
-        VariableUtilities.getUsedVariables(parentOperator, usedVarsSoFar);
-        if (parentOperator.getInputs().size() <= 0) {
-            return false;
-        }
+    // The core rewriting function for an operator.
+    private boolean rewriteForOperator(Mutable<ILogicalOperator> rootRef, Mutable<ILogicalOperator> opRef,
+            IOptimizationContext context) throws AlgebricksException {
         boolean changed = false;
-        GroupByOperator gby = null;
+        ILogicalOperator parentOperator = opRef.getValue();
         for (Mutable<ILogicalOperator> ref : parentOperator.getInputs()) {
-            AbstractLogicalOperator op = (AbstractLogicalOperator) ref.getValue();
-            /** Only processes subplan operator. */
-            List<SubplanOperator> subplans = new ArrayList<SubplanOperator>();
-            if (op.getOperatorTag() == LogicalOperatorTag.SUBPLAN) {
-                while (op.getOperatorTag() == LogicalOperatorTag.SUBPLAN) {
-                    SubplanOperator currentSubplan = (SubplanOperator) op;
-                    subplans.add(currentSubplan);
-                    op = (AbstractLogicalOperator) op.getInputs().get(0).getValue();
+            ILogicalOperator op = ref.getValue();
+            // Only processes subplan operator.
+            Deque<SubplanOperator> subplans = new ArrayDeque<>();
+            if (op.getOperatorTag() != LogicalOperatorTag.SUBPLAN) {
+                // Recursively rewrites the child plan.
+                changed |= rewriteForOperator(rootRef, ref, context);
+                continue;
+            }
+            while (op.getOperatorTag() == LogicalOperatorTag.SUBPLAN) {
+                SubplanOperator currentSubplan = (SubplanOperator) op;
+                // Recursively rewrites the pipelines inside a nested subplan.
+                for (ILogicalPlan subplan : currentSubplan.getNestedPlans()) {
+                    for (Mutable<ILogicalOperator> nestedRootRef : subplan.getRoots()) {
+                        changed |= rewriteForOperator(nestedRootRef, nestedRootRef, context);
+                    }
                 }
-                /** Only processes the case a group-by operator is the input of the subplan operators. */
-                if (op.getOperatorTag() == LogicalOperatorTag.GROUP) {
-                    gby = (GroupByOperator) op;
-                    List<ILogicalPlan> newGbyNestedPlans = new ArrayList<ILogicalPlan>();
-                    for (SubplanOperator subplan : subplans) {
-                        List<ILogicalPlan> subplanNestedPlans = subplan.getNestedPlans();
-                        List<ILogicalPlan> gbyNestedPlans = gby.getNestedPlans();
-                        List<ILogicalPlan> subplanNestedPlansToRemove = new ArrayList<ILogicalPlan>();
-                        for (ILogicalPlan subplanNestedPlan : subplanNestedPlans) {
-                            List<Mutable<ILogicalOperator>> rootOpRefs = subplanNestedPlan.getRoots();
-                            List<Mutable<ILogicalOperator>> rootOpRefsToRemove = new ArrayList<Mutable<ILogicalOperator>>();
-                            for (Mutable<ILogicalOperator> rootOpRef : rootOpRefs) {
-                                /** Gets free variables in the root operator of a nested plan and its descent. */
-                                Set<LogicalVariable> freeVars = new ListSet<LogicalVariable>();
-                                VariableUtilities.getUsedVariablesInDescendantsAndSelf(rootOpRef.getValue(), freeVars);
-                                Set<LogicalVariable> producedVars = new ListSet<LogicalVariable>();
-                                VariableUtilities.getProducedVariablesInDescendantsAndSelf(rootOpRef.getValue(),
-                                        producedVars);
-                                freeVars.removeAll(producedVars);
-                                /** * Checks whether the above freeVars are all contained in live variables * of one nested plan inside the group-by operator. * If yes, then the subplan can be pushed into the nested plan of the group-by. */
-                                for (ILogicalPlan gbyNestedPlanOriginal : gbyNestedPlans) {
-                                    // add a subplan in the original gby
-                                    if (!newGbyNestedPlans.contains(gbyNestedPlanOriginal)) {
-                                        newGbyNestedPlans.add(gbyNestedPlanOriginal);
-                                    }
-
-                                    // add a pushed subplan
-                                    ILogicalPlan gbyNestedPlan = OperatorManipulationUtil.deepCopy(
-                                            gbyNestedPlanOriginal, context);
-                                    List<Mutable<ILogicalOperator>> gbyRootOpRefs = gbyNestedPlan.getRoots();
-                                    for (int rootIndex = 0; rootIndex < gbyRootOpRefs.size(); rootIndex++) {
-                                        //set the nts for a original subplan
-                                        Mutable<ILogicalOperator> originalGbyRootOpRef = gbyNestedPlanOriginal
-                                                .getRoots().get(rootIndex);
-                                        Mutable<ILogicalOperator> originalGbyNtsRef = downToNts(originalGbyRootOpRef);
-                                        NestedTupleSourceOperator originalNts = (NestedTupleSourceOperator) originalGbyNtsRef
-                                                .getValue();
-                                        originalNts.setDataSourceReference(new MutableObject<ILogicalOperator>(gby));
-
-                                        //push a new subplan if possible
-                                        Mutable<ILogicalOperator> gbyRootOpRef = gbyRootOpRefs.get(rootIndex);
-                                        Set<LogicalVariable> liveVars = new ListSet<LogicalVariable>();
-                                        VariableUtilities.getLiveVariables(gbyRootOpRef.getValue(), liveVars);
-                                        if (liveVars.containsAll(freeVars)) {
-                                            /** Does the actual push. */
-                                            Mutable<ILogicalOperator> ntsRef = downToNts(rootOpRef);
-                                            ntsRef.setValue(gbyRootOpRef.getValue());
-                                            // Removes unused vars.
-                                            AggregateOperator aggOp = (AggregateOperator) gbyRootOpRef.getValue();
-                                            for (int varIndex = aggOp.getVariables().size() - 1; varIndex >= 0; varIndex--) {
-                                                if (!freeVars.contains(aggOp.getVariables().get(varIndex))) {
-                                                    aggOp.getVariables().remove(varIndex);
-                                                    aggOp.getExpressions().remove(varIndex);
-                                                }
-                                            }
-
-                                            gbyRootOpRef.setValue(rootOpRef.getValue());
-                                            rootOpRefsToRemove.add(rootOpRef);
-
-                                            // Sets the nts for a new pushed plan.
-                                            Mutable<ILogicalOperator> oldGbyNtsRef = downToNts(gbyRootOpRef);
-                                            NestedTupleSourceOperator nts = (NestedTupleSourceOperator) oldGbyNtsRef
-                                                    .getValue();
-                                            nts.setDataSourceReference(new MutableObject<ILogicalOperator>(gby));
-
-                                            newGbyNestedPlans.add(gbyNestedPlan);
-                                            changed = true;
-                                            continue;
-                                        }
-                                    }
-                                }
-                            }
-                            rootOpRefs.removeAll(rootOpRefsToRemove);
-                            if (rootOpRefs.size() == 0) {
-                                subplanNestedPlansToRemove.add(subplanNestedPlan);
-                            }
-                        }
-                        subplanNestedPlans.removeAll(subplanNestedPlansToRemove);
-                    }
-                    if (changed) {
-                        ref.setValue(gby);
-                        gby.getNestedPlans().clear();
-                        gby.getNestedPlans().addAll(newGbyNestedPlans);
-                    }
+                subplans.addFirst(currentSubplan);
+                op = op.getInputs().get(0).getValue();
+            }
+            // Only processes the case a group-by operator is the input of the subplan operators.
+            if (op.getOperatorTag() != LogicalOperatorTag.GROUP) {
+                continue;
+            }
+            GroupByOperator gby = (GroupByOperator) op;
+            // Recursively rewrites the pipelines inside a nested subplan.
+            for (ILogicalPlan subplan : gby.getNestedPlans()) {
+                for (Mutable<ILogicalOperator> nestedRootRef : subplan.getRoots()) {
+                    changed |= rewriteForOperator(nestedRootRef, nestedRootRef, context);
                 }
             }
+            changed |= pushSubplansIntoGroupBy(rootRef, parentOperator, subplans, gby, context);
         }
-        if (changed) {
-            cleanup(gby);
-            context.computeAndSetTypeEnvironmentForOperator(gby);
-            context.computeAndSetTypeEnvironmentForOperator(parentOperator);
+        return changed;
+    }
+
+    // Pushes subplans into the group by operator.
+    private boolean pushSubplansIntoGroupBy(Mutable<ILogicalOperator> currentRootRef, ILogicalOperator parentOperator,
+            Deque<SubplanOperator> subplans, GroupByOperator gby, IOptimizationContext context)
+            throws AlgebricksException {
+        boolean changed = false;
+        List<ILogicalPlan> newGbyNestedPlans = new ArrayList<>();
+        List<ILogicalPlan> originalNestedPlansInGby = gby.getNestedPlans();
+
+        // Adds all original subplans from the group by.
+        for (ILogicalPlan gbyNestedPlanOriginal : originalNestedPlansInGby) {
+            newGbyNestedPlans.add(gbyNestedPlanOriginal);
         }
+
+        // Tries to push subplans into the group by.
+        Iterator<SubplanOperator> subplanOperatorIterator = subplans.iterator();
+        while (subplanOperatorIterator.hasNext()) {
+            SubplanOperator subplan = subplanOperatorIterator.next();
+            Iterator<ILogicalPlan> subplanNestedPlanIterator = subplan.getNestedPlans().iterator();
+            while (subplanNestedPlanIterator.hasNext()) {
+                ILogicalPlan subplanNestedPlan = subplanNestedPlanIterator.next();
+                List<Mutable<ILogicalOperator>> upperSubplanRootRefs = subplanNestedPlan.getRoots();
+                Iterator<Mutable<ILogicalOperator>> upperSubplanRootRefIterator = upperSubplanRootRefs.iterator();
+                while (upperSubplanRootRefIterator.hasNext()) {
+                    Mutable<ILogicalOperator> rootOpRef = upperSubplanRootRefIterator.next();
+
+                    // Collects free variables in the root operator of a nested plan and its descent.
+                    Set<LogicalVariable> freeVars = new ListSet<>();
+                    OperatorPropertiesUtil.getFreeVariablesInSelfOrDesc((AbstractLogicalOperator) rootOpRef.getValue(),
+                            freeVars);
+
+                    // Checks whether the above freeVars are all contained in live variables * of one nested plan
+                    // inside the group-by operator. If yes, then the subplan can be pushed into the nested plan
+                    // of the group-by.
+                    for (ILogicalPlan gbyNestedPlanOriginal : originalNestedPlansInGby) {
+                        ILogicalPlan gbyNestedPlan = OperatorManipulationUtil.deepCopy(gbyNestedPlanOriginal, context);
+                        List<Mutable<ILogicalOperator>> gbyRootOpRefs = gbyNestedPlan.getRoots();
+                        for (int rootIndex = 0; rootIndex < gbyRootOpRefs.size(); rootIndex++) {
+                            // Sets the nts for a original subplan.
+                            Mutable<ILogicalOperator> originalGbyRootOpRef = gbyNestedPlan.getRoots().get(rootIndex);
+                            Mutable<ILogicalOperator> originalGbyNtsRef = downToNts(originalGbyRootOpRef);
+                            NestedTupleSourceOperator originalNts = (NestedTupleSourceOperator) originalGbyNtsRef
+                                    .getValue();
+                            originalNts.setDataSourceReference(new MutableObject<>(gby));
+
+                            // Pushes a new subplan if possible.
+                            Mutable<ILogicalOperator> gbyRootOpRef = gbyRootOpRefs.get(rootIndex);
+                            Set<LogicalVariable> liveVars = new ListSet<>();
+                            VariableUtilities.getLiveVariables(gbyRootOpRef.getValue(), liveVars);
+                            if (!liveVars.containsAll(freeVars)) {
+                                continue;
+                            }
+
+                            AggregateOperator aggOp = (AggregateOperator) gbyRootOpRef.getValue();
+                            for (int varIndex = aggOp.getVariables().size() - 1; varIndex >= 0; varIndex--) {
+                                if (!freeVars.contains(aggOp.getVariables().get(varIndex))) {
+                                    aggOp.getVariables().remove(varIndex);
+                                    aggOp.getExpressions().remove(varIndex);
+                                }
+                            }
+
+                            // Copy the original nested pipeline inside the group-by.
+                            Pair<ILogicalOperator, Map<LogicalVariable, LogicalVariable>> copiedAggOpAndVarMap =
+                                    OperatorManipulationUtil.deepCopyWithNewVars(aggOp, context);
+                            ILogicalOperator newBottomAgg = copiedAggOpAndVarMap.getLeft();
+
+                            // Substitutes variables in the upper nested pipe line.
+                            VariableUtilities.substituteVariablesInDescendantsAndSelf(rootOpRef.getValue(),
+                                    copiedAggOpAndVarMap.getRight(), context);
+
+                            // Does the actual push.
+                            Mutable<ILogicalOperator> ntsRef = downToNts(rootOpRef);
+                            ntsRef.setValue(newBottomAgg);
+                            gbyRootOpRef.setValue(rootOpRef.getValue());
+
+                            // Sets the nts for a new pushed plan.
+                            Mutable<ILogicalOperator> oldGbyNtsRef = downToNts(new MutableObject<>(newBottomAgg));
+                            NestedTupleSourceOperator nts = (NestedTupleSourceOperator) oldGbyNtsRef.getValue();
+                            nts.setDataSourceReference(new MutableObject<>(gby));
+
+                            OperatorManipulationUtil.computeTypeEnvironmentBottomUp(rootOpRef.getValue(), context);
+                            newGbyNestedPlans.add(new ALogicalPlanImpl(rootOpRef));
+
+                            upperSubplanRootRefIterator.remove();
+                            changed |= true;
+                            break;
+                        }
+                    }
+                }
+
+                if (upperSubplanRootRefs.isEmpty()) {
+                    subplanNestedPlanIterator.remove();
+                }
+            }
+            if (subplan.getNestedPlans().isEmpty()) {
+                subplanOperatorIterator.remove();
+            }
+        }
+
+        // Resets the nested subplans for the group-by operator.
+        gby.getNestedPlans().clear();
+        gby.getNestedPlans().addAll(newGbyNestedPlans);
+
+        // Connects the group-by operator with its parent operator.
+        ILogicalOperator parent = !subplans.isEmpty() ? subplans.getFirst() : parentOperator;
+        parent.getInputs().get(0).setValue(gby);
+
+        // Removes unnecessary pipelines inside the group by operator.
+        cleanup(currentRootRef.getValue(), gby);
+
+        // Computes type environments.
+        context.computeAndSetTypeEnvironmentForOperator(gby);
+        context.computeAndSetTypeEnvironmentForOperator(parent);
         return changed;
     }
 
     /**
      * Removes unused aggregation variables (and expressions)
      *
-     * @param gby
+     * @param rootOp,
+     *            the root operator of a plan or nested plan.
+     * @param gby,
+     *            the group-by operator.
      * @throws AlgebricksException
      */
-    private void cleanup(GroupByOperator gby) throws AlgebricksException {
-        for (ILogicalPlan nestedPlan : gby.getNestedPlans()) {
-            for (Mutable<ILogicalOperator> rootRef : nestedPlan.getRoots()) {
-                AggregateOperator aggOp = (AggregateOperator) rootRef.getValue();
+    private void cleanup(ILogicalOperator rootOp, GroupByOperator gby) throws AlgebricksException {
+        Set<LogicalVariable> freeVars = new HashSet<>();
+        OperatorPropertiesUtil.getFreeVariablesInPath(rootOp, gby, freeVars);
+        Iterator<ILogicalPlan> nestedPlanIterator = gby.getNestedPlans().iterator();
+        while (nestedPlanIterator.hasNext()) {
+            ILogicalPlan nestedPlan = nestedPlanIterator.next();
+            Iterator<Mutable<ILogicalOperator>> nestRootRefIterator = nestedPlan.getRoots().iterator();
+            while (nestRootRefIterator.hasNext()) {
+                Mutable<ILogicalOperator> nestRootRef = nestRootRefIterator.next();
+                AggregateOperator aggOp = (AggregateOperator) nestRootRef.getValue();
                 for (int varIndex = aggOp.getVariables().size() - 1; varIndex >= 0; varIndex--) {
-                    if (!usedVarsSoFar.contains(aggOp.getVariables().get(varIndex))) {
+                    if (!freeVars.contains(aggOp.getVariables().get(varIndex))) {
                         aggOp.getVariables().remove(varIndex);
                         aggOp.getExpressions().remove(varIndex);
                     }
                 }
+                if (aggOp.getVariables().isEmpty()) {
+                    nestRootRefIterator.remove();
+                }
             }
-
+            if (nestedPlan.getRoots().isEmpty()) {
+                nestedPlanIterator.remove();
+            }
         }
     }
 

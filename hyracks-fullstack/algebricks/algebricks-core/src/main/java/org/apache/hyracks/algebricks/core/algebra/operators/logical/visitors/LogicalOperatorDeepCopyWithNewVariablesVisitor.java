@@ -19,9 +19,11 @@
 package org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
@@ -38,10 +40,10 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogi
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.DelegateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DistinctOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.EmptyTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ExchangeOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.DelegateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IntersectOperator;
@@ -52,7 +54,6 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.LimitOperato
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.MaterializeOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.NestedTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator.IOrder;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ProjectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ReplicateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.RunningAggregateOperator;
@@ -64,10 +65,12 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.TokenizeOper
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnionAllOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator.IOrder;
 import org.apache.hyracks.algebricks.core.algebra.plan.ALogicalPlanImpl;
 import org.apache.hyracks.algebricks.core.algebra.properties.FunctionalDependency;
 import org.apache.hyracks.algebricks.core.algebra.typing.ITypingContext;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
+import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 import org.apache.hyracks.algebricks.core.algebra.visitors.IQueryOperatorVisitor;
 
 /**
@@ -87,7 +90,13 @@ public class LogicalOperatorDeepCopyWithNewVariablesVisitor
 
     // Key: New variable in the new plan. Value: The old variable in the
     // original plan.
-    private final LinkedHashMap<LogicalVariable, LogicalVariable> outputVarToInputVarMapping;
+    private final LinkedHashMap<LogicalVariable, LogicalVariable> outputVarToInputVarMapping = new LinkedHashMap<>();
+
+    // Free variables: variables that shouldn't be deep copied, i.e., mapped.
+    private final Set<LogicalVariable> freeVars = new HashSet<>();
+
+    // Whether free variables in the given plan subtree should be reused.
+    private final boolean reuseFreeVars;
 
     /**
      * @param varContext
@@ -96,12 +105,20 @@ public class LogicalOperatorDeepCopyWithNewVariablesVisitor
      *            the type context.
      */
     public LogicalOperatorDeepCopyWithNewVariablesVisitor(IVariableContext varContext, ITypingContext typeContext) {
-        this.varContext = varContext;
-        this.typeContext = typeContext;
-        this.inputVarToOutputVarMapping = new LinkedHashMap<>();
-        this.outputVarToInputVarMapping = new LinkedHashMap<>();
-        this.exprDeepCopyVisitor = new LogicalExpressionDeepCopyWithNewVariablesVisitor(varContext,
-                outputVarToInputVarMapping, inputVarToOutputVarMapping);
+        this(varContext, typeContext, new LinkedHashMap<>(), false);
+    }
+
+    /**
+     * @param varContext
+     *            , the variable context.
+     * @param typeContext
+     *            the type context.
+     * @param reuseFreeVars
+     *            whether free variables in the given plan tree should be reused.
+     */
+    public LogicalOperatorDeepCopyWithNewVariablesVisitor(IVariableContext varContext, ITypingContext typeContext,
+            boolean reuseFreeVars) {
+        this(varContext, typeContext, new LinkedHashMap<>(), reuseFreeVars);
     }
 
     /**
@@ -113,15 +130,17 @@ public class LogicalOperatorDeepCopyWithNewVariablesVisitor
      *            Variable mapping keyed by variables in the original plan.
      *            Those variables are replaced by their corresponding value in
      *            the map in the copied plan.
+     * @param reuseFreeVars
+     *            whether free variables in the given plan tree should be reused.
      */
     public LogicalOperatorDeepCopyWithNewVariablesVisitor(IVariableContext varContext, ITypingContext typeContext,
-            LinkedHashMap<LogicalVariable, LogicalVariable> inVarMapping) {
+            LinkedHashMap<LogicalVariable, LogicalVariable> inVarMapping, boolean reuseFreeVars) {
         this.varContext = varContext;
         this.typeContext = typeContext;
         this.inputVarToOutputVarMapping = inVarMapping;
-        this.outputVarToInputVarMapping = new LinkedHashMap<>();
-        exprDeepCopyVisitor = new LogicalExpressionDeepCopyWithNewVariablesVisitor(varContext, inVarMapping,
-                inputVarToOutputVarMapping);
+        this.exprDeepCopyVisitor = new LogicalExpressionDeepCopyWithNewVariablesVisitor(varContext, inVarMapping,
+                inputVarToOutputVarMapping, freeVars);
+        this.reuseFreeVars = reuseFreeVars;
     }
 
     private void copyAnnotations(ILogicalOperator src, ILogicalOperator dest) {
@@ -136,6 +155,11 @@ public class LogicalOperatorDeepCopyWithNewVariablesVisitor
     private ILogicalOperator deepCopy(ILogicalOperator op, ILogicalOperator arg) throws AlgebricksException {
         if (op == null) {
             return null;
+        }
+        if (reuseFreeVars) {
+            // If the reuseFreeVars flag is set, we collect all free variables in the
+            // given operator subtree and do not re-map them in the deep-copied plan.
+            OperatorPropertiesUtil.getFreeVariablesInSelfOrDesc((AbstractLogicalOperator) op, freeVars);
         }
         ILogicalOperator opCopy = op.accept(this, arg);
         if (typeContext != null) {
@@ -207,6 +231,9 @@ public class LogicalOperatorDeepCopyWithNewVariablesVisitor
         if (var == null) {
             return null;
         }
+        if (freeVars.contains(var)) {
+            return var;
+        }
         LogicalVariable givenVarReplacement = outputVarToInputVarMapping.get(var);
         if (givenVarReplacement != null) {
             inputVarToOutputVarMapping.put(var, givenVarReplacement);
@@ -247,6 +274,7 @@ public class LogicalOperatorDeepCopyWithNewVariablesVisitor
     }
 
     public void reset() {
+        freeVars.clear();
         inputVarToOutputVarMapping.clear();
         outputVarToInputVarMapping.clear();
     }
@@ -561,10 +589,6 @@ public class LogicalOperatorDeepCopyWithNewVariablesVisitor
                 deepCopyVariable(op.getPositionalVariable()), op.getPositionalVariableType(), op.getPositionWriter());
         deepCopyInputsAnnotationsAndExecutionMode(op, arg, opCopy);
         return opCopy;
-    }
-
-    public LinkedHashMap<LogicalVariable, LogicalVariable> getOutputToInputVariableMapping() {
-        return outputVarToInputVarMapping;
     }
 
     public LinkedHashMap<LogicalVariable, LogicalVariable> getInputToOutputVariableMapping() {

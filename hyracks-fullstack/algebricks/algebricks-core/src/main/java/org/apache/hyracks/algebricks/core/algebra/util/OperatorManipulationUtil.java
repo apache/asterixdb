@@ -20,10 +20,12 @@ package org.apache.hyracks.algebricks.core.algebra.util;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
@@ -38,6 +40,8 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOpera
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LimitOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.NestedTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SubplanOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.
+        LogicalOperatorDeepCopyWithNewVariablesVisitor;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.OperatorDeepCopyVisitor;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.algebra.plan.ALogicalPlanImpl;
@@ -194,6 +198,14 @@ public class OperatorManipulationUtil {
         List<Mutable<ILogicalOperator>> newRoots = clonePipeline(roots);
         cloneTypeEnvironments(ctx, roots, newRoots);
         return new ALogicalPlanImpl(newRoots);
+    }
+
+    public static Pair<ILogicalOperator, Map<LogicalVariable, LogicalVariable>> deepCopyWithNewVars(
+            ILogicalOperator root, IOptimizationContext ctx) throws AlgebricksException {
+        LogicalOperatorDeepCopyWithNewVariablesVisitor deepCopyVisitor = new
+                LogicalOperatorDeepCopyWithNewVariablesVisitor(ctx, null, true);
+        ILogicalOperator newRoot = deepCopyVisitor.deepCopy(root);
+        return Pair.of(newRoot, deepCopyVisitor.getInputToOutputVariableMapping());
     }
 
     private static void setDataSource(ILogicalPlan plan, ILogicalOperator dataSource) {

@@ -629,13 +629,13 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
 
         // Create first copy.
         LogicalOperatorDeepCopyWithNewVariablesVisitor firstDeepCopyVisitor = new LogicalOperatorDeepCopyWithNewVariablesVisitor(
-                context, context, newProbeSubTreeVarMap);
+                context, context, newProbeSubTreeVarMap, true);
         ILogicalOperator newProbeSubTree = firstDeepCopyVisitor.deepCopy(probeSubTree.getRoot());
         inferTypes(newProbeSubTree, context);
         Mutable<ILogicalOperator> newProbeSubTreeRootRef = new MutableObject<ILogicalOperator>(newProbeSubTree);
         // Create second copy.
         LogicalOperatorDeepCopyWithNewVariablesVisitor secondDeepCopyVisitor = new LogicalOperatorDeepCopyWithNewVariablesVisitor(
-                context, context, joinInputSubTreeVarMap);
+                context, context, joinInputSubTreeVarMap, true);
         ILogicalOperator joinInputSubTree = secondDeepCopyVisitor.deepCopy(probeSubTree.getRoot());
         inferTypes(joinInputSubTree, context);
         probeSubTree.getRootRef().setValue(joinInputSubTree);

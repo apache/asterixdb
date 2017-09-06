@@ -13,12 +13,12 @@
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
               -- STABLE_SORT [$$nation_key(ASC)]  |PARTITIONED|
                 -- HASH_PARTITION_EXCHANGE [$$nation_key]  |PARTITIONED|
-                  -- SORT_GROUP_BY[$$69, $$70]  |PARTITIONED|
+                  -- SORT_GROUP_BY[$$70, $$71]  |PARTITIONED|
                           {
                             -- AGGREGATE  |LOCAL|
                               -- NESTED_TUPLE_SOURCE  |LOCAL|
                           }
-                    -- HASH_PARTITION_EXCHANGE [$$69, $$70]  |PARTITIONED|
+                    -- HASH_PARTITION_EXCHANGE [$$70, $$71]  |PARTITIONED|
                       -- SORT_GROUP_BY[$$50, $$54]  |PARTITIONED|
                               {
                                 -- AGGREGATE  |LOCAL|
@@ -31,7 +31,7 @@
                                 -- HASH_PARTITION_EXCHANGE [$$56]  |PARTITIONED|
                                   -- STREAM_PROJECT  |PARTITIONED|
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                      -- HYBRID_HASH_JOIN [$$54][$$63]  |PARTITIONED|
+                                      -- HYBRID_HASH_JOIN [$$54][$$64]  |PARTITIONED|
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                           -- STREAM_PROJECT  |PARTITIONED|
                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -48,7 +48,7 @@
                                                       -- DATASOURCE_SCAN  |PARTITIONED|
                                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                           -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-                                        -- HASH_PARTITION_EXCHANGE [$$63]  |PARTITIONED|
+                                        -- HASH_PARTITION_EXCHANGE [$$64]  |PARTITIONED|
                                           -- STREAM_PROJECT  |PARTITIONED|
                                             -- ASSIGN  |PARTITIONED|
                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
