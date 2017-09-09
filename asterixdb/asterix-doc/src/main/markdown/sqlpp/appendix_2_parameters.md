@@ -44,7 +44,7 @@ There are three cases of the value *p* for compiler.parallelism:
 
 ##### Example
 
-    SET `compiler.parallelism` "16"
+    SET `compiler.parallelism` "16";
 
     SELECT u.name AS uname, m.message AS message
     FROM GleambookUsers u JOIN GleambookMessages m ON m.authorId = u.id;
@@ -71,7 +71,7 @@ If there is no user-provided suffix, "B" is the default suffix. See the followin
 
 ##### Example
 
-    SET `compiler.groupmemory` "64MB"
+    SET `compiler.groupmemory` "64MB";
 
     SELECT msg.authorId, COUNT(*)
     FROM GleambookMessages msg
@@ -79,7 +79,7 @@ If there is no user-provided suffix, "B" is the default suffix. See the followin
 
 ##### Example
 
-    SET `compiler.sortmemory` "67108864"
+    SET `compiler.sortmemory` "67108864";
 
     SELECT VALUE user
     FROM GleambookUsers AS user
@@ -87,7 +87,7 @@ If there is no user-provided suffix, "B" is the default suffix. See the followin
 
 ##### Example
 
-    SET `compiler.joinmemory` "132000KB"
+    SET `compiler.joinmemory` "132000KB";
 
     SELECT u.name AS uname, m.message AS message
     FROM GleambookUsers u JOIN GleambookMessages m ON m.authorId = u.id;

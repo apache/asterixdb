@@ -19,7 +19,7 @@
 
 # <a id="DDL_and_DML_statements">5. DDL and DML statements</a>
 
-    Statement ::= ( SingleStatement ( ";" )? )* <EOF>
+    Statement ::= ( ( SingleStatement )? ( ";" )+ )* <EOF>
     SingleStatement ::= DatabaseDeclaration
                       | FunctionDeclaration
                       | CreateStatement
@@ -28,7 +28,7 @@
                       | SetStatement
                       | InsertStatement
                       | DeleteStatement
-                      | Query ";"
+                      | Query
 
 In addition to queries, an implementation of SQL++ needs to support statements for data definition
 and manipulation purposes as well as controlling the context to be used in evaluating SQL++ expressions.
