@@ -179,9 +179,9 @@ public class HttpServerTest {
 
     @Test
     public void testChattyServer() throws Exception {
-        int numRequests = 64;
-        int numExecutors = 32;
-        int serverQueueSize = 32;
+        int numRequests = 48;
+        int numExecutors = 24;
+        int serverQueueSize = 24;
         HttpUtil.printMemUsage();
         WebManager webMgr = new WebManager();
         HttpServer server =
