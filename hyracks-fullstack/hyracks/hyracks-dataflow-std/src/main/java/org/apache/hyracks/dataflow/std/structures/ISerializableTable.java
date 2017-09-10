@@ -64,4 +64,10 @@ public interface ISerializableTable {
      * Prints out the internal information of this table.
      */
     String printInfo();
+
+    /**
+     * Returns the number of entries of this table.
+     * @return the number entries.
+     */
+    int getTableSize();
 }

@@ -56,7 +56,6 @@ public class InMemoryHashJoin {
     private final boolean isLeftOuter;
     private final ArrayTupleBuilder missingTupleBuild;
     private final ISerializableTable table;
-    private final int tableSize;
     private final TuplePointer storedTuplePointer;
     private final boolean reverseOutputOrder; //Should we reverse the order of tuples, we are writing in output
     private final IPredicateEvaluator predEvaluator;
@@ -67,23 +66,22 @@ public class InMemoryHashJoin {
 
     private static final Logger LOGGER = Logger.getLogger(InMemoryHashJoin.class.getName());
 
-    public InMemoryHashJoin(IHyracksTaskContext ctx, int tableSize, FrameTupleAccessor accessorProbe,
+    public InMemoryHashJoin(IHyracksTaskContext ctx, FrameTupleAccessor accessorProbe,
             ITuplePartitionComputer tpcProbe, FrameTupleAccessor accessorBuild, RecordDescriptor rDBuild,
             ITuplePartitionComputer tpcBuild, FrameTuplePairComparator comparator, boolean isLeftOuter,
             IMissingWriter[] missingWritersBuild, ISerializableTable table, IPredicateEvaluator predEval,
             ISimpleFrameBufferManager bufferManager)
             throws HyracksDataException {
-        this(ctx, tableSize, accessorProbe, tpcProbe, accessorBuild, rDBuild, tpcBuild, comparator, isLeftOuter,
+        this(ctx, accessorProbe, tpcProbe, accessorBuild, rDBuild, tpcBuild, comparator, isLeftOuter,
                 missingWritersBuild, table, predEval, false, bufferManager);
     }
 
-    public InMemoryHashJoin(IHyracksTaskContext ctx, int tableSize, FrameTupleAccessor accessorProbe,
+    public InMemoryHashJoin(IHyracksTaskContext ctx, FrameTupleAccessor accessorProbe,
             ITuplePartitionComputer tpcProbe, FrameTupleAccessor accessorBuild,
             RecordDescriptor rDBuild, ITuplePartitionComputer tpcBuild, FrameTuplePairComparator comparator,
             boolean isLeftOuter, IMissingWriter[] missingWritersBuild, ISerializableTable table,
             IPredicateEvaluator predEval, boolean reverse, ISimpleFrameBufferManager bufferManager)
             throws HyracksDataException {
-        this.tableSize = tableSize;
         this.table = table;
         storedTuplePointer = new TuplePointer();
         buffers = new ArrayList<>();
@@ -109,12 +107,12 @@ public class InMemoryHashJoin {
         reverseOutputOrder = reverse;
         this.tupleAccessor = new TupleInFrameListAccessor(rDBuild, buffers);
         this.bufferManager = bufferManager;
-        if (tableSize != 0) {
+        if (table.getTableSize() != 0) {
             isTableCapacityNotZero = true;
         } else {
             isTableCapacityNotZero = false;
         }
-        LOGGER.fine("InMemoryHashJoin has been created for a table size of " + tableSize + " for Thread ID "
+        LOGGER.fine("InMemoryHashJoin has been created for a table size of " + table.getTableSize() + " for Thread ID "
                 + Thread.currentThread().getId() + ".");
     }
 
@@ -124,7 +122,7 @@ public class InMemoryHashJoin {
         accessorBuild.reset(buffer);
         int tCount = accessorBuild.getTupleCount();
         for (int i = 0; i < tCount; ++i) {
-            int entry = tpcBuild.partition(accessorBuild, i, tableSize);
+            int entry = tpcBuild.partition(accessorBuild, i, table.getTableSize());
             storedTuplePointer.reset(bIndex, i);
             // If an insertion fails, then tries to insert the same tuple pointer again after compacting the table.
             if (!table.insert(entry, storedTuplePointer)) {
@@ -160,7 +158,7 @@ public class InMemoryHashJoin {
     void join(int tid, IFrameWriter writer) throws HyracksDataException {
         boolean matchFound = false;
         if (isTableCapacityNotZero) {
-            int entry = tpcProbe.partition(accessorProbe, tid, tableSize);
+            int entry = tpcProbe.partition(accessorProbe, tid, table.getTableSize());
             int tupleCount = table.getTupleCount(entry);
             for (int i = 0; i < tupleCount; i++) {
                 table.getTuplePointer(entry, i, storedTuplePointer);

@@ -104,21 +104,6 @@ public class InMemoryHashJoinOperatorDescriptor extends AbstractOperatorDescript
         this.memSizeInFrames = memSizeInFrames;
     }
 
-    public InMemoryHashJoinOperatorDescriptor(IOperatorDescriptorRegistry spec, int[] keys0, int[] keys1,
-            IBinaryHashFunctionFactory[] hashFunctionFactories, IBinaryComparatorFactory[] comparatorFactories,
-            RecordDescriptor recordDescriptor, int tableSize, int memSizeInFrames) {
-        this(spec, keys0, keys1, hashFunctionFactories, comparatorFactories, recordDescriptor, tableSize, null,
-                memSizeInFrames);
-    }
-
-    public InMemoryHashJoinOperatorDescriptor(IOperatorDescriptorRegistry spec, int[] keys0, int[] keys1,
-            IBinaryHashFunctionFactory[] hashFunctionFactories, IBinaryComparatorFactory[] comparatorFactories,
-            RecordDescriptor recordDescriptor, boolean isLeftOuter, IMissingWriterFactory[] nullWriterFactories1,
-            int tableSize, int memSizeInFrames) {
-        this(spec, keys0, keys1, hashFunctionFactories, comparatorFactories, null, recordDescriptor, isLeftOuter,
-                nullWriterFactories1, tableSize, memSizeInFrames);
-    }
-
     @Override
     public void contributeActivities(IActivityGraphBuilder builder) {
         ActivityId hbaId = new ActivityId(odId, 0);
@@ -203,10 +188,10 @@ public class InMemoryHashJoinOperatorDescriptor extends AbstractOperatorDescript
                     state = new HashBuildTaskState(ctx.getJobletContext().getJobId(),
                             new TaskId(getActivityId(), partition));
                     ISerializableTable table = new SerializableHashTable(tableSize, ctx, bufferManager);
-                    state.joiner = new InMemoryHashJoin(ctx, tableSize, new FrameTupleAccessor(rd0), hpc0,
-                            new FrameTupleAccessor(rd1), rd1, hpc1,
-                            new FrameTuplePairComparator(keys0, keys1, comparators), isLeftOuter, nullWriters1, table,
-                            predEvaluator, bufferManager);
+                    state.joiner =
+                            new InMemoryHashJoin(ctx, new FrameTupleAccessor(rd0), hpc0, new FrameTupleAccessor(rd1),
+                                    rd1, hpc1, new FrameTuplePairComparator(keys0, keys1, comparators), isLeftOuter,
+                                    nullWriters1, table, predEvaluator, bufferManager);
                 }
 
                 @Override
