@@ -125,6 +125,8 @@ public class ErrorCode {
     public static final int GROUP_BY_MEMORY_BUDGET_EXCEEDS = 89;
     public static final int ILLEGAL_MEMORY_BUDGET = 90;
     public static final int TIMEOUT = 91;
+    public static final int JOB_HAS_BEEN_CLEARED_FROM_HISTORY = 92;
+    public static final int JOB_HAS_NOT_BEEN_CREATED_YET = 93;
 
     // Compilation error codes.
     public static final int RULECOLLECTION_NOT_INSTANCE_OF_LIST = 10000;

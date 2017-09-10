@@ -62,13 +62,13 @@ public abstract class AbstractMultiNCIntegrationTest {
     public static final String[] ASTERIX_IDS =
             { "asterix-001", "asterix-002", "asterix-003", "asterix-004", "asterix-005", "asterix-006", "asterix-007" };
 
-    private static ClusterControllerService cc;
+    protected static ClusterControllerService cc;
 
-    private static NodeControllerService[] asterixNCs;
+    protected static NodeControllerService[] asterixNCs;
 
-    private static IHyracksClientConnection hcc;
+    protected static IHyracksClientConnection hcc;
 
-    private final List<File> outputFiles;
+    protected final List<File> outputFiles;
 
     public AbstractMultiNCIntegrationTest() {
         outputFiles = new ArrayList<>();
@@ -82,6 +82,7 @@ public abstract class AbstractMultiNCIntegrationTest {
         ccConfig.setClusterListenAddress("127.0.0.1");
         ccConfig.setClusterListenPort(39001);
         ccConfig.setProfileDumpPeriod(10000);
+        ccConfig.setJobHistorySize(2);
         File outDir = new File("target" + File.separator + "ClusterController");
         outDir.mkdirs();
         File ccRoot = File.createTempFile(AbstractMultiNCIntegrationTest.class.getName(), ".data", outDir);
@@ -186,24 +187,30 @@ public abstract class AbstractMultiNCIntegrationTest {
                 readSize = reader.read(resultFrame);
             }
         }
+        waitForCompletion(jobId, expectedErrorMessage);
+        // Waiting a second time should lead to the same behavior
+        waitForCompletion(jobId, expectedErrorMessage);
+        dumpOutputFiles();
+    }
+
+    protected void waitForCompletion(JobId jobId, String expectedErrorMessage) throws Exception {
         boolean expectedExceptionThrown = false;
         try {
             hcc.waitForCompletion(jobId);
-        } catch (HyracksDataException hde) {
+        } catch (Exception e) {
             if (expectedErrorMessage != null) {
-                if (hde.toString().contains(expectedErrorMessage)) {
+                if (e.toString().contains(expectedErrorMessage)) {
                     expectedExceptionThrown = true;
                 } else {
-                    throw hde;
+                    throw e;
                 }
             } else {
-                throw hde;
+                throw e;
             }
         }
         if (expectedErrorMessage != null && !expectedExceptionThrown) {
             throw new Exception("Expected error (" + expectedErrorMessage + ") was not thrown");
         }
-        dumpOutputFiles();
     }
 
     private void dumpOutputFiles() {

@@ -27,6 +27,10 @@ public class JobIdFactory {
         return new JobId(id.getAndIncrement());
     }
 
+    public long maxJobId() {
+        return id.get();
+    }
+
     public void ensureMinimumId(long id) {
         this.id.updateAndGet(current -> Math.max(current, id));
     }

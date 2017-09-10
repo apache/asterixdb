@@ -25,6 +25,7 @@ import org.apache.hyracks.api.job.IActivityClusterGraphGenerator;
 import org.apache.hyracks.api.job.IActivityClusterGraphGeneratorFactory;
 import org.apache.hyracks.api.job.JobFlag;
 import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.api.job.JobIdFactory;
 import org.apache.hyracks.api.util.JavaSerializationUtils;
 import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.cc.NodeControllerState;
@@ -37,12 +38,12 @@ import org.apache.hyracks.control.common.work.SynchronizableWork;
 public class DistributeJobWork extends SynchronizableWork {
     private final ClusterControllerService ccs;
     private final byte[] acggfBytes;
-    private final JobId jobId;
+    private final JobIdFactory jobIdFactory;
     private final IResultCallback<JobId> callback;
 
-    public DistributeJobWork(ClusterControllerService ccs, byte[] acggfBytes, JobId jobId,
+    public DistributeJobWork(ClusterControllerService ccs, byte[] acggfBytes, JobIdFactory jobIdFactory,
             IResultCallback<JobId> callback) {
-        this.jobId = jobId;
+        this.jobIdFactory = jobIdFactory;
         this.ccs = ccs;
         this.acggfBytes = acggfBytes;
         this.callback = callback;
@@ -51,6 +52,7 @@ public class DistributeJobWork extends SynchronizableWork {
     @Override
     protected void doRun() throws Exception {
         try {
+            JobId jobId = jobIdFactory.create();
             final CCServiceContext ccServiceCtx = ccs.getContext();
             ccs.getPreDistributedJobStore().checkForExistingDistributedJobDescriptor(jobId);
             IActivityClusterGraphGeneratorFactory acggf =

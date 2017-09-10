@@ -18,12 +18,15 @@
  */
 package org.apache.hyracks.control.cc.work;
 
+import java.util.Collections;
 import java.util.List;
 
+import org.apache.hyracks.api.exceptions.ErrorCode;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.cc.job.IJobManager;
-import org.apache.hyracks.control.cc.job.IJobStatusConditionVariable;
+import org.apache.hyracks.control.cc.job.JobRun;
 import org.apache.hyracks.control.common.work.IResultCallback;
 import org.apache.hyracks.control.common.work.SynchronizableWork;
 
@@ -41,13 +44,13 @@ public class WaitForJobCompletionWork extends SynchronizableWork {
     @Override
     protected void doRun() throws Exception {
         IJobManager jobManager = ccs.getJobManager();
-        final IJobStatusConditionVariable cRunningVar = jobManager.get(jobId);
-        if (cRunningVar != null) {
+        final JobRun jobRun = jobManager.get(jobId);
+        if (jobRun != null) {
             ccs.getExecutor().execute(new Runnable() {
                 @Override
                 public void run() {
                     try {
-                        cRunningVar.waitForCompletion();
+                        jobRun.waitForCompletion();
                         callback.setValue(null);
                     } catch (Exception e) {
                         callback.setException(e);
@@ -55,18 +58,28 @@ public class WaitForJobCompletionWork extends SynchronizableWork {
                 }
             });
         } else {
-            final List<Exception> exceptions = jobManager.getExceptionHistory(jobId);
-            ccs.getExecutor().execute(new Runnable() {
-                @Override
-                public void run() {
+            // Couldn't find jobRun
+            List<Exception> exceptionHistory = jobManager.getExceptionHistory(jobId);
+            List<Exception> exceptions;
+            if (exceptionHistory == null) {
+                // couldn't be found
+                long maxJobId = ccs.getJobIdFactory().maxJobId();
+                exceptions = Collections.singletonList(jobId.getId() <= maxJobId
+                        ? HyracksDataException.create(ErrorCode.JOB_HAS_BEEN_CLEARED_FROM_HISTORY, jobId)
+                        : HyracksDataException.create(ErrorCode.JOB_HAS_NOT_BEEN_CREATED_YET, jobId));
+
+            } else {
+                exceptions = exceptionHistory;
+            }
+            ccs.getExecutor().execute(() -> {
+                if (!exceptions.isEmpty()) {
+                    /**
+                     * only report the first exception because IResultCallback will only throw one exception
+                     * anyway
+                     */
+                    callback.setException(exceptions.get(0));
+                } else {
                     callback.setValue(null);
-                    if (exceptions != null && !exceptions.isEmpty()) {
-                        /**
-                         * only report the first exception because IResultCallback will only throw one exception
-                         * anyway
-                         */
-                        callback.setException(exceptions.get(0));
-                    }
                 }
             });
         }

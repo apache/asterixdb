@@ -25,6 +25,7 @@ import org.apache.hyracks.api.job.IActivityClusterGraphGenerator;
 import org.apache.hyracks.api.job.IActivityClusterGraphGeneratorFactory;
 import org.apache.hyracks.api.job.JobFlag;
 import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.api.job.JobIdFactory;
 import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.cc.application.CCServiceContext;
 import org.apache.hyracks.control.cc.job.IJobManager;
@@ -38,19 +39,19 @@ public class JobStartWork extends SynchronizableWork {
     private final byte[] acggfBytes;
     private final EnumSet<JobFlag> jobFlags;
     private final DeploymentId deploymentId;
-    private final JobId jobId;
+    private final JobId preDistributedJobId;
     private final IResultCallback<JobId> callback;
-    private final boolean predestributed;
+    private final JobIdFactory jobIdFactory;
 
     public JobStartWork(ClusterControllerService ccs, DeploymentId deploymentId, byte[] acggfBytes,
-            EnumSet<JobFlag> jobFlags, JobId jobId, IResultCallback<JobId> callback, boolean predestributed) {
+            EnumSet<JobFlag> jobFlags, JobId jobId, IResultCallback<JobId> callback, JobIdFactory jobIdFactory) {
         this.deploymentId = deploymentId;
-        this.jobId = jobId;
+        this.preDistributedJobId = jobId;
         this.ccs = ccs;
         this.acggfBytes = acggfBytes;
         this.jobFlags = jobFlags;
         this.callback = callback;
-        this.predestributed = predestributed;
+        this.jobIdFactory = jobIdFactory;
     }
 
     @Override
@@ -58,8 +59,10 @@ public class JobStartWork extends SynchronizableWork {
         IJobManager jobManager = ccs.getJobManager();
         try {
             final CCServiceContext ccServiceCtx = ccs.getContext();
+            JobId jobId;
             JobRun run;
-            if (!predestributed) {
+            if (preDistributedJobId == null) {
+                jobId = jobIdFactory.create();
                 //Need to create the ActivityClusterGraph
                 IActivityClusterGraphGeneratorFactory acggf = (IActivityClusterGraphGeneratorFactory) DeploymentUtils
                         .deserialize(acggfBytes, deploymentId, ccServiceCtx);
@@ -67,6 +70,7 @@ public class JobStartWork extends SynchronizableWork {
                         acggf.createActivityClusterGraphGenerator(jobId, ccServiceCtx, jobFlags);
                 run = new JobRun(ccs, deploymentId, jobId, acggf, acgg, jobFlags);
             } else {
+                jobId = preDistributedJobId;
                 //ActivityClusterGraph has already been distributed
                 run = new JobRun(ccs, deploymentId, jobId, jobFlags,
                         ccs.getPreDistributedJobStore().getDistributedJobDescriptor(jobId));

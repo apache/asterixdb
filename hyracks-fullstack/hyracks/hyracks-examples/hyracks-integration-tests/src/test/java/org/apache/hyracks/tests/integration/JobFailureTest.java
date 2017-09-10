@@ -20,6 +20,7 @@ package org.apache.hyracks.tests.integration;
 
 import org.apache.hyracks.api.constraints.PartitionConstraintHelper;
 import org.apache.hyracks.api.dataflow.IConnectorDescriptor;
+import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
 import org.apache.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor;
@@ -32,9 +33,27 @@ public class JobFailureTest extends AbstractMultiNCIntegrationTest {
 
     @Test
     public void failureOnCreatePushRuntime() throws Exception {
-        for (int round = 0; round < 100; ++round) {
+        JobId jobId = new JobId(0); // First job
+        for (int i = 0; i < 20; i++) {
+            execTest();
+            if (i == 0) {
+                // passes. read from job archive
+                waitForCompletion(jobId, ExceptionOnCreatePushRuntimeOperatorDescriptor.ERROR_MESSAGE);
+            }
+        }
+        // passes. read from job history
+        waitForCompletion(jobId, ExceptionOnCreatePushRuntimeOperatorDescriptor.ERROR_MESSAGE);
+        for (int i = 0; i < 300; i++) {
             execTest();
         }
+        // passes. history has been cleared
+        waitForCompletion(jobId, "has been cleared from job history");
+    }
+
+    @Test
+    public void waitForNonExistingJob() throws Exception {
+        JobId jobId = new JobId(Long.MAX_VALUE);
+        waitForCompletion(jobId, "has not been created yet");
     }
 
     private void execTest() throws Exception {
