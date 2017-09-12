@@ -3,7 +3,7 @@ Query:
 SELECT [
 Variable [ Name=$h ]
 hour
-FunctionCall TinySocial.sql-count@1[
+FunctionCall asterix.sql-count@1[
   (
     SELECT ELEMENT [
     LiteralExpr [LONG] [1]
@@ -18,7 +18,7 @@ count
   SELECT [
   Variable [ Name=$min ]
   minute
-  FunctionCall TinySocial.sql-count@1[
+  FunctionCall asterix.sql-count@1[
     (
       SELECT ELEMENT [
       LiteralExpr [LONG] [1]

@@ -10,7 +10,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [count]
     :
-    FunctionCall twitter.count@1[
+    FunctionCall asterix.count@1[
       (
         SELECT ELEMENT [
         FunctionCall Metadata.resolve@-1[
@@ -51,7 +51,7 @@ Groupby
   )
 
 Orderby
-  FunctionCall twitter.count@1[
+  FunctionCall asterix.count@1[
     (
       SELECT ELEMENT [
       FunctionCall Metadata.resolve@-1[

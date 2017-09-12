@@ -1,7 +1,7 @@
 DataverseUse test
 Query:
 SELECT ELEMENT [
-FunctionCall test.sql-count@1[
+FunctionCall asterix.sql-count@1[
   (
     SELECT ELEMENT [
     Variable [ Name=$x ]

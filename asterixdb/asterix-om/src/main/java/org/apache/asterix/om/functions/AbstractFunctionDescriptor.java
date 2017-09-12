@@ -40,31 +40,31 @@ public abstract class AbstractFunctionDescriptor implements IFunctionDescriptor 
 
     @Override
     public IScalarEvaluatorFactory createEvaluatorFactory(IScalarEvaluatorFactory[] args) throws AlgebricksException {
-        throw new NotImplementedException("Not Implemented");
+        throw new NotImplementedException("Not Implemented: " + getIdentifier());
     }
 
     @Override
     public IRunningAggregateEvaluatorFactory createRunningAggregateEvaluatorFactory(IScalarEvaluatorFactory[] args)
             throws AlgebricksException {
-        throw new NotImplementedException("Not Implemented");
+        throw new NotImplementedException("Not Implemented: " + getIdentifier());
     }
 
     @Override
     public ISerializedAggregateEvaluatorFactory createSerializableAggregateEvaluatorFactory(
             IScalarEvaluatorFactory[] args) throws AlgebricksException {
-        throw new NotImplementedException("Not Implemented");
+        throw new NotImplementedException("Not Implemented: " + getIdentifier());
     }
 
     @Override
     public IUnnestingEvaluatorFactory createUnnestingEvaluatorFactory(IScalarEvaluatorFactory[] args)
             throws AlgebricksException {
-        throw new NotImplementedException("Not Implemented");
+        throw new NotImplementedException("Not Implemented: " + getIdentifier());
     }
 
     @Override
     public IAggregateEvaluatorFactory createAggregateEvaluatorFactory(IScalarEvaluatorFactory[] args)
             throws AlgebricksException {
-        throw new NotImplementedException("Not Implemented");
+        throw new NotImplementedException("Not Implemented: " + getIdentifier());
     }
 
 }

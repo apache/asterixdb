@@ -25,7 +25,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [sum_qty_partial]
     :
-    FunctionCall tpch.sum@1[
+    FunctionCall asterix.sum@1[
       (
         SELECT ELEMENT [
         FieldAccessor [
@@ -53,7 +53,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [sum_base_price]
     :
-    FunctionCall tpch.sum@1[
+    FunctionCall asterix.sum@1[
       (
         SELECT ELEMENT [
         FieldAccessor [
@@ -72,7 +72,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [sum_disc_price]
     :
-    FunctionCall tpch.sum@1[
+    FunctionCall asterix.sum@1[
       (
         SELECT ELEMENT [
         OperatorExpr [
@@ -102,7 +102,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [sum_charge]
     :
-    FunctionCall tpch.sum@1[
+    FunctionCall asterix.sum@1[
       (
         SELECT ELEMENT [
         OperatorExpr [
@@ -141,7 +141,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [ave_qty]
     :
-    FunctionCall tpch.avg@1[
+    FunctionCall asterix.avg@1[
       (
         SELECT ELEMENT [
         FieldAccessor [
@@ -169,7 +169,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [ave_price]
     :
-    FunctionCall tpch.avg@1[
+    FunctionCall asterix.avg@1[
       (
         SELECT ELEMENT [
         FieldAccessor [
@@ -188,7 +188,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [ave_disc]
     :
-    FunctionCall tpch.avg@1[
+    FunctionCall asterix.avg@1[
       (
         SELECT ELEMENT [
         FieldAccessor [
@@ -207,7 +207,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [count_order]
     :
-    FunctionCall tpch.count@1[
+    FunctionCall asterix.count@1[
       (
         SELECT ELEMENT [
         Variable [ Name=$l ]

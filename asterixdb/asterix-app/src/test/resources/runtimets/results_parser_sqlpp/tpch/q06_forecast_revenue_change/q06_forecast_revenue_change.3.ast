@@ -4,7 +4,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [revenue]
     :
-    FunctionCall tpch.sum@1[
+    FunctionCall asterix.sum@1[
       (
         SELECT ELEMENT [
         OperatorExpr [

@@ -52,7 +52,7 @@ FROM [  (
             OperatorExpr [
               LiteralExpr [DOUBLE] [0.5]
               *
-              FunctionCall tpch.sum@1[
+              FunctionCall asterix.sum@1[
                 (
                   SELECT ELEMENT [
                   FieldAccessor [

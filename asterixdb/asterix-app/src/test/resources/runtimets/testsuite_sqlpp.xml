@@ -295,6 +295,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
+      <compilation-unit name="avg_distinct">
+        <output-dir compare="Text">avg_distinct</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
       <compilation-unit name="count_01">
         <output-dir compare="Text">count_01</output-dir>
       </compilation-unit>
@@ -312,6 +317,11 @@
     <test-case FilePath="aggregate">
       <compilation-unit name="count_null">
         <output-dir compare="Text">count_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="count_distinct">
+        <output-dir compare="Text">count_distinct</output-dir>
       </compilation-unit>
     </test-case>
     <!--
@@ -406,6 +416,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
+      <compilation-unit name="max_distinct">
+        <output-dir compare="Text">max_distinct</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
       <compilation-unit name="min_empty_01">
         <output-dir compare="Text">min_empty_01</output-dir>
       </compilation-unit>
@@ -413,6 +428,11 @@
     <test-case FilePath="aggregate">
       <compilation-unit name="min_empty_02">
         <output-dir compare="Text">min_empty_02</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="min_distinct">
+        <output-dir compare="Text">min_distinct</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
@@ -568,6 +588,11 @@
     <test-case FilePath="aggregate">
       <compilation-unit name="sum_numeric_null">
         <output-dir compare="Text">sum_numeric_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="sum_distinct">
+        <output-dir compare="Text">sum_distinct</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>
@@ -731,6 +756,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">
+      <compilation-unit name="avg_distinct">
+        <output-dir compare="Text">avg_distinct</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
       <compilation-unit name="count_01">
         <output-dir compare="Text">count_01</output-dir>
       </compilation-unit>
@@ -751,6 +781,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">
+      <compilation-unit name="count_distinct">
+        <output-dir compare="Text">count_distinct</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
       <compilation-unit name="max_empty_01">
         <output-dir compare="Text">max_empty_01</output-dir>
       </compilation-unit>
@@ -761,6 +796,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">
+      <compilation-unit name="max_distinct">
+        <output-dir compare="Text">max_distinct</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
       <compilation-unit name="min_empty_01">
         <output-dir compare="Text">min_empty_01</output-dir>
       </compilation-unit>
@@ -768,6 +808,11 @@
     <test-case FilePath="aggregate-sql">
       <compilation-unit name="min_empty_02">
         <output-dir compare="Text">min_empty_02</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="min_distinct">
+        <output-dir compare="Text">min_distinct</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">
@@ -923,6 +968,11 @@
     <test-case FilePath="aggregate-sql">
       <compilation-unit name="sum_numeric_null">
         <output-dir compare="Text">sum_numeric_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="sum_distinct">
+        <output-dir compare="Text">sum_distinct</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>
@@ -2829,6 +2879,11 @@
     <test-case FilePath="group-by">
       <compilation-unit name="sugar-05-2">
         <output-dir compare="Text">core-05</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="group-by">
+      <compilation-unit name="sugar-06-distinct">
+        <output-dir compare="Text">sugar-06-distinct</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="group-by">

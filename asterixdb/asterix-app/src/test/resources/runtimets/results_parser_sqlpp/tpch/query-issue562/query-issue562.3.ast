@@ -89,7 +89,7 @@ FunctionDecl q22_customer_tmp([]) {
 Query:
 Let Variable [ Name=$avg ]
   :=
-  FunctionCall tpch.avg@1[
+  FunctionCall asterix.avg@1[
     (
       SELECT ELEMENT [
       FieldAccessor [
@@ -179,7 +179,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [numcust]
     :
-    FunctionCall tpch.sql-count@1[
+    FunctionCall asterix.sql-count@1[
       (
         SELECT ELEMENT [
         FieldAccessor [
@@ -196,7 +196,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [totacctbal]
     :
-    FunctionCall tpch.sum@1[
+    FunctionCall asterix.sum@1[
       (
         SELECT ELEMENT [
         FieldAccessor [
@@ -229,7 +229,7 @@ FROM [  FunctionCall tpch.q22_customer_tmp@0[
 ]
 Where
   OperatorExpr [
-    FunctionCall tpch.count@1[
+    FunctionCall asterix.count@1[
       (
         SELECT ELEMENT [
         Variable [ Name=$o ]

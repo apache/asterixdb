@@ -3,7 +3,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [count1]
     :
-    FunctionCall null.count@1[
+    FunctionCall asterix.count@1[
       OrderedListConstructor [
         FunctionCall null.float@1[
           LiteralExpr [STRING] [2.0]
@@ -19,7 +19,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [average1]
     :
-    FunctionCall null.avg@1[
+    FunctionCall asterix.avg@1[
       OrderedListConstructor [
         FunctionCall null.float@1[
           LiteralExpr [STRING] [2.0]
@@ -35,7 +35,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [sum1]
     :
-    FunctionCall null.sum@1[
+    FunctionCall asterix.sum@1[
       OrderedListConstructor [
         FunctionCall null.float@1[
           LiteralExpr [STRING] [2.0]
@@ -51,7 +51,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [min1]
     :
-    FunctionCall null.min@1[
+    FunctionCall asterix.min@1[
       OrderedListConstructor [
         FunctionCall null.float@1[
           LiteralExpr [STRING] [2.0]
@@ -67,7 +67,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [max1]
     :
-    FunctionCall null.max@1[
+    FunctionCall asterix.max@1[
       OrderedListConstructor [
         FunctionCall null.float@1[
           LiteralExpr [STRING] [2.0]
@@ -83,7 +83,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [count2]
     :
-    FunctionCall null.count@1[
+    FunctionCall asterix.count@1[
       UnorderedListConstructor [
         FunctionCall null.float@1[
           LiteralExpr [STRING] [2.0]
@@ -99,7 +99,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [average2]
     :
-    FunctionCall null.avg@1[
+    FunctionCall asterix.avg@1[
       UnorderedListConstructor [
         FunctionCall null.float@1[
           LiteralExpr [STRING] [2.0]
@@ -115,7 +115,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [sum2]
     :
-    FunctionCall null.sum@1[
+    FunctionCall asterix.sum@1[
       UnorderedListConstructor [
         FunctionCall null.float@1[
           LiteralExpr [STRING] [2.0]
@@ -131,7 +131,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [min2]
     :
-    FunctionCall null.min@1[
+    FunctionCall asterix.min@1[
       UnorderedListConstructor [
         FunctionCall null.float@1[
           LiteralExpr [STRING] [2.0]
@@ -147,7 +147,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [max2]
     :
-    FunctionCall null.max@1[
+    FunctionCall asterix.max@1[
       UnorderedListConstructor [
         FunctionCall null.float@1[
           LiteralExpr [STRING] [2.0]

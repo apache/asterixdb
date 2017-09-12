@@ -144,7 +144,7 @@ FROM [  (
               )
 
             Orderby
-              FunctionCall fuzzyjoin.sql-count@1[
+              FunctionCall asterix.sql-count@1[
                 (
                   SELECT ELEMENT [
                   FunctionCall Metadata.resolve@-1[
@@ -172,7 +172,7 @@ FROM [  (
 
           )
           AS Variable [ Name=$tokenRanked ]
- AT 
+ AT
 Variable [ Name=$i ]
         ]
         Where
@@ -234,7 +234,7 @@ Variable [ Name=$i ]
               )
 
             Orderby
-              FunctionCall fuzzyjoin.sql-count@1[
+              FunctionCall asterix.sql-count@1[
                 (
                   SELECT ELEMENT [
                   FunctionCall Metadata.resolve@-1[
@@ -263,7 +263,7 @@ Variable [ Name=$i ]
 
           )
           AS Variable [ Name=$tokenRanked ]
- AT 
+ AT
 Variable [ Name=$i ]
         ]
         Where

@@ -10,7 +10,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [count]
     :
-    FunctionCall TinySocial.sql-count@1[
+    FunctionCall asterix.sql-count@1[
       (
         SELECT ELEMENT [
         LiteralExpr [LONG] [1]

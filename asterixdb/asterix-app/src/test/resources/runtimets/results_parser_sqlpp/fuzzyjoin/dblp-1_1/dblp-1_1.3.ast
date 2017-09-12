@@ -28,7 +28,7 @@ Groupby
   )
 
 Orderby
-  FunctionCall fuzzyjoin.sql-count@1[
+  FunctionCall asterix.sql-count@1[
     (
       SELECT ELEMENT [
       FieldAccessor [

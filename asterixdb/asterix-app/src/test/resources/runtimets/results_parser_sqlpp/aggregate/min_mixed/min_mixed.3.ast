@@ -1,6 +1,6 @@
 Query:
 SELECT ELEMENT [
-FunctionCall null.min@1[
+FunctionCall asterix.min@1[
   (
     SELECT ELEMENT [
     Variable [ Name=$x ]

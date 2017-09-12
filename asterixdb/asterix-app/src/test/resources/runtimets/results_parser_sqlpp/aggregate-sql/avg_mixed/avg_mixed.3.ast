@@ -1,6 +1,6 @@
 Query:
 SELECT ELEMENT [
-FunctionCall null.sql-avg@1[
+FunctionCall asterix.sql-avg@1[
   (
     SELECT ELEMENT [
     Variable [ Name=$x ]

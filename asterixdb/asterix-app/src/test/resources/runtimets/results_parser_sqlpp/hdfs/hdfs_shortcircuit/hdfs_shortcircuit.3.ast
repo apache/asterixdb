@@ -10,7 +10,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [count]
     :
-    FunctionCall test.count@1[
+    FunctionCall asterix.count@1[
       (
         SELECT ELEMENT [
         FunctionCall Metadata.resolve@-1[

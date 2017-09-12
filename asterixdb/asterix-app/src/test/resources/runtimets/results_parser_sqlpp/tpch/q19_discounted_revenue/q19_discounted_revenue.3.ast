@@ -2,7 +2,7 @@ DataverseUse tpch
 Set import-private-functions=true
 Query:
 SELECT ELEMENT [
-FunctionCall tpch.sum@1[
+FunctionCall asterix.sum@1[
   (
     SELECT ELEMENT [
     OperatorExpr [

@@ -4,7 +4,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [average]
     :
-    FunctionCall test.sql-avg@1[
+    FunctionCall asterix.sql-avg@1[
       (
         SELECT ELEMENT [
         FieldAccessor [

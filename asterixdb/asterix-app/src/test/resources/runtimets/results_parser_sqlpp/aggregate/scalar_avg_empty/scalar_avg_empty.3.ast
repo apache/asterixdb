@@ -1,6 +1,6 @@
 Query:
 SELECT ELEMENT [
-FunctionCall null.avg@1[
+FunctionCall asterix.avg@1[
   OrderedListConstructor [
   ]
 ]

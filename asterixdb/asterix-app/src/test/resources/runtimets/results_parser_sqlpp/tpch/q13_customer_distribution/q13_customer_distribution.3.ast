@@ -26,7 +26,7 @@ FROM [  (
       (
         LiteralExpr [STRING] [c_count]
         :
-        FunctionCall tpch.sum@1[
+        FunctionCall asterix.sum@1[
           (
             SELECT ELEMENT [
             FieldAccessor [
@@ -67,7 +67,7 @@ FROM [  (
           (
             LiteralExpr [STRING] [o_orderkey_count]
             :
-            FunctionCall tpch.count@1[
+            FunctionCall asterix.count@1[
               (
                 SELECT ELEMENT [
                 FieldAccessor [
@@ -145,7 +145,7 @@ Groupby
 
 Let Variable [ Name=$custdist ]
   :=
-  FunctionCall tpch.sql-count@1[
+  FunctionCall asterix.sql-count@1[
     (
       SELECT ELEMENT [
       (

@@ -193,9 +193,14 @@ public abstract class AbstractFunctionCallExpression extends AbstractLogicalExpr
             if (!equal) {
                 return false;
             }
-            for (int i = 0; i < arguments.size(); i++) {
+            int argumentCount = arguments.size();
+            List<Mutable<ILogicalExpression>> fceArguments = fce.getArguments();
+            if (argumentCount != fceArguments.size()) {
+                return false;
+            }
+            for (int i = 0; i < argumentCount; i++) {
                 ILogicalExpression argument = arguments.get(i).getValue();
-                ILogicalExpression fceArgument = fce.getArguments().get(i).getValue();
+                ILogicalExpression fceArgument = fceArguments.get(i).getValue();
                 if (!argument.equals(fceArgument)) {
                     return false;
                 }

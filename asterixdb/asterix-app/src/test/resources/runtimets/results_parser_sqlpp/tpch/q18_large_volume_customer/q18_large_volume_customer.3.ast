@@ -30,7 +30,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [sum_quantity]
     :
-    FunctionCall tpch.sum@1[
+    FunctionCall asterix.sum@1[
       (
         SELECT ELEMENT [
         FieldAccessor [
@@ -82,7 +82,7 @@ FROM [  FunctionCall Metadata.dataset@1[
       (
         LiteralExpr [STRING] [t_sum_quantity]
         :
-        FunctionCall tpch.sum@1[
+        FunctionCall asterix.sum@1[
           (
             SELECT ELEMENT [
             FieldAccessor [

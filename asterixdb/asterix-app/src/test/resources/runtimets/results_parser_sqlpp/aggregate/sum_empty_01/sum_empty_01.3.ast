@@ -1,7 +1,7 @@
 DataverseUse test
 Query:
 SELECT ELEMENT [
-FunctionCall test.sum@1[
+FunctionCall asterix.sum@1[
   (
     SELECT ELEMENT [
     Variable [ Name=$x ]

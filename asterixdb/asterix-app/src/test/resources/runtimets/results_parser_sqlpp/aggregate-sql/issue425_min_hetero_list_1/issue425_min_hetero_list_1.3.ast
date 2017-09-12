@@ -1,5 +1,5 @@
 Query:
-FunctionCall null.sql-min@1[
+FunctionCall asterix.sql-min@1[
   OrderedListConstructor [
     LiteralExpr [LONG] [748374857483]
     LiteralExpr [LONG] [23]

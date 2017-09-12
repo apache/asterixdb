@@ -11,7 +11,7 @@ RecordConstructor [
     LiteralExpr [STRING] [mkt_share]
     :
     OperatorExpr [
-      FunctionCall tpch.sum@1[
+      FunctionCall asterix.sum@1[
         (
           SELECT ELEMENT [
           CASE              OperatorExpr [
@@ -53,7 +53,7 @@ RecordConstructor [
         )
       ]
       /
-      FunctionCall tpch.sum@1[
+      FunctionCall asterix.sum@1[
         (
           SELECT ELEMENT [
           FieldAccessor [

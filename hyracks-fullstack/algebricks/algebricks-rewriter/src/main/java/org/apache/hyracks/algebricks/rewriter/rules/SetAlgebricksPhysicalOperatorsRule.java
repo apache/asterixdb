@@ -65,6 +65,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.physical.IndexInsert
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.InsertDeleteUpsertPOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.IntersectPOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.LeftOuterUnnestPOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.physical.MicroPreSortedDistinctByPOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.MicroPreclusteredGroupByPOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.NestedTupleSourcePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.PreSortedDistinctByPOperator;
@@ -135,7 +136,12 @@ public class SetAlgebricksPhysicalOperatorsRule implements IAlgebraicRewriteRule
                 }
                 case DISTINCT: {
                     DistinctOperator distinct = (DistinctOperator) op;
-                    distinct.setPhysicalOperator(new PreSortedDistinctByPOperator(distinct.getDistinctByVarList()));
+                    if (topLevelOp) {
+                        distinct.setPhysicalOperator(new PreSortedDistinctByPOperator(distinct.getDistinctByVarList()));
+                    } else {
+                        distinct.setPhysicalOperator(
+                                new MicroPreSortedDistinctByPOperator(distinct.getDistinctByVarList()));
+                    }
                     break;
                 }
                 case EMPTYTUPLESOURCE: {

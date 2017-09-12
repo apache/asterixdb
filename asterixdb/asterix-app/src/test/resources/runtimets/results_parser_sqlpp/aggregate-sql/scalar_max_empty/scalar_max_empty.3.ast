@@ -1,7 +1,7 @@
 DataverseUse test
 Query:
 SELECT ELEMENT [
-FunctionCall test.sql-max@1[
+FunctionCall asterix.sql-max@1[
   OrderedListConstructor [
   ]
 ]

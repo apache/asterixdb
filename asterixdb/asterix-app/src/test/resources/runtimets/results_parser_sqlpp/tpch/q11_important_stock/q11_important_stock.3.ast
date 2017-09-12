@@ -2,7 +2,7 @@ DataverseUse tpch
 Query:
 Let Variable [ Name=$sum ]
   :=
-  FunctionCall tpch.sum@1[
+  FunctionCall asterix.sum@1[
     (
       SELECT ELEMENT [
       OperatorExpr [
@@ -105,7 +105,7 @@ FROM [  (
       (
         LiteralExpr [STRING] [part_value]
         :
-        FunctionCall tpch.sum@1[
+        FunctionCall asterix.sum@1[
           (
             SELECT ELEMENT [
             OperatorExpr [

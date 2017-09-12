@@ -1,7 +1,7 @@
 DataverseUse test
 Query:
 SELECT ELEMENT [
-FunctionCall test.max@1[
+FunctionCall asterix.max@1[
   (
     SELECT ELEMENT [
     FieldAccessor [

@@ -5,7 +5,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [min]
     :
-    FunctionCall test.min@1[
+    FunctionCall asterix.min@1[
       (
         SELECT ELEMENT [
         FieldAccessor [
@@ -24,7 +24,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [max]
     :
-    FunctionCall test.max@1[
+    FunctionCall asterix.max@1[
       (
         SELECT ELEMENT [
         FieldAccessor [

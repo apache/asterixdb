@@ -3,7 +3,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [count]
     :
-    FunctionCall null.count@1[
+    FunctionCall asterix.count@1[
       OrderedListConstructor [
         LiteralExpr [LONG] [1]
         LiteralExpr [LONG] [60]
@@ -14,7 +14,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [average]
     :
-    FunctionCall null.avg@1[
+    FunctionCall asterix.avg@1[
       OrderedListConstructor [
         LiteralExpr [LONG] [1]
         LiteralExpr [LONG] [60]
@@ -25,7 +25,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [sum]
     :
-    FunctionCall null.sum@1[
+    FunctionCall asterix.sum@1[
       OrderedListConstructor [
         LiteralExpr [LONG] [1]
         LiteralExpr [LONG] [60]
@@ -36,7 +36,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [min]
     :
-    FunctionCall null.min@1[
+    FunctionCall asterix.min@1[
       OrderedListConstructor [
         LiteralExpr [LONG] [1]
         LiteralExpr [LONG] [60]
@@ -47,7 +47,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [max]
     :
-    FunctionCall null.max@1[
+    FunctionCall asterix.max@1[
       OrderedListConstructor [
         LiteralExpr [LONG] [1]
         LiteralExpr [LONG] [60]

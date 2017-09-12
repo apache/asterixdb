@@ -3,7 +3,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [sql-count]
     :
-    FunctionCall null.sql-count@1[
+    FunctionCall asterix.sql-count@1[
       OrderedListConstructor [
         LiteralExpr [LONG] [1]
         LiteralExpr [LONG] [60]
@@ -14,7 +14,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [average]
     :
-    FunctionCall null.sql-avg@1[
+    FunctionCall asterix.sql-avg@1[
       OrderedListConstructor [
         LiteralExpr [LONG] [1]
         LiteralExpr [LONG] [60]
@@ -25,7 +25,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [sql-sum]
     :
-    FunctionCall null.sql-sum@1[
+    FunctionCall asterix.sql-sum@1[
       OrderedListConstructor [
         LiteralExpr [LONG] [1]
         LiteralExpr [LONG] [60]
@@ -36,7 +36,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [sql-min]
     :
-    FunctionCall null.sql-min@1[
+    FunctionCall asterix.sql-min@1[
       OrderedListConstructor [
         LiteralExpr [LONG] [1]
         LiteralExpr [LONG] [60]
@@ -47,7 +47,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [sql-max]
     :
-    FunctionCall null.sql-max@1[
+    FunctionCall asterix.sql-max@1[
       OrderedListConstructor [
         LiteralExpr [LONG] [1]
         LiteralExpr [LONG] [60]

@@ -37,7 +37,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [count_suppkey]
     :
-    FunctionCall tpch.sql-count@1[
+    FunctionCall asterix.sql-count@1[
       (
         SELECT ELEMENT [
         FieldAccessor [

@@ -1,7 +1,7 @@
 DataverseUse test
 Query:
 SELECT ELEMENT [
-FunctionCall test.sql-avg@1[
+FunctionCall asterix.sql-avg@1[
   (
     SELECT ELEMENT [
     FieldAccessor [

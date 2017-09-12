@@ -36,7 +36,7 @@ Groupby
 
 Let Variable [ Name=$c ]
   :=
-  FunctionCall TinySocial.sql-count@1[
+  FunctionCall asterix.sql-count@1[
     (
       SELECT ELEMENT [
       LiteralExpr [LONG] [1]

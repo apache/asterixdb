@@ -21,7 +21,7 @@ RecordConstructor [
         (
           LiteralExpr [STRING] [item_count]
           :
-          FunctionCall multitask.sql-count@1[
+          FunctionCall asterix.sql-count@1[
             (
               SELECT ELEMENT [
               FieldAccessor [
@@ -73,7 +73,7 @@ RecordConstructor [
       Orderby
         Variable [ Name=$subgid ]
         ASC
-        FunctionCall multitask.sql-count@1[
+        FunctionCall asterix.sql-count@1[
           (
             SELECT ELEMENT [
             FieldAccessor [
@@ -94,7 +94,7 @@ RecordConstructor [
 ]
 FROM [  FunctionCall multitask.overlap-bins@3[
     FunctionCall multitask.interval@2[
-      FunctionCall multitask.min@1[
+      FunctionCall asterix.min@1[
         (
           SELECT ELEMENT [
           FieldAccessor [
@@ -109,7 +109,7 @@ FROM [  FunctionCall multitask.overlap-bins@3[
           ]
         )
       ]
-      FunctionCall multitask.max@1[
+      FunctionCall asterix.max@1[
         (
           SELECT ELEMENT [
           OperatorExpr [

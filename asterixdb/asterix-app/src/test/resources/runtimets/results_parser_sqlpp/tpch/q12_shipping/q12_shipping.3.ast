@@ -10,7 +10,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [high_line_count]
     :
-    FunctionCall tpch.sum@1[
+    FunctionCall asterix.sum@1[
       (
         SELECT ELEMENT [
         CASE            OperatorExpr [
@@ -63,7 +63,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [low_line_count]
     :
-    FunctionCall tpch.sum@1[
+    FunctionCall asterix.sum@1[
       (
         SELECT ELEMENT [
         CASE            LiteralExpr [TRUE]

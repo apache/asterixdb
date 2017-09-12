@@ -4,7 +4,7 @@ SELECT ELEMENT [
 OperatorExpr [
   LiteralExpr [DOUBLE] [100.0]
   *
-  FunctionCall tpch.sum@1[
+  FunctionCall asterix.sum@1[
     (
       SELECT ELEMENT [
       CASE          OperatorExpr [
@@ -56,7 +56,7 @@ OperatorExpr [
     )
   ]
   /
-  FunctionCall tpch.sum@1[
+  FunctionCall asterix.sum@1[
     (
       SELECT ELEMENT [
       OperatorExpr [

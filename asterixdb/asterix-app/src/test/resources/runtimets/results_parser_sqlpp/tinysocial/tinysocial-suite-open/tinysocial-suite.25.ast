@@ -1,7 +1,7 @@
 DataverseUse TinySocial
 Query:
 SELECT ELEMENT [
-FunctionCall TinySocial.avg@1[
+FunctionCall asterix.avg@1[
   (
     SELECT ELEMENT [
     FunctionCall TinySocial.string-length@1[

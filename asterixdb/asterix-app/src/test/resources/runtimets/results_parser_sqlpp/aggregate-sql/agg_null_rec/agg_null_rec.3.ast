@@ -4,7 +4,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [sql-count]
     :
-    FunctionCall test.sql-count@1[
+    FunctionCall asterix.sql-count@1[
       (
         SELECT ELEMENT [
         FieldAccessor [
@@ -23,7 +23,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [average]
     :
-    FunctionCall test.sql-avg@1[
+    FunctionCall asterix.sql-avg@1[
       (
         SELECT ELEMENT [
         FieldAccessor [
@@ -42,7 +42,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [sql-sum]
     :
-    FunctionCall test.sql-sum@1[
+    FunctionCall asterix.sql-sum@1[
       (
         SELECT ELEMENT [
         FieldAccessor [
@@ -61,7 +61,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [sql-min]
     :
-    FunctionCall test.sql-min@1[
+    FunctionCall asterix.sql-min@1[
       (
         SELECT ELEMENT [
         FieldAccessor [
@@ -80,7 +80,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [sql-max]
     :
-    FunctionCall test.sql-max@1[
+    FunctionCall asterix.sql-max@1[
       (
         SELECT ELEMENT [
         FieldAccessor [

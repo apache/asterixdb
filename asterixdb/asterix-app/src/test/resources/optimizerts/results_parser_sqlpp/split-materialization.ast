@@ -33,7 +33,7 @@ Let Variable [ Name=$lonelyusers ]
     ]
     Where
       OperatorExpr [
-        FunctionCall TinySocial.count@1[
+        FunctionCall asterix.count@1[
           FieldAccessor [
             Variable [ Name=$d ]
             Field=friend-ids
@@ -56,7 +56,7 @@ Let Variable [ Name=$lonelyusers2 ]
     ]
     Where
       OperatorExpr [
-        FunctionCall TinySocial.count@1[
+        FunctionCall asterix.count@1[
           FieldAccessor [
             Variable [ Name=$d ]
             Field=friend-ids

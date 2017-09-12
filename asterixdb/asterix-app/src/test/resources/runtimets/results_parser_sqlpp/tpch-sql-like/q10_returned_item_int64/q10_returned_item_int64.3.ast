@@ -335,7 +335,7 @@ Groupby
 
 Let Variable [ Name=$revenue ]
   :=
-  FunctionCall tpch.sum@1[
+  FunctionCall asterix.sum@1[
     (
       SELECT ELEMENT [
       OperatorExpr [

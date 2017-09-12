@@ -614,7 +614,7 @@ class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator imp
             returnVar = context.getVar(varExpr.getVar().getId());
         } else {
             returnVar = context.newVar();
-            returnOperator = new AssignOperator(returnVar, new MutableObject<ILogicalExpression>(eo.first));
+            returnOperator = new AssignOperator(returnVar, new MutableObject<>(eo.first));
             returnOperator.getInputs().add(eo.second);
         }
         if (selectClause.distinct()) {

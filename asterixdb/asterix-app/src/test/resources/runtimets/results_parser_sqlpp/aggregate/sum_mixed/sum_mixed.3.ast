@@ -1,6 +1,6 @@
 Query:
 SELECT ELEMENT [
-FunctionCall null.sum@1[
+FunctionCall asterix.sum@1[
   (
     SELECT ELEMENT [
     Variable [ Name=$x ]

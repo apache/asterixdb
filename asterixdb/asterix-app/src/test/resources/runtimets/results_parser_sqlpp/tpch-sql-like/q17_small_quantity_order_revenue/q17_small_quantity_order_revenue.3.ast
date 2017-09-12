@@ -14,7 +14,7 @@ FunctionDecl tmp([]) {
         OperatorExpr [
           LiteralExpr [DOUBLE] [0.2]
           *
-          FunctionCall tpch.avg@1[
+          FunctionCall asterix.avg@1[
             (
               SELECT ELEMENT [
               FieldAccessor [
@@ -56,7 +56,7 @@ FunctionDecl tmp([]) {
 Query:
 SELECT ELEMENT [
 OperatorExpr [
-  FunctionCall tpch.sum@1[
+  FunctionCall asterix.sum@1[
     (
       SELECT ELEMENT [
       FieldAccessor [

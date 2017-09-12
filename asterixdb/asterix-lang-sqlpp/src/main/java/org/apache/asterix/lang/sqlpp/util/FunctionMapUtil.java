@@ -104,7 +104,7 @@ public class FunctionMapUtil {
         if (!isSql92AggregateFunction(fs)) {
             return fs;
         }
-        return new FunctionSignature(fs.getNamespace(), CORE_SQL_AGGREGATE_PREFIX + fs.getName(),
+        return new FunctionSignature(FunctionConstants.ASTERIX_NS, CORE_SQL_AGGREGATE_PREFIX + fs.getName(),
                 fs.getArity());
     }
 
@@ -161,7 +161,7 @@ public class FunctionMapUtil {
         boolean coreAgg = name.startsWith(CORE_AGGREGATE_PREFIX);
         String lowerCaseName = coreAgg ? name.substring(CORE_AGGREGATE_PREFIX.length())
                 : (INTERNAL_SQL_AGGREGATE_PREFIX + name.substring(CORE_SQL_AGGREGATE_PREFIX.length()));
-        return new FunctionSignature(fs.getNamespace(), lowerCaseName, fs.getArity());
+        return new FunctionSignature(FunctionConstants.ASTERIX_NS, lowerCaseName, fs.getArity());
     }
 
 }

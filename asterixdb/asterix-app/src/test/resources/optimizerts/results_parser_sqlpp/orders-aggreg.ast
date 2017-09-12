@@ -22,7 +22,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [ordpercust]
     :
-    FunctionCall orders-aggreg.count@1[
+    FunctionCall asterix.count@1[
       FunctionCall Metadata.resolve@-1[
         LiteralExpr [STRING] [o]
         Variable [ Name=$cid ]
@@ -33,7 +33,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [totalcust]
     :
-    FunctionCall orders-aggreg.sum@1[
+    FunctionCall asterix.sum@1[
       (
         SELECT ELEMENT [
         FieldAccessor [
@@ -52,7 +52,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [avgcust]
     :
-    FunctionCall orders-aggreg.avg@1[
+    FunctionCall asterix.avg@1[
       (
         SELECT ELEMENT [
         FieldAccessor [

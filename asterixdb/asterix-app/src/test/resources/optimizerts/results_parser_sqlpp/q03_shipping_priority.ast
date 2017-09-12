@@ -173,7 +173,7 @@ Groupby
 
 Let Variable [ Name=$revenue ]
   :=
-  FunctionCall q3_shipping_priority.sum@1[
+  FunctionCall asterix.sum@1[
     (
       SELECT ELEMENT [
       OperatorExpr [

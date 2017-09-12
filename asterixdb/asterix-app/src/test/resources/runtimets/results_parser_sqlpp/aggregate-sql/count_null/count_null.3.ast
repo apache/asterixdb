@@ -4,7 +4,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [sql-count]
     :
-    FunctionCall test.sql-count@1[
+    FunctionCall asterix.sql-count@1[
       (
         SELECT ELEMENT [
         FieldAccessor [

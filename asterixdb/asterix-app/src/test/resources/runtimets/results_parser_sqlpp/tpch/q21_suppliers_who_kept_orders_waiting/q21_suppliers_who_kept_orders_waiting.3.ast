@@ -11,7 +11,7 @@ FunctionDecl tmp1([]) {
       (
         LiteralExpr [STRING] [count_suppkey]
         :
-        FunctionCall tpch.count@1[
+        FunctionCall asterix.count@1[
           (
             SELECT ELEMENT [
             FieldAccessor [
@@ -38,7 +38,7 @@ FunctionDecl tmp1([]) {
       (
         LiteralExpr [STRING] [max_suppkey]
         :
-        FunctionCall tpch.max@1[
+        FunctionCall asterix.max@1[
           (
             SELECT ELEMENT [
             FieldAccessor [
@@ -123,7 +123,7 @@ FunctionDecl tmp2([]) {
       (
         LiteralExpr [STRING] [count_suppkey]
         :
-        FunctionCall tpch.count@1[
+        FunctionCall asterix.count@1[
           (
             SELECT ELEMENT [
             FieldAccessor [
@@ -150,7 +150,7 @@ FunctionDecl tmp2([]) {
       (
         LiteralExpr [STRING] [max_suppkey]
         :
-        FunctionCall tpch.max@1[
+        FunctionCall asterix.max@1[
           (
             SELECT ELEMENT [
             FieldAccessor [
@@ -481,7 +481,7 @@ Groupby
 
 Let Variable [ Name=$numwait ]
   :=
-  FunctionCall tpch.sql-count@1[
+  FunctionCall asterix.sql-count@1[
     (
       SELECT ELEMENT [
       (

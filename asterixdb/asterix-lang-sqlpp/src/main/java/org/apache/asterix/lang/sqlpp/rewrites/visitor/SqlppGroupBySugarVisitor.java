@@ -72,10 +72,10 @@ import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppExpressionScoping
 // GROUP AS eis(e AS e, i AS i, s AS s)
 // SELECT ELEMENT {
 //          'deptId': deptId,
-//          'star_cost': coll_sum( (FROM eis AS p SELECT ELEMENT p.e.salary + p.i.bonus) )
+//          'star_cost': array_sum( (FROM eis AS p SELECT ELEMENT p.e.salary + p.i.bonus) )
 // };
 //
-// where SUM(e.salary + i.bonus) is turned into coll_sum( (FROM eis AS p SELECT ELEMENT p.e.salary + p.i.bonus) ).
+// where SUM(e.salary + i.bonus) is turned into array_sum( (FROM eis AS p SELECT ELEMENT p.e.salary + p.i.bonus) ).
 
 public class SqlppGroupBySugarVisitor extends AbstractSqlppExpressionScopingVisitor {
 
@@ -102,7 +102,7 @@ public class SqlppGroupBySugarVisitor extends AbstractSqlppExpressionScopingVisi
         }
         if (rewritten) {
             // Rewrites the SQL-92 function name to core functions,
-            // e.g., SUM --> coll_sum
+            // e.g., SUM --> array_sum
             callExpr.setFunctionSignature(FunctionMapUtil.sql92ToCoreAggregateFunction(signature));
         }
         callExpr.setExprList(newExprList);

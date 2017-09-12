@@ -1,7 +1,7 @@
 DataverseUse test
 Query:
 SELECT ELEMENT [
-FunctionCall test.min@1[
+FunctionCall asterix.min@1[
   Variable [ Name=$y ]
 ]
 ]
@@ -15,7 +15,7 @@ Let Variable [ Name=$y ]
   :=
   (
     SELECT ELEMENT [
-    FunctionCall test.min@1[
+    FunctionCall asterix.min@1[
       Variable [ Name=$i ]
     ]
     ]

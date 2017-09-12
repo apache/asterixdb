@@ -72,7 +72,7 @@ import org.apache.hyracks.algebricks.common.utils.Pair;
 // GROUP AS eis(e AS e, i AS i, s AS s)
 // SELECT ELEMENT {
 //  'deptId': deptId,
-//  'star_cost': coll_sum( (FROM eis AS p SELECT ELEMENT p.e.salary + p.i.bonus) )
+//  'star_cost': array_sum( (FROM eis AS p SELECT ELEMENT p.e.salary + p.i.bonus) )
 // };
 /**
  * The transformation include three things:
@@ -81,7 +81,7 @@ import org.apache.hyracks.algebricks.common.utils.Pair;
  * expression is not a subquery;
  * 3. Turn a SQL-92 aggregate function into a SQL++ core aggregate function when performing 2, e.g.,
  * SUM(e.salary + i.bonus) becomes
- * coll_sum( (FROM eis AS p SELECT ELEMENT p.e.salary + p.i.bonus) ).
+ * array_sum( (FROM eis AS p SELECT ELEMENT p.e.salary + p.i.bonus) ).
  */
 
 public class SqlppGroupByVisitor extends AbstractSqlppExpressionScopingVisitor {

@@ -1,7 +1,7 @@
 DataverseUse SocialNetworkData
 Query:
 SELECT ELEMENT [
-FunctionCall SocialNetworkData.count@1[
+FunctionCall asterix.count@1[
   (
     SELECT ELEMENT [
     Variable [ Name=$h ]

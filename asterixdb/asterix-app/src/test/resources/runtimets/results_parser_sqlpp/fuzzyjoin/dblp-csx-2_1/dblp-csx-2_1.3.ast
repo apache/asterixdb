@@ -115,7 +115,7 @@ Let Variable [ Name=$tokensDBLP ]
           )
 
         Orderby
-          FunctionCall fuzzyjoin.sql-count@1[
+          FunctionCall asterix.sql-count@1[
             (
               SELECT ELEMENT [
               FieldAccessor [
@@ -134,7 +134,7 @@ Let Variable [ Name=$tokensDBLP ]
 
       )
       AS Variable [ Name=$tokenRanked ]
- AT 
+ AT
 Variable [ Name=$i ]
     ]
     Where
@@ -190,7 +190,7 @@ Let Variable [ Name=$tokensCSX ]
           )
 
         Orderby
-          FunctionCall fuzzyjoin.sql-count@1[
+          FunctionCall asterix.sql-count@1[
             (
               SELECT ELEMENT [
               FieldAccessor [
@@ -209,7 +209,7 @@ Let Variable [ Name=$tokensCSX ]
 
       )
       AS Variable [ Name=$tokenRanked ]
- AT 
+ AT
 Variable [ Name=$i ]
     ]
     Where

@@ -2484,13 +2484,16 @@ Expression FunctionCallExpr() throws ParseException:
   FunctionName funcName = null;
   String hint = null;
   boolean star = false;
+  boolean distinct = false;
 }
 {
   funcName = FunctionName()
     {
       hint = funcName.hint;
     }
-  <LEFTPAREN> ( ( tmp = Expression() | <MUL> { star = true; } )
+  <LEFTPAREN> (
+    ( <DISTINCT> { distinct = true; } )?
+    ( tmp = Expression() | <MUL> { star = true; } )
     {
       if(star){
         if(!funcName.function.toLowerCase().equals("count")){
@@ -2509,8 +2512,12 @@ Expression FunctionCallExpr() throws ParseException:
     }
   )*)? <RIGHTPAREN>
     {
+      String name = funcName.function;
+      if (distinct) {
+        name += "-distinct";
+      }
       // TODO use funcName.library
-      String fqFunctionName = funcName.library == null ? funcName.function : funcName.library + "#" + funcName.function;
+      String fqFunctionName = funcName.library == null ? name : funcName.library + "#" + name;
       FunctionSignature signature
         = lookupFunctionSignature(funcName.dataverse, fqFunctionName, arity);
       if (signature == null) {

@@ -11,7 +11,7 @@ FunctionDecl revenue([]) {
       (
         LiteralExpr [STRING] [total_revenue]
         :
-        FunctionCall tpch.sum@1[
+        FunctionCall asterix.sum@1[
           (
             SELECT ELEMENT [
             OperatorExpr [
@@ -82,7 +82,7 @@ FunctionDecl revenue([]) {
 Query:
 Let Variable [ Name=$m ]
   :=
-  FunctionCall tpch.max@1[
+  FunctionCall asterix.max@1[
     (
       SELECT ELEMENT [
       FieldAccessor [

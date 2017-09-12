@@ -6,7 +6,7 @@ OrderedListConstructor [
     Variable [ Name=$x ]
     Field=int_m
   ]
-  FunctionCall test.count@1[
+  FunctionCall asterix.count@1[
     (
       SELECT ELEMENT [
       Variable [ Name=$x ]

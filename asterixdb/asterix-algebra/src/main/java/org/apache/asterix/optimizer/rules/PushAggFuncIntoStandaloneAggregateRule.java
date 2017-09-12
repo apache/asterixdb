@@ -44,6 +44,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBina
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
@@ -78,8 +79,7 @@ public class PushAggFuncIntoStandaloneAggregateRule implements IAlgebraicRewrite
             AbstractBinaryJoinOperator join = (AbstractBinaryJoinOperator) op2;
             // Tries to push aggregates through the join.
             if (containsAggregate(assignOp.getExpressions()) && pushableThroughJoin(join)) {
-                pushAggregateFunctionThroughJoin(join, assignOp, context);
-                return true;
+                return pushAggregateFunctionThroughJoin(join, assignOp, context);
             }
         }
         return false;
@@ -152,27 +152,29 @@ public class PushAggFuncIntoStandaloneAggregateRule implements IAlgebraicRewrite
      * @param context
      * @throws AlgebricksException
      */
-    private void pushAggregateFunctionThroughJoin(AbstractBinaryJoinOperator join, AssignOperator assignOp,
+    private boolean pushAggregateFunctionThroughJoin(AbstractBinaryJoinOperator join, AssignOperator assignOp,
             IOptimizationContext context) throws AlgebricksException {
+        boolean applied = false;
         for (Mutable<ILogicalOperator> branchRef : join.getInputs()) {
             AbstractLogicalOperator branch = (AbstractLogicalOperator) branchRef.getValue();
             if (branch.getOperatorTag() == LogicalOperatorTag.AGGREGATE) {
                 AggregateOperator aggOp = (AggregateOperator) branch;
-                pushAggregateFunction(aggOp, assignOp, context);
+                applied |= pushAggregateFunction(aggOp, assignOp, context);
             } else if (branch.getOperatorTag() == LogicalOperatorTag.INNERJOIN
                     || branch.getOperatorTag() == LogicalOperatorTag.LEFTOUTERJOIN) {
                 AbstractBinaryJoinOperator childJoin = (AbstractBinaryJoinOperator) branch;
-                pushAggregateFunctionThroughJoin(childJoin, assignOp, context);
+                applied |= pushAggregateFunctionThroughJoin(childJoin, assignOp, context);
             }
         }
+        return applied;
     }
 
     private boolean pushAggregateFunction(AggregateOperator aggOp, AssignOperator assignOp, IOptimizationContext context)
             throws AlgebricksException {
         Mutable<ILogicalOperator> opRef3 = aggOp.getInputs().get(0);
         AbstractLogicalOperator op3 = (AbstractLogicalOperator) opRef3.getValue();
-        // If there's a group by below the agg, then we want to have the agg pushed into the group by.
-        if (op3.getOperatorTag() == LogicalOperatorTag.GROUP) {
+        // If there's a group by below the agg, then we want to have the agg pushed into the group by
+        if (op3.getOperatorTag() == LogicalOperatorTag.GROUP && !((GroupByOperator) op3).getNestedPlans().isEmpty()) {
             return false;
         }
         if (aggOp.getVariables().size() != 1) {

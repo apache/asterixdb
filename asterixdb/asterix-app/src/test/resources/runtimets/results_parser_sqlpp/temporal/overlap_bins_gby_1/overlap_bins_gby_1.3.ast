@@ -10,7 +10,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [count]
     :
-    FunctionCall test.sql-count@1[
+    FunctionCall asterix.sql-count@1[
       (
         SELECT ELEMENT [
         (
@@ -31,7 +31,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [total_ms]
     :
-    FunctionCall test.sum@1[
+    FunctionCall asterix.sum@1[
       (
         SELECT ELEMENT [
         FunctionCall test.ms-from-day-time-duration@1[

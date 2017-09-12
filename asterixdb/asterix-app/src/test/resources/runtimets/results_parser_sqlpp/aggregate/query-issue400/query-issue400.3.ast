@@ -1,5 +1,5 @@
 Query:
-FunctionCall null.count@1[
+FunctionCall asterix.count@1[
   (
     SELECT ELEMENT [
     Variable [ Name=$i ]

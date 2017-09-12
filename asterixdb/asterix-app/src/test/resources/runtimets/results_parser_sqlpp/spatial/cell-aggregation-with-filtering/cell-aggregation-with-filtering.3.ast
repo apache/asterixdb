@@ -26,9 +26,9 @@ Let Variable [ Name=$region ]
   :=
   FunctionCall test.polygon@1[
     LiteralExpr [STRING] [
-	33.80503407287759,-126.41235263538363 
-	44.9090773200516,-126.41235263538363 
-	44.9090773200516,-87.65258701038363 
+	33.80503407287759,-126.41235263538363
+	44.9090773200516,-126.41235263538363
+	44.9090773200516,-87.65258701038363
 	33.80503407287759,-87.65258701038363]
   ]
 Where
@@ -93,7 +93,7 @@ Groupby
 
 Let Variable [ Name=$num ]
   :=
-  FunctionCall test.count@1[
+  FunctionCall asterix.count@1[
     (
       SELECT ELEMENT [
       Variable [ Name=$t ]
