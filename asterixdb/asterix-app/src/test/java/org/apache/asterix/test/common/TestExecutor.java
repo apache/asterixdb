@@ -46,6 +46,7 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -66,9 +67,9 @@ import org.apache.asterix.testframework.context.TestCaseContext;
 import org.apache.asterix.testframework.context.TestCaseContext.OutputFormat;
 import org.apache.asterix.testframework.context.TestFileContext;
 import org.apache.asterix.testframework.xml.ComparisonEnum;
+import org.apache.asterix.testframework.xml.TestGroup;
 import org.apache.asterix.testframework.xml.TestCase.CompilationUnit;
 import org.apache.asterix.testframework.xml.TestCase.CompilationUnit.Parameter;
-import org.apache.asterix.testframework.xml.TestGroup;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.ByteArrayOutputStream;
@@ -1262,8 +1263,18 @@ public class TestExecutor {
                     throw new Exception("Poll limit (" + timeoutSecs + "s) exceeded without obtaining expected result");
 
                 }
-            } catch (Exception e) {
-                LOGGER.log(Level.INFO, "received exception on poll", e);
+            } catch (ExecutionException ee) {
+                Exception e;
+                if (ee.getCause() instanceof Exception) {
+                    e = (Exception) ee.getCause();
+                } else {
+                    e = ee;
+                }
+                if (e instanceof ComparisonException) {
+                    LOGGER.log(Level.INFO, "Comparison failure on poll: " + e.getMessage());
+                } else {
+                    LOGGER.log(Level.INFO, "received exception on poll", e);
+                }
                 responsesReceived++;
                 if (isExpected(e, cUnit)) {
                     expectedException = true;
