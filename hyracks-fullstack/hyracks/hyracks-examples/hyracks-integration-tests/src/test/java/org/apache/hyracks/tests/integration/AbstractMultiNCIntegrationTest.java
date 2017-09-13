@@ -43,6 +43,7 @@ import org.apache.hyracks.api.job.resource.IJobCapacityController;
 import org.apache.hyracks.client.dataset.HyracksDataset;
 import org.apache.hyracks.control.cc.BaseCCApplication;
 import org.apache.hyracks.control.cc.ClusterControllerService;
+import org.apache.hyracks.control.cc.application.CCServiceContext;
 import org.apache.hyracks.control.common.controllers.CCConfig;
 import org.apache.hyracks.control.common.controllers.NCConfig;
 import org.apache.hyracks.control.nc.NodeControllerService;
@@ -58,6 +59,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 public abstract class AbstractMultiNCIntegrationTest {
 
     private static final Logger LOGGER = Logger.getLogger(AbstractMultiNCIntegrationTest.class.getName());
+    private static final TestJobLifecycleListener jobLifecycleListener = new TestJobLifecycleListener();
 
     public static final String[] ASTERIX_IDS =
             { "asterix-001", "asterix-002", "asterix-003", "asterix-004", "asterix-005", "asterix-006", "asterix-007" };
@@ -92,7 +94,8 @@ public abstract class AbstractMultiNCIntegrationTest {
         ccConfig.setAppClass(DummyApplication.class.getName());
         cc = new ClusterControllerService(ccConfig);
         cc.start();
-
+        CCServiceContext serviceCtx = cc.getContext();
+        serviceCtx.addJobLifecycleListener(jobLifecycleListener);
         asterixNCs = new NodeControllerService[ASTERIX_IDS.length];
         for (int i = 0; i < ASTERIX_IDS.length; i++) {
             File ioDev = new File("target" + File.separator + ASTERIX_IDS[i] + File.separator + "ioDevice");
@@ -121,6 +124,7 @@ public abstract class AbstractMultiNCIntegrationTest {
             nc.stop();
         }
         cc.stop();
+        jobLifecycleListener.check();
     }
 
     protected JobId startJob(JobSpecification spec) throws Exception {

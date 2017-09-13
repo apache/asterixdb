@@ -18,7 +18,6 @@
  */
 package org.apache.asterix.app.active;
 
-import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 
@@ -90,8 +89,8 @@ public class FeedEventsListener extends ActiveEntityEventsListener {
                     ((QueryTranslator) statementExecutor).getSessionOutput(), mdProvider, feed, feedConnections,
                     compilationProvider, storageComponentProvider, statementExecutorFactory, hcc);
             JobSpecification feedJob = jobInfo.getLeft();
-            WaitForStateSubscriber eventSubscriber =
-                    new WaitForStateSubscriber(this, Collections.singleton(ActivityState.RUNNING));
+            WaitForStateSubscriber eventSubscriber = new WaitForStateSubscriber(this, EnumSet.of(ActivityState.RUNNING,
+                    ActivityState.TEMPORARILY_FAILED, ActivityState.PERMANENTLY_FAILED));
             feedJob.setProperty(ActiveNotificationHandler.ACTIVE_ENTITY_PROPERTY_NAME, entityId);
             // TODO(Yingyi): currently we do not check IFrameWriter protocol violations for Feed jobs.
             // We will need to design general exception handling mechanism for feeds.

@@ -132,6 +132,7 @@ public class ActiveNotificationHandler extends SingleThreadEventProcessor<Active
     @Override
     public synchronized void notifyJobFinish(JobId jobId, JobStatus jobStatus, List<Exception> exceptions)
             throws HyracksException {
+        LOGGER.log(level, "Getting notified of job finish for JobId: " + jobId);
         EntityId entityId = jobId2EntityId.get(jobId);
         if (entityId != null) {
             add(new ActiveEvent(jobId, Kind.JOB_FINISHED, entityId, Pair.of(jobStatus, exceptions)));

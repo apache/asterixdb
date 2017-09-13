@@ -165,6 +165,26 @@ public class ActiveEventsListenerTest {
     }
 
     @Test
+    public void testStartWhenStartFailsCompile() throws Exception {
+        Assert.assertEquals(ActivityState.STOPPED, listener.getState());
+        listener.onStart(Behavior.FAIL_COMPILE);
+        Action action = users[0].startActivity(listener);
+        action.sync();
+        assertFailure(action, 0);
+        Assert.assertEquals(ActivityState.PERMANENTLY_FAILED, listener.getState());
+    }
+
+    @Test
+    public void testStartWhenStartFailsRuntime() throws Exception {
+        Assert.assertEquals(ActivityState.STOPPED, listener.getState());
+        listener.onStart(Behavior.FAIL_RUNTIME);
+        Action action = users[0].startActivity(listener);
+        action.sync();
+        assertFailure(action, 0);
+        Assert.assertEquals(ActivityState.PERMANENTLY_FAILED, listener.getState());
+    }
+
+    @Test
     public void testStartWhenOneNodeFinishesBeforeOtherNodeStarts() throws Exception {
         Assert.assertEquals(ActivityState.STOPPED, listener.getState());
         listener.onStart(Behavior.SUCCEED);
