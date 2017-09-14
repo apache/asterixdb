@@ -71,7 +71,8 @@ public class ConfigManager implements IConfigManager, Serializable {
     private CompositeMap<IOption, Object> configurationMap = new CompositeMap<>(definedMap, defaultMap,
             new NoOpMapMutator());
     private EnumMap<Section, Map<String, IOption>> sectionMap = new EnumMap<>(Section.class);
-    private TreeMap<String, Map<IOption, Object>> nodeSpecificMap = new TreeMap<>();
+    @SuppressWarnings("squid:S1948") // TreeMap is serializable, and therefore so is its synchronized map
+    private Map<String, Map<IOption, Object>> nodeSpecificMap = Collections.synchronizedMap(new TreeMap<>());
     private transient ArrayListValuedHashMap<IOption, IConfigSetter> optionSetters = new ArrayListValuedHashMap<>();
     private final String[] args;
     private ConfigManagerApplicationConfig appConfig = new ConfigManagerApplicationConfig(this);
@@ -457,10 +458,13 @@ public class ConfigManager implements IConfigManager, Serializable {
         }
         for (Map.Entry<String, Map<IOption, Object>> nodeMapEntry : nodeSpecificMap.entrySet()) {
             String section = Section.NC.sectionName() + "/" + nodeMapEntry.getKey();
-            for (Map.Entry<IOption, Object> entry : nodeMapEntry.getValue().entrySet()) {
-                if (entry.getValue() != null) {
-                    final IOption option = entry.getKey();
-                    ini.add(section, option.ini(), option.type().serializeToIni(entry.getValue()));
+            final Map<IOption, Object> nodeValueMap = nodeMapEntry.getValue();
+            synchronized (nodeValueMap) {
+                for (Map.Entry<IOption, Object> entry : nodeValueMap.entrySet()) {
+                    if (entry.getValue() != null) {
+                        final IOption option = entry.getKey();
+                        ini.add(section, option.ini(), option.type().serializeToIni(entry.getValue()));
+                    }
                 }
             }
         }
