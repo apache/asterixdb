@@ -18,12 +18,14 @@
  */
 package org.apache.asterix.common.transactions;
 
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+
 public interface IResourceIdManager {
 
     long createResourceId();
 
     boolean reported(String nodeId);
 
-    void report(String nodeId, long maxResourceId);
+    void report(String nodeId, long maxResourceId) throws HyracksDataException;
 
 }

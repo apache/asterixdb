@@ -108,12 +108,19 @@ public class CCApplication extends BaseCCApplication {
     private IHyracksClientConnection hcc;
 
     @Override
-    public void start(IServiceContext serviceCtx, String[] args) throws Exception {
+    public void init(IServiceContext serviceCtx) throws Exception {
+        ccServiceCtx = (ICCServiceContext) serviceCtx;
+        ccServiceCtx.setThreadFactory(
+                new AsterixThreadFactory(ccServiceCtx.getThreadFactory(), new LifeCycleComponentManager()));
+    }
+
+    @Override
+    public void start(String[] args) throws Exception {
         if (args.length > 0) {
             throw new IllegalArgumentException("Unrecognized argument(s): " + Arrays.toString(args));
         }
-        final ClusterControllerService controllerService = (ClusterControllerService) serviceCtx.getControllerService();
-        this.ccServiceCtx = (ICCServiceContext) serviceCtx;
+        final ClusterControllerService controllerService = (ClusterControllerService) ccServiceCtx
+                .getControllerService();
         ccServiceCtx.setMessageBroker(new CCMessageBroker(controllerService));
 
         configureLoggingLevel(ccServiceCtx.getAppConfig().getLoggingLevel(ExternalProperties.Option.LOG_LEVEL));
@@ -122,8 +129,6 @@ public class CCApplication extends BaseCCApplication {
             LOGGER.info("Starting Asterix cluster controller");
         }
 
-        ccServiceCtx.setThreadFactory(
-                new AsterixThreadFactory(ccServiceCtx.getThreadFactory(), new LifeCycleComponentManager()));
         String strIP = ccServiceCtx.getCCContext().getClusterControllerInfo().getClientNetAddress();
         int port = ccServiceCtx.getCCContext().getClusterControllerInfo().getClientNetPort();
         hcc = new HyracksConnection(strIP, port);
@@ -207,8 +212,8 @@ public class CCApplication extends BaseCCApplication {
     }
 
     protected HttpServer setupJSONAPIServer(ExternalProperties externalProperties) throws Exception {
-        HttpServer jsonAPIServer =
-                new HttpServer(webManager.getBosses(), webManager.getWorkers(), externalProperties.getAPIServerPort());
+        HttpServer jsonAPIServer = new HttpServer(webManager.getBosses(), webManager.getWorkers(),
+                externalProperties.getAPIServerPort());
         jsonAPIServer.setAttribute(HYRACKS_CONNECTION_ATTR, hcc);
         jsonAPIServer.setAttribute(ASTERIX_APP_CONTEXT_INFO_ATTR, appCtx);
         jsonAPIServer.setAttribute(ServletConstants.EXECUTOR_SERVICE_ATTR,

@@ -80,13 +80,17 @@ public class NCApplication extends BaseNCApplication {
     }
 
     @Override
-    public void start(IServiceContext serviceCtx, String[] args) throws Exception {
-        if (args.length > 0) {
-            throw new IllegalArgumentException("Unrecognized argument(s): " + Arrays.toString(args));
-        }
+    public void init(IServiceContext serviceCtx) throws Exception {
         this.ncServiceCtx = (INCServiceContext) serviceCtx;
         ncServiceCtx.setThreadFactory(
                 new AsterixThreadFactory(ncServiceCtx.getThreadFactory(), ncServiceCtx.getLifeCycleComponentManager()));
+    }
+
+    @Override
+    public void start(String[] args) throws Exception {
+        if (args.length > 0) {
+            throw new IllegalArgumentException("Unrecognized argument(s): " + Arrays.toString(args));
+        }
         nodeId = this.ncServiceCtx.getNodeId();
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Starting Asterix node controller: " + nodeId);
@@ -111,8 +115,8 @@ public class NCApplication extends BaseNCApplication {
         MessagingProperties messagingProperties = runtimeContext.getMessagingProperties();
         IMessageBroker messageBroker = new NCMessageBroker(controllerService, messagingProperties);
         this.ncServiceCtx.setMessageBroker(messageBroker);
-        MessagingChannelInterfaceFactory interfaceFactory =
-                new MessagingChannelInterfaceFactory((NCMessageBroker) messageBroker, messagingProperties);
+        MessagingChannelInterfaceFactory interfaceFactory = new MessagingChannelInterfaceFactory(
+                (NCMessageBroker) messageBroker, messagingProperties);
         this.ncServiceCtx.setMessagingChannelInterfaceFactory(interfaceFactory);
 
         IRecoveryManager recoveryMgr = runtimeContext.getTransactionSubsystem().getRecoveryManager();
@@ -224,8 +228,8 @@ public class NCApplication extends BaseNCApplication {
         String[] ioDevices = ((PersistentLocalResourceRepository) runtimeContext.getLocalResourceRepository())
                 .getStorageMountingPoints();
         for (String ioDevice : ioDevices) {
-            String tempDatasetsDir =
-                    ioDevice + storageDirName + File.separator + StoragePathUtil.TEMP_DATASETS_STORAGE_FOLDER;
+            String tempDatasetsDir = ioDevice + storageDirName + File.separator
+                    + StoragePathUtil.TEMP_DATASETS_STORAGE_FOLDER;
             File tmpDsDir = new File(tempDatasetsDir);
             if (tmpDsDir.exists()) {
                 IoUtil.delete(tmpDsDir);

@@ -40,6 +40,7 @@ import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.replication.IFaultToleranceStrategy;
+import org.apache.asterix.common.transactions.IResourceIdManager;
 import org.apache.asterix.event.schema.cluster.Cluster;
 import org.apache.asterix.event.schema.cluster.Node;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
@@ -118,6 +119,10 @@ public class ClusterStateManager implements IClusterStateManager {
 
     @Override
     public synchronized void setState(ClusterState state) {
+        if (this.state == state) {
+            LOGGER.info("ignoring update to same cluster state of " + this.state);
+            return;
+        }
         LOGGER.info("updating cluster state from " + this.state + " to " + state.name());
         this.state = state;
         appCtx.getGlobalRecoveryManager().notifyStateChange(state);
@@ -166,24 +171,35 @@ public class ClusterStateManager implements IClusterStateManager {
             setState(ClusterState.UNUSABLE);
             return;
         }
-
         for (ClusterPartition p : clusterPartitions.values()) {
             if (!p.isActive()) {
                 setState(ClusterState.UNUSABLE);
                 return;
             }
         }
-
-        // if all storage partitions are active as well as the metadata node, then the cluster is active
+        IResourceIdManager resourceIdManager = appCtx.getResourceIdManager();
+        for (String node : activeNcConfiguration.keySet()) {
+            if (!resourceIdManager.reported(node)) {
+                LOGGER.log(Level.INFO, "Partitions are ready but %s has not yet registered its max resource id...",
+                        node);
+                setState(ClusterState.UNUSABLE);
+                return;
+            }
+        }
+        // the metadata bootstrap & global recovery must be complete before the cluster can be active
         if (metadataNodeActive) {
-            if (state != ClusterState.ACTIVE) {
+            if (state != ClusterState.ACTIVE && state != ClusterState.RECOVERING) {
                 setState(ClusterState.PENDING);
             }
             appCtx.getMetadataBootstrap().init();
-            setState(ClusterState.ACTIVE);
-            notifyAll();
-            // start global recovery
-            appCtx.getGlobalRecoveryManager().startGlobalRecovery(appCtx);
+
+            if (appCtx.getGlobalRecoveryManager().isRecoveryCompleted()) {
+                setState(ClusterState.ACTIVE);
+            } else {
+                // start global recovery
+                setState(ClusterState.RECOVERING);
+                appCtx.getGlobalRecoveryManager().startGlobalRecovery(appCtx);
+            }
         } else {
             setState(ClusterState.PENDING);
         }
@@ -269,8 +285,8 @@ public class ClusterStateManager implements IClusterStateManager {
                 clusterActiveLocations.add(p.getActiveNodeId());
             }
         }
-        clusterPartitionConstraint =
-                new AlgebricksAbsolutePartitionConstraint(clusterActiveLocations.toArray(new String[] {}));
+        clusterPartitionConstraint = new AlgebricksAbsolutePartitionConstraint(
+                clusterActiveLocations.toArray(new String[] {}));
     }
 
     @Override
@@ -432,8 +448,8 @@ public class ClusterStateManager implements IClusterStateManager {
     }
 
     private void updateNodeConfig(String nodeId, Map<IOption, Object> configuration) {
-        ConfigManager configManager =
-                ((ConfigManagerApplicationConfig) appCtx.getServiceContext().getAppConfig()).getConfigManager();
+        ConfigManager configManager = ((ConfigManagerApplicationConfig) appCtx.getServiceContext().getAppConfig())
+                .getConfigManager();
         for (Map.Entry<IOption, Object> entry : configuration.entrySet()) {
             if (entry.getKey().section() == Section.NC) {
                 configManager.set(nodeId, entry.getKey(), entry.getValue());

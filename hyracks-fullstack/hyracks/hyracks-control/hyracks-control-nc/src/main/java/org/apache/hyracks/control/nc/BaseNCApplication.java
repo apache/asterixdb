@@ -41,7 +41,12 @@ public class BaseNCApplication implements INCApplication {
     }
 
     @Override
-    public void start(IServiceContext ncAppCtx, String[] args) throws Exception {
+    public void init(IServiceContext serviceCtx) throws Exception {
+        // no-op
+    }
+
+    @Override
+    public void start(String[] args) throws Exception {
         if (args.length > 0) {
             throw new IllegalArgumentException("Unrecognized argument(s): " + Arrays.toString(args));
         }

@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.metadata;
 
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -29,7 +30,9 @@ import java.util.logging.Logger;
 public class GarbageCollector implements Runnable {
     private static final Logger LOGGER = Logger.getLogger(GarbageCollector.class.getName());
 
-    private static final long CLEANUP_PERIOD = 3600L * 24;
+    // TODO(mblow): make this configurable
+    private static final long CLEANUP_PERIOD = 1;
+    private static final TimeUnit CLEANUP_PERIOD_UNIT = TimeUnit.DAYS;
 
     static {
         // Starts the garbage collector thread which
@@ -40,13 +43,13 @@ public class GarbageCollector implements Runnable {
     }
 
     @Override
-    @SuppressWarnings("squid:S2142") // rethrow or interrupt thread on InterruptedException
+    @SuppressWarnings({"squid:S2142", "squid:S2189"}) // rethrow/interrupt thread on InterruptedException, endless loop
     public void run() {
         LOGGER.info("Starting Metadata GC");
         while (true) {
             try {
                 synchronized (this) {
-                    this.wait(CLEANUP_PERIOD);
+                    CLEANUP_PERIOD_UNIT.timedWait(this, CLEANUP_PERIOD);
                 }
                 MetadataManager.INSTANCE.cleanupTempDatasets();
             } catch (InterruptedException e) {

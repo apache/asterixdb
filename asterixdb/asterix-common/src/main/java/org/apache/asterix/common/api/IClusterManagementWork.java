@@ -20,23 +20,24 @@ package org.apache.asterix.common.api;
 
 public interface IClusterManagementWork {
 
-    public enum WorkType {
+    enum WorkType {
         ADD_NODE,
         REMOVE_NODE
     }
 
-    public enum ClusterState {
-        STARTING,
-        PENDING,
-        ACTIVE,
-        UNUSABLE,
-        REBALANCING,
-        SHUTTING_DOWN
+    enum ClusterState {
+        STARTING,       // the initial state
+        UNUSABLE,       // one or more cluster partitions are inactive or max id resources have not been reported
+        PENDING,        // the metadata node has not yet joined & initialized
+        RECOVERING,     // global recovery has not yet completed
+        ACTIVE,         // cluster is ACTIVE and ready for requests
+        REBALANCING,    // replication is processing failbacks
+        SHUTTING_DOWN   // a shutdown request has been received, and is underway
     }
 
-    public WorkType getClusterManagementWorkType();
+    WorkType getClusterManagementWorkType();
 
-    public int getWorkId();
+    int getWorkId();
 
-    public IClusterEventsSubscriber getSourceSubscriber();
+    IClusterEventsSubscriber getSourceSubscriber();
 }

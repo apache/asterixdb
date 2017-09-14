@@ -92,11 +92,8 @@ public class GlobalRecoveryManager implements IGlobalRecoveryManager {
         MetadataTransactionContext mdTxnCtx = null;
         try {
             MetadataManager.INSTANCE.init();
-            // Loop over datasets
             mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
-            for (Dataverse dataverse : MetadataManager.INSTANCE.getDataverses(mdTxnCtx)) {
-                mdTxnCtx = recoverDataset(appCtx, mdTxnCtx, dataverse);
-            }
+            mdTxnCtx = doRecovery(appCtx, mdTxnCtx);
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
         } catch (Exception e) {
             // This needs to be fixed <-- Needs to shutdown the system -->
@@ -109,8 +106,8 @@ public class GlobalRecoveryManager implements IGlobalRecoveryManager {
                 try {
                     MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
                 } catch (Exception e1) {
-                    LOGGER.log(Level.SEVERE, "Exception in aborting", e1);
-                    e1.addSuppressed(e);
+                    LOGGER.log(Level.SEVERE, "Exception aborting metadata transaction", e1);
+                    e.addSuppressed(e1);
                     throw new IllegalStateException(e);
                 }
             }
@@ -118,11 +115,21 @@ public class GlobalRecoveryManager implements IGlobalRecoveryManager {
         }
         recoveryCompleted = true;
         LOGGER.info("Global Recovery Completed");
+        appCtx.getClusterStateManager().refreshState();
+    }
+
+    protected MetadataTransactionContext doRecovery(ICcApplicationContext appCtx, MetadataTransactionContext mdTxnCtx)
+            throws Exception {
+        // Loop over datasets
+        for (Dataverse dataverse : MetadataManager.INSTANCE.getDataverses(mdTxnCtx)) {
+            mdTxnCtx = recoverDataset(appCtx, mdTxnCtx, dataverse);
+        }
+        return mdTxnCtx;
     }
 
     @Override
     public void notifyStateChange(ClusterState newState) {
-        if (newState != ClusterState.ACTIVE) {
+        if (newState != ClusterState.ACTIVE && newState != ClusterState.RECOVERING) {
             recoveryCompleted = false;
         }
     }
@@ -132,8 +139,8 @@ public class GlobalRecoveryManager implements IGlobalRecoveryManager {
         if (!dataverse.getDataverseName().equals(MetadataConstants.METADATA_DATAVERSE_NAME)) {
             MetadataProvider metadataProvider = new MetadataProvider(appCtx, dataverse);
             try {
-                List<Dataset> datasets =
-                        MetadataManager.INSTANCE.getDataverseDatasets(mdTxnCtx, dataverse.getDataverseName());
+                List<Dataset> datasets = MetadataManager.INSTANCE.getDataverseDatasets(mdTxnCtx,
+                        dataverse.getDataverseName());
                 for (Dataset dataset : datasets) {
                     if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
                         // External dataset
@@ -145,8 +152,8 @@ public class GlobalRecoveryManager implements IGlobalRecoveryManager {
                         TransactionState datasetState = dsd.getState();
                         if (!indexes.isEmpty()) {
                             if (datasetState == TransactionState.BEGIN) {
-                                List<ExternalFile> files =
-                                        MetadataManager.INSTANCE.getDatasetExternalFiles(mdTxnCtx, dataset);
+                                List<ExternalFile> files = MetadataManager.INSTANCE.getDatasetExternalFiles(mdTxnCtx,
+                                        dataset);
                                 // if persumed abort, roll backward
                                 // 1. delete all pending files
                                 for (ExternalFile file : files) {
@@ -157,8 +164,8 @@ public class GlobalRecoveryManager implements IGlobalRecoveryManager {
                             }
                             // 2. clean artifacts in NCs
                             metadataProvider.setMetadataTxnContext(mdTxnCtx);
-                            JobSpecification jobSpec =
-                                    ExternalIndexingOperations.buildAbortOp(dataset, indexes, metadataProvider);
+                            JobSpecification jobSpec = ExternalIndexingOperations.buildAbortOp(dataset, indexes,
+                                    metadataProvider);
                             executeHyracksJob(jobSpec);
                             // 3. correct the dataset state
                             ((ExternalDatasetDetails) dataset.getDatasetDetails()).setState(TransactionState.COMMIT);
@@ -166,13 +173,13 @@ public class GlobalRecoveryManager implements IGlobalRecoveryManager {
                             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
                             mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
                         } else if (datasetState == TransactionState.READY_TO_COMMIT) {
-                            List<ExternalFile> files =
-                                    MetadataManager.INSTANCE.getDatasetExternalFiles(mdTxnCtx, dataset);
+                            List<ExternalFile> files = MetadataManager.INSTANCE.getDatasetExternalFiles(mdTxnCtx,
+                                    dataset);
                             // if ready to commit, roll forward
                             // 1. commit indexes in NCs
                             metadataProvider.setMetadataTxnContext(mdTxnCtx);
-                            JobSpecification jobSpec =
-                                    ExternalIndexingOperations.buildRecoverOp(dataset, indexes, metadataProvider);
+                            JobSpecification jobSpec = ExternalIndexingOperations.buildRecoverOp(dataset, indexes,
+                                    metadataProvider);
                             executeHyracksJob(jobSpec);
                             // 2. add pending files in metadata
                             for (ExternalFile file : files) {
@@ -221,4 +228,5 @@ public class GlobalRecoveryManager implements IGlobalRecoveryManager {
     public boolean isRecoveryCompleted() {
         return recoveryCompleted;
     }
+
 }

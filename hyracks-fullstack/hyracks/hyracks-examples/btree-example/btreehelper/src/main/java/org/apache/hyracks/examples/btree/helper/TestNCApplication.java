@@ -30,8 +30,13 @@ public class TestNCApplication implements INCApplication {
     private RuntimeContext rCtx;
 
     @Override
-    public void start(IServiceContext serviceCtx, String[] args) throws Exception {
+    public void init(IServiceContext serviceCtx) throws Exception {
         rCtx = new RuntimeContext((INCServiceContext) serviceCtx);
+    }
+
+    @Override
+    public void start(String[] args) throws Exception {
+        // No-op
     }
 
     @Override

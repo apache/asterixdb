@@ -71,6 +71,6 @@ public class ResourceIdRequestMessage implements ICcAddressedMessage {
 
     @Override
     public String toString() {
-        return ReportMaxResourceIdRequestMessage.class.getSimpleName();
+        return ResourceIdRequestMessage.class.getSimpleName();
     }
 }

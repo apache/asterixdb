@@ -19,7 +19,6 @@
 package org.apache.hyracks.control.nc.application;
 
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.Serializable;
 
 import org.apache.hyracks.api.application.INCServiceContext;
@@ -54,13 +53,7 @@ public class NCServiceContext extends ServiceContext implements INCServiceContex
         this.ioManager = ioManager;
         this.memoryManager = memoryManager;
         this.ncs = ncs;
-        sdh = new IStateDumpHandler() {
-
-            @Override
-            public void dumpState(OutputStream os) throws IOException {
-                lccm.dumpState(os);
-            }
-        };
+        sdh = lccm::dumpState;
     }
 
     @Override

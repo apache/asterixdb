@@ -21,12 +21,15 @@ package org.apache.hyracks.api.application;
 import org.apache.hyracks.api.config.IConfigManager;
 import org.kohsuke.args4j.OptionHandlerFilter;
 
+@SuppressWarnings("squid:S00112") // define and throw specific class of Exception
 public interface IApplication {
-    void start(IServiceContext ctx, String[] args) throws Exception; //NOSONAR
+    void init(IServiceContext serviceCtx) throws Exception;
 
-    void startupCompleted() throws Exception; //NOSONAR
+    void start(String[] args) throws Exception;
 
-    void stop() throws Exception; //NOSONAR
+    void startupCompleted() throws Exception;
+
+    void stop() throws Exception;
 
     void registerConfig(IConfigManager configManager);
 
