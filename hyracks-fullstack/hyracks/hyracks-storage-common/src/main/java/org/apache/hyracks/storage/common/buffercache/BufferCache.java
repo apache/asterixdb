@@ -39,6 +39,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IFileHandle;
@@ -58,6 +59,8 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
     private static final int PIN_MAX_WAIT_TIME = 50;
     private static final int PIN_ATTEMPT_CYCLES_WARNING_THRESHOLD = 3;
     private static final int MAX_PIN_ATTEMPT_CYCLES = 1000;
+    private static final int MAX_PAGE_READ_ATTEMPTS = 5;
+    private static final long PERIOD_BETWEEN_READ_ATTEMPTS = 100;
     public static final boolean DEBUG = false;
 
     private final int pageSize;
@@ -209,7 +212,7 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
             // disk.
             synchronized (cPage) {
                 if (!cPage.valid) {
-                    read(cPage);
+                    tryRead(cPage);
                     cPage.valid = true;
                 }
             }
@@ -525,6 +528,33 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
             bucket.bucketLock.unlock();
         }
         return false;
+    }
+
+    private void tryRead(CachedPage cPage) throws HyracksDataException {
+        for (int i = 1; i <= MAX_PAGE_READ_ATTEMPTS; i++) {
+            try {
+                read(cPage);
+                return;
+            } catch (HyracksDataException readException) {
+                if (readException.getErrorCode() == ErrorCode.CANNOT_READ_CLOSED_FILE && i <= MAX_PAGE_READ_ATTEMPTS) {
+                    /**
+                     * if the read failure was due to another thread closing the file channel because
+                     * it was interrupted, we will try to read again since the interrupted thread
+                     * will re-open the file.
+                     */
+                    try {
+                        Thread.sleep(PERIOD_BETWEEN_READ_ATTEMPTS);
+                        LOGGER.log(Level.WARNING, String.format("Failed to read page. Retrying attempt (%d/%d)", i + 1,
+                                MAX_PAGE_READ_ATTEMPTS), readException);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        throw HyracksDataException.create(e);
+                    }
+                } else {
+                    throw readException;
+                }
+            }
+        }
     }
 
     private void read(CachedPage cPage) throws HyracksDataException {
@@ -1122,7 +1152,7 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
             ICachedPageInternal old = cachedPages.set(victim.cpid, null);
             if (DEBUG) {
                 assert old == victim;
-            } ;
+            }
         }
         return true;
     }

@@ -23,6 +23,7 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedByInterruptException;
+import java.nio.channels.ClosedChannelException;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -209,6 +210,8 @@ public class IOManager implements IIOManager {
             // re-open the closed channel. The channel will be closed during the typical file lifecycle
             ((FileHandle) fHandle).ensureOpen();
             throw HyracksDataException.create(e);
+        } catch (ClosedChannelException e) {
+            throw HyracksDataException.create(ErrorCode.CANNOT_READ_CLOSED_FILE, e, fHandle.getFileReference());
         } catch (IOException e) {
             throw HyracksDataException.create(e);
         }
