@@ -24,10 +24,24 @@
     - name: Create TPCH data dir on HDFS
       shell: 'bash {{ hadoop_base }}/bin/hdfs dfs -mkdir -p {{ data_dir }}'
 
-- hosts: ncs
+- hosts: ncs[0]
   tasks:
     - include_vars: spark_sql_settings.yml
     - include_vars: "{{ playbook_dir }}/../conf/private_ip.yml"
     - include_vars: ../../../benchmarks/tpch/gen/settings.yml
-    - name: Put data on to HDFS
-      shell: for i in `ls -rS {{ data_dir }}/`; do {{ hadoop_base }}/bin/hdfs dfs -put -f {{ data_dir }}/$i hdfs://{{ cc_ip }}:9000/{{ data_dir }}; rm {{ data_dir }}/$i; done
+    - name: Populate data uploading script for 1st node
+      shell: echo "for i in \`ls -rS {{ data_dir }}/*.tbl*\`; do {{ hadoop_base }}/bin/hdfs dfs -put -f \$i hdfs://{{ cc_ip }}:9000/{{ data_dir }}; done" > "{{ upload_script }}"
+
+
+- hosts: ncs[1:]
+  tasks:
+    - include_vars: spark_sql_settings.yml
+    - include_vars: "{{ playbook_dir }}/../conf/private_ip.yml"
+    - include_vars: ../../../benchmarks/tpch/gen/settings.yml
+    - name: Put data uploading generation script for the rest
+      shell: echo "for i in \`ls -rS {{ data_dir }}/*.tbl.*\`; do {{ hadoop_base }}/bin/hdfs dfs -put -f \$i hdfs://{{ cc_ip }}:9000/{{ data_dir }}; done" > "{{ upload_script }}"
+
+- hosts: ncs
+  tasks:
+    - name: Upload data
+      shell: sh {{ upload_script }}

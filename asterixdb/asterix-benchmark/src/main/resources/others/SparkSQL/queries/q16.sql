@@ -30,11 +30,11 @@ WITH tmp AS
       FROM PARTSUPP PS,
                     PART P
       WHERE P.P_PARTKEY = PS.S_PARTKEY
-        AND P.P_BRAND != "BRAND#45"
+        AND P.P_BRAND != "Brand#45"
         AND P.P_TYPE NOT LIKE "MEDIUM POLISHED%") AS PSP,
         SUPPLIER S
    WHERE PSP.PS_SUPPKEY = S.S_SUPPKEY
-     AND S.S_COMMENT NOT LIKE "%CUSTOMER%COMPLAINTS%")
+     AND S.S_COMMENT NOT LIKE "%Customer%Complaints%")
 SELECT P_BRAND,
        P_TYPE,
        P_SIZE,

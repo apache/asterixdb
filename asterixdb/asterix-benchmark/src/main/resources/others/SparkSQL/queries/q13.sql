@@ -23,7 +23,7 @@ FROM  (
         FROM  (
                 SELECT C.C_CUSTKEY, COUNT(O.O_ORDERKEY) AS O_ORDERKEY_COUNT
                 FROM (CUSTOMER C LEFT OUTER JOIN ORDERS O)
-                WHERE C.C_CUSTKEY = O.O_CUSTKEY AND O.O_COMMENT NOT LIKE "%SPECIAL%REQUESTS%"
+                WHERE C.C_CUSTKEY = O.O_CUSTKEY AND O.O_COMMENT NOT LIKE "%special%requests%"
                 GROUP BY C.C_CUSTKEY
         ) CO
         GROUP BY C_CUSTKEY

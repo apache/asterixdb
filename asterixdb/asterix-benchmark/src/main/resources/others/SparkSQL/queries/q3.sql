@@ -17,19 +17,18 @@
 -- under the License.
 -- ------------------------------------------------------------
 
-SELECT l.L_RETURNFLAG,
-       l.L_LINESTATUS,
-       sum(l.L_QUANTITY) AS sum_qty,
-       sum(l.L_EXTENDEDPRICE) AS sum_base_price,
-       sum(l.L_EXTENDEDPRICE * (1 - l.L_DISCOUNT)) AS sum_disc_price,
-       sum(l.L_EXTENDEDPRICE * (1 - l.L_DISCOUNT) * (1 + l.L_TAX)) AS sum_charge,
-       avg(l.l_quantity) AS ave_qty,
-       avg(l.L_EXTENDEDPRICE) AS ave_price,
-       avg(l.L_DISCOUNT) AS ave_disc,
-       count(*) AS count_order
-FROM LINEITEM AS l
-WHERE l.L_SHIPDATE <= "1998-09-02"
-GROUP BY l.L_RETURNFLAG,
-         l.L_LINESTATUS
-ORDER BY l.L_RETURNFLAG,
-         l.L_LINESTATUS
+SELECT l.L_ORDERKEY,
+       sum(l.L_EXTENDEDPRICE * (1 - l.L_DISCOUNT)) AS REVENUE,
+        o.O_ORDERDATE,
+        o.O_SHIPPRIORITY
+FROM  CUSTOMER AS c,
+      ORDERS AS o,
+      LINEITEM AS l
+where c.C_MKTSEGMENT = 'BUILDING'
+      AND c.C_CUSTKEY = o.O_CUSTKEY
+      AND l.L_ORDERKEY = o.O_ORDERKEY
+      AND o.O_ORDERDATE < '1995-03-15'
+      AND l.L_SHIPDATE > '1995-03-15'
+GROUP BY l.L_ORDERKEY, o.O_ORDERDATE, o.O_SHIPPRIORITY
+ORDER BY REVENUE DESC,O_ORDERDATE
+LIMIT 10

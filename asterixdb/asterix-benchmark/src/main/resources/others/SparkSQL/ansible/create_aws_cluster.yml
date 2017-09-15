@@ -50,6 +50,12 @@
           Name: "{{ spark_instance_name }}"
         aws_access_key: "{{ access_key_id }}"
         aws_secret_key: "{{ secret_access_key }}"
+        # Enable the volume section if you need extra disk space
+        #volumes:
+        #  - device_name: /dev/xvda
+        #    volume_type: gp2
+        #    volume_size: 50
+        #    delete_on_termination: true
       register:
         ec2
 

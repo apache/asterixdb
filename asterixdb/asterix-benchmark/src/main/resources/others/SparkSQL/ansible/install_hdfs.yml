@@ -23,7 +23,7 @@
     - include_vars: spark_sql_settings.yml
     - name: Download Hadoop
       get_url:
-        url: http://apache.mirrors.hoobly.com/hadoop/common/hadoop-2.8.0/hadoop-2.8.0.tar.gz
+        url: https://archive.apache.org/dist/hadoop/core/hadoop-2.8.0/hadoop-2.8.0.tar.gz
         dest: "{{ home_dir }}/hadoop.tar.gz"
     - name: Unzip Hadoop
       unarchive:
