@@ -38,7 +38,7 @@ The following shows the (rich) grammar for the `SELECT` statement in SQL++.
 
     SelectClause       ::= <SELECT> ( <ALL> | <DISTINCT> )? ( SelectRegular | SelectValue )
     SelectRegular      ::= Projection ( "," Projection )*
-    SelectValue      ::= ( <VALUE> | <ELEMENT> | <RAW> ) Expression
+    SelectValue        ::= ( <VALUE> | <ELEMENT> | <RAW> ) Expression
     Projection         ::= ( Expression ( <AS> )? Identifier | "*" )
 
     FromClause         ::= <FROM> FromTerm ( "," FromTerm )*
@@ -57,13 +57,16 @@ The following shows the (rich) grammar for the `SELECT` statement in SQL++.
 
     WhereClause        ::= <WHERE> Expression
 
-    GroupbyClause      ::= <GROUP> <BY> ( Expression ( (<AS>)? Variable )? ( "," Expression ( (<AS>)? Variable )? )*
+    GroupbyClause      ::= <GROUP> <BY> Expression ( ( (<AS>)? Variable )?
+                           ( "," Expression ( (<AS>)? Variable )? )* )
                            ( <GROUP> <AS> Variable
-                             ("(" Variable <AS> VariableReference ("," Variable <AS> VariableReference )* ")")?
+                             ("(" Variable <AS> VariableReference
+                             ("," Variable <AS> VariableReference )* ")")?
                            )?
     HavingClause       ::= <HAVING> Expression
 
-    OrderbyClause      ::= <ORDER> <BY> Expression ( <ASC> | <DESC> )? ( "," Expression ( <ASC> | <DESC> )? )*
+    OrderbyClause      ::= <ORDER> <BY> Expression ( <ASC> | <DESC> )?
+                           ( "," Expression ( <ASC> | <DESC> )? )*
     LimitClause        ::= <LIMIT> Expression ( <OFFSET> Expression )?
 
 In this section, we will make use of two stored collections of objects (datasets), `GleambookUsers` and `GleambookMessages`, in a series of running examples to explain `SELECT` queries. The contents of the example collections are as follows:

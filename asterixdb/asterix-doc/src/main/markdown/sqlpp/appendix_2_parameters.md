@@ -19,7 +19,7 @@
 
 The SET statement can be used to override some cluster-wide configuration parameters for a specific request:
 
-          SET <IDENTIFIER> <STRING_LITERAL>
+    SET <IDENTIFIER> <STRING_LITERAL>
 
 As parameter identifiers are qualified names (containing a '.') they have to be escaped using backticks (\`\`).
 Note that changing query parameters will not affect query correctness but only impact performance
