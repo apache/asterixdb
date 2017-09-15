@@ -53,7 +53,7 @@ public class BTreeExamplesTest extends OrderedIndexExamplesTest {
         LinkedMetaDataPageManager freePageManager =
                 new LinkedMetaDataPageManager(harness.getBufferCache(), metaFrameFactory);
         return BTreeUtils.createBTree(harness.getBufferCache(), typeTraits, cmpFactories,
-                BTreeLeafFrameType.REGULAR_NSM, harness.getFileReference(), freePageManager);
+                BTreeLeafFrameType.REGULAR_NSM, harness.getFileReference(), freePageManager, false);
     }
 
 }

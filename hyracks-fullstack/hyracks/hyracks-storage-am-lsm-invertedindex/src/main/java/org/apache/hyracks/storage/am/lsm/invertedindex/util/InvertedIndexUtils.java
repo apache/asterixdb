@@ -29,6 +29,7 @@ import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.storage.am.bloomfilter.impls.BloomFilterFactory;
 import org.apache.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
 import org.apache.hyracks.storage.am.btree.frames.BTreeNSMInteriorFrameFactory;
+import org.apache.hyracks.storage.am.btree.tuples.BTreeTypeAwareTupleWriterFactory;
 import org.apache.hyracks.storage.am.btree.util.BTreeUtils;
 import org.apache.hyracks.storage.am.common.api.IMetadataPageManagerFactory;
 import org.apache.hyracks.storage.am.common.api.IPageManager;
@@ -108,7 +109,8 @@ public class InvertedIndexUtils {
     public static BTreeFactory createDeletedKeysBTreeFactory(IIOManager ioManager, ITypeTraits[] invListTypeTraits,
             IBinaryComparatorFactory[] invListCmpFactories, IBufferCache diskBufferCache,
             IPageManagerFactory freePageManagerFactory) throws HyracksDataException {
-        TypeAwareTupleWriterFactory tupleWriterFactory = new TypeAwareTupleWriterFactory(invListTypeTraits);
+        BTreeTypeAwareTupleWriterFactory tupleWriterFactory =
+                new BTreeTypeAwareTupleWriterFactory(invListTypeTraits, false);
         ITreeIndexFrameFactory leafFrameFactory =
                 BTreeUtils.getLeafFrameFactory(tupleWriterFactory, BTreeLeafFrameType.REGULAR_NSM);
         ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(tupleWriterFactory);

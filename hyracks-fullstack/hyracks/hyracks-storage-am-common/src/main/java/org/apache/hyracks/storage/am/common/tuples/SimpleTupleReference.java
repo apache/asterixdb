@@ -22,6 +22,7 @@ package org.apache.hyracks.storage.am.common.tuples;
 import org.apache.hyracks.data.std.primitive.ShortPointable;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleReference;
+import org.apache.hyracks.storage.am.common.util.BitOperationUtils;
 
 public class SimpleTupleReference implements ITreeIndexTupleReference {
 
@@ -88,7 +89,7 @@ public class SimpleTupleReference implements ITreeIndexTupleReference {
     }
 
     protected int getNullFlagsBytes() {
-        return (int) Math.ceil(fieldCount / 8.0);
+        return BitOperationUtils.getFlagBytes(fieldCount);
     }
 
     protected int getFieldSlotsBytes() {

@@ -41,9 +41,8 @@ import org.apache.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import org.apache.hyracks.storage.am.btree.frames.BTreeFieldPrefixNSMLeafFrame;
+import org.apache.hyracks.storage.am.btree.tuples.BTreeTypeAwareTupleWriter;
 import org.apache.hyracks.storage.am.btree.util.AbstractBTreeTest;
-import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
-import org.apache.hyracks.storage.am.common.tuples.TypeAwareTupleWriter;
 import org.apache.hyracks.storage.am.common.util.TreeIndexUtils;
 import org.apache.hyracks.storage.common.MultiComparator;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
@@ -133,7 +132,7 @@ public class FieldPrefixNSMTest extends AbstractBTreeTest {
         ICachedPage page = bufferCache.pin(BufferedFileHandle.getDiskPageId(btreeFileId, 0), true);
         try {
 
-            ITreeIndexTupleWriter tupleWriter = new TypeAwareTupleWriter(typeTraits);
+            BTreeTypeAwareTupleWriter tupleWriter = new BTreeTypeAwareTupleWriter(typeTraits, false);
             BTreeFieldPrefixNSMLeafFrame frame = new BTreeFieldPrefixNSMLeafFrame(tupleWriter);
             frame.setPage(page);
             frame.initBuffer((byte) 0);

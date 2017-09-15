@@ -64,6 +64,7 @@ import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexOperationC
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentFilterManager;
 import org.apache.hyracks.storage.am.lsm.common.impls.TreeIndexFactory;
+import org.apache.hyracks.storage.am.rtree.frames.RTreeFrameFactory;
 import org.apache.hyracks.storage.am.rtree.impls.RTree;
 import org.apache.hyracks.storage.am.rtree.impls.RTreeSearchCursor;
 import org.apache.hyracks.storage.am.rtree.impls.SearchPredicate;
@@ -78,7 +79,7 @@ public class LSMRTree extends AbstractLSMRTree {
     protected final int[] buddyBTreeFields;
 
     public LSMRTree(IIOManager ioManager, List<IVirtualBufferCache> virtualBufferCaches,
-            ITreeIndexFrameFactory rtreeInteriorFrameFactory, ITreeIndexFrameFactory rtreeLeafFrameFactory,
+            RTreeFrameFactory rtreeInteriorFrameFactory, RTreeFrameFactory rtreeLeafFrameFactory,
             ITreeIndexFrameFactory btreeInteriorFrameFactory, ITreeIndexFrameFactory btreeLeafFrameFactory,
             ILSMIndexFileManager fileNameManager, TreeIndexFactory<RTree> diskRTreeFactory,
             TreeIndexFactory<BTree> diskBTreeFactory, BloomFilterFactory bloomFilterFactory,

@@ -20,20 +20,18 @@
 package org.apache.hyracks.storage.am.rtree.tuples;
 
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
-import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
-import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleWriterFactory;
+import org.apache.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
 
-public class RTreeTypeAwareTupleWriterFactory implements ITreeIndexTupleWriterFactory {
+public class RTreeTypeAwareTupleWriterFactory extends TypeAwareTupleWriterFactory {
 
     private static final long serialVersionUID = 1L;
-    private ITypeTraits[] typeTraits;
 
     public RTreeTypeAwareTupleWriterFactory(ITypeTraits[] typeTraits) {
-        this.typeTraits = typeTraits;
+        super(typeTraits);
     }
 
     @Override
-    public ITreeIndexTupleWriter createTupleWriter() {
+    public RTreeTypeAwareTupleWriter createTupleWriter() {
         return new RTreeTypeAwareTupleWriter(typeTraits);
     }
 }

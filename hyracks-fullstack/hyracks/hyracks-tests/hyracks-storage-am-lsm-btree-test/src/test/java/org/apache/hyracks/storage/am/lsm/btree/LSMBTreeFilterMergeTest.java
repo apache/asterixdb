@@ -56,7 +56,7 @@ public class LSMBTreeFilterMergeTest extends LSMBTreeFilterMergeTestDriver {
                 harness.getFileReference(), harness.getDiskBufferCache(), fieldSerdes, numKeys,
                 harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(), harness.getOperationTracker(),
                 harness.getIOScheduler(), harness.getIOOperationCallback(), harness.getMetadataPageManagerFactory(),
-                filtered);
+                filtered, true, false);
     }
 
     @Override

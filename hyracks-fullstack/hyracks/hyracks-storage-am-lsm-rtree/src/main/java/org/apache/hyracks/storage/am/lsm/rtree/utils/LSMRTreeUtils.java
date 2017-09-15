@@ -34,10 +34,10 @@ import org.apache.hyracks.storage.am.bloomfilter.impls.BloomFilterFactory;
 import org.apache.hyracks.storage.am.btree.frames.BTreeNSMInteriorFrameFactory;
 import org.apache.hyracks.storage.am.btree.frames.BTreeNSMLeafFrameFactory;
 import org.apache.hyracks.storage.am.btree.impls.BTree;
+import org.apache.hyracks.storage.am.btree.tuples.BTreeTypeAwareTupleWriterFactory;
 import org.apache.hyracks.storage.am.common.api.IMetadataPageManagerFactory;
 import org.apache.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
-import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleWriterFactory;
 import org.apache.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
@@ -59,7 +59,7 @@ import org.apache.hyracks.storage.am.lsm.rtree.impls.RTreeFactory;
 import org.apache.hyracks.storage.am.lsm.rtree.tuples.LSMRTreeCopyTupleWriterFactory;
 import org.apache.hyracks.storage.am.lsm.rtree.tuples.LSMRTreeTupleWriterFactory;
 import org.apache.hyracks.storage.am.lsm.rtree.tuples.LSMRTreeTupleWriterFactoryForPointMBR;
-import org.apache.hyracks.storage.am.lsm.rtree.tuples.LSMTypeAwareTupleWriterFactory;
+import org.apache.hyracks.storage.am.rtree.frames.RTreeFrameFactory;
 import org.apache.hyracks.storage.am.rtree.frames.RTreeNSMInteriorFrameFactory;
 import org.apache.hyracks.storage.am.rtree.frames.RTreeNSMLeafFrameFactory;
 import org.apache.hyracks.storage.am.rtree.frames.RTreePolicyType;
@@ -67,6 +67,7 @@ import org.apache.hyracks.storage.am.rtree.impls.RTree;
 import org.apache.hyracks.storage.am.rtree.linearize.HilbertDoubleComparatorFactory;
 import org.apache.hyracks.storage.am.rtree.linearize.ZCurveDoubleComparatorFactory;
 import org.apache.hyracks.storage.am.rtree.linearize.ZCurveIntComparatorFactory;
+import org.apache.hyracks.storage.am.rtree.tuples.RTreeTypeAwareTupleWriterFactory;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 
 public class LSMRTreeUtils {
@@ -86,20 +87,20 @@ public class LSMRTreeUtils {
         for (int i = 0; i < valueFieldCount; i++) {
             btreeTypeTraits[i] = typeTraits[buddyBTreeFields[i]];
         }
-        ITreeIndexTupleWriterFactory rtreeInteriorFrameTupleWriterFactory =
-                new LSMTypeAwareTupleWriterFactory(typeTraits, false);
-        ITreeIndexTupleWriterFactory rtreeLeafFrameTupleWriterFactory = null;
+        RTreeTypeAwareTupleWriterFactory rtreeInteriorFrameTupleWriterFactory =
+                new RTreeTypeAwareTupleWriterFactory(typeTraits);
+        RTreeTypeAwareTupleWriterFactory rtreeLeafFrameTupleWriterFactory = null;
         if (isPointMBR) {
             rtreeLeafFrameTupleWriterFactory =
                     new LSMRTreeTupleWriterFactoryForPointMBR(typeTraits, keyFieldCount, valueFieldCount, false, false);
         } else {
             rtreeLeafFrameTupleWriterFactory = rtreeInteriorFrameTupleWriterFactory;
         }
-        ITreeIndexTupleWriterFactory btreeTupleWriterFactory =
-                new LSMTypeAwareTupleWriterFactory(btreeTypeTraits, true);
-        ITreeIndexFrameFactory rtreeInteriorFrameFactory = new RTreeNSMInteriorFrameFactory(
+        BTreeTypeAwareTupleWriterFactory btreeTupleWriterFactory =
+                new BTreeTypeAwareTupleWriterFactory(btreeTypeTraits, false);
+        RTreeFrameFactory rtreeInteriorFrameFactory = new RTreeNSMInteriorFrameFactory(
                 rtreeInteriorFrameTupleWriterFactory, valueProviderFactories, rtreePolicyType, isPointMBR);
-        ITreeIndexFrameFactory rtreeLeafFrameFactory = new RTreeNSMLeafFrameFactory(rtreeLeafFrameTupleWriterFactory,
+        RTreeFrameFactory rtreeLeafFrameFactory = new RTreeNSMLeafFrameFactory(rtreeLeafFrameTupleWriterFactory,
                 valueProviderFactories, rtreePolicyType, isPointMBR);
         ITreeIndexFrameFactory btreeInteriorFrameFactory = new BTreeNSMInteriorFrameFactory(btreeTupleWriterFactory);
         ITreeIndexFrameFactory btreeLeafFrameFactory = new BTreeNSMLeafFrameFactory(btreeTupleWriterFactory);
@@ -146,11 +147,11 @@ public class LSMRTreeUtils {
             ITypeTraits[] filterTypeTraits, IBinaryComparatorFactory[] filterCmpFactories, int[] filterFields,
             boolean durable, boolean isPointMBR, IMetadataPageManagerFactory freePageManagerFactory)
             throws HyracksDataException {
-        ITreeIndexTupleWriterFactory rtreeInteriorFrameTupleWriterFactory =
+        RTreeTypeAwareTupleWriterFactory rtreeInteriorFrameTupleWriterFactory =
                 new LSMRTreeTupleWriterFactory(typeTraits, false);
-        ITreeIndexTupleWriterFactory rtreeLeafFrameTupleWriterFactory;
-        ITreeIndexTupleWriterFactory rtreeLeafFrameCopyTupleWriterFactory;
-        ITreeIndexTupleWriterFactory rtreeLeafFrameBulkLoadWriterFactory;
+        RTreeTypeAwareTupleWriterFactory rtreeLeafFrameTupleWriterFactory;
+        RTreeTypeAwareTupleWriterFactory rtreeLeafFrameCopyTupleWriterFactory;
+        RTreeTypeAwareTupleWriterFactory rtreeLeafFrameBulkLoadWriterFactory;
         if (isPointMBR) {
             int keyFieldCount = rtreeCmpFactories.length;
             int valueFieldCount = btreeComparatorFactories.length - keyFieldCount;
@@ -166,13 +167,13 @@ public class LSMRTreeUtils {
             rtreeLeafFrameBulkLoadWriterFactory = new LSMRTreeTupleWriterFactory(typeTraits, false);
         }
 
-        LSMRTreeTupleWriterFactory btreeTupleWriterFactory = new LSMRTreeTupleWriterFactory(typeTraits, true);
+        LSMRTreeTupleWriterFactory btreeTupleWriterFactory = new LSMRTreeTupleWriterFactory(typeTraits, false);
 
-        ITreeIndexFrameFactory rtreeInteriorFrameFactory = new RTreeNSMInteriorFrameFactory(
+        RTreeFrameFactory rtreeInteriorFrameFactory = new RTreeNSMInteriorFrameFactory(
                 rtreeInteriorFrameTupleWriterFactory, valueProviderFactories, rtreePolicyType, isPointMBR);
-        ITreeIndexFrameFactory rtreeLeafFrameFactory = new RTreeNSMLeafFrameFactory(rtreeLeafFrameTupleWriterFactory,
+        RTreeFrameFactory rtreeLeafFrameFactory = new RTreeNSMLeafFrameFactory(rtreeLeafFrameTupleWriterFactory,
                 valueProviderFactories, rtreePolicyType, isPointMBR);
-        ITreeIndexFrameFactory rtreeLeafFrameBulkLoadFactory = new RTreeNSMLeafFrameFactory(
+        RTreeFrameFactory rtreeLeafFrameBulkLoadFactory = new RTreeNSMLeafFrameFactory(
                 rtreeLeafFrameBulkLoadWriterFactory, valueProviderFactories, rtreePolicyType, isPointMBR);
 
         ITreeIndexFrameFactory btreeInteriorFrameFactory = new BTreeNSMInteriorFrameFactory(btreeTupleWriterFactory);
@@ -237,20 +238,20 @@ public class LSMRTreeUtils {
         for (int i = 0; i < buddyBTreeFields.length; i++) {
             btreeTypeTraits[i] = typeTraits[buddyBTreeFields[i]];
         }
-        ITreeIndexTupleWriterFactory rtreeInteriorFrameTupleWriterFactory =
-                new LSMTypeAwareTupleWriterFactory(typeTraits, false);
-        ITreeIndexTupleWriterFactory rtreeLeafFrameTupleWriterFactory = null;
+        RTreeTypeAwareTupleWriterFactory rtreeInteriorFrameTupleWriterFactory =
+                new RTreeTypeAwareTupleWriterFactory(typeTraits);
+        RTreeTypeAwareTupleWriterFactory rtreeLeafFrameTupleWriterFactory = null;
         if (isPointMBR) {
             rtreeLeafFrameTupleWriterFactory =
                     new LSMRTreeTupleWriterFactoryForPointMBR(typeTraits, keyFieldCount, valueFieldCount, false, false);
         } else {
             rtreeLeafFrameTupleWriterFactory = rtreeInteriorFrameTupleWriterFactory;
         }
-        ITreeIndexTupleWriterFactory btreeTupleWriterFactory =
-                new LSMTypeAwareTupleWriterFactory(btreeTypeTraits, true);
-        ITreeIndexFrameFactory rtreeInteriorFrameFactory = new RTreeNSMInteriorFrameFactory(
+        BTreeTypeAwareTupleWriterFactory btreeTupleWriterFactory =
+                new BTreeTypeAwareTupleWriterFactory(btreeTypeTraits, false);
+        RTreeFrameFactory rtreeInteriorFrameFactory = new RTreeNSMInteriorFrameFactory(
                 rtreeInteriorFrameTupleWriterFactory, valueProviderFactories, rtreePolicyType, isPointMBR);
-        ITreeIndexFrameFactory rtreeLeafFrameFactory = new RTreeNSMLeafFrameFactory(rtreeLeafFrameTupleWriterFactory,
+        RTreeFrameFactory rtreeLeafFrameFactory = new RTreeNSMLeafFrameFactory(rtreeLeafFrameTupleWriterFactory,
                 valueProviderFactories, rtreePolicyType, isPointMBR);
         ITreeIndexFrameFactory btreeInteriorFrameFactory = new BTreeNSMInteriorFrameFactory(btreeTupleWriterFactory);
         ITreeIndexFrameFactory btreeLeafFrameFactory = new BTreeNSMLeafFrameFactory(btreeTupleWriterFactory);

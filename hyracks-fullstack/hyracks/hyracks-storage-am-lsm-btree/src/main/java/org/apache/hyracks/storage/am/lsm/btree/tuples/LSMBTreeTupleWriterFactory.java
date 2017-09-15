@@ -20,24 +20,25 @@
 package org.apache.hyracks.storage.am.lsm.btree.tuples;
 
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
-import org.apache.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMTreeTupleWriter;
+import org.apache.hyracks.storage.am.btree.tuples.BTreeTypeAwareTupleWriter;
+import org.apache.hyracks.storage.am.btree.tuples.BTreeTypeAwareTupleWriterFactory;
 
-public class LSMBTreeTupleWriterFactory extends TypeAwareTupleWriterFactory {
+public class LSMBTreeTupleWriterFactory extends BTreeTypeAwareTupleWriterFactory {
 
     private static final long serialVersionUID = 1L;
     private final int numKeyFields;
     private final boolean isAntimatter;
 
-    public LSMBTreeTupleWriterFactory(ITypeTraits[] typeTraits, int numKeyFields, boolean isAntimatter) {
-        super(typeTraits);
+    public LSMBTreeTupleWriterFactory(ITypeTraits[] typeTraits, int numKeyFields, boolean isAntimatter,
+            boolean updateAware) {
+        super(typeTraits, updateAware);
         this.numKeyFields = numKeyFields;
         this.isAntimatter = isAntimatter;
     }
 
     @Override
-    public ILSMTreeTupleWriter createTupleWriter() {
-        return new LSMBTreeTupleWriter(typeTraits, numKeyFields, isAntimatter);
+    public BTreeTypeAwareTupleWriter createTupleWriter() {
+        return new LSMBTreeTupleWriter(typeTraits, numKeyFields, isAntimatter, updateAware);
     }
 
 }

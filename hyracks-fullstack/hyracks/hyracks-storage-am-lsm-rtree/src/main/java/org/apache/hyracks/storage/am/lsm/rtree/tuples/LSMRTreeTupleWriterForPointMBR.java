@@ -19,9 +19,11 @@
 
 package org.apache.hyracks.storage.am.lsm.rtree.tuples;
 
+import static org.apache.hyracks.storage.am.lsm.common.api.ILSMTreeTupleReference.ANTIMATTER_BIT_OFFSET;
+
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
-import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleReference;
+import org.apache.hyracks.storage.am.common.util.BitOperationUtils;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMTreeTupleReference;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMTreeTupleWriter;
 import org.apache.hyracks.storage.am.rtree.tuples.RTreeTypeAwareTupleWriter;
@@ -77,7 +79,7 @@ public class LSMRTreeTupleWriterForPointMBR extends RTreeTypeAwareTupleWriter im
     }
 
     @Override
-    public ITreeIndexTupleReference createTupleReference() {
+    public LSMRTreeTupleReferenceForPointMBR createTupleReference() {
         return new LSMRTreeTupleReferenceForPointMBR(typeTraits, inputKeyFieldCount, valueFieldCount, antimatterAware);
     }
 
@@ -135,7 +137,7 @@ public class LSMRTreeTupleWriterForPointMBR extends RTreeTypeAwareTupleWriter im
 
     @Override
     protected int getNullFlagsBytes(ITupleReference tuple) {
-        return (int) Math.ceil((storedTotalFieldCount + (antimatterAware ? 1 : 0)) / 8.0);
+        return BitOperationUtils.getFlagBytes(storedTotalFieldCount + (antimatterAware ? 1 : 0));
     }
 
     @Override
@@ -155,8 +157,8 @@ public class LSMRTreeTupleWriterForPointMBR extends RTreeTypeAwareTupleWriter im
     }
 
     protected void setAntimatterBit(byte[] targetBuf, int targetOff) {
-        // Set leftmost bit to 1.
-        targetBuf[targetOff] = (byte) (targetBuf[targetOff] | (1 << 7));
+        // Set antimatter bit to 1.
+        BitOperationUtils.setBit(targetBuf, targetOff, ANTIMATTER_BIT_OFFSET);
     }
 
     @Override

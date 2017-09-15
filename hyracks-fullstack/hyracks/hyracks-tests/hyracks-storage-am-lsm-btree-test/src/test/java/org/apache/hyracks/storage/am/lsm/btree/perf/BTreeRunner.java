@@ -49,6 +49,6 @@ public class BTreeRunner extends InMemoryBTreeRunner {
         ITreeIndexMetadataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
         LinkedMetaDataPageManager freePageManager = new LinkedMetaDataPageManager(bufferCache, metaFrameFactory);
         btree = BTreeUtils.createBTree(bufferCache, typeTraits, cmpFactories, BTreeLeafFrameType.REGULAR_NSM, file,
-                freePageManager);
+                freePageManager, false);
     }
 }

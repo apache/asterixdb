@@ -20,12 +20,12 @@ package org.apache.hyracks.storage.am.btree.impls;
 
 import org.apache.hyracks.storage.am.btree.api.IPrefixSlotManager;
 import org.apache.hyracks.storage.am.btree.frames.BTreeFieldPrefixNSMLeafFrame;
+import org.apache.hyracks.storage.am.common.api.IBTreeIndexTupleReference;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
-import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 
-public class FieldPrefixTupleReference implements ITreeIndexTupleReference {
+public class BTreeFieldPrefixTupleReference implements IBTreeIndexTupleReference {
 
-    private final ITreeIndexTupleReference helperTuple;
+    private final IBTreeIndexTupleReference helperTuple;
 
     private BTreeFieldPrefixNSMLeafFrame frame;
     private int prefixTupleStartOff;
@@ -33,7 +33,7 @@ public class FieldPrefixTupleReference implements ITreeIndexTupleReference {
     private int numPrefixFields;
     private int fieldCount;
 
-    public FieldPrefixTupleReference(ITreeIndexTupleReference helperTuple) {
+    public BTreeFieldPrefixTupleReference(IBTreeIndexTupleReference helperTuple) {
         this.helperTuple = helperTuple;
         this.fieldCount = helperTuple.getFieldCount();
     }
@@ -132,5 +132,15 @@ public class FieldPrefixTupleReference implements ITreeIndexTupleReference {
 
     public int getNumPrefixFields() {
         return numPrefixFields;
+    }
+
+    @Override
+    public boolean flipUpdated() {
+        return helperTuple.flipUpdated();
+    }
+
+    @Override
+    public boolean isUpdated() {
+        return helperTuple.isUpdated();
     }
 }

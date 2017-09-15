@@ -58,7 +58,7 @@ public class LSMBTreeSearchOperationCallbackTest extends AbstractSearchOperation
                 harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(),
                 NoOpOperationTrackerFactory.INSTANCE.getOperationTracker(null), harness.getIOScheduler(),
                 harness.getIOOperationCallback(), true, null, null, null, null, true,
-                harness.getMetadataPageManagerFactory());
+                harness.getMetadataPageManagerFactory(), false);
     }
 
     @Override

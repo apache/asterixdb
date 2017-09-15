@@ -30,7 +30,7 @@ import org.apache.hyracks.storage.common.MultiComparator;
 public class RTreeNSMLeafFrame extends RTreeNSMFrame implements IRTreeLeafFrame {
 
     public RTreeNSMLeafFrame(ITreeIndexTupleWriter tupleWriter, IPrimitiveValueProvider[] keyValueProviders,
-                             RTreePolicyType rtreePolicyType, boolean isPointMBR) {
+            RTreePolicyType rtreePolicyType, boolean isPointMBR) {
         super(tupleWriter, keyValueProviders, rtreePolicyType, isPointMBR);
     }
 
@@ -82,8 +82,8 @@ public class RTreeNSMLeafFrame extends RTreeNSMFrame implements IRTreeLeafFrame 
         int bytesWritten = tupleWriter.writeTuple(tuple, buf.array(), buf.getInt(Constants.FREE_SPACE_OFFSET));
         buf.putInt(Constants.TUPLE_COUNT_OFFSET, buf.getInt(Constants.TUPLE_COUNT_OFFSET) + 1);
         buf.putInt(Constants.FREE_SPACE_OFFSET, buf.getInt(Constants.FREE_SPACE_OFFSET) + bytesWritten);
-        buf.putInt(TOTAL_FREE_SPACE_OFFSET, buf.getInt(TOTAL_FREE_SPACE_OFFSET) - bytesWritten - slotManager
-                .getSlotSize());
+        buf.putInt(TOTAL_FREE_SPACE_OFFSET,
+                buf.getInt(TOTAL_FREE_SPACE_OFFSET) - bytesWritten - slotManager.getSlotSize());
     }
 
     @Override
@@ -101,8 +101,8 @@ public class RTreeNSMLeafFrame extends RTreeNSMFrame implements IRTreeLeafFrame 
 
         // maintain space information
         buf.putInt(Constants.TUPLE_COUNT_OFFSET, buf.getInt(Constants.TUPLE_COUNT_OFFSET) - 1);
-        buf.putInt(TOTAL_FREE_SPACE_OFFSET, buf.getInt(TOTAL_FREE_SPACE_OFFSET) + tupleSize + slotManager
-                .getSlotSize());
+        buf.putInt(TOTAL_FREE_SPACE_OFFSET,
+                buf.getInt(TOTAL_FREE_SPACE_OFFSET) + tupleSize + slotManager.getSlotSize());
     }
 
     @Override

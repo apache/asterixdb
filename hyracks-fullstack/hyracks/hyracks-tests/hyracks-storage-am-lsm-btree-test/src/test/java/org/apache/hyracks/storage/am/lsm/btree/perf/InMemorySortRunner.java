@@ -132,12 +132,12 @@ public class InMemorySortRunner implements IExperimentRunner {
             this.numBatches = numBatches;
             this.skipList = skipList;
             tupleWriterFactory = new TypeAwareTupleWriterFactory(typeTraits);
-            tupleWriter = (TypeAwareTupleWriter) tupleWriterFactory.createTupleWriter();
+            tupleWriter = tupleWriterFactory.createTupleWriter();
             int numTuples = numBatches * batchSize;
             tuples = new TypeAwareTupleReference[numTuples];
             tupleBuf = ByteBuffer.allocate(numTuples * tupleSize);
             for (int i = 0; i < numTuples; i++) {
-                tuples[i] = (TypeAwareTupleReference) tupleWriter.createTupleReference();
+                tuples[i] = tupleWriter.createTupleReference();
             }
         }
 

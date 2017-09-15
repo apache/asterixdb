@@ -16,33 +16,28 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.storage.am.lsm.rtree.tuples;
+package org.apache.hyracks.storage.am.btree.tuples;
 
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
 import org.apache.hyracks.storage.am.common.tuples.TypeAwareTupleWriter;
-import org.apache.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
-import org.apache.hyracks.storage.am.rtree.tuples.RTreeTypeAwareTupleWriter;
 
-public class LSMTypeAwareTupleWriterFactory extends TypeAwareTupleWriterFactory {
+public class BTreeTypeAwareTupleWriter extends TypeAwareTupleWriter implements ITreeIndexTupleWriter {
+    protected final boolean updateAware;
+    protected boolean isUpdated;
 
-    private static final long serialVersionUID = 1L;
-    private ITypeTraits[] typeTraits;
-    private final boolean isAntimatter;
-
-    public LSMTypeAwareTupleWriterFactory(ITypeTraits[] typeTraits, boolean isAntimatter) {
+    public BTreeTypeAwareTupleWriter(ITypeTraits[] typeTraits, boolean updateAware) {
         super(typeTraits);
-        this.typeTraits = typeTraits;
-        this.isAntimatter = isAntimatter;
+        this.updateAware = updateAware;
     }
 
     @Override
-    public ITreeIndexTupleWriter createTupleWriter() {
-        if (isAntimatter) {
-            return new TypeAwareTupleWriter(typeTraits);
-        } else {
-            return new RTreeTypeAwareTupleWriter(typeTraits);
-        }
+    public BTreeTypeAwareTupleReference createTupleReference() {
+        return new BTreeTypeAwareTupleReference(typeTraits, updateAware);
     }
 
+    @Override
+    public void setUpdated(boolean isUpdated) {
+        this.isUpdated = isUpdated;
+    }
 }

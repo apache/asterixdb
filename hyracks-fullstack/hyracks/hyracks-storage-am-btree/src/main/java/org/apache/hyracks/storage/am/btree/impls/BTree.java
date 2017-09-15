@@ -39,6 +39,7 @@ import org.apache.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import org.apache.hyracks.storage.am.btree.api.ITupleAcceptor;
 import org.apache.hyracks.storage.am.btree.frames.BTreeNSMInteriorFrame;
 import org.apache.hyracks.storage.am.btree.impls.BTreeOpContext.PageValidationInfo;
+import org.apache.hyracks.storage.am.common.api.IBTreeIndexTupleReference;
 import org.apache.hyracks.storage.am.common.api.IPageManager;
 import org.apache.hyracks.storage.am.common.api.ISplitKey;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexAccessor;
@@ -392,6 +393,8 @@ public class BTree extends AbstractTreeIndex {
             throws Exception {
         FrameOpSpaceStatus spaceStatus = ctx.getLeafFrame().hasSpaceUpdate(tuple, oldTupleIndex);
         ITupleReference beforeTuple = ctx.getLeafFrame().getMatchingKeyTuple(tuple, oldTupleIndex);
+        IBTreeIndexTupleReference beforeBTreeTuple = (IBTreeIndexTupleReference) beforeTuple;
+        ctx.getLeafFrame().getTupleWriter().setUpdated(beforeBTreeTuple.flipUpdated());
         boolean restartOp = false;
         switch (spaceStatus) {
             case SUFFICIENT_INPLACE_SPACE: {
@@ -437,6 +440,7 @@ public class BTree extends AbstractTreeIndex {
                 throw new IllegalStateException("NYI: " + spaceStatus);
             }
         }
+        ctx.getLeafFrame().getTupleWriter().setUpdated(false);
         return restartOp;
     }
 
@@ -755,7 +759,7 @@ public class BTree extends AbstractTreeIndex {
     }
 
     private BTreeOpContext createOpContext(IIndexAccessor accessor, IModificationOperationCallback modificationCallback,
-                                           ISearchOperationCallback searchCallback, int[] logTupleFields) {
+            ISearchOperationCallback searchCallback, int[] logTupleFields) {
         return new BTreeOpContext(accessor, leafFrameFactory, interiorFrameFactory, freePageManager, cmpFactories,
                 modificationCallback, searchCallback, logTupleFields);
     }
@@ -821,7 +825,7 @@ public class BTree extends AbstractTreeIndex {
     }
 
     public ITreeIndexAccessor createAccessor(IModificationOperationCallback modificationCallback,
-                                             ISearchOperationCallback searchCallback, int[] logTupleFields) {
+            ISearchOperationCallback searchCallback, int[] logTupleFields) {
         return new BTreeAccessor(this, modificationCallback, searchCallback, logTupleFields);
     }
 
@@ -845,7 +849,7 @@ public class BTree extends AbstractTreeIndex {
         }
 
         public BTreeAccessor(BTree btree, IModificationOperationCallback modificationCalback,
-                             ISearchOperationCallback searchCallback, int[] logTupleFields) {
+                ISearchOperationCallback searchCallback, int[] logTupleFields) {
             this.btree = btree;
             this.ctx = btree.createOpContext(this, modificationCalback, searchCallback, logTupleFields);
         }

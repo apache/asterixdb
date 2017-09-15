@@ -307,11 +307,6 @@ public class BTreeNSMLeafFrame extends TreeIndexNSMFrame implements IBTreeLeafFr
     }
 
     @Override
-    public ITreeIndexTupleReference createTupleReference() {
-        return tupleWriter.createTupleReference();
-    }
-
-    @Override
     public int findTupleIndex(ITupleReference searchKey, ITreeIndexTupleReference pageTuple, MultiComparator cmp,
             FindTupleMode ftm, FindTupleNoExactMatchPolicy ftp) throws HyracksDataException {
         return slotManager.findTupleIndex(searchKey, pageTuple, cmp, ftm, ftp);

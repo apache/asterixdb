@@ -61,7 +61,7 @@ public class LSMBTreeLifecycleTest extends AbstractIndexLifecycleTest {
                 harness.getFileReference(), harness.getDiskBufferCache(), fieldSerdes, fieldSerdes.length,
                 harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(), harness.getOperationTracker(),
                 harness.getIOScheduler(), harness.getIOOperationCallback(), harness.getMetadataPageManagerFactory(),
-                false);
+                false, true, false);
         index = testCtx.getIndex();
     }
 

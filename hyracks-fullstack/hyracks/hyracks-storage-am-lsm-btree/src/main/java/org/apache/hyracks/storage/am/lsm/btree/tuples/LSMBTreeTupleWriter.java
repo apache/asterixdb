@@ -19,18 +19,22 @@
 
 package org.apache.hyracks.storage.am.lsm.btree.tuples;
 
+import static org.apache.hyracks.storage.am.btree.tuples.BTreeTypeAwareTupleReference.UPDATE_BIT_OFFSET;
+import static org.apache.hyracks.storage.am.lsm.common.api.ILSMTreeTupleReference.ANTIMATTER_BIT_OFFSET;
+
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
-import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleReference;
-import org.apache.hyracks.storage.am.common.tuples.TypeAwareTupleWriter;
+import org.apache.hyracks.storage.am.btree.tuples.BTreeTypeAwareTupleWriter;
+import org.apache.hyracks.storage.am.common.util.BitOperationUtils;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMTreeTupleWriter;
 
-public class LSMBTreeTupleWriter extends TypeAwareTupleWriter implements ILSMTreeTupleWriter {
+public class LSMBTreeTupleWriter extends BTreeTypeAwareTupleWriter implements ILSMTreeTupleWriter {
+
     private boolean isAntimatter;
     private final int numKeyFields;
 
-    public LSMBTreeTupleWriter(ITypeTraits[] typeTraits, int numKeyFields, boolean isAntimatter) {
-        super(typeTraits);
+    public LSMBTreeTupleWriter(ITypeTraits[] typeTraits, int numKeyFields, boolean isAntimatter, boolean updateAware) {
+        super(typeTraits, updateAware);
         this.numKeyFields = numKeyFields;
         this.isAntimatter = isAntimatter;
     }
@@ -51,20 +55,28 @@ public class LSMBTreeTupleWriter extends TypeAwareTupleWriter implements ILSMTre
     }
 
     @Override
-    public ITreeIndexTupleReference createTupleReference() {
-        return new LSMBTreeTupleReference(typeTraits, numKeyFields);
+    public LSMBTreeTupleReference createTupleReference() {
+        return new LSMBTreeTupleReference(typeTraits, numKeyFields, updateAware);
     }
 
     @Override
     protected int getNullFlagsBytes(int numFields) {
-        // +1.0 is for matter/antimatter bit.
-        return (int) Math.ceil((numFields + 1.0) / 8.0);
+        // numFields + matter/antimatter bit + updated bit (optional).
+        int numBits = numFields + 1;
+        if (updateAware) {
+            numBits++;
+        }
+        return BitOperationUtils.getFlagBytes(numBits);
     }
 
     @Override
     protected int getNullFlagsBytes(ITupleReference tuple) {
-        // +1.0 is for matter/antimatter bit.
-        return (int) Math.ceil((tuple.getFieldCount() + 1.0) / 8.0);
+        // # of fields + matter/antimatter bit + updated bit (optional).
+        int numBits = tuple.getFieldCount() + 1;
+        if (updateAware) {
+            numBits++;
+        }
+        return BitOperationUtils.getFlagBytes(numBits);
     }
 
     @Override
@@ -72,16 +84,16 @@ public class LSMBTreeTupleWriter extends TypeAwareTupleWriter implements ILSMTre
         int bytesWritten = -1;
         if (isAntimatter) {
             bytesWritten = super.writeTupleFields(tuple, 0, numKeyFields, targetBuf, targetOff);
-            setAntimatterBit(targetBuf, targetOff);
+            // Set antimatter bit to 1.
+            BitOperationUtils.setBit(targetBuf, targetOff, ANTIMATTER_BIT_OFFSET);
         } else {
             bytesWritten = super.writeTuple(tuple, targetBuf, targetOff);
         }
+        if (updateAware && isUpdated) {
+            // Set update-in-place bit to 1.
+            BitOperationUtils.setBit(targetBuf, targetOff, UPDATE_BIT_OFFSET);
+        }
         return bytesWritten;
-    }
-
-    private void setAntimatterBit(byte[] targetBuf, int targetOff) {
-        // Set leftmost bit to 1.
-        targetBuf[targetOff] = (byte) (targetBuf[targetOff] | (1 << 7));
     }
 
     @Override

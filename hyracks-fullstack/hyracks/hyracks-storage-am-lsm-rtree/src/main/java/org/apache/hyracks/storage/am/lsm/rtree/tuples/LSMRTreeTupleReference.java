@@ -20,10 +20,11 @@
 package org.apache.hyracks.storage.am.lsm.rtree.tuples;
 
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
-import org.apache.hyracks.storage.am.common.tuples.TypeAwareTupleReference;
+import org.apache.hyracks.storage.am.common.util.BitOperationUtils;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMTreeTupleReference;
+import org.apache.hyracks.storage.am.rtree.tuples.RTreeTypeAwareTupleReference;
 
-public class LSMRTreeTupleReference extends TypeAwareTupleReference implements ILSMTreeTupleReference {
+public class LSMRTreeTupleReference extends RTreeTypeAwareTupleReference implements ILSMTreeTupleReference {
 
     public LSMRTreeTupleReference(ITypeTraits[] typeTraits) {
         super(typeTraits);
@@ -32,17 +33,13 @@ public class LSMRTreeTupleReference extends TypeAwareTupleReference implements I
     @Override
     protected int getNullFlagsBytes() {
         // +1.0 is for matter/antimatter bit.
-        return (int) Math.ceil((fieldCount + 1.0) / 8.0);
+        return BitOperationUtils.getFlagBytes(fieldCount + 1);
     }
 
     @Override
     public boolean isAntimatter() {
-        // Check if the leftmost bit is 0 or 1.
-        final byte mask = (byte) (1 << 7);
-        if ((buf[tupleStartOff] & mask) != 0) {
-            return true;
-        }
-        return false;
+        // Check antimatter bit.
+        return BitOperationUtils.getBit(buf, tupleStartOff, ANTIMATTER_BIT_OFFSET);
     }
 
     public int getTupleStart() {

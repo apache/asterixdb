@@ -54,7 +54,7 @@ public class BTreeMultiThreadTest extends OrderedIndexMultiThreadTest {
             int[] bloomFilterKeyFields) throws HyracksDataException {
         return BTreeUtils.createBTree(harness.getBufferCache(), typeTraits, cmpFactories,
                 BTreeLeafFrameType.REGULAR_NSM, harness.getFileReference(),
-                harness.getPageManagerFactory().createPageManager(harness.getBufferCache()));
+                harness.getPageManagerFactory().createPageManager(harness.getBufferCache()), false);
     }
 
     @Override

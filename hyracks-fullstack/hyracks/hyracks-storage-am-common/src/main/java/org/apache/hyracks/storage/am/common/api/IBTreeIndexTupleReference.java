@@ -16,12 +16,20 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.apache.hyracks.storage.am.common.api;
 
-import java.io.Serializable;
+public interface IBTreeIndexTupleReference extends ITreeIndexTupleReference {
 
-public interface ITreeIndexFrameFactory extends Serializable {
-    ITreeIndexFrame createFrame();
+    /**
+     * @return Method returns if update-in-place bit is set for a BTree tuple
+     */
+    boolean isUpdated();
 
-    ITreeIndexTupleWriterFactory getTupleWriterFactory();
+    /**
+     * Method changes the value of update-in-place bit from 0 to 1, or from 1 to 0
+     *
+     * @return New value of update-in-place bit
+     */
+    boolean flipUpdated();
 }

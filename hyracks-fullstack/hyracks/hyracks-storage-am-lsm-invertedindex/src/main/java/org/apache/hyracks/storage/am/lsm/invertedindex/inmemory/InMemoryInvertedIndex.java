@@ -74,7 +74,7 @@ public class InMemoryInvertedIndex implements IInPlaceInvertedIndex {
             btreeCmpFactories[tokenTypeTraits.length + i] = invListCmpFactories[i];
         }
         this.btree = BTreeUtils.createBTree(virtualBufferCache, virtualFreePageManager, btreeTypeTraits,
-                btreeCmpFactories, BTreeLeafFrameType.REGULAR_NSM, btreeFileRef);
+                btreeCmpFactories, BTreeLeafFrameType.REGULAR_NSM, btreeFileRef, false);
     }
 
     @Override

@@ -20,10 +20,10 @@
 package org.apache.hyracks.storage.am.lsm.rtree.tuples;
 
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
-import org.apache.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMTreeTupleWriter;
+import org.apache.hyracks.storage.am.rtree.tuples.RTreeTypeAwareTupleWriter;
+import org.apache.hyracks.storage.am.rtree.tuples.RTreeTypeAwareTupleWriterFactory;
 
-public class LSMRTreeTupleWriterFactoryForPointMBR extends TypeAwareTupleWriterFactory {
+public class LSMRTreeTupleWriterFactoryForPointMBR extends RTreeTypeAwareTupleWriterFactory {
 
     private static final long serialVersionUID = 1L;
     private final int keyFieldCount;
@@ -41,7 +41,7 @@ public class LSMRTreeTupleWriterFactoryForPointMBR extends TypeAwareTupleWriterF
     }
 
     @Override
-    public ILSMTreeTupleWriter createTupleWriter() {
+    public RTreeTypeAwareTupleWriter createTupleWriter() {
         return new LSMRTreeTupleWriterForPointMBR(typeTraits, keyFieldCount, valueFieldCount, antimatterAware,
                 isAntimatter);
     }

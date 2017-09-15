@@ -43,4 +43,14 @@ public interface ITreeIndexTupleWriter {
     // in the LSM-BTree can be either matter or anti-matter tuples and we want
     // to calculate the size of all tuples in the frame.
     public int getCopySpaceRequired(ITupleReference tuple);
+
+    /**
+     * Method sets tuple writer to raise update-in-place bit
+     *
+     * @param isUpdated
+     *            Value of update-in-place bit
+     */
+    default void setUpdated(boolean isUpdated) {
+        // Dummy default: most tuple writers don't support update bit
+    }
 }

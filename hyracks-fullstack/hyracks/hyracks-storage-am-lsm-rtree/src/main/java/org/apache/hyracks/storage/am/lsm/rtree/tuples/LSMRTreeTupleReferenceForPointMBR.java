@@ -21,34 +21,26 @@ package org.apache.hyracks.storage.am.lsm.rtree.tuples;
 
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
+import org.apache.hyracks.storage.am.common.util.BitOperationUtils;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMTreeTupleReference;
-import org.apache.hyracks.util.encoding.VarLenIntEncoderDecoder;
-import org.apache.hyracks.util.encoding.VarLenIntEncoderDecoder.VarLenIntDecoder;
+import org.apache.hyracks.storage.am.rtree.tuples.RTreeTypeAwareTupleReference;
 
-public class LSMRTreeTupleReferenceForPointMBR implements ILSMTreeTupleReference {
+public class LSMRTreeTupleReferenceForPointMBR extends RTreeTypeAwareTupleReference implements ILSMTreeTupleReference {
     private final int inputKeyFieldCount; //double field count for mbr secondary key of an input tuple
     private final int inputTotalFieldCount; //total field count (key + value fields) of an input tuple.
     private final int storedKeyFieldCount; //double field count to be stored for the mbr secondary key
 
-    private final ITypeTraits[] typeTraits;
-    private final int nullFlagsBytes;
-    private final int[] decodedFieldSlots;
-
-    private byte[] buf;
-    private int tupleStartOff;
-    private int dataStartOff;
     private final boolean antimatterAware;
-    private VarLenIntDecoder encDec = VarLenIntEncoderDecoder.createDecoder();
 
     public LSMRTreeTupleReferenceForPointMBR(ITypeTraits[] typeTraits, int keyFieldCount, int valueFieldCount,
             boolean antimatterAware) {
+        super(typeTraits);
         this.inputKeyFieldCount = keyFieldCount;
         this.inputTotalFieldCount = keyFieldCount + valueFieldCount;
         this.storedKeyFieldCount = keyFieldCount / 2;
 
-        this.typeTraits = typeTraits;
         this.nullFlagsBytes = getNullFlagsBytes();
-        decodedFieldSlots = new int[inputTotalFieldCount];
+        this.decodedFieldSlots = new int[inputTotalFieldCount];
         this.antimatterAware = antimatterAware;
     }
 
@@ -109,11 +101,6 @@ public class LSMRTreeTupleReferenceForPointMBR implements ILSMTreeTupleReference
     }
 
     @Override
-    public byte[] getFieldData(int fIdx) {
-        return buf;
-    }
-
-    @Override
     public int getFieldLength(int fIdx) {
         if (getInternalFieldIdx(fIdx) == 0) {
             return decodedFieldSlots[0];
@@ -139,8 +126,9 @@ public class LSMRTreeTupleReferenceForPointMBR implements ILSMTreeTupleReference
         }
     }
 
-    private int getNullFlagsBytes() {
-        return (int) Math.ceil((inputTotalFieldCount + (antimatterAware ? 1 : 0)) / 8.0);
+    @Override
+    protected int getNullFlagsBytes() {
+        return BitOperationUtils.getFlagBytes(inputTotalFieldCount + (antimatterAware ? 1 : 0));
     }
 
     @Override
@@ -150,11 +138,7 @@ public class LSMRTreeTupleReferenceForPointMBR implements ILSMTreeTupleReference
 
     @Override
     public boolean isAntimatter() {
-        // Check if the leftmost bit is 0 or 1.
-        final byte mask = (byte) (1 << 7);
-        if ((buf[tupleStartOff] & mask) != 0) {
-            return true;
-        }
-        return false;
+        // Check antimatter bit.
+        return BitOperationUtils.getBit(buf, tupleStartOff, ANTIMATTER_BIT_OFFSET);
     }
 }

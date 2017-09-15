@@ -39,7 +39,7 @@ public class BTreeModificationOperationCallbackTest extends AbstractModification
         IMetadataPageManager freePageManager = freePageManagerFactory.createPageManager(harness.getBufferCache());
         index = BTreeUtils.createBTree(harness.getBufferCache(), SerdeUtils.serdesToTypeTraits(keySerdes),
                 SerdeUtils.serdesToComparatorFactories(keySerdes, keySerdes.length), BTreeLeafFrameType.REGULAR_NSM,
-                harness.getFileReference(), freePageManager);
+                harness.getFileReference(), freePageManager, false);
     }
 
     @Override

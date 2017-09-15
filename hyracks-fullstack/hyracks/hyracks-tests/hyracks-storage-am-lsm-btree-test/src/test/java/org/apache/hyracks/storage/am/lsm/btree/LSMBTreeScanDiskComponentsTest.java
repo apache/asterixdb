@@ -81,7 +81,7 @@ public class LSMBTreeScanDiskComponentsTest extends OrderedIndexTestDriver {
                 harness.getFileReference(), harness.getDiskBufferCache(), fieldSerdes, numKeys,
                 harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(), harness.getOperationTracker(),
                 harness.getIOScheduler(), harness.getIOOperationCallback(), harness.getMetadataPageManagerFactory(),
-                false);
+                false, true, false);
     }
 
     @Override

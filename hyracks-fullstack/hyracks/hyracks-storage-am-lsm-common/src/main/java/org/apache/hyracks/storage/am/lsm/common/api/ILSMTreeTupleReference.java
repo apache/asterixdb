@@ -22,5 +22,8 @@ package org.apache.hyracks.storage.am.lsm.common.api;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 
 public interface ILSMTreeTupleReference extends ITreeIndexTupleReference {
+
+    byte ANTIMATTER_BIT_OFFSET = 7;
+
     public boolean isAntimatter();
 }

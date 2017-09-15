@@ -19,28 +19,26 @@
 
 package org.apache.hyracks.storage.am.btree.frames;
 
-import org.apache.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
-import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleWriterFactory;
+import org.apache.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
 
 public class BTreeNSMLeafFrameFactory implements ITreeIndexFrameFactory {
 
     private static final long serialVersionUID = 1L;
 
-    private final ITreeIndexTupleWriterFactory tupleWriterFactory;
+    private final TypeAwareTupleWriterFactory tupleWriterFactory;
 
-    public BTreeNSMLeafFrameFactory(ITreeIndexTupleWriterFactory tupleWriterFactory) {
+    public BTreeNSMLeafFrameFactory(TypeAwareTupleWriterFactory tupleWriterFactory) {
         this.tupleWriterFactory = tupleWriterFactory;
     }
 
     @Override
-    public IBTreeLeafFrame createFrame() {
+    public BTreeNSMLeafFrame createFrame() {
         return new BTreeNSMLeafFrame(tupleWriterFactory.createTupleWriter());
     }
 
     @Override
-    public ITreeIndexTupleWriterFactory getTupleWriterFactory() {
+    public TypeAwareTupleWriterFactory getTupleWriterFactory() {
         return tupleWriterFactory;
     }
-
 }

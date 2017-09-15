@@ -20,11 +20,9 @@
 package org.apache.hyracks.storage.am.common.tuples;
 
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
-import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleWriterFactory;
 
-public class TypeAwareTupleWriterFactory implements
-        ITreeIndexTupleWriterFactory {
+public class TypeAwareTupleWriterFactory implements ITreeIndexTupleWriterFactory {
 
     private static final long serialVersionUID = 1L;
     protected ITypeTraits[] typeTraits;
@@ -34,7 +32,7 @@ public class TypeAwareTupleWriterFactory implements
     }
 
     @Override
-    public ITreeIndexTupleWriter createTupleWriter() {
+    public TypeAwareTupleWriter createTupleWriter() {
         return new TypeAwareTupleWriter(typeTraits);
     }
 

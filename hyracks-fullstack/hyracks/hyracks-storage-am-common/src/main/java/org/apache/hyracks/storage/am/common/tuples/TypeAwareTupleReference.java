@@ -22,6 +22,7 @@ package org.apache.hyracks.storage.am.common.tuples;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleReference;
+import org.apache.hyracks.storage.am.common.util.BitOperationUtils;
 import org.apache.hyracks.util.encoding.VarLenIntEncoderDecoder;
 import org.apache.hyracks.util.encoding.VarLenIntEncoderDecoder.VarLenIntDecoder;
 
@@ -119,7 +120,7 @@ public class TypeAwareTupleReference implements ITreeIndexTupleReference {
     }
 
     protected int getNullFlagsBytes() {
-        return (int) Math.ceil(fieldCount / 8.0);
+        return BitOperationUtils.getFlagBytes(fieldCount);
     }
 
     @Override

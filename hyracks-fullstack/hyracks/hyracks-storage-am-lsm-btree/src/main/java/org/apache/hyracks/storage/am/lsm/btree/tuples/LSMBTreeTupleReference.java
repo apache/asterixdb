@@ -20,11 +20,12 @@
 package org.apache.hyracks.storage.am.lsm.btree.tuples;
 
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
+import org.apache.hyracks.storage.am.btree.tuples.BTreeTypeAwareTupleReference;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
-import org.apache.hyracks.storage.am.common.tuples.TypeAwareTupleReference;
+import org.apache.hyracks.storage.am.common.util.BitOperationUtils;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMTreeTupleReference;
 
-public class LSMBTreeTupleReference extends TypeAwareTupleReference implements ILSMTreeTupleReference {
+public class LSMBTreeTupleReference extends BTreeTypeAwareTupleReference implements ILSMTreeTupleReference {
 
     // Indicates whether the last call to setFieldCount() was initiated by
     // by the outside or whether it was called internally to set up an
@@ -32,8 +33,8 @@ public class LSMBTreeTupleReference extends TypeAwareTupleReference implements I
     private boolean resetFieldCount = false;
     private final int numKeyFields;
 
-    public LSMBTreeTupleReference(ITypeTraits[] typeTraits, int numKeyFields) {
-        super(typeTraits);
+    public LSMBTreeTupleReference(ITypeTraits[] typeTraits, int numKeyFields, boolean updateAware) {
+        super(typeTraits, updateAware);
         this.numKeyFields = numKeyFields;
     }
 
@@ -76,18 +77,18 @@ public class LSMBTreeTupleReference extends TypeAwareTupleReference implements I
 
     @Override
     protected int getNullFlagsBytes() {
-        // +1.0 is for matter/antimatter bit.
-        return (int) Math.ceil((fieldCount + 1.0) / 8.0);
+        // number of fields + matter/antimatter bit.
+        int numBits = fieldCount + 1;
+        if (updateAware) {
+            numBits++;
+        }
+        return BitOperationUtils.getFlagBytes(numBits);
     }
 
     @Override
     public boolean isAntimatter() {
-          // Check if the leftmost bit is 0 or 1.
-        final byte mask = (byte) (1 << 7);
-        if ((buf[tupleStartOff] & mask) != 0) {
-            return true;
-        }
-        return false;
+        // Check antimatter bit.
+        return BitOperationUtils.getBit(buf, tupleStartOff, ANTIMATTER_BIT_OFFSET);
     }
 
     public int getTupleStart() {

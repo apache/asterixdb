@@ -20,23 +20,20 @@
 package org.apache.hyracks.storage.am.lsm.rtree.tuples;
 
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
-import org.apache.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMTreeTupleWriter;
+import org.apache.hyracks.storage.am.rtree.tuples.RTreeTypeAwareTupleWriterFactory;
 
-public class LSMRTreeTupleWriterFactory extends TypeAwareTupleWriterFactory {
+public class LSMRTreeTupleWriterFactory extends RTreeTypeAwareTupleWriterFactory {
 
     private static final long serialVersionUID = 1L;
-    private final ITypeTraits[] typeTraits;
     private final boolean isAntimatter;
 
     public LSMRTreeTupleWriterFactory(ITypeTraits[] typeTraits, boolean isAntimatter) {
         super(typeTraits);
-        this.typeTraits = typeTraits;
         this.isAntimatter = isAntimatter;
     }
 
     @Override
-    public ILSMTreeTupleWriter createTupleWriter() {
+    public LSMRTreeTupleWriter createTupleWriter() {
         return new LSMRTreeTupleWriter(typeTraits, isAntimatter);
     }
 

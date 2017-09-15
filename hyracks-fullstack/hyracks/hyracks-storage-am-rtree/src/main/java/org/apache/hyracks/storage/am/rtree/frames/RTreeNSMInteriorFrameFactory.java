@@ -21,28 +21,15 @@ package org.apache.hyracks.storage.am.rtree.frames;
 
 import org.apache.hyracks.storage.am.common.api.IPrimitiveValueProvider;
 import org.apache.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
-import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
-import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleWriterFactory;
 import org.apache.hyracks.storage.am.rtree.api.IRTreeInteriorFrame;
+import org.apache.hyracks.storage.am.rtree.tuples.RTreeTypeAwareTupleWriterFactory;
 
-public class RTreeNSMInteriorFrameFactory implements ITreeIndexFrameFactory {
+public class RTreeNSMInteriorFrameFactory extends RTreeFrameFactory {
 
-    private static final long serialVersionUID = 1L;
-    private final ITreeIndexTupleWriterFactory tupleWriterFactory;
-    private final IPrimitiveValueProviderFactory[] keyValueProviderFactories;
-    private final RTreePolicyType rtreePolicyType;
-    private final boolean isPointMBR;
-
-    public RTreeNSMInteriorFrameFactory(ITreeIndexTupleWriterFactory tupleWriterFactory,
+    public RTreeNSMInteriorFrameFactory(RTreeTypeAwareTupleWriterFactory tupleWriterFactory,
             IPrimitiveValueProviderFactory[] keyValueProviderFactories, RTreePolicyType rtreePolicyType,
             boolean isPointMBR) {
-        this.tupleWriterFactory = tupleWriterFactory;
-        if (keyValueProviderFactories.length % 2 != 0) {
-            throw new IllegalArgumentException("The key has different number of dimensions.");
-        }
-        this.keyValueProviderFactories = keyValueProviderFactories;
-        this.rtreePolicyType = rtreePolicyType;
-        this.isPointMBR = isPointMBR;
+        super(tupleWriterFactory, keyValueProviderFactories, rtreePolicyType, isPointMBR);
     }
 
     @Override
@@ -53,11 +40,6 @@ public class RTreeNSMInteriorFrameFactory implements ITreeIndexFrameFactory {
         }
         return new RTreeNSMInteriorFrame(tupleWriterFactory.createTupleWriter(), keyValueProviders,
                 rtreePolicyType, isPointMBR);
-    }
-
-    @Override
-    public ITreeIndexTupleWriterFactory getTupleWriterFactory() {
-        return tupleWriterFactory;
     }
 
 }

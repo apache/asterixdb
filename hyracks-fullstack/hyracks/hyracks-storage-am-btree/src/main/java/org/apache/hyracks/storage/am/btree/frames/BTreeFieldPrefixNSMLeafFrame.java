@@ -30,28 +30,25 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import org.apache.hyracks.storage.am.btree.api.IPrefixSlotManager;
 import org.apache.hyracks.storage.am.btree.compressors.FieldPrefixCompressor;
+import org.apache.hyracks.storage.am.btree.impls.BTreeFieldPrefixTupleReference;
 import org.apache.hyracks.storage.am.btree.impls.BTreeOpContext.PageValidationInfo;
 import org.apache.hyracks.storage.am.btree.impls.FieldPrefixPrefixTupleReference;
 import org.apache.hyracks.storage.am.btree.impls.FieldPrefixSlotManager;
-import org.apache.hyracks.storage.am.btree.impls.FieldPrefixTupleReference;
+import org.apache.hyracks.storage.am.btree.tuples.BTreeTypeAwareTupleWriter;
+import org.apache.hyracks.storage.am.common.api.IBTreeIndexTupleReference;
 import org.apache.hyracks.storage.am.common.api.ISplitKey;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameCompressor;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleReference;
-import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
 import org.apache.hyracks.storage.am.common.frames.FrameOpSpaceStatus;
 import org.apache.hyracks.storage.am.common.ophelpers.FindTupleMode;
 import org.apache.hyracks.storage.am.common.ophelpers.FindTupleNoExactMatchPolicy;
 import org.apache.hyracks.storage.am.common.ophelpers.SlotOffTupleOff;
-import org.apache.hyracks.storage.am.common.tuples.TypeAwareTupleWriter;
 import org.apache.hyracks.storage.common.MultiComparator;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.storage.common.buffercache.IExtraPageBlockHelper;
 
-/**
- * WARNING: only works when tupleWriter is an instance of TypeAwareTupleWriter
- */
 public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
 
     protected static final int PAGE_LSN_OFFSET = ITreeIndexFrame.Constants.RESERVED_HEADER_SIZE;
@@ -63,21 +60,21 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
 
     private final IPrefixSlotManager slotManager;
     private final ITreeIndexFrameCompressor compressor;
-    private final FieldPrefixTupleReference frameTuple;
+    private final BTreeFieldPrefixTupleReference frameTuple;
     private final FieldPrefixPrefixTupleReference framePrefixTuple;
-    private final ITreeIndexTupleWriter tupleWriter;
+    private final BTreeTypeAwareTupleWriter tupleWriter;
 
     private MultiComparator cmp;
 
     protected ICachedPage page = null;
     protected ByteBuffer buf = null;
 
-    public BTreeFieldPrefixNSMLeafFrame(ITreeIndexTupleWriter tupleWriter) {
+    public BTreeFieldPrefixNSMLeafFrame(BTreeTypeAwareTupleWriter tupleWriter) {
         this.tupleWriter = tupleWriter;
-        this.frameTuple = new FieldPrefixTupleReference(tupleWriter.createTupleReference());
+        this.frameTuple = new BTreeFieldPrefixTupleReference(tupleWriter.createTupleReference());
         this.slotManager = new FieldPrefixSlotManager();
 
-        ITypeTraits[] typeTraits = ((TypeAwareTupleWriter) tupleWriter).getTypeTraits();
+        ITypeTraits[] typeTraits = tupleWriter.getTypeTraits();
         this.framePrefixTuple = new FieldPrefixPrefixTupleReference(typeTraits);
         this.compressor = new FieldPrefixCompressor(typeTraits, 0.001f, 2);
     }
@@ -748,13 +745,13 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     }
 
     @Override
-    public ITreeIndexTupleWriter getTupleWriter() {
+    public BTreeTypeAwareTupleWriter getTupleWriter() {
         return tupleWriter;
     }
 
     @Override
-    public ITreeIndexTupleReference createTupleReference() {
-        return new FieldPrefixTupleReference(tupleWriter.createTupleReference());
+    public IBTreeIndexTupleReference createTupleReference() {
+        return new BTreeFieldPrefixTupleReference(tupleWriter.createTupleReference());
     }
 
     @Override

@@ -20,16 +20,15 @@
 package org.apache.hyracks.storage.am.btree.frames;
 
 import org.apache.hyracks.storage.am.btree.api.IBTreeLeafFrame;
+import org.apache.hyracks.storage.am.btree.tuples.BTreeTypeAwareTupleWriterFactory;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
-import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleWriterFactory;
 
 public class BTreeFieldPrefixNSMLeafFrameFactory implements ITreeIndexFrameFactory {
-
     private static final long serialVersionUID = 1L;
 
-    private final ITreeIndexTupleWriterFactory tupleWriterFactory;
+    protected final BTreeTypeAwareTupleWriterFactory tupleWriterFactory;
 
-    public BTreeFieldPrefixNSMLeafFrameFactory(ITreeIndexTupleWriterFactory tupleWriterFactory) {
+    public BTreeFieldPrefixNSMLeafFrameFactory(BTreeTypeAwareTupleWriterFactory tupleWriterFactory) {
         this.tupleWriterFactory = tupleWriterFactory;
     }
 
@@ -39,8 +38,7 @@ public class BTreeFieldPrefixNSMLeafFrameFactory implements ITreeIndexFrameFacto
     }
 
     @Override
-    public ITreeIndexTupleWriterFactory getTupleWriterFactory() {
+    public BTreeTypeAwareTupleWriterFactory getTupleWriterFactory() {
         return tupleWriterFactory;
     }
-
 }

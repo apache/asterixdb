@@ -23,8 +23,8 @@ import java.nio.ByteBuffer;
 
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
-import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
+import org.apache.hyracks.storage.am.common.util.BitOperationUtils;
 import org.apache.hyracks.util.encoding.VarLenIntEncoderDecoder;
 
 public class TypeAwareTupleWriter implements ITreeIndexTupleWriter {
@@ -55,7 +55,7 @@ public class TypeAwareTupleWriter implements ITreeIndexTupleWriter {
     }
 
     @Override
-    public ITreeIndexTupleReference createTupleReference() {
+    public TypeAwareTupleReference createTupleReference() {
         return new TypeAwareTupleReference(typeTraits);
     }
 
@@ -114,7 +114,7 @@ public class TypeAwareTupleWriter implements ITreeIndexTupleWriter {
     }
 
     protected int getNullFlagsBytes(ITupleReference tuple) {
-        return (int) Math.ceil(tuple.getFieldCount() / 8.0);
+        return BitOperationUtils.getFlagBytes(tuple.getFieldCount());
     }
 
     protected int getFieldSlotsBytes(ITupleReference tuple) {
@@ -128,7 +128,7 @@ public class TypeAwareTupleWriter implements ITreeIndexTupleWriter {
     }
 
     protected int getNullFlagsBytes(int numFields) {
-        return (int) Math.ceil(numFields / 8.0);
+        return BitOperationUtils.getFlagBytes(numFields);
     }
 
     protected int getFieldSlotsBytes(ITupleReference tuple, int startField, int numFields) {

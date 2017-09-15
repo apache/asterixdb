@@ -68,7 +68,8 @@ public class LSMBTreeTuplesTest {
             // Create tuples with varying number of fields, and try to interpret their bytes with the lsmBTreeTuple.
             for (int numFields = numKeyFields; numFields <= maxFieldSerdes.length; numFields++) {
                 // Create and write tuple to bytes using an LSMBTreeTupleWriter.
-                LSMBTreeTupleWriter maxMatterTupleWriter = new LSMBTreeTupleWriter(maxTypeTraits, numKeyFields, false);
+                LSMBTreeTupleWriter maxMatterTupleWriter =
+                        new LSMBTreeTupleWriter(maxTypeTraits, numKeyFields, false, false);
                 ITupleReference maxTuple = TupleUtils.createTuple(maxFieldSerdes, (Object[])maxFields);
                 ByteBuffer maxMatterBuf = writeTuple(maxTuple, maxMatterTupleWriter);
                 // Tuple reference should work for both matter and antimatter tuples (doesn't matter which factory creates it).
@@ -84,9 +85,10 @@ public class LSMBTreeTuplesTest {
                 }
                 // Create and write tuple to bytes using an LSMBTreeTupleWriter.
                 ITupleReference tuple = TupleUtils.createTuple(fieldSerdes, (Object[])fields);
-                LSMBTreeTupleWriter matterTupleWriter = new LSMBTreeTupleWriter(typeTraits, numKeyFields, false);
-                LSMBTreeTupleWriter antimatterTupleWriter = new LSMBTreeTupleWriter(typeTraits, numKeyFields, true);
-                LSMBTreeCopyTupleWriter copyTupleWriter = new LSMBTreeCopyTupleWriter(typeTraits, numKeyFields);
+                LSMBTreeTupleWriter matterTupleWriter = new LSMBTreeTupleWriter(typeTraits, numKeyFields, false, false);
+                LSMBTreeTupleWriter antimatterTupleWriter =
+                        new LSMBTreeTupleWriter(typeTraits, numKeyFields, true, false);
+                LSMBTreeCopyTupleWriter copyTupleWriter = new LSMBTreeCopyTupleWriter(typeTraits, numKeyFields, false);
                 ByteBuffer matterBuf = writeTuple(tuple, matterTupleWriter);
                 ByteBuffer antimatterBuf = writeTuple(tuple, antimatterTupleWriter);
 

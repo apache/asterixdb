@@ -40,7 +40,7 @@ public class BTreeSearchOperationCallbackTest extends AbstractSearchOperationCal
                 new LinkedMetaDataPageManager(harness.getBufferCache(), metaFrameFactory);
         index = BTreeUtils.createBTree(harness.getBufferCache(), SerdeUtils.serdesToTypeTraits(keySerdes),
                 SerdeUtils.serdesToComparatorFactories(keySerdes, keySerdes.length), BTreeLeafFrameType.REGULAR_NSM,
-                harness.getFileReference(), freePageManager);
+                harness.getFileReference(), freePageManager, false);
     }
 
     @Override

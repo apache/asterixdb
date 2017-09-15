@@ -90,6 +90,7 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
     protected final ITreeIndexFrameFactory insertLeafFrameFactory;
     protected final ITreeIndexFrameFactory deleteLeafFrameFactory;
     protected final IBinaryComparatorFactory[] cmpFactories;
+    private final boolean updateAware;
 
     private final boolean needKeyDupCheck;
 
@@ -105,13 +106,14 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
             double bloomFilterFalsePositiveRate, int fieldCount, IBinaryComparatorFactory[] cmpFactories,
             ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler,
             ILSMIOOperationCallback ioOpCallback, boolean needKeyDupCheck, int[] btreeFields, int[] filterFields,
-            boolean durable) throws HyracksDataException {
+            boolean durable, boolean updateAware) throws HyracksDataException {
         super(ioManager, virtualBufferCaches, diskBTreeFactory.getBufferCache(), fileManager,
                 bloomFilterFalsePositiveRate, mergePolicy, opTracker, ioScheduler, ioOpCallback, filterFrameFactory,
                 filterManager, filterFields, durable, filterHelper, btreeFields);
         this.insertLeafFrameFactory = insertLeafFrameFactory;
         this.deleteLeafFrameFactory = deleteLeafFrameFactory;
         this.cmpFactories = cmpFactories;
+        this.updateAware = updateAware;
         int i = 0;
         for (IVirtualBufferCache virtualBufferCache : virtualBufferCaches) {
             LSMBTreeMemoryComponent mutableComponent = new LSMBTreeMemoryComponent(
@@ -145,6 +147,7 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
         this.cmpFactories = cmpFactories;
         this.needKeyDupCheck = needKeyDupCheck;
         this.hasBloomFilter = true;
+        this.updateAware = false;
         componentFactory = new LSMBTreeDiskComponentFactory(diskBTreeFactory, bloomFilterFactory, null);
         bulkLoadComponentFactory = new LSMBTreeDiskComponentFactory(bulkLoadBTreeFactory, bloomFilterFactory, null);
     }
@@ -325,6 +328,11 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
         try {
             while (scanCursor.hasNext()) {
                 scanCursor.next();
+                // we can safely throw away updated tuples in secondary BTree components, because they correspond to
+                // deleted tuples
+                if (updateAware && ((LSMBTreeTupleReference) scanCursor.getTuple()).isUpdated()) {
+                    continue;
+                }
                 componentBulkLoader.add(scanCursor.getTuple());
             }
         } finally {

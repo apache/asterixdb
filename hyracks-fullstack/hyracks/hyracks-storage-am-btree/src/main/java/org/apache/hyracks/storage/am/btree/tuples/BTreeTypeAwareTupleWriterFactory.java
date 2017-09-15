@@ -16,12 +16,23 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.storage.am.common.api;
+package org.apache.hyracks.storage.am.btree.tuples;
 
-import java.io.Serializable;
+import org.apache.hyracks.api.dataflow.value.ITypeTraits;
+import org.apache.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
 
-public interface ITreeIndexFrameFactory extends Serializable {
-    ITreeIndexFrame createFrame();
+public class BTreeTypeAwareTupleWriterFactory extends TypeAwareTupleWriterFactory {
 
-    ITreeIndexTupleWriterFactory getTupleWriterFactory();
+    private static final long serialVersionUID = 1L;
+    protected final boolean updateAware;
+
+    public BTreeTypeAwareTupleWriterFactory(ITypeTraits[] typeTraits, boolean updateAware) {
+        super(typeTraits);
+        this.updateAware = updateAware;
+    }
+
+    @Override
+    public BTreeTypeAwareTupleWriter createTupleWriter() {
+        return new BTreeTypeAwareTupleWriter(typeTraits, updateAware);
+    }
 }

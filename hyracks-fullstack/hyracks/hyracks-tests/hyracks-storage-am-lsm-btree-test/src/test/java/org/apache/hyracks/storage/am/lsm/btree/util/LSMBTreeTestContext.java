@@ -74,7 +74,8 @@ public final class LSMBTreeTestContext extends OrderedIndexTestContext {
             FileReference file, IBufferCache diskBufferCache, ISerializerDeserializer[] fieldSerdes, int numKeyFields,
             double bloomFilterFalsePositiveRate, ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker,
             ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallback ioOpCallback,
-            IMetadataPageManagerFactory metadataPageManagerFactory, boolean filtered) throws Exception {
+            IMetadataPageManagerFactory metadataPageManagerFactory, boolean filtered, boolean needKeyDupCheck,
+            boolean updateAware) throws HyracksDataException {
         ITypeTraits[] typeTraits = SerdeUtils.serdesToTypeTraits(fieldSerdes);
         IBinaryComparatorFactory[] cmpFactories = SerdeUtils.serdesToComparatorFactories(fieldSerdes, numKeyFields);
         int[] bloomFilterKeyFields = new int[numKeyFields];
@@ -93,12 +94,15 @@ public final class LSMBTreeTestContext extends OrderedIndexTestContext {
             IBinaryComparatorFactory[] filterCmp = { cmpFactories[0] };
             lsmTree = LSMBTreeUtil.createLSMTree(ioManager, virtualBufferCaches, file, diskBufferCache, typeTraits,
                     cmpFactories, bloomFilterKeyFields, bloomFilterFalsePositiveRate, mergePolicy, opTracker,
-                    ioScheduler, ioOpCallback, true, filterTypeTraits, filterCmp, btreefields, filterfields, true,
-                    metadataPageManagerFactory);
+                    ioScheduler, ioOpCallback, needKeyDupCheck, filterTypeTraits, filterCmp, btreefields, filterfields,
+                    true,
+                    metadataPageManagerFactory, updateAware);
         } else {
             lsmTree = LSMBTreeUtil.createLSMTree(ioManager, virtualBufferCaches, file, diskBufferCache, typeTraits,
                     cmpFactories, bloomFilterKeyFields, bloomFilterFalsePositiveRate, mergePolicy, opTracker,
-                    ioScheduler, ioOpCallback, true, null, null, null, null, true, metadataPageManagerFactory);
+                    ioScheduler, ioOpCallback, needKeyDupCheck, null, null, null, null, true,
+                    metadataPageManagerFactory,
+                    updateAware);
         }
         LSMBTreeTestContext testCtx = new LSMBTreeTestContext(fieldSerdes, lsmTree, filtered);
         return testCtx;

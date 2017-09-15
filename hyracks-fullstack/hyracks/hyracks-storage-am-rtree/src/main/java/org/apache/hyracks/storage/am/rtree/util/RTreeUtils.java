@@ -38,6 +38,10 @@ import org.apache.hyracks.storage.common.MultiComparator;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 
 public class RTreeUtils {
+
+    private RTreeUtils() {
+    }
+
     public static RTree createRTree(IBufferCache bufferCache, ITypeTraits[] typeTraits,
             IPrimitiveValueProviderFactory[] valueProviderFactories, IBinaryComparatorFactory[] cmpFactories,
             RTreePolicyType rtreePolicyType, FileReference file, boolean isPointMBR,

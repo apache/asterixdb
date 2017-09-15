@@ -135,7 +135,7 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
             BTree deleteKeysBTree =
                     BTreeUtils.createBTree(virtualBufferCache, new VirtualFreePageManager(virtualBufferCache),
                             invListTypeTraits, invListCmpFactories, BTreeLeafFrameType.REGULAR_NSM,
-                            ioManager.resolveAbsolutePath(fileManager.getBaseDir() + "_virtual_del_" + i));
+                            ioManager.resolveAbsolutePath(fileManager.getBaseDir() + "_virtual_del_" + i), false);
             LSMInvertedIndexMemoryComponent mutableComponent =
                     new LSMInvertedIndexMemoryComponent(memInvIndex, deleteKeysBTree, virtualBufferCache,
                             i == 0 ? true : false, filterHelper == null ? null : filterHelper.createFilter());

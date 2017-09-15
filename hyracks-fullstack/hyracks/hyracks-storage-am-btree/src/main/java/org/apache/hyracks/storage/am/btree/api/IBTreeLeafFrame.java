@@ -30,7 +30,7 @@ import org.apache.hyracks.storage.common.buffercache.IExtraPageBlockHelper;
 
 public interface IBTreeLeafFrame extends IBTreeFrame {
     public int findTupleIndex(ITupleReference searchKey, ITreeIndexTupleReference pageTuple, MultiComparator cmp,
-                              FindTupleMode ftm, FindTupleNoExactMatchPolicy ftp) throws HyracksDataException;
+            FindTupleMode ftm, FindTupleNoExactMatchPolicy ftp) throws HyracksDataException;
 
     public int findUpdateTupleIndex(ITupleReference tuple) throws HyracksDataException;
 
