@@ -298,10 +298,10 @@ public class CCApplication extends BaseCCApplication {
             case Servlets.QUERY_SERVICE:
                 return new QueryServiceServlet(ctx, paths, appCtx, SQLPP,
                         ccExtensionManager.getCompilationProvider(SQLPP), getStatementExecutorFactory(),
-                        componentProvider);
+                        componentProvider, null);
             case Servlets.QUERY_AQL:
                 return new QueryServiceServlet(ctx, paths, appCtx, AQL, ccExtensionManager.getCompilationProvider(AQL),
-                        getStatementExecutorFactory(), componentProvider);
+                        getStatementExecutorFactory(), componentProvider, null);
             case Servlets.CONNECTOR:
                 return new ConnectorApiServlet(ctx, paths, appCtx);
             case Servlets.REBALANCE:

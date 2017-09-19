@@ -160,6 +160,7 @@ import org.apache.asterix.translator.CompiledStatements.CompiledInsertStatement;
 import org.apache.asterix.translator.CompiledStatements.CompiledLoadFromFileStatement;
 import org.apache.asterix.translator.CompiledStatements.CompiledUpsertStatement;
 import org.apache.asterix.translator.CompiledStatements.ICompiledDmlStatement;
+import org.apache.asterix.translator.IRequestParameters;
 import org.apache.asterix.translator.IStatementExecutor;
 import org.apache.asterix.translator.IStatementExecutorContext;
 import org.apache.asterix.translator.NoOpStatementExecutorContext;
@@ -249,15 +250,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     }
 
     @Override
-    public void compileAndExecute(IHyracksClientConnection hcc, IHyracksDataset hdc, ResultDelivery resultDelivery,
-            ResultMetadata outMetadata, Stats stats) throws Exception {
-        compileAndExecute(hcc, hdc, resultDelivery, outMetadata, stats, null, null);
-    }
-
-    @Override
-    public void compileAndExecute(IHyracksClientConnection hcc, IHyracksDataset hdc, ResultDelivery resultDelivery,
-            ResultMetadata outMetadata, Stats stats, String clientContextId, IStatementExecutorContext ctx)
-            throws Exception {
+    public void compileAndExecute(IHyracksClientConnection hcc, IStatementExecutorContext ctx,
+            IRequestParameters requestParameters) throws Exception {
         int resultSetIdCounter = 0;
         FileSplit outputFile = null;
         IAWriterFactory writerFactory = PrinterBasedWriterFactory.INSTANCE;
@@ -269,6 +263,11 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         String threadName = Thread.currentThread().getName();
         Thread.currentThread().setName(QueryTranslator.class.getSimpleName());
         Map<String, String> config = new HashMap<>();
+        final IHyracksDataset hdc = requestParameters.getHyracksDataset();
+        final ResultDelivery resultDelivery = requestParameters.getResultDelivery();
+        final Stats stats = requestParameters.getStats();
+        final ResultMetadata outMetadata = requestParameters.getOutMetadata();
+        final String clientContextId = requestParameters.getClientContextId();
         try {
             for (Statement stmt : statements) {
                 if (sessionConfig.is(SessionConfig.FORMAT_HTML)) {
@@ -389,8 +388,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         // No op
                         break;
                     case Statement.Kind.EXTENSION:
-                        ((IExtensionStatement) stmt).handle(this, metadataProvider, hcc, hdc, resultDelivery, stats,
-                                resultSetIdCounter);
+                        ((IExtensionStatement) stmt)
+                                .handle(hcc, this, requestParameters, metadataProvider, resultSetIdCounter);
                         break;
                     default:
                         throw new CompilationException("Unknown function");

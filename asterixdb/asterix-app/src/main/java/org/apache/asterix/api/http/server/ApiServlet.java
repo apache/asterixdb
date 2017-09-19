@@ -36,6 +36,7 @@ import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 
 import org.apache.asterix.app.result.ResultReader;
+import org.apache.asterix.app.translator.RequestParameters;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
@@ -46,6 +47,7 @@ import org.apache.asterix.lang.common.base.IParser;
 import org.apache.asterix.lang.common.base.IParserFactory;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.metadata.MetadataManager;
+import org.apache.asterix.translator.IRequestParameters;
 import org.apache.asterix.translator.IStatementExecutor;
 import org.apache.asterix.translator.IStatementExecutorFactory;
 import org.apache.asterix.translator.SessionConfig;
@@ -154,8 +156,10 @@ public class ApiServlet extends AbstractServlet {
                     compilationProvider, componentProvider);
             double duration;
             long startTime = System.currentTimeMillis();
-            translator.compileAndExecute(hcc, hds, IStatementExecutor.ResultDelivery.IMMEDIATE,
-                    null, new IStatementExecutor.Stats());
+            final IRequestParameters requestParameters =
+                    new RequestParameters(hds, IStatementExecutor.ResultDelivery.IMMEDIATE,
+                            new IStatementExecutor.Stats(), null, null, null);
+            translator.compileAndExecute(hcc, null, requestParameters);
             long endTime = System.currentTimeMillis();
             duration = (endTime - startTime) / 1000.00;
             out.println(HTML_STATEMENT_SEPARATOR);

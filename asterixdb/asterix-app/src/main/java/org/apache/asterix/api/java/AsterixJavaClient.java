@@ -23,7 +23,7 @@ import java.io.Reader;
 import java.util.List;
 
 import org.apache.asterix.api.common.APIFramework;
-import org.apache.asterix.app.translator.QueryTranslator;
+import org.apache.asterix.app.translator.RequestParameters;
 import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.utils.Job;
@@ -32,6 +32,7 @@ import org.apache.asterix.lang.common.base.IParser;
 import org.apache.asterix.lang.common.base.IParserFactory;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.metadata.MetadataManager;
+import org.apache.asterix.translator.IRequestParameters;
 import org.apache.asterix.translator.IStatementExecutor;
 import org.apache.asterix.translator.IStatementExecutorFactory;
 import org.apache.asterix.translator.SessionConfig;
@@ -109,8 +110,10 @@ public class AsterixJavaClient {
 
         IStatementExecutor translator = statementExecutorFactory.create(appCtx, statements, output, compilationProvider,
                 storageComponentProvider);
-        translator.compileAndExecute(hcc, null, QueryTranslator.ResultDelivery.IMMEDIATE,
-                null, new IStatementExecutor.Stats());
+        final IRequestParameters requestParameters =
+                new RequestParameters(null, IStatementExecutor.ResultDelivery.IMMEDIATE, new IStatementExecutor.Stats(),
+                        null, null, null);
+        translator.compileAndExecute(hcc, null, requestParameters);
         writer.flush();
     }
 

@@ -22,7 +22,9 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
+import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -39,6 +41,7 @@ import org.apache.asterix.lang.aql.parser.TokenMgrError;
 import org.apache.asterix.lang.common.base.IParser;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.metadata.MetadataManager;
+import org.apache.asterix.translator.IRequestParameters;
 import org.apache.asterix.translator.IStatementExecutor;
 import org.apache.asterix.translator.IStatementExecutor.ResultDelivery;
 import org.apache.asterix.translator.IStatementExecutor.Stats;
@@ -72,10 +75,12 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
     private final IStorageComponentProvider componentProvider;
     private final IStatementExecutorContext queryCtx;
     protected final IServiceContext serviceCtx;
+    protected final Function<IServletRequest, Map<String, String>> optionalParamProvider;
 
     public QueryServiceServlet(ConcurrentMap<String, Object> ctx, String[] paths, IApplicationContext appCtx,
             ILangExtension.Language queryLanguage, ILangCompilationProvider compilationProvider,
-            IStatementExecutorFactory statementExecutorFactory, IStorageComponentProvider componentProvider) {
+            IStatementExecutorFactory statementExecutorFactory, IStorageComponentProvider componentProvider,
+            Function<IServletRequest, Map<String, String>> optionalParamProvider) {
         super(appCtx, ctx, paths);
         this.queryLanguage = queryLanguage;
         this.compilationProvider = compilationProvider;
@@ -83,12 +88,13 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         this.componentProvider = componentProvider;
         this.queryCtx = (IStatementExecutorContext) ctx.get(ServletConstants.RUNNING_QUERIES_ATTR);
         this.serviceCtx = (IServiceContext) ctx.get(ServletConstants.SERVICE_CONTEXT_ATTR);
+        this.optionalParamProvider = optionalParamProvider;
     }
 
     @Override
     protected void post(IServletRequest request, IServletResponse response) {
         try {
-            handleRequest(getRequestParameters(request), response);
+            handleRequest(request, response);
         } catch (IOException e) {
             // Servlet methods should not throw exceptions
             // http://cwe.mitre.org/data/definitions/600.html
@@ -365,7 +371,8 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         return "http://" + host + path + handlePath(delivery);
     }
 
-    private void handleRequest(RequestParameters param, IServletResponse response) throws IOException {
+    private void handleRequest(IServletRequest request, IServletResponse response) throws IOException {
+        RequestParameters param = getRequestParameters(request);
         LOGGER.info(param.toString());
         long elapsedStart = System.nanoTime();
         final StringWriter stringWriter = new StringWriter();
@@ -393,7 +400,11 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
                 throw new AsterixException("Empty request, no statement provided");
             }
             String statementsText = param.statement + ";";
-            executeStatement(statementsText, sessionOutput, delivery, stats, param, handleUrl, execStartEnd);
+            Map<String, String> optionalParams = null;
+            if (optionalParamProvider != null) {
+                optionalParams = optionalParamProvider.apply(request);
+            }
+            executeStatement(statementsText, sessionOutput, delivery, stats, param, execStartEnd, optionalParams);
             if (ResultDelivery.IMMEDIATE == delivery || ResultDelivery.DEFERRED == delivery) {
                 ResultUtil.printStatus(sessionOutput, ResultStatus.SUCCESS);
             }
@@ -425,8 +436,8 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
     }
 
     protected void executeStatement(String statementsText, SessionOutput sessionOutput, ResultDelivery delivery,
-            IStatementExecutor.Stats stats, RequestParameters param, String handleUrl, long[] outExecStartEnd)
-            throws Exception {
+            IStatementExecutor.Stats stats, RequestParameters param, long[] outExecStartEnd,
+            Map<String, String> optionalParameters) throws Exception {
         IClusterManagementWork.ClusterState clusterState =
                 ((ICcApplicationContext) appCtx).getClusterStateManager().getState();
         if (clusterState != IClusterManagementWork.ClusterState.ACTIVE) {
@@ -439,8 +450,10 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         IStatementExecutor translator = statementExecutorFactory.create((ICcApplicationContext) appCtx, statements,
                 sessionOutput, compilationProvider, componentProvider);
         outExecStartEnd[0] = System.nanoTime();
-        translator.compileAndExecute(getHyracksClientConnection(), getHyracksDataset(), delivery, null, stats,
-                param.clientContextID, queryCtx);
+        final IRequestParameters requestParameters =
+                new org.apache.asterix.app.translator.RequestParameters(getHyracksDataset(), delivery, stats, null,
+                        param.clientContextID, optionalParameters);
+        translator.compileAndExecute(getHyracksClientConnection(), queryCtx, requestParameters);
         outExecStartEnd[1] = System.nanoTime();
     }
 

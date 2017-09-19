@@ -24,6 +24,7 @@ import java.lang.management.MemoryPoolMXBean;
 import java.lang.management.MemoryType;
 import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
@@ -110,6 +111,14 @@ public class HttpUtil {
 
     public static void setContentType(IServletResponse response, String type) throws IOException {
         response.setHeader(HttpHeaderNames.CONTENT_TYPE, type);
+    }
+
+    public static Map<String, String> getRequestHeaders(IServletRequest request) {
+        Map<String, String> headers = new HashMap<>();
+        request.getHttpRequest().headers().forEach(entry -> {
+            headers.put(entry.getKey(), entry.getValue());
+        });
+        return headers;
     }
 
     /**
