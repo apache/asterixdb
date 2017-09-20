@@ -553,4 +553,9 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
             getDatasets().add(dataset);
         }
     }
+
+    @Override
+    public String getDisplayName() throws HyracksDataException {
+        return this.getEntityId().toString();
+    }
 }

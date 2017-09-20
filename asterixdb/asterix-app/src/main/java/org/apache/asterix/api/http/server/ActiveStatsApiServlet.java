@@ -44,7 +44,7 @@ public class ActiveStatsApiServlet extends AbstractServlet {
     private static final int DEFAULT_EXPIRE_TIME = 2000;
     private final ActiveNotificationHandler activeNotificationHandler;
 
-    public ActiveStatsApiServlet(ConcurrentMap<String, Object> ctx, String[] paths, ICcApplicationContext appCtx) {
+    public ActiveStatsApiServlet(ICcApplicationContext appCtx, ConcurrentMap<String, Object> ctx, String... paths) {
         super(ctx, paths);
         this.activeNotificationHandler = (ActiveNotificationHandler) appCtx.getActiveNotificationHandler();
     }
@@ -80,7 +80,7 @@ public class ActiveStatsApiServlet extends AbstractServlet {
             }
             long currentTime = System.currentTimeMillis();
             for (int iter1 = 0; iter1 < listeners.length; iter1++) {
-                resNode.putPOJO(listeners[iter1].getEntityId().toString(),
+                resNode.putPOJO(listeners[iter1].getDisplayName(),
                         constructNode(om, listeners[iter1], currentTime, expireTime));
             }
             // Construct Response

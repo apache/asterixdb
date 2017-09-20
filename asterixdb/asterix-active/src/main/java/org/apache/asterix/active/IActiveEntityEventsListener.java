@@ -96,4 +96,10 @@ public interface IActiveEntityEventsListener {
      * Get the job failure for the last failed run
      */
     Exception getJobFailure();
+
+    /**
+     * Get the stats name that's used to form the stats JSON for the active entity
+     * @return the customized stats name for current active entity
+     */
+    String getDisplayName() throws HyracksDataException;
 }

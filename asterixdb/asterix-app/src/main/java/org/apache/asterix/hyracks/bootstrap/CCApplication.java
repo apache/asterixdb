@@ -319,7 +319,7 @@ public class CCApplication extends BaseCCApplication {
             case Servlets.DIAGNOSTICS:
                 return new DiagnosticsApiServlet(appCtx, ctx, paths);
             case Servlets.ACTIVE_STATS:
-                return new ActiveStatsApiServlet(ctx, paths, appCtx);
+                return new ActiveStatsApiServlet(appCtx, ctx, paths);
             default:
                 throw new IllegalStateException(String.valueOf(key));
         }
