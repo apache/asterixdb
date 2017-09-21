@@ -19,36 +19,23 @@
 
 package org.apache.asterix.common.context;
 
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
+import org.apache.hyracks.storage.am.lsm.common.impls.PrefixMergePolicyFactory;
 
-public class CorrelatedPrefixMergePolicyFactory implements ILSMMergePolicyFactory {
+public class CorrelatedPrefixMergePolicyFactory extends PrefixMergePolicyFactory {
 
     private static final long serialVersionUID = 1L;
     public static final String NAME = "correlated-prefix";
     public static final String KEY_DATASET_ID = "datasetId";
-    public static final String KEY_MAX_COMPONENT_SIZE = "max-mergable-component-size";
-    public static final String KEY_MAX_COMPONENT_COUNT = "max-tolerance-component-count";
-
-    private static final String[] SET_VALUES = new String[] { KEY_MAX_COMPONENT_SIZE, KEY_MAX_COMPONENT_COUNT };
-    private static final Set<String> PROPERTIES_NAMES = new HashSet<>(Arrays.asList(SET_VALUES));
 
     @Override
     public String getName() {
         return NAME;
-    }
-
-    @Override
-    public Set<String> getPropertiesNames() {
-        return PROPERTIES_NAMES;
     }
 
     @Override
