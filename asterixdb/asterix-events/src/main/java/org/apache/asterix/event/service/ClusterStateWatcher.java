@@ -29,7 +29,7 @@ public class ClusterStateWatcher implements Watcher {
     private final ZooKeeper zk;
     private String clusterStatePath;
     private boolean done = false;
-    private ClusterState clusterState = ClusterState.STARTING;
+    private ClusterState clusterState = ClusterState.UNUSABLE;
     private boolean failed = false;
     private Exception failureCause = null;
     private static Logger LOGGER = Logger.getLogger(ClusterStateWatcher.class.getName());

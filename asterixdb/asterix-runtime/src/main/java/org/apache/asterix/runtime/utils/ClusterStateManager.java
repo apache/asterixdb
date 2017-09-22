@@ -165,6 +165,10 @@ public class ClusterStateManager implements IClusterStateManager {
 
     @Override
     public synchronized void refreshState() throws HyracksDataException {
+        if (state == ClusterState.SHUTTING_DOWN) {
+            LOGGER.log(Level.INFO, "Not refreshing final state %s", state);
+            return;
+        }
         resetClusterPartitionConstraint();
         if (clusterPartitions.isEmpty()) {
             LOGGER.info("Cluster does not have any registered partitions");

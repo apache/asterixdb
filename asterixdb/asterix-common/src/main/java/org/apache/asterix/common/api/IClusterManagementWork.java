@@ -26,7 +26,6 @@ public interface IClusterManagementWork {
     }
 
     enum ClusterState {
-        STARTING,       // the initial state
         UNUSABLE,       // one or more cluster partitions are inactive or max id resources have not been reported
         PENDING,        // the metadata node has not yet joined & initialized
         RECOVERING,     // global recovery has not yet completed
