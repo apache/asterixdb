@@ -80,7 +80,7 @@ public class FeedEventsListener extends ActiveEntityEventsListener {
     }
 
     @Override
-    protected void doStart(MetadataProvider mdProvider) throws HyracksDataException, AlgebricksException {
+    protected void doStart(MetadataProvider mdProvider) throws HyracksDataException {
         try {
             ILangCompilationProvider compilationProvider = new AqlCompilationProvider();
             IStorageComponentProvider storageComponentProvider = new StorageComponentProvider();
@@ -106,15 +106,13 @@ public class FeedEventsListener extends ActiveEntityEventsListener {
                         EnumSet.of(ActivityState.STOPPED, ActivityState.PERMANENTLY_FAILED));
                 stoppedSubscriber.sync();
             }
-        } catch (AlgebricksException e) {
-            throw e;
         } catch (Exception e) {
             throw HyracksDataException.create(e);
         }
     }
 
     @Override
-    protected Void doStop(MetadataProvider metadataProvider) throws HyracksDataException, AlgebricksException {
+    protected Void doStop(MetadataProvider metadataProvider) throws HyracksDataException {
         IActiveEntityEventSubscriber eventSubscriber =
                 new WaitForStateSubscriber(this, EnumSet.of(ActivityState.STOPPED, ActivityState.PERMANENTLY_FAILED));
         try {
@@ -125,8 +123,6 @@ public class FeedEventsListener extends ActiveEntityEventsListener {
                         i);
             }
             eventSubscriber.sync();
-        } catch (AlgebricksException e) {
-            throw e;
         } catch (Exception e) {
             throw HyracksDataException.create(e);
         }
@@ -135,17 +131,17 @@ public class FeedEventsListener extends ActiveEntityEventsListener {
 
     @Override
     protected void setRunning(MetadataProvider metadataProvider, boolean running)
-            throws HyracksDataException, AlgebricksException {
+            throws HyracksDataException {
         // No op
     }
 
     @Override
-    protected Void doSuspend(MetadataProvider metadataProvider) throws HyracksDataException, AlgebricksException {
+    protected Void doSuspend(MetadataProvider metadataProvider) throws HyracksDataException {
         throw new RuntimeDataException(ErrorCode.OPERATION_NOT_SUPPORTED);
     }
 
     @Override
-    protected void doResume(MetadataProvider metadataProvider) throws HyracksDataException, AlgebricksException {
+    protected void doResume(MetadataProvider metadataProvider) throws HyracksDataException {
         throw new RuntimeDataException(ErrorCode.OPERATION_NOT_SUPPORTED);
     }
 }

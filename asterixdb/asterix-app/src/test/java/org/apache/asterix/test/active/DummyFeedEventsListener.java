@@ -50,7 +50,7 @@ public class DummyFeedEventsListener extends FeedEventsListener {
     }
 
     @Override
-    protected void doStart(MetadataProvider metadataProvider) throws HyracksDataException, AlgebricksException {
+    protected void doStart(MetadataProvider metadataProvider) throws HyracksDataException {
         WaitForStateSubscriber eventSubscriber =
                 new WaitForStateSubscriber(this, Collections.singleton(ActivityState.RUNNING));
         try {
@@ -64,7 +64,7 @@ public class DummyFeedEventsListener extends FeedEventsListener {
     }
 
     @Override
-    protected Void doStop(MetadataProvider metadataProvider) throws HyracksDataException, AlgebricksException {
+    protected Void doStop(MetadataProvider metadataProvider) throws HyracksDataException {
         IActiveEntityEventSubscriber eventSubscriber =
                 new WaitForStateSubscriber(this, EnumSet.of(ActivityState.RUNNING, ActivityState.PERMANENTLY_FAILED));
         try {

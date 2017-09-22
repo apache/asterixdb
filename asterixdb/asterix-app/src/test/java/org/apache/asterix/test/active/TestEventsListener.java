@@ -105,7 +105,7 @@ public class TestEventsListener extends ActiveEntityEventsListener {
 
     @SuppressWarnings("deprecation")
     @Override
-    protected void doStart(MetadataProvider metadataProvider) throws HyracksDataException, AlgebricksException {
+    protected void doStart(MetadataProvider metadataProvider) throws HyracksDataException {
         step(onStart);
         failCompile(onStart);
         JobId jobId = jobIdFactory.create();
@@ -178,7 +178,7 @@ public class TestEventsListener extends ActiveEntityEventsListener {
 
     @Override
     protected void setRunning(MetadataProvider metadataProvider, boolean running)
-            throws HyracksDataException, AlgebricksException {
+            throws HyracksDataException {
         try {
             IMetadataLockManager lockManager = metadataProvider.getApplicationContext().getMetadataLockManager();
             LockList locks = metadataProvider.getLocks();
@@ -191,12 +191,12 @@ public class TestEventsListener extends ActiveEntityEventsListener {
     }
 
     @Override
-    protected Void doSuspend(MetadataProvider metadataProvider) throws HyracksDataException, AlgebricksException {
+    protected Void doSuspend(MetadataProvider metadataProvider) throws HyracksDataException {
         return doStop(metadataProvider);
     }
 
     @Override
-    protected void doResume(MetadataProvider metadataProvider) throws HyracksDataException, AlgebricksException {
+    protected void doResume(MetadataProvider metadataProvider) throws HyracksDataException {
         doStart(metadataProvider);
     }
 }

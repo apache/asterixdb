@@ -53,7 +53,6 @@ import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.translator.IStatementExecutor;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.JobId;
@@ -381,18 +380,18 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
         }
     }
 
-    protected abstract void doStart(MetadataProvider metadataProvider) throws HyracksDataException, AlgebricksException;
+    protected abstract void doStart(MetadataProvider metadataProvider) throws HyracksDataException;
 
-    protected abstract Void doStop(MetadataProvider metadataProvider) throws HyracksDataException, AlgebricksException;
+    protected abstract Void doStop(MetadataProvider metadataProvider) throws HyracksDataException;
 
     protected abstract Void doSuspend(MetadataProvider metadataProvider)
-            throws HyracksDataException, AlgebricksException;
+            throws HyracksDataException;
 
     protected abstract void doResume(MetadataProvider metadataProvider)
-            throws HyracksDataException, AlgebricksException;
+            throws HyracksDataException;
 
     protected abstract void setRunning(MetadataProvider metadataProvider, boolean running)
-            throws HyracksDataException, AlgebricksException;
+            throws HyracksDataException;
 
     @Override
     public synchronized void stop(MetadataProvider metadataProvider) throws HyracksDataException, InterruptedException {
