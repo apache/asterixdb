@@ -172,6 +172,8 @@ public class OptimizerTest {
             LOGGER.info("RUN TEST: \"" + queryFile.getPath() + "\"");
             Reader query = new BufferedReader(new InputStreamReader(new FileInputStream(queryFile), "UTF-8"));
 
+            LOGGER.info("ACTUAL RESULT FILE: " + actualFile.getAbsolutePath());
+
             // Forces the creation of actualFile.
             actualFile.getParentFile().mkdirs();
 
