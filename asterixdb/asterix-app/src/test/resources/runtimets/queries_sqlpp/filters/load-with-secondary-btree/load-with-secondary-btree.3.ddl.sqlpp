@@ -22,3 +22,4 @@ use test;
 
 create  index fbAuthorIdx  on FacebookMessages (`author-id`) type btree;
 
+create  primary index sec_primary_idx  on FacebookMessages;

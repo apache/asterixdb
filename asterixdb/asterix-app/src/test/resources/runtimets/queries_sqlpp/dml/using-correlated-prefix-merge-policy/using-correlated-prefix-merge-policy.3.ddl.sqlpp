@@ -24,3 +24,4 @@ create  index idx_LineItem_partkey  on LineItem (l_linenumber) type btree;
 
 create  index idx_LineItem_suppkey  on LineItem (l_suppkey) type btree;
 
+create  primary index sec_primary_idx  on LineItem ;

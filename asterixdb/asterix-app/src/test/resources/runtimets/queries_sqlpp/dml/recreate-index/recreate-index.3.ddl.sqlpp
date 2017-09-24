@@ -29,3 +29,6 @@ use test;
 drop index employee.idx_employee_first_name;
 create  index idx_employee_first_name  on test.employee (fname) type btree;
 
+drop index employee.sec_primary_idx;
+create  primary index sec_primary_idx  on test.employee;
+

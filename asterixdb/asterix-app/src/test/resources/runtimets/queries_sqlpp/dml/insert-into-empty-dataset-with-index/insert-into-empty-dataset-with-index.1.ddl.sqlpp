@@ -42,3 +42,4 @@ create  index idx_LineID_partkey  on LineID (l_linenumber) type btree;
 
 create  index idx_LineID_suppkey  on LineID (l_suppkey) type btree;
 
+create  primary index sec_primary_idx  on LineID;

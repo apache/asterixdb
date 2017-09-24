@@ -1,0 +1,10 @@
+{ "id": 101, "fname": "Javier", "lname": "Makuch", "age": 28, "dept": "IT" }
+{ "id": 110, "fname": "Allan", "lname": "Piland", "age": 29, "dept": "HR" }
+{ "id": 112, "fname": "Pearlie", "lname": "Aumann", "age": 31, "dept": "Payroll" }
+{ "id": 113, "fname": "Chandra", "lname": "Hase", "age": 34, "dept": "Sales" }
+{ "id": 114, "fname": "Christian", "lname": "Convery", "age": 28, "dept": "HR" }
+{ "id": 115, "fname": "Panther", "lname": "Ritch", "age": 26, "dept": "IT" }
+{ "id": 116, "fname": "Ted", "lname": "Elsea", "age": 26, "dept": "IT" }
+{ "id": 117, "fname": "Tabatha", "lname": "Bladen", "age": 25, "dept": "HR" }
+{ "id": 118, "fname": "Clayton", "lname": "Oltman", "age": 42, "dept": "Sales" }
+{ "id": 119, "fname": "Sharron", "lname": "Darwin", "age": 32, "dept": "Payroll" }

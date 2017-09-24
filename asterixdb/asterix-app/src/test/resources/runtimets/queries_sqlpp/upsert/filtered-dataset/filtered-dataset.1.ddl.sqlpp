@@ -44,3 +44,4 @@ primary key `message-id` with filter on `send-time`;
 
 create index AutherIdx on FilteredFacebookMessages(`author-id`);
 create index MessageIdx on FilteredFacebookMessages(message);
+create primary index sec_primary_idx on FilteredFacebookMessages;

@@ -580,34 +580,47 @@ CreateIndexStatement IndexSpecification() throws ParseException:
   Pair<Integer, Pair<List<String>, IndexedTypeExpression>> fieldPair = null;
   IndexParams indexType = null;
   boolean enforced = false;
+  boolean isPrimaryIdx = false;
 }
 {
-  <INDEX> indexName = Identifier()
-  ifNotExists = IfNotExists()
-  <ON> nameComponents = QualifiedName()
-  <LEFTPAREN> ( fieldPair = OpenField()
-    {
-       cis.addFieldExprPair(fieldPair.second);
-       cis.addFieldIndexIndicator(fieldPair.first);
-    }
-  ) (<COMMA> fieldPair = OpenField()
-    {
-       cis.addFieldExprPair(fieldPair.second);
-       cis.addFieldIndexIndicator(fieldPair.first);
-    }
-  )* <RIGHTPAREN> ( <TYPE> indexType = IndexType() )? ( <ENFORCED> { enforced = true; } )?
-    {
-      cis.setIndexName(new Identifier(indexName));
-      cis.setIfNotExists(ifNotExists);
-      cis.setDataverseName(nameComponents.first);
-      cis.setDatasetName(nameComponents.second);
-      if (indexType != null) {
-        cis.setIndexType(indexType.type);
-        cis.setGramLength(indexType.gramLength);
+  (
+    (<INDEX> indexName = Identifier()
+    ifNotExists = IfNotExists()
+    <ON> nameComponents = QualifiedName()
+    <LEFTPAREN> ( fieldPair = OpenField()
+      {
+        cis.addFieldExprPair(fieldPair.second);
+        cis.addFieldIndexIndicator(fieldPair.first);
       }
-      cis.setEnforced(enforced);
-      return cis;
+    ) (<COMMA> fieldPair = OpenField()
+      {
+        cis.addFieldExprPair(fieldPair.second);
+        cis.addFieldIndexIndicator(fieldPair.first);
+      }
+    )* <RIGHTPAREN> ( <TYPE> indexType = IndexType() )? ( <ENFORCED> { enforced = true; } )?)
+    |
+    (<PRIMARY> <INDEX> {isPrimaryIdx = true;}
+      (
+        (indexName = Identifier())? ifNotExists = IfNotExists()
+      )
+      <ON> nameComponents = QualifiedName() (<TYPE> <BTREE>)?
+    )
+  )
+  {
+    if (isPrimaryIdx && indexName == null) {
+      indexName = "primary_idx_" + nameComponents.second;
     }
+    cis.setIndexName(new Identifier(indexName));
+    cis.setIfNotExists(ifNotExists);
+    cis.setDataverseName(nameComponents.first);
+    cis.setDatasetName(nameComponents.second);
+    if (indexType != null) {
+      cis.setIndexType(indexType.type);
+      cis.setGramLength(indexType.gramLength);
+    }
+    cis.setEnforced(enforced);
+    return cis;
+  }
 }
 
 String CompactionPolicy() throws ParseException :

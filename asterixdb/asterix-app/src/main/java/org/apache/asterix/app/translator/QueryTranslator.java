@@ -30,6 +30,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -762,6 +763,10 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     throw new AlgebricksException("An index with this name " + indexName + " already exists.");
                 }
             }
+            // can't create secondary primary index on an external dataset
+            if (ds.getDatasetType() == DatasetType.EXTERNAL && stmtCreateIndex.getFieldExprs().isEmpty()) {
+                throw new AsterixException(ErrorCode.CANNOT_CREATE_SEC_PRIMARY_IDX_ON_EXT_DATASET);
+            }
             Datatype dt = MetadataManager.INSTANCE.getDatatype(metadataProvider.getMetadataTxnContext(),
                     ds.getItemTypeDataverseName(), ds.getItemTypeName());
             ARecordType aRecordType = (ARecordType) dt.getDatatype();
@@ -776,6 +781,13 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             List<IAType> indexFieldTypes = new ArrayList<>();
             int keyIndex = 0;
             boolean overridesFieldTypes = false;
+
+            // this set is used to detect duplicates in the specified keys in the create index statement
+            // e.g. CREATE INDEX someIdx on dataset(id,id).
+            // checking only the names is not enough. Need also to check the source indicators for cases like:
+            // CREATE INDEX someIdx on dataset(meta().id, id)
+            Set<Pair<List<String>, Integer>> indexKeysSet = new HashSet<>();
+
             for (Pair<List<String>, IndexedTypeExpression> fieldExpr : stmtCreateIndex.getFieldExprs()) {
                 IAType fieldType = null;
                 ARecordType subType =
@@ -800,6 +812,13 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         throw new AsterixException(ErrorCode.INDEX_ILLEGAL_ENFORCED_NON_OPTIONAL,
                                 String.valueOf(fieldExpr.first));
                     }
+                    // don't allow creating an enforced index on a closed-type field, fields that are part of schema.
+                    // get the field type, if it's not null, then the field is closed-type
+                    if (stmtCreateIndex.isEnforced() &&
+                            subType.getSubFieldType(fieldExpr.first.subList(i, fieldExpr.first.size())) != null) {
+                        throw new AsterixException(ErrorCode.INDEX_ILLEGAL_ENFORCED_ON_CLOSED_FIELD,
+                                String.valueOf(fieldExpr.first));
+                    }
                     if (!isOpen) {
                         throw new AlgebricksException("Typed index on \"" + fieldExpr.first
                                 + "\" field could be created only for open datatype");
@@ -816,6 +835,13 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 if (fieldType == null) {
                     throw new AlgebricksException(
                             "Unknown type " + (fieldExpr.second == null ? fieldExpr.first : fieldExpr.second));
+                }
+
+                // try to add the key & its source to the set of keys, if key couldn't be added, there is a duplicate
+                if (!indexKeysSet.add(new Pair<>(fieldExpr.first,
+                        stmtCreateIndex.getFieldSourceIndicators().get(keyIndex)))) {
+                    throw new AsterixException(ErrorCode.INDEX_ILLEGAL_REPETITIVE_FIELD,
+                            String.valueOf(fieldExpr.first));
                 }
 
                 indexFields.add(fieldExpr.first);

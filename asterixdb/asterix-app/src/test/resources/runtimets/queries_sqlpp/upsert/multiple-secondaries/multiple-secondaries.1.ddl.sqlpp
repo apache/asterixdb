@@ -42,3 +42,4 @@ create dataset UpsertTo(MyRecord)
 create index btree_index on UpsertTo(kwds);
 create index rtree_index on UpsertTo(point) type rtree;
 create index inverted_index on UpsertTo(kwds) type keyword;
+create primary index sec_primary_idx on UpsertTo;

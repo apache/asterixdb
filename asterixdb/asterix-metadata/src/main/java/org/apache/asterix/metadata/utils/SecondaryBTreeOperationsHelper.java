@@ -181,6 +181,23 @@ public class SecondaryBTreeOperationsHelper extends SecondaryTreeIndexOperations
         return index.getKeyFieldNames().size();
     }
 
+    /**
+     *      ======
+     *     |  SK  |             Bloom filter
+     *      ======
+     *      ====== ======
+     *     |  SK  |  PK  |      comparators, type traits
+     *      ====== ======
+     *      ====== ........
+     *     |  SK  | Filter |    field access evaluators
+     *      ====== ........
+     *      ====== ====== ........
+     *     |  SK  |  PK  | Filter |   record fields
+     *      ====== ====== ........
+     *      ====== ========= ........ ........
+     *     |  PK  | Payload |  Meta  | Filter | enforced record
+     *      ====== ========= ........ ........
+     */
     @Override
     @SuppressWarnings("rawtypes")
     protected void setSecondaryRecDescAndComparators() throws AlgebricksException {

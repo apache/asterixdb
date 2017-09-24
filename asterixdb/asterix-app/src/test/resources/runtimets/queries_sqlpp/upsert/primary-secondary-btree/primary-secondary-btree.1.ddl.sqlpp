@@ -35,4 +35,5 @@ salary:double
 
 create dataset UpsertTo(TestType) primary key id;
 create index ageindex on UpsertTo(age);
+create primary index sec_primary_idx on UpsertTo;
 create dataset UpsertFrom(TestType) primary key id;

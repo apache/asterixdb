@@ -125,6 +125,10 @@ public class ErrorCode {
     public static final int DOWNGRADE_FAILED_LOCK_WAS_NOT_ACQUIRED = 1048;
     public static final int LOCK_WAS_ACQUIRED_DIFFERENT_OPERATION = 1049;
     public static final int NO_DATASET_WITH_NAME = 1050;
+    public static final int INDEX_ILLEGAL_ENFORCED_ON_CLOSED_FIELD = 1051;
+    public static final int INDEX_ILLEGAL_REPETITIVE_FIELD = 1052;
+    public static final int CANNOT_CREATE_SEC_PRIMARY_IDX_ON_EXT_DATASET = 1053;
+    public static final int COMPILATION_FAILED_DUE_TO_REPLICATE_OP = 1054;
 
     // Feed errors
     public static final int DATAFLOW_ILLEGAL_STATE = 3001;

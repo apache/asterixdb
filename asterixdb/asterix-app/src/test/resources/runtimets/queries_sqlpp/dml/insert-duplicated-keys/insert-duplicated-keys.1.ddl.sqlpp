@@ -37,3 +37,4 @@ create  dataset SimpleGeoPlace(SimpleGeoPlaceType) primary key id;
 
 create  index btreeName  on SimpleGeoPlace (name) type btree;
 
+create  primary index sec_primary_idx  on SimpleGeoPlace;

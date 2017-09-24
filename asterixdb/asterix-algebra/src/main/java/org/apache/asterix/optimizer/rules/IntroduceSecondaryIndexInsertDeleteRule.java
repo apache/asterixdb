@@ -475,6 +475,16 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
                 currentTop = indexUpdate;
             } else {
                 replicateOp.getOutputs().add(new MutableObject<>(replicateOutput));
+
+                /* special treatment for bulk load with the existence of secondary primary index.
+                 * the branch coming out of the replicate operator and feeding the index will not have the usual
+                 * "blocking" sort operator since tuples are already sorted. We mark the materialization flag for that
+                 * branch to make it blocking. Without "blocking", the activity cluster graph would be messed up
+                 */
+                if (index.getKeyFieldNames().isEmpty() && index.getIndexType() == IndexType.BTREE) {
+                    int positionOfSecondaryPrimaryIndex = replicateOp.getOutputs().size() - 1;
+                    replicateOp.getOutputMaterializationFlags()[positionOfSecondaryPrimaryIndex] = true;
+                }
             }
             if (primaryIndexModificationOp.isBulkload()) {
                 // For bulk load, we connect all fanned out insert operator to a single SINK operator
