@@ -210,7 +210,7 @@ public class NodeControllerService implements IControllerService {
         osMXBean = ManagementFactory.getOperatingSystemMXBean();
         getNodeControllerInfosAcceptor = new MutableObject<>();
         memoryManager = new MemoryManager((long) (memoryMXBean.getHeapMemoryUsage().getMax() * MEMORY_FUDGE_FACTOR));
-        ioCounter = new IOCounterFactory().getIOCounter();
+        ioCounter = IOCounterFactory.INSTANCE.getIOCounter();
     }
 
     public IOManager getIoManager() {

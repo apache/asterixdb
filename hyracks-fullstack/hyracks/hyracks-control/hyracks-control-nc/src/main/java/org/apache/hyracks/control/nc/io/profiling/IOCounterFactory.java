@@ -21,6 +21,11 @@ package org.apache.hyracks.control.nc.io.profiling;
 
 public class IOCounterFactory {
 
+    public static final IOCounterFactory INSTANCE = new IOCounterFactory();
+
+    private IOCounterFactory() {
+    }
+
     /**
      * Get the IOCounter for the specific underlying OS
      *

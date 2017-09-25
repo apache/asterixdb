@@ -31,6 +31,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.hyracks.http.api.IServlet;
+import org.apache.hyracks.util.ThreadDumpUtil;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
@@ -218,11 +219,22 @@ public class HttpServer {
     }
 
     protected void doStop() throws InterruptedException {
+        // stop taking new requests
         executor.shutdown();
         try {
-            executor.awaitTermination(1, TimeUnit.MINUTES);
+            // wait 5s before interrupting existing requests
+            executor.awaitTermination(5, TimeUnit.SECONDS);
+            // interrupt
+            executor.shutdownNow();
+            // wait 30s for interrupted requests to unwind
+            executor.awaitTermination(30, TimeUnit.SECONDS);
             if (!executor.isTerminated()) {
-                LOGGER.log(Level.SEVERE, "Failed to shutdown http server executor");
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    LOGGER.log(Level.SEVERE, "Failed to shutdown http server executor; thread dump: " +
+                            ThreadDumpUtil.takeDumpString());
+                } else {
+                    LOGGER.log(Level.SEVERE, "Failed to shutdown http server executor");
+                }
             }
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Error while shutting down http server executor", e);

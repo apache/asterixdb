@@ -18,8 +18,10 @@
  */
 package org.apache.asterix.active;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
@@ -32,7 +34,7 @@ import java.util.logging.Logger;
 
 import org.apache.asterix.active.message.ActiveManagerMessage;
 import org.apache.asterix.active.message.ActiveStatsResponse;
-import org.apache.asterix.active.message.StatsRequestMessage;
+import org.apache.asterix.active.message.ActiveStatsRequestMessage;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.common.memory.ConcurrentFramePool;
@@ -54,7 +56,7 @@ public class ActiveManager {
     private volatile boolean shutdown;
 
     public ActiveManager(ExecutorService executor, String nodeId, long activeMemoryBudget, int frameSize,
-            INCServiceContext serviceCtx) throws HyracksDataException {
+                         INCServiceContext serviceCtx) throws HyracksDataException {
         this.executor = executor;
         this.nodeId = nodeId;
         this.activeFramePool = new ConcurrentFramePool(nodeId, activeMemoryBudget, frameSize);
@@ -77,6 +79,10 @@ public class ActiveManager {
         runtimes.remove(id);
     }
 
+    public Set<ActiveRuntimeId> getRuntimeIds() {
+        return Collections.unmodifiableSet(runtimes.keySet());
+    }
+
     public IActiveRuntime getRuntime(ActiveRuntimeId runtimeId) {
         return runtimes.get(runtimeId);
     }
@@ -93,14 +99,14 @@ public class ActiveManager {
                 stopRuntime(message);
                 break;
             case REQUEST_STATS:
-                requestStats((StatsRequestMessage) message);
+                requestStats((ActiveStatsRequestMessage) message);
                 break;
             default:
                 LOGGER.warning("Unknown message type received: " + message.getKind());
         }
     }
 
-    private void requestStats(StatsRequestMessage message) throws HyracksDataException {
+    private void requestStats(ActiveStatsRequestMessage message) throws HyracksDataException {
         try {
             ActiveRuntimeId runtimeId = (ActiveRuntimeId) message.getPayload();
             IActiveRuntime runtime = runtimes.get(runtimeId);
@@ -111,9 +117,9 @@ public class ActiveManager {
                 ((NodeControllerService) serviceCtx.getControllerService())
                         .sendApplicationMessageToCC(
                                 JavaSerializationUtils
-                                        .serialize(new ActiveStatsResponse(reqId, null, new RuntimeDataException(
-                                                ErrorCode.ACTIVE_MANAGER_INVALID_RUNTIME, runtimeId.toString()))),
-                                null);
+                                        .serialize(new ActiveStatsResponse(reqId, null,
+                                                new RuntimeDataException(ErrorCode.ACTIVE_MANAGER_INVALID_RUNTIME,
+                                                        runtimeId.toString()))), null);
                 return;
             }
             String stats = runtime.getStats();

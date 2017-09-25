@@ -22,6 +22,7 @@ package org.apache.asterix.api.http.server;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Function;
 import java.util.logging.Level;
@@ -132,8 +133,8 @@ public class NCQueryServiceServlet extends QueryServiceServlet {
             CancelQueryRequest cancelQueryMessage =
                     new CancelQueryRequest(nodeId, cancelQueryFuture.getFutureId(), clientContextID);
             messageBroker.sendMessageToCC(cancelQueryMessage);
-            cancelQueryFuture.get(ExecuteStatementRequestMessage.DEFAULT_QUERY_CANCELLATION_TIMEOUT_MILLIS,
-                    java.util.concurrent.TimeUnit.MILLISECONDS);
+            cancelQueryFuture.get(ExecuteStatementRequestMessage.DEFAULT_QUERY_CANCELLATION_WAIT_MILLIS,
+                    TimeUnit.MILLISECONDS);
         } catch (Exception e) {
             exception.addSuppressed(e);
         } finally {

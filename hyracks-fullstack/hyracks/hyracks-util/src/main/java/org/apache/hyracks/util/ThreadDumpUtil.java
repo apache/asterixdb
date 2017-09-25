@@ -16,9 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.control.common.utils;
+package org.apache.hyracks.util;
 
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
 import java.util.ArrayList;
@@ -26,24 +27,26 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-public class ThreadDumpHelper {
+public class ThreadDumpUtil {
     private static final ObjectMapper om = new ObjectMapper();
+    private static final ThreadMXBean threadMXBean = ManagementFactory.getThreadMXBean();
 
-    private ThreadDumpHelper() {
+    private ThreadDumpUtil() {
         om.enable(SerializationFeature.INDENT_OUTPUT);
     }
 
-    public static String takeDumpJSONString(ThreadMXBean threadMXBean) throws IOException {
-        ObjectNode json = takeDumpJSON(threadMXBean);
+    public static String takeDumpJSONString() throws IOException {
+        ObjectNode json = takeDumpJSON();
         return om.writerWithDefaultPrettyPrinter().writeValueAsString(json);
     }
 
-    public static ObjectNode takeDumpJSON(ThreadMXBean threadMXBean) {
+    public static ObjectNode takeDumpJSON() {
         ThreadInfo[] threadInfos = threadMXBean.dumpAllThreads(true, true);
         List<Map<String, Object>> threads = new ArrayList<>();
 
@@ -91,5 +94,11 @@ public class ThreadDumpHelper {
             json.putPOJO("monitor_deadlocked_thread_ids", monitorDeadlockedThreads);
         }
         return json;
+    }
+
+    public static String takeDumpString() {
+        StringBuilder buf = new StringBuilder(2048);
+        Stream.of(threadMXBean.dumpAllThreads(true, true)).forEach(buf::append);
+        return buf.toString();
     }
 }

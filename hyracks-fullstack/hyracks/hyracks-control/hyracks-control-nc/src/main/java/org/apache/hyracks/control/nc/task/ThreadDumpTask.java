@@ -21,7 +21,7 @@ package org.apache.hyracks.control.nc.task;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.hyracks.control.common.utils.ThreadDumpHelper;
+import org.apache.hyracks.util.ThreadDumpUtil;
 import org.apache.hyracks.control.nc.NodeControllerService;
 
 public class ThreadDumpTask implements Runnable {
@@ -38,7 +38,7 @@ public class ThreadDumpTask implements Runnable {
     public void run() {
         String result;
         try {
-            result = ThreadDumpHelper.takeDumpJSONString(ncs.getThreadMXBean());
+            result = ThreadDumpUtil.takeDumpJSONString();
         } catch (Exception e) {
             LOGGER.log(Level.WARNING, "Exception taking thread dump", e);
             result = null;

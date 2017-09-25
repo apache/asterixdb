@@ -19,7 +19,6 @@
 
 package org.apache.hyracks.control.cc.work;
 
-import java.lang.management.ManagementFactory;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -29,7 +28,7 @@ import java.util.logging.Logger;
 import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.cc.NodeControllerState;
 import org.apache.hyracks.control.cc.cluster.INodeManager;
-import org.apache.hyracks.control.common.utils.ThreadDumpHelper;
+import org.apache.hyracks.util.ThreadDumpUtil;
 import org.apache.hyracks.control.common.work.AbstractWork;
 import org.apache.hyracks.control.common.work.IResultCallback;
 
@@ -55,7 +54,7 @@ public class GetThreadDumpWork extends AbstractWork {
         if (nodeId == null) {
             // null nodeId means the request is for the cluster controller
             try {
-                callback.setValue(ThreadDumpHelper.takeDumpJSONString(ManagementFactory.getThreadMXBean()));
+                callback.setValue(ThreadDumpUtil.takeDumpJSONString());
             } catch (Exception e) {
                 LOGGER.log(Level.WARNING, "Exception taking CC thread dump", e);
                 callback.setException(e);

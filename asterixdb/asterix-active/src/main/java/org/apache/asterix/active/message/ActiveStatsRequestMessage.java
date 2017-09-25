@@ -20,11 +20,11 @@ package org.apache.asterix.active.message;
 
 import java.io.Serializable;
 
-public class StatsRequestMessage extends ActiveManagerMessage {
+public class ActiveStatsRequestMessage extends ActiveManagerMessage {
     private static final long serialVersionUID = 1L;
     private final long reqId;
 
-    public StatsRequestMessage(Serializable payload, long reqId) {
+    public ActiveStatsRequestMessage(Serializable payload, long reqId) {
         super(Kind.REQUEST_STATS, payload);
         this.reqId = reqId;
     }
