@@ -218,41 +218,45 @@ public class CheckpointingTest {
         try {
             TestNodeController nc = new TestNodeController(new File(TEST_CONFIG_FILE_PATH).getAbsolutePath(), false);
             nc.init();
-            final ITransactionSubsystem txnSubsystem = nc.getTransactionSubsystem();
-            final AbstractCheckpointManager checkpointManager =
-                    (AbstractCheckpointManager) txnSubsystem.getCheckpointManager();
-            // Make a checkpoint with the current minFirstLSN
-            final long minFirstLSN = txnSubsystem.getRecoveryManager().getMinFirstLSN();
-            checkpointManager.tryCheckpoint(minFirstLSN);
-            // Get the just created checkpoint
-            final Checkpoint validCheckpoint = checkpointManager.getLatest();
-            // Make sure the valid checkout wouldn't force full recovery
-            Assert.assertTrue(validCheckpoint.getMinMCTFirstLsn() >= minFirstLSN);
-            // Add a corrupted (empty) checkpoint file with a timestamp > than current checkpoint
-            Path corruptedCheckpointPath = checkpointManager.getCheckpointPath(validCheckpoint.getTimeStamp() + 1);
-            File corruptedCheckpoint = corruptedCheckpointPath.toFile();
-            corruptedCheckpoint.createNewFile();
-            // Make sure the corrupted checkpoint file was created
-            Assert.assertTrue(corruptedCheckpoint.exists());
-            // Try to get the latest checkpoint again
-            Checkpoint cpAfterCorruption = checkpointManager.getLatest();
-            // Make sure the valid checkpoint was returned
-            Assert.assertEquals(validCheckpoint.getTimeStamp(), cpAfterCorruption.getTimeStamp());
-            // Make sure the corrupted checkpoint file was deleted
-            Assert.assertFalse(corruptedCheckpoint.exists());
-            // Corrupt the valid checkpoint by replacing its content
-            final Path validCheckpointPath = checkpointManager.getCheckpointPath(validCheckpoint.getTimeStamp());
-            File validCheckpointFile = validCheckpointPath.toFile();
-            Assert.assertTrue(validCheckpointFile.exists());
-            // Delete the valid checkpoint file and create it as an empty file
-            validCheckpointFile.delete();
-            validCheckpointFile.createNewFile();
-            // Make sure the returned checkpoint (the forged checkpoint) will enforce full recovery
-            Checkpoint forgedCheckpoint = checkpointManager.getLatest();
-            Assert.assertTrue(forgedCheckpoint.getMinMCTFirstLsn() < minFirstLSN);
-            // Make sure the forged checkpoint recovery will start from the first available log
-            final long readableSmallestLSN = txnSubsystem.getLogManager().getReadableSmallestLSN();
-            Assert.assertTrue(forgedCheckpoint.getMinMCTFirstLsn() <= readableSmallestLSN);
+            try {
+                final ITransactionSubsystem txnSubsystem = nc.getTransactionSubsystem();
+                final AbstractCheckpointManager checkpointManager =
+                        (AbstractCheckpointManager) txnSubsystem.getCheckpointManager();
+                // Make a checkpoint with the current minFirstLSN
+                final long minFirstLSN = txnSubsystem.getRecoveryManager().getMinFirstLSN();
+                checkpointManager.tryCheckpoint(minFirstLSN);
+                // Get the just created checkpoint
+                final Checkpoint validCheckpoint = checkpointManager.getLatest();
+                // Make sure the valid checkout wouldn't force full recovery
+                Assert.assertTrue(validCheckpoint.getMinMCTFirstLsn() >= minFirstLSN);
+                // Add a corrupted (empty) checkpoint file with a timestamp > than current checkpoint
+                Path corruptedCheckpointPath = checkpointManager.getCheckpointPath(validCheckpoint.getTimeStamp() + 1);
+                File corruptedCheckpoint = corruptedCheckpointPath.toFile();
+                corruptedCheckpoint.createNewFile();
+                // Make sure the corrupted checkpoint file was created
+                Assert.assertTrue(corruptedCheckpoint.exists());
+                // Try to get the latest checkpoint again
+                Checkpoint cpAfterCorruption = checkpointManager.getLatest();
+                // Make sure the valid checkpoint was returned
+                Assert.assertEquals(validCheckpoint.getTimeStamp(), cpAfterCorruption.getTimeStamp());
+                // Make sure the corrupted checkpoint file was deleted
+                Assert.assertFalse(corruptedCheckpoint.exists());
+                // Corrupt the valid checkpoint by replacing its content
+                final Path validCheckpointPath = checkpointManager.getCheckpointPath(validCheckpoint.getTimeStamp());
+                File validCheckpointFile = validCheckpointPath.toFile();
+                Assert.assertTrue(validCheckpointFile.exists());
+                // Delete the valid checkpoint file and create it as an empty file
+                validCheckpointFile.delete();
+                validCheckpointFile.createNewFile();
+                // Make sure the returned checkpoint (the forged checkpoint) will enforce full recovery
+                Checkpoint forgedCheckpoint = checkpointManager.getLatest();
+                Assert.assertTrue(forgedCheckpoint.getMinMCTFirstLsn() < minFirstLSN);
+                // Make sure the forged checkpoint recovery will start from the first available log
+                final long readableSmallestLSN = txnSubsystem.getLogManager().getReadableSmallestLSN();
+                Assert.assertTrue(forgedCheckpoint.getMinMCTFirstLsn() <= readableSmallestLSN);
+            } finally {
+                nc.deInit();
+            }
         } catch (Throwable e) {
             e.printStackTrace();
             Assert.fail(e.getMessage());

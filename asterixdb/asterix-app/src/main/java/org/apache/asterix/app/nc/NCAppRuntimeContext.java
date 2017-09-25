@@ -284,8 +284,11 @@ public class NCAppRuntimeContext implements INcApplicationContext {
     }
 
     @Override
-    public void preStop() throws Exception {
+    public synchronized void preStop() throws Exception {
         activeManager.shutdown();
+        if (metadataNodeStub != null) {
+            unexportMetadataNodeStub();
+        }
     }
 
     @Override
@@ -455,7 +458,7 @@ public class NCAppRuntimeContext implements INcApplicationContext {
     }
 
     @Override
-    public void exportMetadataNodeStub() throws RemoteException {
+    public synchronized void exportMetadataNodeStub() throws RemoteException {
         if (metadataNodeStub == null) {
             metadataNodeStub = (IMetadataNode) UnicastRemoteObject.exportObject(MetadataNode.INSTANCE,
                     getMetadataProperties().getMetadataPort());
@@ -464,8 +467,9 @@ public class NCAppRuntimeContext implements INcApplicationContext {
     }
 
     @Override
-    public void unexportMetadataNodeStub() throws RemoteException {
+    public synchronized void unexportMetadataNodeStub() throws RemoteException {
         UnicastRemoteObject.unexportObject(MetadataNode.INSTANCE, false);
+        metadataNodeStub = null;
     }
 
     public NCExtensionManager getNcExtensionManager() {
