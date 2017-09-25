@@ -81,8 +81,7 @@ public class NCQueryServiceServlet extends QueryServiceServlet {
             }
             long timeout = ExecuteStatementRequestMessage.DEFAULT_NC_TIMEOUT_MILLIS;
             if (param.timeout != null) {
-                timeout = java.util.concurrent.TimeUnit.NANOSECONDS
-                        .toMillis(Duration.parseDurationStringToNanos(param.timeout));
+                timeout = TimeUnit.NANOSECONDS.toMillis(Duration.parseDurationStringToNanos(param.timeout));
             }
             ExecuteStatementRequestMessage requestMsg =
                     new ExecuteStatementRequestMessage(ncCtx.getNodeId(), responseFuture.getFutureId(), queryLanguage,
@@ -91,12 +90,14 @@ public class NCQueryServiceServlet extends QueryServiceServlet {
             outExecStartEnd[0] = System.nanoTime();
             ncMb.sendMessageToCC(requestMsg);
             try {
-                responseMsg = (ExecuteStatementResponseMessage) responseFuture.get(timeout,
-                        java.util.concurrent.TimeUnit.MILLISECONDS);
-            } catch (InterruptedException | TimeoutException exception) {
+                responseMsg = (ExecuteStatementResponseMessage) responseFuture.get(timeout, TimeUnit.MILLISECONDS);
+            } catch (InterruptedException e) {
+                cancelQuery(ncMb, ncCtx.getNodeId(), param.clientContextID, e, false);
+                throw e;
+            } catch (TimeoutException exception) {
                 RuntimeDataException hde = new RuntimeDataException(ErrorCode.QUERY_TIMEOUT, exception);
                 // cancel query
-                cancelQuery(ncMb, ncCtx.getNodeId(), param.clientContextID, hde);
+                cancelQuery(ncMb, ncCtx.getNodeId(), param.clientContextID, hde, true);
                 throw hde;
             }
             outExecStartEnd[1] = System.nanoTime();
@@ -127,14 +128,16 @@ public class NCQueryServiceServlet extends QueryServiceServlet {
     }
 
     private void cancelQuery(INCMessageBroker messageBroker, String nodeId, String clientContextID,
-            Exception exception) {
+            Exception exception, boolean wait) {
         MessageFuture cancelQueryFuture = messageBroker.registerMessageFuture();
         try {
             CancelQueryRequest cancelQueryMessage =
                     new CancelQueryRequest(nodeId, cancelQueryFuture.getFutureId(), clientContextID);
             messageBroker.sendMessageToCC(cancelQueryMessage);
-            cancelQueryFuture.get(ExecuteStatementRequestMessage.DEFAULT_QUERY_CANCELLATION_WAIT_MILLIS,
-                    TimeUnit.MILLISECONDS);
+            if (wait) {
+                cancelQueryFuture.get(ExecuteStatementRequestMessage.DEFAULT_QUERY_CANCELLATION_WAIT_MILLIS,
+                        TimeUnit.MILLISECONDS);
+            }
         } catch (Exception e) {
             exception.addSuppressed(e);
         } finally {

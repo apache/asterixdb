@@ -62,7 +62,7 @@ public final class ExecuteStatementRequestMessage implements ICcAddressedMessage
     //TODO: Make configurable: https://issues.apache.org/jira/browse/ASTERIXDB-2062
     public static final long DEFAULT_NC_TIMEOUT_MILLIS = TimeUnit.MINUTES.toMillis(5);
     //TODO: Make configurable: https://issues.apache.org/jira/browse/ASTERIXDB-2063
-    public static final long DEFAULT_QUERY_CANCELLATION_WAIT_MILLIS = TimeUnit.MINUTES.toMillis(0);
+    public static final long DEFAULT_QUERY_CANCELLATION_WAIT_MILLIS = TimeUnit.MINUTES.toMillis(1);
     private final String requestNodeId;
     private final long requestMessageId;
     private final ILangExtension.Language lang;
