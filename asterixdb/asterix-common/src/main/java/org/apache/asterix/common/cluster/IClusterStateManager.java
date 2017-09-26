@@ -76,7 +76,7 @@ public interface IClusterStateManager {
     /**
      * @return a map of nodeId and NC Configuration for active nodes.
      */
-    Map<String, Map<IOption, Object>> getActiveNcConfiguration();
+    Map<String, Map<IOption, Object>> getNcConfiguration();
 
     /**
      * @return The current metadata node Id.
@@ -187,13 +187,13 @@ public interface IClusterStateManager {
     int getNumberOfNodes();
 
     /**
-     * Add node configuration
+     * Notifies {@link IClusterStateManager} that a node has joined
      *
      * @param nodeId
      * @param ncConfiguration
      * @throws HyracksException
      */
-    void addNCConfiguration(String nodeId, Map<IOption, Object> ncConfiguration) throws HyracksException;
+    void notifyNodeJoin(String nodeId, Map<IOption, Object> ncConfiguration) throws HyracksException;
 
     /**
      * @return true if metadata node is active, false otherwise
@@ -201,12 +201,12 @@ public interface IClusterStateManager {
     boolean isMetadataNodeActive();
 
     /**
-     * Remove configuration of a dead node
+     * Notifies {@link IClusterStateManager} that a node has failed
      *
      * @param deadNode
      * @throws HyracksException
      */
-    void removeNCConfiguration(String deadNode) throws HyracksException;
+    void notifyNodeFailure(String deadNode) throws HyracksException;
 
     /**
      * @return a substitution node or null

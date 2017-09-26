@@ -71,7 +71,7 @@ public class ClusterLifecycleListener implements IClusterLifecycleListener {
             LOGGER.info("NC: " + nodeId + " joined");
         }
         IClusterStateManager csm = appCtx.getClusterStateManager();
-        csm.addNCConfiguration(nodeId, ncConfiguration);
+        csm.notifyNodeJoin(nodeId, ncConfiguration);
 
         //if metadata node rejoining, we need to rebind the proxy connection when it is active again.
         if (!csm.isMetadataNodeActive()) {
@@ -101,7 +101,7 @@ public class ClusterLifecycleListener implements IClusterLifecycleListener {
                 LOGGER.info("NC: " + deadNode + " left");
             }
             IClusterStateManager csm = appCtx.getClusterStateManager();
-            csm.removeNCConfiguration(deadNode);
+            csm.notifyNodeFailure(deadNode);
 
             //if metadata node failed, we need to rebind the proxy connection when it is active again
             if (!csm.isMetadataNodeActive()) {

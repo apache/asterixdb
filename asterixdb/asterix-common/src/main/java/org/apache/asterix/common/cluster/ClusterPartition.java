@@ -24,6 +24,8 @@ public class ClusterPartition implements Cloneable {
     private final int ioDeviceNum;
     private String activeNodeId = null;
     private boolean active = false;
+    /* a flag indicating if the partition was dynamically added to the cluster and pending first time activation */
+    private boolean pendingActivation = false;
 
     public ClusterPartition(int partitionId, String nodeId, int ioDeviceNum) {
         this.partitionId = partitionId;
@@ -55,6 +57,18 @@ public class ClusterPartition implements Cloneable {
         this.active = active;
     }
 
+    public boolean isActive() {
+        return active;
+    }
+
+    public boolean isPendingActivation() {
+        return pendingActivation;
+    }
+
+    public void setPendingActivation(boolean pendingActivation) {
+        this.pendingActivation = pendingActivation;
+    }
+
     @Override
     public ClusterPartition clone() {
         return new ClusterPartition(partitionId, nodeId, ioDeviceNum);
@@ -67,10 +81,7 @@ public class ClusterPartition implements Cloneable {
         sb.append(", Original Node: " + nodeId);
         sb.append(", IODevice: " + ioDeviceNum);
         sb.append(", Active Node: " + activeNodeId);
+        sb.append(", Pending Activation: " + pendingActivation);
         return sb.toString();
-    }
-
-    public boolean isActive() {
-        return active;
     }
 }

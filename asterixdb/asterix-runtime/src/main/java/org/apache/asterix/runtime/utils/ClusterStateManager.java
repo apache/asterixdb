@@ -68,7 +68,7 @@ public class ClusterStateManager implements IClusterStateManager {
      */
 
     private static final Logger LOGGER = Logger.getLogger(ClusterStateManager.class.getName());
-    private final Map<String, Map<IOption, Object>> activeNcConfiguration = new HashMap<>();
+    private final Map<String, Map<IOption, Object>> ncConfigMap = new HashMap<>();
     private Set<String> pendingRemoval = new HashSet<>();
     private final Cluster cluster;
     private ClusterState state = ClusterState.UNUSABLE;
@@ -78,6 +78,7 @@ public class ClusterStateManager implements IClusterStateManager {
     private String currentMetadataNode = null;
     private boolean metadataNodeActive = false;
     private Set<String> failedNodes = new HashSet<>();
+    private Set<String> participantNodes = new HashSet<>();
     private IFaultToleranceStrategy ftStrategy;
     private ICcApplicationContext appCtx;
 
@@ -96,25 +97,25 @@ public class ClusterStateManager implements IClusterStateManager {
     }
 
     @Override
-    public synchronized void removeNCConfiguration(String nodeId) throws HyracksException {
+    public synchronized void notifyNodeFailure(String nodeId) throws HyracksException {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Removing configuration parameters for node id " + nodeId);
         }
         failedNodes.add(nodeId);
-        ftStrategy.notifyNodeFailure(nodeId);
+        ncConfigMap.remove(nodeId);
         pendingRemoval.remove(nodeId);
+        ftStrategy.notifyNodeFailure(nodeId);
     }
 
     @Override
-    public synchronized void addNCConfiguration(String nodeId, Map<IOption, Object> configuration)
-            throws HyracksException {
+    public synchronized void notifyNodeJoin(String nodeId, Map<IOption, Object> configuration) throws HyracksException {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Registering configuration parameters for node id " + nodeId);
         }
-        activeNcConfiguration.put(nodeId, configuration);
         failedNodes.remove(nodeId);
-        ftStrategy.notifyNodeJoin(nodeId);
+        ncConfigMap.put(nodeId, configuration);
         updateNodeConfig(nodeId, configuration);
+        ftStrategy.notifyNodeJoin(nodeId);
     }
 
     @Override
@@ -142,6 +143,11 @@ public class ClusterStateManager implements IClusterStateManager {
 
     @Override
     public synchronized void updateNodePartitions(String nodeId, boolean active) throws HyracksDataException {
+        if (active) {
+            participantNodes.add(nodeId);
+        } else {
+            participantNodes.remove(nodeId);
+        }
         ClusterPartition[] nodePartitions = node2PartitionsMap.get(nodeId);
         // if this isn't a storage node, it will not have cluster partitions
         if (nodePartitions != null) {
@@ -159,6 +165,7 @@ public class ClusterStateManager implements IClusterStateManager {
             clusterPartition.setActive(active);
             if (active) {
                 clusterPartition.setActiveNodeId(activeNode);
+                clusterPartition.setPendingActivation(false);
             }
         }
     }
@@ -170,19 +177,22 @@ public class ClusterStateManager implements IClusterStateManager {
             return;
         }
         resetClusterPartitionConstraint();
-        if (clusterPartitions.isEmpty()) {
+        // if the cluster has no registered partitions or all partitions are pending activation -> UNUSABLE
+        if (clusterPartitions.isEmpty() || clusterPartitions.values().stream()
+                .allMatch(ClusterPartition::isPendingActivation)) {
             LOGGER.info("Cluster does not have any registered partitions");
             setState(ClusterState.UNUSABLE);
             return;
         }
-        for (ClusterPartition p : clusterPartitions.values()) {
-            if (!p.isActive()) {
-                setState(ClusterState.UNUSABLE);
-                return;
-            }
+
+        // exclude partitions that are pending activation
+        if (clusterPartitions.values().stream().anyMatch(p -> !p.isActive() && !p.isPendingActivation())) {
+            setState(ClusterState.UNUSABLE);
+            return;
         }
+
         IResourceIdManager resourceIdManager = appCtx.getResourceIdManager();
-        for (String node : activeNcConfiguration.keySet()) {
+        for (String node : participantNodes) {
             if (!resourceIdManager.reported(node)) {
                 LOGGER.log(Level.INFO, "Partitions are ready but %s has not yet registered its max resource id...",
                         node);
@@ -234,7 +244,7 @@ public class ClusterStateManager implements IClusterStateManager {
 
     @Override
     public synchronized String[] getIODevices(String nodeId) {
-        Map<IOption, Object> ncConfig = activeNcConfiguration.get(nodeId);
+        Map<IOption, Object> ncConfig = ncConfigMap.get(nodeId);
         if (ncConfig == null) {
             if (LOGGER.isLoggable(Level.WARNING)) {
                 LOGGER.warning("Configuration parameters for nodeId " + nodeId
@@ -258,20 +268,16 @@ public class ClusterStateManager implements IClusterStateManager {
 
     @Override
     public synchronized Set<String> getParticipantNodes() {
-        Set<String> participantNodes = new HashSet<>();
-        for (String pNode : activeNcConfiguration.keySet()) {
-            participantNodes.add(pNode);
-        }
-        return participantNodes;
+        return new HashSet<>(participantNodes);
     }
 
     @Override
     public synchronized Set<String> getParticipantNodes(boolean excludePendingRemoval) {
-        Set<String> participantNodes = getParticipantNodes();
+        final Set<String> participantNodesCopy = getParticipantNodes();
         if (excludePendingRemoval) {
-            participantNodes.removeAll(pendingRemoval);
+            participantNodesCopy.removeAll(pendingRemoval);
         }
-        return participantNodes;
+        return participantNodesCopy;
     }
 
     @Override
@@ -303,8 +309,8 @@ public class ClusterStateManager implements IClusterStateManager {
     }
 
     @Override
-    public int getNumberOfNodes() {
-        return appCtx.getMetadataProperties().getNodeNames().size();
+    public synchronized int getNumberOfNodes() {
+        return participantNodes.size();
     }
 
     @Override
@@ -379,8 +385,8 @@ public class ClusterStateManager implements IClusterStateManager {
     }
 
     @Override
-    public Map<String, Map<IOption, Object>> getActiveNcConfiguration() {
-        return Collections.unmodifiableMap(activeNcConfiguration);
+    public Map<String, Map<IOption, Object>> getNcConfiguration() {
+        return Collections.unmodifiableMap(ncConfigMap);
     }
 
     @Override
@@ -402,6 +408,7 @@ public class ClusterStateManager implements IClusterStateManager {
             }
         }
         for (ClusterPartition nodePartition : nodePartitions) {
+            nodePartition.setPendingActivation(true);
             clusterPartitions.put(nodePartition.getPartitionId(), nodePartition);
         }
         node2PartitionsMap.put(nodeId, nodePartitions);
@@ -419,6 +426,7 @@ public class ClusterStateManager implements IClusterStateManager {
             for (ClusterPartition nodePartition : nodePartitions) {
                 clusterPartitions.remove(nodePartition.getPartitionId());
             }
+            participantNodes.remove(nodeId);
         }
     }
 
@@ -427,7 +435,7 @@ public class ClusterStateManager implements IClusterStateManager {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Registering intention to remove node id " + nodeId);
         }
-        if (activeNcConfiguration.containsKey(nodeId)) {
+        if (participantNodes.contains(nodeId)) {
             pendingRemoval.add(nodeId);
         } else {
             LOGGER.warning("Cannot register unknown node " + nodeId + " for pending removal");

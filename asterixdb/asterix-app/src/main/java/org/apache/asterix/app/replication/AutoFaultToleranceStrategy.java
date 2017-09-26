@@ -186,8 +186,8 @@ public class AutoFaultToleranceStrategy implements IFaultToleranceStrategy {
 
     private boolean addActiveReplica(String replica, ClusterPartition partition,
             Map<String, List<Integer>> partitionRecoveryPlan) {
-        Map<String, Map<IOption, Object>> activeNcConfiguration = clusterManager.getActiveNcConfiguration();
-        if (activeNcConfiguration.containsKey(replica) && !failedNodes.contains(replica)) {
+        final Set<String> participantNodes = clusterManager.getParticipantNodes();
+        if (participantNodes.contains(replica) && !failedNodes.contains(replica)) {
             if (!partitionRecoveryPlan.containsKey(replica)) {
                 List<Integer> replicaPartitions = new ArrayList<>();
                 replicaPartitions.add(partition.getPartitionId());
