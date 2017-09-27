@@ -8271,7 +8271,7 @@
       </compilation-unit>
     </test-case>
   </test-group>
-  <test-group>
+  <test-group name="big-object">
     <test-case FilePath="big-object">
       <compilation-unit name="big_object_sort">
         <output-dir compare="Text">big_object_sort</output-dir>

@@ -31,7 +31,6 @@ import org.apache.asterix.event.service.AsterixEventServiceUtil;
 import org.apache.asterix.test.common.ITestLibrarian;
 import org.apache.commons.io.FileUtils;
 import org.apache.hyracks.algebricks.common.utils.Pair;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class TestLibrarian implements ITestLibrarian {
 
