@@ -23,11 +23,12 @@ import java.util.Objects;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMemoryComponent;
 
-public class FlushOperation extends AbstractIoOperation implements Comparable<FlushOperation> {
+public class FlushOperation extends AbstractIoOperation implements Comparable<ILSMIOOperation> {
 
     protected final ILSMMemoryComponent flushingComponent;
 
@@ -73,16 +74,17 @@ public class FlushOperation extends AbstractIoOperation implements Comparable<Fl
     }
 
     @Override
-    public int compareTo(FlushOperation o) {
-        return target.getFile().getName().compareTo(o.getTarget().getFile().getName());
+    public int compareTo(ILSMIOOperation o) {
+        if (o instanceof FlushOperation) {
+            return target.getFile().getName().compareTo(((FlushOperation) o).getTarget().getFile().getName());
+        }
+        return -1;
     }
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof FlushOperation)) {
-            return false;
-        }
-        return Objects.equals(target.getFile().getName(), ((FlushOperation) o).target.getFile().getName());
+        return (o instanceof FlushOperation)
+                && Objects.equals(target.getFile().getName(), ((FlushOperation) o).target.getFile().getName());
     }
 
     @Override

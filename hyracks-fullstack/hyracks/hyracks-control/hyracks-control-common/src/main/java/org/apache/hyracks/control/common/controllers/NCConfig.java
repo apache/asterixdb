@@ -78,7 +78,8 @@ public class NCConfig extends ControllerConfig {
         APP_CLASS(STRING, (String) null),
         NCSERVICE_PID(INTEGER, -1),
         COMMAND(STRING, "hyracksnc"),
-        JVM_ARGS(STRING, (String) null);
+        JVM_ARGS(STRING, (String) null),
+        TRACE_CATEGORIES(STRING_ARRAY, new String[0]);
 
         private final IOptionType parser;
         private final String defaultValueDescription;
@@ -190,6 +191,8 @@ public class NCConfig extends ControllerConfig {
                     return "Command NCService should invoke to start the NCDriver";
                 case JVM_ARGS:
                     return "JVM args to pass to the NCDriver";
+                case TRACE_CATEGORIES:
+                    return "Categories for tracing";
                 default:
                     throw new IllegalStateException("NYI: " + this);
             }
@@ -443,6 +446,14 @@ public class NCConfig extends ControllerConfig {
 
     public void setIODevices(String[] iodevices) {
         configManager.set(nodeId, Option.IODEVICES, iodevices);
+    }
+
+    public String[] getTraceCategories() {
+        return appConfig.getStringArray(Option.TRACE_CATEGORIES);
+    }
+
+    public void setTraceCategories(String[] traceCategories) {
+        configManager.set(nodeId, Option.TRACE_CATEGORIES, traceCategories);
     }
 
     public int getNetThreadCount() {

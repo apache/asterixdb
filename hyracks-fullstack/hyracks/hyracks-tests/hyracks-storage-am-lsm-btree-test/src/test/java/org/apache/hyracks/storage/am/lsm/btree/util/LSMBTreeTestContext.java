@@ -41,6 +41,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
+import org.apache.hyracks.util.trace.Tracer;
 
 @SuppressWarnings("rawtypes")
 public final class LSMBTreeTestContext extends OrderedIndexTestContext {
@@ -95,14 +96,12 @@ public final class LSMBTreeTestContext extends OrderedIndexTestContext {
             lsmTree = LSMBTreeUtil.createLSMTree(ioManager, virtualBufferCaches, file, diskBufferCache, typeTraits,
                     cmpFactories, bloomFilterKeyFields, bloomFilterFalsePositiveRate, mergePolicy, opTracker,
                     ioScheduler, ioOpCallback, needKeyDupCheck, filterTypeTraits, filterCmp, btreefields, filterfields,
-                    true,
-                    metadataPageManagerFactory, updateAware);
+                    true, metadataPageManagerFactory, updateAware, Tracer.none());
         } else {
             lsmTree = LSMBTreeUtil.createLSMTree(ioManager, virtualBufferCaches, file, diskBufferCache, typeTraits,
                     cmpFactories, bloomFilterKeyFields, bloomFilterFalsePositiveRate, mergePolicy, opTracker,
                     ioScheduler, ioOpCallback, needKeyDupCheck, null, null, null, null, true,
-                    metadataPageManagerFactory,
-                    updateAware);
+                    metadataPageManagerFactory, updateAware, Tracer.all());
         }
         LSMBTreeTestContext testCtx = new LSMBTreeTestContext(fieldSerdes, lsmTree, filtered);
         return testCtx;

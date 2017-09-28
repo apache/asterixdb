@@ -77,6 +77,6 @@ public class LSMBTreeLocalResource extends LsmResource {
                 mergePolicyFactory.createMergePolicy(mergePolicyProperties, serviceCtx),
                 opTrackerProvider.getOperationTracker(serviceCtx), ioSchedulerProvider.getIoScheduler(serviceCtx),
                 ioOpCallbackFactory.createIoOpCallback(), isPrimary, filterTypeTraits, filterCmpFactories, btreeFields,
-                filterFields, durable, metadataPageManagerFactory, updateAware);
+                filterFields, durable, metadataPageManagerFactory, updateAware, serviceCtx.getTracer());
     }
 }

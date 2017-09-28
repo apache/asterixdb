@@ -22,6 +22,7 @@ import org.apache.hyracks.api.comm.IChannelInterfaceFactory;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.lifecycle.ILifeCycleComponentManager;
 import org.apache.hyracks.api.resources.memory.IMemoryManager;
+import org.apache.hyracks.util.trace.Tracer;
 
 /**
  * Service Context at the Node Controller for an application.
@@ -52,6 +53,13 @@ public interface INCServiceContext extends IServiceContext {
      * @return Memory Manager
      */
     IMemoryManager getMemoryManager();
+
+    /**
+     * Get a Tracer to write trace events to.
+     *
+     * @return a Tracer
+     */
+    Tracer getTracer();
 
     /**
      * Set the handler for state dumps.

@@ -39,7 +39,7 @@ import org.apache.hyracks.control.cc.cluster.INodeManager;
 import org.apache.hyracks.control.common.config.ConfigUtils;
 import org.apache.hyracks.control.common.controllers.CCConfig;
 import org.apache.hyracks.control.common.controllers.NCConfig;
-import org.apache.hyracks.control.common.utils.PidHelper;
+import org.apache.hyracks.util.PidHelper;
 import org.apache.hyracks.control.common.work.IPCResponder;
 import org.apache.hyracks.control.common.work.SynchronizableWork;
 

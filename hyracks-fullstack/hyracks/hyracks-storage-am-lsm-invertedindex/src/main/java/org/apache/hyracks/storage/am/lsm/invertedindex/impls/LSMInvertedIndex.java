@@ -86,6 +86,7 @@ import org.apache.hyracks.storage.common.ISearchOperationCallback;
 import org.apache.hyracks.storage.common.ISearchPredicate;
 import org.apache.hyracks.storage.common.MultiComparator;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
+import org.apache.hyracks.util.trace.Tracer;
 
 public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex {
     private static final Logger LOGGER = Logger.getLogger(LSMInvertedIndex.class.getName());
@@ -117,7 +118,7 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
             throws HyracksDataException {
         super(ioManager, virtualBufferCaches, diskInvIndexFactory.getBufferCache(), fileManager,
                 bloomFilterFalsePositiveRate, mergePolicy, opTracker, ioScheduler, ioOpCallback, filterFrameFactory,
-                filterManager, filterFields, durable, filterHelper, invertedIndexFields);
+                filterManager, filterFields, durable, filterHelper, invertedIndexFields, Tracer.none());
         this.tokenizerFactory = tokenizerFactory;
         this.invListTypeTraits = invListTypeTraits;
         this.invListCmpFactories = invListCmpFactories;

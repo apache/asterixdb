@@ -41,12 +41,13 @@ public class AsynchronousScheduler implements ILSMIOOperationScheduler {
     public final static AsynchronousScheduler INSTANCE = new AsynchronousScheduler();
     private ExecutorService executor;
     private final Map<String, ILSMIOOperation> runningFlushOperations = new HashMap<String, ILSMIOOperation>();
-    private final Map<String, PriorityQueue<ILSMIOOperation>> waitingFlushOperations = new HashMap<String, PriorityQueue<ILSMIOOperation>>();
+    private final Map<String, PriorityQueue<ILSMIOOperation>> waitingFlushOperations =
+            new HashMap<String, PriorityQueue<ILSMIOOperation>>();
 
     public void init(ThreadFactory threadFactory) {
         // Creating an executor with the same configuration of Executors.newCachedThreadPool.
-        executor = new ThreadPoolExecutor(0, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS,
-                new SynchronousQueue<Runnable>(), threadFactory) {
+        executor = new ThreadPoolExecutor(0, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(),
+                threadFactory) {
 
             @Override
             protected <T> RunnableFuture<T> newTaskFor(Callable<T> callable) {

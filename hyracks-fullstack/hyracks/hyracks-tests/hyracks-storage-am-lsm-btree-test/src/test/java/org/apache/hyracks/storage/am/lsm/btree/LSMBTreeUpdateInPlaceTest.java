@@ -39,6 +39,7 @@ import org.apache.hyracks.storage.am.lsm.common.impls.NoOpIOOperationCallbackFac
 import org.apache.hyracks.storage.am.lsm.common.impls.NoOpOperationTrackerFactory;
 import org.apache.hyracks.storage.common.IIndexAccessor;
 import org.apache.hyracks.storage.common.IModificationOperationCallback;
+import org.apache.hyracks.util.trace.Tracer;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -74,7 +75,7 @@ public class LSMBTreeUpdateInPlaceTest extends AbstractOperationCallbackTest {
                 harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(),
                 NoOpOperationTrackerFactory.INSTANCE.getOperationTracker(null), harness.getIOScheduler(),
                 harness.getIOOperationCallback(), true, null, null, null, null, true,
-                harness.getMetadataPageManagerFactory(), true);
+                harness.getMetadataPageManagerFactory(), true, Tracer.all());
     }
 
     @Override

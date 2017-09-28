@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.control.common.utils;
+package org.apache.hyracks.util;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;

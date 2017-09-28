@@ -32,6 +32,7 @@ import org.apache.hyracks.api.lifecycle.LifeCycleComponentManager;
 import org.apache.hyracks.api.messages.IMessageBroker;
 import org.apache.hyracks.api.resources.memory.IMemoryManager;
 import org.apache.hyracks.api.service.IControllerService;
+import org.apache.hyracks.util.trace.Tracer;
 
 public class TestNCServiceContext implements INCServiceContext {
     private final ILifeCycleComponentManager lccm;
@@ -83,6 +84,11 @@ public class TestNCServiceContext implements INCServiceContext {
     @Override
     public IIOManager getIoManager() {
         return ioManager;
+    }
+
+    @Override
+    public Tracer getTracer() {
+        return Tracer.none();
     }
 
     @Override

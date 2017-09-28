@@ -63,6 +63,7 @@ import org.apache.hyracks.storage.common.IIndexCursor;
 import org.apache.hyracks.storage.common.IModificationOperationCallback;
 import org.apache.hyracks.storage.common.ISearchOperationCallback;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
+import org.apache.hyracks.util.trace.Tracer;
 
 public abstract class AbstractLSMIndex implements ILSMIndex {
     protected final ILSMHarness lsmHarness;
@@ -90,13 +91,14 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
     protected boolean isActive;
     protected final AtomicBoolean[] flushRequests;
     protected boolean memoryComponentsAllocated = false;
+    protected Tracer tracer;
 
     public AbstractLSMIndex(IIOManager ioManager, List<IVirtualBufferCache> virtualBufferCaches,
             IBufferCache diskBufferCache, ILSMIndexFileManager fileManager, double bloomFilterFalsePositiveRate,
             ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler,
             ILSMIOOperationCallback ioOpCallback, ILSMComponentFilterFrameFactory filterFrameFactory,
             LSMComponentFilterManager filterManager, int[] filterFields, boolean durable,
-            IComponentFilterHelper filterHelper, int[] treeFields) {
+            IComponentFilterHelper filterHelper, int[] treeFields, Tracer tracer) {
         this.ioManager = ioManager;
         this.virtualBufferCaches = virtualBufferCaches;
         this.diskBufferCache = diskBufferCache;
@@ -112,6 +114,7 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
         this.filterFields = filterFields;
         this.inactiveDiskComponents = new LinkedList<>();
         this.durable = durable;
+        this.tracer = tracer;
         lsmHarness = new LSMHarness(this, mergePolicy, opTracker, diskBufferCache.isReplicationEnabled());
         isActive = false;
         diskComponents = new ArrayList<>();
@@ -333,7 +336,7 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
         opCtx.setOperation(IndexOperation.FLUSH);
         opCtx.getComponentHolder().add(flushingComponent);
         ILSMIOOperation flushOp = createFlushOperation(opCtx, flushingComponent, componentFileRefs, callback);
-        ioScheduler.scheduleOperation(flushOp);
+        ioScheduler.scheduleOperation(TracedIOOperation.wrap(flushOp, tracer));
     }
 
     @Override
@@ -348,7 +351,7 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
         ILSMDiskComponent lastComponent = (ILSMDiskComponent) mergingComponents.get(mergingComponents.size() - 1);
         LSMComponentFileReferences mergeFileRefs = getMergeFileReferences(firstComponent, lastComponent);
         ILSMIOOperation mergeOp = createMergeOperation(opCtx, mergingComponents, mergeFileRefs, callback);
-        ioScheduler.scheduleOperation(mergeOp);
+        ioScheduler.scheduleOperation(TracedIOOperation.wrap(mergeOp, tracer));
     }
 
     private void addOperationalMutableComponents(List<ILSMComponent> operationalComponents) {
