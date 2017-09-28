@@ -1,0 +1,66 @@
+DataverseUse test
+TypeDecl TestType [
+  open RecordType {
+    id : integer,
+    val : integer
+  }
+]
+DatasetDecl testdst(TestType) partitioned by [[id]]
+DatasetDecl testdst2(TestType) partitioned by [[id]]
+Query:
+SELECT [
+*
+]
+FROM [  (
+    SELECT [
+    Variable [ Name=$val ]
+    val
+    FunctionCall asterix.sql-count@1[
+      (
+        SELECT ELEMENT [
+        LiteralExpr [LONG] [1]
+        ]
+        FROM [          Variable [ Name=#1 ]
+          AS Variable [ Name=#2 ]
+        ]
+      )
+    ]
+    null
+    ]
+    FROM [      FunctionCall Metadata.dataset@1[
+        LiteralExpr [STRING] [testdst]
+      ]
+      AS Variable [ Name=$testdst ]
+    ]
+    Groupby
+      Variable [ Name=$val ]
+      :=
+      FunctionCall Metadata.resolve@-1[
+        LiteralExpr [STRING] [val]
+        Variable [ Name=$testdst ]
+      ]
+      GROUP AS Variable [ Name=#1 ]
+      (
+        testdst:=Variable [ Name=$testdst ]
+      )
+
+  )
+  AS Variable [ Name=$bar ]
+  INNER JOIN
+    FunctionCall Metadata.dataset@1[
+      LiteralExpr [STRING] [testdst2]
+    ]
+    AS Variable [ Name=$testdst2 ]
+    ON
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=$bar ]
+        Field=val
+      ]
+      =
+      FieldAccessor [
+        Variable [ Name=$testdst2 ]
+        Field=val
+      ]
+    ]
+]

@@ -320,25 +320,21 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
             // This will be used to find an applicable index on the dataset.
             boolean checkLeftSubTreeMetadata = false;
             boolean checkRightSubTreeMetadata = false;
-            if (continueCheck && (matchInLeftSubTree || matchInRightSubTree)) {
+            if (continueCheck && matchInRightSubTree) {
                 // Set dataset and type metadata.
                 if (matchInLeftSubTree) {
                     checkLeftSubTreeMetadata = leftSubTree.setDatasetAndTypeMetadata(metadataProvider);
                 }
-                if (matchInRightSubTree) {
-                    checkRightSubTreeMetadata = rightSubTree.setDatasetAndTypeMetadata(metadataProvider);
-                }
+                checkRightSubTreeMetadata = rightSubTree.setDatasetAndTypeMetadata(metadataProvider);
             }
 
-            if (continueCheck && (checkLeftSubTreeMetadata || checkRightSubTreeMetadata)) {
+            if (continueCheck && checkRightSubTreeMetadata) {
                 // Map variables to the applicable indexes and find the field name and type.
                 // Then find the applicable indexes for the variables used in the JOIN condition.
                 if (checkLeftSubTreeMetadata) {
                     fillSubTreeIndexExprs(leftSubTree, analyzedAMs, context);
                 }
-                if (checkRightSubTreeMetadata) {
-                    fillSubTreeIndexExprs(rightSubTree, analyzedAMs, context);
-                }
+                fillSubTreeIndexExprs(rightSubTree, analyzedAMs, context);
 
                 // Prune the access methods based on the function expression and access methods.
                 pruneIndexCandidates(analyzedAMs, context, typeEnvironment);
@@ -414,15 +410,18 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
         }
         joinCond = (AbstractFunctionCallExpression) condExpr;
 
-        boolean leftSubTreeInitialized = leftSubTree.initFromSubTree(joinOp.getInputs().get(0));
+        // The result of the left subtree initialization does not need to be checked since only the field type
+        // of the field that is being joined is important. However, if we do not initialize the left sub tree,
+        // we lose a chance to get the field type of a field if there is an enforced index on it.
+        leftSubTree.initFromSubTree(joinOp.getInputs().get(0));
         boolean rightSubTreeInitialized = rightSubTree.initFromSubTree(joinOp.getInputs().get(1));
 
-        if (!leftSubTreeInitialized || !rightSubTreeInitialized) {
+        if (!rightSubTreeInitialized) {
             return false;
         }
 
-        // One of the subtrees must have a datasource scan.
-        if (leftSubTree.hasDataSourceScan() || rightSubTree.hasDataSourceScan()) {
+        // The right (inner) subtree must have a datasource scan.
+        if (rightSubTree.hasDataSourceScan()) {
             return true;
         }
         return false;

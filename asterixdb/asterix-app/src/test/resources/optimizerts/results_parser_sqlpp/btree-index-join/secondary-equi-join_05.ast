@@ -1,0 +1,33 @@
+DataverseUse test
+TypeDecl TestType [
+  open RecordType {
+    id : integer,
+    val : integer
+  }
+]
+DatasetDecl testdst(TestType) partitioned by [[id]]
+Query:
+SELECT [
+*
+]
+FROM [  OrderedListConstructor [
+    LiteralExpr [LONG] [1]
+    LiteralExpr [LONG] [2]
+    LiteralExpr [LONG] [3]
+  ]
+  AS Variable [ Name=$bar ]
+  INNER JOIN
+    FunctionCall Metadata.dataset@1[
+      LiteralExpr [STRING] [testdst]
+    ]
+    AS Variable [ Name=$testdst ]
+    ON
+    OperatorExpr [
+      Variable [ Name=$bar ]
+      =
+      FieldAccessor [
+        Variable [ Name=$testdst ]
+        Field=val
+      ]
+    ]
+]
