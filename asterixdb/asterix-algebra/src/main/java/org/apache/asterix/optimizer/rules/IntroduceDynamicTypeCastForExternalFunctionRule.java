@@ -25,7 +25,6 @@ import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.typecomputer.base.TypeCastUtils;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.AUnionType;
-import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.utils.NonTaggedFormatUtil;
 import org.apache.commons.lang3.mutable.Mutable;
@@ -39,7 +38,6 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
 /**
@@ -58,12 +56,21 @@ public class IntroduceDynamicTypeCastForExternalFunctionRule implements IAlgebra
     private boolean rewriteFunctionArgs(ILogicalOperator op, Mutable<ILogicalExpression> expRef,
             IOptimizationContext context) throws AlgebricksException {
         ILogicalExpression expr = expRef.getValue();
-        if (expr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL
-                || !(expr instanceof ScalarFunctionCallExpression)) {
+        if (expr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
             return false;
         }
-        ScalarFunctionCallExpression funcCallExpr = (ScalarFunctionCallExpression) expr;
         boolean changed = false;
+        // go over all arguments recursively
+        AbstractFunctionCallExpression funcCallExpr = (AbstractFunctionCallExpression) expr;
+        for (Mutable<ILogicalExpression> functionArgRef : funcCallExpr.getArguments()) {
+            if (rewriteFunctionArgs(op, functionArgRef, context)) {
+                changed = true;
+            }
+        }
+        // if the current function is builtin function, skip the type casting
+        if (BuiltinFunctions.getBuiltinFunctionIdentifier(funcCallExpr.getFunctionIdentifier()) != null) {
+            return changed;
+        }
         IAType inputRecordType;
         ARecordType requiredRecordType;
         for (int iter1 = 0; iter1 < funcCallExpr.getArguments().size(); iter1++) {
@@ -105,19 +112,6 @@ public class IntroduceDynamicTypeCastForExternalFunctionRule implements IAlgebra
         if (op.getOperatorTag() != LogicalOperatorTag.ASSIGN) {
             return false;
         }
-        AssignOperator assignOp = (AssignOperator) op;
-        ILogicalExpression assignExpr = assignOp.getExpressions().get(0).getValue();
-        if (assignExpr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
-            return false;
-        }
-        if (BuiltinFunctions.getBuiltinFunctionIdentifier(
-                ((AbstractFunctionCallExpression) assignExpr).getFunctionIdentifier()) != null) {
-            return false;
-        }
-        if (op.acceptExpressionTransform(exprRef -> rewriteFunctionArgs(op, exprRef, context))) {
-            return true;
-        } else {
-            return false;
-        }
+        return op.acceptExpressionTransform(expr -> rewriteFunctionArgs(op, expr, context));
     }
 }

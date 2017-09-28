@@ -19,5 +19,4 @@
 
 use test;
 
-
 {'result1':test.uppercase('Hellow'),'result2':test.uppercase(''),'result3':test.uppercase(null)};

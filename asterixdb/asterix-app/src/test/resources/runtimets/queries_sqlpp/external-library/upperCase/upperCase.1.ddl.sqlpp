@@ -16,13 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-use dataverse externallibtest;
+DROP DATAVERSE externallibtest if exists;
+CREATE DATAVERSE  externallibtest;
+USE externallibtest;
 
-let $i:={"id":1, "text":"lower text"}
-return testlib#toUpper($i);
-
-let $i:=testlib#toUpper({"id":1, "text":"lower text"})
-return $i;
-
-let $i:= {"field1" : testlib#toUpper({"id":1, "text":"lower text"}), "field2": 123}
-return $i;
+create type TextType if not exists as open {
+    id: int32,
+    text: string
+};
