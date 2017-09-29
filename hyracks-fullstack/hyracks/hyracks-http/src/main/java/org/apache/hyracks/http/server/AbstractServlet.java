@@ -18,6 +18,9 @@
  */
 package org.apache.hyracks.http.server;
 
+import static com.fasterxml.jackson.databind.MapperFeature.SORT_PROPERTIES_ALPHABETICALLY;
+import static com.fasterxml.jackson.databind.SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS;
+
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.concurrent.ConcurrentMap;
@@ -29,12 +32,21 @@ import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
 import org.apache.hyracks.http.server.utils.HttpUtil;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpResponseStatus;
 
 public abstract class AbstractServlet implements IServlet {
     private static final Logger LOGGER = Logger.getLogger(AbstractServlet.class.getName());
+    protected static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
+    static {
+        OBJECT_MAPPER.enable(SerializationFeature.INDENT_OUTPUT);
+        OBJECT_MAPPER.configure(SORT_PROPERTIES_ALPHABETICALLY, true);
+        OBJECT_MAPPER.configure(ORDER_MAP_ENTRIES_BY_KEYS, true);
+    }
 
     protected final String[] paths;
     protected final ConcurrentMap<String, Object> ctx;

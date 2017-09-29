@@ -39,7 +39,6 @@ import org.apache.hyracks.http.server.AbstractServlet;
 import org.apache.hyracks.http.server.utils.HttpUtil;
 import org.apache.hyracks.util.JSONUtil;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -57,7 +56,6 @@ public class ClusterApiServlet extends AbstractServlet {
     protected static final String FULL_SHUTDOWN_URI_KEY = "fullShutdownUri";
     protected static final String VERSION_URI_KEY = "versionUri";
     protected static final String DIAGNOSTICS_URI_KEY = "diagnosticsUri";
-    private final ObjectMapper om = new ObjectMapper();
     protected final ICcApplicationContext appCtx;
 
     public ClusterApiServlet(ICcApplicationContext appCtx, ConcurrentMap<String, Object> ctx, String... paths) {
@@ -117,7 +115,7 @@ public class ClusterApiServlet extends AbstractServlet {
         if (json.has("cc")) {
             cc = (ObjectNode) json.get("cc");
         } else {
-            cc = om.createObjectNode();
+            cc = OBJECT_MAPPER.createObjectNode();
             json.set("cc", cc);
         }
         cc.put(CONFIG_URI_KEY, clusterURL + "cc/config");

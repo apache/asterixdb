@@ -83,7 +83,7 @@ public class MetadataReplicationIT {
     public void before() throws Exception {
         LOGGER.info("Creating new instance...");
         AsterixInstallerIntegrationUtil.init(AsterixInstallerIntegrationUtil.LOCAL_CLUSTER_METADATA_ONLY_REP_PATH);
-        LOGGER.info("Instacne created.");
+        LOGGER.info("Instance created.");
         AsterixInstallerIntegrationUtil.transformIntoRequiredState(State.ACTIVE);
         LOGGER.info("Instance is in ACTIVE state.");
     }

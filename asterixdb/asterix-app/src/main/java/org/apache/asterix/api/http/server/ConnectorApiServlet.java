@@ -77,8 +77,7 @@ public class ConnectorApiServlet extends AbstractServlet {
         }
         PrintWriter out = response.writer();
         try {
-            ObjectMapper om = new ObjectMapper();
-            ObjectNode jsonResponse = om.createObjectNode();
+            ObjectNode jsonResponse = OBJECT_MAPPER.createObjectNode();
             String dataverseName = request.getParameter("dataverseName");
             String datasetName = request.getParameter("datasetName");
             if (dataverseName == null || datasetName == null) {
@@ -140,8 +139,7 @@ public class ConnectorApiServlet extends AbstractServlet {
 
     private void formResponseObject(ObjectNode jsonResponse, FileSplit[] fileSplits, ARecordType recordType,
             String primaryKeys, boolean temp, Map<String, NodeControllerInfo> nodeMap) {
-        ObjectMapper om = new ObjectMapper();
-        ArrayNode partititons = om.createArrayNode();
+        ArrayNode partititons = OBJECT_MAPPER.createArrayNode();
         // Whether the dataset is temp or not
         jsonResponse.put("temp", temp);
         // Adds a primary key.

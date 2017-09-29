@@ -37,8 +37,11 @@ public class ThreadDumpUtil {
     private static final ObjectMapper om = new ObjectMapper();
     private static final ThreadMXBean threadMXBean = ManagementFactory.getThreadMXBean();
 
-    private ThreadDumpUtil() {
+    static {
         om.enable(SerializationFeature.INDENT_OUTPUT);
+    }
+
+    private ThreadDumpUtil() {
     }
 
     public static String takeDumpJSONString() throws IOException {

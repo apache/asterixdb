@@ -308,7 +308,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         param.path = servletPath(request);
         if (HttpUtil.ContentType.APPLICATION_JSON.equals(contentType)) {
             try {
-                JsonNode jsonRequest = new ObjectMapper().readTree(HttpUtil.getRequestBody(request));
+                JsonNode jsonRequest = OBJECT_MAPPER.readTree(HttpUtil.getRequestBody(request));
                 param.statement = jsonRequest.get(Parameter.STATEMENT.str()).asText();
                 param.format = toLower(getOptText(jsonRequest, Parameter.FORMAT.str()));
                 param.pretty = getOptBoolean(jsonRequest, Parameter.PRETTY.str(), false);

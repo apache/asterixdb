@@ -43,22 +43,17 @@ import org.apache.hyracks.http.server.utils.HttpUtil;
 import org.apache.hyracks.util.JSONUtil;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
-
 import io.netty.handler.codec.http.HttpResponseStatus;
 
 public class DiagnosticsApiServlet extends NodeControllerDetailsApiServlet {
     private static final Logger LOGGER = Logger.getLogger(DiagnosticsApiServlet.class.getName());
-    protected final ObjectMapper om;
     protected final IHyracksClientConnection hcc;
     protected final ExecutorService executor;
 
     public DiagnosticsApiServlet(ICcApplicationContext appCtx, ConcurrentMap<String, Object> ctx, String... paths) {
         super(appCtx, ctx, paths);
-        this.om = new ObjectMapper();
         this.hcc = (IHyracksClientConnection) ctx.get(HYRACKS_CONNECTION_ATTR);
         this.executor = (ExecutorService) ctx.get(ServletConstants.EXECUTOR_SERVICE_ATTR);
     }
@@ -68,7 +63,6 @@ public class DiagnosticsApiServlet extends NodeControllerDetailsApiServlet {
         HttpUtil.setContentType(response, HttpUtil.ContentType.APPLICATION_JSON, HttpUtil.Encoding.UTF8);
         PrintWriter responseWriter = response.writer();
         response.setStatus(HttpResponseStatus.OK);
-        om.enable(SerializationFeature.INDENT_OUTPUT);
         try {
             if (!"".equals(localPath(request))) {
                 throw new IllegalArgumentException();
@@ -94,7 +88,7 @@ public class DiagnosticsApiServlet extends NodeControllerDetailsApiServlet {
         for (String nc : csm.getParticipantNodes()) {
             ncDataMap.put(nc, getNcDiagnosticFutures(nc));
         }
-        ObjectNode result = om.createObjectNode();
+        ObjectNode result = OBJECT_MAPPER.createObjectNode();
         result.putPOJO("cc", resolveFutures(ccFutureData));
         List<Map<String, ?>> ncList = new ArrayList<>();
         for (Map.Entry<String, Map<String, Future<JsonNode>>> entry : ncDataMap.entrySet()) {
@@ -110,9 +104,11 @@ public class DiagnosticsApiServlet extends NodeControllerDetailsApiServlet {
     protected Map<String, Future<JsonNode>> getNcDiagnosticFutures(String nc) {
         Map<String, Future<JsonNode>> ncData;
         ncData = new HashMap<>();
-        ncData.put("threaddump", executor.submit(() -> fixupKeys((ObjectNode) om.readTree(hcc.getThreadDump(nc)))));
+        ncData.put("threaddump",
+                executor.submit(() -> fixupKeys((ObjectNode) OBJECT_MAPPER.readTree(hcc.getThreadDump(nc)))));
         ncData.put("config",
-                executor.submit(() -> fixupKeys((ObjectNode) om.readTree(hcc.getNodeDetailsJSON(nc, false, true)))));
+                executor.submit(
+                        () -> fixupKeys((ObjectNode) OBJECT_MAPPER.readTree(hcc.getNodeDetailsJSON(nc, false, true)))));
         ncData.put("stats", executor.submit(() -> fixupKeys(processNodeStats(hcc, nc))));
         return ncData;
     }
@@ -121,11 +117,13 @@ public class DiagnosticsApiServlet extends NodeControllerDetailsApiServlet {
         Map<String, Future<JsonNode>> ccFutureData;
         ccFutureData = new HashMap<>();
         ccFutureData.put("threaddump",
-                executor.submit(() -> fixupKeys((ObjectNode) om.readTree(hcc.getThreadDump(null)))));
+                executor.submit(() -> fixupKeys((ObjectNode) OBJECT_MAPPER.readTree(hcc.getThreadDump(null)))));
         ccFutureData.put("config",
-                executor.submit(() -> fixupKeys((ObjectNode) om.readTree(hcc.getNodeDetailsJSON(null, false, true)))));
+                executor.submit(() -> fixupKeys(
+                        (ObjectNode) OBJECT_MAPPER.readTree(hcc.getNodeDetailsJSON(null, false, true)))));
         ccFutureData.put("stats",
-                executor.submit(() -> fixupKeys((ObjectNode) om.readTree(hcc.getNodeDetailsJSON(null, true, false)))));
+                executor.submit(() -> fixupKeys(
+                        (ObjectNode) OBJECT_MAPPER.readTree(hcc.getNodeDetailsJSON(null, true, false)))));
         return ccFutureData;
     }
 

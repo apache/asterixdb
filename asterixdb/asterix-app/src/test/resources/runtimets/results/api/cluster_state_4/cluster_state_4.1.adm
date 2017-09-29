@@ -2,11 +2,11 @@
   "node_id" : "asterix_nc1",
   "state" : "ACTIVE",
   "partitions" : [ {
-    "partition_id" : "partition_0",
-    "active" : true
+    "active" : true,
+    "partition_id" : "partition_0"
   }, {
-    "partition_id" : "partition_1",
-    "active" : true
+    "active" : true,
+    "partition_id" : "partition_1"
   } ],
   "configUri" : "http://127.0.0.1:19002/admin/cluster/node/asterix_nc1/config",
   "statsUri" : "http://127.0.0.1:19002/admin/cluster/node/asterix_nc1/stats",

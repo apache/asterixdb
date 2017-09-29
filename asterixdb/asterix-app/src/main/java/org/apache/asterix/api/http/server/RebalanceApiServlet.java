@@ -53,7 +53,6 @@ import org.apache.hyracks.http.api.IServletResponse;
 import org.apache.hyracks.http.server.AbstractServlet;
 import org.apache.hyracks.http.server.utils.HttpUtil;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
@@ -273,8 +272,7 @@ public class RebalanceApiServlet extends AbstractServlet {
             }
         }
         PrintWriter out = response.writer();
-        ObjectMapper om = new ObjectMapper();
-        ObjectNode jsonResponse = om.createObjectNode();
+        ObjectNode jsonResponse = OBJECT_MAPPER.createObjectNode();
         jsonResponse.put("results", message);
         response.setStatus(status);
         out.write(jsonResponse.toString());

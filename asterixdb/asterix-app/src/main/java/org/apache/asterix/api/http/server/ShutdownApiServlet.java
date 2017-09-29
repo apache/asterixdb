@@ -38,7 +38,6 @@ import org.apache.hyracks.http.server.AbstractServlet;
 import org.apache.hyracks.http.server.utils.HttpUtil;
 import org.apache.hyracks.util.JSONUtil;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -78,8 +77,7 @@ public class ShutdownApiServlet extends AbstractServlet {
             return;
         }
         response.setStatus(HttpResponseStatus.ACCEPTED);
-        ObjectMapper om = new ObjectMapper();
-        ObjectNode jsonObject = om.createObjectNode();
+        ObjectNode jsonObject = OBJECT_MAPPER.createObjectNode();
         try {
             jsonObject.put("status", "SHUTTING_DOWN");
             jsonObject.put("date", new Date().toString());
@@ -88,7 +86,7 @@ public class ShutdownApiServlet extends AbstractServlet {
             for (int i = 0; i < ncs.size(); i++) {
                 ObjectNode nc = (ObjectNode) ncs.get(i);
                 String node = nc.get(NODE_ID_KEY).asText();
-                ObjectNode details = (ObjectNode) om.readTree(hcc.getNodeDetailsJSON(node, false, true));
+                ObjectNode details = (ObjectNode) OBJECT_MAPPER.readTree(hcc.getNodeDetailsJSON(node, false, true));
                 nc.set(PID, details.get(PID));
                 if (details.has(INI) && details.get(INI).has(NCSERVICE_PID)) {
                     nc.put(NCSERVICE_PID, details.get(INI).get(NCSERVICE_PID).asInt());

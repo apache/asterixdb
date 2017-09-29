@@ -20,8 +20,7 @@ package org.apache.hyracks.api.config;
 
 import java.util.function.Function;
 
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.text.WordUtils;
+import org.apache.hyracks.util.StringUtil;
 
 public interface IOption {
 
@@ -67,8 +66,8 @@ public interface IOption {
         return name().toLowerCase().replace("_", ".");
     }
 
-    default String json() {
-        return StringUtils.remove(WordUtils.capitalize("z" + name().toLowerCase(), '_').substring(1), '_');
+    default String camelCase() {
+        return StringUtil.toCamelCase(name());
     }
 
     default String toIniString() {

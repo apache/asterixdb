@@ -33,9 +33,7 @@ import org.apache.hyracks.http.server.AbstractServlet;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-
 import io.netty.handler.codec.http.HttpResponseStatus;
 
 public class ActiveStatsApiServlet extends AbstractServlet {
@@ -67,9 +65,7 @@ public class ActiveStatsApiServlet extends AbstractServlet {
         String localPath = localPath(request);
         int expireTime;
         IActiveEntityEventsListener[] listeners = activeNotificationHandler.getEventListeners();
-        ObjectMapper om = new ObjectMapper();
-        om.enable(SerializationFeature.INDENT_OUTPUT);
-        ObjectNode resNode = om.createObjectNode();
+        ObjectNode resNode = OBJECT_MAPPER.createObjectNode();
         PrintWriter responseWriter = response.writer();
         try {
             response.setStatus(HttpResponseStatus.OK);
@@ -81,10 +77,10 @@ public class ActiveStatsApiServlet extends AbstractServlet {
             long currentTime = System.currentTimeMillis();
             for (int iter1 = 0; iter1 < listeners.length; iter1++) {
                 resNode.putPOJO(listeners[iter1].getDisplayName(),
-                        constructNode(om, listeners[iter1], currentTime, expireTime));
+                        constructNode(OBJECT_MAPPER, listeners[iter1], currentTime, expireTime));
             }
             // Construct Response
-            responseWriter.write(om.writerWithDefaultPrettyPrinter().writeValueAsString(resNode));
+            responseWriter.write(OBJECT_MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(resNode));
         } catch (Exception e) {
             LOGGER.log(Level.INFO, "exception thrown for " + request, e);
             response.setStatus(HttpResponseStatus.INTERNAL_SERVER_ERROR);

@@ -31,7 +31,6 @@ import org.apache.hyracks.http.api.IServletResponse;
 import org.apache.hyracks.http.server.StaticResourceServlet;
 import org.apache.hyracks.http.server.utils.HttpUtil;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
@@ -61,8 +60,7 @@ public class QueryWebInterfaceServlet extends StaticResourceServlet {
         HttpUtil.setContentType(response, HttpUtil.ContentType.APPLICATION_JSON, HttpUtil.Encoding.UTF8);
         ExternalProperties externalProperties = appCtx.getExternalProperties();
         response.setStatus(HttpResponseStatus.OK);
-        ObjectMapper om = new ObjectMapper();
-        ObjectNode obj = om.createObjectNode();
+        ObjectNode obj = OBJECT_MAPPER.createObjectNode();
         try {
             PrintWriter out = response.writer();
             obj.put("api_port", String.valueOf(externalProperties.getAPIServerPort()));

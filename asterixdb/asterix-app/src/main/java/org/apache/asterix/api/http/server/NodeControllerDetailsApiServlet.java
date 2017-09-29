@@ -38,22 +38,17 @@ import org.apache.hyracks.http.api.IServletResponse;
 import org.apache.hyracks.http.server.utils.HttpUtil;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-
 import io.netty.handler.codec.http.HttpResponseStatus;
 
 public class NodeControllerDetailsApiServlet extends ClusterApiServlet {
 
     private static final Logger LOGGER = Logger.getLogger(NodeControllerDetailsApiServlet.class.getName());
-    private final ObjectMapper om = new ObjectMapper();
 
     public NodeControllerDetailsApiServlet(ICcApplicationContext appCtx, ConcurrentMap<String, Object> ctx,
             String... paths) {
         super(appCtx, ctx, paths);
-        om.enable(SerializationFeature.INDENT_OUTPUT);
     }
 
     @Override
@@ -64,13 +59,13 @@ public class NodeControllerDetailsApiServlet extends ClusterApiServlet {
             ObjectNode json;
             response.setStatus(HttpResponseStatus.OK);
             if ("".equals(localPath(request))) {
-                json = om.createObjectNode();
+                json = OBJECT_MAPPER.createObjectNode();
                 json.set("ncs", getClusterStateJSON(request, "../").get("ncs"));
             } else {
                 json = processNode(request, hcc);
             }
             HttpUtil.setContentType(response, HttpUtil.ContentType.APPLICATION_JSON, HttpUtil.Encoding.UTF8);
-            responseWriter.write(om.writerWithDefaultPrettyPrinter().writeValueAsString(json));
+            responseWriter.write(OBJECT_MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(json));
         } catch (IllegalStateException e) { // NOSONAR - exception not logged or rethrown
             response.setStatus(HttpResponseStatus.SERVICE_UNAVAILABLE);
         } catch (IllegalArgumentException e) { // NOSONAR - exception not logged or rethrown
@@ -99,7 +94,7 @@ public class NodeControllerDetailsApiServlet extends ClusterApiServlet {
                 }
             }
             if ("cc".equals(node)) {
-                return om.createObjectNode();
+                return OBJECT_MAPPER.createObjectNode();
             }
             throw new IllegalArgumentException();
         } else if (parts.length == 2) {
@@ -148,7 +143,7 @@ public class NodeControllerDetailsApiServlet extends ClusterApiServlet {
         if (details == null) {
             throw new IllegalArgumentException();
         }
-        ObjectNode json = (ObjectNode) om.readTree(details);
+        ObjectNode json = (ObjectNode) OBJECT_MAPPER.readTree(details);
         int index = json.get("rrd-ptr").asInt() - 1;
         json.remove("rrd-ptr");
 
@@ -178,10 +173,10 @@ public class NodeControllerDetailsApiServlet extends ClusterApiServlet {
                 }
             }
         }
-        ArrayNode gcs = om.createArrayNode();
+        ArrayNode gcs = OBJECT_MAPPER.createArrayNode();
 
         for (int i = 0; i < gcNames.size(); i++) {
-            ObjectNode gc = om.createObjectNode();
+            ObjectNode gc = OBJECT_MAPPER.createObjectNode();
             gc.set("name", gcNames.get(i));
             gc.set("collection-time", gcCollectionTimes.get(i).get(index));
             gc.set("collection-count", gcCollectionCounts.get(i).get(index));
@@ -198,12 +193,12 @@ public class NodeControllerDetailsApiServlet extends ClusterApiServlet {
         if (config == null) {
             throw new IllegalArgumentException();
         }
-        return (ObjectNode) om.readTree(config);
+        return (ObjectNode) OBJECT_MAPPER.readTree(config);
     }
 
     private ObjectNode processNodeThreadDump(IHyracksClientConnection hcc, String node) throws Exception {
         if ("cc".equals(node)) {
-            return om.createObjectNode();
+            return OBJECT_MAPPER.createObjectNode();
         }
         String dump = hcc.getThreadDump(node);
         if (dump == null) {
@@ -212,6 +207,6 @@ public class NodeControllerDetailsApiServlet extends ClusterApiServlet {
             ClusterPartition[] cp = csm.getNodePartitions(node);
             throw cp != null ? new IllegalStateException() : new IllegalArgumentException();
         }
-        return (ObjectNode) om.readTree(dump);
+        return (ObjectNode) OBJECT_MAPPER.readTree(dump);
     }
 }

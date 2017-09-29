@@ -56,7 +56,6 @@ import org.apache.hyracks.http.server.AbstractServlet;
 import org.apache.hyracks.http.server.utils.HttpUtil;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.netty.handler.codec.http.HttpMethod;
@@ -214,7 +213,7 @@ public abstract class RestApiServlet extends AbstractServlet {
             String errorMessage = ResultUtil.buildParseExceptionMessage(pe, query);
             ObjectNode errorResp =
                     ResultUtil.getErrorResponse(2, errorMessage, "", ResultUtil.extractFullStackTrace(pe));
-            sessionOutput.out().write(new ObjectMapper().writeValueAsString(errorResp));
+            sessionOutput.out().write(OBJECT_MAPPER.writeValueAsString(errorResp));
         } catch (Exception e) {
             GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, e.getMessage(), e);
             response.setStatus(HttpResponseStatus.INTERNAL_SERVER_ERROR);
