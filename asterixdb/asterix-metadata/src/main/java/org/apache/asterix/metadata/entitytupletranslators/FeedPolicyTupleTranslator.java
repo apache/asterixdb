@@ -141,7 +141,7 @@ public class FeedPolicyTupleTranslator extends AbstractTupleTranslator<FeedPolic
         fieldValue.reset();
         aString.setValue(feedPolicy.getDescription());
         stringSerde.serialize(aString, fieldValue.getDataOutput());
-        recordBuilder.addField(MetadataRecordTypes.FEED_POLICY_ARECORD_POLICY_NAME_FIELD_INDEX, fieldValue);
+        recordBuilder.addField(MetadataRecordTypes.FEED_POLICY_ARECORD_DESCRIPTION_FIELD_INDEX, fieldValue);
 
         // write field 3 (properties)
         Map<String, String> properties = feedPolicy.getProperties();
