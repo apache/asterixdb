@@ -19,6 +19,8 @@
 
 package org.apache.hyracks.storage.am.lsm.common.impls;
 
+import java.util.logging.Logger;
+
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.IODeviceHandle;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
@@ -26,6 +28,9 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import org.apache.hyracks.util.trace.Tracer;
 
 class TracedIOOperation implements ILSMIOOperation {
+
+    static final Logger LOGGER = Logger.getLogger(TracedIOOperation.class.getName());
+
     protected final ILSMIOOperation ioOp;
     private final LSMIOOpertionType ioOpType;
     private final Tracer tracer;
@@ -81,16 +86,26 @@ class ComparableTracedIOOperation extends TracedIOOperation implements Comparabl
 
     protected ComparableTracedIOOperation(ILSMIOOperation ioOp, Tracer trace) {
         super(ioOp, trace);
-        System.err.println("COMPARE ComparableTracedIOOperation");
     }
 
+    @Override
+    public int hashCode() {
+        return this.ioOp.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        return other instanceof ILSMIOOperation && compareTo((ILSMIOOperation) other) == 0;
+    }
+
+    @Override
     public int compareTo(ILSMIOOperation other) {
-        System.err.println("COMPARE compareTo " + other.getClass().getSimpleName());
-        if (other instanceof ComparableTracedIOOperation) {
-            other = ((ComparableTracedIOOperation) other).getIoOp();
-            return ((Comparable) this.ioOp).compareTo(other);
+        final ILSMIOOperation myIoOp = this.ioOp;
+        if (myIoOp instanceof Comparable && other instanceof ComparableTracedIOOperation) {
+            return ((Comparable) myIoOp).compareTo(((ComparableTracedIOOperation) other).getIoOp());
         }
-        throw new IllegalArgumentException("Comparing ioOps of type " + this.ioOp.getClass().getSimpleName() + " and "
-                + other.getClass().getSimpleName());
+        LOGGER.warning("Comparing ioOps of type " + myIoOp.getClass().getSimpleName() + " and "
+                + other.getClass().getSimpleName() + " in " + getClass().getSimpleName());
+        return Integer.signum(hashCode() - other.hashCode());
     }
 }
