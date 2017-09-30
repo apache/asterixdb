@@ -112,37 +112,35 @@ public class ResultExtractor {
         LOGGER.fine("+++++++\n" + result + "\n+++++++\n");
 
         final StringBuilder resultBuilder = new StringBuilder();
-        String field;
-        String fieldPrefix;
-        for (Iterator<String> sIter = result.fieldNames(); sIter.hasNext(); ) {
-            field = sIter.next();
-            fieldPrefix = field.split("-")[0];
-            final ResultField extractedResultField = ResultField.ofFieldName(fieldPrefix);
-            if (extractedResultField == null) {
-                throw new AsterixException("Unanticipated field \"" + field + "\"");
+        for (Iterator<String> fieldNameIter = result.fieldNames(); fieldNameIter.hasNext();) {
+            final String fieldName = fieldNameIter.next();
+            final ResultField fieldKind = ResultField.ofFieldName(fieldName.split("-")[0]);
+            if (fieldKind == null) {
+                throw new AsterixException("Unanticipated field \"" + fieldName + "\"");
             }
-            if (!resultFields.contains(extractedResultField)) {
+            if (!resultFields.contains(fieldKind)) {
                 continue;
             }
-            switch (extractedResultField) {
+            final JsonNode fieldValue = result.get(fieldName);
+            switch (fieldKind) {
                 case RESULTS:
-                    if (result.get(field).size() <= 1) {
-                        if (result.get(field).size() == 0) {
+                    if (fieldValue.size() <= 1) {
+                        if (fieldValue.size() == 0) {
                             resultBuilder.append("");
-                        } else if (result.get(field).isArray()) {
-                            if (result.get(field).get(0).isTextual()) {
-                                resultBuilder.append(result.get(field).get(0).asText());
+                        } else if (fieldValue.isArray()) {
+                            if (fieldValue.get(0).isTextual()) {
+                                resultBuilder.append(fieldValue.get(0).asText());
                             } else {
                                 ObjectMapper omm = new ObjectMapper();
                                 omm.setDefaultPrettyPrinter(singleLine);
                                 omm.enable(SerializationFeature.INDENT_OUTPUT);
-                                resultBuilder.append(omm.writer(singleLine).writeValueAsString(result.get(field)));
+                                resultBuilder.append(omm.writer(singleLine).writeValueAsString(fieldValue));
                             }
                         } else {
-                            resultBuilder.append(OBJECT_MAPPER.writeValueAsString(result.get(field)));
+                            resultBuilder.append(OBJECT_MAPPER.writeValueAsString(fieldValue));
                         }
                     } else {
-                        JsonNode[] fields = Iterators.toArray(result.get(field).elements(), JsonNode.class);
+                        JsonNode[] fields = Iterators.toArray(fieldValue.elements(), JsonNode.class);
                         if (fields.length > 1) {
                             for (JsonNode f : fields) {
                                 if (f.isObject()) {
@@ -157,7 +155,7 @@ public class ResultExtractor {
                     }
                     break;
                 case ERRORS:
-                    final JsonNode errors = result.get(field).get(0).get("msg");
+                    final JsonNode errors = fieldValue.get(0).get("msg");
                     if (!result.get(ResultField.METRICS.getFieldName()).has("errorCount")) {
                         throw new AsterixException("Request reported error but not an errorCount");
                     }
@@ -168,10 +166,10 @@ public class ResultExtractor {
                 case SIGNATURE:
                 case STATUS:
                 case TYPE:
-                    resultBuilder.append(OBJECT_MAPPER.writeValueAsString(result.get(field)));
+                    resultBuilder.append(OBJECT_MAPPER.writeValueAsString(fieldValue));
                     break;
                 default:
-                    throw new IllegalStateException("Unexpected result field: " + extractedResultField);
+                    throw new IllegalStateException("Unexpected result field: " + fieldKind);
             }
         }
         return IOUtils.toInputStream(resultBuilder.toString(), StandardCharsets.UTF_8);
