@@ -50,11 +50,6 @@ public class FlushOperation extends AbstractIoOperation implements Comparable<IL
     }
 
     @Override
-    public FileReference getTarget() {
-        return target;
-    }
-
-    @Override
     public ILSMIndexAccessor getAccessor() {
         return accessor;
     }

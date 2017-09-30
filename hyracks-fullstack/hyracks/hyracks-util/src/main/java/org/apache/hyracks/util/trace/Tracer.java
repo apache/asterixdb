@@ -44,7 +44,7 @@ public class Tracer {
         // Complete Events
         X,
         // Instant Events
-        I,
+        i,
         // Counter Events
         C,
         // Async Events
@@ -59,6 +59,12 @@ public class Tracer {
         N, // created
         O, // snapshot
         D // destroyed
+    }
+
+    public enum Scope {
+        g, // Global scope
+        p, // Process scope
+        t // Thread scope
     }
 
     public Tracer(String name, String[] categories) {
@@ -88,64 +94,18 @@ public class Tracer {
     }
 
     public long durationB(String name, String cat, String args) {
-        Event e = Event.create(name, cat, Phase.B, pid, Thread.currentThread().getId(), args);
+        Event e = Event.create(name, cat, Phase.B, pid, Thread.currentThread().getId(), null, args);
         traceLog.log(TRACE_LOG_LEVEL, e.toJson());
         return e.tid;
     }
 
     public void durationE(long tid, String args) {
-        Event e = Event.create(null, null, Phase.E, pid, tid, args);
+        Event e = Event.create(null, null, Phase.E, pid, tid, null, args);
         traceLog.log(TRACE_LOG_LEVEL, e.toJson());
     }
-}
 
-class Event {
-    public final String name;
-    public final String cat;
-    public final Tracer.Phase ph;
-    public final long ts;
-    public final int pid;
-    public final long tid;
-    public final String args;
-
-    private Event(String name, String cat, Tracer.Phase ph, long ts, int pid, long tid, String args) {
-        this.name = name;
-        this.cat = cat;
-        this.ph = ph;
-        this.ts = ts;
-        this.pid = pid;
-        this.tid = tid;
-        this.args = args;
-    }
-
-    private static long timestamp() {
-        return System.nanoTime() / 1000;
-    }
-
-    public static Event create(String name, String cat, Tracer.Phase ph, int pid, long tid, String args) {
-        return new Event(name, cat, ph, timestamp(), pid, tid, args);
-    }
-
-    public String toJson() {
-        return append(new StringBuilder()).toString();
-    }
-
-    public StringBuilder append(StringBuilder sb) {
-        sb.append("{");
-        if (name != null) {
-            sb.append("\"name\":\"").append(name).append("\",");
-        }
-        if (cat != null) {
-            sb.append("\"cat\":\"").append(cat).append("\",");
-        }
-        sb.append("\"ph\":\"").append(ph).append("\",");
-        sb.append("\"pid\":\"").append(pid).append("\",");
-        sb.append("\"tid\":").append(tid).append(",");
-        sb.append("\"ts\":").append(ts);
-        if (args != null) {
-            sb.append(",\"args\":").append(args);
-        }
-        sb.append("}");
-        return sb;
+    public void instant(String name, String cat, Scope scope, String args) {
+        Event e = Event.create(name, cat, Phase.i, pid, Thread.currentThread().getId(), scope, args);
+        traceLog.log(TRACE_LOG_LEVEL, e.toJson());
     }
 }

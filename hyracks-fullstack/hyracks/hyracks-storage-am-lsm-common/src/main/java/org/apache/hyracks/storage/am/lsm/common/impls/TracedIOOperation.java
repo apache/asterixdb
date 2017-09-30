@@ -22,10 +22,12 @@ package org.apache.hyracks.storage.am.lsm.common.impls;
 import java.util.logging.Logger;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IODeviceHandle;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import org.apache.hyracks.util.trace.Tracer;
+import org.apache.hyracks.util.trace.Tracer.Scope;
 
 class TracedIOOperation implements ILSMIOOperation {
 
@@ -45,6 +47,9 @@ class TracedIOOperation implements ILSMIOOperation {
 
     public static ILSMIOOperation wrap(final ILSMIOOperation ioOp, final Tracer tracer) {
         if (tracer != null && tracer.isEnabled()) {
+            tracer.instant(ioOp.getTarget().getRelativePath(),
+                    ioOp.getIOOpertionType() == LSMIOOpertionType.FLUSH ? "schedule-flush" : "schedule-merge", Scope.p,
+                    null);
             return ioOp instanceof Comparable ? new ComparableTracedIOOperation(ioOp, tracer)
                     : new TracedIOOperation(ioOp, tracer);
         }
@@ -55,30 +60,39 @@ class TracedIOOperation implements ILSMIOOperation {
         return ioOp;
     }
 
+    @Override
     public IODeviceHandle getDevice() {
         return ioOp.getDevice();
     }
 
+    @Override
     public ILSMIOOperationCallback getCallback() {
         return ioOp.getCallback();
     }
 
+    @Override
     public String getIndexIdentifier() {
         return ioOp.getIndexIdentifier();
     }
 
+    @Override
     public LSMIOOpertionType getIOOpertionType() {
         return ioOpType;
     }
 
     @Override
     public Boolean call() throws HyracksDataException {
-        final long tid = tracer.durationB(getDevice().toString(), cat, null);
+        final long tid = tracer.durationB(getTarget().getRelativePath(), cat, null);
         try {
             return ioOp.call();
         } finally {
             tracer.durationE(tid, "{\"optional\":\"value\"}");
         }
+    }
+
+    @Override
+    public FileReference getTarget() {
+        return ioOp.getTarget();
     }
 }
 

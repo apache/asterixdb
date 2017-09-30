@@ -21,6 +21,7 @@ package org.apache.hyracks.storage.am.lsm.common.api;
 import java.util.concurrent.Callable;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IODeviceHandle;
 
 public interface ILSMIOOperation extends Callable<Boolean> {
@@ -55,4 +56,11 @@ public interface ILSMIOOperation extends Callable<Boolean> {
 
     @Override
     Boolean call() throws HyracksDataException;
+
+    /**
+     * The target of the io operation
+     *
+     * @return
+     */
+    FileReference getTarget();
 }
