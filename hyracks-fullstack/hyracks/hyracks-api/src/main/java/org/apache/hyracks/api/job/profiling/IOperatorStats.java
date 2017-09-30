@@ -16,40 +16,29 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.api.job.profiling.counters;
+package org.apache.hyracks.api.job.profiling;
 
 import java.io.Serializable;
 
-public interface ICounter extends Serializable {
+import org.apache.hyracks.api.io.IWritable;
+import org.apache.hyracks.api.job.profiling.counters.ICounter;
+
+public interface IOperatorStats extends IWritable, Serializable {
+
     /**
-     * Get the fully-qualified name of the counter.
-     *
-     * @return Name of the counter.
+     * @return The name of the operator
      */
     String getName();
 
     /**
-     * Update the value of the counter to be current + delta.
-     *
-     * @param delta
-     *            - Amount to change the counter value by.
-     * @return the new value after update.
+     * @return A counter used to track the number of tuples
+     * accessed by an operator
      */
-    long update(long delta);
+    ICounter getTupleCounter();
 
     /**
-     * Set the value of the counter.
-     *
-     * @param value
-     *            - New value of the counter.
-     * @return Old value of the counter.
+     * @return A counter used to track the execution time
+     * of an operator
      */
-    long set(long value);
-
-    /**
-     * Get the value of the counter.
-     *
-     * @return the value of the counter.
-     */
-    long get();
+    ICounter getTimeCounter();
 }

@@ -53,12 +53,14 @@ import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.io.IWorkspaceFileFactory;
 import org.apache.hyracks.api.job.IOperatorEnvironment;
 import org.apache.hyracks.api.job.JobFlag;
+import org.apache.hyracks.api.job.profiling.IStatsCollector;
 import org.apache.hyracks.api.job.profiling.counters.ICounter;
 import org.apache.hyracks.api.job.profiling.counters.ICounterContext;
 import org.apache.hyracks.api.partitions.PartitionId;
 import org.apache.hyracks.api.resources.IDeallocatable;
 import org.apache.hyracks.api.util.JavaSerializationUtils;
 import org.apache.hyracks.control.common.job.PartitionState;
+import org.apache.hyracks.control.common.job.profiling.StatsCollector;
 import org.apache.hyracks.control.common.job.profiling.counters.Counter;
 import org.apache.hyracks.control.common.job.profiling.om.PartitionProfile;
 import org.apache.hyracks.control.common.job.profiling.om.TaskProfile;
@@ -107,6 +109,8 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
 
     private final Set<JobFlag> jobFlags;
 
+    private final IStatsCollector statsCollector;
+
     public Task(Joblet joblet, Set<JobFlag> jobFlags, TaskAttemptId taskId, String displayName,
             ExecutorService executor, NodeControllerService ncs,
             List<List<PartitionChannel>> inputChannelsFromConnectors) {
@@ -124,6 +128,7 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
         exceptions = new CopyOnWriteArrayList<>(); // Multiple threads could add exceptions to this list.
         this.ncs = ncs;
         this.inputChannelsFromConnectors = inputChannelsFromConnectors;
+        statsCollector = new StatsCollector();
     }
 
     public void setTaskRuntime(IPartitionCollector[] collectors, IOperatorNodePushable operator) {
@@ -452,5 +457,10 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
     @Override
     public Set<JobFlag> getJobFlags() {
         return jobFlags;
+    }
+
+    @Override
+    public IStatsCollector getStatsCollector() {
+        return statsCollector;
     }
 }

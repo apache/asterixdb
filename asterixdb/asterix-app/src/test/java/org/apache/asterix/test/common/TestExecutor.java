@@ -67,9 +67,9 @@ import org.apache.asterix.testframework.context.TestCaseContext;
 import org.apache.asterix.testframework.context.TestCaseContext.OutputFormat;
 import org.apache.asterix.testframework.context.TestFileContext;
 import org.apache.asterix.testframework.xml.ComparisonEnum;
-import org.apache.asterix.testframework.xml.TestGroup;
 import org.apache.asterix.testframework.xml.TestCase.CompilationUnit;
 import org.apache.asterix.testframework.xml.TestCase.CompilationUnit.Parameter;
+import org.apache.asterix.testframework.xml.TestGroup;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.ByteArrayOutputStream;
@@ -124,6 +124,7 @@ public class TestExecutor {
     public static final String DELIVERY_ASYNC = "async";
     public static final String DELIVERY_DEFERRED = "deferred";
     public static final String DELIVERY_IMMEDIATE = "immediate";
+    private static final String METRICS_QUERY_TYPE = "metrics";
 
     private static Method managixExecuteMethod = null;
     private static final HashMap<Integer, ITestServer> runningTestServers = new HashMap<>();
@@ -888,6 +889,7 @@ public class TestExecutor {
             case "query":
             case "async":
             case "deferred":
+            case "metrics":
                 // isDmlRecoveryTest: insert Crash and Recovery
                 if (isDmlRecoveryTest) {
                     executeScript(pb, pb.environment().get("SCRIPT_HOME") + File.separator + "dml_recovery"
@@ -1203,7 +1205,9 @@ public class TestExecutor {
             final URI uri = getEndpoint(Servlets.QUERY_SERVICE);
             if (DELIVERY_IMMEDIATE.equals(delivery)) {
                 resultStream = executeQueryService(statement, fmt, uri, params, true, null, true);
-                resultStream = ResultExtractor.extract(resultStream);
+                resultStream = METRICS_QUERY_TYPE.equals(reqType) ?
+                        ResultExtractor.extractMetrics(resultStream) :
+                        ResultExtractor.extract(resultStream);
             } else {
                 String handleVar = getHandleVariable(statement);
                 resultStream = executeQueryService(statement, fmt, uri, upsertParam(params, "mode", delivery), true);

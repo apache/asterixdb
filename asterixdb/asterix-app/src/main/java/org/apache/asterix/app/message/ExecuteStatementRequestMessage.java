@@ -119,13 +119,14 @@ public final class ExecuteStatementRequestMessage implements ICcAddressedMessage
             MetadataManager.INSTANCE.init();
             IStatementExecutor translator = statementExecutorFactory.create(ccAppCtx, statements, sessionOutput,
                     compilationProvider, storageComponentProvider);
+            final IStatementExecutor.Stats stats = new IStatementExecutor.Stats();
             final IRequestParameters requestParameters =
-                    new RequestParameters(null, delivery, new IStatementExecutor.Stats(), outMetadata, clientContextID,
-                            optionalParameters);
+                    new RequestParameters(null, delivery, stats, outMetadata, clientContextID, optionalParameters);
             translator.compileAndExecute(ccApp.getHcc(), statementExecutorContext, requestParameters);
             outPrinter.close();
             responseMsg.setResult(outWriter.toString());
             responseMsg.setMetadata(outMetadata);
+            responseMsg.setStats(stats);
         } catch (AlgebricksException | HyracksException | TokenMgrError
                 | org.apache.asterix.aqlplus.parser.TokenMgrError pe) {
             // we trust that "our" exceptions are serializable and have a comprehensible error message

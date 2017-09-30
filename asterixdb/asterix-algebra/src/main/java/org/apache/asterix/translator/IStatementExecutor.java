@@ -68,11 +68,13 @@ public interface IStatementExecutor {
         public List<Triple<JobId, ResultSetId, ARecordType>> getResultSets() {
             return resultSets;
         }
+
     }
 
-    public static class Stats {
+    class Stats implements Serializable {
         private long count;
         private long size;
+        private long processedObjects;
 
         public long getCount() {
             return count;
@@ -90,6 +92,13 @@ public interface IStatementExecutor {
             this.size = size;
         }
 
+        public long getProcessedObjects() {
+            return processedObjects;
+        }
+
+        public void setProcessedObjects(long processedObjects) {
+            this.processedObjects = processedObjects;
+        }
     }
 
     /**

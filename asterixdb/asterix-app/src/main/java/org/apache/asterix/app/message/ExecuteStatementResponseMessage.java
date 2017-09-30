@@ -35,6 +35,8 @@ public final class ExecuteStatementResponseMessage implements INcAddressedMessag
 
     private IStatementExecutor.ResultMetadata metadata;
 
+    private IStatementExecutor.Stats stats;
+
     private Throwable error;
 
     public ExecuteStatementResponseMessage(long requestMessageId) {
@@ -72,6 +74,14 @@ public final class ExecuteStatementResponseMessage implements INcAddressedMessag
 
     public void setMetadata(IStatementExecutor.ResultMetadata metadata) {
         this.metadata = metadata;
+    }
+
+    public IStatementExecutor.Stats getStats() {
+        return stats;
+    }
+
+    public void setStats(IStatementExecutor.Stats stats) {
+        this.stats = stats;
     }
 
     @Override

@@ -25,12 +25,15 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.apache.hyracks.api.dataflow.TaskAttemptId;
+import org.apache.hyracks.api.job.profiling.IStatsCollector;
+import org.apache.hyracks.api.partitions.PartitionId;
+import org.apache.hyracks.control.common.job.profiling.StatsCollector;
+import org.apache.hyracks.control.common.job.profiling.counters.MultiResolutionEventProfiler;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.apache.hyracks.api.dataflow.TaskAttemptId;
-import org.apache.hyracks.api.partitions.PartitionId;
-import org.apache.hyracks.control.common.job.profiling.counters.MultiResolutionEventProfiler;
 
 public class TaskProfile extends AbstractProfile {
     private static final long serialVersionUID = 1L;
@@ -38,6 +41,8 @@ public class TaskProfile extends AbstractProfile {
     private TaskAttemptId taskAttemptId;
 
     private Map<PartitionId, PartitionProfile> partitionSendProfile;
+
+    private IStatsCollector statsCollector;
 
     public static TaskProfile create(DataInput dis) throws IOException {
         TaskProfile taskProfile = new TaskProfile();
@@ -49,9 +54,11 @@ public class TaskProfile extends AbstractProfile {
 
     }
 
-    public TaskProfile(TaskAttemptId taskAttemptId, Map<PartitionId, PartitionProfile> partitionSendProfile) {
+    public TaskProfile(TaskAttemptId taskAttemptId, Map<PartitionId, PartitionProfile> partitionSendProfile,
+            IStatsCollector statsCollector) {
         this.taskAttemptId = taskAttemptId;
-        this.partitionSendProfile = new HashMap<PartitionId, PartitionProfile>(partitionSendProfile);
+        this.partitionSendProfile = new HashMap<>(partitionSendProfile);
+        this.statsCollector = statsCollector;
     }
 
     public TaskAttemptId getTaskId() {
@@ -104,17 +111,22 @@ public class TaskProfile extends AbstractProfile {
         return json;
     }
 
+    public IStatsCollector getStatsCollector() {
+        return statsCollector;
+    }
+
     @Override
     public void readFields(DataInput input) throws IOException {
         super.readFields(input);
         taskAttemptId = TaskAttemptId.create(input);
         int size = input.readInt();
-        partitionSendProfile = new HashMap<PartitionId, PartitionProfile>();
+        partitionSendProfile = new HashMap<>();
         for (int i = 0; i < size; i++) {
             PartitionId key = PartitionId.create(input);
             PartitionProfile value = PartitionProfile.create(input);
             partitionSendProfile.put(key, value);
         }
+        statsCollector = StatsCollector.create(input);
     }
 
     @Override
@@ -126,5 +138,6 @@ public class TaskProfile extends AbstractProfile {
             entry.getKey().writeFields(output);
             entry.getValue().writeFields(output);
         }
+        statsCollector.writeFields(output);
     }
 }

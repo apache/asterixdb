@@ -36,8 +36,10 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.job.JobFlag;
+import org.apache.hyracks.api.job.profiling.IStatsCollector;
 import org.apache.hyracks.api.job.profiling.counters.ICounterContext;
 import org.apache.hyracks.api.resources.IDeallocatable;
+import org.apache.hyracks.control.common.job.profiling.StatsCollector;
 import org.apache.hyracks.control.nc.io.WorkspaceFileFactory;
 
 public class TestTaskContext implements IHyracksTaskContext {
@@ -46,6 +48,7 @@ public class TestTaskContext implements IHyracksTaskContext {
     private WorkspaceFileFactory fileFactory;
     private Map<Object, IStateObject> stateObjectMap = new HashMap<>();
     private Object sharedObject;
+    private final IStatsCollector statsCollector = new StatsCollector();
 
     public TestTaskContext(TestJobletContext jobletContext, TaskAttemptId taskId) {
         this.jobletContext = jobletContext;
@@ -162,5 +165,10 @@ public class TestTaskContext implements IHyracksTaskContext {
     @Override
     public Set<JobFlag> getJobFlags() {
         return EnumSet.noneOf(JobFlag.class);
+    }
+
+    @Override
+    public IStatsCollector getStatsCollector() {
+        return statsCollector;
     }
 }

@@ -118,6 +118,7 @@ public class NCQueryServiceServlet extends QueryServiceServlet {
 
         IStatementExecutor.ResultMetadata resultMetadata = responseMsg.getMetadata();
         if (delivery == IStatementExecutor.ResultDelivery.IMMEDIATE && !resultMetadata.getResultSets().isEmpty()) {
+            stats.setProcessedObjects(responseMsg.getStats().getProcessedObjects());
             for (Triple<JobId, ResultSetId, ARecordType> rsmd : resultMetadata.getResultSets()) {
                 ResultReader resultReader = new ResultReader(getHyracksDataset(), rsmd.getLeft(), rsmd.getMiddle());
                 ResultUtil.printResults(appCtx, resultReader, sessionOutput, stats, rsmd.getRight());

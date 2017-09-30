@@ -16,40 +16,33 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.api.job.profiling.counters;
+package org.apache.hyracks.api.job.profiling;
 
 import java.io.Serializable;
 
-public interface ICounter extends Serializable {
-    /**
-     * Get the fully-qualified name of the counter.
-     *
-     * @return Name of the counter.
-     */
-    String getName();
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.IWritable;
+
+public interface IStatsCollector extends IWritable, Serializable {
 
     /**
-     * Update the value of the counter to be current + delta.
+     * Adds {@link IOperatorStats} to the stats collections
      *
-     * @param delta
-     *            - Amount to change the counter value by.
-     * @return the new value after update.
+     * @param operatorStats
+     * @throws HyracksDataException when an operator with the same was already added.
      */
-    long update(long delta);
+    void add(IOperatorStats operatorStats) throws HyracksDataException;
 
     /**
-     * Set the value of the counter.
-     *
-     * @param value
-     *            - New value of the counter.
-     * @return Old value of the counter.
+     * @param operatorName
+     * @return {@link IOperatorStats} for the operator with name <code>operatorName</code>
+     * if one exists or else null.
      */
-    long set(long value);
+    IOperatorStats getOperatorStats(String operatorName);
 
     /**
-     * Get the value of the counter.
-     *
-     * @return the value of the counter.
+     * @return A special {@link IOperatorStats} that has the aggregated stats
+     * from all operators in the collection.
      */
-    long get();
+    IOperatorStats getAggregatedStats();
 }

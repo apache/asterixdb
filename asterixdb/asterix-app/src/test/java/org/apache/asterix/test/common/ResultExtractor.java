@@ -20,7 +20,11 @@ package org.apache.asterix.test.common;
 
 import java.io.InputStream;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.logging.Logger;
 
 import org.apache.asterix.common.exceptions.AsterixException;
@@ -40,47 +44,88 @@ import com.google.common.collect.Iterators;
  */
 public class ResultExtractor {
 
+    private enum ResultField {
+        RESULTS("results"),
+        REQUEST_ID("requestID"),
+        METRICS("metrics"),
+        CLIENT_CONTEXT_ID("clientContextID"),
+        SIGNATURE("signature"),
+        STATUS("status"),
+        TYPE("type"),
+        ERRORS("errors");
+
+        private static final Map<String, ResultField> fields = new HashMap<>();
+
+        static {
+            for (ResultField field : ResultField.values()) {
+                fields.put(field.getFieldName(), field);
+            }
+        }
+
+        private String fieldName;
+
+        ResultField(String fieldName) {
+            this.fieldName = fieldName;
+        }
+
+        public String getFieldName() {
+            return fieldName;
+        }
+
+        public static ResultField ofFieldName(String fieldName) {
+            return fields.get(fieldName);
+        }
+    }
+
     private static final Logger LOGGER = Logger.getLogger(ResultExtractor.class.getName());
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     public static InputStream extract(InputStream resultStream) throws Exception {
-        ObjectMapper om = new ObjectMapper();
-        String resultStr = IOUtils.toString(resultStream, Charset.defaultCharset());
-        PrettyPrinter singleLine = new SingleLinePrettyPrinter();
-        ObjectNode result = om.readValue(resultStr, ObjectNode.class);
+        return extract(resultStream, EnumSet.of(ResultField.RESULTS, ResultField.ERRORS));
+    }
+
+    public static InputStream extractMetrics(InputStream resultStream) throws Exception {
+        return extract(resultStream, EnumSet.of(ResultField.METRICS, ResultField.ERRORS));
+    }
+
+    public static String extractHandle(InputStream resultStream) throws Exception {
+        String result = IOUtils.toString(resultStream, StandardCharsets.UTF_8);
+        ObjectNode resultJson = OBJECT_MAPPER.readValue(result, ObjectNode.class);
+        final JsonNode handle = resultJson.get("handle");
+        if (handle != null) {
+            return handle.asText();
+        } else {
+            JsonNode errors = resultJson.get("errors");
+            if (errors != null) {
+                JsonNode msg = errors.get(0).get("msg");
+                throw new AsterixException(msg.asText());
+            }
+        }
+        return null;
+    }
+
+    private static InputStream extract(InputStream resultStream, EnumSet<ResultField> resultFields) throws Exception {
+        final String resultStr = IOUtils.toString(resultStream, Charset.defaultCharset());
+        final PrettyPrinter singleLine = new SingleLinePrettyPrinter();
+        final ObjectNode result = OBJECT_MAPPER.readValue(resultStr, ObjectNode.class);
 
         LOGGER.fine("+++++++\n" + result + "\n+++++++\n");
 
-        String type = "";
-        String status = "";
-        StringBuilder resultBuilder = new StringBuilder();
-        String field = "";
-        String fieldPrefix = "";
-        for (Iterator<String> sIter = result.fieldNames(); sIter.hasNext();) {
+        final StringBuilder resultBuilder = new StringBuilder();
+        String field;
+        String fieldPrefix;
+        for (Iterator<String> sIter = result.fieldNames(); sIter.hasNext(); ) {
             field = sIter.next();
             fieldPrefix = field.split("-")[0];
-            switch (fieldPrefix) {
-                case "requestID":
-                    break;
-                case "clientContextID":
-                    break;
-                case "signature":
-                    break;
-                case "status":
-                    status = om.writeValueAsString(result.get(field));
-                    break;
-                case "type":
-                    type = om.writeValueAsString(result.get(field));
-                    break;
-                case "metrics":
-                    LOGGER.fine(om.writeValueAsString(result.get(field)));
-                    break;
-                case "errors":
-                    JsonNode errors = result.get(field).get(0).get("msg");
-                    if (!result.get("metrics").has("errorCount")) {
-                        throw new AsterixException("Request reported error but not an errorCount");
-                    };
-                    throw new AsterixException(errors.asText());
-                case "results":
+            final ResultField extractedResultField = ResultField.ofFieldName(fieldPrefix);
+            if (extractedResultField == null) {
+                throw new AsterixException("Unanticipated field \"" + field + "\"");
+            }
+            if (!resultFields.contains(extractedResultField)) {
+                continue;
+            }
+            switch (extractedResultField) {
+                case RESULTS:
                     if (result.get(field).size() <= 1) {
                         if (result.get(field).size() == 0) {
                             resultBuilder.append("");
@@ -94,44 +139,41 @@ public class ResultExtractor {
                                 resultBuilder.append(omm.writer(singleLine).writeValueAsString(result.get(field)));
                             }
                         } else {
-                            resultBuilder.append(om.writeValueAsString(result.get(field)));
+                            resultBuilder.append(OBJECT_MAPPER.writeValueAsString(result.get(field)));
                         }
                     } else {
                         JsonNode[] fields = Iterators.toArray(result.get(field).elements(), JsonNode.class);
                         if (fields.length > 1) {
                             for (JsonNode f : fields) {
                                 if (f.isObject()) {
-                                    resultBuilder.append(om.writeValueAsString(f));
+
+                                    resultBuilder.append(OBJECT_MAPPER.writeValueAsString(f));
                                 } else {
                                     resultBuilder.append(f.asText());
                                 }
                             }
                         }
+
                     }
                     break;
+                case ERRORS:
+                    final JsonNode errors = result.get(field).get(0).get("msg");
+                    if (!result.get(ResultField.METRICS.getFieldName()).has("errorCount")) {
+                        throw new AsterixException("Request reported error but not an errorCount");
+                    }
+                    throw new AsterixException(errors.asText());
+                case REQUEST_ID:
+                case METRICS:
+                case CLIENT_CONTEXT_ID:
+                case SIGNATURE:
+                case STATUS:
+                case TYPE:
+                    resultBuilder.append(OBJECT_MAPPER.writeValueAsString(result.get(field)));
+                    break;
                 default:
-                    throw new AsterixException("Unanticipated field \"" + field + "\"");
+                    throw new IllegalStateException("Unexpected result field: " + extractedResultField);
             }
         }
-
-        return IOUtils.toInputStream(resultBuilder.toString());
-    }
-
-    public static String extractHandle(InputStream resultStream) throws Exception {
-        final Charset utf8 = Charset.forName("UTF-8");
-        ObjectMapper om = new ObjectMapper();
-        String result = IOUtils.toString(resultStream, utf8);
-        ObjectNode resultJson = om.readValue(result, ObjectNode.class);
-        final JsonNode handle = resultJson.get("handle");
-        if (handle != null) {
-            return handle.asText();
-        } else {
-            JsonNode errors = resultJson.get("errors");
-            if (errors != null) {
-                JsonNode msg = errors.get(0).get("msg");
-                throw new AsterixException(msg.asText());
-            }
-        }
-        return null;
+        return IOUtils.toInputStream(resultBuilder.toString(), StandardCharsets.UTF_8);
     }
 }

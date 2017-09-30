@@ -147,7 +147,8 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         EXECUTION_TIME("executionTime"),
         RESULT_COUNT("resultCount"),
         RESULT_SIZE("resultSize"),
-        ERROR_COUNT("errorCount");
+        ERROR_COUNT("errorCount"),
+        PROCESSED_OBJECTS_COUNT("processedObjects");
 
         private final String str;
 
@@ -271,7 +272,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
     }
 
     private static void printMetrics(PrintWriter pw, long elapsedTime, long executionTime, long resultCount,
-            long resultSize, long errorCount) {
+            long resultSize, long processedObjects, long errorCount) {
         boolean hasErrors = errorCount != 0;
         pw.print("\t\"");
         pw.print(ResultFields.METRICS.str());
@@ -283,7 +284,10 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         pw.print("\t");
         ResultUtil.printField(pw, Metrics.RESULT_COUNT.str(), resultCount, true);
         pw.print("\t");
-        ResultUtil.printField(pw, Metrics.RESULT_SIZE.str(), resultSize, hasErrors);
+        ResultUtil.printField(pw, Metrics.RESULT_SIZE.str(), resultSize, true);
+        pw.print("\t");
+        ResultUtil.printField(pw, Metrics.PROCESSED_OBJECTS_COUNT.str(), processedObjects, hasErrors);
+        pw.print("\t");
         if (hasErrors) {
             pw.print("\t");
             ResultUtil.printField(pw, Metrics.ERROR_COUNT.str(), errorCount, false);
@@ -421,7 +425,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
             }
         }
         printMetrics(resultWriter, System.nanoTime() - elapsedStart, execStartEnd[1] - execStartEnd[0],
-                stats.getCount(), stats.getSize(), errorCount);
+                stats.getCount(), stats.getSize(), stats.getProcessedObjects(), errorCount);
         resultWriter.print("}\n");
         resultWriter.flush();
         String result = stringWriter.toString();

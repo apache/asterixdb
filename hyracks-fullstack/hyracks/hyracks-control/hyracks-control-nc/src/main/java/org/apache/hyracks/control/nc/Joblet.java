@@ -53,6 +53,7 @@ import org.apache.hyracks.api.resources.IDeallocatable;
 import org.apache.hyracks.control.common.deployment.DeploymentUtils;
 import org.apache.hyracks.control.common.job.PartitionRequest;
 import org.apache.hyracks.control.common.job.PartitionState;
+import org.apache.hyracks.control.common.job.profiling.StatsCollector;
 import org.apache.hyracks.control.common.job.profiling.counters.Counter;
 import org.apache.hyracks.control.common.job.profiling.om.JobletProfile;
 import org.apache.hyracks.control.common.job.profiling.om.TaskProfile;
@@ -190,7 +191,7 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
         }
         for (Task task : taskMap.values()) {
             TaskProfile taskProfile = new TaskProfile(task.getTaskAttemptId(),
-                    new Hashtable<>(task.getPartitionSendProfile()));
+                    new Hashtable<>(task.getPartitionSendProfile()), new StatsCollector());
             task.dumpProfile(taskProfile);
             jProfile.getTaskProfiles().put(task.getTaskAttemptId(), taskProfile);
         }
