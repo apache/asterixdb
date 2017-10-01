@@ -22,6 +22,7 @@ import org.apache.hyracks.control.common.ipc.CCNCFunctions;
 import org.apache.hyracks.control.common.ipc.CCNCFunctions.StateDumpRequestFunction;
 import org.apache.hyracks.control.nc.task.ShutdownTask;
 import org.apache.hyracks.control.nc.task.ThreadDumpTask;
+import org.apache.hyracks.control.nc.work.AbortAllJobsWork;
 import org.apache.hyracks.control.nc.work.AbortTasksWork;
 import org.apache.hyracks.control.nc.work.ApplicationMessageWork;
 import org.apache.hyracks.control.nc.work.CleanupJobletWork;
@@ -55,10 +56,9 @@ final class NodeControllerIPCI implements IIPCI {
         CCNCFunctions.Function fn = (CCNCFunctions.Function) payload;
         switch (fn.getFunctionId()) {
             case SEND_APPLICATION_MESSAGE:
-                CCNCFunctions.SendApplicationMessageFunction amf =
-                        (CCNCFunctions.SendApplicationMessageFunction) fn;
-                ncs.getWorkQueue().schedule(new ApplicationMessageWork(ncs, amf.getMessage(),
-                        amf.getDeploymentId(), amf.getNodeId()));
+                CCNCFunctions.SendApplicationMessageFunction amf = (CCNCFunctions.SendApplicationMessageFunction) fn;
+                ncs.getWorkQueue().schedule(
+                        new ApplicationMessageWork(ncs, amf.getMessage(), amf.getDeploymentId(), amf.getNodeId()));
                 return;
             case START_TASKS:
                 CCNCFunctions.StartTasksFunction stf = (CCNCFunctions.StartTasksFunction) fn;
@@ -69,6 +69,9 @@ final class NodeControllerIPCI implements IIPCI {
                 CCNCFunctions.AbortTasksFunction atf = (CCNCFunctions.AbortTasksFunction) fn;
                 ncs.getWorkQueue().schedule(new AbortTasksWork(ncs, atf.getJobId(), atf.getTasks()));
                 return;
+            case ABORT_ALL_JOBS:
+                ncs.getWorkQueue().schedule(new AbortAllJobsWork(ncs));
+                return;
             case CLEANUP_JOBLET:
                 CCNCFunctions.CleanupJobletFunction cjf = (CCNCFunctions.CleanupJobletFunction) fn;
                 ncs.getWorkQueue().schedule(new CleanupJobletWork(ncs, cjf.getJobId(), cjf.getStatus()));
@@ -76,8 +79,8 @@ final class NodeControllerIPCI implements IIPCI {
             case REPORT_PARTITION_AVAILABILITY:
                 CCNCFunctions.ReportPartitionAvailabilityFunction rpaf =
                         (CCNCFunctions.ReportPartitionAvailabilityFunction) fn;
-                ncs.getWorkQueue().schedule(new ReportPartitionAvailabilityWork(ncs,
-                        rpaf.getPartitionId(), rpaf.getNetworkAddress()));
+                ncs.getWorkQueue().schedule(
+                        new ReportPartitionAvailabilityWork(ncs, rpaf.getPartitionId(), rpaf.getNetworkAddress()));
                 return;
             case NODE_REGISTRATION_RESULT:
                 CCNCFunctions.NodeRegistrationResult nrrf = (CCNCFunctions.NodeRegistrationResult) fn;
@@ -92,8 +95,7 @@ final class NodeControllerIPCI implements IIPCI {
 
             case DEPLOY_BINARY:
                 CCNCFunctions.DeployBinaryFunction dbf = (CCNCFunctions.DeployBinaryFunction) fn;
-                ncs.getWorkQueue().schedule(new DeployBinaryWork(ncs, dbf.getDeploymentId(),
-                        dbf.getBinaryURLs()));
+                ncs.getWorkQueue().schedule(new DeployBinaryWork(ncs, dbf.getDeploymentId(), dbf.getBinaryURLs()));
                 return;
 
             case UNDEPLOY_BINARY:

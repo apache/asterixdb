@@ -93,7 +93,7 @@ public class HyracksDatasetReader implements IHyracksDatasetReader {
         try {
             return datasetDirectoryServiceConnection.getDatasetResultStatus(jobId, resultSetId);
         } catch (HyracksDataException e) {
-            if (e.getErrorCode() != ErrorCode.NO_RESULTSET) {
+            if (e.getErrorCode() != ErrorCode.NO_RESULT_SET) {
                 LOGGER.log(Level.WARNING, "Exception retrieving result set for job " + jobId, e);
             }
         } catch (Exception e) {

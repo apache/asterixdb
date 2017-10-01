@@ -18,14 +18,24 @@
  */
 package org.apache.hyracks.control.cc.work;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import org.apache.hyracks.api.comm.NetworkAddress;
 import org.apache.hyracks.api.dataset.ResultSetId;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.control.cc.ClusterControllerService;
+import org.apache.hyracks.control.cc.job.JobRun;
 import org.apache.hyracks.control.common.work.AbstractWork;
+import org.apache.hyracks.control.common.work.NoOpCallback;
 
 public class RegisterResultPartitionLocationWork extends AbstractWork {
+
+    private static final Logger LOGGER = Logger.getLogger(RegisterResultPartitionLocationWork.class.getName());
+
     private final ClusterControllerService ccs;
 
     private final JobId jobId;
@@ -43,8 +53,7 @@ public class RegisterResultPartitionLocationWork extends AbstractWork {
     private final NetworkAddress networkAddress;
 
     public RegisterResultPartitionLocationWork(ClusterControllerService ccs, JobId jobId, ResultSetId rsId,
-            boolean orderedResult, boolean emptyResult, int partition, int nPartitions, NetworkAddress
-            networkAddress) {
+            boolean orderedResult, boolean emptyResult, int partition, int nPartitions, NetworkAddress networkAddress) {
         this.ccs = ccs;
         this.jobId = jobId;
         this.rsId = rsId;
@@ -58,17 +67,24 @@ public class RegisterResultPartitionLocationWork extends AbstractWork {
     @Override
     public void run() {
         try {
-            ccs.getDatasetDirectoryService()
-                    .registerResultPartitionLocation(jobId, rsId, orderedResult, emptyResult, partition, nPartitions,
-                            networkAddress);
+            ccs.getDatasetDirectoryService().registerResultPartitionLocation(jobId, rsId, orderedResult, emptyResult,
+                    partition, nPartitions, networkAddress);
         } catch (HyracksDataException e) {
-            throw new RuntimeException(e);
+            LOGGER.log(Level.WARNING, "Failed to register partition location", e);
+            // Should fail the job if exists on cc, otherwise, do nothing
+            JobRun jobRun = ccs.getJobManager().get(jobId);
+            if (jobRun != null) {
+                List<Exception> exceptions = new ArrayList<>();
+                exceptions.add(e);
+                jobRun.getExecutor().abortJob(exceptions, NoOpCallback.INSTANCE);
+            }
         }
     }
 
     @Override
     public String toString() {
-        return getName() + ": JobId@" + jobId + " ResultSetId@" + rsId + " Partition@" + partition + " NPartitions@" + nPartitions
-                + " ResultPartitionLocation@" + networkAddress + " OrderedResult@" + orderedResult + " EmptyResult@" + emptyResult;
+        return getName() + ": JobId@" + jobId + " ResultSetId@" + rsId + " Partition@" + partition + " NPartitions@"
+                + nPartitions + " ResultPartitionLocation@" + networkAddress + " OrderedResult@" + orderedResult
+                + " EmptyResult@" + emptyResult;
     }
 }

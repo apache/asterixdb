@@ -67,4 +67,6 @@ public interface IHyracksClientInterface {
     public String getNodeDetailsJSON(String nodeId, boolean includeStats, boolean includeConfig) throws Exception;
 
     public String getThreadDump(String node) throws Exception;
+
+    public boolean isConnected();
 }

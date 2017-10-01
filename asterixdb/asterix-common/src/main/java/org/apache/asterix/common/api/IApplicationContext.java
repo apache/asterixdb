@@ -30,6 +30,8 @@ import org.apache.asterix.common.config.StorageProperties;
 import org.apache.asterix.common.config.TransactionProperties;
 import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.hyracks.api.application.IServiceContext;
+import org.apache.hyracks.api.client.IHyracksClientConnection;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public interface IApplicationContext {
 
@@ -56,7 +58,17 @@ public interface IApplicationContext {
     /**
      * @return the library manager which implements {@link org.apache.asterix.common.library.ILibraryManager}
      */
-    public ILibraryManager getLibraryManager();
+    ILibraryManager getLibraryManager();
 
+    /**
+     * @return the service context
+     */
     IServiceContext getServiceContext();
+
+    /**
+     * @return a connected instance of {@link IHyracksClientConnection}
+     * @throws HyracksDataException
+     *             if connection couldn't be established to cluster controller
+     */
+    IHyracksClientConnection getHcc() throws HyracksDataException;
 }

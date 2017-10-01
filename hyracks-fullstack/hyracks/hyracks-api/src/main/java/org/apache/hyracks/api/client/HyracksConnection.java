@@ -44,7 +44,6 @@ import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.api.job.JobStatus;
 import org.apache.hyracks.api.topology.ClusterTopology;
 import org.apache.hyracks.api.util.JavaSerializationUtils;
-import org.apache.hyracks.ipc.api.IIPCHandle;
 import org.apache.hyracks.ipc.api.RPCInterface;
 import org.apache.hyracks.ipc.impl.IPCSystem;
 import org.apache.hyracks.ipc.impl.JavaSerializationBasedPayloadSerializerDeserializer;
@@ -57,6 +56,8 @@ import org.apache.hyracks.ipc.impl.JavaSerializationBasedPayloadSerializerDeseri
  */
 public final class HyracksConnection implements IHyracksClientConnection {
     private final String ccHost;
+
+    private final int ccPort;
 
     private final IPCSystem ipc;
 
@@ -77,11 +78,11 @@ public final class HyracksConnection implements IHyracksClientConnection {
      */
     public HyracksConnection(String ccHost, int ccPort) throws Exception {
         this.ccHost = ccHost;
+        this.ccPort = ccPort;
         RPCInterface rpci = new RPCInterface();
         ipc = new IPCSystem(new InetSocketAddress(0), rpci, new JavaSerializationBasedPayloadSerializerDeserializer());
         ipc.start();
-        IIPCHandle ccIpchandle = ipc.getHandle(new InetSocketAddress(ccHost, ccPort));
-        this.hci = new HyracksClientInterfaceRemoteProxy(ccIpchandle, rpci);
+        hci = new HyracksClientInterfaceRemoteProxy(ipc.getHandle(new InetSocketAddress(ccHost, ccPort)), rpci);
         ccInfo = hci.getClusterControllerInfo();
     }
 
@@ -124,6 +125,7 @@ public final class HyracksConnection implements IHyracksClientConnection {
         return hci.startJob(jobId);
     }
 
+    @Override
     public JobId startJob(IActivityClusterGraphGeneratorFactory acggf, EnumSet<JobFlag> jobFlags) throws Exception {
         return hci.startJob(JavaSerializationUtils.serialize(acggf), jobFlags);
     }
@@ -132,6 +134,7 @@ public final class HyracksConnection implements IHyracksClientConnection {
         return hci.distributeJob(JavaSerializationUtils.serialize(acggf));
     }
 
+    @Override
     public NetworkAddress getDatasetDirectoryServiceInfo() throws Exception {
         return hci.getDatasetDirectoryServiceInfo();
     }
@@ -241,5 +244,20 @@ public final class HyracksConnection implements IHyracksClientConnection {
     @Override
     public String getThreadDump(String node) throws Exception {
         return hci.getThreadDump(node);
+    }
+
+    @Override
+    public String getHost() {
+        return ccHost;
+    }
+
+    @Override
+    public int getPort() {
+        return ccPort;
+    }
+
+    @Override
+    public boolean isConnected() {
+        return hci.isConnected();
     }
 }

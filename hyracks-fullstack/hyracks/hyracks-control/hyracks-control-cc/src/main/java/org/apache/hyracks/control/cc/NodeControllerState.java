@@ -28,12 +28,12 @@ import java.util.Set;
 import org.apache.hyracks.api.comm.NetworkAddress;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.resource.NodeCapacity;
-import org.apache.hyracks.control.common.base.INodeController;
 import org.apache.hyracks.control.common.controllers.NCConfig;
 import org.apache.hyracks.control.common.controllers.NodeRegistration;
 import org.apache.hyracks.control.common.heartbeat.HeartbeatData;
 import org.apache.hyracks.control.common.heartbeat.HeartbeatSchema;
 import org.apache.hyracks.control.common.heartbeat.HeartbeatSchema.GarbageCollectorInfo;
+import org.apache.hyracks.control.common.ipc.NodeControllerRemoteProxy;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -41,7 +41,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 public class NodeControllerState {
     private static final int RRD_SIZE = 720;
 
-    private final INodeController nodeController;
+    private final NodeControllerRemoteProxy nodeController;
 
     private final NCConfig ncConfig;
 
@@ -145,7 +145,7 @@ public class NodeControllerState {
 
     private NodeCapacity capacity;
 
-    public NodeControllerState(INodeController nodeController, NodeRegistration reg) {
+    public NodeControllerState(NodeControllerRemoteProxy nodeController, NodeRegistration reg) {
         this.nodeController = nodeController;
         ncConfig = reg.getNCConfig();
         dataPort = reg.getDataPort();
@@ -251,7 +251,7 @@ public class NodeControllerState {
         return lastHeartbeatDuration++;
     }
 
-    public INodeController getNodeController() {
+    public NodeControllerRemoteProxy getNodeController() {
         return nodeController;
     }
 
@@ -279,7 +279,7 @@ public class NodeControllerState {
         return capacity;
     }
 
-    public synchronized ObjectNode toSummaryJSON()  {
+    public synchronized ObjectNode toSummaryJSON() {
         ObjectMapper om = new ObjectMapper();
         ObjectNode o = om.createObjectNode();
         o.put("node-id", ncConfig.getNodeId());
@@ -289,7 +289,7 @@ public class NodeControllerState {
         return o;
     }
 
-    public synchronized ObjectNode toDetailedJSON(boolean includeStats, boolean includeConfig)  {
+    public synchronized ObjectNode toDetailedJSON(boolean includeStats, boolean includeConfig) {
         ObjectMapper om = new ObjectMapper();
         ObjectNode o = om.createObjectNode();
 

@@ -27,7 +27,7 @@ public class RPCInterface implements IIPCI {
     private final Map<Long, Request> reqMap;
 
     public RPCInterface() {
-        reqMap = new HashMap<Long, RPCInterface.Request>();
+        reqMap = new HashMap<>();
     }
 
     public Object call(IIPCHandle handle, Object request) throws Exception {

@@ -27,7 +27,6 @@ import org.apache.asterix.common.metadata.IMetadataBootstrap;
 import org.apache.asterix.common.replication.IFaultToleranceStrategy;
 import org.apache.asterix.common.transactions.IResourceIdManager;
 import org.apache.hyracks.api.application.ICCServiceContext;
-import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.job.IJobLifecycleListener;
 import org.apache.hyracks.storage.common.IStorageManager;
 
@@ -69,11 +68,6 @@ public interface ICcApplicationContext extends IApplicationContext {
      * @return the active notification handler at Cluster controller
      */
     IJobLifecycleListener getActiveNotificationHandler();
-
-    /**
-     * @return a new instance of {@link IHyracksClientConnection}
-     */
-    IHyracksClientConnection getHcc();
 
     /**
      * @return the cluster wide resource id manager

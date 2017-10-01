@@ -107,7 +107,7 @@ public class DatasetDirectoryService implements IDatasetDirectoryService {
     private DatasetJobRecord getNonNullDatasetJobRecord(JobId jobId) throws HyracksDataException {
         final DatasetJobRecord djr = getDatasetJobRecord(jobId);
         if (djr == null) {
-            throw HyracksDataException.create(ErrorCode.NO_RESULTSET, jobId);
+            throw HyracksDataException.create(ErrorCode.NO_RESULT_SET, jobId);
         }
         return djr;
     }

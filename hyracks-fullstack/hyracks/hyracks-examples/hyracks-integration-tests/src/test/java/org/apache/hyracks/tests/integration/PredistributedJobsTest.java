@@ -23,6 +23,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.verify;
 
 import java.io.File;
+import java.lang.reflect.Field;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -32,6 +33,8 @@ import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.control.cc.ClusterControllerService;
+import org.apache.hyracks.control.cc.cluster.INodeManager;
+import org.apache.hyracks.control.cc.cluster.NodeManager;
 import org.apache.hyracks.control.common.controllers.CCConfig;
 import org.apache.hyracks.control.common.controllers.NCConfig;
 import org.apache.hyracks.control.nc.NodeControllerService;
@@ -69,8 +72,16 @@ public class PredistributedJobsTest {
         ccRoot.mkdir();
         ccConfig.setRootDir(ccRoot.getAbsolutePath());
         ClusterControllerService ccBase = new ClusterControllerService(ccConfig);
+        // The spying below is dangerous since it replaces the ClusterControllerService already referenced by many
+        // objects created in the constructor above
         cc = Mockito.spy(ccBase);
         cc.start();
+
+        // The following code partially fixes the problem created by the spying
+        INodeManager nodeManager = cc.getNodeManager();
+        Field ccsInNodeManager = NodeManager.class.getDeclaredField("ccs");
+        ccsInNodeManager.setAccessible(true);
+        ccsInNodeManager.set(nodeManager, cc);
 
         NCConfig ncConfig1 = new NCConfig(NC1_ID);
         ncConfig1.setClusterAddress("localhost");
@@ -79,7 +90,7 @@ public class PredistributedJobsTest {
         ncConfig1.setDataListenAddress("127.0.0.1");
         ncConfig1.setResultListenAddress("127.0.0.1");
         ncConfig1.setResultSweepThreshold(5000);
-        ncConfig1.setIODevices(new String [] { joinPath(System.getProperty("user.dir"), "target", "data", "device0") });
+        ncConfig1.setIODevices(new String[] { joinPath(System.getProperty("user.dir"), "target", "data", "device0") });
         NodeControllerService nc1Base = new NodeControllerService(ncConfig1);
         nc1 = Mockito.spy(nc1Base);
         nc1.start();
@@ -91,7 +102,7 @@ public class PredistributedJobsTest {
         ncConfig2.setDataListenAddress("127.0.0.1");
         ncConfig2.setResultListenAddress("127.0.0.1");
         ncConfig2.setResultSweepThreshold(5000);
-        ncConfig2.setIODevices(new String [] { joinPath(System.getProperty("user.dir"), "target", "data", "device1") });
+        ncConfig2.setIODevices(new String[] { joinPath(System.getProperty("user.dir"), "target", "data", "device1") });
         NodeControllerService nc2Base = new NodeControllerService(ncConfig2);
         nc2 = Mockito.spy(nc2Base);
         nc2.start();

@@ -45,7 +45,9 @@ import org.apache.asterix.common.replication.IFaultToleranceStrategy;
 import org.apache.asterix.common.transactions.IResourceIdManager;
 import org.apache.asterix.runtime.transaction.ResourceIdManager;
 import org.apache.hyracks.api.application.ICCServiceContext;
+import org.apache.hyracks.api.client.HyracksConnection;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.IJobLifecycleListener;
 import org.apache.hyracks.storage.common.IStorageManager;
 
@@ -155,7 +157,18 @@ public class CcApplicationContext implements ICcApplicationContext {
     }
 
     @Override
-    public IHyracksClientConnection getHcc() {
+    public IHyracksClientConnection getHcc() throws HyracksDataException {
+        if (!hcc.isConnected()) {
+            synchronized (this) {
+                if (!hcc.isConnected()) {
+                    try {
+                        hcc = new HyracksConnection(hcc.getHost(), hcc.getPort());
+                    } catch (Exception e) {
+                        throw HyracksDataException.create(e);
+                    }
+                }
+            }
+        }
         return hcc;
     }
 

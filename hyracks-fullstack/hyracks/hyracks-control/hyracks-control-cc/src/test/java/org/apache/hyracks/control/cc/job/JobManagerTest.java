@@ -45,8 +45,8 @@ import org.apache.hyracks.control.cc.NodeControllerState;
 import org.apache.hyracks.control.cc.application.CCServiceContext;
 import org.apache.hyracks.control.cc.cluster.INodeManager;
 import org.apache.hyracks.control.cc.cluster.NodeManager;
-import org.apache.hyracks.control.common.base.INodeController;
 import org.apache.hyracks.control.common.controllers.CCConfig;
+import org.apache.hyracks.control.common.ipc.NodeControllerRemoteProxy;
 import org.apache.hyracks.control.common.logs.LogFile;
 import org.apache.hyracks.control.common.work.NoOpCallback;
 import org.junit.Assert;
@@ -293,7 +293,7 @@ public class JobManagerTest {
     private INodeManager mockNodeManager() {
         INodeManager nodeManager = mock(NodeManager.class);
         NodeControllerState ncState = mock(NodeControllerState.class);
-        INodeController nodeController = mock(INodeController.class);
+        NodeControllerRemoteProxy nodeController = mock(NodeControllerRemoteProxy.class);
         when(nodeManager.getNodeControllerState(any())).thenReturn(ncState);
         when(ncState.getNodeController()).thenReturn(nodeController);
         return nodeManager;

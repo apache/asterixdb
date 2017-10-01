@@ -70,8 +70,8 @@ public class HyracksClientInterfaceRemoteProxy implements IHyracksClientInterfac
 
     @Override
     public void cancelJob(JobId jobId) throws Exception {
-        HyracksClientInterfaceFunctions.CancelJobFunction cjf = new HyracksClientInterfaceFunctions.CancelJobFunction(
-                jobId);
+        HyracksClientInterfaceFunctions.CancelJobFunction cjf =
+                new HyracksClientInterfaceFunctions.CancelJobFunction(jobId);
         rpci.call(ipcHandle, cjf);
     }
 
@@ -84,8 +84,8 @@ public class HyracksClientInterfaceRemoteProxy implements IHyracksClientInterfac
 
     @Override
     public JobId startJob(DeploymentId deploymentId, byte[] acggfBytes, EnumSet<JobFlag> jobFlags) throws Exception {
-        HyracksClientInterfaceFunctions.StartJobFunction sjf = new HyracksClientInterfaceFunctions.StartJobFunction(
-                deploymentId, acggfBytes, jobFlags);
+        HyracksClientInterfaceFunctions.StartJobFunction sjf =
+                new HyracksClientInterfaceFunctions.StartJobFunction(deploymentId, acggfBytes, jobFlags);
         return (JobId) rpci.call(ipcHandle, sjf);
     }
 
@@ -165,8 +165,8 @@ public class HyracksClientInterfaceRemoteProxy implements IHyracksClientInterfac
             }
         }
         if (ipcHandle.isConnected()) {
-            throw new IPCException("CC refused to release connection after " + SHUTDOWN_CONNECTION_TIMEOUT_SECS
-                    + " seconds");
+            throw new IPCException(
+                    "CC refused to release connection after " + SHUTDOWN_CONNECTION_TIMEOUT_SECS + " seconds");
         }
     }
 
@@ -181,6 +181,11 @@ public class HyracksClientInterfaceRemoteProxy implements IHyracksClientInterfac
     public String getThreadDump(String node) throws Exception {
         HyracksClientInterfaceFunctions.ThreadDumpFunction tdf =
                 new HyracksClientInterfaceFunctions.ThreadDumpFunction(node);
-        return (String)rpci.call(ipcHandle, tdf);
+        return (String) rpci.call(ipcHandle, tdf);
+    }
+
+    @Override
+    public boolean isConnected() {
+        return ipcHandle.isConnected();
     }
 }

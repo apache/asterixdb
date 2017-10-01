@@ -57,7 +57,7 @@ public class ErrorCode {
     public static final int ERROR_FINDING_DISTRIBUTED_JOB = 21;
     public static final int DUPLICATE_DISTRIBUTED_JOB = 22;
     public static final int DISTRIBUTED_JOB_FAILURE = 23;
-    public static final int NO_RESULTSET = 24;
+    public static final int NO_RESULT_SET = 24;
     public static final int JOB_CANCELED = 25;
     public static final int NODE_FAILED = 26;
     public static final int FILE_IS_NOT_DIRECTORY = 27;

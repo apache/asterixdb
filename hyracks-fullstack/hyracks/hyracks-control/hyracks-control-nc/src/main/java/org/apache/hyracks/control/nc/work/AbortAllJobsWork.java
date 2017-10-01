@@ -18,23 +18,23 @@
  */
 package org.apache.hyracks.control.nc.work;
 
-import java.util.Map;
+import java.util.Collection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.hyracks.api.dataflow.TaskAttemptId;
 import org.apache.hyracks.api.dataset.IDatasetPartitionManager;
+import org.apache.hyracks.api.job.JobStatus;
 import org.apache.hyracks.control.common.work.SynchronizableWork;
 import org.apache.hyracks.control.nc.Joblet;
 import org.apache.hyracks.control.nc.NodeControllerService;
 import org.apache.hyracks.control.nc.Task;
 
-public class AbortAllTasksWork extends SynchronizableWork {
+public class AbortAllJobsWork extends SynchronizableWork {
 
-    private static final Logger LOGGER = Logger.getLogger(AbortAllTasksWork.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(AbortAllJobsWork.class.getName());
     private final NodeControllerService ncs;
 
-    public AbortAllTasksWork(NodeControllerService ncs) {
+    public AbortAllJobsWork(NodeControllerService ncs) {
         this.ncs = ncs;
     }
 
@@ -46,14 +46,16 @@ public class AbortAllTasksWork extends SynchronizableWork {
         IDatasetPartitionManager dpm = ncs.getDatasetPartitionManager();
         if (dpm != null) {
             ncs.getDatasetPartitionManager().abortAllReaders();
+        } else {
+            LOGGER.log(Level.WARNING, "DatasetPartitionManager is null on " + ncs.getId());
         }
-        for (Joblet ji : ncs.getJobletMap().values()) {
-            Map<TaskAttemptId, Task> taskMap = ji.getTaskMap();
-            for (Task task : taskMap.values()) {
-                if (task != null) {
-                    task.abort();
-                }
+        Collection<Joblet> joblets = ncs.getJobletMap().values();
+        for (Joblet ji : joblets) {
+            Collection<Task> tasks = ji.getTaskMap().values();
+            for (Task task : tasks) {
+                task.abort();
             }
+            ncs.getWorkQueue().schedule(new CleanupJobletWork(ncs, ji.getJobId(), JobStatus.FAILURE));
         }
     }
 }
