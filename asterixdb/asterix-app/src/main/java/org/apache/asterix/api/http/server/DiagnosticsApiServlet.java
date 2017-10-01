@@ -67,7 +67,7 @@ public class DiagnosticsApiServlet extends NodeControllerDetailsApiServlet {
             if (!"".equals(localPath(request))) {
                 throw new IllegalArgumentException();
             }
-            responseWriter.write(JSONUtil.convertNode(getClusterDiagnosticsJSON()));
+            JSONUtil.writeNode(responseWriter, getClusterDiagnosticsJSON());
         } catch (IllegalStateException e) { // NOSONAR - exception not logged or rethrown
             response.setStatus(HttpResponseStatus.SERVICE_UNAVAILABLE);
         } catch (IllegalArgumentException e) { // NOSONAR - exception not logged or rethrown

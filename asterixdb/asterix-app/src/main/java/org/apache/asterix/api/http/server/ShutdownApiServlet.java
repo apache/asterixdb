@@ -94,7 +94,7 @@ public class ShutdownApiServlet extends AbstractServlet {
             }
             jsonObject.set("cluster", clusterState);
             final PrintWriter writer = response.writer();
-            writer.print(JSONUtil.convertNode(jsonObject));
+            JSONUtil.writeNode(writer, jsonObject);
             // accept no further queries once this servlet returns
             csm.setState(SHUTTING_DOWN);
             writer.close();

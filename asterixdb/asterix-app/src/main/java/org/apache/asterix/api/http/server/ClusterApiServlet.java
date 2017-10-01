@@ -80,7 +80,7 @@ public class ClusterApiServlet extends AbstractServlet {
                 default:
                     throw new IllegalArgumentException();
             }
-            responseWriter.write(JSONUtil.convertNode(json));
+            JSONUtil.writeNode(responseWriter, json);
         } catch (IllegalArgumentException e) { // NOSONAR - exception not logged or rethrown
             response.setStatus(HttpResponseStatus.NOT_FOUND);
         } catch (Exception e) {
