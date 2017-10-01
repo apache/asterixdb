@@ -21,6 +21,8 @@ package org.apache.hyracks.control.nc;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.hyracks.util.ThreadDumpUtil;
+
 /**
  * Shutdown hook that invokes {@link NodeControllerService#stop() stop} method.
  * This shutdown hook must have a failsafe mechanism to halt the process in case the shutdown
@@ -67,6 +69,7 @@ public class NCShutdownHook extends Thread {
             }
             shutdownHookThread = Thread.currentThread();
             watchDog.start();
+            LOGGER.log(Level.INFO, () -> "Thread dump at shutdown: " + ThreadDumpUtil.takeDumpString());
             nodeControllerService.stop();
         } catch (Throwable th) { // NOSONAR... This is fine since this is shutdown hook
             LOGGER.log(Level.WARNING, "Exception in executing shutdown hook", th);
