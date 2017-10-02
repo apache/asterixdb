@@ -51,12 +51,14 @@ public class JobletCleanupNotificationWork extends AbstractHeartbeatWork {
     public void runWork() {
         IJobManager jobManager = ccs.getJobManager();
         final JobRun run = jobManager.get(jobId);
+        if (run == null) {
+            LOGGER.log(Level.WARNING, () -> "ignoring unknown job " + jobId + " on notification from " + nodeId);
+            return;
+        }
         Set<String> cleanupPendingNodes = run.getCleanupPendingNodeIds();
         if (!cleanupPendingNodes.remove(nodeId)) {
-            if (LOGGER.isLoggable(Level.WARNING)) {
-                LOGGER.warning(
-                        nodeId + " not in pending cleanup nodes set: " + cleanupPendingNodes + " for Job: " + jobId);
-            }
+            LOGGER.log(Level.WARNING, () -> nodeId + " not in pending cleanup nodes set: " + cleanupPendingNodes +
+                    " for job " + jobId);
             return;
         }
         INodeManager nodeManager = ccs.getNodeManager();
