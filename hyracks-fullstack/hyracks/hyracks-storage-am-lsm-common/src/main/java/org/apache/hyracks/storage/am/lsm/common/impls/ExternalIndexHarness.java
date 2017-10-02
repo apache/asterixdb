@@ -45,7 +45,7 @@ public class ExternalIndexHarness extends LSMHarness {
 
     public ExternalIndexHarness(ILSMIndex lsmIndex, ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker,
             boolean replicationEnabled) {
-        super(lsmIndex, mergePolicy, opTracker, replicationEnabled);
+        super(lsmIndex, mergePolicy, opTracker, replicationEnabled, null);
     }
 
     @Override

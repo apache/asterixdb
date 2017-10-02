@@ -53,6 +53,8 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
 import org.apache.hyracks.storage.common.IIndexCursor;
 import org.apache.hyracks.storage.common.ISearchPredicate;
+import org.apache.hyracks.util.trace.Tracer;
+import org.apache.hyracks.util.trace.Tracer.Scope;
 
 public class LSMHarness implements ILSMHarness {
     private static final Logger LOGGER = Logger.getLogger(LSMHarness.class.getName());
@@ -63,12 +65,14 @@ public class LSMHarness implements ILSMHarness {
     protected final AtomicBoolean fullMergeIsRequested;
     protected final boolean replicationEnabled;
     protected List<ILSMDiskComponent> componentsToBeReplicated;
+    protected Tracer tracer;
 
     public LSMHarness(ILSMIndex lsmIndex, ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker,
-            boolean replicationEnabled) {
+            boolean replicationEnabled, Tracer tracer) {
         this.lsmIndex = lsmIndex;
         this.opTracker = opTracker;
         this.mergePolicy = mergePolicy;
+        this.tracer = tracer;
         fullMergeIsRequested = new AtomicBoolean();
         //only durable indexes are replicated
         this.replicationEnabled = replicationEnabled && lsmIndex.isDurable();
@@ -217,7 +221,6 @@ public class LSMHarness implements ILSMHarness {
         try {
             synchronized (opTracker) {
                 try {
-
                     /**
                      * [flow control]
                      * If merge operations are lagged according to the merge policy,
@@ -247,6 +250,9 @@ public class LSMHarness implements ILSMHarness {
                                     }
                                     break;
                                 case INACTIVE:
+                                    if (tracer != null && tracer.isEnabled()) {
+                                        tracer.instant(lsmIndex.toString(), "release-memory-component", Scope.p, null);
+                                    }
                                     ((AbstractLSMMemoryComponent) c).reset();
                                     // Notify all waiting threads whenever the mutable component's has change to inactive. This is important because
                                     // even though we switched the mutable components, it is possible that the component that we just switched
