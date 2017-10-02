@@ -30,7 +30,7 @@ distribute result [$$17]
                   -- STREAM_PROJECT  |PARTITIONED|
                     assign [$$18] <- [substring($$22.getField("department_id"), 1)]
                     -- ASSIGN  |PARTITIONED|
-                      project ([$$22, $$15])
+                      project ([$$15, $$22])
                       -- STREAM_PROJECT  |PARTITIONED|
                         assign [$$15, $$22] <- [$$e.getField("salary"), $$e.getField("dept")]
                         -- ASSIGN  |PARTITIONED|

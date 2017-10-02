@@ -21,7 +21,7 @@ package org.apache.hyracks.algebricks.rewriter.rules;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -48,14 +48,14 @@ import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
  * that the overall cost of the plan is reduced since project operators also add a cost.
  */
 public class IntroduceProjectsRule implements IAlgebraicRewriteRule {
-
-    private final Set<LogicalVariable> usedVars = new HashSet<>();
-    private final Set<LogicalVariable> liveVars = new HashSet<>();
-    private final Set<LogicalVariable> producedVars = new HashSet<>();
+    // preserve the original variable order using linked hash set
+    private final Set<LogicalVariable> usedVars = new LinkedHashSet<>();
+    private final Set<LogicalVariable> liveVars = new LinkedHashSet<>();
+    private final Set<LogicalVariable> producedVars = new LinkedHashSet<>();
     private final List<LogicalVariable> projectVars = new ArrayList<>();
     protected boolean hasRun = false;
     // Keep track of used variables after the current operator, including used variables in itself.
-    private final Map<AbstractLogicalOperator, HashSet<LogicalVariable>> allUsedVarsAfterOpMap = new HashMap<>();
+    private final Map<AbstractLogicalOperator, Set<LogicalVariable>> allUsedVarsAfterOpMap = new HashMap<>();
 
     @Override
     public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context) {
@@ -74,7 +74,7 @@ public class IntroduceProjectsRule implements IAlgebraicRewriteRule {
         // This is necessary since introduceProjects() may generate a wrong project if it doesn't have the information
         // for all paths in the plan in case there are two or more branches since it can only deal one path at a time.
         // So, a variable used in one path might be removed while the method traverses another path.
-        Set<LogicalVariable> parentUsedVars = new HashSet<>();
+        Set<LogicalVariable> parentUsedVars = new LinkedHashSet<>();
         collectUsedVars(opRef, parentUsedVars);
 
         // Introduce projects
@@ -89,7 +89,7 @@ public class IntroduceProjectsRule implements IAlgebraicRewriteRule {
     protected void collectUsedVars(Mutable<ILogicalOperator> opRef, Set<LogicalVariable> parentUsedVars)
             throws AlgebricksException {
         AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
-        HashSet<LogicalVariable> usedVarsPerOp = new HashSet<>();
+        Set<LogicalVariable> usedVarsPerOp = new LinkedHashSet<>();
         VariableUtilities.getUsedVariables(op, usedVarsPerOp);
         usedVarsPerOp.addAll(parentUsedVars);
 
@@ -117,7 +117,7 @@ public class IntroduceProjectsRule implements IAlgebraicRewriteRule {
         // In the top-down pass, maintain a set of variables that are used in op and all its parents.
         // This is a necessary step for the newly created project operator during this optimization,
         // since we already have all information from collectUsedVars() method for the other operators.
-        HashSet<LogicalVariable> parentsUsedVars = new HashSet<>();
+        Set<LogicalVariable> parentsUsedVars = new LinkedHashSet<>();
         parentsUsedVars.addAll(parentUsedVars);
         parentsUsedVars.addAll(usedVars);
 
@@ -180,8 +180,8 @@ public class IntroduceProjectsRule implements IAlgebraicRewriteRule {
                 boolean eliminateProject = true;
                 // For UnionAll the variables must also be in exactly the correct order.
                 if (parentOp.getOperatorTag() == LogicalOperatorTag.UNIONALL) {
-                    eliminateProject = canEliminateProjectBelowUnion((UnionAllOperator) parentOp, projectOp,
-                            parentInputIndex);
+                    eliminateProject =
+                            canEliminateProjectBelowUnion((UnionAllOperator) parentOp, projectOp, parentInputIndex);
                 }
                 if (eliminateProject) {
                     // The existing project has become useless. Remove it.
