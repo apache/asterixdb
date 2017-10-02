@@ -24,9 +24,14 @@ import org.apache.hyracks.api.comm.IFrameFieldAppender;
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 import org.apache.hyracks.api.comm.IFrameTupleAppender;
 import org.apache.hyracks.api.comm.IFrameWriter;
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.util.trace.Tracer;
 
 public class FrameUtils {
+
+    private FrameUtils() {
+    }
 
     public static void copyWholeFrame(ByteBuffer srcFrame, ByteBuffer destFrame) {
         srcFrame.clear();
@@ -67,7 +72,7 @@ public class FrameUtils {
             flushedBytes = frameTupleAppender.getBuffer().capacity();
             frameTupleAppender.write(writer, true);
             if (!frameTupleAppender.appendSkipEmptyField(fieldSlots, bytes, offset, length)) {
-                throw new HyracksDataException("The output cannot be fit into a frame.");
+                throw HyracksDataException.create(ErrorCode.TUPLE_CANNOT_FIT_INTO_EMPTY_FRAME, length);
             }
         }
         return flushedBytes;
@@ -93,7 +98,7 @@ public class FrameUtils {
             flushedBytes = frameTupleAppender.getBuffer().capacity();
             frameTupleAppender.write(writer, true);
             if (!frameTupleAppender.append(bytes, offset, length)) {
-                throw new HyracksDataException("The output cannot be fit into a frame.");
+                throw HyracksDataException.create(ErrorCode.TUPLE_CANNOT_FIT_INTO_EMPTY_FRAME, length);
             }
         }
         return flushedBytes;
@@ -109,14 +114,14 @@ public class FrameUtils {
      * @throws HyracksDataException
      */
     public static int appendToWriter(IFrameWriter writer, IFrameTupleAppender frameTupleAppender,
-            IFrameTupleAccessor tupleAccessor, int tStartOffset, int tEndOffset)
-            throws HyracksDataException {
+            IFrameTupleAccessor tupleAccessor, int tStartOffset, int tEndOffset) throws HyracksDataException {
         int flushedBytes = 0;
         if (!frameTupleAppender.append(tupleAccessor, tStartOffset, tEndOffset)) {
             flushedBytes = frameTupleAppender.getBuffer().capacity();
             frameTupleAppender.write(writer, true);
             if (!frameTupleAppender.append(tupleAccessor, tStartOffset, tEndOffset)) {
-                throw new HyracksDataException("The output cannot be fit into a frame.");
+                throw HyracksDataException.create(ErrorCode.TUPLE_CANNOT_FIT_INTO_EMPTY_FRAME,
+                        tEndOffset - tStartOffset);
             }
         }
         return flushedBytes;
@@ -137,7 +142,25 @@ public class FrameUtils {
             flushedBytes = frameTupleAppender.getBuffer().capacity();
             frameTupleAppender.write(writer, true);
             if (!frameTupleAppender.append(tupleAccessor, tIndex)) {
-                throw new HyracksDataException("The output cannot be fit into a frame.");
+                throw HyracksDataException.create(ErrorCode.TUPLE_CANNOT_FIT_INTO_EMPTY_FRAME,
+                        tupleAccessor.getTupleLength(tIndex));
+            }
+        }
+        return flushedBytes;
+    }
+
+    public static int appendToWriter(IFrameWriter writer, IFrameTupleAppender frameTupleAppender,
+            IFrameTupleAccessor tupleAccessor, int tIndex, Tracer tracer, String name, String cat, String args)
+            throws HyracksDataException {
+        int flushedBytes = 0;
+        if (!frameTupleAppender.append(tupleAccessor, tIndex)) {
+            flushedBytes = frameTupleAppender.getBuffer().capacity();
+            long tid = tracer.durationB(name, cat, args);
+            frameTupleAppender.write(writer, true);
+            tracer.durationE(tid, args);
+            if (!frameTupleAppender.append(tupleAccessor, tIndex)) {
+                throw HyracksDataException.create(ErrorCode.TUPLE_CANNOT_FIT_INTO_EMPTY_FRAME,
+                        tupleAccessor.getTupleLength(tIndex));
             }
         }
         return flushedBytes;
@@ -153,8 +176,8 @@ public class FrameUtils {
      * @return the number of bytes that have been flushed, 0 if not get flushed.
      * @throws HyracksDataException
      */
-    public static int appendToWriter(IFrameWriter writer, IFrameTupleAppender tupleAppender,
-            int[] fieldEndOffsets, byte[] byteArray, int start, int size) throws HyracksDataException {
+    public static int appendToWriter(IFrameWriter writer, IFrameTupleAppender tupleAppender, int[] fieldEndOffsets,
+            byte[] byteArray, int start, int size) throws HyracksDataException {
         int flushedBytes = 0;
         if (!tupleAppender.append(fieldEndOffsets, byteArray, start, size)) {
 
@@ -162,7 +185,7 @@ public class FrameUtils {
             tupleAppender.write(writer, true);
 
             if (!tupleAppender.append(fieldEndOffsets, byteArray, start, size)) {
-                throw new HyracksDataException("The output cannot be fit into a frame.");
+                throw HyracksDataException.create(ErrorCode.TUPLE_CANNOT_FIT_INTO_EMPTY_FRAME, size);
             }
         }
         return flushedBytes;
@@ -186,7 +209,8 @@ public class FrameUtils {
             flushedBytes = frameTupleAppender.getBuffer().capacity();
             frameTupleAppender.write(writer, true);
             if (!frameTupleAppender.appendConcat(accessor0, tIndex0, accessor1, tIndex1)) {
-                throw new HyracksDataException("The output cannot be fit into a frame.");
+                throw HyracksDataException.create(ErrorCode.TUPLE_CANNOT_FIT_INTO_EMPTY_FRAME,
+                        accessor0.getTupleLength(tIndex0) + accessor1.getTupleLength(tIndex1));
             }
         }
         return flushedBytes;
@@ -205,14 +229,19 @@ public class FrameUtils {
      * @throws HyracksDataException
      */
     public static int appendConcatToWriter(IFrameWriter writer, IFrameTupleAppender frameTupleAppender,
-            IFrameTupleAccessor accessor0, int tIndex0, int[] fieldSlots1, byte[] bytes1, int offset1,
-            int dataLen1) throws HyracksDataException {
+            IFrameTupleAccessor accessor0, int tIndex0, int[] fieldSlots1, byte[] bytes1, int offset1, int dataLen1)
+            throws HyracksDataException {
         int flushedBytes = 0;
         if (!frameTupleAppender.appendConcat(accessor0, tIndex0, fieldSlots1, bytes1, offset1, dataLen1)) {
             flushedBytes = frameTupleAppender.getBuffer().capacity();
             frameTupleAppender.write(writer, true);
             if (!frameTupleAppender.appendConcat(accessor0, tIndex0, fieldSlots1, bytes1, offset1, dataLen1)) {
-                throw new HyracksDataException("The output cannot be fit into a frame.");
+                int startOffset0 = accessor0.getTupleStartOffset(tIndex0);
+                int endOffset0 = accessor0.getTupleEndOffset(tIndex0);
+                int length0 = endOffset0 - startOffset0;
+                int slotsLen1 = fieldSlots1.length * Integer.BYTES;
+                int length1 = slotsLen1 + dataLen1;
+                throw HyracksDataException.create(ErrorCode.TUPLE_CANNOT_FIT_INTO_EMPTY_FRAME, length0 + length1);
             }
         }
         return flushedBytes;
@@ -234,7 +263,13 @@ public class FrameUtils {
             flushedBytes = frameTupleAppender.getBuffer().capacity();
             frameTupleAppender.write(writer, true);
             if (!frameTupleAppender.appendProjection(accessor, tIndex, fields)) {
-                throw new HyracksDataException("The output cannot be fit into a frame.");
+                int fTargetSlotsLength = fields.length * Integer.BYTES;
+                int length = fTargetSlotsLength;
+                for (int i = 0; i < fields.length; ++i) {
+                    length += (accessor.getFieldEndOffset(tIndex, fields[i])
+                            - accessor.getFieldStartOffset(tIndex, fields[i]));
+                }
+                throw HyracksDataException.create(ErrorCode.TUPLE_CANNOT_FIT_INTO_EMPTY_FRAME, length);
             }
         }
         return flushedBytes;
@@ -249,14 +284,14 @@ public class FrameUtils {
      * @return the number of bytes that have been flushed, 0 if not get flushed.
      * @throws HyracksDataException
      */
-    public static int appendFieldToWriter(IFrameWriter writer, IFrameFieldAppender appender, byte[] array,
-            int start, int length) throws HyracksDataException {
+    public static int appendFieldToWriter(IFrameWriter writer, IFrameFieldAppender appender, byte[] array, int start,
+            int length) throws HyracksDataException {
         int flushedBytes = 0;
         if (!appender.appendField(array, start, length)) {
             flushedBytes = appender.getBuffer().capacity();
             appender.write(writer, true);
             if (!appender.appendField(array, start, length)) {
-                throw new HyracksDataException("Could not write frame: the size of the tuple is too long");
+                throw HyracksDataException.create(ErrorCode.TUPLE_CANNOT_FIT_INTO_EMPTY_FRAME, length);
             }
         }
         return flushedBytes;
@@ -278,10 +313,11 @@ public class FrameUtils {
             flushedBytes = appender.getBuffer().capacity();
             appender.write(writer, true);
             if (!appender.appendField(accessor, tid, fid)) {
-                throw new HyracksDataException("Could not write frame: the size of the tuple is too long");
+                int fStartOffset = accessor.getFieldStartOffset(tid, fid);
+                int fLen = accessor.getFieldEndOffset(tid, fid) - fStartOffset;
+                throw HyracksDataException.create(ErrorCode.TUPLE_CANNOT_FIT_INTO_EMPTY_FRAME, fLen);
             }
         }
         return flushedBytes;
     }
-
 }

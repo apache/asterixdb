@@ -28,6 +28,7 @@ import org.apache.hyracks.api.comm.IFrameAppender;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.util.IntSerDeUtils;
+import org.apache.hyracks.util.trace.Tracer;
 
 /*
  * Frame
@@ -114,5 +115,20 @@ public class AbstractFrameAppender implements IFrameAppender {
             write(writer, true);
         }
         writer.flush();
+    }
+
+    public void flush(IFrameWriter writer, Tracer tracer, String name, String cat, String args)
+            throws HyracksDataException {
+        long tid = -1L;
+        if (tracer != null && tracer.isEnabled()) {
+            tid = tracer.durationB(name, cat, args);
+        }
+        if (tupleCount > 0) {
+            write(writer, true);
+        }
+        writer.flush();
+        if (tracer != null && tracer.isEnabled()) {
+            tracer.durationE(tid, args);
+        }
     }
 }
