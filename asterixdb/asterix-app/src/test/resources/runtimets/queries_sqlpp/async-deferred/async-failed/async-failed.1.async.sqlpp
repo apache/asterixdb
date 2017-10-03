@@ -17,7 +17,7 @@
  * under the License.
  */
 
-#handlevariable=status
+-- handlevariable=status
 
 set `import-private-functions` `true`;
 select value inject_failure(sleep("result", 5000), true);

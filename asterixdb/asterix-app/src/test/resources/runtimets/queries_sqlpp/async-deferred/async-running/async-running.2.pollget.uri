@@ -17,6 +17,6 @@
  * under the License.
  */
 
-#polltimeoutsecs=10
+-- polltimeoutsecs=10
 
 $status

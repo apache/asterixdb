@@ -17,7 +17,7 @@
  * under the License.
  */
 
-#polltimeoutsecs=30
-#handlevariable=result
+-- polltimeoutsecs=30
+-- handlevariable=result
 
 $status

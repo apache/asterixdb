@@ -17,6 +17,6 @@
  * under the License.
  */
 
-#handlevariable=status
+-- handlevariable=status
 
 select i, i * i as i2 from range(1, 10) i;

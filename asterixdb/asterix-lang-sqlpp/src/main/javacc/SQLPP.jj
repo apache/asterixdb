@@ -3464,19 +3464,6 @@ SKIP:
 <DEFAULT,IN_DBL_BRACE>
 SKIP:
 {
-    <"#" (~["\n"])* "\n">
-}
-
-
-<DEFAULT,IN_DBL_BRACE>
-SKIP:
-{
-    <"#" (~["\n","\r"])* ("\n"|"\r"|"\r\n")?>
-}
-
-<DEFAULT,IN_DBL_BRACE>
-SKIP:
-{
     <"/*"> { pushState(); } : INSIDE_COMMENT
 }
 

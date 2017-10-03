@@ -108,8 +108,8 @@ public class TestExecutor {
     private static final long MAX_URL_LENGTH = 2000l;
     private static final Pattern JAVA_BLOCK_COMMENT_PATTERN = Pattern.compile("/\\*.*\\*/",
             Pattern.MULTILINE | Pattern.DOTALL);
-    private static final Pattern JAVA_LINE_COMMENT_PATTERN = Pattern.compile("^//.*$", Pattern.MULTILINE);
-    private static final Pattern SHELL_LINE_COMMENT_PATTERN = Pattern.compile("^#.*$", Pattern.MULTILINE);
+    private static final Pattern JAVA_SHELL_SQL_LINE_COMMENT_PATTERN = Pattern.compile("^(//|#|--).*$",
+            Pattern.MULTILINE);
     private static final Pattern REGEX_LINES_PATTERN = Pattern.compile("^(-)?/(.*)/([im]*)$");
     private static final Pattern POLL_TIMEOUT_PATTERN = Pattern.compile("polltimeoutsecs=(\\d+)(\\D|$)",
             Pattern.MULTILINE);
@@ -1522,8 +1522,7 @@ public class TestExecutor {
     }
 
     public static String stripLineComments(String text) {
-        final String s = SHELL_LINE_COMMENT_PATTERN.matcher(text).replaceAll("");
-        return JAVA_LINE_COMMENT_PATTERN.matcher(s).replaceAll("");
+        return JAVA_SHELL_SQL_LINE_COMMENT_PATTERN.matcher(text).replaceAll("");
     }
 
     public static String stripAllComments(String statement) {
