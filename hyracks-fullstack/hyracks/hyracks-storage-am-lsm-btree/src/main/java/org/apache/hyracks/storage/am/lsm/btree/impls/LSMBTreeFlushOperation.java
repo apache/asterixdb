@@ -21,16 +21,14 @@ package org.apache.hyracks.storage.am.lsm.btree.impls;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMMemoryComponent;
 import org.apache.hyracks.storage.am.lsm.common.impls.FlushOperation;
 
 public class LSMBTreeFlushOperation extends FlushOperation {
     private final FileReference bloomFilterFlushTarget;
 
-    public LSMBTreeFlushOperation(ILSMIndexAccessor accessor, ILSMMemoryComponent flushingComponent,
-            FileReference flushTarget, FileReference bloomFilterFlushTarget, ILSMIOOperationCallback callback,
-            String indexIdentifier) {
-        super(accessor, flushingComponent, flushTarget, callback, indexIdentifier);
+    public LSMBTreeFlushOperation(ILSMIndexAccessor accessor, FileReference flushTarget,
+            FileReference bloomFilterFlushTarget, ILSMIOOperationCallback callback, String indexIdentifier) {
+        super(accessor, flushTarget, callback, indexIdentifier);
         this.bloomFilterFlushTarget = bloomFilterFlushTarget;
     }
 

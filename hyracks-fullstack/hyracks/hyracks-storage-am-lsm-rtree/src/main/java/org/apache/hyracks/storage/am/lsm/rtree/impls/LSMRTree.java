@@ -56,7 +56,6 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexFileManager;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMMemoryComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
@@ -163,7 +162,7 @@ public class LSMRTree extends AbstractLSMRTree {
     }
 
     @Override
-    public ILSMDiskComponent flush(ILSMIOOperation operation) throws HyracksDataException {
+    public ILSMDiskComponent doFlush(ILSMIOOperation operation) throws HyracksDataException {
         LSMRTreeFlushOperation flushOp = (LSMRTreeFlushOperation) operation;
         LSMRTreeMemoryComponent flushingComponent = (LSMRTreeMemoryComponent) flushOp.getFlushingComponent();
         // Renaming order is critical because we use assume ordering when we
@@ -263,19 +262,15 @@ public class LSMRTree extends AbstractLSMRTree {
     }
 
     @Override
-    public ILSMDiskComponent merge(ILSMIOOperation operation) throws HyracksDataException {
+    public ILSMDiskComponent doMerge(ILSMIOOperation operation) throws HyracksDataException {
         LSMRTreeMergeOperation mergeOp = (LSMRTreeMergeOperation) operation;
         IIndexCursor cursor = mergeOp.getCursor();
         ISearchPredicate rtreeSearchPred = new SearchPredicate(null, null);
         ILSMIndexOperationContext opCtx = ((LSMRTreeSortedCursor) cursor).getOpCtx();
-        opCtx.getComponentHolder().addAll(mergeOp.getMergingComponents());
         search(opCtx, cursor, rtreeSearchPred);
-
         LSMRTreeDiskComponent mergedComponent = createDiskComponent(componentFactory, mergeOp.getTarget(),
                 mergeOp.getBTreeTarget(), mergeOp.getBloomFilterTarget(), true);
-
         ILSMDiskComponentBulkLoader componentBulkLoader;
-
         // In case we must keep the deleted-keys BTrees, then they must be merged *before* merging the r-trees so that
         // lsmHarness.endSearch() is called once when the r-trees have been merged.
         if (mergeOp.getMergingComponents().get(mergeOp.getMergingComponents().size() - 1) != diskComponents
@@ -409,14 +404,6 @@ public class LSMRTree extends AbstractLSMRTree {
     }
 
     @Override
-    public void markAsValid(ILSMDiskComponent lsmComponent) throws HyracksDataException {
-        LSMRTreeDiskComponent component = (LSMRTreeDiskComponent) lsmComponent;
-        markAsValidInternal(component.getBTree().getBufferCache(), component.getBloomFilter());
-        markAsValidInternal((component).getBTree());
-        markAsValidInternal((component).getRTree());
-    }
-
-    @Override
     public Set<String> getLSMComponentPhysicalFiles(ILSMComponent lsmComponent) {
         Set<String> files = new HashSet<>();
         LSMRTreeDiskComponent component = (LSMRTreeDiskComponent) lsmComponent;
@@ -428,22 +415,21 @@ public class LSMRTree extends AbstractLSMRTree {
 
     @Override
     protected ILSMIOOperation createFlushOperation(AbstractLSMIndexOperationContext opCtx,
-            ILSMMemoryComponent flushingComponent, LSMComponentFileReferences componentFileRefs,
-            ILSMIOOperationCallback callback) throws HyracksDataException {
+            LSMComponentFileReferences componentFileRefs, ILSMIOOperationCallback callback)
+            throws HyracksDataException {
         LSMRTreeAccessor accessor = new LSMRTreeAccessor(getLsmHarness(), opCtx, buddyBTreeFields);
-        return new LSMRTreeFlushOperation(accessor, flushingComponent, componentFileRefs.getInsertIndexFileReference(),
+        return new LSMRTreeFlushOperation(accessor, componentFileRefs.getInsertIndexFileReference(),
                 componentFileRefs.getDeleteIndexFileReference(), componentFileRefs.getBloomFilterFileReference(),
                 callback, fileManager.getBaseDir().getAbsolutePath());
     }
 
     @Override
     protected ILSMIOOperation createMergeOperation(AbstractLSMIndexOperationContext opCtx,
-            List<ILSMComponent> mergingComponents, LSMComponentFileReferences mergeFileRefs,
-            ILSMIOOperationCallback callback) throws HyracksDataException {
+            LSMComponentFileReferences mergeFileRefs, ILSMIOOperationCallback callback) throws HyracksDataException {
         ITreeIndexCursor cursor = new LSMRTreeSortedCursor(opCtx, linearizer, buddyBTreeFields);
         ILSMIndexAccessor accessor = new LSMRTreeAccessor(getLsmHarness(), opCtx, buddyBTreeFields);
-        return new LSMRTreeMergeOperation(accessor, mergingComponents, cursor,
-                mergeFileRefs.getInsertIndexFileReference(), mergeFileRefs.getDeleteIndexFileReference(),
-                mergeFileRefs.getBloomFilterFileReference(), callback, fileManager.getBaseDir().getAbsolutePath());
+        return new LSMRTreeMergeOperation(accessor, cursor, mergeFileRefs.getInsertIndexFileReference(),
+                mergeFileRefs.getDeleteIndexFileReference(), mergeFileRefs.getBloomFilterFileReference(), callback,
+                fileManager.getBaseDir().getAbsolutePath());
     }
 }

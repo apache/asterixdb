@@ -20,6 +20,7 @@
 package org.apache.hyracks.storage.am.lsm.common.impls;
 
 import java.util.List;
+import java.util.function.Predicate;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IValueReference;
@@ -30,6 +31,7 @@ import org.apache.hyracks.storage.am.common.api.ITreeIndexCursor;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.IFrameOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.IFrameTupleProcessor;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMHarness;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
@@ -123,7 +125,6 @@ public class LSMTreeIndexAccessor implements ILSMIndexAccessor {
 
     @Override
     public void merge(ILSMIOOperation operation) throws HyracksDataException {
-        ctx.setOperation(IndexOperation.MERGE);
         lsmHarness.merge(ctx, operation);
     }
 
@@ -223,5 +224,15 @@ public class LSMTreeIndexAccessor implements ILSMIndexAccessor {
     @Override
     public String toString() {
         return getClass().getSimpleName() + ':' + lsmHarness.toString();
+    }
+
+    @Override
+    public void deleteComponents(Predicate<ILSMComponent> predicate) throws HyracksDataException {
+        lsmHarness.deleteComponents(ctx, predicate);
+    }
+
+    @Override
+    public ILSMIndexOperationContext getOpContext() {
+        return ctx;
     }
 }

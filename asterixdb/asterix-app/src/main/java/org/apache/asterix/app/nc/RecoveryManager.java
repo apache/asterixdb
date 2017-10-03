@@ -362,7 +362,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
                                     try {
                                         maxDiskLastLsn =
                                                 ((AbstractLSMIOOperationCallback) lsmIndex.getIOOperationCallback())
-                                                        .getComponentLSN(lsmIndex.getImmutableComponents());
+                                                        .getComponentLSN(lsmIndex.getDiskComponents());
                                     } catch (HyracksDataException e) {
                                         datasetLifecycleManager.close(localResource.getPath());
                                         throw e;

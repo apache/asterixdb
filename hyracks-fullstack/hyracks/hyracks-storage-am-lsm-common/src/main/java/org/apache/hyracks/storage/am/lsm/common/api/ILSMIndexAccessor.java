@@ -19,6 +19,7 @@
 package org.apache.hyracks.storage.am.lsm.common.api;
 
 import java.util.List;
+import java.util.function.Predicate;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IValueReference;
@@ -34,6 +35,11 @@ import org.apache.hyracks.storage.common.IIndexCursor;
  * concurrent operations).
  */
 public interface ILSMIndexAccessor extends IIndexAccessor {
+
+    /**
+     * @return the operation context associated with the accessor
+     */
+    ILSMIndexOperationContext getOpContext();
 
     /**
      * Schedule a flush operation
@@ -245,4 +251,13 @@ public interface ILSMIndexAccessor extends IIndexAccessor {
      *             If the BufferCache throws while un/pinning or un/latching.
      */
     void scanDiskComponents(IIndexCursor cursor) throws HyracksDataException;
+
+    /**
+     * Delete components that match the passed predicate
+     * NOTE: This call can only be made when the caller knows that data modification has been stopped
+     *
+     * @param filter
+     * @throws HyracksDataException
+     */
+    void deleteComponents(Predicate<ILSMComponent> predicate) throws HyracksDataException;
 }

@@ -24,6 +24,7 @@ import org.apache.hyracks.storage.am.btree.impls.BTree;
 import org.apache.hyracks.storage.am.common.api.IMetadataPageManager;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilter;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMDiskComponent;
+import org.apache.hyracks.storage.am.lsm.common.util.ComponentUtils;
 
 public class LSMBTreeDiskComponent extends AbstractLSMDiskComponent {
     private final BTree btree;
@@ -67,5 +68,15 @@ public class LSMBTreeDiskComponent extends AbstractLSMDiskComponent {
     @Override
     public String toString() {
         return getClass().getSimpleName() + ":" + btree.getFileReference().getRelativePath();
+    }
+
+    @Override
+    public void markAsValid(boolean persist) throws HyracksDataException {
+        // The order of forcing the dirty page to be flushed is critical.
+        // The bloom filter must be always done first.
+        if (bloomFilter != null && persist) {
+            ComponentUtils.markAsValid(btree.getBufferCache(), bloomFilter, persist);
+        }
+        ComponentUtils.markAsValid(btree, persist);
     }
 }

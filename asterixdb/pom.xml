@@ -965,6 +965,12 @@
         <type>test-jar</type>
       </dependency>
       <dependency>
+        <groupId>org.apache.hyracks</groupId>
+        <artifactId>hyracks-storage-am-lsm-btree-test</artifactId>
+        <version>${hyracks.version}</version>
+        <type>test-jar</type>
+      </dependency>
+      <dependency>
         <groupId>commons-io</groupId>
         <artifactId>commons-io</artifactId>
         <version>2.5</version>

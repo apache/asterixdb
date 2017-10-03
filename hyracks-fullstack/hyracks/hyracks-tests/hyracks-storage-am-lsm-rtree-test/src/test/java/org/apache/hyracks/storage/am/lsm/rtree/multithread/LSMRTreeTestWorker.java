@@ -79,7 +79,7 @@ public class LSMRTreeTestWorker extends AbstractIndexTestWorker {
 
             case MERGE:
                 accessor.scheduleMerge(NoOpIOOperationCallbackFactory.INSTANCE.createIoOpCallback(),
-                        lsmRTree.getImmutableComponents());
+                        lsmRTree.getDiskComponents());
                 break;
 
             default:

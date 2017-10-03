@@ -26,6 +26,7 @@ import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IODeviceHandle;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import org.apache.hyracks.util.trace.Tracer;
 import org.apache.hyracks.util.trace.Tracer.Scope;
 
@@ -93,6 +94,11 @@ class TracedIOOperation implements ILSMIOOperation {
     @Override
     public FileReference getTarget() {
         return ioOp.getTarget();
+    }
+
+    @Override
+    public ILSMIndexAccessor getAccessor() {
+        return ioOp.getAccessor();
     }
 }
 

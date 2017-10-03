@@ -52,7 +52,7 @@ public class PrefixMergePolicy implements ILSMMergePolicy {
     @Override
     public void diskComponentAdded(final ILSMIndex index, boolean fullMergeIsRequested) throws HyracksDataException {
 
-        List<ILSMDiskComponent> immutableComponents = new ArrayList<>(index.getImmutableComponents());
+        List<ILSMDiskComponent> immutableComponents = new ArrayList<>(index.getDiskComponents());
 
         if (!areComponentsReadableWritableState(immutableComponents)) {
             return;
@@ -140,7 +140,7 @@ public class PrefixMergePolicy implements ILSMMergePolicy {
          * there will be no new merge either in this situation.
          */
 
-        List<ILSMDiskComponent> immutableComponents = new ArrayList<>(index.getImmutableComponents());
+        List<ILSMDiskComponent> immutableComponents = new ArrayList<>(index.getDiskComponents());
         // reverse the list so that we look from the oldest to the newest components
         Collections.reverse(immutableComponents);
         int mergableImmutableComponentCount = getMergableImmutableComponentCount(immutableComponents);
@@ -225,7 +225,7 @@ public class PrefixMergePolicy implements ILSMMergePolicy {
      * @throws IndexException
      */
     protected boolean scheduleMerge(final ILSMIndex index) throws HyracksDataException {
-        List<ILSMDiskComponent> immutableComponents = new ArrayList<>(index.getImmutableComponents());
+        List<ILSMDiskComponent> immutableComponents = new ArrayList<>(index.getDiskComponents());
         // Reverse the components order so that we look at components from oldest to newest.
         Collections.reverse(immutableComponents);
 

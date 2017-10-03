@@ -54,6 +54,7 @@ public abstract class AbstractIoOperation implements ILSMIOOperation {
         return target;
     }
 
+    @Override
     public ILSMIndexAccessor getAccessor() {
         return accessor;
     }

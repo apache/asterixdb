@@ -116,7 +116,7 @@ public class LSMInvertedIndexTestWorker extends AbstractIndexTestWorker {
 
             case MERGE: {
                 accessor.scheduleMerge(NoOpIOOperationCallbackFactory.INSTANCE.createIoOpCallback(),
-                        invIndex.getImmutableComponents());
+                        invIndex.getDiskComponents());
                 break;
             }
 

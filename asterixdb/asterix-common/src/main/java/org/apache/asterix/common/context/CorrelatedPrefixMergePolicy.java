@@ -77,7 +77,7 @@ public class CorrelatedPrefixMergePolicy extends PrefixMergePolicy {
 
     @Override
     protected boolean scheduleMerge(final ILSMIndex index) throws HyracksDataException {
-        List<ILSMDiskComponent> immutableComponents = new ArrayList<>(index.getImmutableComponents());
+        List<ILSMDiskComponent> immutableComponents = new ArrayList<>(index.getDiskComponents());
         // Reverse the components order so that we look at components from oldest to newest.
         Collections.reverse(immutableComponents);
 
@@ -110,7 +110,7 @@ public class CorrelatedPrefixMergePolicy extends PrefixMergePolicy {
         for (IndexInfo info : indexInfos) {
             ILSMIndex lsmIndex = info.getIndex();
 
-            List<ILSMDiskComponent> immutableComponents = new ArrayList<>(lsmIndex.getImmutableComponents());
+            List<ILSMDiskComponent> immutableComponents = new ArrayList<>(lsmIndex.getDiskComponents());
             if (isMergeOngoing(immutableComponents)) {
                 continue;
             }

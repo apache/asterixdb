@@ -129,7 +129,7 @@ public abstract class LSMBTreeFilterMergeTestDriver extends OrderedIndexTestDriv
                 }
             }
 
-            List<ILSMDiskComponent> flushedComponents = ((LSMBTree) ctx.getIndex()).getImmutableComponents();
+            List<ILSMDiskComponent> flushedComponents = ((LSMBTree) ctx.getIndex()).getDiskComponents();
             MutablePair<ITupleReference, ITupleReference> expectedMergeMinMax = null;
             for (ILSMDiskComponent f : flushedComponents) {
                 Pair<ITupleReference, ITupleReference> componentMinMax = filterToMinMax(f.getLSMComponentFilter());
@@ -146,9 +146,9 @@ public abstract class LSMBTreeFilterMergeTestDriver extends OrderedIndexTestDriv
                 }
             }
             accessor.scheduleMerge(NoOpIOOperationCallbackFactory.INSTANCE.createIoOpCallback(),
-                    ((LSMBTree) ctx.getIndex()).getImmutableComponents());
+                    ((LSMBTree) ctx.getIndex()).getDiskComponents());
 
-            flushedComponents = ((LSMBTree) ctx.getIndex()).getImmutableComponents();
+            flushedComponents = ((LSMBTree) ctx.getIndex()).getDiskComponents();
             Pair<ITupleReference, ITupleReference> mergedMinMax =
                     filterToMinMax(flushedComponents.get(0).getLSMComponentFilter());
             Assert.assertEquals(0, TreeIndexTestUtils.compareFilterTuples(expectedMergeMinMax.getLeft(),

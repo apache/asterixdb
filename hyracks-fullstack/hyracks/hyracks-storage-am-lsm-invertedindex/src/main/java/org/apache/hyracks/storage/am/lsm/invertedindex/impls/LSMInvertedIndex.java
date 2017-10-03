@@ -219,7 +219,7 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
         if (ctx.getIndexTuple() != null) {
             ctx.getIndexTuple().reset(tuple);
             indexTuple = ctx.getIndexTuple();
-            ((InMemoryInvertedIndexAccessor)(ctx.getCurrentMutableInvIndexAccessors())).resetLogTuple(tuple);
+            ((InMemoryInvertedIndexAccessor) (ctx.getCurrentMutableInvIndexAccessors())).resetLogTuple(tuple);
         } else {
             indexTuple = tuple;
         }
@@ -330,7 +330,7 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
     }
 
     @Override
-    public ILSMDiskComponent flush(ILSMIOOperation operation) throws HyracksDataException {
+    public ILSMDiskComponent doFlush(ILSMIOOperation operation) throws HyracksDataException {
         LSMInvertedIndexFlushOperation flushOp = (LSMInvertedIndexFlushOperation) operation;
 
         // Create an inverted index instance to be bulk loaded.
@@ -408,13 +408,12 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
     }
 
     @Override
-    public ILSMDiskComponent merge(ILSMIOOperation operation) throws HyracksDataException {
+    public ILSMDiskComponent doMerge(ILSMIOOperation operation) throws HyracksDataException {
         LSMInvertedIndexMergeOperation mergeOp = (LSMInvertedIndexMergeOperation) operation;
         IIndexCursor cursor = mergeOp.getCursor();
 
         RangePredicate mergePred = new RangePredicate(null, null, true, true, null, null);
         ILSMIndexOperationContext opCtx = ((LSMIndexSearchCursor) cursor).getOpCtx();
-        opCtx.getComponentHolder().addAll(mergeOp.getMergingComponents());
         // Scan diskInvertedIndexes ignoring the memoryInvertedIndex.
         search(opCtx, cursor, mergePred);
 
@@ -620,26 +619,6 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
     }
 
     @Override
-    public void markAsValid(ILSMDiskComponent lsmComponent) throws HyracksDataException {
-        LSMInvertedIndexDiskComponent invIndexComponent = (LSMInvertedIndexDiskComponent) lsmComponent;
-        OnDiskInvertedIndex invIndex = (OnDiskInvertedIndex) invIndexComponent.getInvIndex();
-        IBufferCache bufferCache = invIndex.getBufferCache();
-        markAsValidInternal(invIndex.getBufferCache(), invIndexComponent.getBloomFilter());
-
-        // Flush inverted index second.
-        bufferCache.force(invIndex.getInvListsFileId(), true);
-        markAsValidInternal(invIndex.getBTree());
-
-        // Flush deleted keys BTree.
-        markAsValidInternal(invIndexComponent.getDeletedKeysBTree());
-    }
-
-    @Override
-    public String toString() {
-        return "LSMInvertedIndex [" + fileManager.getBaseDir() + "]";
-    }
-
-    @Override
     public boolean isPrimaryIndex() {
         return false;
     }
@@ -709,22 +688,20 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
 
     @Override
     protected ILSMIOOperation createFlushOperation(AbstractLSMIndexOperationContext opCtx,
-            ILSMMemoryComponent flushingComponent, LSMComponentFileReferences componentFileRefs,
-            ILSMIOOperationCallback callback) throws HyracksDataException {
+            LSMComponentFileReferences componentFileRefs, ILSMIOOperationCallback callback)
+            throws HyracksDataException {
         return new LSMInvertedIndexFlushOperation(new LSMInvertedIndexAccessor(getLsmHarness(), opCtx),
-                flushingComponent, componentFileRefs.getInsertIndexFileReference(),
-                componentFileRefs.getDeleteIndexFileReference(), componentFileRefs.getBloomFilterFileReference(),
-                callback, fileManager.getBaseDir().getAbsolutePath());
+                componentFileRefs.getInsertIndexFileReference(), componentFileRefs.getDeleteIndexFileReference(),
+                componentFileRefs.getBloomFilterFileReference(), callback, fileManager.getBaseDir().getAbsolutePath());
     }
 
     @Override
     protected ILSMIOOperation createMergeOperation(AbstractLSMIndexOperationContext opCtx,
-            List<ILSMComponent> mergingComponents, LSMComponentFileReferences mergeFileRefs,
-            ILSMIOOperationCallback callback) throws HyracksDataException {
+            LSMComponentFileReferences mergeFileRefs, ILSMIOOperationCallback callback) throws HyracksDataException {
         ILSMIndexAccessor accessor = new LSMInvertedIndexAccessor(getLsmHarness(), opCtx);
         IIndexCursor cursor = new LSMInvertedIndexRangeSearchCursor(opCtx);
-        return new LSMInvertedIndexMergeOperation(accessor, mergingComponents, cursor,
-                mergeFileRefs.getInsertIndexFileReference(), mergeFileRefs.getDeleteIndexFileReference(),
-                mergeFileRefs.getBloomFilterFileReference(), callback, fileManager.getBaseDir().getAbsolutePath());
+        return new LSMInvertedIndexMergeOperation(accessor, cursor, mergeFileRefs.getInsertIndexFileReference(),
+                mergeFileRefs.getDeleteIndexFileReference(), mergeFileRefs.getBloomFilterFileReference(), callback,
+                fileManager.getBaseDir().getAbsolutePath());
     }
 }

@@ -16,7 +16,8 @@
  ! specific language governing permissions and limitations
  ! under the License.
  !-->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <artifactId>apache-asterixdb</artifactId>
@@ -169,7 +170,7 @@
             </goals>
             <configuration>
               <licenses combine.children="append">
-                <license implementation="org.apache.rat.analysis.license.MITLicense"/>
+                <license implementation="org.apache.rat.analysis.license.MITLicense" />
               </licenses>
               <excludes combine.children="append">
                 <exclude>src/test/resources/**/results_parser_sqlpp/**</exclude>
@@ -192,7 +193,7 @@
             <configuration>
               <reportFile>${project.build.directory}/webqueryui-rat.txt</reportFile>
               <licenses combine.children="append">
-                <license implementation="org.apache.rat.analysis.license.MITLicense"/>
+                <license implementation="org.apache.rat.analysis.license.MITLicense" />
                 <license implementation="org.apache.rat.analysis.license.SimplePatternBasedLicense">
                   <licenseFamilyCategory>MIT</licenseFamilyCategory>
                   <licenseFamilyName>JQuery</licenseFamilyName>
@@ -210,7 +211,7 @@
                 </license>
               </licenses>
               <licenseFamilies combine.children="append">
-                <licenseFamily implementation="org.apache.rat.license.MITLicenseFamily"/>
+                <licenseFamily implementation="org.apache.rat.license.MITLicenseFamily" />
                 <licenseFamily implementation="org.apache.rat.license.SimpleLicenseFamily">
                   <familyName>JQuery</familyName>
                 </licenseFamily>
@@ -566,6 +567,12 @@
     <dependency>
       <groupId>io.netty</groupId>
       <artifactId>netty-all</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hyracks</groupId>
+      <artifactId>hyracks-storage-am-lsm-btree-test</artifactId>
+      <type>test-jar</type>
+      <scope>test</scope>
     </dependency>
   </dependencies>
 </project>

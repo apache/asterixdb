@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.storage.am.lsm.common.utils;
+package org.apache.hyracks.storage.am.lsm.common.util;
 
 import java.util.List;
 import java.util.logging.Level;
@@ -26,19 +26,22 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.data.std.primitive.LongPointable;
+import org.apache.hyracks.storage.am.bloomfilter.impls.BloomFilter;
+import org.apache.hyracks.storage.am.common.api.ITreeIndex;
 import org.apache.hyracks.storage.am.common.freepage.MutableArrayValueReference;
 import org.apache.hyracks.storage.am.lsm.common.api.IComponentMetadata;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMemoryComponent;
+import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 
-public class ComponentMetadataUtil {
+public class ComponentUtils {
 
-    private static final Logger LOGGER = Logger.getLogger(ComponentMetadataUtil.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(ComponentUtils.class.getName());
     public static final MutableArrayValueReference MARKER_LSN_KEY = new MutableArrayValueReference("Marker".getBytes());
     public static final long NOT_FOUND = -1L;
 
-    private ComponentMetadataUtil() {
+    private ComponentUtils() {
     }
 
     /**
@@ -120,7 +123,7 @@ public class ComponentMetadataUtil {
     private static void fromDiskComponents(ILSMIndex index, IValueReference key, IPointable pointable)
             throws HyracksDataException {
         LOGGER.log(Level.INFO, "Getting " + key + " from disk components of " + index);
-        for (ILSMDiskComponent c : index.getImmutableComponents()) {
+        for (ILSMDiskComponent c : index.getDiskComponents()) {
             LOGGER.log(Level.INFO, "Getting " + key + " from disk components " + c);
             c.getMetadata().get(key, pointable);
             if (pointable.getLength() != 0) {
@@ -150,6 +153,26 @@ public class ComponentMetadataUtil {
                     return;
                 }
             }
+        }
+    }
+
+    public static void markAsValid(ITreeIndex treeIndex, boolean forceToDisk) throws HyracksDataException {
+        int fileId = treeIndex.getFileId();
+        IBufferCache bufferCache = treeIndex.getBufferCache();
+        treeIndex.getPageManager().close();
+        // WARNING: flushing the metadata page should be done after releasing the write latch; otherwise, the page
+        // won't be flushed to disk because it won't be dirty until the write latch has been released.
+        // Force modified metadata page to disk.
+        // If the index is not durable, then the flush is not necessary.
+        if (forceToDisk) {
+            bufferCache.force(fileId, true);
+        }
+    }
+
+    public static void markAsValid(IBufferCache bufferCache, BloomFilter filter, boolean forceToDisk)
+            throws HyracksDataException {
+        if (forceToDisk) {
+            bufferCache.force(filter.getFileId(), true);
         }
     }
 }

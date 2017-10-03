@@ -325,7 +325,7 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
     }
 
     @Override
-    public ILSMDiskComponent flush(ILSMIOOperation operation) throws HyracksDataException {
+    public ILSMDiskComponent doFlush(ILSMIOOperation operation) throws HyracksDataException {
         throw HyracksDataException.create(ErrorCode.FLUSH_NOT_SUPPORTED_IN_EXTERNAL_INDEX);
     }
 
@@ -364,10 +364,10 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
                     .get(secondDiskComponents.size() - 1);
         }
 
-        ioScheduler.scheduleOperation(new LSMBTreeWithBuddyMergeOperation(accessor, mergingComponents, cursor,
-                relMergeFileRefs.getInsertIndexFileReference(), relMergeFileRefs.getDeleteIndexFileReference(),
-                relMergeFileRefs.getBloomFilterFileReference(), callback, fileManager.getBaseDir().getAbsolutePath(),
-                keepDeleteTuples));
+        ioScheduler.scheduleOperation(
+                new LSMBTreeWithBuddyMergeOperation(accessor, cursor, relMergeFileRefs.getInsertIndexFileReference(),
+                        relMergeFileRefs.getDeleteIndexFileReference(), relMergeFileRefs.getBloomFilterFileReference(),
+                        callback, fileManager.getBaseDir().getAbsolutePath(), keepDeleteTuples));
     }
 
     // This method creates the appropriate opContext for the targeted version
@@ -378,12 +378,11 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
     }
 
     @Override
-    public ILSMDiskComponent merge(ILSMIOOperation operation) throws HyracksDataException {
+    public ILSMDiskComponent doMerge(ILSMIOOperation operation) throws HyracksDataException {
         LSMBTreeWithBuddyMergeOperation mergeOp = (LSMBTreeWithBuddyMergeOperation) operation;
         IIndexCursor cursor = mergeOp.getCursor();
         ISearchPredicate btreeSearchPred = new RangePredicate(null, null, true, true, null, null);
         ILSMIndexOperationContext opCtx = ((LSMBTreeWithBuddySortedCursor) cursor).getOpCtx();
-        opCtx.getComponentHolder().addAll(mergeOp.getMergingComponents());
         search(opCtx, cursor, btreeSearchPred);
 
         LSMBTreeWithBuddyDiskComponent mergedComponent = createDiskComponent(componentFactory, mergeOp.getTarget(),
@@ -475,15 +474,6 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
             default:
                 throw new UnsupportedOperationException("Operation " + ctx.getOperation() + " not supported.");
         }
-    }
-
-    @Override
-    public void markAsValid(ILSMDiskComponent lsmComponent) throws HyracksDataException {
-        LSMBTreeWithBuddyDiskComponent component = (LSMBTreeWithBuddyDiskComponent) lsmComponent;
-        // Flush the bloom filter first.
-        markAsValidInternal(component.getBTree().getBufferCache(), component.getBloomFilter());
-        markAsValidInternal(component.getBTree());
-        markAsValidInternal(component.getBuddyBTree());
     }
 
     // This function is used when a new component is to be committed -- is
@@ -629,7 +619,7 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
                 if (isTransaction) {
                     // Since this is a transaction component, validate and
                     // deactivate. it could later be added or deleted
-                    markAsValid(component);
+                    component.markAsValid(durable);
                     BTree btree = ((LSMBTreeWithBuddyDiskComponent) component).getBTree();
                     BTree buddyBtree = ((LSMBTreeWithBuddyDiskComponent) component).getBuddyBTree();
                     BloomFilter bloomFilter = ((LSMBTreeWithBuddyDiskComponent) component).getBloomFilter();
@@ -816,15 +806,14 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
 
     @Override
     protected ILSMIOOperation createFlushOperation(AbstractLSMIndexOperationContext opCtx,
-            ILSMMemoryComponent flushingComponent, LSMComponentFileReferences componentFileRefs,
-            ILSMIOOperationCallback callback) throws HyracksDataException {
+            LSMComponentFileReferences componentFileRefs, ILSMIOOperationCallback callback)
+            throws HyracksDataException {
         return null;
     }
 
     @Override
     protected ILSMIOOperation createMergeOperation(AbstractLSMIndexOperationContext opCtx,
-            List<ILSMComponent> mergingComponents, LSMComponentFileReferences mergeFileRefs,
-            ILSMIOOperationCallback callback) throws HyracksDataException {
+            LSMComponentFileReferences mergeFileRefs, ILSMIOOperationCallback callback) throws HyracksDataException {
         return null;
     }
 }

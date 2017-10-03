@@ -355,9 +355,9 @@ public class LSMBTreeUpdateInPlaceScanDiskComponentsTest extends OrderedIndexTes
         accessor.scheduleFlush(NoOpIOOperationCallbackFactory.INSTANCE.createIoOpCallback());
 
         LSMBTree btree = (LSMBTree) ctx.getIndex();
-        Assert.assertEquals("Check disk components", 1, btree.getImmutableComponents().size());
+        Assert.assertEquals("Check disk components", 1, btree.getDiskComponents().size());
 
-        LSMBTreeDiskComponent btreeComponent = (LSMBTreeDiskComponent) btree.getImmutableComponents().get(0);
+        LSMBTreeDiskComponent btreeComponent = (LSMBTreeDiskComponent) btree.getDiskComponents().get(0);
         BTree.BTreeAccessor btreeAccessor = (BTree.BTreeAccessor) btreeComponent.getBTree()
                 .createAccessor(TestOperationCallback.INSTANCE, TestOperationCallback.INSTANCE);
 

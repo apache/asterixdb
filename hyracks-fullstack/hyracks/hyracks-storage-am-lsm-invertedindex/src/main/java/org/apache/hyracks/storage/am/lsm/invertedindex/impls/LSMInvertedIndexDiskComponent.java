@@ -24,8 +24,10 @@ import org.apache.hyracks.storage.am.btree.impls.BTree;
 import org.apache.hyracks.storage.am.common.api.IMetadataPageManager;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilter;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMDiskComponent;
+import org.apache.hyracks.storage.am.lsm.common.util.ComponentUtils;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInPlaceInvertedIndex;
 import org.apache.hyracks.storage.am.lsm.invertedindex.ondisk.OnDiskInvertedIndex;
+import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 
 public class LSMInvertedIndexDiskComponent extends AbstractLSMDiskComponent {
 
@@ -79,5 +81,18 @@ public class LSMInvertedIndexDiskComponent extends AbstractLSMDiskComponent {
     @Override
     public String toString() {
         return getClass().getSimpleName() + ":" + ((OnDiskInvertedIndex) invIndex).getInvListsFile().getRelativePath();
+    }
+
+    @Override
+    public void markAsValid(boolean persist) throws HyracksDataException {
+        IBufferCache bufferCache = invIndex.getBufferCache();
+        ComponentUtils.markAsValid(invIndex.getBufferCache(), bloomFilter, persist);
+
+        // Flush inverted index second.
+        bufferCache.force(((OnDiskInvertedIndex) invIndex).getInvListsFileId(), true);
+        ComponentUtils.markAsValid(((OnDiskInvertedIndex) invIndex).getBTree(), persist);
+
+        // Flush deleted keys BTree.
+        ComponentUtils.markAsValid(deletedKeysBTree, persist);
     }
 }

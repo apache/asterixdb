@@ -28,19 +28,16 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import org.apache.hyracks.storage.common.IIndexCursor;
 
 public class MergeOperation extends AbstractIoOperation {
-
-    protected final List<ILSMComponent> mergingComponents;
     protected final IIndexCursor cursor;
 
     public MergeOperation(ILSMIndexAccessor accessor, FileReference target, ILSMIOOperationCallback callback,
-            String indexIdentifier, List<ILSMComponent> mergingComponents, IIndexCursor cursor) {
+            String indexIdentifier, IIndexCursor cursor) {
         super(accessor, target, callback, indexIdentifier);
-        this.mergingComponents = mergingComponents;
         this.cursor = cursor;
     }
 
     public List<ILSMComponent> getMergingComponents() {
-        return mergingComponents;
+        return accessor.getOpContext().getComponentHolder();
     }
 
     @Override

@@ -18,11 +18,8 @@
  */
 package org.apache.hyracks.storage.am.lsm.btree.impls;
 
-import java.util.List;
-
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexCursor;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.common.impls.MergeOperation;
@@ -33,11 +30,10 @@ public class LSMBTreeWithBuddyMergeOperation extends MergeOperation {
     private final FileReference bloomFilterMergeTarget;
     private final boolean keepDeletedTuples;
 
-    public LSMBTreeWithBuddyMergeOperation(ILSMIndexAccessor accessor, List<ILSMComponent> mergingComponents,
-            ITreeIndexCursor cursor, FileReference target, FileReference buddyBtreeMergeTarget,
-            FileReference bloomFilterMergeTarget, ILSMIOOperationCallback callback, String indexIdentifier,
-            boolean keepDeletedTuples) {
-        super(accessor, target, callback, indexIdentifier, mergingComponents, cursor);
+    public LSMBTreeWithBuddyMergeOperation(ILSMIndexAccessor accessor, ITreeIndexCursor cursor, FileReference target,
+            FileReference buddyBtreeMergeTarget, FileReference bloomFilterMergeTarget, ILSMIOOperationCallback callback,
+            String indexIdentifier, boolean keepDeletedTuples) {
+        super(accessor, target, callback, indexIdentifier, cursor);
         this.buddyBtreeMergeTarget = buddyBtreeMergeTarget;
         this.bloomFilterMergeTarget = bloomFilterMergeTarget;
         this.keepDeletedTuples = keepDeletedTuples;

@@ -236,7 +236,7 @@ public class ExternalIndexHarness extends LSMHarness {
         try {
             newComponent = lsmIndex.merge(operation);
             operation.getCallback().afterOperation(LSMOperationType.MERGE, ctx.getComponentHolder(), newComponent);
-            lsmIndex.markAsValid(newComponent);
+            newComponent.markAsValid(lsmIndex.isDurable());
         } finally {
             exitComponents(ctx, LSMOperationType.MERGE, newComponent, false);
             operation.getCallback().afterFinalize(LSMOperationType.MERGE, newComponent);
@@ -248,7 +248,7 @@ public class ExternalIndexHarness extends LSMHarness {
 
     @Override
     public void addBulkLoadedComponent(ILSMDiskComponent c) throws HyracksDataException {
-        lsmIndex.markAsValid(c);
+        c.markAsValid(lsmIndex.isDurable());
         synchronized (opTracker) {
             lsmIndex.addDiskComponent(c);
             if (replicationEnabled) {

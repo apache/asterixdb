@@ -16,12 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.hyracks.storage.am.lsm.btree.impl;
 
-package org.apache.hyracks.storage.am.lsm.common.impls;
+import java.util.concurrent.Semaphore;
 
-public enum LSMComponentState {
-    FLUSHING,
-    MERGING,
-    DONE_FLUSHING,
-    DONE_MERGING
+public interface ITestOpCallback {
+    void callback(Semaphore smeaphore);
 }

@@ -1,0 +1,85 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+package org.apache.hyracks.storage.am.lsm.common.impls;
+
+import org.apache.hyracks.api.exceptions.ErrorCode;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilter;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponentId;
+import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
+
+public class EmptyComponent implements ILSMDiskComponent {
+    public static final EmptyComponent INSTANCE = new EmptyComponent();
+
+    private EmptyComponent() {
+    }
+
+    @Override
+    public boolean threadEnter(LSMOperationType opType, boolean isMutableComponent) throws HyracksDataException {
+        throw HyracksDataException.create(ErrorCode.ILLEGAL_ATTEMPT_TO_ENTER_EMPTY_COMPONENT);
+    }
+
+    @Override
+    public void threadExit(LSMOperationType opType, boolean failedOperation, boolean isMutableComponent)
+            throws HyracksDataException {
+        throw HyracksDataException.create(ErrorCode.ILLEGAL_ATTEMPT_TO_EXIT_EMPTY_COMPONENT);
+    }
+
+    @Override
+    public ComponentState getState() {
+        return ComponentState.INACTIVE;
+    }
+
+    @Override
+    public ILSMComponentFilter getLSMComponentFilter() {
+        return null;
+    }
+
+    @Override
+    public DiskComponentMetadata getMetadata() {
+        return EmptyDiskComponentMetadata.INSTANCE;
+    }
+
+    @Override
+    public long getComponentSize() {
+        return 0;
+    }
+
+    @Override
+    public int getFileReferenceCount() {
+        return 0;
+    }
+
+    @Override
+    public void destroy() throws HyracksDataException {
+        // No Op
+    }
+
+    @Override
+    public ILSMDiskComponentId getComponentId() throws HyracksDataException {
+        return null;
+    }
+
+    @Override
+    public void markAsValid(boolean persist) throws HyracksDataException {
+        // No Op
+    }
+
+}

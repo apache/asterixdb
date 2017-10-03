@@ -129,7 +129,7 @@ public class LSMBTreeScanDiskComponentsTest extends OrderedIndexTestDriver {
         accessor.scheduleFlush(NoOpIOOperationCallbackFactory.INSTANCE.createIoOpCallback());
 
         LSMBTree btree = (LSMBTree) ctx.getIndex();
-        Assert.assertEquals("Check disk components", 3, btree.getImmutableComponents().size());
+        Assert.assertEquals("Check disk components", 3, btree.getDiskComponents().size());
 
         IIndexCursor cursor = accessor.createSearchCursor(false);
         accessor.scanDiskComponents(cursor);

@@ -26,7 +26,7 @@ import org.apache.hyracks.data.std.primitive.LongPointable;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMemoryComponent;
-import org.apache.hyracks.storage.am.lsm.common.utils.ComponentMetadataUtil;
+import org.apache.hyracks.storage.am.lsm.common.util.ComponentUtils;
 
 /**
  * A basic callback used to write marker to transaction logs
@@ -52,17 +52,17 @@ public class PrimaryIndexLogMarkerCallback implements ILogMarkerCallback {
     private long getLsn() {
         long lsn;
         try {
-            lsn = ComponentMetadataUtil.getLong(index.getCurrentMemoryComponent().getMetadata(),
-                    ComponentMetadataUtil.MARKER_LSN_KEY, ComponentMetadataUtil.NOT_FOUND);
+            lsn = ComponentUtils.getLong(index.getCurrentMemoryComponent().getMetadata(), ComponentUtils.MARKER_LSN_KEY,
+                    ComponentUtils.NOT_FOUND);
         } catch (HyracksDataException e) {
             // Should never happen since this is a memory component
             throw new IllegalStateException(e);
         }
-        if (lsn == ComponentMetadataUtil.NOT_FOUND) {
+        if (lsn == ComponentUtils.NOT_FOUND) {
             synchronized (index.getOperationTracker()) {
                 // look for it in previous memory component if exists
                 lsn = lsnFromImmutableMemoryComponents();
-                if (lsn == ComponentMetadataUtil.NOT_FOUND) {
+                if (lsn == ComponentUtils.NOT_FOUND) {
                     // look for it in disk component
                     lsn = lsnFromDiskComponents();
                 }
@@ -72,26 +72,26 @@ public class PrimaryIndexLogMarkerCallback implements ILogMarkerCallback {
     }
 
     private long lsnFromDiskComponents() {
-        List<ILSMDiskComponent> diskComponents = index.getImmutableComponents();
+        List<ILSMDiskComponent> diskComponents = index.getDiskComponents();
         for (ILSMDiskComponent c : diskComponents) {
             try {
-                long lsn = ComponentMetadataUtil.getLong(c.getMetadata(), ComponentMetadataUtil.MARKER_LSN_KEY,
-                        ComponentMetadataUtil.NOT_FOUND);
-                if (lsn != ComponentMetadataUtil.NOT_FOUND) {
+                long lsn = ComponentUtils.getLong(c.getMetadata(), ComponentUtils.MARKER_LSN_KEY,
+                        ComponentUtils.NOT_FOUND);
+                if (lsn != ComponentUtils.NOT_FOUND) {
                     return lsn;
                 }
             } catch (HyracksDataException e) {
                 throw new IllegalStateException("Unable to read metadata page. Disk Error?", e);
             }
         }
-        return ComponentMetadataUtil.NOT_FOUND;
+        return ComponentUtils.NOT_FOUND;
     }
 
     private long lsnFromImmutableMemoryComponents() {
         List<ILSMMemoryComponent> memComponents = index.getMemoryComponents();
         int numOtherMemComponents = memComponents.size() - 1;
         int next = index.getCurrentMemoryComponentIndex();
-        long lsn = ComponentMetadataUtil.NOT_FOUND;
+        long lsn = ComponentUtils.NOT_FOUND;
         for (int i = 0; i < numOtherMemComponents; i++) {
             next = next - 1;
             if (next < 0) {
@@ -100,13 +100,13 @@ public class PrimaryIndexLogMarkerCallback implements ILogMarkerCallback {
             ILSMMemoryComponent c = index.getMemoryComponents().get(next);
             if (c.isReadable()) {
                 try {
-                    lsn = ComponentMetadataUtil.getLong(c.getMetadata(), ComponentMetadataUtil.MARKER_LSN_KEY,
-                            ComponentMetadataUtil.NOT_FOUND);
+                    lsn = ComponentUtils.getLong(c.getMetadata(), ComponentUtils.MARKER_LSN_KEY,
+                            ComponentUtils.NOT_FOUND);
                 } catch (HyracksDataException e) {
                     // Should never happen since this is a memory component
                     throw new IllegalStateException(e);
                 }
-                if (lsn != ComponentMetadataUtil.NOT_FOUND) {
+                if (lsn != ComponentUtils.NOT_FOUND) {
                     return lsn;
                 }
             }
@@ -117,7 +117,7 @@ public class PrimaryIndexLogMarkerCallback implements ILogMarkerCallback {
     @Override
     public void after(long lsn) {
         pointable.setLong(lsn);
-        index.getCurrentMemoryComponent().getMetadata().put(ComponentMetadataUtil.MARKER_LSN_KEY, pointable);
+        index.getCurrentMemoryComponent().getMetadata().put(ComponentUtils.MARKER_LSN_KEY, pointable);
     }
 
     public ILSMIndex getIndex() {

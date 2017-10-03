@@ -57,7 +57,7 @@ public interface ILSMIndex extends IIndex {
     /**
      * components with lower indexes are newer than components with higher index
      */
-    List<ILSMDiskComponent> getImmutableComponents();
+    List<ILSMDiskComponent> getDiskComponents();
 
     boolean isPrimaryIndex();
 
@@ -98,15 +98,6 @@ public interface ILSMIndex extends IIndex {
     List<ILSMDiskComponent> getInactiveDiskComponents();
 
     void addInactiveDiskComponent(ILSMDiskComponent diskComponent);
-
-    /**
-     * Persist the LSM component
-     *
-     * @param lsmComponent
-     *            , the component to be persistent
-     * @throws HyracksDataException
-     */
-    void markAsValid(ILSMDiskComponent lsmComponent) throws HyracksDataException;
 
     boolean isCurrentMutableComponentEmpty() throws HyracksDataException;
 

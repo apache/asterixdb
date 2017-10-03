@@ -26,16 +26,12 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMMemoryComponent;
 
 public class FlushOperation extends AbstractIoOperation implements Comparable<ILSMIOOperation> {
 
-    protected final ILSMMemoryComponent flushingComponent;
-
-    public FlushOperation(ILSMIndexAccessor accessor, ILSMMemoryComponent flushingComponent, FileReference target,
-            ILSMIOOperationCallback callback, String indexIdentifier) {
+    public FlushOperation(ILSMIndexAccessor accessor, FileReference target, ILSMIOOperationCallback callback,
+            String indexIdentifier) {
         super(accessor, target, callback, indexIdentifier);
-        this.flushingComponent = flushingComponent;
     }
 
     @Override
@@ -55,7 +51,7 @@ public class FlushOperation extends AbstractIoOperation implements Comparable<IL
     }
 
     public ILSMComponent getFlushingComponent() {
-        return flushingComponent;
+        return accessor.getOpContext().getComponentHolder().get(0);
     }
 
     @Override

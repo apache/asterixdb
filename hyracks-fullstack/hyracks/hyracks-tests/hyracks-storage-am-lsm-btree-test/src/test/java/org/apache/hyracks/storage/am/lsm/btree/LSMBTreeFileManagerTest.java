@@ -76,12 +76,12 @@ public class LSMBTreeFileManagerTest {
 
         // Make sure the disk component was generated
         LSMBTree btree = (LSMBTree) ctx.getIndex();
-        Assert.assertEquals("Check disk components", 1, btree.getImmutableComponents().size());
+        Assert.assertEquals("Check disk components", 1, btree.getDiskComponents().size());
 
         ctx.getIndex().deactivate();
 
         // Delete the btree file and keep the bloom filter file from the disk component
-        LSMBTreeDiskComponent ilsmDiskComponent = (LSMBTreeDiskComponent) btree.getImmutableComponents().get(0);
+        LSMBTreeDiskComponent ilsmDiskComponent = (LSMBTreeDiskComponent) btree.getDiskComponents().get(0);
         ilsmDiskComponent.getBTree().getFileReference().delete();
 
         File bloomFilterFile = ilsmDiskComponent.getBloomFilter().getFileReference().getFile().getAbsoluteFile();
@@ -90,6 +90,6 @@ public class LSMBTreeFileManagerTest {
         // Activating the index again should delete the orphaned bloom filter file as well as the disk component
         ctx.getIndex().activate();
         Assert.assertEquals("Check bloom filter file deleted", false, bloomFilterFile.exists());
-        Assert.assertEquals("Check disk components", 0, btree.getImmutableComponents().size());
+        Assert.assertEquals("Check disk components", 0, btree.getDiskComponents().size());
     }
 }

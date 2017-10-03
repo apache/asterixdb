@@ -294,11 +294,6 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
     }
 
     @Override
-    public String toString() {
-        return "LSMRTree [" + fileManager.getBaseDir() + "]";
-    }
-
-    @Override
     protected void allocateMemoryComponent(ILSMMemoryComponent c) throws HyracksDataException {
         LSMRTreeMemoryComponent mutableComponent = (LSMRTreeMemoryComponent) c;
         ((IVirtualBufferCache) mutableComponent.getRTree().getBufferCache()).open();

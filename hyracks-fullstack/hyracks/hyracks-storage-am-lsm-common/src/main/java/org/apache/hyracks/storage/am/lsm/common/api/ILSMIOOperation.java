@@ -58,9 +58,12 @@ public interface ILSMIOOperation extends Callable<Boolean> {
     Boolean call() throws HyracksDataException;
 
     /**
-     * The target of the io operation
-     *
-     * @return
+     * @return The target of the io operation
      */
     FileReference getTarget();
+
+    /**
+     * @return the accessor of the operation
+     */
+    ILSMIndexAccessor getAccessor();
 }

@@ -19,6 +19,7 @@
 package org.apache.hyracks.storage.am.lsm.common.api;
 
 import java.util.List;
+import java.util.function.Predicate;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IValueReference;
@@ -242,4 +243,14 @@ public interface ILSMHarness {
      */
     void batchOperate(ILSMIndexOperationContext ctx, FrameTupleAccessor accessor, FrameTupleReference tuple,
             IFrameTupleProcessor processor, IFrameOperationCallback frameOpCallback) throws HyracksDataException;
+
+    /**
+     * Rollback components that match the passed predicate
+     *
+     * @param ctx
+     * @param predicate
+     * @throws HyracksDataException
+     */
+    void deleteComponents(ILSMIndexOperationContext ctx, Predicate<ILSMComponent> predicate)
+            throws HyracksDataException;
 }

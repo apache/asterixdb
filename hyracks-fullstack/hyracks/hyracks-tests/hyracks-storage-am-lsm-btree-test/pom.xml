@@ -36,6 +36,27 @@
           <skip>true</skip>
         </configuration>
       </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <configuration>
+          <includes>
+            <include>**/*.class</include>
+            <include>**/*.properties</include>
+            <include>**/README*</include>
+            <include>**/NOTICE*</include>
+            <include>**/LICENSE*</include>
+            <include>**/DEPENDENCIES*</include>
+          </includes>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>test-jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
   </build>
 

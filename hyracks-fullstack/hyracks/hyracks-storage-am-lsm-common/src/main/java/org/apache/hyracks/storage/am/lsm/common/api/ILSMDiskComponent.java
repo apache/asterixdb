@@ -22,6 +22,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.lsm.common.impls.DiskComponentMetadata;
 
 public interface ILSMDiskComponent extends ILSMComponent {
+
     @Override
     default LSMComponentType getType() {
         return LSMComponentType.DISK;
@@ -49,9 +50,19 @@ public interface ILSMDiskComponent extends ILSMComponent {
 
     /**
      * Return the component Id of this disk component from its metadata
+     *
      * @return
      * @throws HyracksDataException
      */
     ILSMDiskComponentId getComponentId() throws HyracksDataException;
+
+    /**
+     * Mark the component as valid
+     *
+     * @param persist
+     *            whether the call should force data to disk before returning
+     * @throws HyracksDataException
+     */
+    void markAsValid(boolean persist) throws HyracksDataException;
 
 }

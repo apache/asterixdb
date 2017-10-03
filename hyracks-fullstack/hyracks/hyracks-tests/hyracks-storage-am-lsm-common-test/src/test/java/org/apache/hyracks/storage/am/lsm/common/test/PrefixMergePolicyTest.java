@@ -191,7 +191,7 @@ public class PrefixMergePolicyTest extends TestCase {
         }
 
         ILSMIndex index = Mockito.mock(ILSMIndex.class);
-        Mockito.when(index.getImmutableComponents()).thenReturn(components);
+        Mockito.when(index.getDiskComponents()).thenReturn(components);
 
         ILSMIndexAccessor accessor = Mockito.mock(ILSMIndexAccessor.class);
 

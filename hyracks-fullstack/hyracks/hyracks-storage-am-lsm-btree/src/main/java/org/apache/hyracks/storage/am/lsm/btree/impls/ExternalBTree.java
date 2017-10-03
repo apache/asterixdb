@@ -141,7 +141,7 @@ public class ExternalBTree extends LSMBTree implements ITwoPCIndex {
     // is needed.
     // It only needs to return the newer list
     @Override
-    public List<ILSMDiskComponent> getImmutableComponents() {
+    public List<ILSMDiskComponent> getDiskComponents() {
         if (version == 0) {
             return diskComponents;
         } else if (version == 1) {
@@ -195,7 +195,7 @@ public class ExternalBTree extends LSMBTree implements ITwoPCIndex {
         LSMComponentFileReferences relMergeFileRefs =
                 fileManager.getRelMergeFileReference(firstFile.getFile().getName(), lastFile.getFile().getName());
         ILSMIndexAccessor accessor = new LSMTreeIndexAccessor(getLsmHarness(), opCtx, cursorFactory);
-        ioScheduler.scheduleOperation(new LSMBTreeMergeOperation(accessor, mergingComponents, cursor,
+        ioScheduler.scheduleOperation(new LSMBTreeMergeOperation(accessor, cursor,
                 relMergeFileRefs.getInsertIndexFileReference(), relMergeFileRefs.getBloomFilterFileReference(),
                 callback, fileManager.getBaseDir().getAbsolutePath()));
     }
@@ -376,7 +376,7 @@ public class ExternalBTree extends LSMBTree implements ITwoPCIndex {
 
     // Not supported
     @Override
-    public ILSMDiskComponent flush(ILSMIOOperation operation) throws HyracksDataException {
+    public ILSMDiskComponent doFlush(ILSMIOOperation operation) throws HyracksDataException {
         throw new UnsupportedOperationException("flush not supported in LSM-Disk-Only-BTree");
     }
 
@@ -465,7 +465,7 @@ public class ExternalBTree extends LSMBTree implements ITwoPCIndex {
                 if (isTransaction) {
                     // Since this is a transaction component, validate and
                     // deactivate. it could later be added or deleted
-                    markAsValid(component);
+                    component.markAsValid(durable);
                     BTree btree = ((LSMBTreeDiskComponent) component).getBTree();
                     BloomFilter bloomFilter = ((LSMBTreeDiskComponent) component).getBloomFilter();
                     btree.deactivate();
@@ -504,11 +504,6 @@ public class ExternalBTree extends LSMBTree implements ITwoPCIndex {
             return createDiskComponent(transactionComponentFactory, componentFileRefs.getInsertIndexFileReference(),
                     componentFileRefs.getBloomFilterFileReference(), true);
         }
-    }
-
-    @Override
-    public String toString() {
-        return "LSMTwoPCBTree [" + fileManager.getBaseDir() + "]";
     }
 
     // The accessor for disk only indexes don't use modification callback and always carry the target index version with them

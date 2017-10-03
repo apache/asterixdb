@@ -24,6 +24,7 @@ import org.apache.hyracks.storage.am.btree.impls.BTree;
 import org.apache.hyracks.storage.am.common.api.IMetadataPageManager;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilter;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMDiskComponent;
+import org.apache.hyracks.storage.am.lsm.common.util.ComponentUtils;
 import org.apache.hyracks.storage.am.rtree.impls.RTree;
 
 public class LSMRTreeDiskComponent extends AbstractLSMDiskComponent {
@@ -80,5 +81,16 @@ public class LSMRTreeDiskComponent extends AbstractLSMDiskComponent {
     @Override
     public String toString() {
         return getClass().getSimpleName() + ":" + rtree.getFileReference().getRelativePath();
+    }
+
+    @Override
+    public void markAsValid(boolean persist) throws HyracksDataException {
+        if (bloomFilter != null) {
+            ComponentUtils.markAsValid(btree.getBufferCache(), bloomFilter, persist);
+        }
+        if (btree != null) {
+            ComponentUtils.markAsValid(btree, persist);
+        }
+        ComponentUtils.markAsValid(rtree, persist);
     }
 }

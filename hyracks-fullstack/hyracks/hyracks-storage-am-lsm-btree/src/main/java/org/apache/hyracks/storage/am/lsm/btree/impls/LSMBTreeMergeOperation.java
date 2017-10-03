@@ -19,11 +19,8 @@
 
 package org.apache.hyracks.storage.am.lsm.btree.impls;
 
-import java.util.List;
-
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexCursor;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.common.impls.MergeOperation;
@@ -32,10 +29,9 @@ public class LSMBTreeMergeOperation extends MergeOperation {
 
     private final FileReference bloomFilterMergeTarget;
 
-    public LSMBTreeMergeOperation(ILSMIndexAccessor accessor, List<ILSMComponent> mergingComponents,
-            ITreeIndexCursor cursor, FileReference target, FileReference bloomFilterMergeTarget,
-            ILSMIOOperationCallback callback, String indexIdentifier) {
-        super(accessor, target, callback, indexIdentifier, mergingComponents, cursor);
+    public LSMBTreeMergeOperation(ILSMIndexAccessor accessor, ITreeIndexCursor cursor, FileReference target,
+            FileReference bloomFilterMergeTarget, ILSMIOOperationCallback callback, String indexIdentifier) {
+        super(accessor, target, callback, indexIdentifier, cursor);
         this.bloomFilterMergeTarget = bloomFilterMergeTarget;
     }
 

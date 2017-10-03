@@ -136,7 +136,7 @@ public class ExternalRTree extends LSMRTree implements ITwoPCIndex {
     // is needed.
     // It only needs to return the newer list
     @Override
-    public List<ILSMDiskComponent> getImmutableComponents() {
+    public List<ILSMDiskComponent> getDiskComponents() {
         if (version == 0) {
             return diskComponents;
         } else {
@@ -258,12 +258,11 @@ public class ExternalRTree extends LSMRTree implements ITwoPCIndex {
     // This can be done in a better way by creating a method boolean
     // keepDeletedTuples(mergedComponents);
     @Override
-    public ILSMDiskComponent merge(ILSMIOOperation operation) throws HyracksDataException {
+    public ILSMDiskComponent doMerge(ILSMIOOperation operation) throws HyracksDataException {
         LSMRTreeMergeOperation mergeOp = (LSMRTreeMergeOperation) operation;
         IIndexCursor cursor = mergeOp.getCursor();
         ISearchPredicate rtreeSearchPred = new SearchPredicate(null, null);
         ILSMIndexOperationContext opCtx = ((LSMRTreeSortedCursor) cursor).getOpCtx();
-        opCtx.getComponentHolder().addAll(mergeOp.getMergingComponents());
         search(opCtx, cursor, rtreeSearchPred);
 
         LSMRTreeDiskComponent mergedComponent = createDiskComponent(componentFactory, mergeOp.getTarget(),
@@ -424,7 +423,7 @@ public class ExternalRTree extends LSMRTree implements ITwoPCIndex {
 
     // Not supported
     @Override
-    public ILSMDiskComponent flush(ILSMIOOperation operation) throws HyracksDataException {
+    public ILSMDiskComponent doFlush(ILSMIOOperation operation) throws HyracksDataException {
         throw new UnsupportedOperationException("flush not supported in LSM-Disk-Only-RTree");
     }
 
@@ -570,7 +569,7 @@ public class ExternalRTree extends LSMRTree implements ITwoPCIndex {
                 } else if (isTransaction) {
                     // Since this is a transaction component, validate and
                     // deactivate. it could later be added or deleted
-                    markAsValid(component);
+                    component.markAsValid(durable);
                     RTree rtree = ((LSMRTreeDiskComponent) component).getRTree();
                     BTree btree = ((LSMRTreeDiskComponent) component).getBTree();
                     BloomFilter bloomFilter = ((LSMRTreeDiskComponent) component).getBloomFilter();
@@ -621,11 +620,6 @@ public class ExternalRTree extends LSMRTree implements ITwoPCIndex {
         }
     }
 
-    @Override
-    public String toString() {
-        return "LSMTwoPCRTree [" + fileManager.getBaseDir() + "]";
-    }
-
     // The only change the the schedule merge is the method used to create the
     // opCtx. first line <- in schedule merge, we->
     @Override
@@ -640,7 +634,7 @@ public class ExternalRTree extends LSMRTree implements ITwoPCIndex {
                         (ILSMDiskComponent) mergingComponents.get(mergingComponents.size() - 1));
         ILSMIndexAccessor accessor = new LSMRTreeAccessor(getLsmHarness(), rctx, buddyBTreeFields);
         // create the merge operation.
-        LSMRTreeMergeOperation mergeOp = new LSMRTreeMergeOperation(accessor, mergingComponents, cursor,
+        LSMRTreeMergeOperation mergeOp = new LSMRTreeMergeOperation(accessor, cursor,
                 relMergeFileRefs.getInsertIndexFileReference(), relMergeFileRefs.getDeleteIndexFileReference(),
                 relMergeFileRefs.getBloomFilterFileReference(), callback, fileManager.getBaseDir().getAbsolutePath());
         ioScheduler.scheduleOperation(mergeOp);
