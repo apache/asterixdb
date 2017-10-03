@@ -18,7 +18,7 @@ distribute result [$$l]
                 -- STABLE_SORT [$$15(ASC), $$16(ASC)]  |PARTITIONED|
                   exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    project ([$$16, $$15])
+                    project ([$$15, $$16])
                     -- STREAM_PROJECT  |PARTITIONED|
                       exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

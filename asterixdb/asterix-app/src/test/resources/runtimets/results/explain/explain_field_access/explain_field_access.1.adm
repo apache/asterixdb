@@ -26,7 +26,7 @@ distribute result [$$17]
               -- SORT_GROUP_BY[$$18]  |PARTITIONED|
                 exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  project ([$$18, $$15])
+                  project ([$$15, $$18])
                   -- STREAM_PROJECT  |PARTITIONED|
                     assign [$$18] <- [substring($$22.getField("department_id"), 1)]
                     -- ASSIGN  |PARTITIONED|

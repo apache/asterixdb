@@ -20,9 +20,10 @@ package org.apache.hyracks.algebricks.rewriter.rules;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
@@ -64,7 +65,7 @@ public class PushProjectDownRule implements IAlgebraicRewriteRule {
         ProjectOperator pi = (ProjectOperator) op;
         Mutable<ILogicalOperator> opRef2 = pi.getInputs().get(0);
 
-        HashSet<LogicalVariable> toPush = new HashSet<LogicalVariable>();
+        Set<LogicalVariable> toPush = new LinkedHashSet<LogicalVariable>();
         toPush.addAll(pi.getVariables());
 
         Pair<Boolean, Boolean> p = pushThroughOp(toPush, opRef2, op, context);
@@ -77,9 +78,8 @@ public class PushProjectDownRule implements IAlgebraicRewriteRule {
         return smthWasPushed;
     }
 
-    private static Pair<Boolean, Boolean> pushThroughOp(HashSet<LogicalVariable> toPush,
-            Mutable<ILogicalOperator> opRef2, ILogicalOperator initialOp, IOptimizationContext context)
-                    throws AlgebricksException {
+    private static Pair<Boolean, Boolean> pushThroughOp(Set<LogicalVariable> toPush, Mutable<ILogicalOperator> opRef2,
+            ILogicalOperator initialOp, IOptimizationContext context) throws AlgebricksException {
         List<LogicalVariable> initProjectList = new ArrayList<LogicalVariable>(toPush);
         AbstractLogicalOperator op2 = (AbstractLogicalOperator) opRef2.getValue();
         do {
@@ -112,13 +112,14 @@ public class PushProjectDownRule implements IAlgebraicRewriteRule {
 
         boolean canCommuteProjection = initProjectList.containsAll(toPush) && initProjectList.containsAll(produced2)
                 && initProjectList.containsAll(used2);
-                // if true, we can get rid of the initial projection
+        // if true, we can get rid of the initial projection
 
         // get rid of useless decor vars.
         if (!canCommuteProjection && op2.getOperatorTag() == LogicalOperatorTag.GROUP) {
             boolean gbyChanged = false;
             GroupByOperator gby = (GroupByOperator) op2;
-            List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> newDecorList = new ArrayList<Pair<LogicalVariable, Mutable<ILogicalExpression>>>();
+            List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> newDecorList =
+                    new ArrayList<Pair<LogicalVariable, Mutable<ILogicalExpression>>>();
             for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : gby.getDecorList()) {
                 LogicalVariable decorVar = GroupByOperator.getDecorVariable(p);
                 if (!toPush.contains(decorVar)) {
@@ -164,13 +165,13 @@ public class PushProjectDownRule implements IAlgebraicRewriteRule {
     }
 
     // It does not try to push above another Projection.
-    private static boolean pushNeededProjections(HashSet<LogicalVariable> toPush, Mutable<ILogicalOperator> opRef,
+    private static boolean pushNeededProjections(Set<LogicalVariable> toPush, Mutable<ILogicalOperator> opRef,
             IOptimizationContext context, ILogicalOperator initialOp) throws AlgebricksException {
-        HashSet<LogicalVariable> allP = new HashSet<LogicalVariable>();
+        Set<LogicalVariable> allP = new LinkedHashSet<LogicalVariable>();
         AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
         VariableUtilities.getSubplanLocalLiveVariables(op, allP);
 
-        HashSet<LogicalVariable> toProject = new HashSet<LogicalVariable>();
+        Set<LogicalVariable> toProject = new LinkedHashSet<LogicalVariable>();
         for (LogicalVariable v : toPush) {
             if (allP.contains(v)) {
                 toProject.add(v);
@@ -192,7 +193,7 @@ public class PushProjectDownRule implements IAlgebraicRewriteRule {
     // It does not try to push above another Projection.
     private static boolean pushAllProjectionsOnTopOf(Collection<LogicalVariable> toPush,
             Mutable<ILogicalOperator> opRef, IOptimizationContext context, ILogicalOperator initialOp)
-                    throws AlgebricksException {
+            throws AlgebricksException {
         if (toPush.isEmpty()) {
             return false;
         }
