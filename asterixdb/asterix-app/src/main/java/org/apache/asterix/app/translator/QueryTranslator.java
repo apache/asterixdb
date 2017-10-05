@@ -300,10 +300,10 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         handleCreateDataverseStatement(metadataProvider, stmt);
                         break;
                     case Statement.Kind.DATASET_DECL:
-                        handleCreateDatasetStatement(metadataProvider, stmt, hcc);
+                        handleCreateDatasetStatement(metadataProvider, stmt, hcc, requestParameters);
                         break;
                     case Statement.Kind.CREATE_INDEX:
-                        handleCreateIndexStatement(metadataProvider, stmt, hcc);
+                        handleCreateIndexStatement(metadataProvider, stmt, hcc, requestParameters);
                         break;
                     case Statement.Kind.TYPE_DECL:
                         handleCreateTypeStatement(metadataProvider, stmt);
@@ -315,10 +315,10 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         handleDataverseDropStatement(metadataProvider, stmt, hcc);
                         break;
                     case Statement.Kind.DATASET_DROP:
-                        handleDatasetDropStatement(metadataProvider, stmt, hcc);
+                        handleDatasetDropStatement(metadataProvider, stmt, hcc, requestParameters);
                         break;
                     case Statement.Kind.INDEX_DROP:
-                        handleIndexDropStatement(metadataProvider, stmt, hcc);
+                        handleIndexDropStatement(metadataProvider, stmt, hcc, requestParameters);
                         break;
                     case Statement.Kind.TYPE_DROP:
                         handleTypeDropStatement(metadataProvider, stmt);
@@ -512,7 +512,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     }
 
     public void handleCreateDatasetStatement(MetadataProvider metadataProvider, Statement stmt,
-            IHyracksClientConnection hcc) throws CompilationException, Exception {
+            IHyracksClientConnection hcc, IRequestParameters requestParameters) throws CompilationException, Exception {
         MutableObject<ProgressState> progress = new MutableObject<>(ProgressState.NO_PROGRESS);
         DatasetDecl dd = (DatasetDecl) stmt;
         String dataverseName = getActiveDataverse(dd.getDataverse());
@@ -741,7 +741,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     }
 
     protected void handleCreateIndexStatement(MetadataProvider metadataProvider, Statement stmt,
-            IHyracksClientConnection hcc) throws Exception {
+            IHyracksClientConnection hcc, IRequestParameters requestParameters) throws Exception {
         CreateIndexStatement stmtCreateIndex = (CreateIndexStatement) stmt;
         String dataverseName = getActiveDataverse(stmtCreateIndex.getDataverseName());
         String datasetName = stmtCreateIndex.getDatasetName().getValue();
@@ -1338,7 +1338,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     }
 
     public void handleDatasetDropStatement(MetadataProvider metadataProvider, Statement stmt,
-            IHyracksClientConnection hcc) throws Exception {
+            IHyracksClientConnection hcc, IRequestParameters requestParameters) throws Exception {
         DropDatasetStatement stmtDelete = (DropDatasetStatement) stmt;
         String dataverseName = getActiveDataverse(stmtDelete.getDataverseName());
         String datasetName = stmtDelete.getDatasetName().getValue();
@@ -1409,7 +1409,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     }
 
     protected void handleIndexDropStatement(MetadataProvider metadataProvider, Statement stmt,
-            IHyracksClientConnection hcc) throws Exception {
+            IHyracksClientConnection hcc, IRequestParameters requestParameters) throws Exception {
 
         IndexDropStatement stmtIndexDrop = (IndexDropStatement) stmt;
         String datasetName = stmtIndexDrop.getDatasetName().getValue();
@@ -2850,7 +2850,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             // Cleans up the sink dataset -- Drop and then Create.
             DropDatasetStatement dropStmt =
                     new DropDatasetStatement(new Identifier(dataverseNameTo), pregelixStmt.getDatasetNameTo(), true);
-            this.handleDatasetDropStatement(metadataProvider, dropStmt, hcc);
+            this.handleDatasetDropStatement(metadataProvider, dropStmt, hcc, null);
             IDatasetDetailsDecl idd = new InternalDetailsDecl(toIndex.getKeyFieldNames(),
                     toIndex.getKeyFieldSourceIndicators(), false, null, toDataset.getDatasetDetails().isTemp());
             DatasetDecl createToDataset = new DatasetDecl(new Identifier(dataverseNameTo),
@@ -2860,7 +2860,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     new Identifier(toDataset.getMetaItemTypeName()), new Identifier(toDataset.getNodeGroupName()),
                     toDataset.getCompactionPolicy(), toDataset.getCompactionPolicyProperties(), toDataset.getHints(),
                     toDataset.getDatasetType(), idd, false);
-            this.handleCreateDatasetStatement(metadataProvider, createToDataset, hcc);
+            this.handleCreateDatasetStatement(metadataProvider, createToDataset, hcc, null);
         } catch (Exception e) {
             LOGGER.log(Level.WARNING, e.getMessage(), e);
             throw new AlgebricksException("Error cleaning the result dataset. This should not happen.");
