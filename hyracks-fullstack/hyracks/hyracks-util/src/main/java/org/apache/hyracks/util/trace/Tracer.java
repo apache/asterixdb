@@ -19,7 +19,10 @@
 
 package org.apache.hyracks.util.trace;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -31,6 +34,8 @@ import org.apache.hyracks.util.PidHelper;
 public class Tracer {
 
     protected static final Level TRACE_LOG_LEVEL = Level.INFO;
+    protected static final String CAT = "Tracer";
+    protected static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
 
     protected final Logger traceLog;
     protected String[] categories;
@@ -70,6 +75,13 @@ public class Tracer {
     public Tracer(String name, String[] categories) {
         this.traceLog = Logger.getLogger(Tracer.class.getName() + "@" + name);
         this.categories = categories;
+        instant("Trace-Start", CAT, Scope.p, dateTimeStamp());
+    }
+
+    public static String dateTimeStamp() {
+        synchronized (DATE_FORMAT) {
+            return DATE_FORMAT.format(new Date());
+        }
     }
 
     public static Tracer none() {

@@ -18,9 +18,13 @@
  */
 package org.apache.hyracks.util.trace;
 
+import java.util.concurrent.TimeUnit;
+
 import org.apache.hyracks.util.trace.Tracer.Scope;
 
 final class Event {
+    private static final long NANOTIME_DELTA_TO_EPOCH = System.nanoTime()
+            - TimeUnit.MILLISECONDS.toNanos(System.currentTimeMillis());
     public final String name;
     public final String cat;
     public final Tracer.Phase ph;
@@ -43,7 +47,7 @@ final class Event {
     }
 
     private static long timestamp() {
-        return System.nanoTime() / 1000;
+        return (System.nanoTime() - NANOTIME_DELTA_TO_EPOCH) / 1000;
     }
 
     public static Event create(String name, String cat, Tracer.Phase ph, int pid, long tid, Scope scope, String args) {
