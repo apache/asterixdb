@@ -81,11 +81,11 @@ public class ResultExtractor {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     public static InputStream extract(InputStream resultStream) throws Exception {
-        return extract(resultStream, EnumSet.of(ResultField.RESULTS, ResultField.ERRORS));
+        return extract(resultStream, EnumSet.of(ResultField.RESULTS));
     }
 
     public static InputStream extractMetrics(InputStream resultStream) throws Exception {
-        return extract(resultStream, EnumSet.of(ResultField.METRICS, ResultField.ERRORS));
+        return extract(resultStream, EnumSet.of(ResultField.METRICS));
     }
 
     public static String extractHandle(InputStream resultStream) throws Exception {
@@ -110,7 +110,8 @@ public class ResultExtractor {
         final ObjectNode result = OBJECT_MAPPER.readValue(resultStr, ObjectNode.class);
 
         LOGGER.fine("+++++++\n" + result + "\n+++++++\n");
-
+        // if we have errors field in the results, we will always return it
+        checkForErrors(result);
         final StringBuilder resultBuilder = new StringBuilder();
         for (Iterator<String> fieldNameIter = result.fieldNames(); fieldNameIter.hasNext();) {
             final String fieldName = fieldNameIter.next();
@@ -154,12 +155,6 @@ public class ResultExtractor {
 
                     }
                     break;
-                case ERRORS:
-                    final JsonNode errors = fieldValue.get(0).get("msg");
-                    if (!result.get(ResultField.METRICS.getFieldName()).has("errorCount")) {
-                        throw new AsterixException("Request reported error but not an errorCount");
-                    }
-                    throw new AsterixException(errors.asText());
                 case REQUEST_ID:
                 case METRICS:
                 case CLIENT_CONTEXT_ID:
@@ -173,5 +168,16 @@ public class ResultExtractor {
             }
         }
         return IOUtils.toInputStream(resultBuilder.toString(), StandardCharsets.UTF_8);
+    }
+
+    private static void checkForErrors(ObjectNode result) throws AsterixException {
+        final JsonNode errorsField = result.get(ResultField.ERRORS.getFieldName());
+        if (errorsField != null) {
+            final JsonNode errors = errorsField.get(0).get("msg");
+            if (!result.get(ResultField.METRICS.getFieldName()).has("errorCount")) {
+                throw new AsterixException("Request reported error but not an errorCount");
+            }
+            throw new AsterixException(errors.asText());
+        }
     }
 }

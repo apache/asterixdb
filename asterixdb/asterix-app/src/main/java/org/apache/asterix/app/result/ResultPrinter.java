@@ -200,32 +200,33 @@ public class ResultPrinter {
 
     public void print(ResultReader resultReader) throws HyracksDataException {
         printPrefix();
+        try {
+            final IFrameTupleAccessor fta = resultReader.getFrameTupleAccessor();
+            final IFrame frame = new VSizeFrame(resultDisplayFrameMgr);
 
-        final IFrameTupleAccessor fta = resultReader.getFrameTupleAccessor();
-        final IFrame frame = new VSizeFrame(resultDisplayFrameMgr);
-
-        while (resultReader.read(frame) > 0) {
-            final ByteBuffer frameBuffer = frame.getBuffer();
-            final byte[] frameBytes = frameBuffer.array();
-            fta.reset(frameBuffer);
-            final int last = fta.getTupleCount();
-            for (int tIndex = 0; tIndex < last; tIndex++) {
-                final int start = fta.getTupleStartOffset(tIndex);
-                int length = fta.getTupleEndOffset(tIndex) - start;
-                if (conf.fmt() == SessionConfig.OutputFormat.CSV
-                        && ((length > 0) && (frameBytes[start + length - 1] == '\n'))) {
-                    length--;
+            while (resultReader.read(frame) > 0) {
+                final ByteBuffer frameBuffer = frame.getBuffer();
+                final byte[] frameBytes = frameBuffer.array();
+                fta.reset(frameBuffer);
+                final int last = fta.getTupleCount();
+                for (int tIndex = 0; tIndex < last; tIndex++) {
+                    final int start = fta.getTupleStartOffset(tIndex);
+                    int length = fta.getTupleEndOffset(tIndex) - start;
+                    if (conf.fmt() == SessionConfig.OutputFormat.CSV
+                            && ((length > 0) && (frameBytes[start + length - 1] == '\n'))) {
+                        length--;
+                    }
+                    String result = new String(frameBytes, start, length, UTF_8);
+                    if (wrapArray && notFirst) {
+                        output.out().print(", ");
+                    }
+                    notFirst = true;
+                    displayRecord(result);
                 }
-                String result = new String(frameBytes, start, length, UTF_8);
-                if (wrapArray && notFirst) {
-                    output.out().print(", ");
-                }
-                notFirst = true;
-                displayRecord(result);
+                frameBuffer.clear();
             }
-            frameBuffer.clear();
+        } finally {
+            printPostfix();
         }
-
-        printPostfix();
     }
 }
