@@ -69,7 +69,6 @@ import org.apache.hyracks.control.common.ipc.CCNCFunctions;
 import org.apache.hyracks.control.common.ipc.ClusterControllerRemoteProxy;
 import org.apache.hyracks.control.common.ipc.IControllerRemoteProxyIPCEventListener;
 import org.apache.hyracks.control.common.job.profiling.om.JobProfile;
-import org.apache.hyracks.util.PidHelper;
 import org.apache.hyracks.control.common.work.FutureValue;
 import org.apache.hyracks.control.common.work.WorkQueue;
 import org.apache.hyracks.control.nc.application.NCServiceContext;
@@ -90,6 +89,9 @@ import org.apache.hyracks.ipc.impl.IPCSystem;
 import org.apache.hyracks.net.protocols.muxdemux.FullFrameChannelInterfaceFactory;
 import org.apache.hyracks.net.protocols.muxdemux.MuxDemuxPerformanceCounters;
 import org.apache.hyracks.util.ExitUtil;
+import org.apache.hyracks.util.PidHelper;
+import org.apache.hyracks.util.trace.ITracer;
+import org.apache.hyracks.util.trace.Tracer;
 import org.kohsuke.args4j.CmdLineException;
 
 public class NodeControllerService implements IControllerService {
@@ -194,8 +196,8 @@ public class NodeControllerService implements IControllerService {
         // Set shutdown hook before so it doesn't have the same uncaught exception handler
         Runtime.getRuntime().addShutdownHook(new NCShutdownHook(this));
         Thread.currentThread().setUncaughtExceptionHandler(getLifeCycleComponentManager());
-        ioManager = new IOManager(IODeviceHandle.getDevices(ncConfig.getIODevices()),
-                application.getFileDeviceResolver());
+        ioManager =
+                new IOManager(IODeviceHandle.getDevices(ncConfig.getIODevices()), application.getFileDeviceResolver());
 
         workQueue = new WorkQueue(id, Thread.NORM_PRIORITY); // Reserves MAX_PRIORITY of the heartbeat thread.
         jobletMap = new Hashtable<>();
@@ -315,6 +317,8 @@ public class NodeControllerService implements IControllerService {
         timerThread.setPriority(Thread.MAX_PRIORITY);
         // Schedule heartbeat generator.
         timer.schedule(heartbeatTask, 0, nodeParameters.getHeartbeatPeriod());
+        // Schedule tracing a human-readable datetime
+        timer.schedule(new TraceCurrentTimeTask(serviceCtx.getTracer()), 0, 60000);
 
         if (nodeParameters.getProfileDumpPeriod() > 0) {
             // Schedule profile dump generator.
@@ -336,8 +340,8 @@ public class NodeControllerService implements IControllerService {
         // Use "public" versions of network addresses and ports
         NetworkAddress datasetAddress = datasetNetworkManager.getPublicNetworkAddress();
         NetworkAddress netAddress = netManager.getPublicNetworkAddress();
-        NetworkAddress meesagingPort = messagingNetManager != null ? messagingNetManager.getPublicNetworkAddress()
-                : null;
+        NetworkAddress meesagingPort =
+                messagingNetManager != null ? messagingNetManager.getPublicNetworkAddress() : null;
         int allCores = osMXBean.getAvailableProcessors();
         nodeRegistration = new NodeRegistration(ipc.getSocketAddress(), id, ncConfig, netAddress, datasetAddress,
                 osMXBean.getName(), osMXBean.getArch(), osMXBean.getVersion(), allCores, runtimeMXBean.getVmName(),
@@ -562,6 +566,24 @@ public class NodeControllerService implements IControllerService {
                 }
             } catch (Exception e) {
                 LOGGER.log(Level.WARNING, "Exception reporting profile", e);
+            }
+        }
+    }
+
+    private class TraceCurrentTimeTask extends TimerTask {
+
+        private ITracer tracer;
+
+        public TraceCurrentTimeTask(ITracer tracer) {
+            this.tracer = tracer;
+        }
+
+        @Override
+        public void run() {
+            try {
+                ITracer.check(tracer).instant("CurrentTime", "Timestamp", Tracer.Scope.p, Tracer.dateTimeStamp());
+            } catch (Exception e) {
+                LOGGER.log(Level.WARNING, "Exception tracing current time", e);
             }
         }
     }

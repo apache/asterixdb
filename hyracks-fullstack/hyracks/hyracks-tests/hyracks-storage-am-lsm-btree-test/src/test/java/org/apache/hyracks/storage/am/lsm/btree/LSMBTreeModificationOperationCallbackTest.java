@@ -29,7 +29,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.common.impls.BlockingIOOperationCallbackWrapper;
 import org.apache.hyracks.storage.am.lsm.common.impls.NoOpIOOperationCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.impls.NoOpOperationTrackerFactory;
-import org.apache.hyracks.util.trace.Tracer;
+import org.apache.hyracks.util.trace.ITracer;
 import org.junit.Test;
 
 public class LSMBTreeModificationOperationCallbackTest extends AbstractModificationOperationCallbackTest {
@@ -53,7 +53,7 @@ public class LSMBTreeModificationOperationCallbackTest extends AbstractModificat
                 harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(),
                 NoOpOperationTrackerFactory.INSTANCE.getOperationTracker(null), harness.getIOScheduler(),
                 harness.getIOOperationCallback(), true, null, null, null, null, true,
-                harness.getMetadataPageManagerFactory(), false, Tracer.none());
+                harness.getMetadataPageManagerFactory(), false, ITracer.NONE);
     }
 
     @Override

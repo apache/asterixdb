@@ -53,7 +53,7 @@ import org.apache.hyracks.storage.am.lsm.common.impls.ComponentFilterHelper;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentFilterManager;
 import org.apache.hyracks.storage.am.lsm.common.impls.TreeIndexFactory;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
-import org.apache.hyracks.util.trace.Tracer;
+import org.apache.hyracks.util.trace.ITracer;
 
 public class LSMBTreeUtil {
 
@@ -66,7 +66,7 @@ public class LSMBTreeUtil {
             ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler,
             ILSMIOOperationCallback ioOpCallback, boolean needKeyDupCheck, ITypeTraits[] filterTypeTraits,
             IBinaryComparatorFactory[] filterCmpFactories, int[] btreeFields, int[] filterFields, boolean durable,
-            IMetadataPageManagerFactory freePageManagerFactory, boolean updateAware, Tracer tracer)
+            IMetadataPageManagerFactory freePageManagerFactory, boolean updateAware, ITracer tracer)
             throws HyracksDataException {
         LSMBTreeTupleWriterFactory insertTupleWriterFactory =
                 new LSMBTreeTupleWriterFactory(typeTraits, cmpFactories.length, false, updateAware);

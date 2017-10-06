@@ -37,7 +37,7 @@ import org.apache.hyracks.storage.am.common.api.ITreeIndex;
 import org.apache.hyracks.storage.am.lsm.btree.util.LSMBTreeTestHarness;
 import org.apache.hyracks.storage.am.lsm.btree.utils.LSMBTreeUtil;
 import org.apache.hyracks.storage.common.IIndexAccessor;
-import org.apache.hyracks.util.trace.Tracer;
+import org.apache.hyracks.util.trace.ITracer;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -54,7 +54,7 @@ public class LSMBTreeExamplesTest extends OrderedIndexExamplesTest {
                 bloomFilterKeyFields, harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(),
                 harness.getOperationTracker(), harness.getIOScheduler(), harness.getIOOperationCallback(), true,
                 filterTypeTraits, filterCmpFactories, btreeFields, filterFields, true,
-                harness.getMetadataPageManagerFactory(), false, Tracer.none());
+                harness.getMetadataPageManagerFactory(), false, ITracer.NONE);
     }
 
     @Before

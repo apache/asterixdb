@@ -61,7 +61,7 @@ import org.apache.hyracks.storage.common.IIndexCursor;
 import org.apache.hyracks.storage.common.IModificationOperationCallback;
 import org.apache.hyracks.storage.common.ISearchOperationCallback;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
-import org.apache.hyracks.util.trace.Tracer;
+import org.apache.hyracks.util.trace.ITracer;
 
 public abstract class AbstractLSMIndex implements ILSMIndex {
     protected final ILSMHarness lsmHarness;
@@ -89,14 +89,14 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
     protected boolean isActive;
     protected final AtomicBoolean[] flushRequests;
     protected boolean memoryComponentsAllocated = false;
-    protected Tracer tracer;
+    protected ITracer tracer;
 
     public AbstractLSMIndex(IIOManager ioManager, List<IVirtualBufferCache> virtualBufferCaches,
             IBufferCache diskBufferCache, ILSMIndexFileManager fileManager, double bloomFilterFalsePositiveRate,
             ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler,
             ILSMIOOperationCallback ioOpCallback, ILSMComponentFilterFrameFactory filterFrameFactory,
             LSMComponentFilterManager filterManager, int[] filterFields, boolean durable,
-            IComponentFilterHelper filterHelper, int[] treeFields, Tracer tracer) {
+            IComponentFilterHelper filterHelper, int[] treeFields, ITracer tracer) {
         this.ioManager = ioManager;
         this.virtualBufferCaches = virtualBufferCaches;
         this.diskBufferCache = diskBufferCache;

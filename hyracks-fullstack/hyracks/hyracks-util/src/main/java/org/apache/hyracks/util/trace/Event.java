@@ -20,21 +20,19 @@ package org.apache.hyracks.util.trace;
 
 import java.util.concurrent.TimeUnit;
 
-import org.apache.hyracks.util.trace.Tracer.Scope;
-
 final class Event {
-    private static final long NANOTIME_DELTA_TO_EPOCH = System.nanoTime()
-            - TimeUnit.MILLISECONDS.toNanos(System.currentTimeMillis());
+    private static final long NANOTIME_DELTA_TO_EPOCH =
+            System.nanoTime() - TimeUnit.MILLISECONDS.toNanos(System.currentTimeMillis());
     public final String name;
     public final String cat;
-    public final Tracer.Phase ph;
+    public final ITracer.Phase ph;
     public final long ts;
     public final int pid;
     public final long tid;
-    public final Tracer.Scope scope;
+    public final ITracer.Scope scope;
     public final String args;
 
-    private Event(String name, String cat, Tracer.Phase ph, long ts, int pid, long tid, Tracer.Scope scope,
+    private Event(String name, String cat, ITracer.Phase ph, long ts, int pid, long tid, ITracer.Scope scope,
             String args) {
         this.name = name;
         this.cat = cat;
@@ -50,7 +48,8 @@ final class Event {
         return (System.nanoTime() - NANOTIME_DELTA_TO_EPOCH) / 1000;
     }
 
-    public static Event create(String name, String cat, Tracer.Phase ph, int pid, long tid, Scope scope, String args) {
+    public static Event create(String name, String cat, ITracer.Phase ph, int pid, long tid, ITracer.Scope scope,
+            String args) {
         return new Event(name, cat, ph, timestamp(), pid, tid, scope, args);
     }
 

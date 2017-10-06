@@ -26,7 +26,7 @@ import org.apache.hyracks.api.comm.IFrameTupleAppender;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.util.trace.Tracer;
+import org.apache.hyracks.util.trace.ITracer;
 
 public class FrameUtils {
 
@@ -150,14 +150,14 @@ public class FrameUtils {
     }
 
     public static int appendToWriter(IFrameWriter writer, IFrameTupleAppender frameTupleAppender,
-            IFrameTupleAccessor tupleAccessor, int tIndex, Tracer tracer, String name, String cat, String args)
+            IFrameTupleAccessor tupleAccessor, int tIndex, ITracer tracer, String name, String cat, String args)
             throws HyracksDataException {
         int flushedBytes = 0;
         if (!frameTupleAppender.append(tupleAccessor, tIndex)) {
             flushedBytes = frameTupleAppender.getBuffer().capacity();
-            long tid = tracer.durationB(name, cat, args);
+            long tid = ITracer.check(tracer).durationB(name, cat, args);
             frameTupleAppender.write(writer, true);
-            tracer.durationE(tid, args);
+            ITracer.check(tracer).durationE(tid, args);
             if (!frameTupleAppender.append(tupleAccessor, tIndex)) {
                 throw HyracksDataException.create(ErrorCode.TUPLE_CANNOT_FIT_INTO_EMPTY_FRAME,
                         tupleAccessor.getTupleLength(tIndex));

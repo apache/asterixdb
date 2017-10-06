@@ -38,7 +38,7 @@ import org.apache.hyracks.storage.common.IIndexAccessor;
 import org.apache.hyracks.storage.common.IIndexBulkLoader;
 import org.apache.hyracks.storage.common.IIndexCursor;
 import org.apache.hyracks.storage.common.ISearchOperationCallback;
-import org.apache.hyracks.util.trace.Tracer;
+import org.apache.hyracks.util.trace.ITracer;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -59,7 +59,7 @@ public class LSMBTreeSearchOperationCallbackTest extends AbstractSearchOperation
                 harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(),
                 NoOpOperationTrackerFactory.INSTANCE.getOperationTracker(null), harness.getIOScheduler(),
                 harness.getIOOperationCallback(), true, null, null, null, null, true,
-                harness.getMetadataPageManagerFactory(), false, Tracer.none());
+                harness.getMetadataPageManagerFactory(), false, ITracer.NONE);
     }
 
     @Override

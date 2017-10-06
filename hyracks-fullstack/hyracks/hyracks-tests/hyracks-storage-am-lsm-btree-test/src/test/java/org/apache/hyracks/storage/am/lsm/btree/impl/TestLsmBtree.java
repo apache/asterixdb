@@ -47,7 +47,7 @@ import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexOperationC
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentFilterManager;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMTreeIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.common.impls.TreeIndexFactory;
-import org.apache.hyracks.util.trace.Tracer;
+import org.apache.hyracks.util.trace.ITracer;
 
 public class TestLsmBtree extends LSMBTree {
 
@@ -77,7 +77,7 @@ public class TestLsmBtree extends LSMBTree {
             double bloomFilterFalsePositiveRate, int fieldCount, IBinaryComparatorFactory[] cmpFactories,
             ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler,
             ILSMIOOperationCallback ioOpCallback, boolean needKeyDupCheck, int[] btreeFields, int[] filterFields,
-            boolean durable, boolean updateAware, Tracer tracer) throws HyracksDataException {
+            boolean durable, boolean updateAware, ITracer tracer) throws HyracksDataException {
         super(ioManager, virtualBufferCaches, interiorFrameFactory, insertLeafFrameFactory, deleteLeafFrameFactory,
                 fileManager, diskBTreeFactory, bulkLoadBTreeFactory, bloomFilterFactory, filterHelper,
                 filterFrameFactory, filterManager, bloomFilterFalsePositiveRate, fieldCount, cmpFactories, mergePolicy,

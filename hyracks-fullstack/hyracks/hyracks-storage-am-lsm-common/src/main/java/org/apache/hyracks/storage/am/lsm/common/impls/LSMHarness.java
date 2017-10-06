@@ -55,8 +55,8 @@ import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
 import org.apache.hyracks.storage.am.lsm.common.util.IOOperationUtils;
 import org.apache.hyracks.storage.common.IIndexCursor;
 import org.apache.hyracks.storage.common.ISearchPredicate;
-import org.apache.hyracks.util.trace.Tracer;
-import org.apache.hyracks.util.trace.Tracer.Scope;
+import org.apache.hyracks.util.trace.ITracer;
+import org.apache.hyracks.util.trace.ITracer.Scope;
 
 public class LSMHarness implements ILSMHarness {
     private static final Logger LOGGER = Logger.getLogger(LSMHarness.class.getName());
@@ -67,10 +67,10 @@ public class LSMHarness implements ILSMHarness {
     protected final AtomicBoolean fullMergeIsRequested;
     protected final boolean replicationEnabled;
     protected List<ILSMDiskComponent> componentsToBeReplicated;
-    protected Tracer tracer;
+    protected ITracer tracer;
 
     public LSMHarness(ILSMIndex lsmIndex, ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker,
-            boolean replicationEnabled, Tracer tracer) {
+            boolean replicationEnabled, ITracer tracer) {
         this.lsmIndex = lsmIndex;
         this.opTracker = opTracker;
         this.mergePolicy = mergePolicy;
@@ -253,9 +253,8 @@ public class LSMHarness implements ILSMHarness {
                                     }
                                     break;
                                 case INACTIVE:
-                                    if (tracer != null && tracer.isEnabled()) {
-                                        tracer.instant(lsmIndex.toString(), "release-memory-component", Scope.p, null);
-                                    }
+                                    ITracer.check(tracer).instant(lsmIndex.toString(), "release-memory-component",
+                                            Scope.p, null);
                                     ((AbstractLSMMemoryComponent) c).reset();
                                     // Notify all waiting threads whenever the mutable component's has change to inactive. This is important because
                                     // even though we switched the mutable components, it is possible that the component that we just switched

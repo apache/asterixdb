@@ -75,7 +75,7 @@ import org.apache.hyracks.storage.common.ISearchOperationCallback;
 import org.apache.hyracks.storage.common.ISearchPredicate;
 import org.apache.hyracks.storage.common.MultiComparator;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
-import org.apache.hyracks.util.trace.Tracer;
+import org.apache.hyracks.util.trace.ITracer;
 
 public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
 
@@ -106,7 +106,7 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
             double bloomFilterFalsePositiveRate, int fieldCount, IBinaryComparatorFactory[] cmpFactories,
             ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler,
             ILSMIOOperationCallback ioOpCallback, boolean needKeyDupCheck, int[] btreeFields, int[] filterFields,
-            boolean durable, boolean updateAware, Tracer tracer) throws HyracksDataException {
+            boolean durable, boolean updateAware, ITracer tracer) throws HyracksDataException {
         super(ioManager, virtualBufferCaches, diskBTreeFactory.getBufferCache(), fileManager,
                 bloomFilterFalsePositiveRate, mergePolicy, opTracker, ioScheduler, ioOpCallback, filterFrameFactory,
                 filterManager, filterFields, durable, filterHelper, btreeFields, tracer);

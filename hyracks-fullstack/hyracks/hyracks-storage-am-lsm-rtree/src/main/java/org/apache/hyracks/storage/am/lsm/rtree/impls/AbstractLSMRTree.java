@@ -57,7 +57,7 @@ import org.apache.hyracks.storage.common.IModificationOperationCallback;
 import org.apache.hyracks.storage.common.ISearchOperationCallback;
 import org.apache.hyracks.storage.common.ISearchPredicate;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
-import org.apache.hyracks.util.trace.Tracer;
+import org.apache.hyracks.util.trace.ITracer;
 
 public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITreeIndex {
 
@@ -92,7 +92,7 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
             boolean isPointMBR, IBufferCache diskBufferCache) throws HyracksDataException {
         super(ioManager, virtualBufferCaches, diskBufferCache, fileManager, bloomFilterFalsePositiveRate, mergePolicy,
                 opTracker, ioScheduler, ioOpCallback, filterFrameFactory, filterManager, filterFields, durable,
-                filterHelper, rtreeFields, Tracer.none());
+                filterHelper, rtreeFields, ITracer.NONE);
         int i = 0;
         for (IVirtualBufferCache virtualBufferCache : virtualBufferCaches) {
             RTree memRTree = new RTree(virtualBufferCache, new VirtualFreePageManager(virtualBufferCache),

@@ -31,7 +31,9 @@ import org.apache.hyracks.util.PidHelper;
 /**
  * https://docs.google.com/document/d/1CvAClvFfyA5R-PhYUmn5OOQtYMH4h6I0nSsKchNAySU/edit
  */
-public class Tracer {
+public class Tracer implements ITracer {
+
+    public static final Logger LOGGER = Logger.getLogger(Tracer.class.getName());
 
     protected static final Level TRACE_LOG_LEVEL = Level.INFO;
     protected static final String CAT = "Tracer";
@@ -42,80 +44,51 @@ public class Tracer {
 
     protected static final int pid = PidHelper.getPid();
 
-    public enum Phase {
-        // Duration Events
-        B, // begin
-        E, // end
-        // Complete Events
-        X,
-        // Instant Events
-        i,
-        // Counter Events
-        C,
-        // Async Events
-        b, // nestable start
-        n, // nestable instant
-        e, // nestable end
-        // Flow Events
-        s, // start
-        t, // step
-        f, // end
-        // Object Events
-        N, // created
-        O, // snapshot
-        D // destroyed
-    }
-
-    public enum Scope {
-        g, // Global scope
-        p, // Process scope
-        t // Thread scope
-    }
-
     public Tracer(String name, String[] categories) {
-        this.traceLog = Logger.getLogger(Tracer.class.getName() + "@" + name);
+        final String traceLoggerName = Tracer.class.getName() + "@" + name;
+        LOGGER.info("Initialize Tracer " + traceLoggerName + " " + Arrays.toString(categories));
+        this.traceLog = Logger.getLogger(traceLoggerName);
         this.categories = categories;
         instant("Trace-Start", CAT, Scope.p, dateTimeStamp());
     }
 
     public static String dateTimeStamp() {
         synchronized (DATE_FORMAT) {
-            return DATE_FORMAT.format(new Date());
+            return "{\"datetime\":\"" + DATE_FORMAT.format(new Date()) + "\"}";
         }
     }
 
-    public static Tracer none() {
-        return new Tracer("None", new String[0]);
-    }
-
-    public static Tracer all() {
-        return new Tracer("All", new String[] { "*" });
-    }
+    public static final Tracer ALL = new Tracer("All", new String[] { "*" });
 
     @Override
     public String toString() {
         return getName() + Arrays.toString(categories) + (isEnabled() ? "enabled" : "disabled");
     }
 
+    @Override
     public String getName() {
         return traceLog.getName();
     }
 
+    @Override
     public boolean isEnabled() {
         return categories.length > 0;
     }
 
+    @Override
     public long durationB(String name, String cat, String args) {
         Event e = Event.create(name, cat, Phase.B, pid, Thread.currentThread().getId(), null, args);
         traceLog.log(TRACE_LOG_LEVEL, e.toJson());
         return e.tid;
     }
 
+    @Override
     public void durationE(long tid, String args) {
         Event e = Event.create(null, null, Phase.E, pid, tid, null, args);
         traceLog.log(TRACE_LOG_LEVEL, e.toJson());
     }
 
+    @Override
     public void instant(String name, String cat, Scope scope, String args) {
         Event e = Event.create(name, cat, Phase.i, pid, Thread.currentThread().getId(), scope, args);
         traceLog.log(TRACE_LOG_LEVEL, e.toJson());

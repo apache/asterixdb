@@ -34,6 +34,7 @@ import org.apache.hyracks.control.common.utils.HyracksThreadFactory;
 import org.apache.hyracks.control.nc.NodeControllerService;
 import org.apache.hyracks.control.nc.io.IOManager;
 import org.apache.hyracks.control.nc.resources.memory.MemoryManager;
+import org.apache.hyracks.util.trace.ITracer;
 import org.apache.hyracks.util.trace.Tracer;
 
 public class NCServiceContext extends ServiceContext implements INCServiceContext {
@@ -44,7 +45,7 @@ public class NCServiceContext extends ServiceContext implements INCServiceContex
     private IStateDumpHandler sdh;
     private final NodeControllerService ncs;
     private IChannelInterfaceFactory messagingChannelInterfaceFactory;
-    private final Tracer tracer;
+    private final ITracer tracer;
 
     public NCServiceContext(NodeControllerService ncs, ServerContext serverCtx, IOManager ioManager, String nodeId,
             MemoryManager memoryManager, ILifeCycleComponentManager lifeCyclecomponentManager,
@@ -93,7 +94,7 @@ public class NCServiceContext extends ServiceContext implements INCServiceContex
     }
 
     @Override
-    public Tracer getTracer() {
+    public ITracer getTracer() {
         return tracer;
     }
 
