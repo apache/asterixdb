@@ -49,7 +49,7 @@ public class ConstantMergePolicy implements ILSMMergePolicy {
         } else if (immutableComponents.size() >= numComponents) {
             ILSMIndexAccessor accessor =
                     index.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
-            accessor.scheduleMerge(index.getIOOperationCallback(), immutableComponents);
+            accessor.scheduleMerge(index.getIOOperationCallback(), immutableComponents, null);
         }
     }
 
@@ -106,7 +106,7 @@ public class ConstantMergePolicy implements ILSMMergePolicy {
             }
             ILSMIndexAccessor accessor =
                     index.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
-            accessor.scheduleMerge(index.getIOOperationCallback(), immutableComponents);
+            accessor.scheduleMerge(index.getIOOperationCallback(), immutableComponents, null);
             return true;
         }
     }

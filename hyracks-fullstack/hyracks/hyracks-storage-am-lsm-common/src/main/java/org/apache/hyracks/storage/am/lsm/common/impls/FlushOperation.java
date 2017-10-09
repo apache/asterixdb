@@ -18,6 +18,7 @@
  */
 package org.apache.hyracks.storage.am.lsm.common.impls;
 
+import java.util.List;
 import java.util.Objects;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -30,14 +31,13 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 public class FlushOperation extends AbstractIoOperation implements Comparable<ILSMIOOperation> {
 
     public FlushOperation(ILSMIndexAccessor accessor, FileReference target, ILSMIOOperationCallback callback,
-            String indexIdentifier) {
-        super(accessor, target, callback, indexIdentifier);
+            String indexIdentifier, List<ILSMIOOperation> dependingOps) {
+        super(accessor, target, callback, indexIdentifier, dependingOps);
     }
 
     @Override
-    public Boolean call() throws HyracksDataException {
+    protected void callInternal() throws HyracksDataException {
         accessor.flush(this);
-        return true;
     }
 
     @Override

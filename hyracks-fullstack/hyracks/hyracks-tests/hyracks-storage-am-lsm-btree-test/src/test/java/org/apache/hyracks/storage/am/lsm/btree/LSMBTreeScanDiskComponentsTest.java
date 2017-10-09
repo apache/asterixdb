@@ -19,7 +19,7 @@
 
 package org.apache.hyracks.storage.am.lsm.btree;
 
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInput;
@@ -116,17 +116,17 @@ public class LSMBTreeScanDiskComponentsTest extends OrderedIndexTestDriver {
         //component 2 contains 1 and 2
         upsertTuple(ctx, fieldSerdes, getValue(1, fieldSerdes));
         upsertTuple(ctx, fieldSerdes, getValue(2, fieldSerdes));
-        accessor.scheduleFlush(NoOpIOOperationCallbackFactory.INSTANCE.createIoOpCallback());
+        accessor.scheduleFlush(NoOpIOOperationCallbackFactory.INSTANCE.createIoOpCallback(), null);
 
         //component 1 contains 1 and -2
         upsertTuple(ctx, fieldSerdes, getValue(1, fieldSerdes));
         deleteTuple(ctx, fieldSerdes, getValue(2, fieldSerdes));
-        accessor.scheduleFlush(NoOpIOOperationCallbackFactory.INSTANCE.createIoOpCallback());
+        accessor.scheduleFlush(NoOpIOOperationCallbackFactory.INSTANCE.createIoOpCallback(), null);
 
         //component 0 contains 2 and 3
         upsertTuple(ctx, fieldSerdes, getValue(3, fieldSerdes));
         upsertTuple(ctx, fieldSerdes, getValue(2, fieldSerdes));
-        accessor.scheduleFlush(NoOpIOOperationCallbackFactory.INSTANCE.createIoOpCallback());
+        accessor.scheduleFlush(NoOpIOOperationCallbackFactory.INSTANCE.createIoOpCallback(), null);
 
         LSMBTree btree = (LSMBTree) ctx.getIndex();
         Assert.assertEquals("Check disk components", 3, btree.getDiskComponents().size());

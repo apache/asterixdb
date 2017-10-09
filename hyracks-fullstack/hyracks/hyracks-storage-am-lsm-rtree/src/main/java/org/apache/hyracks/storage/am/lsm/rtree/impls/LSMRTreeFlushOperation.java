@@ -18,7 +18,10 @@
  */
 package org.apache.hyracks.storage.am.lsm.rtree.impls;
 
+import java.util.List;
+
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.common.impls.FlushOperation;
@@ -29,8 +32,9 @@ public class LSMRTreeFlushOperation extends FlushOperation {
     private final FileReference bloomFilterFlushTarget;
 
     public LSMRTreeFlushOperation(ILSMIndexAccessor accessor, FileReference flushTarget, FileReference btreeFlushTarget,
-            FileReference bloomFilterFlushTarget, ILSMIOOperationCallback callback, String indexIdentifier) {
-        super(accessor, flushTarget, callback, indexIdentifier);
+            FileReference bloomFilterFlushTarget, ILSMIOOperationCallback callback, String indexIdentifier,
+            List<ILSMIOOperation> dependingOps) {
+        super(accessor, flushTarget, callback, indexIdentifier, dependingOps);
         this.btreeFlushTarget = btreeFlushTarget;
         this.bloomFilterFlushTarget = bloomFilterFlushTarget;
     }

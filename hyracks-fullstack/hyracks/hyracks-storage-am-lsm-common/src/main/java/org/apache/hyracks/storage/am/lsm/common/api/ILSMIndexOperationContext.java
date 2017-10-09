@@ -56,4 +56,8 @@ public interface ILSMIndexOperationContext extends IIndexOperationContext {
     PermutingTupleReference getFilterTuple();
 
     MultiComparator getFilterCmp();
+
+    List<ILSMIOOperation> getDependingOps();
+
+    void setDependingOps(List<ILSMIOOperation> dependingOps);
 }

@@ -236,7 +236,7 @@ public class CorrelatedPrefixMergePolicyTest extends TestCase {
                 return null;
             }
         }).when(accessor).scheduleMerge(Mockito.any(ILSMIOOperationCallback.class),
-                Mockito.anyListOf(ILSMDiskComponent.class));
+                Mockito.anyListOf(ILSMDiskComponent.class), Mockito.any());
 
         Mockito.when(index.createAccessor(Mockito.any(IModificationOperationCallback.class),
                 Mockito.any(ISearchOperationCallback.class))).thenReturn(accessor);

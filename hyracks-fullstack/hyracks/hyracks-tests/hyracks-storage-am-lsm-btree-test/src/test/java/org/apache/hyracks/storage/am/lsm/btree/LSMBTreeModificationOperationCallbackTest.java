@@ -81,7 +81,7 @@ public class LSMBTreeModificationOperationCallbackTest extends AbstractModificat
             }
 
             if (j == 1) {
-                accessor.scheduleFlush(ioOpCallback);
+                accessor.scheduleFlush(ioOpCallback, null);
                 ioOpCallback.waitForIO();
                 isFoundNull = true;
             } else {
@@ -94,7 +94,7 @@ public class LSMBTreeModificationOperationCallbackTest extends AbstractModificat
             }
 
             if (j == 1) {
-                accessor.scheduleFlush(ioOpCallback);
+                accessor.scheduleFlush(ioOpCallback, null);
                 ioOpCallback.waitForIO();
                 isFoundNull = true;
             } else {
@@ -106,7 +106,7 @@ public class LSMBTreeModificationOperationCallbackTest extends AbstractModificat
                 accessor.delete(tuple);
             }
 
-            accessor.scheduleFlush(ioOpCallback);
+            accessor.scheduleFlush(ioOpCallback, null);
             ioOpCallback.waitForIO();
         }
     }

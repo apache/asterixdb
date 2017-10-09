@@ -19,7 +19,10 @@
 
 package org.apache.hyracks.storage.am.lsm.invertedindex.impls;
 
+import java.util.List;
+
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.common.impls.MergeOperation;
@@ -31,8 +34,8 @@ public class LSMInvertedIndexMergeOperation extends MergeOperation {
 
     public LSMInvertedIndexMergeOperation(ILSMIndexAccessor accessor, IIndexCursor cursor, FileReference target,
             FileReference deletedKeysBTreeMergeTarget, FileReference bloomFilterMergeTarget,
-            ILSMIOOperationCallback callback, String indexIdentifier) {
-        super(accessor, target, callback, indexIdentifier, cursor);
+            ILSMIOOperationCallback callback, String indexIdentifier, List<ILSMIOOperation> dependingOps) {
+        super(accessor, target, callback, indexIdentifier, cursor, dependingOps);
         this.deletedKeysBTreeMergeTarget = deletedKeysBTreeMergeTarget;
         this.bloomFilterMergeTarget = bloomFilterMergeTarget;
     }

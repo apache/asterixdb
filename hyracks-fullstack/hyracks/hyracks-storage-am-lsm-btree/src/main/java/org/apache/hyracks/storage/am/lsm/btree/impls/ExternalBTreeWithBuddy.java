@@ -319,7 +319,7 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
     }
 
     @Override
-    public void scheduleFlush(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
+    public ILSMIOOperation scheduleFlush(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
             throws HyracksDataException {
         throw HyracksDataException.create(ErrorCode.FLUSH_NOT_SUPPORTED_IN_EXTERNAL_INDEX);
     }
@@ -342,7 +342,7 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
     }
 
     @Override
-    public void scheduleMerge(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
+    public ILSMIOOperation scheduleMerge(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
             throws HyracksDataException {
         ILSMIndexOperationContext bctx = createOpContext(NoOpOperationCallback.INSTANCE, 0);
         bctx.setOperation(IndexOperation.MERGE);
@@ -363,11 +363,12 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
             keepDeleteTuples = mergingComponents.get(mergingComponents.size() - 1) != secondDiskComponents
                     .get(secondDiskComponents.size() - 1);
         }
-
-        ioScheduler.scheduleOperation(
+        ILSMIOOperation mergeOp =
                 new LSMBTreeWithBuddyMergeOperation(accessor, cursor, relMergeFileRefs.getInsertIndexFileReference(),
                         relMergeFileRefs.getDeleteIndexFileReference(), relMergeFileRefs.getBloomFilterFileReference(),
-                        callback, fileManager.getBaseDir().getAbsolutePath(), keepDeleteTuples));
+                        callback, fileManager.getBaseDir().getAbsolutePath(), keepDeleteTuples, ctx.getDependingOps());
+        ioScheduler.scheduleOperation(mergeOp);
+        return mergeOp;
     }
 
     // This method creates the appropriate opContext for the targeted version

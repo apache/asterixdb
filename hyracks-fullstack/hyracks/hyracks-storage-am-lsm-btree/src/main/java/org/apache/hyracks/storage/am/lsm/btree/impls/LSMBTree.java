@@ -462,7 +462,8 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
             LSMComponentFileReferences componentFileRefs, ILSMIOOperationCallback callback) {
         ILSMIndexAccessor accessor = createAccessor(opCtx);
         return new LSMBTreeFlushOperation(accessor, componentFileRefs.getInsertIndexFileReference(),
-                componentFileRefs.getBloomFilterFileReference(), callback, fileManager.getBaseDir().getAbsolutePath());
+                componentFileRefs.getBloomFilterFileReference(), callback, fileManager.getBaseDir().getAbsolutePath(),
+                opCtx.getDependingOps());
     }
 
     @Override
@@ -611,6 +612,7 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
         }
         ITreeIndexCursor cursor = new LSMBTreeRangeSearchCursor(opCtx, returnDeletedTuples);
         return new LSMBTreeMergeOperation(accessor, cursor, mergeFileRefs.getInsertIndexFileReference(),
-                mergeFileRefs.getBloomFilterFileReference(), callback, fileManager.getBaseDir().getAbsolutePath());
+                mergeFileRefs.getBloomFilterFileReference(), callback, fileManager.getBaseDir().getAbsolutePath(),
+                opCtx.getDependingOps());
     }
 }

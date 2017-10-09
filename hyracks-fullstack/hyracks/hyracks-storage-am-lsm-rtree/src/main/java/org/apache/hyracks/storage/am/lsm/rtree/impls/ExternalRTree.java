@@ -416,7 +416,7 @@ public class ExternalRTree extends LSMRTree implements ITwoPCIndex {
 
     // Not supported
     @Override
-    public void scheduleFlush(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
+    public ILSMIOOperation scheduleFlush(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
             throws HyracksDataException {
         throw new UnsupportedOperationException("flush not supported in LSM-Disk-Only-RTree");
     }
@@ -623,7 +623,7 @@ public class ExternalRTree extends LSMRTree implements ITwoPCIndex {
     // The only change the the schedule merge is the method used to create the
     // opCtx. first line <- in schedule merge, we->
     @Override
-    public void scheduleMerge(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
+    public ILSMIOOperation scheduleMerge(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
             throws HyracksDataException {
         ILSMIndexOperationContext rctx = createOpContext(NoOpOperationCallback.INSTANCE, -1);
         rctx.setOperation(IndexOperation.MERGE);
@@ -634,10 +634,12 @@ public class ExternalRTree extends LSMRTree implements ITwoPCIndex {
                         (ILSMDiskComponent) mergingComponents.get(mergingComponents.size() - 1));
         ILSMIndexAccessor accessor = new LSMRTreeAccessor(getLsmHarness(), rctx, buddyBTreeFields);
         // create the merge operation.
-        LSMRTreeMergeOperation mergeOp = new LSMRTreeMergeOperation(accessor, cursor,
-                relMergeFileRefs.getInsertIndexFileReference(), relMergeFileRefs.getDeleteIndexFileReference(),
-                relMergeFileRefs.getBloomFilterFileReference(), callback, fileManager.getBaseDir().getAbsolutePath());
+        ILSMIOOperation mergeOp =
+                new LSMRTreeMergeOperation(accessor, cursor, relMergeFileRefs.getInsertIndexFileReference(),
+                        relMergeFileRefs.getDeleteIndexFileReference(), relMergeFileRefs.getBloomFilterFileReference(),
+                        callback, fileManager.getBaseDir().getAbsolutePath(), ctx.getDependingOps());
         ioScheduler.scheduleOperation(mergeOp);
+        return mergeOp;
     }
 
     @Override

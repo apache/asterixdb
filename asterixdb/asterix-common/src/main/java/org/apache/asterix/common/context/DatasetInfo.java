@@ -34,6 +34,7 @@ public class DatasetInfo extends Info implements Comparable<DatasetInfo> {
     private boolean isRegistered;
     private boolean memoryAllocated;
     private boolean durable;
+    private boolean correlated;
 
     public DatasetInfo(int datasetID) {
         this.indexes = new HashMap<>();
@@ -41,6 +42,7 @@ public class DatasetInfo extends Info implements Comparable<DatasetInfo> {
         this.datasetID = datasetID;
         this.setRegistered(false);
         this.setMemoryAllocated(false);
+        this.setCorrelated(false);
     }
 
     @Override
@@ -194,5 +196,13 @@ public class DatasetInfo extends Info implements Comparable<DatasetInfo> {
 
     public void setLastAccess(long lastAccess) {
         this.lastAccess = lastAccess;
+    }
+
+    public void setCorrelated(boolean correlated) {
+        this.correlated = correlated;
+    }
+
+    public boolean isCorrelated() {
+        return correlated;
     }
 }

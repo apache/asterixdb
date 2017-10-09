@@ -500,13 +500,13 @@ public class LSMHarness implements ILSMHarness {
     }
 
     @Override
-    public void scheduleFlush(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
+    public ILSMIOOperation scheduleFlush(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
             throws HyracksDataException {
         if (!getAndEnterComponents(ctx, LSMOperationType.FLUSH, true)) {
             callback.afterFinalize(LSMOperationType.FLUSH, null);
-            return;
+            return null;
         }
-        lsmIndex.scheduleFlush(ctx, callback);
+        return lsmIndex.scheduleFlush(ctx, callback);
     }
 
     @Override
@@ -519,6 +519,7 @@ public class LSMHarness implements ILSMHarness {
         boolean failedOperation = false;
         try {
             newComponent = lsmIndex.flush(operation);
+            waitForDependingOps(operation);
             operation.getCallback().afterOperation(LSMOperationType.FLUSH, null, newComponent);
             newComponent.markAsValid(lsmIndex.isDurable());
         } catch (Throwable e) {
@@ -537,13 +538,13 @@ public class LSMHarness implements ILSMHarness {
     }
 
     @Override
-    public void scheduleMerge(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
+    public ILSMIOOperation scheduleMerge(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
             throws HyracksDataException {
         if (!getAndEnterComponents(ctx, LSMOperationType.MERGE, true)) {
             callback.afterFinalize(LSMOperationType.MERGE, null);
-            return;
+            return null;
         }
-        lsmIndex.scheduleMerge(ctx, callback);
+        return lsmIndex.scheduleMerge(ctx, callback);
     }
 
     @Override
@@ -570,6 +571,7 @@ public class LSMHarness implements ILSMHarness {
         boolean failedOperation = false;
         try {
             newComponent = lsmIndex.merge(operation);
+            waitForDependingOps(operation);
             operation.getCallback().afterOperation(LSMOperationType.MERGE, ctx.getComponentHolder(), newComponent);
             newComponent.markAsValid(lsmIndex.isDurable());
         } catch (Throwable e) {
@@ -748,6 +750,32 @@ public class LSMHarness implements ILSMHarness {
                     if (LOGGER.isLoggable(Level.WARNING)) {
                         LOGGER.log(Level.WARNING, "Ignoring interrupt while waiting for lagging merge on " + lsmIndex,
                                 e);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Wait for depending operations to finish.
+     *
+     * @param op
+     */
+    private void waitForDependingOps(ILSMIOOperation op) throws HyracksDataException {
+        List<ILSMIOOperation> dependingOps = op.getDependingOps();
+        if (dependingOps == null) {
+            return;
+        }
+        for (ILSMIOOperation dependingOp : dependingOps) {
+            if (dependingOp != null && !dependingOp.isFinished()) {
+                synchronized (dependingOp) {
+                    while (!dependingOp.isFinished()) {
+                        try {
+                            dependingOp.wait();
+                        } catch (InterruptedException e) {
+                            Thread.currentThread().interrupt();
+                            throw HyracksDataException.create(e);
+                        }
                     }
                 }
             }

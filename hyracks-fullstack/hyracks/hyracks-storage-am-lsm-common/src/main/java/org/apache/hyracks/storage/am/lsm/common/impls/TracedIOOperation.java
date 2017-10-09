@@ -19,6 +19,7 @@
 
 package org.apache.hyracks.storage.am.lsm.common.impls;
 
+import java.util.List;
 import java.util.logging.Logger;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -99,6 +100,16 @@ class TracedIOOperation implements ILSMIOOperation {
     @Override
     public ILSMIndexAccessor getAccessor() {
         return ioOp.getAccessor();
+    }
+
+    @Override
+    public boolean isFinished() {
+        return ioOp.isFinished();
+    }
+
+    @Override
+    public List<ILSMIOOperation> getDependingOps() {
+        return ioOp.getDependingOps();
     }
 }
 

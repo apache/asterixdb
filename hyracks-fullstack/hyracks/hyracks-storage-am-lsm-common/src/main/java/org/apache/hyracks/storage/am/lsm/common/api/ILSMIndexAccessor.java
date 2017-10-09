@@ -46,9 +46,13 @@ public interface ILSMIndexAccessor extends IIndexAccessor {
      *
      * @param callback
      *            the IO operation callback
+     * @param dependingOps
+     *            other operations that this operation depends on
+     * @return The scheduled flush operation
      * @throws HyracksDataException
      */
-    void scheduleFlush(ILSMIOOperationCallback callback) throws HyracksDataException;
+    ILSMIOOperation scheduleFlush(ILSMIOOperationCallback callback, List<ILSMIOOperation> dependingOps)
+            throws HyracksDataException;
 
     /**
      * Schedule a merge operation
@@ -57,11 +61,13 @@ public interface ILSMIndexAccessor extends IIndexAccessor {
      *            the merge operation callback
      * @param components
      *            the components to be merged
+     * @param dependingOps
+     *            other operations that this operation depends on
+     * @return The scheduled merge operation
      * @throws HyracksDataException
-     * @throws IndexException
      */
-    void scheduleMerge(ILSMIOOperationCallback callback, List<ILSMDiskComponent> components)
-            throws HyracksDataException;
+    ILSMIOOperation scheduleMerge(ILSMIOOperationCallback callback, List<ILSMDiskComponent> components,
+            List<ILSMIOOperation> dependingOps) throws HyracksDataException;
 
     /**
      * Schedule a full merge

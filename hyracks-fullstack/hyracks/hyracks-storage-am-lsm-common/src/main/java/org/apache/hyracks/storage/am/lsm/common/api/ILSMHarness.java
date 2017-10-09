@@ -105,10 +105,12 @@ public interface ILSMHarness {
      *
      * @param ctx
      * @param callback
+     * @return The scheduled merge operation, used for the caller to track its status
      * @throws HyracksDataException
      * @throws IndexException
      */
-    void scheduleMerge(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback) throws HyracksDataException;
+    ILSMIOOperation scheduleMerge(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
+            throws HyracksDataException;
 
     /**
      * Schedule full merge
@@ -135,9 +137,11 @@ public interface ILSMHarness {
      *
      * @param ctx
      * @param callback
+     * @return The scheduled flush operation, used for the caller to track its status
      * @throws HyracksDataException
      */
-    void scheduleFlush(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback) throws HyracksDataException;
+    ILSMIOOperation scheduleFlush(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
+            throws HyracksDataException;
 
     /**
      * Perform a flush

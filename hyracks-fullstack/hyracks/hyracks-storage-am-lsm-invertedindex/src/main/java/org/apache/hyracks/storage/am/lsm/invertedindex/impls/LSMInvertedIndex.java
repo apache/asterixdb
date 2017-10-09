@@ -691,17 +691,20 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
             LSMComponentFileReferences componentFileRefs, ILSMIOOperationCallback callback)
             throws HyracksDataException {
         return new LSMInvertedIndexFlushOperation(new LSMInvertedIndexAccessor(getLsmHarness(), opCtx),
-                componentFileRefs.getInsertIndexFileReference(), componentFileRefs.getDeleteIndexFileReference(),
-                componentFileRefs.getBloomFilterFileReference(), callback, fileManager.getBaseDir().getAbsolutePath());
+                componentFileRefs.getInsertIndexFileReference(),
+                componentFileRefs.getDeleteIndexFileReference(), componentFileRefs.getBloomFilterFileReference(),
+                callback, fileManager.getBaseDir().getAbsolutePath(), opCtx.getDependingOps());
     }
 
     @Override
     protected ILSMIOOperation createMergeOperation(AbstractLSMIndexOperationContext opCtx,
-            LSMComponentFileReferences mergeFileRefs, ILSMIOOperationCallback callback) throws HyracksDataException {
+            LSMComponentFileReferences mergeFileRefs,
+            ILSMIOOperationCallback callback) throws HyracksDataException {
         ILSMIndexAccessor accessor = new LSMInvertedIndexAccessor(getLsmHarness(), opCtx);
         IIndexCursor cursor = new LSMInvertedIndexRangeSearchCursor(opCtx);
-        return new LSMInvertedIndexMergeOperation(accessor, cursor, mergeFileRefs.getInsertIndexFileReference(),
-                mergeFileRefs.getDeleteIndexFileReference(), mergeFileRefs.getBloomFilterFileReference(), callback,
-                fileManager.getBaseDir().getAbsolutePath());
+        return new LSMInvertedIndexMergeOperation(accessor, cursor,
+                mergeFileRefs.getInsertIndexFileReference(), mergeFileRefs.getDeleteIndexFileReference(),
+                mergeFileRefs.getBloomFilterFileReference(), callback, fileManager.getBaseDir().getAbsolutePath(),
+                opCtx.getDependingOps());
     }
 }

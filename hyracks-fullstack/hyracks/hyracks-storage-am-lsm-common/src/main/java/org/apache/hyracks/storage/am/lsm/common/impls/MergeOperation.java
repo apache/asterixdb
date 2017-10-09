@@ -23,6 +23,7 @@ import java.util.List;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import org.apache.hyracks.storage.common.IIndexCursor;
@@ -31,19 +32,13 @@ public class MergeOperation extends AbstractIoOperation {
     protected final IIndexCursor cursor;
 
     public MergeOperation(ILSMIndexAccessor accessor, FileReference target, ILSMIOOperationCallback callback,
-            String indexIdentifier, IIndexCursor cursor) {
-        super(accessor, target, callback, indexIdentifier);
+            String indexIdentifier, IIndexCursor cursor, List<ILSMIOOperation> dependingOps) {
+        super(accessor, target, callback, indexIdentifier, dependingOps);
         this.cursor = cursor;
     }
 
     public List<ILSMComponent> getMergingComponents() {
         return accessor.getOpContext().getComponentHolder();
-    }
-
-    @Override
-    public Boolean call() throws HyracksDataException {
-        accessor.merge(this);
-        return true;
     }
 
     @Override
@@ -53,5 +48,11 @@ public class MergeOperation extends AbstractIoOperation {
 
     public IIndexCursor getCursor() {
         return cursor;
+    }
+
+    @Override
+    protected void callInternal() throws HyracksDataException {
+        accessor.merge(this);
+
     }
 }

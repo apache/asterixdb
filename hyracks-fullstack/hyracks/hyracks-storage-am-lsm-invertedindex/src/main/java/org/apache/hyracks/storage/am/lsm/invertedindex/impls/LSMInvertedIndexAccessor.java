@@ -85,9 +85,11 @@ public class LSMInvertedIndexAccessor implements ILSMIndexAccessor, IInvertedInd
     }
 
     @Override
-    public void scheduleFlush(ILSMIOOperationCallback callback) throws HyracksDataException {
+    public ILSMIOOperation scheduleFlush(ILSMIOOperationCallback callback, List<ILSMIOOperation> dependingOps)
+            throws HyracksDataException {
         ctx.setOperation(IndexOperation.FLUSH);
-        lsmHarness.scheduleFlush(ctx, callback);
+        ctx.setDependingOps(dependingOps);
+        return lsmHarness.scheduleFlush(ctx, callback);
     }
 
     @Override
@@ -96,12 +98,13 @@ public class LSMInvertedIndexAccessor implements ILSMIndexAccessor, IInvertedInd
     }
 
     @Override
-    public void scheduleMerge(ILSMIOOperationCallback callback, List<ILSMDiskComponent> components)
-            throws HyracksDataException {
+    public ILSMIOOperation scheduleMerge(ILSMIOOperationCallback callback, List<ILSMDiskComponent> components,
+            List<ILSMIOOperation> dependingOps) throws HyracksDataException {
         ctx.setOperation(IndexOperation.MERGE);
         ctx.getComponentsToBeMerged().clear();
         ctx.getComponentsToBeMerged().addAll(components);
-        lsmHarness.scheduleMerge(ctx, callback);
+        ctx.setDependingOps(dependingOps);
+        return lsmHarness.scheduleMerge(ctx, callback);
     }
 
     @Override
@@ -116,6 +119,7 @@ public class LSMInvertedIndexAccessor implements ILSMIndexAccessor, IInvertedInd
     @Override
     public void scheduleFullMerge(ILSMIOOperationCallback callback) throws HyracksDataException {
         ctx.setOperation(IndexOperation.FULL_MERGE);
+        ctx.setDependingOps(null);
         lsmHarness.scheduleFullMerge(ctx, callback);
     }
 

@@ -76,7 +76,7 @@ public abstract class LSMBTreeMergeTestDriver extends OrderedIndexTestDriver {
 
             ILSMIndexAccessor accessor = (ILSMIndexAccessor) ctx.getIndexAccessor();
             accessor.scheduleMerge(NoOpIOOperationCallbackFactory.INSTANCE.createIoOpCallback(),
-                    ((LSMBTree) ctx.getIndex()).getDiskComponents());
+                    ((LSMBTree) ctx.getIndex()).getDiskComponents(), null);
 
             orderedIndexTestUtils.checkPointSearches(ctx);
             orderedIndexTestUtils.checkScan(ctx);

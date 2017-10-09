@@ -18,6 +18,10 @@
  */
 package org.apache.hyracks.storage.am.lsm.common.impls;
 
+import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IODeviceHandle;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
@@ -30,13 +34,32 @@ public abstract class AbstractIoOperation implements ILSMIOOperation {
     protected final FileReference target;
     protected final ILSMIOOperationCallback callback;
     protected final String indexIdentifier;
+    protected final List<ILSMIOOperation> dependingOps;
+
+    protected AtomicBoolean isFinished = new AtomicBoolean(false);
 
     public AbstractIoOperation(ILSMIndexAccessor accessor, FileReference target, ILSMIOOperationCallback callback,
-            String indexIdentifier) {
+            String indexIdentifier, List<ILSMIOOperation> dependingOps) {
         this.accessor = accessor;
         this.target = target;
         this.callback = callback;
         this.indexIdentifier = indexIdentifier;
+        this.dependingOps = dependingOps;
+    }
+
+    protected abstract void callInternal() throws HyracksDataException;
+
+    @Override
+    public Boolean call() throws HyracksDataException {
+        try {
+            callInternal();
+        } finally {
+            synchronized (this) {
+                isFinished.set(true);
+                notifyAll();
+            }
+        }
+        return true;
     }
 
     @Override
@@ -62,5 +85,15 @@ public abstract class AbstractIoOperation implements ILSMIOOperation {
     @Override
     public String getIndexIdentifier() {
         return indexIdentifier;
+    }
+
+    @Override
+    public List<ILSMIOOperation> getDependingOps() {
+        return dependingOps;
+    }
+
+    @Override
+    public boolean isFinished() {
+        return isFinished.get();
     }
 }

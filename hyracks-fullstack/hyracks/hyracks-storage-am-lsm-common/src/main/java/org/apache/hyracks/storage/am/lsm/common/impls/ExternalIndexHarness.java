@@ -203,13 +203,13 @@ public class ExternalIndexHarness extends LSMHarness {
     }
 
     @Override
-    public void scheduleMerge(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
+    public ILSMIOOperation scheduleMerge(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
             throws HyracksDataException {
         if (!getAndEnterComponents(ctx, LSMOperationType.MERGE, true)) {
             callback.afterFinalize(LSMOperationType.MERGE, null);
-            return;
+            return null;
         }
-        lsmIndex.scheduleMerge(ctx, callback);
+        return lsmIndex.scheduleMerge(ctx, callback);
     }
 
     @Override
@@ -297,9 +297,10 @@ public class ExternalIndexHarness extends LSMHarness {
     }
 
     @Override
-    public void scheduleFlush(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
+    public ILSMIOOperation scheduleFlush(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
             throws HyracksDataException {
         callback.afterFinalize(LSMOperationType.FLUSH, null);
+        return null;
     }
 
     @Override
