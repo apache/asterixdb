@@ -117,7 +117,7 @@ public abstract class LSMBTreeFilterMergeTestDriver extends OrderedIndexTestDriv
 
                 StubIOOperationCallback stub = new StubIOOperationCallback();
                 BlockingIOOperationCallbackWrapper waiter = new BlockingIOOperationCallbackWrapper(stub);
-                accessor.scheduleFlush(waiter, null);
+                accessor.scheduleFlush(waiter);
                 waiter.waitForIO();
                 if (minMax != null) {
                     Pair<ITupleReference, ITupleReference> obsMinMax =
@@ -146,7 +146,7 @@ public abstract class LSMBTreeFilterMergeTestDriver extends OrderedIndexTestDriv
                 }
             }
             accessor.scheduleMerge(NoOpIOOperationCallbackFactory.INSTANCE.createIoOpCallback(),
-                    ((LSMBTree) ctx.getIndex()).getDiskComponents(), null);
+                    ((LSMBTree) ctx.getIndex()).getDiskComponents());
 
             flushedComponents = ((LSMBTree) ctx.getIndex()).getDiskComponents();
             Pair<ITupleReference, ITupleReference> mergedMinMax =

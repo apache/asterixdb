@@ -19,10 +19,7 @@
 
 package org.apache.hyracks.storage.am.lsm.invertedindex.impls;
 
-import java.util.List;
-
 import org.apache.hyracks.api.io.FileReference;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.common.impls.FlushOperation;
@@ -33,8 +30,8 @@ public class LSMInvertedIndexFlushOperation extends FlushOperation {
 
     public LSMInvertedIndexFlushOperation(ILSMIndexAccessor accessor, FileReference flushTarget,
             FileReference deletedKeysBTreeFlushTarget, FileReference bloomFilterFlushTarget,
-            ILSMIOOperationCallback callback, String indexIdentifier, List<ILSMIOOperation> dependingOps) {
-        super(accessor, flushTarget, callback, indexIdentifier, dependingOps);
+            ILSMIOOperationCallback callback, String indexIdentifier) {
+        super(accessor, flushTarget, callback, indexIdentifier);
         this.deletedKeysBTreeFlushTarget = deletedKeysBTreeFlushTarget;
         this.bloomFilterFlushTarget = bloomFilterFlushTarget;
     }

@@ -19,9 +19,6 @@
 
 package org.apache.asterix.common.context;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -34,7 +31,6 @@ import org.apache.asterix.common.utils.TransactionUtil;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent.ComponentState;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMemoryComponent;
@@ -145,16 +141,17 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
 
     //This method is called sequentially by LogPage.notifyFlushTerminator in the sequence flushes were scheduled.
     public synchronized void triggerScheduleFlush(LogRecord logRecord) throws HyracksDataException {
-        Set<IndexInfo> indexInfos = dsInfo.getDatsetIndexInfos();
-        for (IndexInfo iInfo : indexInfos) {
+        for (ILSMIndex lsmIndex : dsInfo.getDatasetIndexes()) {
+            //get resource
+            ILSMIndexAccessor accessor =
+                    lsmIndex.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
             //update resource lsn
             AbstractLSMIOOperationCallback ioOpCallback =
-                    (AbstractLSMIOOperationCallback) iInfo.getIndex().getIOOperationCallback();
+                    (AbstractLSMIOOperationCallback) lsmIndex.getIOOperationCallback();
             ioOpCallback.updateLastLSN(logRecord.getLSN());
+            //schedule flush after update
+            accessor.scheduleFlush(lsmIndex.getIOOperationCallback());
         }
-
-        flushDatasetIndexes(indexInfos, dsInfo.isCorrelated());
-
         flushLogCreated = false;
     }
 
@@ -199,65 +196,6 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
 
     public boolean isFlushLogCreated() {
         return flushLogCreated;
-    }
-
-    public static void flushDatasetIndexes(Set<IndexInfo> indexes, boolean correlated) throws HyracksDataException {
-        if (!correlated) {
-            // if not correlated, we simply schedule flushes of each index independently
-            for (IndexInfo iInfo : indexes) {
-                ILSMIndex lsmIndex = iInfo.getIndex();
-                //get resource
-                ILSMIndexAccessor accessor =
-                        lsmIndex.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
-                //schedule flush after update
-                accessor.scheduleFlush(lsmIndex.getIOOperationCallback(), null);
-            }
-        } else {
-            // otherwise, we need to schedule indexes properly s.t. the primary index would depend on
-            // all secondary indexes in the same partition
-
-            // collect partitions
-            Set<Integer> partitions = new HashSet<>();
-            indexes.forEach(iInfo -> partitions.add(iInfo.getPartition()));
-            for (Integer partition : partitions) {
-                flushCorrelatedDatasetIndexes(indexes, partition);
-            }
-
-        }
-    }
-
-    private static void flushCorrelatedDatasetIndexes(Set<IndexInfo> indexes, int partition)
-            throws HyracksDataException {
-        ILSMIndex primaryIndex = null;
-        List<ILSMIOOperation> flushOps = new ArrayList<>();
-        for (IndexInfo iInfo : indexes) {
-            if (iInfo.getPartition() != partition) {
-                continue;
-            }
-            ILSMIndex lsmIndex = iInfo.getIndex();
-            if (lsmIndex.isPrimaryIndex()) {
-                primaryIndex = lsmIndex;
-            } else {
-                //get resource
-                ILSMIndexAccessor accessor =
-                        lsmIndex.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
-                //schedule flush
-                ILSMIOOperation flushOp = accessor.scheduleFlush(lsmIndex.getIOOperationCallback(), null);
-                if (flushOp != null) {
-                    flushOps.add(flushOp);
-                }
-            }
-        }
-
-        if (primaryIndex != null) {
-            //get resource
-            ILSMIndexAccessor accessor =
-                    primaryIndex.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
-            //schedule flush after update
-            accessor.scheduleFlush(primaryIndex.getIOOperationCallback(), flushOps);
-
-        }
-
     }
 
 }

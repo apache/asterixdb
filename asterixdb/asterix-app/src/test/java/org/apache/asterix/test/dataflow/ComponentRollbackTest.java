@@ -132,9 +132,9 @@ public class ComponentRollbackTest {
     public void createIndex() throws Exception {
         List<List<String>> partitioningKeys = new ArrayList<>();
         partitioningKeys.add(Collections.singletonList("key"));
-        dataset = new TestDataset(DATAVERSE_NAME, DATASET_NAME, DATAVERSE_NAME, DATA_TYPE_NAME, NODE_GROUP_NAME, null,
-                null, new InternalDatasetDetails(null, PartitioningStrategy.HASH, partitioningKeys, null, null, null,
-                        false, null, false),
+        dataset = new TestDataset(DATAVERSE_NAME, DATASET_NAME, DATAVERSE_NAME, DATA_TYPE_NAME,
+                NODE_GROUP_NAME, null, null, new InternalDatasetDetails(null, PartitioningStrategy.HASH,
+                        partitioningKeys, null, null, null, false, null, false),
                 null, DatasetType.INTERNAL, DATASET_ID, 0);
         PrimaryIndexInfo primaryIndexInfo = nc.createPrimaryIndex(dataset, KEY_TYPES, RECORD_TYPE, META_TYPE,
                 new NoMergePolicyFactory(), null, null, storageManager, KEY_INDEXES, KEY_INDICATORS_LIST);
@@ -448,7 +448,7 @@ public class ComponentRollbackTest {
             for (int i = 0; i < numMergedComponents; i++) {
                 mergedComponents.add(diskComponents.get(i));
             }
-            mergeAccessor.scheduleMerge(lsmBtree.getIOOperationCallback(), mergedComponents, null);
+            mergeAccessor.scheduleMerge(lsmBtree.getIOOperationCallback(), mergedComponents);
             merger.waitUntilCount(1);
             // now that we enetered, we will rollback
             Rollerback rollerback = new Rollerback(lsmBtree, new DiskComponentLsnPredicate(lsn));
@@ -635,7 +635,7 @@ public class ComponentRollbackTest {
             for (int i = 0; i < numMergedComponents; i++) {
                 mergedComponents.add(diskComponents.get(i));
             }
-            mergeAccessor.scheduleMerge(lsmBtree.getIOOperationCallback(), mergedComponents, null);
+            mergeAccessor.scheduleMerge(lsmBtree.getIOOperationCallback(), mergedComponents);
             merger.waitUntilCount(1);
             // we will block search
             lsmBtree.clearSearchCallbacks();
@@ -707,7 +707,7 @@ public class ComponentRollbackTest {
             for (int i = 0; i < numMergedComponents; i++) {
                 mergedComponents.add(diskComponents.get(i));
             }
-            mergeAccessor.scheduleMerge(lsmBtree.getIOOperationCallback(), mergedComponents, null);
+            mergeAccessor.scheduleMerge(lsmBtree.getIOOperationCallback(), mergedComponents);
             merger.waitUntilCount(1);
             // we will block search
             lsmBtree.clearSearchCallbacks();
@@ -736,7 +736,7 @@ public class ComponentRollbackTest {
     }
 
     private class Rollerback {
-        private final Thread task;
+        private Thread task;
         private Exception failure;
 
         public Rollerback(TestLsmBtree lsmBtree, Predicate<ILSMComponent> predicate) {
@@ -766,7 +766,7 @@ public class ComponentRollbackTest {
     }
 
     private class Searcher {
-        private final ExecutorService executor = Executors.newSingleThreadExecutor();
+        private ExecutorService executor = Executors.newSingleThreadExecutor();
         private Future<Boolean> task;
         private volatile boolean entered = false;
 

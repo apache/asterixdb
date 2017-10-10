@@ -103,19 +103,17 @@ public class TestLsmBtree extends LSMBTree {
     }
 
     @Override
-    public ILSMIOOperation scheduleFlush(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
+    public void scheduleFlush(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
             throws HyracksDataException {
-        ILSMIOOperation flushOp = super.scheduleFlush(ctx, callback);
+        super.scheduleFlush(ctx, callback);
         numScheduledFlushes++;
-        return flushOp;
     }
 
     @Override
-    public ILSMIOOperation scheduleMerge(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
+    public void scheduleMerge(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
             throws HyracksDataException {
-        ILSMIOOperation mergeOp = super.scheduleMerge(ctx, callback);
+        super.scheduleMerge(ctx, callback);
         numScheduledMerges++;
-        return mergeOp;
     }
 
     @Override

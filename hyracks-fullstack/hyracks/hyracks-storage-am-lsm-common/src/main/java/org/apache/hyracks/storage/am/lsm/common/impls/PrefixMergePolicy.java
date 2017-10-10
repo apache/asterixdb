@@ -247,7 +247,7 @@ public class PrefixMergePolicy implements ILSMMergePolicy {
         Collections.reverse(mergableComponents);
         ILSMIndexAccessor accessor =
                 index.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
-        accessor.scheduleMerge(index.getIOOperationCallback(), mergableComponents, null);
+        accessor.scheduleMerge(index.getIOOperationCallback(), mergableComponents);
     }
 
     /**

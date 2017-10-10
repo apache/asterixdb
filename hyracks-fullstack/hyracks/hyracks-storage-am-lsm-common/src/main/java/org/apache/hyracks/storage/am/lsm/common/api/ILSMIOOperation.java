@@ -18,7 +18,6 @@
  */
 package org.apache.hyracks.storage.am.lsm.common.api;
 
-import java.util.List;
 import java.util.concurrent.Callable;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -64,19 +63,7 @@ public interface ILSMIOOperation extends Callable<Boolean> {
     FileReference getTarget();
 
     /**
-     * <<<<<<< HEAD
-     *
      * @return the accessor of the operation
      */
     ILSMIndexAccessor getAccessor();
-
-    /**
-     * @return whether this operation has finished
-     */
-    boolean isFinished();
-
-    /**
-     * @return a list of operations that this operation depends on
-     */
-    List<ILSMIOOperation> getDependingOps();
 }

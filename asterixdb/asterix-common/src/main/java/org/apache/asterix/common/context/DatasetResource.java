@@ -23,7 +23,6 @@ import java.util.Map;
 import org.apache.asterix.common.dataflow.DatasetLocalResource;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
-import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndex;
 import org.apache.hyracks.storage.common.IIndex;
 import org.apache.hyracks.storage.common.LocalResource;
 
@@ -96,10 +95,6 @@ public class DatasetResource implements Comparable<DatasetResource> {
                     datasetInfo.setExternal(!index.hasMemoryComponents());
                     datasetInfo.setRegistered(true);
                     datasetInfo.setDurable(((ILSMIndex) index).isDurable());
-                    //TODO use a general mechanism to set correlated property when we have more
-                    // correlated merge policies
-                    datasetInfo.setCorrelated(
-                            ((AbstractLSMIndex) index).getMergePolicy() instanceof CorrelatedPrefixMergePolicy);
                 }
             }
         }

@@ -223,7 +223,7 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
         if (iInfo.isOpen()) {
             ILSMIndexAccessor accessor =
                     iInfo.getIndex().createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
-            accessor.scheduleFlush(iInfo.getIndex().getIOOperationCallback(), null);
+            accessor.scheduleFlush(iInfo.getIndex().getIOOperationCallback());
         }
 
         // Wait for the above flush op.
@@ -417,22 +417,16 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
         }
 
         if (asyncFlush) {
-            PrimaryIndexOperationTracker.flushDatasetIndexes(dsInfo.getDatsetIndexInfos(), dsInfo.isCorrelated());
-        } else {
-            List<IndexInfo> primaryIndexes = new ArrayList<>();
             for (IndexInfo iInfo : dsInfo.getIndexes().values()) {
-                if (iInfo.getIndex().isPrimaryIndex()) {
-                    // primary indexes are flushed later to guarantee the correctness of the correlated merge policy
-                    primaryIndexes.add(iInfo);
-                } else {
-                    // TODO: This is not efficient since we flush the indexes sequentially.
-                    // Think of a way to allow submitting the flush requests concurrently.
-                    // We don't do them concurrently because this may lead to a deadlock scenario
-                    // between the DatasetLifeCycleManager and the PrimaryIndexOperationTracker.
-                    flushAndWaitForIO(dsInfo, iInfo);
-                }
+                ILSMIndexAccessor accessor =
+                        iInfo.getIndex().createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+                accessor.scheduleFlush(iInfo.getIndex().getIOOperationCallback());
             }
-            for (IndexInfo iInfo : primaryIndexes) {
+        } else {
+            for (IndexInfo iInfo : dsInfo.getIndexes().values()) {
+                // TODO: This is not efficient since we flush the indexes sequentially.
+                // Think of a way to allow submitting the flush requests concurrently. We don't do them concurrently because this
+                // may lead to a deadlock scenario between the DatasetLifeCycleManager and the PrimaryIndexOperationTracker.
                 flushAndWaitForIO(dsInfo, iInfo);
             }
         }
@@ -597,5 +591,4 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
             }
         }
     }
-
 }

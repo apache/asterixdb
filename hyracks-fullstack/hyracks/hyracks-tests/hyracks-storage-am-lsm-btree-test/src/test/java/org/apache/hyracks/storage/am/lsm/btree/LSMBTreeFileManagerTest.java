@@ -72,7 +72,7 @@ public class LSMBTreeFileManagerTest {
         accessor.insert(tuple);
 
         // Flush to generate a disk component
-        accessor.scheduleFlush(NoOpIOOperationCallbackFactory.INSTANCE.createIoOpCallback(), null);
+        accessor.scheduleFlush(NoOpIOOperationCallbackFactory.INSTANCE.createIoOpCallback());
 
         // Make sure the disk component was generated
         LSMBTree btree = (LSMBTree) ctx.getIndex();

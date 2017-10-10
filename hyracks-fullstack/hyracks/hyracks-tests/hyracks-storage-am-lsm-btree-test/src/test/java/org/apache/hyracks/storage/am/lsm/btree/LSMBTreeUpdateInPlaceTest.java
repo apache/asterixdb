@@ -109,7 +109,7 @@ public class LSMBTreeUpdateInPlaceTest extends AbstractOperationCallbackTest {
             }
 
             if (j == 1) {
-                lsmAccessor.scheduleFlush(ioOpCallback, null);
+                lsmAccessor.scheduleFlush(ioOpCallback);
                 ioOpCallback.waitForIO();
                 isFoundNull = true;
                 isUpdated = false;
@@ -124,7 +124,7 @@ public class LSMBTreeUpdateInPlaceTest extends AbstractOperationCallbackTest {
             }
 
             if (j == 1) {
-                lsmAccessor.scheduleFlush(ioOpCallback, null);
+                lsmAccessor.scheduleFlush(ioOpCallback);
                 ioOpCallback.waitForIO();
             } else {
                 isFoundNull = false;

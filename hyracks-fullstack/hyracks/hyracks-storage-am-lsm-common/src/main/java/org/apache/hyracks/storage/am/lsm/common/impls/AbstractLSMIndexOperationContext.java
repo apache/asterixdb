@@ -27,7 +27,6 @@ import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.am.common.tuples.PermutingTupleReference;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import org.apache.hyracks.storage.common.IModificationOperationCallback;
 import org.apache.hyracks.storage.common.ISearchOperationCallback;
@@ -48,7 +47,6 @@ public abstract class AbstractLSMIndexOperationContext implements ILSMIndexOpera
     protected IndexOperation op;
     protected boolean accessingComponents = false;
     protected ISearchPredicate searchPredicate;
-    protected final List<ILSMIOOperation> dependingOps;
 
     public AbstractLSMIndexOperationContext(int[] treeFields, int[] filterFields,
             IBinaryComparatorFactory[] filterCmpFactories, ISearchOperationCallback searchCallback,
@@ -58,7 +56,6 @@ public abstract class AbstractLSMIndexOperationContext implements ILSMIndexOpera
         this.componentHolder = new LinkedList<>();
         this.componentsToBeMerged = new LinkedList<>();
         this.componentsToBeReplicated = new LinkedList<>();
-        this.dependingOps = new LinkedList<>();
         if (filterFields != null) {
             indexTuple = new PermutingTupleReference(treeFields);
             filterCmp = MultiComparator.create(filterCmpFactories);
@@ -155,18 +152,5 @@ public abstract class AbstractLSMIndexOperationContext implements ILSMIndexOpera
     @Override
     public ISearchPredicate getSearchPredicate() {
         return searchPredicate;
-    }
-
-    @Override
-    public List<ILSMIOOperation> getDependingOps() {
-        return dependingOps;
-    }
-
-    @Override
-    public void setDependingOps(List<ILSMIOOperation> dependingOps) {
-        this.dependingOps.clear();
-        if (dependingOps != null) {
-            this.dependingOps.addAll(dependingOps);
-        }
     }
 }

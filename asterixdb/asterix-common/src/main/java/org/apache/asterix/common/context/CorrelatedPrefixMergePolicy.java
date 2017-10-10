@@ -31,7 +31,6 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponentId;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.common.impls.PrefixMergePolicy;
@@ -92,17 +91,14 @@ public class CorrelatedPrefixMergePolicy extends PrefixMergePolicy {
 
         Set<IndexInfo> indexInfos = datasetLifecycleManager.getDatasetInfo(datasetId).getDatsetIndexInfos();
         int partition = getIndexPartition(index, indexInfos);
-        List<ILSMIOOperation> dependingMerges = scheduleSecondaryIndexes(minID, maxID,
+        triggerScheduledMerge(minID, maxID,
                 indexInfos.stream().filter(info -> info.getPartition() == partition).collect(Collectors.toSet()));
-
-        schedulePrimaryIndex(minID, maxID, index, dependingMerges);
-
         return true;
     }
 
     /**
      * Submit merge requests for all disk components within [minID, maxID]
-     * of all of secondary indexes of a given dataset in the given partition
+     * of all indexes of a given dataset in the given partition
      *
      * @param minID
      * @param maxID
@@ -110,39 +106,17 @@ public class CorrelatedPrefixMergePolicy extends PrefixMergePolicy {
      * @param indexInfos
      * @throws HyracksDataException
      */
-    private List<ILSMIOOperation> scheduleSecondaryIndexes(long minID, long maxID, Set<IndexInfo> indexInfos)
-            throws HyracksDataException {
-        List<ILSMIOOperation> mergeOps = new ArrayList<>();
+    private void triggerScheduledMerge(long minID, long maxID, Set<IndexInfo> indexInfos) throws HyracksDataException {
         for (IndexInfo info : indexInfos) {
             ILSMIndex lsmIndex = info.getIndex();
-            List<ILSMDiskComponent> diskComponents = lsmIndex.getDiskComponents();
-            if (lsmIndex.isPrimaryIndex() || isMergeOngoing(diskComponents)) {
+
+            List<ILSMDiskComponent> immutableComponents = new ArrayList<>(lsmIndex.getDiskComponents());
+            if (isMergeOngoing(immutableComponents)) {
                 continue;
             }
-            List<ILSMDiskComponent> mergeableComponents = collectMergeableComponents(minID, maxID, diskComponents);
-            ILSMIndexAccessor accessor =
-                    lsmIndex.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
-            mergeOps.add(accessor.scheduleMerge(lsmIndex.getIOOperationCallback(), mergeableComponents, null));
-        }
-        return mergeOps;
-    }
-
-    private void schedulePrimaryIndex(long minID, long maxID, ILSMIndex primaryIndex,
-            List<ILSMIOOperation> dependingMerges) throws HyracksDataException {
-        assert primaryIndex.isPrimaryIndex();
-        List<ILSMDiskComponent> diskComponents = primaryIndex.getDiskComponents();
-        List<ILSMDiskComponent> mergeableComponents = collectMergeableComponents(minID, maxID, diskComponents);
-        ILSMIndexAccessor accessor =
-                primaryIndex.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
-        accessor.scheduleMerge(primaryIndex.getIOOperationCallback(), mergeableComponents, dependingMerges);
-    }
-
-    private List<ILSMDiskComponent> collectMergeableComponents(long minID, long maxID,
-            List<ILSMDiskComponent> diskComponents) throws HyracksDataException {
-        List<ILSMDiskComponent> mergableComponents = new ArrayList<>();
-        for (ILSMDiskComponent component : diskComponents) {
-            ILSMDiskComponentId id = component.getComponentId();
-            if (!id.notFound()) {
+            List<ILSMDiskComponent> mergableComponents = new ArrayList<>();
+            for (ILSMDiskComponent component : immutableComponents) {
+                ILSMDiskComponentId id = component.getComponentId();
                 if (id.getMinId() >= minID && id.getMaxId() <= maxID) {
                     mergableComponents.add(component);
                 }
@@ -152,8 +126,10 @@ public class CorrelatedPrefixMergePolicy extends PrefixMergePolicy {
                     break;
                 }
             }
+            ILSMIndexAccessor accessor =
+                    lsmIndex.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+            accessor.scheduleMerge(lsmIndex.getIOOperationCallback(), mergableComponents);
         }
-        return mergableComponents;
     }
 
     private int getIndexPartition(ILSMIndex index, Set<IndexInfo> indexInfos) {

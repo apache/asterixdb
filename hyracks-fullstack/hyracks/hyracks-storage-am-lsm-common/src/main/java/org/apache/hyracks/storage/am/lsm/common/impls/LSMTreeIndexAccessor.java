@@ -135,21 +135,18 @@ public class LSMTreeIndexAccessor implements ILSMIndexAccessor {
     }
 
     @Override
-    public ILSMIOOperation scheduleFlush(ILSMIOOperationCallback callback, List<ILSMIOOperation> dependingOps)
-            throws HyracksDataException {
+    public void scheduleFlush(ILSMIOOperationCallback callback) throws HyracksDataException {
         ctx.setOperation(IndexOperation.FLUSH);
-        ctx.setDependingOps(dependingOps);
-        return lsmHarness.scheduleFlush(ctx, callback);
+        lsmHarness.scheduleFlush(ctx, callback);
     }
 
     @Override
-    public ILSMIOOperation scheduleMerge(ILSMIOOperationCallback callback, List<ILSMDiskComponent> components,
-            List<ILSMIOOperation> dependingOps) throws HyracksDataException {
+    public void scheduleMerge(ILSMIOOperationCallback callback, List<ILSMDiskComponent> components)
+            throws HyracksDataException {
         ctx.setOperation(IndexOperation.MERGE);
         ctx.getComponentsToBeMerged().clear();
         ctx.getComponentsToBeMerged().addAll(components);
-        ctx.setDependingOps(dependingOps);
-        return lsmHarness.scheduleMerge(ctx, callback);
+        lsmHarness.scheduleMerge(ctx, callback);
     }
 
     @Override
