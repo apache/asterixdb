@@ -253,8 +253,8 @@ public class LSMHarness implements ILSMHarness {
                                     }
                                     break;
                                 case INACTIVE:
-                                    ITracer.check(tracer).instant(lsmIndex.toString(), "release-memory-component",
-                                            Scope.p, null);
+                                    ITracer.check(tracer).instant(c.toString(), "release-memory-component", Scope.p,
+                                            lsmIndex.toString());
                                     ((AbstractLSMMemoryComponent) c).reset();
                                     // Notify all waiting threads whenever the mutable component's has change to inactive. This is important because
                                     // even though we switched the mutable components, it is possible that the component that we just switched
