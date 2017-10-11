@@ -317,6 +317,12 @@ public class NodeControllerService implements IControllerService {
             timer.schedule(new ProfileDumpTask(ccs), 0, nodeParameters.getProfileDumpPeriod());
         }
 
+        // Start heartbeat generator.
+        heartbeatThread = new Thread(new HeartbeatTask(ccs, nodeParameters.getHeartbeatPeriod()), id + "-Heartbeat");
+        heartbeatThread.setPriority(Thread.MAX_PRIORITY);
+        heartbeatThread.setDaemon(true);
+        heartbeatThread.start();
+
         LOGGER.log(Level.INFO, "Started NodeControllerService");
         application.startupCompleted();
     }
@@ -354,12 +360,6 @@ public class NodeControllerService implements IControllerService {
                     registrationException);
             throw registrationException;
         }
-        // Start heartbeat generator.
-        heartbeatThread = new Thread(new HeartbeatTask(ccs, nodeParameters.getHeartbeatPeriod()), id + "-Heartbeat");
-        heartbeatThread.setPriority(Thread.MAX_PRIORITY);
-        heartbeatThread.setDaemon(true);
-        heartbeatThread.start();
-
         serviceCtx.setDistributedState(nodeParameters.getDistributedState());
         application.onRegisterNode();
         LOGGER.info("Registering with Cluster Controller complete");
