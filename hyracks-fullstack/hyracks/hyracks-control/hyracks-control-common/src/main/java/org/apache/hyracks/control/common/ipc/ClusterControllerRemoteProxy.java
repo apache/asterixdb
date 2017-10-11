@@ -51,8 +51,9 @@ public class ClusterControllerRemoteProxy extends ControllerRemoteProxy implemen
     }
 
     @Override
-    protected int getRetries(boolean first) {
-        return first ? clusterConnectRetries : 0;
+    protected int getMaxRetries(boolean first) {
+        // -1 == retry forever
+        return first ? clusterConnectRetries : -1;
     }
 
     @Override
@@ -104,7 +105,7 @@ public class ClusterControllerRemoteProxy extends ControllerRemoteProxy implemen
     @Override
     public void nodeHeartbeat(String id, HeartbeatData hbData) throws Exception {
         NodeHeartbeatFunction fn = new NodeHeartbeatFunction(id, hbData);
-        ensureIpcHandle().send(-1, fn, null);
+        ensureIpcHandle(0).send(-1, fn, null);
     }
 
     @Override

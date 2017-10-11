@@ -45,22 +45,25 @@ public abstract class ControllerRemoteProxy {
     }
 
     protected IIPCHandle ensureIpcHandle() throws HyracksDataException {
+        return ensureIpcHandle(getMaxRetries(ipcHandle == null));
+    }
+
+    protected IIPCHandle ensureIpcHandle(int maxRetries) throws HyracksDataException {
+        if (ipcHandle != null && ipcHandle.isConnected()) {
+            return ipcHandle;
+        }
         try {
             final boolean first = ipcHandle == null;
-            if (first || !ipcHandle.isConnected()) {
-                if (!first) {
-                    getLogger().warning("ipcHandle " + ipcHandle + " disconnected; retrying connection");
-                    eventListener.ipcHandleDisconnected(ipcHandle);
-                }
-                ipcHandle = ipc.getHandle(inetSocketAddress, getRetries(first));
-                if (ipcHandle.isConnected()) {
-                    if (first) {
-                        eventListener.ipcHandleConnected(ipcHandle);
-                    } else {
-                        getLogger().warning("ipcHandle " + ipcHandle + " restored");
-                        eventListener.ipcHandleRestored(ipcHandle);
-                    }
-                }
+            if (!first) {
+                getLogger().warning("ipcHandle " + ipcHandle + " disconnected; retrying connection");
+                eventListener.ipcHandleDisconnected(ipcHandle);
+            }
+            ipcHandle = ipc.getHandle(inetSocketAddress, maxRetries);
+            if (first) {
+                eventListener.ipcHandleConnected(ipcHandle);
+            } else {
+                getLogger().warning("ipcHandle " + ipcHandle + " restored");
+                eventListener.ipcHandleRestored(ipcHandle);
             }
         } catch (IPCException e) {
             throw HyracksDataException.create(e);
@@ -68,7 +71,12 @@ public abstract class ControllerRemoteProxy {
         return ipcHandle;
     }
 
-    protected abstract int getRetries(boolean first);
+    /**
+     * Maximum number of times to retry a failed connection attempt
+     * @param first true if the initial connection attempt (i.e. server start)
+     * @return the maximum number of retries, if any.  <0 means retry forever
+     */
+    protected abstract int getMaxRetries(boolean first);
 
     protected abstract Logger getLogger();
 

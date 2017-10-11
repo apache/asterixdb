@@ -47,6 +47,10 @@ import org.apache.commons.io.IOUtils;
 public class IPCConnectionManager {
     private static final Logger LOGGER = Logger.getLogger(IPCConnectionManager.class.getName());
 
+    // TODO(mblow): the next two could be config parameters
+    private static final int INITIAL_RETRY_DELAY_MILLIS = 100;
+    private static final int MAX_RETRY_DELAY_MILLIS = 15000;
+
     private final IPCSystem system;
 
     private final NetworkThread networkThread;
@@ -99,9 +103,10 @@ public class IPCConnectionManager {
         networkThread.selector.wakeup();
     }
 
-    IPCHandle getIPCHandle(InetSocketAddress remoteAddress, int retries) throws IOException, InterruptedException {
+    IPCHandle getIPCHandle(InetSocketAddress remoteAddress, int maxRetries) throws IOException, InterruptedException {
         IPCHandle handle;
-        int attempt = 1;
+        int retries = 0;
+        int delay = INITIAL_RETRY_DELAY_MILLIS;
         while (true) {
             synchronized (this) {
                 handle = ipcHandleMap.get(remoteAddress);
@@ -114,19 +119,11 @@ public class IPCConnectionManager {
             if (handle.waitTillConnected()) {
                 return handle;
             }
-            if (retries < 0) {
-                if (LOGGER.isLoggable(Level.INFO)) {
-                    LOGGER.info("Connection to " + remoteAddress + " failed, retrying...");
-                    attempt++;
-                    Thread.sleep(5000);
-                }
-            } else if (attempt < retries) {
-                if (LOGGER.isLoggable(Level.INFO)) {
-                    LOGGER.info("Connection to " + remoteAddress + " failed (Attempt " + attempt + " of " + retries
-                            + ")");
-                    attempt++;
-                    Thread.sleep(5000);
-                }
+            if (maxRetries < 0 || retries++ < maxRetries) {
+                LOGGER.warning("Connection to " + remoteAddress + " failed; retrying" + (maxRetries <= 0 ? ""
+                        : " (retry attempt " + retries + " of " + maxRetries + ") after " + delay + "ms"));
+                Thread.sleep(delay);
+                delay = Math.min(MAX_RETRY_DELAY_MILLIS, (int) (delay * 1.5));
             } else {
                 throw new IOException("Connection failed to " + remoteAddress);
             }
