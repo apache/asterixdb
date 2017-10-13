@@ -48,6 +48,8 @@ import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
+import org.apache.hyracks.control.nc.NCShutdownHook;
+import org.apache.hyracks.util.ExitUtil;
 
 public class GlobalRecoveryManager implements IGlobalRecoveryManager {
 
@@ -56,6 +58,7 @@ public class GlobalRecoveryManager implements IGlobalRecoveryManager {
     protected final ICCServiceContext serviceCtx;
     protected IHyracksClientConnection hcc;
     protected volatile boolean recoveryCompleted;
+    protected volatile boolean recovering;
 
     public GlobalRecoveryManager(ICCServiceContext serviceCtx, IHyracksClientConnection hcc,
             IStorageComponentProvider componentProvider) {
@@ -81,41 +84,42 @@ public class GlobalRecoveryManager implements IGlobalRecoveryManager {
     }
 
     @Override
-    public void startGlobalRecovery(ICcApplicationContext appCtx) throws HyracksDataException {
-        if (!recoveryCompleted) {
-            recover(appCtx);
+    public void startGlobalRecovery(ICcApplicationContext appCtx) {
+        if (!recoveryCompleted && !recovering) {
+            synchronized (this) {
+                if (!recovering) {
+                    recovering = true;
+                    /**
+                     * Perform recovery on a different thread to avoid deadlocks in
+                     * {@link org.apache.asterix.common.cluster.IClusterStateManager}
+                     */
+                    serviceCtx.getControllerService().getExecutor().submit(() -> {
+                        try {
+                            recover(appCtx);
+                        } catch (HyracksDataException e) {
+                            LOGGER.log(Level.SEVERE, "Global recovery failed. Shutting down...", e);
+                            ExitUtil.exit(NCShutdownHook.FAILED_TO_RECOVER_EXIT_CODE);
+                        }
+                    });
+                }
+            }
         }
     }
 
     protected void recover(ICcApplicationContext appCtx) throws HyracksDataException {
-        LOGGER.info("Starting Global Recovery");
-        MetadataTransactionContext mdTxnCtx = null;
         try {
+            LOGGER.info("Starting Global Recovery");
             MetadataManager.INSTANCE.init();
-            mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+            MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
             mdTxnCtx = doRecovery(appCtx, mdTxnCtx);
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+            recoveryCompleted = true;
+            recovering = false;
+            LOGGER.info("Global Recovery Completed. Refreshing cluster state...");
+            appCtx.getClusterStateManager().refreshState();
         } catch (Exception e) {
-            // This needs to be fixed <-- Needs to shutdown the system -->
-            /*
-             * Note: Throwing this illegal state exception will terminate this thread
-             * and feeds listeners will not be notified.
-             */
-            LOGGER.log(Level.SEVERE, "Global recovery was not completed successfully: ", e);
-            if (mdTxnCtx != null) {
-                try {
-                    MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
-                } catch (Exception e1) {
-                    LOGGER.log(Level.SEVERE, "Exception aborting metadata transaction", e1);
-                    e.addSuppressed(e1);
-                    throw new IllegalStateException(e);
-                }
-            }
             throw HyracksDataException.create(e);
         }
-        recoveryCompleted = true;
-        LOGGER.info("Global Recovery Completed");
-        appCtx.getClusterStateManager().refreshState();
     }
 
     protected MetadataTransactionContext doRecovery(ICcApplicationContext appCtx, MetadataTransactionContext mdTxnCtx)

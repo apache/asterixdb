@@ -31,6 +31,7 @@ import org.apache.hyracks.util.ThreadDumpUtil;
 public class NCShutdownHook extends Thread {
 
     public static final int FAILED_TO_STARTUP_EXIT_CODE = 2;
+    public static final int FAILED_TO_RECOVER_EXIT_CODE = 3;
     private static final Logger LOGGER = Logger.getLogger(NCShutdownHook.class.getName());
     private static final long SHUTDOWN_WAIT_TIME = 10 * 60 * 1000L;
     private final Thread watchDog;

@@ -20,19 +20,15 @@ package org.apache.asterix.common.cluster;
 
 import org.apache.asterix.common.api.IClusterEventsSubscriber;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public interface IGlobalRecoveryManager extends IClusterEventsSubscriber {
 
     /**
      * Starts the global recovery process after the cluster state has changed to ACTIVE.
      *
-     * @param appCtx
-     *            the application context
-     * @throws HyracksDataException
-     *             if the global recovery fails
+     * @param appCtx the application context
      */
-    void startGlobalRecovery(ICcApplicationContext appCtx) throws HyracksDataException;
+    void startGlobalRecovery(ICcApplicationContext appCtx);
 
     /**
      * @return true, if global recovery has been completed successfully
