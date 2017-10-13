@@ -486,7 +486,7 @@ public class OnDiskInvertedIndex implements IInPlaceInvertedIndex {
     }
 
     @Override
-    public IIndexAccessor createAccessor(IModificationOperationCallback modificationCallback,
+    public OnDiskInvertedIndexAccessor createAccessor(IModificationOperationCallback modificationCallback,
             ISearchOperationCallback searchCallback) throws HyracksDataException {
         return new OnDiskInvertedIndexAccessor(this);
     }
@@ -554,7 +554,7 @@ public class OnDiskInvertedIndex implements IInPlaceInvertedIndex {
         PermutingTupleReference tokenTuple = new PermutingTupleReference(fieldPermutation);
 
         IInvertedIndexAccessor invIndexAccessor =
-                (IInvertedIndexAccessor) createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+                createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
         IInvertedListCursor invListCursor = invIndexAccessor.createInvertedListCursor();
         MultiComparator invListCmp = MultiComparator.create(invListCmpFactories);
 

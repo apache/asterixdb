@@ -62,7 +62,7 @@ public class LSMBuddyBTreeMergeCursor extends LSMIndexSearchCursor {
             ILSMComponent component = operationalComponents.get(i);
             IBTreeLeafFrame leafFrame = (IBTreeLeafFrame) lsmInitialState.getBuddyBTreeLeafFrameFactory().createFrame();
             rangeCursors[i] = new BTreeRangeSearchCursor(leafFrame, false);
-            BTree buddyBtree = ((LSMBTreeWithBuddyDiskComponent) component).getBuddyBTree();
+            BTree buddyBtree = ((LSMBTreeWithBuddyDiskComponent) component).getBuddyIndex();
             btreeAccessors[i] =
                     buddyBtree.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
             btreeAccessors[i].search(rangeCursors[i], btreePredicate);

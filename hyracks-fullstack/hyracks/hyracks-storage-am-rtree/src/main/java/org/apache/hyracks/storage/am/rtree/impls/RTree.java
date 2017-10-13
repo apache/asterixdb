@@ -756,12 +756,12 @@ public class RTree extends AbstractTreeIndex {
     }
 
     @Override
-    public ITreeIndexAccessor createAccessor(IModificationOperationCallback modificationCallback,
+    public RTreeAccessor createAccessor(IModificationOperationCallback modificationCallback,
             ISearchOperationCallback searchCallback) {
         return new RTreeAccessor(this, modificationCallback, searchCallback);
     }
 
-    public ITreeIndexAccessor createAccessor(IModificationOperationCallback modificationCallback,
+    public RTreeAccessor createAccessor(IModificationOperationCallback modificationCallback,
                                              ISearchOperationCallback searchCallback, int[] nonIndexFields) {
         return new RTreeAccessor(this, modificationCallback, searchCallback, nonIndexFields);
     }
@@ -807,7 +807,7 @@ public class RTree extends AbstractTreeIndex {
         }
 
         @Override
-        public ITreeIndexCursor createSearchCursor(boolean exclusive) {
+        public RTreeSearchCursor createSearchCursor(boolean exclusive) {
             return new RTreeSearchCursor((IRTreeInteriorFrame) interiorFrameFactory.createFrame(),
                     (IRTreeLeafFrame) leafFrameFactory.createFrame());
         }

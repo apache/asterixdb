@@ -22,6 +22,7 @@ package org.apache.hyracks.storage.am.lsm.rtree.impls;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.lsm.common.api.IComponentFilterHelper;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponentFactory;
+import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
 import org.apache.hyracks.storage.am.lsm.common.impls.TreeIndexFactory;
 import org.apache.hyracks.storage.am.rtree.impls.RTree;
@@ -37,8 +38,10 @@ public class LSMRTreeWithAntiMatterTuplesDiskComponentFactory implements ILSMDis
     }
 
     @Override
-    public LSMRTreeDiskComponent createComponent(LSMComponentFileReferences cfr) throws HyracksDataException {
-        return new LSMRTreeDiskComponent(rtreeFactory.createIndexInstance(cfr.getInsertIndexFileReference()), null,
-                null, filterHelper == null ? null : filterHelper.createFilter());
+    public LSMRTreeWithAntimatterDiskComponent createComponent(AbstractLSMIndex lsmIndex,
+            LSMComponentFileReferences cfr) throws HyracksDataException {
+        return new LSMRTreeWithAntimatterDiskComponent(lsmIndex,
+                rtreeFactory.createIndexInstance(cfr.getInsertIndexFileReference()),
+                filterHelper == null ? null : filterHelper.createFilter());
     }
 }

@@ -61,7 +61,7 @@ public class LSMRTreeDeletedKeysBTreeMergeCursor extends LSMIndexSearchCursor {
             ILSMComponent component = operationalComponents.get(i);
             IBTreeLeafFrame leafFrame = (IBTreeLeafFrame) lsmInitialState.getBTreeLeafFrameFactory().createFrame();
             rangeCursors[i] = new BTreeRangeSearchCursor(leafFrame, false);
-            BTree btree = ((LSMRTreeDiskComponent) component).getBTree();
+            BTree btree = ((LSMRTreeDiskComponent) component).getBuddyIndex();
             btreeAccessors[i] = btree.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
             btreeAccessors[i].search(rangeCursors[i], btreePredicate);
         }

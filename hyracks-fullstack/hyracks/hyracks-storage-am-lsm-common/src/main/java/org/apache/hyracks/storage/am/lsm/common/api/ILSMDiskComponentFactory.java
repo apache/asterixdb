@@ -19,6 +19,7 @@
 package org.apache.hyracks.storage.am.lsm.common.api;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
 
 @FunctionalInterface
@@ -32,5 +33,6 @@ public interface ILSMDiskComponentFactory {
      * @return a disk component
      * @throws HyracksDataException
      */
-    ILSMDiskComponent createComponent(LSMComponentFileReferences cfr) throws HyracksDataException;
+    ILSMDiskComponent createComponent(AbstractLSMIndex lsmIndex, LSMComponentFileReferences cfr)
+            throws HyracksDataException;
 }

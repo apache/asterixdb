@@ -19,7 +19,6 @@
 
 package org.apache.hyracks.storage.am.lsm.btree.impls;
 
-import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.btree.impls.BTree;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilter;
 import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
@@ -29,23 +28,13 @@ public class LSMBTreeMemoryComponent extends AbstractLSMMemoryComponent {
 
     private final BTree btree;
 
-    public LSMBTreeMemoryComponent(BTree btree, IVirtualBufferCache vbc, boolean isActive,
-            ILSMComponentFilter filter) {
+    public LSMBTreeMemoryComponent(BTree btree, IVirtualBufferCache vbc, boolean isActive, ILSMComponentFilter filter) {
         super(vbc, isActive, filter);
         this.btree = btree;
     }
 
-    public BTree getBTree() {
+    @Override
+    public BTree getIndex() {
         return btree;
     }
-
-    @Override
-    public void reset() throws HyracksDataException {
-        super.reset();
-        btree.deactivate();
-        btree.destroy();
-        btree.create();
-        btree.activate();
-    }
-
 }

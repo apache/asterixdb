@@ -33,6 +33,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent.LSMComponentType;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMHarness;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
+import org.apache.hyracks.storage.am.lsm.common.api.AbstractLSMWithBuddyDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.impls.BloomFilterAwareBTreePointSearchCursor;
 import org.apache.hyracks.storage.common.ICursorInitialState;
 import org.apache.hyracks.storage.common.ISearchPredicate;
@@ -104,26 +105,26 @@ public abstract class LSMBTreeWithBuddyAbstractCursor implements ITreeIndexCurso
                 } else {
                     buddyBtreeCursors[i].reset();
                 }
-                btree = ((LSMBTreeWithBuddyMemoryComponent) component).getBTree();
-                buddyBtree = ((LSMBTreeWithBuddyMemoryComponent) component).getBuddyBTree();
+                btree = ((LSMBTreeWithBuddyMemoryComponent) component).getIndex();
+                buddyBtree = ((LSMBTreeWithBuddyMemoryComponent) component).getBuddyIndex();
             } else {
                 if (buddyBtreeCursors[i] == null || !buddyBtreeCursors[i].isBloomFilterAware()) {
                     buddyBtreeCursors[i] = new BloomFilterAwareBTreePointSearchCursor(
                             (IBTreeLeafFrame) lsmInitialState.getBuddyBTreeLeafFrameFactory().createFrame(), false,
-                            ((LSMBTreeWithBuddyDiskComponent) operationalComponents.get(i)).getBloomFilter());
+                            ((AbstractLSMWithBuddyDiskComponent) operationalComponents.get(i)).getBloomFilter());
                 } else {
                     buddyBtreeCursors[i].reset();
                 }
-                btree = ((LSMBTreeWithBuddyDiskComponent) component).getBTree();
-                buddyBtree = ((LSMBTreeWithBuddyDiskComponent) component).getBuddyBTree();
+                btree = (BTree) component.getIndex();
+                buddyBtree = (BTree) ((AbstractLSMWithBuddyDiskComponent) component).getBuddyIndex();
             }
             IBTreeLeafFrame leafFrame = (IBTreeLeafFrame) lsmInitialState.getBTreeLeafFrameFactory().createFrame();
             if (btreeAccessors[i] == null) {
                 btreeCursors[i] = new BTreeRangeSearchCursor(leafFrame, false);
-                btreeAccessors[i] = (BTreeAccessor) btree.createAccessor(NoOpOperationCallback.INSTANCE,
-                        NoOpOperationCallback.INSTANCE);
-                buddyBtreeAccessors[i] = (BTreeAccessor) buddyBtree.createAccessor(NoOpOperationCallback.INSTANCE,
-                        NoOpOperationCallback.INSTANCE);
+                btreeAccessors[i] =
+                        btree.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+                buddyBtreeAccessors[i] =
+                        buddyBtree.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
             } else {
                 btreeCursors[i].reset();
                 btreeAccessors[i].reset(btree, NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);

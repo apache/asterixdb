@@ -37,7 +37,7 @@ public class LSMInvertedIndexIOOperationCallback extends AbstractLSMIOOperationC
         if (diskComponentFilePath.endsWith(LSMInvertedIndexFileManager.DELETED_KEYS_BTREE_SUFFIX)) {
             LSMInvertedIndexDiskComponent invIndexComponent = (LSMInvertedIndexDiskComponent) diskComponent;
             IMetadataPageManager metadataPageManager =
-                    (IMetadataPageManager) invIndexComponent.getDeletedKeysBTree().getPageManager();
+                    (IMetadataPageManager) invIndexComponent.getBuddyIndex().getPageManager();
             return metadataPageManager.getFileOffset(metadataPageManager.createMetadataFrame(), LSN_KEY);
         }
         return INVALID;

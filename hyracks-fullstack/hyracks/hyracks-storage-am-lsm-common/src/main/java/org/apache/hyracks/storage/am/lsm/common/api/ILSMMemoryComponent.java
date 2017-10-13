@@ -65,7 +65,7 @@ public interface ILSMMemoryComponent extends ILSMComponent {
     /**
      * request the component to be active
      */
-    void activate();
+    void requestActivation();
 
     /**
      * Set the component state
@@ -74,4 +74,31 @@ public interface ILSMMemoryComponent extends ILSMComponent {
      *            the new state
      */
     void setState(ComponentState state);
+
+    /**
+     * Allocates memory to this component, create and activate it
+     *
+     * @throws HyracksDataException
+     */
+    void allocate() throws HyracksDataException;
+
+    /**
+     * Deactivete the memory component, destroy it, and deallocates its memory
+     *
+     * @throws HyracksDataException
+     */
+    void deallocate() throws HyracksDataException;
+
+    /**
+     * Test method
+     * TODO: Get rid of it
+     *
+     * @throws HyracksDataException
+     */
+    void validate() throws HyracksDataException;
+
+    /**
+     * @return the size of the memory component
+     */
+    long getSize();
 }

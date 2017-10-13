@@ -24,6 +24,7 @@ import org.apache.hyracks.storage.am.bloomfilter.impls.BloomFilterFactory;
 import org.apache.hyracks.storage.am.btree.impls.BTree;
 import org.apache.hyracks.storage.am.lsm.common.api.IComponentFilterHelper;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponentFactory;
+import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
 import org.apache.hyracks.storage.am.lsm.common.impls.TreeIndexFactory;
 import org.apache.hyracks.storage.am.lsm.invertedindex.ondisk.OnDiskInvertedIndexFactory;
@@ -44,8 +45,9 @@ public class LSMInvertedIndexDiskComponentFactory implements ILSMDiskComponentFa
     }
 
     @Override
-    public LSMInvertedIndexDiskComponent createComponent(LSMComponentFileReferences cfr) throws HyracksDataException {
-        return new LSMInvertedIndexDiskComponent(
+    public LSMInvertedIndexDiskComponent createComponent(AbstractLSMIndex lsmIndex, LSMComponentFileReferences cfr)
+            throws HyracksDataException {
+        return new LSMInvertedIndexDiskComponent(lsmIndex,
                 diskInvIndexFactory.createIndexInstance(cfr.getInsertIndexFileReference()),
                 btreeFactory.createIndexInstance(cfr.getDeleteIndexFileReference()),
                 bloomFilterFactory.createBloomFiltertInstance(cfr.getBloomFilterFileReference()),

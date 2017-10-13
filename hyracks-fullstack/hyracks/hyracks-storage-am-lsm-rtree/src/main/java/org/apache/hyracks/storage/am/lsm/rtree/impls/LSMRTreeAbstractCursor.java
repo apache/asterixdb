@@ -110,8 +110,8 @@ public abstract class LSMRTreeAbstractCursor implements ITreeIndexCursor {
                     //re-use
                     btreeCursors[i].reset();
                 }
-                rtree = ((LSMRTreeMemoryComponent) component).getRTree();
-                btree = ((LSMRTreeMemoryComponent) component).getBTree();
+                rtree = ((LSMRTreeMemoryComponent) component).getIndex();
+                btree = ((LSMRTreeMemoryComponent) component).getBuddyIndex();
             } else {
                 if (btreeCursors[i] == null || !btreeCursors[i].isBloomFilterAware()) {
                     // need to create a new one
@@ -124,8 +124,8 @@ public abstract class LSMRTreeAbstractCursor implements ITreeIndexCursor {
                             .resetBloomFilter(((LSMRTreeDiskComponent) operationalComponents.get(i)).getBloomFilter());
                     btreeCursors[i].reset();
                 }
-                rtree = ((LSMRTreeDiskComponent) component).getRTree();
-                btree = ((LSMRTreeDiskComponent) component).getBTree();
+                rtree = ((LSMRTreeDiskComponent) component).getIndex();
+                btree = ((LSMRTreeDiskComponent) component).getBuddyIndex();
             }
             if (rtreeCursors[i] == null) {
                 rtreeCursors[i] = new RTreeSearchCursor(
@@ -135,10 +135,10 @@ public abstract class LSMRTreeAbstractCursor implements ITreeIndexCursor {
                 rtreeCursors[i].reset();
             }
             if (rtreeAccessors[i] == null) {
-                rtreeAccessors[i] = (RTreeAccessor) rtree.createAccessor(NoOpOperationCallback.INSTANCE,
-                        NoOpOperationCallback.INSTANCE);
-                btreeAccessors[i] = (BTreeAccessor) btree.createAccessor(NoOpOperationCallback.INSTANCE,
-                        NoOpOperationCallback.INSTANCE);
+                rtreeAccessors[i] =
+                        rtree.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+                btreeAccessors[i] =
+                        btree.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
             } else {
                 rtreeAccessors[i].reset(rtree, NoOpOperationCallback.INSTANCE);
                 btreeAccessors[i].reset(btree, NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);

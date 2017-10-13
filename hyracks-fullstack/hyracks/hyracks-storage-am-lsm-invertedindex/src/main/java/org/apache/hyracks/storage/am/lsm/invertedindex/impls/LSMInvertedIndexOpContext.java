@@ -28,8 +28,6 @@ import org.apache.hyracks.storage.am.common.tuples.PermutingTupleReference;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMemoryComponent;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexOperationContext;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexAccessor;
-import org.apache.hyracks.storage.am.lsm.invertedindex.inmemory.InMemoryInvertedIndex;
-import org.apache.hyracks.storage.am.lsm.invertedindex.inmemory.InMemoryInvertedIndexAccessor;
 import org.apache.hyracks.storage.common.IIndexAccessor;
 import org.apache.hyracks.storage.common.IModificationOperationCallback;
 import org.apache.hyracks.storage.common.ISearchOperationCallback;
@@ -58,19 +56,17 @@ public class LSMInvertedIndexOpContext extends AbstractLSMIndexOperationContext 
             LSMInvertedIndexMemoryComponent mutableComponent =
                     (LSMInvertedIndexMemoryComponent) mutableComponents.get(i);
             if (allFields != null) {
-                mutableInvIndexAccessors[i] = (IInvertedIndexAccessor) ((InMemoryInvertedIndex) mutableComponent
-                        .getInvIndex()).createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE,
-                                allFields);
+                mutableInvIndexAccessors[i] = mutableComponent.getIndex().createAccessor(allFields);
             } else {
-                mutableInvIndexAccessors[i] = (IInvertedIndexAccessor) mutableComponent.getInvIndex()
-                        .createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+                mutableInvIndexAccessors[i] = mutableComponent.getIndex().createAccessor(NoOpOperationCallback.INSTANCE,
+                        NoOpOperationCallback.INSTANCE);
             }
-            deletedKeysBTreeAccessors[i] = mutableComponent.getDeletedKeysBTree()
+            deletedKeysBTreeAccessors[i] = mutableComponent.getBuddyIndex()
                     .createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
         }
         // Project away the document fields, leaving only the key fields.
         LSMInvertedIndexMemoryComponent c = (LSMInvertedIndexMemoryComponent) mutableComponents.get(0);
-        int numKeyFields = c.getInvIndex().getInvListTypeTraits().length;
+        int numKeyFields = c.getIndex().getInvListTypeTraits().length;
         int[] keyFieldPermutation = new int[numKeyFields];
         for (int i = 0; i < numKeyFields; i++) {
             keyFieldPermutation[i] = NUM_DOCUMENT_FIELDS + i;

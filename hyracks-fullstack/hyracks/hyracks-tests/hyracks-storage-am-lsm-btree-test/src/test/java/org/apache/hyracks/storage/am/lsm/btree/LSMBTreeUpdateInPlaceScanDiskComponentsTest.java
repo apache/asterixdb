@@ -48,10 +48,10 @@ import org.apache.hyracks.storage.am.common.TestOperationCallback;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexCursor;
 import org.apache.hyracks.storage.am.config.AccessMethodTestsConfig;
 import org.apache.hyracks.storage.am.lsm.btree.impls.LSMBTree;
-import org.apache.hyracks.storage.am.lsm.btree.impls.LSMBTreeDiskComponent;
 import org.apache.hyracks.storage.am.lsm.btree.tuples.LSMBTreeTupleReference;
 import org.apache.hyracks.storage.am.lsm.btree.util.LSMBTreeTestContext;
 import org.apache.hyracks.storage.am.lsm.btree.util.LSMBTreeTestHarness;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.common.impls.NoOpIOOperationCallbackFactory;
 import org.apache.hyracks.storage.common.IIndexCursor;
@@ -172,8 +172,9 @@ public class LSMBTreeUpdateInPlaceScanDiskComponentsTest extends OrderedIndexTes
             (IIndexTestContext ctx, ITupleReference tuple, UpdatedCheckTuple checkTuple) -> {
                 ctx.getIndexAccessor().delete(tuple);
                 // Remove check tuple from expected results.
-                if (!checkTuples.contains(checkTuple))
+                if (!checkTuples.contains(checkTuple)) {
                     fail("Trying to delete tuple " + checkTuple + " that does not exist");
+                }
                 checkTuple.setUpdated(!checkTuple.isUpdated());
                 checkTuple.setAntimatter(true);
             };
@@ -272,8 +273,9 @@ public class LSMBTreeUpdateInPlaceScanDiskComponentsTest extends OrderedIndexTes
             // Copy CheckTuple references into array, so we can randomly pick from there.
             UpdatedCheckTuple[] checkTuplesArray = new UpdatedCheckTuple[numCheckTuples];
             int idx = 0;
-            for (UpdatedCheckTuple t : checkTuples)
+            for (UpdatedCheckTuple t : checkTuples) {
                 checkTuplesArray[idx++] = t;
+            }
 
             for (int i = 0; i < numTuples && numCheckTuples > 0; i++) {
                 if (LOGGER.isLoggable(Level.INFO)) {
@@ -357,8 +359,8 @@ public class LSMBTreeUpdateInPlaceScanDiskComponentsTest extends OrderedIndexTes
         LSMBTree btree = (LSMBTree) ctx.getIndex();
         Assert.assertEquals("Check disk components", 1, btree.getDiskComponents().size());
 
-        LSMBTreeDiskComponent btreeComponent = (LSMBTreeDiskComponent) btree.getDiskComponents().get(0);
-        BTree.BTreeAccessor btreeAccessor = (BTree.BTreeAccessor) btreeComponent.getBTree()
+        ILSMDiskComponent btreeComponent = btree.getDiskComponents().get(0);
+        BTree.BTreeAccessor btreeAccessor = ((BTree) btreeComponent.getIndex())
                 .createAccessor(TestOperationCallback.INSTANCE, TestOperationCallback.INSTANCE);
 
         ITreeIndexCursor cursor = btreeAccessor.createDiskOrderScanCursor();

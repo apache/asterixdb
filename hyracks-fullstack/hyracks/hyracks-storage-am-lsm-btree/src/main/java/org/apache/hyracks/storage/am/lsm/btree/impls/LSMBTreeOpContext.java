@@ -66,29 +66,29 @@ public final class LSMBTreeOpContext extends AbstractLSMIndexOperationContext {
             ILSMHarness lsmHarness, IBinaryComparatorFactory[] filterCmpFactories) {
         super(btreeFields, filterFields, filterCmpFactories, searchCallback, modificationCallback);
         LSMBTreeMemoryComponent c = (LSMBTreeMemoryComponent) mutableComponents.get(0);
-        IBinaryComparatorFactory cmpFactories[] = c.getBTree().getComparatorFactories();
+        IBinaryComparatorFactory cmpFactories[] = c.getIndex().getComparatorFactories();
         if (cmpFactories[0] != null) {
-            this.cmp = MultiComparator.create(c.getBTree().getComparatorFactories());
+            this.cmp = MultiComparator.create(c.getIndex().getComparatorFactories());
         } else {
             this.cmp = null;
         }
 
         bloomFilterCmp = numBloomFilterKeyFields == 0 ? null
-                : MultiComparator.create(c.getBTree().getComparatorFactories(), 0, numBloomFilterKeyFields);
+                : MultiComparator.create(c.getIndex().getComparatorFactories(), 0, numBloomFilterKeyFields);
 
         mutableBTrees = new BTree[mutableComponents.size()];
         mutableBTreeAccessors = new BTree.BTreeAccessor[mutableComponents.size()];
         mutableBTreeOpCtxs = new BTreeOpContext[mutableComponents.size()];
         for (int i = 0; i < mutableComponents.size(); i++) {
             LSMBTreeMemoryComponent mutableComponent = (LSMBTreeMemoryComponent) mutableComponents.get(i);
-            mutableBTrees[i] = mutableComponent.getBTree();
+            mutableBTrees[i] = mutableComponent.getIndex();
             if (allFields != null) {
-                mutableBTreeAccessors[i] = (BTree.BTreeAccessor) mutableBTrees[i].createAccessor(modificationCallback,
+                mutableBTreeAccessors[i] = mutableBTrees[i].createAccessor(modificationCallback,
                         NoOpOperationCallback.INSTANCE, allFields);
             } else {
 
-                mutableBTreeAccessors[i] = (BTree.BTreeAccessor) mutableBTrees[i].createAccessor(modificationCallback,
-                        NoOpOperationCallback.INSTANCE);
+                mutableBTreeAccessors[i] =
+                        mutableBTrees[i].createAccessor(modificationCallback, NoOpOperationCallback.INSTANCE);
             }
             mutableBTreeOpCtxs[i] = mutableBTreeAccessors[i].getOpContext();
         }

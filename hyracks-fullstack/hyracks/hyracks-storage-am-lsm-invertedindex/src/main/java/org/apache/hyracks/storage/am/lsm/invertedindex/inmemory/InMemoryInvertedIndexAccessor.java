@@ -51,8 +51,8 @@ public class InMemoryInvertedIndexAccessor implements IInvertedIndexAccessor {
         this.opCtx = opCtx;
         this.index = index;
         this.searcher = createSearcher();
-        this.btreeAccessor = (BTreeAccessor) index.getBTree().createAccessor(NoOpOperationCallback.INSTANCE,
-                NoOpOperationCallback.INSTANCE);
+        this.btreeAccessor =
+                index.getBTree().createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
     }
 
     public InMemoryInvertedIndexAccessor(InMemoryInvertedIndex index, IIndexOperationContext opCtx,
@@ -60,7 +60,7 @@ public class InMemoryInvertedIndexAccessor implements IInvertedIndexAccessor {
         this.opCtx = opCtx;
         this.index = index;
         this.searcher = createSearcher();
-        this.btreeAccessor = (BTreeAccessor) index.getBTree().createAccessor(NoOpOperationCallback.INSTANCE,
+        this.btreeAccessor = index.getBTree().createAccessor(NoOpOperationCallback.INSTANCE,
                 NoOpOperationCallback.INSTANCE, nonIndexFields);
     }
 

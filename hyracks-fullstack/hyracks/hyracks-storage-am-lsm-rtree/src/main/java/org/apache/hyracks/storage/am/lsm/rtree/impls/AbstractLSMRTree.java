@@ -42,7 +42,6 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexFileManager;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMMemoryComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
@@ -66,10 +65,6 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
     protected final IBinaryComparatorFactory[] linearizerArray;
     protected final boolean isPointMBR;
 
-    // On-disk components.
-    // For creating RTree's used in flush and merge.
-    protected final ILSMDiskComponentFactory componentFactory;
-
     protected IBinaryComparatorFactory[] btreeCmpFactories;
     protected IBinaryComparatorFactory[] rtreeCmpFactories;
 
@@ -82,17 +77,18 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
     public AbstractLSMRTree(IIOManager ioManager, List<IVirtualBufferCache> virtualBufferCaches,
             RTreeFrameFactory rtreeInteriorFrameFactory, RTreeFrameFactory rtreeLeafFrameFactory,
             ITreeIndexFrameFactory btreeInteriorFrameFactory, ITreeIndexFrameFactory btreeLeafFrameFactory,
-            ILSMIndexFileManager fileManager, ILSMDiskComponentFactory componentFactory, int fieldCount,
+            IBufferCache diskBufferCache, ILSMIndexFileManager fileManager, ILSMDiskComponentFactory componentFactory,
+            ILSMDiskComponentFactory bulkLoadComponentFactory, int fieldCount,
             IBinaryComparatorFactory[] rtreeCmpFactories, IBinaryComparatorFactory[] btreeCmpFactories,
             ILinearizeComparatorFactory linearizer, int[] comparatorFields, IBinaryComparatorFactory[] linearizerArray,
             double bloomFilterFalsePositiveRate, ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker,
             ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallback ioOpCallback,
             IComponentFilterHelper filterHelper, ILSMComponentFilterFrameFactory filterFrameFactory,
             LSMComponentFilterManager filterManager, int[] rtreeFields, int[] filterFields, boolean durable,
-            boolean isPointMBR, IBufferCache diskBufferCache) throws HyracksDataException {
+            boolean isPointMBR) throws HyracksDataException {
         super(ioManager, virtualBufferCaches, diskBufferCache, fileManager, bloomFilterFalsePositiveRate, mergePolicy,
-                opTracker, ioScheduler, ioOpCallback, filterFrameFactory, filterManager, filterFields, durable,
-                filterHelper, rtreeFields, ITracer.NONE);
+                opTracker, ioScheduler, ioOpCallback, componentFactory, bulkLoadComponentFactory, filterFrameFactory,
+                filterManager, filterFields, durable, filterHelper, rtreeFields, ITracer.NONE);
         int i = 0;
         for (IVirtualBufferCache virtualBufferCache : virtualBufferCaches) {
             RTree memRTree = new RTree(virtualBufferCache, new VirtualFreePageManager(virtualBufferCache),
@@ -112,7 +108,6 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
         this.rtreeLeafFrameFactory = rtreeLeafFrameFactory;
         this.btreeInteriorFrameFactory = btreeInteriorFrameFactory;
         this.btreeLeafFrameFactory = btreeLeafFrameFactory;
-        this.componentFactory = componentFactory;
         this.btreeCmpFactories = btreeCmpFactories;
         this.rtreeCmpFactories = rtreeCmpFactories;
         this.linearizer = linearizer;
@@ -126,19 +121,19 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
      */
     public AbstractLSMRTree(IIOManager ioManager, ITreeIndexFrameFactory rtreeInteriorFrameFactory,
             ITreeIndexFrameFactory rtreeLeafFrameFactory, ITreeIndexFrameFactory btreeInteriorFrameFactory,
-            ITreeIndexFrameFactory btreeLeafFrameFactory, ILSMIndexFileManager fileManager,
-            ILSMDiskComponentFactory componentFactory, IBinaryComparatorFactory[] rtreeCmpFactories,
-            IBinaryComparatorFactory[] btreeCmpFactories, ILinearizeComparatorFactory linearizer,
-            int[] comparatorFields, IBinaryComparatorFactory[] linearizerArray, double bloomFilterFalsePositiveRate,
-            ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler,
-            ILSMIOOperationCallback ioOpCallback, boolean durable, boolean isPointMBR, IBufferCache diskBufferCache) {
+            ITreeIndexFrameFactory btreeLeafFrameFactory, IBufferCache diskBufferCache,
+            ILSMIndexFileManager fileManager, ILSMDiskComponentFactory componentFactory,
+            IBinaryComparatorFactory[] rtreeCmpFactories, IBinaryComparatorFactory[] btreeCmpFactories,
+            ILinearizeComparatorFactory linearizer, int[] comparatorFields, IBinaryComparatorFactory[] linearizerArray,
+            double bloomFilterFalsePositiveRate, ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker,
+            ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallback ioOpCallback, boolean durable,
+            boolean isPointMBR) {
         super(ioManager, diskBufferCache, fileManager, bloomFilterFalsePositiveRate, mergePolicy, opTracker,
-                ioScheduler, ioOpCallback, durable);
+                ioScheduler, ioOpCallback, componentFactory, componentFactory, durable);
         this.rtreeInteriorFrameFactory = rtreeInteriorFrameFactory;
         this.rtreeLeafFrameFactory = rtreeLeafFrameFactory;
         this.btreeInteriorFrameFactory = btreeInteriorFrameFactory;
         this.btreeLeafFrameFactory = btreeLeafFrameFactory;
-        this.componentFactory = componentFactory;
         this.btreeCmpFactories = btreeCmpFactories;
         this.rtreeCmpFactories = rtreeCmpFactories;
         this.linearizer = linearizer;
@@ -154,71 +149,46 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
         cursor.open(ctx.getSearchInitialState(), pred);
     }
 
-    protected LSMRTreeDiskComponent createDiskComponent(ILSMDiskComponentFactory factory, FileReference insertFileRef,
-            FileReference deleteFileRef, FileReference bloomFilterFileRef, boolean createComponent)
-            throws HyracksDataException {
-        // Create new tree instance.
-        LSMRTreeDiskComponent component = (LSMRTreeDiskComponent) factory
-                .createComponent(new LSMComponentFileReferences(insertFileRef, deleteFileRef, bloomFilterFileRef));
-        // Tree will be closed during cleanup of merge().
-        if (createComponent) {
-            component.getRTree().create();
-        }
-        component.getRTree().activate();
-        if (component.getBTree() != null) {
-            if (createComponent) {
-                component.getBTree().create();
-                component.getBloomFilter().create();
-            }
-            component.getBTree().activate();
-            component.getBloomFilter().activate();
-        }
-        if (component.getLSMComponentFilter() != null && !createComponent) {
-            getFilterManager().readFilter(component.getLSMComponentFilter(), component.getRTree());
-        }
-        return component;
-    }
-
     @Override
     public ITreeIndexFrameFactory getLeafFrameFactory() {
         LSMRTreeMemoryComponent mutableComponent =
                 (LSMRTreeMemoryComponent) memoryComponents.get(currentMutableComponentId.get());
-        return mutableComponent.getRTree().getLeafFrameFactory();
+        return mutableComponent.getIndex().getLeafFrameFactory();
     }
 
     @Override
     public ITreeIndexFrameFactory getInteriorFrameFactory() {
         LSMRTreeMemoryComponent mutableComponent =
                 (LSMRTreeMemoryComponent) memoryComponents.get(currentMutableComponentId.get());
-        return mutableComponent.getRTree().getInteriorFrameFactory();
+        return mutableComponent.getIndex().getInteriorFrameFactory();
     }
 
     @Override
     public IPageManager getPageManager() {
         LSMRTreeMemoryComponent mutableComponent =
                 (LSMRTreeMemoryComponent) memoryComponents.get(currentMutableComponentId.get());
-        return mutableComponent.getRTree().getPageManager();
+        return mutableComponent.getIndex().getPageManager();
     }
 
     @Override
     public int getFieldCount() {
         LSMRTreeMemoryComponent mutableComponent =
                 (LSMRTreeMemoryComponent) memoryComponents.get(currentMutableComponentId.get());
-        return mutableComponent.getRTree().getFieldCount();
+        return mutableComponent.getIndex().getFieldCount();
     }
 
     @Override
     public int getRootPageId() {
         LSMRTreeMemoryComponent mutableComponent =
                 (LSMRTreeMemoryComponent) memoryComponents.get(currentMutableComponentId.get());
-        return mutableComponent.getRTree().getRootPageId();
+        return mutableComponent.getIndex().getRootPageId();
     }
 
     @Override
     public int getFileId() {
         LSMRTreeMemoryComponent mutableComponent =
                 (LSMRTreeMemoryComponent) memoryComponents.get(currentMutableComponentId.get());
-        return mutableComponent.getRTree().getFileId();
+        return mutableComponent.getIndex().getFileId();
     }
 
     @Override
@@ -272,60 +242,15 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
     }
 
     @Override
-    protected void validateMemoryComponent(ILSMMemoryComponent c) throws HyracksDataException {
-        throw new UnsupportedOperationException("Validation not implemented for LSM R-Trees.");
-    }
-
-    @Override
-    protected void validateDiskComponent(ILSMDiskComponent c) throws HyracksDataException {
-        throw new UnsupportedOperationException("Validation not implemented for LSM R-Trees.");
-    }
-
-    @Override
-    protected long getMemoryComponentSize(ILSMMemoryComponent c) {
-        LSMRTreeMemoryComponent mutableComponent = (LSMRTreeMemoryComponent) c;
-        IBufferCache virtualBufferCache = mutableComponent.getRTree().getBufferCache();
-        return virtualBufferCache.getNumPages() * (long) virtualBufferCache.getPageSize();
-    }
-
-    @Override
     public boolean isPrimaryIndex() {
         return false;
     }
 
     @Override
-    protected void allocateMemoryComponent(ILSMMemoryComponent c) throws HyracksDataException {
-        LSMRTreeMemoryComponent mutableComponent = (LSMRTreeMemoryComponent) c;
-        ((IVirtualBufferCache) mutableComponent.getRTree().getBufferCache()).open();
-        mutableComponent.getRTree().create();
-        mutableComponent.getBTree().create();
-        mutableComponent.getRTree().activate();
-        mutableComponent.getBTree().activate();
-    }
-
-    @Override
-    protected void deactivateMemoryComponent(ILSMMemoryComponent c) throws HyracksDataException {
-        LSMRTreeMemoryComponent mutableComponent = (LSMRTreeMemoryComponent) c;
-        mutableComponent.getRTree().deactivate();
-        mutableComponent.getBTree().deactivate();
-        mutableComponent.getRTree().destroy();
-        mutableComponent.getBTree().destroy();
-        ((IVirtualBufferCache) mutableComponent.getRTree().getBufferCache()).close();
-    }
-
-    @Override
-    protected void clearMemoryComponent(ILSMMemoryComponent c) throws HyracksDataException {
-        LSMRTreeMemoryComponent mutableComponent = (LSMRTreeMemoryComponent) c;
-        mutableComponent.getRTree().clear();
-        mutableComponent.getBTree().clear();
-        mutableComponent.reset();
-    }
-
-    @Override
     protected LSMComponentFileReferences getMergeFileReferences(ILSMDiskComponent firstComponent,
             ILSMDiskComponent lastComponent) throws HyracksDataException {
-        RTree firstTree = ((LSMRTreeDiskComponent) firstComponent).getRTree();
-        RTree lastTree = ((LSMRTreeDiskComponent) lastComponent).getRTree();
+        RTree firstTree = (RTree) firstComponent.getIndex();
+        RTree lastTree = (RTree) lastComponent.getIndex();
         FileReference firstFile = firstTree.getFileReference();
         FileReference lastFile = lastTree.getFileReference();
         return fileManager.getRelMergeFileReference(firstFile.getFile().getName(), lastFile.getFile().getName());

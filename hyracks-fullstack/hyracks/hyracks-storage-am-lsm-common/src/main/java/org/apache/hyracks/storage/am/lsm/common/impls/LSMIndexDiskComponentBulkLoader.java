@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.storage.am.lsm.rtree.impls;
+package org.apache.hyracks.storage.am.lsm.common.impls;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
@@ -24,19 +24,19 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
 import org.apache.hyracks.storage.common.IIndexBulkLoader;
 
-public class LSMRTreeBulkLoader implements IIndexBulkLoader {
+public class LSMIndexDiskComponentBulkLoader implements IIndexBulkLoader {
+    private final AbstractLSMIndex lsmIndex;
     private final ILSMDiskComponent component;
-    private final LSMRTree lsmIndex;
     private final IIndexBulkLoader componentBulkLoader;
 
-    public LSMRTreeBulkLoader(LSMRTree lsmIndex, float fillFactor, boolean verifyInput, long numElementsHint)
-            throws HyracksDataException {
+    public LSMIndexDiskComponentBulkLoader(AbstractLSMIndex lsmIndex, float fillFactor, boolean verifyInput,
+            long numElementsHint) throws HyracksDataException {
         this.lsmIndex = lsmIndex;
         // Note that by using a flush target file name, we state that the
-        // new bulk loaded tree is "newer" than any other merged tree.
+        // new bulk loaded component is "newer" than any other merged component.
         this.component = lsmIndex.createBulkLoadTarget();
-        this.componentBulkLoader = lsmIndex.createComponentBulkLoader(component, fillFactor, verifyInput,
-                numElementsHint, false, true, true);
+        this.componentBulkLoader =
+                component.createBulkLoader(fillFactor, verifyInput, numElementsHint, false, true, true);
     }
 
     @Override
@@ -48,6 +48,9 @@ public class LSMRTreeBulkLoader implements IIndexBulkLoader {
     public void end() throws HyracksDataException {
         componentBulkLoader.end();
         if (component.getComponentSize() > 0) {
+            //TODO(amoudi): Ensure Bulk load follow the same lifecycle Other Operations (Flush, Merge, etc).
+            //then after operation should be called from harness as well
+            //https://issues.apache.org/jira/browse/ASTERIXDB-1764
             lsmIndex.getIOOperationCallback().afterOperation(LSMOperationType.FLUSH, null, component);
             lsmIndex.getLsmHarness().addBulkLoadedComponent(component);
         }
@@ -57,4 +60,5 @@ public class LSMRTreeBulkLoader implements IIndexBulkLoader {
     public void abort() throws HyracksDataException {
         componentBulkLoader.abort();
     }
+
 }

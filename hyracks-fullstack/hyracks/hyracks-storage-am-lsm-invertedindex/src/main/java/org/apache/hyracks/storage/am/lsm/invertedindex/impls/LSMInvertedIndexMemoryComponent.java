@@ -19,43 +19,31 @@
 
 package org.apache.hyracks.storage.am.lsm.invertedindex.impls;
 
-import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.btree.impls.BTree;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilter;
+import org.apache.hyracks.storage.am.lsm.common.api.AbstractLSMWithBuddyMemoryComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
-import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMMemoryComponent;
-import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndex;
+import org.apache.hyracks.storage.am.lsm.invertedindex.inmemory.InMemoryInvertedIndex;
 
-public class LSMInvertedIndexMemoryComponent extends AbstractLSMMemoryComponent {
+public class LSMInvertedIndexMemoryComponent extends AbstractLSMWithBuddyMemoryComponent {
 
-    private final IInvertedIndex invIndex;
+    private final InMemoryInvertedIndex invIndex;
     private final BTree deletedKeysBTree;
 
-    public LSMInvertedIndexMemoryComponent(IInvertedIndex invIndex, BTree deletedKeysBTree, IVirtualBufferCache vbc,
-            boolean isActive, ILSMComponentFilter filter) {
+    public LSMInvertedIndexMemoryComponent(InMemoryInvertedIndex invIndex, BTree deletedKeysBTree,
+            IVirtualBufferCache vbc, boolean isActive, ILSMComponentFilter filter) {
         super(vbc, isActive, filter);
         this.invIndex = invIndex;
         this.deletedKeysBTree = deletedKeysBTree;
     }
 
-    public IInvertedIndex getInvIndex() {
+    @Override
+    public InMemoryInvertedIndex getIndex() {
         return invIndex;
     }
 
-    public BTree getDeletedKeysBTree() {
-        return deletedKeysBTree;
-    }
-
     @Override
-    public void reset() throws HyracksDataException {
-        super.reset();
-        invIndex.deactivate();
-        invIndex.destroy();
-        invIndex.create();
-        invIndex.activate();
-        deletedKeysBTree.deactivate();
-        deletedKeysBTree.destroy();
-        deletedKeysBTree.create();
-        deletedKeysBTree.activate();
+    public BTree getBuddyIndex() {
+        return deletedKeysBTree;
     }
 }

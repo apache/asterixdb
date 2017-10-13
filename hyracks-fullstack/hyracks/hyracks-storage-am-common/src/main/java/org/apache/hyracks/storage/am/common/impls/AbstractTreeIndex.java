@@ -121,6 +121,7 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
         isActive = false;
     }
 
+    @Override
     public void purge() throws HyracksDataException {
         if (isActive) {
             throw HyracksDataException.create(ErrorCode.CANNOT_PURGE_ACTIVE_INDEX);

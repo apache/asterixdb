@@ -199,8 +199,8 @@ public class LSMSecondaryIndexBulkLoadNodePushable extends AbstractLSMSecondaryI
         endCurrentComponent();
 
         component = secondaryIndex.createBulkLoadTarget();
-        componentBulkLoader = secondaryIndex.createComponentBulkLoader(component, 1.0f, false,
-                getNumDeletedTuples(componentPos), false, true, true);
+        int numTuples = getNumDeletedTuples(componentPos);
+        componentBulkLoader = component.createBulkLoader(1.0f, false, numTuples, false, true, true);
 
     }
 

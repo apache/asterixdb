@@ -231,14 +231,14 @@ public class LSMBTreeRangeSearchCursor extends LSMIndexSearchCursor {
             }
             if (component.getType() == LSMComponentType.MEMORY) {
                 includeMutableComponent = true;
-                btree = ((LSMBTreeMemoryComponent) component).getBTree();
+                btree = (BTree) component.getIndex();
             } else {
-                btree = ((LSMBTreeDiskComponent) component).getBTree();
+                btree = (BTree) component.getIndex();
             }
 
             if (btreeAccessors[i] == null) {
-                btreeAccessors[i] = (BTreeAccessor) btree.createAccessor(NoOpOperationCallback.INSTANCE,
-                        NoOpOperationCallback.INSTANCE);
+                btreeAccessors[i] =
+                        btree.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
             } else {
                 // re-use
                 btreeAccessors[i].reset(btree, NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);

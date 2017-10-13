@@ -118,8 +118,7 @@ public class BTree extends AbstractTreeIndex {
         // Stack validation protocol:
         //      * parent pushes the validation information onto the stack before validation
         //      * child pops the validation information off of the stack after validating
-        BTreeAccessor accessor =
-                (BTreeAccessor) createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+        BTreeAccessor accessor = createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
         PageValidationInfo pvi = accessor.ctx.createPageValidationInfo(null);
         accessor.ctx.getValidationInfos().addFirst(pvi);
         if (isActive) {
@@ -819,12 +818,12 @@ public class BTree extends AbstractTreeIndex {
     }
 
     @Override
-    public ITreeIndexAccessor createAccessor(IModificationOperationCallback modificationCallback,
+    public BTreeAccessor createAccessor(IModificationOperationCallback modificationCallback,
             ISearchOperationCallback searchCallback) {
         return new BTreeAccessor(this, modificationCallback, searchCallback);
     }
 
-    public ITreeIndexAccessor createAccessor(IModificationOperationCallback modificationCallback,
+    public BTreeAccessor createAccessor(IModificationOperationCallback modificationCallback,
             ISearchOperationCallback searchCallback, int[] logTupleFields) {
         return new BTreeAccessor(this, modificationCallback, searchCallback, logTupleFields);
     }
@@ -892,7 +891,7 @@ public class BTree extends AbstractTreeIndex {
         }
 
         @Override
-        public ITreeIndexCursor createSearchCursor(boolean exclusive) {
+        public BTreeRangeSearchCursor createSearchCursor(boolean exclusive) {
             IBTreeLeafFrame leafFrame = (IBTreeLeafFrame) btree.getLeafFrameFactory().createFrame();
             return new BTreeRangeSearchCursor(leafFrame, exclusive);
         }

@@ -135,7 +135,7 @@ public class ExternalIndexHarness extends LSMHarness {
                                 lsmIndex.scheduleReplication(null, componentsToBeReplicated, false,
                                         ReplicationOperation.DELETE, opType);
                             }
-                            ((ILSMDiskComponent) c).destroy();
+                            ((ILSMDiskComponent) c).deactivateAndDestroy();
                             break;
                         default:
                             break;
@@ -348,7 +348,7 @@ public class ExternalIndexHarness extends LSMHarness {
                 componentsToBeReplicated.add(diskComponent);
                 lsmIndex.scheduleReplication(null, componentsToBeReplicated, false, ReplicationOperation.DELETE, null);
             }
-            diskComponent.destroy();
+            diskComponent.deactivateAndDestroy();
         }
     }
 

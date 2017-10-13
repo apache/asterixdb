@@ -356,8 +356,8 @@ public class LSMHarness implements ILSMHarness {
                         lsmIndex.scheduleReplication(null, inactiveDiskComponentsToBeDeleted, false,
                                 ReplicationOperation.DELETE, opType);
                     }
-                    for (ILSMComponent c : inactiveDiskComponentsToBeDeleted) {
-                        ((AbstractLSMDiskComponent) c).destroy();
+                    for (ILSMDiskComponent c : inactiveDiskComponentsToBeDeleted) {
+                        c.deactivateAndDestroy();
                     }
                 } catch (Throwable e) {
                     if (LOGGER.isLoggable(Level.WARNING)) {

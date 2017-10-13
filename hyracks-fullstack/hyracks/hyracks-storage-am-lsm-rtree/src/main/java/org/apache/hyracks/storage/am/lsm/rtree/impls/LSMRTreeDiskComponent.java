@@ -18,79 +18,92 @@
  */
 package org.apache.hyracks.storage.am.lsm.rtree.impls;
 
-import org.apache.hyracks.api.exceptions.HyracksDataException;
+import java.util.HashSet;
+import java.util.Set;
+
 import org.apache.hyracks.storage.am.bloomfilter.impls.BloomFilter;
 import org.apache.hyracks.storage.am.btree.impls.BTree;
 import org.apache.hyracks.storage.am.common.api.IMetadataPageManager;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilter;
-import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMDiskComponent;
-import org.apache.hyracks.storage.am.lsm.common.util.ComponentUtils;
+import org.apache.hyracks.storage.am.lsm.common.api.AbstractLSMWithBuddyDiskComponent;
+import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndex;
 import org.apache.hyracks.storage.am.rtree.impls.RTree;
+import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 
-public class LSMRTreeDiskComponent extends AbstractLSMDiskComponent {
+public class LSMRTreeDiskComponent extends AbstractLSMWithBuddyDiskComponent {
     private final RTree rtree;
     private final BTree btree;
     private final BloomFilter bloomFilter;
 
-    public LSMRTreeDiskComponent(RTree rtree, BTree btree, BloomFilter bloomFilter, ILSMComponentFilter filter) {
-        super((IMetadataPageManager) rtree.getPageManager(), filter);
+    public LSMRTreeDiskComponent(AbstractLSMIndex lsmIndex, RTree rtree, BTree btree, BloomFilter bloomFilter,
+            ILSMComponentFilter filter) {
+        super(lsmIndex, getMetadataPageManager(rtree), filter);
         this.rtree = rtree;
         this.btree = btree;
         this.bloomFilter = bloomFilter;
     }
 
     @Override
-    public void destroy() throws HyracksDataException {
-        rtree.deactivate();
-        rtree.destroy();
-        if (btree != null) {
-            btree.deactivate();
-            btree.destroy();
-            bloomFilter.deactivate();
-            bloomFilter.destroy();
-        }
-    }
-
-    public RTree getRTree() {
-        return rtree;
-    }
-
-    public BTree getBTree() {
+    public BTree getBuddyIndex() {
         return btree;
     }
 
+    @Override
     public BloomFilter getBloomFilter() {
         return bloomFilter;
     }
 
     @Override
+    public IBufferCache getBloomFilterBufferCache() {
+        return btree.getBufferCache();
+    }
+
+    @Override
     public long getComponentSize() {
-        long size = rtree.getFileReference().getFile().length();
-        if (btree != null) {
-            size += btree.getFileReference().getFile().length();
-            size += bloomFilter.getFileReference().getFile().length();
-        }
+        long size = getComponentSize(rtree);
+        size += btree.getFileReference().getFile().length();
+        size += bloomFilter.getFileReference().getFile().length();
         return size;
     }
 
     @Override
+    public Set<String> getLSMComponentPhysicalFiles() {
+        Set<String> files = getFiles(rtree);
+        files.add(btree.getFileReference().getFile().getAbsolutePath());
+        files.add(bloomFilter.getFileReference().getFile().getAbsolutePath());
+        return files;
+    }
+
+    @Override
     public int getFileReferenceCount() {
+        return getFileReferenceCount(rtree);
+    }
+
+    @Override
+    public RTree getMetadataHolder() {
+        return rtree;
+    }
+
+    @Override
+    public RTree getIndex() {
+        return rtree;
+    }
+
+    static IMetadataPageManager getMetadataPageManager(RTree rtree) {
+        return (IMetadataPageManager) rtree.getPageManager();
+    }
+
+    static long getComponentSize(RTree rtree) {
+        return rtree.getFileReference().getFile().length();
+    }
+
+    static int getFileReferenceCount(RTree rtree) {
         return rtree.getBufferCache().getFileReferenceCount(rtree.getFileId());
     }
 
-    @Override
-    public String toString() {
-        return getClass().getSimpleName() + ":" + rtree.getFileReference().getRelativePath();
-    }
-
-    @Override
-    public void markAsValid(boolean persist) throws HyracksDataException {
-        if (bloomFilter != null) {
-            ComponentUtils.markAsValid(btree.getBufferCache(), bloomFilter, persist);
-        }
-        if (btree != null) {
-            ComponentUtils.markAsValid(btree, persist);
-        }
-        ComponentUtils.markAsValid(rtree, persist);
+    static Set<String> getFiles(RTree rtree) {
+        Set<String> files = new HashSet<>();
+        files.add(rtree.getFileReference().getFile().getAbsolutePath());
+        return files;
     }
 }

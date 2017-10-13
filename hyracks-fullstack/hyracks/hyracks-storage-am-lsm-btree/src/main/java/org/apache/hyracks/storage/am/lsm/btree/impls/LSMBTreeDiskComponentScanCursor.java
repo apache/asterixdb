@@ -69,7 +69,6 @@ public class LSMBTreeDiskComponentScanCursor extends LSMIndexSearchCursor {
         operationalComponents = lsmInitialState.getOperationalComponents();
         lsmHarness = lsmInitialState.getLSMHarness();
         includeMutableComponent = false;
-
         int numBTrees = operationalComponents.size();
         rangeCursors = new IIndexCursor[numBTrees];
         btreeAccessors = new BTreeAccessor[numBTrees];
@@ -77,10 +76,9 @@ public class LSMBTreeDiskComponentScanCursor extends LSMIndexSearchCursor {
             ILSMComponent component = operationalComponents.get(i);
             IBTreeLeafFrame leafFrame = (IBTreeLeafFrame) lsmInitialState.getLeafFrameFactory().createFrame();
             rangeCursors[i] = new BTreeRangeSearchCursor(leafFrame, false);
-            BTree btree = ((LSMBTreeDiskComponent) component).getBTree();
+            BTree btree = (BTree) component.getIndex();
 
-            btreeAccessors[i] = (BTreeAccessor) btree.createAccessor(NoOpOperationCallback.INSTANCE,
-                    NoOpOperationCallback.INSTANCE);
+            btreeAccessors[i] = btree.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
             btreeAccessors[i].search(rangeCursors[i], searchPred);
         }
 

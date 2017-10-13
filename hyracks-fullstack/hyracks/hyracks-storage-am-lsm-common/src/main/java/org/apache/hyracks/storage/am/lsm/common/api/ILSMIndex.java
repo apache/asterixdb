@@ -134,23 +134,6 @@ public interface ILSMIndex extends IIndex {
     void updateFilter(ILSMIndexOperationContext ictx, ITupleReference tuple) throws HyracksDataException;
 
     /**
-     * Create a component bulk loader for the given component
-     *
-     * @param component
-     * @param fillFactor
-     * @param verifyInput
-     * @param numElementsHint
-     * @param checkIfEmptyIndex
-     * @param withFilter
-     * @param cleanupEmptyComponent
-     * @return
-     * @throws HyracksDataException
-     */
-    ILSMDiskComponentBulkLoader createComponentBulkLoader(ILSMDiskComponent component, float fillFactor,
-            boolean verifyInput, long numElementsHint, boolean checkIfEmptyIndex, boolean withFilter,
-            boolean cleanupEmptyComponent) throws HyracksDataException;
-
-    /**
      * Creates a disk component for the bulk load operation
      *
      * @return

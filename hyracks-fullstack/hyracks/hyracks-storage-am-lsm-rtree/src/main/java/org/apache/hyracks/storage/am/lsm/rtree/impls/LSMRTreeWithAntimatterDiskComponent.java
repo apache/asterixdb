@@ -16,26 +16,22 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.hyracks.storage.am.lsm.rtree.impls;
 
+import java.util.Set;
+
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.storage.am.btree.impls.BTree;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilter;
-import org.apache.hyracks.storage.am.lsm.common.api.AbstractLSMWithBuddyMemoryComponent;
-import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
+import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMDiskComponent;
+import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndex;
 import org.apache.hyracks.storage.am.rtree.impls.RTree;
 
-public class LSMRTreeMemoryComponent extends AbstractLSMWithBuddyMemoryComponent {
-
+public class LSMRTreeWithAntimatterDiskComponent extends AbstractLSMDiskComponent {
     private final RTree rtree;
-    private final BTree btree;
 
-    public LSMRTreeMemoryComponent(RTree rtree, BTree btree, IVirtualBufferCache vbc, boolean isActive,
-            ILSMComponentFilter filter) {
-        super(vbc, isActive, filter);
+    public LSMRTreeWithAntimatterDiskComponent(AbstractLSMIndex lsmIndex, RTree rtree, ILSMComponentFilter filter) {
+        super(lsmIndex, LSMRTreeDiskComponent.getMetadataPageManager(rtree), filter);
         this.rtree = rtree;
-        this.btree = btree;
     }
 
     @Override
@@ -44,13 +40,32 @@ public class LSMRTreeMemoryComponent extends AbstractLSMWithBuddyMemoryComponent
     }
 
     @Override
-    public BTree getBuddyIndex() {
-        return btree;
+    public RTree getMetadataHolder() {
+        return rtree;
+    }
+
+    @Override
+    public long getComponentSize() {
+        return LSMRTreeDiskComponent.getComponentSize(rtree);
+    }
+
+    @Override
+    public int getFileReferenceCount() {
+        return LSMRTreeDiskComponent.getFileReferenceCount(rtree);
+    }
+
+    @Override
+    public Set<String> getLSMComponentPhysicalFiles() {
+        return LSMRTreeDiskComponent.getFiles(rtree);
+    }
+
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + ":" + rtree.getFileReference().getRelativePath();
     }
 
     @Override
     public void validate() throws HyracksDataException {
         throw new UnsupportedOperationException("Validation not implemented for LSM R-Trees.");
     }
-
 }

@@ -178,24 +178,24 @@ public class LSMBTreePointSearchCursor implements ITreeIndexCursor {
                     // reset
                     rangeCursors[i].reset();
                 }
-                btree = ((LSMBTreeMemoryComponent) component).getBTree();
+                btree = ((LSMBTreeMemoryComponent) component).getIndex();
             } else {
                 if (rangeCursors[i] != null && rangeCursors[i].isBloomFilterAware()) {
                     // can re-use cursor
                     ((BloomFilterAwareBTreePointSearchCursor) rangeCursors[i])
-                            .resetBloomFilter(((LSMBTreeDiskComponent) component).getBloomFilter());
+                            .resetBloomFilter(((LSMBTreeWithBloomFilterDiskComponent) component).getBloomFilter());
                     rangeCursors[i].reset();
                 } else {
                     // create new cursor <should be relatively rare>
                     IBTreeLeafFrame leafFrame = (IBTreeLeafFrame) lsmInitialState.getLeafFrameFactory().createFrame();
                     rangeCursors[i] = new BloomFilterAwareBTreePointSearchCursor(leafFrame, false,
-                            ((LSMBTreeDiskComponent) component).getBloomFilter());
+                            ((LSMBTreeWithBloomFilterDiskComponent) component).getBloomFilter());
                 }
-                btree = ((LSMBTreeDiskComponent) component).getBTree();
+                btree = (BTree) component.getIndex();
             }
             if (btreeAccessors[i] == null) {
-                btreeAccessors[i] = (BTreeAccessor) btree.createAccessor(NoOpOperationCallback.INSTANCE,
-                        NoOpOperationCallback.INSTANCE);
+                btreeAccessors[i] =
+                        btree.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
             } else {
                 // re-use
                 btreeAccessors[i].reset(btree, NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);

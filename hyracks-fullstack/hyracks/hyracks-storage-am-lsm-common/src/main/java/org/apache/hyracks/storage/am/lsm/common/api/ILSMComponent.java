@@ -19,6 +19,7 @@
 package org.apache.hyracks.storage.am.lsm.common.api;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.storage.common.IIndex;
 
 /**
  * An LSM index component. can be an in memory or on disk. Can be readable or unreadable, writable or unwritable
@@ -121,4 +122,9 @@ public interface ILSMComponent {
      * @return the component filter
      */
     ILSMComponentFilter getLSMComponentFilter();
+
+    /**
+     * @return index data structure that is the stored in the component
+     */
+    IIndex getIndex();
 }

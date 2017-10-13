@@ -18,8 +18,14 @@
  */
 package org.apache.hyracks.storage.am.lsm.common.api;
 
+import java.util.Set;
+
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.storage.am.common.api.ITreeIndex;
+import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndex;
+import org.apache.hyracks.storage.am.lsm.common.impls.ChainedLSMDiskComponentBulkLoader;
 import org.apache.hyracks.storage.am.lsm.common.impls.DiskComponentMetadata;
+import org.apache.hyracks.storage.am.lsm.common.impls.IChainedComponentBulkLoader;
 
 public interface ILSMDiskComponent extends ILSMComponent {
 
@@ -42,19 +48,27 @@ public interface ILSMDiskComponent extends ILSMComponent {
     int getFileReferenceCount();
 
     /**
-     * Delete the component from disk
-     *
-     * @throws HyracksDataException
-     */
-    void destroy() throws HyracksDataException;
-
-    /**
      * Return the component Id of this disk component from its metadata
      *
      * @return
      * @throws HyracksDataException
      */
     ILSMDiskComponentId getComponentId() throws HyracksDataException;
+
+    /**
+     * @return LsmIndex of the component
+     */
+    AbstractLSMIndex getLsmIndex();
+
+    /**
+     * @return the TreeIndex which holds metadata for the disk component
+     */
+    ITreeIndex getMetadataHolder();
+
+    /**
+     * @return a set of files describing the contents of the disk component
+     */
+    Set<String> getLSMComponentPhysicalFiles();
 
     /**
      * Mark the component as valid
@@ -65,4 +79,86 @@ public interface ILSMDiskComponent extends ILSMComponent {
      */
     void markAsValid(boolean persist) throws HyracksDataException;
 
+    /**
+     * Activates the component
+     *
+     * @param create
+     *            whether a new component should be created
+     * @throws HyracksDataException
+     */
+    void activate(boolean create) throws HyracksDataException;
+
+    /**
+     * Deactivate and destroy the component (Deletes it from disk)
+     *
+     * @throws HyracksDataException
+     */
+    void deactivateAndDestroy() throws HyracksDataException;
+
+    /**
+     * Destroy the component (Deletes it from disk)
+     *
+     * @throws HyracksDataException
+     */
+    void destroy() throws HyracksDataException;
+
+    /**
+     * Deactivate the component
+     * The pages are still in the buffer cache
+     *
+     * @throws HyracksDataException
+     */
+    void deactivate() throws HyracksDataException;
+
+    /**
+     * Deactivate the component and purge it out of the buffer cache
+     *
+     * @throws HyracksDataException
+     */
+    void deactivateAndPurge() throws HyracksDataException;
+
+    /**
+     * Test method. validates the content of the component
+     * TODO: Remove this method from the interface
+     *
+     * @throws HyracksDataException
+     */
+    void validate() throws HyracksDataException;
+
+    /**
+     * Creates a chained bulkloader which populates component's LSM filter
+     *
+     * @return
+     * @throws HyracksDataException
+     */
+    IChainedComponentBulkLoader createFilterBulkLoader() throws HyracksDataException;
+
+    /**
+     * Creates a chained bulkloader which populates component's index
+     *
+     * @param fillFactor
+     * @param verifyInput
+     * @param numElementsHint
+     * @param checkIfEmptyIndex
+     * @return
+     * @throws HyracksDataException
+     */
+    IChainedComponentBulkLoader createIndexBulkLoader(float fillFactor, boolean verifyInput, long numElementsHint,
+            boolean checkIfEmptyIndex) throws HyracksDataException;
+
+    /**
+     * Creates a bulkloader pipeline which includes all chained operations, bulkloading individual elements of the
+     * component: indexes, LSM filters, Bloom filters, buddy indexes, etc.
+     *
+     * @param fillFactor
+     * @param verifyInput
+     * @param numElementsHint
+     * @param checkIfEmptyIndex
+     * @param withFilter
+     * @param cleanupEmptyComponent
+     * @return
+     * @throws HyracksDataException
+     */
+    ChainedLSMDiskComponentBulkLoader createBulkLoader(float fillFactor, boolean verifyInput, long numElementsHint,
+            boolean checkIfEmptyIndex, boolean withFilter, boolean cleanupEmptyComponent) throws HyracksDataException;
 }

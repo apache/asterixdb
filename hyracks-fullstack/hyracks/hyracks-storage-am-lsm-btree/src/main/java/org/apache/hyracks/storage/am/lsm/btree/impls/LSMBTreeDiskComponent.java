@@ -18,51 +18,47 @@
  */
 package org.apache.hyracks.storage.am.lsm.btree.impls;
 
-import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.storage.am.bloomfilter.impls.BloomFilter;
+import java.util.HashSet;
+import java.util.Set;
+
 import org.apache.hyracks.storage.am.btree.impls.BTree;
 import org.apache.hyracks.storage.am.common.api.IMetadataPageManager;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilter;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMDiskComponent;
-import org.apache.hyracks.storage.am.lsm.common.util.ComponentUtils;
+import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndex;
 
-public class LSMBTreeDiskComponent extends AbstractLSMDiskComponent {
-    private final BTree btree;
-    private final BloomFilter bloomFilter;
+public class LSMBTreeDiskComponent extends AbstractLSMDiskComponent implements ILSMDiskComponent {
+    protected final BTree btree;
 
-    public LSMBTreeDiskComponent(BTree btree, BloomFilter bloomFilter, ILSMComponentFilter filter) {
-        super((IMetadataPageManager) btree.getPageManager(), filter);
+    public LSMBTreeDiskComponent(AbstractLSMIndex lsmIndex, BTree btree, ILSMComponentFilter filter) {
+        super(lsmIndex, getMetadataPageManager(btree), filter);
         this.btree = btree;
-        this.bloomFilter = bloomFilter;
     }
 
     @Override
-    public void destroy() throws HyracksDataException {
-        btree.deactivate();
-        btree.destroy();
-        if (bloomFilter != null) {
-            bloomFilter.deactivate();
-            bloomFilter.destroy();
-        }
-    }
-
-    public BTree getBTree() {
+    public BTree getIndex() {
         return btree;
     }
 
-    public BloomFilter getBloomFilter() {
-        return bloomFilter;
+    @Override
+    public BTree getMetadataHolder() {
+        return btree;
     }
 
     @Override
     public long getComponentSize() {
-        return btree.getFileReference().getFile().length()
-                + (bloomFilter == null ? 0 : bloomFilter.getFileReference().getFile().length());
+        return getComponentSize(btree);
     }
 
     @Override
     public int getFileReferenceCount() {
-        return btree.getBufferCache().getFileReferenceCount(btree.getFileId());
+        return getFileReferenceCount(btree);
+    }
+
+    @Override
+    public Set<String> getLSMComponentPhysicalFiles() {
+        return getFiles(btree);
     }
 
     @Override
@@ -70,13 +66,21 @@ public class LSMBTreeDiskComponent extends AbstractLSMDiskComponent {
         return getClass().getSimpleName() + ":" + btree.getFileReference().getRelativePath();
     }
 
-    @Override
-    public void markAsValid(boolean persist) throws HyracksDataException {
-        // The order of forcing the dirty page to be flushed is critical.
-        // The bloom filter must be always done first.
-        if (bloomFilter != null && persist) {
-            ComponentUtils.markAsValid(btree.getBufferCache(), bloomFilter, persist);
-        }
-        ComponentUtils.markAsValid(btree, persist);
+    static IMetadataPageManager getMetadataPageManager(BTree btree) {
+        return (IMetadataPageManager) btree.getPageManager();
+    }
+
+    static long getComponentSize(BTree btree) {
+        return btree.getFileReference().getFile().length();
+    }
+
+    static int getFileReferenceCount(BTree btree) {
+        return btree.getBufferCache().getFileReferenceCount(btree.getFileId());
+    }
+
+    static Set<String> getFiles(BTree btree) {
+        Set<String> files = new HashSet<>();
+        files.add(btree.getFileReference().getFile().getAbsolutePath());
+        return files;
     }
 }

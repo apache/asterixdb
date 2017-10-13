@@ -40,8 +40,7 @@ public abstract class IndexTestContext<T extends CheckTuple> implements IIndexTe
             throws HyracksDataException {
         this.fieldSerdes = fieldSerdes;
         this.index = index;
-        this.indexAccessor = (IIndexAccessor) index.createAccessor(TestOperationCallback.INSTANCE,
-                TestOperationCallback.INSTANCE);
+        this.indexAccessor = index.createAccessor(TestOperationCallback.INSTANCE, TestOperationCallback.INSTANCE);
         this.tupleBuilder = filtered ? new ArrayTupleBuilder(fieldSerdes.length + 1)
                 : new ArrayTupleBuilder(fieldSerdes.length);
     }

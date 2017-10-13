@@ -26,7 +26,7 @@ import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleReference;
 import org.apache.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import org.apache.hyracks.storage.am.lsm.btree.impls.LSMBTree;
-import org.apache.hyracks.storage.am.lsm.btree.impls.LSMBTreeDiskComponent;
+import org.apache.hyracks.storage.am.lsm.btree.impls.LSMBTreeWithBloomFilterDiskComponent;
 import org.apache.hyracks.storage.am.lsm.btree.util.LSMBTreeTestContext;
 import org.apache.hyracks.storage.am.lsm.btree.util.LSMBTreeTestHarness;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
@@ -81,8 +81,9 @@ public class LSMBTreeFileManagerTest {
         ctx.getIndex().deactivate();
 
         // Delete the btree file and keep the bloom filter file from the disk component
-        LSMBTreeDiskComponent ilsmDiskComponent = (LSMBTreeDiskComponent) btree.getDiskComponents().get(0);
-        ilsmDiskComponent.getBTree().getFileReference().delete();
+        LSMBTreeWithBloomFilterDiskComponent ilsmDiskComponent =
+                (LSMBTreeWithBloomFilterDiskComponent) btree.getDiskComponents().get(0);
+        ilsmDiskComponent.getIndex().getFileReference().delete();
 
         File bloomFilterFile = ilsmDiskComponent.getBloomFilter().getFileReference().getFile().getAbsoluteFile();
         Assert.assertEquals("Check bloom filter file exists", true, bloomFilterFile.exists());

@@ -18,12 +18,17 @@
  */
 package org.apache.hyracks.storage.am.lsm.common.impls;
 
+import java.util.Collections;
+import java.util.Set;
+
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.storage.am.common.api.ITreeIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilter;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponentId;
 import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
+import org.apache.hyracks.storage.common.IIndex;
 
 public class EmptyComponent implements ILSMDiskComponent {
     public static final EmptyComponent INSTANCE = new EmptyComponent();
@@ -53,6 +58,11 @@ public class EmptyComponent implements ILSMDiskComponent {
     }
 
     @Override
+    public IIndex getIndex() {
+        return null;
+    }
+
+    @Override
     public DiskComponentMetadata getMetadata() {
         return EmptyDiskComponentMetadata.INSTANCE;
     }
@@ -78,8 +88,65 @@ public class EmptyComponent implements ILSMDiskComponent {
     }
 
     @Override
+    public AbstractLSMIndex getLsmIndex() {
+        return null;
+    }
+
+    @Override
+    public ITreeIndex getMetadataHolder() {
+        return null;
+    }
+
+    @Override
+    public Set<String> getLSMComponentPhysicalFiles() {
+        return Collections.emptySet();
+    }
+
+    @Override
     public void markAsValid(boolean persist) throws HyracksDataException {
         // No Op
     }
 
+    @Override
+    public void activate(boolean createNewComponent) throws HyracksDataException {
+        // No Op
+    }
+
+    @Override
+    public void deactivateAndDestroy() throws HyracksDataException {
+        // No Op
+    }
+
+    @Override
+    public void deactivate() throws HyracksDataException {
+        // No Op
+    }
+
+    @Override
+    public void deactivateAndPurge() throws HyracksDataException {
+        // No Op
+    }
+
+    @Override
+    public void validate() throws HyracksDataException {
+        // No Op
+    }
+
+    @Override
+    public IChainedComponentBulkLoader createFilterBulkLoader() throws HyracksDataException {
+        return null;
+    }
+
+    @Override
+    public IChainedComponentBulkLoader createIndexBulkLoader(float fillFactor, boolean verifyInput,
+            long numElementsHint, boolean checkIfEmptyIndex) throws HyracksDataException {
+        return null;
+    }
+
+    @Override
+    public ChainedLSMDiskComponentBulkLoader createBulkLoader(float fillFactor, boolean verifyInput,
+            long numElementsHint, boolean checkIfEmptyIndex, boolean withFilter, boolean cleanupEmptyComponent)
+            throws HyracksDataException {
+        return null;
+    }
 }
