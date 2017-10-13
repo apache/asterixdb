@@ -121,6 +121,10 @@ public class AsterixHyracksIntegrationUtil {
         this.ncs = nodeControllers.toArray(new NodeControllerService[nodeControllers.size()]);
     }
 
+    public ClusterControllerService getClusterControllerService() {
+        return cc;
+    }
+
     protected CCConfig createCCConfig(ConfigManager configManager) throws IOException {
         CCConfig ccConfig = new CCConfig(configManager);
         ccConfig.setClusterListenAddress(Inet4Address.getLoopbackAddress().getHostAddress());

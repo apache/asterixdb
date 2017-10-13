@@ -147,7 +147,11 @@ public class TransactionContext implements ITransactionContext, Serializable {
     @Override
     public void notifyOptracker(boolean isJobLevelCommit) {
         try {
-            if (isJobLevelCommit && isMetadataTxn) {
+            /**
+             * in case of transaction abort {@link TransactionContext#cleanupForAbort()} will
+             * clean the primaryIndexOpTracker state.
+             */
+            if (isJobLevelCommit && isMetadataTxn && txnState.get() != ITransactionManager.ABORTED) {
                 primaryIndexOpTracker.exclusiveJobCommitted();
             } else if (!isJobLevelCommit) {
                 primaryIndexOpTracker.completeOperation(null, LSMOperationType.MODIFICATION, null,

@@ -184,6 +184,9 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
     public void cleanupNumActiveOperationsForAbortedJob(int numberOfActiveOperations) {
         numberOfActiveOperations *= -1;
         numActiveOperations.getAndAdd(numberOfActiveOperations);
+        if (numActiveOperations.get() < 0) {
+            throw new IllegalStateException("The number of active operations cannot be negative!");
+        }
     }
 
     public boolean isFlushOnExit() {
