@@ -23,8 +23,7 @@ import java.util.Arrays;
 
 public class ByteArrayAccessibleOutputStream extends ByteArrayOutputStream {
 
-    private static final int MAX_SIZE = 1024 * 1024 * 32;
-    private static final double BUFFER_INCREMENT_FACTOR = 1.5;
+    private static final int MAX_ARRAY_SIZE = Integer.MAX_VALUE;
 
     public ByteArrayAccessibleOutputStream() {
         super();
@@ -97,20 +96,22 @@ public class ByteArrayAccessibleOutputStream extends ByteArrayOutputStream {
     private void grow(int minCapacity) {
         // overflow-conscious code
         int oldCapacity = buf.length;
-        if (oldCapacity == MAX_SIZE) {
-            throw new IllegalArgumentException("Buffer is too large...");
-        }
-        int newCapacity = Math.min((int) (oldCapacity * BUFFER_INCREMENT_FACTOR), MAX_SIZE);
+        // increase by a factor of 1.5
+        int newCapacity = oldCapacity + (oldCapacity >> 1);
         if (newCapacity - minCapacity < 0) {
             newCapacity = minCapacity;
         }
-        if (newCapacity < 0) {
-            if (minCapacity < 0) {
-                throw new OutOfMemoryError();
-            }
-            newCapacity = Integer.MAX_VALUE;
+        if (newCapacity - MAX_ARRAY_SIZE > 0) {
+            newCapacity = hugeCapacity(minCapacity);
         }
         buf = Arrays.copyOf(buf, newCapacity);
+    }
+
+    private static int hugeCapacity(int minCapacity) {
+        if (minCapacity < 0) { // overflow
+            throw new RuntimeException("Memory allocation limit (" + MAX_ARRAY_SIZE + " bytes) exceeded");
+        }
+        return (minCapacity > MAX_ARRAY_SIZE) ? Integer.MAX_VALUE : MAX_ARRAY_SIZE;
     }
 
     /**
