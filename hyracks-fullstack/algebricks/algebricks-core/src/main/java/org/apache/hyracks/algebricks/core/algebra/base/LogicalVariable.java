@@ -48,11 +48,10 @@ public final class LogicalVariable {
 
     @Override
     public boolean equals(Object obj) {
-        if (!(obj instanceof LogicalVariable)) {
-            return false;
-        } else {
+        if (obj instanceof LogicalVariable) {
             return id == ((LogicalVariable) obj).getId();
         }
+        return false;
     }
 
     @Override
