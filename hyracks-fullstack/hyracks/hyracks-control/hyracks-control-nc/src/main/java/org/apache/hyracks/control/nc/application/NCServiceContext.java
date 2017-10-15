@@ -95,7 +95,7 @@ public class NCServiceContext extends ServiceContext implements INCServiceContex
 
     @Override
     public ITracer getTracer() {
-        return tracer;
+        return ITracer.check(tracer);
     }
 
     @Override
