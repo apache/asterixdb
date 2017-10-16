@@ -49,8 +49,8 @@ public class HttpServer {
     // Constants
     private static final int LOW_WRITE_BUFFER_WATER_MARK = 8 * 1024;
     private static final int HIGH_WRITE_BUFFER_WATER_MARK = 32 * 1024;
-    protected static final WriteBufferWaterMark WRITE_BUFFER_WATER_MARK =
-            new WriteBufferWaterMark(LOW_WRITE_BUFFER_WATER_MARK, HIGH_WRITE_BUFFER_WATER_MARK);
+    protected static final WriteBufferWaterMark WRITE_BUFFER_WATER_MARK = new WriteBufferWaterMark(
+            LOW_WRITE_BUFFER_WATER_MARK, HIGH_WRITE_BUFFER_WATER_MARK);
     protected static final int RECEIVE_BUFFER_SIZE = 4096;
     protected static final int DEFAULT_NUM_EXECUTOR_THREADS = 16;
     protected static final int DEFAULT_REQUEST_QUEUE_SIZE = 256;
@@ -92,8 +92,8 @@ public class HttpServer {
         long directMemoryBudget = numExecutorThreads * (long) HIGH_WRITE_BUFFER_WATER_MARK
                 + numExecutorThreads * HttpServerInitializer.RESPONSE_CHUNK_SIZE;
         LOGGER.log(Level.INFO, "The output direct memory budget for this server is " + directMemoryBudget + " bytes");
-        long inputBudgetEstimate =
-                (long) HttpServerInitializer.MAX_REQUEST_INITIAL_LINE_LENGTH * (requestQueueSize + numExecutorThreads);
+        long inputBudgetEstimate = (long) HttpServerInitializer.MAX_REQUEST_INITIAL_LINE_LENGTH
+                * (requestQueueSize + numExecutorThreads);
         inputBudgetEstimate = inputBudgetEstimate * 2;
         LOGGER.log(Level.INFO,
                 "The \"estimated\" input direct memory budget for this server is " + inputBudgetEstimate + " bytes");
@@ -230,8 +230,8 @@ public class HttpServer {
             executor.awaitTermination(30, TimeUnit.SECONDS);
             if (!executor.isTerminated()) {
                 if (LOGGER.isLoggable(Level.INFO)) {
-                    LOGGER.log(Level.SEVERE, "Failed to shutdown http server executor; thread dump: " +
-                            ThreadDumpUtil.takeDumpString());
+                    LOGGER.log(Level.SEVERE,
+                            "Failed to shutdown http server executor; thread dump: " + ThreadDumpUtil.takeDumpString());
                 } else {
                     LOGGER.log(Level.SEVERE, "Failed to shutdown http server executor");
                 }
@@ -284,11 +284,11 @@ public class HttpServer {
         return b && (path.length() == cpl || '/' == path.charAt(cpl));
     }
 
-    protected HttpServerHandler<HttpServer> createHttpHandler(int chunkSize) {
+    protected HttpServerHandler<? extends HttpServer> createHttpHandler(int chunkSize) {
         return new HttpServerHandler<>(this, chunkSize);
     }
 
-    public ThreadPoolExecutor getExecutor() {
+    public ThreadPoolExecutor getExecutor(HttpRequestHandler handler) {
         return executor;
     }
 

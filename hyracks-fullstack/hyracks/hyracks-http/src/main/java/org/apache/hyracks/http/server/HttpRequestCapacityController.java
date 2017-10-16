@@ -67,8 +67,8 @@ public class HttpRequestCapacityController extends ChannelInboundHandlerAdapter 
         HttpResponseEncoder encoder = new HttpResponseEncoder();
         ChannelPromise promise = ctx.newPromise();
         promise.addListener(ChannelFutureListener.CLOSE);
-        DefaultFullHttpResponse response =
-                new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.SERVICE_UNAVAILABLE);
+        DefaultFullHttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1,
+                HttpResponseStatus.SERVICE_UNAVAILABLE);
         try {
             encoder.write(ctx, response, ctx.voidPromise());
             ctx.writeAndFlush(ctx.alloc().buffer(0), promise);
@@ -99,7 +99,9 @@ public class HttpRequestCapacityController extends ChannelInboundHandlerAdapter 
     }
 
     private boolean overloaded() {
-        overloaded = overloaded || server.getExecutor().getQueue().remainingCapacity() == 0;
+        if (!overloaded) {
+            overloaded = server.getExecutor(null).getQueue().remainingCapacity() == 0;
+        }
         return overloaded;
     }
 }

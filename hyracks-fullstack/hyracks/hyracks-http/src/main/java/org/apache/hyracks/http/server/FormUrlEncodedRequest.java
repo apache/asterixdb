@@ -62,7 +62,7 @@ public class FormUrlEncodedRequest extends BaseRequest implements IServletReques
     }
 
     protected FormUrlEncodedRequest(FullHttpRequest request, Map<String, List<String>> parameters, List<String> names,
-                                    List<String> values) {
+            List<String> values) {
         super(request, parameters);
         this.names = names;
         this.values = values;

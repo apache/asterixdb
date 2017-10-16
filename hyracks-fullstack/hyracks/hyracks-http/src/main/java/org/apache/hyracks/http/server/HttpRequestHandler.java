@@ -89,4 +89,8 @@ public class HttpRequestHandler implements Callable<Void> {
             request.getHttpRequest().release();
         }
     }
+
+    public IServlet getServlet() {
+        return servlet;
+    }
 }

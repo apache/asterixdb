@@ -96,7 +96,7 @@ public class HttpServerHandler<T extends HttpServer> extends SimpleChannelInboun
 
     private void submit() throws IOException {
         try {
-            server.getExecutor().submit(handler);
+            server.getExecutor(handler).submit(handler);
         } catch (RejectedExecutionException e) { // NOSONAR
             LOGGER.log(Level.WARNING, "Request rejected by server executor service. " + e.getMessage());
             handler.reject();

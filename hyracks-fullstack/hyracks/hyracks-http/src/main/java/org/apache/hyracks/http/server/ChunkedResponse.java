@@ -52,7 +52,6 @@ import io.netty.handler.codec.http.LastHttpContent;
  * with headers, followed by the buffered bytes as the first chunk.
  * When chunking, an output buffer is allocated only when the previous buffer has been sent
  * If an error occurs after sending the first chunk, the connection will close abruptly.
- *
  * Here is a breakdown of the possible cases.
  * 1. smaller than chunkSize, no error -> full response
  * 2. smaller than chunkSize, error -> full response
