@@ -54,7 +54,7 @@ public interface ITracer {
     ITracer NONE = new ITracer() {
         @Override
         public String getName() {
-            return null;
+            return "NONE";
         }
 
         @Override
