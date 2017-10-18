@@ -214,9 +214,7 @@ public class LSMBTreePointSearchCursor implements ITreeIndexCursor {
     public void close() throws HyracksDataException {
         if (lsmHarness != null) {
             try {
-                for (int i = 0; i < rangeCursors.length; i++) {
-                    rangeCursors[i].close();
-                }
+                closeCursors();
                 rangeCursors = null;
             } finally {
                 lsmHarness.endSearch(opCtx);
@@ -265,4 +263,13 @@ public class LSMBTreePointSearchCursor implements ITreeIndexCursor {
         return false;
     }
 
+    private void closeCursors() throws HyracksDataException {
+        if (rangeCursors != null) {
+            for (int i = 0; i < rangeCursors.length; ++i) {
+                if (rangeCursors[i] != null) {
+                    rangeCursors[i].close();
+                }
+            }
+        }
+    }
 }
