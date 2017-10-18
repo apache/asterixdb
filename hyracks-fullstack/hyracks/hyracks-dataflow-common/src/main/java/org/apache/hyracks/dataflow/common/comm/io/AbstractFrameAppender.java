@@ -120,10 +120,10 @@ public class AbstractFrameAppender implements IFrameAppender {
     public void flush(IFrameWriter writer, ITracer tracer, String name, String cat, String args)
             throws HyracksDataException {
         final long tid = ITracer.check(tracer).durationB(name, cat, args);
-        if (tupleCount > 0) {
-            write(writer, true);
+        try {
+            flush(writer);
+        } finally {
+            ITracer.check(tracer).durationE(tid, args);
         }
-        writer.flush();
-        ITracer.check(tracer).durationE(tid, args);
     }
 }

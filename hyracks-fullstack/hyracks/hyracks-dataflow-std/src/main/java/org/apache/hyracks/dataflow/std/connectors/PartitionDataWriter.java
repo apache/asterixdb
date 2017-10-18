@@ -31,6 +31,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import org.apache.hyracks.dataflow.common.comm.util.FrameUtils;
+import org.apache.hyracks.util.trace.ITracer;
 
 public class PartitionDataWriter implements IFrameWriter {
     private final int consumerPartitionCount;
@@ -159,6 +160,14 @@ public class PartitionDataWriter implements IFrameWriter {
         for (int i = 0; i < consumerPartitionCount; i++) {
             if (allocatedFrames[i]) {
                 appenders[i].flush(pWriters[i]);
+            }
+        }
+    }
+
+    public void flush(ITracer tracer, String name, String cat, String args) throws HyracksDataException {
+        for (int i = 0; i < consumerPartitionCount; i++) {
+            if (allocatedFrames[i]) {
+                appenders[i].flush(pWriters[i], tracer, name, cat, args);
             }
         }
     }
