@@ -18,8 +18,8 @@
  */
 package org.apache.asterix.app.nc.task;
 
-import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.api.INCLifecycleTask;
+import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.service.IControllerService;
 
@@ -31,5 +31,10 @@ public class StartFailbackTask implements INCLifecycleTask {
     public void perform(IControllerService cs) throws HyracksDataException {
         INcApplicationContext appContext = (INcApplicationContext) cs.getApplicationContext();
         appContext.getRemoteRecoveryManager().startFailbackProcess();
+    }
+
+    @Override
+    public String toString() {
+        return "{ \"class\" : \"" + getClass().getSimpleName() + "\" }";
     }
 }

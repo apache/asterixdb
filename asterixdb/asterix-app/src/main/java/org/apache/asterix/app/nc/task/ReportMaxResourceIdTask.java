@@ -32,4 +32,9 @@ public class ReportMaxResourceIdTask implements INCLifecycleTask {
     public void perform(IControllerService cs) throws HyracksDataException {
         ReportMaxResourceIdMessage.send((NodeControllerService) cs);
     }
+
+    @Override
+    public String toString() {
+        return "{ \"class\" : \"" + getClass().getSimpleName() + "\" }";
+    }
 }

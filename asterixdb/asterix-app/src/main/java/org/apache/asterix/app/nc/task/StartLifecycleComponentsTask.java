@@ -23,8 +23,8 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.api.INCLifecycleTask;
+import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.config.MetadataProperties;
 import org.apache.asterix.hyracks.bootstrap.AsterixStateDumpHandler;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -60,5 +60,10 @@ public class StartLifecycleComponentsTask implements INCLifecycleTask {
         }
         serviceCtx.setStateDumpHandler(new AsterixStateDumpHandler(serviceCtx.getNodeId(), lccm.getDumpPath(), lccm));
         lccm.startAll();
+    }
+
+    @Override
+    public String toString() {
+        return "{ \"class\" : \"" + getClass().getSimpleName() + "\" }";
     }
 }

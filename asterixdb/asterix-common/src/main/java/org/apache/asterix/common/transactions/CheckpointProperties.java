@@ -50,4 +50,11 @@ public class CheckpointProperties {
     public String getCheckpointDirPath() {
         return checkpointDirPath;
     }
+
+    @Override
+    public String toString() {
+        return "{\"class\" : \"" + getClass().getSimpleName() + "\", \"checkpoint-dir-path\" : \"" + checkpointDirPath
+                + "\", \"lsn-threshold\" : " + lsnThreshold + ", \"poll-frequency\" : " + pollFrequency
+                + ", \"history-to-keep\" : " + historyToKeep + " }";
+    }
 }

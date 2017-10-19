@@ -187,11 +187,14 @@ public class NCAppRuntimeContext implements INcApplicationContext {
         IAppRuntimeContextProvider asterixAppRuntimeContextProvider = new AppRuntimeContextProviderForRecovery(this);
         txnSubsystem = new TransactionSubsystem(getServiceContext(), getServiceContext().getNodeId(),
                 asterixAppRuntimeContextProvider, txnProperties);
-
         IRecoveryManager recoveryMgr = txnSubsystem.getRecoveryManager();
         SystemState systemState = recoveryMgr.getSystemState();
         if (initialRun || systemState == SystemState.PERMANENT_DATA_LOSS) {
             //delete any storage data before the resource factory is initialized
+            if (LOGGER.isLoggable(Level.WARNING)) {
+                LOGGER.log(Level.WARNING,
+                        "Deleting the storage dir. initialRun = " + initialRun + ", systemState = " + systemState);
+            }
             localResourceRepository.deleteStorageData(true);
         }
 

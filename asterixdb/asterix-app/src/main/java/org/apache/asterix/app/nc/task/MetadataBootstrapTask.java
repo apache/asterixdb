@@ -18,8 +18,8 @@
  */
 package org.apache.asterix.app.nc.task;
 
-import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.api.INCLifecycleTask;
+import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.transactions.IRecoveryManager.SystemState;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.service.IControllerService;
@@ -37,5 +37,10 @@ public class MetadataBootstrapTask implements INCLifecycleTask {
         } catch (Exception e) {
             throw HyracksDataException.create(e);
         }
+    }
+
+    @Override
+    public String toString() {
+        return "{ \"class\" : \"" + getClass().getSimpleName() + "\" }";
     }
 }

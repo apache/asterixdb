@@ -53,9 +53,16 @@ public class StartupTaskResponseMessage implements INCLifecycleMessage, INcAddre
             Throwable exception = null;
             try {
                 for (INCLifecycleTask task : tasks) {
+                    if (LOGGER.isLoggable(Level.INFO)) {
+                        LOGGER.log(Level.INFO, "Starting startup task: " + task);
+                    }
                     task.perform(cs);
+                    if (LOGGER.isLoggable(Level.INFO)) {
+                        LOGGER.log(Level.INFO, "Completed startup task: " + task);
+                    }
                 }
             } catch (Throwable e) { //NOSONAR all startup failures should be reported to CC
+                LOGGER.log(Level.SEVERE, "Failed during startup task", e);
                 success = false;
                 exception = e;
             }
