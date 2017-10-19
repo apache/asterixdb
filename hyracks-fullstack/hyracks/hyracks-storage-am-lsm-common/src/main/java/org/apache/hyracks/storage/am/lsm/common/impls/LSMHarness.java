@@ -643,9 +643,9 @@ public class LSMHarness implements ILSMHarness {
         exitComponents(ctx, LSMOperationType.REPLICATE, null, false);
     }
 
-    protected void validateOperationEnterComponentsState(ILSMIndexOperationContext ctx) throws HyracksDataException {
+    protected void validateOperationEnterComponentsState(ILSMIndexOperationContext ctx) {
         if (ctx.isAccessingComponents()) {
-            throw new HyracksDataException("Opeartion already has access to components of index " + lsmIndex);
+            throw new IllegalStateException("Operation already has access to components of index " + lsmIndex);
         }
     }
 
@@ -684,17 +684,17 @@ public class LSMHarness implements ILSMHarness {
         processor.start();
         enter(ctx);
         try {
-            int tupleCount = accessor.getTupleCount();
-            int i = 0;
-            while (i < tupleCount) {
-                tuple.reset(accessor, i);
-                processor.process(tuple, i);
-                i++;
+            try {
+                processFrame(accessor, tuple, processor);
+                frameOpCallback.frameCompleted();
+            } finally {
+                processor.finish();
             }
-            frameOpCallback.frameCompleted();
-            processor.finish();
-        } catch (Exception e) {
-            throw HyracksDataException.create(e);
+        } catch (HyracksDataException e) {
+            if (LOGGER.isLoggable(Level.SEVERE)) {
+                LOGGER.log(Level.SEVERE, "Failed to process frame", e);
+            }
+            throw e;
         } finally {
             exit(ctx);
         }
@@ -851,6 +851,17 @@ public class LSMHarness implements ILSMHarness {
             }
         }
         return false;
+    }
+
+    private static void processFrame(FrameTupleAccessor accessor, FrameTupleReference tuple,
+            IFrameTupleProcessor processor) throws HyracksDataException {
+        int tupleCount = accessor.getTupleCount();
+        int i = 0;
+        while (i < tupleCount) {
+            tuple.reset(accessor, i);
+            processor.process(tuple, i);
+            i++;
+        }
     }
 
     @Override
