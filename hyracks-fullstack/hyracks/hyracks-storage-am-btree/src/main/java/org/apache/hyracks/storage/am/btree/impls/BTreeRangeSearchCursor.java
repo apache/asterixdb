@@ -310,8 +310,4 @@ public class BTreeRangeSearchCursor implements ITreeIndexCursor {
     public boolean isExclusiveLatchNodes() {
         return exclusiveLatchNodes;
     }
-
-    public boolean isBloomFilterAware() {
-        return false;
-    }
 }

@@ -170,6 +170,10 @@ public class BloomFilter {
         fileId = -1;
     }
 
+    public static long[] createHashArray() {
+        return new long[2];
+    }
+
     public synchronized void destroy() throws HyracksDataException {
         if (isActivated) {
             throw HyracksDataException.create(ErrorCode.CANNOT_DESTROY_ACTIVE_BLOOM_FILTER);
@@ -183,13 +187,13 @@ public class BloomFilter {
     }
 
     public class BloomFilterBuilder implements IIndexBulkLoader {
-        private final long[] hashes = new long[2];
+        private final long[] hashes = BloomFilter.createHashArray();
         private final long numElements;
         private final int numHashes;
         private final long numBits;
         private final int numPages;
-        private IFIFOPageQueue queue;
-        private ICachedPage[] pages;
+        private final IFIFOPageQueue queue;
+        private final ICachedPage[] pages;
         private ICachedPage metaDataPage = null;
 
         public BloomFilterBuilder(long numElements, int numHashes, int numBitsPerElement) throws HyracksDataException {

@@ -28,7 +28,7 @@ import org.apache.hyracks.storage.common.ISearchPredicate;
 
 public class LSMBTreeWithBuddySearchCursor extends LSMBTreeWithBuddyAbstractCursor {
     private int currentCursor;
-    private PermutingTupleReference buddyBTreeTuple;
+    private final PermutingTupleReference buddyBTreeTuple;
 
     public LSMBTreeWithBuddySearchCursor(ILSMIndexOperationContext opCtx, int[] buddyBTreeFields) {
         super(opCtx);
@@ -80,7 +80,11 @@ public class LSMBTreeWithBuddySearchCursor extends LSMBTreeWithBuddyAbstractCurs
                 ITupleReference currentTuple = btreeCursors[currentCursor].getTuple();
                 buddyBTreeTuple.reset(btreeCursors[currentCursor].getTuple());
                 boolean killerTupleFound = false;
-                for (int i = 0; i < currentCursor; i++) {
+                for (int i = 0; i < currentCursor && !killerTupleFound; i++) {
+                    if (buddyBtreeBloomFilters[i] != null
+                            && !buddyBtreeBloomFilters[i].contains(buddyBTreeTuple, hashes)) {
+                        continue;
+                    }
                     buddyBtreeCursors[i].reset();
                     buddyBtreeRangePredicate.setHighKey(buddyBTreeTuple, true);
                     buddyBtreeRangePredicate.setLowKey(buddyBTreeTuple, true);
@@ -88,7 +92,6 @@ public class LSMBTreeWithBuddySearchCursor extends LSMBTreeWithBuddyAbstractCurs
                     try {
                         if (buddyBtreeCursors[i].hasNext()) {
                             killerTupleFound = true;
-                            break;
                         }
                     } finally {
                         buddyBtreeCursors[i].close();
@@ -115,13 +118,13 @@ public class LSMBTreeWithBuddySearchCursor extends LSMBTreeWithBuddyAbstractCurs
     @Override
     public ITupleReference getFilterMinTuple() {
         ILSMComponentFilter filter = getFilter();
-        return filter == null ?  null : filter.getMinTuple();
+        return filter == null ? null : filter.getMinTuple();
     }
 
     @Override
     public ITupleReference getFilterMaxTuple() {
         ILSMComponentFilter filter = getFilter();
-        return filter == null ?  null : filter.getMaxTuple();
+        return filter == null ? null : filter.getMaxTuple();
     }
 
     private ILSMComponentFilter getFilter() {

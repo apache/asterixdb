@@ -22,7 +22,6 @@ package org.apache.hyracks.storage.am.lsm.rtree.impls;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.common.tuples.PermutingTupleReference;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilter;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import org.apache.hyracks.storage.common.ICursorInitialState;
@@ -31,7 +30,7 @@ import org.apache.hyracks.storage.common.ISearchPredicate;
 public class LSMRTreeSearchCursor extends LSMRTreeAbstractCursor {
 
     private int currentCursor;
-    private PermutingTupleReference btreeTuple;
+    private final PermutingTupleReference btreeTuple;
 
     public LSMRTreeSearchCursor(ILSMIndexOperationContext opCtx, int[] buddyBTreeFields) {
         super(opCtx);
@@ -99,7 +98,10 @@ public class LSMRTreeSearchCursor extends LSMRTreeAbstractCursor {
                 ITupleReference currentTuple = rtreeCursors[currentCursor].getTuple();
                 btreeTuple.reset(rtreeCursors[currentCursor].getTuple());
                 boolean killerTupleFound = false;
-                for (int i = 0; i < currentCursor; i++) {
+                for (int i = 0; i < currentCursor && !killerTupleFound; i++) {
+                    if (bloomFilters[i] != null && bloomFilters[i].contains(btreeTuple, hashes)) {
+                        continue;
+                    }
                     btreeCursors[i].reset();
                     btreeRangePredicate.setHighKey(btreeTuple, true);
                     btreeRangePredicate.setLowKey(btreeTuple, true);
@@ -107,7 +109,6 @@ public class LSMRTreeSearchCursor extends LSMRTreeAbstractCursor {
                     try {
                         if (btreeCursors[i].hasNext()) {
                             killerTupleFound = true;
-                            break;
                         }
                     } finally {
                         btreeCursors[i].close();

@@ -99,7 +99,7 @@ public class BloomFilterTest extends AbstractBloomFilterTest {
 
         // Check all the inserted tuples can be found.
 
-        long[] hashes = new long[2];
+        long[] hashes = BloomFilter.createHashArray();
         for (int i = 0; i < keys.size(); ++i) {
             TupleUtils.createIntegerTuple(tupleBuilder, tuple, keys.get(i), i);
             Assert.assertTrue(bf.contains(tuple, hashes));
@@ -157,7 +157,7 @@ public class BloomFilterTest extends AbstractBloomFilterTest {
         }
         builder.end();
 
-        long[] hashes = new long[2];
+        long[] hashes = BloomFilter.createHashArray();
         for (int i = 0; i < numElements; ++i) {
             TupleUtils.createTuple(tupleBuilder, tuple, fieldSerdes, s1.get(i), s2.get(i), i, s3.get(i), s4.get(i));
             Assert.assertTrue(bf.contains(tuple, hashes));
