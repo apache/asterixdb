@@ -39,7 +39,7 @@ import org.apache.asterix.lang.sqlpp.clause.SelectElement;
 import org.apache.asterix.lang.sqlpp.clause.SelectSetOperation;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationInput;
-import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppExpressionScopingVisitor;
+import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppSimpleExpressionVisitor;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
@@ -49,9 +49,11 @@ import org.apache.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
  * {@code agg-distinct(expr) -> agg((FROM expr AS i SELECT DISTINCT VALUE i))} <br/>
  * where {@code agg-distinct} is a distinct aggregate function, {@code agg} - a regular aggregate function
  */
-public class SqlppDistinctAggregationSugarVisitor extends AbstractSqlppExpressionScopingVisitor {
+public class SqlppDistinctAggregationSugarVisitor extends AbstractSqlppSimpleExpressionVisitor {
+    protected final LangRewritingContext context;
+
     public SqlppDistinctAggregationSugarVisitor(LangRewritingContext context) {
-        super(context);
+        this.context = context;
     }
 
     @Override
