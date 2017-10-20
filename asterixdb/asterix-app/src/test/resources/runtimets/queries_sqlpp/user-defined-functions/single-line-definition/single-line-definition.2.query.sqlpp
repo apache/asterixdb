@@ -23,8 +23,13 @@
  * Date         : Jul 10th 2016
  */
 
-use Metadata;
-
-select value `Function`
-from `Function`
-where DataverseName = 'test';
+select element {
+'DataverseName': l.DataverseName,
+'Name': l.Name,
+'Arity': l.Arity,
+'ReturnType': l.ReturnType,
+'Definition': l.`Definition`
+}
+from  `Metadata.Function` as l
+where (l.DataverseName = 'test')
+;

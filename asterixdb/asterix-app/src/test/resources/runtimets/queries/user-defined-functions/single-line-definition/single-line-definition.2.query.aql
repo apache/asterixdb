@@ -23,6 +23,12 @@
  * Date         : Jul 10th 2016
  */
 
-for $x in dataset Metadata.Function
-where $x.DataverseName = "test"
-return $x;
+for $l in dataset('Metadata.Function')
+where $l.DataverseName='test'
+return {
+"DataverseName": $l.DataverseName,
+"Name": $l.Name,
+"Arity": $l.Arity,
+"ReturnType": $l.ReturnType,
+"Definition": $l.Definition
+};

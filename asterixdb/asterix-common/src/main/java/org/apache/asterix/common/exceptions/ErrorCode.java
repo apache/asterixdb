@@ -129,6 +129,7 @@ public class ErrorCode {
     public static final int INDEX_ILLEGAL_REPETITIVE_FIELD = 1052;
     public static final int CANNOT_CREATE_SEC_PRIMARY_IDX_ON_EXT_DATASET = 1053;
     public static final int COMPILATION_FAILED_DUE_TO_REPLICATE_OP = 1054;
+    public static final int COMPILATION_INCOMPATIBLE_FUNCTION_LANGUAGE = 1055;
 
     // Feed errors
     public static final int DATAFLOW_ILLEGAL_STATE = 3001;

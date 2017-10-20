@@ -43,5 +43,10 @@
         <output-dir compare="Text">upperCase</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="feeds">
+      <compilation-unit name="feed-with-external-function">
+        <output-dir compare="Text">feed-with-external-function</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
 </test-suite>

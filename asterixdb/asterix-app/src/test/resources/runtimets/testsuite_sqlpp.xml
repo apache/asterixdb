@@ -8248,6 +8248,11 @@
         <output-dir compare="Text">upsert-feed</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="feeds">
+      <compilation-unit name="connect-feed-with-function">
+        <output-dir compare="Text">connect-feed-with-function</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="hdfs">
     <test-case FilePath="hdfs">

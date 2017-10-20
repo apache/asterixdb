@@ -320,56 +320,6 @@ public class CompiledStatements {
         }
     }
 
-    public static class CompiledConnectFeedStatement implements ICompiledDmlStatement {
-        private final String dataverseName;
-        private final String feedName;
-        private final String datasetName;
-        private final String policyName;
-        private final Query query;
-        private final int varCounter;
-
-        public CompiledConnectFeedStatement(String dataverseName, String feedName, String datasetName,
-                String policyName, Query query, int varCounter) {
-            this.dataverseName = dataverseName;
-            this.feedName = feedName;
-            this.datasetName = datasetName;
-            this.policyName = policyName;
-            this.query = query;
-            this.varCounter = varCounter;
-        }
-
-        @Override
-        public String getDataverseName() {
-            return dataverseName;
-        }
-
-        public String getFeedName() {
-            return feedName;
-        }
-
-        @Override
-        public String getDatasetName() {
-            return datasetName;
-        }
-
-        public int getVarCounter() {
-            return varCounter;
-        }
-
-        public Query getQuery() {
-            return query;
-        }
-
-        @Override
-        public byte getKind() {
-            return Statement.Kind.CONNECT_FEED;
-        }
-
-        public String getPolicyName() {
-            return policyName;
-        }
-    }
-
     public static class CompiledSubscribeFeedStatement implements ICompiledDmlStatement {
 
         private FeedConnectionRequest request;
@@ -402,38 +352,6 @@ public class CompiledStatements {
         public byte getKind() {
             return Statement.Kind.SUBSCRIBE_FEED;
         }
-    }
-
-    public static class CompiledDisconnectFeedStatement implements ICompiledDmlStatement {
-        private final String dataverseName;
-        private final String datasetName;
-        private final String feedName;
-
-        public CompiledDisconnectFeedStatement(String dataverseName, String feedName, String datasetName) {
-            this.dataverseName = dataverseName;
-            this.feedName = feedName;
-            this.datasetName = datasetName;
-        }
-
-        @Override
-        public String getDataverseName() {
-            return dataverseName;
-        }
-
-        @Override
-        public String getDatasetName() {
-            return datasetName;
-        }
-
-        public String getFeedName() {
-            return feedName;
-        }
-
-        @Override
-        public byte getKind() {
-            return Statement.Kind.DISCONNECT_FEED;
-        }
-
     }
 
     public static class CompiledDeleteStatement implements ICompiledDmlStatement {

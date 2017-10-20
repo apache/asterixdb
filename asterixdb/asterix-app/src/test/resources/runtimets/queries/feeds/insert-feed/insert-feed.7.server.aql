@@ -16,19 +16,5 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/*
- * Description  : Create a UDF but use ';' for terminating the create function statement. Look up metadata
- * Expected Res : Success
- * Date         : Apr 5th 2013
- */
 
-select element {
-'DataverseName': l.DataverseName,
-'Name': l.Name,
-'Arity': l.Arity,
-'ReturnType': l.ReturnType,
-'Definition': l.`Definition`
-}
-from  `Metadata.Function` as l
-where (l.DataverseName = 'test')
-;
+stop 10001

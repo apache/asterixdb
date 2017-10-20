@@ -16,13 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/*
- * Description  : Create a feed and apply two functions in the
- * workflow. The output of the first function can be used in
- * the second function. The function parameter can have any
- * name.
- * Expected Res : Success
- * Date         : 29th Mar 2017
- */
+use experiments;
 
-stop 10001
+select value t.true_popularity from TwitterUsers t
+order by t.`screen-name`;

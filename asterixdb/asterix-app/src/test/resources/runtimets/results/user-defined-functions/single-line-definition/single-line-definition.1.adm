@@ -1,1 +1,1 @@
-{ "DataverseName": "test", "Name": "printName", "Arity": "0", "Params": [  ], "ReturnType": "VOID", "Definition": "'AsterixDB Shared nothing parallel BDMS'", "Language": "AQL", "Kind": "SCALAR" }
+{ "DataverseName": "test", "Name": "printName", "Arity": "0", "ReturnType": "VOID", "Definition": "'AsterixDB Shared nothing parallel BDMS'" }

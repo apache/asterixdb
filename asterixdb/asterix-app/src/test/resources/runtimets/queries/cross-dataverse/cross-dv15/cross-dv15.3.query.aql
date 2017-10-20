@@ -30,6 +30,5 @@ return {
 "DataverseName": $l.DataverseName,
 "Name": $l.Name,
 "Arity": $l.Arity,
-"ReturnType": $l.ReturnType,
-"Language": $l.Language
+"ReturnType": $l.ReturnType
 };

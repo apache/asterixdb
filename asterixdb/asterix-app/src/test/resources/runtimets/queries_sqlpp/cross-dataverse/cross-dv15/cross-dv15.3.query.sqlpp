@@ -27,8 +27,7 @@ select element {
 'DataverseName': l.DataverseName,
 'Name': l.Name,
 'Arity': l.Arity,
-'ReturnType': l.ReturnType,
-'Language': l.Language
+'ReturnType': l.ReturnType
 }
 from  `Metadata.Function` as l
 where (l.DataverseName = 'testdv1')

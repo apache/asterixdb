@@ -17,11 +17,12 @@
  * under the License.
  */
 /*
- * Description  : Create a feed and apply two functions in the
- * workflow. The output of the first function can be used in
- * the second function. The function parameter can have any
- * name.
+ * Description  : Apply user defined function to feed.
  * Expected Res : Success
- * Date         : 29th Mar 2017
+ * Date         : 4th Oct 2017
  */
-2000
+use externallibtest;
+
+connect feed TweetFeed to dataset TweetsFeedIngest apply function `testlib#parseTweet`;
+
+start feed TweetFeed;

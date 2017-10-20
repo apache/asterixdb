@@ -17,10 +17,13 @@
  * under the License.
  */
 /*
- * Description  : Create a feed with upsert option. Push record twice
- * with minor changes. The updated record will not cause duplicate
- * key exception and the data will be updated.
+ * Description  : Apply user defined function to feed.
  * Expected Res : Success
- * Date         : 13th Aug 2016
+ * Date         : 4th Oct 2017
  */
-10000
+// polltimeoutsecs=5
+use externallibtest;
+
+select value t from TweetsFeedIngest t
+ORDER BY t.id;
+

@@ -63,6 +63,7 @@ import org.apache.asterix.metadata.utils.IndexUtil;
 import org.apache.asterix.metadata.utils.InvertedIndexResourceFactoryProvider;
 import org.apache.asterix.metadata.utils.MetadataUtil;
 import org.apache.asterix.metadata.utils.RTreeResourceFactoryProvider;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.utils.RecordUtil;
@@ -85,6 +86,10 @@ import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
+import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
+import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
+import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
 import org.apache.hyracks.algebricks.data.IBinaryComparatorFactoryProvider;
 import org.apache.hyracks.algebricks.data.ISerializerDeserializerProvider;
 import org.apache.hyracks.algebricks.data.ITypeTraitProvider;
@@ -289,8 +294,31 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
                 && Objects.equals(datasetName, otherDataset.datasetName);
     }
 
-    public boolean allow(ILogicalOperator topOp, byte operation) {//NOSONAR: this method is meant to be extended
-        return !hasMetaPart();
+    public boolean allow(ILogicalOperator topOp, byte operation) {
+        if (!hasMetaPart()) {
+            return true;
+        }
+        if (topOp.getInputs().get(0).getValue().getOperatorTag() != LogicalOperatorTag.ASSIGN) {
+            return false;
+        }
+        ILogicalOperator op = topOp.getInputs().get(0).getValue();
+        while ((!op.getInputs().isEmpty())
+                && op.getInputs().get(0).getValue().getOperatorTag() != LogicalOperatorTag.UNNEST) {
+            op = op.getInputs().get(0).getValue();
+        }
+        if (op.getInputs().isEmpty()) {
+            return false;
+        }
+        UnnestOperator unnestOp = (UnnestOperator) op.getInputs().get(0).getValue();
+        if (unnestOp.getExpressionRef().getValue().getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
+            return false;
+        }
+        AbstractFunctionCallExpression functionCall =
+                (AbstractFunctionCallExpression) unnestOp.getExpressionRef().getValue();
+        if (functionCall.getFunctionIdentifier() != BuiltinFunctions.FEED_COLLECT) {
+            return false;
+        }
+        return operation == DatasetUtil.OP_UPSERT;
     }
 
     /**

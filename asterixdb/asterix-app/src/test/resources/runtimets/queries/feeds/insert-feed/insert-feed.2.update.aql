@@ -16,16 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/*
- * Description  : Create a feed and apply two functions in the
- * workflow. The output of the first function can be used in
- * the second function. The function parameter can have any
- * name.
- * Expected Res : Success
- * Date         : 29th Mar 2017
- */
 use dataverse experiments;
+set wait-for-completion-feed "false";
 
-for $x in dataset TwitterUsers
-order by $x.screen-name
-return $x.true_popularity;
+connect feed UserFeed to dataset TwitterUsers;
+
+start feed UserFeed;

@@ -299,8 +299,8 @@ public class ExternalDataUtils {
         return Boolean.parseBoolean(configuration.get(ExternalDataConstants.KEY_IS_CHANGE_FEED));
     }
 
-    public static boolean isUpsertFeed(Map<String, String> configuration) {
-        return Boolean.parseBoolean(configuration.get(ExternalDataConstants.KEY_IS_UPSERT_FEED));
+    public static boolean isInsertFeed(Map<String, String> configuration) {
+        return Boolean.parseBoolean(configuration.get(ExternalDataConstants.KEY_IS_INSERT_FEED));
     }
 
     public static int getNumberOfKeys(Map<String, String> configuration) throws AsterixException {

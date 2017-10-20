@@ -17,12 +17,11 @@
  * under the License.
  */
 /*
- * Description  : Create a feed with upsert option. Push record twice
- * with minor changes. The updated record will not cause duplicate
- * key exception and the data will be updated.
+ * Description  : Create a feed and apply two functions in the
+ * workflow. The output of the first function can be used in
+ * the second function. The function parameter can have any
+ * name.
  * Expected Res : Success
- * Date         : 13th Aug 2016
+ * Date         : 29th Mar 2017
  */
-use dataverse experiments;
-stop feed UserFeed;
-disconnect feed UserFeed from dataset TwitterUsers;
+drop dataverse experiments;

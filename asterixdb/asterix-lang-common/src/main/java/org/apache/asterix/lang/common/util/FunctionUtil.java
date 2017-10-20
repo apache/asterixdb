@@ -123,7 +123,8 @@ public class FunctionUtil {
                 throw new CompilationException(messageBuilder.toString());
             }
 
-            if (function.getLanguage().equalsIgnoreCase(Function.LANGUAGE_AQL)) {
+            if (function.getLanguage().equalsIgnoreCase(Function.LANGUAGE_AQL)
+                    || function.getLanguage().equalsIgnoreCase(Function.LANGUAGE_SQLPP)) {
                 FunctionDecl functionDecl = functionParser.getFunctionDecl(function);
                 if (functionDecl != null) {
                     if (functionDecls.contains(functionDecl)) {
