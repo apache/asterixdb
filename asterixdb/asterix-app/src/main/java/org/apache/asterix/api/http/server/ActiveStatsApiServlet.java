@@ -76,8 +76,10 @@ public class ActiveStatsApiServlet extends AbstractServlet {
             }
             long currentTime = System.currentTimeMillis();
             for (int iter1 = 0; iter1 < listeners.length; iter1++) {
-                resNode.putPOJO(listeners[iter1].getDisplayName(),
-                        constructNode(OBJECT_MAPPER, listeners[iter1], currentTime, expireTime));
+                if (listeners[iter1].isActive()) {
+                    resNode.putPOJO(listeners[iter1].getDisplayName(),
+                            constructNode(OBJECT_MAPPER, listeners[iter1], currentTime, expireTime));
+                }
             }
             // Construct Response
             responseWriter.write(OBJECT_MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(resNode));

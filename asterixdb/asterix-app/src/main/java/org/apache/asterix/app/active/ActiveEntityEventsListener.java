@@ -65,6 +65,7 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
     private static final ActiveEvent STATE_CHANGED = new ActiveEvent(null, Kind.STATE_CHANGED, null, null);
     private static final EnumSet<ActivityState> TRANSITION_STATES = EnumSet.of(ActivityState.RESUMING,
             ActivityState.STARTING, ActivityState.STOPPING, ActivityState.RECOVERING);
+    private static final String DEFAULT_ACTIVE_STATS = "{\"Stats\":\"N/A\"}";
     // finals
     protected final IClusterStateManager clusterStateManager;
     protected final ActiveNotificationHandler handler;
@@ -113,7 +114,7 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
         this.statsTimestamp = -1;
         this.isFetchingStats = false;
         this.statsUpdatedEvent = new ActiveEvent(null, Kind.STATS_UPDATED, entityId, null);
-        this.stats = "{\"Stats\":\"N/A\"}";
+        this.stats = DEFAULT_ACTIVE_STATS;
         this.runtimeName = runtimeName;
         this.locations = locations;
         this.numRegistered = 0;
@@ -275,9 +276,12 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
     public void refreshStats(long timeout) throws HyracksDataException {
         LOGGER.log(level, "refreshStats called");
         synchronized (this) {
-            if (state != ActivityState.RUNNING || isFetchingStats) {
-                LOGGER.log(level,
-                        "returning immediately since state = " + state + " and fetchingStats = " + isFetchingStats);
+            if (state != ActivityState.RUNNING) {
+                LOGGER.log(level, "returning immediately since state = " + state);
+                notifySubscribers(statsUpdatedEvent);
+                return;
+            } else if (isFetchingStats) {
+                LOGGER.log(level, "returning immediately since fetchingStats = " + isFetchingStats);
                 return;
             } else {
                 isFetchingStats = true;
@@ -426,6 +430,8 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
         } else {
             throw new RuntimeDataException(ErrorCode.ACTIVE_ENTITY_CANNOT_BE_STOPPED, entityId, state);
         }
+        this.stats = DEFAULT_ACTIVE_STATS;
+        notifySubscribers(statsUpdatedEvent);
     }
 
     public RecoveryTask getRecoveryTask() {
