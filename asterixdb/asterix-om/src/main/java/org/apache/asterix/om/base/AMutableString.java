@@ -20,11 +20,16 @@ package org.apache.asterix.om.base;
 
 public class AMutableString extends AString {
 
+    private static final long serialVersionUID = 1L;
+
     public AMutableString(String value) {
         super(value);
     }
 
     public void setValue(String value) {
+        if (value == null) {
+            throw new NullPointerException();
+        }
         this.value = value;
     }
 }
