@@ -89,6 +89,12 @@ public class Tracer implements ITracer {
     }
 
     @Override
+    public void durationE(String name, String cat, long tid, String args) {
+        Event e = Event.create(name, cat, Phase.E, pid, tid, null, args);
+        traceLog.log(TRACE_LOG_LEVEL, e.toJson());
+    }
+
+    @Override
     public void instant(String name, String cat, Scope scope, String args) {
         Event e = Event.create(name, cat, Phase.i, pid, Thread.currentThread().getId(), scope, args);
         traceLog.log(TRACE_LOG_LEVEL, e.toJson());

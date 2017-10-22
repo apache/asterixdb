@@ -76,6 +76,11 @@ public interface ITracer {
         public void instant(String name, String cat, Scope scope, String args) {
             // nothing to do here
         }
+
+        @Override
+        public void durationE(String name, String cat, long tid, String args) {
+            // nothing to do here
+        }
     };
 
     static ITracer check(ITracer tracer) {
@@ -92,6 +97,8 @@ public interface ITracer {
     long durationB(String name, String cat, String args);
 
     void durationE(long tid, String args);
+
+    void durationE(String name, String cat, long tid, String args);
 
     void instant(String name, String cat, Scope scope, String args);
 

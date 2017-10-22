@@ -87,7 +87,8 @@ class TracedIOOperation implements ILSMIOOperation {
         try {
             return ioOp.call();
         } finally {
-            tracer.durationE(tid, "{\"optional\":\"value\"}");
+            tracer.durationE(getTarget().getRelativePath(), cat, tid,
+                    "{\"size\":" + getTarget().getFile().length() + "}");
         }
     }
 
