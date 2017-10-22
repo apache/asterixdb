@@ -69,4 +69,8 @@ public interface IJobQueue {
      */
     Collection<JobRun> jobs();
 
+    /**
+     * Clears the job queue
+     */
+    void clear();
 }

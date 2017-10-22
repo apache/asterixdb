@@ -125,4 +125,9 @@ public interface IJobManager {
      * @return the maximum number of jobs to queue before rejecting new jobs
      */
     int getJobQueueCapacity();
+
+    /**
+     * Clears all queued jobs
+     */
+    void clearJobQueue();
 }

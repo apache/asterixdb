@@ -37,10 +37,14 @@ import org.apache.hyracks.api.job.JobStatus;
 import org.apache.hyracks.api.job.resource.IJobCapacityController;
 import org.apache.hyracks.control.cc.job.IJobManager;
 import org.apache.hyracks.control.cc.job.JobRun;
+import org.apache.hyracks.util.annotations.NotThreadSafe;
+import org.apache.hyracks.util.annotations.ThreadSafetyGuaranteedBy;
 
 /**
  * An implementation of IJobQueue that gives more priority to jobs that are submitted earlier.
  */
+@NotThreadSafe
+@ThreadSafetyGuaranteedBy("JobManager")
 public class FIFOJobQueue implements IJobQueue {
 
     private static final Logger LOGGER = Logger.getLogger(FIFOJobQueue.class.getName());
@@ -112,4 +116,8 @@ public class FIFOJobQueue implements IJobQueue {
         return Collections.unmodifiableCollection(jobListMap.values());
     }
 
+    @Override
+    public void clear() {
+        jobListMap.clear();
+    }
 }
