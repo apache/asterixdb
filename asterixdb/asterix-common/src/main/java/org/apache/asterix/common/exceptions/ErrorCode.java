@@ -74,6 +74,8 @@ public class ErrorCode {
 
     public static final int INSTANTIATION_ERROR = 100;
 
+    public static final int EXTERNAL_UDF_RESULT_TYPE_ERROR = 200;
+
     // Compilation errors
     public static final int PARSE_ERROR = 1001;
     public static final int COMPILATION_TYPE_MISMATCH = 1002;

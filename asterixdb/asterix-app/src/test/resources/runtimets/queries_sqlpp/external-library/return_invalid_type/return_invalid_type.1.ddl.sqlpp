@@ -1,0 +1,63 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+drop dataverse externallibtest if exists;
+create dataverse externallibtest;
+use externallibtest;
+
+create type TwitterUserType as closed {
+ screen_name: string,
+ language: string,
+ friends_count: int32,
+ status_count: int32,
+ name: string,
+ followers_count: int32
+};
+
+create type Tweet as closed {
+ id: int64,
+ user: TwitterUserType,
+ latitude: double,
+ longitude: double,
+ message_text: string,
+ created_at: string,
+ country: string
+};
+
+create type ProcessedTweet if not exists as open {
+    id: int64,
+    user_name:string,
+    location:point,
+    created_at:string,
+    message_text:string,
+    country: string,
+    topics: {{string}}
+};
+
+create dataset SyntheticTweets(Tweet) primary key id;
+
+create feed  SyntheticTweetFeed using stream
+(("duration"="1"),
+("stream-source"="org.apache.asterix.external.input.stream.factory.TwitterFirehoseStreamFactory"),
+("tps"="50"),
+("type-name"="Tweet"),
+("tput-duration"="1"),
+("dataverse-dataset"="feeds:SyntheticTweets"),
+("format"="adm"),
+("mode"="controlled"));

@@ -48,5 +48,11 @@
         <output-dir compare="Text">feed-with-external-function</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="external-library">
+      <compilation-unit name="return_invalid_type">
+        <output-dir compare="Text">getCapital</output-dir>
+        <expected-error>External UDF cannot produce expected result.</expected-error>
+      </compilation-unit>
+    </test-case>
   </test-group>
 </test-suite>

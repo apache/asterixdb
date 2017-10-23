@@ -25,7 +25,6 @@ import org.apache.asterix.external.api.IExternalFunction;
 import org.apache.asterix.external.api.IExternalScalarFunction;
 import org.apache.asterix.external.api.IFunctionHelper;
 import org.apache.asterix.om.functions.IExternalFunctionInfo;
-import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -79,14 +78,8 @@ class ExternalScalarFunction extends ExternalFunction implements IExternalScalar
         try {
             resultBuffer.reset();
             ((IExternalScalarFunction) externalFunction).evaluate(argumentProvider);
-            /*
-             * Make sure that if "setResult" is not called,
-             * or the result object is missing we let Hyracks storage manager know
-             * we want to discard a missing object
-             */
-            byte byteOutput = resultBuffer.getByteArray()[0];
-            if (!argumentProvider.isValidResult() || byteOutput == ATypeTag.SERIALIZED_MISSING_TYPE_TAG) {
-                resultBuffer.getDataOutput().writeByte(ATypeTag.SERIALIZED_MISSING_TYPE_TAG);
+            if (!argumentProvider.isValidResult()) {
+                throw new RuntimeDataException(ErrorCode.EXTERNAL_UDF_RESULT_TYPE_ERROR);
             }
         } catch (Exception e) {
             throw new HyracksDataException(e);

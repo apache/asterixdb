@@ -421,7 +421,7 @@ public class DataGenerator {
             buffer.append(" ");
             String jargonTerm = jargon.get(random.nextInt(jargon.size()));
             referredTopics.add(jargonTerm);
-            buffer.append(jargonTerm);
+            buffer.append("#" + jargonTerm);
             buffer.append(" is ");
             buffer.append(adjective);
             if (random.nextBoolean()) {

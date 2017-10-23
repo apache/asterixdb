@@ -78,7 +78,6 @@ public class AddHashTagsFunction implements IExternalScalarFunction {
         outputRecord.setField(Datatypes.Tweet.MESSAGE, text);
         outputRecord.setField(Datatypes.ProcessedTweet.TOPICS, list);
 
-        inputRecord.addField(Datatypes.ProcessedTweet.TOPICS, list);
         functionHelper.setResult(outputRecord);
     }
 
