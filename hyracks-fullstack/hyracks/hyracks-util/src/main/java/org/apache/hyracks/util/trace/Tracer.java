@@ -40,16 +40,25 @@ public class Tracer implements ITracer {
     protected static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
 
     protected final Logger traceLog;
-    protected String[] categories;
+    protected long categories;
+    protected TraceCategoryRegistry registry;
 
     protected static final int pid = PidHelper.getPid();
 
-    public Tracer(String name, String[] categories) {
+    public Tracer(String name, long categories, TraceCategoryRegistry registry) {
         final String traceLoggerName = Tracer.class.getName() + "@" + name;
-        LOGGER.info("Initialize Tracer " + traceLoggerName + " " + Arrays.toString(categories));
+        LOGGER.info("Initialize Tracer " + traceLoggerName);
         this.traceLog = Logger.getLogger(traceLoggerName);
         this.categories = categories;
-        instant("Trace-Start", CAT, Scope.p, dateTimeStamp());
+        this.registry = registry;
+        final long traceCategory = getRegistry().get(CAT);
+        instant("Trace-Start", traceCategory, Scope.p, dateTimeStamp());
+    }
+
+    public Tracer(String name, String[] categories, TraceCategoryRegistry registry) {
+        this(name, ITraceCategoryRegistry.CATEGORIES_ALL, registry);
+        LOGGER.info("Set categories for Tracer " + this.traceLog.getName() + " to " + Arrays.toString(categories));
+        this.categories = getRegistry().get(categories);
     }
 
     public static String dateTimeStamp() {
@@ -58,11 +67,9 @@ public class Tracer implements ITracer {
         }
     }
 
-    public static final Tracer ALL = new Tracer("All", new String[] { "*" });
-
     @Override
     public String toString() {
-        return getName() + Arrays.toString(categories) + (isEnabled() ? "enabled" : "disabled");
+        return getName() + Long.toHexString(categories);
     }
 
     @Override
@@ -71,32 +78,46 @@ public class Tracer implements ITracer {
     }
 
     @Override
-    public boolean isEnabled() {
-        return categories.length > 0;
+    public TraceCategoryRegistry getRegistry() {
+        return registry;
     }
 
     @Override
-    public long durationB(String name, String cat, String args) {
-        Event e = Event.create(name, cat, Phase.B, pid, Thread.currentThread().getId(), null, args);
-        traceLog.log(TRACE_LOG_LEVEL, e.toJson());
-        return e.tid;
+    public boolean isEnabled(long cat) {
+        return (categories & cat) != 0L;
     }
 
     @Override
-    public void durationE(long tid, String args) {
-        Event e = Event.create(null, null, Phase.E, pid, tid, null, args);
-        traceLog.log(TRACE_LOG_LEVEL, e.toJson());
+    public long durationB(String name, long cat, String args) {
+        if (isEnabled(cat)) {
+            Event e = Event.create(name, cat, Phase.B, pid, Thread.currentThread().getId(), null, args, getRegistry());
+            traceLog.log(TRACE_LOG_LEVEL, e.toJson());
+            return e.tid;
+        }
+        return -1;
     }
 
     @Override
-    public void durationE(String name, String cat, long tid, String args) {
-        Event e = Event.create(name, cat, Phase.E, pid, tid, null, args);
-        traceLog.log(TRACE_LOG_LEVEL, e.toJson());
+    public void durationE(String name, long cat, long tid, String args) {
+        if (isEnabled(cat)) {
+            Event e = Event.create(name, cat, Phase.E, pid, tid, null, args, getRegistry());
+            traceLog.log(TRACE_LOG_LEVEL, e.toJson());
+        }
     }
 
     @Override
-    public void instant(String name, String cat, Scope scope, String args) {
-        Event e = Event.create(name, cat, Phase.i, pid, Thread.currentThread().getId(), scope, args);
-        traceLog.log(TRACE_LOG_LEVEL, e.toJson());
+    public void durationE(long tid, long cat, String args) {
+        if (isEnabled(cat)) {
+            Event e = Event.create(null, 0L, Phase.E, pid, tid, null, args, getRegistry());
+            traceLog.log(TRACE_LOG_LEVEL, e.toJson());
+        }
+    }
+
+    @Override
+    public void instant(String name, long cat, Scope scope, String args) {
+        if (isEnabled(cat)) {
+            Event e = Event.create(name, cat, Phase.i, pid, Thread.currentThread().getId(), scope, args, getRegistry());
+            traceLog.log(TRACE_LOG_LEVEL, e.toJson());
+        }
     }
 }

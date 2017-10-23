@@ -58,49 +58,49 @@ public interface ITracer {
         }
 
         @Override
-        public boolean isEnabled() {
+        public ITraceCategoryRegistry getRegistry() {
+            return ITraceCategoryRegistry.NONE;
+        }
+
+        @Override
+        public boolean isEnabled(long cat) {
             return false;
         }
 
         @Override
-        public long durationB(String name, String cat, String args) {
+        public long durationB(String name, long cat, String args) {
             return -1;
         }
 
         @Override
-        public void durationE(long tid, String args) {
+        public void durationE(String name, long cat, long tid, String args) {
             // nothing to do here
         }
 
         @Override
-        public void instant(String name, String cat, Scope scope, String args) {
+        public void durationE(long tid, long cat, String args) {
             // nothing to do here
         }
 
         @Override
-        public void durationE(String name, String cat, long tid, String args) {
+        public void instant(String name, long cat, Scope scope, String args) {
             // nothing to do here
         }
     };
 
-    static ITracer check(ITracer tracer) {
-        if (tracer == null) {
-            throw new IllegalArgumentException("Tracer cannot be null");
-        }
-        return tracer.isEnabled() ? tracer : NONE;
-    }
-
     String getName();
 
-    boolean isEnabled();
+    ITraceCategoryRegistry getRegistry();
 
-    long durationB(String name, String cat, String args);
+    boolean isEnabled(long cat);
 
-    void durationE(long tid, String args);
+    long durationB(String name, long cat, String args);
 
-    void durationE(String name, String cat, long tid, String args);
+    void durationE(long tid, long cat, String args);
 
-    void instant(String name, String cat, Scope scope, String args);
+    void durationE(String name, long cat, long tid, String args);
+
+    void instant(String name, long cat, Scope scope, String args);
 
     @Override
     String toString();

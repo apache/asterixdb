@@ -150,14 +150,14 @@ public class FrameUtils {
     }
 
     public static int appendToWriter(IFrameWriter writer, IFrameTupleAppender frameTupleAppender,
-            IFrameTupleAccessor tupleAccessor, int tIndex, ITracer tracer, String name, String cat, String args)
+            IFrameTupleAccessor tupleAccessor, int tIndex, ITracer tracer, String name, long cat, String args)
             throws HyracksDataException {
         int flushedBytes = 0;
         if (!frameTupleAppender.append(tupleAccessor, tIndex)) {
             flushedBytes = frameTupleAppender.getBuffer().capacity();
-            long tid = ITracer.check(tracer).durationB(name, cat, args);
+            long tid = tracer.durationB(name, cat, args);
             frameTupleAppender.write(writer, true);
-            ITracer.check(tracer).durationE(tid, args);
+            tracer.durationE(tid, cat, args);
             if (!frameTupleAppender.append(tupleAccessor, tIndex)) {
                 throw HyracksDataException.create(ErrorCode.TUPLE_CANNOT_FIT_INTO_EMPTY_FRAME,
                         tupleAccessor.getTupleLength(tIndex));

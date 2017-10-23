@@ -37,22 +37,25 @@ class TracedIOOperation implements ILSMIOOperation {
     protected final ILSMIOOperation ioOp;
     private final LSMIOOpertionType ioOpType;
     private final ITracer tracer;
-    private final String cat;
+    private final long traceCategory;
 
-    protected TracedIOOperation(ILSMIOOperation ioOp, ITracer tracer) {
+    protected TracedIOOperation(ILSMIOOperation ioOp, ITracer tracer, long traceCategory) {
         this.ioOp = ioOp;
         this.tracer = tracer;
         this.ioOpType = ioOp.getIOOpertionType();
-        this.cat = ioOpType.name().toLowerCase();
+        this.traceCategory = traceCategory;
     }
 
     public static ILSMIOOperation wrap(final ILSMIOOperation ioOp, final ITracer tracer) {
-        if (tracer != null && tracer.isEnabled()) {
-            tracer.instant(ioOp.getTarget().getRelativePath(),
-                    ioOp.getIOOpertionType() == LSMIOOpertionType.FLUSH ? "schedule-flush" : "schedule-merge", Scope.p,
-                    null);
-            return ioOp instanceof Comparable ? new ComparableTracedIOOperation(ioOp, tracer)
-                    : new TracedIOOperation(ioOp, tracer);
+        final String ioOpName = ioOp.getIOOpertionType().name().toLowerCase();
+        final long traceCategorySchedule = tracer.getRegistry().get("schedule-" + ioOpName);
+        if (tracer.isEnabled(traceCategorySchedule)) {
+            tracer.instant(ioOp.getTarget().getRelativePath(), traceCategorySchedule, Scope.p, null);
+        }
+        final long traceCategoryExec = tracer.getRegistry().get(ioOpName);
+        if (tracer.isEnabled(traceCategoryExec)) {
+            return ioOp instanceof Comparable ? new ComparableTracedIOOperation(ioOp, tracer, traceCategoryExec)
+                    : new TracedIOOperation(ioOp, tracer, traceCategoryExec);
         }
         return ioOp;
     }
@@ -83,12 +86,12 @@ class TracedIOOperation implements ILSMIOOperation {
 
     @Override
     public Boolean call() throws HyracksDataException {
-        final long tid = tracer.durationB(getTarget().getRelativePath(), cat, null);
+        final String name = getTarget().getRelativePath();
+        final long tid = tracer.durationB(name, traceCategory, null);
         try {
             return ioOp.call();
         } finally {
-            tracer.durationE(getTarget().getRelativePath(), cat, tid,
-                    "{\"size\":" + getTarget().getFile().length() + "}");
+            tracer.durationE(name, traceCategory, tid, "{\"size\":" + getTarget().getFile().length() + "}");
         }
     }
 
@@ -105,8 +108,8 @@ class TracedIOOperation implements ILSMIOOperation {
 
 class ComparableTracedIOOperation extends TracedIOOperation implements Comparable<ILSMIOOperation> {
 
-    protected ComparableTracedIOOperation(ILSMIOOperation ioOp, ITracer trace) {
-        super(ioOp, trace);
+    protected ComparableTracedIOOperation(ILSMIOOperation ioOp, ITracer trace, long traceCategory) {
+        super(ioOp, trace, traceCategory);
     }
 
     @Override

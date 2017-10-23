@@ -164,7 +164,7 @@ public class PartitionDataWriter implements IFrameWriter {
         }
     }
 
-    public void flush(ITracer tracer, String name, String cat, String args) throws HyracksDataException {
+    public void flush(ITracer tracer, String name, long cat, String args) throws HyracksDataException {
         for (int i = 0; i < consumerPartitionCount; i++) {
             if (allocatedFrames[i]) {
                 appenders[i].flush(pWriters[i], tracer, name, cat, args);

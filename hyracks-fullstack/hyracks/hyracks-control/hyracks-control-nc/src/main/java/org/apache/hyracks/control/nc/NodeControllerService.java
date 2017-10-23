@@ -605,15 +605,17 @@ public class NodeControllerService implements IControllerService {
     private class TraceCurrentTimeTask extends TimerTask {
 
         private ITracer tracer;
+        private long traceCategory;
 
         public TraceCurrentTimeTask(ITracer tracer) {
             this.tracer = tracer;
+            this.traceCategory = tracer.getRegistry().get("Timestamp");
         }
 
         @Override
         public void run() {
             try {
-                ITracer.check(tracer).instant("CurrentTime", "Timestamp", Tracer.Scope.p, Tracer.dateTimeStamp());
+                tracer.instant("CurrentTime", traceCategory, Tracer.Scope.p, Tracer.dateTimeStamp());
             } catch (Exception e) {
                 LOGGER.log(Level.WARNING, "Exception tracing current time", e);
             }

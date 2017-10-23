@@ -68,6 +68,7 @@ public class LSMHarness implements ILSMHarness {
     protected final boolean replicationEnabled;
     protected List<ILSMDiskComponent> componentsToBeReplicated;
     protected ITracer tracer;
+    protected long traceCategory;
 
     public LSMHarness(ILSMIndex lsmIndex, ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker,
             boolean replicationEnabled, ITracer tracer) {
@@ -75,6 +76,7 @@ public class LSMHarness implements ILSMHarness {
         this.opTracker = opTracker;
         this.mergePolicy = mergePolicy;
         this.tracer = tracer;
+        this.traceCategory = tracer.getRegistry().get("release-memory-component");
         fullMergeIsRequested = new AtomicBoolean();
         //only durable indexes are replicated
         this.replicationEnabled = replicationEnabled && lsmIndex.isDurable();
@@ -253,13 +255,13 @@ public class LSMHarness implements ILSMHarness {
                                     }
                                     break;
                                 case INACTIVE:
-                                    ITracer.check(tracer).instant(c.toString(), "release-memory-component", Scope.p,
-                                            lsmIndex.toString());
+                                    tracer.instant(c.toString(), traceCategory, Scope.p, lsmIndex.toString());
                                     ((AbstractLSMMemoryComponent) c).reset();
-                                    // Notify all waiting threads whenever the mutable component's has change to inactive. This is important because
-                                    // even though we switched the mutable components, it is possible that the component that we just switched
-                                    // to is still busy flushing its data to disk. Thus, the notification that was issued upon scheduling the flush
-                                    // is not enough.
+                                    // Notify all waiting threads whenever the mutable component's state has changed to
+                                    // inactive. This is important because even though we switched the mutable
+                                    // components, it is possible that the component that we just switched to is still
+                                    // busy flushing its data to disk. Thus, the notification that was issued upon
+                                    // scheduling the flush is not enough.
                                     opTracker.notifyAll();
                                     break;
                                 default:

@@ -23,17 +23,19 @@ import java.util.concurrent.TimeUnit;
 final class Event {
     private static final long NANOTIME_DELTA_TO_EPOCH =
             System.nanoTime() - TimeUnit.MILLISECONDS.toNanos(System.currentTimeMillis());
+
     public final String name;
-    public final String cat;
+    public final long cat;
     public final ITracer.Phase ph;
     public final long ts;
     public final int pid;
     public final long tid;
     public final ITracer.Scope scope;
     public final String args;
+    public final TraceCategoryRegistry registry;
 
-    private Event(String name, String cat, ITracer.Phase ph, long ts, int pid, long tid, ITracer.Scope scope,
-            String args) {
+    private Event(String name, long cat, ITracer.Phase ph, long ts, int pid, long tid, ITracer.Scope scope, String args,
+            TraceCategoryRegistry registry) {
         this.name = name;
         this.cat = cat;
         this.ph = ph;
@@ -42,15 +44,16 @@ final class Event {
         this.tid = tid;
         this.scope = scope;
         this.args = args;
+        this.registry = registry;
     }
 
     private static long timestamp() {
         return (System.nanoTime() - NANOTIME_DELTA_TO_EPOCH) / 1000;
     }
 
-    public static Event create(String name, String cat, ITracer.Phase ph, int pid, long tid, ITracer.Scope scope,
-            String args) {
-        return new Event(name, cat, ph, timestamp(), pid, tid, scope, args);
+    public static Event create(String name, long cat, ITracer.Phase ph, int pid, long tid, ITracer.Scope scope,
+            String args, TraceCategoryRegistry registry) {
+        return new Event(name, cat, ph, timestamp(), pid, tid, scope, args, registry);
     }
 
     public String toJson() {
@@ -62,8 +65,9 @@ final class Event {
         if (name != null) {
             sb.append("\"name\":\"").append(name).append("\",");
         }
-        if (cat != null) {
-            sb.append("\"cat\":\"").append(cat).append("\",");
+        if (cat != 0L) {
+            final String catName = registry.getName(cat);
+            sb.append("\"cat\":\"").append(catName).append("\",");
         }
         sb.append("\"ph\":\"").append(ph).append("\",");
         sb.append("\"pid\":\"").append(pid).append("\",");

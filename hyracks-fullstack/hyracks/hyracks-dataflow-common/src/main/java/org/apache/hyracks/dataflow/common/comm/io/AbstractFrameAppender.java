@@ -117,13 +117,13 @@ public class AbstractFrameAppender implements IFrameAppender {
         writer.flush();
     }
 
-    public void flush(IFrameWriter writer, ITracer tracer, String name, String cat, String args)
+    public void flush(IFrameWriter writer, ITracer tracer, String name, long traceCategory, String args)
             throws HyracksDataException {
-        final long tid = ITracer.check(tracer).durationB(name, cat, args);
+        final long tid = tracer.durationB(name, traceCategory, args);
         try {
             flush(writer);
         } finally {
-            ITracer.check(tracer).durationE(tid, args);
+            tracer.durationE(tid, traceCategory, args);
         }
     }
 }

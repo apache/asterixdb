@@ -35,6 +35,7 @@ import org.apache.hyracks.control.nc.NodeControllerService;
 import org.apache.hyracks.control.nc.io.IOManager;
 import org.apache.hyracks.control.nc.resources.memory.MemoryManager;
 import org.apache.hyracks.util.trace.ITracer;
+import org.apache.hyracks.util.trace.TraceCategoryRegistry;
 import org.apache.hyracks.util.trace.Tracer;
 
 public class NCServiceContext extends ServiceContext implements INCServiceContext {
@@ -57,7 +58,7 @@ public class NCServiceContext extends ServiceContext implements INCServiceContex
         this.memoryManager = memoryManager;
         this.ncs = ncs;
         this.sdh = lccm::dumpState;
-        this.tracer = new Tracer(nodeId, ncs.getConfiguration().getTraceCategories());
+        this.tracer = new Tracer(nodeId, ncs.getConfiguration().getTraceCategories(), new TraceCategoryRegistry());
     }
 
     @Override
@@ -95,7 +96,7 @@ public class NCServiceContext extends ServiceContext implements INCServiceContex
 
     @Override
     public ITracer getTracer() {
-        return ITracer.check(tracer);
+        return tracer;
     }
 
     @Override

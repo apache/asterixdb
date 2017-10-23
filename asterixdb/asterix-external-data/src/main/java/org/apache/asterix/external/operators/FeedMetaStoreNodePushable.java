@@ -88,6 +88,8 @@ public class FeedMetaStoreNodePushable extends AbstractUnaryInputUnaryOutputOper
 
     private final ITracer tracer;
 
+    private final long traceCategory;
+
     public FeedMetaStoreNodePushable(IHyracksTaskContext ctx, IRecordDescriptorProvider recordDescProvider,
             int partition, int nPartitions, IOperatorDescriptor coreOperator, FeedConnectionId feedConnectionId,
             Map<String, String> feedPolicyProperties, FeedMetaOperatorDescriptor feedMetaOperatorDescriptor)
@@ -105,6 +107,7 @@ public class FeedMetaStoreNodePushable extends AbstractUnaryInputUnaryOutputOper
         this.recordDescProvider = recordDescProvider;
         this.opDesc = feedMetaOperatorDescriptor;
         tracer = ctx.getJobletContext().getServiceContext().getTracer();
+        traceCategory = tracer.getRegistry().get("Process-Frame");
     }
 
     @Override
@@ -140,7 +143,7 @@ public class FeedMetaStoreNodePushable extends AbstractUnaryInputUnaryOutputOper
 
     @Override
     public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
-        long tid = tracer.durationB("Ingestion-Store", "Process-Frame", null);
+        long tid = tracer.durationB("Ingestion-Store", traceCategory, null);
         try {
             FeedUtils.processFeedMessage(buffer, message, fta);
             writer.nextFrame(buffer);
@@ -148,7 +151,7 @@ public class FeedMetaStoreNodePushable extends AbstractUnaryInputUnaryOutputOper
             LOGGER.log(Level.WARNING, "Failure Processing a frame at store side", e);
             throw HyracksDataException.create(e);
         } finally {
-            tracer.durationE(tid, null);
+            tracer.durationE(tid, traceCategory, null);
         }
     }
 
