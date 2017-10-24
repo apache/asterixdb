@@ -366,7 +366,8 @@ public class NodeControllerService implements IControllerService {
     }
 
     private void startApplication() throws Exception {
-        serviceCtx = new NCServiceContext(this, serverCtx, ioManager, id, memoryManager, lccm, ncConfig.getAppConfig());
+        serviceCtx = new NCServiceContext(this, serverCtx, ioManager, id, memoryManager, lccm,
+                ncConfig.getNodeScopedAppConfig());
         application.init(serviceCtx);
         executor = Executors.newCachedThreadPool(serviceCtx.getThreadFactory());
         application.start(ncConfig.getAppArgsArray());
@@ -486,7 +487,7 @@ public class NodeControllerService implements IControllerService {
 
         private final HeartbeatData hbData;
 
-        HeartbeatTask(IClusterController cc, int heartbeatPeriod) {
+        HeartbeatTask(IClusterController cc, long heartbeatPeriod) {
             this.cc = cc;
             this.heartbeatPeriodNanos = TimeUnit.MILLISECONDS.toNanos(heartbeatPeriod);
             hbData = new HeartbeatData();
@@ -559,7 +560,7 @@ public class NodeControllerService implements IControllerService {
 
             hbData.diskReads = ioCounter.getReads();
             hbData.diskWrites = ioCounter.getWrites();
-            hbData.numCores = Runtime.getRuntime().availableProcessors() - 1; // Reserves one core for heartbeats.
+            hbData.numCores = Runtime.getRuntime().availableProcessors();
 
             try {
                 cc.nodeHeartbeat(id, hbData);
@@ -568,7 +569,11 @@ public class NodeControllerService implements IControllerService {
             } catch (InterruptedException e) {
                 throw e;
             } catch (Exception e) {
-                LOGGER.log(Level.SEVERE, "Exception sending heartbeat; will retry after 1s", e);
+                if (LOGGER.isLoggable(Level.FINE)) {
+                    LOGGER.log(Level.FINE, "Exception sending heartbeat; will retry after 1s", e);
+                } else {
+                    LOGGER.log(Level.SEVERE, "Exception sending heartbeat; will retry after 1s: " + e.toString());
+                }
                 return false;
             }
         }

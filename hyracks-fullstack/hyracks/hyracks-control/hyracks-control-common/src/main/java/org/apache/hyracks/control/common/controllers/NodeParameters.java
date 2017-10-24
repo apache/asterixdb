@@ -29,7 +29,7 @@ public class NodeParameters implements Serializable {
 
     private Serializable distributedState;
 
-    private int heartbeatPeriod;
+    private long heartbeatPeriod;
 
     private int profileDumpPeriod;
 
@@ -49,11 +49,11 @@ public class NodeParameters implements Serializable {
         this.distributedState = distributedState;
     }
 
-    public int getHeartbeatPeriod() {
+    public long getHeartbeatPeriod() {
         return heartbeatPeriod;
     }
 
-    public void setHeartbeatPeriod(int heartbeatPeriod) {
+    public void setHeartbeatPeriod(long heartbeatPeriod) {
         this.heartbeatPeriod = heartbeatPeriod;
     }
 

@@ -86,6 +86,10 @@ public class ControllerConfig implements Serializable {
         return configManager.getAppConfig();
     }
 
+    public ConfigManager getConfigManager() {
+        return configManager;
+    }
+
     public String getConfigFile() {
         return getAppConfig().getString(ControllerConfig.Option.CONFIG_FILE);
     }

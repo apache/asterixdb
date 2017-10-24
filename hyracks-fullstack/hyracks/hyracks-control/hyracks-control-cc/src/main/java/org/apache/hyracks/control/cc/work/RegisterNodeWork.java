@@ -67,7 +67,7 @@ public class RegisterNodeWork extends SynchronizableWork {
             NodeParameters params = new NodeParameters();
             params.setClusterControllerInfo(ccs.getClusterControllerInfo());
             params.setDistributedState(ccs.getContext().getDistributedState());
-            params.setHeartbeatPeriod(ccs.getCCConfig().getHeartbeatPeriod());
+            params.setHeartbeatPeriod(ccs.getCCConfig().getHeartbeatPeriodMillis());
             params.setProfileDumpPeriod(ccs.getCCConfig().getProfileDumpPeriod());
             result = new CCNCFunctions.NodeRegistrationResult(params, null);
             ccs.getJobIdFactory().ensureMinimumId(reg.getMaxJobId() + 1);

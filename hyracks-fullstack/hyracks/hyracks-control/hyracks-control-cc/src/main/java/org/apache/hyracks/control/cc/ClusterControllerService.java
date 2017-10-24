@@ -207,7 +207,7 @@ public class ClusterControllerService implements IControllerService {
         webServer.start();
         info = new ClusterControllerInfo(ccConfig.getClientListenAddress(), ccConfig.getClientListenPort(),
                 webServer.getListeningPort());
-        timer.schedule(sweeper, 0, ccConfig.getHeartbeatPeriod());
+        timer.schedule(sweeper, 0, ccConfig.getHeartbeatPeriodMillis());
         jobLog.open();
         startApplication();
 

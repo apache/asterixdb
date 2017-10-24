@@ -56,7 +56,7 @@ public class HyracksUtils {
         ccConfig.setClientListenPort(TEST_HYRACKS_CC_CLIENT_PORT);
         ccConfig.setJobHistorySize(0);
         ccConfig.setProfileDumpPeriod(-1);
-        ccConfig.setHeartbeatPeriod(50);
+        ccConfig.setHeartbeatPeriodMillis(50);
 
         // cluster controller
         cc = new ClusterControllerService(ccConfig);

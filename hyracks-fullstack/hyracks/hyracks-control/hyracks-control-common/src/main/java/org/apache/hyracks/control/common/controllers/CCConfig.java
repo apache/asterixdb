@@ -51,7 +51,7 @@ public class CCConfig extends ControllerConfig {
         CLIENT_LISTEN_PORT(INTEGER, 1098),
         CONSOLE_LISTEN_ADDRESS(STRING, ADDRESS),
         CONSOLE_LISTEN_PORT(INTEGER, 16001),
-        HEARTBEAT_PERIOD(INTEGER, 10000), // TODO (mblow): add time unit
+        HEARTBEAT_PERIOD(LONG, 10000L), // TODO (mblow): add time unit
         HEARTBEAT_MAX_MISSES(INTEGER, 5),
         PROFILE_DUMP_PERIOD(INTEGER, 0),
         JOB_HISTORY_SIZE(INTEGER, 10),
@@ -176,8 +176,6 @@ public class CCConfig extends ControllerConfig {
         }
     }
 
-    private final ConfigManager configManager;
-
     private List<String> appArgs = new ArrayList<>();
 
     public CCConfig() {
@@ -186,7 +184,6 @@ public class CCConfig extends ControllerConfig {
 
     public CCConfig(ConfigManager configManager) {
         super(configManager);
-        this.configManager = configManager;
         configManager.register(Option.class);
         configManager.registerArgsListener(appArgs::addAll);
     }
@@ -205,10 +202,6 @@ public class CCConfig extends ControllerConfig {
      */
     public Ini getIni() {
         return configManager.toIni(false);
-    }
-
-    public ConfigManager getConfigManager() {
-        return configManager;
     }
 
     // QQQ Note that clusterListenAddress is *not directly used* yet. Both
@@ -270,11 +263,11 @@ public class CCConfig extends ControllerConfig {
         configManager.set(Option.CONSOLE_LISTEN_PORT, consoleListenPort);
     }
 
-    public int getHeartbeatPeriod() {
-        return getAppConfig().getInt(Option.HEARTBEAT_PERIOD);
+    public long getHeartbeatPeriodMillis() {
+        return getAppConfig().getLong(Option.HEARTBEAT_PERIOD);
     }
 
-    public void setHeartbeatPeriod(int heartbeatPeriod) {
+    public void setHeartbeatPeriodMillis(long heartbeatPeriod) {
         configManager.set(Option.HEARTBEAT_PERIOD, heartbeatPeriod);
     }
 

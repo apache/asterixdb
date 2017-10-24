@@ -141,7 +141,7 @@ public class NodeControllerState {
 
     private int rrdPtr;
 
-    private int lastHeartbeatDuration;
+    private long lastHeartbeatNanoTime;
 
     private NodeCapacity capacity;
 
@@ -207,10 +207,11 @@ public class NodeControllerState {
 
         rrdPtr = 0;
         capacity = reg.getCapacity();
+        touchHeartbeat();
     }
 
     public synchronized void notifyHeartbeat(HeartbeatData hbData) {
-        lastHeartbeatDuration = 0;
+        touchHeartbeat();
         hbTime[rrdPtr] = System.currentTimeMillis();
         if (hbData != null) {
             heapInitSize[rrdPtr] = hbData.heapInitSize;
@@ -247,8 +248,16 @@ public class NodeControllerState {
         }
     }
 
-    public int incrementLastHeartbeatDuration() {
-        return lastHeartbeatDuration++;
+    public void touchHeartbeat() {
+        lastHeartbeatNanoTime = System.nanoTime();
+    }
+
+    public long nanosSinceLastHeartbeat() {
+        return System.nanoTime() - lastHeartbeatNanoTime;
+    }
+
+    public long getLastHeartbeatNanoTime() {
+        return lastHeartbeatNanoTime;
     }
 
     public NodeControllerRemoteProxy getNodeController() {

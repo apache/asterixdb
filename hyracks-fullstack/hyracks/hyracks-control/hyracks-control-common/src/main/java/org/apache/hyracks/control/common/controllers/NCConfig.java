@@ -247,12 +247,7 @@ public class NCConfig extends ControllerConfig {
         return appArgs.toArray(new String[appArgs.size()]);
     }
 
-    public ConfigManager getConfigManager() {
-        return configManager;
-    }
-
-    @Override
-    public IApplicationConfig getAppConfig() {
+    public IApplicationConfig getNodeScopedAppConfig() {
         return appConfig;
     }
 
