@@ -22,14 +22,18 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 
 public class DatasetInfo extends Info implements Comparable<DatasetInfo> {
+    private static final Logger LOGGER = Logger.getLogger(DatasetInfo.class.getName());
     private final Map<Long, IndexInfo> indexes;
     private final int datasetID;
-    private long lastAccess;
     private int numActiveIOOps;
+    private long lastAccess;
     private boolean isExternal;
     private boolean isRegistered;
     private boolean memoryAllocated;
@@ -56,11 +60,11 @@ public class DatasetInfo extends Info implements Comparable<DatasetInfo> {
     }
 
     public synchronized void declareActiveIOOperation() {
-        setNumActiveIOOps(getNumActiveIOOps() + 1);
+        numActiveIOOps++;
     }
 
     public synchronized void undeclareActiveIOOperation() {
-        setNumActiveIOOps(getNumActiveIOOps() - 1);
+        numActiveIOOps--;
         //notify threads waiting on this dataset info
         notifyAll();
     }
@@ -126,7 +130,7 @@ public class DatasetInfo extends Info implements Comparable<DatasetInfo> {
             return datasetID == ((DatasetInfo) obj).datasetID;
         }
         return false;
-    };
+    }
 
     @Override
     public int hashCode() {
@@ -142,14 +146,6 @@ public class DatasetInfo extends Info implements Comparable<DatasetInfo> {
 
     public boolean isDurable() {
         return durable;
-    }
-
-    public int getNumActiveIOOps() {
-        return numActiveIOOps;
-    }
-
-    public void setNumActiveIOOps(int numActiveIOOps) {
-        this.numActiveIOOps = numActiveIOOps;
     }
 
     public boolean isExternal() {
@@ -194,5 +190,25 @@ public class DatasetInfo extends Info implements Comparable<DatasetInfo> {
 
     public void setLastAccess(long lastAccess) {
         this.lastAccess = lastAccess;
+    }
+
+    public synchronized void waitForIO() throws HyracksDataException {
+        while (numActiveIOOps > 0) {
+            try {
+                /**
+                 * Will be Notified by {@link DatasetInfo#undeclareActiveIOOperation()}
+                 */
+                wait();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw HyracksDataException.create(e);
+            }
+        }
+        if (numActiveIOOps < 0) {
+            if (LOGGER.isLoggable(Level.SEVERE)) {
+                LOGGER.severe("Number of IO operations cannot be negative for dataset: " + this);
+            }
+            throw new IllegalStateException("Number of IO operations cannot be negative");
+        }
     }
 }

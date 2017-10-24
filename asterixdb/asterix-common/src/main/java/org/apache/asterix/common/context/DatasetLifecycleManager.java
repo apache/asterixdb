@@ -102,7 +102,7 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
         datasetResource.register(resource, index);
     }
 
-    public int getDIDfromResourcePath(String resourcePath) throws HyracksDataException {
+    private int getDIDfromResourcePath(String resourcePath) throws HyracksDataException {
         LocalResource lr = resourceRepository.get(resourcePath);
         if (lr == null) {
             return -1;
@@ -110,7 +110,7 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
         return ((DatasetLocalResource) lr.getResource()).getDatasetId();
     }
 
-    public long getResourceIDfromResourcePath(String resourcePath) throws HyracksDataException {
+    private long getResourceIDfromResourcePath(String resourcePath) throws HyracksDataException {
         LocalResource lr = resourceRepository.get(resourcePath);
         if (lr == null) {
             return -1;
@@ -133,36 +133,24 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
 
         PrimaryIndexOperationTracker opTracker = dsr.getOpTracker();
         if (iInfo.getReferenceCount() != 0 || (opTracker != null && opTracker.getNumActiveOperations() != 0)) {
-            throw new HyracksDataException("Cannot remove index while it is open. (Dataset reference count = "
-                    + iInfo.getReferenceCount() + ", Operation tracker number of active operations = "
-                    + opTracker.getNumActiveOperations() + ")");
+            throw new HyracksDataException(
+                    "Cannot remove index while it is open. (Dataset reference count = " + iInfo.getReferenceCount()
+                            + ", Operation tracker number of active operations = " + opTracker.getNumActiveOperations()
+                            + ")");
         }
 
         // TODO: use fine-grained counters, one for each index instead of a single counter per dataset.
-        // First wait for any ongoing IO operations
         DatasetInfo dsInfo = dsr.getDatasetInfo();
-        synchronized (dsInfo) {
-            while (dsInfo.getNumActiveIOOps() > 0) {
-                try {
-                    //notification will come from DatasetInfo class (undeclareActiveIOOperation)
-                    dsInfo.wait();
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    throw HyracksDataException.create(e);
-                }
-            }
-        }
-
+        dsInfo.waitForIO();
         if (iInfo.isOpen()) {
             ILSMOperationTracker indexOpTracker = iInfo.getIndex().getOperationTracker();
             synchronized (indexOpTracker) {
                 iInfo.getIndex().deactivate(false);
             }
         }
-
         dsInfo.getIndexes().remove(resourceID);
-        if (dsInfo.getReferenceCount() == 0 && dsInfo.isOpen() && dsInfo.getIndexes().isEmpty()
-                && !dsInfo.isExternal()) {
+        if (dsInfo.getReferenceCount() == 0 && dsInfo.isOpen() && dsInfo.getIndexes().isEmpty() && !dsInfo
+                .isExternal()) {
             removeDatasetFromCache(dsInfo.getDatasetID());
         }
     }
@@ -227,16 +215,7 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
         }
 
         // Wait for the above flush op.
-        synchronized (dsInfo) {
-            while (dsInfo.getNumActiveIOOps() > 0) {
-                try {
-                    //notification will come from DatasetInfo class (undeclareActiveIOOperation)
-                    dsInfo.wait();
-                } catch (InterruptedException e) {
-                    throw new HyracksDataException(e);
-                }
-            }
-        }
+        dsInfo.waitForIO();
     }
 
     public DatasetResource getDatasetLifecycle(int did) {
@@ -434,16 +413,7 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
 
     private void closeDataset(DatasetInfo dsInfo) throws HyracksDataException {
         // First wait for any ongoing IO operations
-        synchronized (dsInfo) {
-            while (dsInfo.getNumActiveIOOps() > 0) {
-                try {
-                    dsInfo.wait();
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    throw HyracksDataException.create(e);
-                }
-            }
-        }
+        dsInfo.waitForIO();
         try {
             flushDatasetOpenIndexes(dsInfo, false);
         } catch (Exception e) {
