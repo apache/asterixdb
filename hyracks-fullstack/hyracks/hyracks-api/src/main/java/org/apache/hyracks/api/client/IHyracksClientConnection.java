@@ -211,7 +211,7 @@ public interface IHyracksClientConnection extends IClusterInfoCollector {
      *            id the subject node
      * @param includeStats
      * @param includeConfig
-     * @return serialized JSON containing the node details
+     * @return serialized JSON containing the node details, or null if the details are not available (e.g. NC down)
      * @throws Exception
      */
     String getNodeDetailsJSON(String nodeId, boolean includeStats, boolean includeConfig) throws Exception;

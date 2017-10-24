@@ -106,9 +106,9 @@ public class DiagnosticsApiServlet extends NodeControllerDetailsApiServlet {
         Map<String, Future<JsonNode>> ncData;
         ncData = new HashMap<>();
         ncData.put("threaddump",
-                executor.submit(() -> fixupKeys((ObjectNode) OBJECT_MAPPER.readTree(hcc.getThreadDump(nc)))));
+                executor.submit(() -> fixupKeys((ObjectNode) OBJECT_MAPPER.readTree(processThreadDump(nc)))));
         ncData.put("config", executor
-                .submit(() -> fixupKeys((ObjectNode) OBJECT_MAPPER.readTree(hcc.getNodeDetailsJSON(nc, false, true)))));
+                .submit(() -> fixupKeys((ObjectNode) OBJECT_MAPPER.readTree(processNodeDetails(nc, false, true)))));
         ncData.put("stats", executor.submit(() -> fixupKeys(processNodeStats(hcc, nc))));
         return ncData;
     }
@@ -117,11 +117,11 @@ public class DiagnosticsApiServlet extends NodeControllerDetailsApiServlet {
         Map<String, Future<JsonNode>> ccFutureData;
         ccFutureData = new HashMap<>();
         ccFutureData.put("threaddump",
-                executor.submit(() -> fixupKeys((ObjectNode) OBJECT_MAPPER.readTree(hcc.getThreadDump(null)))));
+                executor.submit(() -> fixupKeys((ObjectNode) OBJECT_MAPPER.readTree(processThreadDump(null)))));
         ccFutureData.put("config", executor.submit(
-                () -> fixupKeys((ObjectNode) OBJECT_MAPPER.readTree(hcc.getNodeDetailsJSON(null, false, true)))));
+                () -> fixupKeys((ObjectNode) OBJECT_MAPPER.readTree(processNodeDetails(null, false, true)))));
         ccFutureData.put("stats", executor.submit(
-                () -> fixupKeys((ObjectNode) OBJECT_MAPPER.readTree(hcc.getNodeDetailsJSON(null, true, false)))));
+                () -> fixupKeys((ObjectNode) OBJECT_MAPPER.readTree(processNodeDetails(null, true, false)))));
         return ccFutureData;
     }
 
@@ -143,4 +143,13 @@ public class DiagnosticsApiServlet extends NodeControllerDetailsApiServlet {
             }
         }
     }
+
+    protected String processNodeDetails(String node, boolean includeStats, boolean includeConfig) throws Exception {
+        return checkNullDetail(node, hcc.getNodeDetailsJSON(node, includeStats, includeConfig));
+    }
+
+    protected String processThreadDump(String node) throws Exception {
+        return checkNullDetail(node, hcc.getThreadDump(node));
+    }
+
 }

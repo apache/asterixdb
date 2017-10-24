@@ -86,10 +86,15 @@ public class ShutdownApiServlet extends AbstractServlet {
             for (int i = 0; i < ncs.size(); i++) {
                 ObjectNode nc = (ObjectNode) ncs.get(i);
                 String node = nc.get(NODE_ID_KEY).asText();
-                ObjectNode details = (ObjectNode) OBJECT_MAPPER.readTree(hcc.getNodeDetailsJSON(node, false, true));
-                nc.set(PID, details.get(PID));
-                if (details.has(INI) && details.get(INI).has(NCSERVICE_PID)) {
-                    nc.put(NCSERVICE_PID, details.get(INI).get(NCSERVICE_PID).asInt());
+                final String detailsString = hcc.getNodeDetailsJSON(node, false, true);
+                if (detailsString != null) {
+                    ObjectNode details = (ObjectNode) OBJECT_MAPPER.readTree(detailsString);
+                    nc.set(PID, details.get(PID));
+                    if (details.has(INI) && details.get(INI).has(NCSERVICE_PID)) {
+                        nc.put(NCSERVICE_PID, details.get(INI).get(NCSERVICE_PID).asInt());
+                    }
+                } else {
+                    LOGGER.warning("Unable to get node details for " + node + " from hcc");
                 }
             }
             jsonObject.set("cluster", clusterState);

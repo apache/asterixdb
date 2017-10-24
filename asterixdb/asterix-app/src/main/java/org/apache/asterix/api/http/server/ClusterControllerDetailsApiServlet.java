@@ -81,9 +81,9 @@ public class ClusterControllerDetailsApiServlet extends ClusterApiServlet {
         } else if (parts.length == 1) {
             switch (parts[0]) {
                 case "config":
-                    return OBJECT_MAPPER.readValue(hcc.getNodeDetailsJSON(null, false, true), ObjectNode.class);
+                    return OBJECT_MAPPER.readValue(processNodeDetails(hcc, false, true), ObjectNode.class);
                 case "stats":
-                    return OBJECT_MAPPER.readValue(hcc.getNodeDetailsJSON(null, true, false), ObjectNode.class);
+                    return OBJECT_MAPPER.readValue(processNodeDetails(hcc, true, false), ObjectNode.class);
                 case "threaddump":
                     return processCCThreadDump(hcc);
 
@@ -96,10 +96,19 @@ public class ClusterControllerDetailsApiServlet extends ClusterApiServlet {
         }
     }
 
+    private String processNodeDetails(IHyracksClientConnection hcc, boolean includeStats, boolean includeConfig)
+            throws Exception {
+        final String details = hcc.getNodeDetailsJSON(null, includeStats, includeConfig);
+        if (details == null) {
+            throw new IllegalStateException("unable to retrieve details for CC");
+        }
+        return details;
+    }
+
     private ObjectNode processCCThreadDump(IHyracksClientConnection hcc) throws Exception {
         String dump = hcc.getThreadDump(null);
         if (dump == null) {
-            throw new IllegalArgumentException();
+            throw new IllegalStateException("unable to retrieve thread dump for CC");
         }
         return (ObjectNode) OBJECT_MAPPER.readTree(dump);
     }

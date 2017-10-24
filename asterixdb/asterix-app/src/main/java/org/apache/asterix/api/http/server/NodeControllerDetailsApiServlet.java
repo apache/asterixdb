@@ -40,6 +40,7 @@ import org.apache.hyracks.http.server.utils.HttpUtil;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+
 import io.netty.handler.codec.http.HttpResponseStatus;
 
 public class NodeControllerDetailsApiServlet extends ClusterApiServlet {
@@ -139,10 +140,7 @@ public class NodeControllerDetailsApiServlet extends ClusterApiServlet {
     }
 
     protected ObjectNode processNodeStats(IHyracksClientConnection hcc, String node) throws Exception {
-        final String details = hcc.getNodeDetailsJSON(node, true, false);
-        if (details == null) {
-            throw new IllegalArgumentException();
-        }
+        final String details = checkNullDetail(node, hcc.getNodeDetailsJSON(node, true, false));
         ObjectNode json = (ObjectNode) OBJECT_MAPPER.readTree(details);
         int index = json.get("rrd-ptr").asInt() - 1;
         json.remove("rrd-ptr");
@@ -189,10 +187,7 @@ public class NodeControllerDetailsApiServlet extends ClusterApiServlet {
     }
 
     private ObjectNode processNodeConfig(IHyracksClientConnection hcc, String node) throws Exception {
-        String config = hcc.getNodeDetailsJSON(node, false, true);
-        if (config == null) {
-            throw new IllegalArgumentException();
-        }
+        String config = checkNullDetail(node, hcc.getNodeDetailsJSON(node, false, true));
         return (ObjectNode) OBJECT_MAPPER.readTree(config);
     }
 
@@ -200,13 +195,22 @@ public class NodeControllerDetailsApiServlet extends ClusterApiServlet {
         if ("cc".equals(node)) {
             return OBJECT_MAPPER.createObjectNode();
         }
-        String dump = hcc.getThreadDump(node);
-        if (dump == null) {
-            // check to see if this is a node that is simply down
-            IClusterStateManager csm = appCtx.getClusterStateManager();
-            ClusterPartition[] cp = csm.getNodePartitions(node);
-            throw cp != null ? new IllegalStateException() : new IllegalArgumentException();
-        }
+        String dump = checkNullDetail(node, hcc.getThreadDump(node));
         return (ObjectNode) OBJECT_MAPPER.readTree(dump);
+    }
+
+    protected String checkNullDetail(String node, String value) {
+        if (value != null) {
+            return value;
+        }
+        if (node == null) {
+            // something is seriously wrong if we can't get the cc detail
+            throw new IllegalStateException("unable to obtain detail from cc");
+        }
+        // check to see if this is a node that is simply down
+        IClusterStateManager csm = appCtx.getClusterStateManager();
+        ClusterPartition[] cp = csm.getNodePartitions(node);
+        throw cp != null ? new IllegalStateException("unable to obtain detail from node " + node)
+                : new IllegalArgumentException("unknown node " + node);
     }
 }
