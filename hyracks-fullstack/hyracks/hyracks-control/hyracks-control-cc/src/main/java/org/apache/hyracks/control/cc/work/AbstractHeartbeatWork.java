@@ -42,7 +42,11 @@ public abstract class AbstractHeartbeatWork extends SynchronizableWork {
         INodeManager nodeManager = ccs.getNodeManager();
         NodeControllerState state = nodeManager.getNodeControllerState(nodeId);
         if (state != null) {
-            state.notifyHeartbeat(hbData);
+            if (hbData != null) {
+                state.notifyHeartbeat(hbData);
+            } else {
+                state.touchHeartbeat();
+            }
         }
         runWork();
     }

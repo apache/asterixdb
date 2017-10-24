@@ -27,7 +27,6 @@ import org.apache.hyracks.api.dataflow.TaskId;
 import org.apache.hyracks.api.job.ActivityCluster;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.control.cc.ClusterControllerService;
-import org.apache.hyracks.control.cc.NodeControllerState;
 import org.apache.hyracks.control.cc.job.ActivityPlan;
 import org.apache.hyracks.control.cc.job.IJobManager;
 import org.apache.hyracks.control.cc.job.JobRun;
@@ -75,10 +74,6 @@ public abstract class AbstractTaskLifecycleWork extends AbstractHeartbeatWork {
                     }
                 }
             }
-        }
-        final NodeControllerState ncState = ccs.getNodeManager().getNodeControllerState(nodeId);
-        if (ncState != null) {
-            ncState.touchHeartbeat();
         }
     }
 

@@ -213,39 +213,37 @@ public class NodeControllerState {
     public synchronized void notifyHeartbeat(HeartbeatData hbData) {
         touchHeartbeat();
         hbTime[rrdPtr] = System.currentTimeMillis();
-        if (hbData != null) {
-            heapInitSize[rrdPtr] = hbData.heapInitSize;
-            heapUsedSize[rrdPtr] = hbData.heapUsedSize;
-            heapCommittedSize[rrdPtr] = hbData.heapCommittedSize;
-            heapMaxSize[rrdPtr] = hbData.heapMaxSize;
-            nonheapInitSize[rrdPtr] = hbData.nonheapInitSize;
-            nonheapUsedSize[rrdPtr] = hbData.nonheapUsedSize;
-            nonheapCommittedSize[rrdPtr] = hbData.nonheapCommittedSize;
-            nonheapMaxSize[rrdPtr] = hbData.nonheapMaxSize;
-            threadCount[rrdPtr] = hbData.threadCount;
-            peakThreadCount[rrdPtr] = hbData.peakThreadCount;
-            systemLoadAverage[rrdPtr] = hbData.systemLoadAverage;
-            int gcN = hbSchema.getGarbageCollectorInfos().length;
-            for (int i = 0; i < gcN; ++i) {
-                gcCollectionCounts[i][rrdPtr] = hbData.gcCollectionCounts[i];
-                gcCollectionTimes[i][rrdPtr] = hbData.gcCollectionTimes[i];
-            }
-            netPayloadBytesRead[rrdPtr] = hbData.netPayloadBytesRead;
-            netPayloadBytesWritten[rrdPtr] = hbData.netPayloadBytesWritten;
-            netSignalingBytesRead[rrdPtr] = hbData.netSignalingBytesRead;
-            netSignalingBytesWritten[rrdPtr] = hbData.netSignalingBytesWritten;
-            datasetNetPayloadBytesRead[rrdPtr] = hbData.datasetNetPayloadBytesRead;
-            datasetNetPayloadBytesWritten[rrdPtr] = hbData.datasetNetPayloadBytesWritten;
-            datasetNetSignalingBytesRead[rrdPtr] = hbData.datasetNetSignalingBytesRead;
-            datasetNetSignalingBytesWritten[rrdPtr] = hbData.datasetNetSignalingBytesWritten;
-            ipcMessagesSent[rrdPtr] = hbData.ipcMessagesSent;
-            ipcMessageBytesSent[rrdPtr] = hbData.ipcMessageBytesSent;
-            ipcMessagesReceived[rrdPtr] = hbData.ipcMessagesReceived;
-            ipcMessageBytesReceived[rrdPtr] = hbData.ipcMessageBytesReceived;
-            diskReads[rrdPtr] = hbData.diskReads;
-            diskWrites[rrdPtr] = hbData.diskWrites;
-            rrdPtr = (rrdPtr + 1) % RRD_SIZE;
+        heapInitSize[rrdPtr] = hbData.heapInitSize;
+        heapUsedSize[rrdPtr] = hbData.heapUsedSize;
+        heapCommittedSize[rrdPtr] = hbData.heapCommittedSize;
+        heapMaxSize[rrdPtr] = hbData.heapMaxSize;
+        nonheapInitSize[rrdPtr] = hbData.nonheapInitSize;
+        nonheapUsedSize[rrdPtr] = hbData.nonheapUsedSize;
+        nonheapCommittedSize[rrdPtr] = hbData.nonheapCommittedSize;
+        nonheapMaxSize[rrdPtr] = hbData.nonheapMaxSize;
+        threadCount[rrdPtr] = hbData.threadCount;
+        peakThreadCount[rrdPtr] = hbData.peakThreadCount;
+        systemLoadAverage[rrdPtr] = hbData.systemLoadAverage;
+        int gcN = hbSchema.getGarbageCollectorInfos().length;
+        for (int i = 0; i < gcN; ++i) {
+            gcCollectionCounts[i][rrdPtr] = hbData.gcCollectionCounts[i];
+            gcCollectionTimes[i][rrdPtr] = hbData.gcCollectionTimes[i];
         }
+        netPayloadBytesRead[rrdPtr] = hbData.netPayloadBytesRead;
+        netPayloadBytesWritten[rrdPtr] = hbData.netPayloadBytesWritten;
+        netSignalingBytesRead[rrdPtr] = hbData.netSignalingBytesRead;
+        netSignalingBytesWritten[rrdPtr] = hbData.netSignalingBytesWritten;
+        datasetNetPayloadBytesRead[rrdPtr] = hbData.datasetNetPayloadBytesRead;
+        datasetNetPayloadBytesWritten[rrdPtr] = hbData.datasetNetPayloadBytesWritten;
+        datasetNetSignalingBytesRead[rrdPtr] = hbData.datasetNetSignalingBytesRead;
+        datasetNetSignalingBytesWritten[rrdPtr] = hbData.datasetNetSignalingBytesWritten;
+        ipcMessagesSent[rrdPtr] = hbData.ipcMessagesSent;
+        ipcMessageBytesSent[rrdPtr] = hbData.ipcMessageBytesSent;
+        ipcMessagesReceived[rrdPtr] = hbData.ipcMessagesReceived;
+        ipcMessageBytesReceived[rrdPtr] = hbData.ipcMessageBytesReceived;
+        diskReads[rrdPtr] = hbData.diskReads;
+        diskWrites[rrdPtr] = hbData.diskWrites;
+        rrdPtr = (rrdPtr + 1) % RRD_SIZE;
     }
 
     public void touchHeartbeat() {
