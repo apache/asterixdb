@@ -40,6 +40,7 @@ public class HyracksDataException extends HyracksException {
             // don't wrap errors, allow them to propagate
             throw (Error)cause;
         } else if (cause instanceof InterruptedException && !Thread.currentThread().isInterrupted()) {
+            // TODO(mblow): why not force interrupt on current thread?
             LOGGER.log(Level.WARNING,
                     "Wrapping an InterruptedException in HyracksDataException and current thread is not interrupted",
                     cause);
@@ -58,6 +59,15 @@ public class HyracksDataException extends HyracksException {
     public static HyracksDataException suppress(HyracksDataException root, Throwable th) {
         if (root == null) {
             return HyracksDataException.create(th);
+        }
+        if (th instanceof Error) {
+            // don't suppress errors into a HyracksDataException, allow them to propagate
+            th.addSuppressed(root);
+            throw (Error) th;
+        } else if (th instanceof InterruptedException && !Thread.currentThread().isInterrupted()) {
+            // TODO(mblow): why not force interrupt on current thread?
+            LOGGER.log(Level.WARNING, "Suppressing an InterruptedException in a HyracksDataException and current "
+                    + "thread is not interrupted", th);
         }
         root.addSuppressed(th);
         return root;
