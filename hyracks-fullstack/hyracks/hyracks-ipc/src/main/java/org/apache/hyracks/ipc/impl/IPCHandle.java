@@ -148,21 +148,21 @@ final class IPCHandle implements IIPCHandle {
             }
             system.getPerformanceCounters().addMessageReceivedCount(1);
 
-            if (state == HandleState.CONNECT_RECEIVED) {
+            final boolean error = message.getFlag() == Message.ERROR;
+            if (!error && state == HandleState.CONNECT_RECEIVED) {
                 remoteAddress = (InetSocketAddress) message.getPayload();
                 system.getConnectionManager().registerHandle(this);
                 setState(HandleState.CONNECTED);
                 system.getConnectionManager().ack(this, message);
-                continue;
-            } else if (state == HandleState.CONNECT_SENT) {
+            } else if (!error && state == HandleState.CONNECT_SENT) {
                 if (message.getFlag() == Message.INITIAL_ACK) {
                     setState(HandleState.CONNECTED);
                 } else {
                     throw new IllegalStateException();
                 }
-                continue;
+            } else {
+                system.deliverIncomingMessage(message);
             }
-            system.deliverIncomingMessage(message);
         }
         inBuffer.compact();
     }

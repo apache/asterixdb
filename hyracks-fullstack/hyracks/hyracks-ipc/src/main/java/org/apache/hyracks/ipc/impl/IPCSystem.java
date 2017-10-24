@@ -94,7 +94,7 @@ public class IPCSystem {
         Exception exception = null;
         if (message.getFlag() == Message.ERROR) {
             exception = (Exception) message.getPayload();
-            LOGGER.log(Level.INFO, "Exception in message " + message.toString());
+            LOGGER.log(Level.INFO, "Exception in message", exception);
         } else {
             payload = message.getPayload();
         }
