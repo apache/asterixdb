@@ -18,29 +18,35 @@
  */
 package org.apache.asterix.api.http.server;
 
+import static org.apache.asterix.app.message.ExecuteStatementRequestMessage.DEFAULT_NC_TIMEOUT_MILLIS;
+
 import java.io.IOException;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.asterix.translator.IStatementExecutorContext;
-import org.apache.hyracks.api.client.IHyracksClientConnection;
-import org.apache.hyracks.api.job.JobId;
+import org.apache.asterix.app.message.CancelQueryRequest;
+import org.apache.asterix.common.messaging.api.INCMessageBroker;
+import org.apache.asterix.common.messaging.api.MessageFuture;
+import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
-import org.apache.hyracks.http.server.AbstractServlet;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
 
 /**
- * The servlet provides a REST API for cancelling an on-going query.
+ * The servlet provides a REST API on an NC for cancelling an on-going query.
  */
-public class QueryCancellationServlet extends AbstractServlet {
-    private static final Logger LOGGER = Logger.getLogger(QueryCancellationServlet.class.getName());
-    protected static final String CLIENT_CONTEXT_ID = "client_context_id";
+public class NCQueryCancellationServlet extends QueryCancellationServlet {
+    private static final Logger LOGGER = Logger.getLogger(NCQueryCancellationServlet.class.getName());
+    private final INCServiceContext serviceCtx;
+    private final INCMessageBroker messageBroker;
 
-    public QueryCancellationServlet(ConcurrentMap<String, Object> ctx, String... paths) {
+    public NCQueryCancellationServlet(ConcurrentMap<String, Object> ctx, String... paths) {
         super(ctx, paths);
+        this.serviceCtx = (INCServiceContext) ctx.get(ServletConstants.SERVICE_CONTEXT_ATTR);
+        messageBroker = (INCMessageBroker) serviceCtx.getMessageBroker();
     }
 
     @Override
@@ -51,29 +57,20 @@ public class QueryCancellationServlet extends AbstractServlet {
             response.setStatus(HttpResponseStatus.BAD_REQUEST);
             return;
         }
-
-        // Retrieves the corresponding Hyracks job id.
-        IStatementExecutorContext runningQueries = (IStatementExecutorContext) ctx
-                .get(ServletConstants.RUNNING_QUERIES_ATTR);
-        IHyracksClientConnection hcc = (IHyracksClientConnection) ctx.get(ServletConstants.HYRACKS_CONNECTION_ATTR);
-        JobId jobId = runningQueries.getJobIdFromClientContextId(clientContextId);
-
-        if (jobId == null) {
-            // response: NOT FOUND
-            response.setStatus(HttpResponseStatus.NOT_FOUND);
-            return;
-        }
+        final MessageFuture cancelQueryFuture = messageBroker.registerMessageFuture();
         try {
-            // Cancels the on-going job.
-            hcc.cancelJob(jobId);
-            // Removes the cancelled query from the map activeQueries.
-            runningQueries.removeJobIdFromClientContextId(clientContextId);
-            // response: OK
+            CancelQueryRequest cancelQueryMessage =
+                    new CancelQueryRequest(serviceCtx.getNodeId(), cancelQueryFuture.getFutureId(), clientContextId);
+            messageBroker.sendMessageToCC(cancelQueryMessage);
+            cancelQueryFuture.get(DEFAULT_NC_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
             response.setStatus(HttpResponseStatus.OK);
         } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "unexpected exception thrown from cancel", e);
-            // response: INTERNAL SERVER ERROR
+            if (LOGGER.isLoggable(Level.SEVERE)) {
+                LOGGER.log(Level.SEVERE, "Unexpected exception while canceling query", e);
+            }
             response.setStatus(HttpResponseStatus.INTERNAL_SERVER_ERROR);
+        } finally {
+            messageBroker.deregisterMessageFuture(cancelQueryFuture.getFutureId());
         }
     }
 }
