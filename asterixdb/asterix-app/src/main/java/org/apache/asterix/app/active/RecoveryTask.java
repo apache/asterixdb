@@ -79,15 +79,14 @@ public class RecoveryTask {
         cancelRecovery = true;
     }
 
-    protected Void resumeOrRecover(MetadataProvider metadataProvider)
-            throws HyracksDataException, AlgebricksException, InterruptedException {
+    protected void resumeOrRecover(MetadataProvider metadataProvider) throws HyracksDataException {
         try {
             synchronized (listener) {
                 listener.doResume(metadataProvider);
                 listener.setState(ActivityState.RUNNING);
             }
         } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "First attempt to resume " + listener.getEntityId() + " Failed", e);
+            LOGGER.log(Level.WARNING, "Attempt to resume " + listener.getEntityId() + " Failed", e);
             synchronized (listener) {
                 if (listener.getState() == ActivityState.RESUMING) {
                     // This will be the case if compilation failure
@@ -103,11 +102,12 @@ public class RecoveryTask {
                     }
                 }
             } else {
-                IRetryPolicy policy = retryPolicyFactory.create(listener);
-                doRecover(policy);
+                LOGGER.log(Level.WARNING, "Submitting recovery task for " + listener.getEntityId());
+                metadataProvider.getApplicationContext().getServiceContext().getControllerService().getExecutor()
+                        .submit(() -> doRecover(retryPolicyFactory.create(listener)));
             }
+            throw e;
         }
-        return null;
     }
 
     protected Void doRecover(IRetryPolicy policy)

@@ -388,14 +388,11 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
 
     protected abstract Void doStop(MetadataProvider metadataProvider) throws HyracksDataException;
 
-    protected abstract Void doSuspend(MetadataProvider metadataProvider)
-            throws HyracksDataException;
+    protected abstract Void doSuspend(MetadataProvider metadataProvider) throws HyracksDataException;
 
-    protected abstract void doResume(MetadataProvider metadataProvider)
-            throws HyracksDataException;
+    protected abstract void doResume(MetadataProvider metadataProvider) throws HyracksDataException;
 
-    protected abstract void setRunning(MetadataProvider metadataProvider, boolean running)
-            throws HyracksDataException;
+    protected abstract void setRunning(MetadataProvider metadataProvider, boolean running) throws HyracksDataException;
 
     @Override
     public synchronized void stop(MetadataProvider metadataProvider) throws HyracksDataException, InterruptedException {
@@ -505,21 +502,11 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
                 return;
             }
             setState(ActivityState.RESUMING);
-            WaitForStateSubscriber subscriber = new WaitForStateSubscriber(this,
-                    EnumSet.of(ActivityState.RUNNING, ActivityState.TEMPORARILY_FAILED));
             rt = new RecoveryTask(appCtx, this, retryPolicyFactory);
-            metadataProvider.getApplicationContext().getServiceContext().getControllerService().getExecutor()
-                    .submit(() -> rt.resumeOrRecover(metadataProvider));
             try {
-                subscriber.sync();
-                if (subscriber.getFailure() != null) {
-                    LOGGER.log(Level.WARNING, "Failure while attempting to resume " + entityId,
-                            subscriber.getFailure());
-                }
-            } catch (InterruptedException e) {
+                rt.resumeOrRecover(metadataProvider);
+            } catch (Exception e) {
                 LOGGER.log(Level.WARNING, "Failure while attempting to resume " + entityId, e);
-                Thread.currentThread().interrupt();
-                throw HyracksDataException.create(e);
             }
         } finally {
             suspended = false;
