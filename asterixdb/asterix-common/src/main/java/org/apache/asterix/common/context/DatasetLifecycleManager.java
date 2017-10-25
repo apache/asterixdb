@@ -491,11 +491,8 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
         sb.append(String.format(idxHeaderFormat, "DatasetID", "ResourceID", "Open", "Reference Count", "Index"));
         for (DatasetResource dsr : datasets.values()) {
             DatasetInfo dsInfo = dsr.getDatasetInfo();
-            for (Map.Entry<Long, IndexInfo> entry : dsInfo.getIndexes().entrySet()) {
-                IndexInfo iInfo = entry.getValue();
-                sb.append(String.format(idxFormat, dsInfo.getDatasetID(), entry.getKey(), iInfo.isOpen(),
-                        iInfo.getReferenceCount(), iInfo.getIndex()));
-            }
+            dsInfo.getIndexes().forEach((key, iInfo) -> sb.append(String.format(idxFormat, dsInfo.getDatasetID(), key,
+                    iInfo.isOpen(), iInfo.getReferenceCount(), iInfo.getIndex())));
         }
         outputStream.write(sb.toString().getBytes());
     }

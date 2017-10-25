@@ -260,9 +260,9 @@ public class ClusterControllerService implements IControllerService {
     }
 
     private void connectNCs() {
-        getNCServices().entrySet().forEach(ncService -> {
+        getNCServices().forEach((key, value) -> {
             final TriggerNCWork triggerWork = new TriggerNCWork(ClusterControllerService.this,
-                    ncService.getValue().getLeft(), ncService.getValue().getRight(), ncService.getKey());
+                    value.getLeft(), value.getRight(), key);
             executor.submit(triggerWork);
         });
         serviceCtx.addClusterLifecycleListener(new IClusterLifecycleListener() {
@@ -289,10 +289,9 @@ public class ClusterControllerService implements IControllerService {
 
     private void terminateNCServices() throws Exception {
         List<ShutdownNCServiceWork> shutdownNCServiceWorks = new ArrayList<>();
-        getNCServices().entrySet().forEach(ncService -> {
-            if (ncService.getValue().getRight() != NCConfig.NCSERVICE_PORT_DISABLED) {
-                ShutdownNCServiceWork shutdownWork = new ShutdownNCServiceWork(ncService.getValue().getLeft(),
-                        ncService.getValue().getRight(), ncService.getKey());
+        getNCServices().forEach((key, value) -> {
+            if (value.getRight() != NCConfig.NCSERVICE_PORT_DISABLED) {
+                ShutdownNCServiceWork shutdownWork = new ShutdownNCServiceWork(value.getLeft(), value.getRight(), key);
                 workQueue.schedule(shutdownWork);
                 shutdownNCServiceWorks.add(shutdownWork);
             }

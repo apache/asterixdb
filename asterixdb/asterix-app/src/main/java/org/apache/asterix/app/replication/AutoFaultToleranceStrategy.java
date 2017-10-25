@@ -25,7 +25,6 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -67,7 +66,6 @@ import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.util.FaultToleranceUtil;
 import org.apache.hyracks.api.application.ICCServiceContext;
 import org.apache.hyracks.api.application.IClusterLifecycleListener.ClusterEventType;
-import org.apache.hyracks.api.config.IOption;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class AutoFaultToleranceStrategy implements IFaultToleranceStrategy {
@@ -163,9 +161,8 @@ public class AutoFaultToleranceStrategy implements IFaultToleranceStrategy {
                 LOGGER.info("Partitions to recover: " + lostPartitions);
             }
             //For each replica, send a request to takeover the assigned partitions
-            for (Entry<String, List<Integer>> entry : partitionRecoveryPlan.entrySet()) {
-                String replica = entry.getKey();
-                Integer[] partitionsToTakeover = entry.getValue().toArray(new Integer[entry.getValue().size()]);
+            partitionRecoveryPlan.forEach((replica, value) -> {
+                Integer[] partitionsToTakeover = value.toArray(new Integer[value.size()]);
                 long requestId = clusterRequestId++;
                 TakeoverPartitionsRequestMessage takeoverRequest = new TakeoverPartitionsRequestMessage(requestId,
                         replica, partitionsToTakeover);
@@ -180,7 +177,7 @@ public class AutoFaultToleranceStrategy implements IFaultToleranceStrategy {
                      */
                     LOGGER.log(Level.WARNING, "Failed to send takeover request: " + takeoverRequest, e);
                 }
-            }
+            });
         }
     }
 

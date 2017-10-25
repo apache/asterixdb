@@ -34,7 +34,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.concurrent.ConcurrentHashMap;
@@ -128,9 +127,8 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
                 .append(Character.LINE_SEPARATOR).append(ioManager.getClass().getSimpleName()).append(':')
                 .append(Character.LINE_SEPARATOR).append(ioManager.toString()).append(Character.LINE_SEPARATOR)
                 .append("Cached Resources:").append(Character.LINE_SEPARATOR);
-        for (Entry<String, LocalResource> pair : resourceCache.asMap().entrySet()) {
-            aString.append(pair.getKey()).append("->").append(pair.getValue()).append(Character.LINE_SEPARATOR);
-        }
+        resourceCache.asMap().forEach(
+                (key, value) -> aString.append(key).append("->").append(value).append(Character.LINE_SEPARATOR));
         return aString.toString();
     }
 

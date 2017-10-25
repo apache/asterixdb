@@ -59,17 +59,17 @@ public class SuperActivity extends OneToOneConnectedActivityCluster implements I
             throws HyracksDataException {
         final Map<ActivityId, IActivity> startActivities = new HashMap<>();
         Map<ActivityId, IActivity> activities = getActivityMap();
-        for (Entry<ActivityId, IActivity> entry : activities.entrySet()) {
-            /**
+        activities.forEach((key, value) -> {
+            /*
              * extract start activities
              */
-            List<IConnectorDescriptor> conns = getActivityInputMap().get(entry.getKey());
+            List<IConnectorDescriptor> conns = getActivityInputMap().get(key);
             if (conns == null || conns.isEmpty()) {
-                startActivities.put(entry.getKey(), entry.getValue());
+                startActivities.put(key, value);
             }
-        }
+        });
 
-        /**
+        /*
          * wrap a RecordDescriptorProvider for the super activity
          */
         IRecordDescriptorProvider wrappedRecDescProvider = new IRecordDescriptorProvider() {
@@ -77,7 +77,7 @@ public class SuperActivity extends OneToOneConnectedActivityCluster implements I
             @Override
             public RecordDescriptor getInputRecordDescriptor(ActivityId aid, int inputIndex) {
                 if (startActivities.get(aid) != null) {
-                    /**
+                    /*
                      * if the activity is a start (input boundary) activity
                      */
                     int superActivityInputChannel = SuperActivity.this.getClusterInputIndex(Pair.of(aid, inputIndex));
@@ -86,14 +86,14 @@ public class SuperActivity extends OneToOneConnectedActivityCluster implements I
                     }
                 }
                 if (SuperActivity.this.getActivityMap().get(aid) != null) {
-                    /**
+                    /*
                      * if the activity is an internal activity of the super activity
                      */
                     IConnectorDescriptor conn = getActivityInputMap().get(aid).get(inputIndex);
                     return getConnectorRecordDescriptorMap().get(conn.getConnectorId());
                 }
 
-                /**
+                /*
                  * the following is for the case where the activity is in other SuperActivities
                  */
                 ActivityClusterGraph acg = SuperActivity.this.getActivityClusterGraph();
@@ -121,7 +121,7 @@ public class SuperActivity extends OneToOneConnectedActivityCluster implements I
 
             @Override
             public RecordDescriptor getOutputRecordDescriptor(ActivityId aid, int outputIndex) {
-                /**
+                /*
                  * if the activity is an output-boundary activity
                  */
                 int superActivityOutputChannel = SuperActivity.this.getClusterOutputIndex(Pair.of(aid, outputIndex));
@@ -130,14 +130,14 @@ public class SuperActivity extends OneToOneConnectedActivityCluster implements I
                 }
 
                 if (SuperActivity.this.getActivityMap().get(aid) != null) {
-                    /**
+                    /*
                      * if the activity is an internal activity of the super activity
                      */
                     IConnectorDescriptor conn = getActivityOutputMap().get(aid).get(outputIndex);
                     return getConnectorRecordDescriptorMap().get(conn.getConnectorId());
                 }
 
-                /**
+                /*
                  * the following is for the case where the activity is in other SuperActivities
                  */
                 ActivityClusterGraph acg = SuperActivity.this.getActivityClusterGraph();

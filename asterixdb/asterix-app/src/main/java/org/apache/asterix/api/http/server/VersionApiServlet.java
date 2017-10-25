@@ -50,9 +50,7 @@ public class VersionApiServlet extends AbstractServlet {
         ICcApplicationContext props = (ICcApplicationContext) ctx.get(ASTERIX_APP_CONTEXT_INFO_ATTR);
         Map<String, String> buildProperties = props.getBuildProperties().getAllProps();
         ObjectNode responseObject = OBJECT_MAPPER.createObjectNode();
-        for (Map.Entry<String, String> e : buildProperties.entrySet()) {
-            responseObject.put(e.getKey(), e.getValue());
-        }
+        buildProperties.forEach(responseObject::put);
         try {
             HttpUtil.setContentType(response, HttpUtil.ContentType.TEXT_PLAIN, HttpUtil.Encoding.UTF8);
         } catch (IOException e) {

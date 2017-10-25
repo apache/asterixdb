@@ -216,7 +216,7 @@ public class GrammarExtensionMojo extends AbstractMojo {
             writer.newLine();
             writer.newLine();
 
-            // Extinsibles
+            // Extensibles
             for (Entry<String, Pair<String, String>> entry : extensibles.entrySet()) {
                 writer.newLine();
                 String signature = entry.getKey();

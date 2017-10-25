@@ -499,7 +499,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
         int abortedJobId = txnContext.getJobId().getId();
         // Obtain the first/last log record LSNs written by the Job
         long firstLSN = txnContext.getFirstLSN();
-        /**
+        /*
          * The effect of any log record with LSN below minFirstLSN has already been written to disk and
          * will not be rolled back. Therefore, we will set the first LSN of the job to the maximum of
          * minFirstLSN and the job's first LSN.

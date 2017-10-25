@@ -29,7 +29,6 @@ import java.util.Queue;
 import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Pair;
-
 import org.apache.hyracks.api.dataflow.ActivityId;
 import org.apache.hyracks.api.dataflow.ConnectorDescriptorId;
 import org.apache.hyracks.api.dataflow.IActivity;
@@ -37,7 +36,6 @@ import org.apache.hyracks.api.dataflow.IConnectorDescriptor;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.job.ActivityCluster;
 import org.apache.hyracks.api.job.ActivityClusterGraph;
-import org.apache.hyracks.api.job.ActivityClusterId;
 import org.apache.hyracks.api.rewriter.runtime.SuperActivity;
 
 /**
@@ -65,12 +63,10 @@ public class ActivityClusterGraphRewriter {
         acg.getActivityMap().clear();
         acg.getConnectorMap().clear();
         Map<IActivity, SuperActivity> invertedActivitySuperActivityMap = new HashMap<>();
-        for (Entry<ActivityClusterId, ActivityCluster> entry : acg.getActivityClusterMap().entrySet()) {
-            rewriteIntraActivityCluster(entry.getValue(), invertedActivitySuperActivityMap);
-        }
-        for (Entry<ActivityClusterId, ActivityCluster> entry : acg.getActivityClusterMap().entrySet()) {
-            rewriteInterActivityCluster(entry.getValue(), invertedActivitySuperActivityMap);
-        }
+        acg.getActivityClusterMap()
+                .forEach((key, value) -> rewriteIntraActivityCluster(value, invertedActivitySuperActivityMap));
+        acg.getActivityClusterMap()
+                .forEach((key, value) -> rewriteInterActivityCluster(value, invertedActivitySuperActivityMap));
         invertedActivitySuperActivityMap.clear();
     }
 
@@ -84,14 +80,11 @@ public class ActivityClusterGraphRewriter {
             Map<IActivity, SuperActivity> invertedActivitySuperActivityMap) {
         Map<ActivityId, Set<ActivityId>> blocked2BlockerMap = ac.getBlocked2BlockerMap();
         Map<ActivityId, ActivityId> invertedAid2SuperAidMap = new HashMap<>();
-        for (Entry<IActivity, SuperActivity> entry : invertedActivitySuperActivityMap.entrySet()) {
-            invertedAid2SuperAidMap.put(entry.getKey().getActivityId(), entry.getValue().getActivityId());
-        }
+        invertedActivitySuperActivityMap
+                .forEach((key, value) -> invertedAid2SuperAidMap.put(key.getActivityId(), value.getActivityId()));
         Map<ActivityId, Set<ActivityId>> replacedBlocked2BlockerMap = new HashMap<>();
-        for (Entry<ActivityId, Set<ActivityId>> entry : blocked2BlockerMap.entrySet()) {
-            ActivityId blocked = entry.getKey();
+        blocked2BlockerMap.forEach((blocked, blockers) -> {
             ActivityId replacedBlocked = invertedAid2SuperAidMap.get(blocked);
-            Set<ActivityId> blockers = entry.getValue();
             Set<ActivityId> replacedBlockers = null;
             if (blockers != null) {
                 replacedBlockers = new HashSet<>();
@@ -113,7 +106,7 @@ public class ActivityClusterGraphRewriter {
                     replacedBlocked2BlockerMap.put(replacedBlocked, existingBlockers);
                 }
             }
-        }
+        });
         blocked2BlockerMap.clear();
         blocked2BlockerMap.putAll(replacedBlocked2BlockerMap);
     }
@@ -136,23 +129,21 @@ public class ActivityClusterGraphRewriter {
         Map<ActivityId, SuperActivity> superActivities = new HashMap<>();
         Map<ActivityId, Queue<IActivity>> toBeExpendedMap = new HashMap<>();
 
-        /**
+        /*
          * Build the initial super activities
          */
-        for (Entry<ActivityId, IActivity> entry : activities.entrySet()) {
-            ActivityId activityId = entry.getKey();
-            IActivity activity = entry.getValue();
+        activities.forEach((activityId, activity) -> {
             if (activityInputMap.get(activityId) == null) {
                 startActivities.put(activityId, activity);
-                /**
+                /*
                  * use the start activity's id as the id of the super activity
                  */
                 createNewSuperActivity(ac, superActivities, toBeExpendedMap, invertedActivitySuperActivityMap,
                         activityId, activity);
             }
-        }
+        });
 
-        /**
+        /*
          * expand one-to-one connected activity cluster by the BFS order.
          * after the while-loop, the original activities are partitioned
          * into equivalent classes, one-per-super-activity.
@@ -165,19 +156,19 @@ public class ActivityClusterGraphRewriter {
                 ActivityId superActivityId = entry.getKey();
                 SuperActivity superActivity = entry.getValue();
 
-                /**
+                /*
                  * for the case where the super activity has already been swallowed
                  */
                 if (superActivities.get(superActivityId) == null) {
                     continue;
                 }
 
-                /**
+                /*
                  * expend the super activity
                  */
                 Queue<IActivity> toBeExpended = toBeExpendedMap.get(superActivityId);
                 if (toBeExpended == null) {
-                    /**
+                    /*
                      * Nothing to expand
                      */
                     continue;
@@ -191,7 +182,7 @@ public class ActivityClusterGraphRewriter {
                         IActivity newActivity = endPoints.getRight().getLeft();
                         SuperActivity existingSuperActivity = invertedActivitySuperActivityMap.get(newActivity);
                         if (outputConn.getClass().getName().contains(ONE_TO_ONE_CONNECTOR)) {
-                            /**
+                            /*
                              * expend the super activity cluster on an one-to-one out-bound connection
                              */
                             if (existingSuperActivity == null) {
@@ -199,13 +190,13 @@ public class ActivityClusterGraphRewriter {
                                 toBeExpended.add(newActivity);
                                 invertedActivitySuperActivityMap.put(newActivity, superActivity);
                             } else {
-                                /**
+                                /*
                                  * the two activities already in the same super activity
                                  */
                                 if (existingSuperActivity == superActivity) {
                                     continue;
                                 }
-                                /**
+                                /*
                                  * swallow an existing super activity
                                  */
                                 swallowExistingSuperActivity(superActivities, toBeExpendedMap,
@@ -214,7 +205,7 @@ public class ActivityClusterGraphRewriter {
                             }
                         } else {
                             if (existingSuperActivity == null) {
-                                /**
+                                /*
                                  * create new activity
                                  */
                                 createNewSuperActivity(ac, superActivities, toBeExpendedMap,
@@ -224,10 +215,10 @@ public class ActivityClusterGraphRewriter {
                     }
                 }
 
-                /**
+                /*
                  * remove the to-be-expended queue if it is empty
                  */
-                if (toBeExpended.size() == 0) {
+                if (toBeExpended.isEmpty()) {
                     toBeExpendedMap.remove(superActivityId);
                 }
             }
@@ -237,28 +228,25 @@ public class ActivityClusterGraphRewriter {
         Map<ConnectorDescriptorId, RecordDescriptor> connRecordDesc = ac.getConnectorRecordDescriptorMap();
         Map<SuperActivity, Integer> superActivityProducerPort = new HashMap<>();
         Map<SuperActivity, Integer> superActivityConsumerPort = new HashMap<>();
-        for (Entry<ActivityId, SuperActivity> entry : superActivities.entrySet()) {
-            superActivityProducerPort.put(entry.getValue(), 0);
-            superActivityConsumerPort.put(entry.getValue(), 0);
-        }
+        superActivities.forEach((key, value) -> {
+            superActivityProducerPort.put(value, 0);
+            superActivityConsumerPort.put(value, 0);
+        });
 
-        /**
+        /*
          * create a new activity cluster to replace the old activity cluster
          */
         ActivityCluster newActivityCluster = new ActivityCluster(acg, ac.getId());
         newActivityCluster.setConnectorPolicyAssignmentPolicy(ac.getConnectorPolicyAssignmentPolicy());
-        for (Entry<ActivityId, SuperActivity> entry : superActivities.entrySet()) {
-            newActivityCluster.addActivity(entry.getValue());
-            acg.getActivityMap().put(entry.getKey(), newActivityCluster);
-        }
+        superActivities.forEach((key, value) -> {
+            newActivityCluster.addActivity(value);
+            acg.getActivityMap().put(key, newActivityCluster);
+        });
 
-        /**
+        /*
          * Setup connectors: either inside a super activity or among super activities
          */
-        for (Entry<ConnectorDescriptorId, Pair<Pair<IActivity, Integer>, Pair<IActivity, Integer>>> entry : connectorActivityMap
-                .entrySet()) {
-            ConnectorDescriptorId connectorId = entry.getKey();
-            Pair<Pair<IActivity, Integer>, Pair<IActivity, Integer>> endPoints = entry.getValue();
+        connectorActivityMap.forEach((connectorId, endPoints) -> {
             IActivity producerActivity = endPoints.getLeft().getLeft();
             IActivity consumerActivity = endPoints.getRight().getLeft();
             int producerPort = endPoints.getLeft().getRight();
@@ -266,14 +254,14 @@ public class ActivityClusterGraphRewriter {
             RecordDescriptor recordDescriptor = connRecordDesc.get(connectorId);
             IConnectorDescriptor conn = connMap.get(connectorId);
             if (conn.getClass().getName().contains(ONE_TO_ONE_CONNECTOR)) {
-                /**
+                /*
                  * connection edge between inner activities
                  */
                 SuperActivity residingSuperActivity = invertedActivitySuperActivityMap.get(producerActivity);
                 residingSuperActivity.connect(conn, producerActivity, producerPort, consumerActivity, consumerPort,
                         recordDescriptor);
             } else {
-                /**
+                /*
                  * connection edge between super activities
                  */
                 SuperActivity producerSuperActivity = invertedActivitySuperActivityMap.get(producerActivity);
@@ -284,7 +272,7 @@ public class ActivityClusterGraphRewriter {
                 newActivityCluster.connect(conn, producerSuperActivity, producerSAPort, consumerSuperActivity,
                         consumerSAPort, recordDescriptor);
 
-                /**
+                /*
                  * bridge the port
                  */
                 producerSuperActivity.setClusterOutputIndex(producerSAPort, producerActivity.getActivityId(),
@@ -293,30 +281,30 @@ public class ActivityClusterGraphRewriter {
                         consumerPort);
                 acg.getConnectorMap().put(connectorId, newActivityCluster);
 
-                /**
+                /*
                  * increasing the port number for the producer and consumer
                  */
                 superActivityProducerPort.put(producerSuperActivity, ++producerSAPort);
                 superActivityConsumerPort.put(consumerSuperActivity, ++consumerSAPort);
             }
-        }
+        });
 
-        /**
+        /*
          * Set up the roots of the new activity cluster
          */
-        for (Entry<ActivityId, SuperActivity> entry : superActivities.entrySet()) {
-            List<IConnectorDescriptor> connIds = newActivityCluster.getActivityOutputMap().get(entry.getKey());
+        superActivities.forEach((key, value) -> {
+            List<IConnectorDescriptor> connIds = newActivityCluster.getActivityOutputMap().get(key);
             if (connIds == null || connIds.isEmpty()) {
-                newActivityCluster.addRoot(entry.getValue());
+                newActivityCluster.addRoot(value);
             }
-        }
+        });
 
-        /**
+        /*
          * set up the blocked2Blocker mapping, which will be updated in the rewriteInterActivityCluster call
          */
         newActivityCluster.getBlocked2BlockerMap().putAll(ac.getBlocked2BlockerMap());
 
-        /**
+        /*
          * replace the old activity cluster with the new activity cluster
          */
         acg.getActivityClusterMap().put(ac.getId(), newActivityCluster);

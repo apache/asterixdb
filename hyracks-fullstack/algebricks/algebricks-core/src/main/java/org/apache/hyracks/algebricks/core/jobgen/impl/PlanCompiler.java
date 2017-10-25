@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -98,13 +97,10 @@ public class PlanCompiler {
     }
 
     private void reviseEdges(IHyracksJobBuilder builder) {
-        /**
+        /*
          * revise the edges for the case of replicate operator
          */
-        for (Entry<Mutable<ILogicalOperator>, List<Mutable<ILogicalOperator>>> entry : operatorVisitedToParents
-                .entrySet()) {
-            Mutable<ILogicalOperator> child = entry.getKey();
-            List<Mutable<ILogicalOperator>> parents = entry.getValue();
+        operatorVisitedToParents.forEach((child, parents) -> {
             if (parents.size() > 1) {
                 if (child.getValue().getOperatorTag() == LogicalOperatorTag.REPLICATE
                         || child.getValue().getOperatorTag() == LogicalOperatorTag.SPLIT) {
@@ -113,7 +109,8 @@ public class PlanCompiler {
                         // make the order of the graph edges consistent with the order of rop's outputs
                         List<Mutable<ILogicalOperator>> outputs = rop.getOutputs();
                         for (Mutable<ILogicalOperator> parent : parents) {
-                            builder.contributeGraphEdge(child.getValue(), outputs.indexOf(parent), parent.getValue(), 0);
+                            builder.contributeGraphEdge(child.getValue(), outputs.indexOf(parent), parent.getValue(),
+                                    0);
                         }
                     } else {
                         int i = 0;
@@ -124,6 +121,6 @@ public class PlanCompiler {
                     }
                 }
             }
-        }
+        });
     }
 }

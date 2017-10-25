@@ -18,15 +18,13 @@
  */
 package org.apache.hyracks.control.cc.web;
 
-import java.util.Map;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
 import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.cc.web.util.IJSONOutputFunction;
 import org.apache.hyracks.control.cc.work.GatherStateDumpsWork;
 import org.apache.hyracks.control.cc.work.GatherStateDumpsWork.StateDumpRun;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class StateDumpRESTAPIFunction implements IJSONOutputFunction {
     private final ClusterControllerService ccs;
@@ -44,9 +42,7 @@ public class StateDumpRESTAPIFunction implements IJSONOutputFunction {
 
         ObjectMapper om = new ObjectMapper();
         ObjectNode result = om.createObjectNode();
-        for (Map.Entry<String, String> e : sdr.getStateDump().entrySet()) {
-            result.put(e.getKey(), e.getValue());
-        }
+        sdr.getStateDump().forEach(result::put);
         return result;
     }
 

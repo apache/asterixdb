@@ -103,12 +103,8 @@ public class JobActivityGraphBuilder implements IActivityGraphBuilder {
     public void finish() {
         Map<ConnectorDescriptorId, Pair<Pair<IActivity, Integer>, Pair<IActivity, Integer>>> caMap = jag
                 .getConnectorActivityMap();
-        for (Map.Entry<ConnectorDescriptorId, Pair<IActivity, Integer>> e : connectorProducerMap.entrySet()) {
-            ConnectorDescriptorId cdId = e.getKey();
-            Pair<IActivity, Integer> producer = e.getValue();
-            Pair<IActivity, Integer> consumer = connectorConsumerMap.get(cdId);
-            caMap.put(cdId, Pair.of(producer, consumer));
-        }
+        connectorProducerMap
+                .forEach((cdId, producer) -> caMap.put(cdId, Pair.of(producer, connectorConsumerMap.get(cdId))));
     }
 
     private <K, V> void addToValueSet(Map<K, Set<V>> map, K n1, V n2) {

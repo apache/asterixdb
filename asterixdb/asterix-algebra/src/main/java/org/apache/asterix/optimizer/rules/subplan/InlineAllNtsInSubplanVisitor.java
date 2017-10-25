@@ -53,10 +53,10 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceE
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.DelegateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DistinctOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.EmptyTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ExchangeOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.DelegateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IntersectOperator;
@@ -86,43 +86,43 @@ import org.apache.hyracks.algebricks.core.algebra.properties.FunctionalDependenc
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
 import org.apache.hyracks.algebricks.core.algebra.visitors.IQueryOperatorVisitor;
 
-/*
-    This visitor inlines all nested tuple source operators in the query
-    plan rooted at the operator being visited, with a deep copy of the query
-    plan rooted at the input <code>subplanInputOperator</code>.
-
-    The visitor ensures that the variables used to correlate between the
-    query plan rooted at <code>subplanInputOperator</code> are propagated
-    to the operator being visited.
-
-    ----------------------------------
-    Here is an abstract example.
-    The original query plan:
-    --Op1
-      --Subplan{
-        --AggregateOp
-          --NestedOp
-            .....
-              --Nested-Tuple-Source
-        }
-        --InputOp
-          .....
-
-    After we call NestedOp.accept(....) with this visitor. We will get an
-    intermediate plan that looks like:
-    --Op1
-      --Subplan{
-        --AggregateOp
-          --NestedOp
-            .....
-              --InputOp'
-                ....
-        }
-        --InputOp
-          .....
-     The plan rooted at InputOp' is a deep copy of the plan rooted at InputOp
-     with a different set of variables.
-
+/**
+ *   This visitor inlines all nested tuple source operators in the query
+ *   plan rooted at the operator being visited, with a deep copy of the query
+ *   plan rooted at the input <code>subplanInputOperator</code>.
+ *
+ *   The visitor ensures that the variables used to correlate between the
+ *   query plan rooted at <code>subplanInputOperator</code> are propagated
+ *   to the operator being visited.
+ *
+ *   ----------------------------------
+ *   Here is an abstract example.
+ *   The original query plan:
+ *   --Op1
+ *     --Subplan{
+ *       --AggregateOp
+ *         --NestedOp
+ *           .....
+ *             --Nested-Tuple-Source
+ *       }
+ *       --InputOp
+ *         .....
+ *
+ *   After we call NestedOp.accept(....) with this visitor. We will get an
+ *   intermediate plan that looks like:
+ *   --Op1
+ *     --Subplan{
+ *       --AggregateOp
+ *         --NestedOp
+ *           .....
+ *             --InputOp'
+ *               ....
+ *       }
+ *       --InputOp
+ *         .....
+ *    The plan rooted at InputOp' is a deep copy of the plan rooted at InputOp
+ *    with a different set of variables.
+ *
  */
 class InlineAllNtsInSubplanVisitor implements IQueryOperatorVisitor<ILogicalOperator, Void> {
     // The optimization context.
@@ -218,8 +218,8 @@ class InlineAllNtsInSubplanVisitor implements IQueryOperatorVisitor<ILogicalOper
         for (LogicalVariable keyVar : correlatedKeyVars) {
             if (!groupKeyVars.contains(keyVar)) {
                 LogicalVariable newVar = context.newVar();
-                op.getGroupByList().add(new Pair<LogicalVariable, Mutable<ILogicalExpression>>(newVar,
-                        new MutableObject<ILogicalExpression>(new VariableReferenceExpression(keyVar))));
+                op.getGroupByList()
+                        .add(new Pair<>(newVar, new MutableObject<>(new VariableReferenceExpression(keyVar))));
                 addedGroupKeyMapping.put(keyVar, newVar);
             }
         }
@@ -237,9 +237,7 @@ class InlineAllNtsInSubplanVisitor implements IQueryOperatorVisitor<ILogicalOper
         }
 
         // Updates the var mapping for added group-by keys.
-        for (Map.Entry<LogicalVariable, LogicalVariable> entry : addedGroupKeyMapping.entrySet()) {
-            updateInputToOutputVarMapping(entry.getKey(), entry.getValue(), false);
-        }
+        addedGroupKeyMapping.forEach((key, value) -> updateInputToOutputVarMapping(key, value, false));
         return op;
     }
 
@@ -260,23 +258,23 @@ class InlineAllNtsInSubplanVisitor implements IQueryOperatorVisitor<ILogicalOper
         ILogicalOperator assignOp = assignOpAndRecordVar.first;
         LogicalVariable recordVar = assignOpAndRecordVar.second;
         ILogicalOperator inputOp = op.getInputs().get(0).getValue();
-        assignOp.getInputs().add(new MutableObject<ILogicalOperator>(inputOp));
+        assignOp.getInputs().add(new MutableObject<>(inputOp));
 
         // Rewrites limit to a group-by with limit as its nested operator.
         Pair<ILogicalOperator, LogicalVariable> gbyOpAndAggVar = wrapLimitInGroupBy(op, recordVar, inputLiveVars);
         ILogicalOperator gbyOp = gbyOpAndAggVar.first;
         LogicalVariable aggVar = gbyOpAndAggVar.second;
-        gbyOp.getInputs().add(new MutableObject<ILogicalOperator>(assignOp));
+        gbyOp.getInputs().add(new MutableObject<>(assignOp));
 
         // Adds an unnest operators on top of the group-by operator.
         Pair<ILogicalOperator, LogicalVariable> unnestOpAndUnnestVar = createUnnestForAggregatedList(aggVar);
         ILogicalOperator unnestOp = unnestOpAndUnnestVar.first;
         LogicalVariable unnestVar = unnestOpAndUnnestVar.second;
-        unnestOp.getInputs().add(new MutableObject<ILogicalOperator>(gbyOp));
+        unnestOp.getInputs().add(new MutableObject<>(gbyOp));
 
         // Adds field accesses to recover input live variables.
         ILogicalOperator fieldAccessAssignOp = createFieldAccessAssignOperator(unnestVar, inputLiveVars);
-        fieldAccessAssignOp.getInputs().add(new MutableObject<ILogicalOperator>(unnestOp));
+        fieldAccessAssignOp.getInputs().add(new MutableObject<>(unnestOp));
 
         OperatorManipulationUtil.computeTypeEnvironmentBottomUp(fieldAccessAssignOp, context);
         return fieldAccessAssignOp;
@@ -288,10 +286,10 @@ class InlineAllNtsInSubplanVisitor implements IQueryOperatorVisitor<ILogicalOper
         List<Mutable<ILogicalExpression>> recordConstructorArgs = new ArrayList<>();
         for (LogicalVariable inputLiveVar : inputLiveVars) {
             if (!correlatedKeyVars.contains(inputLiveVar)) {
-                recordConstructorArgs.add(new MutableObject<ILogicalExpression>(new ConstantExpression(
+                recordConstructorArgs.add(new MutableObject<>(new ConstantExpression(
                         new AsterixConstantValue(new AString(Integer.toString(inputLiveVar.getId()))))));
                 recordConstructorArgs
-                        .add(new MutableObject<ILogicalExpression>(new VariableReferenceExpression(inputLiveVar)));
+                        .add(new MutableObject<>(new VariableReferenceExpression(inputLiveVar)));
             }
         }
         LogicalVariable recordVar = context.newVar();
@@ -300,7 +298,7 @@ class InlineAllNtsInSubplanVisitor implements IQueryOperatorVisitor<ILogicalOper
                         FunctionUtil.getFunctionInfo(BuiltinFunctions.OPEN_RECORD_CONSTRUCTOR),
                         recordConstructorArgs));
         AssignOperator assignOp = new AssignOperator(recordVar, recordExprRef);
-        return new Pair<ILogicalOperator, LogicalVariable>(assignOp, recordVar);
+        return new Pair<>(assignOp, recordVar);
     }
 
     private Pair<ILogicalOperator, LogicalVariable> wrapLimitInGroupBy(ILogicalOperator op, LogicalVariable recordVar,
@@ -345,7 +343,7 @@ class InlineAllNtsInSubplanVisitor implements IQueryOperatorVisitor<ILogicalOper
 
         // Adds a nested tuple source operator as the input operator to the
         // limit operator.
-        NestedTupleSourceOperator nts = new NestedTupleSourceOperator(new MutableObject<ILogicalOperator>(gbyOp));
+        NestedTupleSourceOperator nts = new NestedTupleSourceOperator(new MutableObject<>(gbyOp));
         currentOp.getInputs().add(new MutableObject<>(nts));
 
         // Sets the root of the added nested plan to the aggregate operator.
@@ -365,15 +363,15 @@ class InlineAllNtsInSubplanVisitor implements IQueryOperatorVisitor<ILogicalOper
     private Pair<ILogicalOperator, LogicalVariable> createUnnestForAggregatedList(LogicalVariable aggVar) {
         LogicalVariable unnestVar = context.newVar();
         // Creates an unnest function expression.
-        Mutable<ILogicalExpression> unnestArg = new MutableObject<ILogicalExpression>(
+        Mutable<ILogicalExpression> unnestArg = new MutableObject<>(
                 new VariableReferenceExpression(aggVar));
-        List<Mutable<ILogicalExpression>> unnestArgList = new ArrayList<Mutable<ILogicalExpression>>();
+        List<Mutable<ILogicalExpression>> unnestArgList = new ArrayList<>();
         unnestArgList.add(unnestArg);
-        Mutable<ILogicalExpression> unnestExpr = new MutableObject<ILogicalExpression>(
+        Mutable<ILogicalExpression> unnestExpr = new MutableObject<>(
                 new UnnestingFunctionCallExpression(
                         FunctionUtil.getFunctionInfo(BuiltinFunctions.SCAN_COLLECTION), unnestArgList));
         ILogicalOperator unnestOp = new UnnestOperator(unnestVar, unnestExpr);
-        return new Pair<ILogicalOperator, LogicalVariable>(unnestOp, unnestVar);
+        return new Pair<>(unnestOp, unnestVar);
     }
 
     private ILogicalOperator createFieldAccessAssignOperator(LogicalVariable recordVar,
@@ -388,17 +386,16 @@ class InlineAllNtsInSubplanVisitor implements IQueryOperatorVisitor<ILogicalOper
                 fieldAccessVars.add(newVar);
                 // fieldAcess expr
                 List<Mutable<ILogicalExpression>> argRefs = new ArrayList<>();
-                argRefs.add(new MutableObject<ILogicalExpression>(new VariableReferenceExpression(recordVar)));
-                argRefs.add(new MutableObject<ILogicalExpression>(new ConstantExpression(
+                argRefs.add(new MutableObject<>(new VariableReferenceExpression(recordVar)));
+                argRefs.add(new MutableObject<>(new ConstantExpression(
                         new AsterixConstantValue(new AString(Integer.toString(inputLiveVar.getId()))))));
-                fieldAccessExprs.add(new MutableObject<ILogicalExpression>(new ScalarFunctionCallExpression(
+                fieldAccessExprs.add(new MutableObject<>(new ScalarFunctionCallExpression(
                         FunctionUtil.getFunctionInfo(BuiltinFunctions.FIELD_ACCESS_BY_NAME), argRefs)));
                 // Updates variable mapping for ancestor operators.
                 updateInputToOutputVarMapping(inputLiveVar, newVar, false);
             }
         }
-        AssignOperator fieldAccessAssignOp = new AssignOperator(fieldAccessVars, fieldAccessExprs);
-        return fieldAccessAssignOp;
+        return new AssignOperator(fieldAccessVars, fieldAccessExprs);
     }
 
     @Override
@@ -429,15 +426,13 @@ class InlineAllNtsInSubplanVisitor implements IQueryOperatorVisitor<ILogicalOper
         correlatedKeyVars.clear();
         correlatedKeyVars.addAll(primaryOpAndVars.second);
         // Update key variables and input-output-var mapping.
-        for (Map.Entry<LogicalVariable, LogicalVariable> entry : varMap.entrySet()) {
-            LogicalVariable oldVar = entry.getKey();
-            LogicalVariable newVar = entry.getValue();
+        varMap.forEach((oldVar, newVar) -> {
             if (correlatedKeyVars.contains(oldVar)) {
                 correlatedKeyVars.remove(oldVar);
                 correlatedKeyVars.add(newVar);
             }
             updateInputToOutputVarMapping(oldVar, newVar, true);
-        }
+        });
         return primaryOpAndVars.first;
     }
 
@@ -454,8 +449,8 @@ class InlineAllNtsInSubplanVisitor implements IQueryOperatorVisitor<ILogicalOper
         List<Pair<IOrder, Mutable<ILogicalExpression>>> orderExprList = new ArrayList<>();
         // Adds keyVars to the prefix of sorting columns.
         for (LogicalVariable keyVar : correlatedKeyVars) {
-            orderExprList.add(new Pair<IOrder, Mutable<ILogicalExpression>>(OrderOperator.ASC_ORDER,
-                    new MutableObject<ILogicalExpression>(new VariableReferenceExpression(keyVar))));
+            orderExprList.add(
+                    new Pair<>(OrderOperator.ASC_ORDER, new MutableObject<>(new VariableReferenceExpression(keyVar))));
         }
         orderExprList.addAll(op.getOrderExpressions());
 
@@ -636,7 +631,7 @@ class InlineAllNtsInSubplanVisitor implements IQueryOperatorVisitor<ILogicalOper
             return op;
         }
         GroupByOperator gbyOp = new GroupByOperator();
-        // Creates a copy of correlatedKeyVars, to fix the ConcurrentModificationExcetpion in ASTERIXDB-1581.
+        // Creates a copy of correlatedKeyVars, to fix the ConcurrentModificationException in ASTERIXDB-1581.
         List<LogicalVariable> copyOfCorrelatedKeyVars = new ArrayList<>(correlatedKeyVars);
         for (LogicalVariable keyVar : copyOfCorrelatedKeyVars) {
             // This limits the visitor can only be applied to a nested logical
@@ -652,7 +647,7 @@ class InlineAllNtsInSubplanVisitor implements IQueryOperatorVisitor<ILogicalOper
         ILogicalOperator inputOp = op.getInputs().get(0).getValue();
         gbyOp.getInputs().add(new MutableObject<>(inputOp));
 
-        NestedTupleSourceOperator nts = new NestedTupleSourceOperator(new MutableObject<ILogicalOperator>(gbyOp));
+        NestedTupleSourceOperator nts = new NestedTupleSourceOperator(new MutableObject<>(gbyOp));
         op.getInputs().clear();
         op.getInputs().add(new MutableObject<>(nts));
 
@@ -718,7 +713,7 @@ class InlineAllNtsInSubplanVisitor implements IQueryOperatorVisitor<ILogicalOper
             subplanInputVarToCurrentVarMap.put(oldVar, newVar);
             currentVarToSubplanInputVarMap.put(newVar, oldVar);
         } else {
-            varMapIntroducedByRewriting.add(new Pair<LogicalVariable, LogicalVariable>(oldVar, newVar));
+            varMapIntroducedByRewriting.add(new Pair<>(oldVar, newVar));
         }
     }
 
@@ -726,8 +721,8 @@ class InlineAllNtsInSubplanVisitor implements IQueryOperatorVisitor<ILogicalOper
             List<Pair<IOrder, Mutable<ILogicalExpression>>> orderExprs) {
         List<Pair<IOrder, Mutable<ILogicalExpression>>> clonedOrderExprs = new ArrayList<>();
         for (Pair<IOrder, Mutable<ILogicalExpression>> orderExpr : orderExprs) {
-            clonedOrderExprs.add(new Pair<IOrder, Mutable<ILogicalExpression>>(orderExpr.first,
-                    new MutableObject<ILogicalExpression>(orderExpr.second.getValue().cloneExpression())));
+            clonedOrderExprs.add(
+                    new Pair<>(orderExpr.first, new MutableObject<>(orderExpr.second.getValue().cloneExpression())));
         }
         return clonedOrderExprs;
     }

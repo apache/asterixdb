@@ -22,7 +22,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -172,10 +171,7 @@ public final class ConstantExpression extends AbstractLogicalExpression {
     @Override
     public AbstractLogicalExpression cloneExpression() {
         Map<Object, IExpressionAnnotation> m = new HashMap<>();
-        for (Entry<Object, IExpressionAnnotation> entry : annotationMap.entrySet()) {
-            IExpressionAnnotation annot2 = entry.getValue().copy();
-            m.put(entry.getKey(), annot2);
-        }
+        annotationMap.forEach((key, value1) -> m.put(key, value1.copy()));
         ConstantExpression c = new ConstantExpression(value);
         c.annotationMap = m;
         return c;

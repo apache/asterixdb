@@ -154,13 +154,14 @@ public abstract class AbstractLangTranslator {
                 DatasetDecl datasetStmt = (DatasetDecl) stmt;
                 Map<String, String> hints = datasetStmt.getHints();
                 if (hints != null && !hints.isEmpty()) {
-                    Pair<Boolean, String> validationResult = null;
-                    StringBuffer errorMsgBuffer = new StringBuffer();
+                    StringBuilder errorMsgBuffer = new StringBuilder();
                     for (Entry<String, String> hint : hints.entrySet()) {
-                        validationResult = DatasetHints.validate(appCtx, hint.getKey(), hint.getValue());
+                        Pair<Boolean, String> validationResult = DatasetHints.validate(appCtx, hint.getKey(),
+                                hint.getValue());
                         if (!validationResult.first) {
-                            errorMsgBuffer.append("Dataset: " + datasetStmt.getName().getValue()
-                                    + " error in processing hint: " + hint.getKey() + " " + validationResult.second);
+                            errorMsgBuffer.append("Dataset: ").append(datasetStmt.getName().getValue())
+                                    .append(" error in processing hint: ").append(hint.getKey()).append(" ")
+                                    .append(validationResult.second);
                             errorMsgBuffer.append(" \n");
                         }
                     }

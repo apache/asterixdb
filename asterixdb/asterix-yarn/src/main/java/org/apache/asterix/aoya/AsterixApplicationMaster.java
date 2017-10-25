@@ -230,10 +230,10 @@ public class AsterixApplicationMaster {
 
         LOG.info("Dump debug output");
         Map<String, String> envs = System.getenv();
-        for (Map.Entry<String, String> env : envs.entrySet()) {
-            LOG.info("System env: key=" + env.getKey() + ", val=" + env.getValue());
-            System.out.println("System env: key=" + env.getKey() + ", val=" + env.getValue());
-        }
+        envs.forEach((key, value) -> {
+            LOG.info("System env: key=" + key + ", val=" + value);
+            System.out.println("System env: key=" + key + ", val=" + value);
+        });
 
         String cmd = "ls -alhLR";
         Runtime run = Runtime.getRuntime();

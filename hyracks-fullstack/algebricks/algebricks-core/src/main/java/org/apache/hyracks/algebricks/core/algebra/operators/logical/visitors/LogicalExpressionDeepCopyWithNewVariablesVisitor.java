@@ -65,10 +65,7 @@ public class LogicalExpressionDeepCopyWithNewVariablesVisitor
     private void deepCopyAnnotations(AbstractFunctionCallExpression src, AbstractFunctionCallExpression dest) {
         Map<Object, IExpressionAnnotation> srcAnnotations = src.getAnnotations();
         Map<Object, IExpressionAnnotation> destAnnotations = dest.getAnnotations();
-        for (Map.Entry<Object, IExpressionAnnotation> annotationEntry : srcAnnotations.entrySet()) {
-            IExpressionAnnotation annotation = annotationEntry.getValue().copy();
-            destAnnotations.put(annotationEntry.getKey(), annotation);
-        }
+        srcAnnotations.forEach((key, value) -> destAnnotations.put(key, value.copy()));
     }
 
     private void deepCopyOpaqueParameters(AbstractFunctionCallExpression src, AbstractFunctionCallExpression dest) {
@@ -85,7 +82,7 @@ public class LogicalExpressionDeepCopyWithNewVariablesVisitor
 
     public MutableObject<ILogicalExpression> deepCopyExpressionReference(Mutable<ILogicalExpression> exprRef)
             throws AlgebricksException {
-        return new MutableObject<ILogicalExpression>(deepCopy(exprRef.getValue()));
+        return new MutableObject<>(deepCopy(exprRef.getValue()));
     }
 
     // TODO return List<...>

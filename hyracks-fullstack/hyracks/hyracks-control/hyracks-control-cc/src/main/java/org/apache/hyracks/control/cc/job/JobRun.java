@@ -284,10 +284,9 @@ public class JobRun implements IJobStatusConditionVariable {
                 ObjectNode planJSON = om.createObjectNode();
 
                 ArrayNode acTasks = om.createArrayNode();
-                for (Map.Entry<ActivityId, ActivityPlan> e : acp.getActivityPlanMap().entrySet()) {
-                    ActivityPlan acPlan = e.getValue();
+                acp.getActivityPlanMap().forEach((key, acPlan) -> {
                     ObjectNode entry = om.createObjectNode();
-                    entry.put("activity-id", e.getKey().toString());
+                    entry.put("activity-id", key.toString());
 
                     ActivityPartitionDetails apd = acPlan.getActivityPartitionDetails();
                     entry.put("partition-count", apd.getPartitionCount());
@@ -319,21 +318,21 @@ public class JobRun implements IJobStatusConditionVariable {
                         ArrayNode dependentTasksJSON = om.createArrayNode();
                         for (TaskId dependent : t.getDependents()) {
                             dependentTasksJSON.add(dependent.toString());
-                        task.set("dependents", dependentTasksJSON);
+                            task.set("dependents", dependentTasksJSON);
 
-                        ArrayNode dependencyTasksJSON = om.createArrayNode();
-                        for (TaskId dependency : t.getDependencies()) {
-                            dependencyTasksJSON.add(dependency.toString());
+                            ArrayNode dependencyTasksJSON = om.createArrayNode();
+                            for (TaskId dependency : t.getDependencies()) {
+                                dependencyTasksJSON.add(dependency.toString());
+                            }
+                            task.set("dependencies", dependencyTasksJSON);
+
+                            tasks.add(task);
                         }
-                        task.set("dependencies", dependencyTasksJSON);
+                        entry.set("tasks", tasks);
 
-                        tasks.add(task);
+                        acTasks.add(entry);
                     }
-                    entry.set("tasks", tasks);
-
-                    acTasks.add(entry);
-                    }
-                }
+                });
                 planJSON.set("activities", acTasks);
 
                 ArrayNode tClusters = om.createArrayNode();

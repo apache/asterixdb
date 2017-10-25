@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
@@ -49,9 +48,7 @@ public class ExternalLibraryManager implements ILibraryManager {
     public List<Pair<String, String>> getAllLibraries() {
         ArrayList<Pair<String, String>> libs = new ArrayList<>();
         synchronized (libraryClassLoaders) {
-            for (Entry<String, ClassLoader> entry : libraryClassLoaders.entrySet()) {
-                libs.add(getDataverseAndLibararyName(entry.getKey()));;
-            }
+            libraryClassLoaders.forEach((key, value) -> libs.add(getDataverseAndLibararyName(key)));
         }
         return libs;
     }

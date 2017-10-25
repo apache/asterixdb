@@ -25,11 +25,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.apache.hyracks.api.dataflow.TaskAttemptId;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.apache.hyracks.api.dataflow.TaskAttemptId;
 
 public class JobletProfile extends AbstractProfile {
     private static final long serialVersionUID = 1L;
@@ -50,7 +50,7 @@ public class JobletProfile extends AbstractProfile {
 
     public JobletProfile(String nodeId) {
         this.nodeId = nodeId;
-        taskProfiles = new HashMap<TaskAttemptId, TaskProfile>();
+        taskProfiles = new HashMap<>();
     }
 
     public String getNodeId() {
@@ -67,7 +67,7 @@ public class JobletProfile extends AbstractProfile {
         ObjectMapper om = new ObjectMapper();
         ObjectNode json = om.createObjectNode();
 
-        json.put("node-id", nodeId.toString());
+        json.put("node-id", nodeId);
         populateCounters(json);
         ArrayNode tasks = om.createArrayNode();
         for (TaskProfile p : taskProfiles.values()) {
@@ -94,7 +94,7 @@ public class JobletProfile extends AbstractProfile {
         super.readFields(input);
         nodeId = input.readUTF();
         int size = input.readInt();
-        taskProfiles = new HashMap<TaskAttemptId, TaskProfile>();
+        taskProfiles = new HashMap<>();
         for (int i = 0; i < size; i++) {
             TaskAttemptId key = TaskAttemptId.create(input);
             TaskProfile value = TaskProfile.create(input);

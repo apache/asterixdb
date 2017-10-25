@@ -653,11 +653,11 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         // Replace the variables in the join condition based on the mapping of variables
         // in the new probe subtree.
         Map<LogicalVariable, LogicalVariable> varMapping = firstDeepCopyVisitor.getInputToOutputVariableMapping();
-        for (Map.Entry<LogicalVariable, LogicalVariable> varMapEntry : varMapping.entrySet()) {
-            if (varMapEntry.getKey() != varMapEntry.getValue()) {
-                joinCond.substituteVar(varMapEntry.getKey(), varMapEntry.getValue());
+        varMapping.forEach((key, value) -> {
+            if (key != value) {
+                joinCond.substituteVar(key, value);
             }
-        }
+        });
         return originalProbeSubTreeRootRef;
     }
 
@@ -726,9 +726,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         // condition since we deep-copied one of the scanner subtrees which
         // changed variables.
         AbstractBinaryJoinOperator joinOp = (AbstractBinaryJoinOperator) joinRef.getValue();
-        for (Map.Entry<LogicalVariable, LogicalVariable> entry : copyVarMap.entrySet()) {
-            joinOp.getCondition().getValue().substituteVar(entry.getKey(), entry.getValue());
-        }
+        copyVarMap.forEach((key, value) -> joinOp.getCondition().getValue().substituteVar(key, value));
         joinOp.getInputs().clear();
         joinOp.getInputs().add(new MutableObject<ILogicalOperator>(scanSubTree));
         // Make sure that the build input (which may be materialized causing blocking) comes from

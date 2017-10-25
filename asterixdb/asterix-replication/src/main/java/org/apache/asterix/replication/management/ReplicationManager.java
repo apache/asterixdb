@@ -509,7 +509,7 @@ public class ReplicationManager implements IReplicationManager {
             i++;
         }
 
-        /**
+        /*
          * establish log replication handshake
          */
         ByteBuffer handshakeBuffer = ByteBuffer.allocate(ReplicationProtocol.REPLICATION_REQUEST_TYPE_SIZE)
@@ -563,7 +563,7 @@ public class ReplicationManager implements IReplicationManager {
             LOGGER.info("TxnLogReplicator thread was terminated.");
         }
 
-        /**
+        /*
          * End log replication handshake (by sending a dummy log with a single byte)
          */
         ByteBuffer endLogRepHandshake = ByteBuffer.allocate(Integer.SIZE + 1).putInt(1).put((byte) 0);
@@ -602,7 +602,7 @@ public class ReplicationManager implements IReplicationManager {
             }
         }
 
-        /**
+        /*
          * Close log replication sockets
          */
         ByteBuffer goodbyeBuffer = ReplicationProtocol.getGoodbyeBuffer();
@@ -914,7 +914,7 @@ public class ReplicationManager implements IReplicationManager {
         //stop replication thread afters all jobs/logs have been processed
         suspendReplication(false);
 
-        /**
+        /*
          * If this node has any remote replicas, it needs to inform them
          * that it is shutting down.
          */
@@ -923,7 +923,7 @@ public class ReplicationManager implements IReplicationManager {
             sendShutdownNotifiction();
         }
 
-        /**
+        /*
          * If this node has any remote primary replicas, then it needs to wait
          * until all of them send the shutdown notification.
          */
@@ -1051,7 +1051,7 @@ public class ReplicationManager implements IReplicationManager {
                     ReplicationProtocol.sendGoodbye(socketChannel);
                 }
 
-                /**
+                /*
                  * 4. update the LSN_MAP for indexes that were not flushed
                  * to the current append LSN to indicate no operations happened
                  * since the checkpoint start.

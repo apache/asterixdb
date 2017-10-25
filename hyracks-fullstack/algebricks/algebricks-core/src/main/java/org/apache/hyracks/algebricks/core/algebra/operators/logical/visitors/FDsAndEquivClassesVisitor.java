@@ -25,7 +25,6 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
 import org.apache.commons.lang3.mutable.Mutable;
@@ -49,11 +48,11 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractUnne
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.DelegateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DistinctOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DistributeResultOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.EmptyTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ExchangeOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.DelegateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IndexInsertDeleteUpsertOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
@@ -662,26 +661,24 @@ public class FDsAndEquivClassesVisitor implements ILogicalOperatorVisitor<Void, 
         // equivalent
         // class should still be propagated (kept).
         Set<LogicalVariable> usedVarSet = new HashSet<LogicalVariable>(usedVariables);
-        for (Entry<LogicalVariable, EquivalenceClass> entry : chldClasses.entrySet()) {
-            EquivalenceClass ec = entry.getValue();
+        chldClasses.forEach((key, ec) -> {
             for (ILogicalExpression expr : ec.getExpressionMembers()) {
-                Set<LogicalVariable> exprUsedVars = new HashSet<LogicalVariable>();
+                Set<LogicalVariable> exprUsedVars = new HashSet<>();
                 expr.getUsedVariables(exprUsedVars);
                 exprUsedVars.retainAll(usedVarSet);
                 // Check if the expression member uses a used variable.
                 if (!exprUsedVars.isEmpty()) {
-                    for (LogicalVariable v : ec.getMembers()) {
+                    // If variable members contain a used variable, the representative variable should be a used
+                    // variable.
+                    ec.getMembers().forEach(v -> {
                         eqClasses.put(v, ec);
-                        // If variable members contain a used variable, the
-                        // representative
-                        // variable should be a used variable.
                         if (usedVarSet.contains(v)) {
                             ec.setVariableRepresentative(v);
                         }
-                    }
+                    });
                 }
             }
-        }
+        });
 
         List<FunctionalDependency> chldFds = getOrComputeFDs(op2, ctx);
         for (FunctionalDependency fd : chldFds) {
@@ -786,8 +783,7 @@ public class FDsAndEquivClassesVisitor implements ILogicalOperatorVisitor<Void, 
             LogicalVariable var = assignVars.get(assignVarIndex);
             ILogicalExpression expr = assignExprs.get(assignVarIndex).getValue();
             Map<LogicalVariable, EquivalenceClass> newVarEqcMap = new HashMap<LogicalVariable, EquivalenceClass>();
-            for (Entry<LogicalVariable, EquivalenceClass> entry : eqClasses.entrySet()) {
-                EquivalenceClass eqc = entry.getValue();
+            eqClasses.forEach((key, eqc) -> {
                 // If the equivalence class contains the right-hand-side
                 // expression,
                 // the left-hand-side variable is added into the equivalence
@@ -795,9 +791,9 @@ public class FDsAndEquivClassesVisitor implements ILogicalOperatorVisitor<Void, 
                 if (eqc.contains(expr)) {
                     eqc.addMember(var);
                     newVarEqcMap.put(var, eqc); // Add var as a map key for the
-                                                // equivalence class.
+                    // equivalence class.
                 }
-            }
+            });
             eqClasses.putAll(newVarEqcMap);
         }
     }

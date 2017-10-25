@@ -23,6 +23,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -80,14 +81,14 @@ public class IndexingScheduler {
      */
     public String[] getLocationConstraints(InputSplit[] splits) throws HyracksException {
         if (splits == null) {
-            /** deal the case when the splits array is null */
+            /* deal the case when the splits array is null */
             return new String[] {};
         }
         int[] workloads = new int[NCs.length];
         Arrays.fill(workloads, 0);
         String[] locations = new String[splits.length];
         Map<String, IntWritable> locationToNumOfSplits = new HashMap<String, IntWritable>();
-        /**
+        /*
          * upper bound is number of splits
          */
         int upperBoundSlots = splits.length;
@@ -96,7 +97,7 @@ public class IndexingScheduler {
             Random random = new Random(System.currentTimeMillis());
             boolean scheduled[] = new boolean[splits.length];
             Arrays.fill(scheduled, false);
-            /**
+            /*
              * scan the splits and build the popularity map
              * give the machines with less local splits more scheduling priority
              */
@@ -105,7 +106,7 @@ public class IndexingScheduler {
             for (String location : locationToNumOfSplits.keySet()) {
                 locationToNumOfAssignement.put(location, 0);
             }
-            /**
+            /*
              * push data-local upper-bounds slots to each machine
              */
             scheduleLocalSlots(splits, workloads, locations, upperBoundSlots, random, scheduled, locationToNumOfSplits,
@@ -119,7 +120,7 @@ public class IndexingScheduler {
             }
             LOGGER.info("Data local rate: "
                     + (scheduled.length == 0 ? 0.0 : ((float) dataLocalCount / (float) (scheduled.length))));
-            /**
+            /*
              * push non-data-local upper-bounds slots to each machine
              */
             locationToNumOfAssignement.clear();
@@ -158,22 +159,15 @@ public class IndexingScheduler {
             boolean[] scheduled, final HashMap<String, Integer> locationToNumOfAssignement)
                     throws IOException, UnknownHostException {
 
-        PriorityQueue<String> scheduleCadndiates = new PriorityQueue<String>(NCs.length, new Comparator<String>() {
-            @Override
-            public int compare(String s1, String s2) {
-                return locationToNumOfAssignement.get(s1).compareTo(locationToNumOfAssignement.get(s2));
-            }
+        PriorityQueue<String> scheduleCadndiates = new PriorityQueue<String>(NCs.length,
+                Comparator.comparing(locationToNumOfAssignement::get));
 
-        });
-
-        for (String nc : NCs) {
-            scheduleCadndiates.add(nc);
-        }
-        /**
+        scheduleCadndiates.addAll(Arrays.asList(NCs));
+        /*
          * schedule no-local file reads
          */
         for (int i = 0; i < splits.length; i++) {
-            /** if there is no data-local NC choice, choose a random one */
+            /* if there is no data-local NC choice, choose a random one */
             if (!scheduled[i]) {
                 String selectedNcName = scheduleCadndiates.remove();
                 if (selectedNcName != null) {
@@ -209,55 +203,48 @@ public class IndexingScheduler {
     private void scheduleLocalSlots(InputSplit[] splits, int[] workloads, String[] locations, int slots, Random random,
             boolean[] scheduled, final Map<String, IntWritable> locationToNumSplits,
             final HashMap<String, Integer> locationToNumOfAssignement) throws IOException, UnknownHostException {
-        /** scheduling candidates will be ordered inversely according to their popularity */
-        PriorityQueue<String> scheduleCadndiates = new PriorityQueue<String>(3, new Comparator<String>() {
-            @Override
-            public int compare(String s1, String s2) {
-                int assignmentDifference = locationToNumOfAssignement.get(s1)
-                        .compareTo(locationToNumOfAssignement.get(s2));
-                if (assignmentDifference != 0) {
-                    return assignmentDifference;
-                }
-                return locationToNumSplits.get(s1).compareTo(locationToNumSplits.get(s2));
+        /* scheduling candidates will be ordered inversely according to their popularity */
+        PriorityQueue<String> scheduleCadndiates = new PriorityQueue<>(3, (s1, s2) -> {
+            int assignmentDifference = locationToNumOfAssignement.get(s1).compareTo(locationToNumOfAssignement.get(s2));
+            if (assignmentDifference != 0) {
+                return assignmentDifference;
             }
-
+            return locationToNumSplits.get(s1).compareTo(locationToNumSplits.get(s2));
         });
 
         for (int i = 0; i < splits.length; i++) {
             if (scheduled[i]) {
                 continue;
             }
-            /**
+            /*
              * get the location of all the splits
              */
             String[] locs = splits[i].getLocations();
             if (locs.length > 0) {
                 scheduleCadndiates.clear();
-                for (int j = 0; j < locs.length; j++) {
-                    scheduleCadndiates.add(locs[j]);
-                }
+                Collections.addAll(scheduleCadndiates, locs);
 
                 for (String candidate : scheduleCadndiates) {
-                    /**
+                    /*
                      * get all the IP addresses from the name
                      */
                     InetAddress[] allIps = InetAddress.getAllByName(candidate);
-                    /**
+                    /*
                      * iterate overa all ips
                      */
                     for (InetAddress ip : allIps) {
-                        /**
+                        /*
                          * if the node controller exists
                          */
                         if (ipToNcMapping.get(ip.getHostAddress()) != null) {
-                            /**
+                            /*
                              * set the ncs
                              */
                             List<String> dataLocations = ipToNcMapping.get(ip.getHostAddress());
                             int arrayPos = random.nextInt(dataLocations.size());
                             String nc = dataLocations.get(arrayPos);
                             int pos = ncNameToIndex.get(nc);
-                            /**
+                            /*
                              * check if the node is already full
                              */
                             if (workloads[pos] < slots) {
@@ -270,11 +257,11 @@ public class IndexingScheduler {
                             }
                         }
                     }
-                    /**
+                    /*
                      * break the loop for data-locations if the schedule has
                      * already been found
                      */
-                    if (scheduled[i] == true) {
+                    if (scheduled[i]) {
                         break;
                     }
                 }
@@ -319,23 +306,19 @@ public class IndexingScheduler {
             ncNameToIndex.clear();
             int i = 0;
 
-            /**
+            /*
              * build the IP address to NC map
              */
             for (Map.Entry<String, NodeControllerInfo> entry : ncNameToNcInfos.entrySet()) {
                 String ipAddr = InetAddress.getByAddress(entry.getValue().getNetworkAddress().lookupIpAddress())
                         .getHostAddress();
-                List<String> matchedNCs = ipToNcMapping.get(ipAddr);
-                if (matchedNCs == null) {
-                    matchedNCs = new ArrayList<String>();
-                    ipToNcMapping.put(ipAddr, matchedNCs);
-                }
+                List<String> matchedNCs = ipToNcMapping.computeIfAbsent(ipAddr, k -> new ArrayList<>());
                 matchedNCs.add(entry.getKey());
                 NCs[i] = entry.getKey();
                 i++;
             }
 
-            /**
+            /*
              * set up the NC name to index mapping
              */
             for (i = 0; i < NCs.length; i++) {

@@ -20,7 +20,6 @@ package org.apache.hyracks.hdfs.scheduler;
 
 import java.net.InetAddress;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,7 +29,6 @@ import java.util.logging.Logger;
 
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.mapred.InputSplit;
-
 import org.apache.hyracks.api.client.NodeControllerInfo;
 import org.apache.hyracks.api.topology.ClusterTopology;
 import org.apache.hyracks.hdfs.api.INcCollection;
@@ -51,41 +49,32 @@ public class RackAwareNcCollectionBuilder implements INcCollectionBuilder {
             final int[] workloads, final int slotLimit) {
         try {
             final Map<List<Integer>, List<String>> pathToNCs = new HashMap<List<Integer>, List<String>>();
-            for (int i = 0; i < NCs.length; i++) {
-                List<Integer> path = new ArrayList<Integer>();
+            for (String NC : NCs) {
+                List<Integer> path = new ArrayList<>();
                 String ipAddress = InetAddress.getByAddress(
-                        ncNameToNcInfos.get(NCs[i]).getNetworkAddress().lookupIpAddress()).getHostAddress();
+                        ncNameToNcInfos.get(NC).getNetworkAddress().lookupIpAddress()).getHostAddress();
                 topology.lookupNetworkTerminal(ipAddress, path);
-                if (path.size() <= 0) {
+                if (path.isEmpty()) {
                     // if the hyracks nc is not in the defined cluster
                     path.add(Integer.MIN_VALUE);
-                    LOGGER.info(NCs[i] + "'s IP address is not in the cluster toplogy file!");
+                    LOGGER.info(NC + "'s IP address is not in the cluster toplogy file!");
                 }
-                List<String> ncs = pathToNCs.get(path);
-                if (ncs == null) {
-                    ncs = new ArrayList<String>();
-                    pathToNCs.put(path, ncs);
-                }
-                ncs.add(NCs[i]);
+                List<String> ncs = pathToNCs.computeIfAbsent(path, k -> new ArrayList<>());
+                ncs.add(NC);
             }
 
             final TreeMap<List<Integer>, IntWritable> availableIpsToSlots = new TreeMap<List<Integer>, IntWritable>(
-                    new Comparator<List<Integer>>() {
-
-                        @Override
-                        public int compare(List<Integer> l1, List<Integer> l2) {
-                            int commonLength = Math.min(l1.size(), l2.size());
-                            for (int i = 0; i < commonLength; i++) {
-                                Integer value1 = l1.get(i);
-                                Integer value2 = l2.get(i);
-                                int cmp = value1 > value2 ? 1 : (value1 < value2 ? -1 : 0);
-                                if (cmp != 0) {
-                                    return cmp;
-                                }
+                    (l1, l2) -> {
+                        int commonLength = Math.min(l1.size(), l2.size());
+                        for (int i = 0; i < commonLength; i++) {
+                            int value1 = l1.get(i);
+                            int value2 = l2.get(i);
+                            int cmp = Integer.compare(value1, value2);
+                            if (cmp != 0) {
+                                return cmp;
                             }
-                            return l1.size() > l2.size() ? 1 : (l1.size() < l2.size() ? -1 : 0);
                         }
-
+                        return Integer.compare(l1.size(), l2.size());
                     });
             for (int i = 0; i < workloads.length; i++) {
                 if (workloads[i] < slotLimit) {
@@ -93,7 +82,7 @@ public class RackAwareNcCollectionBuilder implements INcCollectionBuilder {
                     String ipAddress = InetAddress.getByAddress(
                             ncNameToNcInfos.get(NCs[i]).getNetworkAddress().lookupIpAddress()).getHostAddress();
                     topology.lookupNetworkTerminal(ipAddress, path);
-                    if (path.size() <= 0) {
+                    if (path.isEmpty()) {
                         // if the hyracks nc is not in the defined cluster
                         path.add(Integer.MIN_VALUE);
                     }
@@ -115,41 +104,38 @@ public class RackAwareNcCollectionBuilder implements INcCollectionBuilder {
                         int minDistance = Integer.MAX_VALUE;
                         List<Integer> currentCandidatePath = null;
                         if (locs == null || locs.length > 0) {
-                            for (int j = 0; j < locs.length; j++) {
-                                /**
+                            for (String loc : locs) {
+                                /*
                                  * get all the IP addresses from the name
                                  */
-                                InetAddress[] allIps = InetAddress.getAllByName(locs[j]);
+                                InetAddress[] allIps = InetAddress.getAllByName(loc);
                                 boolean inTopology = false;
                                 for (InetAddress ip : allIps) {
-                                    List<Integer> splitPath = new ArrayList<Integer>();
+                                    List<Integer> splitPath = new ArrayList<>();
                                     boolean inCluster = topology.lookupNetworkTerminal(ip.getHostAddress(), splitPath);
                                     if (!inCluster) {
                                         continue;
                                     }
                                     inTopology = true;
-                                    /**
+                                    /*
                                      * if the node controller exists
                                      */
                                     List<Integer> candidatePath = availableIpsToSlots.floorKey(splitPath);
                                     if (candidatePath == null) {
                                         candidatePath = availableIpsToSlots.ceilingKey(splitPath);
                                     }
-                                    if (candidatePath != null) {
-                                        if (availableIpsToSlots.get(candidatePath).get() > 0) {
-                                            int distance = distance(splitPath, candidatePath);
-                                            if (minDistance > distance) {
-                                                minDistance = distance;
-                                                currentCandidatePath = candidatePath;
-                                            }
+                                    if (candidatePath != null && availableIpsToSlots.get(candidatePath).get() > 0) {
+                                        int distance = distance(splitPath, candidatePath);
+                                        if (minDistance > distance) {
+                                            minDistance = distance;
+                                            currentCandidatePath = candidatePath;
                                         }
-
                                     }
                                 }
 
                                 if (!inTopology) {
-                                    LOGGER.info(locs[j] + "'s IP address is not in the cluster toplogy file!");
-                                    /**
+                                    LOGGER.info(loc + "'s IP address is not in the cluster toplogy file!");
+                                    /*
                                      * if the machine is not in the toplogy file
                                      */
                                     List<Integer> candidatePath = null;
@@ -159,11 +145,9 @@ public class RackAwareNcCollectionBuilder implements INcCollectionBuilder {
                                             break;
                                         }
                                     }
-                                    /** the split path is empty */
-                                    if (candidatePath != null) {
-                                        if (availableIpsToSlots.get(candidatePath).get() > 0) {
-                                            currentCandidatePath = candidatePath;
-                                        }
+                                    /* the split path is empty */
+                                    if (candidatePath != null && availableIpsToSlots.get(candidatePath).get() > 0) {
+                                        currentCandidatePath = candidatePath;
                                     }
                                 }
                             }
@@ -176,8 +160,8 @@ public class RackAwareNcCollectionBuilder implements INcCollectionBuilder {
                             }
                         }
 
-                        if (currentCandidatePath != null && currentCandidatePath.size() > 0) {
-                            /**
+                        if (currentCandidatePath != null && !currentCandidatePath.isEmpty()) {
+                            /*
                              * Update the entry of the selected IP
                              */
                             IntWritable availableSlot = availableIpsToSlots.get(currentCandidatePath);
@@ -185,7 +169,7 @@ public class RackAwareNcCollectionBuilder implements INcCollectionBuilder {
                             if (availableSlot.get() == 0) {
                                 availableIpsToSlots.remove(currentCandidatePath);
                             }
-                            /**
+                            /*
                              * Update the entry of the selected NC
                              */
                             List<String> candidateNcs = pathToNCs.get(currentCandidatePath);
@@ -196,7 +180,7 @@ public class RackAwareNcCollectionBuilder implements INcCollectionBuilder {
                                 }
                             }
                         }
-                        /** not scheduled */
+                        /* not scheduled */
                         return null;
                     } catch (Exception e) {
                         throw new IllegalStateException(e);

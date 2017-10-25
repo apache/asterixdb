@@ -41,15 +41,15 @@ public class TemplateHelper {
 
     private TemplateHelper() {
         registerReplacement(LoremIpsumReplacement.INSTANCE);
-        StringBuffer pattern = null;
-        for (Map.Entry<String, TemplateReplacement> entry : replacements.entrySet()) {
-            if (pattern == null) {
-                pattern = new StringBuffer("%(");
+        StringBuilder pattern = new StringBuilder();
+        replacements.forEach((key, value) -> {
+            if (pattern.length() == 0) {
+                pattern.append("%(");
             } else {
                 pattern.append("|");
             }
-            pattern.append(entry.getKey());
-        }
+            pattern.append(key);
+        });
         pattern.append(")[^%]*%");
         replacementPattern = Pattern.compile(pattern.toString());
     }

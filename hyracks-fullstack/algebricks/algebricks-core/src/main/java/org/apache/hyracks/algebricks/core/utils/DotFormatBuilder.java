@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 public class DotFormatBuilder {
@@ -129,9 +128,7 @@ public class DotFormatBuilder {
         public String toString() {
             StringBuilder nodeString = new StringBuilder();
             nodeString.append(nodeId).append(" [");
-            for (Map.Entry attribute : attributes.entrySet()) {
-                nodeString.append(attribute.getKey()).append("=").append(attribute.getValue()).append(",");
-            }
+            attributes.forEach((key, value) -> nodeString.append(key).append("=").append(value).append(","));
             // remove last ","
             if (nodeString.charAt(nodeString.length() - 1) == ',') {
                 nodeString.deleteCharAt(nodeString.length() - 1);
@@ -186,9 +183,7 @@ public class DotFormatBuilder {
         public String toString() {
             StringBuilder edgeString = new StringBuilder();
             edgeString.append(source.getNodeId()).append("->").append(destination.getNodeId()).append(" [");
-            for (Map.Entry attribute : attributes.entrySet()) {
-                edgeString.append(attribute.getKey()).append("=").append(attribute.getValue()).append(",");
-            }
+            attributes.forEach((key, value) -> edgeString.append(key).append("=").append(value).append(","));
             // remove last ","
             if (edgeString.charAt(edgeString.length() - 1) == ',') {
                 edgeString.deleteCharAt(edgeString.length() - 1);

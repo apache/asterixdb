@@ -40,12 +40,8 @@ public class LexerNode {
     public LexerNode clone() {
         LexerNode node = new LexerNode();
         node.finalTokenName = this.finalTokenName;
-        for (Map.Entry<Rule, LexerNode> entry : this.actions.entrySet()) {
-            node.actions.put(entry.getKey().clone(), entry.getValue().clone());
-        }
-        for (String ongoing : this.ongoingParsing) {
-            node.ongoingParsing.add(ongoing);
-        }
+        this.actions.forEach((key, value) -> node.actions.put(key.clone(), value.clone()));
+        node.ongoingParsing.addAll(this.ongoingParsing);
         return node;
     }
 
@@ -59,9 +55,7 @@ public class LexerNode {
         if (actions.size() == 0) {
             add(newRule);
         } else {
-            for (Map.Entry<Rule, LexerNode> action : actions.entrySet()) {
-                action.getValue().append(newRule);
-            }
+            actions.forEach((key, value) -> value.append(newRule));
             if (actions.containsKey(new RuleEpsilon())) {
                 actions.remove(new RuleEpsilon());
                 add(newRule);
@@ -84,9 +78,7 @@ public class LexerNode {
                 throw new Exception("Rule conflict between: " + this.finalTokenName + " and " + newNode.finalTokenName);
             }
         }
-        for (String ongoing : newNode.ongoingParsing) {
-            this.ongoingParsing.add(ongoing);
-        }
+        this.ongoingParsing.addAll(newNode.ongoingParsing);
     }
 
     public void append(LexerNode node) throws Exception {
@@ -110,9 +102,7 @@ public class LexerNode {
             this.finalTokenName = name;
         } else {
             ongoingParsing.add(TOKEN_PREFIX + name);
-            for (Map.Entry<Rule, LexerNode> action : actions.entrySet()) {
-                action.getValue().appendTokenName(name);
-            }
+            actions.forEach((key, value) -> value.appendTokenName(name));
         }
     }
 
@@ -130,7 +120,7 @@ public class LexerNode {
         if (finalTokenName != null)
             result.append("! ");
         if (actions.size() == 1)
-            result.append(actions.keySet().toArray()[0].toString() + actions.values().toArray()[0].toString());
+            result.append(actions.keySet().toArray()[0].toString()).append(actions.values().toArray()[0].toString());
         if (actions.size() > 1) {
             result.append(" ( ");
             for (Map.Entry<Rule, LexerNode> action : actions.entrySet()) {
@@ -146,7 +136,7 @@ public class LexerNode {
     }
 
     public String toJava() {
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
         if (numberOfRuleChar() > 2) {
             result.append(toJavaSingleCharRules());
             result.append(toJavaComplexRules(false));
@@ -154,10 +144,10 @@ public class LexerNode {
             result.append(toJavaComplexRules(true));
         }
         if (this.finalTokenName != null) {
-            result.append("return " + TOKEN_PREFIX + finalTokenName + ";\n");
+            result.append("return ").append(TOKEN_PREFIX).append(finalTokenName).append(";\n");
         } else if (ongoingParsing != null) {
             String ongoingParsingArgs = collectionJoin(ongoingParsing, ',');
-            result.append("return parseError(" + ongoingParsingArgs + ");\n");
+            result.append("return parseError(").append(ongoingParsingArgs).append(");\n");
         }
         return result.toString();
     }
@@ -172,12 +162,12 @@ public class LexerNode {
     }
 
     private String toJavaSingleCharRules() {
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
         result.append("switch(currentChar){\n");
         for (Map.Entry<Rule, LexerNode> action : actions.entrySet()) {
             if (action.getKey() instanceof RuleChar) {
                 RuleChar rule = (RuleChar) action.getKey();
-                result.append("case '" + rule.expectedChar() + "':\n");
+                result.append("case '").append(rule.expectedChar()).append("':\n");
                 result.append(rule.javaAction()).append("\n");
                 result.append(action.getValue().toJava());
             }
@@ -187,7 +177,7 @@ public class LexerNode {
     }
 
     private String toJavaComplexRules(boolean all) {
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
         for (Map.Entry<Rule, LexerNode> action : actions.entrySet()) {
             if (!all && action.getKey() instanceof RuleChar)
                 continue;
@@ -244,7 +234,7 @@ public class LexerNode {
             ongoingParsingArgs.append(token);
             ongoingParsingArgs.append(c);
         }
-        if (ongoingParsing.size() > 0) {
+        if (!ongoingParsing.isEmpty()) {
             ongoingParsingArgs.deleteCharAt(ongoingParsingArgs.length() - 1);
         }
         return ongoingParsingArgs.toString();

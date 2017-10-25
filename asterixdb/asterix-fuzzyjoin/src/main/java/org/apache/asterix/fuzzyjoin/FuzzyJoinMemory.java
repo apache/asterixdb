@@ -27,7 +27,6 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.asterix.fuzzyjoin.invertedlist.InvertedListLengthList;
 import org.apache.asterix.fuzzyjoin.invertedlist.InvertedListsLengthList;
@@ -176,9 +175,9 @@ public class FuzzyJoinMemory {
         // verify candidates
         //
         ArrayList<ResultJoin> results = new ArrayList<>();
-        for (Map.Entry<Integer, Integer> cand : counts.entrySet()) {
-            int count = cand.getValue();
-            int indexProbe = cand.getKey();
+        counts.forEach((key, value) -> {
+            int count = value;
+            int indexProbe = key;
             if (count > 0) {
                 int tokensProbe[] = records.get(indexProbe);
                 float similarity = similarityFilters.passSimilarityFilter(tokens, prefixLength, tokensProbe,
@@ -187,7 +186,7 @@ public class FuzzyJoinMemory {
                     results.add(new ResultJoin(indexProbe, similarity));
                 }
             }
-        }
+        });
         return results;
     }
 
@@ -293,9 +292,9 @@ public class FuzzyJoinMemory {
         // verify candidates
         //
         ArrayList<ResultSelfJoin> results = new ArrayList<>();
-        for (Map.Entry<Integer, Integer> cand : counts.entrySet()) {
-            int count = cand.getValue();
-            int indexProbe = cand.getKey();
+        counts.forEach((key, value) -> {
+            int count = value;
+            int indexProbe = key;
             if (count > 0) {
                 int tokensProbe[] = records.get(indexProbe);
                 float similarity = similarityFilters.passSimilarityFilter(tokens, prefixLength, tokensProbe,
@@ -304,7 +303,7 @@ public class FuzzyJoinMemory {
                     results.add(new ResultSelfJoin(index, indexProbe, similarity));
                 }
             }
-        }
+        });
         return results;
     }
 }

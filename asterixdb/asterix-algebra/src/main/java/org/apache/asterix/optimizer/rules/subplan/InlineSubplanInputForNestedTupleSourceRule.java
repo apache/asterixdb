@@ -48,9 +48,9 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOpera
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.NestedTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator.IOrder;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SubplanOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator.IOrder;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.algebra.plan.ALogicalPlanImpl;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
@@ -324,9 +324,7 @@ public class InlineSubplanInputForNestedTupleSourceRule implements IAlgebraicRew
                     childrenRef,
                     context);
             changed = changed || resultFromChild.first;
-            for (Map.Entry<LogicalVariable, LogicalVariable> entry : resultFromChild.second.entrySet()) {
-                LogicalVariable oldVar = entry.getKey();
-                LogicalVariable newVar = entry.getValue();
+            resultFromChild.second.forEach((oldVar, newVar) -> {
                 if (liveVars.contains(oldVar)) {
                     // Maps live variables for its ancestors.
                     replacedVarMapForAncestor.put(oldVar, newVar);
@@ -337,7 +335,7 @@ public class InlineSubplanInputForNestedTupleSourceRule implements IAlgebraicRew
                         oldVar = newVar;
                     }
                 }
-            }
+            });
             replacedVarMap.putAll(resultFromChild.second);
         }
         VariableUtilities.substituteVariables(op, replacedVarMap, context);

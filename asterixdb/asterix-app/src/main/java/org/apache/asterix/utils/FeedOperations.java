@@ -330,8 +330,7 @@ public class FeedOperations {
 
             // copy connectors
             connectorIdMapping.clear();
-            for (Entry<ConnectorDescriptorId, IConnectorDescriptor> entry : subJob.getConnectorMap().entrySet()) {
-                IConnectorDescriptor connDesc = entry.getValue();
+            subJob.getConnectorMap().forEach((key, connDesc) -> {
                 ConnectorDescriptorId newConnId;
                 if (connDesc instanceof MToNPartitioningConnectorDescriptor) {
                     MToNPartitioningConnectorDescriptor m2nConn = (MToNPartitioningConnectorDescriptor) connDesc;
@@ -341,8 +340,8 @@ public class FeedOperations {
                 } else {
                     newConnId = jobSpec.createConnectorDescriptor(connDesc);
                 }
-                connectorIdMapping.put(entry.getKey(), newConnId);
-            }
+                connectorIdMapping.put(key, newConnId);
+            });
 
             // make connections between operators
             for (Entry<ConnectorDescriptorId, Pair<Pair<IOperatorDescriptor, Integer>,
@@ -406,12 +405,12 @@ public class FeedOperations {
             }
 
             // set count constraints
-            for (Entry<OperatorDescriptorId, Integer> entry : operatorCounts.entrySet()) {
-                IOperatorDescriptor opDesc = jobSpec.getOperatorMap().get(entry.getKey());
-                if (!operatorLocations.keySet().contains(entry.getKey())) {
-                    PartitionConstraintHelper.addPartitionCountConstraint(jobSpec, opDesc, entry.getValue());
+            operatorCounts.forEach((key, value) -> {
+                IOperatorDescriptor opDesc = jobSpec.getOperatorMap().get(key);
+                if (!operatorLocations.keySet().contains(key)) {
+                    PartitionConstraintHelper.addPartitionCountConstraint(jobSpec, opDesc, value);
                 }
-            }
+            });
             // roots
             for (OperatorDescriptorId root : subJob.getRoots()) {
                 jobSpec.addRoot(jobSpec.getOperatorMap().get(operatorIdMapping.get(root)));

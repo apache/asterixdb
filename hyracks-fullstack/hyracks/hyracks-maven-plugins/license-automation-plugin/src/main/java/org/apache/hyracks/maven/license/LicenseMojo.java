@@ -123,8 +123,7 @@ public abstract class LicenseMojo extends AbstractMojo {
 
     protected void addDependenciesToLicenseMap() throws ProjectBuildingException {
         Map<MavenProject, List<Pair<String, String>>> dependencyLicenseMap = gatherDependencies();
-        for (Map.Entry<MavenProject, List<Pair<String, String>>> dep : dependencyLicenseMap.entrySet()) {
-            final MavenProject depProject = dep.getKey();
+        dependencyLicenseMap.forEach((depProject, value) -> {
             Set<String> locations = dependencySets.isEmpty() ? Collections.singleton(location)
                     : getIncludedLocation(depProject.getArtifact());
             if (isExcluded(depProject.getArtifact())) {
@@ -133,10 +132,10 @@ public abstract class LicenseMojo extends AbstractMojo {
                 getLog().debug("skipping " + depProject + " [not included in dependency sets]");
             } else {
                 for (String depLocation : locations) {
-                    addDependencyToLicenseMap(depProject, dep.getValue(), depLocation);
+                    addDependencyToLicenseMap(depProject, value, depLocation);
                 }
             }
-        }
+        });
     }
 
     private int getLicenseMetric(String url) {

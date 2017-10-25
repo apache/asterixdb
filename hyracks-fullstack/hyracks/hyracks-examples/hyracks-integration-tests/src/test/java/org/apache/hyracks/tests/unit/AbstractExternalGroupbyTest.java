@@ -130,15 +130,15 @@ public abstract class AbstractExternalGroupbyTest {
 
         @Override
         public void open() throws HyracksDataException {
-            for (Map.Entry<Integer, String> keyValue : keyValueMap.entrySet()) {
-                Result result = answer.get(keyValue.getValue());
+            keyValueMap.forEach((key, value) -> {
+                Result result = answer.get(value);
                 if (result == null) {
-                    answer.put(keyValue.getValue(), new Result(keyValue.getKey()));
+                    answer.put(value, new Result(key));
                 } else {
-                    result.sum += keyValue.getKey();
+                    result.sum += key;
                     result.count++;
                 }
-            }
+            });
         }
 
         @Override

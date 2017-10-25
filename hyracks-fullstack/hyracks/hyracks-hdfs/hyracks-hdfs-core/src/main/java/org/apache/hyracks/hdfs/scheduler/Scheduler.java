@@ -379,23 +379,19 @@ public class Scheduler {
             ncNameToIndex.clear();
             int i = 0;
 
-            /**
+            /*
              * build the IP address to NC map
              */
             for (Map.Entry<String, NodeControllerInfo> entry : ncNameToNcInfos.entrySet()) {
                 String ipAddr = InetAddress.getByAddress(entry.getValue().getNetworkAddress().lookupIpAddress())
                         .getHostAddress();
-                List<String> matchedNCs = ipToNcMapping.get(ipAddr);
-                if (matchedNCs == null) {
-                    matchedNCs = new ArrayList<String>();
-                    ipToNcMapping.put(ipAddr, matchedNCs);
-                }
+                List<String> matchedNCs = ipToNcMapping.computeIfAbsent(ipAddr, k -> new ArrayList<>());
                 matchedNCs.add(entry.getKey());
                 NCs[i] = entry.getKey();
                 i++;
             }
 
-            /**
+            /*
              * set up the NC name to index mapping
              */
             for (i = 0; i < NCs.length; i++) {

@@ -30,7 +30,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Map;
 
 import org.apache.asterix.fuzzyjoin.tokenizer.Tokenizer;
 import org.apache.asterix.fuzzyjoin.tokenizer.TokenizerFactory;
@@ -95,9 +94,7 @@ public class FuzzyJoinTokenize {
         input.close();
 
         ArrayList<TokenCount> tokenCounts = new ArrayList<TokenCount>();
-        for (Map.Entry<String, MutableInteger> entry : tokenCount.entrySet()) {
-            tokenCounts.add(new TokenCount(entry.getKey(), entry.getValue()));
-        }
+        tokenCount.forEach((key, value) -> tokenCounts.add(new TokenCount(key, value)));
         Collections.sort(tokenCounts);
 
         BufferedWriter outputTokens = new BufferedWriter(new FileWriter(tokensFileName));

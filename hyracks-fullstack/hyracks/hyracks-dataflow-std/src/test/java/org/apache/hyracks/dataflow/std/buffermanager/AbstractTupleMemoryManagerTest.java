@@ -35,9 +35,9 @@ import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import org.apache.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import org.apache.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
-import org.apache.hyracks.util.IntSerDeUtils;
 import org.apache.hyracks.dataflow.std.sort.Utility;
 import org.apache.hyracks.dataflow.std.structures.TuplePointer;
+import org.apache.hyracks.util.IntSerDeUtils;
 
 public abstract class AbstractTupleMemoryManagerTest {
     ISerializerDeserializer[] fieldsSerDer = new ISerializerDeserializer[] {
@@ -51,13 +51,13 @@ public abstract class AbstractTupleMemoryManagerTest {
 
     protected void assertEachTupleInFTAIsInBuffer(Map<Integer, Integer> map, Map<TuplePointer, Integer> mapInserted) {
         ITuplePointerAccessor accessor = getTuplePointerAccessor();
-        for (Map.Entry<TuplePointer, Integer> entry : mapInserted.entrySet()) {
-            accessor.reset(entry.getKey());
-            int dataLength = map.get(entry.getValue());
-            assertEquals((int) entry.getValue(),
+        mapInserted.forEach((key, value) -> {
+            accessor.reset(key);
+            int dataLength = map.get(value);
+            assertEquals((int) value,
                     IntSerDeUtils.getInt(accessor.getBuffer().array(), accessor.getAbsFieldStartOffset(0)));
             assertEquals(dataLength, accessor.getTupleLength());
-        }
+        });
         assertEquals(map.size(), mapInserted.size());
     }
 

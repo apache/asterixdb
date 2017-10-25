@@ -97,10 +97,10 @@ public class RemoteRecoveryManager implements IRemoteRecoveryManager {
         Map<String, Set<String>> recoveryList = new HashMap<>();
 
         //3. find best candidate to recover from per lost replica data
-        for (Entry<String, Set<String>> entry : recoveryCandidates.entrySet()) {
+        recoveryCandidates.forEach((key, value) -> {
             int winnerScore = -1;
             String winner = "";
-            for (String node : entry.getValue()) {
+            for (String node : value) {
 
                 int nodeScore = candidatesScore.get(node);
 
@@ -111,14 +111,14 @@ public class RemoteRecoveryManager implements IRemoteRecoveryManager {
             }
 
             if (recoveryList.containsKey(winner)) {
-                recoveryList.get(winner).add(entry.getKey());
+                recoveryList.get(winner).add(key);
             } else {
                 Set<String> nodesToRecover = new HashSet<>();
-                nodesToRecover.add(entry.getKey());
+                nodesToRecover.add(key);
                 recoveryList.put(winner, nodesToRecover);
             }
 
-        }
+        });
 
         return recoveryList;
     }
@@ -146,7 +146,7 @@ public class RemoteRecoveryManager implements IRemoteRecoveryManager {
 
     @Override
     public void takeoverPartitons(Integer[] partitions) throws IOException, ACIDException {
-        /**
+        /*
          * TODO even though the takeover is always expected to succeed,
          * in case of any failure during the takeover, the CC should be
          * notified that the takeover failed.
@@ -227,7 +227,7 @@ public class RemoteRecoveryManager implements IRemoteRecoveryManager {
                 (ReplicaResourcesManager) runtimeContext.getReplicaResourcesManager();
         Map<String, ClusterPartition[]> nodePartitions = runtimeContext.getMetadataProperties().getNodePartitions();
 
-        /**
+        /*
          * for each lost partition, get the remaining files from replicas
          * to complete the failback process.
          */
@@ -251,7 +251,7 @@ public class RemoteRecoveryManager implements IRemoteRecoveryManager {
                 replicationManager.requestReplicaFiles(replicaId, partitionsToRecover, existingFiles);
             }
         } catch (IOException e) {
-            /**
+            /*
              * in case of failure during failback completion process we need to construct a new plan
              * and get all the files from the start since the remote replicas will change in the new plan.
              */

@@ -33,9 +33,7 @@ public class VariableSubstitutionEnvironment {
     }
 
     public VariableSubstitutionEnvironment(Map<VariableExpr, Expression> varExprMap) {
-        for (Map.Entry<VariableExpr, Expression> entry : varExprMap.entrySet()) {
-            oldVarToNewExpressionMap.put(entry.getKey().getVar().getValue(), entry.getValue());
-        }
+        varExprMap.forEach((key, value) -> oldVarToNewExpressionMap.put(key.getVar().getValue(), value));
     }
 
     public VariableSubstitutionEnvironment(VariableSubstitutionEnvironment env) {

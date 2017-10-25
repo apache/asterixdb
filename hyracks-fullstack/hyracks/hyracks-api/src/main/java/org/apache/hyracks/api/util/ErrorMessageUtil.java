@@ -56,9 +56,9 @@ public class ErrorMessageUtil {
         Properties prop = new Properties();
         Map<Integer, String> errorMessageMap = new HashMap<>();
         prop.load(resourceStream);
-        for (Map.Entry<Object, Object> entry : prop.entrySet()) {
-            String key = (String) entry.getKey();
-            String msg = (String) entry.getValue();
+        prop.forEach((key1, value) -> {
+            String key = (String) key1;
+            String msg = (String) value;
             if (key.contains(COMMA)) {
                 String[] codes = key.split(COMMA);
                 for (String code : codes) {
@@ -67,7 +67,7 @@ public class ErrorMessageUtil {
             } else {
                 errorMessageMap.put(Integer.parseInt(key), msg);
             }
-        }
+        });
         return errorMessageMap;
     }
 

@@ -462,11 +462,11 @@ public class ClusterStateManager implements IClusterStateManager {
     private void updateNodeConfig(String nodeId, Map<IOption, Object> configuration) {
         ConfigManager configManager = ((ConfigManagerApplicationConfig) appCtx.getServiceContext().getAppConfig())
                 .getConfigManager();
-        for (Map.Entry<IOption, Object> entry : configuration.entrySet()) {
-            if (entry.getKey().section() == Section.NC) {
-                configManager.set(nodeId, entry.getKey(), entry.getValue());
+        configuration.forEach((key, value) -> {
+            if (key.section() == Section.NC) {
+                configManager.set(nodeId, key, value);
             }
-        }
+        });
     }
 
 }

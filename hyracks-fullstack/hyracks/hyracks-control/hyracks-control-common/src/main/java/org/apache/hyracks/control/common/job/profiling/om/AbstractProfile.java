@@ -26,11 +26,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.apache.hyracks.api.io.IWritable;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-
-import org.apache.hyracks.api.io.IWritable;
 
 public abstract class AbstractProfile implements IWritable, Serializable {
     private static final long serialVersionUID = 1L;
@@ -38,7 +38,7 @@ public abstract class AbstractProfile implements IWritable, Serializable {
     protected Map<String, Long> counters;
 
     public AbstractProfile() {
-        counters = new HashMap<String, Long>();
+        counters = new HashMap<>();
     }
 
     public Map<String, Long> getCounters() {
@@ -50,12 +50,12 @@ public abstract class AbstractProfile implements IWritable, Serializable {
     protected void populateCounters(ObjectNode jo) {
         ObjectMapper om = new ObjectMapper();
         ArrayNode countersObj = om.createArrayNode();
-        for (Map.Entry<String, Long> e : counters.entrySet()) {
+        counters.forEach((key, value) -> {
             ObjectNode jpe = om.createObjectNode();
-            jpe.put("name", e.getKey());
-            jpe.put("value", e.getValue());
+            jpe.put("name", key);
+            jpe.put("value", value);
             countersObj.add(jpe);
-        }
+        });
         jo.set("counters", countersObj);
     }
 
@@ -75,7 +75,7 @@ public abstract class AbstractProfile implements IWritable, Serializable {
     @Override
     public void readFields(DataInput input) throws IOException {
         int size = input.readInt();
-        counters = new HashMap<String, Long>();
+        counters = new HashMap<>();
         for (int i = 0; i < size; i++) {
             String key = input.readUTF();
             long value = input.readLong();

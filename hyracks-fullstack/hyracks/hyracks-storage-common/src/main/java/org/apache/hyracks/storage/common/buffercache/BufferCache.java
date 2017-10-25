@@ -801,19 +801,19 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
         }
 
         synchronized (fileInfoMap) {
-            for (Map.Entry<Integer, BufferedFileHandle> entry : fileInfoMap.entrySet()) {
+            fileInfoMap.forEach((key, value) -> {
                 try {
-                    boolean fileHasBeenDeleted = entry.getValue().fileHasBeenDeleted();
-                    sweepAndFlush(entry.getKey(), !fileHasBeenDeleted);
+                    boolean fileHasBeenDeleted = value.fileHasBeenDeleted();
+                    sweepAndFlush(key, !fileHasBeenDeleted);
                     if (!fileHasBeenDeleted) {
-                        ioManager.close(entry.getValue().getFileHandle());
+                        ioManager.close(value.getFileHandle());
                     }
                 } catch (HyracksDataException e) {
                     if (LOGGER.isLoggable(Level.WARNING)) {
-                        LOGGER.log(Level.WARNING, "Error flushing file id: " + entry.getKey(), e);
+                        LOGGER.log(Level.WARNING, "Error flushing file id: " + key, e);
                     }
                 }
-            }
+            });
             fileInfoMap.clear();
         }
     }

@@ -242,15 +242,15 @@ class ActivityClusterPlanner {
 
         JobRun jobRun = executor.getJobRun();
         Map<ConnectorDescriptorId, IConnectorPolicy> connectorPolicies = jobRun.getConnectorPolicyMap();
-        for (Map.Entry<TaskId, List<Pair<TaskId, ConnectorDescriptorId>>> e : taskConnectivity.entrySet()) {
-            Set<TaskId> cluster = taskClusterMap.get(e.getKey());
-            for (Pair<TaskId, ConnectorDescriptorId> p : e.getValue()) {
+        taskConnectivity.forEach((key, value) -> {
+            Set<TaskId> cluster = taskClusterMap.get(key);
+            for (Pair<TaskId, ConnectorDescriptorId> p : value) {
                 IConnectorPolicy cPolicy = connectorPolicies.get(p.getRight());
                 if (cPolicy.requiresProducerConsumerCoscheduling()) {
                     cluster.add(p.getLeft());
                 }
             }
-        }
+        });
 
         /*
          * We compute the transitive closure of this (producer-consumer) relation to find the largest set of

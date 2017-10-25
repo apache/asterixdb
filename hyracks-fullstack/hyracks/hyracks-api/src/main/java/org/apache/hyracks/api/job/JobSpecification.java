@@ -309,11 +309,7 @@ public class JobSpecification implements Serializable, IOperatorDescriptorRegist
     }
 
     private <K, V> void insertIntoIndexedMap(Map<K, List<V>> map, K key, int index, V value) {
-        List<V> vList = map.get(key);
-        if (vList == null) {
-            vList = new ArrayList<>();
-            map.put(key, vList);
-        }
+        List<V> vList = map.computeIfAbsent(key, k -> new ArrayList<>());
         extend(vList, index);
         vList.set(index, value);
     }
@@ -322,9 +318,9 @@ public class JobSpecification implements Serializable, IOperatorDescriptorRegist
     public String toString() {
         StringBuilder buffer = new StringBuilder();
 
-        for (Map.Entry<OperatorDescriptorId, IOperatorDescriptor> e : opMap.entrySet()) {
-            buffer.append(e.getKey().getId()).append(" : ").append(e.getValue().toString()).append("\n");
-            List<IConnectorDescriptor> inputs = opInputMap.get(e.getKey());
+        opMap.forEach((key, value) -> {
+            buffer.append(key.getId()).append(" : ").append(value.toString()).append("\n");
+            List<IConnectorDescriptor> inputs = opInputMap.get(key);
             if (inputs != null && !inputs.isEmpty()) {
                 buffer.append("   Inputs:\n");
                 for (IConnectorDescriptor c : inputs) {
@@ -332,7 +328,7 @@ public class JobSpecification implements Serializable, IOperatorDescriptorRegist
                             .append("\n");
                 }
             }
-            List<IConnectorDescriptor> outputs = opOutputMap.get(e.getKey());
+            List<IConnectorDescriptor> outputs = opOutputMap.get(key);
             if (outputs != null && !outputs.isEmpty()) {
                 buffer.append("   Outputs:\n");
                 for (IConnectorDescriptor c : outputs) {
@@ -340,7 +336,7 @@ public class JobSpecification implements Serializable, IOperatorDescriptorRegist
                             .append("\n");
                 }
             }
-        }
+        });
 
         buffer.append("\n").append("Constraints:\n").append(userConstraints);
 
@@ -352,8 +348,8 @@ public class JobSpecification implements Serializable, IOperatorDescriptorRegist
         ObjectNode jjob = om.createObjectNode();
 
         ArrayNode jopArray = om.createArrayNode();
-        for (Map.Entry<OperatorDescriptorId, IOperatorDescriptor> e : opMap.entrySet()) {
-            ObjectNode op = e.getValue().toJSON();
+        opMap.forEach((key, value) -> {
+            ObjectNode op = value.toJSON();
             if (!userConstraints.isEmpty()) {
                 // Add operator partition constraints to each JSON operator.
                 ObjectNode pcObject = om.createObjectNode();
@@ -364,12 +360,12 @@ public class JobSpecification implements Serializable, IOperatorDescriptorRegist
                     ExpressionTag tag = constraint.getLValue().getTag();
                     if (tag == ExpressionTag.PARTITION_COUNT) {
                         PartitionCountExpression pce = (PartitionCountExpression) constraint.getLValue();
-                        if (e.getKey() == pce.getOperatorDescriptorId()) {
+                        if (key == pce.getOperatorDescriptorId()) {
                             pcObject.put("count", getConstraintExpressionRValue(constraint));
                         }
                     } else if (tag == ExpressionTag.PARTITION_LOCATION) {
                         PartitionLocationExpression ple = (PartitionLocationExpression) constraint.getLValue();
-                        if (e.getKey() == ple.getOperatorDescriptorId()) {
+                        if (key == ple.getOperatorDescriptorId()) {
                             pleObject.put(Integer.toString(ple.getPartition()),
                                     getConstraintExpressionRValue(constraint));
                         }
@@ -383,23 +379,23 @@ public class JobSpecification implements Serializable, IOperatorDescriptorRegist
                 }
             }
             jopArray.add(op);
-        }
+        });
         jjob.set("operators", jopArray);
 
         ArrayNode jcArray = om.createArrayNode();
-        for (Map.Entry<ConnectorDescriptorId, IConnectorDescriptor> e : connMap.entrySet()) {
+        connMap.forEach((key, value) -> {
             ObjectNode conn = om.createObjectNode();
             Pair<Pair<IOperatorDescriptor, Integer>, Pair<IOperatorDescriptor, Integer>> connection =
-                    connectorOpMap.get(e.getKey());
+                    connectorOpMap.get(key);
             if (connection != null) {
                 conn.put("in-operator-id", connection.getLeft().getLeft().getOperatorId().toString());
                 conn.put("in-operator-port", connection.getLeft().getRight().intValue());
                 conn.put("out-operator-id", connection.getRight().getLeft().getOperatorId().toString());
                 conn.put("out-operator-port", connection.getRight().getRight().intValue());
             }
-            conn.set("connector", e.getValue().toJSON());
+            conn.set("connector", value.toJSON());
             jcArray.add(conn);
-        }
+        });
         jjob.set("connectors", jcArray);
 
         return jjob;

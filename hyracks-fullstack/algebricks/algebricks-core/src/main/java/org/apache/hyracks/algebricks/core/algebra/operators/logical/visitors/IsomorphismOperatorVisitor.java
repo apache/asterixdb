@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -37,11 +38,11 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogi
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.DelegateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DistinctOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DistributeResultOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.EmptyTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ExchangeOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.DelegateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IndexInsertDeleteUpsertOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
@@ -633,15 +634,13 @@ public class IsomorphismOperatorVisitor implements ILogicalOperatorVisitor<Boole
         variableMapping.clear();
         IsomorphismUtilities.mapVariablesTopDown(op, argOp, variableMapping);
 
-        List<LogicalVariable> liveVars = new ArrayList<LogicalVariable>();
-        if (argOp.getInputs().size() > 0) {
-            for (int i = 0; i < argOp.getInputs().size(); i++) {
-                VariableUtilities.getLiveVariables(argOp.getInputs().get(i).getValue(), liveVars);
-            }
+        List<LogicalVariable> liveVars = new ArrayList<>();
+        for (int i = 0; i < argOp.getInputs().size(); i++) {
+            VariableUtilities.getLiveVariables(argOp.getInputs().get(i).getValue(), liveVars);
         }
-        List<LogicalVariable> producedVars = new ArrayList<LogicalVariable>();
+        List<LogicalVariable> producedVars = new ArrayList<>();
         VariableUtilities.getProducedVariables(argOp, producedVars);
-        List<LogicalVariable> producedVarsNew = new ArrayList<LogicalVariable>();
+        List<LogicalVariable> producedVarsNew = new ArrayList<>();
         VariableUtilities.getProducedVariables(op, producedVarsNew);
 
         if (producedVars.size() != producedVarsNew.size()) {
@@ -671,14 +670,7 @@ public class IsomorphismOperatorVisitor implements ILogicalOperatorVisitor<Boole
     }
 
     private static boolean variableEqual(LogicalVariable var, LogicalVariable varArg) {
-        if (var == null && varArg == null) {
-            return true;
-        }
-        if (var.equals(varArg)) {
-            return true;
-        } else {
-            return false;
-        }
+        return Objects.equals(var, varArg);
     }
 
     @Override

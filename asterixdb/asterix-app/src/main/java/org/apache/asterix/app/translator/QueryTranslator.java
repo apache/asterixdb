@@ -36,7 +36,6 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -1981,9 +1980,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     throw new AlgebricksException("Unable to read policy file" + cfps.getSourcePolicyFile(), e);
                 }
                 Map<String, String> policyProperties = new HashMap<>();
-                for (Entry<Object, Object> entry : prop.entrySet()) {
-                    policyProperties.put((String) entry.getKey(), (String) entry.getValue());
-                }
+                prop.forEach((key, value) -> policyProperties.put((String) key, (String) value));
                 newPolicy = new FeedPolicyEntity(dataverse, policy, description, policyProperties);
             }
             MetadataManager.INSTANCE.addFeedPolicy(mdTxnCtx, newPolicy);

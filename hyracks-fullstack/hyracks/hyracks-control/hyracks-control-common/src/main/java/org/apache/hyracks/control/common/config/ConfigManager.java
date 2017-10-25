@@ -344,20 +344,20 @@ public class ConfigManager implements IConfigManager, Serializable {
 
     private void applyDefaults() {
         LOGGER.fine("applying defaults");
-        for (Map.Entry<Section, Map<String, IOption>> entry : sectionMap.entrySet()) {
-            if (entry.getKey() == Section.NC) {
-                entry.getValue().values().forEach(option -> getNodeNames()
+        sectionMap.forEach((key, value) -> {
+            if (key == Section.NC) {
+                value.values().forEach(option -> getNodeNames()
                         .forEach(node -> getOrDefault(getNodeEffectiveMap(node), option, node)));
                 for (Map.Entry<String, Map<IOption, Object>> nodeMap : nodeSpecificMap.entrySet()) {
-                    entry.getValue().values()
+                    value.values()
                             .forEach(option -> getOrDefault(
                                     new CompositeMap<>(nodeMap.getValue(), definedMap, new NoOpMapMutator()), option,
                                     nodeMap.getKey()));
                 }
             } else {
-                entry.getValue().values().forEach(option -> getOrDefault(configurationMap, option, null));
+                value.values().forEach(option -> getOrDefault(configurationMap, option, null));
             }
-        }
+        });
     }
 
     private Object getOrDefault(Map<IOption, Object> map, IOption option, String nodeId) {
@@ -450,15 +450,13 @@ public class ConfigManager implements IConfigManager, Serializable {
 
     public Ini toIni(boolean includeDefaults) {
         Ini ini = new Ini();
-        for (Map.Entry<IOption, Object> entry : (includeDefaults ? configurationMap : definedMap).entrySet()) {
-            if (entry.getValue() != null) {
-                final IOption option = entry.getKey();
-                ini.add(option.section().sectionName(), option.ini(), option.type().serializeToIni(entry.getValue()));
+        (includeDefaults ? configurationMap : definedMap).forEach((option, value) -> {
+            if (value != null) {
+                ini.add(option.section().sectionName(), option.ini(), option.type().serializeToIni(value));
             }
-        }
-        for (Map.Entry<String, Map<IOption, Object>> nodeMapEntry : nodeSpecificMap.entrySet()) {
-            String section = Section.NC.sectionName() + "/" + nodeMapEntry.getKey();
-            final Map<IOption, Object> nodeValueMap = nodeMapEntry.getValue();
+        });
+        nodeSpecificMap.forEach((key, nodeValueMap) -> {
+            String section = Section.NC.sectionName() + "/" + key;
             synchronized (nodeValueMap) {
                 for (Map.Entry<IOption, Object> entry : nodeValueMap.entrySet()) {
                     if (entry.getValue() != null) {
@@ -467,7 +465,7 @@ public class ConfigManager implements IConfigManager, Serializable {
                     }
                 }
             }
-        }
+        });
         return ini;
     }
 

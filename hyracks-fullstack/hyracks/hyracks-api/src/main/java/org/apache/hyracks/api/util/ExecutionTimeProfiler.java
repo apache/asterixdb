@@ -22,7 +22,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.Map;
 
 public class ExecutionTimeProfiler {
 
@@ -67,9 +66,7 @@ public class ExecutionTimeProfiler {
         try {
             synchronized (lock1) {
                 sb.append("\n\n");
-                for (Map.Entry<String, String> entry : spentTimePerJobMap.get(jobSignature).entrySet()) {
-                    sb.append(entry.getValue());
-                }
+                spentTimePerJobMap.get(jobSignature).forEach((key, value) -> sb.append(value));
                 fos.write(sb.toString().getBytes());
                 fos.flush();
                 spentTimePerJobMap.get(jobSignature).clear();

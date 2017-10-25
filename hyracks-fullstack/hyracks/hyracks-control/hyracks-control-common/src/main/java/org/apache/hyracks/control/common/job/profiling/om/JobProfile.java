@@ -25,10 +25,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.apache.hyracks.api.job.JobId;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.apache.hyracks.api.job.JobId;
 
 public class JobProfile extends AbstractProfile {
     private static final long serialVersionUID = 1L;
@@ -49,7 +50,7 @@ public class JobProfile extends AbstractProfile {
 
     public JobProfile(JobId jobId) {
         this.jobId = jobId;
-        jobletProfiles = new HashMap<String, JobletProfile>();
+        jobletProfiles = new HashMap<>();
     }
 
     public JobId getJobId() {
@@ -91,7 +92,7 @@ public class JobProfile extends AbstractProfile {
     public void readFields(DataInput input) throws IOException {
         jobId = JobId.create(input);
         int size = input.readInt();
-        jobletProfiles = new HashMap<String, JobletProfile>();
+        jobletProfiles = new HashMap<>();
         for (int i = 0; i < size; i++) {
             String key = input.readUTF();
             JobletProfile value = JobletProfile.create(input);

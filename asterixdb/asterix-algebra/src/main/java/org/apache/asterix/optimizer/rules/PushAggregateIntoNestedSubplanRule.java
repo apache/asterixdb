@@ -111,9 +111,7 @@ public class PushAggregateIntoNestedSubplanRule implements IAlgebraicRewriteRule
             }
         }
         // Removes subplans.
-        for (Map.Entry<AbstractOperatorWithNestedPlans, List<ILogicalPlan>> entry : nspToSubplanListMap.entrySet()) {
-            entry.getKey().getNestedPlans().removeAll(entry.getValue());
-        }
+        nspToSubplanListMap.forEach((key, value) -> key.getNestedPlans().removeAll(value));
     }
 
     private boolean collectVarsBottomUp(Mutable<ILogicalOperator> opRef, IOptimizationContext context,

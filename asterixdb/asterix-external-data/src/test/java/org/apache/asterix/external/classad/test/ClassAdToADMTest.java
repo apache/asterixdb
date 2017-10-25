@@ -27,7 +27,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import org.apache.asterix.external.api.IRawRecord;
 import org.apache.asterix.external.classad.CaseInsensitiveString;
@@ -215,8 +214,7 @@ public class ClassAdToADMTest extends TestCase {
                         parser.setLexerSource(lexerSource);
                         parser.parseNext(pAd);
                         Map<CaseInsensitiveString, ExprTree> attrs = pAd.getAttrList();
-                        for (Entry<CaseInsensitiveString, ExprTree> entry : attrs.entrySet()) {
-                            ExprTree tree = entry.getValue();
+                        attrs.forEach((key, tree) -> {
                             switch (tree.getKind()) {
                                 case ATTRREF_NODE:
                                 case CLASSAD_NODE:
@@ -231,7 +229,7 @@ public class ClassAdToADMTest extends TestCase {
                                     System.out.println("Something is wrong");
                                     break;
                             }
-                        }
+                        });
                     }
                 } finally {
                     recordReader.close();

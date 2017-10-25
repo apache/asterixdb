@@ -427,9 +427,7 @@ public class APIFramework {
         int perNodeParallelismMax = parallelism / numNodes + 1;
         List<String> allNodes = new ArrayList<>();
         Set<String> selectedNodesWithOneMorePartition = new HashSet<>();
-        for (Map.Entry<String, NodeControllerInfo> entry : ncMap.entrySet()) {
-            allNodes.add(entry.getKey());
-        }
+        ncMap.forEach((key, value) -> allNodes.add(key));
         Random random = new Random();
         for (int index = numNodesWithOneMorePartition; index >= 1; --index) {
             int pick = random.nextInt(index);
@@ -439,9 +437,8 @@ public class APIFramework {
 
         // Generates cluster locations, which has duplicates for a node if it contains more than one partitions.
         List<String> locations = new ArrayList<>();
-        for (Map.Entry<String, NodeControllerInfo> entry : ncMap.entrySet()) {
-            String nodeId = entry.getKey();
-            int availableCores = entry.getValue().getNumAvailableCores();
+        ncMap.forEach((nodeId, value) -> {
+            int availableCores = value.getNumAvailableCores();
             int nodeParallelism =
                     selectedNodesWithOneMorePartition.contains(nodeId) ? perNodeParallelismMax : perNodeParallelismMin;
             int coresToUse =
@@ -449,17 +446,13 @@ public class APIFramework {
             for (int count = 0; count < coresToUse; ++count) {
                 locations.add(nodeId);
             }
-        }
+        });
         return new AlgebricksAbsolutePartitionConstraint(locations.toArray(new String[0]));
     }
 
     // Gets the total number of available cores in the cluster.
     private static int getTotalNumCores(Map<String, NodeControllerInfo> ncMap) {
-        int sum = 0;
-        for (Map.Entry<String, NodeControllerInfo> entry : ncMap.entrySet()) {
-            sum += entry.getValue().getNumAvailableCores();
-        }
-        return sum;
+        return ncMap.values().stream().mapToInt(NodeControllerInfo::getNumAvailableCores).sum();
     }
 
     // Gets the frame limit.

@@ -376,9 +376,7 @@ public class MetadataCache {
             if (m == null) {
                 return retDatasets;
             }
-            for (Map.Entry<String, Dataset> entry : m.entrySet()) {
-                retDatasets.add(entry.getValue());
-            }
+            m.forEach((key, value) -> retDatasets.add(value));
             return retDatasets;
         }
     }
