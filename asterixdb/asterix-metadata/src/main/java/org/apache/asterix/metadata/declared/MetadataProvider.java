@@ -62,6 +62,7 @@ import org.apache.asterix.formats.nontagged.LinearizeComparatorFactoryProvider;
 import org.apache.asterix.formats.nontagged.TypeTraitProvider;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
+import org.apache.asterix.metadata.bootstrap.MetadataBuiltinEntities;
 import org.apache.asterix.metadata.dataset.hints.DatasetHints.DatasetCardinalityHint;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.DatasourceAdapter;
@@ -160,7 +161,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
 
     public MetadataProvider(ICcApplicationContext appCtx, Dataverse defaultDataverse) {
         this.appCtx = appCtx;
-        this.defaultDataverse = defaultDataverse;
+        this.defaultDataverse = defaultDataverse == null ? MetadataBuiltinEntities.DEFAULT_DATAVERSE : defaultDataverse;
         this.storageComponentProvider = appCtx.getStorageComponentProvider();
         storageProperties = appCtx.getStorageProperties();
         locks = new LockList();
@@ -433,8 +434,11 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             if (primaryIndex != null && (dataset.getDatasetType() != DatasetType.EXTERNAL)) {
                 isSecondary = !indexName.equals(primaryIndex.getIndexName());
             }
-            Index theIndex = isSecondary ? MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataset.getDataverseName(),
-                    dataset.getDatasetName(), indexName) : primaryIndex;
+            Index theIndex =
+                    isSecondary
+                            ? MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataset.getDataverseName(),
+                                    dataset.getDatasetName(), indexName)
+                            : primaryIndex;
             int numPrimaryKeys = dataset.getPrimaryKeys().size();
             RecordDescriptor outputRecDesc = JobGenHelper.mkRecordDescriptor(typeEnv, opSchema, context);
             Pair<IFileSplitProvider, AlgebricksPartitionConstraint> spPc =
