@@ -74,5 +74,17 @@ public class TraceTest {
         for (String line : lines) {
             Assert.assertFalse(validate(line).get("cat").equals("CAT3"));
         }
+        tracer.setCategories("CAT1", "CAT3");
+        os.reset();
+
+        tracer.instant("test1", cat1, ITracer.Scope.p, null);
+        tracer.instant("test2", cat2, ITracer.Scope.p, null);
+        tracer.instant("test3", cat3, ITracer.Scope.p, null);
+
+        handler.flush();
+        lines = os.toString().split("\n");
+        for (String line : lines) {
+            Assert.assertFalse(validate(line).get("cat").equals("CAT2"));
+        }
     }
 }

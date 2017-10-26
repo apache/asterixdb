@@ -57,6 +57,10 @@ public class Tracer implements ITracer {
 
     public Tracer(String name, String[] categories, TraceCategoryRegistry registry) {
         this(name, ITraceCategoryRegistry.CATEGORIES_ALL, registry);
+        setCategories(categories);
+    }
+
+    public void setCategories(String... categories) {
         LOGGER.info("Set categories for Tracer " + this.traceLog.getName() + " to " + Arrays.toString(categories));
         this.categories = getRegistry().get(categories);
     }

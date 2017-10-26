@@ -63,6 +63,11 @@ public interface ITracer {
         }
 
         @Override
+        public void setCategories(String... categories) {
+            // nothing to do here
+        }
+
+        @Override
         public boolean isEnabled(long cat) {
             return false;
         }
@@ -91,6 +96,8 @@ public interface ITracer {
     String getName();
 
     ITraceCategoryRegistry getRegistry();
+
+    void setCategories(String... categories);
 
     boolean isEnabled(long cat);
 
