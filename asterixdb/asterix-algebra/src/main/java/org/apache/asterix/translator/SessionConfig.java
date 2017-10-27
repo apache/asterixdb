@@ -21,6 +21,9 @@ package org.apache.asterix.translator;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 
 /**
  * SessionConfig captures several different parameters for controlling
@@ -36,7 +39,6 @@ import java.util.Map;
  * <li>It allows you to specify output format-specific parameters.
  */
 public class SessionConfig implements Serializable {
-
     private static final long serialVersionUID = 1L;
 
     /**
@@ -47,6 +49,29 @@ public class SessionConfig implements Serializable {
         CSV,
         CLEAN_JSON,
         LOSSLESS_JSON
+    };
+
+    /**
+     * Used to specify the format for logical plan and optimized logical plan.
+     */
+
+    public enum PlanFormat {
+        JSON,
+        STRING;
+        public static PlanFormat get(String fmtString, String label, PlanFormat defaultFmt, Logger logger) {
+            try {
+                if (fmtString != null) {
+                    String format =
+                            ("JSON".equalsIgnoreCase(fmtString) || "CLEAN_JSON".equalsIgnoreCase(fmtString))
+                                    ? "JSON"
+                                    : fmtString;
+                    return PlanFormat.valueOf(format);
+                }
+            } catch (IllegalArgumentException e) {
+                logger.log(Level.INFO, fmtString + ": unsupported " + label + ", using " + defaultFmt + "instead", e);
+            }
+            return defaultFmt;
+        }
     };
 
     /**
@@ -106,6 +131,7 @@ public class SessionConfig implements Serializable {
 
     // Output format.
     private final OutputFormat fmt;
+    private final PlanFormat lpfmt;
 
     // Standard execution flags.
     private final boolean executeQuery;
@@ -116,13 +142,18 @@ public class SessionConfig implements Serializable {
     private final Map<String, Boolean> flags;
 
     public SessionConfig(OutputFormat fmt) {
-        this(fmt, true, true, true);
+        this(fmt, PlanFormat.STRING);
+    }
+
+    public SessionConfig(OutputFormat fmt, PlanFormat lpfmt) {
+        this(fmt, true, true, true, lpfmt);
     }
 
     /**
      * Create a SessionConfig object with all optional values set to defaults:
      * - All format flags set to "false".
      * - All out-of-band outputs set to "false".
+     *
      * @param fmt
      *            Output format for execution output.
      * @param optimize
@@ -131,13 +162,20 @@ public class SessionConfig implements Serializable {
      *            Whether to execute the query or not.
      * @param generateJobSpec
      *            Whether to generate the Hyracks job specification (if
+     * @param lpfmt
+     *            Plan format for logical plan.
      */
     public SessionConfig(OutputFormat fmt, boolean optimize, boolean executeQuery, boolean generateJobSpec) {
+        this(fmt, optimize, executeQuery, generateJobSpec, PlanFormat.STRING);
+    }
+    public SessionConfig(OutputFormat fmt, boolean optimize, boolean executeQuery, boolean generateJobSpec,
+            PlanFormat lpfmt) {
         this.fmt = fmt;
         this.optimize = optimize;
         this.executeQuery = executeQuery;
         this.generateJobSpec = generateJobSpec;
         this.flags = new HashMap<>();
+        this.lpfmt = lpfmt;
     }
 
     /**
@@ -145,6 +183,13 @@ public class SessionConfig implements Serializable {
      */
     public OutputFormat fmt() {
         return this.fmt;
+    }
+
+    /**
+     * Retrieve the PlanFormat for this execution.
+     */
+    public PlanFormat getLpfmt() {
+        return this.lpfmt;
     }
 
     /**

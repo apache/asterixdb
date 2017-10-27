@@ -84,8 +84,10 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionEvalSiz
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionTypeComputer;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IMergeAggregationExpressionFactory;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IMissableTypeComputer;
+import org.apache.hyracks.algebricks.core.algebra.prettyprint.AbstractLogicalOperatorPrettyPrintVisitor;
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.AlgebricksAppendable;
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.LogicalOperatorPrettyPrintVisitor;
+import org.apache.hyracks.algebricks.core.algebra.prettyprint.LogicalOperatorPrettyPrintVisitorJson;
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.PlanPrettyPrinter;
 import org.apache.hyracks.algebricks.core.rewriter.base.AlgebricksOptimizationContext;
 import org.apache.hyracks.algebricks.core.rewriter.base.IOptimizationContextFactory;
@@ -111,6 +113,8 @@ public class APIFramework {
     private static final int MIN_FRAME_LIMIT_FOR_SORT = 3;
     private static final int MIN_FRAME_LIMIT_FOR_GROUP_BY = 4;
     private static final int MIN_FRAME_LIMIT_FOR_JOIN = 5;
+    private static final String LPLAN = "Logical plan";
+    private static final String OPLAN = "Optimized logical plan";
 
     // A white list of supported configurable parameters.
     private static final Set<String> CONFIGURABLE_PARAMETER_NAMES =
@@ -156,7 +160,13 @@ public class APIFramework {
     private void printPlanPrefix(SessionOutput output, String planName) {
         if (output.config().is(SessionConfig.FORMAT_HTML)) {
             output.out().println("<h4>" + planName + ":</h4>");
-            output.out().println("<pre>");
+            if (LPLAN.equalsIgnoreCase(planName)) {
+                output.out().println("<pre class = query-plan>");
+            } else if (OPLAN.equalsIgnoreCase(planName)) {
+                output.out().println("<pre class = query-optimized-plan>");
+            } else {
+                output.out().println("<pre>");
+            }
         } else {
             output.out().println("----------" + planName + ":");
         }
@@ -219,7 +229,13 @@ public class APIFramework {
 
             printPlanPrefix(output, "Logical plan");
             if (rwQ != null || (statement != null && statement.getKind() == Statement.Kind.LOAD)) {
-                LogicalOperatorPrettyPrintVisitor pvisitor = new LogicalOperatorPrettyPrintVisitor(output.out());
+                AbstractLogicalOperatorPrettyPrintVisitor pvisitor;
+                if (output.config().getLpfmt().equals(SessionConfig.PlanFormat.JSON)) {
+                    pvisitor = new LogicalOperatorPrettyPrintVisitorJson(output.out());
+                } else {
+                    pvisitor = new LogicalOperatorPrettyPrintVisitor(output.out());
+
+                }
                 PlanPrettyPrinter.printPlan(plan, pvisitor, 0);
             }
             printPlanPostfix(output);
@@ -273,8 +289,13 @@ public class APIFramework {
                 } else {
                     printPlanPrefix(output, "Optimized logical plan");
                     if (rwQ != null || (statement != null && statement.getKind() == Statement.Kind.LOAD)) {
-                        LogicalOperatorPrettyPrintVisitor pvisitor =
-                                new LogicalOperatorPrettyPrintVisitor(output.out());
+                        AbstractLogicalOperatorPrettyPrintVisitor pvisitor;
+                        if (output.config().getLpfmt().equals(SessionConfig.PlanFormat.JSON)) {
+                            pvisitor = new LogicalOperatorPrettyPrintVisitorJson(output.out());
+
+                        } else {
+                            pvisitor = new LogicalOperatorPrettyPrintVisitor(output.out());
+                        }
                         PlanPrettyPrinter.printPlan(plan, pvisitor, 0);
                     }
                     printPlanPostfix(output);

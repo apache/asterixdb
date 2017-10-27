@@ -52,6 +52,7 @@ import org.apache.asterix.translator.IStatementExecutor;
 import org.apache.asterix.translator.IStatementExecutorFactory;
 import org.apache.asterix.translator.SessionConfig;
 import org.apache.asterix.translator.SessionConfig.OutputFormat;
+import org.apache.asterix.translator.SessionConfig.PlanFormat;
 import org.apache.asterix.translator.SessionOutput;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.dataset.IHyracksDataset;
@@ -67,7 +68,6 @@ import org.apache.hyracks.http.server.utils.HttpUtil.Encoding;
 import io.netty.handler.codec.http.HttpResponseStatus;
 
 public class ApiServlet extends AbstractServlet {
-
     private static final Logger LOGGER = Logger.getLogger(ApiServlet.class.getName());
     public static final String HTML_STATEMENT_SEPARATOR = "<!-- BEGIN -->";
 
@@ -88,18 +88,20 @@ public class ApiServlet extends AbstractServlet {
         this.componentProvider = componentProvider;
     }
 
-    @Override
-    protected void post(IServletRequest request, IServletResponse response) {
+    @Override protected void post(IServletRequest request, IServletResponse response) {
         // Query language
-        ILangCompilationProvider compilationProvider = "AQL".equals(request.getParameter("query-language"))
-                ? aqlCompilationProvider : sqlppCompilationProvider;
+        ILangCompilationProvider compilationProvider = "AQL".equals(request.getParameter("query-language")) ?
+                aqlCompilationProvider :
+                sqlppCompilationProvider;
         IParserFactory parserFactory = compilationProvider.getParserFactory();
 
         // Output format.
         PrintWriter out = response.writer();
         OutputFormat format;
+
         boolean csvAndHeader = false;
         String output = request.getParameter("output-format");
+
         if ("CSV-Header".equals(output)) {
             output = "CSV";
             csvAndHeader = true;
@@ -112,6 +114,8 @@ public class ApiServlet extends AbstractServlet {
             // Default output format
             format = OutputFormat.CLEAN_JSON;
         }
+        PlanFormat planFormat =
+                PlanFormat.get(request.getParameter("plan-format"), "plan format", PlanFormat.STRING, LOGGER);
 
         String query = request.getParameter("query");
         String wrapperArray = request.getParameter("wrapper-array");
@@ -144,12 +148,14 @@ public class ApiServlet extends AbstractServlet {
             }
             IParser parser = parserFactory.createParser(query);
             List<Statement> aqlStatements = parser.parse();
-            SessionConfig sessionConfig = new SessionConfig(format, true, isSet(executeQuery), true);
+            SessionConfig sessionConfig =
+                    new SessionConfig(format, true, isSet(executeQuery), true, planFormat);
             sessionConfig.set(SessionConfig.FORMAT_HTML, true);
             sessionConfig.set(SessionConfig.FORMAT_CSV_HEADER, csvAndHeader);
             sessionConfig.set(SessionConfig.FORMAT_WRAPPER_ARRAY, isSet(wrapperArray));
-            sessionConfig.setOOBData(isSet(printExprParam), isSet(printRewrittenExprParam),
-                    isSet(printLogicalPlanParam), isSet(printOptimizedLogicalPlanParam), isSet(printJob));
+            sessionConfig
+                    .setOOBData(isSet(printExprParam), isSet(printRewrittenExprParam), isSet(printLogicalPlanParam),
+                            isSet(printOptimizedLogicalPlanParam), isSet(printJob));
             SessionOutput sessionOutput = new SessionOutput(sessionConfig, out);
             MetadataManager.INSTANCE.init();
             IStatementExecutor translator = statementExectorFactory.create(appCtx, aqlStatements, sessionOutput,

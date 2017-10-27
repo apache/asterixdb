@@ -114,7 +114,8 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         CLIENT_ID("client_context_id"),
         PRETTY("pretty"),
         MODE("mode"),
-        TIMEOUT("timeout");
+        TIMEOUT("timeout"),
+        PLAN_FORMAT("plan-format");
 
         private final String str;
 
@@ -236,6 +237,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         SessionOutput.ResultAppender appendStatus = ResultUtil.createResultStatusAppender();
 
         SessionConfig.OutputFormat format = getFormat(param.format);
+        //TODO:get the parameters from UI.Currently set to clean_json.
         SessionConfig sessionConfig = new SessionConfig(format);
         sessionConfig.set(SessionConfig.FORMAT_WRAPPER_ARRAY, true);
         sessionConfig.set(SessionConfig.FORMAT_INDENT_JSON, param.pretty);

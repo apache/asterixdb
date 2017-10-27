@@ -46,6 +46,7 @@ import org.apache.asterix.translator.IStatementExecutor.ResultDelivery;
 import org.apache.asterix.translator.IStatementExecutorFactory;
 import org.apache.asterix.translator.SessionConfig;
 import org.apache.asterix.translator.SessionConfig.OutputFormat;
+import org.apache.asterix.translator.SessionConfig.PlanFormat;
 import org.apache.asterix.translator.SessionOutput;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.dataset.IHyracksDataset;
@@ -107,6 +108,8 @@ public abstract class RestApiServlet extends AbstractServlet {
                 format = OutputFormat.CSV;
             }
         }
+        PlanFormat planFormat =
+                PlanFormat.get(request.getParameter("plan-format"), "plan format", PlanFormat.STRING, LOGGER);
 
         // If it's JSON, check for the "lossless" flag
 
@@ -117,7 +120,7 @@ public abstract class RestApiServlet extends AbstractServlet {
 
         SessionOutput.ResultAppender appendHandle = (app, handle) -> app.append("{ \"").append("handle")
                 .append("\":" + " \"").append(handle).append("\" }");
-        SessionConfig sessionConfig = new SessionConfig(format);
+        SessionConfig sessionConfig = new SessionConfig(format, planFormat);
 
         // If it's JSON or ADM, check for the "wrapper-array" flag. Default is
         // "true" for JSON and "false" for ADM. (Not applicable for CSV.)

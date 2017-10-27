@@ -19,24 +19,24 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta name="description" content="ASTERIX WEB PAGE" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link
-	href='http://fonts.googleapis.com/css?family=Bitter|PT+Sans+Caption|Open+Sans'
-	rel='stylesheet' type='text/css'>
-<script src="/webui/static/js/jquery.min.js"></script>
+  <meta name="description" content="ASTERIX WEB PAGE" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link
+          href='http://fonts.googleapis.com/css?family=Bitter|PT+Sans+Caption|Open+Sans'
+          rel='stylesheet' type='text/css'>
+  <script src="/webui/static/js/jquery.min.js"></script>
 
-<link href="/webui/static/css/bootstrap.min.css" rel="stylesheet"
-	type="text/css" />
-<link href="/webui/static/css/bootstrap-responsive.min.css"
-	rel="stylesheet" type="text/css" />
+  <link href="/webui/static/css/bootstrap.min.css" rel="stylesheet"
+        type="text/css" />
+  <link href="/webui/static/css/bootstrap-responsive.min.css"
+        rel="stylesheet" type="text/css" />
 
-<script src="/webui/static/js/bootstrap.min.js"></script>
+  <script src="/webui/static/js/bootstrap.min.js"></script>
 
-<link href="/webui/static/css/style.css" rel="stylesheet"
-	type="text/css" />
-<script src="/webui/static/js/jquery.json-viewer.js"></script>
-<link href="/webui/static/css/jquery.json-viewer.css" type="text/css" rel="stylesheet" />
+  <link href="/webui/static/css/style.css" rel="stylesheet"
+        type="text/css" />
+  <script src="/webui/static/js/jquery.json-viewer.js"></script>
+  <link href="/webui/static/css/jquery.json-viewer.css" type="text/css" rel="stylesheet" />
 
   <script type="text/javascript">
 $(document).ready(function() {
@@ -169,13 +169,13 @@ $(document).ready(function() {
                 }
             }
 
-            /* Handling Pretty JSON */
+            /* Handling Pretty JSON-query result */
             var resultFormat = $('#output-format option:checked').text();
             if ( resultFormat == 'JSON (formatted)') {
               $('.result-content').each(
                   function(idx) {
                     var results = $(this).text().split('\n');
-                    $(this).css('padding-left', '20px');
+                     $(this).css('padding-left', '20px');
                     $(this).text('');
                     for (var iter1 = 0; iter1 < results.length - 1; iter1++) {
                       if (results[iter1].length < 1) {
@@ -183,10 +183,36 @@ $(document).ready(function() {
                       }
                       var resultJSON = $.parseJSON(results[iter1]);
                       $(this).append($('<div/>').attr("id", "json-record"+idx+"-"+iter1));
-                      $('#json-record'+idx+"-"+iter1).jsonViewer(resultJSON, {collapsed: true, level: 1});
+                      $('#json-record'+idx+"-"+iter1).jsonViewer(resultJSON, {collapsed: true, level: 10});
                     }
                   }
                 );
+            }
+
+
+            /* Handling Pretty JSON-logical plan */
+            var planFormat = $('#plan-format option:checked').text();
+            $('.query-plan').addClass("outer");
+            $('.query-optimized-plan').addClass("outer");
+            if ( planFormat == 'JSON (formatted)') {
+              $('.query-plan').each(
+                  function() {
+                   var planSt = $(this).text();
+                    $(this).text('');
+                    var planJSON = $.parseJSON(planSt);
+                    $(this).append($('<div/>').attr("id", "json-queryPlan"));
+                    $('#json-queryPlan').jsonViewer(planJSON, {collapsed: false, level: 10});
+                  }
+              );
+              $('.query-optimized-plan').each(
+                  function() {
+                   var opPlanSt = $(this).text();
+                    $(this).text('');
+                    var opPlanJSON = $.parseJSON(opPlanSt);
+                    $(this).append($('<div/>').attr("id", "json-queryOptimizedPlan").attr("class","inner"));
+                    $('#json-queryOptimizedPlan').jsonViewer(opPlanJSON, {collapsed: false, level: 10});
+                  }
+              );
             }
 
 
@@ -203,106 +229,129 @@ $(document).ready(function() {
 });
 </script>
 
-<meta charset=utf-8 />
-<title>AsterixDB Web Interface</title>
+  <meta charset=utf-8 />
+  <title>AsterixDB Web Interface</title>
 </head>
 
 <body>
-  <div class="navbar navbar-fixed-top">
-    <div class="navbar-inner">
-      <div class="container">
-        <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
-          <span class="icon-bar"></span>
-          <span class="icon-bar"></span>
-          <span class="icon-bar"></span>
-        </a>
+<div class="navbar navbar-fixed-top">
+  <div class="navbar-inner">
+    <div class="container">
+      <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </a>
 
-        <!-- Temporary logo placeholder -->
-        <a class="brand" href="#"><img src="/webui/static/img/finalasterixlogo.png"></a>
+      <!-- Temporary logo placeholder -->
+      <a class="brand" href="#"><img src="/webui/static/img/finalasterixlogo.png"></a>
 
-        <div class="nav-collapse collapse">
-          <ul class="nav">
-            <li><a href="https://asterixdb.apache.org/" target="_blank">
-                    Open source<img class="extarget" src="/webui/static/img/targetlink.png"/></a></li>
-            <li><a href="https://issues.apache.org/jira/browse/ASTERIXDB" target="_blank">
-                    File issues<img class="extarget" src="/webui/static/img/targetlink.png"/></a></li>
-            <li><a href="https://ci.apache.org/projects/asterixdb/index.html" target="_blank">
-                    Documentation<img class="extarget" src="/webui/static/img/targetlink.png"/></a></li>
-            <li><a href="https://asterixdb.apache.org/community.html" target="_blank">
-                    Contact<img class="extarget" src="/webui/static/img/targetlink.png"/></a></li>
-          </ul>
-        </div><!--/.nav-collapse -->
-      </div>
+      <div class="nav-collapse collapse">
+        <ul class="nav">
+          <li><a href="https://asterixdb.apache.org/" target="_blank">
+            Open source<img class="extarget" src="/webui/static/img/targetlink.png"/></a></li>
+          <li><a href="https://issues.apache.org/jira/browse/ASTERIXDB" target="_blank">
+            File issues<img class="extarget" src="/webui/static/img/targetlink.png"/></a></li>
+          <li><a href="https://ci.apache.org/projects/asterixdb/index.html" target="_blank">
+            Documentation<img class="extarget" src="/webui/static/img/targetlink.png"/></a></li>
+          <li><a href="https://asterixdb.apache.org/community.html" target="_blank">
+            Contact<img class="extarget" src="/webui/static/img/targetlink.png"/></a></li>
+        </ul>
+      </div><!--/.nav-collapse -->
     </div>
   </div>
+</div>
 
-  <div class="content">
+<div class="content">
     <div class="container">
-      <div class="row-fluid">
+        <div class="row-fluid">
 
-        <div class="span6">
+            <div class="span6">
 
-          <form id="queryform" class="form-horizontal" method="post">
-            <div style="margin-bottom: 1em;">
-              <label class="query">Query</label>
-              <textarea rows="10" id="qry" name="query" class="query" value="%s" placeholder="Type your query ..."></textarea>
+                <form id="queryform" class="form-horizontal" method="post">
+                    <div style="margin-bottom: 1em;">
+                        <label class="query">Query</label>
+                        <textarea rows="10" id="qry" name="query" class="query" value="%s"
+                                  placeholder="Type your query ..."></textarea>
+                    </div>
+
+                    <div class="btn-group">
+                        <button id="checkboxes-on" class="btn">
+                            <i id="opts" class="icon-ok" style="display:none;"></i>Select Options
+                        </button>
+                        <button id="clear-query-button" class="btn">Clear Query</button>
+                        <!-- <button id="checkboxes-off" class="btn">Clear All Options</button> -->
+                        <button type="submit" id="run-btn" class="btn btn-custom-darken">Run</button>
+                    </div>
+
+                    <div>
+                        <label id="query-language" class="optlabel"> Query Language:<br/>
+                            <select name="query-language" class="btn btn-width">
+                                <option selected value="SQLPP">SQL++</option>
+                                <option value="AQL">AQL</option>
+                            </select>
+                        </label>
+                        <label id="output-format" class="optlabel"> Output Format:<br/>
+                            <select name="output-format" class="btn btn-width">
+                                <option selected value="CLEAN_JSON">JSON</option>
+                                <option value="CLEAN_JSON">JSON (formatted)</option>
+                                <option value="ADM">ADM</option>
+                                <option value="CSV">CSV (no header)</option>
+                                <option value="CSV-Header">CSV (with header)</option>
+                                <option value="LOSSLESS_JSON">JSON (lossless)</option>
+                            </select>
+                        </label>
+                        <label id="plan-format" class="optlabel"> Plan Format:<br/>
+                            <select name="plan-format"  class="btn btn-width">
+                                <option selected value="JSON">JSON</option>
+                                <option value="CLEAN_JSON">JSON (formatted)</option>
+                                <option value="STRING">String</option>
+                            </select>
+                        </label>
+                        <label class="optlabel"><input type="checkbox" name="wrapper-array" value="true"/> Wrap results
+                            in outer array</label>
+                        <label class="checkbox optlabel"><input type="checkbox" name="print-expr-tree" value="true"/>
+                            Print parsed expressions</label>
+                        <label class="checkbox optlabel"><input type="checkbox" name="print-rewritten-expr-tree"
+                                                                value="true"/> Print rewritten expressions</label>
+                        <div><label class="checkbox optlabel"><input type="checkbox"
+                                                                                         name="print-logical-plan"
+                                                                                         value="true"/> Print logical
+                            plan</label></div>
+
+                     <div><label class="checkbox optlabel"><input type="checkbox"
+                                                                                         name="print-optimized-logical-plan"
+                                                                                         value="true"/> Print optimized
+                            logical plan</label></div>
+
+                        <label class="checkbox optlabel"><input type="checkbox" name="print-job" value="true"/> Print
+                            Hyracks job</label>
+                        <label class="optlabel"><input type="checkbox" name="execute-query" value="true" checked/>
+                            Execute query</label>
+                    </div>
+                </form>
             </div>
 
-            <div class="btn-group">
-              <button id="checkboxes-on" class="btn">
-                  <i id="opts" class="icon-ok" style="display:none;"></i>Select Options</button>
-              <button id="clear-query-button" class="btn">Clear Query</button>
-              <!-- <button id="checkboxes-off" class="btn">Clear All Options</button> -->
-              <button type="submit" id="run-btn" class="btn btn-custom-darken">Run</button>
+            <div class="span6">
+                <div class="output">
+                    <label id="output-heading" class="heading">Output</label>
+                    <div id="output-message" class="message">
+                    </div>
+                </div>
             </div>
-
-            <div>
-              <label id="query-language" class="optlabel"> Query Language:<br/>
-                <select name="query-language" class="btn">
-                  <option selected value="SQLPP">SQL++</option>
-                  <option value="AQL">AQL</option>
-                </select>
-              </label>
-              <label id="output-format" class="optlabel"> Output Format:<br/>
-                <select name="output-format" class="btn">
-                  <option selected value="CLEAN_JSON">JSON</option>
-                  <option value="CLEAN_JSON">JSON (formatted)</option>
-                  <option value="ADM">ADM</option>
-                  <option value="CSV">CSV (no header)</option>
-                  <option value="CSV-Header">CSV (with header)</option>
-                  <option value="LOSSLESS_JSON">JSON (lossless)</option>
-                </select>
-              </label>
-              <label class="optlabel"><input type="checkbox" name="wrapper-array" value="true" /> Wrap results in outer array</label>
-              <label class="checkbox optlabel"><input type="checkbox" name="print-expr-tree" value="true" /> Print parsed expressions</label>
-              <label class="checkbox optlabel"><input type="checkbox" name="print-rewritten-expr-tree" value="true" /> Print rewritten expressions</label>
-              <label class="checkbox optlabel"><input type="checkbox" name="print-logical-plan" value="true" /> Print logical plan</label>
-              <label class="checkbox optlabel"><input type="checkbox" name="print-optimized-logical-plan" value="true" /> Print optimized logical plan</label>
-              <label class="checkbox optlabel"><input type="checkbox" name="print-job" value="true" /> Print Hyracks job</label>
-              <label class="optlabel"><input type="checkbox" name="execute-query" value="true" checked/> Execute query</label>
-            </div>
-          </form>
-       </div>
-
-       <div class="span6">
-         <div class="output">
-           <label id="output-heading" class="heading">Output</label>
-           <div id="output-message" class="message">
-           </div>
-         </div>
-       </div>
-
-      </div>
+        </div>
     </div>
 </div>
-  <div class="footer">
-    <section class="line"><hr></section>
-    <section class="content">
-      <section class="left">
-      </section>
-      <section class="right">
-      </section>
+<div class="footer">
+    <section class="line">
+        <hr>
     </section>
-  </div>
+    <section class="content">
+        <section class="left">
+        </section>
+        <section class="right">
+        </section>
+    </section>
+</div>
 </body>
 </html>

@@ -18,76 +18,42 @@
  */
 package org.apache.hyracks.algebricks.core.algebra.prettyprint;
 
-import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
-import org.apache.hyracks.algebricks.core.algebra.base.IPhysicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractOperatorWithNestedPlans;
 
 public class PlanPrettyPrinter {
-    public static void printPlan(ILogicalPlan plan, LogicalOperatorPrettyPrintVisitor pvisitor, int indent)
-            throws AlgebricksException {
-        for (Mutable<ILogicalOperator> root : plan.getRoots()) {
-            printOperator((AbstractLogicalOperator) root.getValue(), pvisitor, indent);
+    @FunctionalInterface
+    public interface print<T1, T2, T3> {
+        void apply(T1 arg1, T2 arg2, T3 arg3) throws AlgebricksException;
+    }
+
+    public static void printOperator(AbstractLogicalOperator op, LogicalOperatorPrettyPrintVisitor pvisitor,
+            int indent) throws AlgebricksException {
+        print<AbstractLogicalOperator, LogicalOperatorPrettyPrintVisitor, Integer> printOperator =
+                LogicalOperatorPrettyPrintVisitor::printOperator;
+        printOperator.apply(op, pvisitor, indent);
+    }
+
+    public static <T extends AbstractLogicalOperatorPrettyPrintVisitor> void printPlan(ILogicalPlan plan,
+            T pvisitor, int indent) throws AlgebricksException {
+        if (pvisitor.getClass().equals(LogicalOperatorPrettyPrintVisitor.class)) {
+            print<ILogicalPlan, LogicalOperatorPrettyPrintVisitor, Integer> printPlan =
+                    LogicalOperatorPrettyPrintVisitor::printPlan;
+            printPlan.apply(plan,(LogicalOperatorPrettyPrintVisitor) pvisitor, indent);
         }
+        else if (pvisitor.getClass().equals(LogicalOperatorPrettyPrintVisitorJson.class)) {
+            print<ILogicalPlan, LogicalOperatorPrettyPrintVisitorJson, Integer> printPlan =
+                    LogicalOperatorPrettyPrintVisitorJson::printPlanJson;
+            printPlan.apply(plan, (LogicalOperatorPrettyPrintVisitorJson)pvisitor, indent);
+        }
+
     }
 
     public static void printPhysicalOps(ILogicalPlan plan, AlgebricksAppendable out, int indent)
             throws AlgebricksException {
-        for (Mutable<ILogicalOperator> root : plan.getRoots()) {
-            printPhysicalOperator((AbstractLogicalOperator) root.getValue(), indent, out);
-        }
-    }
-
-    public static void printOperator(AbstractLogicalOperator op, LogicalOperatorPrettyPrintVisitor pvisitor, int indent)
-            throws AlgebricksException {
-        final AlgebricksAppendable out = pvisitor.get();
-        op.accept(pvisitor, indent);
-        IPhysicalOperator pOp = op.getPhysicalOperator();
-
-        if (pOp != null) {
-            out.append("\n");
-            pad(out, indent);
-            appendln(out, "-- " + pOp.toString() + "  |" + op.getExecutionMode() + "|");
-        } else {
-            appendln(out, " -- |" + op.getExecutionMode() + "|");
-        }
-
-        for (Mutable<ILogicalOperator> i : op.getInputs()) {
-            printOperator((AbstractLogicalOperator) i.getValue(), pvisitor, indent + 2);
-        }
-    }
-
-    private static void printPhysicalOperator(AbstractLogicalOperator op, int indent, AlgebricksAppendable out)
-            throws AlgebricksException {
-        IPhysicalOperator pOp = op.getPhysicalOperator();
-        pad(out, indent);
-        appendln(out, "-- " + pOp.toString() + "  |" + op.getExecutionMode() + "|");
-        if (op.hasNestedPlans()) {
-            AbstractOperatorWithNestedPlans opNest = (AbstractOperatorWithNestedPlans) op;
-            for (ILogicalPlan p : opNest.getNestedPlans()) {
-                pad(out, indent + 8);
-                appendln(out, "{");
-                printPhysicalOps(p, out, indent + 10);
-                pad(out, indent + 8);
-                appendln(out, "}");
-            }
-        }
-        for (Mutable<ILogicalOperator> i : op.getInputs()) {
-            printPhysicalOperator((AbstractLogicalOperator) i.getValue(), indent + 2, out);
-        }
-    }
-
-    private static void appendln(AlgebricksAppendable buf, String s) throws AlgebricksException {
-        buf.append(s);
-        buf.append("\n");
-    }
-
-    private static void pad(AlgebricksAppendable buf, int indent) throws AlgebricksException {
-        for (int i = 0; i < indent; ++i) {
-            buf.append(' ');
-        }
+        print<ILogicalPlan, AlgebricksAppendable, Integer> printOperator =
+                AbstractLogicalOperatorPrettyPrintVisitor::printPhysicalOps;
+        printOperator.apply(plan, out, indent);
     }
 }

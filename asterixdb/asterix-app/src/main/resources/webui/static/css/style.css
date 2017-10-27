@@ -230,3 +230,33 @@ div.output .message pre.error {
 .span6 {
     padding: 24px;
 }
+
+.inline-half {
+    display: inline-block;
+    width: 50%;
+    float:left;
+}
+.inline-btn-width{
+    display: inline-block;
+    width: 58%;
+}
+
+.btn-width{
+    width: 30%;
+}
+.inner{
+    float : none;
+}
+
+pre.outer {
+    padding-left :20px;
+    overflow-x : scroll !important;
+    overflow-y : scroll !important;
+    word-wrap : normal !important;
+    word-break : normal !important;
+}
+
+.wrapper {
+    overflow: hidden;
+}
+

@@ -53,8 +53,8 @@ public class AsterixClientDriver {
         }
         boolean exec = new Boolean(acc.execute);
         IHyracksClientConnection hcc = exec ? new HyracksConnection("localhost", acc.hyracksPort) : null;
-        AsterixJavaClient q = compileQuery(hcc, acc.getArguments().get(0), new Boolean(acc.optimize),
-                new Boolean(acc.onlyPhysical), exec || new Boolean(acc.hyracksJob));
+        AsterixJavaClient q = compileQuery(hcc, acc.getArguments().get(0), new Boolean(acc.optimize), false,
+                exec || new Boolean(acc.hyracksJob));
         if (exec) {
             q.execute();
         }
@@ -64,8 +64,9 @@ public class AsterixClientDriver {
             boolean onlyPhysical, boolean createBinaryRuntime) throws Exception {
         ILangCompilationProvider compilationProvider = new AqlCompilationProvider();
         FileReader reader = new FileReader(filename);
-        AsterixJavaClient q = new AsterixJavaClient(null, hcc, reader, compilationProvider,
-                new DefaultStatementExecutorFactory(), new StorageComponentProvider());
+        AsterixJavaClient q =
+                new AsterixJavaClient(null, hcc, reader, compilationProvider, new DefaultStatementExecutorFactory(),
+                        new StorageComponentProvider());
         q.compile(optimize, true, true, true, onlyPhysical, createBinaryRuntime, createBinaryRuntime);
         return q;
     }

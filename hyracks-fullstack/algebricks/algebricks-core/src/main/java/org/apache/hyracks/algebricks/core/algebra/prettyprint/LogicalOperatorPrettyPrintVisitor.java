@@ -25,18 +25,21 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
+import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
+import org.apache.hyracks.algebricks.core.algebra.base.IPhysicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractOperatorWithNestedPlans;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractUnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.DelegateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DistinctOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DistributeResultOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.EmptyTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ExchangeOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.DelegateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IndexInsertDeleteUpsertOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
@@ -65,48 +68,50 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperat
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteResultOperator;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionVisitor;
-import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisitor;
 
-public class LogicalOperatorPrettyPrintVisitor implements ILogicalOperatorVisitor<Void, Integer> {
-
-    ILogicalExpressionVisitor<String, Integer> exprVisitor;
-    AlgebricksAppendable buffer;
+public class LogicalOperatorPrettyPrintVisitor extends AbstractLogicalOperatorPrettyPrintVisitor {
 
     public LogicalOperatorPrettyPrintVisitor() {
-        this(new AlgebricksAppendable());
-    }
-
-    public LogicalOperatorPrettyPrintVisitor(Appendable app) {
-        this(new AlgebricksAppendable(app), new LogicalExpressionPrettyPrintVisitor());
-    }
-
-    public LogicalOperatorPrettyPrintVisitor(AlgebricksAppendable buffer) {
-        this(buffer, new LogicalExpressionPrettyPrintVisitor());
+        super();
     }
 
     public LogicalOperatorPrettyPrintVisitor(AlgebricksAppendable buffer,
             ILogicalExpressionVisitor<String, Integer> exprVisitor) {
-        reset(buffer);
-        this.exprVisitor = exprVisitor;
+        super(buffer, exprVisitor);
     }
 
-    public AlgebricksAppendable reset(AlgebricksAppendable buffer) {
-        AlgebricksAppendable old = this.buffer;
-        this.buffer = buffer;
-        return old;
+    public LogicalOperatorPrettyPrintVisitor(AlgebricksAppendable buffer) {
+        super(buffer);
     }
 
-    public AlgebricksAppendable get() {
-        return buffer;
+    public LogicalOperatorPrettyPrintVisitor(Appendable app) {
+        super(app);
     }
 
-    @Override
-    public String toString() {
-        return buffer.toString();
+    public static void printPlan(ILogicalPlan plan, LogicalOperatorPrettyPrintVisitor pvisitor, int indent)
+            throws AlgebricksException {
+        for (Mutable<ILogicalOperator> root : plan.getRoots()) {
+            printOperator((AbstractLogicalOperator) root.getValue(), pvisitor, indent);
+        }
     }
 
-    CharSequence str(Object o) {
-        return String.valueOf(o);
+    public static void printOperator(AbstractLogicalOperator op, LogicalOperatorPrettyPrintVisitor pvisitor, int indent)
+            throws AlgebricksException {
+        final AlgebricksAppendable out = pvisitor.get();
+        op.accept(pvisitor, indent);
+        IPhysicalOperator pOp = op.getPhysicalOperator();
+
+        if (pOp != null) {
+            out.append("\n");
+            pad(out, indent);
+            appendln(out, "-- " + pOp.toString() + "  |" + op.getExecutionMode() + "|");
+        } else {
+            appendln(out, " -- |" + op.getExecutionMode() + "|");
+        }
+
+        for (Mutable<ILogicalOperator> i : op.getInputs()) {
+            printOperator((AbstractLogicalOperator) i.getValue(), pvisitor, indent + 2);
+        }
     }
 
     @Override
@@ -480,7 +485,7 @@ public class LogicalOperatorPrettyPrintVisitor implements ILogicalOperatorVisito
                 } else {
                     addIndent(indent).append("       {\n");
                 }
-                PlanPrettyPrinter.printPlan(p, this, indent + 10);
+                printPlan(p, this, indent + 10);
                 addIndent(indent).append("       }");
             }
         }
