@@ -57,10 +57,13 @@ public class GroupFrameAccessor implements IFrameTupleAccessor {
     private final RecordDescriptor recordDescriptor;
     private final int minFrameSize;
     private final FrameTupleAccessor frameTupleAccessor;
-    private int lastTupleIndex;
     private int lastFrameId;
+    // the start tuple index of the last accessed frame (inclusive)
+    private int lastFrameStart;
+    // the end tuple index of the last accessed frame (exclusive)
+    private int lastFrameEnd;
     private ByteBuffer buffer;
-    private List<InnerFrameInfo> innerFrameInfos;
+    private final List<InnerFrameInfo> innerFrameInfos;
 
     public GroupFrameAccessor(int minFrameSize, RecordDescriptor recordDescriptor) {
         this.minFrameSize = minFrameSize;
@@ -127,8 +130,9 @@ public class GroupFrameAccessor implements IFrameTupleAccessor {
     @Override
     public void reset(ByteBuffer buffer) {
         this.buffer = buffer;
-        this.lastTupleIndex = -1;
         this.lastFrameId = -1;
+        this.lastFrameStart = -1;
+        this.lastFrameEnd = -1;
         parseGroupedBuffer(0, buffer.limit());
     }
 
@@ -153,12 +157,13 @@ public class GroupFrameAccessor implements IFrameTupleAccessor {
 
     private int resetSubTupleAccessor(int tupleIndex) {
         assert tupleIndex < getTupleCount();
-        if (innerFrameInfos.size() == 1) {
-            return tupleIndex;
+        if (tupleIndex >= lastFrameStart && tupleIndex < lastFrameEnd) {
+            // a special optimization path
+            // since GroupFrameAccessor is used by merge, it is expected that tuples are accessed sequentially
+            // thus, if tuple still fit into the last frame, we do not need to perform binary search
+            return tupleIndex - lastFrameStart;
         }
-        if (tupleIndex == lastTupleIndex) {
-            return lastFrameId > 0 ? lastTupleIndex - innerFrameInfos.get(lastFrameId - 1).tupleCount : lastTupleIndex;
-        }
+        // we perform binary search to get the frame Id
         int subFrameId = Collections.binarySearch(innerFrameInfos, tupleIndex);
         if (subFrameId >= 0) {
             subFrameId++;
@@ -166,9 +171,11 @@ public class GroupFrameAccessor implements IFrameTupleAccessor {
             subFrameId = -subFrameId - 1;
         }
         frameTupleAccessor.reset(buffer, innerFrameInfos.get(subFrameId).start, innerFrameInfos.get(subFrameId).length);
-        lastTupleIndex = tupleIndex;
         lastFrameId = subFrameId;
-        return lastFrameId > 0 ? lastTupleIndex - innerFrameInfos.get(lastFrameId - 1).tupleCount : lastTupleIndex;
+        lastFrameStart = lastFrameId > 0 ? innerFrameInfos.get(lastFrameId - 1).tupleCount : 0;
+        lastFrameEnd = innerFrameInfos.get(lastFrameId).tupleCount;
+
+        return tupleIndex - lastFrameStart;
     }
 
 }
