@@ -33,7 +33,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -51,6 +51,7 @@ import org.apache.asterix.common.transactions.LogManagerProperties;
 import org.apache.asterix.common.transactions.LogType;
 import org.apache.asterix.common.transactions.MutableLong;
 import org.apache.asterix.common.transactions.TxnLogFile;
+import org.apache.asterix.common.utils.InterruptUtil;
 import org.apache.hyracks.api.lifecycle.ILifeCycleComponent;
 
 public class LogManager implements ILogManager, ILifeCycleComponent {
@@ -162,7 +163,7 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
             }
         }
 
-        /**
+        /*
          * To eliminate the case where the modulo of the next appendLSN = 0 (the next
          * appendLSN = the first LSN of the next log file), we do not allow a log to be
          * written at the last offset of the current file.
@@ -616,13 +617,11 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
      * The deadlock happens when PrimaryIndexOpeartionTracker.completeOperation results in generating a FLUSH log and there are no empty log buffers available to log it.
      */
     private class FlushLogsLogger extends Thread {
-        private ILogRecord logRecord;
-
         @Override
         public void run() {
             while (true) {
                 try {
-                    logRecord = flushLogsQ.take();
+                    ILogRecord logRecord = flushLogsQ.take();
                     appendToLogTail(logRecord);
                 } catch (ACIDException e) {
                     e.printStackTrace();
@@ -641,77 +640,57 @@ class LogFlusher implements Callable<Boolean> {
     private final LinkedBlockingQueue<ILogBuffer> emptyQ;
     private final LinkedBlockingQueue<ILogBuffer> flushQ;
     private final LinkedBlockingQueue<ILogBuffer> stashQ;
-    private ILogBuffer flushPage;
-    private final AtomicBoolean isStarted;
-    private final AtomicBoolean terminateFlag;
+    private volatile ILogBuffer flushPage;
+    private volatile boolean stopping;
+    private final Semaphore started;
 
-    public LogFlusher(LogManager logMgr, LinkedBlockingQueue<ILogBuffer> emptyQ, LinkedBlockingQueue<ILogBuffer> flushQ,
+    LogFlusher(LogManager logMgr, LinkedBlockingQueue<ILogBuffer> emptyQ, LinkedBlockingQueue<ILogBuffer> flushQ,
             LinkedBlockingQueue<ILogBuffer> stashQ) {
         this.logMgr = logMgr;
         this.emptyQ = emptyQ;
         this.flushQ = flushQ;
         this.stashQ = stashQ;
-        flushPage = null;
-        isStarted = new AtomicBoolean(false);
-        terminateFlag = new AtomicBoolean(false);
-
+        this.started = new Semaphore(0);
     }
 
     public void terminate() {
-        //make sure the LogFlusher thread started before terminating it.
-        synchronized (isStarted) {
-            while (!isStarted.get()) {
-                try {
-                    isStarted.wait();
-                } catch (InterruptedException e) {
-                    //ignore
-                }
-            }
-        }
+        // make sure the LogFlusher thread started before terminating it.
+        InterruptUtil.doUninterruptibly(started::acquire);
 
-        terminateFlag.set(true);
-        if (flushPage != null) {
-            synchronized (flushPage) {
-                flushPage.stop();
-                flushPage.notify();
-            }
+        stopping = true;
+
+        // we must tell any active flush, if any, to stop
+        final ILogBuffer currentFlushPage = this.flushPage;
+        if (currentFlushPage != null) {
+            currentFlushPage.stop();
         }
-        //[Notice]
-        //The return value doesn't need to be checked
-        //since terminateFlag will trigger termination if the flushQ is full.
-        flushQ.offer(POISON_PILL);
+        // finally we put a POISON_PILL onto the flushQ to indicate to the flusher it is time to exit
+        InterruptUtil.doUninterruptibly(() -> flushQ.put(POISON_PILL));
     }
 
     @Override
-    public Boolean call() {
-        synchronized (isStarted) {
-            isStarted.set(true);
-            isStarted.notify();
-        }
+    public Boolean call() throws InterruptedException {
+        started.release();
+        boolean interrupted = false;
         try {
             while (true) {
                 flushPage = null;
-                try {
-                    flushPage = flushQ.take();
-                    if (flushPage == POISON_PILL || terminateFlag.get()) {
-                        return true;
-                    }
-                } catch (InterruptedException e) {
-                    if (flushPage == null) {
-                        continue;
-                    }
+                interrupted = InterruptUtil.doUninterruptiblyGet(() -> flushPage = flushQ.take()) || interrupted;
+                if (flushPage == POISON_PILL) {
+                    return true;
                 }
-                flushPage.flush();
-                emptyQ.offer(flushPage.getLogPageSize() == logMgr.getLogPageSize() ? flushPage : stashQ.remove());
+                flushPage.flush(stopping);
+
+                // TODO(mblow): recycle large pages
+                emptyQ.add(flushPage.getLogPageSize() == logMgr.getLogPageSize() ? flushPage : stashQ.remove());
             }
         } catch (Exception e) {
-            if (LOGGER.isLoggable(Level.INFO)) {
-                LOGGER.info("-------------------------------------------------------------------------");
-                LOGGER.info("LogFlusher is terminating abnormally. System is in unusalbe state.");
-                LOGGER.info("-------------------------------------------------------------------------");
-            }
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "LogFlusher is terminating abnormally. System is in unusable state.", e);
             throw e;
+        } finally {
+            if (interrupted) {
+                Thread.currentThread().interrupt();
+            }
         }
     }
 }

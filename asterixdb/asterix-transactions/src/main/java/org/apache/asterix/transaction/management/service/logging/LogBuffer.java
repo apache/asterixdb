@@ -105,15 +105,15 @@ public class LogBuffer implements ILogBuffer {
                 if (logRecord.getLogType() == LogType.JOB_COMMIT || logRecord.getLogType() == LogType.ABORT
                         || logRecord.getLogType() == LogType.WAIT) {
                     logRecord.isFlushed(false);
-                    syncCommitQ.offer(logRecord);
+                    syncCommitQ.add(logRecord);
                 }
                 if (logRecord.getLogType() == LogType.FLUSH) {
                     logRecord.isFlushed(false);
-                    flushQ.offer(logRecord);
+                    flushQ.add(logRecord);
                 }
             } else if (logRecord.getLogSource() == LogSource.REMOTE
                     && (logRecord.getLogType() == LogType.JOB_COMMIT || logRecord.getLogType() == LogType.ABORT)) {
-                remoteJobsQ.offer(logRecord);
+                remoteJobsQ.add(logRecord);
             }
             this.notify();
         }
@@ -168,29 +168,30 @@ public class LogBuffer implements ILogBuffer {
     ////////////////////////////////////
 
     @Override
-    public void flush() {
+    public void flush(boolean stopping) {
+        boolean interrupted = false;
         try {
             int endOffset;
             while (!full.get()) {
-                synchronized (this) {
-                    if (appendOffset - flushOffset == 0 && !full.get()) {
-                        try {
+                try {
+                    synchronized (this) {
+                        if (appendOffset - flushOffset == 0 && !full.get()) {
                             if (IS_DEBUG_MODE) {
                                 LOGGER.info("flush()| appendOffset: " + appendOffset + ", flushOffset: " + flushOffset
                                         + ", full: " + full.get());
                             }
-                            if (stop) {
+                            if (stopping || stop) {
                                 fileChannel.close();
                                 return;
                             }
-                            this.wait();
-                        } catch (InterruptedException e) {
-                            continue;
+                            wait();
                         }
+                        endOffset = appendOffset;
                     }
-                    endOffset = appendOffset;
-                }
                 internalFlush(flushOffset, endOffset);
+                } catch (InterruptedException e) {
+                    interrupted = true;
+                }
             }
             internalFlush(flushOffset, appendOffset);
             if (isLastPage) {
@@ -198,6 +199,10 @@ public class LogBuffer implements ILogBuffer {
             }
         } catch (IOException e) {
             throw new IllegalStateException(e);
+        } finally {
+            if (interrupted) {
+                Thread.currentThread().interrupt();
+            }
         }
     }
 
@@ -230,7 +235,7 @@ public class LogBuffer implements ILogBuffer {
         if (endOffset > beginOffset) {
             logBufferTailReader.initializeScan(beginOffset, endOffset);
 
-            ITransactionContext txnCtx = null;
+            ITransactionContext txnCtx;
 
             LogRecord logRecord = logBufferTailReader.next();
             while (logRecord != null) {
@@ -327,8 +332,9 @@ public class LogBuffer implements ILogBuffer {
     }
 
     @Override
-    public void stop() {
-        this.stop = true;
+    public synchronized void stop() {
+        stop = true;
+        notifyAll();
     }
 
     @Override
