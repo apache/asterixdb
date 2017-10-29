@@ -25,6 +25,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.config.StorageProperties;
@@ -49,6 +51,7 @@ import org.apache.hyracks.storage.common.ILocalResourceRepository;
 import org.apache.hyracks.storage.common.LocalResource;
 
 public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeCycleComponent {
+    private static final Logger LOGGER = Logger.getLogger(DatasetLifecycleManager.class.getName());
     private final Map<Integer, DatasetResource> datasets = new ConcurrentHashMap<>();
     private final StorageProperties storageProperties;
     private final ILocalResourceRepository resourceRepository;
@@ -133,10 +136,9 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
 
         PrimaryIndexOperationTracker opTracker = dsr.getOpTracker();
         if (iInfo.getReferenceCount() != 0 || (opTracker != null && opTracker.getNumActiveOperations() != 0)) {
-            throw new HyracksDataException(
-                    "Cannot remove index while it is open. (Dataset reference count = " + iInfo.getReferenceCount()
-                            + ", Operation tracker number of active operations = " + opTracker.getNumActiveOperations()
-                            + ")");
+            throw new HyracksDataException("Cannot remove index while it is open. (Dataset reference count = "
+                    + iInfo.getReferenceCount() + ", Operation tracker number of active operations = "
+                    + opTracker.getNumActiveOperations() + ")");
         }
 
         // TODO: use fine-grained counters, one for each index instead of a single counter per dataset.
@@ -149,8 +151,8 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
             }
         }
         dsInfo.getIndexes().remove(resourceID);
-        if (dsInfo.getReferenceCount() == 0 && dsInfo.isOpen() && dsInfo.getIndexes().isEmpty() && !dsInfo
-                .isExternal()) {
+        if (dsInfo.getReferenceCount() == 0 && dsInfo.isOpen() && dsInfo.getIndexes().isEmpty()
+                && !dsInfo.isExternal()) {
             removeDatasetFromCache(dsInfo.getDatasetID());
         }
     }
@@ -353,6 +355,9 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
                             || opTracker.isFlushOnExit())) {
                         long firstLSN = ioCallback.getFirstLSN();
                         if (firstLSN < targetLSN) {
+                            if (LOGGER.isLoggable(Level.INFO)) {
+                                LOGGER.info("Checkpoint flush dataset " + dsr.getDatasetID());
+                            }
                             opTracker.setFlushOnExit(true);
                             if (opTracker.getNumActiveOperations() == 0) {
                                 // No Modify operations currently, we need to trigger the flush and we can do so safely
