@@ -28,7 +28,6 @@ import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
-import org.apache.hyracks.storage.am.lsm.common.impls.NoOpIOOperationCallbackFactory;
 
 public class LSMIndexCompactOperatorNodePushable extends AbstractOperatorNodePushable {
     private final IIndexDataflowHelper indexHelper;
@@ -59,12 +58,7 @@ public class LSMIndexCompactOperatorNodePushable extends AbstractOperatorNodePus
         ILSMIndex index = (ILSMIndex) indexHelper.getIndexInstance();
         ILSMIndexAccessor accessor =
                 index.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
-        try {
-            accessor.scheduleFullMerge(NoOpIOOperationCallbackFactory.INSTANCE.createIoOpCallback());
-        } catch (Exception e) {
-            indexHelper.close();
-            throw new HyracksDataException(e);
-        }
+        accessor.scheduleFullMerge(index.getIOOperationCallback());
     }
 
     @Override
