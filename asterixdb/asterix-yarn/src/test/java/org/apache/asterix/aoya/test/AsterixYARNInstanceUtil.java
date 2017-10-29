@@ -70,7 +70,7 @@ public class AsterixYARNInstanceUtil {
                 return name.startsWith("asterix-server") && name.endsWith("binary-assembly.zip");
             }
         });
-        if (zipsInFolder.length != 1) {
+        if (zipsInFolder == null || zipsInFolder.length != 1) {
             throw new IllegalStateException("Could not find server binary to run YARN integration test with");
         }
         aoyaServerPath = asterixServerInstallerDir.getAbsolutePath() + File.separator + zipsInFolder[0];

@@ -107,12 +107,13 @@
       </plugin>
       <plugin>
         <artifactId>maven-assembly-plugin</artifactId>
-        <version>2.6</version>
         <executions>
           <execution>
             <configuration>
               <attach>true</attach>
-              <descriptor>src/main/assembly/assembly.xml</descriptor>
+              <descriptors>
+                <descriptor>src/main/assembly/assembly.xml</descriptor>
+              </descriptors>
             </configuration>
             <phase>package</phase>
             <goals>
@@ -124,7 +125,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>
-        <version>2.10</version>
         <configuration>
           <usedDependencies combine.children="append">
             <usedDependency>org.codehaus.mojo.appassembler:appassembler-booter</usedDependency>

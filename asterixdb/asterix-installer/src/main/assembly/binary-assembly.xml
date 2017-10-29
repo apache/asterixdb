@@ -123,14 +123,14 @@
     <dependencySet>
       <outputDirectory>asterix</outputDirectory>
       <includes>
-        <include>asterix-server*</include>
+        <include>org.apache.asterix:asterix-server*</include>
       </includes>
       <useTransitiveDependencies>false</useTransitiveDependencies>
     </dependencySet>
     <dependencySet>
       <outputDirectory>.installer/events</outputDirectory>
       <includes>
-        <include>asterix-events*</include>
+        <include>org.apache.asterix:asterix-events*</include>
       </includes>
       <unpack>false</unpack>
       <useTransitiveDependencies>false</useTransitiveDependencies>
@@ -138,7 +138,7 @@
     <dependencySet>
       <outputDirectory>extlibs</outputDirectory>
       <includes>
-        <include>asterix-external-data:*:zip</include>
+        <include>org.apache.asterix:asterix-external-data:*:zip</include>
       </includes>
       <unpack>false</unpack>
       <useTransitiveDependencies>false</useTransitiveDependencies>

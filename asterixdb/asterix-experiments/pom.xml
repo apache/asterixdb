@@ -59,7 +59,6 @@
       </plugin>
       <plugin>
         <artifactId>maven-assembly-plugin</artifactId>
-        <version>2.2-beta-5</version>
         <executions>
           <execution>
             <configuration>
@@ -69,7 +68,7 @@
             </configuration>
             <phase>package</phase>
             <goals>
-              <goal>attached</goal>
+              <goal>single</goal>
             </goals>
           </execution>
         </executions>
@@ -77,7 +76,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>
-        <version>2.10</version>
         <configuration>
           <failOnWarning>false</failOnWarning>
         </configuration>

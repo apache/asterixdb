@@ -45,7 +45,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>
-        <version>2.10</version>
         <configuration>
           <usedDependencies combine.children="append">
             <usedDependency>org.apache.hyracks:hyracks-control-nc</usedDependency>
@@ -122,7 +121,6 @@
       </plugin>
       <plugin>
         <artifactId>maven-antrun-plugin</artifactId>
-        <version>1.6</version>
         <executions>
           <execution>
             <id>process-test-classes</id>

@@ -107,7 +107,7 @@
     <dependencySet>
       <outputDirectory>asterix</outputDirectory>
       <includes>
-        <include>asterix-server*</include>
+        <include>org.apache.asterix:asterix-server*</include>
       </includes>
       <unpack>false</unpack>
       <useTransitiveDependencies>false</useTransitiveDependencies>
