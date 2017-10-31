@@ -49,4 +49,8 @@ public class MetadataIndexImmutableProperties {
     public String getDatasetName() {
         return indexName;
     }
+
+    public static boolean isMetadataDataset(int datasetId) {
+        return datasetId < FIRST_AVAILABLE_USER_DATASET_ID;
+    }
 }

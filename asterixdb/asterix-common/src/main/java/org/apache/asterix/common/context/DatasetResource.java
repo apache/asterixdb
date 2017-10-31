@@ -21,6 +21,7 @@ package org.apache.asterix.common.context;
 import java.util.Map;
 
 import org.apache.asterix.common.dataflow.DatasetLocalResource;
+import org.apache.asterix.common.metadata.MetadataIndexImmutableProperties;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.common.IIndex;
@@ -140,5 +141,9 @@ public class DatasetResource implements Comparable<DatasetResource> {
 
     public int getDatasetID() {
         return datasetInfo.getDatasetID();
+    }
+
+    public boolean isMetadataDataset() {
+        return MetadataIndexImmutableProperties.isMetadataDataset(getDatasetID());
     }
 }

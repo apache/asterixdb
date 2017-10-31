@@ -33,51 +33,39 @@ import org.apache.hyracks.storage.common.buffercache.ResourceHeapBufferAllocator
 public class DatasetVirtualBufferCaches {
     private final int datasetID;
     private final StorageProperties storageProperties;
-    private final int firstAvilableUserDatasetID;
     private final int numPartitions;
+    private final int numPages;
     private final Map<Integer, List<IVirtualBufferCache>> ioDeviceVirtualBufferCaches = new HashMap<>();
 
-    public DatasetVirtualBufferCaches(int datasetID, StorageProperties storageProperties,
-            int firstAvilableUserDatasetID, int numPartitions) {
+    public DatasetVirtualBufferCaches(int datasetID, StorageProperties storageProperties, int numPages,
+            int numPartitions) {
         this.datasetID = datasetID;
         this.storageProperties = storageProperties;
-        this.firstAvilableUserDatasetID = firstAvilableUserDatasetID;
         this.numPartitions = numPartitions;
-    }
-
-    public List<IVirtualBufferCache> initializeVirtualBufferCaches(IResourceMemoryManager memoryManager,
-            int ioDeviceNum) {
-        int numPages = datasetID < firstAvilableUserDatasetID
-                ? storageProperties.getMetadataMemoryComponentNumPages()
-                : storageProperties.getMemoryComponentNumPages();
-        List<IVirtualBufferCache> vbcs = new ArrayList<>();
-        for (int i = 0; i < storageProperties.getMemoryComponentsNum(); i++) {
-            MultitenantVirtualBufferCache vbc = new MultitenantVirtualBufferCache(
-                    new VirtualBufferCache(
-                            new ResourceHeapBufferAllocator(memoryManager,
-                                    Integer.toString(datasetID)),
-                            storageProperties.getMemoryComponentPageSize(),
-                            numPages / storageProperties.getMemoryComponentsNum() / numPartitions));
-            vbcs.add(vbc);
-        }
-        ioDeviceVirtualBufferCaches.put(ioDeviceNum, vbcs);
-        return vbcs;
+        this.numPages = numPages;
     }
 
     public List<IVirtualBufferCache> getVirtualBufferCaches(IResourceMemoryManager memoryManager, int ioDeviceNum) {
         synchronized (ioDeviceVirtualBufferCaches) {
             List<IVirtualBufferCache> vbcs = ioDeviceVirtualBufferCaches.get(ioDeviceNum);
             if (vbcs == null) {
-                vbcs = initializeVirtualBufferCaches(memoryManager, ioDeviceNum);
+                vbcs = initializeVirtualBufferCaches(memoryManager, ioDeviceNum, numPages);
             }
             return vbcs;
         }
     }
 
-    public long getTotalSize() {
-        int numPages = datasetID < firstAvilableUserDatasetID
-                ? storageProperties.getMetadataMemoryComponentNumPages()
-                : storageProperties.getMemoryComponentNumPages();
-        return storageProperties.getMemoryComponentPageSize() * ((long) numPages);
+    private List<IVirtualBufferCache> initializeVirtualBufferCaches(IResourceMemoryManager memoryManager,
+            int ioDeviceNum, int numPages) {
+        List<IVirtualBufferCache> vbcs = new ArrayList<>();
+        for (int i = 0; i < storageProperties.getMemoryComponentsNum(); i++) {
+            MultitenantVirtualBufferCache vbc = new MultitenantVirtualBufferCache(
+                    new VirtualBufferCache(new ResourceHeapBufferAllocator(memoryManager, Integer.toString(datasetID)),
+                            storageProperties.getMemoryComponentPageSize(),
+                            numPages / storageProperties.getMemoryComponentsNum() / numPartitions));
+            vbcs.add(vbc);
+        }
+        ioDeviceVirtualBufferCaches.put(ioDeviceNum, vbcs);
+        return vbcs;
     }
 }

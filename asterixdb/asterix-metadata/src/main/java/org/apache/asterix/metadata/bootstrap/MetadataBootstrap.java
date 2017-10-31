@@ -302,6 +302,11 @@ public class MetadataBootstrap {
      */
     public static void enlistMetadataDataset(INCServiceContext ncServiceCtx, IMetadataIndex index)
             throws HyracksDataException {
+        final int datasetId = index.getDatasetId().getId();
+        // reserve memory for metadata dataset to ensure it can be opened when needed
+        if (!appContext.getDatasetMemoryManager().reserve(index.getDatasetId().getId())) {
+            throw new IllegalStateException("Failed to reserve memory for metadata dataset (" + datasetId + ")");
+        }
         ClusterPartition metadataPartition = appContext.getMetadataProperties().getMetadataPartition();
         int metadataDeviceId = metadataPartition.getIODeviceNum();
         String metadataPartitionPath = StoragePathUtil.prepareStoragePartitionPath(
@@ -317,20 +322,20 @@ public class MetadataBootstrap {
         // We are unable to do this since IStorageManager needs a dataset to determine the appropriate
         // objects
         ILSMOperationTrackerFactory opTrackerFactory =
-                index.isPrimaryIndex() ? new PrimaryIndexOperationTrackerFactory(index.getDatasetId().getId())
-                        : new SecondaryIndexOperationTrackerFactory(index.getDatasetId().getId());
+                index.isPrimaryIndex() ? new PrimaryIndexOperationTrackerFactory(datasetId)
+                        : new SecondaryIndexOperationTrackerFactory(datasetId);
         ILSMIOOperationCallbackFactory ioOpCallbackFactory = LSMBTreeIOOperationCallbackFactory.INSTANCE;
         IStorageComponentProvider storageComponentProvider = appContext.getStorageComponentProvider();
         if (isNewUniverse()) {
             LSMBTreeLocalResourceFactory lsmBtreeFactory = new LSMBTreeLocalResourceFactory(
                     storageComponentProvider.getStorageManager(), typeTraits, cmpFactories, null, null, null,
                     opTrackerFactory, ioOpCallbackFactory, storageComponentProvider.getMetadataPageManagerFactory(),
-                    new AsterixVirtualBufferCacheProvider(index.getDatasetId().getId()),
+                    new AsterixVirtualBufferCacheProvider(datasetId),
                     storageComponentProvider.getIoOperationSchedulerProvider(),
                     appContext.getMetadataMergePolicyFactory(), GlobalConfig.DEFAULT_COMPACTION_POLICY_PROPERTIES, true,
                     bloomFilterKeyFields, appContext.getBloomFilterFalsePositiveRate(), true, null);
             DatasetLocalResourceFactory dsLocalResourceFactory =
-                    new DatasetLocalResourceFactory(index.getDatasetId().getId(), lsmBtreeFactory);
+                    new DatasetLocalResourceFactory(datasetId, lsmBtreeFactory);
             // TODO(amoudi) Creating the index should be done through the same code path as other indexes
             // This is to be done by having a metadata dataset associated with each index
             IIndexBuilder indexBuilder = new IndexBuilder(ncServiceCtx, storageComponentProvider.getStorageManager(),

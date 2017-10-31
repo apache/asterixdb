@@ -62,6 +62,8 @@ public interface INcApplicationContext extends IApplicationContext {
 
     IDatasetLifecycleManager getDatasetLifecycleManager();
 
+    IDatasetMemoryManager getDatasetMemoryManager();
+
     IResourceIdFactory getResourceIdFactory();
 
     ILSMOperationTracker getLSMBTreeOperationTracker(int datasetID);

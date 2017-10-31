@@ -63,6 +63,7 @@ public class AsterixHyracksIntegrationUtil {
     public ClusterControllerService cc;
     public NodeControllerService[] ncs = new NodeControllerService[0];
     public IHyracksClientConnection hcc;
+    protected boolean gracefulShutdown = true;
 
     private static final String DEFAULT_STORAGE_PATH = joinPath("target", "io", "dir");
     private static String storagePath = DEFAULT_STORAGE_PATH;
@@ -158,6 +159,9 @@ public class AsterixHyracksIntegrationUtil {
     }
 
     protected INCApplication createNCApplication() {
+        if (!gracefulShutdown) {
+            return new UngracefulShutdownNCApplication();
+        }
         return new NCApplication();
     }
 
@@ -227,6 +231,10 @@ public class AsterixHyracksIntegrationUtil {
         storagePath = path;
     }
 
+    public void setGracefulShutdown(boolean gracefulShutdown) {
+        this.gracefulShutdown = gracefulShutdown;
+    }
+
     public static void restoreDefaultStoragePath() {
         storagePath = DEFAULT_STORAGE_PATH;
     }
@@ -286,6 +294,13 @@ public class AsterixHyracksIntegrationUtil {
         init(cleanupOnStart);
         while (true) {
             Thread.sleep(10000);
+        }
+    }
+
+    private class UngracefulShutdownNCApplication extends NCApplication {
+        @Override
+        public void stop() throws Exception {
+            // ungraceful shutdown
         }
     }
 }
