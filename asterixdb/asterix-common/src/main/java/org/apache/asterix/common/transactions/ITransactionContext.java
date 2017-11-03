@@ -56,4 +56,10 @@ public interface ITransactionContext {
     public void incrementNumActiveOperations();
 
     public void decrementNumActiveOperations();
+
+    /**
+     * Called when no further operations will be performed by the transaction
+     * so that any resources held by the transaction may be released
+     */
+    void complete();
 }

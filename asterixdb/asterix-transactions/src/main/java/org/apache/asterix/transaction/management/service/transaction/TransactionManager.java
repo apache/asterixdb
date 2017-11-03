@@ -72,7 +72,7 @@ public class TransactionManager implements ITransactionManager, ILifeCycleCompon
             ae.printStackTrace();
             throw new ACIDException(msg, ae);
         } finally {
-            ((TransactionContext) txnCtx).cleanupForAbort();
+            txnCtx.complete();
             txnSubsystem.getLockManager().releaseLocks(txnCtx);
             transactionContextRepository.remove(txnCtx.getJobId());
         }
@@ -119,6 +119,7 @@ public class TransactionManager implements ITransactionManager, ILifeCycleCompon
             }
             throw ae;
         } finally {
+            txnCtx.complete();
             txnSubsystem.getLockManager().releaseLocks(txnCtx);
             transactionContextRepository.remove(txnCtx.getJobId());
             txnCtx.setTxnState(ITransactionManager.COMMITTED);
