@@ -36,9 +36,11 @@ import org.apache.asterix.formats.nontagged.BinaryIntegerInspector;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.formats.nontagged.TypeTraitProvider;
 import org.apache.asterix.jobgen.QueryLogicalExpressionJobGen;
+import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.BuiltinFunctions;
+import org.apache.asterix.om.functions.IFunctionExtensionManager;
 import org.apache.asterix.om.typecomputer.base.TypeCastUtils;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
@@ -125,12 +127,13 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
     private static final IOperatorSchema[] _emptySchemas = new IOperatorSchema[] {};
 
     public ConstantFoldingRule(ICcApplicationContext appCtx) {
-        jobGenCtx = new JobGenContext(null, null, appCtx, SerializerDeserializerProvider.INSTANCE,
+        MetadataProvider metadataProvider = new MetadataProvider(appCtx, null);
+        jobGenCtx = new JobGenContext(null, metadataProvider, appCtx, SerializerDeserializerProvider.INSTANCE,
                 BinaryHashFunctionFactoryProvider.INSTANCE, BinaryHashFunctionFamilyProvider.INSTANCE,
                 BinaryComparatorFactoryProvider.INSTANCE, TypeTraitProvider.INSTANCE, BinaryBooleanInspector.FACTORY,
                 BinaryIntegerInspector.FACTORY, ADMPrinterFactoryProvider.INSTANCE, MissingWriterFactory.INSTANCE, null,
-                new ExpressionRuntimeProvider(QueryLogicalExpressionJobGen.INSTANCE), ExpressionTypeComputer.INSTANCE,
-                null, null, null, null, GlobalConfig.DEFAULT_FRAME_SIZE, null);
+                new ExpressionRuntimeProvider(new QueryLogicalExpressionJobGen(metadataProvider.getFunctionManager())),
+                ExpressionTypeComputer.INSTANCE, null, null, null, null, GlobalConfig.DEFAULT_FRAME_SIZE, null);
     }
 
     @Override

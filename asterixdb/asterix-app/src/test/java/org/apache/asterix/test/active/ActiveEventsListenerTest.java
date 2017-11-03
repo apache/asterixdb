@@ -45,6 +45,9 @@ import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Feed;
 import org.apache.asterix.metadata.lock.MetadataLockManager;
+import org.apache.asterix.om.functions.IFunctionExtensionManager;
+import org.apache.asterix.runtime.functions.FunctionCollection;
+import org.apache.asterix.runtime.functions.FunctionManager;
 import org.apache.asterix.runtime.utils.CcApplicationContext;
 import org.apache.asterix.test.active.TestEventsListener.Behavior;
 import org.apache.asterix.test.base.TestMethodTracer;
@@ -82,6 +85,7 @@ public class ActiveEventsListenerTest {
     static CcApplicationContext appCtx;
     static IStatementExecutor statementExecutor;
     static IHyracksClientConnection hcc;
+    static IFunctionExtensionManager functionExtensionManager;
     static MetadataProvider metadataProvider;
     static IStorageComponentProvider componentProvider;
     static JobIdFactory jobIdFactory;
@@ -121,6 +125,10 @@ public class ActiveEventsListenerTest {
         Mockito.when(ccServiceCtx.getControllerService()).thenReturn(ccService);
         Mockito.when(ccService.getExecutor()).thenReturn(executor);
         locations = new AlgebricksAbsolutePartitionConstraint(nodes);
+        functionExtensionManager = Mockito.mock(IFunctionExtensionManager.class);
+        Mockito.when(functionExtensionManager.getFunctionManager())
+                .thenReturn(new FunctionManager(FunctionCollection.createDefaultFunctionCollection()));
+        Mockito.when(appCtx.getExtensionManager()).thenReturn(functionExtensionManager);
         metadataProvider = new MetadataProvider(appCtx, null);
         clusterController = new TestClusterControllerActor("CC", handler, allDatasets);
         nodeControllers = new TestNodeControllerActor[2];
@@ -1449,6 +1457,10 @@ public class ActiveEventsListenerTest {
             CcApplicationContext ccAppCtx = Mockito.mock(CcApplicationContext.class);
             IStatementExecutor statementExecutor = Mockito.mock(IStatementExecutor.class);
             IHyracksClientConnection hcc = Mockito.mock(IHyracksClientConnection.class);
+            IFunctionExtensionManager functionExtensionManager = Mockito.mock(IFunctionExtensionManager.class);
+            Mockito.when(functionExtensionManager.getFunctionManager())
+                    .thenReturn(new FunctionManager(FunctionCollection.createDefaultFunctionCollection()));
+            Mockito.when(ccAppCtx.getExtensionManager()).thenReturn(functionExtensionManager);
             Mockito.when(ccAppCtx.getActiveNotificationHandler()).thenReturn(handler);
             Mockito.when(ccAppCtx.getMetadataLockManager()).thenReturn(lockManager);
             Mockito.when(ccAppCtx.getServiceContext()).thenReturn(ccServiceCtx);

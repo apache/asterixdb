@@ -21,17 +21,26 @@ package org.apache.asterix.runtime.aggregates.scalar;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
+import org.apache.asterix.runtime.aggregates.std.SqlCountAggregateDescriptor;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 
 public class ScalarSqlCountAggregateDescriptor extends AbstractScalarAggregateDescriptor {
 
     private static final long serialVersionUID = 1L;
+
     public final static FunctionIdentifier FID = BuiltinFunctions.SCALAR_SQL_COUNT;
+
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+        @Override
         public IFunctionDescriptor createFunctionDescriptor() {
-            return new ScalarSqlCountAggregateDescriptor();
+            return new ScalarSqlCountAggregateDescriptor(
+                    SqlCountAggregateDescriptor.FACTORY.createFunctionDescriptor());
         }
     };
+
+    private ScalarSqlCountAggregateDescriptor(IFunctionDescriptor aggFuncDesc) {
+        super(aggFuncDesc);
+    }
 
     @Override
     public FunctionIdentifier getIdentifier() {

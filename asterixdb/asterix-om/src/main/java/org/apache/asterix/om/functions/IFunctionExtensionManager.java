@@ -19,20 +19,14 @@
 
 package org.apache.asterix.om.functions;
 
-public interface IFunctionDescriptorFactory {
-
+/**
+ * An extension point for built-in functions
+ */
+public interface IFunctionExtensionManager {
     /**
-     * the artifact registered in function manager
+     * Returns function manager
      *
-     * @return a new IFunctionDescriptor instance
+     * @return a new {@link IFunctionManager} instance
      */
-    IFunctionDescriptor createFunctionDescriptor();
-
-    /**
-     * Creates type inferer for this function
-     * @return an new instance of the type inferer or {@code null} if not provided
-     */
-    default IFunctionTypeInferer createFunctionTypeInferer() {
-        return null;
-    }
+    IFunctionManager getFunctionManager();
 }

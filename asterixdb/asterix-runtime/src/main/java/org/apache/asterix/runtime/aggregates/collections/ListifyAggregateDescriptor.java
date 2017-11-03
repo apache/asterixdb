@@ -21,22 +21,29 @@ package org.apache.asterix.runtime.aggregates.collections;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
+import org.apache.asterix.om.functions.IFunctionTypeInferer;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.runtime.aggregates.base.AbstractAggregateFunctionDynamicDescriptor;
+import org.apache.asterix.runtime.functions.FunctionTypeInferers;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IAggregateEvaluatorFactory;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 
 public class ListifyAggregateDescriptor extends AbstractAggregateFunctionDynamicDescriptor {
 
-    private static final long serialVersionUID = 1L;
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         @Override
         public IFunctionDescriptor createFunctionDescriptor() {
             return new ListifyAggregateDescriptor();
         }
+
+        @Override
+        public IFunctionTypeInferer createFunctionTypeInferer() {
+            return FunctionTypeInferers.SET_EXPRESSION_TYPE;
+        }
     };
 
+    private static final long serialVersionUID = 1L;
     private AOrderedListType oltype;
 
     @Override
@@ -53,5 +60,4 @@ public class ListifyAggregateDescriptor extends AbstractAggregateFunctionDynamic
     public IAggregateEvaluatorFactory createAggregateEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
         return new ListifyAggregateFunctionEvalFactory(args, oltype);
     }
-
 }

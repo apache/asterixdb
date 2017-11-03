@@ -21,17 +21,25 @@ package org.apache.asterix.runtime.aggregates.scalar;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
+import org.apache.asterix.runtime.aggregates.std.SumAggregateDescriptor;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 
 public class ScalarSumAggregateDescriptor extends AbstractScalarAggregateDescriptor {
 
     private static final long serialVersionUID = 1L;
+
     public final static FunctionIdentifier FID = BuiltinFunctions.SCALAR_SUM;
+
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+        @Override
         public IFunctionDescriptor createFunctionDescriptor() {
-            return new ScalarSumAggregateDescriptor();
+            return new ScalarSumAggregateDescriptor(SumAggregateDescriptor.FACTORY.createFunctionDescriptor());
         }
     };
+
+    private ScalarSumAggregateDescriptor(IFunctionDescriptor aggFuncDesc) {
+        super(aggFuncDesc);
+    }
 
     @Override
     public FunctionIdentifier getIdentifier() {

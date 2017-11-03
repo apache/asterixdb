@@ -22,7 +22,6 @@ package org.apache.asterix.metadata.utils;
 import static org.apache.hyracks.storage.am.common.dataflow.IndexDropOperatorDescriptor.DropOption;
 
 import java.util.Collections;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -52,7 +51,6 @@ import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.evaluators.functions.AndDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.IsUnknownDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.NotDescriptor;
-import org.apache.asterix.runtime.functions.FunctionManagerHolder;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraintHelper;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -239,7 +237,7 @@ public abstract class SecondaryIndexOperationsHelper {
         ITypeTraits[] primaryTypeTraits = new ITypeTraits[numPrimaryKeys + 1 + (dataset.hasMetaPart() ? 1 : 0)];
         primaryComparatorFactories = new IBinaryComparatorFactory[numPrimaryKeys];
         primaryBloomFilterKeyFields = new int[numPrimaryKeys];
-        ISerializerDeserializerProvider serdeProvider = metadataProvider.getFormat().getSerdeProvider();
+        ISerializerDeserializerProvider serdeProvider = metadataProvider.getDataFormat().getSerdeProvider();
         List<Integer> indicators = null;
         if (dataset.hasMetaPart()) {
             indicators = ((InternalDatasetDetails) dataset.getDatasetDetails()).getKeySourceIndicator();
@@ -298,10 +296,6 @@ public abstract class SecondaryIndexOperationsHelper {
 
     protected AlgebricksMetaOperatorDescriptor createCastOp(JobSpecification spec, DatasetType dsType,
             boolean strictCast) throws AlgebricksException {
-        IFunctionDescriptor castFuncDesc = FunctionManagerHolder.getFunctionManager()
-                .lookupFunction(strictCast ? BuiltinFunctions.CAST_TYPE : BuiltinFunctions.CAST_TYPE_LAX);
-        castFuncDesc.setImmutableStates(enforcedItemType, itemType);
-
         int[] outColumns = new int[1];
         int[] projectionList = new int[(dataset.hasMetaPart() ? 2 : 1) + numPrimaryKeys];
         int recordIdx;
@@ -322,10 +316,17 @@ public abstract class SecondaryIndexOperationsHelper {
         IScalarEvaluatorFactory[] castEvalFact =
                 new IScalarEvaluatorFactory[] { new ColumnAccessEvalFactory(recordIdx) };
         IScalarEvaluatorFactory[] sefs = new IScalarEvaluatorFactory[1];
-        sefs[0] = castFuncDesc.createEvaluatorFactory(castEvalFact);
+        sefs[0] = createCastFunction(strictCast).createEvaluatorFactory(castEvalFact);
         AssignRuntimeFactory castAssign = new AssignRuntimeFactory(outColumns, sefs, projectionList);
         return new AlgebricksMetaOperatorDescriptor(spec, 1, 1, new IPushRuntimeFactory[] { castAssign },
                 new RecordDescriptor[] { enforcedRecDesc });
+    }
+
+    protected IFunctionDescriptor createCastFunction(boolean strictCast) throws AlgebricksException {
+        IFunctionDescriptor castFuncDesc = metadataProvider.getFunctionManager()
+                .lookupFunction(strictCast ? BuiltinFunctions.CAST_TYPE : BuiltinFunctions.CAST_TYPE_LAX);
+        castFuncDesc.setImmutableStates(enforcedItemType, itemType);
+        return castFuncDesc;
     }
 
     protected ExternalSortOperatorDescriptor createSortOp(JobSpecification spec,

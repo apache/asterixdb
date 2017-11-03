@@ -21,11 +21,13 @@ package org.apache.asterix.om.functions;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 
-public interface IFunctionManager extends Iterable<IFunctionDescriptorFactory> {
+/**
+ * A registry of {@link IFunctionDescriptor} and {@link IFunctionTypeInferer}
+ * for built-in functions
+ */
+public interface IFunctionManager {
 
-    public void registerFunction(IFunctionDescriptorFactory descriptorFactory);
+    IFunctionDescriptor lookupFunction(FunctionIdentifier fid) throws AlgebricksException;
 
-    public void unregisterFunction(IFunctionDescriptorFactory descriptorFactory);
-
-    public IFunctionDescriptor lookupFunction(FunctionIdentifier fid) throws AlgebricksException;
+    IFunctionTypeInferer lookupFunctionTypeInferer(FunctionIdentifier fid);
 }

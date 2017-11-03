@@ -18,15 +18,11 @@
  */
 package org.apache.asterix.runtime.aggregates.scalar;
 
-import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
-import org.apache.asterix.om.functions.IFunctionManager;
 import org.apache.asterix.runtime.aggregates.base.AbstractAggregateFunctionDynamicDescriptor;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
-import org.apache.asterix.runtime.functions.FunctionManagerHolder;
 import org.apache.asterix.runtime.unnestingfunctions.std.ScanCollectionDescriptor.ScanCollectionUnnestingFunctionFactory;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IAggregateEvaluatorFactory;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
@@ -37,6 +33,12 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 public abstract class AbstractScalarAggregateDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
 
+    private final AbstractAggregateFunctionDynamicDescriptor aggFuncDesc;
+
+    protected AbstractScalarAggregateDescriptor(IFunctionDescriptor aggFuncDesc) {
+        this.aggFuncDesc = (AbstractAggregateFunctionDynamicDescriptor) aggFuncDesc;
+    }
+
     @Override
     public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
             throws AlgebricksException {
@@ -45,10 +47,6 @@ public abstract class AbstractScalarAggregateDescriptor extends AbstractScalarFu
         IScalarEvaluatorFactory[] aggFuncArgs = new IScalarEvaluatorFactory[1];
         aggFuncArgs[0] = new ColumnAccessEvalFactory(0);
         // Create aggregate function from this scalar version.
-        FunctionIdentifier fid = BuiltinFunctions.getAggregateFunction(getIdentifier());
-        IFunctionManager mgr = FunctionManagerHolder.getFunctionManager();
-        IFunctionDescriptor fd = mgr.lookupFunction(fid);
-        AbstractAggregateFunctionDynamicDescriptor aggFuncDesc = (AbstractAggregateFunctionDynamicDescriptor) fd;
         final IAggregateEvaluatorFactory aggFuncFactory = aggFuncDesc.createAggregateEvaluatorFactory(aggFuncArgs);
 
         return new IScalarEvaluatorFactory() {

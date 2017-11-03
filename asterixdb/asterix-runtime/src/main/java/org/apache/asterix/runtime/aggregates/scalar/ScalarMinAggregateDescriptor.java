@@ -21,17 +21,25 @@ package org.apache.asterix.runtime.aggregates.scalar;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
+import org.apache.asterix.runtime.aggregates.std.MinAggregateDescriptor;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 
 public class ScalarMinAggregateDescriptor extends AbstractScalarAggregateDescriptor {
 
     private static final long serialVersionUID = 1L;
+
     public final static FunctionIdentifier FID = BuiltinFunctions.SCALAR_MIN;
+
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+        @Override
         public IFunctionDescriptor createFunctionDescriptor() {
-            return new ScalarMinAggregateDescriptor();
+            return new ScalarMinAggregateDescriptor(MinAggregateDescriptor.FACTORY.createFunctionDescriptor());
         }
     };
+
+    private ScalarMinAggregateDescriptor(IFunctionDescriptor aggFuncDesc) {
+        super(aggFuncDesc);
+    }
 
     @Override
     public FunctionIdentifier getIdentifier() {

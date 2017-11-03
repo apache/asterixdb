@@ -730,7 +730,7 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
         ISerializerDeserializer[] primaryRecFields =
                 new ISerializerDeserializer[numPrimaryKeys + 1 + (hasMetaPart() ? 1 : 0)];
         ITypeTraits[] primaryTypeTraits = new ITypeTraits[numPrimaryKeys + 1 + (hasMetaPart() ? 1 : 0)];
-        ISerializerDeserializerProvider serdeProvider = metadataProvider.getFormat().getSerdeProvider();
+        ISerializerDeserializerProvider serdeProvider = metadataProvider.getDataFormat().getSerdeProvider();
         List<Integer> indicators = null;
         if (hasMetaPart()) {
             indicators = ((InternalDatasetDetails) getDatasetDetails()).getKeySourceIndicator();

@@ -57,6 +57,7 @@ import org.apache.asterix.external.provider.AdapterFactoryProvider;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.FeedConstants;
 import org.apache.asterix.formats.base.IDataFormat;
+import org.apache.asterix.om.functions.IFunctionExtensionManager;
 import org.apache.asterix.formats.nontagged.BinaryComparatorFactoryProvider;
 import org.apache.asterix.formats.nontagged.LinearizeComparatorFactoryProvider;
 import org.apache.asterix.formats.nontagged.TypeTraitProvider;
@@ -78,6 +79,7 @@ import org.apache.asterix.metadata.utils.DatasetUtil;
 import org.apache.asterix.metadata.utils.MetadataConstants;
 import org.apache.asterix.metadata.utils.SplitsAndConstraintsUtil;
 import org.apache.asterix.om.functions.BuiltinFunctions;
+import org.apache.asterix.om.functions.IFunctionManager;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
@@ -143,6 +145,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
     private final ICcApplicationContext appCtx;
     private final IStorageComponentProvider storageComponentProvider;
     private final StorageProperties storageProperties;
+    private final IFunctionManager functionManager;
     private final Dataverse defaultDataverse;
     private final LockList locks;
     private final Map<String, String> config;
@@ -164,6 +167,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         this.defaultDataverse = defaultDataverse == null ? MetadataBuiltinEntities.DEFAULT_DATAVERSE : defaultDataverse;
         this.storageComponentProvider = appCtx.getStorageComponentProvider();
         storageProperties = appCtx.getStorageProperties();
+        functionManager = ((IFunctionExtensionManager) appCtx.getExtensionManager()).getFunctionManager();
         locks = new LockList();
         config = new HashMap<>();
     }
@@ -259,7 +263,11 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         return isTemporaryDatasetWriteJob;
     }
 
-    public IDataFormat getFormat() {
+    public IFunctionManager getFunctionManager() {
+        return functionManager;
+    }
+
+    public IDataFormat getDataFormat() {
         return FormatUtils.getDefaultFormat();
     }
 
@@ -868,13 +876,14 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
     }
 
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> buildExternalDatasetDataScannerRuntime(
-            JobSpecification jobSpec, IAType itemType, IAdapterFactory adapterFactory, IDataFormat format)
+            JobSpecification jobSpec, IAType itemType, IAdapterFactory adapterFactory)
             throws AlgebricksException {
         if (itemType.getTypeTag() != ATypeTag.OBJECT) {
             throw new AlgebricksException("Can only scan datasets of records.");
         }
 
-        ISerializerDeserializer<?> payloadSerde = format.getSerdeProvider().getSerializerDeserializer(itemType);
+        ISerializerDeserializer<?> payloadSerde =
+                getDataFormat().getSerdeProvider().getSerializerDeserializer(itemType);
         RecordDescriptor scannerDesc = new RecordDescriptor(new ISerializerDeserializer[] { payloadSerde });
 
         ExternalScanOperatorDescriptor dataScanner =
@@ -1501,7 +1510,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             // Generate Output Record format
             ISerializerDeserializer<?>[] tokenKeyPairFields = new ISerializerDeserializer[numTokenKeyPairFields];
             ITypeTraits[] tokenKeyPairTypeTraits = new ITypeTraits[numTokenKeyPairFields];
-            ISerializerDeserializerProvider serdeProvider = FormatUtils.getDefaultFormat().getSerdeProvider();
+            ISerializerDeserializerProvider serdeProvider = getDataFormat().getSerdeProvider();
 
             // The order of the output record: propagated variables (including
             // PK and SK), token, and number of token.

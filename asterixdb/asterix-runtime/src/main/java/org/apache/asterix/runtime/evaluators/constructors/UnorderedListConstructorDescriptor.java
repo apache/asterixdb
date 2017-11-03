@@ -25,10 +25,11 @@ import org.apache.asterix.builders.UnorderedListBuilder;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
-import org.apache.asterix.om.types.AOrderedListType;
+import org.apache.asterix.om.functions.IFunctionTypeInferer;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnorderedListType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
+import org.apache.asterix.runtime.functions.FunctionTypeInferers;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
@@ -41,14 +42,19 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class UnorderedListConstructorDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
-    private static final long serialVersionUID = 1L;
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         @Override
         public IFunctionDescriptor createFunctionDescriptor() {
             return new UnorderedListConstructorDescriptor();
         }
+
+        @Override
+        public IFunctionTypeInferer createFunctionTypeInferer() {
+            return FunctionTypeInferers.SET_EXPRESSION_TYPE;
+        }
     };
 
+    private static final long serialVersionUID = 1L;
     private AUnorderedListType ultype;
 
     @Override
@@ -70,7 +76,6 @@ public class UnorderedListConstructorDescriptor extends AbstractScalarFunctionDy
 
         private static final long serialVersionUID = 1L;
         private IScalarEvaluatorFactory[] args;
-
         private boolean selfDescList = false;
         private boolean homoList = false;
         private AUnorderedListType unorderedlistType;
@@ -144,5 +149,4 @@ public class UnorderedListConstructorDescriptor extends AbstractScalarFunctionDy
 
         }
     }
-
 }

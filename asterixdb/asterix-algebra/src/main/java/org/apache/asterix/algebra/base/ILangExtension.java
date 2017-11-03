@@ -21,6 +21,7 @@ package org.apache.asterix.algebra.base;
 
 import org.apache.asterix.common.api.IExtension;
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
+import org.apache.asterix.om.functions.IFunctionManager;
 
 /**
  * An interface for language extensions
@@ -38,4 +39,8 @@ public interface ILangExtension extends IExtension {
     }
 
     ILangCompilationProvider getLangCompilationProvider(Language lang);
+
+    default IFunctionManager getFunctionManager() {
+        return null;
+    }
 }

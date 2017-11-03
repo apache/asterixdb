@@ -19,27 +19,45 @@
 
 package org.apache.asterix.runtime.functions;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.functions.IFunctionManager;
+import org.apache.asterix.om.functions.IFunctionTypeInferer;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 
-final class FunctionManagerImpl implements IFunctionManager {
+/**
+ * Default implementation of {@link IFunctionManager}.
+ */
+public final class FunctionManager implements IFunctionManager {
+
     private final Map<Pair<FunctionIdentifier, Integer>, IFunctionDescriptorFactory> functions;
 
-    FunctionManagerImpl() {
-        functions = new HashMap<>();
+    private final Map<FunctionIdentifier, IFunctionTypeInferer> typeInferers;
+
+    public FunctionManager(FunctionCollection functionCollection) {
+        Map<Pair<FunctionIdentifier, Integer>, IFunctionDescriptorFactory> functionsMap = new HashMap<>();
+        Map<FunctionIdentifier, IFunctionTypeInferer> typeInferersMap = new HashMap<>();
+
+        for (IFunctionDescriptorFactory descriptorFactory : functionCollection.getFunctionDescriptorFactories()) {
+            FunctionIdentifier fid = descriptorFactory.createFunctionDescriptor().getIdentifier();
+            functionsMap.put(new Pair<>(fid, fid.getArity()), descriptorFactory);
+            IFunctionTypeInferer typeInferer = descriptorFactory.createFunctionTypeInferer();
+            if (typeInferer != null) {
+                typeInferersMap.put(fid, typeInferer);
+            }
+        }
+
+        this.functions = functionsMap;
+        this.typeInferers = typeInferersMap;
     }
 
     @Override
-    public synchronized IFunctionDescriptor lookupFunction(FunctionIdentifier fid) throws AlgebricksException {
+    public IFunctionDescriptor lookupFunction(FunctionIdentifier fid) throws AlgebricksException {
         Pair<FunctionIdentifier, Integer> key = new Pair<>(fid, fid.getArity());
         IFunctionDescriptorFactory factory = functions.get(key);
         if (factory == null) {
@@ -49,20 +67,7 @@ final class FunctionManagerImpl implements IFunctionManager {
     }
 
     @Override
-    public synchronized void registerFunction(IFunctionDescriptorFactory descriptorFactory) {
-        FunctionIdentifier fid = descriptorFactory.createFunctionDescriptor().getIdentifier();
-        functions.put(new Pair<>(fid, fid.getArity()), descriptorFactory);
-    }
-
-    @Override
-    public synchronized void unregisterFunction(IFunctionDescriptorFactory descriptorFactory) {
-        FunctionIdentifier fid = descriptorFactory.createFunctionDescriptor().getIdentifier();
-        Pair<FunctionIdentifier, Integer> key = new Pair<>(fid, fid.getArity());
-        functions.remove(key);
-    }
-
-    @Override
-    public synchronized Iterator<IFunctionDescriptorFactory> iterator() {
-        return new ArrayList<>(functions.values()).iterator();
+    public IFunctionTypeInferer lookupFunctionTypeInferer(FunctionIdentifier fid) {
+        return typeInferers.get(fid);
     }
 }

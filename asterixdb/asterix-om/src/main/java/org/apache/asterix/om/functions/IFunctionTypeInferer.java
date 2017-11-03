@@ -16,26 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.runtime.functions;
 
-import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
-import org.apache.asterix.om.functions.IFunctionManager;
+package org.apache.asterix.om.functions;
 
-public final class FunctionManagerHolder {
-    private static final IFunctionManager functionManager = createFunctionManager();
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 
-    public static IFunctionManager getFunctionManager() {
-        return functionManager;
-    }
-
-    private static IFunctionManager createFunctionManager() {
-        FunctionManagerImpl mgr = new FunctionManagerImpl();
-        for (IFunctionDescriptorFactory fdFactory : FunctionCollection.getFunctionDescriptorFactories()) {
-            mgr.registerFunction(fdFactory);
-        }
-        return mgr;
-    }
-
-    private FunctionManagerHolder() {
-    }
+public interface IFunctionTypeInferer {
+    void infer(ILogicalExpression expr, IFunctionDescriptor fd, IVariableTypeEnvironment context)
+            throws AlgebricksException;
 }

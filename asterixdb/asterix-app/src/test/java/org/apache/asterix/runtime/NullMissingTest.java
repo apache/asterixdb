@@ -43,7 +43,8 @@ public class NullMissingTest {
 
     @Test
     public void test() throws Exception {
-        List<IFunctionDescriptorFactory> functions = FunctionCollection.getFunctionDescriptorFactories();
+        List<IFunctionDescriptorFactory> functions =
+                FunctionCollection.createDefaultFunctionCollection().getFunctionDescriptorFactories();
         int testedFunctions = 0;
         for (IFunctionDescriptorFactory func : functions) {
             String className = func.getClass().getName();

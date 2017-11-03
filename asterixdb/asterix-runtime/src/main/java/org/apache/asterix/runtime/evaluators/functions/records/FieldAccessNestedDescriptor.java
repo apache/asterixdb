@@ -23,20 +23,28 @@ import java.util.List;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
+import org.apache.asterix.om.functions.IFunctionTypeInferer;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
+import org.apache.asterix.runtime.functions.FunctionTypeInferers;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 
 public class FieldAccessNestedDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
-    private static final long serialVersionUID = 1L;
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+        @Override
         public IFunctionDescriptor createFunctionDescriptor() {
             return new FieldAccessNestedDescriptor();
         }
+
+        @Override
+        public IFunctionTypeInferer createFunctionTypeInferer() {
+            return new FunctionTypeInferers.FieldAccessNestedTypeInferer();
+        }
     };
 
+    private static final long serialVersionUID = 1L;
     private ARecordType recType;
     private List<String> fldName;
 
@@ -55,5 +63,4 @@ public class FieldAccessNestedDescriptor extends AbstractScalarFunctionDynamicDe
     public IScalarEvaluatorFactory createEvaluatorFactory(IScalarEvaluatorFactory[] args) {
         return new FieldAccessNestedEvalFactory(args[0], recType, fldName);
     }
-
 }

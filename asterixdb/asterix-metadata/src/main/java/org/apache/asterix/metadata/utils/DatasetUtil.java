@@ -41,6 +41,7 @@ import org.apache.asterix.common.exceptions.MetadataException;
 import org.apache.asterix.common.transactions.IRecoveryManager;
 import org.apache.asterix.common.transactions.JobId;
 import org.apache.asterix.external.indexing.IndexingConstants;
+import org.apache.asterix.formats.base.IDataFormat;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.formats.nontagged.TypeTraitProvider;
 import org.apache.asterix.metadata.MetadataManager;
@@ -57,7 +58,6 @@ import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
-import org.apache.asterix.runtime.formats.FormatUtils;
 import org.apache.asterix.runtime.job.listener.JobEventListenerFactory;
 import org.apache.asterix.runtime.operators.LSMPrimaryUpsertOperatorDescriptor;
 import org.apache.asterix.runtime.utils.RuntimeUtils;
@@ -419,16 +419,16 @@ public class DatasetUtil {
                     + (dataset.hasMetaPart() ? 2 : 1) + numFilterFields];
             ISerializerDeserializer<?>[] outputSerDes = new ISerializerDeserializer[inputRecordDesc.getFieldCount()
                     + (dataset.hasMetaPart() ? 2 : 1) + numFilterFields];
+            IDataFormat dataFormat = metadataProvider.getDataFormat();
 
             // add the previous record first
             int f = 0;
-            outputSerDes[f] = FormatUtils.getDefaultFormat().getSerdeProvider().getSerializerDeserializer(itemType);
+            outputSerDes[f] = dataFormat.getSerdeProvider().getSerializerDeserializer(itemType);
             f++;
             // add the previous meta second
             if (dataset.hasMetaPart()) {
-                outputSerDes[f] =
-                        FormatUtils.getDefaultFormat().getSerdeProvider().getSerializerDeserializer(metaItemType);
-                outputTypeTraits[f] = FormatUtils.getDefaultFormat().getTypeTraitProvider().getTypeTrait(metaItemType);
+                outputSerDes[f] = dataFormat.getSerdeProvider().getSerializerDeserializer(metaItemType);
+                outputTypeTraits[f] = dataFormat.getTypeTraitProvider().getTypeTrait(metaItemType);
                 f++;
             }
             // add the previous filter third
@@ -443,10 +443,10 @@ public class DatasetUtil {
                     }
                 }
                 fieldIdx = i;
-                outputTypeTraits[f] = FormatUtils.getDefaultFormat().getTypeTraitProvider()
-                        .getTypeTrait(itemType.getFieldTypes()[fieldIdx]);
-                outputSerDes[f] = FormatUtils.getDefaultFormat().getSerdeProvider()
-                        .getSerializerDeserializer(itemType.getFieldTypes()[fieldIdx]);
+                outputTypeTraits[f] =
+                        dataFormat.getTypeTraitProvider().getTypeTrait(itemType.getFieldTypes()[fieldIdx]);
+                outputSerDes[f] =
+                        dataFormat.getSerdeProvider().getSerializerDeserializer(itemType.getFieldTypes()[fieldIdx]);
                 f++;
             }
             for (int j = 0; j < inputRecordDesc.getFieldCount(); j++) {

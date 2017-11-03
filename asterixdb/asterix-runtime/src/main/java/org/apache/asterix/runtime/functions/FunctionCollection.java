@@ -331,394 +331,400 @@ import org.apache.asterix.runtime.unnestingfunctions.std.ScanCollectionDescripto
 import org.apache.asterix.runtime.unnestingfunctions.std.SubsetCollectionDescriptor;
 
 /**
- * This class (statically) holds a list of function descriptor factories.
+ * This class holds a list of function descriptor factories.
  */
 public final class FunctionCollection {
 
     private static final String FACTORY = "FACTORY";
-    private static final List<IFunctionDescriptorFactory> temp = new ArrayList<>();
 
-    static {
+    private final List<IFunctionDescriptorFactory> descriptorFactories = new ArrayList<>();
+
+    public void add(IFunctionDescriptorFactory descriptorFactory) {
+        descriptorFactories.add(descriptorFactory);
+    }
+
+    public void addGenerated(IFunctionDescriptorFactory descriptorFactory) {
+        add(getGeneratedFunctionDescriptorFactory(descriptorFactory.createFunctionDescriptor().getClass()));
+    }
+
+    public static FunctionCollection createDefaultFunctionCollection() {
+        FunctionCollection fc = new FunctionCollection();
+
         // unnesting function
-        temp.add(TidRunningAggregateDescriptor.FACTORY);
-        temp.add(ScanCollectionDescriptor.FACTORY);
-        temp.add(RangeDescriptor.FACTORY);
-        temp.add(SubsetCollectionDescriptor.FACTORY);
+        fc.add(TidRunningAggregateDescriptor.FACTORY);
+        fc.add(ScanCollectionDescriptor.FACTORY);
+        fc.add(RangeDescriptor.FACTORY);
+        fc.add(SubsetCollectionDescriptor.FACTORY);
 
         // aggregate functions
-        temp.add(ListifyAggregateDescriptor.FACTORY);
-        temp.add(CountAggregateDescriptor.FACTORY);
-        temp.add(AvgAggregateDescriptor.FACTORY);
-        temp.add(LocalAvgAggregateDescriptor.FACTORY);
-        temp.add(IntermediateAvgAggregateDescriptor.FACTORY);
-        temp.add(GlobalAvgAggregateDescriptor.FACTORY);
-        temp.add(SumAggregateDescriptor.FACTORY);
-        temp.add(LocalSumAggregateDescriptor.FACTORY);
-        temp.add(MaxAggregateDescriptor.FACTORY);
-        temp.add(LocalMaxAggregateDescriptor.FACTORY);
-        temp.add(MinAggregateDescriptor.FACTORY);
-        temp.add(LocalMinAggregateDescriptor.FACTORY);
-        temp.add(FirstElementAggregateDescriptor.FACTORY);
-        temp.add(LocalFirstElementAggregateDescriptor.FACTORY);
+        fc.add(ListifyAggregateDescriptor.FACTORY);
+        fc.add(CountAggregateDescriptor.FACTORY);
+        fc.add(AvgAggregateDescriptor.FACTORY);
+        fc.add(LocalAvgAggregateDescriptor.FACTORY);
+        fc.add(IntermediateAvgAggregateDescriptor.FACTORY);
+        fc.add(GlobalAvgAggregateDescriptor.FACTORY);
+        fc.add(SumAggregateDescriptor.FACTORY);
+        fc.add(LocalSumAggregateDescriptor.FACTORY);
+        fc.add(MaxAggregateDescriptor.FACTORY);
+        fc.add(LocalMaxAggregateDescriptor.FACTORY);
+        fc.add(MinAggregateDescriptor.FACTORY);
+        fc.add(LocalMinAggregateDescriptor.FACTORY);
+        fc.add(FirstElementAggregateDescriptor.FACTORY);
+        fc.add(LocalFirstElementAggregateDescriptor.FACTORY);
 
         // serializable aggregates
-        temp.add(SerializableCountAggregateDescriptor.FACTORY);
-        temp.add(SerializableAvgAggregateDescriptor.FACTORY);
-        temp.add(SerializableLocalAvgAggregateDescriptor.FACTORY);
-        temp.add(SerializableIntermediateAvgAggregateDescriptor.FACTORY);
-        temp.add(SerializableGlobalAvgAggregateDescriptor.FACTORY);
-        temp.add(SerializableSumAggregateDescriptor.FACTORY);
-        temp.add(SerializableLocalSumAggregateDescriptor.FACTORY);
+        fc.add(SerializableCountAggregateDescriptor.FACTORY);
+        fc.add(SerializableAvgAggregateDescriptor.FACTORY);
+        fc.add(SerializableLocalAvgAggregateDescriptor.FACTORY);
+        fc.add(SerializableIntermediateAvgAggregateDescriptor.FACTORY);
+        fc.add(SerializableGlobalAvgAggregateDescriptor.FACTORY);
+        fc.add(SerializableSumAggregateDescriptor.FACTORY);
+        fc.add(SerializableLocalSumAggregateDescriptor.FACTORY);
 
         // scalar aggregates
-        temp.add(ScalarCountAggregateDescriptor.FACTORY);
-        temp.add(ScalarAvgAggregateDescriptor.FACTORY);
-        temp.add(ScalarSumAggregateDescriptor.FACTORY);
-        temp.add(ScalarMaxAggregateDescriptor.FACTORY);
-        temp.add(ScalarMinAggregateDescriptor.FACTORY);
-        temp.add(EmptyStreamAggregateDescriptor.FACTORY);
-        temp.add(NonEmptyStreamAggregateDescriptor.FACTORY);
+        fc.add(ScalarCountAggregateDescriptor.FACTORY);
+        fc.add(ScalarAvgAggregateDescriptor.FACTORY);
+        fc.add(ScalarSumAggregateDescriptor.FACTORY);
+        fc.add(ScalarMaxAggregateDescriptor.FACTORY);
+        fc.add(ScalarMinAggregateDescriptor.FACTORY);
+        fc.add(EmptyStreamAggregateDescriptor.FACTORY);
+        fc.add(NonEmptyStreamAggregateDescriptor.FACTORY);
 
         // SQL aggregates
-        temp.add(SqlCountAggregateDescriptor.FACTORY);
-        temp.add(SqlAvgAggregateDescriptor.FACTORY);
-        temp.add(LocalSqlAvgAggregateDescriptor.FACTORY);
-        temp.add(IntermediateSqlAvgAggregateDescriptor.FACTORY);
-        temp.add(GlobalSqlAvgAggregateDescriptor.FACTORY);
-        temp.add(SqlSumAggregateDescriptor.FACTORY);
-        temp.add(LocalSqlSumAggregateDescriptor.FACTORY);
-        temp.add(SqlMaxAggregateDescriptor.FACTORY);
-        temp.add(LocalSqlMaxAggregateDescriptor.FACTORY);
-        temp.add(SqlMinAggregateDescriptor.FACTORY);
-        temp.add(LocalSqlMinAggregateDescriptor.FACTORY);
+        fc.add(SqlCountAggregateDescriptor.FACTORY);
+        fc.add(SqlAvgAggregateDescriptor.FACTORY);
+        fc.add(LocalSqlAvgAggregateDescriptor.FACTORY);
+        fc.add(IntermediateSqlAvgAggregateDescriptor.FACTORY);
+        fc.add(GlobalSqlAvgAggregateDescriptor.FACTORY);
+        fc.add(SqlSumAggregateDescriptor.FACTORY);
+        fc.add(LocalSqlSumAggregateDescriptor.FACTORY);
+        fc.add(SqlMaxAggregateDescriptor.FACTORY);
+        fc.add(LocalSqlMaxAggregateDescriptor.FACTORY);
+        fc.add(SqlMinAggregateDescriptor.FACTORY);
+        fc.add(LocalSqlMinAggregateDescriptor.FACTORY);
 
         // SQL serializable aggregates
-        temp.add(SerializableSqlCountAggregateDescriptor.FACTORY);
-        temp.add(SerializableSqlAvgAggregateDescriptor.FACTORY);
-        temp.add(SerializableLocalSqlAvgAggregateDescriptor.FACTORY);
-        temp.add(SerializableIntermediateSqlAvgAggregateDescriptor.FACTORY);
-        temp.add(SerializableGlobalSqlAvgAggregateDescriptor.FACTORY);
-        temp.add(SerializableSqlSumAggregateDescriptor.FACTORY);
-        temp.add(SerializableLocalSqlSumAggregateDescriptor.FACTORY);
+        fc.add(SerializableSqlCountAggregateDescriptor.FACTORY);
+        fc.add(SerializableSqlAvgAggregateDescriptor.FACTORY);
+        fc.add(SerializableLocalSqlAvgAggregateDescriptor.FACTORY);
+        fc.add(SerializableIntermediateSqlAvgAggregateDescriptor.FACTORY);
+        fc.add(SerializableGlobalSqlAvgAggregateDescriptor.FACTORY);
+        fc.add(SerializableSqlSumAggregateDescriptor.FACTORY);
+        fc.add(SerializableLocalSqlSumAggregateDescriptor.FACTORY);
 
         // SQL scalar aggregates
-        temp.add(ScalarSqlCountAggregateDescriptor.FACTORY);
-        temp.add(ScalarSqlAvgAggregateDescriptor.FACTORY);
-        temp.add(ScalarSqlSumAggregateDescriptor.FACTORY);
-        temp.add(ScalarSqlMaxAggregateDescriptor.FACTORY);
-        temp.add(ScalarSqlMinAggregateDescriptor.FACTORY);
+        fc.add(ScalarSqlCountAggregateDescriptor.FACTORY);
+        fc.add(ScalarSqlAvgAggregateDescriptor.FACTORY);
+        fc.add(ScalarSqlSumAggregateDescriptor.FACTORY);
+        fc.add(ScalarSqlMaxAggregateDescriptor.FACTORY);
+        fc.add(ScalarSqlMinAggregateDescriptor.FACTORY);
 
         // boolean functions
-        temp.add(AndDescriptor.FACTORY);
-        temp.add(OrDescriptor.FACTORY);
+        fc.add(AndDescriptor.FACTORY);
+        fc.add(OrDescriptor.FACTORY);
 
         // Record constructors
-        temp.add(ClosedRecordConstructorDescriptor.FACTORY);
-        temp.add(OpenRecordConstructorDescriptor.FACTORY);
+        fc.add(ClosedRecordConstructorDescriptor.FACTORY);
+        fc.add(OpenRecordConstructorDescriptor.FACTORY);
 
         // List constructors
-        temp.add(OrderedListConstructorDescriptor.FACTORY);
-        temp.add(UnorderedListConstructorDescriptor.FACTORY);
+        fc.add(OrderedListConstructorDescriptor.FACTORY);
+        fc.add(UnorderedListConstructorDescriptor.FACTORY);
 
         // Sleep function
-        temp.add(SleepDescriptor.FACTORY);
+        fc.add(SleepDescriptor.FACTORY);
 
         // Inject failure function
-        temp.add(InjectFailureDescriptor.FACTORY);
+        fc.add(InjectFailureDescriptor.FACTORY);
 
         // Switch case
-        temp.add(SwitchCaseDescriptor.FACTORY);
+        fc.add(SwitchCaseDescriptor.FACTORY);
 
         // null functions
-        temp.add(IsMissingDescriptor.FACTORY);
-        temp.add(IsNullDescriptor.FACTORY);
-        temp.add(IsUnknownDescriptor.FACTORY);
-        temp.add(IsSystemNullDescriptor.FACTORY);
-        temp.add(CheckUnknownDescriptor.FACTORY);
-        temp.add(IfMissingDescriptor.FACTORY);
-        temp.add(IfNullDescriptor.FACTORY);
-        temp.add(IfMissingOrNullDescriptor.FACTORY);
+        fc.add(IsMissingDescriptor.FACTORY);
+        fc.add(IsNullDescriptor.FACTORY);
+        fc.add(IsUnknownDescriptor.FACTORY);
+        fc.add(IsSystemNullDescriptor.FACTORY);
+        fc.add(CheckUnknownDescriptor.FACTORY);
+        fc.add(IfMissingDescriptor.FACTORY);
+        fc.add(IfNullDescriptor.FACTORY);
+        fc.add(IfMissingOrNullDescriptor.FACTORY);
 
         // uuid generators (zero independent functions)
-        temp.add(CreateUUIDDescriptor.FACTORY);
-        temp.add(UUIDDescriptor.FACTORY);
-        temp.add(CreateQueryUIDDescriptor.FACTORY);
-        temp.add(CurrentDateDescriptor.FACTORY);
-        temp.add(CurrentTimeDescriptor.FACTORY);
-        temp.add(CurrentDateTimeDescriptor.FACTORY);
+        fc.add(CreateUUIDDescriptor.FACTORY);
+        fc.add(UUIDDescriptor.FACTORY);
+        fc.add(CreateQueryUIDDescriptor.FACTORY);
+        fc.add(CurrentDateDescriptor.FACTORY);
+        fc.add(CurrentTimeDescriptor.FACTORY);
+        fc.add(CurrentDateTimeDescriptor.FACTORY);
 
         // TODO: decide how should we deal these two weird functions as
         // the number of arguments of the function depend on the first few arguments.
-        temp.add(SimilarityJaccardPrefixDescriptor.FACTORY);
-        temp.add(SimilarityJaccardPrefixCheckDescriptor.FACTORY);
+        fc.add(SimilarityJaccardPrefixDescriptor.FACTORY);
+        fc.add(SimilarityJaccardPrefixCheckDescriptor.FACTORY);
 
         // functions that need generated class for null-handling.
-        List<IFunctionDescriptorFactory> functionsToInjectUnkownHandling = new ArrayList<>();
 
         // Element accessors.
-        functionsToInjectUnkownHandling.add(FieldAccessByIndexDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(FieldAccessByNameDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(FieldAccessNestedDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(AnyCollectionMemberDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(GetItemDescriptor.FACTORY);
+        fc.addGenerated(FieldAccessByIndexDescriptor.FACTORY);
+        fc.addGenerated(FieldAccessByNameDescriptor.FACTORY);
+        fc.addGenerated(FieldAccessNestedDescriptor.FACTORY);
+
+        fc.addGenerated(AnyCollectionMemberDescriptor.FACTORY);
+        fc.addGenerated(GetItemDescriptor.FACTORY);
 
         // Numeric functions
-        functionsToInjectUnkownHandling.add(NumericUnaryMinusDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(NumericAddDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(NumericDivideDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(NumericMultiplyDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(NumericSubDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(NumericModuloDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(NumericCaretDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(NotDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(LenDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(NumericAbsDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(NumericCeilingDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(NumericFloorDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(NumericRoundDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(NumericRoundHalfToEvenDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(NumericRoundHalfToEven2Descriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(NumericACosDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(NumericASinDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(NumericATanDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(NumericCosDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(NumericSinDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(NumericTanDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(NumericExpDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(NumericLnDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(NumericLogDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(NumericSqrtDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(NumericSignDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(NumericTruncDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(NumericATan2Descriptor.FACTORY);
+        fc.addGenerated(NumericUnaryMinusDescriptor.FACTORY);
+        fc.addGenerated(NumericAddDescriptor.FACTORY);
+        fc.addGenerated(NumericDivideDescriptor.FACTORY);
+        fc.addGenerated(NumericMultiplyDescriptor.FACTORY);
+        fc.addGenerated(NumericSubDescriptor.FACTORY);
+        fc.addGenerated(NumericModuloDescriptor.FACTORY);
+        fc.addGenerated(NumericCaretDescriptor.FACTORY);
+        fc.addGenerated(NotDescriptor.FACTORY);
+        fc.addGenerated(LenDescriptor.FACTORY);
+        fc.addGenerated(NumericAbsDescriptor.FACTORY);
+        fc.addGenerated(NumericCeilingDescriptor.FACTORY);
+        fc.addGenerated(NumericFloorDescriptor.FACTORY);
+        fc.addGenerated(NumericRoundDescriptor.FACTORY);
+        fc.addGenerated(NumericRoundHalfToEvenDescriptor.FACTORY);
+        fc.addGenerated(NumericRoundHalfToEven2Descriptor.FACTORY);
+        fc.addGenerated(NumericACosDescriptor.FACTORY);
+        fc.addGenerated(NumericASinDescriptor.FACTORY);
+        fc.addGenerated(NumericATanDescriptor.FACTORY);
+        fc.addGenerated(NumericCosDescriptor.FACTORY);
+        fc.addGenerated(NumericSinDescriptor.FACTORY);
+        fc.addGenerated(NumericTanDescriptor.FACTORY);
+        fc.addGenerated(NumericExpDescriptor.FACTORY);
+        fc.addGenerated(NumericLnDescriptor.FACTORY);
+        fc.addGenerated(NumericLogDescriptor.FACTORY);
+        fc.addGenerated(NumericSqrtDescriptor.FACTORY);
+        fc.addGenerated(NumericSignDescriptor.FACTORY);
+        fc.addGenerated(NumericTruncDescriptor.FACTORY);
+        fc.addGenerated(NumericATan2Descriptor.FACTORY);
 
         // Comparisons.
-        functionsToInjectUnkownHandling.add(EqualsDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(GreaterThanDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(GreaterThanOrEqualsDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(LessThanDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(LessThanOrEqualsDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(NotEqualsDescriptor.FACTORY);
+        fc.addGenerated(EqualsDescriptor.FACTORY);
+        fc.addGenerated(GreaterThanDescriptor.FACTORY);
+        fc.addGenerated(GreaterThanOrEqualsDescriptor.FACTORY);
+        fc.addGenerated(LessThanDescriptor.FACTORY);
+        fc.addGenerated(LessThanOrEqualsDescriptor.FACTORY);
+        fc.addGenerated(NotEqualsDescriptor.FACTORY);
 
         // Binary functions
-        functionsToInjectUnkownHandling.add(BinaryLengthDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(ParseBinaryDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(PrintBinaryDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(BinaryConcatDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(SubBinaryFromDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(SubBinaryFromToDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(FindBinaryDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(FindBinaryFromDescriptor.FACTORY);
+        fc.addGenerated(BinaryLengthDescriptor.FACTORY);
+        fc.addGenerated(ParseBinaryDescriptor.FACTORY);
+        fc.addGenerated(PrintBinaryDescriptor.FACTORY);
+        fc.addGenerated(BinaryConcatDescriptor.FACTORY);
+        fc.addGenerated(SubBinaryFromDescriptor.FACTORY);
+        fc.addGenerated(SubBinaryFromToDescriptor.FACTORY);
+        fc.addGenerated(FindBinaryDescriptor.FACTORY);
+        fc.addGenerated(FindBinaryFromDescriptor.FACTORY);
 
         // String functions
-        functionsToInjectUnkownHandling.add(StringLikeDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(StringContainsDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(StringEndsWithDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(StringStartsWithDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(SubstringDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(StringEqualDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(StringLowerCaseDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(StringUpperCaseDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(StringLengthDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(Substring2Descriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(SubstringBeforeDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(SubstringAfterDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(StringToCodePointDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(CodePointToStringDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(StringConcatDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(StringJoinDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(StringRegExpContainsDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(StringRegExpContainsWithFlagDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(StringRegExpLikeDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(StringRegExpLikeWithFlagDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(StringRegExpPositionDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(StringRegExpPositionWithFlagDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(StringRegExpReplaceDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(StringRegExpReplaceWithFlagsDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(StringInitCapDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(StringTrimDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(StringLTrimDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(StringRTrimDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(StringTrim2Descriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(StringLTrim2Descriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(StringRTrim2Descriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(StringPositionDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(StringRepeatDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(StringSplitDescriptor.FACTORY);
+        fc.addGenerated(StringLikeDescriptor.FACTORY);
+        fc.addGenerated(StringContainsDescriptor.FACTORY);
+        fc.addGenerated(StringEndsWithDescriptor.FACTORY);
+        fc.addGenerated(StringStartsWithDescriptor.FACTORY);
+        fc.addGenerated(SubstringDescriptor.FACTORY);
+        fc.addGenerated(StringEqualDescriptor.FACTORY);
+        fc.addGenerated(StringLowerCaseDescriptor.FACTORY);
+        fc.addGenerated(StringUpperCaseDescriptor.FACTORY);
+        fc.addGenerated(StringLengthDescriptor.FACTORY);
+        fc.addGenerated(Substring2Descriptor.FACTORY);
+        fc.addGenerated(SubstringBeforeDescriptor.FACTORY);
+        fc.addGenerated(SubstringAfterDescriptor.FACTORY);
+        fc.addGenerated(StringToCodePointDescriptor.FACTORY);
+        fc.addGenerated(CodePointToStringDescriptor.FACTORY);
+        fc.addGenerated(StringConcatDescriptor.FACTORY);
+        fc.addGenerated(StringJoinDescriptor.FACTORY);
+        fc.addGenerated(StringRegExpContainsDescriptor.FACTORY);
+        fc.addGenerated(StringRegExpContainsWithFlagDescriptor.FACTORY);
+        fc.addGenerated(StringRegExpLikeDescriptor.FACTORY);
+        fc.addGenerated(StringRegExpLikeWithFlagDescriptor.FACTORY);
+        fc.addGenerated(StringRegExpPositionDescriptor.FACTORY);
+        fc.addGenerated(StringRegExpPositionWithFlagDescriptor.FACTORY);
+        fc.addGenerated(StringRegExpReplaceDescriptor.FACTORY);
+        fc.addGenerated(StringRegExpReplaceWithFlagsDescriptor.FACTORY);
+        fc.addGenerated(StringInitCapDescriptor.FACTORY);
+        fc.addGenerated(StringTrimDescriptor.FACTORY);
+        fc.addGenerated(StringLTrimDescriptor.FACTORY);
+        fc.addGenerated(StringRTrimDescriptor.FACTORY);
+        fc.addGenerated(StringTrim2Descriptor.FACTORY);
+        fc.addGenerated(StringLTrim2Descriptor.FACTORY);
+        fc.addGenerated(StringRTrim2Descriptor.FACTORY);
+        fc.addGenerated(StringPositionDescriptor.FACTORY);
+        fc.addGenerated(StringRepeatDescriptor.FACTORY);
+        fc.addGenerated(StringSplitDescriptor.FACTORY);
 
         // Constructors
-        functionsToInjectUnkownHandling.add(ABooleanConstructorDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(ABinaryHexStringConstructorDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(ABinaryBase64StringConstructorDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(AStringConstructorDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(AInt8ConstructorDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(AInt16ConstructorDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(AInt32ConstructorDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(AInt64ConstructorDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(AFloatConstructorDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(ADoubleConstructorDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(APointConstructorDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(APoint3DConstructorDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(ALineConstructorDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(APolygonConstructorDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(ACircleConstructorDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(ARectangleConstructorDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(ATimeConstructorDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(ADateConstructorDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(ADateTimeConstructorDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(ADurationConstructorDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(AYearMonthDurationConstructorDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(ADayTimeDurationConstructorDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(AUUIDFromStringConstructorDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(AIntervalConstructorDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(AIntervalStartFromDateConstructorDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(AIntervalStartFromDateTimeConstructorDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(AIntervalStartFromTimeConstructorDescriptor.FACTORY);
+        fc.addGenerated(ABooleanConstructorDescriptor.FACTORY);
+        fc.addGenerated(ABinaryHexStringConstructorDescriptor.FACTORY);
+        fc.addGenerated(ABinaryBase64StringConstructorDescriptor.FACTORY);
+        fc.addGenerated(AStringConstructorDescriptor.FACTORY);
+        fc.addGenerated(AInt8ConstructorDescriptor.FACTORY);
+        fc.addGenerated(AInt16ConstructorDescriptor.FACTORY);
+        fc.addGenerated(AInt32ConstructorDescriptor.FACTORY);
+        fc.addGenerated(AInt64ConstructorDescriptor.FACTORY);
+        fc.addGenerated(AFloatConstructorDescriptor.FACTORY);
+        fc.addGenerated(ADoubleConstructorDescriptor.FACTORY);
+        fc.addGenerated(APointConstructorDescriptor.FACTORY);
+        fc.addGenerated(APoint3DConstructorDescriptor.FACTORY);
+        fc.addGenerated(ALineConstructorDescriptor.FACTORY);
+        fc.addGenerated(APolygonConstructorDescriptor.FACTORY);
+        fc.addGenerated(ACircleConstructorDescriptor.FACTORY);
+        fc.addGenerated(ARectangleConstructorDescriptor.FACTORY);
+        fc.addGenerated(ATimeConstructorDescriptor.FACTORY);
+        fc.addGenerated(ADateConstructorDescriptor.FACTORY);
+        fc.addGenerated(ADateTimeConstructorDescriptor.FACTORY);
+        fc.addGenerated(ADurationConstructorDescriptor.FACTORY);
+        fc.addGenerated(AYearMonthDurationConstructorDescriptor.FACTORY);
+        fc.addGenerated(ADayTimeDurationConstructorDescriptor.FACTORY);
+        fc.addGenerated(AUUIDFromStringConstructorDescriptor.FACTORY);
+        fc.addGenerated(AIntervalConstructorDescriptor.FACTORY);
+        fc.addGenerated(AIntervalStartFromDateConstructorDescriptor.FACTORY);
+        fc.addGenerated(AIntervalStartFromDateTimeConstructorDescriptor.FACTORY);
+        fc.addGenerated(AIntervalStartFromTimeConstructorDescriptor.FACTORY);
 
         // Spatial
-        functionsToInjectUnkownHandling.add(CreatePointDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(CreateLineDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(CreatePolygonDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(CreateCircleDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(CreateRectangleDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(SpatialAreaDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(SpatialDistanceDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(SpatialIntersectDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(CreateMBRDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(SpatialCellDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(PointXCoordinateAccessor.FACTORY);
-        functionsToInjectUnkownHandling.add(PointYCoordinateAccessor.FACTORY);
-        functionsToInjectUnkownHandling.add(CircleRadiusAccessor.FACTORY);
-        functionsToInjectUnkownHandling.add(CircleCenterAccessor.FACTORY);
-        functionsToInjectUnkownHandling.add(LineRectanglePolygonAccessor.FACTORY);
+        fc.addGenerated(CreatePointDescriptor.FACTORY);
+        fc.addGenerated(CreateLineDescriptor.FACTORY);
+        fc.addGenerated(CreatePolygonDescriptor.FACTORY);
+        fc.addGenerated(CreateCircleDescriptor.FACTORY);
+        fc.addGenerated(CreateRectangleDescriptor.FACTORY);
+        fc.addGenerated(SpatialAreaDescriptor.FACTORY);
+        fc.addGenerated(SpatialDistanceDescriptor.FACTORY);
+        fc.addGenerated(SpatialIntersectDescriptor.FACTORY);
+        fc.addGenerated(CreateMBRDescriptor.FACTORY);
+        fc.addGenerated(SpatialCellDescriptor.FACTORY);
+        fc.addGenerated(PointXCoordinateAccessor.FACTORY);
+        fc.addGenerated(PointYCoordinateAccessor.FACTORY);
+        fc.addGenerated(CircleRadiusAccessor.FACTORY);
+        fc.addGenerated(CircleCenterAccessor.FACTORY);
+        fc.addGenerated(LineRectanglePolygonAccessor.FACTORY);
 
         // fuzzyjoin function
-        functionsToInjectUnkownHandling.add(PrefixLenJaccardDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(WordTokensDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(HashedWordTokensDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(CountHashedWordTokensDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(GramTokensDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(HashedGramTokensDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(CountHashedGramTokensDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(EditDistanceDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(EditDistanceCheckDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(EditDistanceStringIsFilterableDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(EditDistanceListIsFilterableDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(EditDistanceContainsDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(SimilarityJaccardDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(SimilarityJaccardCheckDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(SimilarityJaccardSortedDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(SimilarityJaccardSortedCheckDescriptor.FACTORY);
+        fc.addGenerated(PrefixLenJaccardDescriptor.FACTORY);
+        fc.addGenerated(WordTokensDescriptor.FACTORY);
+        fc.addGenerated(HashedWordTokensDescriptor.FACTORY);
+        fc.addGenerated(CountHashedWordTokensDescriptor.FACTORY);
+        fc.addGenerated(GramTokensDescriptor.FACTORY);
+        fc.addGenerated(HashedGramTokensDescriptor.FACTORY);
+        fc.addGenerated(CountHashedGramTokensDescriptor.FACTORY);
+        fc.addGenerated(EditDistanceDescriptor.FACTORY);
+        fc.addGenerated(EditDistanceCheckDescriptor.FACTORY);
+        fc.addGenerated(EditDistanceStringIsFilterableDescriptor.FACTORY);
+        fc.addGenerated(EditDistanceListIsFilterableDescriptor.FACTORY);
+        fc.addGenerated(EditDistanceContainsDescriptor.FACTORY);
+        fc.addGenerated(SimilarityJaccardDescriptor.FACTORY);
+        fc.addGenerated(SimilarityJaccardCheckDescriptor.FACTORY);
+        fc.addGenerated(SimilarityJaccardSortedDescriptor.FACTORY);
+        fc.addGenerated(SimilarityJaccardSortedCheckDescriptor.FACTORY);
 
         // full-text function
-        functionsToInjectUnkownHandling.add(FullTextContainsDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(FullTextContainsWithoutOptionDescriptor.FACTORY);
+        fc.addGenerated(FullTextContainsDescriptor.FACTORY);
+        fc.addGenerated(FullTextContainsWithoutOptionDescriptor.FACTORY);
 
         // Record functions.
-        functionsToInjectUnkownHandling.add(GetRecordFieldsDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(GetRecordFieldValueDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(DeepEqualityDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(RecordMergeDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(RecordAddFieldsDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(RecordRemoveFieldsDescriptor.FACTORY);
+        fc.addGenerated(GetRecordFieldsDescriptor.FACTORY);
+        fc.addGenerated(GetRecordFieldValueDescriptor.FACTORY);
+        fc.addGenerated(DeepEqualityDescriptor.FACTORY);
+        fc.addGenerated(RecordMergeDescriptor.FACTORY);
+        fc.addGenerated(RecordAddFieldsDescriptor.FACTORY);
+        fc.addGenerated(RecordRemoveFieldsDescriptor.FACTORY);
 
         // Spatial and temporal type accessors
-        functionsToInjectUnkownHandling.add(TemporalYearAccessor.FACTORY);
-        functionsToInjectUnkownHandling.add(TemporalMonthAccessor.FACTORY);
-        functionsToInjectUnkownHandling.add(TemporalDayAccessor.FACTORY);
-        functionsToInjectUnkownHandling.add(TemporalHourAccessor.FACTORY);
-        functionsToInjectUnkownHandling.add(TemporalMinuteAccessor.FACTORY);
-        functionsToInjectUnkownHandling.add(TemporalSecondAccessor.FACTORY);
-        functionsToInjectUnkownHandling.add(TemporalMillisecondAccessor.FACTORY);
-        functionsToInjectUnkownHandling.add(TemporalIntervalStartAccessor.FACTORY);
-        functionsToInjectUnkownHandling.add(TemporalIntervalEndAccessor.FACTORY);
-        functionsToInjectUnkownHandling.add(TemporalIntervalStartDateAccessor.FACTORY);
-        functionsToInjectUnkownHandling.add(TemporalIntervalEndDateAccessor.FACTORY);
-        functionsToInjectUnkownHandling.add(TemporalIntervalStartTimeAccessor.FACTORY);
-        functionsToInjectUnkownHandling.add(TemporalIntervalEndTimeAccessor.FACTORY);
-        functionsToInjectUnkownHandling.add(TemporalIntervalStartDatetimeAccessor.FACTORY);
-        functionsToInjectUnkownHandling.add(TemporalIntervalEndDatetimeAccessor.FACTORY);
+        fc.addGenerated(TemporalYearAccessor.FACTORY);
+        fc.addGenerated(TemporalMonthAccessor.FACTORY);
+        fc.addGenerated(TemporalDayAccessor.FACTORY);
+        fc.addGenerated(TemporalHourAccessor.FACTORY);
+        fc.addGenerated(TemporalMinuteAccessor.FACTORY);
+        fc.addGenerated(TemporalSecondAccessor.FACTORY);
+        fc.addGenerated(TemporalMillisecondAccessor.FACTORY);
+        fc.addGenerated(TemporalIntervalStartAccessor.FACTORY);
+        fc.addGenerated(TemporalIntervalEndAccessor.FACTORY);
+        fc.addGenerated(TemporalIntervalStartDateAccessor.FACTORY);
+        fc.addGenerated(TemporalIntervalEndDateAccessor.FACTORY);
+        fc.addGenerated(TemporalIntervalStartTimeAccessor.FACTORY);
+        fc.addGenerated(TemporalIntervalEndTimeAccessor.FACTORY);
+        fc.addGenerated(TemporalIntervalStartDatetimeAccessor.FACTORY);
+        fc.addGenerated(TemporalIntervalEndDatetimeAccessor.FACTORY);
 
         // Temporal functions
-        functionsToInjectUnkownHandling.add(UnixTimeFromDateInDaysDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(UnixTimeFromTimeInMsDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(UnixTimeFromDatetimeInMsDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(UnixTimeFromDatetimeInSecsDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(DateFromUnixTimeInDaysDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(DateFromDatetimeDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(TimeFromUnixTimeInMsDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(TimeFromDatetimeDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(DatetimeFromUnixTimeInMsDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(DatetimeFromUnixTimeInSecsDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(DatetimeFromDateAndTimeDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(CalendarDurationFromDateTimeDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(CalendarDuartionFromDateDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(AdjustDateTimeForTimeZoneDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(AdjustTimeForTimeZoneDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(IntervalBeforeDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(IntervalAfterDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(IntervalMeetsDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(IntervalMetByDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(IntervalOverlapsDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(IntervalOverlappedByDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(OverlapDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(IntervalStartsDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(IntervalStartedByDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(IntervalCoversDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(IntervalCoveredByDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(IntervalEndsDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(IntervalEndedByDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(DurationFromMillisecondsDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(DurationFromMonthsDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(YearMonthDurationGreaterThanComparatorDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(YearMonthDurationLessThanComparatorDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(DayTimeDurationGreaterThanComparatorDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(DayTimeDurationLessThanComparatorDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(MonthsFromYearMonthDurationDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(MillisecondsFromDayTimeDurationDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(DurationEqualDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(GetYearMonthDurationDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(GetDayTimeDurationDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(IntervalBinDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(OverlapBinsDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(DayOfWeekDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(ParseDateDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(ParseTimeDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(ParseDateTimeDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(PrintDateDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(PrintTimeDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(PrintDateTimeDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(GetOverlappingIntervalDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(DurationFromIntervalDescriptor.FACTORY);
+        fc.addGenerated(UnixTimeFromDateInDaysDescriptor.FACTORY);
+        fc.addGenerated(UnixTimeFromTimeInMsDescriptor.FACTORY);
+        fc.addGenerated(UnixTimeFromDatetimeInMsDescriptor.FACTORY);
+        fc.addGenerated(UnixTimeFromDatetimeInSecsDescriptor.FACTORY);
+        fc.addGenerated(DateFromUnixTimeInDaysDescriptor.FACTORY);
+        fc.addGenerated(DateFromDatetimeDescriptor.FACTORY);
+        fc.addGenerated(TimeFromUnixTimeInMsDescriptor.FACTORY);
+        fc.addGenerated(TimeFromDatetimeDescriptor.FACTORY);
+        fc.addGenerated(DatetimeFromUnixTimeInMsDescriptor.FACTORY);
+        fc.addGenerated(DatetimeFromUnixTimeInSecsDescriptor.FACTORY);
+        fc.addGenerated(DatetimeFromDateAndTimeDescriptor.FACTORY);
+        fc.addGenerated(CalendarDurationFromDateTimeDescriptor.FACTORY);
+        fc.addGenerated(CalendarDuartionFromDateDescriptor.FACTORY);
+        fc.addGenerated(AdjustDateTimeForTimeZoneDescriptor.FACTORY);
+        fc.addGenerated(AdjustTimeForTimeZoneDescriptor.FACTORY);
+        fc.addGenerated(IntervalBeforeDescriptor.FACTORY);
+        fc.addGenerated(IntervalAfterDescriptor.FACTORY);
+        fc.addGenerated(IntervalMeetsDescriptor.FACTORY);
+        fc.addGenerated(IntervalMetByDescriptor.FACTORY);
+        fc.addGenerated(IntervalOverlapsDescriptor.FACTORY);
+        fc.addGenerated(IntervalOverlappedByDescriptor.FACTORY);
+        fc.addGenerated(OverlapDescriptor.FACTORY);
+        fc.addGenerated(IntervalStartsDescriptor.FACTORY);
+        fc.addGenerated(IntervalStartedByDescriptor.FACTORY);
+        fc.addGenerated(IntervalCoversDescriptor.FACTORY);
+        fc.addGenerated(IntervalCoveredByDescriptor.FACTORY);
+        fc.addGenerated(IntervalEndsDescriptor.FACTORY);
+        fc.addGenerated(IntervalEndedByDescriptor.FACTORY);
+        fc.addGenerated(DurationFromMillisecondsDescriptor.FACTORY);
+        fc.addGenerated(DurationFromMonthsDescriptor.FACTORY);
+        fc.addGenerated(YearMonthDurationGreaterThanComparatorDescriptor.FACTORY);
+        fc.addGenerated(YearMonthDurationLessThanComparatorDescriptor.FACTORY);
+        fc.addGenerated(DayTimeDurationGreaterThanComparatorDescriptor.FACTORY);
+        fc.addGenerated(DayTimeDurationLessThanComparatorDescriptor.FACTORY);
+        fc.addGenerated(MonthsFromYearMonthDurationDescriptor.FACTORY);
+        fc.addGenerated(MillisecondsFromDayTimeDurationDescriptor.FACTORY);
+        fc.addGenerated(DurationEqualDescriptor.FACTORY);
+        fc.addGenerated(GetYearMonthDurationDescriptor.FACTORY);
+        fc.addGenerated(GetDayTimeDurationDescriptor.FACTORY);
+        fc.addGenerated(IntervalBinDescriptor.FACTORY);
+        fc.addGenerated(OverlapBinsDescriptor.FACTORY);
+        fc.addGenerated(DayOfWeekDescriptor.FACTORY);
+        fc.addGenerated(ParseDateDescriptor.FACTORY);
+        fc.addGenerated(ParseTimeDescriptor.FACTORY);
+        fc.addGenerated(ParseDateTimeDescriptor.FACTORY);
+        fc.addGenerated(PrintDateDescriptor.FACTORY);
+        fc.addGenerated(PrintTimeDescriptor.FACTORY);
+        fc.addGenerated(PrintDateTimeDescriptor.FACTORY);
+        fc.addGenerated(GetOverlappingIntervalDescriptor.FACTORY);
+        fc.addGenerated(DurationFromIntervalDescriptor.FACTORY);
 
         // Type functions.
-        functionsToInjectUnkownHandling.add(IsBooleanDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(IsNumberDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(IsStringDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(IsArrayDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(IsObjectDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(ToBooleanDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(ToStringDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(ToDoubleDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(ToBigIntDescriptor.FACTORY);
+        fc.addGenerated(IsBooleanDescriptor.FACTORY);
+        fc.addGenerated(IsNumberDescriptor.FACTORY);
+        fc.addGenerated(IsStringDescriptor.FACTORY);
+        fc.addGenerated(IsArrayDescriptor.FACTORY);
+        fc.addGenerated(IsObjectDescriptor.FACTORY);
+        fc.addGenerated(ToBooleanDescriptor.FACTORY);
+        fc.addGenerated(ToStringDescriptor.FACTORY);
+        fc.addGenerated(ToDoubleDescriptor.FACTORY);
+        fc.addGenerated(ToBigIntDescriptor.FACTORY);
 
         // Cast function
-        functionsToInjectUnkownHandling.add(CastTypeDescriptor.FACTORY);
-        functionsToInjectUnkownHandling.add(CastTypeLaxDescriptor.FACTORY);
+        fc.addGenerated(CastTypeDescriptor.FACTORY);
+        fc.addGenerated(CastTypeLaxDescriptor.FACTORY);
 
         // Record function
-        functionsToInjectUnkownHandling.add(RecordPairsDescriptor.FACTORY);
+        fc.addGenerated(RecordPairsDescriptor.FACTORY);
 
-        List<IFunctionDescriptorFactory> generatedFactories = new ArrayList<>();
-        for (IFunctionDescriptorFactory factory : functionsToInjectUnkownHandling) {
-            generatedFactories
-                    .add(getGeneratedFunctionDescriptorFactory(factory.createFunctionDescriptor().getClass()));
-        }
-        temp.addAll(generatedFactories);
+        return fc;
     }
 
-    public static List<IFunctionDescriptorFactory> getFunctionDescriptorFactories() {
-        return temp;
+    public List<IFunctionDescriptorFactory> getFunctionDescriptorFactories() {
+        return descriptorFactories;
     }
 
     /**
@@ -739,8 +745,5 @@ public final class FunctionCollection {
         } catch (Exception e) {
             throw new IllegalStateException(e);
         }
-    }
-
-    private FunctionCollection() {
     }
 }

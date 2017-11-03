@@ -26,6 +26,7 @@ import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.asterix.metadata.api.IMetadataExtension;
+import org.apache.asterix.om.functions.IFunctionManager;
 import org.apache.asterix.translator.IStatementExecutorFactory;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 
@@ -52,18 +53,39 @@ public class ExtensionUtil {
      */
     public static Pair<ExtensionId, ILangCompilationProvider> extendLangCompilationProvider(Language lang,
             Pair<ExtensionId, ILangCompilationProvider> cp, ILangExtension le) throws RuntimeDataException {
-        if (cp != null && le.getLangCompilationProvider(lang) != null) {
+        ILangCompilationProvider lecp = le.getLangCompilationProvider(lang);
+        if (cp != null && lecp != null) {
             throw new RuntimeDataException(ErrorCode.EXTENSION_COMPONENT_CONFLICT, le.getId(), cp.first,
                     lang.toString());
         }
-        return (le.getLangCompilationProvider(lang) != null)
-                ? new Pair<>(le.getId(), le.getLangCompilationProvider(lang)) : cp;
+        return lecp != null ? new Pair<>(le.getId(), lecp) : cp;
+    }
+
+    /**
+     * Validate no extension conflict and return function manager extension
+     *
+     * @param fm
+     *            place holder for function manager extension
+     * @param le
+     *            user defined extension
+     * @return the user defined extension
+     * @throws RuntimeDataException
+     *             if extension conflict was detected
+     */
+    public static Pair<ExtensionId, IFunctionManager> extendFunctionManager(Pair<ExtensionId, IFunctionManager> fm,
+            ILangExtension le) throws RuntimeDataException {
+        IFunctionManager lefm = le.getFunctionManager();
+        if (fm != null && lefm != null) {
+            throw new RuntimeDataException(ErrorCode.EXTENSION_COMPONENT_CONFLICT, le.getId(), fm.first,
+                    IFunctionManager.class.getSimpleName());
+        }
+        return lefm != null ? new Pair<>(le.getId(), lefm) : fm;
     }
 
     /**
      * Validate no extension conflict and return statement executor extension
      *
-     * @param qte
+     * @param see
      *            place holder for statement executor extension
      * @param extension
      *            user defined extension
@@ -71,10 +93,10 @@ public class ExtensionUtil {
      * @throws RuntimeDataException
      *             if extension conflict was detected
      */
-    public static IStatementExecutorExtension extendStatementExecutor(IStatementExecutorExtension qte,
+    public static IStatementExecutorExtension extendStatementExecutor(IStatementExecutorExtension see,
             IStatementExecutorExtension extension) throws RuntimeDataException {
-        if (qte != null) {
-            throw new RuntimeDataException(ErrorCode.EXTENSION_COMPONENT_CONFLICT, qte.getId(), extension.getId(),
+        if (see != null) {
+            throw new RuntimeDataException(ErrorCode.EXTENSION_COMPONENT_CONFLICT, see.getId(), extension.getId(),
                     IStatementExecutorFactory.class.getSimpleName());
         }
         return extension;

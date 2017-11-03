@@ -32,7 +32,6 @@ import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
-import org.apache.asterix.runtime.functions.FunctionManagerHolder;
 import org.apache.asterix.runtime.operators.LSMSecondaryIndexBulkLoadOperatorDescriptor;
 import org.apache.asterix.runtime.operators.LSMSecondaryIndexCreationTupleProcessorOperatorDescriptor;
 import org.apache.asterix.transaction.management.opcallbacks.PrimaryIndexInstantSearchOperationCallbackFactory;
@@ -155,10 +154,6 @@ public abstract class SecondaryCorrelatedTreeIndexOperationsHelper extends Secon
     @Override
     protected AlgebricksMetaOperatorDescriptor createCastOp(JobSpecification spec, DatasetType dsType,
             boolean strictCast) throws AlgebricksException {
-        IFunctionDescriptor castFuncDesc = FunctionManagerHolder.getFunctionManager()
-                .lookupFunction(strictCast ? BuiltinFunctions.CAST_TYPE : BuiltinFunctions.CAST_TYPE_LAX);
-        castFuncDesc.setImmutableStates(enforcedItemType, itemType);
-
         int[] outColumns = new int[1];
 
         // tags(2) + primary keys + record + meta part(?)
@@ -185,7 +180,7 @@ public abstract class SecondaryCorrelatedTreeIndexOperationsHelper extends Secon
         IScalarEvaluatorFactory[] castEvalFact =
                 new IScalarEvaluatorFactory[] { new ColumnAccessEvalFactory(recordIdx) };
         IScalarEvaluatorFactory[] sefs = new IScalarEvaluatorFactory[1];
-        sefs[0] = castFuncDesc.createEvaluatorFactory(castEvalFact);
+        sefs[0] = createCastFunction(strictCast).createEvaluatorFactory(castEvalFact);
         AssignRuntimeFactory castAssign = new AssignRuntimeFactory(outColumns, sefs, projectionList);
         return new AlgebricksMetaOperatorDescriptor(spec, 1, 1, new IPushRuntimeFactory[] { castAssign },
                 new RecordDescriptor[] { getTaggedRecordDescriptor(enforcedRecDesc) });
