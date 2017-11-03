@@ -23,6 +23,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.hyracks.api.application.INCServiceContext;
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.storage.am.common.api.IIndexDataflowHelper;
@@ -72,8 +73,7 @@ public class IndexDataflowHelper implements IIndexDataflowHelper {
         // Get local resource
         LocalResource lr = getResource();
         if (lr == null) {
-            throw new HyracksDataException(
-                    "Index resource couldn't be found. Has it been created yet? Was it deleted?");
+            throw HyracksDataException.create(ErrorCode.INDEX_DOES_NOT_EXIST);
         }
         IResource resource = lr.getResource();
         index = resource.createInstance(ctx);

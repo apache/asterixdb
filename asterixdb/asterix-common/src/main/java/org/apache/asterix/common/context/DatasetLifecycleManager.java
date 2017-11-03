@@ -37,6 +37,7 @@ import org.apache.asterix.common.ioopcallbacks.AbstractLSMIOOperationCallback;
 import org.apache.asterix.common.replication.IReplicationStrategy;
 import org.apache.asterix.common.transactions.ILogManager;
 import org.apache.asterix.common.transactions.LogRecord;
+import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.asterix.common.utils.TransactionUtil;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -129,14 +130,19 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
         IndexInfo iInfo = dsr == null ? null : dsr.getIndexInfo(resourceID);
 
         if (dsr == null || iInfo == null) {
-            throw new HyracksDataException("Index with resource ID " + resourceID + " does not exist.");
+            throw HyracksDataException.create(ErrorCode.INDEX_DOES_NOT_EXIST);
         }
 
         PrimaryIndexOperationTracker opTracker = dsr.getOpTracker();
         if (iInfo.getReferenceCount() != 0 || (opTracker != null && opTracker.getNumActiveOperations() != 0)) {
-            throw new HyracksDataException("Cannot remove index while it is open. (Dataset reference count = "
-                    + iInfo.getReferenceCount() + ", Operation tracker number of active operations = "
-                    + opTracker.getNumActiveOperations() + ")");
+            if (LOGGER.isLoggable(Level.SEVERE)) {
+                final String logMsg = String.format(
+                        "Failed to drop in-use index %s. Ref count (%d), Operation tracker active ops (%d)",
+                        resourcePath, iInfo.getReferenceCount(), opTracker.getNumActiveOperations());
+                LOGGER.severe(logMsg);
+            }
+            throw HyracksDataException
+                    .create(ErrorCode.CANNOT_DROP_IN_USE_INDEX, StoragePathUtil.getIndexNameFromPath(resourcePath));
         }
 
         // TODO: use fine-grained counters, one for each index instead of a single counter per dataset.

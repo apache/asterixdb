@@ -129,4 +129,15 @@ public class StoragePathUtil {
             throw HyracksDataException.create(e);
         }
     }
+
+    /**
+     * Gets the index name part in the index relative path.
+     *
+     * @param path
+     * @return The index name
+     */
+    public static String getIndexNameFromPath(String path) {
+        int idx = path.lastIndexOf(DATASET_INDEX_NAME_SEPARATOR);
+        return idx != -1 ? path.substring(idx + DATASET_INDEX_NAME_SEPARATOR.length()) : path;
+    }
 }

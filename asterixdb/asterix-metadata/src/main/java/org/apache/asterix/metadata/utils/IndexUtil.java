@@ -18,7 +18,11 @@
  */
 package org.apache.asterix.metadata.utils;
 
+import static org.apache.hyracks.storage.am.common.dataflow.IndexDropOperatorDescriptor.*;
+
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.asterix.common.config.DatasetConfig;
 import org.apache.asterix.common.config.OptimizationConfUtil;
@@ -37,6 +41,7 @@ import org.apache.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConf
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.job.IJobletEventListenerFactory;
 import org.apache.hyracks.api.job.JobSpecification;
+import org.apache.hyracks.storage.am.common.dataflow.IndexDropOperatorDescriptor;
 
 public class IndexUtil {
 
@@ -103,14 +108,14 @@ public class IndexUtil {
             Dataset dataset) throws AlgebricksException {
         SecondaryIndexOperationsHelper secondaryIndexHelper = SecondaryIndexOperationsHelper
                 .createIndexOperationsHelper(dataset, index, metadataProvider, physicalOptimizationConfig);
-        return secondaryIndexHelper.buildDropJobSpec(false);
+        return secondaryIndexHelper.buildDropJobSpec(EnumSet.noneOf(DropOption.class));
     }
 
     public static JobSpecification buildDropIndexJobSpec(Index index, MetadataProvider metadataProvider,
-            Dataset dataset, boolean failSilently) throws AlgebricksException {
+            Dataset dataset, Set<DropOption> options) throws AlgebricksException {
         SecondaryIndexOperationsHelper secondaryIndexHelper = SecondaryIndexOperationsHelper
                 .createIndexOperationsHelper(dataset, index, metadataProvider, physicalOptimizationConfig);
-        return secondaryIndexHelper.buildDropJobSpec(failSilently);
+        return secondaryIndexHelper.buildDropJobSpec(options);
     }
 
     public static JobSpecification buildSecondaryIndexCreationJobSpec(Dataset dataset, Index index,

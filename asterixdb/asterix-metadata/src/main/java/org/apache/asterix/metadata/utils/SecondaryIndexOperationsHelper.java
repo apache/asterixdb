@@ -19,9 +19,13 @@
 
 package org.apache.asterix.metadata.utils;
 
+import static org.apache.hyracks.storage.am.common.dataflow.IndexDropOperatorDescriptor.DropOption;
+
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.ExternalFilePendingOp;
@@ -170,7 +174,7 @@ public abstract class SecondaryIndexOperationsHelper {
 
     public abstract JobSpecification buildCompactJobSpec() throws AlgebricksException;
 
-    public abstract JobSpecification buildDropJobSpec(boolean failSilently) throws AlgebricksException;
+    public abstract JobSpecification buildDropJobSpec(Set<DropOption> options) throws AlgebricksException;
 
     protected void init() throws AlgebricksException {
         payloadSerde = SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(itemType);

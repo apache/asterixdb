@@ -19,6 +19,17 @@
 
 package org.apache.hyracks.storage.am.common.dataflow;
 
+import static org.apache.hyracks.api.exceptions.ErrorCode.CANNOT_DROP_IN_USE_INDEX;
+import static org.apache.hyracks.api.exceptions.ErrorCode.INDEX_DOES_NOT_EXIST;
+import static org.apache.hyracks.storage.am.common.dataflow.IndexDropOperatorDescriptor.DropOption;
+import static org.apache.hyracks.storage.am.common.dataflow.IndexDropOperatorDescriptor.DropOption.IF_EXISTS;
+import static org.apache.hyracks.storage.am.common.dataflow.IndexDropOperatorDescriptor.DropOption.WAIT_ON_IN_USE;
+
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
@@ -27,17 +38,22 @@ import org.apache.hyracks.dataflow.std.base.AbstractOperatorNodePushable;
 import org.apache.hyracks.storage.am.common.api.IIndexDataflowHelper;
 
 public class IndexDropOperatorNodePushable extends AbstractOperatorNodePushable {
-    private final IIndexDataflowHelper indexHelper;
-    private final boolean failSliently;
 
-    public IndexDropOperatorNodePushable(IIndexDataflowHelperFactory indexHelperFactory, boolean failSilently,
+    private static final Logger LOGGER = Logger.getLogger(IndexDropOperatorNodePushable.class.getName());
+    private static final long DROP_ATTEMPT_WAIT_TIME_MILLIS = TimeUnit.SECONDS.toMillis(1);
+    private final IIndexDataflowHelper indexHelper;
+    private final Set<DropOption> options;
+    private long maxWaitTimeMillis = TimeUnit.SECONDS.toMillis(30);
+
+    public IndexDropOperatorNodePushable(IIndexDataflowHelperFactory indexHelperFactory, Set<DropOption> options,
             IHyracksTaskContext ctx, int partition) throws HyracksDataException {
         this.indexHelper = indexHelperFactory.create(ctx.getJobletContext().getServiceContext(), partition);
-        this.failSliently = failSilently;
+        this.options = options;
     }
 
     @Override
     public void deinitialize() throws HyracksDataException {
+        // no op
     }
 
     @Override
@@ -52,16 +68,51 @@ public class IndexDropOperatorNodePushable extends AbstractOperatorNodePushable 
 
     @Override
     public void initialize() throws HyracksDataException {
-        try {
-            indexHelper.destroy();
-        } catch (HyracksDataException e) {
-            if (!failSliently) {
+        dropIndex();
+    }
+
+    @Override
+    public void setOutputFrameWriter(int index, IFrameWriter writer, RecordDescriptor recordDesc) {
+        // no op
+    }
+
+    private void dropIndex() throws HyracksDataException {
+        while (true) {
+            try {
+                indexHelper.destroy();
+                return;
+            } catch (HyracksDataException e) {
+                if (isIgnorable(e)) {
+                    LOGGER.log(Level.INFO, e, () -> "Ignoring exception on drop");
+                    return;
+                }
+                if (canRetry(e)) {
+                    LOGGER.log(Level.INFO, e, () -> "Retrying drop on exception");
+                    continue;
+                }
                 throw e;
             }
         }
     }
 
-    @Override
-    public void setOutputFrameWriter(int index, IFrameWriter writer, RecordDescriptor recordDesc) {
+    private boolean isIgnorable(HyracksDataException e) {
+        return e.getErrorCode() == INDEX_DOES_NOT_EXIST && options.contains(IF_EXISTS);
+    }
+
+    private boolean canRetry(HyracksDataException e) throws HyracksDataException {
+        if (e.getErrorCode() == CANNOT_DROP_IN_USE_INDEX && options.contains(WAIT_ON_IN_USE)) {
+            if (maxWaitTimeMillis <= 0) {
+                return false;
+            }
+            try {
+                TimeUnit.MILLISECONDS.sleep(DROP_ATTEMPT_WAIT_TIME_MILLIS);
+                maxWaitTimeMillis -= DROP_ATTEMPT_WAIT_TIME_MILLIS;
+                return true;
+            } catch (InterruptedException e1) {
+                Thread.currentThread().interrupt();
+                throw HyracksDataException.create(e1);
+            }
+        }
+        return false;
     }
 }
