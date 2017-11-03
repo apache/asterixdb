@@ -78,10 +78,6 @@ public class BufferCacheTest {
 
         ICachedPage page = null;
 
-        // tryPin should fail
-        page = bufferCache.tryPin(BufferedFileHandle.getDiskPageId(fileId, testPageId));
-        Assert.assertNull(page);
-
         // pin page should succeed
         page = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, testPageId), true);
         page.acquireWriteLatch();
@@ -89,12 +85,6 @@ public class BufferCacheTest {
             for (int i = 0; i < num; i++) {
                 page.getBuffer().putInt(i * 4, i);
             }
-
-            // try pin should succeed
-            ICachedPage page2 = bufferCache.tryPin(BufferedFileHandle.getDiskPageId(fileId, testPageId));
-            Assert.assertNotNull(page2);
-            bufferCache.unpin(page2);
-
         } finally {
             page.releaseWriteLatch(true);
             bufferCache.unpin(page);
@@ -102,31 +92,11 @@ public class BufferCacheTest {
 
         bufferCache.closeFile(fileId);
 
-        // This code is commented because the method pinSanityCheck in the BufferCache is commented.
-        /*boolean exceptionThrown = false;
-
-        // tryPin should fail since file is not open
-        try {
-            page = bufferCache.tryPin(BufferedFileHandle.getDiskPageId(fileId, testPageId));
-        } catch (HyracksDataException e) {
-            exceptionThrown = true;
-        }
-        Assert.assertTrue(exceptionThrown);
-
-        // pin should fail since file is not open
-        exceptionThrown = false;
-        try {
-            page = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, testPageId), false);
-        } catch (HyracksDataException e) {
-            exceptionThrown = true;
-        }
-        Assert.assertTrue(exceptionThrown);*/
-
         // open file again
         bufferCache.openFile(fileId);
 
         // tryPin should succeed because page should still be cached
-        page = bufferCache.tryPin(BufferedFileHandle.getDiskPageId(fileId, testPageId));
+        page = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, testPageId), false);
         Assert.assertNotNull(page);
         page.acquireReadLatch();
         try {

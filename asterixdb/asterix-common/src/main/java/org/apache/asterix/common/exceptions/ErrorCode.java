@@ -229,7 +229,6 @@ public class ErrorCode {
     public static final int ACTIVE_ENTITY_LISTENER_IS_NOT_REGISTERED = 3097;
     public static final int CANNOT_DERIGESTER_ACTIVE_ENTITY_LISTENER = 3098;
     public static final int DOUBLE_INITIALIZATION_OF_ACTIVE_NOTIFICATION_HANDLER = 3099;
-    public static final int FAILED_TO_SHUTDOWN_EVENT_PROCESSOR = 3100;
     public static final int DOUBLE_RECOVERY_ATTEMPTS = 3101;
     public static final int UNREPORTED_TASK_FAILURE_EXCEPTION = 3102;
     public static final int ACTIVE_ENTITY_ALREADY_SUSPENDED = 3103;

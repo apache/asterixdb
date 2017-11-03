@@ -46,7 +46,7 @@ public class CachedPage implements ICachedPageInternal {
     private final StackTraceElement[] ctorStack;
 
     //Constructor for making dummy entry for FIFO queue
-    public CachedPage(){
+    public CachedPage() {
         this.cpid = -1;
         this.buffer = null;
         this.pageReplacementStrategy = null;
@@ -55,7 +55,7 @@ public class CachedPage implements ICachedPageInternal {
         pinCount = null;
         queueInfo = null;
         replacementStrategyObject = null;
-        latch =null;
+        latch = null;
         ctorStack = DEBUG ? new Throwable().getStackTrace() : null;
     }
 
@@ -194,5 +194,15 @@ public class CachedPage implements ICachedPageInternal {
 
     void setNext(CachedPage next) {
         this.next = next;
+    }
+
+    @Override
+    public void setDiskPageId(long dpid) {
+        this.dpid = dpid;
+    }
+
+    @Override
+    public boolean isLargePage() {
+        return multiplier > 1;
     }
 }

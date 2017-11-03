@@ -1135,7 +1135,7 @@ public class BTree extends AbstractTreeIndex {
 
                 ((IBTreeInteriorFrame) interiorFrame).deleteGreatest();
                 int finalPageId = freePageManager.takePage(metaFrame);
-                bufferCache.setPageDiskId(frontier.page, BufferedFileHandle.getDiskPageId(getFileId(), finalPageId));
+                frontier.page.setDiskPageId(BufferedFileHandle.getDiskPageId(getFileId(), finalPageId));
                 pagesToWrite.add(frontier.page);
                 splitKey.setLeftPage(finalPageId);
 
@@ -1156,7 +1156,7 @@ public class BTree extends AbstractTreeIndex {
             if (level < 1) {
                 ICachedPage lastLeaf = nodeFrontiers.get(level).page;
                 int lastLeafPage = nodeFrontiers.get(level).pageId;
-                setPageDpid(lastLeaf, nodeFrontiers.get(level).pageId);
+                lastLeaf.setDiskPageId(BufferedFileHandle.getDiskPageId(getFileId(), nodeFrontiers.get(level).pageId));
                 queue.put(lastLeaf);
                 nodeFrontiers.get(level).page = null;
                 persistFrontiers(level + 1, lastLeafPage);
@@ -1171,7 +1171,7 @@ public class BTree extends AbstractTreeIndex {
             }
             ((IBTreeInteriorFrame) interiorFrame).setRightmostChildPageId(rightPage);
             int finalPageId = freePageManager.takePage(metaFrame);
-            setPageDpid(frontier.page, finalPageId);
+            frontier.page.setDiskPageId(BufferedFileHandle.getDiskPageId(getFileId(), finalPageId));
             queue.put(frontier.page);
             frontier.pageId = finalPageId;
 
@@ -1192,10 +1192,6 @@ public class BTree extends AbstractTreeIndex {
         @Override
         public void abort() throws HyracksDataException {
             super.handleException();
-        }
-
-        private void setPageDpid(ICachedPage page, int pageId) {
-            bufferCache.setPageDiskId(page, BufferedFileHandle.getDiskPageId(getFileId(), pageId));
         }
     }
 

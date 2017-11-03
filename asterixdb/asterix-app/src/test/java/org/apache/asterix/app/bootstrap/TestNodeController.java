@@ -19,6 +19,7 @@
 package org.apache.asterix.app.bootstrap;
 
 import java.io.File;
+import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -36,20 +37,27 @@ import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.context.TransactionSubsystemProvider;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.dataflow.LSMInsertDeleteOperatorNodePushable;
+import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.transactions.IRecoveryManager.ResourceType;
 import org.apache.asterix.common.transactions.ITransactionManager;
+import org.apache.asterix.dataflow.data.nontagged.MissingWriterFactory;
 import org.apache.asterix.file.StorageComponentProvider;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.formats.nontagged.TypeTraitProvider;
+import org.apache.asterix.metadata.MetadataManager;
+import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Dataverse;
 import org.apache.asterix.metadata.entities.Index;
+import org.apache.asterix.metadata.utils.DatasetUtil;
 import org.apache.asterix.metadata.utils.MetadataUtil;
 import org.apache.asterix.metadata.utils.SplitsAndConstraintsUtil;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.runtime.formats.FormatUtils;
 import org.apache.asterix.runtime.formats.NonTaggedDataFormat;
+import org.apache.asterix.runtime.operators.LSMPrimaryUpsertOperatorNodePushable;
 import org.apache.asterix.runtime.utils.CcApplicationContext;
 import org.apache.asterix.test.runtime.ExecutionTestUtil;
 import org.apache.asterix.transaction.management.opcallbacks.AbstractIndexModificationOperationCallback.Operation;
@@ -81,11 +89,13 @@ import org.apache.hyracks.storage.am.btree.dataflow.BTreeSearchOperatorDescripto
 import org.apache.hyracks.storage.am.btree.dataflow.BTreeSearchOperatorNodePushable;
 import org.apache.hyracks.storage.am.common.api.IIndexBuilder;
 import org.apache.hyracks.storage.am.common.api.IModificationOperationCallbackFactory;
+import org.apache.hyracks.storage.am.common.api.ISearchOperationCallbackFactory;
 import org.apache.hyracks.storage.am.common.build.IndexBuilderFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallbackFactory;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
+import org.apache.hyracks.storage.am.lsm.common.api.IFrameOperationCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
 import org.apache.hyracks.storage.am.lsm.common.impls.NoMergePolicyFactory;
 import org.apache.hyracks.storage.common.IResourceFactory;
@@ -113,9 +123,7 @@ public class TestNodeController {
     public static final double BLOOM_FILTER_FALSE_POSITIVE_RATE = 0.01;
     public static final TransactionSubsystemProvider TXN_SUBSYSTEM_PROVIDER = TransactionSubsystemProvider.INSTANCE;
     // Mutables
-    private JobId jobId;
     private long jobCounter = 0L;
-    private IHyracksJobletContext jobletCtx;
     private final String testConfigFileName;
     private final boolean runHDFS;
 
@@ -137,9 +145,6 @@ public class TestNodeController {
             th.printStackTrace();
             throw th;
         }
-        jobletCtx = Mockito.mock(IHyracksJobletContext.class);
-        Mockito.when(jobletCtx.getServiceContext()).thenReturn(ExecutionTestUtil.integrationUtil.ncs[0].getContext());
-        Mockito.when(jobletCtx.getJobId()).thenReturn(jobId);
     }
 
     public void deInit() throws Exception {
@@ -147,20 +152,24 @@ public class TestNodeController {
         ExecutionTestUtil.tearDown(cleanupOnStop);
     }
 
-    public org.apache.asterix.common.transactions.JobId getTxnJobId() {
-        return new org.apache.asterix.common.transactions.JobId((int) jobId.getId());
+    public org.apache.asterix.common.transactions.JobId getTxnJobId(IHyracksTaskContext ctx) {
+        return new org.apache.asterix.common.transactions.JobId((int) ctx.getJobletContext().getJobId().getId());
     }
 
     public Pair<LSMInsertDeleteOperatorNodePushable, CommitRuntime> getInsertPipeline(IHyracksTaskContext ctx,
-            Dataset dataset, IAType[] primaryKeyTypes, ARecordType recordType, ARecordType metaType,
-            ILSMMergePolicyFactory mergePolicyFactory, Map<String, String> mergePolicyProperties, int[] filterFields,
+            Dataset dataset, IAType[] primaryKeyTypes, ARecordType recordType, ARecordType metaType, int[] filterFields,
             int[] primaryKeyIndexes, List<Integer> primaryKeyIndicators,
-            StorageComponentProvider storageComponentProvider) throws AlgebricksException, HyracksDataException {
+            StorageComponentProvider storageComponentProvider)
+            throws AlgebricksException, HyracksDataException, RemoteException, ACIDException {
+        MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+        org.apache.hyracks.algebricks.common.utils.Pair<ILSMMergePolicyFactory, Map<String, String>> mergePolicy =
+                DatasetUtil.getMergePolicyFactory(dataset, mdTxnCtx);
+        MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
         PrimaryIndexInfo primaryIndexInfo = new PrimaryIndexInfo(dataset, primaryKeyTypes, recordType, metaType,
-                mergePolicyFactory, mergePolicyProperties, filterFields, primaryKeyIndexes, primaryKeyIndicators);
+                mergePolicy.first, mergePolicy.second, filterFields, primaryKeyIndexes, primaryKeyIndicators);
         IndexOperation op = IndexOperation.INSERT;
         IModificationOperationCallbackFactory modOpCallbackFactory =
-                new PrimaryIndexModificationOperationCallbackFactory(getTxnJobId(), dataset.getDatasetId(),
+                new PrimaryIndexModificationOperationCallbackFactory(getTxnJobId(ctx), dataset.getDatasetId(),
                         primaryIndexInfo.primaryKeyIndexes, TXN_SUBSYSTEM_PROVIDER, Operation.get(op),
                         ResourceType.LSM_BTREE);
         IRecordDescriptorProvider recordDescProvider = primaryIndexInfo.getInsertRecordDescriptorProvider();
@@ -170,7 +179,7 @@ public class TestNodeController {
                 primaryIndexInfo.primaryIndexInsertFieldsPermutations,
                 recordDescProvider.getInputRecordDescriptor(new ActivityId(new OperatorDescriptorId(0), 0), 0), op,
                 true, indexHelperFactory, modOpCallbackFactory, null);
-        CommitRuntime commitOp = new CommitRuntime(ctx, getTxnJobId(), dataset.getDatasetId(),
+        CommitRuntime commitOp = new CommitRuntime(ctx, getTxnJobId(ctx), dataset.getDatasetId(),
                 primaryIndexInfo.primaryKeyIndexes, false, true, PARTITION, true);
         insertOp.setOutputFrameWriter(0, commitOp, primaryIndexInfo.rDesc);
         commitOp.setInputRecordDescriptor(0, primaryIndexInfo.rDesc);
@@ -204,8 +213,7 @@ public class TestNodeController {
     }
 
     public JobId newJobId() {
-        jobId = new JobId(jobCounter++);
-        return jobId;
+        return new JobId(jobCounter++);
     }
 
     public IResourceFactory getPrimaryResourceFactory(IHyracksTaskContext ctx, PrimaryIndexInfo primaryIndexInfo,
@@ -225,18 +233,22 @@ public class TestNodeController {
     }
 
     public PrimaryIndexInfo createPrimaryIndex(Dataset dataset, IAType[] primaryKeyTypes, ARecordType recordType,
-            ARecordType metaType, ILSMMergePolicyFactory mergePolicyFactory, Map<String, String> mergePolicyProperties,
-            int[] filterFields, IStorageComponentProvider storageComponentProvider, int[] primaryKeyIndexes,
-            List<Integer> primaryKeyIndicators) throws AlgebricksException, HyracksDataException {
+            ARecordType metaType, int[] filterFields, IStorageComponentProvider storageComponentProvider,
+            int[] primaryKeyIndexes, List<Integer> primaryKeyIndicators)
+            throws AlgebricksException, HyracksDataException, RemoteException, ACIDException {
+        MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+        org.apache.hyracks.algebricks.common.utils.Pair<ILSMMergePolicyFactory, Map<String, String>> mergePolicy =
+                DatasetUtil.getMergePolicyFactory(dataset, mdTxnCtx);
+        MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
         PrimaryIndexInfo primaryIndexInfo = new PrimaryIndexInfo(dataset, primaryKeyTypes, recordType, metaType,
-                mergePolicyFactory, mergePolicyProperties, filterFields, primaryKeyIndexes, primaryKeyIndicators);
+                mergePolicy.first, mergePolicy.second, filterFields, primaryKeyIndexes, primaryKeyIndicators);
         Dataverse dataverse = new Dataverse(dataset.getDataverseName(), NonTaggedDataFormat.class.getName(),
                 MetadataUtil.PENDING_NO_OP);
         MetadataProvider mdProvider = new MetadataProvider(
                 (ICcApplicationContext) ExecutionTestUtil.integrationUtil.cc.getApplicationContext(), dataverse);
         try {
             IResourceFactory resourceFactory = dataset.getResourceFactory(mdProvider, primaryIndexInfo.index,
-                    recordType, metaType, mergePolicyFactory, mergePolicyProperties);
+                    recordType, metaType, mergePolicy.first, mergePolicy.second);
             IndexBuilderFactory indexBuilderFactory =
                     new IndexBuilderFactory(storageComponentProvider.getStorageManager(),
                             primaryIndexInfo.getFileSplitProvider(), resourceFactory, !dataset.isTemp());
@@ -283,6 +295,10 @@ public class TestNodeController {
         if (withMessaging) {
             TaskUtil.put(HyracksConstants.KEY_MESSAGE, new VSizeFrame(ctx), ctx);
         }
+        JobId jobId = newJobId();
+        IHyracksJobletContext jobletCtx = Mockito.mock(IHyracksJobletContext.class);
+        Mockito.when(jobletCtx.getServiceContext()).thenReturn(ExecutionTestUtil.integrationUtil.ncs[0].getContext());
+        Mockito.when(jobletCtx.getJobId()).thenReturn(jobId);
         ctx = Mockito.spy(ctx);
         Mockito.when(ctx.getJobletContext()).thenReturn(jobletCtx);
         Mockito.when(ctx.getIoManager()).thenReturn(ExecutionTestUtil.integrationUtil.ncs[0].getIoManager());
@@ -409,5 +425,85 @@ public class TestNodeController {
         CcApplicationContext appCtx =
                 (CcApplicationContext) ExecutionTestUtil.integrationUtil.cc.getApplicationContext();
         return appCtx.getStorageManager();
+    }
+
+    public Pair<LSMPrimaryUpsertOperatorNodePushable, CommitRuntime> getUpsertPipeline(IHyracksTaskContext ctx,
+            Dataset dataset, IAType[] keyTypes, ARecordType recordType, ARecordType metaType, int[] filterFields,
+            int[] keyIndexes, List<Integer> keyIndicators, StorageComponentProvider storageComponentProvider,
+            IFrameOperationCallbackFactory frameOpCallbackFactory, boolean hasSecondaries) throws Exception {
+        MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+        org.apache.hyracks.algebricks.common.utils.Pair<ILSMMergePolicyFactory, Map<String, String>> mergePolicy =
+                DatasetUtil.getMergePolicyFactory(dataset, mdTxnCtx);
+        MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+        PrimaryIndexInfo primaryIndexInfo = new PrimaryIndexInfo(dataset, keyTypes, recordType, metaType,
+                mergePolicy.first, mergePolicy.second, filterFields, keyIndexes, keyIndicators);
+        IModificationOperationCallbackFactory modificationCallbackFactory = dataset.getModificationCallbackFactory(
+                storageComponentProvider, primaryIndexInfo.index, getTxnJobId(ctx), IndexOperation.UPSERT, keyIndexes);
+        ISearchOperationCallbackFactory searchCallbackFactory = dataset.getSearchCallbackFactory(
+                storageComponentProvider, primaryIndexInfo.index, getTxnJobId(ctx), IndexOperation.UPSERT, keyIndexes);
+        IRecordDescriptorProvider recordDescProvider = primaryIndexInfo.getInsertRecordDescriptorProvider();
+        IIndexDataflowHelperFactory indexHelperFactory = new IndexDataflowHelperFactory(
+                storageComponentProvider.getStorageManager(), primaryIndexInfo.getFileSplitProvider());
+        LSMPrimaryUpsertOperatorNodePushable insertOp = new LSMPrimaryUpsertOperatorNodePushable(ctx, PARTITION,
+                indexHelperFactory, primaryIndexInfo.primaryIndexInsertFieldsPermutations,
+                recordDescProvider.getInputRecordDescriptor(new ActivityId(new OperatorDescriptorId(0), 0), 0),
+                modificationCallbackFactory, searchCallbackFactory, keyIndexes.length, recordType, -1,
+                frameOpCallbackFactory == null ? dataset.getFrameOpCallbackFactory() : frameOpCallbackFactory,
+                MissingWriterFactory.INSTANCE, hasSecondaries);
+        RecordDescriptor upsertOutRecDesc = getUpsertOutRecDesc(primaryIndexInfo.rDesc, dataset,
+                filterFields == null ? 0 : filterFields.length, recordType, metaType);
+        // fix pk fields
+        int diff = upsertOutRecDesc.getFieldCount() - primaryIndexInfo.rDesc.getFieldCount();
+        int[] pkFieldsInCommitOp = new int[dataset.getPrimaryKeys().size()];
+        for (int i = 0; i < pkFieldsInCommitOp.length; i++) {
+            pkFieldsInCommitOp[i] = diff + i;
+        }
+        CommitRuntime commitOp = new CommitRuntime(ctx, getTxnJobId(ctx), dataset.getDatasetId(), pkFieldsInCommitOp,
+                false, true, PARTITION, true);
+        insertOp.setOutputFrameWriter(0, commitOp, upsertOutRecDesc);
+        commitOp.setInputRecordDescriptor(0, upsertOutRecDesc);
+        return Pair.of(insertOp, commitOp);
+    }
+
+    private RecordDescriptor getUpsertOutRecDesc(RecordDescriptor inputRecordDesc, Dataset dataset, int numFilterFields,
+            ARecordType itemType, ARecordType metaItemType) throws Exception {
+        ITypeTraits[] outputTypeTraits =
+                new ITypeTraits[inputRecordDesc.getFieldCount() + (dataset.hasMetaPart() ? 2 : 1) + numFilterFields];
+        ISerializerDeserializer<?>[] outputSerDes = new ISerializerDeserializer[inputRecordDesc.getFieldCount()
+                + (dataset.hasMetaPart() ? 2 : 1) + numFilterFields];
+
+        // add the previous record first
+        int f = 0;
+        outputSerDes[f] = FormatUtils.getDefaultFormat().getSerdeProvider().getSerializerDeserializer(itemType);
+        f++;
+        // add the previous meta second
+        if (dataset.hasMetaPart()) {
+            outputSerDes[f] = FormatUtils.getDefaultFormat().getSerdeProvider().getSerializerDeserializer(metaItemType);
+            outputTypeTraits[f] = FormatUtils.getDefaultFormat().getTypeTraitProvider().getTypeTrait(metaItemType);
+            f++;
+        }
+        // add the previous filter third
+        int fieldIdx = -1;
+        if (numFilterFields > 0) {
+            String filterField = DatasetUtil.getFilterField(dataset).get(0);
+            String[] fieldNames = itemType.getFieldNames();
+            int i = 0;
+            for (; i < fieldNames.length; i++) {
+                if (fieldNames[i].equals(filterField)) {
+                    break;
+                }
+            }
+            fieldIdx = i;
+            outputTypeTraits[f] = FormatUtils.getDefaultFormat().getTypeTraitProvider()
+                    .getTypeTrait(itemType.getFieldTypes()[fieldIdx]);
+            outputSerDes[f] = FormatUtils.getDefaultFormat().getSerdeProvider()
+                    .getSerializerDeserializer(itemType.getFieldTypes()[fieldIdx]);
+            f++;
+        }
+        for (int j = 0; j < inputRecordDesc.getFieldCount(); j++) {
+            outputTypeTraits[j + f] = inputRecordDesc.getTypeTraits()[j];
+            outputSerDes[j + f] = inputRecordDesc.getFields()[j];
+        }
+        return new RecordDescriptor(outputSerDes, outputTypeTraits);
     }
 }

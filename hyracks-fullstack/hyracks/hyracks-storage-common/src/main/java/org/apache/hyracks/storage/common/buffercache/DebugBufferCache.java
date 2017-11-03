@@ -77,11 +77,6 @@ public class DebugBufferCache implements IBufferCache {
     }
 
     @Override
-    public ICachedPage tryPin(long dpid) throws HyracksDataException {
-        return bufferCache.tryPin(dpid);
-    }
-
-    @Override
     public ICachedPage pin(long dpid, boolean newPage) throws HyracksDataException {
         ICachedPage page = bufferCache.pin(dpid, newPage);
         pinCount.addAndGet(1);
@@ -105,8 +100,8 @@ public class DebugBufferCache implements IBufferCache {
     }
 
     @Override
-    public int getNumPages() {
-        return bufferCache.getNumPages();
+    public int getPageBudget() {
+        return bufferCache.getPageBudget();
     }
 
     @Override
@@ -168,8 +163,8 @@ public class DebugBufferCache implements IBufferCache {
     }
 
     @Override
-    public void flushDirtyPage(ICachedPage page) throws HyracksDataException {
-        bufferCache.flushDirtyPage(page);
+    public void flush(ICachedPage page) throws HyracksDataException {
+        bufferCache.flush(page);
     }
 
     @Override
@@ -180,11 +175,6 @@ public class DebugBufferCache implements IBufferCache {
     @Override
     public int getNumPagesOfFile(int fileId) throws HyracksDataException {
         return bufferCache.getNumPagesOfFile(fileId);
-    }
-
-    @Override
-    public void adviseWontNeed(ICachedPage page) {
-        bufferCache.adviseWontNeed(page);
     }
 
     @Override
@@ -211,12 +201,6 @@ public class DebugBufferCache implements IBufferCache {
     @Override
     public void finishQueue() {
         bufferCache.finishQueue();
-    }
-
-    @Override
-    public void setPageDiskId(ICachedPage page, long dpid) {
-        // TODO Auto-generated method stub
-
     }
 
     @Override

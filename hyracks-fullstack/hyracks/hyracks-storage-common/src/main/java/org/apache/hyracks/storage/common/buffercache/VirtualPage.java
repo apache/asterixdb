@@ -121,4 +121,14 @@ public class VirtualPage implements ICachedPage {
         this.buffer = buffer;
     }
 
+    @Override
+    public void setDiskPageId(long dpid) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean isLargePage() {
+        return multiplier > 1;
+    }
+
 }

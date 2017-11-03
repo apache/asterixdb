@@ -41,4 +41,13 @@ public interface ICachedPage {
     int getPageSize();
 
     int getFrameSizeMultiplier();
+
+    void setDiskPageId(long dpid);
+
+    /**
+     * Check if a page is a large page
+     *
+     * @return true if the page is large, false otherwise
+     */
+    boolean isLargePage();
 }

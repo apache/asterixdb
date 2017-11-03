@@ -19,15 +19,16 @@
 package org.apache.hyracks.storage.am.lsm.common.impls;
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.replication.IIOReplicationManager;
@@ -38,39 +39,68 @@ import org.apache.hyracks.storage.common.buffercache.IExtraPageBlockHelper;
 import org.apache.hyracks.storage.common.buffercache.IFIFOPageQueue;
 import org.apache.hyracks.storage.common.buffercache.VirtualPage;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
-import org.apache.hyracks.storage.common.file.IFileMapManager;
 import org.apache.hyracks.storage.common.file.FileMapManager;
+import org.apache.hyracks.storage.common.file.IFileMapManager;
 import org.apache.hyracks.util.JSONUtil;
 
 public class VirtualBufferCache implements IVirtualBufferCache {
-    private static final Logger LOGGER = Logger.getLogger(ExternalIndexHarness.class.getName());
-
-    private static final int OVERFLOW_PADDING = 8;
+    private static final Logger LOGGER = Logger.getLogger(VirtualBufferCache.class.getName());
 
     private final ICacheMemoryAllocator allocator;
     private final IFileMapManager fileMapManager;
     private final int pageSize;
-    private final int numPages;
-
+    private final int pageBudget;
     private final CacheBucket[] buckets;
-    private final ArrayList<VirtualPage> pages;
-
-    private volatile int nextFree;
+    private final BlockingQueue<VirtualPage> freePages;
     private final AtomicInteger largePages;
-
+    private final AtomicInteger used;
     private boolean open;
 
-    public VirtualBufferCache(ICacheMemoryAllocator allocator, int pageSize, int numPages) {
+    public VirtualBufferCache(ICacheMemoryAllocator allocator, int pageSize, int pageBudget) {
         this.allocator = allocator;
         this.fileMapManager = new FileMapManager();
         this.pageSize = pageSize;
-        this.numPages = 2 * (numPages / 2) + 1;
-
-        buckets = new CacheBucket[this.numPages];
-        pages = new ArrayList<>();
-        nextFree = 0;
+        if (pageBudget == 0) {
+            throw new IllegalArgumentException("Page Budget Cannot be 0");
+        }
+        this.pageBudget = pageBudget;
+        buckets = new CacheBucket[this.pageBudget];
+        freePages = new ArrayBlockingQueue<>(this.pageBudget);
         largePages = new AtomicInteger(0);
+        used = new AtomicInteger(0);
         open = false;
+    }
+
+    @Override
+    public int getPageSize() {
+        return pageSize;
+    }
+
+    @Override
+    public int getPageSizeWithHeader() {
+        return pageSize;
+    }
+
+    public int getLargePages() {
+        return largePages.get();
+    }
+
+    public int getUsage() {
+        return used.get();
+    }
+
+    public int getPreAllocatedPages() {
+        return freePages.size();
+    }
+
+    @Override
+    public int getPageBudget() {
+        return pageBudget;
+    }
+
+    @Override
+    public boolean isFull() {
+        return used.get() >= pageBudget;
     }
 
     @Override
@@ -82,16 +112,28 @@ public class VirtualBufferCache implements IVirtualBufferCache {
 
     @Override
     public int openFile(FileReference fileRef) throws HyracksDataException {
-        synchronized (fileMapManager) {
-            if (fileMapManager.isMapped(fileRef)) {
-                return fileMapManager.lookupFileId(fileRef);
+        try {
+            synchronized (fileMapManager) {
+                if (fileMapManager.isMapped(fileRef)) {
+                    return fileMapManager.lookupFileId(fileRef);
+                }
+                return fileMapManager.registerFile(fileRef);
             }
-            return fileMapManager.registerFile(fileRef);
+        } finally {
+            logStats();
+        }
+    }
+
+    private void logStats() {
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.log(Level.INFO, "Free (allocated) pages = " + freePages.size() + ". Budget = " + pageBudget
+                    + ". Large pages = " + largePages.get() + ". Overall usage = " + used.get());
         }
     }
 
     @Override
     public void openFile(int fileId) throws HyracksDataException {
+        logStats();
     }
 
     @Override
@@ -111,6 +153,7 @@ public class VirtualBufferCache implements IVirtualBufferCache {
         synchronized (fileMapManager) {
             fileMapManager.unregisterFile(fileId);
         }
+        int reclaimedPages = 0;
         for (int i = 0; i < buckets.length; i++) {
             final CacheBucket bucket = buckets[i];
             bucket.bucketLock.lock();
@@ -119,16 +162,20 @@ public class VirtualBufferCache implements IVirtualBufferCache {
                 VirtualPage curr = bucket.cachedPage;
                 while (curr != null) {
                     if (BufferedFileHandle.getFileId(curr.dpid()) == fileId) {
-                        if (curr.getFrameSizeMultiplier() > 1) {
+                        reclaimedPages++;
+                        if (curr.isLargePage()) {
                             largePages.getAndAdd(-curr.getFrameSizeMultiplier());
+                            used.addAndGet(-curr.getFrameSizeMultiplier());
+                        } else {
+                            used.decrementAndGet();
                         }
                         if (prev == null) {
                             bucket.cachedPage = curr.next();
-                            curr.reset();
+                            recycle(curr);
                             curr = bucket.cachedPage;
                         } else {
                             prev.next(curr.next());
-                            curr.reset();
+                            recycle(curr);
                             curr = prev.next();
                         }
                     } else {
@@ -140,54 +187,27 @@ public class VirtualBufferCache implements IVirtualBufferCache {
                 bucket.bucketLock.unlock();
             }
         }
-        defragPageList();
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.log(Level.INFO, "Reclaimed pages = " + reclaimedPages);
+        }
+        logStats();
     }
 
-    private void defragPageList() {
-        synchronized (pages) {
-            int start = 0;
-            int end = nextFree - 1;
-            while (start < end) {
-                VirtualPage lastUsed = pages.get(end);
-                while (end > 0 && lastUsed.dpid() == -1) {
-                    --end;
-                    lastUsed = pages.get(end);
-                }
-
-                if (end == 0) {
-                    nextFree = lastUsed.dpid() == -1 ? 0 : 1;
-                    break;
-                }
-
-                VirtualPage firstUnused = pages.get(start);
-                while (start < end && firstUnused.dpid() != -1) {
-                    ++start;
-                    firstUnused = pages.get(start);
-                }
-
-                if (start >= end) {
-                    break;
-                }
-
-                Collections.swap(pages, start, end);
-                nextFree = end;
-                --end;
-                ++start;
-            }
+    private void recycle(VirtualPage page) {
+        // recycle only if
+        // 1. not a large page
+        // 2. allocation is not above budget
+        if (used.get() < pageBudget && !page.isLargePage()) {
+            page.reset();
+            freePages.offer(page);
         }
     }
 
     @Override
-    public ICachedPage tryPin(long dpid) throws HyracksDataException {
-        return pin(dpid, false);
-    }
-
-    @Override
     public ICachedPage pin(long dpid, boolean newPage) throws HyracksDataException {
-        VirtualPage page = null;
+        VirtualPage page;
         int hash = hash(dpid);
         CacheBucket bucket = buckets[hash];
-
         bucket.bucketLock.lock();
         try {
             page = bucket.cachedPage;
@@ -197,15 +217,15 @@ public class VirtualBufferCache implements IVirtualBufferCache {
                 }
                 page = page.next();
             }
-
             if (!newPage) {
+                int fileId = BufferedFileHandle.getFileId(dpid);
+                FileReference fileRef;
                 synchronized (fileMapManager) {
-                    throw new HyracksDataException(
-                            "Page " + BufferedFileHandle.getPageId(dpid) + " does not exist in file "
-                                    + fileMapManager.lookupFileName(BufferedFileHandle.getFileId(dpid)));
+                    fileRef = fileMapManager.lookupFileName(fileId);
                 }
+                throw HyracksDataException.create(ErrorCode.PAGE_DOES_NOT_EXIST_IN_FILE,
+                        BufferedFileHandle.getPageId(dpid), fileRef);
             }
-
             page = getOrAllocPage(dpid);
             page.next(bucket.cachedPage);
             bucket.cachedPage = page;
@@ -222,18 +242,13 @@ public class VirtualBufferCache implements IVirtualBufferCache {
     }
 
     private VirtualPage getOrAllocPage(long dpid) {
-        VirtualPage page;
-        synchronized (pages) {
-            if (nextFree >= pages.size()) {
-                page = new VirtualPage(allocator.allocate(pageSize, 1)[0], pageSize);
-                page.multiplier(1);
-                pages.add(page);
-            } else {
-                page = pages.get(nextFree);
-            }
-            ++nextFree;
-            page.dpid(dpid);
+        VirtualPage page = freePages.poll();
+        if (page == null) {
+            page = new VirtualPage(allocator.allocate(pageSize, 1)[0], pageSize);
+            page.multiplier(1);
         }
+        page.dpid(dpid);
+        used.incrementAndGet();
         return page;
     }
 
@@ -245,10 +260,26 @@ public class VirtualBufferCache implements IVirtualBufferCache {
             // no-op
             return;
         }
+        // Maintain counters
+        // In addition, discard pre-allocated pages as the multiplier of the large page
+        // This is done before actual resizing in order to allow GC for the same budget out of
+        // the available free pages first
         if (origMultiplier == 1) {
-            synchronized (pages) {
-                pages.remove(cPage);
-                nextFree--;
+            largePages.getAndAdd(multiplier);
+            int diff = multiplier - 1;
+            used.getAndAdd(diff);
+            for (int i = 0; i < diff; i++) {
+                freePages.poll();
+            }
+        } else if (multiplier == 1) {
+            largePages.getAndAdd(-origMultiplier);
+            used.addAndGet(-origMultiplier + 1);
+        } else {
+            int diff = multiplier - origMultiplier;
+            largePages.getAndAdd(diff);
+            used.getAndAdd(diff);
+            for (int i = 0; i < diff; i++) {
+                freePages.poll();
             }
         }
         ByteBuffer newBuffer = allocator.allocate(pageSize * multiplier, 1)[0];
@@ -257,15 +288,6 @@ public class VirtualBufferCache implements IVirtualBufferCache {
             oldBuffer.limit(newBuffer.capacity());
         }
         newBuffer.put(oldBuffer);
-        if (origMultiplier == 1) {
-            largePages.getAndAdd(multiplier);
-        } else if (multiplier == 1) {
-            largePages.getAndAdd(-origMultiplier);
-            pages.add(0, (VirtualPage) cPage);
-            nextFree++;
-        } else {
-            largePages.getAndAdd(multiplier - origMultiplier);
-        }
         ((VirtualPage) cPage).buffer(newBuffer);
         ((VirtualPage) cPage).multiplier(multiplier);
     }
@@ -275,7 +297,8 @@ public class VirtualBufferCache implements IVirtualBufferCache {
     }
 
     @Override
-    public void flushDirtyPage(ICachedPage page) throws HyracksDataException {
+    public void flush(ICachedPage page) throws HyracksDataException {
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -283,59 +306,50 @@ public class VirtualBufferCache implements IVirtualBufferCache {
     }
 
     @Override
-    public int getPageSize() {
-        return pageSize;
-    }
-
-    @Override
-    public int getPageSizeWithHeader() {
-        return pageSize;
-    }
-
-    @Override
-    public int getNumPages() {
-        return numPages;
-    }
-
-    @Override
     public void open() throws HyracksDataException {
         if (open) {
-            throw new HyracksDataException("Failed to open virtual buffercache since it is already open.");
+            throw HyracksDataException.create(ErrorCode.VBC_ALREADY_OPEN);
         }
-        pages.trimToSize();
-        pages.ensureCapacity(numPages + OVERFLOW_PADDING);
-        allocator.reserveAllocation(pageSize, numPages);
-        for (int i = 0; i < numPages; i++) {
+        allocator.reserveAllocation(pageSize, pageBudget);
+        for (int i = 0; i < pageBudget; i++) {
             buckets[i] = new CacheBucket();
         }
-        nextFree = 0;
         largePages.set(0);
+        used.set(0);
         open = true;
     }
 
     @Override
     public void reset() {
-        for (int i = 0; i < numPages; i++) {
-            buckets[i].cachedPage = null;
-        }
-        int excess = pages.size() - numPages;
-        if (excess > 0) {
-            for (int i = numPages + excess - 1; i >= numPages; i--) {
-                pages.remove(i);
+        recycleAllPages();
+        used.set(0);
+        largePages.set(0);
+    }
+
+    private void recycleAllPages() {
+        for (int i = 0; i < buckets.length; i++) {
+            final CacheBucket bucket = buckets[i];
+            bucket.bucketLock.lock();
+            try {
+                VirtualPage curr = bucket.cachedPage;
+                while (curr != null) {
+                    bucket.cachedPage = curr.next();
+                    recycle(curr);
+                    curr = bucket.cachedPage;
+                }
+            } finally {
+                bucket.bucketLock.unlock();
             }
         }
-        nextFree = 0;
-        largePages.set(0);
     }
 
     @Override
     public void close() throws HyracksDataException {
         if (!open) {
-            throw new HyracksDataException("Failed to close virtual buffercache since it is already closed.");
+            throw HyracksDataException.create(ErrorCode.VBC_ALREADY_CLOSED);
         }
-
-        pages.clear();
-        for (int i = 0; i < numPages; i++) {
+        freePages.clear();
+        for (int i = 0; i < pageBudget; i++) {
             buckets[i].cachedPage = null;
         }
         open = false;
@@ -343,22 +357,17 @@ public class VirtualBufferCache implements IVirtualBufferCache {
 
     public String dumpState() {
         StringBuilder sb = new StringBuilder();
-        sb.append(String.format("Page size = %d\n", pageSize));
-        sb.append(String.format("Capacity = %d\n", numPages));
-        sb.append(String.format("Allocated pages = %d\n", pages.size()));
-        sb.append(String.format("Allocated large pages = %d\n", largePages.get()));
-        sb.append(String.format("Next free page = %d\n", nextFree));
+        sb.append(String.format("Page size = %d%n", pageSize));
+        sb.append(String.format("Page budget = %d%n", pageBudget));
+        sb.append(String.format("Used pages = %d%n", used.get()));
+        sb.append(String.format("Used large pages = %d%n", largePages.get()));
+        sb.append(String.format("Available free pages = %d%n", freePages.size()));
         return sb.toString();
     }
 
     @Override
     public IFileMapManager getFileMapProvider() {
         return fileMapManager;
-    }
-
-    @Override
-    public boolean isFull() {
-        return (nextFree + largePages.get()) >= numPages;
     }
 
     private static class CacheBucket {
@@ -373,14 +382,6 @@ public class VirtualBufferCache implements IVirtualBufferCache {
     @Override
     public int getNumPagesOfFile(int fileId) throws HyracksDataException {
         return -1;
-    }
-
-    @Override
-    public void adviseWontNeed(ICachedPage page) {
-        if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.log(Level.INFO, "Calling adviseWontNeed on " + this.getClass().getName()
-                    + " makes no sense as this BufferCache cannot evict pages");
-        }
     }
 
     @Override
@@ -407,11 +408,6 @@ public class VirtualBufferCache implements IVirtualBufferCache {
     public ICachedPage confiscateLargePage(long dpid, int multiplier, int extraBlockPageId)
             throws HyracksDataException {
         throw new UnsupportedOperationException("Virtual buffer caches don't have FIFO writers");
-    }
-
-    @Override
-    public void setPageDiskId(ICachedPage page, long dpid) {
-
     }
 
     @Override
@@ -449,7 +445,7 @@ public class VirtualBufferCache implements IVirtualBufferCache {
         map.put("class", getClass().getSimpleName());
         map.put("allocator", allocator.toString());
         map.put("pageSize", pageSize);
-        map.put("numPages", numPages);
+        map.put("pageBudget", pageBudget);
         map.put("open", open);
         return map;
     }

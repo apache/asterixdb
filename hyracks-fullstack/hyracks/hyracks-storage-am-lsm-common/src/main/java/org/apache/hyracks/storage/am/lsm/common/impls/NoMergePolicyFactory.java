@@ -31,13 +31,13 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
 public class NoMergePolicyFactory implements ILSMMergePolicyFactory {
 
     private static final long serialVersionUID = 1L;
-
     private static final String[] SET_VALUES = new String[] {};
     private static final Set<String> PROPERTIES_NAMES = new HashSet<>(Arrays.asList(SET_VALUES));
+    public static final String NAME = "no-merge";
 
     @Override
     public String getName() {
-        return "no-merge";
+        return NAME;
     }
 
     @Override

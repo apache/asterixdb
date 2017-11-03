@@ -25,19 +25,6 @@ public abstract class AbstractPointable implements IPointable {
 
     protected int length;
 
-    /**
-     * copies the content of this pointable to the passed byte array.
-     * the array is expected to be at least of length = length of this pointable
-     *
-     * @param copy
-     *            the array to write into
-     * @throws ArrayIndexOutOfBoundsException
-     *             if the passed array size is smaller than length
-     */
-    public void copyInto(byte[] copy) {
-        System.arraycopy(bytes, start, copy, 0, length);
-    }
-
     @Override
     public void set(byte[] bytes, int start, int length) {
         this.bytes = bytes;

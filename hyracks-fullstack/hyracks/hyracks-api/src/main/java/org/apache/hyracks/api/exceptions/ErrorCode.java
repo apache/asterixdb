@@ -133,6 +133,10 @@ public class ErrorCode {
     public static final int ILLEGAL_ATTEMPT_TO_EXIT_EMPTY_COMPONENT = 97;
     public static final int A_FLUSH_OPERATION_HAS_FAILED = 98;
     public static final int A_MERGE_OPERATION_HAS_FAILED = 99;
+    public static final int FAILED_TO_SHUTDOWN_EVENT_PROCESSOR = 100;
+    public static final int PAGE_DOES_NOT_EXIST_IN_FILE = 101;
+    public static final int VBC_ALREADY_OPEN = 102;
+    public static final int VBC_ALREADY_CLOSED = 103;
 
     // Compilation error codes.
     public static final int RULECOLLECTION_NOT_INSTANCE_OF_LIST = 10000;

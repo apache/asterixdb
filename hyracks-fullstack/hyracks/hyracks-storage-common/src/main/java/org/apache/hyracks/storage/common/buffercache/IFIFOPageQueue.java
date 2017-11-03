@@ -17,6 +17,7 @@ package org.apache.hyracks.storage.common.buffercache;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
+@FunctionalInterface
 public interface IFIFOPageQueue {
-    public void put(ICachedPage page) throws HyracksDataException;
+    void put(ICachedPage page) throws HyracksDataException;
 }

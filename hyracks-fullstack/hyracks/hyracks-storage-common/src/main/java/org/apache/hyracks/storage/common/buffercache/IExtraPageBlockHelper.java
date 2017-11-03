@@ -21,6 +21,25 @@ package org.apache.hyracks.storage.common.buffercache;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public interface IExtraPageBlockHelper {
+    /**
+     * Get the page id of the free block of size
+     *
+     * @param size
+     *            the size of the block
+     * @return
+     *         the page id
+     * @throws HyracksDataException
+     */
     int getFreeBlock(int size) throws HyracksDataException;
+
+    /**
+     * Release the block at location blockPageId which has size size
+     *
+     * @param blockPageId
+     *            the block page id
+     * @param size
+     *            the size of the block
+     * @throws HyracksDataException
+     */
     void returnFreePageBlock(int blockPageId, int size) throws HyracksDataException;
 }

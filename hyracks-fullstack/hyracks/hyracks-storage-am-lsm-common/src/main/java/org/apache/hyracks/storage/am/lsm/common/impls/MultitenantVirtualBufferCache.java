@@ -20,8 +20,6 @@ package org.apache.hyracks.storage.am.lsm.common.impls;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
@@ -34,7 +32,6 @@ import org.apache.hyracks.storage.common.file.IFileMapManager;
 import org.apache.hyracks.util.JSONUtil;
 
 public class MultitenantVirtualBufferCache implements IVirtualBufferCache {
-    private static final Logger LOGGER = Logger.getLogger(ExternalIndexHarness.class.getName());
 
     private final IVirtualBufferCache vbc;
     private int openCount;
@@ -65,11 +62,6 @@ public class MultitenantVirtualBufferCache implements IVirtualBufferCache {
     }
 
     @Override
-    public ICachedPage tryPin(long dpid) throws HyracksDataException {
-        return vbc.tryPin(dpid);
-    }
-
-    @Override
     public ICachedPage pin(long dpid, boolean newPage) throws HyracksDataException {
         return vbc.pin(dpid, newPage);
     }
@@ -80,8 +72,8 @@ public class MultitenantVirtualBufferCache implements IVirtualBufferCache {
     }
 
     @Override
-    public void flushDirtyPage(ICachedPage page) throws HyracksDataException {
-        vbc.flushDirtyPage(page);
+    public void flush(ICachedPage page) throws HyracksDataException {
+        vbc.flush(page);
     }
 
     @Override
@@ -100,8 +92,8 @@ public class MultitenantVirtualBufferCache implements IVirtualBufferCache {
     }
 
     @Override
-    public int getNumPages() {
-        return vbc.getNumPages();
+    public int getPageBudget() {
+        return vbc.getPageBudget();
     }
 
     @Override
@@ -141,14 +133,6 @@ public class MultitenantVirtualBufferCache implements IVirtualBufferCache {
     }
 
     @Override
-    public void adviseWontNeed(ICachedPage page) {
-        if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.log(Level.INFO, "Calling adviseWontNeed on " + this.getClass().getName()
-                    + " makes no sense as this BufferCache cannot evict pages");
-        }
-    }
-
-    @Override
     public ICachedPage confiscatePage(long dpid) throws HyracksDataException {
         return vbc.confiscatePage(dpid);
     }
@@ -172,11 +156,6 @@ public class MultitenantVirtualBufferCache implements IVirtualBufferCache {
     @Override
     public void finishQueue() {
         throw new UnsupportedOperationException("Virtual buffer caches don't have FIFO writers");
-    }
-
-    @Override
-    public void setPageDiskId(ICachedPage page, long dpid) {
-
     }
 
     @Override

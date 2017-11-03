@@ -255,6 +255,6 @@ public abstract class AbstractLSMMemoryComponent extends AbstractLSMComponent im
     @Override
     public long getSize() {
         IBufferCache virtualBufferCache = getIndex().getBufferCache();
-        return virtualBufferCache.getNumPages() * (long) virtualBufferCache.getPageSize();
+        return virtualBufferCache.getPageBudget() * (long) virtualBufferCache.getPageSize();
     }
 }

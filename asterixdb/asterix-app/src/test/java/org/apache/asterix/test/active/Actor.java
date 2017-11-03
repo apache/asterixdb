@@ -18,8 +18,8 @@
  */
 package org.apache.asterix.test.active;
 
-import org.apache.asterix.active.SingleThreadEventProcessor;
 import org.apache.asterix.metadata.declared.MetadataProvider;
+import org.apache.hyracks.api.util.SingleThreadEventProcessor;
 
 public class Actor extends SingleThreadEventProcessor<Action> {
 

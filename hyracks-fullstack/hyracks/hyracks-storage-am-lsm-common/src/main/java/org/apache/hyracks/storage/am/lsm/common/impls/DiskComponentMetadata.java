@@ -45,7 +45,7 @@ public class DiskComponentMetadata implements IComponentMetadata {
 
     @Override
     public IValueReference get(IValueReference key) throws HyracksDataException {
-        IPointable value = VoidPointable.FACTORY.createPointable();
+        VoidPointable value = VoidPointable.FACTORY.createPointable();
         get(key, value);
         return value;
     }

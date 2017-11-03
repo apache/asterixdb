@@ -147,7 +147,7 @@ public class InMemoryInvertedIndex implements IInPlaceInvertedIndex {
     @Override
     public long getMemoryAllocationSize() {
         IBufferCache virtualBufferCache = btree.getBufferCache();
-        return virtualBufferCache.getNumPages() * virtualBufferCache.getPageSize();
+        return (long) virtualBufferCache.getPageBudget() * virtualBufferCache.getPageSize();
     }
 
     @Override

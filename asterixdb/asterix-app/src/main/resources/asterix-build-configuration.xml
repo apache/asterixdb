@@ -77,7 +77,7 @@
   </property>
   <property>
     <name>storage.memorycomponent.numpages</name>
-    <value>8</value>
+    <value>16</value>
     <description>The number of pages to allocate for a memory component.
       This budget is shared by all the memory components of the primary
       index and all its secondary indexes across all I/O devices on a node.

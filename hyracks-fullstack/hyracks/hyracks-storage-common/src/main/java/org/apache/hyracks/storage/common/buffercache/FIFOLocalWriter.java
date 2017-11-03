@@ -18,19 +18,15 @@ package org.apache.hyracks.storage.common.buffercache;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class FIFOLocalWriter implements IFIFOPageWriter {
-    private static FIFOLocalWriter instance;
+    public static final FIFOLocalWriter INSTANCE = new FIFOLocalWriter();
     private static boolean DEBUG = false;
 
-    public static FIFOLocalWriter instance() {
-        if(instance == null) {
-            instance = new FIFOLocalWriter();
-        }
-        return instance;
+    private FIFOLocalWriter() {
     }
 
     @Override
     public void write(ICachedPage page, BufferCache bufferCache) throws HyracksDataException {
-        CachedPage cPage = (CachedPage)page;
+        CachedPage cPage = (CachedPage) page;
         try {
             bufferCache.write(cPage);
         } finally {
@@ -43,6 +39,6 @@ public class FIFOLocalWriter implements IFIFOPageWriter {
 
     @Override
     public void sync(int fileId, BufferCache bufferCache) throws HyracksDataException {
-        bufferCache.force(fileId,true);
+        bufferCache.force(fileId, true);
     }
 }

@@ -197,4 +197,9 @@ public abstract class AbstractLSMDiskComponent extends AbstractLSMComponent impl
                 .addBulkLoader(createIndexBulkLoader(fillFactor, verifyInput, numElementsHint, checkIfEmptyIndex));
         return chainedBulkLoader;
     }
+
+    @Override
+    public String toString() {
+        return "{\"class\":" + getClass().getSimpleName() + "\", \"index\":" + getIndex().toString() + "}";
+    }
 }

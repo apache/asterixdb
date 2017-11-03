@@ -31,7 +31,6 @@ import org.apache.asterix.active.ActivityState;
 import org.apache.asterix.active.EntityId;
 import org.apache.asterix.active.IActiveEntityEventsListener;
 import org.apache.asterix.active.IActiveNotificationHandler;
-import org.apache.asterix.active.SingleThreadEventProcessor;
 import org.apache.asterix.active.message.ActivePartitionMessage;
 import org.apache.asterix.common.api.IMetadataLockManager;
 import org.apache.asterix.common.exceptions.AsterixException;
@@ -48,6 +47,7 @@ import org.apache.hyracks.api.job.IJobLifecycleListener;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.api.job.JobStatus;
+import org.apache.hyracks.api.util.SingleThreadEventProcessor;
 
 public class ActiveNotificationHandler extends SingleThreadEventProcessor<ActiveEvent>
         implements IActiveNotificationHandler, IJobLifecycleListener {

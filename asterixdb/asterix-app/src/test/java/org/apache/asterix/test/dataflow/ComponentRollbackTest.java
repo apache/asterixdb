@@ -132,12 +132,12 @@ public class ComponentRollbackTest {
     public void createIndex() throws Exception {
         List<List<String>> partitioningKeys = new ArrayList<>();
         partitioningKeys.add(Collections.singletonList("key"));
-        dataset = new TestDataset(DATAVERSE_NAME, DATASET_NAME, DATAVERSE_NAME, DATA_TYPE_NAME,
-                NODE_GROUP_NAME, null, null, new InternalDatasetDetails(null, PartitioningStrategy.HASH,
+        dataset = new TestDataset(DATAVERSE_NAME, DATASET_NAME, DATAVERSE_NAME, DATA_TYPE_NAME, NODE_GROUP_NAME,
+                NoMergePolicyFactory.NAME, null, new InternalDatasetDetails(null, PartitioningStrategy.HASH,
                         partitioningKeys, null, null, null, false, null, false),
                 null, DatasetType.INTERNAL, DATASET_ID, 0);
-        PrimaryIndexInfo primaryIndexInfo = nc.createPrimaryIndex(dataset, KEY_TYPES, RECORD_TYPE, META_TYPE,
-                new NoMergePolicyFactory(), null, null, storageManager, KEY_INDEXES, KEY_INDICATORS_LIST);
+        PrimaryIndexInfo primaryIndexInfo = nc.createPrimaryIndex(dataset, KEY_TYPES, RECORD_TYPE, META_TYPE, null,
+                storageManager, KEY_INDEXES, KEY_INDICATORS_LIST);
         IndexDataflowHelperFactory iHelperFactory =
                 new IndexDataflowHelperFactory(nc.getStorageManager(), primaryIndexInfo.getFileSplitProvider());
         ctx = nc.createTestContext(false);
@@ -146,9 +146,9 @@ public class ComponentRollbackTest {
         lsmBtree = (TestLsmBtree) indexDataflowHelper.getIndexInstance();
         indexDataflowHelper.close();
         nc.newJobId();
-        txnCtx = nc.getTransactionManager().getTransactionContext(nc.getTxnJobId(), true);
-        insertOp = nc.getInsertPipeline(ctx, dataset, KEY_TYPES, RECORD_TYPE, META_TYPE, new NoMergePolicyFactory(),
-                null, null, KEY_INDEXES, KEY_INDICATORS_LIST, storageManager).getLeft();
+        txnCtx = nc.getTransactionManager().getTransactionContext(nc.getTxnJobId(ctx), true);
+        insertOp = nc.getInsertPipeline(ctx, dataset, KEY_TYPES, RECORD_TYPE, META_TYPE, null, KEY_INDEXES,
+                KEY_INDICATORS_LIST, storageManager).getLeft();
     }
 
     @After
@@ -174,7 +174,7 @@ public class ComponentRollbackTest {
             VSizeFrame frame = new VSizeFrame(ctx);
             FrameTupleAppender tupleAppender = new FrameTupleAppender(frame);
             for (int j = 0; j < TOTAL_NUM_OF_RECORDS; j++) {
-                // flush every 1000 records
+                // flush every RECORDS_PER_COMPONENT records
                 if (j % RECORDS_PER_COMPONENT == 0 && j + 1 != TOTAL_NUM_OF_RECORDS) {
                     if (tupleAppender.getTupleCount() > 0) {
                         tupleAppender.write(insertOp, true);
@@ -224,7 +224,7 @@ public class ComponentRollbackTest {
             VSizeFrame frame = new VSizeFrame(ctx);
             FrameTupleAppender tupleAppender = new FrameTupleAppender(frame);
             for (int j = 0; j < TOTAL_NUM_OF_RECORDS; j++) {
-                // flush every 1000 records
+                // flush every RECORDS_PER_COMPONENT records
                 if (j % RECORDS_PER_COMPONENT == 0 && j + 1 != TOTAL_NUM_OF_RECORDS) {
                     if (tupleAppender.getTupleCount() > 0) {
                         tupleAppender.write(insertOp, true);
@@ -254,9 +254,9 @@ public class ComponentRollbackTest {
 
             // insert again
             nc.newJobId();
-            txnCtx = nc.getTransactionManager().getTransactionContext(nc.getTxnJobId(), true);
-            insertOp = nc.getInsertPipeline(ctx, dataset, KEY_TYPES, RECORD_TYPE, META_TYPE, new NoMergePolicyFactory(),
-                    null, null, KEY_INDEXES, KEY_INDICATORS_LIST, storageManager).getLeft();
+            txnCtx = nc.getTransactionManager().getTransactionContext(nc.getTxnJobId(ctx), true);
+            insertOp = nc.getInsertPipeline(ctx, dataset, KEY_TYPES, RECORD_TYPE, META_TYPE, null, KEY_INDEXES,
+                    KEY_INDICATORS_LIST, storageManager).getLeft();
             insertOp.open();
             for (int j = 0; j < RECORDS_PER_COMPONENT; j++) {
                 ITupleReference tuple = tupleGenerator.next();
@@ -291,7 +291,7 @@ public class ComponentRollbackTest {
             VSizeFrame frame = new VSizeFrame(ctx);
             FrameTupleAppender tupleAppender = new FrameTupleAppender(frame);
             for (int j = 0; j < TOTAL_NUM_OF_RECORDS; j++) {
-                // flush every 1000 records
+                // flush every RECORDS_PER_COMPONENT records
                 if (j % RECORDS_PER_COMPONENT == 0 && j + 1 != TOTAL_NUM_OF_RECORDS) {
                     if (tupleAppender.getTupleCount() > 0) {
                         tupleAppender.write(insertOp, true);
@@ -360,7 +360,7 @@ public class ComponentRollbackTest {
             VSizeFrame frame = new VSizeFrame(ctx);
             FrameTupleAppender tupleAppender = new FrameTupleAppender(frame);
             for (int j = 0; j < TOTAL_NUM_OF_RECORDS; j++) {
-                // flush every 1000 records
+                // flush every RECORDS_PER_COMPONENT records
                 if (j % RECORDS_PER_COMPONENT == 0 && j + 1 != TOTAL_NUM_OF_RECORDS) {
                     if (tupleAppender.getTupleCount() > 0) {
                         tupleAppender.write(insertOp, true);
@@ -416,7 +416,7 @@ public class ComponentRollbackTest {
             VSizeFrame frame = new VSizeFrame(ctx);
             FrameTupleAppender tupleAppender = new FrameTupleAppender(frame);
             for (int j = 0; j < TOTAL_NUM_OF_RECORDS; j++) {
-                // flush every 1000 records
+                // flush every RECORDS_PER_COMPONENT records
                 if (j % RECORDS_PER_COMPONENT == 0 && j + 1 != TOTAL_NUM_OF_RECORDS) {
                     if (tupleAppender.getTupleCount() > 0) {
                         tupleAppender.write(insertOp, true);
@@ -481,7 +481,7 @@ public class ComponentRollbackTest {
             VSizeFrame frame = new VSizeFrame(ctx);
             FrameTupleAppender tupleAppender = new FrameTupleAppender(frame);
             for (int j = 0; j < TOTAL_NUM_OF_RECORDS; j++) {
-                // flush every 1000 records
+                // flush every RECORDS_PER_COMPONENT records
                 if (j % RECORDS_PER_COMPONENT == 0 && j + 1 != TOTAL_NUM_OF_RECORDS) {
                     if (tupleAppender.getTupleCount() > 0) {
                         tupleAppender.write(insertOp, true);
@@ -541,7 +541,7 @@ public class ComponentRollbackTest {
             VSizeFrame frame = new VSizeFrame(ctx);
             FrameTupleAppender tupleAppender = new FrameTupleAppender(frame);
             for (int j = 0; j < TOTAL_NUM_OF_RECORDS; j++) {
-                // flush every 1000 records
+                // flush every RECORDS_PER_COMPONENT records
                 if (j % RECORDS_PER_COMPONENT == 0 && j + 1 != TOTAL_NUM_OF_RECORDS) {
                     if (tupleAppender.getTupleCount() > 0) {
                         tupleAppender.write(insertOp, true);
@@ -603,7 +603,7 @@ public class ComponentRollbackTest {
             VSizeFrame frame = new VSizeFrame(ctx);
             FrameTupleAppender tupleAppender = new FrameTupleAppender(frame);
             for (int j = 0; j < TOTAL_NUM_OF_RECORDS; j++) {
-                // flush every 1000 records
+                // flush every RECORDS_PER_COMPONENT records
                 if (j % RECORDS_PER_COMPONENT == 0 && j + 1 != TOTAL_NUM_OF_RECORDS) {
                     if (tupleAppender.getTupleCount() > 0) {
                         tupleAppender.write(insertOp, true);
@@ -675,7 +675,7 @@ public class ComponentRollbackTest {
             VSizeFrame frame = new VSizeFrame(ctx);
             FrameTupleAppender tupleAppender = new FrameTupleAppender(frame);
             for (int j = 0; j < TOTAL_NUM_OF_RECORDS; j++) {
-                // flush every 1000 records
+                // flush every RECORDS_PER_COMPONENT records
                 if (j % RECORDS_PER_COMPONENT == 0 && j + 1 != TOTAL_NUM_OF_RECORDS) {
                     if (tupleAppender.getTupleCount() > 0) {
                         tupleAppender.write(insertOp, true);

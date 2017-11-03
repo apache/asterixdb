@@ -342,4 +342,9 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
     public boolean hasMemoryComponents() {
         return true;
     }
+
+    @Override
+    public String toString() {
+        return "{\"class\":\"" + getClass().getSimpleName() + "\",\"file\":\"" + file.getRelativePath() + "\"}";
+    }
 }

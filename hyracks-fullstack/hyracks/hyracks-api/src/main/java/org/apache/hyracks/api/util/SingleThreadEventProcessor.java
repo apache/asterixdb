@@ -16,14 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.active;
+package org.apache.hyracks.api.util;
 
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.asterix.common.exceptions.ErrorCode;
-import org.apache.asterix.common.exceptions.RuntimeDataException;
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public abstract class SingleThreadEventProcessor<T> implements Runnable {
@@ -75,7 +74,7 @@ public abstract class SingleThreadEventProcessor<T> implements Runnable {
             LOGGER.log(Level.WARNING,
                     "Failed to stop event processor after " + attempt + " attempts. Interrupted exception swallowed?");
             if (attempt == 10) {
-                throw new RuntimeDataException(ErrorCode.FAILED_TO_SHUTDOWN_EVENT_PROCESSOR, name);
+                throw HyracksDataException.create(ErrorCode.FAILED_TO_SHUTDOWN_EVENT_PROCESSOR, name);
             }
             executorThread.interrupt();
             executorThread.join(1000);
