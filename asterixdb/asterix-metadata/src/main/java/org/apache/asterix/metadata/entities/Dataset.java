@@ -562,6 +562,11 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
                             storageComponentProvider.getTransactionSubsystemProvider(), ResourceType.LSM_BTREE)
                     : new PrimaryIndexInstantSearchOperationCallbackFactory(jobId, getDatasetId(), primaryKeyFields,
                             storageComponentProvider.getTransactionSubsystemProvider(), ResourceType.LSM_BTREE);
+        } else if (index.getKeyFieldNames().isEmpty()) {
+            // this is the case where the index is secondary primary index and locking is required
+            // since the secondary primary index replaces the dataset index (which locks)
+            return new PrimaryIndexInstantSearchOperationCallbackFactory(jobId, getDatasetId(), primaryKeyFields,
+                    storageComponentProvider.getTransactionSubsystemProvider(), ResourceType.LSM_BTREE);
         }
         return new SecondaryIndexSearchOperationCallbackFactory();
     }

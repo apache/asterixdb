@@ -3040,6 +3040,26 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="index-selection">
+      <compilation-unit name="btree-sec-primary-index-01">
+        <output-dir compare="Text">btree-sec-primary-index-01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
+      <compilation-unit name="btree-sec-primary-index-02">
+        <output-dir compare="Text">btree-sec-primary-index-02</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
+      <compilation-unit name="btree-sec-primary-index-03">
+        <output-dir compare="Text">btree-sec-primary-index-03</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
+      <compilation-unit name="btree-sec-primary-index-04">
+        <output-dir compare="Text">btree-sec-primary-index-04</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
       <compilation-unit name="btree-index-composite-key-mixed-intervals">
         <output-dir compare="Text">btree-index-composite-key-mixed-intervals</output-dir>
       </compilation-unit>

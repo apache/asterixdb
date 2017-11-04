@@ -223,6 +223,7 @@ public class DotFormatBuilder {
             if (value == null) {
                 newValue = "";
             }
+            newValue = newValue.replace("\n", "\\n");
             return new StringValue("\"" + newValue.replace("\"","\'").trim() + "\"");
         }
     }

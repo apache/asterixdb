@@ -1,0 +1,30 @@
+DataverseUse test
+WriteOutputTo asterix_nc1:rttest/btree-index_btree-secondary-64.adm
+TypeDecl TestType [
+  open RecordType {
+    id : integer,
+    fname : string,
+    lname : string
+  }
+]
+DatasetDecl testdst(TestType) partitioned by [[id]]
+Query:
+SELECT [
+FunctionCall asterix.sql-count@1[
+  (
+    SELECT ELEMENT [
+    LiteralExpr [LONG] [1]
+    ]
+    FROM [      Variable [ Name=#1 ]
+      AS Variable [ Name=#2 ]
+    ]
+  )
+]
+count
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [testdst]
+  ]
+  AS Variable [ Name=$testdst ]
+]
+Group All

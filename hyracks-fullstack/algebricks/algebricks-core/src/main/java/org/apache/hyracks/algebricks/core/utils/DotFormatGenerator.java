@@ -178,11 +178,13 @@ public class DotFormatGenerator {
             rightOperator = entry.getValue().getRight().getLeft();
             source = leftOperator.getClass().getName().substring(
                     leftOperator.getClass().getName().lastIndexOf(".") + 1);
-            sourceNode = graphBuilder.createNode(DotFormatBuilder.StringValue.of(leftOperator.toString()),
+            sourceNode = graphBuilder.createNode(
+                    DotFormatBuilder.StringValue.of(leftOperator.getOperatorId().toString()),
                     DotFormatBuilder.StringValue.of(leftOperator.toString() + "-" + source));
             destination = rightOperator.getClass().getName().substring(
                     rightOperator.getClass().getName().lastIndexOf(".") + 1);
-            destinationNode = graphBuilder.createNode(DotFormatBuilder.StringValue.of(rightOperator.toString()),
+            destinationNode = graphBuilder.createNode(
+                    DotFormatBuilder.StringValue.of(rightOperator.getOperatorId().toString()),
                     DotFormatBuilder.StringValue.of(rightOperator.toString() + "-" + destination));
             graphBuilder.createEdge(sourceNode, destinationNode).setLabel(DotFormatBuilder.StringValue.of(edgeLabel));
         }
