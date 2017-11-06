@@ -34,7 +34,7 @@ import org.apache.hyracks.storage.am.btree.impls.RangePredicate;
 import org.apache.hyracks.storage.am.common.api.IIndexOperationContext;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexCursor;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
-import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
+import org.apache.hyracks.storage.am.common.impls.NoOpIndexAccessParameters;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.am.common.tuples.DualTupleReference;
 import org.apache.hyracks.storage.am.lsm.common.api.IComponentFilterHelper;
@@ -58,9 +58,8 @@ import org.apache.hyracks.storage.am.rtree.frames.RTreeFrameFactory;
 import org.apache.hyracks.storage.am.rtree.impls.RTree.RTreeAccessor;
 import org.apache.hyracks.storage.am.rtree.impls.RTreeSearchCursor;
 import org.apache.hyracks.storage.am.rtree.impls.SearchPredicate;
+import org.apache.hyracks.storage.common.IIndexAccessParameters;
 import org.apache.hyracks.storage.common.IIndexCursor;
-import org.apache.hyracks.storage.common.IModificationOperationCallback;
-import org.apache.hyracks.storage.common.ISearchOperationCallback;
 import org.apache.hyracks.storage.common.ISearchPredicate;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 
@@ -115,8 +114,8 @@ public class LSMRTree extends AbstractLSMRTree {
         // The RTree should be renamed before the BTree.
 
         // scan the memory RTree
-        RTreeAccessor memRTreeAccessor = flushingComponent.getIndex().createAccessor(NoOpOperationCallback.INSTANCE,
-                NoOpOperationCallback.INSTANCE);
+        RTreeAccessor memRTreeAccessor =
+                flushingComponent.getIndex().createAccessor(NoOpIndexAccessParameters.INSTANCE);
         RTreeSearchCursor rtreeScanCursor = memRTreeAccessor.createSearchCursor(false);
         SearchPredicate rtreeNullPredicate = new SearchPredicate(null, null);
         memRTreeAccessor.search(rtreeScanCursor, rtreeNullPredicate);
@@ -125,8 +124,8 @@ public class LSMRTree extends AbstractLSMRTree {
                 flushOp.getBTreeTarget(), flushOp.getBloomFilterTarget(), true);
 
         //count the number of tuples in the buddy btree
-        BTreeAccessor memBTreeAccessor = flushingComponent.getBuddyIndex()
-                .createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+        BTreeAccessor memBTreeAccessor =
+                flushingComponent.getBuddyIndex().createAccessor(NoOpIndexAccessParameters.INSTANCE);
         RangePredicate btreeNullPredicate = new RangePredicate(null, null, true, true, null, null);
         IIndexCursor btreeCountingCursor = memBTreeAccessor.createCountingSearchCursor();
         memBTreeAccessor.search(btreeCountingCursor, btreeNullPredicate);
@@ -274,10 +273,9 @@ public class LSMRTree extends AbstractLSMRTree {
     }
 
     @Override
-    public ILSMIndexAccessor createAccessor(IModificationOperationCallback modificationCallback,
-            ISearchOperationCallback searchCallback) {
-        return new LSMRTreeAccessor(getLsmHarness(), createOpContext(modificationCallback, searchCallback),
-                buddyBTreeFields);
+    public ILSMIndexAccessor createAccessor(IIndexAccessParameters iap) {
+        return new LSMRTreeAccessor(getLsmHarness(),
+                createOpContext(iap.getModificationCallback(), iap.getSearchOperationCallback()), buddyBTreeFields);
     }
 
     // This function is modified for R-Trees without antimatter tuples to allow buddy B-Tree to have only primary keys

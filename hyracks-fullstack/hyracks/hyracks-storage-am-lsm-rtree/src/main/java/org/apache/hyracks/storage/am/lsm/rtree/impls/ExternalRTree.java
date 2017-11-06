@@ -54,9 +54,9 @@ import org.apache.hyracks.storage.am.lsm.common.impls.BlockingIOOperationCallbac
 import org.apache.hyracks.storage.am.lsm.common.impls.ExternalIndexHarness;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
 import org.apache.hyracks.storage.am.rtree.impls.SearchPredicate;
+import org.apache.hyracks.storage.common.IIndexAccessParameters;
 import org.apache.hyracks.storage.common.IIndexBulkLoader;
 import org.apache.hyracks.storage.common.IIndexCursor;
-import org.apache.hyracks.storage.common.IModificationOperationCallback;
 import org.apache.hyracks.storage.common.ISearchOperationCallback;
 import org.apache.hyracks.storage.common.ISearchPredicate;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
@@ -610,9 +610,9 @@ public class ExternalRTree extends LSMRTree implements ITwoPCIndex {
     // The accessor for disk only indexes don't use modification callback and
     // always carry the target index version with them
     @Override
-    public ILSMIndexAccessor createAccessor(IModificationOperationCallback modificationCallback,
-            ISearchOperationCallback searchCallback) {
-        return new LSMRTreeAccessor(getLsmHarness(), createOpContext(searchCallback, version), buddyBTreeFields);
+    public ILSMIndexAccessor createAccessor(IIndexAccessParameters iap) {
+        return new LSMRTreeAccessor(getLsmHarness(), createOpContext(iap.getSearchOperationCallback(), version),
+                buddyBTreeFields);
     }
 
     @Override

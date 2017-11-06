@@ -28,11 +28,13 @@ import org.apache.hyracks.storage.am.btree.impls.BTreeOpContext;
 import org.apache.hyracks.storage.am.btree.impls.BTreeRangeSearchCursor;
 import org.apache.hyracks.storage.am.btree.impls.RangePredicate;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
+import org.apache.hyracks.storage.am.common.impls.IndexAccessParameters;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMHarness;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMemoryComponent;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexOperationContext;
+import org.apache.hyracks.storage.common.IIndexAccessParameters;
 import org.apache.hyracks.storage.common.IModificationOperationCallback;
 import org.apache.hyracks.storage.common.ISearchOperationCallback;
 import org.apache.hyracks.storage.common.MultiComparator;
@@ -86,9 +88,9 @@ public final class LSMBTreeOpContext extends AbstractLSMIndexOperationContext {
                 mutableBTreeAccessors[i] = mutableBTrees[i].createAccessor(modificationCallback,
                         NoOpOperationCallback.INSTANCE, allFields);
             } else {
-
-                mutableBTreeAccessors[i] =
-                        mutableBTrees[i].createAccessor(modificationCallback, NoOpOperationCallback.INSTANCE);
+                IIndexAccessParameters iap =
+                        new IndexAccessParameters(modificationCallback, NoOpOperationCallback.INSTANCE);
+                mutableBTreeAccessors[i] = mutableBTrees[i].createAccessor(iap);
             }
             mutableBTreeOpCtxs[i] = mutableBTreeAccessors[i].getOpContext();
         }

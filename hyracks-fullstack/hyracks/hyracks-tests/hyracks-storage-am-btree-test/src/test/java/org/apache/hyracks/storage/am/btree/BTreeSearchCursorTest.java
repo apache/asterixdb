@@ -56,6 +56,7 @@ import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexMetadataFrameFactory;
 import org.apache.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
 import org.apache.hyracks.storage.am.common.freepage.LinkedMetaDataPageManager;
+import org.apache.hyracks.storage.am.common.impls.IndexAccessParameters;
 import org.apache.hyracks.storage.common.MultiComparator;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.junit.Assert;
@@ -107,8 +108,9 @@ public class BTreeSearchCursorTest extends AbstractBTreeTest {
         ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
 
-        ITreeIndexAccessor indexAccessor =
-                btree.createAccessor(TestOperationCallback.INSTANCE, TestOperationCallback.INSTANCE);
+        IndexAccessParameters actx =
+                new IndexAccessParameters(TestOperationCallback.INSTANCE, TestOperationCallback.INSTANCE);
+        ITreeIndexAccessor indexAccessor = btree.createAccessor(actx);
 
         // generate keys
         int numKeys = 50;
@@ -183,8 +185,9 @@ public class BTreeSearchCursorTest extends AbstractBTreeTest {
         ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
 
-        ITreeIndexAccessor indexAccessor =
-                btree.createAccessor(TestOperationCallback.INSTANCE, TestOperationCallback.INSTANCE);
+        IndexAccessParameters actx =
+                new IndexAccessParameters(TestOperationCallback.INSTANCE, TestOperationCallback.INSTANCE);
+        ITreeIndexAccessor indexAccessor = btree.createAccessor(actx);
 
         // generate keys
         int numKeys = 50;
@@ -256,8 +259,9 @@ public class BTreeSearchCursorTest extends AbstractBTreeTest {
         ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
 
-        ITreeIndexAccessor indexAccessor =
-                btree.createAccessor(TestOperationCallback.INSTANCE, TestOperationCallback.INSTANCE);
+        IndexAccessParameters actx =
+                new IndexAccessParameters(TestOperationCallback.INSTANCE, TestOperationCallback.INSTANCE);
+        ITreeIndexAccessor indexAccessor = btree.createAccessor(actx);
 
         // generate keys
         int numKeys = 50;
@@ -357,8 +361,9 @@ public class BTreeSearchCursorTest extends AbstractBTreeTest {
 
                 ITreeIndexCursor rangeCursor = new BTreeRangeSearchCursor(leafFrame, false);
                 RangePredicate rangePred = createRangePredicate(lowKey, highKey, lowKeyInclusive, highKeyInclusive);
-                ITreeIndexAccessor indexAccessor =
-                        btree.createAccessor(TestOperationCallback.INSTANCE, TestOperationCallback.INSTANCE);
+                IndexAccessParameters actx =
+                        new IndexAccessParameters(TestOperationCallback.INSTANCE, TestOperationCallback.INSTANCE);
+                ITreeIndexAccessor indexAccessor = btree.createAccessor(actx);
                 indexAccessor.search(rangeCursor, rangePred);
 
                 try {

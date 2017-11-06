@@ -50,6 +50,7 @@ import org.apache.hyracks.storage.am.rtree.api.IRTreeLeafFrame;
 import org.apache.hyracks.storage.am.rtree.frames.RTreeNSMFrame;
 import org.apache.hyracks.storage.am.rtree.frames.RTreeNSMInteriorFrame;
 import org.apache.hyracks.storage.am.rtree.tuples.RTreeTypeAwareTupleWriter;
+import org.apache.hyracks.storage.common.IIndexAccessParameters;
 import org.apache.hyracks.storage.common.IIndexBulkLoader;
 import org.apache.hyracks.storage.common.IIndexCursor;
 import org.apache.hyracks.storage.common.IModificationOperationCallback;
@@ -756,9 +757,8 @@ public class RTree extends AbstractTreeIndex {
     }
 
     @Override
-    public RTreeAccessor createAccessor(IModificationOperationCallback modificationCallback,
-            ISearchOperationCallback searchCallback) {
-        return new RTreeAccessor(this, modificationCallback, searchCallback);
+    public RTreeAccessor createAccessor(IIndexAccessParameters iap) {
+        return new RTreeAccessor(this, iap.getModificationCallback(), iap.getSearchOperationCallback());
     }
 
     public RTreeAccessor createAccessor(IModificationOperationCallback modificationCallback,

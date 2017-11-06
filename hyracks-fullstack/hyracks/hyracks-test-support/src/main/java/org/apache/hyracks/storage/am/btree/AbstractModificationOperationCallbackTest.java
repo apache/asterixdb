@@ -23,6 +23,7 @@ import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleReference;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.dataflow.common.utils.TupleUtils;
+import org.apache.hyracks.storage.am.common.impls.IndexAccessParameters;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import org.apache.hyracks.storage.am.config.AccessMethodTestsConfig;
 import org.apache.hyracks.storage.common.IIndexAccessor;
@@ -61,7 +62,8 @@ public abstract class AbstractModificationOperationCallbackTest extends Abstract
 
     @Test
     public void modificationCallbackTest() throws Exception {
-        IIndexAccessor accessor = index.createAccessor(cb, NoOpOperationCallback.INSTANCE);
+        IndexAccessParameters actx = new IndexAccessParameters(cb, NoOpOperationCallback.INSTANCE);
+        IIndexAccessor accessor = index.createAccessor(actx);
 
         isFoundNull = true;
         for (int i = 0; i < AccessMethodTestsConfig.BTREE_NUM_TUPLES_TO_INSERT; i++) {

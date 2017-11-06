@@ -54,6 +54,7 @@ import org.apache.hyracks.storage.am.common.api.ITreeIndexMetadataFrame;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexMetadataFrameFactory;
 import org.apache.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
 import org.apache.hyracks.storage.am.common.freepage.LinkedMetaDataPageManager;
+import org.apache.hyracks.storage.am.common.impls.IndexAccessParameters;
 import org.apache.hyracks.storage.am.common.util.TreeIndexBufferCacheWarmup;
 import org.apache.hyracks.storage.am.common.util.TreeIndexStats;
 import org.apache.hyracks.storage.am.common.util.TreeIndexStatsGatherer;
@@ -125,8 +126,9 @@ public class BTreeStatsTest extends AbstractBTreeTest {
         accessor.reset(frame.getBuffer());
         FrameTupleReference tuple = new FrameTupleReference();
 
-        ITreeIndexAccessor indexAccessor =
-                btree.createAccessor(TestOperationCallback.INSTANCE, TestOperationCallback.INSTANCE);
+        IndexAccessParameters actx =
+                new IndexAccessParameters(TestOperationCallback.INSTANCE, TestOperationCallback.INSTANCE);
+        ITreeIndexAccessor indexAccessor = btree.createAccessor(actx);
         // 10000
         for (int i = 0; i < 100000; i++) {
 

@@ -32,6 +32,8 @@ import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleReference;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.dataflow.common.utils.TupleUtils;
 import org.apache.hyracks.storage.am.btree.impls.RangePredicate;
+import org.apache.hyracks.storage.am.common.impls.IndexAccessParameters;
+import org.apache.hyracks.storage.am.common.impls.NoOpIndexAccessParameters;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import org.apache.hyracks.storage.common.IIndexAccessor;
 import org.apache.hyracks.storage.common.IIndexCursor;
@@ -92,7 +94,8 @@ public abstract class AbstractSearchOperationCallbackTest extends AbstractOperat
 
         public SearchTask() throws HyracksDataException {
             this.cb = new SynchronizingSearchOperationCallback();
-            this.accessor = index.createAccessor(NoOpOperationCallback.INSTANCE, cb);
+            IndexAccessParameters actx = new IndexAccessParameters(NoOpOperationCallback.INSTANCE, cb);
+            this.accessor = index.createAccessor(actx);
             this.cursor = accessor.createSearchCursor(false);
             this.predicate = new RangePredicate();
             this.builder = new ArrayTupleBuilder(NUM_KEY_FIELDS);
@@ -208,7 +211,7 @@ public abstract class AbstractSearchOperationCallbackTest extends AbstractOperat
         private final ArrayTupleReference tuple;
 
         public InsertionTask() throws HyracksDataException {
-            this.accessor = index.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+            this.accessor = index.createAccessor(NoOpIndexAccessParameters.INSTANCE);
             this.builder = new ArrayTupleBuilder(NUM_KEY_FIELDS);
             this.tuple = new ArrayTupleReference();
         }

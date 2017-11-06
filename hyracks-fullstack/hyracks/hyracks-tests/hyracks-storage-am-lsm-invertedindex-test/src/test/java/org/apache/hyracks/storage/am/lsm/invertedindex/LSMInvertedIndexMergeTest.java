@@ -22,7 +22,7 @@ package org.apache.hyracks.storage.am.lsm.invertedindex;
 import java.io.IOException;
 
 import org.apache.hyracks.storage.am.common.datagen.TupleGenerator;
-import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
+import org.apache.hyracks.storage.am.common.impls.NoOpIndexAccessParameters;
 import org.apache.hyracks.storage.am.config.AccessMethodTestsConfig;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.common.impls.NoOpIOOperationCallbackFactory;
@@ -46,8 +46,8 @@ public class LSMInvertedIndexMergeTest extends AbstractInvertedIndexLoadTest {
         IIndex invIndex = testCtx.getIndex();
         invIndex.create();
         invIndex.activate();
-        ILSMIndexAccessor invIndexAccessor = (ILSMIndexAccessor) invIndex.createAccessor(NoOpOperationCallback.INSTANCE,
-                NoOpOperationCallback.INSTANCE);
+        ILSMIndexAccessor invIndexAccessor =
+                (ILSMIndexAccessor) invIndex.createAccessor(NoOpIndexAccessParameters.INSTANCE);
 
         for (int i = 0; i < maxTreesToMerge; i++) {
             for (int j = 0; j < i; j++) {

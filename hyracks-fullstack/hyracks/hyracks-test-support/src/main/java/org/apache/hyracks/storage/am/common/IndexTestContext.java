@@ -25,6 +25,7 @@ import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleReference;
+import org.apache.hyracks.storage.am.common.impls.IndexAccessParameters;
 import org.apache.hyracks.storage.common.IIndex;
 import org.apache.hyracks.storage.common.IIndexAccessor;
 
@@ -40,7 +41,9 @@ public abstract class IndexTestContext<T extends CheckTuple> implements IIndexTe
             throws HyracksDataException {
         this.fieldSerdes = fieldSerdes;
         this.index = index;
-        this.indexAccessor = index.createAccessor(TestOperationCallback.INSTANCE, TestOperationCallback.INSTANCE);
+        IndexAccessParameters actx =
+                new IndexAccessParameters(TestOperationCallback.INSTANCE, TestOperationCallback.INSTANCE);
+        this.indexAccessor = index.createAccessor(actx);
         this.tupleBuilder = filtered ? new ArrayTupleBuilder(fieldSerdes.length + 1)
                 : new ArrayTupleBuilder(fieldSerdes.length);
     }

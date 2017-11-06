@@ -30,6 +30,8 @@ import org.apache.hyracks.dataflow.common.utils.SerdeUtils;
 import org.apache.hyracks.dataflow.common.utils.TupleUtils;
 import org.apache.hyracks.storage.am.btree.AbstractSearchOperationCallbackTest;
 import org.apache.hyracks.storage.am.btree.impls.RangePredicate;
+import org.apache.hyracks.storage.am.common.impls.IndexAccessParameters;
+import org.apache.hyracks.storage.am.common.impls.NoOpIndexAccessParameters;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import org.apache.hyracks.storage.am.lsm.btree.util.LSMBTreeTestHarness;
 import org.apache.hyracks.storage.am.lsm.btree.utils.LSMBTreeUtil;
@@ -101,7 +103,8 @@ public class LSMBTreeSearchOperationCallbackTest extends AbstractSearchOperation
 
         public SearchTask() throws HyracksDataException {
             this.cb = new SynchronizingSearchOperationCallback();
-            this.accessor = index.createAccessor(NoOpOperationCallback.INSTANCE, cb);
+            IndexAccessParameters actx = new IndexAccessParameters(NoOpOperationCallback.INSTANCE, cb);
+            this.accessor = index.createAccessor(actx);
             this.cursor = accessor.createSearchCursor(false);
             this.predicate = new RangePredicate();
             this.builder = new ArrayTupleBuilder(NUM_KEY_FIELDS);
@@ -219,7 +222,7 @@ public class LSMBTreeSearchOperationCallbackTest extends AbstractSearchOperation
         private final ArrayTupleReference tuple;
 
         public InsertionTask() throws HyracksDataException {
-            this.accessor = index.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+            this.accessor = index.createAccessor(NoOpIndexAccessParameters.INSTANCE);
             this.builder = new ArrayTupleBuilder(NUM_KEY_FIELDS);
             this.tuple = new ArrayTupleReference();
         }

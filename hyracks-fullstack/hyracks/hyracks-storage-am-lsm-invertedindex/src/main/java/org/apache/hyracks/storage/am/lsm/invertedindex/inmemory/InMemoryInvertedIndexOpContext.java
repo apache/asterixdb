@@ -24,7 +24,7 @@ import org.apache.hyracks.storage.am.btree.impls.BTree;
 import org.apache.hyracks.storage.am.btree.impls.BTree.BTreeAccessor;
 import org.apache.hyracks.storage.am.btree.impls.RangePredicate;
 import org.apache.hyracks.storage.am.common.api.IIndexOperationContext;
-import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
+import org.apache.hyracks.storage.am.common.impls.NoOpIndexAccessParameters;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizer;
 import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizerFactory;
@@ -67,8 +67,7 @@ public class InMemoryInvertedIndexOpContext implements IIndexOperationContext {
             case SEARCH: {
                 if (getBtreePred() == null) {
                     btreePred = new RangePredicate(null, null, true, true, null, null);
-                    btreeAccessor =
-                            btree.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+                    btreeAccessor = btree.createAccessor(NoOpIndexAccessParameters.INSTANCE);
                     btreeCmp = MultiComparator.create(btree.getComparatorFactories());
                     tokenFieldsCmp = MultiComparator.create(tokenCmpFactories);
                 }

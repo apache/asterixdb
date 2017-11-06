@@ -27,9 +27,8 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.common.api.IIndexOperationContext;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMHarness;
 import org.apache.hyracks.storage.common.IIndex;
+import org.apache.hyracks.storage.common.IIndexAccessParameters;
 import org.apache.hyracks.storage.common.IIndexCursor;
-import org.apache.hyracks.storage.common.IModificationOperationCallback;
-import org.apache.hyracks.storage.common.ISearchOperationCallback;
 import org.apache.hyracks.storage.common.ISearchPredicate;
 
 /**
@@ -45,8 +44,7 @@ public interface ILSMIndex extends IIndex {
     void deactivate(boolean flush) throws HyracksDataException;
 
     @Override
-    ILSMIndexAccessor createAccessor(IModificationOperationCallback modificationCallback,
-            ISearchOperationCallback searchCallback) throws HyracksDataException;
+    ILSMIndexAccessor createAccessor(IIndexAccessParameters iap) throws HyracksDataException;
 
     ILSMOperationTracker getOperationTracker();
 

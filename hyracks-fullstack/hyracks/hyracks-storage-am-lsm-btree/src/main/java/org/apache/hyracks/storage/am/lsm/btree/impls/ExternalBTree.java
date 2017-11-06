@@ -55,9 +55,9 @@ import org.apache.hyracks.storage.am.lsm.common.impls.ExternalIndexHarness;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMTreeIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMTreeIndexAccessor.ICursorFactory;
+import org.apache.hyracks.storage.common.IIndexAccessParameters;
 import org.apache.hyracks.storage.common.IIndexBulkLoader;
 import org.apache.hyracks.storage.common.IIndexCursor;
-import org.apache.hyracks.storage.common.IModificationOperationCallback;
 import org.apache.hyracks.storage.common.ISearchOperationCallback;
 import org.apache.hyracks.storage.common.ISearchPredicate;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
@@ -487,9 +487,8 @@ public class ExternalBTree extends LSMBTree implements ITwoPCIndex {
 
     // The accessor for disk only indexes don't use modification callback and always carry the target index version with them
     @Override
-    public ILSMIndexAccessor createAccessor(IModificationOperationCallback modificationCallback,
-            ISearchOperationCallback searchCallback) {
-        ExternalBTreeOpContext opCtx = createOpContext(searchCallback, version);
+    public ILSMIndexAccessor createAccessor(IIndexAccessParameters iap) {
+        ExternalBTreeOpContext opCtx = createOpContext(iap.getSearchOperationCallback(), version);
         return new LSMTreeIndexAccessor(getLsmHarness(), opCtx, cursorFactory);
     }
 

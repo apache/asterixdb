@@ -23,7 +23,7 @@ import java.util.List;
 
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
+import org.apache.hyracks.storage.am.common.impls.NoOpIndexAccessParameters;
 import org.apache.hyracks.storage.am.common.tuples.PermutingTupleReference;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMemoryComponent;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexOperationContext;
@@ -58,11 +58,11 @@ public class LSMInvertedIndexOpContext extends AbstractLSMIndexOperationContext 
             if (allFields != null) {
                 mutableInvIndexAccessors[i] = mutableComponent.getIndex().createAccessor(allFields);
             } else {
-                mutableInvIndexAccessors[i] = mutableComponent.getIndex().createAccessor(NoOpOperationCallback.INSTANCE,
-                        NoOpOperationCallback.INSTANCE);
+                mutableInvIndexAccessors[i] =
+                        mutableComponent.getIndex().createAccessor(NoOpIndexAccessParameters.INSTANCE);
             }
-            deletedKeysBTreeAccessors[i] = mutableComponent.getBuddyIndex()
-                    .createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+            deletedKeysBTreeAccessors[i] =
+                    mutableComponent.getBuddyIndex().createAccessor(NoOpIndexAccessParameters.INSTANCE);
         }
         // Project away the document fields, leaving only the key fields.
         LSMInvertedIndexMemoryComponent c = (LSMInvertedIndexMemoryComponent) mutableComponents.get(0);

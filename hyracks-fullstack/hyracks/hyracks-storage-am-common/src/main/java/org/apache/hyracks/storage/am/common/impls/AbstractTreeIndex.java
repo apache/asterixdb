@@ -308,8 +308,7 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
         ITreeIndexAccessor accessor;
 
         public TreeIndexInsertBulkLoader() throws HyracksDataException {
-            accessor =
-                    (ITreeIndexAccessor) createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+            accessor = (ITreeIndexAccessor) createAccessor(NoOpIndexAccessParameters.INSTANCE);
         }
 
         @Override

@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
+import org.apache.hyracks.storage.am.common.impls.NoOpIndexAccessParameters;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponentId;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
@@ -126,8 +126,7 @@ public class CorrelatedPrefixMergePolicy extends PrefixMergePolicy {
                     break;
                 }
             }
-            ILSMIndexAccessor accessor =
-                    lsmIndex.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+            ILSMIndexAccessor accessor = lsmIndex.createAccessor(NoOpIndexAccessParameters.INSTANCE);
             accessor.scheduleMerge(lsmIndex.getIOOperationCallback(), mergableComponents);
         }
     }

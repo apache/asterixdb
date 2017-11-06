@@ -54,7 +54,7 @@ import org.apache.hyracks.storage.am.common.datagen.IFieldValueGenerator;
 import org.apache.hyracks.storage.am.common.datagen.PersonNameFieldValueGenerator;
 import org.apache.hyracks.storage.am.common.datagen.SortedIntegerFieldValueGenerator;
 import org.apache.hyracks.storage.am.common.datagen.TupleGenerator;
-import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
+import org.apache.hyracks.storage.am.common.impls.NoOpIndexAccessParameters;
 import org.apache.hyracks.storage.am.common.tuples.PermutingTupleReference;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndex;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexAccessor;
@@ -257,8 +257,8 @@ public class LSMInvertedIndexTestUtils {
         IInvertedIndex invIndex = (IInvertedIndex) testCtx.getIndex();
         int tokenFieldCount = invIndex.getTokenTypeTraits().length;
         int invListFieldCount = invIndex.getInvListTypeTraits().length;
-        IInvertedIndexAccessor invIndexAccessor = (IInvertedIndexAccessor) invIndex
-                .createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+        IInvertedIndexAccessor invIndexAccessor =
+                (IInvertedIndexAccessor) invIndex.createAccessor(NoOpIndexAccessParameters.INSTANCE);
         IIndexCursor invIndexCursor = invIndexAccessor.createRangeSearchCursor();
         MultiComparator tokenCmp = MultiComparator.create(invIndex.getTokenCmpFactories());
         IBinaryComparatorFactory[] tupleCmpFactories =
@@ -490,8 +490,8 @@ public class LSMInvertedIndexTestUtils {
             int numDocQueries, int numRandomQueries, IInvertedIndexSearchModifier searchModifier, int[] scanCountArray)
             throws IOException, HyracksDataException {
         IInvertedIndex invIndex = testCtx.invIndex;
-        IInvertedIndexAccessor accessor = (IInvertedIndexAccessor) invIndex
-                .createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+        IInvertedIndexAccessor accessor =
+                (IInvertedIndexAccessor) invIndex.createAccessor(NoOpIndexAccessParameters.INSTANCE);
         IBinaryTokenizer tokenizer = testCtx.getTokenizerFactory().createTokenizer();
         InvertedIndexSearchPredicate searchPred = new InvertedIndexSearchPredicate(tokenizer, searchModifier);
         List<ITupleReference> documentCorpus = testCtx.getDocumentCorpus();

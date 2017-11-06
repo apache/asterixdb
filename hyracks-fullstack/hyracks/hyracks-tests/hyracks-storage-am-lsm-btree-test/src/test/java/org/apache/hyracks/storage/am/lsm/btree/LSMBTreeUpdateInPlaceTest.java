@@ -29,6 +29,7 @@ import org.apache.hyracks.dataflow.common.utils.SerdeUtils;
 import org.apache.hyracks.dataflow.common.utils.TupleUtils;
 import org.apache.hyracks.storage.am.btree.AbstractOperationCallbackTest;
 import org.apache.hyracks.storage.am.common.api.IBTreeIndexTupleReference;
+import org.apache.hyracks.storage.am.common.impls.IndexAccessParameters;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import org.apache.hyracks.storage.am.config.AccessMethodTestsConfig;
 import org.apache.hyracks.storage.am.lsm.btree.util.LSMBTreeTestHarness;
@@ -83,7 +84,8 @@ public class LSMBTreeUpdateInPlaceTest extends AbstractOperationCallbackTest {
     public void setup() throws Exception {
         harness.setUp();
         super.setup();
-        accessor = index.createAccessor(cb, NoOpOperationCallback.INSTANCE);
+        IndexAccessParameters actx = new IndexAccessParameters(cb, NoOpOperationCallback.INSTANCE);
+        accessor = index.createAccessor(actx);
     }
 
     @Override

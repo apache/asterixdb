@@ -46,6 +46,7 @@ import org.apache.hyracks.storage.am.common.CheckTuple;
 import org.apache.hyracks.storage.am.common.IIndexTestContext;
 import org.apache.hyracks.storage.am.common.TestOperationCallback;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexCursor;
+import org.apache.hyracks.storage.am.common.impls.IndexAccessParameters;
 import org.apache.hyracks.storage.am.config.AccessMethodTestsConfig;
 import org.apache.hyracks.storage.am.lsm.btree.impls.LSMBTree;
 import org.apache.hyracks.storage.am.lsm.btree.tuples.LSMBTreeTupleReference;
@@ -360,8 +361,9 @@ public class LSMBTreeUpdateInPlaceScanDiskComponentsTest extends OrderedIndexTes
         Assert.assertEquals("Check disk components", 1, btree.getDiskComponents().size());
 
         ILSMDiskComponent btreeComponent = btree.getDiskComponents().get(0);
-        BTree.BTreeAccessor btreeAccessor = ((BTree) btreeComponent.getIndex())
-                .createAccessor(TestOperationCallback.INSTANCE, TestOperationCallback.INSTANCE);
+        IndexAccessParameters actx =
+                new IndexAccessParameters(TestOperationCallback.INSTANCE, TestOperationCallback.INSTANCE);
+        BTree.BTreeAccessor btreeAccessor = ((BTree) btreeComponent.getIndex()).createAccessor(actx);
 
         ITreeIndexCursor cursor = btreeAccessor.createDiskOrderScanCursor();
         try {

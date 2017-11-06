@@ -26,7 +26,7 @@ import java.util.Map;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
+import org.apache.hyracks.storage.am.common.impls.NoOpIndexAccessParameters;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent.ComponentState;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
@@ -59,8 +59,7 @@ public class PrefixMergePolicy implements ILSMMergePolicy {
         }
 
         if (fullMergeIsRequested) {
-            ILSMIndexAccessor accessor =
-                    index.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+            ILSMIndexAccessor accessor = index.createAccessor(NoOpIndexAccessParameters.INSTANCE);
             accessor.scheduleFullMerge(index.getIOOperationCallback());
             return;
         }
@@ -245,8 +244,7 @@ public class PrefixMergePolicy implements ILSMMergePolicy {
 
         // Reverse the components order back to its original order
         Collections.reverse(mergableComponents);
-        ILSMIndexAccessor accessor =
-                index.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+        ILSMIndexAccessor accessor = index.createAccessor(NoOpIndexAccessParameters.INSTANCE);
         accessor.scheduleMerge(index.getIOOperationCallback(), mergableComponents);
     }
 

@@ -40,8 +40,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMDiskComponentId;
-import org.apache.hyracks.storage.common.IModificationOperationCallback;
-import org.apache.hyracks.storage.common.ISearchOperationCallback;
+import org.apache.hyracks.storage.common.IIndexAccessParameters;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -238,8 +237,7 @@ public class CorrelatedPrefixMergePolicyTest extends TestCase {
         }).when(accessor).scheduleMerge(Mockito.any(ILSMIOOperationCallback.class),
                 Mockito.anyListOf(ILSMDiskComponent.class));
 
-        Mockito.when(index.createAccessor(Mockito.any(IModificationOperationCallback.class),
-                Mockito.any(ISearchOperationCallback.class))).thenReturn(accessor);
+        Mockito.when(index.createAccessor(Mockito.any(IIndexAccessParameters.class))).thenReturn(accessor);
         Mockito.when(index.isPrimaryIndex()).thenReturn(isPrimary);
 
         return new IndexInfo(index, DATASET_ID, 0, partition);

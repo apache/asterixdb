@@ -100,14 +100,12 @@ public interface IIndex {
      * on the same {@link IIndex}.
      *
      * @returns IIndexAccessor an accessor for this {@link IIndex}
-     * @param modificationCallback
-     *            the callback to be used for modification operations
-     * @param searchCallback
-     *            the callback to be used for search operations
+     * @param iap
+     *            an instance of the index access parameter class that contains modification callback,
+     *            search operation callback, etc
      * @throws HyracksDataException
      */
-    IIndexAccessor createAccessor(IModificationOperationCallback modificationCallback,
-            ISearchOperationCallback searchCallback) throws HyracksDataException;
+    IIndexAccessor createAccessor(IIndexAccessParameters iap) throws HyracksDataException;
 
     /**
      * TODO: Get rid of this method

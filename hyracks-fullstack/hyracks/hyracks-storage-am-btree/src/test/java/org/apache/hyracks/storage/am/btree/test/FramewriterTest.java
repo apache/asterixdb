@@ -336,10 +336,10 @@ public class FramewriterTest {
         int j = 0;
         for (int i = 0; i < indexAccessors.length; i++) {
             indexes[j] = Mockito.mock(ITreeIndex.class);
-            Mockito.when(indexes[j].createAccessor(Mockito.any(), Mockito.any())).thenReturn(indexAccessors[i]);
+            Mockito.when(indexes[j].createAccessor(Mockito.any())).thenReturn(indexAccessors[i]);
             j++;
             indexes[j] = Mockito.mock(ITreeIndex.class);
-            Mockito.when(indexes[j].createAccessor(Mockito.any(), Mockito.any()))
+            Mockito.when(indexes[j].createAccessor(Mockito.any()))
                     .thenThrow(new HyracksDataException("failed to create accessor"));
             j++;
         }
