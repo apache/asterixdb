@@ -66,8 +66,8 @@ public class AsyncFIFOPageQueueManager implements Runnable {
                     throw new HyracksDataException("Queue is closing");
                 }
             } catch (InterruptedException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+                Thread.currentThread().interrupt();
+                throw HyracksDataException.create(e);
             }
         }
     }
