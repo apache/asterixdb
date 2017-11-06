@@ -91,17 +91,17 @@ public class LSMInvertedIndexLocalResource extends LsmResource {
             return InvertedIndexUtils.createPartitionedLSMInvertedIndex(ioManager, virtualBufferCaches, typeTraits,
                     cmpFactories, tokenTypeTraits, tokenCmpFactories, tokenizerFactory, bufferCache,
                     file.getAbsolutePath(), bloomFilterFalsePositiveRate, mergePolicy,
-                    opTrackerProvider.getOperationTracker(serviceCtx), ioScheduler,
-                    ioOpCallbackFactory.createIoOpCallback(), invertedIndexFields, filterTypeTraits, filterCmpFactories,
-                    filterFields, filterFieldsForNonBulkLoadOps, invertedIndexFieldsForNonBulkLoadOps, durable,
+                    opTrackerProvider.getOperationTracker(serviceCtx), ioScheduler, ioOpCallbackFactory,
+                    invertedIndexFields, filterTypeTraits, filterCmpFactories, filterFields,
+                    filterFieldsForNonBulkLoadOps, invertedIndexFieldsForNonBulkLoadOps, durable,
                     metadataPageManagerFactory);
         } else {
             return InvertedIndexUtils.createLSMInvertedIndex(ioManager, virtualBufferCaches, typeTraits, cmpFactories,
                     tokenTypeTraits, tokenCmpFactories, tokenizerFactory, bufferCache, file.getAbsolutePath(),
                     bloomFilterFalsePositiveRate, mergePolicy, opTrackerProvider.getOperationTracker(serviceCtx),
-                    ioScheduler, ioOpCallbackFactory.createIoOpCallback(), invertedIndexFields, filterTypeTraits,
-                    filterCmpFactories, filterFields, filterFieldsForNonBulkLoadOps,
-                    invertedIndexFieldsForNonBulkLoadOps, durable, metadataPageManagerFactory);
+                    ioScheduler, ioOpCallbackFactory, invertedIndexFields, filterTypeTraits, filterCmpFactories,
+                    filterFields, filterFieldsForNonBulkLoadOps, invertedIndexFieldsForNonBulkLoadOps, durable,
+                    metadataPageManagerFactory);
         }
     }
 }

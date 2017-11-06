@@ -59,7 +59,7 @@ public class ThreadCountingTracker implements ILSMOperationTracker {
                 && index.hasFlushRequestForCurrentMutableComponent()) {
             ILSMIndexAccessor accessor =
                     index.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
-            accessor.scheduleFlush(NoOpIOOperationCallbackFactory.INSTANCE.createIoOpCallback());
+            accessor.scheduleFlush(NoOpIOOperationCallbackFactory.INSTANCE.createIoOpCallback(index));
         }
     }
 }

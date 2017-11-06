@@ -626,11 +626,6 @@ public class OnDiskInvertedIndex implements IInPlaceInvertedIndex {
     }
 
     @Override
-    public boolean hasMemoryComponents() {
-        return true;
-    }
-
-    @Override
     public int getNumOfFilterFields() {
         return 0;
     }

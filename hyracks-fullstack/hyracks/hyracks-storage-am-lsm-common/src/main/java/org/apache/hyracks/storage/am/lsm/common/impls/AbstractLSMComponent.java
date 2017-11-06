@@ -26,11 +26,13 @@ public abstract class AbstractLSMComponent implements ILSMComponent {
     // Finals
     protected final LongPointable pointable = LongPointable.FACTORY.createPointable();
     protected final ILSMComponentFilter filter;
+    protected final AbstractLSMIndex lsmIndex;
     // Mutables
     protected ComponentState state;
     protected int readerCount;
 
-    public AbstractLSMComponent(ILSMComponentFilter filter) {
+    public AbstractLSMComponent(AbstractLSMIndex lsmIndex, ILSMComponentFilter filter) {
+        this.lsmIndex = lsmIndex;
         this.filter = filter;
         readerCount = 0;
     }

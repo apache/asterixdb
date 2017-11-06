@@ -56,8 +56,8 @@ public class LSMBTreeInsertTest extends OrderedIndexInsertTest {
         return LSMBTreeTestContext.create(harness.getIOManager(), harness.getVirtualBufferCaches(),
                 harness.getFileReference(), harness.getDiskBufferCache(), fieldSerdes, numKeys,
                 harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(), harness.getOperationTracker(),
-                harness.getIOScheduler(), harness.getIOOperationCallback(), harness.getMetadataPageManagerFactory(),
-                false, true, false);
+                harness.getIOScheduler(), harness.getIOOperationCallbackFactory(),
+                harness.getMetadataPageManagerFactory(), false, true, false);
     }
 
     @Override

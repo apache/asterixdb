@@ -94,19 +94,18 @@ public class LSMHarness implements ILSMHarness {
                 // Before entering the components, prune those corner cases that indeed should not proceed.
                 switch (opType) {
                     case FLUSH:
-                        ILSMComponent flushingComponent = ctx.getComponentHolder().get(0);
-                        if (!((AbstractLSMMemoryComponent) flushingComponent).isModified()) {
+                        ILSMMemoryComponent flushingComponent = (ILSMMemoryComponent) ctx.getComponentHolder().get(0);
+                        if (!flushingComponent.isModified()) {
                             //The mutable component has not been modified by any writer. There is nothing to flush.
                             //since the component is empty, set its state back to READABLE_WRITABLE
-                            if (((AbstractLSMIndex) lsmIndex)
-                                    .getCurrentMutableComponentState() == ComponentState.READABLE_UNWRITABLE) {
-                                ((AbstractLSMIndex) lsmIndex)
-                                        .setCurrentMutableComponentState(ComponentState.READABLE_WRITABLE);
+                            if (flushingComponent.getState() == ComponentState.READABLE_UNWRITABLE) {
+                                flushingComponent.setState(ComponentState.READABLE_WRITABLE);
                                 opTracker.notifyAll();
                             }
+                            lsmIndex.getIOOperationCallback().recycled(flushingComponent);
                             return false;
                         }
-                        if (((AbstractLSMMemoryComponent) flushingComponent).getWriterCount() > 0) {
+                        if (flushingComponent.getWriterCount() > 0) {
                             /*
                              * This case is a case where even though FLUSH log was flushed to disk and scheduleFlush is triggered,
                              * the current in-memory component (whose state was changed to READABLE_WRITABLE (RW)

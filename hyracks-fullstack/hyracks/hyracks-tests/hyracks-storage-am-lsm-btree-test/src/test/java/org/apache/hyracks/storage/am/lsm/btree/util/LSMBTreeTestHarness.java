@@ -37,7 +37,7 @@ import org.apache.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
 import org.apache.hyracks.storage.am.common.api.IMetadataPageManagerFactory;
 import org.apache.hyracks.storage.am.common.freepage.AppendOnlyLinkedMetadataPageManagerFactory;
 import org.apache.hyracks.storage.am.config.AccessMethodTestsConfig;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
@@ -77,7 +77,7 @@ public class LSMBTreeTestHarness {
     protected ILSMIOOperationScheduler ioScheduler;
     protected ILSMMergePolicy mergePolicy;
     protected ILSMOperationTracker opTracker;
-    protected ILSMIOOperationCallback ioOpCallback;
+    protected ILSMIOOperationCallbackFactory ioOpCallbackFactory;
     protected IMetadataPageManagerFactory metadataPageManagerFactory;
 
     protected final Random rnd = new Random();
@@ -97,9 +97,9 @@ public class LSMBTreeTestHarness {
         this.ioScheduler = SynchronousScheduler.INSTANCE;
         this.mergePolicy = new NoMergePolicy();
         this.opTracker = new ThreadCountingTracker();
-        this.ioOpCallback = NoOpIOOperationCallbackFactory.INSTANCE.createIoOpCallback();
         this.numMutableComponents = AccessMethodTestsConfig.LSM_BTREE_NUM_MUTABLE_COMPONENTS;
         this.metadataPageManagerFactory = AppendOnlyLinkedMetadataPageManagerFactory.INSTANCE;
+        this.ioOpCallbackFactory = NoOpIOOperationCallbackFactory.INSTANCE;
     }
 
     public void setUp() throws HyracksDataException {
@@ -208,8 +208,8 @@ public class LSMBTreeTestHarness {
         return mergePolicy;
     }
 
-    public ILSMIOOperationCallback getIOOperationCallback() {
-        return ioOpCallback;
+    public ILSMIOOperationCallbackFactory getIOOperationCallbackFactory() {
+        return ioOpCallbackFactory;
     }
 
     public IMetadataPageManagerFactory getMetadataPageManagerFactory() {

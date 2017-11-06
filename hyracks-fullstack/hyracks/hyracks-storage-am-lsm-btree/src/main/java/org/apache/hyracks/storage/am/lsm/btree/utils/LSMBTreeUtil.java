@@ -45,7 +45,7 @@ import org.apache.hyracks.storage.am.lsm.btree.impls.LSMBTreeWithBuddyFileManage
 import org.apache.hyracks.storage.am.lsm.btree.tuples.LSMBTreeCopyTupleWriterFactory;
 import org.apache.hyracks.storage.am.lsm.btree.tuples.LSMBTreeTupleWriterFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponentFactory;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexFileManager;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
@@ -68,7 +68,7 @@ public class LSMBTreeUtil {
             FileReference file, IBufferCache diskBufferCache, ITypeTraits[] typeTraits,
             IBinaryComparatorFactory[] cmpFactories, int[] bloomFilterKeyFields, double bloomFilterFalsePositiveRate,
             ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler,
-            ILSMIOOperationCallback ioOpCallback, boolean needKeyDupCheck, ITypeTraits[] filterTypeTraits,
+            ILSMIOOperationCallbackFactory ioOpCallbackFactory, boolean needKeyDupCheck, ITypeTraits[] filterTypeTraits,
             IBinaryComparatorFactory[] filterCmpFactories, int[] btreeFields, int[] filterFields, boolean durable,
             IMetadataPageManagerFactory freePageManagerFactory, boolean updateAware, ITracer tracer)
             throws HyracksDataException {
@@ -123,15 +123,16 @@ public class LSMBTreeUtil {
         return new LSMBTree(ioManager, virtualBufferCaches, interiorFrameFactory, insertLeafFrameFactory,
                 deleteLeafFrameFactory, diskBufferCache, fileNameManager, componentFactory, bulkLoadComponentFactory,
                 filterHelper, filterFrameFactory, filterManager, bloomFilterFalsePositiveRate, typeTraits.length,
-                cmpFactories, mergePolicy, opTracker, ioScheduler, ioOpCallback, needKeyDupCheck, btreeFields,
+                cmpFactories, mergePolicy, opTracker, ioScheduler, ioOpCallbackFactory, needKeyDupCheck, btreeFields,
                 filterFields, durable, updateAware, tracer);
     }
 
     public static ExternalBTree createExternalBTree(IIOManager ioManager, FileReference file,
             IBufferCache diskBufferCache, ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories,
             int[] bloomFilterKeyFields, double bloomFilterFalsePositiveRate, ILSMMergePolicy mergePolicy,
-            ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallback ioOpCallback,
-            boolean durable, IMetadataPageManagerFactory freePageManagerFactory) {
+            ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler,
+            ILSMIOOperationCallbackFactory ioOpCallbackFactory, boolean durable,
+            IMetadataPageManagerFactory freePageManagerFactory) {
         LSMBTreeTupleWriterFactory insertTupleWriterFactory =
                 new LSMBTreeTupleWriterFactory(typeTraits, cmpFactories.length, false, false);
         LSMBTreeTupleWriterFactory deleteTupleWriterFactory =
@@ -175,14 +176,14 @@ public class LSMBTreeUtil {
         return new ExternalBTree(ioManager, interiorFrameFactory, insertLeafFrameFactory, deleteLeafFrameFactory,
                 diskBufferCache, fileNameManager, componentFactory, bulkLoadComponentFactory,
                 transactionComponentFactory, bloomFilterFalsePositiveRate, cmpFactories, mergePolicy, opTracker,
-                ioScheduler, ioOpCallback, durable);
+                ioScheduler, ioOpCallbackFactory, durable);
     }
 
     public static ExternalBTreeWithBuddy createExternalBTreeWithBuddy(IIOManager ioManager, FileReference file,
             IBufferCache diskBufferCache, ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories,
             double bloomFilterFalsePositiveRate, ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker,
-            ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallback ioOpCallback, int[] buddyBTreeFields,
-            boolean durable, IMetadataPageManagerFactory freePageManagerFactory) {
+            ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallbackFactory ioOpCallbackFactory,
+            int[] buddyBTreeFields, boolean durable, IMetadataPageManagerFactory freePageManagerFactory) {
         ITypeTraits[] buddyBtreeTypeTraits = new ITypeTraits[buddyBTreeFields.length];
         IBinaryComparatorFactory[] buddyBtreeCmpFactories = new IBinaryComparatorFactory[buddyBTreeFields.length];
         for (int i = 0; i < buddyBtreeTypeTraits.length; i++) {
@@ -231,6 +232,6 @@ public class LSMBTreeUtil {
         return new ExternalBTreeWithBuddy(ioManager, interiorFrameFactory, insertLeafFrameFactory,
                 buddyBtreeLeafFrameFactory, diskBufferCache, fileNameManager, componentFactory,
                 bulkLoadComponentFactory, bloomFilterFalsePositiveRate, mergePolicy, opTracker, ioScheduler,
-                ioOpCallback, cmpFactories, buddyBtreeCmpFactories, buddyBTreeFields, durable);
+                ioOpCallbackFactory, cmpFactories, buddyBtreeCmpFactories, buddyBTreeFields, durable);
     }
 }

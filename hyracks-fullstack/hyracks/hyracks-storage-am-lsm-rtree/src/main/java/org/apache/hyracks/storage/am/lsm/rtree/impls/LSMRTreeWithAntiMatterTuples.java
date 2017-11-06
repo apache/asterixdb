@@ -41,6 +41,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponentBulkLoader;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponentFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexFileManager;
@@ -56,7 +57,6 @@ import org.apache.hyracks.storage.am.lsm.common.impls.LSMTreeIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMTreeIndexAccessor.ICursorFactory;
 import org.apache.hyracks.storage.am.lsm.common.impls.MergeOperation;
 import org.apache.hyracks.storage.am.rtree.frames.RTreeFrameFactory;
-import org.apache.hyracks.storage.am.rtree.impls.RTree;
 import org.apache.hyracks.storage.am.rtree.impls.RTree.RTreeAccessor;
 import org.apache.hyracks.storage.am.rtree.impls.RTreeSearchCursor;
 import org.apache.hyracks.storage.am.rtree.impls.SearchPredicate;
@@ -78,13 +78,13 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
             IBinaryComparatorFactory[] rtreeCmpFactories, IBinaryComparatorFactory[] btreeComparatorFactories,
             ILinearizeComparatorFactory linearizer, int[] comparatorFields, IBinaryComparatorFactory[] linearizerArray,
             ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler,
-            ILSMIOOperationCallback ioOpCallback, int[] rtreeFields, int[] filterFields, boolean durable,
+            ILSMIOOperationCallbackFactory ioOpCallbackFactory, int[] rtreeFields, int[] filterFields, boolean durable,
             boolean isPointMBR) throws HyracksDataException {
         super(ioManager, virtualBufferCaches, rtreeInteriorFrameFactory, rtreeLeafFrameFactory,
                 btreeInteriorFrameFactory, btreeLeafFrameFactory, diskBufferCache, fileManager, componentFactory,
                 bulkLoadComponentFactory, fieldCount, rtreeCmpFactories, btreeComparatorFactories, linearizer,
-                comparatorFields, linearizerArray, 0, mergePolicy, opTracker, ioScheduler, ioOpCallback, filterHelper,
-                filterFrameFactory, filterManager, rtreeFields, filterFields, durable, isPointMBR);
+                comparatorFields, linearizerArray, 0, mergePolicy, opTracker, ioScheduler, ioOpCallbackFactory,
+                filterHelper, filterFrameFactory, filterManager, rtreeFields, filterFields, durable, isPointMBR);
     }
 
     @Override

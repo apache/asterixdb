@@ -20,6 +20,7 @@ package org.apache.asterix.common.ioopcallbacks;
 
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 
 public class LSMBTreeWithBuddyIOOperationCallbackFactory implements ILSMIOOperationCallbackFactory {
 
@@ -32,7 +33,7 @@ public class LSMBTreeWithBuddyIOOperationCallbackFactory implements ILSMIOOperat
     }
 
     @Override
-    public ILSMIOOperationCallback createIoOpCallback() {
-        return new LSMBTreeWithBuddyIOOperationCallback();
+    public ILSMIOOperationCallback createIoOpCallback(ILSMIndex index) {
+        return new LSMBTreeWithBuddyIOOperationCallback(index);
     }
 }

@@ -83,7 +83,7 @@ public class LSMRTreeWithAntiMatterLocalResource extends LsmResource {
                 valueProviderFactories, rtreePolicyType,
                 mergePolicyFactory.createMergePolicy(mergePolicyProperties, serviceCtx),
                 opTrackerProvider.getOperationTracker(serviceCtx), ioSchedulerProvider.getIoScheduler(serviceCtx),
-                ioOpCallbackFactory.createIoOpCallback(), linearizeCmpFactory, rtreeFields, filterTypeTraits,
-                filterCmpFactories, filterFields, true, isPointMBR, metadataPageManagerFactory);
+                ioOpCallbackFactory, linearizeCmpFactory, rtreeFields, filterTypeTraits, filterCmpFactories,
+                filterFields, true, isPointMBR, metadataPageManagerFactory);
     }
 }

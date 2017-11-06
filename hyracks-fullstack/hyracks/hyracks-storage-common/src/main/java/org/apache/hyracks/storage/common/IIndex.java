@@ -141,11 +141,8 @@ public interface IIndex {
             boolean checkIfEmptyIndex) throws HyracksDataException;
 
     /**
-     * @return true if the index needs memory components
-     */
-    public boolean hasMemoryComponents();
-
-    /**
+     * TODO: This should be moved to ILSMIndex since filters don't make sense in non LSM context
+     *
      * @return the number of filter fields
      */
     int getNumOfFilterFields();

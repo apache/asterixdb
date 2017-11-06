@@ -64,7 +64,7 @@ public class TestLsmBtreeLocalResource extends LSMBTreeLocalResource {
                 typeTraits, cmpFactories, bloomFilterKeyFields, bloomFilterFalsePositiveRate,
                 mergePolicyFactory.createMergePolicy(mergePolicyProperties, serviceCtx),
                 opTrackerProvider.getOperationTracker(serviceCtx), ioSchedulerProvider.getIoScheduler(serviceCtx),
-                ioOpCallbackFactory.createIoOpCallback(), isPrimary, filterTypeTraits, filterCmpFactories, btreeFields,
-                filterFields, durable, metadataPageManagerFactory, false, serviceCtx.getTracer());
+                ioOpCallbackFactory, isPrimary, filterTypeTraits, filterCmpFactories, btreeFields, filterFields,
+                durable, metadataPageManagerFactory, false, serviceCtx.getTracer());
     }
 }

@@ -140,4 +140,9 @@ public interface ILSMIndex extends IIndex {
      * @throws HyracksDataException
      */
     ILSMDiskComponent createBulkLoadTarget() throws HyracksDataException;
+
+    /**
+     * @return The number of all memory components (active and inactive)
+     */
+    int getNumberOfAllMemoryComponents();
 }

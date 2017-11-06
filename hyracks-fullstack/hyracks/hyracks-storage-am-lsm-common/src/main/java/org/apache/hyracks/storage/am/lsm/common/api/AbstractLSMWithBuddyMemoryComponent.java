@@ -20,12 +20,14 @@ package org.apache.hyracks.storage.am.lsm.common.api;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.common.impls.AbstractTreeIndex;
+import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMMemoryComponent;
 
 public abstract class AbstractLSMWithBuddyMemoryComponent extends AbstractLSMMemoryComponent {
 
-    public AbstractLSMWithBuddyMemoryComponent(IVirtualBufferCache vbc, boolean isActive, ILSMComponentFilter filter) {
-        super(vbc, isActive, filter);
+    public AbstractLSMWithBuddyMemoryComponent(AbstractLSMIndex lsmIndex, IVirtualBufferCache vbc, boolean isActive,
+            ILSMComponentFilter filter) {
+        super(lsmIndex, vbc, isActive, filter);
     }
 
     public abstract AbstractTreeIndex getBuddyIndex();

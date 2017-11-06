@@ -26,7 +26,6 @@ import org.apache.hyracks.storage.am.common.TestOperationSelector.TestOperation;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexCursor;
 import org.apache.hyracks.storage.am.common.datagen.DataGenThread;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMTreeIndexAccessor;
-import org.apache.hyracks.storage.am.lsm.common.impls.NoOpIOOperationCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.rtree.impls.AbstractLSMRTree;
 import org.apache.hyracks.storage.am.lsm.rtree.impls.LSMRTreeOpContext;
 import org.apache.hyracks.storage.am.rtree.impls.SearchPredicate;
@@ -67,7 +66,7 @@ public class LSMRTreeWithAntiMatterTuplesTestWorker extends AbstractLSMRTreeTest
                 break;
 
             case MERGE:
-                accessor.scheduleMerge(NoOpIOOperationCallbackFactory.INSTANCE.createIoOpCallback(),
+                accessor.scheduleMerge(((AbstractLSMRTree) lsmRTree).getIOOperationCallback(),
                         ((AbstractLSMRTree) lsmRTree).getDiskComponents());
                 break;
 

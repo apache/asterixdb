@@ -21,6 +21,7 @@ package org.apache.asterix.test.ioopcallbacks;
 
 import org.apache.asterix.common.ioopcallbacks.LSMBTreeIOOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
 import org.junit.Assert;
 import org.mockito.Mockito;
@@ -31,8 +32,9 @@ public class LSMBTreeIOOperationCallbackTest extends TestCase {
 
     public void testNormalSequence() {
         try {
-            LSMBTreeIOOperationCallback callback = new LSMBTreeIOOperationCallback();
-            callback.setNumOfMutableComponents(2);
+            ILSMIndex mockIndex = Mockito.mock(ILSMIndex.class);
+            Mockito.when(mockIndex.getNumberOfAllMemoryComponents()).thenReturn(2);
+            LSMBTreeIOOperationCallback callback = new LSMBTreeIOOperationCallback(mockIndex);
 
             //request to flush first component
             callback.updateLastLSN(1);
@@ -54,8 +56,9 @@ public class LSMBTreeIOOperationCallbackTest extends TestCase {
 
     public void testOverWrittenLSN() {
         try {
-            LSMBTreeIOOperationCallback callback = new LSMBTreeIOOperationCallback();
-            callback.setNumOfMutableComponents(2);
+            ILSMIndex mockIndex = Mockito.mock(ILSMIndex.class);
+            Mockito.when(mockIndex.getNumberOfAllMemoryComponents()).thenReturn(2);
+            LSMBTreeIOOperationCallback callback = new LSMBTreeIOOperationCallback(mockIndex);
 
             //request to flush first component
             callback.updateLastLSN(1);

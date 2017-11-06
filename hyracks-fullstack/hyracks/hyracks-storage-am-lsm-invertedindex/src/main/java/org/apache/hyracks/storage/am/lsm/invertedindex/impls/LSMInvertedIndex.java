@@ -47,11 +47,11 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponentBulkLoader;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponentFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexFileManager;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMMemoryComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
@@ -64,7 +64,6 @@ import org.apache.hyracks.storage.am.lsm.common.impls.LSMIndexSearchCursor;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndex;
 import org.apache.hyracks.storage.am.lsm.invertedindex.inmemory.InMemoryInvertedIndex;
 import org.apache.hyracks.storage.am.lsm.invertedindex.inmemory.InMemoryInvertedIndexAccessor;
-import org.apache.hyracks.storage.am.lsm.invertedindex.ondisk.OnDiskInvertedIndex;
 import org.apache.hyracks.storage.am.lsm.invertedindex.search.InvertedIndexSearchPredicate;
 import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizerFactory;
 import org.apache.hyracks.storage.am.lsm.invertedindex.util.InvertedIndexUtils;
@@ -98,11 +97,11 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
             ITypeTraits[] invListTypeTraits, IBinaryComparatorFactory[] invListCmpFactories,
             ITypeTraits[] tokenTypeTraits, IBinaryComparatorFactory[] tokenCmpFactories,
             IBinaryTokenizerFactory tokenizerFactory, ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker,
-            ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallback ioOpCallback, int[] invertedIndexFields,
-            int[] filterFields, int[] filterFieldsForNonBulkLoadOps, int[] invertedIndexFieldsForNonBulkLoadOps,
-            boolean durable) throws HyracksDataException {
+            ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallbackFactory ioOpCallbackFactory,
+            int[] invertedIndexFields, int[] filterFields, int[] filterFieldsForNonBulkLoadOps,
+            int[] invertedIndexFieldsForNonBulkLoadOps, boolean durable) throws HyracksDataException {
         super(ioManager, virtualBufferCaches, diskBufferCache, fileManager, bloomFilterFalsePositiveRate, mergePolicy,
-                opTracker, ioScheduler, ioOpCallback, componentFactory, componentFactory, filterFrameFactory,
+                opTracker, ioScheduler, ioOpCallbackFactory, componentFactory, componentFactory, filterFrameFactory,
                 filterManager, filterFields, durable, filterHelper, invertedIndexFields, ITracer.NONE);
         this.tokenizerFactory = tokenizerFactory;
         this.invListTypeTraits = invListTypeTraits;
@@ -121,7 +120,7 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
                             invListTypeTraits, invListCmpFactories, BTreeLeafFrameType.REGULAR_NSM,
                             ioManager.resolveAbsolutePath(fileManager.getBaseDir() + "_virtual_del_" + i), false);
             LSMInvertedIndexMemoryComponent mutableComponent =
-                    new LSMInvertedIndexMemoryComponent(memInvIndex, deleteKeysBTree, virtualBufferCache,
+                    new LSMInvertedIndexMemoryComponent(this, memInvIndex, deleteKeysBTree, virtualBufferCache,
                             i == 0 ? true : false, filterHelper == null ? null : filterHelper.createFilter());
             memoryComponents.add(mutableComponent);
             ++i;
@@ -202,15 +201,15 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
             ILSMComponent component = operationalComponents.get(i);
             if (component.getType() == LSMComponentType.MEMORY) {
                 includeMutableComponent = true;
-                IIndexAccessor invIndexAccessor = component.getIndex()
-                        .createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+                IIndexAccessor invIndexAccessor = component.getIndex().createAccessor(NoOpOperationCallback.INSTANCE,
+                        NoOpOperationCallback.INSTANCE);
                 indexAccessors.add(invIndexAccessor);
                 IIndexAccessor deletedKeysAccessor = ((LSMInvertedIndexMemoryComponent) component).getBuddyIndex()
                         .createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
                 deletedKeysBTreeAccessors.add(deletedKeysAccessor);
             } else {
-                IIndexAccessor invIndexAccessor = component.getIndex()
-                        .createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+                IIndexAccessor invIndexAccessor = component.getIndex().createAccessor(NoOpOperationCallback.INSTANCE,
+                        NoOpOperationCallback.INSTANCE);
                 indexAccessors.add(invIndexAccessor);
                 IIndexAccessor deletedKeysAccessor = ((LSMInvertedIndexDiskComponent) component).getBuddyIndex()
                         .createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);

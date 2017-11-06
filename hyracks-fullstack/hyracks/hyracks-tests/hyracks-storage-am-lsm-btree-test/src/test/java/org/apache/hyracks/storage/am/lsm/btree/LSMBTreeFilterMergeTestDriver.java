@@ -42,7 +42,6 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilter;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.common.impls.BlockingIOOperationCallbackWrapper;
-import org.apache.hyracks.storage.am.lsm.common.impls.NoOpIOOperationCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.impls.StubIOOperationCallback;
 
 import junit.framework.Assert;
@@ -145,7 +144,7 @@ public abstract class LSMBTreeFilterMergeTestDriver extends OrderedIndexTestDriv
                     expectedMergeMinMax.setRight(componentMinMax.getRight());
                 }
             }
-            accessor.scheduleMerge(NoOpIOOperationCallbackFactory.INSTANCE.createIoOpCallback(),
+            accessor.scheduleMerge(((LSMBTree) ctx.getIndex()).getIOOperationCallback(),
                     ((LSMBTree) ctx.getIndex()).getDiskComponents());
 
             flushedComponents = ((LSMBTree) ctx.getIndex()).getDiskComponents();

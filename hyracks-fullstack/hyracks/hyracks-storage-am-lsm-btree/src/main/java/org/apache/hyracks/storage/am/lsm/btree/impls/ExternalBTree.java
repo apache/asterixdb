@@ -42,6 +42,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponentBulkLoader;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponentFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexFileManager;
@@ -92,11 +93,11 @@ public class ExternalBTree extends LSMBTree implements ITwoPCIndex {
             IBufferCache bufferCache, ILSMIndexFileManager fileManager, ILSMDiskComponentFactory componentFactory,
             ILSMDiskComponentFactory bulkLoadComponentFactory, ILSMDiskComponentFactory transactionComponentFactory,
             double bloomFilterFalsePositiveRate, IBinaryComparatorFactory[] cmpFactories, ILSMMergePolicy mergePolicy,
-            ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallback ioOpCallback,
-            boolean durable) {
+            ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler,
+            ILSMIOOperationCallbackFactory ioOpCallbackFactory, boolean durable) {
         super(ioManager, insertLeafFrameFactory, deleteLeafFrameFactory, bufferCache, fileManager, componentFactory,
                 bulkLoadComponentFactory, bloomFilterFalsePositiveRate, cmpFactories, mergePolicy, opTracker,
-                ioScheduler, ioOpCallback, false, durable);
+                ioScheduler, ioOpCallbackFactory, false, durable);
         this.transactionComponentFactory = transactionComponentFactory;
         this.secondDiskComponents = new LinkedList<>();
         this.interiorFrameFactory = interiorFrameFactory;
@@ -564,10 +565,5 @@ public class ExternalBTree extends LSMBTree implements ITwoPCIndex {
     @Override
     public void recoverTransaction() throws HyracksDataException {
         fileManager.recoverTransaction();
-    }
-
-    @Override
-    public boolean hasMemoryComponents() {
-        return false;
     }
 }

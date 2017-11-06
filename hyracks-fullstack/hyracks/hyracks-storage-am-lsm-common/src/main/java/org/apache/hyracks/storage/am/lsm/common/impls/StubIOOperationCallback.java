@@ -24,6 +24,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMMemoryComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
 
 /**
@@ -38,7 +39,7 @@ public class StubIOOperationCallback implements ILSMIOOperationCallback {
 
     @Override
     public void beforeOperation(LSMOperationType opType) throws HyracksDataException {
-        //Not interested in this
+        // Not interested in this
     }
 
     @Override
@@ -51,12 +52,7 @@ public class StubIOOperationCallback implements ILSMIOOperationCallback {
     @Override
     public synchronized void afterFinalize(LSMOperationType opType, ILSMDiskComponent newComponent)
             throws HyracksDataException {
-        //Redundant info from after
-    }
-
-    @Override
-    public void setNumOfMutableComponents(int count) {
-        //Not interested in this
+        // Redundant info from after
     }
 
     public List<ILSMComponent> getLastOldComponents() {
@@ -65,5 +61,15 @@ public class StubIOOperationCallback implements ILSMIOOperationCallback {
 
     public ILSMDiskComponent getLastNewComponent() {
         return newComponent;
+    }
+
+    @Override
+    public void recycled(ILSMMemoryComponent component) {
+        // Not interested in this
+    }
+
+    @Override
+    public void allocated(ILSMMemoryComponent component) {
+        // Not interested in this
     }
 }

@@ -32,7 +32,7 @@ import org.apache.hyracks.dataflow.common.utils.SerdeUtils;
 import org.apache.hyracks.storage.am.common.api.IMetadataPageManagerFactory;
 import org.apache.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import org.apache.hyracks.storage.am.common.api.ITreeIndex;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
@@ -77,8 +77,9 @@ public final class LSMRTreeWithAntiMatterTuplesTestContext extends AbstractRTree
             List<IVirtualBufferCache> virtualBufferCaches, FileReference file, IBufferCache diskBufferCache,
             ISerializerDeserializer[] fieldSerdes, IPrimitiveValueProviderFactory[] valueProviderFactories,
             int numKeyFields, RTreePolicyType rtreePolicyType, ILSMMergePolicy mergePolicy,
-            ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallback ioOpCallback,
-            IMetadataPageManagerFactory metadataPageManagerFactory) throws Exception {
+            ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler,
+            ILSMIOOperationCallbackFactory ioOpCallbackFactory, IMetadataPageManagerFactory metadataPageManagerFactory)
+            throws Exception {
         ITypeTraits[] typeTraits = SerdeUtils.serdesToTypeTraits(fieldSerdes);
         IBinaryComparatorFactory[] rtreeCmpFactories =
                 SerdeUtils.serdesToComparatorFactories(fieldSerdes, numKeyFields);
@@ -86,7 +87,7 @@ public final class LSMRTreeWithAntiMatterTuplesTestContext extends AbstractRTree
                 SerdeUtils.serdesToComparatorFactories(fieldSerdes, fieldSerdes.length);
         LSMRTreeWithAntiMatterTuples lsmTree = LSMRTreeUtils.createLSMTreeWithAntiMatterTuples(ioManager,
                 virtualBufferCaches, file, diskBufferCache, typeTraits, rtreeCmpFactories, btreeCmpFactories,
-                valueProviderFactories, rtreePolicyType, mergePolicy, opTracker, ioScheduler, ioOpCallback,
+                valueProviderFactories, rtreePolicyType, mergePolicy, opTracker, ioScheduler, ioOpCallbackFactory,
                 LSMRTreeUtils.proposeBestLinearizer(typeTraits, rtreeCmpFactories.length), null, null, null, null, true,
                 false, metadataPageManagerFactory);
         LSMRTreeWithAntiMatterTuplesTestContext testCtx =

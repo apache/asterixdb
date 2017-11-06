@@ -22,6 +22,7 @@ import org.apache.asterix.common.ioopcallbacks.LSMBTreeIOOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
 import org.apache.hyracks.storage.am.lsm.common.impls.EmptyComponent;
 
@@ -41,7 +42,7 @@ public class TestLsmBtreeIoOpCallbackFactory implements ILSMIOOperationCallbackF
     }
 
     @Override
-    public synchronized ILSMIOOperationCallback createIoOpCallback() {
+    public synchronized ILSMIOOperationCallback createIoOpCallback(ILSMIndex index) {
         completedFlushes = 0;
         completedMerges = 0;
         rollbackFlushes = 0;
@@ -49,7 +50,7 @@ public class TestLsmBtreeIoOpCallbackFactory implements ILSMIOOperationCallbackF
         // Whenever this is called, it resets the counter
         // However, the counters for the failed operations are never reset since we expect them
         // To be always 0
-        return new TestLsmBtreeIoOpCallback();
+        return new TestLsmBtreeIoOpCallback(index);
     }
 
     public int getTotalFlushes() {
@@ -89,6 +90,10 @@ public class TestLsmBtreeIoOpCallbackFactory implements ILSMIOOperationCallbackF
     }
 
     public class TestLsmBtreeIoOpCallback extends LSMBTreeIOOperationCallback {
+        public TestLsmBtreeIoOpCallback(ILSMIndex index) {
+            super(index);
+        }
+
         @Override
         public void afterFinalize(LSMOperationType opType, ILSMDiskComponent newComponent) {
             super.afterFinalize(opType, newComponent);

@@ -27,6 +27,7 @@ public interface ILSMIOOperationCallback {
     /**
      * This method is called on an IO operation before the operation starts.
      * (i.e. IO operations could be flush or merge operations.)
+     * For flush, this is called immediately before switching the current memory component pointer
      */
     void beforeOperation(LSMOperationType opType) throws HyracksDataException;
 
@@ -54,5 +55,18 @@ public interface ILSMIOOperationCallback {
      */
     void afterFinalize(LSMOperationType opType, ILSMDiskComponent newComponent) throws HyracksDataException;
 
-    void setNumOfMutableComponents(int count);
+    /**
+     * This method is called when a memory component is recycled
+     *
+     * @param component
+     */
+    void recycled(ILSMMemoryComponent component) throws HyracksDataException;
+
+    /**
+     * This method is called when a memory component is allocated
+     *
+     * @param component
+     */
+    void allocated(ILSMMemoryComponent component) throws HyracksDataException;
+
 }
