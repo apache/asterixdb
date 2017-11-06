@@ -44,8 +44,9 @@ import org.apache.hyracks.storage.am.common.tuples.PermutingTupleReference;
 import org.apache.hyracks.storage.am.lsm.btree.impls.LSMBTree;
 import org.apache.hyracks.storage.am.lsm.btree.util.LSMBTreeTestContext;
 import org.apache.hyracks.storage.am.lsm.btree.util.LSMBTreeTestHarness;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
-import org.apache.hyracks.storage.am.lsm.common.impls.NoOpIOOperationCallbackFactory;
 import org.apache.hyracks.storage.common.IIndexCursor;
 import org.junit.After;
 import org.junit.Assert;
@@ -80,8 +81,8 @@ public class LSMBTreeScanDiskComponentsTest extends OrderedIndexTestDriver {
         return LSMBTreeTestContext.create(harness.getIOManager(), harness.getVirtualBufferCaches(),
                 harness.getFileReference(), harness.getDiskBufferCache(), fieldSerdes, numKeys,
                 harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(), harness.getOperationTracker(),
-                harness.getIOScheduler(), harness.getIOOperationCallback(), harness.getMetadataPageManagerFactory(),
-                false, true, false);
+                harness.getIOScheduler(), harness.getIOOperationCallbackFactory(),
+                harness.getMetadataPageManagerFactory(), false, true, false);
     }
 
     @Override
@@ -112,21 +113,21 @@ public class LSMBTreeScanDiskComponentsTest extends OrderedIndexTestDriver {
     protected void test(OrderedIndexTestContext ctx, ISerializerDeserializer[] fieldSerdes)
             throws HyracksDataException {
         ILSMIndexAccessor accessor = (ILSMIndexAccessor) ctx.getIndexAccessor();
-
+        ILSMIOOperationCallback ioCallback = ((ILSMIndex) ctx.getIndex()).getIOOperationCallback();
         //component 2 contains 1 and 2
         upsertTuple(ctx, fieldSerdes, getValue(1, fieldSerdes));
         upsertTuple(ctx, fieldSerdes, getValue(2, fieldSerdes));
-        accessor.scheduleFlush(NoOpIOOperationCallbackFactory.INSTANCE.createIoOpCallback());
+        accessor.scheduleFlush(ioCallback);
 
         //component 1 contains 1 and -2
         upsertTuple(ctx, fieldSerdes, getValue(1, fieldSerdes));
         deleteTuple(ctx, fieldSerdes, getValue(2, fieldSerdes));
-        accessor.scheduleFlush(NoOpIOOperationCallbackFactory.INSTANCE.createIoOpCallback());
+        accessor.scheduleFlush(ioCallback);
 
         //component 0 contains 2 and 3
         upsertTuple(ctx, fieldSerdes, getValue(3, fieldSerdes));
         upsertTuple(ctx, fieldSerdes, getValue(2, fieldSerdes));
-        accessor.scheduleFlush(NoOpIOOperationCallbackFactory.INSTANCE.createIoOpCallback());
+        accessor.scheduleFlush(ioCallback);
 
         LSMBTree btree = (LSMBTree) ctx.getIndex();
         Assert.assertEquals("Check disk components", 3, btree.getDiskComponents().size());

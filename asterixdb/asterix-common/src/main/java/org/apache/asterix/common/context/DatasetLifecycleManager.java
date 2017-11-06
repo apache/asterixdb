@@ -101,7 +101,7 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
         if (datasetResource == null) {
             datasetResource = getDatasetLifecycle(did);
         }
-        datasetResource.register(resource, index);
+        datasetResource.register(resource, (ILSMIndex) index);
     }
 
     private int getDIDfromResourcePath(String resourcePath) throws HyracksDataException {
@@ -141,8 +141,8 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
                         resourcePath, iInfo.getReferenceCount(), opTracker.getNumActiveOperations());
                 LOGGER.severe(logMsg);
             }
-            throw HyracksDataException
-                    .create(ErrorCode.CANNOT_DROP_IN_USE_INDEX, StoragePathUtil.getIndexNameFromPath(resourcePath));
+            throw HyracksDataException.create(ErrorCode.CANNOT_DROP_IN_USE_INDEX,
+                    StoragePathUtil.getIndexNameFromPath(resourcePath));
         }
 
         // TODO: use fine-grained counters, one for each index instead of a single counter per dataset.
@@ -204,8 +204,8 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
         for (DatasetResource dsr : datasetsResources) {
             PrimaryIndexOperationTracker opTracker = dsr.getOpTracker();
             if (opTracker != null && opTracker.getNumActiveOperations() == 0
-                    && dsr.getDatasetInfo().getReferenceCount() == 0 && dsr.getDatasetInfo().isOpen() && !dsr
-                    .isMetadataDataset()) {
+                    && dsr.getDatasetInfo().getReferenceCount() == 0 && dsr.getDatasetInfo().isOpen()
+                    && !dsr.isMetadataDataset()) {
                 closeDataset(dsr.getDatasetInfo());
                 LOGGER.info(() -> "Evicted Dataset" + dsr.getDatasetID());
                 return true;
@@ -234,9 +234,8 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
             if (dsr == null) {
                 DatasetInfo dsInfo = new DatasetInfo(did);
                 PrimaryIndexOperationTracker opTracker = new PrimaryIndexOperationTracker(did, logManager, dsInfo);
-                DatasetVirtualBufferCaches vbcs =
-                        new DatasetVirtualBufferCaches(did, storageProperties, memoryManager.getNumPages(did),
-                                numPartitions);
+                DatasetVirtualBufferCaches vbcs = new DatasetVirtualBufferCaches(did, storageProperties,
+                        memoryManager.getNumPages(did), numPartitions);
                 dsr = new DatasetResource(dsInfo, opTracker, vbcs);
                 datasets.put(did, dsr);
             }

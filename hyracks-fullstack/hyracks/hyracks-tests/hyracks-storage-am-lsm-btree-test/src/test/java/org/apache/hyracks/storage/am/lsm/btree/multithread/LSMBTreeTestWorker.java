@@ -32,7 +32,6 @@ import org.apache.hyracks.storage.am.common.datagen.DataGenThread;
 import org.apache.hyracks.storage.am.lsm.btree.impls.LSMBTree;
 import org.apache.hyracks.storage.am.lsm.btree.impls.LSMBTreeOpContext;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMTreeIndexAccessor;
-import org.apache.hyracks.storage.am.lsm.common.impls.NoOpIOOperationCallbackFactory;
 import org.apache.hyracks.storage.common.IIndex;
 import org.apache.hyracks.storage.common.IIndexCursor;
 import org.apache.hyracks.storage.common.MultiComparator;
@@ -116,10 +115,8 @@ public class LSMBTreeTestWorker extends AbstractIndexTestWorker {
                 accessor.search(searchCursor, rangePred);
                 consumeCursorTuples(searchCursor);
                 break;
-
             case MERGE:
-                accessor.scheduleMerge(NoOpIOOperationCallbackFactory.INSTANCE.createIoOpCallback(),
-                        lsmBTree.getDiskComponents());
+                accessor.scheduleMerge(lsmBTree.getIOOperationCallback(), lsmBTree.getDiskComponents());
                 break;
 
             default:

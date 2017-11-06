@@ -20,9 +20,10 @@ package org.apache.hyracks.storage.am.lsm.btree.impls;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.btree.impls.BTree;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilter;
 import org.apache.hyracks.storage.am.lsm.common.api.AbstractLSMWithBuddyMemoryComponent;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilter;
 import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
+import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndex;
 
 /*
  * This class is also not needed at the moment but is implemented anyway
@@ -32,9 +33,9 @@ public class LSMBTreeWithBuddyMemoryComponent extends AbstractLSMWithBuddyMemory
     private final BTree btree;
     private final BTree buddyBtree;
 
-    public LSMBTreeWithBuddyMemoryComponent(BTree btree, BTree buddyBtree, IVirtualBufferCache vbc, boolean isActive,
-            ILSMComponentFilter filter) {
-        super(vbc, isActive, filter);
+    public LSMBTreeWithBuddyMemoryComponent(AbstractLSMIndex lsmIndex, BTree btree, BTree buddyBtree,
+            IVirtualBufferCache vbc, boolean isActive, ILSMComponentFilter filter) {
+        super(lsmIndex, vbc, isActive, filter);
         this.btree = btree;
         this.buddyBtree = buddyBtree;
     }

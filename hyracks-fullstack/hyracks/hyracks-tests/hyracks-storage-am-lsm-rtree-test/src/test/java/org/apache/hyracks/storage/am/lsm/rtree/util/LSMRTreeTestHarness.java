@@ -36,7 +36,7 @@ import org.apache.hyracks.control.nc.io.IOManager;
 import org.apache.hyracks.storage.am.common.api.IMetadataPageManagerFactory;
 import org.apache.hyracks.storage.am.common.freepage.AppendOnlyLinkedMetadataPageManagerFactory;
 import org.apache.hyracks.storage.am.config.AccessMethodTestsConfig;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
@@ -71,7 +71,7 @@ public class LSMRTreeTestHarness {
     protected List<IVirtualBufferCache> virtualBufferCaches;
     protected IHyracksTaskContext ctx;
     protected ILSMIOOperationScheduler ioScheduler;
-    protected ILSMIOOperationCallback ioOpCallback;
+    protected ILSMIOOperationCallbackFactory ioOpCallbackFactory;
     protected ILSMMergePolicy mergePolicy;
     protected ILSMOperationTracker opTracker;
     protected IMetadataPageManagerFactory metadataPageManagerFactory =
@@ -94,7 +94,7 @@ public class LSMRTreeTestHarness {
         this.ioScheduler = SynchronousScheduler.INSTANCE;
         this.mergePolicy = new NoMergePolicy();
         this.opTracker = new ThreadCountingTracker();
-        this.ioOpCallback = NoOpIOOperationCallbackFactory.INSTANCE.createIoOpCallback();
+        this.ioOpCallbackFactory = NoOpIOOperationCallbackFactory.INSTANCE;
         this.numMutableComponents = AccessMethodTestsConfig.LSM_RTREE_NUM_MUTABLE_COMPONENTS;
     }
 
@@ -207,8 +207,8 @@ public class LSMRTreeTestHarness {
         return mergePolicy;
     }
 
-    public ILSMIOOperationCallback getIOOperationCallback() {
-        return ioOpCallback;
+    public ILSMIOOperationCallbackFactory getIOOperationCallbackFactory() {
+        return ioOpCallbackFactory;
     }
 
     public IMetadataPageManagerFactory getMetadataPageManagerFactory() {

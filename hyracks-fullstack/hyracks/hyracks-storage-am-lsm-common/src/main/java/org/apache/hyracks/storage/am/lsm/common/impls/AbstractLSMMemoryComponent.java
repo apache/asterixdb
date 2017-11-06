@@ -35,8 +35,9 @@ public abstract class AbstractLSMMemoryComponent extends AbstractLSMComponent im
     private boolean requestedToBeActive;
     private final MemoryComponentMetadata metadata;
 
-    public AbstractLSMMemoryComponent(IVirtualBufferCache vbc, boolean isActive, ILSMComponentFilter filter) {
-        super(filter);
+    public AbstractLSMMemoryComponent(AbstractLSMIndex lsmIndex, IVirtualBufferCache vbc, boolean isActive,
+            ILSMComponentFilter filter) {
+        super(lsmIndex, filter);
         this.vbc = vbc;
         writerCount = 0;
         if (isActive) {
@@ -53,6 +54,7 @@ public abstract class AbstractLSMMemoryComponent extends AbstractLSMComponent im
         if (state == ComponentState.INACTIVE && requestedToBeActive) {
             state = ComponentState.READABLE_WRITABLE;
             requestedToBeActive = false;
+            lsmIndex.getIOOperationCallback().recycled(this);
         }
         switch (opType) {
             case FORCE_MODIFICATION:

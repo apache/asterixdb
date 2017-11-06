@@ -24,6 +24,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMMemoryComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
 
 public class BlockingIOOperationCallbackWrapper implements ILSMIOOperationCallback {
@@ -63,7 +64,12 @@ public class BlockingIOOperationCallbackWrapper implements ILSMIOOperationCallba
     }
 
     @Override
-    public void setNumOfMutableComponents(int count) {
-        wrappedCallback.setNumOfMutableComponents(count);
+    public void recycled(ILSMMemoryComponent component) throws HyracksDataException {
+        wrappedCallback.recycled(component);
+    }
+
+    @Override
+    public void allocated(ILSMMemoryComponent component) throws HyracksDataException {
+        wrappedCallback.allocated(component);
     }
 }

@@ -34,9 +34,9 @@ import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import org.apache.hyracks.storage.am.config.AccessMethodTestsConfig;
 import org.apache.hyracks.storage.am.lsm.btree.util.LSMBTreeTestHarness;
 import org.apache.hyracks.storage.am.lsm.btree.utils.LSMBTreeUtil;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.common.impls.BlockingIOOperationCallbackWrapper;
-import org.apache.hyracks.storage.am.lsm.common.impls.NoOpIOOperationCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.impls.NoOpOperationTrackerFactory;
 import org.apache.hyracks.storage.common.IIndexAccessor;
 import org.apache.hyracks.storage.common.IModificationOperationCallback;
@@ -48,7 +48,6 @@ import org.junit.Test;
 
 public class LSMBTreeUpdateInPlaceTest extends AbstractOperationCallbackTest {
     private final LSMBTreeTestHarness harness;
-    private final BlockingIOOperationCallbackWrapper ioOpCallback;
     private final ArrayTupleBuilder builder;
     private final ArrayTupleReference tuple;
     private final IModificationOperationCallback cb;
@@ -61,8 +60,6 @@ public class LSMBTreeUpdateInPlaceTest extends AbstractOperationCallbackTest {
         this.builder = new ArrayTupleBuilder(NUM_KEY_FIELDS);
         this.tuple = new ArrayTupleReference();
         this.cb = new VerifyingUpdateModificationCallback(tuple);
-        this.ioOpCallback =
-                new BlockingIOOperationCallbackWrapper(NoOpIOOperationCallbackFactory.INSTANCE.createIoOpCallback());
         this.harness = new LSMBTreeTestHarness();
         this.isUpdated = false;
         this.isFoundNull = true;
@@ -75,7 +72,7 @@ public class LSMBTreeUpdateInPlaceTest extends AbstractOperationCallbackTest {
                 SerdeUtils.serdesToComparatorFactories(keySerdes, keySerdes.length), bloomFilterKeyFields,
                 harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(),
                 NoOpOperationTrackerFactory.INSTANCE.getOperationTracker(null), harness.getIOScheduler(),
-                harness.getIOOperationCallback(), true, null, null, null, null, true,
+                harness.getIOOperationCallbackFactory(), true, null, null, null, null, true,
                 harness.getMetadataPageManagerFactory(), true, ITracer.NONE);
     }
 
@@ -101,6 +98,8 @@ public class LSMBTreeUpdateInPlaceTest extends AbstractOperationCallbackTest {
 
     private void test(IndexModification op1, IndexModification op2) throws Exception {
         ILSMIndexAccessor lsmAccessor = (ILSMIndexAccessor) accessor;
+        BlockingIOOperationCallbackWrapper ioOpCallback =
+                new BlockingIOOperationCallbackWrapper(((ILSMIndex) index).getIOOperationCallback());
         for (int j = 0; j < 2; j++) {
             index.clear();
             isFoundNull = true;

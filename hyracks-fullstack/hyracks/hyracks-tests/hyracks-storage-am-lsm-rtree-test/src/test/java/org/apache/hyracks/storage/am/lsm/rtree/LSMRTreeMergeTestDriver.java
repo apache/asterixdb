@@ -26,7 +26,6 @@ import org.apache.hyracks.dataflow.common.data.marshalling.IntegerSerializerDese
 import org.apache.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import org.apache.hyracks.storage.am.config.AccessMethodTestsConfig;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
-import org.apache.hyracks.storage.am.lsm.common.impls.NoOpIOOperationCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.rtree.impls.AbstractLSMRTree;
 import org.apache.hyracks.storage.am.rtree.AbstractRTreeTestContext;
 import org.apache.hyracks.storage.am.rtree.AbstractRTreeTestDriver;
@@ -77,7 +76,7 @@ public abstract class LSMRTreeMergeTestDriver extends AbstractRTreeTestDriver {
             }
 
             ILSMIndexAccessor accessor = (ILSMIndexAccessor) ctx.getIndexAccessor();
-            accessor.scheduleMerge(NoOpIOOperationCallbackFactory.INSTANCE.createIoOpCallback(),
+            accessor.scheduleMerge(((AbstractLSMRTree) ctx.getIndex()).getIOOperationCallback(),
                     ((AbstractLSMRTree) ctx.getIndex()).getDiskComponents());
 
             rTreeTestUtils.checkScan(ctx);

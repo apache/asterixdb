@@ -20,8 +20,8 @@
 package org.apache.hyracks.storage.am.lsm.invertedindex.impls;
 
 import org.apache.hyracks.storage.am.btree.impls.BTree;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilter;
 import org.apache.hyracks.storage.am.lsm.common.api.AbstractLSMWithBuddyMemoryComponent;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilter;
 import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import org.apache.hyracks.storage.am.lsm.invertedindex.inmemory.InMemoryInvertedIndex;
 
@@ -30,9 +30,9 @@ public class LSMInvertedIndexMemoryComponent extends AbstractLSMWithBuddyMemoryC
     private final InMemoryInvertedIndex invIndex;
     private final BTree deletedKeysBTree;
 
-    public LSMInvertedIndexMemoryComponent(InMemoryInvertedIndex invIndex, BTree deletedKeysBTree,
-            IVirtualBufferCache vbc, boolean isActive, ILSMComponentFilter filter) {
-        super(vbc, isActive, filter);
+    public LSMInvertedIndexMemoryComponent(LSMInvertedIndex lsmIndex, InMemoryInvertedIndex invIndex,
+            BTree deletedKeysBTree, IVirtualBufferCache vbc, boolean isActive, ILSMComponentFilter filter) {
+        super(lsmIndex, vbc, isActive, filter);
         this.invIndex = invIndex;
         this.deletedKeysBTree = deletedKeysBTree;
     }

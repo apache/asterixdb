@@ -48,6 +48,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponentBulkLoader;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponentFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexFileManager;
@@ -94,18 +95,18 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
             ILSMComponentFilterFrameFactory filterFrameFactory, LSMComponentFilterManager filterManager,
             double bloomFilterFalsePositiveRate, int fieldCount, IBinaryComparatorFactory[] cmpFactories,
             ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler,
-            ILSMIOOperationCallback ioOpCallback, boolean needKeyDupCheck, int[] btreeFields, int[] filterFields,
-            boolean durable, boolean updateAware, ITracer tracer) throws HyracksDataException {
+            ILSMIOOperationCallbackFactory ioOpCallbackFactory, boolean needKeyDupCheck, int[] btreeFields,
+            int[] filterFields, boolean durable, boolean updateAware, ITracer tracer) throws HyracksDataException {
         super(ioManager, virtualBufferCaches, diskBufferCache, fileManager, bloomFilterFalsePositiveRate, mergePolicy,
-                opTracker, ioScheduler, ioOpCallback, componentFactory, bulkLoadComponentFactory, filterFrameFactory,
-                filterManager, filterFields, durable, filterHelper, btreeFields, tracer);
+                opTracker, ioScheduler, ioOpCallbackFactory, componentFactory, bulkLoadComponentFactory,
+                filterFrameFactory, filterManager, filterFields, durable, filterHelper, btreeFields, tracer);
         this.insertLeafFrameFactory = insertLeafFrameFactory;
         this.deleteLeafFrameFactory = deleteLeafFrameFactory;
         this.cmpFactories = cmpFactories;
         this.updateAware = updateAware;
         int i = 0;
         for (IVirtualBufferCache virtualBufferCache : virtualBufferCaches) {
-            LSMBTreeMemoryComponent mutableComponent = new LSMBTreeMemoryComponent(
+            LSMBTreeMemoryComponent mutableComponent = new LSMBTreeMemoryComponent(this,
                     new BTree(virtualBufferCache, new VirtualFreePageManager(virtualBufferCache), interiorFrameFactory,
                             insertLeafFrameFactory, cmpFactories, fieldCount,
                             ioManager.resolveAbsolutePath(fileManager.getBaseDir() + "_virtual_" + i)),
@@ -123,10 +124,10 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
             ITreeIndexFrameFactory deleteLeafFrameFactory, IBufferCache bufferCache, ILSMIndexFileManager fileManager,
             ILSMDiskComponentFactory componentFactory, ILSMDiskComponentFactory bulkLoadComponentFactory,
             double bloomFilterFalsePositiveRate, IBinaryComparatorFactory[] cmpFactories, ILSMMergePolicy mergePolicy,
-            ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallback ioOpCallback,
-            boolean needKeyDupCheck, boolean durable) {
+            ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler,
+            ILSMIOOperationCallbackFactory ioOpCallbackFactory, boolean needKeyDupCheck, boolean durable) {
         super(ioManager, bufferCache, fileManager, bloomFilterFalsePositiveRate, mergePolicy, opTracker, ioScheduler,
-                ioOpCallback, componentFactory, bulkLoadComponentFactory, durable);
+                ioOpCallbackFactory, componentFactory, bulkLoadComponentFactory, durable);
         this.insertLeafFrameFactory = insertLeafFrameFactory;
         this.deleteLeafFrameFactory = deleteLeafFrameFactory;
         this.cmpFactories = cmpFactories;
@@ -363,8 +364,7 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
     public LSMBTreeOpContext createOpContext(IModificationOperationCallback modificationCallback,
             ISearchOperationCallback searchCallback) {
         int numBloomFilterKeyFields = hasBloomFilter
-                ? ((LSMBTreeWithBloomFilterDiskComponentFactory) componentFactory).getBloomFilterKeyFields().length
-                : 0;
+                ? ((LSMBTreeWithBloomFilterDiskComponentFactory) componentFactory).getBloomFilterKeyFields().length : 0;
         return new LSMBTreeOpContext(memoryComponents, insertLeafFrameFactory, deleteLeafFrameFactory,
                 modificationCallback, searchCallback, numBloomFilterKeyFields, getTreeFields(), getFilterFields(),
                 getLsmHarness(), getFilterCmpFactories());

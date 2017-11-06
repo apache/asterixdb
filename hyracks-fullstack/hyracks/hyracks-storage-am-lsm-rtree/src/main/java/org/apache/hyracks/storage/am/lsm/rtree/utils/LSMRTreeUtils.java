@@ -40,7 +40,7 @@ import org.apache.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import org.apache.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponentFactory;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexFileManager;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
@@ -79,7 +79,7 @@ public class LSMRTreeUtils {
             IBinaryComparatorFactory[] rtreeCmpFactories, IBinaryComparatorFactory[] btreeCmpFactories,
             IPrimitiveValueProviderFactory[] valueProviderFactories, RTreePolicyType rtreePolicyType,
             double bloomFilterFalsePositiveRate, ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker,
-            ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallback ioOpCallback,
+            ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallbackFactory ioOpCallbackFactory,
             ILinearizeComparatorFactory linearizeCmpFactory, int[] rtreeFields, int[] buddyBTreeFields,
             ITypeTraits[] filterTypeTraits, IBinaryComparatorFactory[] filterCmpFactories, int[] filterFields,
             boolean durable, boolean isPointMBR, IMetadataPageManagerFactory freePageManagerFactory)
@@ -139,8 +139,8 @@ public class LSMRTreeUtils {
                 btreeInteriorFrameFactory, btreeLeafFrameFactory, diskBufferCache, fileNameManager, componentFactory,
                 filterHelper, filterFrameFactory, filterManager, bloomFilterFalsePositiveRate, typeTraits.length,
                 rtreeCmpFactories, btreeCmpFactories, linearizeCmpFactory, comparatorFields, linearizerArray,
-                mergePolicy, opTracker, ioScheduler, ioOpCallback, rtreeFields, buddyBTreeFields, filterFields, durable,
-                isPointMBR);
+                mergePolicy, opTracker, ioScheduler, ioOpCallbackFactory, rtreeFields, buddyBTreeFields, filterFields,
+                durable, isPointMBR);
     }
 
     public static LSMRTreeWithAntiMatterTuples createLSMTreeWithAntiMatterTuples(IIOManager ioManager,
@@ -149,9 +149,9 @@ public class LSMRTreeUtils {
             IBinaryComparatorFactory[] btreeComparatorFactories,
             IPrimitiveValueProviderFactory[] valueProviderFactories, RTreePolicyType rtreePolicyType,
             ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler,
-            ILSMIOOperationCallback ioOpCallback, ILinearizeComparatorFactory linearizerCmpFactory, int[] rtreeFields,
-            ITypeTraits[] filterTypeTraits, IBinaryComparatorFactory[] filterCmpFactories, int[] filterFields,
-            boolean durable, boolean isPointMBR, IMetadataPageManagerFactory freePageManagerFactory)
+            ILSMIOOperationCallbackFactory ioOpCallbackFactory, ILinearizeComparatorFactory linearizerCmpFactory,
+            int[] rtreeFields, ITypeTraits[] filterTypeTraits, IBinaryComparatorFactory[] filterCmpFactories,
+            int[] filterFields, boolean durable, boolean isPointMBR, IMetadataPageManagerFactory freePageManagerFactory)
             throws HyracksDataException {
         RTreeTypeAwareTupleWriterFactory rtreeInteriorFrameTupleWriterFactory =
                 new LSMRTreeTupleWriterFactory(typeTraits, false);
@@ -232,17 +232,18 @@ public class LSMRTreeUtils {
                 rtreeLeafFrameFactory, btreeInteriorFrameFactory, btreeLeafFrameFactory, diskBufferCache,
                 fileNameManager, componentFactory, bulkLoadComponentFactory, filterHelper, filterFrameFactory,
                 filterManager, typeTraits.length, rtreeCmpFactories, btreeComparatorFactories, linearizerCmpFactory,
-                comparatorFields, linearizerArray, mergePolicy, opTracker, ioScheduler, ioOpCallback, rtreeFields,
-                filterFields, durable, isPointMBR);
+                comparatorFields, linearizerArray, mergePolicy, opTracker, ioScheduler, ioOpCallbackFactory,
+                rtreeFields, filterFields, durable, isPointMBR);
     }
 
     public static ExternalRTree createExternalRTree(IIOManager ioManager, FileReference file,
             IBufferCache diskBufferCache, ITypeTraits[] typeTraits, IBinaryComparatorFactory[] rtreeCmpFactories,
             IBinaryComparatorFactory[] btreeCmpFactories, IPrimitiveValueProviderFactory[] valueProviderFactories,
             RTreePolicyType rtreePolicyType, double bloomFilterFalsePositiveRate, ILSMMergePolicy mergePolicy,
-            ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallback ioOpCallback,
-            ILinearizeComparatorFactory linearizeCmpFactory, int[] buddyBTreeFields, boolean durable,
-            boolean isPointMBR, IMetadataPageManagerFactory freePageManagerFactory) throws HyracksDataException {
+            ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler,
+            ILSMIOOperationCallbackFactory ioOpCallbackFactory, ILinearizeComparatorFactory linearizeCmpFactory,
+            int[] buddyBTreeFields, boolean durable, boolean isPointMBR,
+            IMetadataPageManagerFactory freePageManagerFactory) throws HyracksDataException {
 
         int keyFieldCount = rtreeCmpFactories.length;
         int valueFieldCount = typeTraits.length - keyFieldCount;
@@ -288,7 +289,7 @@ public class LSMRTreeUtils {
         return new ExternalRTree(ioManager, rtreeInteriorFrameFactory, rtreeLeafFrameFactory, btreeInteriorFrameFactory,
                 btreeLeafFrameFactory, diskBufferCache, fileNameManager, componentFactory, bloomFilterFalsePositiveRate,
                 typeTraits.length, rtreeCmpFactories, btreeCmpFactories, linearizeCmpFactory, comparatorFields,
-                linearizerArray, mergePolicy, opTracker, ioScheduler, ioOpCallback, buddyBTreeFields, durable,
+                linearizerArray, mergePolicy, opTracker, ioScheduler, ioOpCallbackFactory, buddyBTreeFields, durable,
                 isPointMBR);
     }
 

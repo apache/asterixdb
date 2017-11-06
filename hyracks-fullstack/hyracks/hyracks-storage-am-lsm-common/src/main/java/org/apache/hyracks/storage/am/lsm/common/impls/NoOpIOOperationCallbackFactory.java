@@ -25,13 +25,15 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMMemoryComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
 
 public enum NoOpIOOperationCallbackFactory implements ILSMIOOperationCallbackFactory {
     INSTANCE;
 
     @Override
-    public ILSMIOOperationCallback createIoOpCallback() {
+    public ILSMIOOperationCallback createIoOpCallback(ILSMIndex index) {
         return NoOpIOOperationCallback.INSTANCE;
     }
 
@@ -39,7 +41,6 @@ public enum NoOpIOOperationCallbackFactory implements ILSMIOOperationCallbackFac
         private static final NoOpIOOperationCallback INSTANCE = new NoOpIOOperationCallback();
 
         private NoOpIOOperationCallback() {
-
         }
 
         @Override
@@ -59,7 +60,12 @@ public enum NoOpIOOperationCallbackFactory implements ILSMIOOperationCallbackFac
         }
 
         @Override
-        public void setNumOfMutableComponents(int count) {
+        public void recycled(ILSMMemoryComponent component) {
+            // Do nothing.
+        }
+
+        @Override
+        public void allocated(ILSMMemoryComponent component) {
             // Do nothing.
         }
     }

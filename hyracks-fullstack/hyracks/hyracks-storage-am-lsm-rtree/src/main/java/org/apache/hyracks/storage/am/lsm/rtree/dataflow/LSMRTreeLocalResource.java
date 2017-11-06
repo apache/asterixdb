@@ -88,7 +88,7 @@ public class LSMRTreeLocalResource extends LsmResource {
                 valueProviderFactories, rtreePolicyType, bloomFilterFalsePositiveRate,
                 mergePolicyFactory.createMergePolicy(mergePolicyProperties, ncServiceCtx),
                 opTrackerProvider.getOperationTracker(ncServiceCtx), ioSchedulerProvider.getIoScheduler(ncServiceCtx),
-                ioOpCallbackFactory.createIoOpCallback(), linearizeCmpFactory, rtreeFields, buddyBTreeFields,
-                filterTypeTraits, filterCmpFactories, filterFields, durable, isPointMBR, metadataPageManagerFactory);
+                ioOpCallbackFactory, linearizeCmpFactory, rtreeFields, buddyBTreeFields, filterTypeTraits,
+                filterCmpFactories, filterFields, durable, isPointMBR, metadataPageManagerFactory);
     }
 }

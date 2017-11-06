@@ -30,12 +30,10 @@ import org.apache.hyracks.storage.common.MultiComparator;
 public abstract class AbstractLSMDiskComponent extends AbstractLSMComponent implements ILSMDiskComponent {
 
     private final DiskComponentMetadata metadata;
-    private final AbstractLSMIndex lsmIndex;
 
     public AbstractLSMDiskComponent(AbstractLSMIndex lsmIndex, IMetadataPageManager mdPageManager,
             ILSMComponentFilter filter) {
-        super(filter);
-        this.lsmIndex = lsmIndex;
+        super(lsmIndex, filter);
         state = ComponentState.READABLE_UNWRITABLE;
         metadata = new DiskComponentMetadata(mdPageManager);
     }

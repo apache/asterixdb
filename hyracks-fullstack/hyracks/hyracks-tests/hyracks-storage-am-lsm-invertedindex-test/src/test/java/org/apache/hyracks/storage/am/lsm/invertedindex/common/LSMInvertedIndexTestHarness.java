@@ -35,7 +35,7 @@ import org.apache.hyracks.control.nc.io.IOManager;
 import org.apache.hyracks.storage.am.common.api.IMetadataPageManagerFactory;
 import org.apache.hyracks.storage.am.common.freepage.AppendOnlyLinkedMetadataPageManagerFactory;
 import org.apache.hyracks.storage.am.config.AccessMethodTestsConfig;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
@@ -72,7 +72,7 @@ public class LSMInvertedIndexTestHarness {
     protected ILSMIOOperationScheduler ioScheduler;
     protected ILSMMergePolicy mergePolicy;
     protected ILSMOperationTracker opTracker;
-    protected ILSMIOOperationCallback ioOpCallback;
+    protected ILSMIOOperationCallbackFactory ioOpCallbackFactory;
 
     protected final Random rnd = new Random();
     protected final static SimpleDateFormat simpleDateFormat = new SimpleDateFormat("ddMMyy-hhmmssSS");
@@ -95,7 +95,7 @@ public class LSMInvertedIndexTestHarness {
         this.ioScheduler = SynchronousScheduler.INSTANCE;
         this.mergePolicy = new NoMergePolicy();
         this.opTracker = new ThreadCountingTracker();
-        this.ioOpCallback = NoOpIOOperationCallbackFactory.INSTANCE.createIoOpCallback();
+        this.ioOpCallbackFactory = NoOpIOOperationCallbackFactory.INSTANCE;
         this.numMutableComponents = AccessMethodTestsConfig.LSM_INVINDEX_NUM_MUTABLE_COMPONENTS;
     }
 
@@ -213,8 +213,8 @@ public class LSMInvertedIndexTestHarness {
         return mergePolicy;
     }
 
-    public ILSMIOOperationCallback getIOOperationCallback() {
-        return ioOpCallback;
+    public ILSMIOOperationCallbackFactory getIOOperationCallbackFactory() {
+        return ioOpCallbackFactory;
     }
 
     public IMetadataPageManagerFactory getMetadataPageManagerFactory() {

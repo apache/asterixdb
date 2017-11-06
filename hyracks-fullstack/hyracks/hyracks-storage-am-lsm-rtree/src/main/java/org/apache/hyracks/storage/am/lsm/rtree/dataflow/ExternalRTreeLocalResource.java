@@ -70,7 +70,7 @@ public class ExternalRTreeLocalResource extends LSMRTreeLocalResource {
                 typeTraits, cmpFactories, btreeCmpFactories, valueProviderFactories, rtreePolicyType,
                 bloomFilterFalsePositiveRate, mergePolicyFactory.createMergePolicy(mergePolicyProperties, ncServiceCtx),
                 opTrackerProvider.getOperationTracker(ncServiceCtx), ioSchedulerProvider.getIoScheduler(ncServiceCtx),
-                ioOpCallbackFactory.createIoOpCallback(), linearizeCmpFactory, buddyBTreeFields, durable, isPointMBR,
+                ioOpCallbackFactory, linearizeCmpFactory, buddyBTreeFields, durable, isPointMBR,
                 metadataPageManagerFactory);
 
     }

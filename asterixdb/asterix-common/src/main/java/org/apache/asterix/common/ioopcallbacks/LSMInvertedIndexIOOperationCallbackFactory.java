@@ -21,6 +21,7 @@ package org.apache.asterix.common.ioopcallbacks;
 
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 
 public class LSMInvertedIndexIOOperationCallbackFactory implements ILSMIOOperationCallbackFactory {
 
@@ -33,7 +34,7 @@ public class LSMInvertedIndexIOOperationCallbackFactory implements ILSMIOOperati
     }
 
     @Override
-    public ILSMIOOperationCallback createIoOpCallback() {
-        return new LSMInvertedIndexIOOperationCallback();
+    public ILSMIOOperationCallback createIoOpCallback(ILSMIndex index) {
+        return new LSMInvertedIndexIOOperationCallback(index);
     }
 }

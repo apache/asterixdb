@@ -22,5 +22,5 @@ import java.io.Serializable;
 
 @FunctionalInterface
 public interface ILSMIOOperationCallbackFactory extends Serializable {
-    ILSMIOOperationCallback createIoOpCallback();
+    ILSMIOOperationCallback createIoOpCallback(ILSMIndex index);
 }
