@@ -35,7 +35,7 @@ class TracedIOOperation implements ILSMIOOperation {
     static final Logger LOGGER = Logger.getLogger(TracedIOOperation.class.getName());
 
     protected final ILSMIOOperation ioOp;
-    private final LSMIOOpertionType ioOpType;
+    private final LSMIOOperationType ioOpType;
     private final ITracer tracer;
     private final long traceCategory;
 
@@ -80,7 +80,7 @@ class TracedIOOperation implements ILSMIOOperation {
     }
 
     @Override
-    public LSMIOOpertionType getIOOpertionType() {
+    public LSMIOOperationType getIOOpertionType() {
         return ioOpType;
     }
 

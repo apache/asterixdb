@@ -60,8 +60,8 @@ public class FlushOperation extends AbstractIoOperation implements Comparable<IL
     }
 
     @Override
-    public LSMIOOpertionType getIOOpertionType() {
-        return LSMIOOpertionType.FLUSH;
+    public LSMIOOperationType getIOOpertionType() {
+        return LSMIOOperationType.FLUSH;
     }
 
     @Override

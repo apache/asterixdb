@@ -30,10 +30,10 @@ import org.apache.hyracks.storage.am.common.freepage.MutableArrayValueReference;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponentId;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation.LSMIOOperationType;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMemoryComponent;
-import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
 import org.apache.hyracks.storage.am.lsm.common.impls.DiskComponentMetadata;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMDiskComponentId;
 import org.apache.hyracks.storage.am.lsm.common.util.ComponentUtils;
@@ -67,8 +67,8 @@ public abstract class AbstractLSMIOOperationCallback implements ILSMIOOperationC
     }
 
     @Override
-    public void beforeOperation(LSMOperationType opType) throws HyracksDataException {
-        if (opType == LSMOperationType.FLUSH) {
+    public void beforeOperation(LSMIOOperationType opType) throws HyracksDataException {
+        if (opType == LSMIOOperationType.FLUSH) {
             /*
              * This method was called on the scheduleFlush operation.
              * We set the lastLSN to the last LSN for the index (the LSN for the flush log)
@@ -87,9 +87,9 @@ public abstract class AbstractLSMIOOperationCallback implements ILSMIOOperationC
     }
 
     @Override
-    public void afterFinalize(LSMOperationType opType, ILSMDiskComponent newComponent) {
+    public void afterFinalize(LSMIOOperationType opType, ILSMDiskComponent newComponent) {
         // The operation was complete and the next I/O operation for the LSM index didn't start yet
-        if (opType == LSMOperationType.FLUSH && newComponent != null) {
+        if (opType == LSMIOOperationType.FLUSH && newComponent != null) {
             synchronized (this) {
                 flushRequested[readIndex] = false;
                 // if the component which just finished flushing is the component that will be modified next,
@@ -183,13 +183,13 @@ public abstract class AbstractLSMIOOperationCallback implements ILSMIOOperationC
     }
 
     @Override
-    public void afterOperation(LSMOperationType opType, List<ILSMComponent> oldComponents,
+    public void afterOperation(LSMIOOperationType opType, List<ILSMComponent> oldComponents,
             ILSMDiskComponent newComponent) throws HyracksDataException {
         //TODO: Copying Filters and all content of the metadata pages for flush operation should be done here
         if (newComponent != null) {
             putLSNIntoMetadata(newComponent, oldComponents);
             putComponentIdIntoMetadata(newComponent, oldComponents);
-            if (opType == LSMOperationType.MERGE) {
+            if (opType == LSMIOOperationType.MERGE) {
                 // In case of merge, oldComponents are never null
                 LongPointable markerLsn =
                         LongPointable.FACTORY.createPointable(ComponentUtils.getLong(oldComponents.get(0).getMetadata(),

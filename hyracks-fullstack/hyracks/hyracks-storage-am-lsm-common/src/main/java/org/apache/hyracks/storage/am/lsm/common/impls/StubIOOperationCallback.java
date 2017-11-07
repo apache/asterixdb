@@ -23,9 +23,9 @@ import java.util.List;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation.LSMIOOperationType;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMemoryComponent;
-import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
 
 /**
  * This class is for testing. It's basically a way to get the new/old component info from the
@@ -38,19 +38,19 @@ public class StubIOOperationCallback implements ILSMIOOperationCallback {
     private ILSMDiskComponent newComponent = null;
 
     @Override
-    public void beforeOperation(LSMOperationType opType) throws HyracksDataException {
+    public void beforeOperation(LSMIOOperationType opType) throws HyracksDataException {
         // Not interested in this
     }
 
     @Override
-    public void afterOperation(LSMOperationType opType, List<ILSMComponent> oldComponents,
+    public void afterOperation(LSMIOOperationType opType, List<ILSMComponent> oldComponents,
             ILSMDiskComponent newComponent) throws HyracksDataException {
         this.oldComponents = oldComponents;
         this.newComponent = newComponent;
     }
 
     @Override
-    public synchronized void afterFinalize(LSMOperationType opType, ILSMDiskComponent newComponent)
+    public synchronized void afterFinalize(LSMIOOperationType opType, ILSMDiskComponent newComponent)
             throws HyracksDataException {
         // Redundant info from after
     }

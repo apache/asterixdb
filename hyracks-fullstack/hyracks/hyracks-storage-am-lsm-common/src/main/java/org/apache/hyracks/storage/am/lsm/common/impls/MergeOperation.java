@@ -47,8 +47,8 @@ public class MergeOperation extends AbstractIoOperation {
     }
 
     @Override
-    public LSMIOOpertionType getIOOpertionType() {
-        return LSMIOOpertionType.MERGE;
+    public LSMIOOperationType getIOOpertionType() {
+        return LSMIOOperationType.MERGE;
     }
 
     public IIndexCursor getCursor() {

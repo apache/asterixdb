@@ -34,8 +34,8 @@ import org.apache.hyracks.storage.am.common.tuples.PermutingTupleReference;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponentBulkLoader;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponentId;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation.LSMIOOperationType;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
-import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndex;
 
 /**
@@ -225,7 +225,8 @@ public class LSMSecondaryIndexBulkLoadNodePushable extends AbstractLSMSecondaryI
         for (int i = diskComponents.length - 1; i >= 0; i--) {
             // start from the oldest component to the newest component
             if (diskComponents[i] != null && diskComponents[i].getComponentSize() > 0) {
-                secondaryIndex.getIOOperationCallback().afterOperation(LSMOperationType.FLUSH, null, diskComponents[i]);
+                secondaryIndex.getIOOperationCallback().afterOperation(LSMIOOperationType.FLUSH, null,
+                        diskComponents[i]);
 
                 // setting component id has to be place between afterOperation and addBulkLoadedComponent,
                 // since afterOperation would set a flush component id (but it's not invalid)

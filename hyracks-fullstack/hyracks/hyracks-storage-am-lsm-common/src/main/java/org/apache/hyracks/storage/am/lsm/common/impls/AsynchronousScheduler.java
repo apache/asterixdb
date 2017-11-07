@@ -31,7 +31,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation.LSMIOOpertionType;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation.LSMIOOperationType;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 
 public class AsynchronousScheduler implements ILSMIOOperationScheduler {
@@ -60,7 +60,7 @@ public class AsynchronousScheduler implements ILSMIOOperationScheduler {
                 super.afterExecute(r, t);
                 LSMIOOperationTask<Boolean> task = (LSMIOOperationTask<Boolean>) r;
                 ILSMIOOperation executedOp = task.getOperation();
-                if (executedOp.getIOOpertionType() == LSMIOOpertionType.FLUSH) {
+                if (executedOp.getIOOpertionType() == LSMIOOperationType.FLUSH) {
                     String id = executedOp.getIndexIdentifier();
                     synchronized (this) {
                         runningFlushOperations.remove(id);
@@ -84,9 +84,9 @@ public class AsynchronousScheduler implements ILSMIOOperationScheduler {
 
     @Override
     public void scheduleOperation(ILSMIOOperation operation) throws HyracksDataException {
-        if (operation.getIOOpertionType() == LSMIOOpertionType.MERGE) {
+        if (operation.getIOOpertionType() == LSMIOOperationType.MERGE) {
             executor.submit(operation);
-        } else if (operation.getIOOpertionType() == LSMIOOpertionType.FLUSH) {
+        } else if (operation.getIOOpertionType() == LSMIOOperationType.FLUSH) {
             String id = operation.getIndexIdentifier();
             synchronized (executor) {
                 if (runningFlushOperations.containsKey(id)) {

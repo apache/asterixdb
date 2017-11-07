@@ -20,10 +20,10 @@ package org.apache.asterix.test.dataflow;
 
 import org.apache.asterix.common.ioopcallbacks.LSMBTreeIOOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation.LSMIOOperationType;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
-import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
 import org.apache.hyracks.storage.am.lsm.common.impls.EmptyComponent;
 
 public class TestLsmBtreeIoOpCallbackFactory implements ILSMIOOperationCallbackFactory {
@@ -95,18 +95,18 @@ public class TestLsmBtreeIoOpCallbackFactory implements ILSMIOOperationCallbackF
         }
 
         @Override
-        public void afterFinalize(LSMOperationType opType, ILSMDiskComponent newComponent) {
+        public void afterFinalize(LSMIOOperationType opType, ILSMDiskComponent newComponent) {
             super.afterFinalize(opType, newComponent);
             synchronized (INSTANCE) {
                 if (newComponent != null) {
                     if (newComponent == EmptyComponent.INSTANCE) {
-                        if (opType == LSMOperationType.FLUSH) {
+                        if (opType == LSMIOOperationType.FLUSH) {
                             rollbackFlushes++;
                         } else {
                             rollbackMerges++;
                         }
                     } else {
-                        if (opType == LSMOperationType.FLUSH) {
+                        if (opType == LSMIOOperationType.FLUSH) {
                             completedFlushes++;
                         } else {
                             completedMerges++;
@@ -119,8 +119,8 @@ public class TestLsmBtreeIoOpCallbackFactory implements ILSMIOOperationCallbackF
             }
         }
 
-        private void recordFailure(LSMOperationType opType) {
-            if (opType == LSMOperationType.FLUSH) {
+        private void recordFailure(LSMIOOperationType opType) {
+            if (opType == LSMIOOperationType.FLUSH) {
                 failedFlushes++;
             } else {
                 failedMerges++;

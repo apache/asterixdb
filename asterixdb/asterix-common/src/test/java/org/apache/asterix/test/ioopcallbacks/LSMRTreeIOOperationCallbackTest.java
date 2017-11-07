@@ -21,8 +21,8 @@ package org.apache.asterix.test.ioopcallbacks;
 
 import org.apache.asterix.common.ioopcallbacks.LSMRTreeIOOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation.LSMIOOperationType;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
-import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
 import org.junit.Assert;
 import org.mockito.Mockito;
 
@@ -38,17 +38,17 @@ public class LSMRTreeIOOperationCallbackTest extends TestCase {
 
             //request to flush first component
             callback.updateLastLSN(1);
-            callback.beforeOperation(LSMOperationType.FLUSH);
+            callback.beforeOperation(LSMIOOperationType.FLUSH);
 
             //request to flush second component
             callback.updateLastLSN(2);
-            callback.beforeOperation(LSMOperationType.FLUSH);
+            callback.beforeOperation(LSMIOOperationType.FLUSH);
 
             Assert.assertEquals(1, callback.getComponentLSN(null));
-            callback.afterFinalize(LSMOperationType.FLUSH, Mockito.mock(ILSMDiskComponent.class));
+            callback.afterFinalize(LSMIOOperationType.FLUSH, Mockito.mock(ILSMDiskComponent.class));
 
             Assert.assertEquals(2, callback.getComponentLSN(null));
-            callback.afterFinalize(LSMOperationType.FLUSH, Mockito.mock(ILSMDiskComponent.class));
+            callback.afterFinalize(LSMIOOperationType.FLUSH, Mockito.mock(ILSMDiskComponent.class));
         } catch (Exception e) {
             Assert.fail();
         }
@@ -62,11 +62,11 @@ public class LSMRTreeIOOperationCallbackTest extends TestCase {
 
             //request to flush first component
             callback.updateLastLSN(1);
-            callback.beforeOperation(LSMOperationType.FLUSH);
+            callback.beforeOperation(LSMIOOperationType.FLUSH);
 
             //request to flush second component
             callback.updateLastLSN(2);
-            callback.beforeOperation(LSMOperationType.FLUSH);
+            callback.beforeOperation(LSMIOOperationType.FLUSH);
 
             //request to flush first component again
             //this call should fail
@@ -75,10 +75,10 @@ public class LSMRTreeIOOperationCallbackTest extends TestCase {
             //the scheduleFlush request would fail this time
 
             Assert.assertEquals(1, callback.getComponentLSN(null));
-            callback.afterFinalize(LSMOperationType.FLUSH, Mockito.mock(ILSMDiskComponent.class));
+            callback.afterFinalize(LSMIOOperationType.FLUSH, Mockito.mock(ILSMDiskComponent.class));
 
             Assert.assertEquals(2, callback.getComponentLSN(null));
-            callback.afterFinalize(LSMOperationType.FLUSH, Mockito.mock(ILSMDiskComponent.class));
+            callback.afterFinalize(LSMIOOperationType.FLUSH, Mockito.mock(ILSMDiskComponent.class));
         } catch (Exception e) {
             Assert.fail();
         }

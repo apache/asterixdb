@@ -29,9 +29,10 @@ public interface ILSMIOOperation extends Callable<Boolean> {
     /**
      * Represents the io operation type
      */
-    enum LSMIOOpertionType {
+    enum LSMIOOperationType {
         FLUSH,
-        MERGE
+        MERGE,
+        LOAD
     }
 
     /**
@@ -52,7 +53,7 @@ public interface ILSMIOOperation extends Callable<Boolean> {
     /**
      * @return the operation type
      */
-    LSMIOOpertionType getIOOpertionType();
+    LSMIOOperationType getIOOpertionType();
 
     @Override
     Boolean call() throws HyracksDataException;
