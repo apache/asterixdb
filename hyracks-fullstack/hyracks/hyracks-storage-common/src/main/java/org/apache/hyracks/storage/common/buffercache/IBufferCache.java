@@ -235,7 +235,7 @@ public interface IBufferCache {
     /**
      * Flush the queued pages written through buffer cache FIFO queues
      */
-    void finishQueue();
+    void finishQueue() throws HyracksDataException;
 
     // TODO: remove the replication out of the buffer cache interface
     /**

@@ -1379,7 +1379,7 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
     }
 
     @Override
-    public void finishQueue() {
+    public void finishQueue() throws HyracksDataException {
         fifoWriter.finishQueue();
     }
 

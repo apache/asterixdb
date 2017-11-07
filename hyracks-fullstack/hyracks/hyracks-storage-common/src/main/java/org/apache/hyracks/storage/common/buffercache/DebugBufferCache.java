@@ -199,7 +199,7 @@ public class DebugBufferCache implements IBufferCache {
     }
 
     @Override
-    public void finishQueue() {
+    public void finishQueue() throws HyracksDataException {
         bufferCache.finishQueue();
     }
 
