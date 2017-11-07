@@ -877,7 +877,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
     private static SearchModifierType getFullTextOption(AbstractFunctionCallExpression funcExpr) {
         if (funcExpr.getArguments().size() < 3 || funcExpr.getArguments().size() % 2 != 0) {
             // If no parameters or incorrect number of parameters are given, the default search type is returned.
-            return SearchModifierType.DISJUNCTIVE;
+            return SearchModifierType.CONJUNCTIVE;
         }
         // From the third argument, it contains full-text search options.
         for (int i = 2; i < funcExpr.getArguments().size(); i = i + 2) {

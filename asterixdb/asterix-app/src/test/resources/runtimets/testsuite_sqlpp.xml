@@ -2737,6 +2737,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="fulltext">
+      <compilation-unit name="fulltext-09">
+        <output-dir compare="Text">fulltext-09</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fulltext">
       <compilation-unit name="fulltext-index-01">
         <output-dir compare="Text">fulltext-index-01</output-dir>
       </compilation-unit>
@@ -2744,6 +2749,11 @@
     <test-case FilePath="fulltext">
       <compilation-unit name="fulltext-index-02">
         <output-dir compare="Text">fulltext-index-02</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fulltext">
+      <compilation-unit name="fulltext-index-08">
+        <output-dir compare="Text">fulltext-index-08</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>

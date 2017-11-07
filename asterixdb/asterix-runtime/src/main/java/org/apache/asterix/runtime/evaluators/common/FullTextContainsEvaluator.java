@@ -335,6 +335,8 @@ public class FullTextContainsEvaluator implements IScalarEvaluator {
      * for that option. (e.g., argOptions[0] = "mode", argOptions[1] = "all")
      */
     private void setFullTextOption(IPointable[] argOptions, int uniqueQueryTokenCount) throws HyracksDataException {
+        // By default, we conduct a conjunctive search.
+        occurrenceThreshold = uniqueQueryTokenCount;
         for (int i = 0; i < optionArgsLength; i = i + 2) {
             // mode option
             if (compareStrInByteArrayAndPointable(FullTextContainsDescriptor.getSearchModeOptionArray(), argOptions[i],
