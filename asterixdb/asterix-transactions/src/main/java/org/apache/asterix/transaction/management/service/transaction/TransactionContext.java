@@ -122,7 +122,7 @@ public class TransactionContext implements ITransactionContext {
                 final ITransactionOperationTracker txnOpTracker =
                         (ITransactionOperationTracker) index.getOperationTracker();
                 indexMap.put(resourceId, txnOpTracker);
-                txnOpTracker.beforeTransaction();
+                txnOpTracker.beforeTransaction(resourceId);
             }
         }
     }
@@ -258,7 +258,7 @@ public class TransactionContext implements ITransactionContext {
             }
         } finally {
             synchronized (indexMap) {
-                indexMap.values().forEach(ITransactionOperationTracker::afterTransaction);
+                indexMap.forEach((resource, opTracker) -> opTracker.afterTransaction(resource));
             }
         }
     }

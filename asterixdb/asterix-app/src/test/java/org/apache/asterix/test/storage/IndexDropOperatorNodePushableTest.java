@@ -30,17 +30,28 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.asterix.app.bootstrap.TestNodeController;
 import org.apache.asterix.common.config.DatasetConfig;
+import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.file.StorageComponentProvider;
+import org.apache.asterix.metadata.MetadataManager;
+import org.apache.asterix.metadata.MetadataTransactionContext;
+import org.apache.asterix.metadata.bootstrap.MetadataBuiltinEntities;
+import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails;
+import org.apache.asterix.metadata.utils.SplitsAndConstraintsUtil;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.test.common.TestExecutor;
 import org.apache.asterix.test.common.TestHelper;
+import org.apache.asterix.test.runtime.ExecutionTestUtil;
+import org.apache.asterix.testframework.context.TestCaseContext;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.FileSplit;
+import org.apache.hyracks.dataflow.std.file.ConstantFileSplitProvider;
 import org.apache.hyracks.storage.am.common.api.IIndexDataflowHelper;
 import org.apache.hyracks.storage.am.common.dataflow.IndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IndexDropOperatorNodePushable;
@@ -64,6 +75,7 @@ public class IndexDropOperatorNodePushableTest {
     private static final String DATA_TYPE_NAME = "DUMMY";
     private static final String NODE_GROUP_NAME = "DEFAULT";
     private final AtomicBoolean dropFailed = new AtomicBoolean(false);
+    private final TestExecutor testExecutor = new TestExecutor();
 
     @Before
     public void setUp() throws Exception {
@@ -77,6 +89,12 @@ public class IndexDropOperatorNodePushableTest {
         TestHelper.deleteExistingInstanceFiles();
     }
 
+    /**
+     * Tests dropping a dataset using different
+     * drop options
+     *
+     * @throws Exception
+     */
     @Test
     public void dropOptionsTest() throws Exception {
         TestNodeController nc = new TestNodeController(null, false);
@@ -102,6 +120,47 @@ public class IndexDropOperatorNodePushableTest {
             dropInUseWithWait(ctx, helperFactory, dataflowHelper);
             dropNonExisting(ctx, helperFactory);
             dropNonExistingWithIfExists(ctx, helperFactory);
+        } finally {
+            nc.deInit();
+        }
+    }
+
+    /**
+     * Tests dropping an index whose dataset has no active
+     * operations
+     *
+     * @throws Exception
+     */
+    @Test
+    public void dropIndexInUseTest() throws Exception {
+        TestNodeController nc = new TestNodeController(null, false);
+        try {
+            nc.init();
+            String datasetName = "ds";
+            String indexName = "fooIdx";
+            // create dataset and index
+            final TestCaseContext.OutputFormat format = TestCaseContext.OutputFormat.CLEAN_JSON;
+            testExecutor.executeSqlppUpdateOrDdl("CREATE TYPE KeyType AS { id: int, foo: int };", format);
+            testExecutor.executeSqlppUpdateOrDdl("CREATE DATASET " + datasetName + "(KeyType) PRIMARY KEY id;", format);
+            testExecutor.executeSqlppUpdateOrDdl("CREATE INDEX " + indexName + " on " + datasetName + "(foo)", format);
+            final MetadataTransactionContext mdTxn = MetadataManager.INSTANCE.beginTransaction();
+            ICcApplicationContext appCtx =
+                    (ICcApplicationContext) ExecutionTestUtil.integrationUtil.getClusterControllerService()
+                            .getApplicationContext();
+            MetadataProvider metadataProver = new MetadataProvider(appCtx, null);
+            metadataProver.setMetadataTxnContext(mdTxn);
+            final String defaultDv = MetadataBuiltinEntities.DEFAULT_DATAVERSE.getDataverseName();
+            final Dataset dataset = MetadataManager.INSTANCE.getDataset(mdTxn, defaultDv, datasetName);
+            MetadataManager.INSTANCE.commitTransaction(mdTxn);
+            FileSplit[] splits = SplitsAndConstraintsUtil
+                    .getIndexSplits(appCtx.getClusterStateManager(), dataset, indexName, Arrays.asList("asterix_nc1"));
+            final ConstantFileSplitProvider constantFileSplitProvider =
+                    new ConstantFileSplitProvider(Arrays.copyOfRange(splits, 0, 1));
+            IndexDataflowHelperFactory helperFactory =
+                    new IndexDataflowHelperFactory(nc.getStorageManager(), constantFileSplitProvider);
+            IHyracksTaskContext ctx = nc.createTestContext(true);
+            IIndexDataflowHelper dataflowHelper = helperFactory.create(ctx.getJobletContext().getServiceContext(), 0);
+            dropInUse(ctx, helperFactory, dataflowHelper);
         } finally {
             nc.deInit();
         }

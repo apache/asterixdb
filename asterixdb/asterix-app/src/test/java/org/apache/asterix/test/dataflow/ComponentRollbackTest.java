@@ -264,6 +264,7 @@ public class ComponentRollbackTest {
                 tupleAppender.write(insertOp, true);
             }
             insertOp.close();
+            nc.getTransactionManager().completedTransaction(txnCtx, DatasetId.NULL, -1, true);
             searchAndAssertCount(nc, ctx, dataset, storageManager, TOTAL_NUM_OF_RECORDS);
             // rollback the last disk component
             lsmAccessor = lsmBtree.createAccessor(NoOpIndexAccessParameters.INSTANCE);

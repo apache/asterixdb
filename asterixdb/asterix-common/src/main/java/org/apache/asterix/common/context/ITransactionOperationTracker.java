@@ -25,12 +25,18 @@ public interface ITransactionOperationTracker extends ILSMOperationTracker {
     /**
      * Called before a transaction performs any operations on
      * {@link org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex}
+     * with resource id {@code resourceId}
+     *
+     * @param resourceId
      */
-    void beforeTransaction();
+    void beforeTransaction(long resourceId);
 
     /**
      * Called after a transaction completes its operations on
      * {@link org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex}
+     * with resource id {@code resourceId}
+     *
+     * @param resourceId
      */
-    void afterTransaction();
+    void afterTransaction(long resourceId);
 }
