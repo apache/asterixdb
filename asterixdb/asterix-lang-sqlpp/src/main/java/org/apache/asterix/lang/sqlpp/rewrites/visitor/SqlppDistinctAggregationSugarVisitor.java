@@ -72,8 +72,7 @@ public class SqlppDistinctAggregationSugarVisitor extends AbstractSqlppSimpleExp
             Expression newExpr = rewriteArgument(expr);
             newExprList.add(newExpr.accept(this, arg));
         }
-        callExpr.setFunctionSignature(
-                new FunctionSignature(newAggFn.getNamespace(), newAggFn.getName(), newAggFn.getArity()));
+        callExpr.setFunctionSignature(new FunctionSignature(newAggFn));
         callExpr.setExprList(newExprList);
         return callExpr;
     }

@@ -24,17 +24,17 @@ RecordConstructor [
   )
 ]
 ]
-FROM [  FunctionCall Metadata.dataset@1[
+FROM [  FunctionCall asterix.dataset@1[
     LiteralExpr [STRING] [Customer]
   ]
   AS Variable [ Name=$c ]
 ,
-  FunctionCall Metadata.dataset@1[
+  FunctionCall asterix.dataset@1[
     LiteralExpr [STRING] [Orders]
   ]
   AS Variable [ Name=$o ]
 ,
-  FunctionCall Metadata.dataset@1[
+  FunctionCall asterix.dataset@1[
     LiteralExpr [STRING] [LineItem]
   ]
   AS Variable [ Name=$l ]
@@ -145,7 +145,7 @@ Let Variable [ Name=$revenue ]
       ]
       FROM [        (
           SELECT ELEMENT [
-          FunctionCall Metadata.resolve@-1[
+          FunctionCall asterix.resolve@-1[
             LiteralExpr [STRING] [l]
             Variable [ Name=$o_shippriority ]
             Variable [ Name=$g ]

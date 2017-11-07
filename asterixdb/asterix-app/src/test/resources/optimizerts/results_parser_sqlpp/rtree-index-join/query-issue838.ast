@@ -44,7 +44,7 @@ RecordConstructor [
   )
 ]
 ]
-FROM [  FunctionCall Metadata.dataset@1[
+FROM [  FunctionCall asterix.dataset@1[
     LiteralExpr [STRING] [TweetHistorySubscriptions]
   ]
   AS Variable [ Name=$sub ]
@@ -53,7 +53,7 @@ FROM [  FunctionCall Metadata.dataset@1[
     SELECT ELEMENT [
     Variable [ Name=$tweet ]
     ]
-    FROM [      FunctionCall Metadata.dataset@1[
+    FROM [      FunctionCall asterix.dataset@1[
         LiteralExpr [STRING] [TweetMessages]
       ]
       AS Variable [ Name=$tweet ]
@@ -61,7 +61,7 @@ FROM [  FunctionCall Metadata.dataset@1[
     Let Variable [ Name=$circle ]
       :=
       FunctionCall twitter.create-circle@2[
-        FunctionCall Metadata.resolve@-1[
+        FunctionCall asterix.resolve@-1[
           LiteralExpr [STRING] [location]
           Variable [ Name=$tweet ]
           Variable [ Name=$sub ]

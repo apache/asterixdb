@@ -18,13 +18,12 @@
  */
 package org.apache.asterix.external.util;
 
-import org.apache.asterix.common.functions.FunctionConstants;
-import org.apache.asterix.common.functions.FunctionSignature;
+import org.apache.asterix.om.functions.BuiltinFunctions;
+import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 
 public class FeedConstants {
 
-    public static final FunctionSignature FEED_COLLECT_FUN_SIGNATURE =
-            new FunctionSignature(FunctionConstants.ASTERIX_NS, "feed_collect", 6);
+    public static final FunctionIdentifier FEED_COLLECT_FUN = BuiltinFunctions.FEED_COLLECT;
 
     public final static String FEEDS_METADATA_DV = "feeds_metadata";
     public final static String FAILED_TUPLE_DATASET = "failed_tuple";

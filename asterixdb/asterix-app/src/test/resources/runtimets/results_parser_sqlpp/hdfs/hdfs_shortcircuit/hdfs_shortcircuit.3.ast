@@ -13,7 +13,7 @@ RecordConstructor [
     FunctionCall asterix.count@1[
       (
         SELECT ELEMENT [
-        FunctionCall Metadata.resolve@-1[
+        FunctionCall asterix.resolve@-1[
           LiteralExpr [STRING] [token]
           Variable [ Name=$g ]
           Variable [ Name=$tok ]
@@ -27,7 +27,7 @@ RecordConstructor [
   )
 ]
 ]
-FROM [  FunctionCall Metadata.dataset@1[
+FROM [  FunctionCall asterix.dataset@1[
     LiteralExpr [STRING] [TextDataset]
   ]
   AS Variable [ Name=$line ]

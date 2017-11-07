@@ -19,12 +19,12 @@ RecordConstructor [
   )
 ]
 ]
-FROM [  FunctionCall Metadata.dataset@1[
+FROM [  FunctionCall asterix.dataset@1[
     LiteralExpr [STRING] [User]
   ]
   AS Variable [ Name=$user ]
 ,
-  FunctionCall Metadata.dataset@1[
+  FunctionCall asterix.dataset@1[
     LiteralExpr [STRING] [Movie]
   ]
   AS Variable [ Name=$mv ]

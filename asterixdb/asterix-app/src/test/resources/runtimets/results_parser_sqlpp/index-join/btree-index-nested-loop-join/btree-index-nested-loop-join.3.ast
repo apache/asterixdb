@@ -6,17 +6,17 @@ FieldAccessor [
   Field=tweetid
 ]
 ]
-FROM [  FunctionCall Metadata.dataset@1[
+FROM [  FunctionCall asterix.dataset@1[
     LiteralExpr [STRING] [TwitterUsers]
   ]
   AS Variable [ Name=$tu ]
 ,
-  FunctionCall Metadata.dataset@1[
+  FunctionCall asterix.dataset@1[
     LiteralExpr [STRING] [TweetMessages]
   ]
   AS Variable [ Name=$tm ]
 ,
-  FunctionCall Metadata.dataset@1[
+  FunctionCall asterix.dataset@1[
     LiteralExpr [STRING] [results]
   ]
   AS Variable [ Name=$r ]

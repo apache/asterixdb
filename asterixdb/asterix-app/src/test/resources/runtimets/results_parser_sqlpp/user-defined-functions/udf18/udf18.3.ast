@@ -1,6 +1,6 @@
 DataverseUse test
 Query:
-FunctionCall null.not@1[
+FunctionCall algebricks.not@1[
   FunctionCall test.fn06@0[
   ]
 ]

@@ -58,15 +58,12 @@ import org.apache.asterix.lang.sqlpp.expression.IndependentSubquery;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
 import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
-import org.apache.asterix.metadata.utils.MetadataConstants;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.Counter;
-import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 
 public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleExpressionVisitor {
 
-    protected final FunctionSignature resolveFunction =
-            new FunctionSignature(MetadataConstants.METADATA_DATAVERSE_NAME, "resolve", FunctionIdentifier.VARARGS);
     protected final ScopeChecker scopeChecker = new ScopeChecker();
     protected final LangRewritingContext context;
 
@@ -389,7 +386,7 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
         String varName = SqlppVariableUtil.toUserDefinedVariableName(expr.getVar().getValue()).getValue();
         argList.add(new LiteralExpr(new StringLiteral(varName)));
         argList.addAll(liveVars);
-        return new CallExpr(resolveFunction, argList);
+        return new CallExpr(new FunctionSignature(BuiltinFunctions.RESOLVE), argList);
     }
 
     // Adds a new encountered alias identifier into a scope

@@ -49,7 +49,7 @@ RecordConstructor [
   )
 ]
 ]
-FROM [  FunctionCall Metadata.dataset@1[
+FROM [  FunctionCall asterix.dataset@1[
     LiteralExpr [STRING] [LineItem]
   ]
   AS Variable [ Name=$l ]
@@ -87,7 +87,7 @@ Let Variable [ Name=$cheap ]
     SELECT ELEMENT [
     Variable [ Name=$m ]
     ]
-    FROM [      FunctionCall Metadata.dataset@1[
+    FROM [      FunctionCall asterix.dataset@1[
         LiteralExpr [STRING] [l]
       ]
       AS Variable [ Name=$m ]
@@ -108,7 +108,7 @@ Let Variable [ Name=$expensive ]
     SELECT ELEMENT [
     Variable [ Name=$a ]
     ]
-    FROM [      FunctionCall Metadata.dataset@1[
+    FROM [      FunctionCall asterix.dataset@1[
         LiteralExpr [STRING] [l]
       ]
       AS Variable [ Name=$a ]

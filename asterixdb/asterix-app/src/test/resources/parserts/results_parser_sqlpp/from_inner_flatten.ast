@@ -9,7 +9,7 @@ sensor
 Variable [ Name=$r ]
 reading
 ]
-FROM [  FunctionCall Metadata.dataset@1[
+FROM [  FunctionCall asterix.dataset@1[
     LiteralExpr [STRING] [sensors]
   ]
   AS Variable [ Name=$s ]

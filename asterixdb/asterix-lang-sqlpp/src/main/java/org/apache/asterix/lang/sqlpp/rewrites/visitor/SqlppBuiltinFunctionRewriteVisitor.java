@@ -29,12 +29,12 @@ import org.apache.asterix.lang.common.expression.CallExpr;
 import org.apache.asterix.lang.common.expression.LiteralExpr;
 import org.apache.asterix.lang.common.expression.OperatorExpr;
 import org.apache.asterix.lang.common.literal.TrueLiteral;
+import org.apache.asterix.lang.common.struct.OperatorType;
 import org.apache.asterix.lang.sqlpp.expression.CaseExpression;
 import org.apache.asterix.lang.sqlpp.util.FunctionMapUtil;
 import org.apache.asterix.lang.sqlpp.util.SqlppRewriteUtil;
 import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppSimpleExpressionVisitor;
-import org.apache.asterix.metadata.utils.MetadataConstants;
-import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 
 public class SqlppBuiltinFunctionRewriteVisitor extends AbstractSqlppSimpleExpressionVisitor {
 
@@ -63,8 +63,7 @@ public class SqlppBuiltinFunctionRewriteVisitor extends AbstractSqlppSimpleExpre
             return newCaseExpr;
         }
         // If the CASE expression does not contain a subquery, we rewrite it to a switch-case function call.
-        FunctionSignature functionSignature = new FunctionSignature(MetadataConstants.METADATA_DATAVERSE_NAME,
-                "switch-case", FunctionIdentifier.VARARGS);
+        FunctionSignature functionSignature = new FunctionSignature(BuiltinFunctions.SWITCH_CASE);
         List<Expression> whenExprList = newCaseExpr.getWhenExprs();
         List<Expression> thenExprList = newCaseExpr.getThenExprs();
         List<Expression> newExprList = new ArrayList<>();
@@ -90,7 +89,7 @@ public class SqlppBuiltinFunctionRewriteVisitor extends AbstractSqlppSimpleExpre
             OperatorExpr operatorExpr = new OperatorExpr();
             operatorExpr.addOperand((Expression) SqlppRewriteUtil.deepCopy(expr));
             operatorExpr.addOperand(caseExpr.getConditionExpr());
-            operatorExpr.addOperator("=");
+            operatorExpr.addOperator(OperatorType.EQ);
             normalizedWhenExprs.add(operatorExpr);
         }
         return new CaseExpression(trueLiteral, normalizedWhenExprs, caseExpr.getThenExprs(), caseExpr.getElseExpr());

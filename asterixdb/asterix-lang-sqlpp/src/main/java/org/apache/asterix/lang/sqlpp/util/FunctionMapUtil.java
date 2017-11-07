@@ -36,6 +36,7 @@ import org.apache.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
 
 public class FunctionMapUtil {
 
+    public static final String CONCAT = "concat";
     private final static String CORE_AGGREGATE_PREFIX = "coll_";
     private final static String CORE_SQL_AGGREGATE_PREFIX = "array_";
     private final static String INTERNAL_SQL_AGGREGATE_PREFIX = "sql-";
@@ -44,7 +45,7 @@ public class FunctionMapUtil {
     private static final Map<String, String> LIST_INPUT_FUNCTION_MAP = new HashMap<>();
 
     static {
-        LIST_INPUT_FUNCTION_MAP.put("concat", "string-concat");
+        LIST_INPUT_FUNCTION_MAP.put(CONCAT, BuiltinFunctions.STRING_CONCAT.getName());
         LIST_INPUT_FUNCTION_MAP.put("greatest", CORE_SQL_AGGREGATE_PREFIX + "max");
         LIST_INPUT_FUNCTION_MAP.put("least", CORE_SQL_AGGREGATE_PREFIX + "min");
     }

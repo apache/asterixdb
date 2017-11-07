@@ -18,7 +18,7 @@ RecordConstructor [
   )
 ]
 ]
-FROM [  FunctionCall Metadata.dataset@1[
+FROM [  FunctionCall asterix.dataset@1[
     LiteralExpr [STRING] [DBLP]
   ]
   AS Variable [ Name=$paperDBLP ]
@@ -41,7 +41,7 @@ Let Variable [ Name=$tokensDBLP ]
         SELECT ELEMENT [
         Variable [ Name=$tokenGroupped ]
         ]
-        FROM [          FunctionCall Metadata.dataset@1[
+        FROM [          FunctionCall asterix.dataset@1[
             LiteralExpr [STRING] [DBLP]
           ]
           AS Variable [ Name=$paper ]

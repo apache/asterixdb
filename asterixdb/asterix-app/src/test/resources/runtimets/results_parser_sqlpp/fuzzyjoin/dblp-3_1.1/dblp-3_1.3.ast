@@ -40,7 +40,7 @@ FROM [  (
         LiteralExpr [STRING] [sim]
         :
         IndexAccessor [
-          FunctionCall Metadata.resolve@-1[
+          FunctionCall asterix.resolve@-1[
             LiteralExpr [STRING] [sim]
             Variable [ Name=#5 ]
             Variable [ Name=$lenLeft ]
@@ -59,19 +59,19 @@ FROM [  (
       )
     ]
     ]
-    FROM [      FunctionCall Metadata.dataset@1[
+    FROM [      FunctionCall asterix.dataset@1[
         LiteralExpr [STRING] [DBLP]
       ]
       AS Variable [ Name=$paperLeft ]
 ,
       FunctionCall fuzzyjoin.subset-collection@3[
-        FunctionCall Metadata.resolve@-1[
+        FunctionCall asterix.resolve@-1[
           LiteralExpr [STRING] [tokensLeft]
           Variable [ Name=$paperLeft ]
         ]
         LiteralExpr [LONG] [0]
         FunctionCall fuzzyjoin.prefix-len-jaccard@2[
-          FunctionCall Metadata.resolve@-1[
+          FunctionCall asterix.resolve@-1[
             LiteralExpr [STRING] [lenLeft]
             Variable [ Name=$paperLeft ]
           ]
@@ -80,13 +80,13 @@ FROM [  (
       ]
       AS Variable [ Name=$prefixTokenLeft ]
 ,
-      FunctionCall Metadata.dataset@1[
+      FunctionCall asterix.dataset@1[
         LiteralExpr [STRING] [DBLP]
       ]
       AS Variable [ Name=$paperRight ]
 ,
       FunctionCall fuzzyjoin.subset-collection@3[
-        FunctionCall Metadata.resolve@-1[
+        FunctionCall asterix.resolve@-1[
           LiteralExpr [STRING] [tokensRight]
           Variable [ Name=$paperLeft ]
           Variable [ Name=$paperRight ]
@@ -94,7 +94,7 @@ FROM [  (
         ]
         LiteralExpr [LONG] [0]
         FunctionCall fuzzyjoin.prefix-len-jaccard@2[
-          FunctionCall Metadata.resolve@-1[
+          FunctionCall asterix.resolve@-1[
             LiteralExpr [STRING] [lenRight]
             Variable [ Name=$paperLeft ]
             Variable [ Name=$paperRight ]
@@ -133,7 +133,7 @@ FROM [  (
             SELECT ELEMENT [
             Variable [ Name=$tokenGroupped ]
             ]
-            FROM [              FunctionCall Metadata.dataset@1[
+            FROM [              FunctionCall asterix.dataset@1[
                 LiteralExpr [STRING] [DBLP]
               ]
               AS Variable [ Name=$paper ]
@@ -218,7 +218,7 @@ Variable [ Name=$i ]
             SELECT ELEMENT [
             Variable [ Name=$tokenGroupped ]
             ]
-            FROM [              FunctionCall Metadata.dataset@1[
+            FROM [              FunctionCall asterix.dataset@1[
                 LiteralExpr [STRING] [DBLP]
               ]
               AS Variable [ Name=$paper ]
@@ -337,12 +337,12 @@ Variable [ Name=$i ]
   )
   AS Variable [ Name=$ridpair ]
 ,
-  FunctionCall Metadata.dataset@1[
+  FunctionCall asterix.dataset@1[
     LiteralExpr [STRING] [DBLP]
   ]
   AS Variable [ Name=$paperLeft ]
 ,
-  FunctionCall Metadata.dataset@1[
+  FunctionCall asterix.dataset@1[
     LiteralExpr [STRING] [DBLP]
   ]
   AS Variable [ Name=$paperRight ]

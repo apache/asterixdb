@@ -32,7 +32,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [age]
     :
-    FunctionCall Metadata.resolve@-1[
+    FunctionCall asterix.resolve@-1[
       LiteralExpr [STRING] [age]
       Variable [ Name=$name ]
       Variable [ Name=#1 ]
@@ -40,7 +40,7 @@ RecordConstructor [
   )
 ]
 ]
-FROM [  FunctionCall Metadata.dataset@1[
+FROM [  FunctionCall asterix.dataset@1[
     LiteralExpr [STRING] [Customers]
   ]
   AS Variable [ Name=$c ]
@@ -60,7 +60,7 @@ Groupby
 Orderby
   Variable [ Name=$name ]
   DESC
-  FunctionCall Metadata.resolve@-1[
+  FunctionCall asterix.resolve@-1[
     LiteralExpr [STRING] [age]
     Variable [ Name=$name ]
     Variable [ Name=#1 ]

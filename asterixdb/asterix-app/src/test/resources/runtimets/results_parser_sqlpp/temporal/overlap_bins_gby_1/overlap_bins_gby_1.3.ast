@@ -76,7 +76,7 @@ FROM [  (
       )
     ]
     ]
-    FROM [      FunctionCall Metadata.dataset@1[
+    FROM [      FunctionCall asterix.dataset@1[
         LiteralExpr [STRING] [tsdata]
       ]
       AS Variable [ Name=$i1 ]

@@ -341,7 +341,7 @@ Let Variable [ Name=$supplier_cnt ]
       ]
       FROM [        (
           SELECT ELEMENT [
-          FunctionCall Metadata.resolve@-1[
+          FunctionCall asterix.resolve@-1[
             LiteralExpr [STRING] [t2]
             Variable [ Name=$g ]
             Variable [ Name=$p_brand ]

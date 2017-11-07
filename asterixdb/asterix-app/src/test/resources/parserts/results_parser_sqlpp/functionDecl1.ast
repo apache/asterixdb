@@ -102,7 +102,7 @@ Query:
 Let Variable [ Name=$result ]
   :=
   FunctionCall null.calculate@1[
-    FunctionCall Metadata.resolve@-1[
+    FunctionCall asterix.resolve@-1[
       LiteralExpr [STRING] [Events]
     ]
   ]

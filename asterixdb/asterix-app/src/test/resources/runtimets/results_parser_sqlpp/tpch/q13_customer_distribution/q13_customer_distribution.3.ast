@@ -36,7 +36,7 @@ FROM [  (
             ]
             FROM [              (
                 SELECT ELEMENT [
-                FunctionCall Metadata.resolve@-1[
+                FunctionCall asterix.resolve@-1[
                   LiteralExpr [STRING] [co]
                   Variable [ Name=$g2 ]
                   Variable [ Name=$c_custkey ]
@@ -75,7 +75,7 @@ FROM [  (
                   Field=o_orderkey
                 ]
                 ]
-                FROM [                  FunctionCall Metadata.dataset@1[
+                FROM [                  FunctionCall asterix.dataset@1[
                     LiteralExpr [STRING] [Orders]
                   ]
                   AS Variable [ Name=$o ]
@@ -108,7 +108,7 @@ FROM [  (
           )
         ]
         ]
-        FROM [          FunctionCall Metadata.dataset@1[
+        FROM [          FunctionCall asterix.dataset@1[
             LiteralExpr [STRING] [Customer]
           ]
           AS Variable [ Name=$c ]

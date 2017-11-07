@@ -8,7 +8,7 @@ RecordConstructor [
   )
 ]
 ]
-FROM [  FunctionCall Metadata.dataset@1[
+FROM [  FunctionCall asterix.dataset@1[
     LiteralExpr [STRING] [Event]
   ]
   AS Variable [ Name=$event ]
@@ -28,7 +28,7 @@ Let Variable [ Name=$collocated_events ]
       )
     ]
     ]
-    FROM [      FunctionCall Metadata.dataset@1[
+    FROM [      FunctionCall asterix.dataset@1[
         LiteralExpr [STRING] [Events]
       ]
       AS Variable [ Name=$collocated_event ]

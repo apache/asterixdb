@@ -28,7 +28,7 @@ FunctionCall asterix.sql-max@1[
 ]
 maximum
 ]
-FROM [  FunctionCall Metadata.dataset@1[
+FROM [  FunctionCall asterix.dataset@1[
     LiteralExpr [STRING] [testdst]
   ]
   AS Variable [ Name=$t ]

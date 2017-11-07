@@ -68,7 +68,7 @@ public class ExpressionTypeComputer implements IExpressionTypeComputer {
         FunctionIdentifier fi = expr.getFunctionIdentifier();
         // Note: built-in functions + udfs
         IResultTypeComputer rtc;
-        FunctionSignature signature = new FunctionSignature(fi.getNamespace(), fi.getName(), fi.getArity());
+        FunctionSignature signature = new FunctionSignature(fi);
         if (BuiltinFunctions.isBuiltinCompilerFunction(signature, true)) {
             rtc = BuiltinFunctions.getResultTypeComputer(fi);
         } else {

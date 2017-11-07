@@ -11,7 +11,7 @@ FunctionCall asterix.avg@1[
       ]
     ]
     ]
-    FROM [      FunctionCall Metadata.dataset@1[
+    FROM [      FunctionCall asterix.dataset@1[
         LiteralExpr [STRING] [FacebookMessages]
       ]
       AS Variable [ Name=$message ]

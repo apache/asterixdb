@@ -6,7 +6,7 @@ FieldAccessor [
   Field=zip
 ]
 ]
-FROM [  FunctionCall Metadata.dataset@1[
+FROM [  FunctionCall asterix.dataset@1[
     LiteralExpr [STRING] [testds]
   ]
   AS Variable [ Name=$l ]

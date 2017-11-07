@@ -25,14 +25,14 @@ RecordConstructor [
           Field=value
         ]
         ]
-        FROM [          FunctionCall Metadata.dataset@1[
+        FROM [          FunctionCall asterix.dataset@1[
             LiteralExpr [STRING] [i]
           ]
           AS Variable [ Name=$j ]
         ]
         Where
-          FunctionCall null.not@1[
-            FunctionCall null.is-null@1[
+          FunctionCall algebricks.not@1[
+            FunctionCall algebricks.is-null@1[
               FieldAccessor [
                 Variable [ Name=$j ]
                 Field=value
@@ -44,7 +44,7 @@ RecordConstructor [
   )
 ]
 ]
-FROM [  FunctionCall Metadata.dataset@1[
+FROM [  FunctionCall asterix.dataset@1[
     LiteralExpr [STRING] [test]
   ]
   AS Variable [ Name=$i ]

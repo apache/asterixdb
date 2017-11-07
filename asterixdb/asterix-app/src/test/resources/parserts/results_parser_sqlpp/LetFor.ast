@@ -1,7 +1,7 @@
 Query:
 Let Variable [ Name=$users ]
   :=
-  FunctionCall Metadata.resolve@-1[
+  FunctionCall asterix.resolve@-1[
     LiteralExpr [STRING] [User]
   ]
 SELECT ELEMENT [

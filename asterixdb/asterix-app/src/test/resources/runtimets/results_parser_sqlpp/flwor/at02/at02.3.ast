@@ -50,19 +50,19 @@ RecordConstructor [
 
         )
         AS Variable [ Name=$a ]
- AT 
+ AT
 Variable [ Name=$p ]
       ]
     )
   )
 ]
 ]
-FROM [  FunctionCall Metadata.dataset@1[
+FROM [  FunctionCall asterix.dataset@1[
     LiteralExpr [STRING] [FacebookUsers]
   ]
   AS Variable [ Name=$u ]
 ,
-  FunctionCall Metadata.dataset@1[
+  FunctionCall asterix.dataset@1[
     LiteralExpr [STRING] [FacebookMessages]
   ]
   AS Variable [ Name=$m ]

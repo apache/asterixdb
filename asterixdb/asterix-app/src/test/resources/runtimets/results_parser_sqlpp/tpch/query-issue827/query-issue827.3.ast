@@ -12,7 +12,7 @@ RecordConstructor [
           Field=l_quantity
         ]
         ]
-        FROM [          FunctionCall Metadata.dataset@1[
+        FROM [          FunctionCall asterix.dataset@1[
             LiteralExpr [STRING] [LineItem]
           ]
           AS Variable [ Name=$l ]
@@ -35,7 +35,7 @@ RecordConstructor [
               Field=l_extendedprice
             ]
             ]
-            FROM [              FunctionCall Metadata.dataset@1[
+            FROM [              FunctionCall asterix.dataset@1[
                 LiteralExpr [STRING] [LineItem]
               ]
               AS Variable [ Name=$l ]

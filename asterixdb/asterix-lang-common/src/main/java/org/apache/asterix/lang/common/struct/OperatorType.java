@@ -18,9 +18,6 @@
  */
 package org.apache.asterix.lang.common.struct;
 
-import java.util.Arrays;
-import java.util.Optional;
-
 public enum OperatorType {
     OR("or"),
     AND("and"),
@@ -47,6 +44,8 @@ public enum OperatorType {
     BETWEEN("between"),
     NOT_BETWEEN("not_between");
 
+    private static final OperatorType[] VALUES = values();
+
     private final String symbol;
 
     OperatorType(String s) {
@@ -58,7 +57,12 @@ public enum OperatorType {
         return symbol;
     }
 
-    public static Optional<OperatorType> fromSymbol(String symbol) {
-        return Arrays.stream(OperatorType.values()).filter(o -> o.symbol.equals(symbol)).findFirst();
+    public static OperatorType fromSymbol(String symbol) {
+        for (OperatorType opType : VALUES) {
+            if (opType.symbol.equals(symbol)) {
+                return opType;
+            }
+        }
+        return null;
     }
 }

@@ -9,14 +9,14 @@ FunctionCall asterix.sql-sum@1[
       Field=sal
     ]
     ]
-    FROM [      FunctionCall Metadata.dataset@1[
+    FROM [      FunctionCall asterix.dataset@1[
         LiteralExpr [STRING] [tdst]
       ]
       AS Variable [ Name=$l ]
     ]
     Where
-      FunctionCall null.not@1[
-        FunctionCall null.is-null@1[
+      FunctionCall algebricks.not@1[
+        FunctionCall algebricks.is-null@1[
           FieldAccessor [
             Variable [ Name=$l ]
             Field=sal

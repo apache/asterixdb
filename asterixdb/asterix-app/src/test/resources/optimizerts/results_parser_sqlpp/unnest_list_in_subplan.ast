@@ -32,7 +32,7 @@ RecordConstructor [
   )
 ]
 ]
-FROM [  FunctionCall Metadata.dataset@1[
+FROM [  FunctionCall asterix.dataset@1[
     LiteralExpr [STRING] [DBLP]
   ]
   AS Variable [ Name=$paperDBLP ]
@@ -63,7 +63,7 @@ Let Variable [ Name=$tokensDBLP ]
     FROM [      Variable [ Name=$tokensUnrankedDBLP ]
       AS Variable [ Name=$tokenUnranked ]
 ,
-      FunctionCall Metadata.dataset@1[
+      FunctionCall asterix.dataset@1[
         LiteralExpr [STRING] [TOKENSRANKEDADM]
       ]
       AS Variable [ Name=$tokenRanked ]

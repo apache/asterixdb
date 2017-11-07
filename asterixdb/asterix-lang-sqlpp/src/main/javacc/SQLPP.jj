@@ -64,6 +64,7 @@ import org.apache.asterix.common.annotations.UndeclaredFieldsDataGen;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.functions.FunctionConstants;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.Literal;
@@ -165,6 +166,7 @@ import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
 import org.apache.asterix.lang.sqlpp.util.ExpressionToVariableUtil;
 import org.apache.asterix.lang.sqlpp.util.FunctionMapUtil;
 import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionAnnotation;
@@ -1856,7 +1858,7 @@ Expression NotExpr()throws ParseException:
   (<NOT> { not = true; } )? inputExpr = RelExpr()
   {
     if(not){
-        FunctionSignature signature = new FunctionSignature(null, "not", 1);
+        FunctionSignature signature = new FunctionSignature(BuiltinFunctions.NOT);
         return new CallExpr(signature, new ArrayList<Expression>(Collections.singletonList(inputExpr)));
     } else {
         return inputExpr;
@@ -1985,16 +1987,22 @@ Expression IsExpr() throws ParseException:
     Expression expr = null;
     Expression operand = null;
     boolean not = false;
+    FunctionIdentifier fn = null;
 }
 {
     operand = LikeExpr()
-    ( <IS> (<NOT> { not = true; })? (<NULL> | <MISSING> | <UNKOWN>)
+    ( <IS>
+        (<NOT> { not = true; })?
+        (
+            <NULL> { fn = BuiltinFunctions.IS_NULL; } |
+            <MISSING> { fn = BuiltinFunctions.IS_MISSING; } |
+            <UNKOWN> { fn = BuiltinFunctions.IS_UNKNOWN; }
+        )
       {
-        String functionName = "is-" + token.image.toLowerCase();
-        FunctionSignature signature = new FunctionSignature(null, functionName, 1);
+        FunctionSignature signature = new FunctionSignature(fn);
         expr = new CallExpr(signature, new ArrayList<Expression>(Collections.singletonList(operand)));
         if(not) {
-           FunctionSignature notSignature = new FunctionSignature(null, "not", 1);
+           FunctionSignature notSignature = new FunctionSignature(BuiltinFunctions.NOT);
            expr = new CallExpr(notSignature, new ArrayList<Expression>(Collections.singletonList(expr)));
         }
       }

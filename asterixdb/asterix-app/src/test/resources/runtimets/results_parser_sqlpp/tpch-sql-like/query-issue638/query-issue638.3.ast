@@ -57,7 +57,7 @@ FROM [  (
       )
     ]
     ]
-    FROM [      FunctionCall Metadata.dataset@1[
+    FROM [      FunctionCall asterix.dataset@1[
         LiteralExpr [STRING] [Orders]
       ]
       AS Variable [ Name=$o ]
@@ -115,7 +115,7 @@ FROM [  (
           )
         ]
         ]
-        FROM [          FunctionCall Metadata.dataset@1[
+        FROM [          FunctionCall asterix.dataset@1[
             LiteralExpr [STRING] [Part]
           ]
           AS Variable [ Name=$p ]
@@ -181,7 +181,7 @@ FROM [  (
               )
             ]
             ]
-            FROM [              FunctionCall Metadata.dataset@1[
+            FROM [              FunctionCall asterix.dataset@1[
                 LiteralExpr [STRING] [Partsupp]
               ]
               AS Variable [ Name=$ps ]
@@ -268,12 +268,12 @@ FROM [  (
                       )
                     ]
                     ]
-                    FROM [                      FunctionCall Metadata.dataset@1[
+                    FROM [                      FunctionCall asterix.dataset@1[
                         LiteralExpr [STRING] [Supplier]
                       ]
                       AS Variable [ Name=$s ]
 ,
-                      FunctionCall Metadata.dataset@1[
+                      FunctionCall asterix.dataset@1[
                         LiteralExpr [STRING] [Nation]
                       ]
                       AS Variable [ Name=$n ]
@@ -293,7 +293,7 @@ FROM [  (
                   )
                   AS Variable [ Name=$s1 ]
 ,
-                  FunctionCall Metadata.dataset@1[
+                  FunctionCall asterix.dataset@1[
                     LiteralExpr [STRING] [LineItem]
                   ]
                   AS Variable [ Name=$l ]

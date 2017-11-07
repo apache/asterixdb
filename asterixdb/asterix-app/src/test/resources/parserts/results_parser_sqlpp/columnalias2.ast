@@ -3,7 +3,7 @@ SELECT [
 FunctionCall null.sqrt@1[
   OperatorExpr [
     FieldAccessor [
-      FunctionCall Metadata.resolve@-1[
+      FunctionCall asterix.resolve@-1[
         LiteralExpr [STRING] [t]
         Variable [ Name=$u ]
         Variable [ Name=#1 ]
@@ -13,7 +13,7 @@ FunctionCall null.sqrt@1[
     ]
     *
     FieldAccessor [
-      FunctionCall Metadata.resolve@-1[
+      FunctionCall asterix.resolve@-1[
         LiteralExpr [STRING] [t]
         Variable [ Name=$u ]
         Variable [ Name=#1 ]
@@ -25,7 +25,7 @@ FunctionCall null.sqrt@1[
 ]
 root
 ]
-FROM [  FunctionCall Metadata.dataset@1[
+FROM [  FunctionCall asterix.dataset@1[
     LiteralExpr [STRING] [tbl_name]
   ]
   AS Variable [ Name=$root ]
@@ -45,7 +45,7 @@ Groupby
 Let Variable [ Name=$u ]
   :=
   FieldAccessor [
-    FunctionCall Metadata.resolve@-1[
+    FunctionCall asterix.resolve@-1[
       LiteralExpr [STRING] [root]
       Variable [ Name=#1 ]
       Variable [ Name=$id ]
@@ -55,7 +55,7 @@ Let Variable [ Name=$u ]
  HAVING
   OperatorExpr [
     FieldAccessor [
-      FunctionCall Metadata.resolve@-1[
+      FunctionCall asterix.resolve@-1[
         LiteralExpr [STRING] [root]
         Variable [ Name=$u ]
         Variable [ Name=#1 ]

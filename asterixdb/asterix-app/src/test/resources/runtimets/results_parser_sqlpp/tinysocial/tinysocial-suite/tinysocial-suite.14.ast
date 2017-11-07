@@ -6,7 +6,7 @@ FunctionCall asterix.count@1[
     SELECT ELEMENT [
     Variable [ Name=$fbu ]
     ]
-    FROM [      FunctionCall Metadata.dataset@1[
+    FROM [      FunctionCall asterix.dataset@1[
         LiteralExpr [STRING] [FacebookUsers]
       ]
       AS Variable [ Name=$fbu ]

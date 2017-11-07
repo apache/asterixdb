@@ -18,7 +18,7 @@ RecordConstructor [
   )
 ]
 ]
-FROM [  FunctionCall Metadata.dataset@1[
+FROM [  FunctionCall asterix.dataset@1[
     LiteralExpr [STRING] [Event]
   ]
   AS Variable [ Name=$event ]
@@ -61,7 +61,7 @@ Let Variable [ Name=$sig_sponsorship_count ]
   FunctionCall asterix.sql-count@1[
     (
       SELECT ELEMENT [
-      FunctionCall Metadata.resolve@-1[
+      FunctionCall asterix.resolve@-1[
         LiteralExpr [STRING] [es]
         Variable [ Name=$sponsor ]
         Variable [ Name=$event ]
@@ -91,7 +91,7 @@ Let Variable [ Name=$by_chapter ]
         FunctionCall asterix.sql-count@1[
           (
             SELECT ELEMENT [
-            FunctionCall Metadata.resolve@-1[
+            FunctionCall asterix.resolve@-1[
               LiteralExpr [STRING] [es]
               Variable [ Name=#4 ]
               Variable [ Name=$sponsor ]
@@ -111,7 +111,7 @@ Let Variable [ Name=$by_chapter ]
       )
     ]
     ]
-    FROM [      FunctionCall Metadata.dataset@1[
+    FROM [      FunctionCall asterix.dataset@1[
         LiteralExpr [STRING] [es]
       ]
       AS Variable [ Name=$e ]

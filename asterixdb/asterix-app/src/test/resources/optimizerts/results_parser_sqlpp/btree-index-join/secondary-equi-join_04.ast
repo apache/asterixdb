@@ -12,12 +12,12 @@ Query:
 SELECT [
 *
 ]
-FROM [  FunctionCall Metadata.dataset@1[
+FROM [  FunctionCall asterix.dataset@1[
     LiteralExpr [STRING] [testdst]
   ]
   AS Variable [ Name=$a ]
   INNER JOIN
-    FunctionCall Metadata.dataset@1[
+    FunctionCall asterix.dataset@1[
       LiteralExpr [STRING] [testdst2]
     ]
     AS Variable [ Name=$b ]
@@ -34,7 +34,7 @@ FROM [  FunctionCall Metadata.dataset@1[
       ]
     ]
   INNER JOIN
-    FunctionCall Metadata.dataset@1[
+    FunctionCall asterix.dataset@1[
       LiteralExpr [STRING] [testdst3]
     ]
     AS Variable [ Name=$c ]

@@ -61,7 +61,7 @@ Let Variable [ Name=$x ]
         ]
       ]
       Satifies [
-        FunctionCall null.not@1[
+        FunctionCall algebricks.not@1[
           Variable [ Name=$x ]
         ]
       ]
@@ -75,7 +75,7 @@ Let Variable [ Name=$x ]
         ]
       ]
       Satifies [
-        FunctionCall null.not@1[
+        FunctionCall algebricks.not@1[
           Variable [ Name=$x ]
         ]
       ]
@@ -89,7 +89,7 @@ Let Variable [ Name=$x ]
         ]
       ]
       Satifies [
-        FunctionCall null.not@1[
+        FunctionCall algebricks.not@1[
           Variable [ Name=$x ]
         ]
       ]
@@ -103,7 +103,7 @@ Let Variable [ Name=$x ]
         ]
       ]
       Satifies [
-        FunctionCall null.not@1[
+        FunctionCall algebricks.not@1[
           Variable [ Name=$x ]
         ]
       ]

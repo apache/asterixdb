@@ -92,12 +92,18 @@ public class OperatorExpr extends AbstractExpression {
     }
 
     public void addOperator(String strOp) throws CompilationException {
-        Optional<OperatorType> op = OperatorType.fromSymbol(strOp);
-        if (op.isPresent()) {
-            opList.add(op.get());
-        } else {
+        OperatorType op = OperatorType.fromSymbol(strOp);
+        if (op == null) {
             throw new CompilationException("Unsupported operator: " + strOp);
         }
+        addOperator(op);
+    }
+
+    public void addOperator(OperatorType op) throws CompilationException {
+        if (op == null) {
+            throw new NullPointerException();
+        }
+        opList.add(op);
     }
 
     @Override

@@ -36,7 +36,7 @@ RecordConstructor [
   )
 ]
 ]
-FROM [  FunctionCall Metadata.dataset@1[
+FROM [  FunctionCall asterix.dataset@1[
     LiteralExpr [STRING] [Users]
   ]
   AS Variable [ Name=$user ]
@@ -57,7 +57,7 @@ Let Variable [ Name=$tokens ]
         SELECT ELEMENT [
         Variable [ Name=$item ]
         ]
-        FROM [          FunctionCall Metadata.dataset@1[
+        FROM [          FunctionCall asterix.dataset@1[
             LiteralExpr [STRING] [Users]
           ]
           AS Variable [ Name=$user ]

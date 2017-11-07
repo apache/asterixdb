@@ -35,22 +35,22 @@ RecordConstructor [
   )
 ]
 ]
-FROM [  FunctionCall Metadata.dataset@1[
+FROM [  FunctionCall asterix.dataset@1[
     LiteralExpr [STRING] [DBLP]
   ]
   AS Variable [ Name=$paperDBLP ]
 ,
-  FunctionCall Metadata.dataset@1[
+  FunctionCall asterix.dataset@1[
     LiteralExpr [STRING] [tokensDBLP]
   ]
   AS Variable [ Name=$prefixTokenDBLP ]
 ,
-  FunctionCall Metadata.dataset@1[
+  FunctionCall asterix.dataset@1[
     LiteralExpr [STRING] [CSX]
   ]
   AS Variable [ Name=$paperCSX ]
 ,
-  FunctionCall Metadata.dataset@1[
+  FunctionCall asterix.dataset@1[
     LiteralExpr [STRING] [tokensCSX]
   ]
   AS Variable [ Name=$prefixTokenCSX ]
@@ -85,14 +85,14 @@ Let Variable [ Name=$tokensDBLP ]
           Field=title
         ]
         ]
-        FROM [          FunctionCall Metadata.dataset@1[
+        FROM [          FunctionCall asterix.dataset@1[
             LiteralExpr [STRING] [DBLP]
           ]
           AS Variable [ Name=$paper ]
         ]
       )
       AS Variable [ Name=$tokenRanked ]
- AT 
+ AT
 Variable [ Name=$i ]
     ]
     Where
@@ -136,14 +136,14 @@ Let Variable [ Name=$tokensCSX ]
           Field=title
         ]
         ]
-        FROM [          FunctionCall Metadata.dataset@1[
+        FROM [          FunctionCall asterix.dataset@1[
             LiteralExpr [STRING] [DBLP]
           ]
           AS Variable [ Name=$paper ]
         ]
       )
       AS Variable [ Name=$tokenRanked ]
- AT 
+ AT
 Variable [ Name=$i ]
     ]
     Where

@@ -4,21 +4,21 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [not_x]
     :
-    FunctionCall null.not@1[
+    FunctionCall algebricks.not@1[
       LiteralExpr [TRUE]
     ]
   )
   (
     LiteralExpr [STRING] [not_y]
     :
-    FunctionCall null.not@1[
+    FunctionCall algebricks.not@1[
       LiteralExpr [FALSE]
     ]
   )
   (
     LiteralExpr [STRING] [not_z]
     :
-    FunctionCall null.not@1[
+    FunctionCall algebricks.not@1[
       LiteralExpr [NULL]
     ]
   )

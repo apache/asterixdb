@@ -6,7 +6,7 @@ FunctionCall asterix.count@1[
     SELECT ELEMENT [
     Variable [ Name=$h ]
     ]
-    FROM [      FunctionCall Metadata.dataset@1[
+    FROM [      FunctionCall asterix.dataset@1[
         LiteralExpr [STRING] [HandbookUsers]
       ]
       AS Variable [ Name=$h ]

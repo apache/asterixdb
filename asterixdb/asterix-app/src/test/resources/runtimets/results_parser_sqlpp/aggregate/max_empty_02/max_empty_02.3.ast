@@ -9,7 +9,7 @@ FunctionCall asterix.max@1[
       Field=val
     ]
     ]
-    FROM [      FunctionCall Metadata.dataset@1[
+    FROM [      FunctionCall asterix.dataset@1[
         LiteralExpr [STRING] [Test]
       ]
       AS Variable [ Name=$x ]

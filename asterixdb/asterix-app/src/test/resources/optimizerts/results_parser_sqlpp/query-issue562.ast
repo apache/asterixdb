@@ -144,7 +144,7 @@ Let Variable [ Name=$avg ]
         Field=c_acctbal
       ]
       ]
-      FROM [        FunctionCall Metadata.dataset@1[
+      FROM [        FunctionCall asterix.dataset@1[
           LiteralExpr [STRING] [Customer]
         ]
         AS Variable [ Name=$c ]
@@ -227,7 +227,7 @@ RecordConstructor [
     LiteralExpr [STRING] [numcust]
     :
     FunctionCall asterix.count@1[
-      FunctionCall Metadata.resolve@-1[
+      FunctionCall asterix.resolve@-1[
         LiteralExpr [STRING] [ct]
         Variable [ Name=$cntrycode ]
         Variable [ Name=#1 ]
@@ -245,7 +245,7 @@ RecordConstructor [
           Field=c_acctbal
         ]
         ]
-        FROM [          FunctionCall Metadata.dataset@1[
+        FROM [          FunctionCall asterix.dataset@1[
             LiteralExpr [STRING] [ct]
           ]
           AS Variable [ Name=$i ]
@@ -266,7 +266,7 @@ Where
         SELECT ELEMENT [
         Variable [ Name=$o ]
         ]
-        FROM [          FunctionCall Metadata.dataset@1[
+        FROM [          FunctionCall asterix.dataset@1[
             LiteralExpr [STRING] [Orders]
           ]
           AS Variable [ Name=$o ]

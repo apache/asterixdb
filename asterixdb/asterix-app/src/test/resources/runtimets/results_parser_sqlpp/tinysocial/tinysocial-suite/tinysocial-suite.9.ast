@@ -20,7 +20,7 @@ RecordConstructor [
         Field=message
       ]
       ]
-      FROM [        FunctionCall Metadata.dataset@1[
+      FROM [        FunctionCall asterix.dataset@1[
           LiteralExpr [STRING] [FacebookMessages]
         ]
         AS Variable [ Name=$message ]
@@ -48,7 +48,7 @@ RecordConstructor [
   )
 ]
 ]
-FROM [  FunctionCall Metadata.dataset@1[
+FROM [  FunctionCall asterix.dataset@1[
     LiteralExpr [STRING] [FacebookUsers]
   ]
   AS Variable [ Name=$user ]

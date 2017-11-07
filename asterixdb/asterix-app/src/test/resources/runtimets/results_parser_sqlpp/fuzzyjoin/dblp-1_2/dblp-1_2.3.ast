@@ -4,7 +4,7 @@ Query:
 SELECT ELEMENT [
 Variable [ Name=$tokenGroupped ]
 ]
-FROM [  FunctionCall Metadata.dataset@1[
+FROM [  FunctionCall asterix.dataset@1[
     LiteralExpr [STRING] [DBLP]
   ]
   AS Variable [ Name=$paper ]
@@ -37,7 +37,7 @@ Orderby
   FunctionCall asterix.sql-count@1[
     (
       SELECT ELEMENT [
-      FunctionCall Metadata.resolve@-1[
+      FunctionCall asterix.resolve@-1[
         LiteralExpr [STRING] [paperid]
         Variable [ Name=$token ]
         Variable [ Name=$paper ]

@@ -46,20 +46,20 @@ FROM [  (
       )
     ]
     ]
-    FROM [      FunctionCall Metadata.dataset@1[
+    FROM [      FunctionCall asterix.dataset@1[
         LiteralExpr [STRING] [DBLP]
       ]
       AS Variable [ Name=$paperDBLP ]
 ,
       FunctionCall fuzzyjoin.subset-collection@3[
-        FunctionCall Metadata.resolve@-1[
+        FunctionCall asterix.resolve@-1[
           LiteralExpr [STRING] [tokensDBLP]
           Variable [ Name=$paperDBLP ]
         ]
         LiteralExpr [LONG] [0]
         FunctionCall fuzzyjoin.prefix-len-jaccard@2[
           FunctionCall fuzzyjoin.len@1[
-            FunctionCall Metadata.resolve@-1[
+            FunctionCall asterix.resolve@-1[
               LiteralExpr [STRING] [tokensDBLP]
               Variable [ Name=$paperDBLP ]
             ]
@@ -69,13 +69,13 @@ FROM [  (
       ]
       AS Variable [ Name=$prefixTokenDBLP ]
 ,
-      FunctionCall Metadata.dataset@1[
+      FunctionCall asterix.dataset@1[
         LiteralExpr [STRING] [CSX]
       ]
       AS Variable [ Name=$paperCSX ]
 ,
       FunctionCall fuzzyjoin.subset-collection@3[
-        FunctionCall Metadata.resolve@-1[
+        FunctionCall asterix.resolve@-1[
           LiteralExpr [STRING] [tokensCSX]
           Variable [ Name=$prefixTokenDBLP ]
           Variable [ Name=$paperDBLP ]
@@ -84,7 +84,7 @@ FROM [  (
         LiteralExpr [LONG] [0]
         FunctionCall fuzzyjoin.prefix-len-jaccard@2[
           FunctionCall fuzzyjoin.len@1[
-            FunctionCall Metadata.resolve@-1[
+            FunctionCall asterix.resolve@-1[
               LiteralExpr [STRING] [tokensCSX]
               Variable [ Name=$prefixTokenDBLP ]
               Variable [ Name=$paperDBLP ]
@@ -114,7 +114,7 @@ FROM [  (
             SELECT ELEMENT [
             Variable [ Name=$tokenGroupped ]
             ]
-            FROM [              FunctionCall Metadata.dataset@1[
+            FROM [              FunctionCall asterix.dataset@1[
                 LiteralExpr [STRING] [DBLP]
               ]
               AS Variable [ Name=$paper ]
@@ -147,7 +147,7 @@ FROM [  (
               FunctionCall asterix.sql-count@1[
                 (
                   SELECT ELEMENT [
-                  FunctionCall Metadata.resolve@-1[
+                  FunctionCall asterix.resolve@-1[
                     LiteralExpr [STRING] [id]
                     Variable [ Name=$prefixTokenCSX ]
                     Variable [ Name=$token ]
@@ -204,7 +204,7 @@ Variable [ Name=$i ]
             SELECT ELEMENT [
             Variable [ Name=$tokenGroupped ]
             ]
-            FROM [              FunctionCall Metadata.dataset@1[
+            FROM [              FunctionCall asterix.dataset@1[
                 LiteralExpr [STRING] [DBLP]
               ]
               AS Variable [ Name=$paper ]
@@ -237,7 +237,7 @@ Variable [ Name=$i ]
               FunctionCall asterix.sql-count@1[
                 (
                   SELECT ELEMENT [
-                  FunctionCall Metadata.resolve@-1[
+                  FunctionCall asterix.resolve@-1[
                     LiteralExpr [STRING] [id]
                     Variable [ Name=#4 ]
                     Variable [ Name=$prefixTokenCSX ]
@@ -342,12 +342,12 @@ Variable [ Name=$i ]
   )
   AS Variable [ Name=$ridpair ]
 ,
-  FunctionCall Metadata.dataset@1[
+  FunctionCall asterix.dataset@1[
     LiteralExpr [STRING] [DBLP]
   ]
   AS Variable [ Name=$paperDBLP ]
 ,
-  FunctionCall Metadata.dataset@1[
+  FunctionCall asterix.dataset@1[
     LiteralExpr [STRING] [CSX]
   ]
   AS Variable [ Name=$paperCSX ]

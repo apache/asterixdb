@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.functions.FunctionConstants;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.ILangExpression;
@@ -35,12 +36,12 @@ import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.common.struct.OperatorType;
 import org.apache.asterix.lang.common.struct.QuantifiedPair;
+import org.apache.asterix.lang.sqlpp.util.FunctionMapUtil;
 import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppExpressionScopingVisitor;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionAnnotation;
 
 public class OperatorExpressionVisitor extends AbstractSqlppExpressionScopingVisitor {
-
-    private static final String CONCAT = "concat";
 
     public OperatorExpressionVisitor(LangRewritingContext context) {
         super(context);
@@ -75,12 +76,17 @@ public class OperatorExpressionVisitor extends AbstractSqlppExpressionScopingVis
     }
 
     private Expression processLikeOperator(OperatorExpr operatorExpr, OperatorType opType) {
-        Expression likeExpr = new CallExpr(new FunctionSignature(null, "like", 2), operatorExpr.getExprList());
-        if (opType == OperatorType.LIKE) {
-            return likeExpr;
+        Expression likeExpr =
+                new CallExpr(new FunctionSignature(BuiltinFunctions.STRING_LIKE), operatorExpr.getExprList());
+        switch (opType) {
+            case LIKE:
+                return likeExpr;
+            case NOT_LIKE:
+                return new CallExpr(new FunctionSignature(BuiltinFunctions.NOT),
+                        new ArrayList<>(Collections.singletonList(likeExpr)));
+            default:
+                throw new IllegalArgumentException(String.valueOf(opType));
         }
-        return new CallExpr(new FunctionSignature(null, "not", 1),
- new ArrayList<>(Collections.singletonList(likeExpr)));
     }
 
     private Expression processInOperator(OperatorExpr operatorExpr, OperatorType opType) throws CompilationException {
@@ -92,11 +98,11 @@ public class OperatorExpressionVisitor extends AbstractSqlppExpressionScopingVis
         comparison.addOperand(bindingVar);
         comparison.setCurrentop(true);
         if (opType == OperatorType.IN) {
-            comparison.addOperator("=");
+            comparison.addOperator(OperatorType.EQ);
             return new QuantifiedExpression(Quantifier.SOME, new ArrayList<>(
                     Collections.singletonList(new QuantifiedPair(bindingVar, collectionExpr))), comparison);
         } else {
-            comparison.addOperator("!=");
+            comparison.addOperator(OperatorType.NEQ);
             return new QuantifiedExpression(Quantifier.EVERY, new ArrayList<>(
                     Collections.singletonList(new QuantifiedPair(bindingVar, collectionExpr))), comparison);
         }
@@ -104,7 +110,8 @@ public class OperatorExpressionVisitor extends AbstractSqlppExpressionScopingVis
 
     private Expression processConcatOperator(OperatorExpr operatorExpr) {
         // All operators have to be "||"s (according to the grammar).
-        return new CallExpr(new FunctionSignature(null, CONCAT, 1), operatorExpr.getExprList());
+        return new CallExpr(new FunctionSignature(FunctionConstants.ASTERIX_NS, FunctionMapUtil.CONCAT, 1),
+                operatorExpr.getExprList());
     }
 
     private Expression processBetweenOperator(OperatorExpr operatorExpr, OperatorType opType)
@@ -121,9 +128,9 @@ public class OperatorExpressionVisitor extends AbstractSqlppExpressionScopingVis
         OperatorExpr andExpr = new OperatorExpr();
         andExpr.addOperand(leftComparison);
         andExpr.addOperand(rightComparison);
-        andExpr.addOperator("and");
-        return opType == OperatorType.BETWEEN ? andExpr :
-                new CallExpr(new FunctionSignature(null, "not", 1),
+        andExpr.addOperator(OperatorType.AND);
+        return opType == OperatorType.BETWEEN ? andExpr
+                : new CallExpr(new FunctionSignature(BuiltinFunctions.NOT),
                         new ArrayList<>(Collections.singletonList(andExpr)));
     }
 
@@ -132,7 +139,7 @@ public class OperatorExpressionVisitor extends AbstractSqlppExpressionScopingVis
         OperatorExpr comparison = new OperatorExpr();
         comparison.addOperand(lhs);
         comparison.addOperand(rhs);
-        comparison.addOperator("<=");
+        comparison.addOperator(OperatorType.LE);
         if (hints != null) {
             for (IExpressionAnnotation hint : hints) {
                 comparison.addHint(hint);

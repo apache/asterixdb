@@ -16,7 +16,7 @@ FunctionCall asterix.sql-count@1[
 ]
 count
 ]
-FROM [  FunctionCall Metadata.dataset@1[
+FROM [  FunctionCall asterix.dataset@1[
     LiteralExpr [STRING] [LineItem]
   ]
   AS Variable [ Name=$l ]

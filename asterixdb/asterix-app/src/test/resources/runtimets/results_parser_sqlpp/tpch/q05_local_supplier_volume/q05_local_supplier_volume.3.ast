@@ -14,7 +14,7 @@ RecordConstructor [
   )
 ]
 ]
-FROM [  FunctionCall Metadata.dataset@1[
+FROM [  FunctionCall asterix.dataset@1[
     LiteralExpr [STRING] [Customer]
   ]
   AS Variable [ Name=$c ]
@@ -64,7 +64,7 @@ FROM [  FunctionCall Metadata.dataset@1[
       )
     ]
     ]
-    FROM [      FunctionCall Metadata.dataset@1[
+    FROM [      FunctionCall asterix.dataset@1[
         LiteralExpr [STRING] [Orders]
       ]
       AS Variable [ Name=$o ]
@@ -114,7 +114,7 @@ FROM [  FunctionCall Metadata.dataset@1[
           )
         ]
         ]
-        FROM [          FunctionCall Metadata.dataset@1[
+        FROM [          FunctionCall asterix.dataset@1[
             LiteralExpr [STRING] [LineItem]
           ]
           AS Variable [ Name=$l ]
@@ -148,7 +148,7 @@ FROM [  FunctionCall Metadata.dataset@1[
               )
             ]
             ]
-            FROM [              FunctionCall Metadata.dataset@1[
+            FROM [              FunctionCall asterix.dataset@1[
                 LiteralExpr [STRING] [Supplier]
               ]
               AS Variable [ Name=$s ]
@@ -174,12 +174,12 @@ FROM [  FunctionCall Metadata.dataset@1[
                   )
                 ]
                 ]
-                FROM [                  FunctionCall Metadata.dataset@1[
+                FROM [                  FunctionCall asterix.dataset@1[
                     LiteralExpr [STRING] [Nation]
                   ]
                   AS Variable [ Name=$n ]
 ,
-                  FunctionCall Metadata.dataset@1[
+                  FunctionCall asterix.dataset@1[
                     LiteralExpr [STRING] [Region]
                   ]
                   AS Variable [ Name=$r ]
@@ -326,7 +326,7 @@ Let Variable [ Name=$revenue ]
       ]
       FROM [        (
           SELECT ELEMENT [
-          FunctionCall Metadata.resolve@-1[
+          FunctionCall asterix.resolve@-1[
             LiteralExpr [STRING] [o1]
             Variable [ Name=$g ]
             Variable [ Name=$n_name ]

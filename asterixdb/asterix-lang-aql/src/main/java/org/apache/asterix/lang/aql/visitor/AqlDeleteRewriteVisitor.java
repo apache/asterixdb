@@ -36,6 +36,7 @@ import org.apache.asterix.lang.common.literal.StringLiteral;
 import org.apache.asterix.lang.common.statement.DeleteStatement;
 import org.apache.asterix.lang.common.statement.Query;
 import org.apache.asterix.lang.common.struct.Identifier;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 
 public class AqlDeleteRewriteVisitor extends AbstractAqlAstVisitor<Void, Void> {
 
@@ -48,8 +49,7 @@ public class AqlDeleteRewriteVisitor extends AbstractAqlAstVisitor<Void, Void> {
                 : dataverseName.getValue() + "." + datasetName.getValue();
         LiteralExpr argumentLiteral = new LiteralExpr(new StringLiteral(arg));
         arguments.add(argumentLiteral);
-        CallExpr callExpression =
-                new CallExpr(new FunctionSignature(FunctionConstants.ASTERIX_NS, "dataset", 1), arguments);
+        CallExpr callExpression = new CallExpr(new FunctionSignature(BuiltinFunctions.DATASET), arguments);
 
         List<Clause> clauseList = new ArrayList<>();
         VariableExpr var = deleteStmt.getVariableExpr();

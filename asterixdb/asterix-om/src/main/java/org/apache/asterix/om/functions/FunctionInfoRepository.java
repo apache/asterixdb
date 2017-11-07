@@ -29,12 +29,12 @@ public class FunctionInfoRepository {
     private final Map<FunctionSignature, IFunctionInfo> functionMap;
 
     public FunctionInfoRepository() {
-        functionMap = new ConcurrentHashMap<FunctionSignature, IFunctionInfo>();
+        functionMap = new ConcurrentHashMap<>();
     }
 
     public IFunctionInfo get(String namespace, String name, int arity) {
-        FunctionSignature fname = new FunctionSignature(namespace, name, arity);
-        return functionMap.get(fname);
+        FunctionSignature functionSignature = new FunctionSignature(namespace, name, arity);
+        return functionMap.get(functionSignature);
     }
 
     public IFunctionInfo get(FunctionIdentifier fid) {
@@ -42,7 +42,7 @@ public class FunctionInfoRepository {
     }
 
     public void put(FunctionIdentifier fid, IFunctionInfo fInfo) {
-        FunctionSignature functionSignature = new FunctionSignature(fid.getNamespace(), fid.getName(), fid.getArity());
+        FunctionSignature functionSignature = new FunctionSignature(fid);
         functionMap.put(functionSignature, fInfo);
     }
 }

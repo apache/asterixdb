@@ -17,7 +17,7 @@ FROM [  OrderedListConstructor [
   ]
   AS Variable [ Name=$bar ]
   INNER JOIN
-    FunctionCall Metadata.dataset@1[
+    FunctionCall asterix.dataset@1[
       LiteralExpr [STRING] [testdst]
     ]
     AS Variable [ Name=$testdst ]

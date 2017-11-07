@@ -61,7 +61,7 @@ public class IsUnknownDescriptor extends AbstractScalarFunctionDynamicDescriptor
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return BuiltinFunctions.IS_UNKOWN;
+        return BuiltinFunctions.IS_UNKNOWN;
     }
 
 }

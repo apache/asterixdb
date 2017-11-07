@@ -6,7 +6,7 @@ RecordConstructor [
     LiteralExpr [STRING] [l_linenumber]
     :
     FieldAccessor [
-      FunctionCall Metadata.resolve@-1[
+      FunctionCall asterix.resolve@-1[
         LiteralExpr [STRING] [l]
         Variable [ Name=$g ]
         Variable [ Name=$l_linenumber ]
@@ -37,7 +37,7 @@ RecordConstructor [
   )
 ]
 ]
-FROM [  FunctionCall Metadata.dataset@1[
+FROM [  FunctionCall asterix.dataset@1[
     LiteralExpr [STRING] [LineItem]
   ]
   AS Variable [ Name=$l ]
@@ -56,7 +56,7 @@ Groupby
 
 Orderby
   FieldAccessor [
-    FunctionCall Metadata.resolve@-1[
+    FunctionCall asterix.resolve@-1[
       LiteralExpr [STRING] [l]
       Variable [ Name=$g ]
       Variable [ Name=$l_linenumber ]

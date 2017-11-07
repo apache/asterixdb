@@ -8,7 +8,7 @@ FunctionCall test.lowercase@1[
   ]
 ]
 ]
-FROM [  FunctionCall Metadata.dataset@1[
+FROM [  FunctionCall asterix.dataset@1[
     LiteralExpr [STRING] [testds]
   ]
   AS Variable [ Name=$l ]

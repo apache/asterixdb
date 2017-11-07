@@ -674,7 +674,7 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
                 continue;
             }
             ScalarFunctionCallExpression isUnknownFuncExpr = new ScalarFunctionCallExpression(
-                    FunctionUtil.getFunctionInfo(BuiltinFunctions.IS_UNKOWN),
+                    FunctionUtil.getFunctionInfo(BuiltinFunctions.IS_UNKNOWN),
                     new MutableObject<ILogicalExpression>(new VariableReferenceExpression(secondaryKeyVar)));
             ScalarFunctionCallExpression notFuncExpr = new ScalarFunctionCallExpression(
                     FunctionUtil.getFunctionInfo(BuiltinFunctions.NOT),

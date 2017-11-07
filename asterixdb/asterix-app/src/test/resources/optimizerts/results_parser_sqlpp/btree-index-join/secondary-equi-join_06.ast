@@ -27,7 +27,7 @@ FROM [  (
     ]
     null
     ]
-    FROM [      FunctionCall Metadata.dataset@1[
+    FROM [      FunctionCall asterix.dataset@1[
         LiteralExpr [STRING] [testdst]
       ]
       AS Variable [ Name=$testdst ]
@@ -35,7 +35,7 @@ FROM [  (
     Groupby
       Variable [ Name=$val ]
       :=
-      FunctionCall Metadata.resolve@-1[
+      FunctionCall asterix.resolve@-1[
         LiteralExpr [STRING] [val]
         Variable [ Name=$testdst ]
       ]
@@ -47,7 +47,7 @@ FROM [  (
   )
   AS Variable [ Name=$bar ]
   INNER JOIN
-    FunctionCall Metadata.dataset@1[
+    FunctionCall asterix.dataset@1[
       LiteralExpr [STRING] [testdst2]
     ]
     AS Variable [ Name=$testdst2 ]

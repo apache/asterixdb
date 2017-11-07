@@ -30,7 +30,6 @@ import org.apache.commons.lang3.ObjectUtils;
 public class CallExpr extends AbstractExpression {
     private FunctionSignature functionSignature;
     private List<Expression> exprList;
-    private boolean isBuiltin;
 
     public CallExpr(FunctionSignature functionSignature, List<Expression> exprList) {
         this.functionSignature = functionSignature;
@@ -43,10 +42,6 @@ public class CallExpr extends AbstractExpression {
 
     public List<Expression> getExprList() {
         return exprList;
-    }
-
-    public boolean isBuiltin() {
-        return isBuiltin;
     }
 
     @Override
@@ -74,7 +69,7 @@ public class CallExpr extends AbstractExpression {
 
     @Override
     public int hashCode() {
-        return ObjectUtils.hashCodeMulti(exprList, functionSignature, isBuiltin);
+        return ObjectUtils.hashCodeMulti(exprList, functionSignature);
     }
 
     @Override
@@ -87,6 +82,6 @@ public class CallExpr extends AbstractExpression {
         }
         CallExpr target = (CallExpr) object;
         return ObjectUtils.equals(exprList, target.exprList)
-                && ObjectUtils.equals(functionSignature, target.functionSignature) && isBuiltin == target.isBuiltin;
+                && ObjectUtils.equals(functionSignature, target.functionSignature);
     }
 }

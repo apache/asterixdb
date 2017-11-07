@@ -87,7 +87,7 @@ RecordConstructor [
           Field=l_quantity
         ]
         ]
-        FROM [          FunctionCall Metadata.dataset@1[
+        FROM [          FunctionCall asterix.dataset@1[
             LiteralExpr [STRING] [l]
           ]
           AS Variable [ Name=$j ]
@@ -97,12 +97,12 @@ RecordConstructor [
   )
 ]
 ]
-FROM [  FunctionCall Metadata.dataset@1[
+FROM [  FunctionCall asterix.dataset@1[
     LiteralExpr [STRING] [Customers]
   ]
   AS Variable [ Name=$c ]
 ,
-  FunctionCall Metadata.dataset@1[
+  FunctionCall asterix.dataset@1[
     LiteralExpr [STRING] [Orders]
   ]
   AS Variable [ Name=$o ]
@@ -126,7 +126,7 @@ FROM [  FunctionCall Metadata.dataset@1[
               Field=l_quantity
             ]
             ]
-            FROM [              FunctionCall Metadata.dataset@1[
+            FROM [              FunctionCall asterix.dataset@1[
                 LiteralExpr [STRING] [l]
               ]
               AS Variable [ Name=$i ]
@@ -136,7 +136,7 @@ FROM [  FunctionCall Metadata.dataset@1[
       )
     ]
     ]
-    FROM [      FunctionCall Metadata.dataset@1[
+    FROM [      FunctionCall asterix.dataset@1[
         LiteralExpr [STRING] [LineItems]
       ]
       AS Variable [ Name=$l ]
@@ -156,7 +156,7 @@ FROM [  FunctionCall Metadata.dataset@1[
   )
   AS Variable [ Name=$t ]
 ,
-  FunctionCall Metadata.dataset@1[
+  FunctionCall asterix.dataset@1[
     LiteralExpr [STRING] [LineItems]
   ]
   AS Variable [ Name=$l ]

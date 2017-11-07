@@ -42,7 +42,7 @@ RecordConstructor [
   )
 ]
 ]
-FROM [  FunctionCall Metadata.dataset@1[
+FROM [  FunctionCall asterix.dataset@1[
     LiteralExpr [STRING] [LineItem]
   ]
   AS Variable [ Name=$l ]
@@ -85,7 +85,7 @@ Let Variable [ Name=$expensives ]
     ]
     FROM [      (
         SELECT ELEMENT [
-        FunctionCall Metadata.resolve@-1[
+        FunctionCall asterix.resolve@-1[
           LiteralExpr [STRING] [l]
           Variable [ Name=$g ]
           Variable [ Name=$l_linestatus ]
@@ -116,7 +116,7 @@ Let Variable [ Name=$cheaps ]
     ]
     FROM [      (
         SELECT ELEMENT [
-        FunctionCall Metadata.resolve@-1[
+        FunctionCall asterix.resolve@-1[
           LiteralExpr [STRING] [l]
           Variable [ Name=$expensives ]
           Variable [ Name=$g ]
@@ -171,7 +171,7 @@ Let Variable [ Name=$charges ]
     ]
     FROM [      (
         SELECT ELEMENT [
-        FunctionCall Metadata.resolve@-1[
+        FunctionCall asterix.resolve@-1[
           LiteralExpr [STRING] [l]
           Variable [ Name=$expensives ]
           Variable [ Name=$g ]
@@ -209,7 +209,7 @@ Let Variable [ Name=$disc_prices ]
     ]
     FROM [      (
         SELECT ELEMENT [
-        FunctionCall Metadata.resolve@-1[
+        FunctionCall asterix.resolve@-1[
           LiteralExpr [STRING] [l]
           Variable [ Name=$expensives ]
           Variable [ Name=$g ]

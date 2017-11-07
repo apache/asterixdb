@@ -9,7 +9,7 @@ FunctionCall test.substring@2[
   LiteralExpr [LONG] [4]
 ]
 ]
-FROM [  FunctionCall Metadata.dataset@1[
+FROM [  FunctionCall asterix.dataset@1[
     LiteralExpr [STRING] [testdst]
   ]
   AS Variable [ Name=$a ]

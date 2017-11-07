@@ -23,7 +23,7 @@ RecordConstructor [
     LiteralExpr [STRING] [ordpercust]
     :
     FunctionCall asterix.count@1[
-      FunctionCall Metadata.resolve@-1[
+      FunctionCall asterix.resolve@-1[
         LiteralExpr [STRING] [o]
         Variable [ Name=$cid ]
         Variable [ Name=#1 ]
@@ -41,7 +41,7 @@ RecordConstructor [
           Field=total
         ]
         ]
-        FROM [          FunctionCall Metadata.dataset@1[
+        FROM [          FunctionCall asterix.dataset@1[
             LiteralExpr [STRING] [o]
           ]
           AS Variable [ Name=$i ]
@@ -60,7 +60,7 @@ RecordConstructor [
           Field=total
         ]
         ]
-        FROM [          FunctionCall Metadata.dataset@1[
+        FROM [          FunctionCall asterix.dataset@1[
             LiteralExpr [STRING] [o]
           ]
           AS Variable [ Name=$i ]
@@ -70,7 +70,7 @@ RecordConstructor [
   )
 ]
 ]
-FROM [  FunctionCall Metadata.dataset@1[
+FROM [  FunctionCall asterix.dataset@1[
     LiteralExpr [STRING] [Orders]
   ]
   AS Variable [ Name=$o ]

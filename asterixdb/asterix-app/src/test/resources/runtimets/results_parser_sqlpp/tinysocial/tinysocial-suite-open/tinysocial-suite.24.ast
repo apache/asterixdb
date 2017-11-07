@@ -20,12 +20,12 @@ FunctionCall TinySocial.substring@2[
 ]
 msg
 ]
-FROM [  FunctionCall Metadata.dataset@1[
+FROM [  FunctionCall asterix.dataset@1[
     LiteralExpr [STRING] [FacebookMessages]
   ]
   AS Variable [ Name=$message ]
 ,
-  FunctionCall Metadata.dataset@1[
+  FunctionCall asterix.dataset@1[
     LiteralExpr [STRING] [FacebookUsers]
   ]
   AS Variable [ Name=$user ]

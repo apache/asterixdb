@@ -1572,7 +1572,7 @@ class LangExpressionToPlanTranslator
         List<Mutable<ILogicalExpression>> arguments = new ArrayList<>();
         arguments.add(new MutableObject<>(logicalExpr));
         Mutable<ILogicalExpression> expr = new MutableObject<>(
-                new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(BuiltinFunctions.IS_UNKOWN),
+                new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(BuiltinFunctions.IS_UNKNOWN),
                         new ArrayList<>(Collections.singletonList(new MutableObject<>(logicalExpr)))));
         arguments.add(new MutableObject<>(new ScalarFunctionCallExpression(
                 FunctionUtil.getFunctionInfo(BuiltinFunctions.NOT), new ArrayList<>(Collections.singletonList(expr)))));

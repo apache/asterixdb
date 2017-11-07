@@ -55,6 +55,7 @@ import org.apache.asterix.lang.common.statement.DeleteStatement;
 import org.apache.asterix.lang.common.statement.InsertStatement;
 import org.apache.asterix.lang.common.statement.Query;
 import org.apache.asterix.lang.common.struct.Identifier;
+import org.apache.asterix.lang.common.struct.OperatorType;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.lang.common.visitor.FormatPrintVisitor;
 import org.apache.hyracks.algebricks.common.utils.Pair;
@@ -584,7 +585,7 @@ public class AQLToSQLPPPrintVisitor extends FormatPrintVisitor implements IAQLVi
                     newWhereExpr.setExprList(expressions);
                     newWhereExpr.setCurrentop(true);
                     for (int operatorIndex = 0; operatorIndex < expressions.size(); ++operatorIndex) {
-                        newWhereExpr.addOperator("and");
+                        newWhereExpr.addOperator(OperatorType.AND);
                     }
                     results.add(new WhereClause(newWhereExpr));
                 } else {

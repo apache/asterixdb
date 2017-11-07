@@ -9,7 +9,7 @@ FunctionCall asterix.count@1[
       Field=name
     ]
     ]
-    FROM [      FunctionCall Metadata.dataset@1[
+    FROM [      FunctionCall asterix.dataset@1[
         LiteralExpr [STRING] [Employee]
       ]
       AS Variable [ Name=$l ]

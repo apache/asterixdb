@@ -28,6 +28,10 @@ public class FunctionSignature implements Serializable {
     private String name;
     private int arity;
 
+    public FunctionSignature(FunctionIdentifier fi) {
+        this(fi.getNamespace(), fi.getName(), fi.getArity());
+    }
+
     public FunctionSignature(String namespace, String name, int arity) {
         this.namespace = namespace;
         this.name = name;

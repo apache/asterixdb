@@ -13,7 +13,7 @@ RecordConstructor [
     FunctionCall asterix.count@1[
       (
         SELECT ELEMENT [
-        FunctionCall Metadata.resolve@-1[
+        FunctionCall asterix.resolve@-1[
           LiteralExpr [STRING] [l]
           Variable [ Name=$g ]
           Variable [ Name=$l_partkey ]
@@ -41,7 +41,7 @@ RecordConstructor [
           ]
           FROM [            (
               SELECT ELEMENT [
-              FunctionCall Metadata.resolve@-1[
+              FunctionCall asterix.resolve@-1[
                 LiteralExpr [STRING] [l]
                 Variable [ Name=$g ]
                 Variable [ Name=$l_partkey ]
@@ -70,7 +70,7 @@ RecordConstructor [
         ]
         FROM [          (
             SELECT ELEMENT [
-            FunctionCall Metadata.resolve@-1[
+            FunctionCall asterix.resolve@-1[
               LiteralExpr [STRING] [l]
               Variable [ Name=$g ]
               Variable [ Name=$l_partkey ]
@@ -98,7 +98,7 @@ RecordConstructor [
         ]
         FROM [          (
             SELECT ELEMENT [
-            FunctionCall Metadata.resolve@-1[
+            FunctionCall asterix.resolve@-1[
               LiteralExpr [STRING] [l]
               Variable [ Name=$g ]
               Variable [ Name=$l_partkey ]
@@ -126,7 +126,7 @@ RecordConstructor [
         ]
         FROM [          (
             SELECT ELEMENT [
-            FunctionCall Metadata.resolve@-1[
+            FunctionCall asterix.resolve@-1[
               LiteralExpr [STRING] [l]
               Variable [ Name=$g ]
               Variable [ Name=$l_partkey ]
@@ -154,7 +154,7 @@ RecordConstructor [
         ]
         FROM [          (
             SELECT ELEMENT [
-            FunctionCall Metadata.resolve@-1[
+            FunctionCall asterix.resolve@-1[
               LiteralExpr [STRING] [l]
               Variable [ Name=$g ]
               Variable [ Name=$l_partkey ]
@@ -182,7 +182,7 @@ RecordConstructor [
         ]
         FROM [          (
             SELECT ELEMENT [
-            FunctionCall Metadata.resolve@-1[
+            FunctionCall asterix.resolve@-1[
               LiteralExpr [STRING] [l]
               Variable [ Name=$g ]
               Variable [ Name=$l_partkey ]
@@ -210,7 +210,7 @@ RecordConstructor [
         ]
         FROM [          (
             SELECT ELEMENT [
-            FunctionCall Metadata.resolve@-1[
+            FunctionCall asterix.resolve@-1[
               LiteralExpr [STRING] [l]
               Variable [ Name=$g ]
               Variable [ Name=$l_partkey ]
@@ -238,7 +238,7 @@ RecordConstructor [
         ]
         FROM [          (
             SELECT ELEMENT [
-            FunctionCall Metadata.resolve@-1[
+            FunctionCall asterix.resolve@-1[
               LiteralExpr [STRING] [l]
               Variable [ Name=$g ]
               Variable [ Name=$l_partkey ]
@@ -266,7 +266,7 @@ RecordConstructor [
         ]
         FROM [          (
             SELECT ELEMENT [
-            FunctionCall Metadata.resolve@-1[
+            FunctionCall asterix.resolve@-1[
               LiteralExpr [STRING] [l]
               Variable [ Name=$g ]
               Variable [ Name=$l_partkey ]
@@ -294,7 +294,7 @@ RecordConstructor [
         ]
         FROM [          (
             SELECT ELEMENT [
-            FunctionCall Metadata.resolve@-1[
+            FunctionCall asterix.resolve@-1[
               LiteralExpr [STRING] [l]
               Variable [ Name=$g ]
               Variable [ Name=$l_partkey ]
@@ -311,7 +311,7 @@ RecordConstructor [
   )
 ]
 ]
-FROM [  FunctionCall Metadata.dataset@1[
+FROM [  FunctionCall asterix.dataset@1[
     LiteralExpr [STRING] [LineItem]
   ]
   AS Variable [ Name=$l ]

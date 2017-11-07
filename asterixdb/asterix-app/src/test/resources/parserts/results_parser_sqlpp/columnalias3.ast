@@ -7,7 +7,7 @@ RecordConstructor [
     FunctionCall null.sqrt@1[
       OperatorExpr [
         FieldAccessor [
-          FunctionCall Metadata.resolve@-1[
+          FunctionCall asterix.resolve@-1[
             LiteralExpr [STRING] [t]
             Variable [ Name=$u ]
             Variable [ Name=$root ]
@@ -17,7 +17,7 @@ RecordConstructor [
         ]
         *
         FieldAccessor [
-          FunctionCall Metadata.resolve@-1[
+          FunctionCall asterix.resolve@-1[
             LiteralExpr [STRING] [t]
             Variable [ Name=$u ]
             Variable [ Name=$root ]
@@ -30,7 +30,7 @@ RecordConstructor [
   )
 ]
 ]
-FROM [  FunctionCall Metadata.dataset@1[
+FROM [  FunctionCall asterix.dataset@1[
     LiteralExpr [STRING] [tbl_name]
   ]
   AS Variable [ Name=$t ]

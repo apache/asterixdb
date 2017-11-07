@@ -9,7 +9,7 @@ FunctionCall asterix.sum@1[
       Field=sal
     ]
     ]
-    FROM [      FunctionCall Metadata.dataset@1[
+    FROM [      FunctionCall asterix.dataset@1[
         LiteralExpr [STRING] [tdst]
       ]
       AS Variable [ Name=$l ]

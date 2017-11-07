@@ -39,13 +39,13 @@ import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
 import org.apache.asterix.lang.sqlpp.visitor.CheckDatasetOnlyResolutionVisitor;
 import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppExpressionScopingVisitor;
 import org.apache.asterix.metadata.declared.MetadataProvider;
-import org.apache.asterix.metadata.utils.MetadataConstants;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 
 public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopingVisitor {
 
-    protected final FunctionSignature datasetFunction =
-            new FunctionSignature(MetadataConstants.METADATA_DATAVERSE_NAME, "dataset", 1);
+    private static final FunctionSignature FN_DATASET = new FunctionSignature(BuiltinFunctions.DATASET);
+
     protected final boolean overwrite;
     protected final MetadataProvider metadataProvider;
 
@@ -79,7 +79,7 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopi
                     fa, parent);
             if (resolvedExpr.getKind() == Kind.CALL_EXPRESSION) {
                 CallExpr callExpr = (CallExpr) resolvedExpr;
-                if (callExpr.getFunctionSignature().equals(datasetFunction)) {
+                if (callExpr.getFunctionSignature().equals(FN_DATASET)) {
                     // The field access is resolved to be a dataset access in the form of "dataverse.dataset".
                     return resolvedExpr;
                 }
@@ -172,7 +172,7 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopi
         String fullyQualifiedName = dataverseName == null ? datasetName : dataverseName + "." + datasetName;
         List<Expression> argList = new ArrayList<>();
         argList.add(new LiteralExpr(new StringLiteral(fullyQualifiedName)));
-        return new CallExpr(datasetFunction, argList);
+        return new CallExpr(new FunctionSignature(BuiltinFunctions.DATASET), argList);
     }
 
     private boolean datasetExists(String dataverseName, String datasetName) throws CompilationException {

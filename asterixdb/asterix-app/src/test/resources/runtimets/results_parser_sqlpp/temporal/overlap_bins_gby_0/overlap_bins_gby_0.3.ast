@@ -41,7 +41,7 @@ FROM [  (
         :
         (
           SELECT ELEMENT [
-          FunctionCall Metadata.resolve@-1[
+          FunctionCall asterix.resolve@-1[
             LiteralExpr [STRING] [i]
             Variable [ Name=$g ]
             Variable [ Name=$bin ]
@@ -58,7 +58,7 @@ FROM [  (
         SELECT ELEMENT [
         Variable [ Name=$i ]
         ]
-        FROM [          FunctionCall Metadata.dataset@1[
+        FROM [          FunctionCall asterix.dataset@1[
             LiteralExpr [STRING] [tsdata]
           ]
           AS Variable [ Name=$i ]

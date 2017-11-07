@@ -26,7 +26,7 @@ Let Variable [ Name=$lonelyusers ]
     SELECT ELEMENT [
     Variable [ Name=$d ]
     ]
-    FROM [      FunctionCall Metadata.dataset@1[
+    FROM [      FunctionCall asterix.dataset@1[
         LiteralExpr [STRING] [FacebookUsers]
       ]
       AS Variable [ Name=$d ]
@@ -49,7 +49,7 @@ Let Variable [ Name=$lonelyusers2 ]
     SELECT ELEMENT [
     Variable [ Name=$d ]
     ]
-    FROM [      FunctionCall Metadata.dataset@1[
+    FROM [      FunctionCall asterix.dataset@1[
         LiteralExpr [STRING] [FacebookUsers]
       ]
       AS Variable [ Name=$d ]

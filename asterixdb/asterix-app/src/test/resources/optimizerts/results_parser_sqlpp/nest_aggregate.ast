@@ -117,12 +117,12 @@ RecordConstructor [
         )
       ]
       ]
-      FROM [        FunctionCall Metadata.dataset@1[
+      FROM [        FunctionCall asterix.dataset@1[
           LiteralExpr [STRING] [Orders]
         ]
         AS Variable [ Name=$orders ]
 ,
-        FunctionCall Metadata.dataset@1[
+        FunctionCall asterix.dataset@1[
           LiteralExpr [STRING] [Customer]
         ]
         AS Variable [ Name=$customer ]
@@ -176,7 +176,7 @@ RecordConstructor [
               Field=o_totalprice
             ]
             ]
-            FROM [              FunctionCall Metadata.dataset@1[
+            FROM [              FunctionCall asterix.dataset@1[
                 LiteralExpr [STRING] [orders]
               ]
               AS Variable [ Name=$o ]
@@ -193,12 +193,12 @@ RecordConstructor [
   )
 ]
 ]
-FROM [  FunctionCall Metadata.dataset@1[
+FROM [  FunctionCall asterix.dataset@1[
     LiteralExpr [STRING] [Nation]
   ]
   AS Variable [ Name=$nation ]
 ,
-  FunctionCall Metadata.dataset@1[
+  FunctionCall asterix.dataset@1[
     LiteralExpr [STRING] [SelectedNation]
   ]
   AS Variable [ Name=$sn ]

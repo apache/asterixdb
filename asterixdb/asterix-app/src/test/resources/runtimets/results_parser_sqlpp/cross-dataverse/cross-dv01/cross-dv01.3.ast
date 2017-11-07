@@ -23,22 +23,22 @@ RecordConstructor [
   )
 ]
 ]
-FROM [  FunctionCall Metadata.dataset@1[
+FROM [  FunctionCall asterix.dataset@1[
     LiteralExpr [STRING] [student.ugdstd]
   ]
   AS Variable [ Name=$s ]
 ,
-  FunctionCall Metadata.dataset@1[
+  FunctionCall asterix.dataset@1[
     LiteralExpr [STRING] [teacher.prof]
   ]
   AS Variable [ Name=$p ]
 ,
-  FunctionCall Metadata.dataset@1[
+  FunctionCall asterix.dataset@1[
     LiteralExpr [STRING] [student.gdstd]
   ]
   AS Variable [ Name=$a ]
 ,
-  FunctionCall Metadata.dataset@1[
+  FunctionCall asterix.dataset@1[
     LiteralExpr [STRING] [teacher.pstdoc]
   ]
   AS Variable [ Name=$b ]

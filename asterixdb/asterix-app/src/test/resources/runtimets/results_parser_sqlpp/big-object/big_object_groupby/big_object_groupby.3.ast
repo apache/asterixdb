@@ -13,7 +13,7 @@ RecordConstructor [
     :
     (
       SELECT ELEMENT [
-      FunctionCall Metadata.resolve@-1[
+      FunctionCall asterix.resolve@-1[
         LiteralExpr [STRING] [i]
         Variable [ Name=$partkey ]
         Variable [ Name=$g ]
@@ -26,7 +26,7 @@ RecordConstructor [
   )
 ]
 ]
-FROM [  FunctionCall Metadata.dataset@1[
+FROM [  FunctionCall asterix.dataset@1[
     LiteralExpr [STRING] [Line]
   ]
   AS Variable [ Name=$i ]

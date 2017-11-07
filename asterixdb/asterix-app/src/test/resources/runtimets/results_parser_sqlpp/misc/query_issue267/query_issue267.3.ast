@@ -3,12 +3,12 @@ Query:
 SELECT ELEMENT [
 Variable [ Name=$l ]
 ]
-FROM [  FunctionCall Metadata.dataset@1[
+FROM [  FunctionCall asterix.dataset@1[
     LiteralExpr [STRING] [t1]
   ]
   AS Variable [ Name=$l ]
 ,
-  FunctionCall Metadata.dataset@1[
+  FunctionCall asterix.dataset@1[
     LiteralExpr [STRING] [t2]
   ]
   AS Variable [ Name=$m ]
