@@ -1996,7 +1996,7 @@ Expression IsExpr() throws ParseException:
         (
             <NULL> { fn = BuiltinFunctions.IS_NULL; } |
             <MISSING> { fn = BuiltinFunctions.IS_MISSING; } |
-            <UNKOWN> { fn = BuiltinFunctions.IS_UNKNOWN; }
+            <UNKNOWN> { fn = BuiltinFunctions.IS_UNKNOWN; }
         )
       {
         FunctionSignature signature = new FunctionSignature(fn);
@@ -3270,7 +3270,7 @@ TOKEN [IGNORE_CASE]:
   | <TYPE : "type">
   | <TO : "to">
   | <UNION : "union">
-  | <UNKOWN : "unknown">
+  | <UNKNOWN : "unknown">
   | <UNNEST : "unnest">
   | <UPDATE : "update">
   | <UPSERT : "upsert">
