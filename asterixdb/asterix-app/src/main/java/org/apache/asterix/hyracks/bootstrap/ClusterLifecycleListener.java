@@ -183,7 +183,7 @@ public class ClusterLifecycleListener implements IClusterLifecycleListener {
                     if (LOGGER.isLoggable(Level.INFO)) {
                         LOGGER.info("Added NC at:" + node.getId());
                     }
-                } catch (AsterixException e) {
+                } catch (Exception e) {
                     if (LOGGER.isLoggable(Level.WARNING)) {
                         LOGGER.warning("Unable to add NC at:" + node.getId());
                     }

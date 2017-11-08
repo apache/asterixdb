@@ -24,7 +24,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.asterix.builders.RecordBuilder;
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.om.functions.BuiltinFunctions;
@@ -132,7 +131,7 @@ public class RecordMergeDescriptor extends AbstractScalarFunctionDynamicDescript
                         try {
                             mergeFields(outRecType, rp0, rp1, true, 0);
                             rbStack.get(0).write(out, true);
-                        } catch (IOException | AsterixException e) {
+                        } catch (IOException  e) {
                             throw new HyracksDataException(e);
                         }
                         result.set(resultStorage);
@@ -140,7 +139,7 @@ public class RecordMergeDescriptor extends AbstractScalarFunctionDynamicDescript
 
                     private void mergeFields(ARecordType combinedType, ARecordVisitablePointable leftRecord,
                             ARecordVisitablePointable rightRecord, boolean openFromParent, int nestedLevel)
-                            throws IOException, AsterixException, HyracksDataException {
+                            throws IOException {
                         if (rbStack.size() < (nestedLevel + 1)) {
                             rbStack.add(new RecordBuilder());
                         }
@@ -207,7 +206,7 @@ public class RecordMergeDescriptor extends AbstractScalarFunctionDynamicDescript
                      */
                     private void addFieldToSubRecord(ARecordType combinedType, IVisitablePointable fieldNamePointable,
                             IVisitablePointable leftValue, IVisitablePointable rightValue, boolean openFromParent,
-                            int nestedLevel) throws IOException, AsterixException, HyracksDataException {
+                            int nestedLevel) throws IOException {
 
                         runtimeRecordTypeInfo.reset(combinedType);
                         int pos = runtimeRecordTypeInfo.getFieldIndex(fieldNamePointable.getByteArray(),

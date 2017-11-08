@@ -23,7 +23,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.external.api.IRecordDataParser;
 import org.apache.asterix.external.api.IRecordDataParserFactory;
@@ -35,14 +34,15 @@ import org.apache.asterix.external.provider.RecordConverterFactoryProvider;
 import org.apache.asterix.external.util.ExternalDataCompatibilityUtils;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.om.types.ARecordType;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class RecordWithMetadataParserFactory<I, O> implements IRecordDataParserFactory<I> {
 
     private static final long serialVersionUID = 1L;
-    private static final List<String> parserFormats = Collections
-            .unmodifiableList(Arrays.asList("record-with-metadata"));
+    private static final List<String> parserFormats =
+            Collections.unmodifiableList(Arrays.asList("record-with-metadata"));
     private ARecordType metaType;
     private ARecordType recordType;
     private IRecordDataParserFactory<O> recordParserFactory;
@@ -50,16 +50,16 @@ public class RecordWithMetadataParserFactory<I, O> implements IRecordDataParserF
 
     @SuppressWarnings("unchecked")
     @Override
-    public void configure(Map<String, String> configuration) throws AsterixException {
+    public void configure(Map<String, String> configuration) throws AlgebricksException {
         // validate first
         String recordFormat = configuration.get(ExternalDataConstants.KEY_RECORD_FORMAT);
         if (recordFormat == null) {
-            throw new AsterixException(ErrorCode.UNKNOWN_RECORD_FORMAT_FOR_META_PARSER,
+            throw AlgebricksException.create(ErrorCode.UNKNOWN_RECORD_FORMAT_FOR_META_PARSER,
                     ExternalDataConstants.KEY_FORMAT);
         }
         String format = configuration.get(ExternalDataConstants.KEY_FORMAT);
         if (format == null) {
-            throw new AsterixException(ErrorCode.UNKNOWN_RECORD_FORMAT_FOR_META_PARSER,
+            throw AlgebricksException.create(ErrorCode.UNKNOWN_RECORD_FORMAT_FOR_META_PARSER,
                     ExternalDataConstants.KEY_FORMAT);
         }
         // Create Parser Factory

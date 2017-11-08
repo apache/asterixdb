@@ -330,7 +330,7 @@ public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDe
         appender.write(writer, true);
     }
 
-    private void appendFilterToPrevTuple() throws IOException, AsterixException {
+    private void appendFilterToPrevTuple() throws IOException {
         if (isFiltered) {
             prevRecWithPKWithFilterValue.reset();
             for (int i = 0; i < prevTuple.getFieldCount(); i++) {

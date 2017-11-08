@@ -78,8 +78,6 @@ public class GetRecordFieldsEvalFactory implements IScalarEvaluatorFactory {
                     rfu.processRecord(recordPointable, recordType, out, 0);
                 } catch (IOException e) {
                     throw new HyracksDataException(e);
-                } catch (AsterixException e) {
-                    throw new HyracksDataException(e);
                 }
                 result.set(resultStorage);
             }

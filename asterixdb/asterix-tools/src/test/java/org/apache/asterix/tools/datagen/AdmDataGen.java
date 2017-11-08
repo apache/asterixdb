@@ -937,7 +937,7 @@ public class AdmDataGen {
         this.outputDir = outputDir;
     }
 
-    public void init() throws IOException, ParseException, AsterixException, ACIDException, MetadataException,
+    public void init() throws IOException, ParseException, ACIDException,
             AlgebricksException {
         FileReader aql = new FileReader(schemaFile);
         IParser parser = parserFactory.createParser(aql);

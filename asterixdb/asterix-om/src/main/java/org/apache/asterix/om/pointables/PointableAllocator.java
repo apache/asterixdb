@@ -19,7 +19,6 @@
 
 package org.apache.asterix.om.pointables;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.pointables.base.DefaultOpenFieldType;
 import org.apache.asterix.om.pointables.base.IVisitablePointable;
 import org.apache.asterix.om.types.AOrderedListType;
@@ -30,6 +29,7 @@ import org.apache.asterix.om.types.TypeTagUtil;
 import org.apache.asterix.om.util.container.IObjectFactory;
 import org.apache.asterix.om.util.container.IObjectPool;
 import org.apache.asterix.om.util.container.ListObjectPool;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 /**
  * This class is the ONLY place to create IVisitablePointable object instances,
@@ -95,7 +95,7 @@ public class PointableAllocator {
      * @param typeTag
      * @return the pointable object
      */
-    public IVisitablePointable allocateFieldValue(ATypeTag typeTag, byte[] b, int offset) throws AsterixException {
+    public IVisitablePointable allocateFieldValue(ATypeTag typeTag, byte[] b, int offset) throws HyracksDataException {
         if (typeTag == null)
             return flatValueAllocator.allocate(null);
         else if (typeTag.equals(ATypeTag.OBJECT))

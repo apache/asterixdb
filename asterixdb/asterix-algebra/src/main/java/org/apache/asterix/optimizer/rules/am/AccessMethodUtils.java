@@ -27,7 +27,6 @@ import java.util.Set;
 import org.apache.asterix.algebra.operators.physical.ExternalDataLookupPOperator;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.external.indexing.IndexingConstants;
@@ -313,11 +312,7 @@ public class AccessMethodUtils {
         // Primary keys.
         if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
             //add primary keys
-            try {
-                appendExternalRecPrimaryKeys(dataset, dest);
-            } catch (AsterixException e) {
-                throw new AlgebricksException(e);
-            }
+            appendExternalRecPrimaryKeys(dataset, dest);
         } else {
             dest.addAll(KeyFieldTypeUtil.getPartitoningKeyTypes(dataset, recordType, metaRecordType));
         }
@@ -675,7 +670,7 @@ public class AccessMethodUtils {
         target.add(itemType);
     }
 
-    private static void appendExternalRecPrimaryKeys(Dataset dataset, List<Object> target) throws AsterixException {
+    private static void appendExternalRecPrimaryKeys(Dataset dataset, List<Object> target) throws AlgebricksException {
         int numPrimaryKeys =
                 IndexingConstants.getRIDSize(((ExternalDatasetDetails) dataset.getDatasetDetails()).getProperties());
         for (int i = 0; i < numPrimaryKeys; i++) {

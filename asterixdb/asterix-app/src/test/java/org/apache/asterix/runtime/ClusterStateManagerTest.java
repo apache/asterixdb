@@ -35,6 +35,7 @@ import org.apache.asterix.common.metadata.IMetadataBootstrap;
 import org.apache.asterix.runtime.transaction.ResourceIdManager;
 import org.apache.asterix.runtime.utils.CcApplicationContext;
 import org.apache.asterix.runtime.utils.ClusterStateManager;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.application.ICCServiceContext;
 import org.apache.hyracks.api.config.IApplicationConfig;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -185,7 +186,7 @@ public class ClusterStateManagerTest {
     }
 
     private void notifyNodeJoined(ClusterStateManager csm, String nodeId, int partitionId, boolean registerPartitions)
-            throws HyracksException, AsterixException {
+            throws HyracksException, AlgebricksException {
         csm.notifyNodeJoin(nodeId, Collections.emptyMap());
         if (registerPartitions) {
             csm.registerNodePartitions(nodeId, new ClusterPartition[] { new ClusterPartition(partitionId, nodeId, 0) });

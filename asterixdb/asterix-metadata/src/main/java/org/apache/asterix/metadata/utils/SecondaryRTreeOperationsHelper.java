@@ -172,7 +172,7 @@ public class SecondaryRTreeOperationsHelper extends SecondaryTreeIndexOperations
     }
 
     @Override
-    public JobSpecification buildLoadingJobSpec() throws AsterixException, AlgebricksException {
+    public JobSpecification buildLoadingJobSpec() throws AlgebricksException {
         /***************************************************
          * [ About PointMBR Optimization ]
          * Instead of storing a MBR(4 doubles) for a point(2 doubles) in RTree leaf node,

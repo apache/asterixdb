@@ -25,7 +25,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.asterix.builders.OrderedListBuilder;
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AOrderedList;
 import org.apache.asterix.om.base.IAObject;
@@ -97,7 +96,7 @@ public class AOrderedListSerializerDeserializer implements ISerializerDeserializ
             }
             AOrderedListType type = new AOrderedListType(currentItemType, "orderedlist");
             return new AOrderedList(type, items);
-        } catch (AsterixException | IOException e) {
+        } catch (IOException e) {
             throw HyracksDataException.create(e);
         }
     }

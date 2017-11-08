@@ -20,6 +20,7 @@ package org.apache.asterix.transaction.management.service.transaction;
 
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 
 public class DatasetIdFactory {
     private static int id = 0;
@@ -34,7 +35,7 @@ public class DatasetIdFactory {
         isInitialized = true;
     }
 
-    public static synchronized int generateDatasetId() throws AsterixException {
+    public static synchronized int generateDatasetId() throws AlgebricksException {
         if (id == Integer.MAX_VALUE) {
             throw new AsterixException(ErrorCode.DATASET_ID_EXHAUSTED);
         }

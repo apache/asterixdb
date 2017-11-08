@@ -22,7 +22,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
 import org.apache.asterix.common.api.IMetadataLockManager;
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.metadata.IMetadataLock;
 import org.apache.asterix.common.metadata.LockList;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -49,147 +48,149 @@ public class MetadataLockManager implements IMetadataLockManager {
     }
 
     @Override
-    public void acquireDataverseReadLock(LockList locks, String dataverseName) throws AsterixException {
+    public void acquireDataverseReadLock(LockList locks, String dataverseName) throws AlgebricksException {
         String key = DATAVERSE_PREFIX + dataverseName;
         IMetadataLock lock = mdlocks.computeIfAbsent(key, LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.READ, lock);
     }
 
     @Override
-    public void acquireDataverseWriteLock(LockList locks, String dataverseName) throws AsterixException {
+    public void acquireDataverseWriteLock(LockList locks, String dataverseName) throws AlgebricksException {
         String key = DATAVERSE_PREFIX + dataverseName;
         IMetadataLock lock = mdlocks.computeIfAbsent(key, LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.WRITE, lock);
     }
 
     @Override
-    public void acquireDatasetReadLock(LockList locks, String datasetName) throws AsterixException {
+    public void acquireDatasetReadLock(LockList locks, String datasetName) throws AlgebricksException {
         String key = DATASET_PREFIX + datasetName;
         DatasetLock lock = (DatasetLock) mdlocks.computeIfAbsent(key, DATASET_LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.READ, lock);
     }
 
     @Override
-    public void acquireDatasetWriteLock(LockList locks, String datasetName) throws AsterixException {
+    public void acquireDatasetWriteLock(LockList locks, String datasetName) throws AlgebricksException {
         String key = DATASET_PREFIX + datasetName;
         DatasetLock lock = (DatasetLock) mdlocks.computeIfAbsent(key, DATASET_LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.WRITE, lock);
     }
 
     @Override
-    public void acquireDatasetModifyLock(LockList locks, String datasetName) throws AsterixException {
+    public void acquireDatasetModifyLock(LockList locks, String datasetName) throws AlgebricksException {
         String key = DATASET_PREFIX + datasetName;
         DatasetLock lock = (DatasetLock) mdlocks.computeIfAbsent(key, DATASET_LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.MODIFY, lock);
     }
 
     @Override
-    public void acquireDatasetCreateIndexLock(LockList locks, String datasetName) throws AsterixException {
+    public void acquireDatasetCreateIndexLock(LockList locks, String datasetName) throws AlgebricksException {
         String dsKey = DATASET_PREFIX + datasetName;
         DatasetLock lock = (DatasetLock) mdlocks.computeIfAbsent(dsKey, DATASET_LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.INDEX_BUILD, lock);
     }
 
     @Override
-    public void acquireDatasetExclusiveModificationLock(LockList locks, String datasetName) throws AsterixException {
+    public void acquireDatasetExclusiveModificationLock(LockList locks, String datasetName) throws AlgebricksException {
         String key = DATASET_PREFIX + datasetName;
         DatasetLock lock = (DatasetLock) mdlocks.computeIfAbsent(key, DATASET_LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.EXCLUSIVE_MODIFY, lock);
     }
 
     @Override
-    public void acquireFunctionReadLock(LockList locks, String functionName) throws AsterixException {
+    public void acquireFunctionReadLock(LockList locks, String functionName) throws AlgebricksException {
         String key = FUNCTION_PREFIX + functionName;
         IMetadataLock lock = mdlocks.computeIfAbsent(key, LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.READ, lock);
     }
 
     @Override
-    public void acquireFunctionWriteLock(LockList locks, String functionName) throws AsterixException {
+    public void acquireFunctionWriteLock(LockList locks, String functionName) throws AlgebricksException {
         String key = FUNCTION_PREFIX + functionName;
         IMetadataLock lock = mdlocks.computeIfAbsent(key, LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.WRITE, lock);
     }
 
     @Override
-    public void acquireNodeGroupReadLock(LockList locks, String nodeGroupName) throws AsterixException {
+    public void acquireNodeGroupReadLock(LockList locks, String nodeGroupName) throws AlgebricksException {
         String key = NODE_GROUP_PREFIX + nodeGroupName;
         IMetadataLock lock = mdlocks.computeIfAbsent(key, LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.READ, lock);
     }
 
     @Override
-    public void acquireNodeGroupWriteLock(LockList locks, String nodeGroupName) throws AsterixException {
+    public void acquireNodeGroupWriteLock(LockList locks, String nodeGroupName) throws AlgebricksException {
         String key = NODE_GROUP_PREFIX + nodeGroupName;
         IMetadataLock lock = mdlocks.computeIfAbsent(key, LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.WRITE, lock);
     }
 
     @Override
-    public void acquireActiveEntityReadLock(LockList locks, String entityName) throws AsterixException {
+    public void acquireActiveEntityReadLock(LockList locks, String entityName) throws AlgebricksException {
         String key = ACTIVE_PREFIX + entityName;
         IMetadataLock lock = mdlocks.computeIfAbsent(key, LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.READ, lock);
     }
 
     @Override
-    public void acquireActiveEntityWriteLock(LockList locks, String entityName) throws AsterixException {
+    public void acquireActiveEntityWriteLock(LockList locks, String entityName) throws AlgebricksException {
         String key = ACTIVE_PREFIX + entityName;
         IMetadataLock lock = mdlocks.computeIfAbsent(key, LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.WRITE, lock);
     }
 
     @Override
-    public void acquireFeedPolicyWriteLock(LockList locks, String feedPolicyName) throws AsterixException {
+    public void acquireFeedPolicyWriteLock(LockList locks, String feedPolicyName) throws AlgebricksException {
         String key = FEED_POLICY_PREFIX + feedPolicyName;
         IMetadataLock lock = mdlocks.computeIfAbsent(key, LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.WRITE, lock);
     }
 
     @Override
-    public void acquireFeedPolicyReadLock(LockList locks, String feedPolicyName) throws AsterixException {
+    public void acquireFeedPolicyReadLock(LockList locks, String feedPolicyName) throws AlgebricksException {
         String key = FEED_POLICY_PREFIX + feedPolicyName;
         IMetadataLock lock = mdlocks.computeIfAbsent(key, LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.READ, lock);
     }
 
     @Override
-    public void acquireMergePolicyReadLock(LockList locks, String mergePolicyName) throws AsterixException {
+    public void acquireMergePolicyReadLock(LockList locks, String mergePolicyName) throws AlgebricksException {
         String key = MERGE_POLICY_PREFIX + mergePolicyName;
         IMetadataLock lock = mdlocks.computeIfAbsent(key, LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.READ, lock);
     }
 
     @Override
-    public void acquireMergePolicyWriteLock(LockList locks, String mergePolicyName) throws AsterixException {
+    public void acquireMergePolicyWriteLock(LockList locks, String mergePolicyName) throws AlgebricksException {
         String key = MERGE_POLICY_PREFIX + mergePolicyName;
         IMetadataLock lock = mdlocks.computeIfAbsent(key, LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.WRITE, lock);
     }
 
     @Override
-    public void acquireDataTypeReadLock(LockList locks, String datatypeName) throws AsterixException {
+    public void acquireDataTypeReadLock(LockList locks, String datatypeName) throws AlgebricksException {
         String key = DATATYPE_PREFIX + datatypeName;
         IMetadataLock lock = mdlocks.computeIfAbsent(key, LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.READ, lock);
     }
 
     @Override
-    public void acquireDataTypeWriteLock(LockList locks, String datatypeName) throws AsterixException {
+    public void acquireDataTypeWriteLock(LockList locks, String datatypeName) throws AlgebricksException {
         String key = DATATYPE_PREFIX + datatypeName;
         IMetadataLock lock = mdlocks.computeIfAbsent(key, LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.WRITE, lock);
     }
 
     @Override
-    public void acquireExtensionReadLock(LockList locks, String extension, String entityName) throws AsterixException {
+    public void acquireExtensionReadLock(LockList locks, String extension, String entityName)
+            throws AlgebricksException {
         String key = EXTENSION_PREFIX + extension + entityName;
         IMetadataLock lock = mdlocks.computeIfAbsent(key, LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.READ, lock);
     }
 
     @Override
-    public void acquireExtensionWriteLock(LockList locks, String extension, String entityName) throws AsterixException {
+    public void acquireExtensionWriteLock(LockList locks, String extension, String entityName)
+            throws AlgebricksException {
         String key = EXTENSION_PREFIX + extension + entityName;
         IMetadataLock lock = mdlocks.computeIfAbsent(key, LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.WRITE, lock);

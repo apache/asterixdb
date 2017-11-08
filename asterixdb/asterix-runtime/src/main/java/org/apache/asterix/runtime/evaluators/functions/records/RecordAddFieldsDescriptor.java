@@ -113,12 +113,8 @@ public class RecordAddFieldsDescriptor extends AbstractScalarFunctionDynamicDesc
                 final ArrayBackedValueStorage fieldNamePointable = new ArrayBackedValueStorage();
                 final ArrayBackedValueStorage fieldValuePointer = new ArrayBackedValueStorage();
                 final PointableHelper pointableHelper = new PointableHelper();
-                try {
-                    pointableHelper.serializeString("field-name", fieldNamePointable, true);
-                    pointableHelper.serializeString("field-value", fieldValuePointer, true);
-                } catch (AsterixException e) {
-                    throw new HyracksDataException(e);
-                }
+                pointableHelper.serializeString("field-name", fieldNamePointable, true);
+                pointableHelper.serializeString("field-value", fieldValuePointer, true);
 
                 return new IScalarEvaluator() {
                     public static final int TABLE_FRAME_SIZE = 32768; // the default 32k frame size

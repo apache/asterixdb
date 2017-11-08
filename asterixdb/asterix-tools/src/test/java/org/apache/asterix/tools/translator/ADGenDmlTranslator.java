@@ -47,7 +47,7 @@ public class ADGenDmlTranslator extends AbstractLangTranslator {
         this.aqlStatements = aqlStatements;
     }
 
-    public void translate() throws AsterixException, MetadataException, AlgebricksException {
+    public void translate() throws AlgebricksException {
         String defaultDataverse = getDefaultDataverse();
         types = new HashMap<TypeSignature, IAType>();
         typeDataGenMap = new HashMap<TypeSignature, TypeDataGen>();

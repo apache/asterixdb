@@ -43,7 +43,7 @@ public class DeepEqualAssessor {
     private final DeepEqualityVisitor equalityVisitor = new DeepEqualityVisitor();
 
     public boolean isEqual(IVisitablePointable leftPointable, IVisitablePointable rightPointable)
-            throws HyracksDataException, AsterixException {
+            throws HyracksDataException {
         if (leftPointable == null || rightPointable == null) {
             return false;
         }

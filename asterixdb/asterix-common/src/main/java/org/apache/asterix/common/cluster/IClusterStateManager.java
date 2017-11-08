@@ -27,6 +27,7 @@ import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.event.schema.cluster.Node;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.config.IOption;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.HyracksException;
@@ -115,7 +116,7 @@ public interface IClusterStateManager {
      * @param nodePartitions
      * @throws AsterixException
      */
-    void registerNodePartitions(String nodeId, ClusterPartition[] nodePartitions) throws AsterixException;
+    void registerNodePartitions(String nodeId, ClusterPartition[] nodePartitions) throws AlgebricksException;
 
     /**
      * De-register the specified node's partitions from this cluster state manager

@@ -44,6 +44,7 @@ import org.apache.asterix.common.transactions.IResourceIdManager;
 import org.apache.asterix.event.schema.cluster.Cluster;
 import org.apache.asterix.event.schema.cluster.Node;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.config.IOption;
 import org.apache.hyracks.api.config.Section;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -396,7 +397,7 @@ public class ClusterStateManager implements IClusterStateManager {
 
     @Override
     public synchronized void registerNodePartitions(String nodeId, ClusterPartition[] nodePartitions)
-            throws AsterixException {
+            throws AlgebricksException {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Registering node partitions for node " + nodeId + ": " + Arrays.toString(nodePartitions));
         }

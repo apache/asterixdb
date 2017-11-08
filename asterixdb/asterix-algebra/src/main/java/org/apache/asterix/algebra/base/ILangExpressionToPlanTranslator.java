@@ -18,7 +18,6 @@
  */
 package org.apache.asterix.algebra.base;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.lang.common.statement.Query;
 import org.apache.asterix.translator.CompiledStatements.ICompiledDmlStatement;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -40,10 +39,9 @@ public interface ILangExpressionToPlanTranslator {
      *            the compiled dml statement (only for insert/delete).
      * @return a logical query plan for the query.
      * @throws AlgebricksException
-     * @throws AsterixException
      */
     public ILogicalPlan translate(Query query, String outputDatasetName, ICompiledDmlStatement stmt)
-            throws AlgebricksException, AsterixException;
+            throws AlgebricksException;
 
     /**
      * Translates a load statement.

@@ -36,6 +36,7 @@ import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.TypeTagUtil;
 import org.apache.asterix.om.utils.NonTaggedFormatUtil;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -98,7 +99,7 @@ public class AUnorderedListSerializerDeserializer implements ISerializerDeserial
             }
             AUnorderedListType type = new AUnorderedListType(currentItemType, "unorderedlist");
             return new AUnorderedList(type, items);
-        } catch (AsterixException | IOException e) {
+        } catch (IOException e) {
             throw HyracksDataException.create(e);
         }
     }

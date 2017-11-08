@@ -91,42 +91,36 @@ public class ClusterManager implements IClusterManager {
     }
 
     @Override
-    public void addNode(ICcApplicationContext appCtx, Node node) throws AsterixException {
-        try {
-            Cluster cluster = ClusterProperties.INSTANCE.getCluster();
-            List<Pattern> pattern = new ArrayList<>();
-            String asterixInstanceName = appCtx.getMetadataProperties().getInstanceName();
-            Patterns prepareNode = PatternCreator.INSTANCE.createPrepareNodePattern(asterixInstanceName,
-                    ClusterProperties.INSTANCE.getCluster(), node);
-            cluster.getNode().add(node);
-            client.submit(prepareNode);
+    public void addNode(ICcApplicationContext appCtx, Node node) throws Exception {
+        Cluster cluster = ClusterProperties.INSTANCE.getCluster();
+        List<Pattern> pattern = new ArrayList<>();
+        String asterixInstanceName = appCtx.getMetadataProperties().getInstanceName();
+        Patterns prepareNode = PatternCreator.INSTANCE.createPrepareNodePattern(asterixInstanceName,
+                ClusterProperties.INSTANCE.getCluster(), node);
+        cluster.getNode().add(node);
+        client.submit(prepareNode);
 
-            ExternalProperties externalProps = appCtx.getExternalProperties();
-            AsterixEventServiceUtil.poulateClusterEnvironmentProperties(cluster, externalProps.getCCJavaParams(),
-                    externalProps.getNCJavaParams());
+        ExternalProperties externalProps = appCtx.getExternalProperties();
+        AsterixEventServiceUtil.poulateClusterEnvironmentProperties(cluster, externalProps.getCCJavaParams(),
+                externalProps.getNCJavaParams());
 
-            pattern.clear();
-            String ccHost = cluster.getMasterNode().getClusterIp();
-            String hostId = node.getId();
-            String nodeControllerId = asterixInstanceName + "_" + node.getId();
-            String iodevices = node.getIodevices() == null ? cluster.getIodevices() : node.getIodevices();
-            Pattern startNC =
-                    PatternCreator.INSTANCE.createNCStartPattern(ccHost, hostId, nodeControllerId, iodevices, false);
-            pattern.add(startNC);
-            Patterns startNCPattern = new Patterns(pattern);
-            client.submit(startNCPattern);
+        pattern.clear();
+        String ccHost = cluster.getMasterNode().getClusterIp();
+        String hostId = node.getId();
+        String nodeControllerId = asterixInstanceName + "_" + node.getId();
+        String iodevices = node.getIodevices() == null ? cluster.getIodevices() : node.getIodevices();
+        Pattern startNC =
+                PatternCreator.INSTANCE.createNCStartPattern(ccHost, hostId, nodeControllerId, iodevices, false);
+        pattern.add(startNC);
+        Patterns startNCPattern = new Patterns(pattern);
+        client.submit(startNCPattern);
 
-            removeNode(cluster.getSubstituteNodes().getNode(), node);
+        removeNode(cluster.getSubstituteNodes().getNode(), node);
 
-            AsterixInstance instance = lookupService.getAsterixInstance(cluster.getInstanceName());
-            instance.getCluster().getNode().add(node);
-            removeNode(instance.getCluster().getSubstituteNodes().getNode(), node);
-            lookupService.updateAsterixInstance(instance);
-
-        } catch (Exception e) {
-            throw new AsterixException(e);
-        }
-
+        AsterixInstance instance = lookupService.getAsterixInstance(cluster.getInstanceName());
+        instance.getCluster().getNode().add(node);
+        removeNode(instance.getCluster().getSubstituteNodes().getNode(), node);
+        lookupService.updateAsterixInstance(instance);
     }
 
     private void removeNode(List<Node> list, Node node) {
@@ -146,7 +140,7 @@ public class ClusterManager implements IClusterManager {
     }
 
     @Override
-    public void removeNode(Node node) throws AsterixException {
+    public void removeNode(Node node) {
         // to be implemented later.
     }
 

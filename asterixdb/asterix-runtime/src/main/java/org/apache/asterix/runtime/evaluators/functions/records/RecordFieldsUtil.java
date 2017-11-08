@@ -82,7 +82,7 @@ public class RecordFieldsUtil {
     private final static ARecordType openType = DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE;
 
     public void processRecord(ARecordPointable recordAccessor, ARecordType recType, DataOutput out, int level)
-            throws IOException, AsterixException {
+            throws IOException {
         if (level == 0) {
             // Resets pools for recycling objects before processing a top-level record.
             resetPools();
@@ -176,7 +176,7 @@ public class RecordFieldsUtil {
     }
 
     public void addNameField(IValueReference nameArg, IARecordBuilder fieldRecordBuilder)
-            throws HyracksDataException, AsterixException {
+            throws HyracksDataException {
         ArrayBackedValueStorage fieldAbvs = getTempBuffer();
 
         fieldAbvs.reset();
@@ -185,7 +185,7 @@ public class RecordFieldsUtil {
     }
 
     public void addFieldType(byte tagId, IARecordBuilder fieldRecordBuilder)
-            throws HyracksDataException, AsterixException {
+            throws HyracksDataException {
         ArrayBackedValueStorage fieldAbvs = getTempBuffer();
         ArrayBackedValueStorage valueAbvs = getTempBuffer();
 
@@ -202,7 +202,7 @@ public class RecordFieldsUtil {
     }
 
     public void addIsOpenField(boolean isOpen, IARecordBuilder fieldRecordBuilder)
-            throws HyracksDataException, AsterixException {
+            throws HyracksDataException {
         ArrayBackedValueStorage fieldAbvs = getTempBuffer();
         ArrayBackedValueStorage valueAbvs = getTempBuffer();
 
@@ -220,7 +220,7 @@ public class RecordFieldsUtil {
     }
 
     public void addListField(IValueReference listArg, IAType fieldType, IARecordBuilder fieldRecordBuilder, int level)
-            throws AsterixException, IOException {
+            throws IOException {
         ArrayBackedValueStorage fieldAbvs = getTempBuffer();
         ArrayBackedValueStorage valueAbvs = getTempBuffer();
 
@@ -234,7 +234,7 @@ public class RecordFieldsUtil {
     }
 
     public void addNestedField(IValueReference recordArg, IAType fieldType, IARecordBuilder fieldRecordBuilder,
-            int level) throws IOException, AsterixException {
+            int level) throws IOException {
         ArrayBackedValueStorage fieldAbvs = getTempBuffer();
         ArrayBackedValueStorage valueAbvs = getTempBuffer();
 
@@ -256,7 +256,7 @@ public class RecordFieldsUtil {
     }
 
     public void processListValue(IValueReference listArg, IAType fieldType, DataOutput out, int level)
-            throws AsterixException, IOException {
+            throws IOException {
         ArrayBackedValueStorage itemValue = getTempBuffer();
         IARecordBuilder listRecordBuilder = getRecordBuilder();
 

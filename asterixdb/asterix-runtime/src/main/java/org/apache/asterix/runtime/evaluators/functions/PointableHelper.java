@@ -21,7 +21,6 @@ package org.apache.asterix.runtime.evaluators.functions;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.pointables.base.IVisitablePointable;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.EnumDeserializer;
@@ -41,8 +40,8 @@ import org.apache.hyracks.util.string.UTF8StringWriter;
  */
 
 public class PointableHelper {
-    private static final IBinaryComparator STRING_BINARY_COMPARATOR = PointableBinaryComparatorFactory.of(
-            UTF8StringPointable.FACTORY).createBinaryComparator();
+    private static final IBinaryComparator STRING_BINARY_COMPARATOR =
+            PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY).createBinaryComparator();
     private final UTF8StringWriter utf8Writer;
 
     public PointableHelper() {
@@ -112,7 +111,7 @@ public class PointableHelper {
      * @param writeTag
      *            Specifying whether a tag for the string should also be written
      */
-    public void serializeString(String str, IMutableValueStorage vs, boolean writeTag) throws AsterixException {
+    public void serializeString(String str, IMutableValueStorage vs, boolean writeTag) throws HyracksDataException {
         vs.reset();
         try {
             DataOutput output = vs.getDataOutput();
@@ -121,7 +120,7 @@ public class PointableHelper {
             }
             utf8Writer.writeUTF8(str, output);
         } catch (IOException e) {
-            throw new AsterixException("Could not serialize " + str);
+            throw new HyracksDataException("Could not serialize " + str);
         }
     }
 }

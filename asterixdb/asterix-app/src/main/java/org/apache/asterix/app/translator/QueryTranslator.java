@@ -1768,7 +1768,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         String dataverseName = getActiveDataverse(stmtInsertUpsert.getDataverseName());
         final IMetadataLocker locker = new IMetadataLocker() {
             @Override
-            public void lock() throws AsterixException {
+            public void lock() throws AlgebricksException {
                 MetadataLockUtil.insertDeleteUpsertBegin(lockManager, metadataProvider.getLocks(),
                         dataverseName + "." + stmtInsertUpsert.getDatasetName());
             }
@@ -2307,9 +2307,9 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     }
 
     private interface IMetadataLocker {
-        void lock() throws AsterixException;
+        void lock() throws AlgebricksException;
 
-        void unlock() throws AsterixException;
+        void unlock() throws AlgebricksException;
     }
 
     private interface IResultPrinter {

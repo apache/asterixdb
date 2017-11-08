@@ -27,7 +27,6 @@ import java.util.Map;
 import org.apache.asterix.algebra.operators.CommitOperator;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.metadata.declared.DataSource;
 import org.apache.asterix.metadata.declared.DataSourceIndex;
@@ -227,34 +226,28 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
          * if the index is enforcing field types (For open indexes), We add a cast
          * operator to ensure type safety
          */
-        try {
-            if (primaryIndexModificationOp.getOperation() == Kind.INSERT
-                    || primaryIndexModificationOp.getOperation() == Kind.UPSERT
-                    /* Actually, delete should not be here but it is now until issue
-                     * https://issues.apache.org/jira/browse/ASTERIXDB-1507
-                     * is solved
-                     */
-                    || primaryIndexModificationOp.getOperation() == Kind.DELETE) {
-                injectFieldAccessesForIndexes(context, dataset, indexes, fieldVarsForNewRecord, recType, metaType,
-                        newRecordVar, newMetaVar, primaryIndexModificationOp, false);
-                if (replicateOp != null) {
-                    context.computeAndSetTypeEnvironmentForOperator(replicateOp);
-                }
+        if (primaryIndexModificationOp.getOperation() == Kind.INSERT
+                || primaryIndexModificationOp.getOperation() == Kind.UPSERT
+                /* Actually, delete should not be here but it is now until issue
+                 * https://issues.apache.org/jira/browse/ASTERIXDB-1507
+                 * is solved
+                 */
+                || primaryIndexModificationOp.getOperation() == Kind.DELETE) {
+            injectFieldAccessesForIndexes(context, dataset, indexes, fieldVarsForNewRecord, recType, metaType,
+                    newRecordVar, newMetaVar, primaryIndexModificationOp, false);
+            if (replicateOp != null) {
+                context.computeAndSetTypeEnvironmentForOperator(replicateOp);
             }
-            if (primaryIndexModificationOp.getOperation() == Kind.UPSERT
-            /* Actually, delete should be here but it is not until issue
-             * https://issues.apache.org/jira/browse/ASTERIXDB-1507
-             * is solved
-             */) {
-                List<LogicalVariable> beforeOpMetaVars = primaryIndexModificationOp
-                        .getBeforeOpAdditionalNonFilteringVars();
-                LogicalVariable beforeOpMetaVar = beforeOpMetaVars == null ? null : beforeOpMetaVars.get(0);
-                currentTop = injectFieldAccessesForIndexes(context, dataset, indexes, fieldVarsForBeforeOperation,
-                        recType, metaType, primaryIndexModificationOp.getBeforeOpRecordVar(), beforeOpMetaVar,
-                        currentTop, true);
-            }
-        } catch (AsterixException e) {
-            throw new AlgebricksException(e);
+        }
+        if (primaryIndexModificationOp.getOperation() == Kind.UPSERT
+        /* Actually, delete should be here but it is not until issue
+         * https://issues.apache.org/jira/browse/ASTERIXDB-1507
+         * is solved
+         */) {
+            List<LogicalVariable> beforeOpMetaVars = primaryIndexModificationOp.getBeforeOpAdditionalNonFilteringVars();
+            LogicalVariable beforeOpMetaVar = beforeOpMetaVars == null ? null : beforeOpMetaVars.get(0);
+            currentTop = injectFieldAccessesForIndexes(context, dataset, indexes, fieldVarsForBeforeOperation, recType,
+                    metaType, primaryIndexModificationOp.getBeforeOpRecordVar(), beforeOpMetaVar, currentTop, true);
         }
 
         // Iterate each secondary index and applying Index Update operations.

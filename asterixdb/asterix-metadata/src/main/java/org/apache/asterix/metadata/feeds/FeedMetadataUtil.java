@@ -99,7 +99,7 @@ public class FeedMetadataUtil {
     }
 
     public static void validateFeed(Feed feed, MetadataTransactionContext mdTxnCtx, ICcApplicationContext appCtx)
-            throws AsterixException {
+            throws AlgebricksException {
         try {
             String adapterName = feed.getAdapterName();
             Map<String, String> configuration = feed.getAdapterConfiguration();

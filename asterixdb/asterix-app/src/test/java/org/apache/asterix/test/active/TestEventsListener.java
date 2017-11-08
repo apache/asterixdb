@@ -30,13 +30,13 @@ import org.apache.asterix.active.IRetryPolicyFactory;
 import org.apache.asterix.app.active.ActiveEntityEventsListener;
 import org.apache.asterix.common.api.IMetadataLockManager;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.metadata.LockList;
 import org.apache.asterix.external.feed.watch.WaitForStateSubscriber;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.translator.IStatementExecutor;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.JobId;
@@ -110,7 +110,7 @@ public class TestEventsListener extends ActiveEntityEventsListener {
         try {
             metadataProvider.getApplicationContext().getMetadataLockManager()
                     .acquireDatasetReadLock(metadataProvider.getLocks(), "Default.type");
-        } catch (AsterixException e) {
+        } catch (AlgebricksException e) {
             throw HyracksDataException.create(e);
         }
         failCompile(onStart);

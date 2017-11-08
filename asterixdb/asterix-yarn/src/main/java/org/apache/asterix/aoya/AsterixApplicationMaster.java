@@ -46,7 +46,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.asterix.common.config.GlobalConfig;
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.utils.StorageConstants;
 import org.apache.asterix.event.schema.yarnCluster.Cluster;
 import org.apache.asterix.event.schema.yarnCluster.MasterNode;
@@ -89,6 +88,7 @@ import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.util.ConverterUtils;
 import org.apache.hadoop.yarn.util.Records;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.log4j.ConsoleAppender;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -383,7 +383,7 @@ public class AsterixApplicationMaster {
         LOG.info("Path suffix: " + instanceConfPath);
     }
 
-    public boolean init() throws ParseException, IOException, AsterixException, YarnException {
+    public boolean init() throws ParseException, IOException, AlgebricksException, YarnException {
         try {
             localizeDFSResources();
             clusterDesc = Utils.parseYarnClusterConfig(CLUSTER_DESC_PATH);

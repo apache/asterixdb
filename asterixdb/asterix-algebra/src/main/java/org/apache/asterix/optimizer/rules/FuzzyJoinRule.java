@@ -26,7 +26,6 @@ import java.util.Locale;
 
 import org.apache.asterix.aqlplus.parser.AQLPlusParser;
 import org.apache.asterix.aqlplus.parser.ParseException;
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.lang.common.base.Clause;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.metadata.declared.MetadataProvider;
@@ -318,12 +317,7 @@ public class FuzzyJoinRule implements IAlgebraicRewriteRule {
         deepCopyVisitor.updatePrimaryKeys(context);
         deepCopyVisitor.reset();
 
-        ILogicalPlan plan;
-        try {
-            plan = translator.translate(clauses);
-        } catch (AsterixException e) {
-            throw new AlgebricksException(e);
-        }
+        ILogicalPlan plan = translator.translate(clauses);
         context.setVarCounter(counter.get());
 
         ILogicalOperator outputOp = plan.getRoots().get(0).getValue();

@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.dataflow.data.nontagged.serde.ABooleanSerializerDeserializer;
@@ -573,32 +572,27 @@ public class JObjectAccessors {
             JList list = pointable.ordered() ? new JOrderedList(listType) : new JUnorderedList(listType);
             IJObject listItem;
             int index = 0;
-            try {
-                for (IVisitablePointable itemPointable : items) {
-                    IVisitablePointable itemTagPointable = itemTags.get(index);
-                    ATypeTag itemTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER
-                            .deserialize(itemTagPointable.getByteArray()[itemTagPointable.getStartOffset()]);
-                    IAType fieldType;
-                    fieldType = TypeTagUtil.getBuiltinTypeByTag(itemTypeTag);
-                    typeInfo.reset(fieldType, itemTypeTag);
-                    switch (itemTypeTag) {
-                        case OBJECT:
-                            listItem = pointableVisitor.visit((ARecordVisitablePointable) itemPointable, typeInfo);
-                            break;
-                        case MULTISET:
-                        case ARRAY:
-                            listItem = pointableVisitor.visit((AListVisitablePointable) itemPointable, typeInfo);
-                            break;
-                        case ANY:
-                            throw new RuntimeDataException(ErrorCode.LIBRARY_JOBJECT_ACCESSOR_CANNOT_PARSE_TYPE,
-                                    listType.getTypeTag());
-                        default:
-                            listItem = pointableVisitor.visit((AFlatValuePointable) itemPointable, typeInfo);
-                    }
-                    list.add(listItem);
+            for (IVisitablePointable itemPointable : items) {
+                IVisitablePointable itemTagPointable = itemTags.get(index);
+                ATypeTag itemTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER
+                        .deserialize(itemTagPointable.getByteArray()[itemTagPointable.getStartOffset()]);
+                final IAType fieldType = TypeTagUtil.getBuiltinTypeByTag(itemTypeTag);
+                typeInfo.reset(fieldType, itemTypeTag);
+                switch (itemTypeTag) {
+                    case OBJECT:
+                        listItem = pointableVisitor.visit((ARecordVisitablePointable) itemPointable, typeInfo);
+                        break;
+                    case MULTISET:
+                    case ARRAY:
+                        listItem = pointableVisitor.visit((AListVisitablePointable) itemPointable, typeInfo);
+                        break;
+                    case ANY:
+                        throw new RuntimeDataException(ErrorCode.LIBRARY_JOBJECT_ACCESSOR_CANNOT_PARSE_TYPE,
+                                listType.getTypeTag());
+                    default:
+                        listItem = pointableVisitor.visit((AFlatValuePointable) itemPointable, typeInfo);
                 }
-            } catch (AsterixException exception) {
-                throw HyracksDataException.create(exception);
+                list.add(listItem);
             }
             return list;
         }

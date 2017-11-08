@@ -18,7 +18,6 @@
  */
 package org.apache.asterix.common.api;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.metadata.LockList;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 
@@ -31,10 +30,10 @@ public interface IMetadataLockManager {
      *            the lock list to add the new lock to
      * @param dataverseName
      *            the dataverse name
-     * @throws AsterixException
+     * @throws AlgebricksException
      *             if lock couldn't be acquired
      */
-    void acquireDataverseReadLock(LockList locks, String dataverseName) throws AsterixException;
+    void acquireDataverseReadLock(LockList locks, String dataverseName) throws AlgebricksException;
 
     /**
      * Acquire write lock on the dataverse
@@ -43,10 +42,10 @@ public interface IMetadataLockManager {
      *            the lock list to add the new lock to
      * @param dataverseName
      *            the dataverse name
-     * @throws AsterixException
+     * @throws AlgebricksException
      *             if lock couldn't be acquired
      */
-    void acquireDataverseWriteLock(LockList locks, String dataverseName) throws AsterixException;
+    void acquireDataverseWriteLock(LockList locks, String dataverseName) throws AlgebricksException;
 
     /**
      * Acquire read lock on the dataset (for queries)
@@ -55,10 +54,10 @@ public interface IMetadataLockManager {
      *            the lock list to add the new lock to
      * @param datasetFullyQualifiedName
      *            the fully qualified name of the dataset
-     * @throws AsterixException
+     * @throws AlgebricksException
      *             if lock couldn't be acquired
      */
-    void acquireDatasetReadLock(LockList locks, String datasetFullyQualifiedName) throws AsterixException;
+    void acquireDatasetReadLock(LockList locks, String datasetFullyQualifiedName) throws AlgebricksException;
 
     /**
      * Acquire write lock on the dataset (for dataset create, dataset drop, and index drop)
@@ -67,10 +66,10 @@ public interface IMetadataLockManager {
      *            the lock list to add the new lock to
      * @param datasetFullyQualifiedName
      *            the fully qualified name of the dataset
-     * @throws AsterixException
+     * @throws AlgebricksException
      *             if lock couldn't be acquired
      */
-    void acquireDatasetWriteLock(LockList locks, String datasetFullyQualifiedName) throws AsterixException;
+    void acquireDatasetWriteLock(LockList locks, String datasetFullyQualifiedName) throws AlgebricksException;
 
     /**
      * Acquire modify lock on the dataset (for inserts, upserts, deletes) Mutually exclusive with create index lock
@@ -79,10 +78,10 @@ public interface IMetadataLockManager {
      *            the lock list to add the new lock to
      * @param datasetFullyQualifiedName
      *            the fully qualified name of the dataset
-     * @throws AsterixException
+     * @throws AlgebricksException
      *             if lock couldn't be acquired
      */
-    void acquireDatasetModifyLock(LockList locks, String datasetFullyQualifiedName) throws AsterixException;
+    void acquireDatasetModifyLock(LockList locks, String datasetFullyQualifiedName) throws AlgebricksException;
 
     /**
      * Acquire create index lock on the dataset (for index creation) Mutually exclusive with modify lock
@@ -91,10 +90,10 @@ public interface IMetadataLockManager {
      *            the lock list to add the new lock to
      * @param datasetFullyQualifiedName
      *            the fully qualified name of the dataset
-     * @throws AsterixException
+     * @throws AlgebricksException
      *             if lock couldn't be acquired
      */
-    void acquireDatasetCreateIndexLock(LockList locks, String datasetFullyQualifiedName) throws AsterixException;
+    void acquireDatasetCreateIndexLock(LockList locks, String datasetFullyQualifiedName) throws AlgebricksException;
 
     /**
      * Acquire exclusive modify lock on the dataset. only a single thread can acquire this lock and it is mutually
@@ -104,11 +103,11 @@ public interface IMetadataLockManager {
      *            the lock list to add the new lock to
      * @param datasetFullyQualifiedName
      *            the fully qualified name of the dataset
-     * @throws AsterixException
+     * @throws AlgebricksException
      *             if lock couldn't be acquired
      */
     void acquireDatasetExclusiveModificationLock(LockList locks, String datasetFullyQualifiedName)
-            throws AsterixException;
+            throws AlgebricksException;
 
     /**
      * Acquire read lock on the function
@@ -117,10 +116,10 @@ public interface IMetadataLockManager {
      *            the lock list to add the new lock to
      * @param functionFullyQualifiedName
      *            the fully qualified name of the function
-     * @throws AsterixException
+     * @throws AlgebricksException
      *             if lock couldn't be acquired
      */
-    void acquireFunctionReadLock(LockList locks, String functionFullyQualifiedName) throws AsterixException;
+    void acquireFunctionReadLock(LockList locks, String functionFullyQualifiedName) throws AlgebricksException;
 
     /**
      * Acquire write lock on the function
@@ -129,10 +128,10 @@ public interface IMetadataLockManager {
      *            the lock list to add the new lock to
      * @param functionFullyQualifiedName
      *            the fully qualified name of the function
-     * @throws AsterixException
+     * @throws AlgebricksException
      *             if lock couldn't be acquired
      */
-    void acquireFunctionWriteLock(LockList locks, String functionFullyQualifiedName) throws AsterixException;
+    void acquireFunctionWriteLock(LockList locks, String functionFullyQualifiedName) throws AlgebricksException;
 
     /**
      * Acquire read lock on the node group
@@ -141,10 +140,10 @@ public interface IMetadataLockManager {
      *            the lock list to add the new lock to
      * @param nodeGroupName
      *            the name of the node group
-     * @throws AsterixException
+     * @throws AlgebricksException
      *             if lock couldn't be acquired
      */
-    void acquireNodeGroupReadLock(LockList locks, String nodeGroupName) throws AsterixException;
+    void acquireNodeGroupReadLock(LockList locks, String nodeGroupName) throws AlgebricksException;
 
     /**
      * Acquire write lock on the node group
@@ -153,10 +152,10 @@ public interface IMetadataLockManager {
      *            the lock list to add the new lock to
      * @param nodeGroupName
      *            the name of the node group
-     * @throws AsterixException
+     * @throws AlgebricksException
      *             if lock couldn't be acquired
      */
-    void acquireNodeGroupWriteLock(LockList locks, String nodeGroupName) throws AsterixException;
+    void acquireNodeGroupWriteLock(LockList locks, String nodeGroupName) throws AlgebricksException;
 
     /**
      * Acquire read lock on the active entity
@@ -165,10 +164,10 @@ public interface IMetadataLockManager {
      *            the lock list to add the new lock to
      * @param entityFullyQualifiedName
      *            the fully qualified name of the active entity
-     * @throws AsterixException
+     * @throws AlgebricksException
      *             if lock couldn't be acquired
      */
-    void acquireActiveEntityReadLock(LockList locks, String entityFullyQualifiedName) throws AsterixException;
+    void acquireActiveEntityReadLock(LockList locks, String entityFullyQualifiedName) throws AlgebricksException;
 
     /**
      * Acquire write lock on the active entity
@@ -177,10 +176,10 @@ public interface IMetadataLockManager {
      *            the lock list to add the new lock to
      * @param entityFullyQualifiedName
      *            the fully qualified name of the active entity
-     * @throws AsterixException
+     * @throws AlgebricksException
      *             if lock couldn't be acquired
      */
-    void acquireActiveEntityWriteLock(LockList locks, String entityFullyQualifiedName) throws AsterixException;
+    void acquireActiveEntityWriteLock(LockList locks, String entityFullyQualifiedName) throws AlgebricksException;
 
     /**
      * Acquire read lock on the feed policy
@@ -189,10 +188,10 @@ public interface IMetadataLockManager {
      *            the lock list to add the new lock to
      * @param feedPolicyFullyQualifiedName
      *            the fully qualified name of the feed policy
-     * @throws AsterixException
+     * @throws AlgebricksException
      *             if lock couldn't be acquired
      */
-    void acquireFeedPolicyWriteLock(LockList locks, String feedPolicyFullyQualifiedName) throws AsterixException;
+    void acquireFeedPolicyWriteLock(LockList locks, String feedPolicyFullyQualifiedName) throws AlgebricksException;
 
     /**
      * Acquire write lock on the feed policy
@@ -201,10 +200,10 @@ public interface IMetadataLockManager {
      *            the lock list to add the new lock to
      * @param feedPolicyFullyQualifiedName
      *            the fully qualified name of the feed policy
-     * @throws AsterixException
+     * @throws AlgebricksException
      *             if lock couldn't be acquired
      */
-    void acquireFeedPolicyReadLock(LockList locks, String feedPolicyFullyQualifiedName) throws AsterixException;
+    void acquireFeedPolicyReadLock(LockList locks, String feedPolicyFullyQualifiedName) throws AlgebricksException;
 
     /**
      * Acquire read lock on the merge policy
@@ -213,10 +212,10 @@ public interface IMetadataLockManager {
      *            the lock list to add the new lock to
      * @param mergePolicyFullyQualifiedName
      *            the fully qualified name of the merge policy
-     * @throws AsterixException
+     * @throws AlgebricksException
      *             if lock couldn't be acquired
      */
-    void acquireMergePolicyReadLock(LockList locks, String mergePolicyFullyQualifiedName) throws AsterixException;
+    void acquireMergePolicyReadLock(LockList locks, String mergePolicyFullyQualifiedName) throws AlgebricksException;
 
     /**
      * Acquire write lock on the merge policy
@@ -225,10 +224,10 @@ public interface IMetadataLockManager {
      *            the lock list to add the new lock to
      * @param mergePolicyFullyQualifiedName
      *            the fully qualified name of the merge policy
-     * @throws AsterixException
+     * @throws AlgebricksException
      *             if lock couldn't be acquired
      */
-    void acquireMergePolicyWriteLock(LockList locks, String mergePolicyFullyQualifiedName) throws AsterixException;
+    void acquireMergePolicyWriteLock(LockList locks, String mergePolicyFullyQualifiedName) throws AlgebricksException;
 
     /**
      * Acquire read lock on the data type
@@ -237,10 +236,10 @@ public interface IMetadataLockManager {
      *            the lock list to add the new lock to
      * @param datatypeFullyQualifiedName
      *            the fully qualified name of the data type
-     * @throws AsterixException
+     * @throws AlgebricksException
      *             if lock couldn't be acquired
      */
-    void acquireDataTypeReadLock(LockList locks, String datatypeFullyQualifiedName) throws AsterixException;
+    void acquireDataTypeReadLock(LockList locks, String datatypeFullyQualifiedName) throws AlgebricksException;
 
     /**
      * Acquire write lock on the data type
@@ -249,10 +248,10 @@ public interface IMetadataLockManager {
      *            the lock list to add the new lock to
      * @param datatypeFullyQualifiedName
      *            the fully qualified name of the data type
-     * @throws AsterixException
+     * @throws AlgebricksException
      *             if lock couldn't be acquired
      */
-    void acquireDataTypeWriteLock(LockList locks, String datatypeFullyQualifiedName) throws AsterixException;
+    void acquireDataTypeWriteLock(LockList locks, String datatypeFullyQualifiedName) throws AlgebricksException;
 
     /**
      * Acquire read lock on the extension entity
@@ -263,11 +262,11 @@ public interface IMetadataLockManager {
      *            the extension key
      * @param extensionEntityFullyQualifiedName
      *            the fully qualified name of the extension entity
-     * @throws AsterixException
+     * @throws AlgebricksException
      *             if lock couldn't be acquired
      */
     void acquireExtensionReadLock(LockList locks, String extension, String extensionEntityFullyQualifiedName)
-            throws AsterixException;
+            throws AlgebricksException;
 
     /**
      * Acquire write lock on the extension entity
@@ -278,11 +277,11 @@ public interface IMetadataLockManager {
      *            the extension key
      * @param extensionEntityFullyQualifiedName
      *            the fully qualified name of the extension entity
-     * @throws AsterixException
+     * @throws AlgebricksException
      *             if lock couldn't be acquired
      */
     void acquireExtensionWriteLock(LockList locks, String extension, String extensionEntityFullyQualifiedName)
-            throws AsterixException;
+            throws AlgebricksException;
 
     /**
      * Upgrade a previously acquired exclusive modification lock on the dataset to a write lock

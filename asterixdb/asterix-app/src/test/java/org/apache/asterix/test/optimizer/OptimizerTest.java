@@ -45,6 +45,7 @@ import org.apache.asterix.test.base.AsterixTestHelper;
 import org.apache.asterix.test.common.TestHelper;
 import org.apache.asterix.test.runtime.HDFSCluster;
 import org.apache.asterix.translator.IStatementExecutorFactory;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.junit.AfterClass;
 import org.junit.Assume;
@@ -189,7 +190,7 @@ public class OptimizerTest {
                             query, plan, provider, statementExecutorFactory, storageComponentProvider);
             try {
                 asterix.compile(true, false, false, true, true, false, false);
-            } catch (AsterixException e) {
+            } catch (AlgebricksException e) {
                 plan.close();
                 query.close();
                 throw new Exception("Compile ERROR for " + queryFile + ": " + e.getMessage(), e);

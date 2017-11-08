@@ -27,13 +27,12 @@ import java.util.Map;
 
 import org.apache.asterix.common.annotations.IRecordFieldDataGen;
 import org.apache.asterix.common.annotations.RecordDataGenAnnotation;
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.lang.common.expression.OrderedListTypeDefinition;
 import org.apache.asterix.lang.common.expression.RecordTypeDefinition;
+import org.apache.asterix.lang.common.expression.RecordTypeDefinition.RecordKind;
 import org.apache.asterix.lang.common.expression.TypeExpression;
 import org.apache.asterix.lang.common.expression.TypeReferenceExpression;
 import org.apache.asterix.lang.common.expression.UnorderedListTypeDefinition;
-import org.apache.asterix.lang.common.expression.RecordTypeDefinition.RecordKind;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.entities.BuiltinTypeMap;
@@ -61,8 +60,7 @@ public class TypeTranslator {
     }
 
     public static Map<TypeSignature, IAType> computeTypes(MetadataTransactionContext mdTxnCtx, TypeExpression typeExpr,
-            String typeName, String typeDataverse, Map<TypeSignature, IAType> typeMap)
-            throws AlgebricksException {
+            String typeName, String typeDataverse, Map<TypeSignature, IAType> typeMap) throws AlgebricksException {
         Map<String, Map<ARecordType, List<Integer>>> incompleteFieldTypes = new HashMap<>();
         Map<TypeSignature, List<AbstractCollectionType>> incompleteItemTypes = new HashMap<>();
         Map<TypeSignature, List<TypeSignature>> incompleteTopLevelTypeReferences = new HashMap<>();
@@ -89,48 +87,43 @@ public class TypeTranslator {
             throw new AlgebricksException("Cannot redefine builtin type " + typeName + " .");
         }
         TypeSignature typeSignature = new TypeSignature(typeDataverse, typeName);
-        try {
-            switch (typeExpr.getTypeKind()) {
-                case TYPEREFERENCE: {
-                    TypeReferenceExpression tre = (TypeReferenceExpression) typeExpr;
-                    IAType t = solveTypeReference(new TypeSignature(
-                            tre.getIdent().first == null ? typeDataverse : tre.getIdent().first.getValue(),
-                            tre.getIdent().second.getValue()), typeMap);
-                    if (t != null) {
-                        typeMap.put(typeSignature, t);
-                    } else {
-                        addIncompleteTopLevelTypeReference(tre, incompleteTopLevelTypeReferences,
-                                typeDataverse);
-                    }
-                    break;
+        switch (typeExpr.getTypeKind()) {
+            case TYPEREFERENCE: {
+                TypeReferenceExpression tre = (TypeReferenceExpression) typeExpr;
+                IAType t = solveTypeReference(new TypeSignature(
+                        tre.getIdent().first == null ? typeDataverse : tre.getIdent().first.getValue(),
+                        tre.getIdent().second.getValue()), typeMap);
+                if (t != null) {
+                    typeMap.put(typeSignature, t);
+                } else {
+                    addIncompleteTopLevelTypeReference(tre, incompleteTopLevelTypeReferences, typeDataverse);
                 }
-                case RECORD: {
-                    RecordTypeDefinition rtd = (RecordTypeDefinition) typeExpr;
-                    ARecordType recType = computeRecordType(typeSignature, rtd, typeMap, incompleteFieldTypes,
-                            incompleteItemTypes, typeDataverse);
-                    typeMap.put(typeSignature, recType);
-                    break;
-                }
-                case ORDEREDLIST: {
-                    OrderedListTypeDefinition oltd = (OrderedListTypeDefinition) typeExpr;
-                    AOrderedListType olType = computeOrderedListType(typeSignature, oltd, typeMap, incompleteItemTypes,
-                            incompleteFieldTypes, typeDataverse);
-                    typeMap.put(typeSignature, olType);
-                    break;
-                }
-                case UNORDEREDLIST: {
-                    UnorderedListTypeDefinition ultd = (UnorderedListTypeDefinition) typeExpr;
-                    AUnorderedListType ulType = computeUnorderedListType(typeSignature, ultd, typeMap,
-                            incompleteItemTypes, incompleteFieldTypes, typeDataverse);
-                    typeMap.put(typeSignature, ulType);
-                    break;
-                }
-                default: {
-                    throw new IllegalStateException();
-                }
+                break;
             }
-        } catch (AsterixException e) {
-            throw new AlgebricksException(e);
+            case RECORD: {
+                RecordTypeDefinition rtd = (RecordTypeDefinition) typeExpr;
+                ARecordType recType = computeRecordType(typeSignature, rtd, typeMap, incompleteFieldTypes,
+                        incompleteItemTypes, typeDataverse);
+                typeMap.put(typeSignature, recType);
+                break;
+            }
+            case ORDEREDLIST: {
+                OrderedListTypeDefinition oltd = (OrderedListTypeDefinition) typeExpr;
+                AOrderedListType olType = computeOrderedListType(typeSignature, oltd, typeMap, incompleteItemTypes,
+                        incompleteFieldTypes, typeDataverse);
+                typeMap.put(typeSignature, olType);
+                break;
+            }
+            case UNORDEREDLIST: {
+                UnorderedListTypeDefinition ultd = (UnorderedListTypeDefinition) typeExpr;
+                AUnorderedListType ulType = computeUnorderedListType(typeSignature, ultd, typeMap, incompleteItemTypes,
+                        incompleteFieldTypes, typeDataverse);
+                typeMap.put(typeSignature, ulType);
+                break;
+            }
+            default: {
+                throw new IllegalStateException();
+            }
         }
     }
 
@@ -204,7 +197,7 @@ public class TypeTranslator {
     private static AOrderedListType computeOrderedListType(TypeSignature typeSignature, OrderedListTypeDefinition oltd,
             Map<TypeSignature, IAType> typeMap, Map<TypeSignature, List<AbstractCollectionType>> incompleteItemTypes,
             Map<String, Map<ARecordType, List<Integer>>> incompleteFieldTypes, String defaultDataverse)
-            throws AsterixException {
+            throws AlgebricksException {
         TypeExpression tExpr = oltd.getItemTypeExpression();
         String typeName = typeSignature != null ? typeSignature.getName() : null;
         AOrderedListType aolt = new AOrderedListType(null, typeName);
@@ -216,7 +209,7 @@ public class TypeTranslator {
             UnorderedListTypeDefinition ultd, Map<TypeSignature, IAType> typeMap,
             Map<TypeSignature, List<AbstractCollectionType>> incompleteItemTypes,
             Map<String, Map<ARecordType, List<Integer>>> incompleteFieldTypes, String defaulDataverse)
-            throws AsterixException {
+            throws AlgebricksException {
         TypeExpression tExpr = ultd.getItemTypeExpression();
         String typeName = typeSignature != null ? typeSignature.getName() : null;
         AUnorderedListType ault = new AUnorderedListType(null, typeName);
@@ -227,7 +220,7 @@ public class TypeTranslator {
     private static void setCollectionItemType(TypeExpression tExpr, Map<TypeSignature, IAType> typeMap,
             Map<TypeSignature, List<AbstractCollectionType>> incompleteItemTypes,
             Map<String, Map<ARecordType, List<Integer>>> incompleteFieldTypes, AbstractCollectionType act,
-            String defaultDataverse) throws AsterixException {
+            String defaultDataverse) throws AlgebricksException {
         switch (tExpr.getTypeKind()) {
             case ORDEREDLIST: {
                 OrderedListTypeDefinition oltd = (OrderedListTypeDefinition) tExpr;
@@ -327,7 +320,7 @@ public class TypeTranslator {
     private static ARecordType computeRecordType(TypeSignature typeSignature, RecordTypeDefinition rtd,
             Map<TypeSignature, IAType> typeMap, Map<String, Map<ARecordType, List<Integer>>> incompleteFieldTypes,
             Map<TypeSignature, List<AbstractCollectionType>> incompleteItemTypes, String defaultDataverse)
-            throws AsterixException {
+            throws AlgebricksException {
         List<String> names = rtd.getFieldNames();
         int n = names.size();
         String[] fldNames = new String[n];
@@ -337,8 +330,8 @@ public class TypeTranslator {
             fldNames[i++] = s;
         }
         boolean isOpen = rtd.getRecordKind() == RecordKind.OPEN;
-        ARecordType recType = new ARecordType(typeSignature == null ? null : typeSignature.getName(), fldNames,
-                fldTypes, isOpen);
+        ARecordType recType =
+                new ARecordType(typeSignature == null ? null : typeSignature.getName(), fldNames, fldTypes, isOpen);
         List<IRecordFieldDataGen> fieldDataGen = rtd.getFieldDataGen();
         if (fieldDataGen.size() == n) {
             IRecordFieldDataGen[] rfdg = new IRecordFieldDataGen[n];

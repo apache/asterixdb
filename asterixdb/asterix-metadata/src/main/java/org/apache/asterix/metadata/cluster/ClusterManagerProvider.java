@@ -58,12 +58,12 @@ public class ClusterManagerProvider {
     }
     private static class NoopClusterManager implements IClusterManager {
         @Override
-        public void addNode(ICcApplicationContext appCtx, Node node) throws AsterixException {
+        public void addNode(ICcApplicationContext appCtx, Node node) {
             // no-op
         }
 
         @Override
-        public void removeNode(Node node) throws AsterixException {
+        public void removeNode(Node node) {
             // no-op
         }
 
@@ -83,7 +83,7 @@ public class ClusterManagerProvider {
         }
 
         @Override
-        public void notifyStartupCompleted() throws Exception {
+        public void notifyStartupCompleted() {
             // no-op
         }
     }

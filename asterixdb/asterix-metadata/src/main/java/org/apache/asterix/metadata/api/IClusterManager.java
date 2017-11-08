@@ -29,15 +29,15 @@ public interface IClusterManager {
 
     /**
      * @param node
-     * @throws AsterixException
+     * @throws Exception
      */
-    public void addNode(ICcApplicationContext appCtx, Node node) throws AsterixException;
+    public void addNode(ICcApplicationContext appCtx, Node node) throws Exception;
 
     /**
      * @param node
-     * @throws AsterixException
+     * @throws Exception
      */
-    public void removeNode(Node node) throws AsterixException;
+    public void removeNode(Node node) throws Exception;
 
     /**
      * @param subscriber

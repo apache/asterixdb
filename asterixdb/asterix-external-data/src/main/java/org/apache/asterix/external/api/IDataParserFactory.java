@@ -22,9 +22,9 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.external.api.IExternalDataSourceFactory.DataSourceType;
 import org.apache.asterix.om.types.ARecordType;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 
 public interface IDataParserFactory extends Serializable {
 
@@ -34,7 +34,6 @@ public interface IDataParserFactory extends Serializable {
      *         an instance of IDataParserFactory with RECORDS data source type must implement IRecordDataParserFactory
      *         <T>
      *         an instance of IDataParserFactory with STREAM data source type must implement IStreamDataParserFactory
-     * @throws AsterixException
      */
     public DataSourceType getDataSourceType();
 
@@ -44,7 +43,7 @@ public interface IDataParserFactory extends Serializable {
      *
      * @param configuration
      */
-    public void configure(Map<String, String> configuration) throws AsterixException;
+    public void configure(Map<String, String> configuration) throws AlgebricksException;
 
     /**
      * Set the record type expected to be produced by parsers created by this factory
