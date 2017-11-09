@@ -72,8 +72,7 @@ class ClusterControllerIPCI implements IIPCI {
                 break;
             case NODE_HEARTBEAT:
                 CCNCFunctions.NodeHeartbeatFunction nhf = (CCNCFunctions.NodeHeartbeatFunction) fn;
-                ccs.getWorkQueue().schedule(new NodeHeartbeatWork(ccs, nhf.getNodeId(),
-                        nhf.getHeartbeatData()));
+                ccs.getExecutor().execute(new NodeHeartbeatWork(ccs, nhf.getNodeId(), nhf.getHeartbeatData()));
                 break;
             case NOTIFY_JOBLET_CLEANUP:
                 CCNCFunctions.NotifyJobletCleanupFunction njcf = (CCNCFunctions.NotifyJobletCleanupFunction) fn;

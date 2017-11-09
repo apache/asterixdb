@@ -38,7 +38,7 @@ public class HyracksDataException extends HyracksException {
             return (HyracksDataException) cause;
         } else if (cause instanceof Error) {
             // don't wrap errors, allow them to propagate
-            throw (Error)cause;
+            throw (Error) cause;
         } else if (cause instanceof InterruptedException && !Thread.currentThread().isInterrupted()) {
             // TODO(mblow): why not force interrupt on current thread?
             LOGGER.log(Level.WARNING,
@@ -76,6 +76,12 @@ public class HyracksDataException extends HyracksException {
     public HyracksDataException(String component, int errorCode, String message, Throwable cause, String nodeId,
             Serializable... params) {
         super(component, errorCode, message, cause, nodeId, params);
+    }
+
+    public HyracksDataException(String component, int errorCode, String message, Throwable cause, String nodeId,
+            StackTraceElement[] stackTrace, Serializable... params) {
+        super(component, errorCode, message, cause, nodeId, params);
+        setStackTrace(stackTrace);
     }
 
     /**
@@ -141,6 +147,6 @@ public class HyracksDataException extends HyracksException {
 
     public static HyracksDataException create(HyracksDataException e, String nodeId) {
         return new HyracksDataException(e.getComponent(), e.getErrorCode(), e.getMessage(), e.getCause(), nodeId,
-                e.getParams());
+                e.getStackTrace(), e.getParams());
     }
 }
