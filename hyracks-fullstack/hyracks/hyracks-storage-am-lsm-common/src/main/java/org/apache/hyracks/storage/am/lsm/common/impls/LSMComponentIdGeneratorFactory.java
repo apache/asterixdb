@@ -17,22 +17,21 @@
  * under the License.
  */
 
-package org.apache.asterix.common.ioopcallbacks;
+package org.apache.hyracks.storage.am.lsm.common.impls;
 
+import org.apache.hyracks.api.application.INCServiceContext;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentIdGenerator;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentIdGeneratorFactory;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 
-public class LSMRTreeIOOperationCallbackFactory extends AbstractLSMIndexIOOperationCallbackFactory {
-
-    private static final long serialVersionUID = 1L;
-
-    public LSMRTreeIOOperationCallbackFactory(ILSMComponentIdGeneratorFactory idGeneratorFactory) {
-        super(idGeneratorFactory);
-    }
+/**
+ * A default implementation of {@link ILSMComponentIdGeneratorFactory}.
+ *
+ */
+public class LSMComponentIdGeneratorFactory implements ILSMComponentIdGeneratorFactory {
 
     @Override
-    public ILSMIOOperationCallback createIoOpCallback(ILSMIndex index) {
-        return new LSMRTreeIOOperationCallback(index, getComponentIdGenerator());
+    public ILSMComponentIdGenerator getComponentIdGenerator(INCServiceContext serviceCtx) {
+        return new LSMComponentIdGenerator();
     }
+
 }

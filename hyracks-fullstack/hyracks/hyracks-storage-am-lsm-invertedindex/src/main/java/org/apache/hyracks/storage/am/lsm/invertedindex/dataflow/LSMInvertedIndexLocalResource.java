@@ -87,6 +87,7 @@ public class LSMInvertedIndexLocalResource extends LsmResource {
         IBufferCache bufferCache = storageManager.getBufferCache(serviceCtx);
         ILSMMergePolicy mergePolicy = mergePolicyFactory.createMergePolicy(mergePolicyProperties, serviceCtx);
         ILSMIOOperationScheduler ioScheduler = ioSchedulerProvider.getIoScheduler(serviceCtx);
+        ioOpCallbackFactory.initialize(serviceCtx);
         if (isPartitioned) {
             return InvertedIndexUtils.createPartitionedLSMInvertedIndex(ioManager, virtualBufferCaches, typeTraits,
                     cmpFactories, tokenTypeTraits, tokenCmpFactories, tokenizerFactory, bufferCache,

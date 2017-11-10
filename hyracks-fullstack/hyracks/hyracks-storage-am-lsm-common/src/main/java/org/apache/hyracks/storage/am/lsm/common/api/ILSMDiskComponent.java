@@ -48,14 +48,6 @@ public interface ILSMDiskComponent extends ILSMComponent {
     int getFileReferenceCount();
 
     /**
-     * Return the component Id of this disk component from its metadata
-     *
-     * @return
-     * @throws HyracksDataException
-     */
-    ILSMDiskComponentId getComponentId() throws HyracksDataException;
-
-    /**
      * @return LsmIndex of the component
      */
     AbstractLSMIndex getLsmIndex();

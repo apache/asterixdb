@@ -23,6 +23,7 @@ import org.apache.asterix.common.ioopcallbacks.LSMBTreeWithBuddyIOOperationCallb
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation.LSMIOOperationType;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
+import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentIdGenerator;
 import org.junit.Assert;
 import org.mockito.Mockito;
 
@@ -34,7 +35,8 @@ public class LSMBTreeWithBuddyIOOperationCallbackTest extends TestCase {
         try {
             ILSMIndex mockIndex = Mockito.mock(ILSMIndex.class);
             Mockito.when(mockIndex.getNumberOfAllMemoryComponents()).thenReturn(2);
-            LSMBTreeWithBuddyIOOperationCallback callback = new LSMBTreeWithBuddyIOOperationCallback(mockIndex);
+            LSMBTreeWithBuddyIOOperationCallback callback =
+                    new LSMBTreeWithBuddyIOOperationCallback(mockIndex, new LSMComponentIdGenerator());
 
             //request to flush first component
             callback.updateLastLSN(1);
@@ -58,7 +60,8 @@ public class LSMBTreeWithBuddyIOOperationCallbackTest extends TestCase {
         try {
             ILSMIndex mockIndex = Mockito.mock(ILSMIndex.class);
             Mockito.when(mockIndex.getNumberOfAllMemoryComponents()).thenReturn(2);
-            LSMBTreeWithBuddyIOOperationCallback callback = new LSMBTreeWithBuddyIOOperationCallback(mockIndex);
+            LSMBTreeWithBuddyIOOperationCallback callback =
+                    new LSMBTreeWithBuddyIOOperationCallback(mockIndex, new LSMComponentIdGenerator());
 
             //request to flush first component
             callback.updateLastLSN(1);

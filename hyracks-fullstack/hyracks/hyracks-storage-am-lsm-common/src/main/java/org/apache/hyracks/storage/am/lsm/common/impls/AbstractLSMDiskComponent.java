@@ -18,18 +18,28 @@
  */
 package org.apache.hyracks.storage.am.lsm.common.impls;
 
+import java.util.logging.Logger;
+
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.common.api.IMetadataPageManager;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilter;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentId;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponentId;
 import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
 import org.apache.hyracks.storage.am.lsm.common.util.ComponentUtils;
+import org.apache.hyracks.storage.am.lsm.common.util.LSMComponentIdUtils;
 import org.apache.hyracks.storage.common.MultiComparator;
 
 public abstract class AbstractLSMDiskComponent extends AbstractLSMComponent implements ILSMDiskComponent {
 
+    private static final Logger LOGGER = Logger.getLogger(AbstractLSMDiskComponent.class.getName());
+
     private final DiskComponentMetadata metadata;
+
+    // a variable cache of componentId stored in metadata.
+    // since componentId is immutable, we do not want to read from metadata every time the componentId
+    // is requested.
+    private ILSMComponentId componentId;
 
     public AbstractLSMDiskComponent(AbstractLSMIndex lsmIndex, IMetadataPageManager mdPageManager,
             ILSMComponentFilter filter) {
@@ -109,13 +119,23 @@ public abstract class AbstractLSMDiskComponent extends AbstractLSMComponent impl
     }
 
     @Override
-    public ILSMDiskComponentId getComponentId() throws HyracksDataException {
-        long minID = ComponentUtils.getLong(metadata, ILSMDiskComponentId.COMPONENT_ID_MIN_KEY,
-                ILSMDiskComponentId.NOT_FOUND);
-        long maxID = ComponentUtils.getLong(metadata, ILSMDiskComponentId.COMPONENT_ID_MAX_KEY,
-                ILSMDiskComponentId.NOT_FOUND);
-        //TODO: do we need to throw an exception when ID is not found?
-        return new LSMDiskComponentId(minID, maxID);
+    public ILSMComponentId getId() throws HyracksDataException {
+        if (componentId != null) {
+            return componentId;
+        }
+        synchronized (this) {
+            if (componentId == null) {
+                componentId = LSMComponentIdUtils.readFrom(metadata);
+            }
+        }
+        if (componentId.missing()) {
+            // For normal datasets, componentId shouldn't be missing, since otherwise it'll be a bug.
+            // However, we cannot throw an exception here to be compatible with legacy datasets.
+            // In this case, the disk component would always get a garbage Id [-1, -1], which makes the
+            // component Id-based optimization useless but still correct.
+            LOGGER.warning("Component Id not found from disk component metadata");
+        }
+        return componentId;
     }
 
     /**

@@ -20,7 +20,15 @@ package org.apache.hyracks.storage.am.lsm.common.api;
 
 import java.io.Serializable;
 
-@FunctionalInterface
+import org.apache.hyracks.api.application.INCServiceContext;
+
 public interface ILSMIOOperationCallbackFactory extends Serializable {
+    /**
+     * Initialize the callback factory with the given ncCtx
+     *
+     * @param ncCtx
+     */
+    void initialize(INCServiceContext ncCtx);
+
     ILSMIOOperationCallback createIoOpCallback(ILSMIndex index);
 }

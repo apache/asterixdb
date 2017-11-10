@@ -20,6 +20,7 @@ package org.apache.hyracks.storage.am.lsm.common.impls;
 
 import java.util.List;
 
+import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
@@ -35,6 +36,11 @@ public enum NoOpIOOperationCallbackFactory implements ILSMIOOperationCallbackFac
     @Override
     public ILSMIOOperationCallback createIoOpCallback(ILSMIndex index) {
         return NoOpIOOperationCallback.INSTANCE;
+    }
+
+    @Override
+    public void initialize(INCServiceContext ncCtx) {
+        // No op
     }
 
     public static class NoOpIOOperationCallback implements ILSMIOOperationCallback {

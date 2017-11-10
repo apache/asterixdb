@@ -66,6 +66,7 @@ public class ExternalRTreeLocalResource extends LSMRTreeLocalResource {
     public IIndex createInstance(INCServiceContext ncServiceCtx) throws HyracksDataException {
         IIOManager ioManager = ncServiceCtx.getIoManager();
         FileReference fileRef = ioManager.resolve(path);
+        ioOpCallbackFactory.initialize(ncServiceCtx);
         return LSMRTreeUtils.createExternalRTree(ioManager, fileRef, storageManager.getBufferCache(ncServiceCtx),
                 typeTraits, cmpFactories, btreeCmpFactories, valueProviderFactories, rtreePolicyType,
                 bloomFilterFalsePositiveRate, mergePolicyFactory.createMergePolicy(mergePolicyProperties, ncServiceCtx),

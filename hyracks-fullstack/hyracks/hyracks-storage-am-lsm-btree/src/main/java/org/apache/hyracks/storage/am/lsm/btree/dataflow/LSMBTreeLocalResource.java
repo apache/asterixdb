@@ -70,6 +70,7 @@ public class LSMBTreeLocalResource extends LsmResource {
         IIOManager ioManager = serviceCtx.getIoManager();
         FileReference file = ioManager.resolve(path);
         List<IVirtualBufferCache> vbcs = vbcProvider.getVirtualBufferCaches(serviceCtx, file);
+        ioOpCallbackFactory.initialize(serviceCtx);
         //TODO: enable updateAwareness for secondary LSMBTree indexes
         boolean updateAware = false;
         return LSMBTreeUtil.createLSMTree(ioManager, vbcs, file, storageManager.getBufferCache(serviceCtx), typeTraits,

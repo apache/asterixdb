@@ -65,7 +65,7 @@ public class IndexBulkLoadOperatorNodePushable extends AbstractUnaryInputUnaryOu
         index = indexHelper.getIndexInstance();
         try {
             writer.open();
-            bulkLoader = index.createBulkLoader(fillFactor, verifyInput, numElementsHint, checkIfEmptyIndex);
+            initializeBulkLoader();
         } catch (Exception e) {
             throw HyracksDataException.create(e);
         }
@@ -115,5 +115,9 @@ public class IndexBulkLoadOperatorNodePushable extends AbstractUnaryInputUnaryOu
         if (index != null) {
             writer.fail();
         }
+    }
+
+    protected void initializeBulkLoader() throws HyracksDataException {
+        bulkLoader = index.createBulkLoader(fillFactor, verifyInput, numElementsHint, checkIfEmptyIndex);
     }
 }

@@ -25,6 +25,7 @@ import org.apache.asterix.common.context.IndexInfo;
 import org.apache.asterix.common.context.PrimaryIndexOperationTracker;
 import org.apache.asterix.common.replication.IReplicationStrategy;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentIdGenerator;
 import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import org.apache.hyracks.storage.common.IIndex;
 import org.apache.hyracks.storage.common.IResourceLifecycleManager;
@@ -77,6 +78,14 @@ public interface IDatasetLifecycleManager extends IResourceLifecycleManager<IInd
      * @return
      */
     PrimaryIndexOperationTracker getOperationTracker(int datasetId);
+
+    /**
+     * creates (if necessary) and returns the component Id generator of a dataset.
+     *
+     * @param datasetId
+     * @return
+     */
+    ILSMComponentIdGenerator getComponentIdGenerator(int datasetId);
 
     /**
      * creates (if necessary) and returns the dataset virtual buffer caches.

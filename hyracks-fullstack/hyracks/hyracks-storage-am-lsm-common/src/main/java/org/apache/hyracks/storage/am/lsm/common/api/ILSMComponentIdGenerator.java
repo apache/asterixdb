@@ -16,23 +16,22 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.hyracks.storage.am.lsm.common.api;
 
-package org.apache.asterix.common.ioopcallbacks;
+/**
+ * This interface generates component Ids for LSM components (both memory and disk components).
+ */
+public interface ILSMComponentIdGenerator {
 
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentIdGeneratorFactory;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
+    /**
+     * @return An Id for LSM component
+     */
+    public ILSMComponentId getId();
 
-public class LSMRTreeIOOperationCallbackFactory extends AbstractLSMIndexIOOperationCallbackFactory {
+    /**
+     * Refresh the component Id generator to generate the next Id.
+     * {@link #getId()} would always return the same Id before this method is called.
+     */
+    public void refresh();
 
-    private static final long serialVersionUID = 1L;
-
-    public LSMRTreeIOOperationCallbackFactory(ILSMComponentIdGeneratorFactory idGeneratorFactory) {
-        super(idGeneratorFactory);
-    }
-
-    @Override
-    public ILSMIOOperationCallback createIoOpCallback(ILSMIndex index) {
-        return new LSMRTreeIOOperationCallback(index, getComponentIdGenerator());
-    }
 }

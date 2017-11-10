@@ -236,7 +236,7 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
         }
         ITreeIndexCursor cursor = new LSMRTreeWithAntiMatterTuplesSearchCursor(opCtx, returnDeletedTuples);
         ILSMIndexAccessor accessor = new LSMTreeIndexAccessor(getLsmHarness(), opCtx, cursorFactory);
-        return new MergeOperation(accessor, mergeFileRefs.getInsertIndexFileReference(), callback,
-                fileManager.getBaseDir().getAbsolutePath(), cursor);
+        return new LSMRTreeMergeOperation(accessor, cursor, mergeFileRefs.getInsertIndexFileReference(), null, null,
+                callback, fileManager.getBaseDir().getAbsolutePath());
     }
 }

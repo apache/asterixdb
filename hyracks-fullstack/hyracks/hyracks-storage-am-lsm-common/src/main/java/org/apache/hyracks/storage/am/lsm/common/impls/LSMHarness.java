@@ -95,15 +95,24 @@ public class LSMHarness implements ILSMHarness {
                 // Before entering the components, prune those corner cases that indeed should not proceed.
                 switch (opType) {
                     case FLUSH:
+                        // if the lsm index does not have memory components allocated, then nothing to flush
+                        if (!lsmIndex.isMemoryComponentsAllocated()) {
+                            return false;
+                        }
                         ILSMMemoryComponent flushingComponent = (ILSMMemoryComponent) ctx.getComponentHolder().get(0);
                         if (!flushingComponent.isModified()) {
-                            //The mutable component has not been modified by any writer. There is nothing to flush.
-                            //since the component is empty, set its state back to READABLE_WRITABLE
                             if (flushingComponent.getState() == ComponentState.READABLE_UNWRITABLE) {
+                                //The mutable component has not been modified by any writer. There is nothing to flush.
+                                //since the component is empty, set its state back to READABLE_WRITABLE only when it's
+                                //state has been set to READABLE_UNWRITABLE
                                 flushingComponent.setState(ComponentState.READABLE_WRITABLE);
                                 opTracker.notifyAll();
+
+                                // Call recycled only when we change it's state is reset back to READABLE_WRITABLE
+                                // Otherwise, if the component is in other state, e.g., INACTIVE, or
+                                // READABLE_UNWRITABLE_FLUSHING, it's not considered as being recycled here.
+                                lsmIndex.getIOOperationCallback().recycled(flushingComponent);
                             }
-                            lsmIndex.getIOOperationCallback().recycled(flushingComponent);
                             return false;
                         }
                         if (flushingComponent.getWriterCount() > 0) {

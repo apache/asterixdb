@@ -83,6 +83,7 @@ public class LSMRTreeLocalResource extends LsmResource {
         IIOManager ioManager = ncServiceCtx.getIoManager();
         FileReference fileRef = ioManager.resolve(path);
         List<IVirtualBufferCache> virtualBufferCaches = vbcProvider.getVirtualBufferCaches(ncServiceCtx, fileRef);
+        ioOpCallbackFactory.initialize(ncServiceCtx);
         return LSMRTreeUtils.createLSMTree(ioManager, virtualBufferCaches, fileRef,
                 storageManager.getBufferCache(ncServiceCtx), typeTraits, cmpFactories, btreeCmpFactories,
                 valueProviderFactories, rtreePolicyType, bloomFilterFalsePositiveRate,

@@ -19,20 +19,30 @@
 
 package org.apache.asterix.common.ioopcallbacks;
 
+import org.apache.hyracks.api.application.INCServiceContext;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentIdGenerator;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentIdGeneratorFactory;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
 
-public class LSMRTreeIOOperationCallbackFactory extends AbstractLSMIndexIOOperationCallbackFactory {
+public abstract class AbstractLSMIndexIOOperationCallbackFactory implements ILSMIOOperationCallbackFactory {
 
     private static final long serialVersionUID = 1L;
 
-    public LSMRTreeIOOperationCallbackFactory(ILSMComponentIdGeneratorFactory idGeneratorFactory) {
-        super(idGeneratorFactory);
+    protected final ILSMComponentIdGeneratorFactory idGeneratorFactory;
+
+    protected transient INCServiceContext ncCtx;
+
+    public AbstractLSMIndexIOOperationCallbackFactory(ILSMComponentIdGeneratorFactory idGeneratorFactory) {
+        this.idGeneratorFactory = idGeneratorFactory;
     }
 
     @Override
-    public ILSMIOOperationCallback createIoOpCallback(ILSMIndex index) {
-        return new LSMRTreeIOOperationCallback(index, getComponentIdGenerator());
+    public void initialize(INCServiceContext ncCtx) {
+        this.ncCtx = ncCtx;
+    }
+
+    protected ILSMComponentIdGenerator getComponentIdGenerator() {
+        assert ncCtx != null;
+        return idGeneratorFactory.getComponentIdGenerator(ncCtx);
     }
 }

@@ -993,8 +993,11 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             // #. create the index artifact in NC.
             runJob(hcc, spec, jobFlags);
 
-            // #. flush the internal dataset for correlated policy
-            if (ds.isCorrelated() && ds.getDatasetType() == DatasetType.INTERNAL) {
+            // #. flush the internal dataset
+            // We need this to guarantee the correctness of component Id acceleration for secondary-to-primary index.
+            // Otherwise, the new secondary index component would corresponding to a partial memory component
+            // of the primary index, which is incorrect.
+            if (ds.getDatasetType() == DatasetType.INTERNAL) {
                 FlushDatasetUtil.flushDataset(hcc, metadataProvider, index.getDataverseName(), index.getDatasetName());
             }
 

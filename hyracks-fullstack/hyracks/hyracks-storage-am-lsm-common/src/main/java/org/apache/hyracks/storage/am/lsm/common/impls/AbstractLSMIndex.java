@@ -44,6 +44,8 @@ import org.apache.hyracks.storage.am.lsm.common.api.IComponentFilterHelper;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent.ComponentState;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilterFrameFactory;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentId;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentId.IdCompareResult;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponentFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMHarness;
@@ -438,6 +440,7 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
         if (c != EmptyComponent.INSTANCE) {
             diskComponents.add(0, c);
         }
+        assert checkComponentIds();
     }
 
     @Override
@@ -448,6 +451,25 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
         if (newComponent != EmptyComponent.INSTANCE) {
             diskComponents.add(swapIndex, newComponent);
         }
+        assert checkComponentIds();
+    }
+
+    /**
+     * A helper method to ensure disk components have proper Ids (non-decreasing)
+     * We may get rid of this method once component Id is stablized
+     *
+     * @throws HyracksDataException
+     */
+    private boolean checkComponentIds() throws HyracksDataException {
+        for (int i = 0; i < diskComponents.size() - 1; i++) {
+            ILSMComponentId id1 = diskComponents.get(i).getId();
+            ILSMComponentId id2 = diskComponents.get(i + 1).getId();
+            IdCompareResult cmp = id1.compareTo(id2);
+            if (cmp != IdCompareResult.UNKNOWN && cmp != IdCompareResult.GREATER_THAN) {
+                return false;
+            }
+        }
+        return true;
     }
 
     @Override

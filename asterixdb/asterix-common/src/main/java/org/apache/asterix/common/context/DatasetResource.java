@@ -23,6 +23,7 @@ import java.util.Map;
 import org.apache.asterix.common.dataflow.DatasetLocalResource;
 import org.apache.asterix.common.metadata.MetadataIndexImmutableProperties;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentIdGenerator;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.common.LocalResource;
 
@@ -42,12 +43,15 @@ public class DatasetResource implements Comparable<DatasetResource> {
     private final DatasetInfo datasetInfo;
     private final PrimaryIndexOperationTracker datasetPrimaryOpTracker;
     private final DatasetVirtualBufferCaches datasetVirtualBufferCaches;
+    private final ILSMComponentIdGenerator datasetComponentIdGenerator;
 
     public DatasetResource(DatasetInfo datasetInfo, PrimaryIndexOperationTracker datasetPrimaryOpTracker,
-            DatasetVirtualBufferCaches datasetVirtualBufferCaches) {
+            DatasetVirtualBufferCaches datasetVirtualBufferCaches,
+            ILSMComponentIdGenerator datasetComponentIdGenerator) {
         this.datasetInfo = datasetInfo;
         this.datasetPrimaryOpTracker = datasetPrimaryOpTracker;
         this.datasetVirtualBufferCaches = datasetVirtualBufferCaches;
+        this.datasetComponentIdGenerator = datasetComponentIdGenerator;
     }
 
     public boolean isRegistered() {
@@ -114,6 +118,10 @@ public class DatasetResource implements Comparable<DatasetResource> {
 
     public PrimaryIndexOperationTracker getOpTracker() {
         return datasetPrimaryOpTracker;
+    }
+
+    public ILSMComponentIdGenerator getIdGenerator() {
+        return datasetComponentIdGenerator;
     }
 
     @Override

@@ -30,6 +30,7 @@ import java.util.stream.IntStream;
 import org.apache.asterix.active.IActiveEntityEventsListener;
 import org.apache.asterix.active.IActiveNotificationHandler;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
+import org.apache.asterix.common.context.DatasetLSMComponentIdGeneratorFactory;
 import org.apache.asterix.common.context.CorrelatedPrefixMergePolicyFactory;
 import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.dataflow.NoOpFrameOperationCallbackFactory;
@@ -107,6 +108,7 @@ import org.apache.hyracks.storage.am.common.api.ISearchOperationCallbackFactory;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallbackFactory;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.IFrameOperationCallbackFactory;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentIdGeneratorFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
@@ -505,15 +507,15 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
             case BTREE:
                 return getDatasetType() == DatasetType.EXTERNAL
                         && !index.getIndexName().equals(IndexingConstants.getFilesIndexName(getDatasetName()))
-                                ? LSMBTreeWithBuddyIOOperationCallbackFactory.INSTANCE
-                                : LSMBTreeIOOperationCallbackFactory.INSTANCE;
+                                ? new LSMBTreeWithBuddyIOOperationCallbackFactory(getComponentIdGeneratorFactory())
+                                : new LSMBTreeIOOperationCallbackFactory(getComponentIdGeneratorFactory());
             case RTREE:
-                return LSMRTreeIOOperationCallbackFactory.INSTANCE;
+                return new LSMRTreeIOOperationCallbackFactory(getComponentIdGeneratorFactory());
             case LENGTH_PARTITIONED_NGRAM_INVIX:
             case LENGTH_PARTITIONED_WORD_INVIX:
             case SINGLE_PARTITION_NGRAM_INVIX:
             case SINGLE_PARTITION_WORD_INVIX:
-                return LSMInvertedIndexIOOperationCallbackFactory.INSTANCE;
+                return new LSMInvertedIndexIOOperationCallbackFactory(getComponentIdGeneratorFactory());
             default:
                 throw new CompilationException(ErrorCode.COMPILATION_UNKNOWN_INDEX_TYPE,
                         index.getIndexType().toString());
@@ -530,6 +532,10 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
     public ILSMOperationTrackerFactory getIndexOperationTrackerFactory(Index index) {
         return index.isPrimaryIndex() ? new PrimaryIndexOperationTrackerFactory(getDatasetId())
                 : new SecondaryIndexOperationTrackerFactory(getDatasetId());
+    }
+
+    public ILSMComponentIdGeneratorFactory getComponentIdGeneratorFactory() {
+        return new DatasetLSMComponentIdGeneratorFactory(getDatasetId());
     }
 
     /**

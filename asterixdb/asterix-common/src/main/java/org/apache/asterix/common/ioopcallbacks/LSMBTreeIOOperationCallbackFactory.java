@@ -19,21 +19,20 @@
 
 package org.apache.asterix.common.ioopcallbacks;
 
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentIdGeneratorFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 
-public class LSMBTreeIOOperationCallbackFactory implements ILSMIOOperationCallbackFactory {
+public class LSMBTreeIOOperationCallbackFactory extends AbstractLSMIndexIOOperationCallbackFactory {
 
     private static final long serialVersionUID = 1L;
 
-    public static LSMBTreeIOOperationCallbackFactory INSTANCE = new LSMBTreeIOOperationCallbackFactory();
-
-    private LSMBTreeIOOperationCallbackFactory() {
+    public LSMBTreeIOOperationCallbackFactory(ILSMComponentIdGeneratorFactory idGeneratorFactory) {
+        super(idGeneratorFactory);
     }
 
     @Override
     public ILSMIOOperationCallback createIoOpCallback(ILSMIndex index) {
-        return new LSMBTreeIOOperationCallback(index);
+        return new LSMBTreeIOOperationCallback(index, getComponentIdGenerator());
     }
 }

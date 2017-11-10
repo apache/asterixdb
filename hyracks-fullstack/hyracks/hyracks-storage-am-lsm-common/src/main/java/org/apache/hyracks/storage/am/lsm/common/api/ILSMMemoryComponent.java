@@ -101,4 +101,12 @@ public interface ILSMMemoryComponent extends ILSMComponent {
      * @return the size of the memory component
      */
     long getSize();
+
+    /**
+     * Reset the component Id of the memory component after it's recycled
+     *
+     * @param newId
+     * @throws HyracksDataException
+     */
+    void resetId(ILSMComponentId newId) throws HyracksDataException;
 }

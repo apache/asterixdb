@@ -25,8 +25,8 @@ import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.common.api.ITreeIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilter;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentId;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponentId;
 import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
 import org.apache.hyracks.storage.common.IIndex;
 
@@ -83,8 +83,8 @@ public class EmptyComponent implements ILSMDiskComponent {
     }
 
     @Override
-    public ILSMDiskComponentId getComponentId() throws HyracksDataException {
-        return null;
+    public ILSMComponentId getId() {
+        return LSMComponentId.MISSING_COMPONENT_ID;
     }
 
     @Override
