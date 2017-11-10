@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import org.apache.asterix.app.external.TestLibrarian;
+import org.apache.asterix.app.external.ExternalUDFLibrarian;
 import org.apache.asterix.app.nc.NCAppRuntimeContext;
 import org.apache.asterix.app.nc.TransactionSubsystem;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
@@ -137,7 +137,7 @@ public class TestNodeController {
             File outdir = new File(PATH_ACTUAL);
             outdir.mkdirs();
             // remove library directory
-            TestLibrarian.removeLibraryDir();
+            ExternalUDFLibrarian.removeLibraryDir();
             ExecutionTestUtil.setUp(cleanupOnStart,
                     testConfigFileName == null ? TEST_CONFIG_FILE_NAME : testConfigFileName,
                     ExecutionTestUtil.integrationUtil, runHDFS);
@@ -148,7 +148,7 @@ public class TestNodeController {
     }
 
     public void deInit() throws Exception {
-        TestLibrarian.removeLibraryDir();
+        ExternalUDFLibrarian.removeLibraryDir();
         ExecutionTestUtil.tearDown(cleanupOnStop);
     }
 

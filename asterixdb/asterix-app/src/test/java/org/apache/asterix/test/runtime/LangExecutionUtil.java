@@ -31,7 +31,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import org.apache.asterix.app.external.TestLibrarian;
+import org.apache.asterix.app.external.ExternalUDFLibrarian;
 import org.apache.asterix.common.config.ClusterProperties;
 import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.test.common.TestExecutor;
@@ -56,7 +56,7 @@ public class LangExecutionUtil {
     private static final List<String> badTestCases = new ArrayList<>();
     private static TestExecutor testExecutor;
 
-    private static TestLibrarian librarian;
+    private static ExternalUDFLibrarian librarian;
     private static final int repeat = Integer.getInteger("test.repeat", 1);
 
     public static void setUp(String configFile, TestExecutor executor) throws Exception {
@@ -64,8 +64,8 @@ public class LangExecutionUtil {
         File outdir = new File(PATH_ACTUAL);
         outdir.mkdirs();
         List<ILibraryManager> libraryManagers = ExecutionTestUtil.setUp(cleanupOnStart, configFile);
-        TestLibrarian.removeLibraryDir();
-        librarian = new TestLibrarian(libraryManagers);
+        ExternalUDFLibrarian.removeLibraryDir();
+        librarian = new ExternalUDFLibrarian(libraryManagers);
         testExecutor.setLibrarian(librarian);
         if (repeat != 1) {
             System.out.println("FYI: each test will be run " + repeat + " times.");
@@ -79,7 +79,7 @@ public class LangExecutionUtil {
             // Check whether there are leaked threads.
             checkThreadLeaks();
         } finally {
-            TestLibrarian.removeLibraryDir();
+            ExternalUDFLibrarian.removeLibraryDir();
             ExecutionTestUtil.tearDown(cleanupOnStop);
             ExecutionTestUtil.integrationUtil.removeTestStorageFiles();
             if (!badTestCases.isEmpty()) {

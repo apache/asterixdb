@@ -346,7 +346,7 @@ public class ExternalLibraryUtils {
         if (jarsInLibDir.length > 1) {
             throw new Exception("Incorrect library structure: found multiple library jars");
         }
-        if (jarsInLibDir.length < 0) {
+        if (jarsInLibDir.length <= 0) {
             throw new Exception("Incorrect library structure: could not find library jar");
         }
 

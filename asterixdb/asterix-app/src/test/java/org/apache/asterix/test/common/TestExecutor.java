@@ -58,6 +58,7 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.asterix.app.external.IExternalUDFLibrarian;
 import org.apache.asterix.common.api.Duration;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.utils.Servlets;
@@ -134,7 +135,7 @@ public class TestExecutor {
      */
     protected final List<InetSocketAddress> endpoints;
     protected int endpointSelector;
-    protected ITestLibrarian librarian;
+    protected IExternalUDFLibrarian librarian;
     private Map<File, TestLoop> testLoops = new HashMap<>();
 
     public TestExecutor() {
@@ -153,7 +154,7 @@ public class TestExecutor {
         this.endpoints = endpoints;
     }
 
-    public void setLibrarian(ITestLibrarian librarian) {
+    public void setLibrarian(IExternalUDFLibrarian librarian) {
         this.librarian = librarian;
     }
 
