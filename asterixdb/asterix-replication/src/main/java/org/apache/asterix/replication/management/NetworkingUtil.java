@@ -23,12 +23,16 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.NetworkInterface;
+import java.net.SocketAddress;
 import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.SocketChannel;
 import java.util.Enumeration;
+
+import org.apache.hyracks.api.comm.NetworkAddress;
 
 public class NetworkingUtil {
 
@@ -118,5 +122,9 @@ public class NetworkingUtil {
         String hostAddress = socketChannel.socket().getInetAddress().getHostAddress();
         int port = socketChannel.socket().getPort();
         return InetSocketAddress.createUnresolved(hostAddress, port);
+    }
+
+    public static SocketAddress getSocketAddress(NetworkAddress netAddr) throws UnknownHostException {
+        return new InetSocketAddress(InetAddress.getByAddress(netAddr.lookupIpAddress()), netAddr.getPort());
     }
 }

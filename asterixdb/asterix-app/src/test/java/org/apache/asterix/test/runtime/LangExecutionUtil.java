@@ -189,7 +189,7 @@ public class LangExecutionUtil {
         return num;
     }
 
-    private static void checkThreadLeaks() throws IOException {
+    public static void checkThreadLeaks() throws IOException {
         String threadDump = ThreadDumpUtil.takeDumpJSONString();
         // Currently we only do sanity check for threads used in the execution engine.
         // Later we should check if there are leaked storage threads as well.
@@ -200,7 +200,7 @@ public class LangExecutionUtil {
         }
     }
 
-    private static void checkOpenRunFileLeaks() throws IOException {
+    public static void checkOpenRunFileLeaks() throws IOException {
         if (SystemUtils.IS_OS_WINDOWS) {
             return;
         }

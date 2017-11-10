@@ -38,31 +38,19 @@ public class MaterializingPipelinedPartition implements IFrameWriter, IPartition
     private static final Logger LOGGER = Logger.getLogger(MaterializingPipelinedPartition.class.getName());
 
     private final IHyracksTaskContext ctx;
-
     private final Executor executor;
-
     private final IIOManager ioManager;
-
     private final PartitionManager manager;
-
     private final PartitionId pid;
-
     private final TaskAttemptId taId;
-
     private FileReference fRef;
-
     private IFileHandle writeHandle;
-
     private long size;
-
     private boolean eos;
-
     private boolean failed;
-
     protected boolean flushRequest;
-
+    private boolean deallocated;
     private Level openCloseLevel = Level.FINE;
-
     private Thread dataConsumerThread;
 
     public MaterializingPipelinedPartition(IHyracksTaskContext ctx, PartitionManager manager, PartitionId pid,
@@ -89,6 +77,7 @@ public class MaterializingPipelinedPartition implements IFrameWriter, IPartition
         if (dataConsumerThread != null) {
             dataConsumerThread.interrupt();
         }
+        deallocated = true;
     }
 
     @Override
@@ -109,13 +98,18 @@ public class MaterializingPipelinedPartition implements IFrameWriter, IPartition
                         fRefCopy = fRef;
                     }
                     writer.open();
-                    IFileHandle readHandle = fRefCopy == null ? null
-                            : ioManager.open(fRefCopy, IIOManager.FileReadWriteMode.READ_ONLY,
-                                IIOManager.FileSyncMode.METADATA_ASYNC_DATA_ASYNC);
+                    IFileHandle readHandle = fRefCopy == null ? null :
+                            ioManager.open(fRefCopy, IIOManager.FileReadWriteMode.READ_ONLY,
+                                    IIOManager.FileSyncMode.METADATA_ASYNC_DATA_ASYNC);
                     try {
                         if (readHandle == null) {
                             // Either fail() is called or close() is called with 0 tuples coming in.
                             return;
+                        }
+                        synchronized (MaterializingPipelinedPartition.this) {
+                            if (deallocated) {
+                                return;
+                            }
                         }
                         long offset = 0;
                         ByteBuffer buffer = ctx.allocateFrame();
@@ -192,6 +186,7 @@ public class MaterializingPipelinedPartition implements IFrameWriter, IPartition
         size = 0;
         eos = false;
         failed = false;
+        deallocated = false;
         manager.registerPartition(pid, taId, this, PartitionState.STARTED, false);
     }
 

@@ -25,7 +25,7 @@ import java.io.Serializable;
 
 import org.apache.hyracks.api.io.IWritable;
 
-public final class TaskAttemptId implements IWritable, Serializable {
+public class TaskAttemptId implements IWritable, Serializable {
     private static final long serialVersionUID = 1L;
 
     private TaskId taskId;

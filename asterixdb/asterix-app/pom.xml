@@ -577,5 +577,10 @@
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.apache.hyracks</groupId>
+      <artifactId>hyracks-comm</artifactId>
+      <version>${hyracks.version}</version>
+    </dependency>
   </dependencies>
 </project>
