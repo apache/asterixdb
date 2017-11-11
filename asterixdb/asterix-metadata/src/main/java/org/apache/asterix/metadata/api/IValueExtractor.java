@@ -22,8 +22,8 @@ package org.apache.asterix.metadata.api;
 import java.io.IOException;
 import java.rmi.RemoteException;
 
-import org.apache.asterix.common.exceptions.MetadataException;
 import org.apache.asterix.common.transactions.JobId;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 
@@ -43,10 +43,9 @@ public interface IValueExtractor<T> {
      * @param tuple
      *            Tuple from which an object shall be extracted.
      * @return New object of type T.
-     * @throws MetadataException
+     * @throws AlgebricksException
      * @throws HyracksDataException
      * @throws IOException
      */
-    public T getValue(JobId jobId, ITupleReference tuple)
-            throws MetadataException, HyracksDataException, RemoteException;
+    T getValue(JobId jobId, ITupleReference tuple) throws AlgebricksException, HyracksDataException, RemoteException;
 }

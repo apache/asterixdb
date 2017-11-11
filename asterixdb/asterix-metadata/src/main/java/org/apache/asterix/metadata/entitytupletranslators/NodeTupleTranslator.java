@@ -27,6 +27,7 @@ import org.apache.asterix.metadata.entities.Node;
 import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.base.AMutableInt64;
 import org.apache.asterix.om.types.BuiltinType;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -84,7 +85,7 @@ public class NodeTupleTranslator extends AbstractTupleTranslator<Node> {
     }
 
     @Override
-    public ITupleReference getTupleFromMetadataEntity(Node instance) throws HyracksDataException, MetadataException {
+    public ITupleReference getTupleFromMetadataEntity(Node instance) throws HyracksDataException, AlgebricksException {
         // write the key in the first field of the tuple
         tupleBuilder.reset();
         aString.setValue(instance.getNodeName());

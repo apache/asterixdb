@@ -33,6 +33,7 @@ import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Function;
 import org.apache.asterix.om.functions.BuiltinFunctions;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
@@ -65,14 +66,16 @@ public class FunctionUtil {
     }
 
     /**
-     * Retrieve stored functions (from CREATE FUNCTION statements) that have been used in an expression.
+     * Retrieve stored functions (from CREATE FUNCTION statements) that have been
+     * used in an expression.
      *
      * @param metadataProvider,
      *            the metadata provider
      * @param expression,
      *            the expression for analysis
      * @param declaredFunctions,
-     *            a set of declared functions in the query, which can potentially override stored functions.
+     *            a set of declared functions in the query, which can potentially
+     *            override stored functions.
      * @param functionCollector,
      *            for collecting function calls in the <code>expression</code>
      * @param functionParser,
@@ -85,8 +88,8 @@ public class FunctionUtil {
             Expression expression, List<FunctionSignature> declaredFunctions, List<FunctionDecl> inputFunctionDecls,
             IFunctionCollector functionCollector, IFunctionParser functionParser,
             IFunctionNormalizer functionNormalizer) throws CompilationException {
-        List<FunctionDecl> functionDecls = inputFunctionDecls == null ? new ArrayList<>()
-                : new ArrayList<>(inputFunctionDecls);
+        List<FunctionDecl> functionDecls =
+                inputFunctionDecls == null ? new ArrayList<>() : new ArrayList<>(inputFunctionDecls);
         if (expression == null) {
             return functionDecls;
         }
@@ -102,13 +105,22 @@ public class FunctionUtil {
             }
             String namespace = signature.getNamespace();
             // Checks the existence of the referred dataverse.
-            if (!namespace.equals(FunctionConstants.ASTERIX_NS)
-                    && !namespace.equals(AlgebricksBuiltinFunctions.ALGEBRICKS_NS)
-                    && metadataProvider.findDataverse(namespace) == null) {
-                throw new CompilationException("In function call \"" + namespace + "." + signature.getName()
-                        + "(...)\", the dataverse \"" + namespace + "\" cannot be found!");
+            try {
+                if (!namespace.equals(FunctionConstants.ASTERIX_NS)
+                        && !namespace.equals(AlgebricksBuiltinFunctions.ALGEBRICKS_NS)
+                        && metadataProvider.findDataverse(namespace) == null) {
+                    throw new CompilationException("In function call \"" + namespace + "." + signature.getName()
+                            + "(...)\", the dataverse \"" + namespace + "\" cannot be found!");
+                }
+            } catch (AlgebricksException e) {
+                throw new CompilationException(e);
             }
-            Function function = lookupUserDefinedFunctionDecl(metadataProvider.getMetadataTxnContext(), signature);
+            Function function;
+            try {
+                function = lookupUserDefinedFunctionDecl(metadataProvider.getMetadataTxnContext(), signature);
+            } catch (AlgebricksException e) {
+                throw new CompilationException(e);
+            }
             if (function == null) {
                 FunctionSignature normalizedSignature = functionNormalizer == null ? signature
                         : functionNormalizer.normalizeBuiltinFunctionSignature(signature);
@@ -144,7 +156,7 @@ public class FunctionUtil {
     }
 
     private static Function lookupUserDefinedFunctionDecl(MetadataTransactionContext mdTxnCtx,
-            FunctionSignature signature) throws CompilationException {
+            FunctionSignature signature) throws AlgebricksException {
         if (signature.getNamespace() == null) {
             return null;
         }

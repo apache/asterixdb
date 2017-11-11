@@ -19,11 +19,10 @@
 
 package org.apache.asterix.metadata.api;
 
-import java.io.IOException;
 import java.io.Serializable;
 import java.rmi.RemoteException;
 
-import org.apache.asterix.common.exceptions.MetadataException;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 
@@ -36,19 +35,19 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 public interface IMetadataEntityTupleTranslator<T> extends Serializable {
 
     /**
-     * Transforms a metadata entity of type T from a given tuple to a Java
-     * object (deserializing the appropriate field(s) in the tuple as
-     * necessary).
+     * Transforms a metadata entity of type T from a given tuple to a Java object
+     * (deserializing the appropriate field(s) in the tuple as necessary).
      *
      * @param tuple
-     *            Tuple containing a serialized representation of a metadata
-     *            entity of type T.
+     *            Tuple containing a serialized representation of a metadata entity
+     *            of type T.
      * @return A new instance of a metadata entity of type T.
-     * @throws MetadataException
-     * @throws IOException
+     * @throws AlgebricksException
+     * @throws HyracksDataException
+     * @throws RemoteException
      */
-    public T getMetadataEntityFromTuple(ITupleReference tuple)
-            throws MetadataException, HyracksDataException, RemoteException;
+    T getMetadataEntityFromTuple(ITupleReference tuple)
+            throws AlgebricksException, HyracksDataException, RemoteException;
 
     /**
      * Serializes the given metadata entity of type T into an appropriate tuple
@@ -56,7 +55,8 @@ public interface IMetadataEntityTupleTranslator<T> extends Serializable {
      *
      * @param metadataEntity
      *            Metadata entity to be written into a tuple.
+     * @throws AlgebricksException
      * @throws HyracksDataException
      */
-    public ITupleReference getTupleFromMetadataEntity(T metadataEntity) throws MetadataException, HyracksDataException;
+    ITupleReference getTupleFromMetadataEntity(T metadataEntity) throws AlgebricksException, HyracksDataException;
 }

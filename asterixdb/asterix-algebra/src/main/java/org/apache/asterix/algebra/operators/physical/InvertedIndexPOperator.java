@@ -100,19 +100,15 @@ public class InvertedIndexPOperator extends IndexSearchPOperator {
         jobGenParams.readFromFuncArgs(unnestFuncExpr.getArguments());
 
         MetadataProvider metadataProvider = (MetadataProvider) context.getMetadataProvider();
-        Dataset dataset;
-        try {
-            dataset = metadataProvider.findDataset(jobGenParams.getDataverseName(), jobGenParams.getDatasetName());
-        } catch (MetadataException e) {
-            throw new AlgebricksException(e);
-        }
+        Dataset dataset = metadataProvider.findDataset(jobGenParams.getDataverseName(), jobGenParams.getDatasetName());
         int[] keyIndexes = getKeyIndexes(jobGenParams.getKeyVarList(), inputSchemas);
 
         int[] minFilterFieldIndexes = getKeyIndexes(unnestMapOp.getMinFilterVars(), inputSchemas);
         int[] maxFilterFieldIndexes = getKeyIndexes(unnestMapOp.getMaxFilterVars(), inputSchemas);
         boolean retainNull = false;
         if (op.getOperatorTag() == LogicalOperatorTag.LEFT_OUTER_UNNEST_MAP) {
-            // By nature, LEFT_OUTER_UNNEST_MAP should generate null values for non-matching tuples.
+            // By nature, LEFT_OUTER_UNNEST_MAP should generate null values for non-matching
+            // tuples.
             retainNull = true;
         }
         // Build runtime.
@@ -135,46 +131,38 @@ public class InvertedIndexPOperator extends IndexSearchPOperator {
             AbstractUnnestMapOperator unnestMap, IOperatorSchema opSchema, boolean retainInput, boolean retainMissing,
             String datasetName, Dataset dataset, String indexName, ATypeTag searchKeyType, int[] keyFields,
             SearchModifierType searchModifierType, IAlgebricksConstantValue similarityThreshold,
-            int[] minFilterFieldIndexes, int[] maxFilterFieldIndexes,
-            boolean isFullTextSearchQuery) throws AlgebricksException {
-        try {
-
-            boolean propagateIndexFilter = unnestMap.propagateIndexFilter();
-            IAObject simThresh = ((AsterixConstantValue) similarityThreshold).getObject();
-            int numPrimaryKeys = dataset.getPrimaryKeys().size();
-            Index secondaryIndex = MetadataManager.INSTANCE
-                    .getIndex(metadataProvider.getMetadataTxnContext(), dataset.getDataverseName(),
-                            dataset.getDatasetName(), indexName);
-            if (secondaryIndex == null) {
-                throw new AlgebricksException(
-                        "Code generation error: no index " + indexName + " for dataset " + datasetName);
-            }
-            IVariableTypeEnvironment typeEnv = context.getTypeEnvironment(unnestMap);
-            RecordDescriptor outputRecDesc = JobGenHelper.mkRecordDescriptor(typeEnv, opSchema, context);
-            Pair<IFileSplitProvider, AlgebricksPartitionConstraint> secondarySplitsAndConstraint =
-                    metadataProvider.getSplitProviderAndConstraints(dataset, indexName);
-            // TODO: Here we assume there is only one search key field.
-            int queryField = keyFields[0];
-            // Get tokenizer and search modifier factories.
-            IInvertedIndexSearchModifierFactory searchModifierFactory =
-                    InvertedIndexAccessMethod.getSearchModifierFactory(searchModifierType, simThresh, secondaryIndex);
-            IBinaryTokenizerFactory queryTokenizerFactory = InvertedIndexAccessMethod
-                    .getBinaryTokenizerFactory(searchModifierType, searchKeyType, secondaryIndex);
-            IIndexDataflowHelperFactory dataflowHelperFactory =
-                    new IndexDataflowHelperFactory(metadataProvider.getStorageComponentProvider().getStorageManager(),
-                            secondarySplitsAndConstraint.first);
-            LSMInvertedIndexSearchOperatorDescriptor invIndexSearchOp =
-                    new LSMInvertedIndexSearchOperatorDescriptor(jobSpec, outputRecDesc, queryField,
-                            dataflowHelperFactory, queryTokenizerFactory, searchModifierFactory, retainInput,
-                            retainMissing, context.getMissingWriterFactory(),
-                            dataset.getSearchCallbackFactory(metadataProvider.getStorageComponentProvider(),
-                                    secondaryIndex,
-                                    ((JobEventListenerFactory) jobSpec.getJobletEventListenerFactory()).getJobId(),
-                                    IndexOperation.SEARCH, null), minFilterFieldIndexes, maxFilterFieldIndexes,
-                            isFullTextSearchQuery, numPrimaryKeys, propagateIndexFilter);
-            return new Pair<>(invIndexSearchOp, secondarySplitsAndConstraint.second);
-        } catch (MetadataException e) {
-            throw new AlgebricksException(e);
+            int[] minFilterFieldIndexes, int[] maxFilterFieldIndexes, boolean isFullTextSearchQuery)
+            throws AlgebricksException {
+        boolean propagateIndexFilter = unnestMap.propagateIndexFilter();
+        IAObject simThresh = ((AsterixConstantValue) similarityThreshold).getObject();
+        int numPrimaryKeys = dataset.getPrimaryKeys().size();
+        Index secondaryIndex = MetadataManager.INSTANCE.getIndex(metadataProvider.getMetadataTxnContext(),
+                dataset.getDataverseName(), dataset.getDatasetName(), indexName);
+        if (secondaryIndex == null) {
+            throw new AlgebricksException(
+                    "Code generation error: no index " + indexName + " for dataset " + datasetName);
         }
+        IVariableTypeEnvironment typeEnv = context.getTypeEnvironment(unnestMap);
+        RecordDescriptor outputRecDesc = JobGenHelper.mkRecordDescriptor(typeEnv, opSchema, context);
+        Pair<IFileSplitProvider, AlgebricksPartitionConstraint> secondarySplitsAndConstraint =
+                metadataProvider.getSplitProviderAndConstraints(dataset, indexName);
+        // TODO: Here we assume there is only one search key field.
+        int queryField = keyFields[0];
+        // Get tokenizer and search modifier factories.
+        IInvertedIndexSearchModifierFactory searchModifierFactory =
+                InvertedIndexAccessMethod.getSearchModifierFactory(searchModifierType, simThresh, secondaryIndex);
+        IBinaryTokenizerFactory queryTokenizerFactory =
+                InvertedIndexAccessMethod.getBinaryTokenizerFactory(searchModifierType, searchKeyType, secondaryIndex);
+        IIndexDataflowHelperFactory dataflowHelperFactory = new IndexDataflowHelperFactory(
+                metadataProvider.getStorageComponentProvider().getStorageManager(), secondarySplitsAndConstraint.first);
+        LSMInvertedIndexSearchOperatorDescriptor invIndexSearchOp = new LSMInvertedIndexSearchOperatorDescriptor(
+                jobSpec, outputRecDesc, queryField, dataflowHelperFactory, queryTokenizerFactory, searchModifierFactory,
+                retainInput, retainMissing, context.getMissingWriterFactory(),
+                dataset.getSearchCallbackFactory(metadataProvider.getStorageComponentProvider(), secondaryIndex,
+                        ((JobEventListenerFactory) jobSpec.getJobletEventListenerFactory()).getJobId(),
+                        IndexOperation.SEARCH, null),
+                minFilterFieldIndexes, maxFilterFieldIndexes, isFullTextSearchQuery, numPrimaryKeys,
+                propagateIndexFilter);
+        return new Pair<>(invIndexSearchOp, secondarySplitsAndConstraint.second);
     }
 }

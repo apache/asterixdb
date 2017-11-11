@@ -23,7 +23,6 @@ import java.util.List;
 
 import org.apache.asterix.common.cluster.IClusterStateManager;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
-import org.apache.asterix.common.exceptions.MetadataException;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.entities.Dataset;
@@ -52,13 +51,7 @@ public class MetadataManagerUtil {
         if (dataverse == null || typeName == null) {
             return null;
         }
-        Datatype type;
-        try {
-            type = MetadataManager.INSTANCE.getDatatype(mdTxnCtx, dataverse, typeName);
-        } catch (MetadataException e) {
-            throw new AlgebricksException(
-                    "Metadata exception while looking up type '" + typeName + "' in dataverse '" + dataverse + "'", e);
-        }
+        Datatype type = MetadataManager.INSTANCE.getDatatype(mdTxnCtx, dataverse, typeName);
         if (type == null) {
             throw new AlgebricksException("Type name '" + typeName + "' unknown in dataverse '" + dataverse + "'");
         }
@@ -81,7 +74,7 @@ public class MetadataManagerUtil {
     }
 
     public static DatasourceAdapter getAdapter(MetadataTransactionContext mdTxnCtx, String dataverseName,
-            String adapterName) throws MetadataException {
+            String adapterName) throws AlgebricksException {
         DatasourceAdapter adapter;
         // search in default namespace (built-in adapter)
         adapter = MetadataManager.INSTANCE.getAdapter(mdTxnCtx, MetadataConstants.METADATA_DATAVERSE_NAME, adapterName);
@@ -95,11 +88,7 @@ public class MetadataManagerUtil {
 
     public static Dataset findDataset(MetadataTransactionContext mdTxnCtx, String dataverse, String dataset)
             throws AlgebricksException {
-        try {
-            return MetadataManager.INSTANCE.getDataset(mdTxnCtx, dataverse, dataset);
-        } catch (MetadataException e) {
-            throw new AlgebricksException(e);
-        }
+        return MetadataManager.INSTANCE.getDataset(mdTxnCtx, dataverse, dataset);
     }
 
     public static Dataset findExistingDataset(MetadataTransactionContext mdTxnCtx, String dataverseName,
@@ -131,47 +120,27 @@ public class MetadataManagerUtil {
 
     public static Feed findFeed(MetadataTransactionContext mdTxnCtx, String dataverse, String feedName)
             throws AlgebricksException {
-        try {
-            return MetadataManager.INSTANCE.getFeed(mdTxnCtx, dataverse, feedName);
-        } catch (MetadataException e) {
-            throw new AlgebricksException(e);
-        }
+        return MetadataManager.INSTANCE.getFeed(mdTxnCtx, dataverse, feedName);
     }
 
     public static FeedConnection findFeedConnection(MetadataTransactionContext mdTxnCtx, String dataverse,
             String feedName, String datasetName) throws AlgebricksException {
-        try {
-            return MetadataManager.INSTANCE.getFeedConnection(mdTxnCtx, dataverse, feedName, datasetName);
-        } catch (MetadataException e) {
-            throw new AlgebricksException(e);
-        }
+        return MetadataManager.INSTANCE.getFeedConnection(mdTxnCtx, dataverse, feedName, datasetName);
     }
 
     public static FeedPolicyEntity findFeedPolicy(MetadataTransactionContext mdTxnCtx, String dataverse,
             String policyName) throws AlgebricksException {
-        try {
-            return MetadataManager.INSTANCE.getFeedPolicy(mdTxnCtx, dataverse, policyName);
-        } catch (MetadataException e) {
-            throw new AlgebricksException(e);
-        }
+        return MetadataManager.INSTANCE.getFeedPolicy(mdTxnCtx, dataverse, policyName);
     }
 
     public static List<Index> getDatasetIndexes(MetadataTransactionContext mdTxnCtx, String dataverseName,
             String datasetName) throws AlgebricksException {
-        try {
-            return MetadataManager.INSTANCE.getDatasetIndexes(mdTxnCtx, dataverseName, datasetName);
-        } catch (MetadataException e) {
-            throw new AlgebricksException(e);
-        }
+        return MetadataManager.INSTANCE.getDatasetIndexes(mdTxnCtx, dataverseName, datasetName);
     }
 
     public static DataSource findDataSource(IClusterStateManager clusterStateManager,
             MetadataTransactionContext mdTxnCtx, DataSourceId id) throws AlgebricksException {
-        try {
-            return lookupSourceInMetadata(clusterStateManager, mdTxnCtx, id);
-        } catch (MetadataException e) {
-            throw new AlgebricksException(e);
-        }
+        return lookupSourceInMetadata(clusterStateManager, mdTxnCtx, id);
     }
 
     public static DataSource lookupSourceInMetadata(IClusterStateManager clusterStateManager,

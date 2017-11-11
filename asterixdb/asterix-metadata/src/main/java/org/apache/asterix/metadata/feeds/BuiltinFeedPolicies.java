@@ -29,6 +29,7 @@ import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.entities.FeedPolicyEntity;
 import org.apache.asterix.metadata.utils.MetadataConstants;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 
 public class BuiltinFeedPolicies {
 
@@ -61,7 +62,7 @@ public class BuiltinFeedPolicies {
         return null;
     }
 
-    //Basic
+    // Basic
     private static FeedPolicyEntity initializeBasicPolicy() {
         Map<String, String> policyParams = new HashMap<>();
         policyParams.put(FeedPolicyAccessor.ELASTIC, Boolean.toString(false));
@@ -106,7 +107,7 @@ public class BuiltinFeedPolicies {
                 policyParams);
     }
 
-    public static void insertInitialFeedPolicies(MetadataTransactionContext mdTxnCtx) throws MetadataException {
+    public static void insertInitialFeedPolicies(MetadataTransactionContext mdTxnCtx) throws AlgebricksException {
         for (FeedPolicyEntity feedPolicy : BuiltinFeedPolicies.POLICIES) {
             MetadataManager.INSTANCE.addFeedPolicy(mdTxnCtx, feedPolicy);
         }

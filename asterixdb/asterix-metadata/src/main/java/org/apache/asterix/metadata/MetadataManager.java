@@ -54,6 +54,7 @@ import org.apache.asterix.metadata.entities.Node;
 import org.apache.asterix.metadata.entities.NodeGroup;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.transaction.management.service.transaction.JobIdFactory;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 /**
@@ -95,7 +96,8 @@ public class MetadataManager implements IMetadataManager {
     private final ReadWriteLock metadataLatch;
     protected boolean rebindMetadataNode = false;
 
-    // TODO(mblow): replace references of this (non-constant) field with a method, update field name accordingly
+    // TODO(mblow): replace references of this (non-constant) field with a method,
+    // update field name accordingly
     public static IMetadataManager INSTANCE;
 
     private MetadataManager(IAsterixStateProxy proxy, IMetadataNode metadataNode) {
@@ -148,7 +150,7 @@ public class MetadataManager implements IMetadataManager {
     }
 
     @Override
-    public void addDataverse(MetadataTransactionContext ctx, Dataverse dataverse) throws MetadataException {
+    public void addDataverse(MetadataTransactionContext ctx, Dataverse dataverse) throws AlgebricksException {
         try {
             metadataNode.addDataverse(ctx.getJobId(), dataverse);
         } catch (RemoteException e) {
@@ -158,7 +160,7 @@ public class MetadataManager implements IMetadataManager {
     }
 
     @Override
-    public void dropDataverse(MetadataTransactionContext ctx, String dataverseName) throws MetadataException {
+    public void dropDataverse(MetadataTransactionContext ctx, String dataverseName) throws AlgebricksException {
         try {
             metadataNode.dropDataverse(ctx.getJobId(), dataverseName);
         } catch (RemoteException e) {
@@ -168,7 +170,7 @@ public class MetadataManager implements IMetadataManager {
     }
 
     @Override
-    public List<Dataverse> getDataverses(MetadataTransactionContext ctx) throws MetadataException {
+    public List<Dataverse> getDataverses(MetadataTransactionContext ctx) throws AlgebricksException {
         try {
             return metadataNode.getDataverses(ctx.getJobId());
         } catch (RemoteException e) {
@@ -177,7 +179,7 @@ public class MetadataManager implements IMetadataManager {
     }
 
     @Override
-    public Dataverse getDataverse(MetadataTransactionContext ctx, String dataverseName) throws MetadataException {
+    public Dataverse getDataverse(MetadataTransactionContext ctx, String dataverseName) throws AlgebricksException {
         // First look in the context to see if this transaction created the
         // requested dataverse itself (but the dataverse is still uncommitted).
         Dataverse dataverse = ctx.getDataverse(dataverseName);
@@ -211,7 +213,7 @@ public class MetadataManager implements IMetadataManager {
 
     @Override
     public List<Dataset> getDataverseDatasets(MetadataTransactionContext ctx, String dataverseName)
-            throws MetadataException {
+            throws AlgebricksException {
         List<Dataset> dataverseDatasets = new ArrayList<>();
         // add uncommitted temporary datasets
         for (Dataset dataset : ctx.getDataverseDatasets(dataverseName)) {
@@ -238,7 +240,7 @@ public class MetadataManager implements IMetadataManager {
     }
 
     @Override
-    public void addDataset(MetadataTransactionContext ctx, Dataset dataset) throws MetadataException {
+    public void addDataset(MetadataTransactionContext ctx, Dataset dataset) throws AlgebricksException {
         // add dataset into metadataNode
         if (!dataset.getDatasetDetails().isTemp()) {
             try {
@@ -254,7 +256,7 @@ public class MetadataManager implements IMetadataManager {
 
     @Override
     public void dropDataset(MetadataTransactionContext ctx, String dataverseName, String datasetName)
-            throws MetadataException {
+            throws AlgebricksException {
         Dataset dataset = findDataset(ctx, dataverseName, datasetName);
         // If a dataset is not in the cache, then it could not be a temp dataset
         if (dataset == null || !dataset.getDatasetDetails().isTemp()) {
@@ -271,7 +273,7 @@ public class MetadataManager implements IMetadataManager {
 
     @Override
     public Dataset getDataset(MetadataTransactionContext ctx, String dataverseName, String datasetName)
-            throws MetadataException {
+            throws AlgebricksException {
 
         // First look in the context to see if this transaction created the
         // requested dataset itself (but the dataset is still uncommitted).
@@ -307,7 +309,7 @@ public class MetadataManager implements IMetadataManager {
 
     @Override
     public List<Index> getDatasetIndexes(MetadataTransactionContext ctx, String dataverseName, String datasetName)
-            throws MetadataException {
+            throws AlgebricksException {
         List<Index> datasetIndexes = new ArrayList<>();
         Dataset dataset = findDataset(ctx, dataverseName, datasetName);
         if (dataset == null) {
@@ -329,7 +331,7 @@ public class MetadataManager implements IMetadataManager {
 
     @Override
     public void addCompactionPolicy(MetadataTransactionContext mdTxnCtx, CompactionPolicy compactionPolicy)
-            throws MetadataException {
+            throws AlgebricksException {
         try {
             metadataNode.addCompactionPolicy(mdTxnCtx.getJobId(), compactionPolicy);
         } catch (RemoteException e) {
@@ -340,7 +342,7 @@ public class MetadataManager implements IMetadataManager {
 
     @Override
     public CompactionPolicy getCompactionPolicy(MetadataTransactionContext ctx, String dataverse, String policyName)
-            throws MetadataException {
+            throws AlgebricksException {
 
         CompactionPolicy compactionPolicy;
         try {
@@ -352,7 +354,7 @@ public class MetadataManager implements IMetadataManager {
     }
 
     @Override
-    public void addDatatype(MetadataTransactionContext ctx, Datatype datatype) throws MetadataException {
+    public void addDatatype(MetadataTransactionContext ctx, Datatype datatype) throws AlgebricksException {
         try {
             metadataNode.addDatatype(ctx.getJobId(), datatype);
         } catch (RemoteException e) {
@@ -368,7 +370,7 @@ public class MetadataManager implements IMetadataManager {
 
     @Override
     public void dropDatatype(MetadataTransactionContext ctx, String dataverseName, String datatypeName)
-            throws MetadataException {
+            throws AlgebricksException {
         try {
             metadataNode.dropDatatype(ctx.getJobId(), dataverseName, datatypeName);
         } catch (RemoteException e) {
@@ -379,7 +381,7 @@ public class MetadataManager implements IMetadataManager {
 
     @Override
     public Datatype getDatatype(MetadataTransactionContext ctx, String dataverseName, String datatypeName)
-            throws MetadataException {
+            throws AlgebricksException {
         // First look in the context to see if this transaction created the
         // requested datatype itself (but the datatype is still uncommitted).
         Datatype datatype = ctx.getDatatype(dataverseName, datatypeName);
@@ -397,9 +399,9 @@ public class MetadataManager implements IMetadataManager {
         datatype = cache.getDatatype(dataverseName, datatypeName);
         if (datatype != null) {
             // Datatype is already in the cache, don't add it again.
-            //create a new Datatype object with a new ARecordType object in order to avoid
-            //concurrent access to UTF8StringPointable comparator in ARecordType object.
-            //see issue 510
+            // create a new Datatype object with a new ARecordType object in order to avoid
+            // concurrent access to UTF8StringPointable comparator in ARecordType object.
+            // see issue 510
             ARecordType aRecType = (ARecordType) datatype.getDatatype();
             return new Datatype(
                     datatype.getDataverseName(), datatype.getDatatypeName(), new ARecordType(aRecType.getTypeName(),
@@ -420,7 +422,7 @@ public class MetadataManager implements IMetadataManager {
     }
 
     @Override
-    public void addIndex(MetadataTransactionContext ctx, Index index) throws MetadataException {
+    public void addIndex(MetadataTransactionContext ctx, Index index) throws AlgebricksException {
         String dataverseName = index.getDataverseName();
         String datasetName = index.getDatasetName();
         Dataset dataset = findDataset(ctx, dataverseName, datasetName);
@@ -435,7 +437,7 @@ public class MetadataManager implements IMetadataManager {
     }
 
     @Override
-    public void addAdapter(MetadataTransactionContext mdTxnCtx, DatasourceAdapter adapter) throws MetadataException {
+    public void addAdapter(MetadataTransactionContext mdTxnCtx, DatasourceAdapter adapter) throws AlgebricksException {
         try {
             metadataNode.addAdapter(mdTxnCtx.getJobId(), adapter);
         } catch (RemoteException e) {
@@ -447,10 +449,12 @@ public class MetadataManager implements IMetadataManager {
 
     @Override
     public void dropIndex(MetadataTransactionContext ctx, String dataverseName, String datasetName, String indexName)
-            throws MetadataException {
+            throws AlgebricksException {
         Dataset dataset = findDataset(ctx, dataverseName, datasetName);
-        // If a dataset is not in the cache, then it could be an unloaded persistent dataset.
-        // If the dataset is a temp dataset, then we do not need to call any MedataNode operations.
+        // If a dataset is not in the cache, then it could be an unloaded persistent
+        // dataset.
+        // If the dataset is a temp dataset, then we do not need to call any MedataNode
+        // operations.
         if (dataset == null || !dataset.getDatasetDetails().isTemp()) {
             try {
                 metadataNode.dropIndex(ctx.getJobId(), dataverseName, datasetName, indexName);
@@ -463,7 +467,7 @@ public class MetadataManager implements IMetadataManager {
 
     @Override
     public Index getIndex(MetadataTransactionContext ctx, String dataverseName, String datasetName, String indexName)
-            throws MetadataException {
+            throws AlgebricksException {
 
         // First look in the context to see if this transaction created the
         // requested index itself (but the index is still uncommitted).
@@ -499,7 +503,7 @@ public class MetadataManager implements IMetadataManager {
     }
 
     @Override
-    public void addNode(MetadataTransactionContext ctx, Node node) throws MetadataException {
+    public void addNode(MetadataTransactionContext ctx, Node node) throws AlgebricksException {
         try {
             metadataNode.addNode(ctx.getJobId(), node);
         } catch (RemoteException e) {
@@ -508,7 +512,7 @@ public class MetadataManager implements IMetadataManager {
     }
 
     @Override
-    public void addNodegroup(MetadataTransactionContext ctx, NodeGroup nodeGroup) throws MetadataException {
+    public void addNodegroup(MetadataTransactionContext ctx, NodeGroup nodeGroup) throws AlgebricksException {
         try {
             metadataNode.addNodeGroup(ctx.getJobId(), nodeGroup);
         } catch (RemoteException e) {
@@ -519,7 +523,7 @@ public class MetadataManager implements IMetadataManager {
 
     @Override
     public void dropNodegroup(MetadataTransactionContext ctx, String nodeGroupName, boolean failSilently)
-            throws MetadataException {
+            throws AlgebricksException {
         boolean dropped;
         try {
             dropped = metadataNode.dropNodegroup(ctx.getJobId(), nodeGroupName, failSilently);
@@ -532,7 +536,7 @@ public class MetadataManager implements IMetadataManager {
     }
 
     @Override
-    public NodeGroup getNodegroup(MetadataTransactionContext ctx, String nodeGroupName) throws MetadataException {
+    public NodeGroup getNodegroup(MetadataTransactionContext ctx, String nodeGroupName) throws AlgebricksException {
         // First look in the context to see if this transaction created the
         // requested dataverse itself (but the dataverse is still uncommitted).
         NodeGroup nodeGroup = ctx.getNodeGroup(nodeGroupName);
@@ -565,7 +569,7 @@ public class MetadataManager implements IMetadataManager {
     }
 
     @Override
-    public void addFunction(MetadataTransactionContext mdTxnCtx, Function function) throws MetadataException {
+    public void addFunction(MetadataTransactionContext mdTxnCtx, Function function) throws AlgebricksException {
         try {
             metadataNode.addFunction(mdTxnCtx.getJobId(), function);
         } catch (RemoteException e) {
@@ -576,7 +580,7 @@ public class MetadataManager implements IMetadataManager {
 
     @Override
     public void dropFunction(MetadataTransactionContext ctx, FunctionSignature functionSignature)
-            throws MetadataException {
+            throws AlgebricksException {
         try {
             metadataNode.dropFunction(ctx.getJobId(), functionSignature);
         } catch (RemoteException e) {
@@ -587,7 +591,7 @@ public class MetadataManager implements IMetadataManager {
 
     @Override
     public Function getFunction(MetadataTransactionContext ctx, FunctionSignature functionSignature)
-            throws MetadataException {
+            throws AlgebricksException {
         // First look in the context to see if this transaction created the
         // requested dataset itself (but the dataset is still uncommitted).
         Function function = ctx.getFunction(functionSignature);
@@ -626,9 +630,10 @@ public class MetadataManager implements IMetadataManager {
     }
 
     @Override
-    public List<Function> getFunctions(MetadataTransactionContext ctx, String dataverseName) throws MetadataException {
+    public List<Function> getFunctions(MetadataTransactionContext ctx, String dataverseName)
+            throws AlgebricksException {
         try {
-           return metadataNode.getFunctions(ctx.getJobId(), dataverseName);
+            return metadataNode.getFunctions(ctx.getJobId(), dataverseName);
         } catch (RemoteException e) {
             throw new MetadataException(e);
         }
@@ -636,7 +641,7 @@ public class MetadataManager implements IMetadataManager {
 
     @Override
     public void addFeedPolicy(MetadataTransactionContext mdTxnCtx, FeedPolicyEntity feedPolicy)
-            throws MetadataException {
+            throws AlgebricksException {
         try {
             metadataNode.addFeedPolicy(mdTxnCtx.getJobId(), feedPolicy);
         } catch (RemoteException e) {
@@ -646,7 +651,7 @@ public class MetadataManager implements IMetadataManager {
     }
 
     @Override
-    public void initializeDatasetIdFactory(MetadataTransactionContext ctx) throws MetadataException {
+    public void initializeDatasetIdFactory(MetadataTransactionContext ctx) throws AlgebricksException {
         try {
             metadataNode.initializeDatasetIdFactory(ctx.getJobId());
         } catch (RemoteException e) {
@@ -655,7 +660,7 @@ public class MetadataManager implements IMetadataManager {
     }
 
     @Override
-    public int getMostRecentDatasetId() throws MetadataException {
+    public int getMostRecentDatasetId() throws AlgebricksException {
         try {
             return metadataNode.getMostRecentDatasetId();
         } catch (RemoteException e) {
@@ -665,7 +670,7 @@ public class MetadataManager implements IMetadataManager {
 
     @Override
     public List<Function> getDataverseFunctions(MetadataTransactionContext ctx, String dataverseName)
-            throws MetadataException {
+            throws AlgebricksException {
         List<Function> dataverseFunctions;
         try {
             // Assuming that the transaction can read its own writes on the
@@ -681,7 +686,7 @@ public class MetadataManager implements IMetadataManager {
 
     @Override
     public void dropAdapter(MetadataTransactionContext ctx, String dataverseName, String name)
-            throws MetadataException {
+            throws AlgebricksException {
         try {
             metadataNode.dropAdapter(ctx.getJobId(), dataverseName, name);
         } catch (RemoteException e) {
@@ -691,7 +696,7 @@ public class MetadataManager implements IMetadataManager {
 
     @Override
     public DatasourceAdapter getAdapter(MetadataTransactionContext ctx, String dataverseName, String name)
-            throws MetadataException {
+            throws AlgebricksException {
         DatasourceAdapter adapter;
         try {
             adapter = metadataNode.getAdapter(ctx.getJobId(), dataverseName, name);
@@ -703,7 +708,7 @@ public class MetadataManager implements IMetadataManager {
 
     @Override
     public void dropLibrary(MetadataTransactionContext ctx, String dataverseName, String libraryName)
-            throws MetadataException {
+            throws AlgebricksException {
         try {
             metadataNode.dropLibrary(ctx.getJobId(), dataverseName, libraryName);
         } catch (RemoteException e) {
@@ -714,7 +719,7 @@ public class MetadataManager implements IMetadataManager {
 
     @Override
     public List<Library> getDataverseLibraries(MetadataTransactionContext ctx, String dataverseName)
-            throws MetadataException {
+            throws AlgebricksException {
         List<Library> dataverseLibaries;
         try {
             // Assuming that the transaction can read its own writes on the
@@ -729,7 +734,7 @@ public class MetadataManager implements IMetadataManager {
     }
 
     @Override
-    public void addLibrary(MetadataTransactionContext ctx, Library library) throws MetadataException {
+    public void addLibrary(MetadataTransactionContext ctx, Library library) throws AlgebricksException {
         try {
             metadataNode.addLibrary(ctx.getJobId(), library);
         } catch (RemoteException e) {
@@ -740,7 +745,7 @@ public class MetadataManager implements IMetadataManager {
 
     @Override
     public Library getLibrary(MetadataTransactionContext ctx, String dataverseName, String libraryName)
-            throws MetadataException, RemoteException {
+            throws AlgebricksException, RemoteException {
         Library library;
         try {
             library = metadataNode.getLibrary(ctx.getJobId(), dataverseName, libraryName);
@@ -772,7 +777,7 @@ public class MetadataManager implements IMetadataManager {
 
     @Override
     public FeedPolicyEntity getFeedPolicy(MetadataTransactionContext ctx, String dataverse, String policyName)
-            throws MetadataException {
+            throws AlgebricksException {
 
         FeedPolicyEntity feedPolicy;
         try {
@@ -784,7 +789,7 @@ public class MetadataManager implements IMetadataManager {
     }
 
     @Override
-    public Feed getFeed(MetadataTransactionContext ctx, String dataverse, String feedName) throws MetadataException {
+    public Feed getFeed(MetadataTransactionContext ctx, String dataverse, String feedName) throws AlgebricksException {
         Feed feed;
         try {
             feed = metadataNode.getFeed(ctx.getJobId(), dataverse, feedName);
@@ -795,7 +800,7 @@ public class MetadataManager implements IMetadataManager {
     }
 
     @Override
-    public List<Feed> getFeeds(MetadataTransactionContext ctx, String dataverse) throws MetadataException {
+    public List<Feed> getFeeds(MetadataTransactionContext ctx, String dataverse) throws AlgebricksException {
         List<Feed> feeds;
         try {
             feeds = metadataNode.getFeeds(ctx.getJobId(), dataverse);
@@ -806,7 +811,7 @@ public class MetadataManager implements IMetadataManager {
     }
 
     @Override
-    public void dropFeed(MetadataTransactionContext ctx, String dataverse, String feedName) throws MetadataException {
+    public void dropFeed(MetadataTransactionContext ctx, String dataverse, String feedName) throws AlgebricksException {
         Feed feed = null;
         List<FeedConnection> feedConnections = null;
         try {
@@ -824,7 +829,7 @@ public class MetadataManager implements IMetadataManager {
     }
 
     @Override
-    public void addFeed(MetadataTransactionContext ctx, Feed feed) throws MetadataException {
+    public void addFeed(MetadataTransactionContext ctx, Feed feed) throws AlgebricksException {
         try {
             metadataNode.addFeed(ctx.getJobId(), feed);
         } catch (RemoteException e) {
@@ -835,7 +840,7 @@ public class MetadataManager implements IMetadataManager {
 
     @Override
     public void addFeedConnection(MetadataTransactionContext ctx, FeedConnection feedConnection)
-            throws MetadataException {
+            throws AlgebricksException {
         try {
             metadataNode.addFeedConnection(ctx.getJobId(), feedConnection);
         } catch (RemoteException e) {
@@ -846,7 +851,7 @@ public class MetadataManager implements IMetadataManager {
 
     @Override
     public void dropFeedConnection(MetadataTransactionContext ctx, String dataverseName, String feedName,
-            String datasetName) throws MetadataException {
+            String datasetName) throws AlgebricksException {
         try {
             metadataNode.dropFeedConnection(ctx.getJobId(), dataverseName, feedName, datasetName);
         } catch (RemoteException e) {
@@ -857,7 +862,7 @@ public class MetadataManager implements IMetadataManager {
 
     @Override
     public FeedConnection getFeedConnection(MetadataTransactionContext ctx, String dataverseName, String feedName,
-            String datasetName) throws MetadataException {
+            String datasetName) throws AlgebricksException {
         try {
             return metadataNode.getFeedConnection(ctx.getJobId(), dataverseName, feedName, datasetName);
         } catch (RemoteException e) {
@@ -867,7 +872,7 @@ public class MetadataManager implements IMetadataManager {
 
     @Override
     public List<FeedConnection> getFeedConections(MetadataTransactionContext ctx, String dataverseName, String feedName)
-            throws MetadataException {
+            throws AlgebricksException {
         try {
             return metadataNode.getFeedConnections(ctx.getJobId(), dataverseName, feedName);
         } catch (RemoteException e) {
@@ -877,7 +882,7 @@ public class MetadataManager implements IMetadataManager {
 
     @Override
     public List<DatasourceAdapter> getDataverseAdapters(MetadataTransactionContext mdTxnCtx, String dataverse)
-            throws MetadataException {
+            throws AlgebricksException {
         List<DatasourceAdapter> dataverseAdapters;
         try {
             dataverseAdapters = metadataNode.getDataverseAdapters(mdTxnCtx.getJobId(), dataverse);
@@ -889,7 +894,7 @@ public class MetadataManager implements IMetadataManager {
 
     @Override
     public void dropFeedPolicy(MetadataTransactionContext mdTxnCtx, String dataverseName, String policyName)
-            throws MetadataException {
+            throws AlgebricksException {
         FeedPolicyEntity feedPolicy;
         try {
             feedPolicy = metadataNode.getFeedPolicy(mdTxnCtx.getJobId(), dataverseName, policyName);
@@ -901,7 +906,7 @@ public class MetadataManager implements IMetadataManager {
     }
 
     public List<FeedPolicyEntity> getDataversePolicies(MetadataTransactionContext mdTxnCtx, String dataverse)
-            throws MetadataException {
+            throws AlgebricksException {
         List<FeedPolicyEntity> dataverseFeedPolicies;
         try {
             dataverseFeedPolicies = metadataNode.getDataversePolicies(mdTxnCtx.getJobId(), dataverse);
@@ -913,7 +918,7 @@ public class MetadataManager implements IMetadataManager {
 
     @Override
     public List<ExternalFile> getDatasetExternalFiles(MetadataTransactionContext mdTxnCtx, Dataset dataset)
-            throws MetadataException {
+            throws AlgebricksException {
         List<ExternalFile> externalFiles;
         try {
             externalFiles = metadataNode.getExternalFiles(mdTxnCtx.getJobId(), dataset);
@@ -924,7 +929,7 @@ public class MetadataManager implements IMetadataManager {
     }
 
     @Override
-    public void addExternalFile(MetadataTransactionContext ctx, ExternalFile externalFile) throws MetadataException {
+    public void addExternalFile(MetadataTransactionContext ctx, ExternalFile externalFile) throws AlgebricksException {
         try {
             metadataNode.addExternalFile(ctx.getJobId(), externalFile);
         } catch (RemoteException e) {
@@ -933,7 +938,7 @@ public class MetadataManager implements IMetadataManager {
     }
 
     @Override
-    public void dropExternalFile(MetadataTransactionContext ctx, ExternalFile externalFile) throws MetadataException {
+    public void dropExternalFile(MetadataTransactionContext ctx, ExternalFile externalFile) throws AlgebricksException {
         try {
             metadataNode.dropExternalFile(ctx.getJobId(), externalFile.getDataverseName(),
                     externalFile.getDatasetName(), externalFile.getFileNumber());
@@ -944,7 +949,7 @@ public class MetadataManager implements IMetadataManager {
 
     @Override
     public ExternalFile getExternalFile(MetadataTransactionContext ctx, String dataverseName, String datasetName,
-            Integer fileNumber) throws MetadataException {
+            Integer fileNumber) throws AlgebricksException {
         ExternalFile file;
         try {
             file = metadataNode.getExternalFile(ctx.getJobId(), dataverseName, datasetName, fileNumber);
@@ -954,10 +959,10 @@ public class MetadataManager implements IMetadataManager {
         return file;
     }
 
-    //TODO: Optimize <-- use keys instead of object -->
+    // TODO: Optimize <-- use keys instead of object -->
     @Override
     public void dropDatasetExternalFiles(MetadataTransactionContext mdTxnCtx, Dataset dataset)
-            throws MetadataException {
+            throws AlgebricksException {
         try {
             metadataNode.dropExternalFiles(mdTxnCtx.getJobId(), dataset);
         } catch (RemoteException e) {
@@ -966,7 +971,7 @@ public class MetadataManager implements IMetadataManager {
     }
 
     @Override
-    public void updateDataset(MetadataTransactionContext ctx, Dataset dataset) throws MetadataException {
+    public void updateDataset(MetadataTransactionContext ctx, Dataset dataset) throws AlgebricksException {
         try {
             metadataNode.updateDataset(ctx.getJobId(), dataset);
         } catch (RemoteException e) {
@@ -992,7 +997,7 @@ public class MetadataManager implements IMetadataManager {
 
     @Override
     public <T extends IExtensionMetadataEntity> void addEntity(MetadataTransactionContext mdTxnCtx, T entity)
-            throws MetadataException {
+            throws AlgebricksException {
         try {
             metadataNode.addEntity(mdTxnCtx.getJobId(), entity);
         } catch (RemoteException e) {
@@ -1002,7 +1007,7 @@ public class MetadataManager implements IMetadataManager {
 
     @Override
     public <T extends IExtensionMetadataEntity> void upsertEntity(MetadataTransactionContext mdTxnCtx, T entity)
-            throws MetadataException {
+            throws AlgebricksException {
         try {
             metadataNode.upsertEntity(mdTxnCtx.getJobId(), entity);
         } catch (RemoteException e) {
@@ -1012,7 +1017,7 @@ public class MetadataManager implements IMetadataManager {
 
     @Override
     public <T extends IExtensionMetadataEntity> void deleteEntity(MetadataTransactionContext mdTxnCtx, T entity)
-            throws MetadataException {
+            throws AlgebricksException {
         try {
             metadataNode.deleteEntity(mdTxnCtx.getJobId(), entity);
         } catch (RemoteException e) {
@@ -1022,7 +1027,7 @@ public class MetadataManager implements IMetadataManager {
 
     @Override
     public <T extends IExtensionMetadataEntity> List<T> getEntities(MetadataTransactionContext mdTxnCtx,
-            IExtensionMetadataSearchKey searchKey) throws MetadataException {
+            IExtensionMetadataSearchKey searchKey) throws AlgebricksException {
         try {
             return metadataNode.getEntities(mdTxnCtx.getJobId(), searchKey);
         } catch (RemoteException e) {

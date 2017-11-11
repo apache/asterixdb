@@ -245,7 +245,8 @@ class LangExpressionToPlanTranslator
         AssignOperator assign = new AssignOperator(pkVars, pkExprs);
         assign.getInputs().add(new MutableObject<>(dssOp));
 
-        // If the input is pre-sorted, we set the ordering property explicitly in the assign
+        // If the input is pre-sorted, we set the ordering property explicitly in the
+        // assign
         if (clffs.alreadySorted()) {
             List<OrderColumn> orderColumns = new ArrayList<>();
             for (int i = 0; i < pkVars.size(); ++i) {
@@ -328,13 +329,13 @@ class LangExpressionToPlanTranslator
             }
         } else {
             /**
-             * add the collection-to-sequence right before the project,
-             * because dataset only accept non-collection records
+             * add the collection-to-sequence right before the project, because dataset only
+             * accept non-collection records
              */
             LogicalVariable seqVar = context.newVar();
             /**
-             * This assign adds a marker function collection-to-sequence: if the input is a singleton collection, unnest
-             * it; otherwise do nothing.
+             * This assign adds a marker function collection-to-sequence: if the input is a
+             * singleton collection, unnest it; otherwise do nothing.
              */
             AssignOperator assignCollectionToSequence = new AssignOperator(seqVar,
                     new MutableObject<>(new ScalarFunctionCallExpression(
@@ -557,7 +558,8 @@ class LangExpressionToPlanTranslator
         return processReturningExpression(rootOperator, insertOp, compiledInsert);
     }
 
-    // Stitches the translated operators for the returning expression into the query plan.
+    // Stitches the translated operators for the returning expression into the query
+    // plan.
     private ILogicalOperator processReturningExpression(ILogicalOperator inputOperator,
             InsertDeleteUpsertOperator insertOp, CompiledInsertStatement compiledInsert) throws AlgebricksException {
         Expression returnExpression = compiledInsert.getReturnExpression();
@@ -566,7 +568,7 @@ class LangExpressionToPlanTranslator
         }
         ILogicalOperator rootOperator = inputOperator;
 
-        //Makes the id of the insert var point to the record variable.
+        // Makes the id of the insert var point to the record variable.
         context.newVarFromExpression(compiledInsert.getVar());
         context.setVar(compiledInsert.getVar(),
                 ((VariableReferenceExpression) insertOp.getPayloadExpression().getValue()).getVariableReference());
@@ -606,7 +608,7 @@ class LangExpressionToPlanTranslator
                 dataset.getDatasetDetails(), domain);
     }
 
-    private FileSplit getDefaultOutputFileLocation(ICcApplicationContext appCtx) throws MetadataException {
+    private FileSplit getDefaultOutputFileLocation(ICcApplicationContext appCtx) throws AlgebricksException {
         String outputDir = System.getProperty("java.io.tmpDir");
         String filePath =
                 outputDir + System.getProperty("file.separator") + OUTPUT_FILE_PREFIX + outputFileID.incrementAndGet();
@@ -702,8 +704,12 @@ class LangExpressionToPlanTranslator
         }
 
         AbstractFunctionCallExpression f;
-        if ((f = lookupUserDefinedFunction(signature, args)) == null) {
-            f = lookupBuiltinFunction(signature.getName(), signature.getArity(), args);
+        try {
+            if ((f = lookupUserDefinedFunction(signature, args)) == null) {
+                f = lookupBuiltinFunction(signature.getName(), signature.getArity(), args);
+            }
+        } catch (AlgebricksException e) {
+            throw new CompilationException(e);
         }
 
         if (f == null) {
@@ -726,7 +732,7 @@ class LangExpressionToPlanTranslator
     }
 
     private AbstractFunctionCallExpression lookupUserDefinedFunction(FunctionSignature signature,
-            List<Mutable<ILogicalExpression>> args) throws MetadataException {
+            List<Mutable<ILogicalExpression>> args) throws AlgebricksException {
         if (signature.getNamespace() == null) {
             return null;
         }
@@ -1406,8 +1412,8 @@ class LangExpressionToPlanTranslator
     }
 
     /**
-     * Eliminate shared operator references in a query plan.
-     * Deep copy a new query plan subtree whenever there is a shared operator reference.
+     * Eliminate shared operator references in a query plan. Deep copy a new query
+     * plan subtree whenever there is a shared operator reference.
      *
      * @param plan,
      *            the query plan.
@@ -1421,15 +1427,16 @@ class LangExpressionToPlanTranslator
     }
 
     /**
-     * Eliminate shared operator references in a query plan rooted at <code>currentOpRef.getValue()</code>.
-     * Deep copy a new query plan subtree whenever there is a shared operator reference.
+     * Eliminate shared operator references in a query plan rooted at
+     * <code>currentOpRef.getValue()</code>. Deep copy a new query plan subtree
+     * whenever there is a shared operator reference.
      *
      * @param currentOpRef,
      *            the operator reference to consider
      * @param opRefSet,
      *            the set storing seen operator references so far.
-     * @return a mapping that maps old variables to new variables, for the ancestors of
-     *         <code>currentOpRef</code> to replace variables properly.
+     * @return a mapping that maps old variables to new variables, for the ancestors
+     *         of <code>currentOpRef</code> to replace variables properly.
      * @throws CompilationException
      */
     private LinkedHashMap<LogicalVariable, LogicalVariable> eliminateSharedOperatorReference(
@@ -1441,9 +1448,12 @@ class LangExpressionToPlanTranslator
 
             // Recursively eliminates shared references in nested plans.
             if (currentOperator.hasNestedPlans()) {
-                // Since a nested plan tree itself can never be shared with another nested plan tree in
-                // another operator, the operation called in the if block does not need to replace
-                // any variables further for <code>currentOpRef.getValue()</code> nor its ancestor.
+                // Since a nested plan tree itself can never be shared with another nested plan
+                // tree in
+                // another operator, the operation called in the if block does not need to
+                // replace
+                // any variables further for <code>currentOpRef.getValue()</code> nor its
+                // ancestor.
                 AbstractOperatorWithNestedPlans opWithNestedPlan = (AbstractOperatorWithNestedPlans) currentOperator;
                 for (ILogicalPlan plan : opWithNestedPlan.getNestedPlans()) {
                     for (Mutable<ILogicalOperator> rootRef : plan.getRoots()) {
@@ -1465,7 +1475,8 @@ class LangExpressionToPlanTranslator
                     LinkedHashMap<LogicalVariable, LogicalVariable> cloneVarMap =
                             visitor.getInputToOutputVariableMapping();
 
-                    // Substitute variables according to the deep copy which generates new variables.
+                    // Substitute variables according to the deep copy which generates new
+                    // variables.
                     VariableUtilities.substituteVariables(currentOperator, cloneVarMap, null);
                     varMap.putAll(cloneVarMap);
 
@@ -1481,7 +1492,8 @@ class LangExpressionToPlanTranslator
                 // Substitute variables according to the new subtree.
                 VariableUtilities.substituteVariables(currentOperator, childVarMap, null);
 
-                // Updates mapping like <$a, $b> in varMap to <$a, $c>, where there is a mapping <$b, $c>
+                // Updates mapping like <$a, $b> in varMap to <$a, $c>, where there is a mapping
+                // <$b, $c>
                 // in childVarMap.
                 varMap.entrySet().forEach(entry -> {
                     LogicalVariable newVar = childVarMap.get(entry.getValue());
@@ -1512,7 +1524,8 @@ class LangExpressionToPlanTranslator
      *            the expression to select tuples that are processed by this branch.
      * @param branchExpression,
      *            the expression to be evaluated in this branch.
-     * @return a pair of the constructed subplan operator and the output variable for the branch.
+     * @return a pair of the constructed subplan operator and the output variable
+     *         for the branch.
      * @throws CompilationException
      */
     protected Pair<ILogicalOperator, LogicalVariable> constructSubplanOperatorForBranch(ILogicalOperator inputOp,
@@ -1523,7 +1536,8 @@ class LangExpressionToPlanTranslator
         Mutable<ILogicalOperator> nestedSource =
                 new MutableObject<>(new NestedTupleSourceOperator(new MutableObject<>(subplanOp)));
         SelectOperator select = new SelectOperator(selectExpr, false, null);
-        // The select operator cannot be moved up and down, otherwise it will cause typing issues (ASTERIXDB-1203).
+        // The select operator cannot be moved up and down, otherwise it will cause
+        // typing issues (ASTERIXDB-1203).
         OperatorPropertiesUtil.markMovable(select, false);
         select.getInputs().add(nestedSource);
         Pair<ILogicalOperator, LogicalVariable> pBranch = branchExpression.accept(this, new MutableObject<>(select));
@@ -1552,12 +1566,14 @@ class LangExpressionToPlanTranslator
         return new AssignOperator(v1, new MutableObject<>(comparison));
     }
 
-    // Generates the filter condition for whether a conditional branch should be executed.
+    // Generates the filter condition for whether a conditional branch should be
+    // executed.
     protected Mutable<ILogicalExpression> generateNoMatchedPrecedingWhenBranchesFilter(
             List<ILogicalExpression> inputBooleanExprs) {
         List<Mutable<ILogicalExpression>> arguments = new ArrayList<>();
         for (ILogicalExpression inputBooleanExpr : inputBooleanExprs) {
-            // A NULL/MISSING valued WHEN expression does not lead to the corresponding THEN execution.
+            // A NULL/MISSING valued WHEN expression does not lead to the corresponding THEN
+            // execution.
             // Therefore, we should check a previous WHEN boolean condition is not unknown.
             arguments.add(generateAndNotIsUnknownWrap(inputBooleanExpr));
         }
@@ -1580,7 +1596,8 @@ class LangExpressionToPlanTranslator
                 new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(BuiltinFunctions.AND), arguments));
     }
 
-    // Generates the plan for "UNION ALL" or union expression from its input expressions.
+    // Generates the plan for "UNION ALL" or union expression from its input
+    // expressions.
     protected Pair<ILogicalOperator, LogicalVariable> translateUnionAllFromInputExprs(List<ILangExpression> inputExprs,
             Mutable<ILogicalOperator> tupSource) throws CompilationException {
         List<Mutable<ILogicalOperator>> inputOpRefsToUnion = new ArrayList<>();

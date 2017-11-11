@@ -29,7 +29,6 @@ import java.util.Calendar;
 import org.apache.asterix.builders.IARecordBuilder;
 import org.apache.asterix.builders.OrderedListBuilder;
 import org.apache.asterix.builders.RecordBuilder;
-import org.apache.asterix.common.exceptions.MetadataException;
 import org.apache.asterix.common.transactions.JobId;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.metadata.MetadataNode;
@@ -51,6 +50,7 @@ import org.apache.asterix.om.types.AbstractCollectionType;
 import org.apache.asterix.om.types.AbstractComplexType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.utils.NonTaggedFormatUtil;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -89,7 +89,7 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
 
     @Override
     public Datatype getMetadataEntityFromTuple(ITupleReference frameTuple)
-            throws MetadataException, HyracksDataException {
+            throws AlgebricksException, HyracksDataException {
         byte[] serRecord = frameTuple.getFieldData(DATATYPE_PAYLOAD_TUPLE_FIELD_INDEX);
         int recordStartOffset = frameTuple.getFieldStart(DATATYPE_PAYLOAD_TUPLE_FIELD_INDEX);
         int recordLength = frameTuple.getFieldLength(DATATYPE_PAYLOAD_TUPLE_FIELD_INDEX);
@@ -99,7 +99,7 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
         return createDataTypeFromARecord(datatypeRecord);
     }
 
-    private Datatype createDataTypeFromARecord(ARecord datatypeRecord) throws MetadataException {
+    private Datatype createDataTypeFromARecord(ARecord datatypeRecord) throws AlgebricksException {
         String dataverseName =
                 ((AString) datatypeRecord.getValueByPos(MetadataRecordTypes.DATATYPE_ARECORD_DATAVERSENAME_FIELD_INDEX))
                         .getStringValue();
@@ -176,7 +176,7 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
 
     @Override
     public ITupleReference getTupleFromMetadataEntity(Datatype dataType)
-            throws HyracksDataException, MetadataException {
+            throws HyracksDataException, AlgebricksException {
         // write the key in the first two fields of the tuple
         tupleBuilder.reset();
         aString.setValue(dataType.getDataverseName());
@@ -202,7 +202,7 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
         recordBuilder.addField(MetadataRecordTypes.DATATYPE_ARECORD_DATATYPENAME_FIELD_INDEX, fieldValue);
 
         IAType fieldType = dataType.getDatatype();
-        //unwrap nullable type out of the union
+        // unwrap nullable type out of the union
         if (fieldType.getTypeTag() == ATypeTag.UNION) {
             fieldType = ((AUnionType) dataType.getDatatype()).getActualType();
         }
@@ -366,8 +366,9 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
             String dataverseName, String datatypeName) throws HyracksDataException {
         try {
             metadataNode.addDatatype(jobId, new Datatype(dataverseName, typeName, nestedType, true));
-        } catch (MetadataException e) {
-            // The nested record type may have been inserted by a previous DDL statement or by
+        } catch (AlgebricksException e) {
+            // The nested record type may have been inserted by a previous DDL statement or
+            // by
             // a previous nested type.
             if (!(e.getCause() instanceof HyracksDataException)) {
                 throw HyracksDataException.create(e);

@@ -54,8 +54,8 @@ import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 
 /**
- * A utility class for providing helper functions for feeds
- * TODO: Refactor this class.
+ * A utility class for providing helper functions for feeds TODO: Refactor this
+ * class.
  */
 public class FeedMetadataUtil {
 
@@ -77,7 +77,7 @@ public class FeedMetadataUtil {
     }
 
     public static Feed validateIfFeedExists(String dataverse, String feedName, MetadataTransactionContext ctx)
-            throws CompilationException {
+            throws AlgebricksException {
         Feed feed = MetadataManager.INSTANCE.getFeed(ctx, dataverse, feedName);
         if (feed == null) {
             throw new CompilationException("Unknown source feed: " + feedName);
@@ -86,7 +86,7 @@ public class FeedMetadataUtil {
     }
 
     public static FeedPolicyEntity validateIfPolicyExists(String dataverse, String policyName,
-            MetadataTransactionContext ctx) throws CompilationException {
+            MetadataTransactionContext ctx) throws AlgebricksException {
         FeedPolicyEntity feedPolicy = MetadataManager.INSTANCE.getFeedPolicy(ctx, dataverse, policyName);
         if (feedPolicy == null) {
             feedPolicy =
@@ -273,7 +273,7 @@ public class FeedMetadataUtil {
     }
 
     public static ARecordType getOutputType(IFeed feed, Map<String, String> configuration, String key)
-            throws MetadataException {
+            throws AlgebricksException {
         ARecordType outputType = null;
         String fqOutputType = configuration.get(key);
 

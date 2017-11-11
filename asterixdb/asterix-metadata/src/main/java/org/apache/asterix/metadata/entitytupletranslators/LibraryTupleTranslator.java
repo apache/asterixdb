@@ -24,13 +24,13 @@ import java.io.DataInput;
 import java.io.DataInputStream;
 import java.util.Calendar;
 
-import org.apache.asterix.common.exceptions.MetadataException;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
 import org.apache.asterix.metadata.bootstrap.MetadataRecordTypes;
 import org.apache.asterix.metadata.entities.Library;
 import org.apache.asterix.om.base.ARecord;
 import org.apache.asterix.om.base.AString;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
@@ -79,7 +79,8 @@ public class LibraryTupleTranslator extends AbstractTupleTranslator<Library> {
     }
 
     @Override
-    public ITupleReference getTupleFromMetadataEntity(Library library) throws HyracksDataException, MetadataException {
+    public ITupleReference getTupleFromMetadataEntity(Library library)
+            throws HyracksDataException, AlgebricksException {
         // write the key in the first 2 fields of the tuple
         tupleBuilder.reset();
         aString.setValue(library.getDataverseName());

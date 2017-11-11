@@ -26,7 +26,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.asterix.builders.OrderedListBuilder;
-import org.apache.asterix.common.exceptions.MetadataException;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
 import org.apache.asterix.metadata.bootstrap.MetadataRecordTypes;
@@ -36,6 +35,7 @@ import org.apache.asterix.om.base.ARecord;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.base.IACursor;
 import org.apache.asterix.om.types.AOrderedListType;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -111,7 +111,7 @@ public class FunctionTupleTranslator extends AbstractTupleTranslator<Function> {
 
     @Override
     public ITupleReference getTupleFromMetadataEntity(Function function)
-            throws HyracksDataException, MetadataException {
+            throws HyracksDataException, AlgebricksException {
         // write the key in the first 2 fields of the tuple
         tupleBuilder.reset();
         aString.setValue(function.getDataverseName());

@@ -265,9 +265,11 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         FileSplit outputFile = null;
         IAWriterFactory writerFactory = PrinterBasedWriterFactory.INSTANCE;
         IResultSerializerFactoryProvider resultSerializerFactoryProvider = ResultSerializerFactoryProvider.INSTANCE;
-        /* Since the system runs a large number of threads, when HTTP requests don't return, it becomes difficult to
-         * find the thread running the request to determine where it has stopped.
-         * Setting the thread name helps make that easier
+        /*
+         * Since the system runs a large number of threads, when HTTP requests don't
+         * return, it becomes difficult to find the thread running the request to
+         * determine where it has stopped. Setting the thread name helps make that
+         * easier
          */
         String threadName = Thread.currentThread().getName();
         Thread.currentThread().setName(QueryTranslator.class.getSimpleName());
@@ -397,8 +399,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         // No op
                         break;
                     case Statement.Kind.EXTENSION:
-                        ((IExtensionStatement) stmt)
-                                .handle(hcc, this, requestParameters, metadataProvider, resultSetIdCounter);
+                        ((IExtensionStatement) stmt).handle(hcc, this, requestParameters, metadataProvider,
+                                resultSetIdCounter);
                         break;
                     default:
                         throw new CompilationException("Unknown function");
@@ -641,7 +643,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 metadataProvider.setMetadataTxnContext(mdTxnCtx);
             }
 
-            // #. add a new dataset with PendingNoOp after deleting the dataset with PendingAddOp
+            // #. add a new dataset with PendingNoOp after deleting the dataset with
+            // PendingAddOp
             MetadataManager.INSTANCE.dropDataset(metadataProvider.getMetadataTxnContext(), dataverseName, datasetName);
             dataset.setPendingOp(MetadataUtil.PENDING_NO_OP);
             MetadataManager.INSTANCE.addDataset(metadataProvider.getMetadataTxnContext(), dataset);
@@ -656,7 +659,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 // #. execute compensation operations
                 // remove the index in NC
                 // [Notice]
-                // As long as we updated(and committed) metadata, we should remove any effect of the job
+                // As long as we updated(and committed) metadata, we should remove any effect of
+                // the job
                 // because an exception occurs during runJob.
                 mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
                 bActiveTxn = true;
@@ -790,9 +794,11 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             int keyIndex = 0;
             boolean overridesFieldTypes = false;
 
-            // this set is used to detect duplicates in the specified keys in the create index statement
+            // this set is used to detect duplicates in the specified keys in the create
+            // index statement
             // e.g. CREATE INDEX someIdx on dataset(id,id).
-            // checking only the names is not enough. Need also to check the source indicators for cases like:
+            // checking only the names is not enough. Need also to check the source
+            // indicators for cases like:
             // CREATE INDEX someIdx on dataset(meta().id, id)
             Set<Pair<List<String>, Integer>> indexKeysSet = new HashSet<>();
 
@@ -820,10 +826,11 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         throw new AsterixException(ErrorCode.INDEX_ILLEGAL_ENFORCED_NON_OPTIONAL,
                                 String.valueOf(fieldExpr.first));
                     }
-                    // don't allow creating an enforced index on a closed-type field, fields that are part of schema.
+                    // don't allow creating an enforced index on a closed-type field, fields that
+                    // are part of schema.
                     // get the field type, if it's not null, then the field is closed-type
-                    if (stmtCreateIndex.isEnforced() &&
-                            subType.getSubFieldType(fieldExpr.first.subList(i, fieldExpr.first.size())) != null) {
+                    if (stmtCreateIndex.isEnforced()
+                            && subType.getSubFieldType(fieldExpr.first.subList(i, fieldExpr.first.size())) != null) {
                         throw new AsterixException(ErrorCode.INDEX_ILLEGAL_ENFORCED_ON_CLOSED_FIELD,
                                 String.valueOf(fieldExpr.first));
                     }
@@ -845,9 +852,10 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                             "Unknown type " + (fieldExpr.second == null ? fieldExpr.first : fieldExpr.second));
                 }
 
-                // try to add the key & its source to the set of keys, if key couldn't be added, there is a duplicate
-                if (!indexKeysSet.add(new Pair<>(fieldExpr.first,
-                        stmtCreateIndex.getFieldSourceIndicators().get(keyIndex)))) {
+                // try to add the key & its source to the set of keys, if key couldn't be added,
+                // there is a duplicate
+                if (!indexKeysSet
+                        .add(new Pair<>(fieldExpr.first, stmtCreateIndex.getFieldSourceIndicators().get(keyIndex)))) {
                     throw new AsterixException(ErrorCode.INDEX_ILLEGAL_REPETITIVE_FIELD,
                             String.valueOf(fieldExpr.first));
                 }
@@ -859,9 +867,11 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
 
             validateIndexKeyFields(stmtCreateIndex, keySourceIndicators, aRecordType, metaRecordType, indexFields,
                     indexFieldTypes);
-            // Checks whether a user is trying to create an inverted secondary index on a dataset
+            // Checks whether a user is trying to create an inverted secondary index on a
+            // dataset
             // with a variable-length primary key.
-            // Currently, we do not support this. Therefore, as a temporary solution, we print an
+            // Currently, we do not support this. Therefore, as a temporary solution, we
+            // print an
             // error message and stop.
             if (stmtCreateIndex.getIndexType() == IndexType.SINGLE_PARTITION_WORD_INVIX
                     || stmtCreateIndex.getIndexType() == IndexType.SINGLE_PARTITION_NGRAM_INVIX
@@ -994,8 +1004,10 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             runJob(hcc, spec, jobFlags);
 
             // #. flush the internal dataset
-            // We need this to guarantee the correctness of component Id acceleration for secondary-to-primary index.
-            // Otherwise, the new secondary index component would corresponding to a partial memory component
+            // We need this to guarantee the correctness of component Id acceleration for
+            // secondary-to-primary index.
+            // Otherwise, the new secondary index component would corresponding to a partial
+            // memory component
             // of the primary index, which is incorrect.
             if (ds.getDatasetType() == DatasetType.INTERNAL) {
                 FlushDatasetUtil.flushDataset(hcc, metadataProvider, index.getDataverseName(), index.getDatasetName());
@@ -1017,7 +1029,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             bActiveTxn = true;
             metadataProvider.setMetadataTxnContext(mdTxnCtx);
 
-            // #. add another new index with PendingNoOp after deleting the index with PendingAddOp
+            // #. add another new index with PendingNoOp after deleting the index with
+            // PendingAddOp
             MetadataManager.INSTANCE.dropIndex(metadataProvider.getMetadataTxnContext(), index.getDataverseName(),
                     index.getDatasetName(), index.getIndexName());
             index.setPendingOp(MetadataUtil.PENDING_NO_OP);
@@ -1038,7 +1051,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             if (bActiveTxn) {
                 abort(e, e, mdTxnCtx);
             }
-            // If files index was replicated for external dataset, it should be cleaned up on NC side
+            // If files index was replicated for external dataset, it should be cleaned up
+            // on NC side
             if (filesIndexReplicated) {
                 mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
                 bActiveTxn = true;
@@ -1687,7 +1701,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     }
 
     protected boolean checkWhetherFunctionIsBeingUsed(MetadataTransactionContext ctx, String dataverseName,
-            String functionName, int arity, String currentDataverse) throws MetadataException {
+            String functionName, int arity, String currentDataverse) throws AlgebricksException {
         List<Dataverse> allDataverses = MetadataManager.INSTANCE.getDataverses(ctx);
         for (Dataverse dataverse : allDataverses) {
             if (currentDataverse != null && dataverse.getDataverseName().equals(currentDataverse)) {
@@ -1876,7 +1890,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             MetadataProvider metadataProvider, InsertStatement insertUpsert)
             throws RemoteException, AlgebricksException, ACIDException {
 
-        // Insert/upsert statement rewriting (happens under the same ongoing metadata transaction)
+        // Insert/upsert statement rewriting (happens under the same ongoing metadata
+        // transaction)
         Pair<IReturningStatement, Integer> rewrittenResult =
                 apiFramework.reWriteQuery(declaredFunctions, metadataProvider, insertUpsert, sessionOutput);
 
@@ -1898,7 +1913,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             default:
                 throw new AlgebricksException("Unsupported statement type " + rewrittenInsertUpsert.getKind());
         }
-        // Insert/upsert statement compilation (happens under the same ongoing metadata transaction)
+        // Insert/upsert statement compilation (happens under the same ongoing metadata
+        // transaction)
         return apiFramework.compileQuery(clusterInfoCollector, metadataProvider, rewrittenInsertUpsert.getQuery(),
                 rewrittenResult.second, datasetName, sessionOutput, clfrqs);
     }
@@ -2627,7 +2643,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             // all index updates has completed successfully, record transaction state
             spec = ExternalIndexingOperations.buildCommitJob(ds, indexes, metadataProvider);
 
-            // Aquire write latch again -> start a transaction and record the decision to commit
+            // Aquire write latch again -> start a transaction and record the decision to
+            // commit
             mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
             metadataProvider.setMetadataTxnContext(mdTxnCtx);
             bActiveTxn = true;

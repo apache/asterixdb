@@ -29,7 +29,6 @@ import java.util.List;
 
 import org.apache.asterix.builders.OrderedListBuilder;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
-import org.apache.asterix.common.exceptions.MetadataException;
 import org.apache.asterix.common.transactions.JobId;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.metadata.MetadataNode;
@@ -104,7 +103,8 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
     }
 
     @Override
-    public Index getMetadataEntityFromTuple(ITupleReference frameTuple) throws MetadataException, HyracksDataException {
+    public Index getMetadataEntityFromTuple(ITupleReference frameTuple)
+            throws AlgebricksException, HyracksDataException {
         byte[] serRecord = frameTuple.getFieldData(INDEX_PAYLOAD_TUPLE_FIELD_INDEX);
         int recordStartOffset = frameTuple.getFieldStart(INDEX_PAYLOAD_TUPLE_FIELD_INDEX);
         int recordLength = frameTuple.getFieldLength(INDEX_PAYLOAD_TUPLE_FIELD_INDEX);
@@ -176,7 +176,8 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
             }
         }
 
-        // index key type information is not persisted, thus we extract type information from the record metadata
+        // index key type information is not persisted, thus we extract type information
+        // from the record metadata
         if (searchKeyType.isEmpty()) {
             try {
                 Dataset dSet = metadataNode.getDataset(jobId, dvName, dsName);
@@ -191,11 +192,7 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
                     metaDt = (ARecordType) metadataNode.getDatatype(jobId, metatypeDataverseName, metatypeName)
                             .getDatatype();
                 }
-                try {
-                    searchKeyType = KeyFieldTypeUtil.getKeyTypes(recordDt, metaDt, searchKey, keyFieldSourceIndicator);
-                } catch (AlgebricksException e) {
-                    throw new MetadataException(e);
-                }
+                searchKeyType = KeyFieldTypeUtil.getKeyTypes(recordDt, metaDt, searchKey, keyFieldSourceIndicator);
             } catch (RemoteException re) {
                 throw HyracksDataException.create(re);
             }

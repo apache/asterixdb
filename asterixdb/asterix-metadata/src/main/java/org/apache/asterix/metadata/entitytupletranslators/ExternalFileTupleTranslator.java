@@ -24,7 +24,6 @@ import java.io.DataInputStream;
 import java.util.Date;
 
 import org.apache.asterix.common.config.DatasetConfig.ExternalFilePendingOp;
-import org.apache.asterix.common.exceptions.MetadataException;
 import org.apache.asterix.external.indexing.ExternalFile;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
@@ -38,6 +37,7 @@ import org.apache.asterix.om.base.AMutableInt64;
 import org.apache.asterix.om.base.ARecord;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.types.BuiltinType;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
@@ -76,7 +76,7 @@ public class ExternalFileTupleTranslator extends AbstractTupleTranslator<Externa
 
     @Override
     public ExternalFile getMetadataEntityFromTuple(ITupleReference tuple)
-            throws MetadataException, HyracksDataException {
+            throws AlgebricksException, HyracksDataException {
         byte[] serRecord = tuple.getFieldData(EXTERNAL_FILE_PAYLOAD_TUPLE_FIELD_INDEX);
         int recordStartOffset = tuple.getFieldStart(EXTERNAL_FILE_PAYLOAD_TUPLE_FIELD_INDEX);
         int recordLength = tuple.getFieldLength(EXTERNAL_FILE_PAYLOAD_TUPLE_FIELD_INDEX);
@@ -108,7 +108,7 @@ public class ExternalFileTupleTranslator extends AbstractTupleTranslator<Externa
 
     @Override
     public ITupleReference getTupleFromMetadataEntity(ExternalFile externalFile)
-            throws MetadataException, HyracksDataException {
+            throws AlgebricksException, HyracksDataException {
         // write the key in the first 3 fields of the tuple
         tupleBuilder.reset();
         // dataverse name

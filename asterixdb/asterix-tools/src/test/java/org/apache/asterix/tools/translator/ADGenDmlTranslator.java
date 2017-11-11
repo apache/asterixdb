@@ -23,8 +23,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.common.annotations.TypeDataGen;
-import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.common.exceptions.MetadataException;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.statement.DataverseDecl;
 import org.apache.asterix.lang.common.statement.TypeDecl;
@@ -49,8 +47,8 @@ public class ADGenDmlTranslator extends AbstractLangTranslator {
 
     public void translate() throws AlgebricksException {
         String defaultDataverse = getDefaultDataverse();
-        types = new HashMap<TypeSignature, IAType>();
-        typeDataGenMap = new HashMap<TypeSignature, TypeDataGen>();
+        types = new HashMap<>();
+        typeDataGenMap = new HashMap<>();
 
         for (Statement stmt : aqlStatements) {
             if (stmt.getKind() == Statement.Kind.TYPE_DECL) {

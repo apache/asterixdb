@@ -30,6 +30,7 @@ import org.apache.asterix.metadata.entities.InternalDatasetDetails;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails.FileStructure;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails.PartitioningStrategy;
 import org.apache.asterix.om.types.BuiltinType;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.junit.Assert;
 import org.junit.Test;
@@ -37,7 +38,7 @@ import org.junit.Test;
 public class DatasetTupleTranslatorTest {
 
     @Test
-    public void test() throws MetadataException, IOException {
+    public void test() throws AlgebricksException, IOException {
         Integer[] indicators = { 0, 1, null };
         for (Integer indicator : indicators) {
             Map<String, String> compactionPolicyProperties = new HashMap<>();

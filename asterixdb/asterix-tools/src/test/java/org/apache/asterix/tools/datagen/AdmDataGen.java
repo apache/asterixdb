@@ -46,8 +46,6 @@ import org.apache.asterix.common.annotations.RecordDataGenAnnotation;
 import org.apache.asterix.common.annotations.TypeDataGen;
 import org.apache.asterix.common.annotations.UndeclaredFieldsDataGen;
 import org.apache.asterix.common.exceptions.ACIDException;
-import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.common.exceptions.MetadataException;
 import org.apache.asterix.common.transactions.JobId;
 import org.apache.asterix.lang.aql.parser.AQLParserFactory;
 import org.apache.asterix.lang.aql.parser.ParseException;
@@ -727,8 +725,8 @@ public class AdmDataGen {
                                         "list-val-file annotation cannot be used for field of type " + ti.getTypeTag());
                             }
                             AbstractCollectionType act = (AbstractCollectionType) ti;
-                            declaredFieldsGenerators[i] = new ListFromArrayGenerator(act, a, lvf.getMin(),
-                                    lvf.getMax());
+                            declaredFieldsGenerators[i] =
+                                    new ListFromArrayGenerator(act, a, lvf.getMin(), lvf.getMax());
                             break;
                         }
                         case VALFILESAMEINDEX: {
@@ -774,9 +772,9 @@ public class AdmDataGen {
                             }
                             switch (fi.getValueType()) {
                                 case INT: {
-                                    declaredFieldsGenerators[i] = new IntIntervalGenerator(
-                                            Integer.parseInt(fi.getMin()), Integer.parseInt(fi.getMax()), prefix,
-                                            suffix);
+                                    declaredFieldsGenerators[i] =
+                                            new IntIntervalGenerator(Integer.parseInt(fi.getMin()),
+                                                    Integer.parseInt(fi.getMax()), prefix, suffix);
                                     break;
                                 }
                                 case LONG: {
@@ -785,9 +783,9 @@ public class AdmDataGen {
                                     break;
                                 }
                                 case DOUBLE: {
-                                    declaredFieldsGenerators[i] = new DoubleIntervalGenerator(
-                                            Double.parseDouble(fi.getMin()), Double.parseDouble(fi.getMax()), prefix,
-                                            suffix);
+                                    declaredFieldsGenerators[i] =
+                                            new DoubleIntervalGenerator(Double.parseDouble(fi.getMin()),
+                                                    Double.parseDouble(fi.getMax()), prefix, suffix);
                                     break;
                                 }
                                 default: {
@@ -813,14 +811,14 @@ public class AdmDataGen {
                         }
                         case DATEBETWEENYEARS: {
                             DateBetweenYearsDataGen dby = (DateBetweenYearsDataGen) rfdg;
-                            declaredFieldsGenerators[i] = new DateBetweenYearsGenerator(dby.getMinYear(),
-                                    dby.getMaxYear());
+                            declaredFieldsGenerators[i] =
+                                    new DateBetweenYearsGenerator(dby.getMinYear(), dby.getMaxYear());
                             break;
                         }
                         case DATETIMEBETWEENYEARS: {
                             DatetimeBetweenYearsDataGen dtby = (DatetimeBetweenYearsDataGen) rfdg;
-                            declaredFieldsGenerators[i] = new DatetimeBetweenYearsGenerator(dtby.getMinYear(),
-                                    dtby.getMaxYear());
+                            declaredFieldsGenerators[i] =
+                                    new DatetimeBetweenYearsGenerator(dtby.getMinYear(), dtby.getMaxYear());
                             break;
                         }
                         case DATETIMEADDRANDHOURS: {
@@ -842,21 +840,21 @@ public class AdmDataGen {
                                 throw new Exception("Couldn't find field " + dtarh.getAddToField() + " before field "
                                         + recType.getFieldNames()[i]);
                             }
-                            declaredFieldsGenerators[i] = new DatetimeAddRandHoursGenerator(dtarh.getMinHour(),
-                                    dtarh.getMaxHour(), adtg);
+                            declaredFieldsGenerators[i] =
+                                    new DatetimeAddRandHoursGenerator(dtarh.getMinHour(), dtarh.getMaxHour(), adtg);
                             break;
                         }
                         case AUTO: {
                             AutoDataGen auto = (AutoDataGen) rfdg;
                             switch (ti.getTypeTag()) {
                                 case INTEGER: {
-                                    declaredFieldsGenerators[i] = new IntAutoGenerator(
-                                            Integer.parseInt(auto.getInitValueStr()));
+                                    declaredFieldsGenerators[i] =
+                                            new IntAutoGenerator(Integer.parseInt(auto.getInitValueStr()));
                                     break;
                                 }
                                 case BIGINT: {
-                                    declaredFieldsGenerators[i] = new LongAutoGenerator(
-                                            Long.parseLong(auto.getInitValueStr()));
+                                    declaredFieldsGenerators[i] =
+                                            new LongAutoGenerator(Long.parseLong(auto.getInitValueStr()));
                                     break;
                                 }
                                 default: {
@@ -881,9 +879,9 @@ public class AdmDataGen {
                     if (!recType.isOpen()) {
                         throw new Exception("Cannot generate undeclared fields for closed type " + recType);
                     }
-                    undeclaredFieldsGenerator = new GenFieldsIntGenerator(declaredFieldsGenerators.length,
-                            ufdg.getMinUndeclaredFields(), ufdg.getMaxUndeclaredFields(),
-                            ufdg.getUndeclaredFieldsPrefix());
+                    undeclaredFieldsGenerator =
+                            new GenFieldsIntGenerator(declaredFieldsGenerators.length, ufdg.getMinUndeclaredFields(),
+                                    ufdg.getMaxUndeclaredFields(), ufdg.getUndeclaredFieldsPrefix());
                 }
             }
             if (undeclaredFieldsGenerator != null) {
@@ -937,8 +935,7 @@ public class AdmDataGen {
         this.outputDir = outputDir;
     }
 
-    public void init() throws IOException, ParseException, ACIDException,
-            AlgebricksException {
+    public void init() throws IOException, ParseException, ACIDException, AlgebricksException {
         FileReader aql = new FileReader(schemaFile);
         IParser parser = parserFactory.createParser(aql);
         List<Statement> statements = parser.parse();

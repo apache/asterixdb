@@ -30,7 +30,6 @@ import java.util.Map;
 import org.apache.asterix.builders.IARecordBuilder;
 import org.apache.asterix.builders.RecordBuilder;
 import org.apache.asterix.builders.UnorderedListBuilder;
-import org.apache.asterix.common.exceptions.MetadataException;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
 import org.apache.asterix.metadata.bootstrap.MetadataRecordTypes;
@@ -42,6 +41,7 @@ import org.apache.asterix.om.base.AUnorderedList;
 import org.apache.asterix.om.base.IACursor;
 import org.apache.asterix.om.types.AUnorderedListType;
 import org.apache.asterix.om.types.BuiltinType;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -109,7 +109,7 @@ public class FeedTupleTranslator extends AbstractTupleTranslator<Feed> {
     }
 
     @Override
-    public ITupleReference getTupleFromMetadataEntity(Feed feed) throws HyracksDataException, MetadataException {
+    public ITupleReference getTupleFromMetadataEntity(Feed feed) throws HyracksDataException, AlgebricksException {
         // write the key in the first two fields of the tuple
         tupleBuilder.reset();
         aString.setValue(feed.getDataverseName());

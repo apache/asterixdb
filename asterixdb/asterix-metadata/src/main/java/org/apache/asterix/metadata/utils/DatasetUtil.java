@@ -37,7 +37,6 @@ import org.apache.asterix.common.context.TransactionSubsystemProvider;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.common.exceptions.MetadataException;
 import org.apache.asterix.common.transactions.IRecoveryManager;
 import org.apache.asterix.common.transactions.JobId;
 import org.apache.asterix.external.indexing.IndexingConstants;
@@ -293,7 +292,8 @@ public class DatasetUtil {
         LOGGER.info("CREATING File Splits: " + sb.toString());
         Pair<ILSMMergePolicyFactory, Map<String, String>> compactionInfo =
                 DatasetUtil.getMergePolicyFactory(dataset, metadataProvider.getMetadataTxnContext());
-        //prepare a LocalResourceMetadata which will be stored in NC's local resource repository
+        // prepare a LocalResourceMetadata which will be stored in NC's local resource
+        // repository
         IResourceFactory resourceFactory = dataset.getResourceFactory(metadataProvider, index, itemType, metaItemType,
                 compactionInfo.first, compactionInfo.second);
         IndexBuilderFactory indexBuilderFactory =
@@ -393,74 +393,69 @@ public class DatasetUtil {
         int numFilterFields = DatasetUtil.getFilterField(dataset) == null ? 0 : 1;
         ARecordType itemType = (ARecordType) metadataProvider.findType(dataset);
         ARecordType metaItemType = (ARecordType) metadataProvider.findMetaType(dataset);
-        try {
-            Index primaryIndex = metadataProvider.getIndex(dataset.getDataverseName(), dataset.getDatasetName(),
-                    dataset.getDatasetName());
-            Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint =
-                    metadataProvider.getSplitProviderAndConstraints(dataset);
+        Index primaryIndex = metadataProvider.getIndex(dataset.getDataverseName(), dataset.getDatasetName(),
+                dataset.getDatasetName());
+        Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint =
+                metadataProvider.getSplitProviderAndConstraints(dataset);
 
-            // prepare callback
-            JobId jobId = ((JobEventListenerFactory) spec.getJobletEventListenerFactory()).getJobId();
-            int[] primaryKeyFields = new int[numKeys];
-            for (int i = 0; i < numKeys; i++) {
-                primaryKeyFields[i] = i;
-            }
-            boolean hasSecondaries =
-                    metadataProvider.getDatasetIndexes(dataset.getDataverseName(), dataset.getDatasetName()).size() > 1;
-            IStorageComponentProvider storageComponentProvider = metadataProvider.getStorageComponentProvider();
-            IModificationOperationCallbackFactory modificationCallbackFactory = dataset.getModificationCallbackFactory(
-                    storageComponentProvider, primaryIndex, jobId, IndexOperation.UPSERT, primaryKeyFields);
-            ISearchOperationCallbackFactory searchCallbackFactory = dataset.getSearchCallbackFactory(
-                    storageComponentProvider, primaryIndex, jobId, IndexOperation.UPSERT, primaryKeyFields);
-            IIndexDataflowHelperFactory idfh = new IndexDataflowHelperFactory(
-                    storageComponentProvider.getStorageManager(), splitsAndConstraint.first);
-            LSMPrimaryUpsertOperatorDescriptor op;
-            ITypeTraits[] outputTypeTraits = new ITypeTraits[inputRecordDesc.getFieldCount()
-                    + (dataset.hasMetaPart() ? 2 : 1) + numFilterFields];
-            ISerializerDeserializer<?>[] outputSerDes = new ISerializerDeserializer[inputRecordDesc.getFieldCount()
-                    + (dataset.hasMetaPart() ? 2 : 1) + numFilterFields];
-            IDataFormat dataFormat = metadataProvider.getDataFormat();
-
-            // add the previous record first
-            int f = 0;
-            outputSerDes[f] = dataFormat.getSerdeProvider().getSerializerDeserializer(itemType);
-            f++;
-            // add the previous meta second
-            if (dataset.hasMetaPart()) {
-                outputSerDes[f] = dataFormat.getSerdeProvider().getSerializerDeserializer(metaItemType);
-                outputTypeTraits[f] = dataFormat.getTypeTraitProvider().getTypeTrait(metaItemType);
-                f++;
-            }
-            // add the previous filter third
-            int fieldIdx = -1;
-            if (numFilterFields > 0) {
-                String filterField = DatasetUtil.getFilterField(dataset).get(0);
-                String[] fieldNames = itemType.getFieldNames();
-                int i = 0;
-                for (; i < fieldNames.length; i++) {
-                    if (fieldNames[i].equals(filterField)) {
-                        break;
-                    }
-                }
-                fieldIdx = i;
-                outputTypeTraits[f] =
-                        dataFormat.getTypeTraitProvider().getTypeTrait(itemType.getFieldTypes()[fieldIdx]);
-                outputSerDes[f] =
-                        dataFormat.getSerdeProvider().getSerializerDeserializer(itemType.getFieldTypes()[fieldIdx]);
-                f++;
-            }
-            for (int j = 0; j < inputRecordDesc.getFieldCount(); j++) {
-                outputTypeTraits[j + f] = inputRecordDesc.getTypeTraits()[j];
-                outputSerDes[j + f] = inputRecordDesc.getFields()[j];
-            }
-            RecordDescriptor outputRecordDesc = new RecordDescriptor(outputSerDes, outputTypeTraits);
-            op = new LSMPrimaryUpsertOperatorDescriptor(spec, outputRecordDesc, fieldPermutation, idfh,
-                    missingWriterFactory, modificationCallbackFactory, searchCallbackFactory,
-                    dataset.getFrameOpCallbackFactory(), numKeys, itemType, fieldIdx, hasSecondaries);
-            return new Pair<>(op, splitsAndConstraint.second);
-        } catch (MetadataException me) {
-            throw new AlgebricksException(me);
+        // prepare callback
+        JobId jobId = ((JobEventListenerFactory) spec.getJobletEventListenerFactory()).getJobId();
+        int[] primaryKeyFields = new int[numKeys];
+        for (int i = 0; i < numKeys; i++) {
+            primaryKeyFields[i] = i;
         }
+        boolean hasSecondaries =
+                metadataProvider.getDatasetIndexes(dataset.getDataverseName(), dataset.getDatasetName()).size() > 1;
+        IStorageComponentProvider storageComponentProvider = metadataProvider.getStorageComponentProvider();
+        IModificationOperationCallbackFactory modificationCallbackFactory = dataset.getModificationCallbackFactory(
+                storageComponentProvider, primaryIndex, jobId, IndexOperation.UPSERT, primaryKeyFields);
+        ISearchOperationCallbackFactory searchCallbackFactory = dataset.getSearchCallbackFactory(
+                storageComponentProvider, primaryIndex, jobId, IndexOperation.UPSERT, primaryKeyFields);
+        IIndexDataflowHelperFactory idfh =
+                new IndexDataflowHelperFactory(storageComponentProvider.getStorageManager(), splitsAndConstraint.first);
+        LSMPrimaryUpsertOperatorDescriptor op;
+        ITypeTraits[] outputTypeTraits =
+                new ITypeTraits[inputRecordDesc.getFieldCount() + (dataset.hasMetaPart() ? 2 : 1) + numFilterFields];
+        ISerializerDeserializer<?>[] outputSerDes = new ISerializerDeserializer[inputRecordDesc.getFieldCount()
+                + (dataset.hasMetaPart() ? 2 : 1) + numFilterFields];
+        IDataFormat dataFormat = metadataProvider.getDataFormat();
+
+        // add the previous record first
+        int f = 0;
+        outputSerDes[f] = dataFormat.getSerdeProvider().getSerializerDeserializer(itemType);
+        f++;
+        // add the previous meta second
+        if (dataset.hasMetaPart()) {
+            outputSerDes[f] = dataFormat.getSerdeProvider().getSerializerDeserializer(metaItemType);
+            outputTypeTraits[f] = dataFormat.getTypeTraitProvider().getTypeTrait(metaItemType);
+            f++;
+        }
+        // add the previous filter third
+        int fieldIdx = -1;
+        if (numFilterFields > 0) {
+            String filterField = DatasetUtil.getFilterField(dataset).get(0);
+            String[] fieldNames = itemType.getFieldNames();
+            int i = 0;
+            for (; i < fieldNames.length; i++) {
+                if (fieldNames[i].equals(filterField)) {
+                    break;
+                }
+            }
+            fieldIdx = i;
+            outputTypeTraits[f] = dataFormat.getTypeTraitProvider().getTypeTrait(itemType.getFieldTypes()[fieldIdx]);
+            outputSerDes[f] =
+                    dataFormat.getSerdeProvider().getSerializerDeserializer(itemType.getFieldTypes()[fieldIdx]);
+            f++;
+        }
+        for (int j = 0; j < inputRecordDesc.getFieldCount(); j++) {
+            outputTypeTraits[j + f] = inputRecordDesc.getTypeTraits()[j];
+            outputSerDes[j + f] = inputRecordDesc.getFields()[j];
+        }
+        RecordDescriptor outputRecordDesc = new RecordDescriptor(outputSerDes, outputTypeTraits);
+        op = new LSMPrimaryUpsertOperatorDescriptor(spec, outputRecordDesc, fieldPermutation, idfh,
+                missingWriterFactory, modificationCallbackFactory, searchCallbackFactory,
+                dataset.getFrameOpCallbackFactory(), numKeys, itemType, fieldIdx, hasSecondaries);
+        return new Pair<>(op, splitsAndConstraint.second);
     }
 
     /**
@@ -503,7 +498,7 @@ public class DatasetUtil {
     }
 
     public static boolean isFullyQualifiedName(String datasetName) {
-        return datasetName.indexOf('.') > 0; //NOSONAR a fully qualified name can't start with a .
+        return datasetName.indexOf('.') > 0; // NOSONAR a fully qualified name can't start with a .
     }
 
     public static String getFullyQualifiedName(Dataset dataset) {

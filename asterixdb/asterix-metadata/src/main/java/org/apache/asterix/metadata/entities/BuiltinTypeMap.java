@@ -31,6 +31,7 @@ import org.apache.asterix.metadata.MetadataNode;
 import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 
 /**
  * Maps from a string representation of an Asterix type to an Asterix type.
@@ -93,7 +94,7 @@ public class BuiltinTypeMap {
     }
 
     public static IAType getTypeFromTypeName(MetadataNode metadataNode, JobId jobId, String dataverseName,
-            String typeName, boolean optional) throws MetadataException {
+            String typeName, boolean optional) throws AlgebricksException {
         IAType type = _builtinTypeMap.get(typeName);
         if (type == null) {
             try {

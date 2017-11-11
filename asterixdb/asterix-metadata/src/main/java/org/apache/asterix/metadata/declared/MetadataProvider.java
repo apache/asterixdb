@@ -36,8 +36,6 @@ import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.dataflow.LSMTreeInsertDeleteOperatorDescriptor;
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.common.exceptions.CompilationException;
-import org.apache.asterix.common.exceptions.MetadataException;
 import org.apache.asterix.common.metadata.LockList;
 import org.apache.asterix.common.transactions.JobId;
 import org.apache.asterix.common.utils.StoragePathUtil;
@@ -57,7 +55,6 @@ import org.apache.asterix.external.provider.AdapterFactoryProvider;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.FeedConstants;
 import org.apache.asterix.formats.base.IDataFormat;
-import org.apache.asterix.om.functions.IFunctionExtensionManager;
 import org.apache.asterix.formats.nontagged.BinaryComparatorFactoryProvider;
 import org.apache.asterix.formats.nontagged.LinearizeComparatorFactoryProvider;
 import org.apache.asterix.formats.nontagged.TypeTraitProvider;
@@ -79,6 +76,7 @@ import org.apache.asterix.metadata.utils.DatasetUtil;
 import org.apache.asterix.metadata.utils.MetadataConstants;
 import org.apache.asterix.metadata.utils.SplitsAndConstraintsUtil;
 import org.apache.asterix.om.functions.BuiltinFunctions;
+import org.apache.asterix.om.functions.IFunctionExtensionManager;
 import org.apache.asterix.om.functions.IFunctionManager;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
@@ -399,7 +397,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         return new Pair<>(dataScanner, constraint);
     }
 
-    public Dataverse findDataverse(String dataverseName) throws CompilationException {
+    public Dataverse findDataverse(String dataverseName) throws AlgebricksException {
         return MetadataManager.INSTANCE.getDataverse(mdTxnCtx, dataverseName);
     }
 
@@ -437,47 +435,39 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             boolean lowKeyInclusive, boolean highKeyInclusive, boolean propagateFilter, int[] minFilterFieldIndexes,
             int[] maxFilterFieldIndexes) throws AlgebricksException {
         boolean isSecondary = true;
-        try {
-            Index primaryIndex = MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataset.getDataverseName(),
-                    dataset.getDatasetName(), dataset.getDatasetName());
-            if (primaryIndex != null && (dataset.getDatasetType() != DatasetType.EXTERNAL)) {
-                isSecondary = !indexName.equals(primaryIndex.getIndexName());
-            }
-            Index theIndex =
-                    isSecondary
-                            ? MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataset.getDataverseName(),
-                                    dataset.getDatasetName(), indexName)
-                            : primaryIndex;
-            int numPrimaryKeys = dataset.getPrimaryKeys().size();
-            RecordDescriptor outputRecDesc = JobGenHelper.mkRecordDescriptor(typeEnv, opSchema, context);
-            Pair<IFileSplitProvider, AlgebricksPartitionConstraint> spPc =
-                    getSplitProviderAndConstraints(dataset, theIndex.getIndexName());
-            int[] primaryKeyFields = new int[numPrimaryKeys];
-            for (int i = 0; i < numPrimaryKeys; i++) {
-                primaryKeyFields[i] = i;
-            }
-
-            ISearchOperationCallbackFactory searchCallbackFactory = dataset.getSearchCallbackFactory(
-                    storageComponentProvider, theIndex, jobId, IndexOperation.SEARCH, primaryKeyFields);
-            IStorageManager storageManager = getStorageComponentProvider().getStorageManager();
-            IIndexDataflowHelperFactory indexHelperFactory = new IndexDataflowHelperFactory(storageManager, spPc.first);
-            BTreeSearchOperatorDescriptor btreeSearchOp;
-            if (dataset.getDatasetType() == DatasetType.INTERNAL) {
-                btreeSearchOp = new BTreeSearchOperatorDescriptor(jobSpec, outputRecDesc, lowKeyFields, highKeyFields,
-                        lowKeyInclusive, highKeyInclusive, indexHelperFactory, retainInput, retainMissing,
-                        context.getMissingWriterFactory(), searchCallbackFactory, minFilterFieldIndexes,
-                        maxFilterFieldIndexes, propagateFilter);
-            } else {
-                btreeSearchOp = new ExternalBTreeSearchOperatorDescriptor(jobSpec, outputRecDesc, lowKeyFields,
-                        highKeyFields, lowKeyInclusive, highKeyInclusive, indexHelperFactory, retainInput,
-                        retainMissing, context.getMissingWriterFactory(), searchCallbackFactory, minFilterFieldIndexes,
-                        maxFilterFieldIndexes,
-                        ExternalDatasetsRegistry.INSTANCE.getAndLockDatasetVersion(dataset, this));
-            }
-            return new Pair<>(btreeSearchOp, spPc.second);
-        } catch (MetadataException me) {
-            throw new AlgebricksException(me);
+        Index primaryIndex = MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataset.getDataverseName(),
+                dataset.getDatasetName(), dataset.getDatasetName());
+        if (primaryIndex != null && (dataset.getDatasetType() != DatasetType.EXTERNAL)) {
+            isSecondary = !indexName.equals(primaryIndex.getIndexName());
         }
+        Index theIndex = isSecondary ? MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataset.getDataverseName(),
+                dataset.getDatasetName(), indexName) : primaryIndex;
+        int numPrimaryKeys = dataset.getPrimaryKeys().size();
+        RecordDescriptor outputRecDesc = JobGenHelper.mkRecordDescriptor(typeEnv, opSchema, context);
+        Pair<IFileSplitProvider, AlgebricksPartitionConstraint> spPc =
+                getSplitProviderAndConstraints(dataset, theIndex.getIndexName());
+        int[] primaryKeyFields = new int[numPrimaryKeys];
+        for (int i = 0; i < numPrimaryKeys; i++) {
+            primaryKeyFields[i] = i;
+        }
+
+        ISearchOperationCallbackFactory searchCallbackFactory = dataset.getSearchCallbackFactory(
+                storageComponentProvider, theIndex, jobId, IndexOperation.SEARCH, primaryKeyFields);
+        IStorageManager storageManager = getStorageComponentProvider().getStorageManager();
+        IIndexDataflowHelperFactory indexHelperFactory = new IndexDataflowHelperFactory(storageManager, spPc.first);
+        BTreeSearchOperatorDescriptor btreeSearchOp;
+        if (dataset.getDatasetType() == DatasetType.INTERNAL) {
+            btreeSearchOp = new BTreeSearchOperatorDescriptor(jobSpec, outputRecDesc, lowKeyFields, highKeyFields,
+                    lowKeyInclusive, highKeyInclusive, indexHelperFactory, retainInput, retainMissing,
+                    context.getMissingWriterFactory(), searchCallbackFactory, minFilterFieldIndexes,
+                    maxFilterFieldIndexes, propagateFilter);
+        } else {
+            btreeSearchOp = new ExternalBTreeSearchOperatorDescriptor(jobSpec, outputRecDesc, lowKeyFields,
+                    highKeyFields, lowKeyInclusive, highKeyInclusive, indexHelperFactory, retainInput, retainMissing,
+                    context.getMissingWriterFactory(), searchCallbackFactory, minFilterFieldIndexes,
+                    maxFilterFieldIndexes, ExternalDatasetsRegistry.INSTANCE.getAndLockDatasetVersion(dataset, this));
+        }
+        return new Pair<>(btreeSearchOp, spPc.second);
     }
 
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> buildRtreeRuntime(JobSpecification jobSpec,
@@ -485,43 +475,39 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             JobGenContext context, boolean retainInput, boolean retainMissing, Dataset dataset, String indexName,
             int[] keyFields, boolean propagateFilter, int[] minFilterFieldIndexes, int[] maxFilterFieldIndexes)
             throws AlgebricksException {
-        try {
-            int numPrimaryKeys = dataset.getPrimaryKeys().size();
-            Index secondaryIndex = MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataset.getDataverseName(),
-                    dataset.getDatasetName(), indexName);
-            if (secondaryIndex == null) {
-                throw new AlgebricksException(
-                        "Code generation error: no index " + indexName + " for dataset " + dataset.getDatasetName());
-            }
-            RecordDescriptor outputRecDesc = JobGenHelper.mkRecordDescriptor(typeEnv, opSchema, context);
-            Pair<IFileSplitProvider, AlgebricksPartitionConstraint> spPc =
-                    getSplitProviderAndConstraints(dataset, secondaryIndex.getIndexName());
-            int[] primaryKeyFields = new int[numPrimaryKeys];
-            for (int i = 0; i < numPrimaryKeys; i++) {
-                primaryKeyFields[i] = i;
-            }
-
-            ISearchOperationCallbackFactory searchCallbackFactory = dataset.getSearchCallbackFactory(
-                    storageComponentProvider, secondaryIndex, jobId, IndexOperation.SEARCH, primaryKeyFields);
-            RTreeSearchOperatorDescriptor rtreeSearchOp;
-            IIndexDataflowHelperFactory indexDataflowHelperFactory =
-                    new IndexDataflowHelperFactory(storageComponentProvider.getStorageManager(), spPc.first);
-            if (dataset.getDatasetType() == DatasetType.INTERNAL) {
-                rtreeSearchOp = new RTreeSearchOperatorDescriptor(jobSpec, outputRecDesc, keyFields, true, true,
-                        indexDataflowHelperFactory, retainInput, retainMissing, context.getMissingWriterFactory(),
-                        searchCallbackFactory, minFilterFieldIndexes, maxFilterFieldIndexes, propagateFilter);
-            } else {
-                // Create the operator
-                rtreeSearchOp = new ExternalRTreeSearchOperatorDescriptor(jobSpec, outputRecDesc, keyFields, true, true,
-                        indexDataflowHelperFactory, retainInput, retainMissing, context.getMissingWriterFactory(),
-                        searchCallbackFactory, minFilterFieldIndexes, maxFilterFieldIndexes,
-                        ExternalDatasetsRegistry.INSTANCE.getAndLockDatasetVersion(dataset, this));
-            }
-
-            return new Pair<>(rtreeSearchOp, spPc.second);
-        } catch (MetadataException me) {
-            throw new AlgebricksException(me);
+        int numPrimaryKeys = dataset.getPrimaryKeys().size();
+        Index secondaryIndex = MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataset.getDataverseName(),
+                dataset.getDatasetName(), indexName);
+        if (secondaryIndex == null) {
+            throw new AlgebricksException(
+                    "Code generation error: no index " + indexName + " for dataset " + dataset.getDatasetName());
         }
+        RecordDescriptor outputRecDesc = JobGenHelper.mkRecordDescriptor(typeEnv, opSchema, context);
+        Pair<IFileSplitProvider, AlgebricksPartitionConstraint> spPc =
+                getSplitProviderAndConstraints(dataset, secondaryIndex.getIndexName());
+        int[] primaryKeyFields = new int[numPrimaryKeys];
+        for (int i = 0; i < numPrimaryKeys; i++) {
+            primaryKeyFields[i] = i;
+        }
+
+        ISearchOperationCallbackFactory searchCallbackFactory = dataset.getSearchCallbackFactory(
+                storageComponentProvider, secondaryIndex, jobId, IndexOperation.SEARCH, primaryKeyFields);
+        RTreeSearchOperatorDescriptor rtreeSearchOp;
+        IIndexDataflowHelperFactory indexDataflowHelperFactory =
+                new IndexDataflowHelperFactory(storageComponentProvider.getStorageManager(), spPc.first);
+        if (dataset.getDatasetType() == DatasetType.INTERNAL) {
+            rtreeSearchOp = new RTreeSearchOperatorDescriptor(jobSpec, outputRecDesc, keyFields, true, true,
+                    indexDataflowHelperFactory, retainInput, retainMissing, context.getMissingWriterFactory(),
+                    searchCallbackFactory, minFilterFieldIndexes, maxFilterFieldIndexes, propagateFilter);
+        } else {
+            // Create the operator
+            rtreeSearchOp = new ExternalRTreeSearchOperatorDescriptor(jobSpec, outputRecDesc, keyFields, true, true,
+                    indexDataflowHelperFactory, retainInput, retainMissing, context.getMissingWriterFactory(),
+                    searchCallbackFactory, minFilterFieldIndexes, maxFilterFieldIndexes,
+                    ExternalDatasetsRegistry.INSTANCE.getAndLockDatasetVersion(dataset, this));
+        }
+
+        return new Pair<>(rtreeSearchOp, spPc.second);
     }
 
     @Override
@@ -583,26 +569,22 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             fieldPermutation[numKeys + 1] = idx;
         }
 
-        try {
-            boolean temp = dataset.getDatasetDetails().isTemp();
-            isTemporaryDatasetWriteJob = isTemporaryDatasetWriteJob && temp;
-            Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint =
-                    getSplitProviderAndConstraints(dataset);
-            long numElementsHint = getCardinalityPerPartitionHint(dataset);
-            // TODO
-            // figure out the right behavior of the bulkload and then give the
-            // right callback
-            // (ex. what's the expected behavior when there is an error during
-            // bulkload?)
-            IIndexDataflowHelperFactory indexHelperFactory = new IndexDataflowHelperFactory(
-                    storageComponentProvider.getStorageManager(), splitsAndConstraint.first);
-            LSMIndexBulkLoadOperatorDescriptor btreeBulkLoad = new LSMIndexBulkLoadOperatorDescriptor(spec, null,
-                    fieldPermutation, GlobalConfig.DEFAULT_TREE_FILL_FACTOR, false, numElementsHint, true,
-                    indexHelperFactory, null, BulkLoadUsage.LOAD, dataset.getDatasetId());
-            return new Pair<>(btreeBulkLoad, splitsAndConstraint.second);
-        } catch (MetadataException me) {
-            throw new AlgebricksException(me);
-        }
+        boolean temp = dataset.getDatasetDetails().isTemp();
+        isTemporaryDatasetWriteJob = isTemporaryDatasetWriteJob && temp;
+        Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint =
+                getSplitProviderAndConstraints(dataset);
+        long numElementsHint = getCardinalityPerPartitionHint(dataset);
+        // TODO
+        // figure out the right behavior of the bulkload and then give the
+        // right callback
+        // (ex. what's the expected behavior when there is an error during
+        // bulkload?)
+        IIndexDataflowHelperFactory indexHelperFactory =
+                new IndexDataflowHelperFactory(storageComponentProvider.getStorageManager(), splitsAndConstraint.first);
+        LSMIndexBulkLoadOperatorDescriptor btreeBulkLoad = new LSMIndexBulkLoadOperatorDescriptor(spec, null,
+                fieldPermutation, GlobalConfig.DEFAULT_TREE_FILL_FACTOR, false, numElementsHint, true,
+                indexHelperFactory, null, BulkLoadUsage.LOAD, dataset.getDatasetId());
+        return new Pair<>(btreeBulkLoad, splitsAndConstraint.second);
     }
 
     @Override
@@ -680,13 +662,8 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         }
 
         Dataset dataset = MetadataManagerUtil.findExistingDataset(mdTxnCtx, dataverseName, datasetName);
-        Index secondaryIndex;
-        try {
-            secondaryIndex = MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataset.getDataverseName(),
-                    dataset.getDatasetName(), indexName);
-        } catch (MetadataException e) {
-            throw new AlgebricksException(e);
-        }
+        Index secondaryIndex = MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataset.getDataverseName(),
+                dataset.getDatasetName(), indexName);
         // TokenizeOperator only supports a keyword or n-gram index.
         switch (secondaryIndex.getIndexType()) {
             case SINGLE_PARTITION_WORD_INVIX:
@@ -703,8 +680,8 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
 
     /**
      * Calculate an estimate size of the bloom filter. Note that this is an
-     * estimation which assumes that the data is going to be uniformly
-     * distributed across all partitions.
+     * estimation which assumes that the data is going to be uniformly distributed
+     * across all partitions.
      *
      * @param dataset
      * @return Number of elements that will be used to create a bloom filter per
@@ -779,7 +756,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
     }
 
     public DatasourceAdapter getAdapter(MetadataTransactionContext mdTxnCtx, String dataverseName, String adapterName)
-            throws MetadataException {
+            throws AlgebricksException {
         DatasourceAdapter adapter;
         // search in default namespace (built-in adapter)
         adapter = MetadataManager.INSTANCE.getAdapter(mdTxnCtx, MetadataConstants.METADATA_DATAVERSE_NAME, adapterName);
@@ -816,7 +793,8 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             // Create the file index data flow helper
             IIndexDataflowHelperFactory indexDataflowHelperFactory =
                     new IndexDataflowHelperFactory(storageComponentProvider.getStorageManager(), spPc.first);
-            // Create the out record descriptor, appContext and fileSplitProvider for the files index
+            // Create the out record descriptor, appContext and fileSplitProvider for the
+            // files index
             RecordDescriptor outRecDesc = JobGenHelper.mkRecordDescriptor(typeEnv, opSchema, context);
             ISearchOperationCallbackFactory searchOpCallbackFactory = dataset
                     .getSearchCallbackFactory(storageComponentProvider, fileIndex, jobId, IndexOperation.SEARCH, null);
@@ -877,8 +855,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
     }
 
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> buildExternalDatasetDataScannerRuntime(
-            JobSpecification jobSpec, IAType itemType, IAdapterFactory adapterFactory)
-            throws AlgebricksException {
+            JobSpecification jobSpec, IAType itemType, IAdapterFactory adapterFactory) throws AlgebricksException {
         if (itemType.getTypeTag() != ATypeTag.OBJECT) {
             throw new AlgebricksException("Can only scan datasets of records.");
         }
@@ -984,35 +961,31 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             }
         }
 
-        try {
-            Index primaryIndex = MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataset.getDataverseName(),
-                    dataset.getDatasetName(), dataset.getDatasetName());
-            Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint =
-                    getSplitProviderAndConstraints(dataset);
+        Index primaryIndex = MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataset.getDataverseName(),
+                dataset.getDatasetName(), dataset.getDatasetName());
+        Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint =
+                getSplitProviderAndConstraints(dataset);
 
-            // prepare callback
-            int[] primaryKeyFields = new int[numKeys];
-            for (i = 0; i < numKeys; i++) {
-                primaryKeyFields[i] = i;
-            }
-            IModificationOperationCallbackFactory modificationCallbackFactory = dataset.getModificationCallbackFactory(
-                    storageComponentProvider, primaryIndex, jobId, indexOp, primaryKeyFields);
-            IIndexDataflowHelperFactory idfh = new IndexDataflowHelperFactory(
-                    storageComponentProvider.getStorageManager(), splitsAndConstraint.first);
-            IOperatorDescriptor op;
-            if (bulkload) {
-                long numElementsHint = getCardinalityPerPartitionHint(dataset);
-                op = new LSMIndexBulkLoadOperatorDescriptor(spec, inputRecordDesc, fieldPermutation,
-                        GlobalConfig.DEFAULT_TREE_FILL_FACTOR, true, numElementsHint, true, idfh, null,
-                        BulkLoadUsage.LOAD, dataset.getDatasetId());
-            } else {
-                op = new LSMTreeInsertDeleteOperatorDescriptor(spec, inputRecordDesc, fieldPermutation, indexOp, idfh,
-                        null, true, modificationCallbackFactory);
-            }
-            return new Pair<>(op, splitsAndConstraint.second);
-        } catch (MetadataException me) {
-            throw new AlgebricksException(me);
+        // prepare callback
+        int[] primaryKeyFields = new int[numKeys];
+        for (i = 0; i < numKeys; i++) {
+            primaryKeyFields[i] = i;
         }
+        IModificationOperationCallbackFactory modificationCallbackFactory = dataset.getModificationCallbackFactory(
+                storageComponentProvider, primaryIndex, jobId, indexOp, primaryKeyFields);
+        IIndexDataflowHelperFactory idfh =
+                new IndexDataflowHelperFactory(storageComponentProvider.getStorageManager(), splitsAndConstraint.first);
+        IOperatorDescriptor op;
+        if (bulkload) {
+            long numElementsHint = getCardinalityPerPartitionHint(dataset);
+            op = new LSMIndexBulkLoadOperatorDescriptor(spec, inputRecordDesc, fieldPermutation,
+                    GlobalConfig.DEFAULT_TREE_FILL_FACTOR, true, numElementsHint, true, idfh, null, BulkLoadUsage.LOAD,
+                    dataset.getDatasetId());
+        } else {
+            op = new LSMTreeInsertDeleteOperatorDescriptor(spec, inputRecordDesc, fieldPermutation, indexOp, idfh, null,
+                    true, modificationCallbackFactory);
+        }
+        return new Pair<>(op, splitsAndConstraint.second);
     }
 
     private Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getIndexInsertOrDeleteOrUpsertRuntime(
@@ -1028,13 +1001,8 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         String datasetName = dataSourceIndex.getDataSource().getId().getDatasourceName();
 
         Dataset dataset = MetadataManagerUtil.findExistingDataset(mdTxnCtx, dataverseName, datasetName);
-        Index secondaryIndex;
-        try {
-            secondaryIndex = MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataset.getDataverseName(),
-                    dataset.getDatasetName(), indexName);
-        } catch (MetadataException e) {
-            throw new AlgebricksException(e);
-        }
+        Index secondaryIndex = MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataset.getDataverseName(),
+                dataset.getDatasetName(), indexName);
 
         ArrayList<LogicalVariable> prevAdditionalFilteringKeys = null;
         if (indexOp == IndexOperation.UPSERT && prevAdditionalFilteringKey != null) {
@@ -1159,101 +1127,96 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             AsterixTupleFilterFactory filterFactory, RecordDescriptor recordDesc, JobGenContext context,
             JobSpecification spec, IndexOperation indexOp, boolean bulkload, List<LogicalVariable> prevSecondaryKeys,
             List<LogicalVariable> prevAdditionalFilteringKeys) throws AlgebricksException {
+        Dataset dataset = MetadataManagerUtil.findExistingDataset(mdTxnCtx, dataverseName, datasetName);
+        boolean temp = dataset.getDatasetDetails().isTemp();
+        isTemporaryDatasetWriteJob = isTemporaryDatasetWriteJob && temp;
 
-        try {
-            Dataset dataset = MetadataManagerUtil.findExistingDataset(mdTxnCtx, dataverseName, datasetName);
-            boolean temp = dataset.getDatasetDetails().isTemp();
-            isTemporaryDatasetWriteJob = isTemporaryDatasetWriteJob && temp;
+        String itemTypeName = dataset.getItemTypeName();
+        IAType itemType = MetadataManager.INSTANCE
+                .getDatatype(mdTxnCtx, dataset.getItemTypeDataverseName(), itemTypeName).getDatatype();
+        validateRecordType(itemType);
+        ARecordType recType = (ARecordType) itemType;
+        Index secondaryIndex = MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataset.getDataverseName(),
+                dataset.getDatasetName(), indexName);
+        List<List<String>> secondaryKeyExprs = secondaryIndex.getKeyFieldNames();
+        List<IAType> secondaryKeyTypes = secondaryIndex.getKeyFieldTypes();
+        Pair<IAType, Boolean> keyPairType =
+                Index.getNonNullableOpenFieldType(secondaryKeyTypes.get(0), secondaryKeyExprs.get(0), recType);
+        IAType spatialType = keyPairType.first;
+        int dimension = NonTaggedFormatUtil.getNumDimensions(spatialType.getTypeTag());
+        int numSecondaryKeys = dimension * 2;
+        int numPrimaryKeys = primaryKeys.size();
+        int numKeys = numSecondaryKeys + numPrimaryKeys;
 
-            String itemTypeName = dataset.getItemTypeName();
-            IAType itemType = MetadataManager.INSTANCE
-                    .getDatatype(mdTxnCtx, dataset.getItemTypeDataverseName(), itemTypeName).getDatatype();
-            validateRecordType(itemType);
-            ARecordType recType = (ARecordType) itemType;
-            Index secondaryIndex = MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataset.getDataverseName(),
-                    dataset.getDatasetName(), indexName);
-            List<List<String>> secondaryKeyExprs = secondaryIndex.getKeyFieldNames();
-            List<IAType> secondaryKeyTypes = secondaryIndex.getKeyFieldTypes();
-            Pair<IAType, Boolean> keyPairType =
-                    Index.getNonNullableOpenFieldType(secondaryKeyTypes.get(0), secondaryKeyExprs.get(0), recType);
-            IAType spatialType = keyPairType.first;
-            int dimension = NonTaggedFormatUtil.getNumDimensions(spatialType.getTypeTag());
-            int numSecondaryKeys = dimension * 2;
-            int numPrimaryKeys = primaryKeys.size();
-            int numKeys = numSecondaryKeys + numPrimaryKeys;
+        int numFilterFields = DatasetUtil.getFilterField(dataset) == null ? 0 : 1;
+        int[] fieldPermutation = new int[numKeys + numFilterFields];
+        int[] modificationCallbackPrimaryKeyFields = new int[primaryKeys.size()];
+        int i = 0;
+        int j = 0;
 
-            int numFilterFields = DatasetUtil.getFilterField(dataset) == null ? 0 : 1;
-            int[] fieldPermutation = new int[numKeys + numFilterFields];
-            int[] modificationCallbackPrimaryKeyFields = new int[primaryKeys.size()];
-            int i = 0;
-            int j = 0;
+        for (LogicalVariable varKey : secondaryKeys) {
+            int idx = propagatedSchema.findVariable(varKey);
+            fieldPermutation[i] = idx;
+            i++;
+        }
+        for (LogicalVariable varKey : primaryKeys) {
+            int idx = propagatedSchema.findVariable(varKey);
+            fieldPermutation[i] = idx;
+            modificationCallbackPrimaryKeyFields[j] = i;
+            i++;
+            j++;
+        }
 
-            for (LogicalVariable varKey : secondaryKeys) {
+        if (numFilterFields > 0) {
+            int idx = propagatedSchema.findVariable(additionalNonKeyFields.get(0));
+            fieldPermutation[numKeys] = idx;
+        }
+
+        int[] prevFieldPermutation = null;
+        if (indexOp == IndexOperation.UPSERT) {
+            // Get field permutation for previous value
+            prevFieldPermutation = new int[numKeys + numFilterFields];
+            i = 0;
+
+            // Get field permutation for new value
+            for (LogicalVariable varKey : prevSecondaryKeys) {
                 int idx = propagatedSchema.findVariable(varKey);
-                fieldPermutation[i] = idx;
+                prevFieldPermutation[i] = idx;
                 i++;
             }
-            for (LogicalVariable varKey : primaryKeys) {
-                int idx = propagatedSchema.findVariable(varKey);
-                fieldPermutation[i] = idx;
-                modificationCallbackPrimaryKeyFields[j] = i;
+            for (int k = 0; k < numPrimaryKeys; k++) {
+                prevFieldPermutation[k + i] = fieldPermutation[k + i];
                 i++;
-                j++;
             }
 
             if (numFilterFields > 0) {
-                int idx = propagatedSchema.findVariable(additionalNonKeyFields.get(0));
-                fieldPermutation[numKeys] = idx;
+                int idx = propagatedSchema.findVariable(prevAdditionalFilteringKeys.get(0));
+                prevFieldPermutation[numKeys] = idx;
             }
-
-            int[] prevFieldPermutation = null;
-            if (indexOp == IndexOperation.UPSERT) {
-                // Get field permutation for previous value
-                prevFieldPermutation = new int[numKeys + numFilterFields];
-                i = 0;
-
-                // Get field permutation for new value
-                for (LogicalVariable varKey : prevSecondaryKeys) {
-                    int idx = propagatedSchema.findVariable(varKey);
-                    prevFieldPermutation[i] = idx;
-                    i++;
-                }
-                for (int k = 0; k < numPrimaryKeys; k++) {
-                    prevFieldPermutation[k + i] = fieldPermutation[k + i];
-                    i++;
-                }
-
-                if (numFilterFields > 0) {
-                    int idx = propagatedSchema.findVariable(prevAdditionalFilteringKeys.get(0));
-                    prevFieldPermutation[numKeys] = idx;
-                }
-            }
-            Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint =
-                    getSplitProviderAndConstraints(dataset, secondaryIndex.getIndexName());
-
-            // prepare callback
-            JobId jobId = ((JobEventListenerFactory) spec.getJobletEventListenerFactory()).getJobId();
-            IModificationOperationCallbackFactory modificationCallbackFactory = dataset.getModificationCallbackFactory(
-                    storageComponentProvider, secondaryIndex, jobId, indexOp, modificationCallbackPrimaryKeyFields);
-            IIndexDataflowHelperFactory indexDataflowHelperFactory = new IndexDataflowHelperFactory(
-                    storageComponentProvider.getStorageManager(), splitsAndConstraint.first);
-            IOperatorDescriptor op;
-            if (bulkload) {
-                long numElementsHint = getCardinalityPerPartitionHint(dataset);
-                op = new LSMIndexBulkLoadOperatorDescriptor(spec, recordDesc, fieldPermutation,
-                        GlobalConfig.DEFAULT_TREE_FILL_FACTOR, false, numElementsHint, false,
-                        indexDataflowHelperFactory, null, BulkLoadUsage.LOAD, dataset.getDatasetId());
-            } else if (indexOp == IndexOperation.UPSERT) {
-                op = new LSMSecondaryUpsertOperatorDescriptor(spec, recordDesc, fieldPermutation,
-                        indexDataflowHelperFactory, filterFactory, modificationCallbackFactory, prevFieldPermutation);
-            } else {
-                op = new LSMTreeInsertDeleteOperatorDescriptor(spec, recordDesc, fieldPermutation, indexOp,
-                        indexDataflowHelperFactory, filterFactory, false, modificationCallbackFactory);
-            }
-            return new Pair<>(op, splitsAndConstraint.second);
-        } catch (MetadataException e) {
-            throw new AlgebricksException(e);
         }
+        Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint =
+                getSplitProviderAndConstraints(dataset, secondaryIndex.getIndexName());
+
+        // prepare callback
+        JobId planJobId = ((JobEventListenerFactory) spec.getJobletEventListenerFactory()).getJobId();
+        IModificationOperationCallbackFactory modificationCallbackFactory = dataset.getModificationCallbackFactory(
+                storageComponentProvider, secondaryIndex, planJobId, indexOp, modificationCallbackPrimaryKeyFields);
+        IIndexDataflowHelperFactory indexDataflowHelperFactory =
+                new IndexDataflowHelperFactory(storageComponentProvider.getStorageManager(), splitsAndConstraint.first);
+        IOperatorDescriptor op;
+        if (bulkload) {
+            long numElementsHint = getCardinalityPerPartitionHint(dataset);
+            op = new LSMIndexBulkLoadOperatorDescriptor(spec, recordDesc, fieldPermutation,
+                    GlobalConfig.DEFAULT_TREE_FILL_FACTOR, false, numElementsHint, false, indexDataflowHelperFactory,
+                    null, BulkLoadUsage.LOAD, dataset.getDatasetId());
+        } else if (indexOp == IndexOperation.UPSERT) {
+            op = new LSMSecondaryUpsertOperatorDescriptor(spec, recordDesc, fieldPermutation,
+                    indexDataflowHelperFactory, filterFactory, modificationCallbackFactory, prevFieldPermutation);
+        } else {
+            op = new LSMTreeInsertDeleteOperatorDescriptor(spec, recordDesc, fieldPermutation, indexOp,
+                    indexDataflowHelperFactory, filterFactory, false, modificationCallbackFactory);
+        }
+        return new Pair<>(op, splitsAndConstraint.second);
     }
 
     private Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getInvertedIndexRuntime(String dataverseName,

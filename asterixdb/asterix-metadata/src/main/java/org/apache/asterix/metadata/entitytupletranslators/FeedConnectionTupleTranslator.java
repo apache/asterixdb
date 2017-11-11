@@ -27,7 +27,6 @@ import java.util.List;
 
 import org.apache.asterix.builders.IARecordBuilder;
 import org.apache.asterix.builders.UnorderedListBuilder;
-import org.apache.asterix.common.exceptions.MetadataException;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
@@ -40,6 +39,7 @@ import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.base.AUnorderedList;
 import org.apache.asterix.om.base.IACursor;
 import org.apache.asterix.om.types.AUnorderedListType;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -62,7 +62,7 @@ public class FeedConnectionTupleTranslator extends AbstractTupleTranslator<FeedC
 
     @Override
     public FeedConnection getMetadataEntityFromTuple(ITupleReference frameTuple)
-            throws MetadataException, HyracksDataException {
+            throws AlgebricksException, HyracksDataException {
         byte[] serRecord = frameTuple.getFieldData(FEED_CONN_PAYLOAD_TUPLE_FIELD_INDEX);
         int recordStartOffset = frameTuple.getFieldStart(FEED_CONN_PAYLOAD_TUPLE_FIELD_INDEX);
         int recordLength = frameTuple.getFieldLength(FEED_CONN_PAYLOAD_TUPLE_FIELD_INDEX);
@@ -106,7 +106,7 @@ public class FeedConnectionTupleTranslator extends AbstractTupleTranslator<FeedC
 
     @Override
     public ITupleReference getTupleFromMetadataEntity(FeedConnection me)
-            throws MetadataException, HyracksDataException {
+            throws AlgebricksException, HyracksDataException {
         tupleBuilder.reset();
 
         // key: dataverse
