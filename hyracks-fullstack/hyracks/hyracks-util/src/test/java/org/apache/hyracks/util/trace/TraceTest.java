@@ -49,14 +49,29 @@ public class TraceTest {
         return handler;
     }
 
-    private JsonNode validate(String line) throws IOException {
-        return mapper.readTree(line);
+    public JsonNode validate(String line) throws IOException {
+        final JsonNode traceRecord = mapper.readTree(line);
+
+        Assert.assertTrue(traceRecord.has("ph"));
+
+        Assert.assertTrue(traceRecord.has("pid"));
+        Integer.parseInt(traceRecord.get("pid").asText());
+
+        Assert.assertTrue(traceRecord.has("tid"));
+        Long.parseLong(traceRecord.get("tid").asText());
+
+        Assert.assertTrue(traceRecord.has("ts"));
+        Long.parseLong(traceRecord.get("ts").asText());
+
+        return traceRecord;
     }
 
     @Test
     public void testInstant() throws IOException {
         final ByteArrayOutputStream os = new ByteArrayOutputStream();
         final StreamHandler handler = redirectTraceLog(os);
+
+        // test with initial categories
 
         TraceCategoryRegistry registry = new TraceCategoryRegistry();
         long cat1 = registry.get("CAT1");
@@ -72,8 +87,13 @@ public class TraceTest {
 
         String[] lines = os.toString().split("\n");
         for (String line : lines) {
-            Assert.assertFalse(validate(line).get("cat").equals("CAT3"));
+            final JsonNode traceRecord = validate(line);
+            Assert.assertEquals("i", traceRecord.get("ph").asText());
+            Assert.assertNotEquals("CAT3", traceRecord.get("cat").asText());
         }
+
+        // test with modified categories
+
         tracer.setCategories("CAT1", "CAT3");
         os.reset();
 
@@ -82,9 +102,12 @@ public class TraceTest {
         tracer.instant("test3", cat3, ITracer.Scope.p, null);
 
         handler.flush();
+
         lines = os.toString().split("\n");
         for (String line : lines) {
-            Assert.assertFalse(validate(line).get("cat").equals("CAT2"));
+            final JsonNode traceRecord = validate(line);
+            Assert.assertEquals("i", traceRecord.get("ph").asText());
+            Assert.assertNotEquals("CAT2", validate(line).get("cat").asText());
         }
     }
 }
