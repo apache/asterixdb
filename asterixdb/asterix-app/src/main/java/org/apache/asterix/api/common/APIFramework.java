@@ -230,14 +230,7 @@ public class APIFramework {
 
             printPlanPrefix(output, "Logical plan");
             if (rwQ != null || (statement != null && statement.getKind() == Statement.Kind.LOAD)) {
-                AbstractLogicalOperatorPrettyPrintVisitor pvisitor;
-                if (output.config().getLpfmt().equals(SessionConfig.PlanFormat.JSON)) {
-                    pvisitor = new LogicalOperatorPrettyPrintVisitorJson(output.out());
-                } else {
-                    pvisitor = new LogicalOperatorPrettyPrintVisitor(output.out());
-
-                }
-                PlanPrettyPrinter.printPlan(plan, pvisitor, 0);
+                PlanPrettyPrinter.printPlan(plan, getPrettyPrintVisitor(output.config().getLpfmt(), output.out()), 0);
             }
             printPlanPostfix(output);
         }
@@ -290,14 +283,8 @@ public class APIFramework {
                 } else {
                     printPlanPrefix(output, "Optimized logical plan");
                     if (rwQ != null || (statement != null && statement.getKind() == Statement.Kind.LOAD)) {
-                        AbstractLogicalOperatorPrettyPrintVisitor pvisitor;
-                        if (output.config().getLpfmt().equals(SessionConfig.PlanFormat.JSON)) {
-                            pvisitor = new LogicalOperatorPrettyPrintVisitorJson(output.out());
-
-                        } else {
-                            pvisitor = new LogicalOperatorPrettyPrintVisitor(output.out());
-                        }
-                        PlanPrettyPrinter.printPlan(plan, pvisitor, 0);
+                        PlanPrettyPrinter.printPlan(plan,
+                                getPrettyPrintVisitor(output.config().getLpfmt(), output.out()), 0);
                     }
                     printPlanPostfix(output);
                 }
@@ -377,6 +364,12 @@ public class APIFramework {
             printPlanPostfix(output);
         }
         return spec;
+    }
+
+    private AbstractLogicalOperatorPrettyPrintVisitor getPrettyPrintVisitor(SessionConfig.PlanFormat planFormat,
+            PrintWriter out) {
+        return planFormat.equals(SessionConfig.PlanFormat.JSON) ? new LogicalOperatorPrettyPrintVisitorJson(out)
+                : new LogicalOperatorPrettyPrintVisitor(out);
     }
 
     public void executeJobArray(IHyracksClientConnection hcc, JobSpecification[] specs, PrintWriter out)

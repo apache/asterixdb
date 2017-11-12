@@ -19,7 +19,7 @@
 package org.apache.hyracks.algebricks.core.algebra.operators.logical;
 
 import java.util.ArrayList;
-import java.util.IdentityHashMap;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -63,7 +63,7 @@ public abstract class AbstractLogicalOperator implements ILogicalOperator {
 
     private AbstractLogicalOperator.ExecutionMode mode = AbstractLogicalOperator.ExecutionMode.UNPARTITIONED;
     protected IPhysicalOperator physicalOperator;
-    private final Map<String, Object> annotations = new IdentityHashMap<String, Object>();
+    private final Map<String, Object> annotations = new HashMap<>();
     private boolean bJobGenEnabled = true;
 
     protected final List<Mutable<ILogicalOperator>> inputs;

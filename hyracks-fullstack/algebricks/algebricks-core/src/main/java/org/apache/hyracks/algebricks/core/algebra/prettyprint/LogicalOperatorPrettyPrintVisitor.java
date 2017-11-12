@@ -88,17 +88,10 @@ public class LogicalOperatorPrettyPrintVisitor extends AbstractLogicalOperatorPr
         super(app);
     }
 
-    public static void printPlan(ILogicalPlan plan, LogicalOperatorPrettyPrintVisitor pvisitor, int indent)
-            throws AlgebricksException {
-        for (Mutable<ILogicalOperator> root : plan.getRoots()) {
-            printOperator((AbstractLogicalOperator) root.getValue(), pvisitor, indent);
-        }
-    }
-
-    public static void printOperator(AbstractLogicalOperator op, LogicalOperatorPrettyPrintVisitor pvisitor, int indent)
-            throws AlgebricksException {
-        final AlgebricksAppendable out = pvisitor.get();
-        op.accept(pvisitor, indent);
+    @Override
+    public void printOperator(AbstractLogicalOperator op, int indent) throws AlgebricksException {
+        final AlgebricksAppendable out = this.get();
+        op.accept(this, indent);
         IPhysicalOperator pOp = op.getPhysicalOperator();
 
         if (pOp != null) {
@@ -110,7 +103,7 @@ public class LogicalOperatorPrettyPrintVisitor extends AbstractLogicalOperatorPr
         }
 
         for (Mutable<ILogicalOperator> i : op.getInputs()) {
-            printOperator((AbstractLogicalOperator) i.getValue(), pvisitor, indent + 2);
+            printOperator((AbstractLogicalOperator) i.getValue(), indent + 2);
         }
     }
 
@@ -155,8 +148,7 @@ public class LogicalOperatorPrettyPrintVisitor extends AbstractLogicalOperatorPr
 
     @Override
     public Void visitInnerJoinOperator(InnerJoinOperator op, Integer indent) throws AlgebricksException {
-        addIndent(indent).append("join (").append(op.getCondition().getValue().accept(exprVisitor, indent)).
-        append(")");
+        addIndent(indent).append("join (").append(op.getCondition().getValue().accept(exprVisitor, indent)).append(")");
         return null;
     }
 
@@ -400,12 +392,11 @@ public class LogicalOperatorPrettyPrintVisitor extends AbstractLogicalOperatorPr
         buffer.append(" partitioned by ");
         pprintExprList(op.getPrimaryKeyExpressions(), indent);
         if (op.getOperation() == Kind.UPSERT) {
-            buffer.append(
-                    " out: ([record-before-upsert:" + op.getBeforeOpRecordVar()
-                            + ((op.getBeforeOpAdditionalNonFilteringVars() != null)
-                                    ? (", additional-before-upsert: " + op.getBeforeOpAdditionalNonFilteringVars())
-                                    : "")
-                            + "]) ");
+            buffer.append(" out: ([record-before-upsert:" + op.getBeforeOpRecordVar()
+                    + ((op.getBeforeOpAdditionalNonFilteringVars() != null)
+                            ? (", additional-before-upsert: " + op.getBeforeOpAdditionalNonFilteringVars())
+                            : "")
+                    + "]) ");
         }
         if (op.isBulkload()) {
             buffer.append(" [bulkload]");
@@ -464,13 +455,6 @@ public class LogicalOperatorPrettyPrintVisitor extends AbstractLogicalOperatorPr
         return null;
     }
 
-    protected AlgebricksAppendable addIndent(int level) throws AlgebricksException {
-        for (int i = 0; i < level; ++i) {
-            buffer.append(' ');
-        }
-        return buffer;
-    }
-
     protected void printNestedPlans(AbstractOperatorWithNestedPlans op, Integer indent) throws AlgebricksException {
         boolean first = true;
         if (op.getNestedPlans().isEmpty()) {
@@ -485,7 +469,7 @@ public class LogicalOperatorPrettyPrintVisitor extends AbstractLogicalOperatorPr
                 } else {
                     addIndent(indent).append("       {\n");
                 }
-                printPlan(p, this, indent + 10);
+                printPlan(p, indent + 10);
                 addIndent(indent).append("       }");
             }
         }
