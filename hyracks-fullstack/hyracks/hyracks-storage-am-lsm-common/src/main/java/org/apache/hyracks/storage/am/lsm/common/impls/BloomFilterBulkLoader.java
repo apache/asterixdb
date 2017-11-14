@@ -26,11 +26,11 @@ public class BloomFilterBulkLoader implements IChainedComponentBulkLoader {
 
     private final IIndexBulkLoader bulkLoader;
 
+    private boolean endedBloomFilterLoad = false;
+
     public BloomFilterBulkLoader(IIndexBulkLoader bulkLoader) {
         this.bulkLoader = bulkLoader;
     }
-
-    private boolean endedBloomFilterLoad = false;
 
     @Override
     public ITupleReference add(ITupleReference tuple) throws HyracksDataException {
@@ -40,7 +40,8 @@ public class BloomFilterBulkLoader implements IChainedComponentBulkLoader {
 
     @Override
     public ITupleReference delete(ITupleReference tuple) throws HyracksDataException {
-        //Noop
+        // this ensure deleted keys are also added to the bulkloader
+        bulkLoader.add(tuple);
         return tuple;
     }
 
