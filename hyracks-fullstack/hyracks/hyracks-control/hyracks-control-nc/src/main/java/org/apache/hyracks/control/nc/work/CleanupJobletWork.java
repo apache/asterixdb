@@ -51,6 +51,7 @@ public class CleanupJobletWork extends AbstractWork {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Cleaning up after job: " + jobId);
         }
+        ncs.removeJobParameterByteStore(jobId);
         final List<IPartition> unregisteredPartitions = new ArrayList<IPartition>();
         ncs.getPartitionManager().unregisterPartitions(jobId, unregisteredPartitions);
         ncs.getExecutor().execute(new Runnable() {

@@ -49,6 +49,7 @@ import org.apache.hyracks.api.dataflow.connectors.ConnectorPolicyFactory;
 import org.apache.hyracks.api.dataflow.connectors.IConnectorPolicy;
 import org.apache.hyracks.api.dataset.ResultSetId;
 import org.apache.hyracks.api.deployment.DeploymentId;
+import org.apache.hyracks.api.job.DeployedJobSpecId;
 import org.apache.hyracks.api.job.JobFlag;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobStatus;
@@ -102,7 +103,7 @@ public class CCNCFunctions {
 
         DISTRIBUTE_JOB,
         DESTROY_JOB,
-        DISTRIBUTED_JOB_FAILURE,
+        DEPLOYED_JOB_FAILURE,
 
         STATE_DUMP_REQUEST,
         STATE_DUMP_RESPONSE,
@@ -286,24 +287,24 @@ public class CCNCFunctions {
         }
     }
 
-    public static class ReportDistributedJobFailureFunction extends Function {
+    public static class ReportDeployedJobSpecFailureFunction extends Function {
         private static final long serialVersionUID = 1L;
 
-        private final JobId jobId;
+        private final DeployedJobSpecId deployedJobSpecId;
         private final String nodeId;
 
-        public ReportDistributedJobFailureFunction(JobId jobId, String nodeId) {
-            this.jobId = jobId;
+        public ReportDeployedJobSpecFailureFunction(DeployedJobSpecId deployedJobSpecId, String nodeId) {
+            this.deployedJobSpecId = deployedJobSpecId;
             this.nodeId = nodeId;
         }
 
         @Override
         public FunctionId getFunctionId() {
-            return FunctionId.DISTRIBUTED_JOB_FAILURE;
+            return FunctionId.DEPLOYED_JOB_FAILURE;
         }
 
-        public JobId getJobId() {
-            return jobId;
+        public DeployedJobSpecId getDeployedJobSpecId() {
+            return deployedJobSpecId;
         }
 
         public String getNodeId() {
@@ -676,15 +677,15 @@ public class CCNCFunctions {
         }
     }
 
-    public static class DistributeJobFunction extends Function {
+    public static class DeployJobSpecFunction extends Function {
         private static final long serialVersionUID = 1L;
 
-        private final JobId jobId;
+        private final DeployedJobSpecId deployedJobSpecId;
 
         private final byte[] acgBytes;
 
-        public DistributeJobFunction(JobId jobId, byte[] acgBytes) {
-            this.jobId = jobId;
+        public DeployJobSpecFunction(DeployedJobSpecId deployedJobSpecId, byte[] acgBytes) {
+            this.deployedJobSpecId = deployedJobSpecId;
             this.acgBytes = acgBytes;
         }
 
@@ -693,8 +694,8 @@ public class CCNCFunctions {
             return FunctionId.DISTRIBUTE_JOB;
         }
 
-        public JobId getJobId() {
-            return jobId;
+        public DeployedJobSpecId getDeployedJobSpecId() {
+            return deployedJobSpecId;
         }
 
         public byte[] getacgBytes() {
@@ -702,13 +703,13 @@ public class CCNCFunctions {
         }
     }
 
-    public static class DestroyJobFunction extends Function {
+    public static class UndeployJobSpecFunction extends Function {
         private static final long serialVersionUID = 1L;
 
-        private final JobId jobId;
+        private final DeployedJobSpecId deployedJobSpecId;
 
-        public DestroyJobFunction(JobId jobId) {
-            this.jobId = jobId;
+        public UndeployJobSpecFunction(DeployedJobSpecId deployedJobSpecId) {
+            this.deployedJobSpecId = deployedJobSpecId;
         }
 
         @Override
@@ -716,8 +717,8 @@ public class CCNCFunctions {
             return FunctionId.DESTROY_JOB;
         }
 
-        public JobId getJobId() {
-            return jobId;
+        public DeployedJobSpecId getDeployedJobSpecId() {
+            return deployedJobSpecId;
         }
     }
 
@@ -730,16 +731,21 @@ public class CCNCFunctions {
         private final List<TaskAttemptDescriptor> taskDescriptors;
         private final Map<ConnectorDescriptorId, IConnectorPolicy> connectorPolicies;
         private final Set<JobFlag> flags;
+        private final Map<byte[], byte[]> jobParameters;
+        private final DeployedJobSpecId deployedJobSpecId;
 
         public StartTasksFunction(DeploymentId deploymentId, JobId jobId, byte[] planBytes,
                 List<TaskAttemptDescriptor> taskDescriptors,
-                Map<ConnectorDescriptorId, IConnectorPolicy> connectorPolicies, Set<JobFlag> flags) {
+                Map<ConnectorDescriptorId, IConnectorPolicy> connectorPolicies, Set<JobFlag> flags,
+                Map<byte[], byte[]> jobParameters, DeployedJobSpecId deployedJobSpecId) {
             this.deploymentId = deploymentId;
             this.jobId = jobId;
             this.planBytes = planBytes;
             this.taskDescriptors = taskDescriptors;
             this.connectorPolicies = connectorPolicies;
             this.flags = flags;
+            this.jobParameters = jobParameters;
+            this.deployedJobSpecId = deployedJobSpecId;
         }
 
         @Override
@@ -751,8 +757,16 @@ public class CCNCFunctions {
             return deploymentId;
         }
 
+        public DeployedJobSpecId getDeployedJobSpecId() {
+            return deployedJobSpecId;
+        }
+
         public JobId getJobId() {
             return jobId;
+        }
+
+        public Map<byte[], byte[]> getJobParameters() {
+            return jobParameters;
         }
 
         public byte[] getPlanBytes() {
@@ -815,7 +829,33 @@ public class CCNCFunctions {
                 flags.add(JobFlag.values()[(dis.readInt())]);
             }
 
-            return new StartTasksFunction(deploymentId, jobId, planBytes, taskDescriptors, connectorPolicies, flags);
+            // read job parameters
+            int paramListSize = dis.readInt();
+            Map<byte[], byte[]> jobParameters = new HashMap<>();
+            for (int i = 0; i < paramListSize; i++) {
+                int nameLength = dis.readInt();
+                byte[] nameBytes = null;
+                if (nameLength >= 0) {
+                    nameBytes = new byte[nameLength];
+                    dis.read(nameBytes, 0, nameLength);
+                }
+                int valueLength = dis.readInt();
+                byte[] valueBytes = null;
+                if (valueLength >= 0) {
+                    valueBytes = new byte[valueLength];
+                    dis.read(valueBytes, 0, valueLength);
+                }
+                jobParameters.put(nameBytes, valueBytes);
+            }
+
+            //read DeployedJobSpecId
+            DeployedJobSpecId deployedJobSpecId = null;
+            if (dis.readBoolean()) {
+                deployedJobSpecId = DeployedJobSpecId.create(dis);
+            }
+
+            return new StartTasksFunction(deploymentId, jobId, planBytes, taskDescriptors, connectorPolicies, flags,
+                    jobParameters, deployedJobSpecId);
         }
 
         public static void serialize(OutputStream out, Object object) throws Exception {
@@ -853,6 +893,22 @@ public class CCNCFunctions {
             for (JobFlag flag : fn.flags) {
                 dos.writeInt(flag.ordinal());
             }
+
+            //write job parameters
+            dos.writeInt(fn.jobParameters.size());
+            for (Entry<byte[], byte[]> entry : fn.jobParameters.entrySet()) {
+                dos.writeInt(entry.getKey().length);
+                dos.write(entry.getKey(), 0, entry.getKey().length);
+                dos.writeInt(entry.getValue().length);
+                dos.write(entry.getValue(), 0, entry.getValue().length);
+            }
+
+            //write deployed job spec id
+            dos.writeBoolean(fn.getDeployedJobSpecId() == null ? false : true);
+            if (fn.getDeployedJobSpecId() != null) {
+                fn.getDeployedJobSpecId().writeFields(dos);
+            }
+
         }
     }
 

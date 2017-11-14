@@ -18,8 +18,6 @@
  */
 package org.apache.hyracks.control.common.ipc;
 
-import static org.apache.hyracks.control.common.ipc.CCNCFunctions.*;
-
 import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.logging.Logger;
@@ -28,11 +26,30 @@ import org.apache.hyracks.api.comm.NetworkAddress;
 import org.apache.hyracks.api.dataflow.TaskAttemptId;
 import org.apache.hyracks.api.dataset.ResultSetId;
 import org.apache.hyracks.api.deployment.DeploymentId;
+import org.apache.hyracks.api.job.DeployedJobSpecId;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.control.common.base.IClusterController;
 import org.apache.hyracks.control.common.controllers.NodeRegistration;
 import org.apache.hyracks.control.common.deployment.DeploymentStatus;
 import org.apache.hyracks.control.common.heartbeat.HeartbeatData;
+import org.apache.hyracks.control.common.ipc.CCNCFunctions.GetNodeControllersInfoFunction;
+import org.apache.hyracks.control.common.ipc.CCNCFunctions.NodeHeartbeatFunction;
+import org.apache.hyracks.control.common.ipc.CCNCFunctions.NotifyDeployBinaryFunction;
+import org.apache.hyracks.control.common.ipc.CCNCFunctions.NotifyJobletCleanupFunction;
+import org.apache.hyracks.control.common.ipc.CCNCFunctions.NotifyTaskCompleteFunction;
+import org.apache.hyracks.control.common.ipc.CCNCFunctions.NotifyTaskFailureFunction;
+import org.apache.hyracks.control.common.ipc.CCNCFunctions.RegisterNodeFunction;
+import org.apache.hyracks.control.common.ipc.CCNCFunctions.RegisterPartitionProviderFunction;
+import org.apache.hyracks.control.common.ipc.CCNCFunctions.RegisterPartitionRequestFunction;
+import org.apache.hyracks.control.common.ipc.CCNCFunctions.RegisterResultPartitionLocationFunction;
+import org.apache.hyracks.control.common.ipc.CCNCFunctions.ReportDeployedJobSpecFailureFunction;
+import org.apache.hyracks.control.common.ipc.CCNCFunctions.ReportProfileFunction;
+import org.apache.hyracks.control.common.ipc.CCNCFunctions.ReportResultPartitionWriteCompletionFunction;
+import org.apache.hyracks.control.common.ipc.CCNCFunctions.SendApplicationMessageFunction;
+import org.apache.hyracks.control.common.ipc.CCNCFunctions.ShutdownResponseFunction;
+import org.apache.hyracks.control.common.ipc.CCNCFunctions.StateDumpResponseFunction;
+import org.apache.hyracks.control.common.ipc.CCNCFunctions.ThreadDumpResponseFunction;
+import org.apache.hyracks.control.common.ipc.CCNCFunctions.UnregisterNodeFunction;
 import org.apache.hyracks.control.common.job.PartitionDescriptor;
 import org.apache.hyracks.control.common.job.PartitionRequest;
 import org.apache.hyracks.control.common.job.profiling.om.JobProfile;
@@ -151,9 +168,8 @@ public class ClusterControllerRemoteProxy extends ControllerRemoteProxy implemen
     }
 
     @Override
-    public void notifyDistributedJobFailure(JobId jobId, String nodeId) throws Exception {
-        ReportDistributedJobFailureFunction fn = new ReportDistributedJobFailureFunction(
-                jobId, nodeId);
+    public void notifyDeployedJobSpecFailure(DeployedJobSpecId deployedJobSpecId, String nodeId) throws Exception {
+        ReportDeployedJobSpecFailureFunction fn = new ReportDeployedJobSpecFailureFunction(deployedJobSpecId, nodeId);
         ensureIpcHandle().send(-1, fn, null);
     }
 

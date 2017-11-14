@@ -163,6 +163,10 @@ public class TestTaskContext implements IHyracksTaskContext {
     }
 
     @Override
+    public byte[] getJobParameter(byte[] name, int start, int length) {
+        return new byte[0];
+    }
+
     public Set<JobFlag> getJobFlags() {
         return EnumSet.noneOf(JobFlag.class);
     }

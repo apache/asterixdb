@@ -158,6 +158,7 @@ import org.apache.asterix.runtime.evaluators.functions.EditDistanceStringIsFilte
 import org.apache.asterix.runtime.evaluators.functions.FullTextContainsDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.FullTextContainsWithoutOptionDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.GetItemDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.GetJobParameterByNameDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.GramTokensDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.HashedGramTokensDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.HashedWordTokensDescriptor;
@@ -436,6 +437,9 @@ public final class FunctionCollection {
 
         // Inject failure function
         fc.add(InjectFailureDescriptor.FACTORY);
+
+        // Get Job Parameter function
+        fc.add(GetJobParameterByNameDescriptor.FACTORY);
 
         // Switch case
         fc.add(SwitchCaseDescriptor.FACTORY);
@@ -737,8 +741,8 @@ public final class FunctionCollection {
      */
     private static IFunctionDescriptorFactory getGeneratedFunctionDescriptorFactory(Class<?> cl) {
         try {
-            String className = CodeGenHelper.getGeneratedClassName(cl.getName(),
-                    CodeGenHelper.DEFAULT_SUFFIX_FOR_GENERATED_CLASS);
+            String className =
+                    CodeGenHelper.getGeneratedClassName(cl.getName(), CodeGenHelper.DEFAULT_SUFFIX_FOR_GENERATED_CLASS);
             Class<?> generatedCl = cl.getClassLoader().loadClass(className);
             Field factory = generatedCl.getDeclaredField(FACTORY);
             return (IFunctionDescriptorFactory) factory.get(null);

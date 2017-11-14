@@ -54,9 +54,9 @@ public class ErrorCode {
     public static final int INCONSISTENT_RESULT_METADATA = 18;
     public static final int CANNOT_DELETE_FILE = 19;
     public static final int NOT_A_JOBID = 20;
-    public static final int ERROR_FINDING_DISTRIBUTED_JOB = 21;
-    public static final int DUPLICATE_DISTRIBUTED_JOB = 22;
-    public static final int DISTRIBUTED_JOB_FAILURE = 23;
+    public static final int ERROR_FINDING_DEPLOYED_JOB = 21;
+    public static final int DUPLICATE_DEPLOYED_JOB = 22;
+    public static final int DEPLOYED_JOB_FAILURE = 23;
     public static final int NO_RESULT_SET = 24;
     public static final int JOB_CANCELED = 25;
     public static final int NODE_FAILED = 26;

@@ -20,6 +20,7 @@ package org.apache.asterix.runtime.job.listener;
 
 import java.util.List;
 
+import org.apache.asterix.common.api.IJobEventListenerFactory;
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.transactions.DatasetId;
@@ -29,13 +30,14 @@ import org.apache.asterix.common.transactions.TxnId;
 import org.apache.hyracks.api.context.IHyracksJobletContext;
 import org.apache.hyracks.api.job.IJobletEventListener;
 import org.apache.hyracks.api.job.IJobletEventListenerFactory;
+import org.apache.hyracks.api.job.JobParameterByteStore;
 import org.apache.hyracks.api.job.JobStatus;
 
 /**
  * This Joblet enable transactions on multiple datasets to take place in the same Hyracks Job
  * It takes a list of Transaction job ids instead of a single job Id
  */
-public class MultiTransactionJobletEventListenerFactory implements IJobletEventListenerFactory {
+public class MultiTransactionJobletEventListenerFactory implements IJobEventListenerFactory {
 
     private static final long serialVersionUID = 1L;
     private final List<TxnId> txnIds;
@@ -44,6 +46,22 @@ public class MultiTransactionJobletEventListenerFactory implements IJobletEventL
     public MultiTransactionJobletEventListenerFactory(List<TxnId> txnIds, boolean transactionalWrite) {
         this.txnIds = txnIds;
         this.transactionalWrite = transactionalWrite;
+    }
+
+    //TODO: Enable this factory to be usable for Deployed Jobs
+    @Override
+    public TxnId getTxnId(TxnId compiledTxnId) {
+        return compiledTxnId;
+    }
+
+    @Override
+    public IJobletEventListenerFactory copyFactory() {
+        return new MultiTransactionJobletEventListenerFactory(txnIds, transactionalWrite);
+    }
+
+    @Override
+    public void updateListenerJobParameters(JobParameterByteStore jobParameterByteStore) {
+        //no op
     }
 
     @Override

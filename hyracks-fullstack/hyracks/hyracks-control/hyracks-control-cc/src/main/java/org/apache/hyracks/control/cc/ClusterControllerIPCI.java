@@ -23,7 +23,7 @@ import java.util.logging.Logger;
 
 import org.apache.hyracks.api.client.NodeControllerInfo;
 import org.apache.hyracks.control.cc.work.ApplicationMessageWork;
-import org.apache.hyracks.control.cc.work.DistributedJobFailureWork;
+import org.apache.hyracks.control.cc.work.DeployedJobFailureWork;
 import org.apache.hyracks.control.cc.work.GetNodeControllersInfoWork;
 import org.apache.hyracks.control.cc.work.JobletCleanupNotificationWork;
 import org.apache.hyracks.control.cc.work.NodeHeartbeatWork;
@@ -76,13 +76,12 @@ class ClusterControllerIPCI implements IIPCI {
                 break;
             case NOTIFY_JOBLET_CLEANUP:
                 CCNCFunctions.NotifyJobletCleanupFunction njcf = (CCNCFunctions.NotifyJobletCleanupFunction) fn;
-                ccs.getWorkQueue().schedule(new JobletCleanupNotificationWork(ccs, njcf.getJobId(),
-                        njcf.getNodeId()));
+                ccs.getWorkQueue().schedule(new JobletCleanupNotificationWork(ccs, njcf.getJobId(), njcf.getNodeId()));
                 break;
             case NOTIFY_DEPLOY_BINARY:
                 CCNCFunctions.NotifyDeployBinaryFunction ndbf = (CCNCFunctions.NotifyDeployBinaryFunction) fn;
-                ccs.getWorkQueue().schedule(new NotifyDeployBinaryWork(ccs, ndbf.getDeploymentId(),
-                        ndbf.getNodeId(), ndbf.getDeploymentStatus()));
+                ccs.getWorkQueue().schedule(new NotifyDeployBinaryWork(ccs, ndbf.getDeploymentId(), ndbf.getNodeId(),
+                        ndbf.getDeploymentStatus()));
                 break;
             case REPORT_PROFILE:
                 CCNCFunctions.ReportProfileFunction rpf = (CCNCFunctions.ReportProfileFunction) fn;
@@ -90,49 +89,48 @@ class ClusterControllerIPCI implements IIPCI {
                 break;
             case NOTIFY_TASK_COMPLETE:
                 CCNCFunctions.NotifyTaskCompleteFunction ntcf = (CCNCFunctions.NotifyTaskCompleteFunction) fn;
-                ccs.getWorkQueue().schedule(new TaskCompleteWork(ccs, ntcf.getJobId(),
-                        ntcf.getTaskId(), ntcf.getNodeId(), ntcf.getStatistics()));
+                ccs.getWorkQueue().schedule(new TaskCompleteWork(ccs, ntcf.getJobId(), ntcf.getTaskId(),
+                        ntcf.getNodeId(), ntcf.getStatistics()));
                 break;
             case NOTIFY_TASK_FAILURE:
                 CCNCFunctions.NotifyTaskFailureFunction ntff = (CCNCFunctions.NotifyTaskFailureFunction) fn;
-                ccs.getWorkQueue().schedule(new TaskFailureWork(ccs, ntff.getJobId(),
-                        ntff.getTaskId(), ntff.getNodeId(), ntff.getExceptions()));
+                ccs.getWorkQueue().schedule(new TaskFailureWork(ccs, ntff.getJobId(), ntff.getTaskId(),
+                        ntff.getNodeId(), ntff.getExceptions()));
                 break;
-            case DISTRIBUTED_JOB_FAILURE:
-                CCNCFunctions.ReportDistributedJobFailureFunction rdjf =
-                        (CCNCFunctions.ReportDistributedJobFailureFunction) fn;
-                ccs.getWorkQueue().schedule(new DistributedJobFailureWork(rdjf.getJobId(), rdjf.getNodeId()));
+            case DEPLOYED_JOB_FAILURE:
+                CCNCFunctions.ReportDeployedJobSpecFailureFunction rdjf =
+                        (CCNCFunctions.ReportDeployedJobSpecFailureFunction) fn;
+                ccs.getWorkQueue()
+                        .schedule(new DeployedJobFailureWork(rdjf.getDeployedJobSpecId(), rdjf.getNodeId()));
                 break;
             case REGISTER_PARTITION_PROVIDER:
                 CCNCFunctions.RegisterPartitionProviderFunction rppf =
                         (CCNCFunctions.RegisterPartitionProviderFunction) fn;
-                ccs.getWorkQueue().schedule(new RegisterPartitionAvailibilityWork(ccs,
-                        rppf.getPartitionDescriptor()));
+                ccs.getWorkQueue().schedule(new RegisterPartitionAvailibilityWork(ccs, rppf.getPartitionDescriptor()));
                 break;
             case REGISTER_PARTITION_REQUEST:
                 CCNCFunctions.RegisterPartitionRequestFunction rprf =
                         (CCNCFunctions.RegisterPartitionRequestFunction) fn;
-                ccs.getWorkQueue().schedule(new RegisterPartitionRequestWork(ccs,
-                        rprf.getPartitionRequest()));
+                ccs.getWorkQueue().schedule(new RegisterPartitionRequestWork(ccs, rprf.getPartitionRequest()));
                 break;
             case REGISTER_RESULT_PARTITION_LOCATION:
                 CCNCFunctions.RegisterResultPartitionLocationFunction rrplf =
                         (CCNCFunctions.RegisterResultPartitionLocationFunction) fn;
-                ccs.getWorkQueue().schedule(new RegisterResultPartitionLocationWork(ccs,
-                        rrplf.getJobId(), rrplf.getResultSetId(), rrplf.getOrderedResult(), rrplf.getEmptyResult(),
-                        rrplf.getPartition(), rrplf.getNPartitions(), rrplf.getNetworkAddress()));
+                ccs.getWorkQueue()
+                        .schedule(new RegisterResultPartitionLocationWork(ccs, rrplf.getJobId(), rrplf.getResultSetId(),
+                                rrplf.getOrderedResult(), rrplf.getEmptyResult(), rrplf.getPartition(),
+                                rrplf.getNPartitions(), rrplf.getNetworkAddress()));
                 break;
             case REPORT_RESULT_PARTITION_WRITE_COMPLETION:
                 CCNCFunctions.ReportResultPartitionWriteCompletionFunction rrpwc =
                         (CCNCFunctions.ReportResultPartitionWriteCompletionFunction) fn;
-                ccs.getWorkQueue().schedule(new ReportResultPartitionWriteCompletionWork(ccs,
-                        rrpwc.getJobId(), rrpwc.getResultSetId(), rrpwc.getPartition()));
+                ccs.getWorkQueue().schedule(new ReportResultPartitionWriteCompletionWork(ccs, rrpwc.getJobId(),
+                        rrpwc.getResultSetId(), rrpwc.getPartition()));
                 break;
             case SEND_APPLICATION_MESSAGE:
-                CCNCFunctions.SendApplicationMessageFunction rsf =
-                        (CCNCFunctions.SendApplicationMessageFunction) fn;
-                ccs.getWorkQueue().schedule(new ApplicationMessageWork(ccs, rsf.getMessage(),
-                        rsf.getDeploymentId(), rsf.getNodeId()));
+                CCNCFunctions.SendApplicationMessageFunction rsf = (CCNCFunctions.SendApplicationMessageFunction) fn;
+                ccs.getWorkQueue().schedule(
+                        new ApplicationMessageWork(ccs, rsf.getMessage(), rsf.getDeploymentId(), rsf.getNodeId()));
                 break;
             case GET_NODE_CONTROLLERS_INFO:
                 ccs.getWorkQueue().schedule(new GetNodeControllersInfoWork(ccs.getNodeManager(),
@@ -150,18 +148,17 @@ class ClusterControllerIPCI implements IIPCI {
                 break;
             case STATE_DUMP_RESPONSE:
                 CCNCFunctions.StateDumpResponseFunction dsrf = (StateDumpResponseFunction) fn;
-                ccs.getWorkQueue().schedule(new NotifyStateDumpResponse(ccs, dsrf.getNodeId(),
-                        dsrf.getStateDumpId(), dsrf.getState()));
+                ccs.getWorkQueue().schedule(
+                        new NotifyStateDumpResponse(ccs, dsrf.getNodeId(), dsrf.getStateDumpId(), dsrf.getState()));
                 break;
             case SHUTDOWN_RESPONSE:
                 CCNCFunctions.ShutdownResponseFunction sdrf = (ShutdownResponseFunction) fn;
                 ccs.getWorkQueue().schedule(new NotifyShutdownWork(ccs, sdrf.getNodeId()));
                 break;
             case THREAD_DUMP_RESPONSE:
-                CCNCFunctions.ThreadDumpResponseFunction tdrf =
-                        (CCNCFunctions.ThreadDumpResponseFunction)fn;
-                ccs.getWorkQueue().schedule(new NotifyThreadDumpResponse(ccs,
-                        tdrf.getRequestId(), tdrf.getThreadDumpJSON()));
+                CCNCFunctions.ThreadDumpResponseFunction tdrf = (CCNCFunctions.ThreadDumpResponseFunction) fn;
+                ccs.getWorkQueue()
+                        .schedule(new NotifyThreadDumpResponse(ccs, tdrf.getRequestId(), tdrf.getThreadDumpJSON()));
                 break;
             default:
                 LOGGER.warning("Unknown function: " + fn.getFunctionId());

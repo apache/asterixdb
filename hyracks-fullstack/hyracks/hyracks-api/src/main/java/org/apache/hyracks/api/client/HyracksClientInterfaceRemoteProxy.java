@@ -26,6 +26,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.hyracks.api.comm.NetworkAddress;
 import org.apache.hyracks.api.deployment.DeploymentId;
+import org.apache.hyracks.api.job.DeployedJobSpecId;
 import org.apache.hyracks.api.job.JobFlag;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobInfo;
@@ -76,9 +77,9 @@ public class HyracksClientInterfaceRemoteProxy implements IHyracksClientInterfac
     }
 
     @Override
-    public JobId startJob(JobId jobId) throws Exception {
+    public JobId startJob(DeployedJobSpecId deployedJobSpecId, Map<byte[], byte[]> jobParameters) throws Exception {
         HyracksClientInterfaceFunctions.StartJobFunction sjf =
-                new HyracksClientInterfaceFunctions.StartJobFunction(jobId);
+                new HyracksClientInterfaceFunctions.StartJobFunction(deployedJobSpecId, jobParameters);
         return (JobId) rpci.call(ipcHandle, sjf);
     }
 
@@ -90,17 +91,17 @@ public class HyracksClientInterfaceRemoteProxy implements IHyracksClientInterfac
     }
 
     @Override
-    public JobId distributeJob(byte[] acggfBytes) throws Exception {
-        HyracksClientInterfaceFunctions.DistributeJobFunction sjf =
-                new HyracksClientInterfaceFunctions.DistributeJobFunction(acggfBytes);
-        return (JobId) rpci.call(ipcHandle, sjf);
+    public DeployedJobSpecId deployJobSpec(byte[] acggfBytes) throws Exception {
+        HyracksClientInterfaceFunctions.DeployJobSpecFunction sjf =
+                new HyracksClientInterfaceFunctions.DeployJobSpecFunction(acggfBytes);
+        return (DeployedJobSpecId) rpci.call(ipcHandle, sjf);
     }
 
     @Override
-    public JobId destroyJob(JobId jobId) throws Exception {
-        HyracksClientInterfaceFunctions.DestroyJobFunction sjf =
-                new HyracksClientInterfaceFunctions.DestroyJobFunction(jobId);
-        return (JobId) rpci.call(ipcHandle, sjf);
+    public DeployedJobSpecId undeployJobSpec(DeployedJobSpecId deployedJobSpecId) throws Exception {
+        HyracksClientInterfaceFunctions.UndeployJobSpecFunction sjf =
+                new HyracksClientInterfaceFunctions.UndeployJobSpecFunction(deployedJobSpecId);
+        return (DeployedJobSpecId) rpci.call(ipcHandle, sjf);
     }
 
     @Override

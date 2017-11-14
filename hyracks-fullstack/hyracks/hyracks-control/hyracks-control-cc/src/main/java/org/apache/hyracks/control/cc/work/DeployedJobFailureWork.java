@@ -16,28 +16,24 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.api.context;
+package org.apache.hyracks.control.cc.work;
 
-import org.apache.hyracks.api.application.INCServiceContext;
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksException;
-import org.apache.hyracks.api.io.IWorkspaceFileFactory;
-import org.apache.hyracks.api.job.IJobletEventListenerFactory;
-import org.apache.hyracks.api.job.JobId;
-import org.apache.hyracks.api.job.profiling.counters.ICounterContext;
-import org.apache.hyracks.api.resources.IDeallocatableRegistry;
+import org.apache.hyracks.api.job.DeployedJobSpecId;
+import org.apache.hyracks.control.common.work.SynchronizableWork;
 
-public interface IHyracksJobletContext extends IWorkspaceFileFactory, IDeallocatableRegistry {
-    INCServiceContext getServiceContext();
+public class DeployedJobFailureWork extends SynchronizableWork {
+    protected final DeployedJobSpecId deployedJobSpecId;
+    protected final String nodeId;
 
-    JobId getJobId();
+    public DeployedJobFailureWork(DeployedJobSpecId deployedJobSpecId, String nodeId) {
+        this.deployedJobSpecId = deployedJobSpecId;
+        this.nodeId = nodeId;
+    }
 
-    ICounterContext getCounterContext();
-
-    Object getGlobalJobData();
-
-    IJobletEventListenerFactory getJobletEventListenerFactory();
-
-    Class<?> loadClass(String className) throws HyracksException;
-
-    ClassLoader getClassLoader() throws HyracksException;
+    @Override
+    public void doRun() throws HyracksException {
+        throw HyracksException.create(ErrorCode.DEPLOYED_JOB_FAILURE, deployedJobSpecId, nodeId);
+    }
 }

@@ -34,10 +34,6 @@ public class CreateFunctionStatement implements Statement {
     private final boolean ifNotExists;
     private final List<String> paramList;
 
-    public FunctionSignature getaAterixFunction() {
-        return signature;
-    }
-
     public String getFunctionBody() {
         return functionBody;
     }
@@ -66,7 +62,7 @@ public class CreateFunctionStatement implements Statement {
         return paramList;
     }
 
-    public FunctionSignature getSignature() {
+    public FunctionSignature getFunctionSignature() {
         return signature;
     }
 

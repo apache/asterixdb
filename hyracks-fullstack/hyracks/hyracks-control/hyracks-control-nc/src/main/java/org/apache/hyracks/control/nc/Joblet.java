@@ -100,8 +100,11 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
 
     private boolean cleanupPending;
 
+    private final IJobletEventListenerFactory jobletEventListenerFactory;
+
     public Joblet(NodeControllerService nodeController, DeploymentId deploymentId, JobId jobId,
-            INCServiceContext serviceCtx, ActivityClusterGraph acg) {
+            INCServiceContext serviceCtx, ActivityClusterGraph acg,
+            IJobletEventListenerFactory jobletEventListenerFactory) {
         this.nodeController = nodeController;
         this.serviceCtx = serviceCtx;
         this.deploymentId = deploymentId;
@@ -117,9 +120,9 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
         deallocatableRegistry = new DefaultDeallocatableRegistry();
         fileFactory = new WorkspaceFileFactory(this, serviceCtx.getIoManager());
         cleanupPending = false;
-        IJobletEventListenerFactory jelf = acg.getJobletEventListenerFactory();
-        if (jelf != null) {
-            IJobletEventListener listener = jelf.createListener(this);
+        this.jobletEventListenerFactory = jobletEventListenerFactory;
+        if (jobletEventListenerFactory != null) {
+            IJobletEventListener listener = jobletEventListenerFactory.createListener(this);
             this.jobletEventListener = listener;
             listener.jobletStart();
         } else {
@@ -132,6 +135,11 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
     @Override
     public JobId getJobId() {
         return jobId;
+    }
+
+    @Override
+    public IJobletEventListenerFactory getJobletEventListenerFactory() {
+        return jobletEventListenerFactory;
     }
 
     public ActivityClusterGraph getActivityClusterGraph() {

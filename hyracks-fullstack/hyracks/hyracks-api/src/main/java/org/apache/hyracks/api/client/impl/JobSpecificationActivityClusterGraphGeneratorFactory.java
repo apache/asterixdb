@@ -32,7 +32,6 @@ import org.apache.hyracks.api.job.IActivityClusterGraphGenerator;
 import org.apache.hyracks.api.job.IActivityClusterGraphGeneratorFactory;
 import org.apache.hyracks.api.job.JobActivityGraph;
 import org.apache.hyracks.api.job.JobFlag;
-import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.api.rewriter.ActivityClusterGraphRewriter;
 
@@ -51,8 +50,8 @@ public class JobSpecificationActivityClusterGraphGeneratorFactory implements IAc
     }
 
     @Override
-    public IActivityClusterGraphGenerator createActivityClusterGraphGenerator(JobId jobId,
-            final ICCServiceContext ccServiceCtx, Set<JobFlag> jobFlags) throws HyracksException {
+    public IActivityClusterGraphGenerator createActivityClusterGraphGenerator(final ICCServiceContext ccServiceCtx,
+            Set<JobFlag> jobFlags) throws HyracksException {
         final JobActivityGraphBuilder builder = new JobActivityGraphBuilder(spec, jobFlags);
         PlanUtils.visit(spec, new IConnectorDescriptorVisitor() {
             @Override
@@ -70,7 +69,7 @@ public class JobSpecificationActivityClusterGraphGeneratorFactory implements IAc
         final JobActivityGraph jag = builder.getActivityGraph();
         ActivityClusterGraphBuilder acgb = new ActivityClusterGraphBuilder();
 
-        final ActivityClusterGraph acg = acgb.inferActivityClusters(jobId, jag);
+        final ActivityClusterGraph acg = acgb.inferActivityClusters(jag);
         acg.setFrameSize(spec.getFrameSize());
         acg.setMaxReattempts(spec.getMaxReattempts());
         acg.setJobletEventListenerFactory(spec.getJobletEventListenerFactory());

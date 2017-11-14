@@ -142,6 +142,7 @@ public class JobManager implements IJobManager {
 
     @Override
     public void prepareComplete(JobRun run, JobStatus status, List<Exception> exceptions) throws HyracksException {
+        ccs.removeJobParameterByteStore(run.getJobId());
         checkJob(run);
         if (status == JobStatus.FAILURE_BEFORE_EXECUTION) {
             run.setPendingStatus(JobStatus.FAILURE, exceptions);
@@ -306,9 +307,7 @@ public class JobManager implements IJobManager {
 
         CCServiceContext serviceCtx = ccs.getContext();
         JobSpecification spec = run.getJobSpecification();
-        if (!run.getExecutor().isPredistributed()) {
-            serviceCtx.notifyJobCreation(jobId, spec);
-        }
+        serviceCtx.notifyJobCreation(jobId, spec);
         run.setStatus(JobStatus.RUNNING, null);
         executeJobInternal(run);
     }

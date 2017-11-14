@@ -18,15 +18,17 @@
  */
 package org.apache.hyracks.api.job;
 
-import java.io.Serializable;
+import java.util.concurrent.atomic.AtomicLong;
 
-import org.apache.hyracks.api.context.IHyracksJobletContext;
+public class DeployedJobSpecIdFactory {
+    private final AtomicLong id = new AtomicLong(0);
 
-public interface IJobletEventListenerFactory extends Serializable {
-    IJobletEventListener createListener(IHyracksJobletContext ctx);
+    public DeployedJobSpecId create() {
+        return new DeployedJobSpecId(id.getAndIncrement());
+    }
 
-    IJobletEventListenerFactory copyFactory();
+    public long maxDeployedJobSpecId() {
+        return id.get();
+    }
 
-    //Allows job parameters to change listener settings
-    void updateListenerJobParameters(JobParameterByteStore jobParameterByteStore);
 }

@@ -47,11 +47,12 @@ import org.apache.hyracks.api.dataflow.connectors.IConnectorPolicy;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.deployment.DeploymentId;
-import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.job.ActivityCluster;
 import org.apache.hyracks.api.job.ActivityClusterGraph;
+import org.apache.hyracks.api.job.DeployedJobSpecId;
+import org.apache.hyracks.api.job.IJobletEventListenerFactory;
 import org.apache.hyracks.api.job.JobFlag;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.partitions.PartitionId;
@@ -79,6 +80,8 @@ public class StartTasksWork extends AbstractWork {
 
     private final JobId jobId;
 
+    private final DeployedJobSpecId deployedJobSpecId;
+
     private final byte[] acgBytes;
 
     private final List<TaskAttemptDescriptor> taskDescriptors;
@@ -87,16 +90,21 @@ public class StartTasksWork extends AbstractWork {
 
     private final Set<JobFlag> flags;
 
+    private final Map<byte[], byte[]> jobParameters;
+
     public StartTasksWork(NodeControllerService ncs, DeploymentId deploymentId, JobId jobId, byte[] acgBytes,
             List<TaskAttemptDescriptor> taskDescriptors,
-            Map<ConnectorDescriptorId, IConnectorPolicy> connectorPoliciesMap, Set<JobFlag> flags) {
+            Map<ConnectorDescriptorId, IConnectorPolicy> connectorPoliciesMap, Set<JobFlag> flags,
+            Map<byte[], byte[]> jobParameters, DeployedJobSpecId deployedJobSpecId) {
         this.ncs = ncs;
         this.deploymentId = deploymentId;
         this.jobId = jobId;
+        this.deployedJobSpecId = deployedJobSpecId;
         this.acgBytes = acgBytes;
         this.taskDescriptors = taskDescriptors;
         this.connectorPoliciesMap = connectorPoliciesMap;
         this.flags = flags;
+        this.jobParameters = jobParameters;
     }
 
     @Override
@@ -106,7 +114,7 @@ public class StartTasksWork extends AbstractWork {
         try {
             ncs.updateMaxJobId(jobId);
             NCServiceContext serviceCtx = ncs.getContext();
-            Joblet joblet = getOrCreateLocalJoblet(deploymentId, jobId, serviceCtx, acgBytes);
+            Joblet joblet = getOrCreateLocalJoblet(deploymentId, serviceCtx, acgBytes);
             final ActivityClusterGraph acg = joblet.getActivityClusterGraph();
             IRecordDescriptorProvider rdp = new IRecordDescriptorProvider() {
                 @Override
@@ -190,19 +198,22 @@ public class StartTasksWork extends AbstractWork {
         }
     }
 
-    private Joblet getOrCreateLocalJoblet(DeploymentId deploymentId, JobId jobId, INCServiceContext appCtx,
-            byte[] acgBytes) throws HyracksException {
+    private Joblet getOrCreateLocalJoblet(DeploymentId deploymentId, INCServiceContext appCtx, byte[] acgBytes)
+            throws HyracksException {
         Map<JobId, Joblet> jobletMap = ncs.getJobletMap();
         Joblet ji = jobletMap.get(jobId);
         if (ji == null) {
-            ActivityClusterGraph acg = ncs.getActivityClusterGraph(jobId);
-            if (acg == null) {
-                if (acgBytes == null) {
-                    throw HyracksException.create(ErrorCode.ERROR_FINDING_DISTRIBUTED_JOB, jobId);
+            ActivityClusterGraph acg = (deployedJobSpecId != null) ? ncs.getActivityClusterGraph(deployedJobSpecId)
+                    : (ActivityClusterGraph) DeploymentUtils.deserialize(acgBytes, deploymentId, appCtx);
+            ncs.createOrGetJobParameterByteStore(jobId).setParameters(jobParameters);
+            IJobletEventListenerFactory listenerFactory = acg.getJobletEventListenerFactory();
+            if (listenerFactory != null) {
+                if (deployedJobSpecId != null) {
+                    listenerFactory = acg.getJobletEventListenerFactory().copyFactory();
                 }
-                acg = (ActivityClusterGraph) DeploymentUtils.deserialize(acgBytes, deploymentId, appCtx);
+                listenerFactory.updateListenerJobParameters(ncs.createOrGetJobParameterByteStore(jobId));
             }
-            ji = new Joblet(ncs, deploymentId, jobId, appCtx, acg);
+            ji = new Joblet(ncs, deploymentId, jobId, appCtx, acg, listenerFactory);
             jobletMap.put(jobId, ji);
         }
         return ji;

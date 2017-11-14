@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.runtime.job.listener;
 
+import org.apache.asterix.common.api.IJobEventListenerFactory;
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.transactions.DatasetId;
@@ -27,13 +28,18 @@ import org.apache.asterix.common.transactions.TxnId;
 import org.apache.hyracks.api.context.IHyracksJobletContext;
 import org.apache.hyracks.api.job.IJobletEventListener;
 import org.apache.hyracks.api.job.IJobletEventListenerFactory;
+import org.apache.hyracks.api.job.JobParameterByteStore;
 import org.apache.hyracks.api.job.JobStatus;
 
-public class JobEventListenerFactory implements IJobletEventListenerFactory {
+public class JobEventListenerFactory implements IJobEventListenerFactory {
 
     private static final long serialVersionUID = 1L;
-    private final TxnId txnId;
+
+    private TxnId txnId;
     private final boolean transactionalWrite;
+
+    //To enable new Asterix TxnId for separate deployed job spec invocations
+    private static final byte[] TRANSACTION_ID_PARAMETER_NAME = "TxnIdParameter".getBytes();
 
     public JobEventListenerFactory(TxnId txnId, boolean transactionalWrite) {
         this.txnId = txnId;
@@ -42,6 +48,26 @@ public class JobEventListenerFactory implements IJobletEventListenerFactory {
 
     public TxnId getTxnId() {
         return txnId;
+    }
+
+    @Override
+    public TxnId getTxnId(TxnId compiledTxnId) {
+        return txnId;
+    }
+
+    @Override
+    public IJobletEventListenerFactory copyFactory() {
+        return new JobEventListenerFactory(txnId, transactionalWrite);
+    }
+
+    @Override
+    public void updateListenerJobParameters(JobParameterByteStore jobParameterByteStore) {
+        String AsterixTransactionIdString =
+                new String(jobParameterByteStore.getParameterValue(TRANSACTION_ID_PARAMETER_NAME, 0,
+                        TRANSACTION_ID_PARAMETER_NAME.length));
+        if (AsterixTransactionIdString.length() > 0) {
+            this.txnId = new TxnId(Integer.parseInt(AsterixTransactionIdString));
+        }
     }
 
     @Override

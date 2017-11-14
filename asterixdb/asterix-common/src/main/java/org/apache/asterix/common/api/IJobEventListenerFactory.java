@@ -16,24 +16,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.control.cc.work;
+package org.apache.asterix.common.api;
 
-import org.apache.hyracks.api.exceptions.ErrorCode;
-import org.apache.hyracks.api.exceptions.HyracksException;
-import org.apache.hyracks.api.job.JobId;
-import org.apache.hyracks.control.common.work.SynchronizableWork;
+import org.apache.asterix.common.transactions.TxnId;
+import org.apache.hyracks.api.job.IJobletEventListenerFactory;
 
-public class DistributedJobFailureWork extends SynchronizableWork {
-    protected final JobId jobId;
-    protected final String nodeId;
+/**
+ * an interface for JobEventListenerFactories to add Asterix transaction JobId getter
+ */
+public interface IJobEventListenerFactory extends IJobletEventListenerFactory {
 
-    public DistributedJobFailureWork(JobId jobId, String nodeId) {
-        this.jobId = jobId;
-        this.nodeId = nodeId;
-    }
-
-    @Override
-    public void doRun() throws HyracksException {
-        throw HyracksException.create(ErrorCode.DISTRIBUTED_JOB_FAILURE, jobId, nodeId);
-    }
+    TxnId getTxnId(TxnId compiledTxnId);
 }

@@ -232,7 +232,7 @@ public class FormatPrintVisitor implements ILangVisitor<Void, Integer> {
             out.print("(");
             exprList.get(0).accept(this, step + 1);
             for (int i = 1; i < exprList.size(); i++) {
-                OperatorType opType = opList.get(i - 1);;
+                OperatorType opType = opList.get(i - 1);
                 if (i == 1) {
                     printHints(operatorExpr.getHints(), step + 1);
                 }
@@ -657,7 +657,7 @@ public class FormatPrintVisitor implements ILangVisitor<Void, Integer> {
         out.print(skip(step) + CREATE + " index ");
         out.print(normalize(cis.getIndexName().getValue()) + " ");
         out.print(generateIfNotExists(cis.getIfNotExists()));
-        out.print(" on ");;
+        out.print(" on ");
         out.print(generateFullName(cis.getDataverseName(), cis.getDatasetName()));
 
         out.print(" (");
@@ -827,7 +827,8 @@ public class FormatPrintVisitor implements ILangVisitor<Void, Integer> {
     public Void visit(CreateFunctionStatement cfs, Integer step) throws CompilationException {
         out.print(skip(step) + CREATE + " function ");
         out.print(generateIfNotExists(cfs.getIfNotExists()));
-        out.print(this.generateFullName(cfs.getSignature().getNamespace(), cfs.getSignature().getName()));
+        out.print(
+                this.generateFullName(cfs.getFunctionSignature().getNamespace(), cfs.getFunctionSignature().getName()));
         out.print("(");
         printDelimitedStrings(cfs.getParamList(), COMMA);
         out.println(") {");

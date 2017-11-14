@@ -23,17 +23,10 @@ import java.io.Serializable;
 public final class ActivityClusterId implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    private final JobId jobId;
-
     private final int id;
 
-    public ActivityClusterId(JobId jobId, int id) {
-        this.jobId = jobId;
+    public ActivityClusterId(int id) {
         this.id = id;
-    }
-
-    public JobId getJobId() {
-        return jobId;
     }
 
     public int getId() {
@@ -45,7 +38,6 @@ public final class ActivityClusterId implements Serializable {
         final int prime = 31;
         int result = 1;
         result = prime * result + id;
-        result = prime * result + ((jobId == null) ? 0 : jobId.hashCode());
         return result;
     }
 
@@ -64,18 +56,11 @@ public final class ActivityClusterId implements Serializable {
         if (id != other.id) {
             return false;
         }
-        if (jobId == null) {
-            if (other.jobId != null) {
-                return false;
-            }
-        } else if (!jobId.equals(other.jobId)) {
-            return false;
-        }
         return true;
     }
 
     @Override
     public String toString() {
-        return "ACID:" + jobId + ":" + id;
+        return "ACID:" + id;
     }
 }
