@@ -27,7 +27,7 @@ import org.apache.asterix.common.transactions.ILogManager;
 import org.apache.asterix.common.transactions.ILogMarkerCallback;
 import org.apache.asterix.common.transactions.ITransactionContext;
 import org.apache.asterix.common.transactions.ITransactionManager;
-import org.apache.asterix.common.transactions.JobId;
+import org.apache.asterix.common.transactions.TxnId;
 import org.apache.asterix.common.transactions.LogRecord;
 import org.apache.asterix.common.transactions.LogType;
 import org.apache.asterix.common.utils.TransactionUtil;
@@ -50,7 +50,7 @@ public class CommitRuntime extends AbstractOneInputOneOutputOneFramePushRuntime 
 
     protected final ITransactionManager transactionManager;
     protected final ILogManager logMgr;
-    protected final JobId jobId;
+    protected final TxnId txnId;
     protected final int datasetId;
     protected final int[] primaryKeyFields;
     protected final boolean isTemporaryDatasetWriteJob;
@@ -62,14 +62,14 @@ public class CommitRuntime extends AbstractOneInputOneOutputOneFramePushRuntime 
     protected LogRecord logRecord;
     protected final boolean isSink;
 
-    public CommitRuntime(IHyracksTaskContext ctx, JobId jobId, int datasetId, int[] primaryKeyFields,
+    public CommitRuntime(IHyracksTaskContext ctx, TxnId txnId, int datasetId, int[] primaryKeyFields,
             boolean isTemporaryDatasetWriteJob, boolean isWriteTransaction, int resourcePartition, boolean isSink) {
         this.ctx = ctx;
         INcApplicationContext appCtx =
                 (INcApplicationContext) ctx.getJobletContext().getServiceContext().getApplicationContext();
         this.transactionManager = appCtx.getTransactionSubsystem().getTransactionManager();
         this.logMgr = appCtx.getTransactionSubsystem().getLogManager();
-        this.jobId = jobId;
+        this.txnId = txnId;
         this.datasetId = datasetId;
         this.primaryKeyFields = primaryKeyFields;
         this.tRef = new FrameTupleReference();
@@ -83,7 +83,7 @@ public class CommitRuntime extends AbstractOneInputOneOutputOneFramePushRuntime 
     @Override
     public void open() throws HyracksDataException {
         try {
-            transactionContext = transactionManager.getTransactionContext(jobId, false);
+            transactionContext = transactionManager.getTransactionContext(txnId, false);
             transactionContext.setWriteTxn(isWriteTransaction);
             ILogMarkerCallback callback = TaskUtil.get(ILogMarkerCallback.KEY_MARKER_CALLBACK, ctx);
             logRecord = new LogRecord(callback);

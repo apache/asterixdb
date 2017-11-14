@@ -32,36 +32,33 @@ public interface ILogRecord {
         LARGE_RECORD
     }
 
-    public static final int CHKSUM_LEN = Long.BYTES;
-    public static final int FLDCNT_LEN = Integer.BYTES;
-    public static final int DS_LEN = Integer.BYTES;
-    public static final int LOG_SOURCE_LEN = Byte.BYTES;
-    public static final int LOGRCD_SZ_LEN = Integer.BYTES;
-    public static final int NEWOP_LEN = Byte.BYTES;
-    public static final int NEWVALSZ_LEN = Integer.BYTES;
-    public static final int PKHASH_LEN = Integer.BYTES;
-    public static final int PKSZ_LEN = Integer.BYTES;
-    public static final int PRVLSN_LEN = Long.BYTES;
-    public static final int RS_PARTITION_LEN = Integer.BYTES;
-    public static final int RSID_LEN = Long.BYTES;
-    public static final int SEQ_NUM_LEN = Long.BYTES;
-    public static final int TYPE_LEN = Byte.BYTES;
-    public static final int UUID_LEN = Long.BYTES;
+    int CHKSUM_LEN = Long.BYTES;
+    int FLDCNT_LEN = Integer.BYTES;
+    int DS_LEN = Integer.BYTES;
+    int LOG_SOURCE_LEN = Byte.BYTES;
+    int LOGRCD_SZ_LEN = Integer.BYTES;
+    int NEWOP_LEN = Byte.BYTES;
+    int NEWVALSZ_LEN = Integer.BYTES;
+    int PKHASH_LEN = Integer.BYTES;
+    int PKSZ_LEN = Integer.BYTES;
+    int PRVLSN_LEN = Long.BYTES;
+    int RS_PARTITION_LEN = Integer.BYTES;
+    int RSID_LEN = Long.BYTES;
+    int SEQ_NUM_LEN = Long.BYTES;
+    int TYPE_LEN = Byte.BYTES;
+    int UUID_LEN = Long.BYTES;
 
-    public static final int ALL_RECORD_HEADER_LEN = LOG_SOURCE_LEN + TYPE_LEN + JobId.BYTES;
-    public static final int ENTITYCOMMIT_UPDATE_HEADER_LEN = RS_PARTITION_LEN + DatasetId.BYTES + PKHASH_LEN + PKSZ_LEN;
-    public static final int UPDATE_LSN_HEADER = RSID_LEN + LOGRCD_SZ_LEN;
-    public static final int UPDATE_BODY_HEADER = FLDCNT_LEN + NEWOP_LEN + NEWVALSZ_LEN;
-    // What are these fields? vvvvv
-    public static final int REMOTE_FLUSH_LOG_EXTRA_FIELDS_LEN = Long.BYTES + Integer.BYTES + Integer.BYTES;
+    int ALL_RECORD_HEADER_LEN = LOG_SOURCE_LEN + TYPE_LEN + TxnId.BYTES;
+    int ENTITYCOMMIT_UPDATE_HEADER_LEN = RS_PARTITION_LEN + DatasetId.BYTES + PKHASH_LEN + PKSZ_LEN;
+    int UPDATE_LSN_HEADER = RSID_LEN + LOGRCD_SZ_LEN;
+    int UPDATE_BODY_HEADER = FLDCNT_LEN + NEWOP_LEN + NEWVALSZ_LEN;
 
-    // How are the following computed?
-    public static final int JOB_TERMINATE_LOG_SIZE = ALL_RECORD_HEADER_LEN + CHKSUM_LEN;
-    public static final int ENTITY_COMMIT_LOG_BASE_SIZE = 30; // ALL_RECORD_HEADER_LEN + CHKSUM_LEN +?
-    public static final int UPDATE_LOG_BASE_SIZE = 51; // ALL_RECORD_HEADER_LEN + CHKSUM_LEN +?
-    public static final int FLUSH_LOG_SIZE = 18; // ALL_RECORD_HEADER_LEN + CHKSUM_LEN +?
-    public static final int WAIT_LOG_SIZE = ALL_RECORD_HEADER_LEN + CHKSUM_LEN;
-    public static final int MARKER_BASE_LOG_SIZE =
+    int JOB_TERMINATE_LOG_SIZE = ALL_RECORD_HEADER_LEN + CHKSUM_LEN;
+    int ENTITY_COMMIT_LOG_BASE_SIZE = ALL_RECORD_HEADER_LEN + ENTITYCOMMIT_UPDATE_HEADER_LEN + CHKSUM_LEN;
+    int UPDATE_LOG_BASE_SIZE = ENTITY_COMMIT_LOG_BASE_SIZE + UPDATE_LSN_HEADER + UPDATE_BODY_HEADER;
+    int FLUSH_LOG_SIZE = ALL_RECORD_HEADER_LEN + DatasetId.BYTES + CHKSUM_LEN;
+    int WAIT_LOG_SIZE = ALL_RECORD_HEADER_LEN + CHKSUM_LEN;
+    int MARKER_BASE_LOG_SIZE =
             ALL_RECORD_HEADER_LEN + CHKSUM_LEN + DS_LEN + RS_PARTITION_LEN + PRVLSN_LEN + LOGRCD_SZ_LEN;
 
     public RecordReadStatus readLogRecord(ByteBuffer buffer);
@@ -80,9 +77,9 @@ public interface ILogRecord {
 
     public void setLogType(byte logType);
 
-    public int getJobId();
+    long getTxnId();
 
-    public void setJobId(int jobId);
+    void setTxnId(long jobId);
 
     public int getDatasetId();
 

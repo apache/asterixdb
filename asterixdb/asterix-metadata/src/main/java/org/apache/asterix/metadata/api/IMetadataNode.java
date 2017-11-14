@@ -26,7 +26,7 @@ import java.util.List;
 
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.functions.FunctionSignature;
-import org.apache.asterix.common.transactions.JobId;
+import org.apache.asterix.common.transactions.TxnId;
 import org.apache.asterix.external.indexing.ExternalFile;
 import org.apache.asterix.metadata.entities.CompactionPolicy;
 import org.apache.asterix.metadata.entities.Dataset;
@@ -59,7 +59,7 @@ public interface IMetadataNode extends Remote, Serializable {
      * @throws ACIDException
      * @throws RemoteException
      */
-    void beginTransaction(JobId jobId) throws ACIDException, RemoteException;
+    void beginTransaction(TxnId txnId) throws ACIDException, RemoteException;
 
     /**
      * Commits a local transaction against the metadata.
@@ -67,7 +67,7 @@ public interface IMetadataNode extends Remote, Serializable {
      * @throws ACIDException
      * @throws RemoteException
      */
-    void commitTransaction(JobId jobId) throws ACIDException, RemoteException;
+    void commitTransaction(TxnId txnId) throws ACIDException, RemoteException;
 
     /**
      * Aborts a local transaction against the metadata.
@@ -75,7 +75,7 @@ public interface IMetadataNode extends Remote, Serializable {
      * @throws ACIDException
      * @throws RemoteException
      */
-    void abortTransaction(JobId jobId) throws ACIDException, RemoteException;
+    void abortTransaction(TxnId txnId) throws ACIDException, RemoteException;
 
     /**
      * Locally locks the entire metadata in given mode on behalf of given
@@ -84,7 +84,7 @@ public interface IMetadataNode extends Remote, Serializable {
      * @throws ACIDException
      * @throws RemoteException
      */
-    void lock(JobId jobId, byte lockMode) throws ACIDException, RemoteException;
+    void lock(TxnId txnId, byte lockMode) throws ACIDException, RemoteException;
 
     /**
      * Releases all local locks of given transaction id.
@@ -92,13 +92,13 @@ public interface IMetadataNode extends Remote, Serializable {
      * @throws ACIDException
      * @throws RemoteException
      */
-    void unlock(JobId jobId, byte lockMode) throws ACIDException, RemoteException;
+    void unlock(TxnId txnId, byte lockMode) throws ACIDException, RemoteException;
 
     /**
      * Inserts a new dataverse into the metadata, acquiring local locks on behalf of
      * the given transaction id.
      *
-     * @param jobId
+     * @param txnId
      *            A globally unique id for an active metadata transaction.
      * @param dataverse
      *            Dataverse instance to be inserted.
@@ -106,26 +106,26 @@ public interface IMetadataNode extends Remote, Serializable {
      *             For example, if the dataverse already exists.
      * @throws RemoteException
      */
-    void addDataverse(JobId jobId, Dataverse dataverse) throws AlgebricksException, RemoteException;
+    void addDataverse(TxnId txnId, Dataverse dataverse) throws AlgebricksException, RemoteException;
 
     /**
      * Retrieves all dataverses, acquiring local locks on behalf of the given
      * transaction id.
      *
-     * @param jobId
+     * @param txnId
      *            A globally unique id for an active metadata transaction.
      * @return A list of dataverse instances.
      * @throws AlgebricksException
      *             For example, if the dataverse does not exist.
      * @throws RemoteException
      */
-    List<Dataverse> getDataverses(JobId jobId) throws AlgebricksException, RemoteException;
+    List<Dataverse> getDataverses(TxnId txnId) throws AlgebricksException, RemoteException;
 
     /**
      * Retrieves a dataverse with given name, acquiring local locks on behalf of the
      * given transaction id.
      *
-     * @param jobId
+     * @param txnId
      *            A globally unique id for an active metadata transaction.
      * @param dataverseName
      *            Name of the dataverse to retrieve.
@@ -134,13 +134,13 @@ public interface IMetadataNode extends Remote, Serializable {
      *             For example, if the dataverse does not exist.
      * @throws RemoteException
      */
-    Dataverse getDataverse(JobId jobId, String dataverseName) throws AlgebricksException, RemoteException;
+    Dataverse getDataverse(TxnId txnId, String dataverseName) throws AlgebricksException, RemoteException;
 
     /**
      * Retrieves all datasets belonging to the given dataverse, acquiring local
      * locks on behalf of the given transaction id.
      *
-     * @param jobId
+     * @param txnId
      *            A globally unique id for an active metadata transaction.
      * @param dataverseName
      *            Name of the dataverse of which to find all datasets.
@@ -148,27 +148,27 @@ public interface IMetadataNode extends Remote, Serializable {
      * @throws AlgebricksException
      *             For example, if the dataverse does not exist. RemoteException
      */
-    List<Dataset> getDataverseDatasets(JobId jobId, String dataverseName) throws AlgebricksException, RemoteException;
+    List<Dataset> getDataverseDatasets(TxnId txnId, String dataverseName) throws AlgebricksException, RemoteException;
 
     /**
      * Deletes the dataverse with given name, and all it's associated datasets,
      * indexes, and types, acquiring local locks on behalf of the given transaction
      * id.
      *
-     * @param jobId
+     * @param txnId
      *            A globally unique id for an active metadata transaction.
      * @return A list of dataset instances.
      * @throws AlgebricksException
      *             For example, if the dataverse does not exist.
      * @throws RemoteException
      */
-    void dropDataverse(JobId jobId, String dataverseName) throws AlgebricksException, RemoteException;
+    void dropDataverse(TxnId txnId, String dataverseName) throws AlgebricksException, RemoteException;
 
     /**
      * Inserts a new dataset into the metadata, acquiring local locks on behalf of
      * the given transaction id.
      *
-     * @param jobId
+     * @param txnId
      *            A globally unique id for an active metadata transaction.
      * @param dataset
      *            Dataset instance to be inserted.
@@ -176,13 +176,13 @@ public interface IMetadataNode extends Remote, Serializable {
      *             For example, if the dataset already exists.
      * @throws RemoteException
      */
-    void addDataset(JobId jobId, Dataset dataset) throws AlgebricksException, RemoteException;
+    void addDataset(TxnId txnId, Dataset dataset) throws AlgebricksException, RemoteException;
 
     /**
      * Retrieves a dataset within a given dataverse, acquiring local locks on behalf
      * of the given transaction id.
      *
-     * @param jobId
+     * @param txnId
      *            A globally unique id for an active metadata transaction.
      * @param dataverseName
      *            Dataverse name to look for the dataset.
@@ -193,14 +193,14 @@ public interface IMetadataNode extends Remote, Serializable {
      *             For example, if the dataset does not exist.
      * @throws RemoteException
      */
-    Dataset getDataset(JobId jobId, String dataverseName, String datasetName)
+    Dataset getDataset(TxnId txnId, String dataverseName, String datasetName)
             throws AlgebricksException, RemoteException;
 
     /**
      * Retrieves all indexes of a dataset, acquiring local locks on behalf of the
      * given transaction id.
      *
-     * @param jobId
+     * @param txnId
      *            A globally unique id for an active metadata transaction.
      * @param dataverseName
      *            Name of dataverse which holds the given dataset.
@@ -211,14 +211,14 @@ public interface IMetadataNode extends Remote, Serializable {
      *             For example, if the dataset and/or dataverse does not exist.
      * @throws RemoteException
      */
-    List<Index> getDatasetIndexes(JobId jobId, String dataverseName, String datasetName)
+    List<Index> getDatasetIndexes(TxnId txnId, String dataverseName, String datasetName)
             throws AlgebricksException, RemoteException;
 
     /**
      * Deletes the dataset with given name, and all it's associated indexes,
      * acquiring local locks on behalf of the given transaction id.
      *
-     * @param jobId
+     * @param txnId
      *            A globally unique id for an active metadata transaction.
      * @param dataverseName
      *            Name of dataverse which holds the given dataset.
@@ -228,14 +228,14 @@ public interface IMetadataNode extends Remote, Serializable {
      *             For example, if the dataset and/or dataverse does not exist.
      * @throws RemoteException
      */
-    void dropDataset(JobId jobId, String dataverseName, String datasetName) throws AlgebricksException, RemoteException;
+    void dropDataset(TxnId txnId, String dataverseName, String datasetName) throws AlgebricksException, RemoteException;
 
     /**
      * Inserts an index into the metadata, acquiring local locks on behalf of the
      * given transaction id. The index itself knows its name, and which dataset it
      * belongs to.
      *
-     * @param jobId
+     * @param txnId
      *            A globally unique id for an active metadata transaction.
      * @param index
      *            Index instance to be inserted.
@@ -243,13 +243,13 @@ public interface IMetadataNode extends Remote, Serializable {
      *             For example, if the index already exists.
      * @throws RemoteException
      */
-    void addIndex(JobId jobId, Index index) throws AlgebricksException, RemoteException;
+    void addIndex(TxnId txnId, Index index) throws AlgebricksException, RemoteException;
 
     /**
      * Retrieves the index with given name, in given dataverse and dataset,
      * acquiring local locks on behalf of the given transaction id.
      *
-     * @param jobId
+     * @param txnId
      *            A globally unique id for an active metadata transaction.
      * @param dataverseName
      *            Name of the datavers holding the given dataset.
@@ -261,14 +261,14 @@ public interface IMetadataNode extends Remote, Serializable {
      *             For example, if the index does not exist.
      * @throws RemoteException
      */
-    Index getIndex(JobId jobId, String dataverseName, String datasetName, String indexName)
+    Index getIndex(TxnId txnId, String dataverseName, String datasetName, String indexName)
             throws AlgebricksException, RemoteException;
 
     /**
      * Deletes the index with given name, in given dataverse and dataset, acquiring
      * local locks on behalf of the given transaction id.
      *
-     * @param jobId
+     * @param txnId
      *            A globally unique id for an active metadata transaction.
      * @param dataverseName
      *            Name of the datavers holding the given dataset.
@@ -279,14 +279,14 @@ public interface IMetadataNode extends Remote, Serializable {
      *             For example, if the index does not exist.
      * @throws RemoteException
      */
-    void dropIndex(JobId jobId, String dataverseName, String datasetName, String indexName)
+    void dropIndex(TxnId txnId, String dataverseName, String datasetName, String indexName)
             throws AlgebricksException, RemoteException;
 
     /**
      * Inserts a datatype, acquiring local locks on behalf of the given transaction
      * id.
      *
-     * @param jobId
+     * @param txnId
      *            A globally unique id for an active metadata transaction.
      * @param datatype
      *            Datatype instance to be inserted.
@@ -294,13 +294,13 @@ public interface IMetadataNode extends Remote, Serializable {
      *             For example, if the datatype already exists.
      * @throws RemoteException
      */
-    void addDatatype(JobId jobId, Datatype datatype) throws AlgebricksException, RemoteException;
+    void addDatatype(TxnId txnId, Datatype datatype) throws AlgebricksException, RemoteException;
 
     /**
      * Retrieves the datatype with given name in given dataverse, acquiring local
      * locks on behalf of the given transaction id.
      *
-     * @param jobId
+     * @param txnId
      *            A globally unique id for an active metadata transaction.
      * @param dataverseName
      *            Name of dataverse holding the datatype.
@@ -311,14 +311,14 @@ public interface IMetadataNode extends Remote, Serializable {
      *             For example, if the datatype does not exist.
      * @throws RemoteException
      */
-    Datatype getDatatype(JobId jobId, String dataverseName, String datatypeName)
+    Datatype getDatatype(TxnId txnId, String dataverseName, String datatypeName)
             throws AlgebricksException, RemoteException;
 
     /**
      * Deletes the given datatype in given dataverse, acquiring local locks on
      * behalf of the given transaction id.
      *
-     * @param jobId
+     * @param txnId
      *            A globally unique id for an active metadata transaction.
      * @param dataverseName
      *            Name of dataverse holding the datatype.
@@ -329,14 +329,14 @@ public interface IMetadataNode extends Remote, Serializable {
      *             deleted.
      * @throws RemoteException
      */
-    void dropDatatype(JobId jobId, String dataverseName, String datatypeName)
+    void dropDatatype(TxnId txnId, String dataverseName, String datatypeName)
             throws AlgebricksException, RemoteException;
 
     /**
      * Inserts a node group, acquiring local locks on behalf of the given
      * transaction id.
      *
-     * @param jobId
+     * @param txnId
      *            A globally unique id for an active metadata transaction.
      * @param nodeGroup
      *            Node group instance to insert.
@@ -344,13 +344,13 @@ public interface IMetadataNode extends Remote, Serializable {
      *             For example, if the node group already exists.
      * @throws RemoteException
      */
-    void addNodeGroup(JobId jobId, NodeGroup nodeGroup) throws AlgebricksException, RemoteException;
+    void addNodeGroup(TxnId txnId, NodeGroup nodeGroup) throws AlgebricksException, RemoteException;
 
     /**
      * Retrieves a node group, acquiring local locks on behalf of the given
      * transaction id.
      *
-     * @param jobId
+     * @param txnId
      *            A globally unique id for an active metadata transaction.
      * @param nodeGroupName
      *            Name of node group to be retrieved.
@@ -358,13 +358,13 @@ public interface IMetadataNode extends Remote, Serializable {
      *             For example, if the node group does not exist.
      * @throws RemoteException
      */
-    NodeGroup getNodeGroup(JobId jobId, String nodeGroupName) throws AlgebricksException, RemoteException;
+    NodeGroup getNodeGroup(TxnId txnId, String nodeGroupName) throws AlgebricksException, RemoteException;
 
     /**
      * Deletes a node group, acquiring local locks on behalf of the given
      * transaction id.
      *
-     * @param jobId
+     * @param txnId
      *            A globally unique id for an active metadata transaction.
      * @param nodeGroupName
      *            Name of node group to be deleted.
@@ -377,14 +377,14 @@ public interface IMetadataNode extends Remote, Serializable {
      *             group to be deleted.
      * @throws RemoteException
      */
-    boolean dropNodegroup(JobId jobId, String nodeGroupName, boolean failSilently)
+    boolean dropNodegroup(TxnId txnId, String nodeGroupName, boolean failSilently)
             throws AlgebricksException, RemoteException;
 
     /**
      * Inserts a node (compute node), acquiring local locks on behalf of the given
      * transaction id.
      *
-     * @param jobId
+     * @param txnId
      *            A globally unique id for an active metadata transaction.
      * @param node
      *            Node instance to be inserted.
@@ -392,10 +392,10 @@ public interface IMetadataNode extends Remote, Serializable {
      *             For example, if the node already exists.
      * @throws RemoteException
      */
-    void addNode(JobId jobId, Node node) throws AlgebricksException, RemoteException;
+    void addNode(TxnId txnId, Node node) throws AlgebricksException, RemoteException;
 
     /**
-     * @param jobId
+     * @param txnId
      *            A globally unique id for an active metadata transaction.
      * @param functionSignature
      *            An instance of functionSignature representing the function
@@ -403,15 +403,15 @@ public interface IMetadataNode extends Remote, Serializable {
      * @throws AlgebricksException
      * @throws RemoteException
      */
-    Function getFunction(JobId jobId, FunctionSignature functionSignature) throws AlgebricksException, RemoteException;
+    Function getFunction(TxnId txnId, FunctionSignature functionSignature) throws AlgebricksException, RemoteException;
 
-    List<Function> getFunctions(JobId jobId, String dataverseName) throws AlgebricksException, RemoteException;
+    List<Function> getFunctions(TxnId txnId, String dataverseName) throws AlgebricksException, RemoteException;
 
     /**
      * Deletes a function, acquiring local locks on behalf of the given transaction
      * id.
      *
-     * @param jobId
+     * @param txnId
      *            A globally unique id for an active metadata transaction.
      * @param functionSignature
      *            An instance of functionSignature representing the function
@@ -420,10 +420,10 @@ public interface IMetadataNode extends Remote, Serializable {
      *             group to be deleted.
      * @throws RemoteException
      */
-    void dropFunction(JobId jobId, FunctionSignature functionSignature) throws AlgebricksException, RemoteException;
+    void dropFunction(TxnId txnId, FunctionSignature functionSignature) throws AlgebricksException, RemoteException;
 
     /**
-     * @param jobId
+     * @param txnId
      *            A globally unique id for an active metadata transaction.
      * @param function
      *            Function to be inserted
@@ -432,45 +432,45 @@ public interface IMetadataNode extends Remote, Serializable {
      *             unknown function
      * @throws RemoteException
      */
-    void addFunction(JobId jobId, Function function) throws AlgebricksException, RemoteException;
+    void addFunction(TxnId txnId, Function function) throws AlgebricksException, RemoteException;
 
     /**
-     * @param jobId
+     * @param txnId
      * @param dataverseName
      * @return List<Function> A list containing the functions in the specified
      *         dataverse
      * @throws AlgebricksException
      * @throws RemoteException
      */
-    List<Function> getDataverseFunctions(JobId jobId, String dataverseName) throws AlgebricksException, RemoteException;
+    List<Function> getDataverseFunctions(TxnId txnId, String dataverseName) throws AlgebricksException, RemoteException;
 
     /**
-     * @param jobId
+     * @param txnId
      * @param dataverseName
      * @return List<Adapter> A list containing the adapters in the specified
      *         dataverse
      * @throws AlgebricksException
      * @throws RemoteException
      */
-    List<DatasourceAdapter> getDataverseAdapters(JobId jobId, String dataverseName)
+    List<DatasourceAdapter> getDataverseAdapters(TxnId txnId, String dataverseName)
             throws AlgebricksException, RemoteException;
 
     /**
-     * @param jobId
+     * @param txnId
      * @param dataverseName
      * @param adapterName
      * @return
      * @throws AlgebricksException
      * @throws RemoteException
      */
-    DatasourceAdapter getAdapter(JobId jobId, String dataverseName, String adapterName)
+    DatasourceAdapter getAdapter(TxnId txnId, String dataverseName, String adapterName)
             throws AlgebricksException, RemoteException;
 
     /**
      * Deletes a adapter , acquiring local locks on behalf of the given transaction
      * id.
      *
-     * @param jobId
+     * @param txnId
      *            A globally unique id for an active metadata transaction.
      * @param dataverseName
      *            dataverse asociated with the adapter that is to be deleted.
@@ -480,10 +480,10 @@ public interface IMetadataNode extends Remote, Serializable {
      * @throws AlgebricksException
      * @throws RemoteException
      */
-    void dropAdapter(JobId jobId, String dataverseName, String adapterName) throws AlgebricksException, RemoteException;
+    void dropAdapter(TxnId txnId, String dataverseName, String adapterName) throws AlgebricksException, RemoteException;
 
     /**
-     * @param jobId
+     * @param txnId
      *            A globally unique id for an active metadata transaction.
      * @param adapter
      *            Adapter to be inserted
@@ -491,34 +491,34 @@ public interface IMetadataNode extends Remote, Serializable {
      *             for example, if the adapter already exists.
      * @throws RemoteException
      */
-    void addAdapter(JobId jobId, DatasourceAdapter adapter) throws AlgebricksException, RemoteException;
+    void addAdapter(TxnId txnId, DatasourceAdapter adapter) throws AlgebricksException, RemoteException;
 
     /**
-     * @param jobId
+     * @param txnId
      * @param compactionPolicy
      * @throws AlgebricksException
      * @throws RemoteException
      */
-    void addCompactionPolicy(JobId jobId, CompactionPolicy compactionPolicy)
+    void addCompactionPolicy(TxnId txnId, CompactionPolicy compactionPolicy)
             throws AlgebricksException, RemoteException;
 
     /**
-     * @param jobId
+     * @param txnId
      * @param dataverse
      * @param policy
      * @return
      * @throws AlgebricksException
      * @throws RemoteException
      */
-    CompactionPolicy getCompactionPolicy(JobId jobId, String dataverse, String policy)
+    CompactionPolicy getCompactionPolicy(TxnId txnId, String dataverse, String policy)
             throws AlgebricksException, RemoteException;
 
     /**
-     * @param jobId
+     * @param txnId
      * @throws AlgebricksException
      * @throws RemoteException
      */
-    void initializeDatasetIdFactory(JobId jobId) throws AlgebricksException, RemoteException;
+    void initializeDatasetIdFactory(TxnId txnId) throws AlgebricksException, RemoteException;
 
     /**
      * @return
@@ -528,58 +528,58 @@ public interface IMetadataNode extends Remote, Serializable {
     int getMostRecentDatasetId() throws AlgebricksException, RemoteException;
 
     /**
-     * @param jobId
+     * @param txnId
      * @param feed
      * @throws AlgebricksException
      * @throws RemoteException
      */
-    void addFeed(JobId jobId, Feed feed) throws AlgebricksException, RemoteException;
+    void addFeed(TxnId txnId, Feed feed) throws AlgebricksException, RemoteException;
 
     /**
-     * @param jobId
+     * @param txnId
      * @param dataverse
      * @param feedName
      * @return
      * @throws AlgebricksException
      * @throws RemoteException
      */
-    Feed getFeed(JobId jobId, String dataverse, String feedName) throws AlgebricksException, RemoteException;
+    Feed getFeed(TxnId txnId, String dataverse, String feedName) throws AlgebricksException, RemoteException;
 
-    List<Feed> getFeeds(JobId jobId, String dataverse) throws AlgebricksException, RemoteException;
+    List<Feed> getFeeds(TxnId txnId, String dataverse) throws AlgebricksException, RemoteException;
 
     /**
-     * @param jobId
+     * @param txnId
      * @param dataverse
      * @param feedName
      * @throws AlgebricksException
      * @throws RemoteException
      */
-    void dropFeed(JobId jobId, String dataverse, String feedName) throws AlgebricksException, RemoteException;
+    void dropFeed(TxnId txnId, String dataverse, String feedName) throws AlgebricksException, RemoteException;
 
     /**
-     * @param jobId
+     * @param txnId
      * @param feedPolicy
      * @throws AlgebricksException
      * @throws RemoteException
      */
-    void addFeedPolicy(JobId jobId, FeedPolicyEntity feedPolicy) throws AlgebricksException, RemoteException;
+    void addFeedPolicy(TxnId txnId, FeedPolicyEntity feedPolicy) throws AlgebricksException, RemoteException;
 
     /**
-     * @param jobId
+     * @param txnId
      * @param dataverse
      * @param policy
      * @return
      * @throws AlgebricksException
      * @throws RemoteException
      */
-    FeedPolicyEntity getFeedPolicy(JobId jobId, String dataverse, String policy)
+    FeedPolicyEntity getFeedPolicy(TxnId txnId, String dataverse, String policy)
             throws AlgebricksException, RemoteException;
 
     /**
      * Removes a library , acquiring local locks on behalf of the given transaction
      * id.
      *
-     * @param jobId
+     * @param txnId
      *            A globally unique id for an active metadata transaction.
      * @param dataverseName
      *            dataverse asociated with the adapter that is to be deleted.
@@ -589,12 +589,12 @@ public interface IMetadataNode extends Remote, Serializable {
      * @throws AlgebricksException
      * @throws RemoteException
      */
-    void dropLibrary(JobId jobId, String dataverseName, String libraryName) throws AlgebricksException, RemoteException;
+    void dropLibrary(TxnId txnId, String dataverseName, String libraryName) throws AlgebricksException, RemoteException;
 
     /**
      * Adds a library, acquiring local locks on behalf of the given transaction id.
      *
-     * @param jobId
+     * @param txnId
      *            A globally unique id for an active metadata transaction.
      * @param library
      *            Library to be added
@@ -602,10 +602,10 @@ public interface IMetadataNode extends Remote, Serializable {
      *             for example, if the library is already added.
      * @throws RemoteException
      */
-    void addLibrary(JobId jobId, Library library) throws AlgebricksException, RemoteException;
+    void addLibrary(TxnId txnId, Library library) throws AlgebricksException, RemoteException;
 
     /**
-     * @param jobId
+     * @param txnId
      *            A globally unique id for an active metadata transaction.
      * @param dataverseName
      *            dataverse asociated with the library that is to be retrieved.
@@ -615,7 +615,7 @@ public interface IMetadataNode extends Remote, Serializable {
      * @throws AlgebricksException
      * @throws RemoteException
      */
-    Library getLibrary(JobId jobId, String dataverseName, String libraryName)
+    Library getLibrary(TxnId txnId, String dataverseName, String libraryName)
             throws AlgebricksException, RemoteException;
 
     /**
@@ -629,42 +629,42 @@ public interface IMetadataNode extends Remote, Serializable {
      * @throws AlgebricksException
      * @throws RemoteException
      */
-    List<Library> getDataverseLibraries(JobId jobId, String dataverseName) throws AlgebricksException, RemoteException;
+    List<Library> getDataverseLibraries(TxnId txnId, String dataverseName) throws AlgebricksException, RemoteException;
 
     /**
-     * @param jobId
+     * @param txnId
      * @param dataverseName
      * @return
      * @throws AlgebricksException
      * @throws RemoteException
      */
-    List<Feed> getDataverseFeeds(JobId jobId, String dataverseName) throws AlgebricksException, RemoteException;
+    List<Feed> getDataverseFeeds(TxnId txnId, String dataverseName) throws AlgebricksException, RemoteException;
 
     /**
      * delete a give feed (ingestion) policy
      *
-     * @param jobId
+     * @param txnId
      * @param dataverseName
      * @param policyName
      * @return
      * @throws RemoteException
      * @throws AlgebricksException
      */
-    void dropFeedPolicy(JobId jobId, String dataverseName, String policyName)
+    void dropFeedPolicy(TxnId txnId, String dataverseName, String policyName)
             throws AlgebricksException, RemoteException;
 
     /**
-     * @param jobId
+     * @param txnId
      * @param dataverse
      * @return
      * @throws AlgebricksException
      * @throws RemoteException
      */
-    List<FeedPolicyEntity> getDataversePolicies(JobId jobId, String dataverse)
+    List<FeedPolicyEntity> getDataversePolicies(TxnId txnId, String dataverse)
             throws AlgebricksException, RemoteException;
 
     /**
-     * @param jobId
+     * @param txnId
      *            A globally unique id for an active metadata transaction.
      * @param externalFile
      *            An object representing the external file entity
@@ -672,23 +672,23 @@ public interface IMetadataNode extends Remote, Serializable {
      *             for example, if the file already exists.
      * @throws RemoteException
      */
-    void addExternalFile(JobId jobId, ExternalFile externalFile) throws AlgebricksException, RemoteException;
+    void addExternalFile(TxnId txnId, ExternalFile externalFile) throws AlgebricksException, RemoteException;
 
     /**
-     * @param jobId
+     * @param txnId
      *            A globally unique id for an active metadata transaction.
      * @param dataset
      *            A dataset the files belongs to.
      * @throws AlgebricksException
      * @throws RemoteException
      */
-    List<ExternalFile> getExternalFiles(JobId jobId, Dataset dataset) throws AlgebricksException, RemoteException;
+    List<ExternalFile> getExternalFiles(TxnId txnId, Dataset dataset) throws AlgebricksException, RemoteException;
 
     /**
      * Deletes an externalFile , acquiring local locks on behalf of the given
      * transaction id.
      *
-     * @param jobId
+     * @param txnId
      *            A globally unique id for an active metadata transaction.
      * @param dataverseName
      *            dataverse asociated with the external dataset that owns the file
@@ -700,27 +700,27 @@ public interface IMetadataNode extends Remote, Serializable {
      * @throws AlgebricksException
      * @throws RemoteException
      */
-    void dropExternalFile(JobId jobId, String dataverseName, String datasetName, int fileNumber)
+    void dropExternalFile(TxnId txnId, String dataverseName, String datasetName, int fileNumber)
             throws AlgebricksException, RemoteException;
 
     /**
      * Deletes all external files belonging to a dataset, acquiring local locks on
      * behalf of the given transaction id.
      *
-     * @param jobId
+     * @param txnId
      *            A globally unique id for an active metadata transaction.
      * @param dataset
      *            An external dataset the files belong to.
      * @throws AlgebricksException
      * @throws RemoteException
      */
-    void dropExternalFiles(JobId jobId, Dataset dataset) throws AlgebricksException, RemoteException;
+    void dropExternalFiles(TxnId txnId, Dataset dataset) throws AlgebricksException, RemoteException;
 
     /**
      * Retrieves the file with given number, in given dataverse and dataset,
      * acquiring local locks on behalf of the given transaction id.
      *
-     * @param jobId
+     * @param txnId
      *            A globally unique id for an active metadata transaction.
      * @param dataverseName
      *            Name of the datavers holding the given dataset.
@@ -733,14 +733,14 @@ public interface IMetadataNode extends Remote, Serializable {
      *             For example, if the index does not exist.
      * @throws RemoteException
      */
-    ExternalFile getExternalFile(JobId jobId, String dataverseName, String datasetName, Integer fileNumber)
+    ExternalFile getExternalFile(TxnId txnId, String dataverseName, String datasetName, Integer fileNumber)
             throws AlgebricksException, RemoteException;
 
     /**
      * update an existing dataset in the metadata, acquiring local locks on behalf
      * of the given transaction id.
      *
-     * @param jobId
+     * @param txnId
      *            A globally unique id for an active metadata transaction.
      * @param dataset
      *            updated Dataset instance.
@@ -748,63 +748,63 @@ public interface IMetadataNode extends Remote, Serializable {
      *             For example, if the dataset already exists.
      * @throws RemoteException
      */
-    void updateDataset(JobId jobId, Dataset dataset) throws AlgebricksException, RemoteException;
+    void updateDataset(TxnId txnId, Dataset dataset) throws AlgebricksException, RemoteException;
 
     /**
      * Adds an extension entity under the ongoing transaction job id
      *
-     * @param jobId
+     * @param txnId
      * @param entity
      * @throws AlgebricksException
      * @throws RemoteException
      */
-    <T extends IExtensionMetadataEntity> void addEntity(JobId jobId, T entity)
+    <T extends IExtensionMetadataEntity> void addEntity(TxnId txnId, T entity)
             throws AlgebricksException, RemoteException;
 
     /**
      * Upserts an extension entity under the ongoing transaction job id
      *
-     * @param jobId
+     * @param txnId
      * @param entity
      * @throws AlgebricksException
      * @throws RemoteException
      */
-    <T extends IExtensionMetadataEntity> void upsertEntity(JobId jobId, T entity)
+    <T extends IExtensionMetadataEntity> void upsertEntity(TxnId txnId, T entity)
             throws AlgebricksException, RemoteException;
 
     /**
      * Deletes an extension entity under the ongoing transaction job id
      *
-     * @param jobId
+     * @param txnId
      * @param entity
      * @throws AlgebricksException
      * @throws RemoteException
      */
-    <T extends IExtensionMetadataEntity> void deleteEntity(JobId jobId, T entity)
+    <T extends IExtensionMetadataEntity> void deleteEntity(TxnId txnId, T entity)
             throws AlgebricksException, RemoteException;
 
     /**
      * Gets a list of extension entities matching a search key under the ongoing
      * transaction
      *
-     * @param jobId
+     * @param txnId
      * @param searchKey
      * @return
      * @throws AlgebricksException
      * @throws RemoteException
      */
-    <T extends IExtensionMetadataEntity> List<T> getEntities(JobId jobId, IExtensionMetadataSearchKey searchKey)
+    <T extends IExtensionMetadataEntity> List<T> getEntities(TxnId txnId, IExtensionMetadataSearchKey searchKey)
             throws AlgebricksException, RemoteException;
 
-    void addFeedConnection(JobId jobId, FeedConnection feedConnection) throws AlgebricksException, RemoteException;
+    void addFeedConnection(TxnId txnId, FeedConnection feedConnection) throws AlgebricksException, RemoteException;
 
-    FeedConnection getFeedConnection(JobId jobId, String dataverseName, String feedName, String datasetName)
+    FeedConnection getFeedConnection(TxnId txnId, String dataverseName, String feedName, String datasetName)
             throws AlgebricksException, RemoteException;
 
-    void dropFeedConnection(JobId jobId, String dataverseName, String feedName, String datasetName)
+    void dropFeedConnection(TxnId txnId, String dataverseName, String feedName, String datasetName)
             throws AlgebricksException, RemoteException;
 
-    List<FeedConnection> getFeedConnections(JobId jobId, String dataverseName, String feedName)
+    List<FeedConnection> getFeedConnections(TxnId txnId, String dataverseName, String feedName)
             throws AlgebricksException, RemoteException;
 
 }

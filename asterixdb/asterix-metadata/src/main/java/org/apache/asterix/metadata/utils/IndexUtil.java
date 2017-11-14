@@ -28,20 +28,19 @@ import org.apache.asterix.common.config.DatasetConfig;
 import org.apache.asterix.common.config.OptimizationConfUtil;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
-import org.apache.asterix.common.transactions.JobId;
+import org.apache.asterix.common.transactions.TxnId;
 import org.apache.asterix.external.indexing.ExternalFile;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails;
 import org.apache.asterix.runtime.job.listener.JobEventListenerFactory;
-import org.apache.asterix.transaction.management.service.transaction.JobIdFactory;
+import org.apache.asterix.transaction.management.service.transaction.TxnIdFactory;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConfig;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.job.IJobletEventListenerFactory;
 import org.apache.hyracks.api.job.JobSpecification;
-import org.apache.hyracks.storage.am.common.dataflow.IndexDropOperatorDescriptor;
 
 public class IndexUtil {
 
@@ -162,13 +161,13 @@ public class IndexUtil {
      *            the metadata provider.
      * @return the AsterixDB job id for transaction management.
      */
-    public static JobId bindJobEventListener(JobSpecification spec, MetadataProvider metadataProvider) {
-        JobId jobId = JobIdFactory.generateJobId();
-        metadataProvider.setJobId(jobId);
+    public static TxnId bindJobEventListener(JobSpecification spec, MetadataProvider metadataProvider) {
+        TxnId txnId = TxnIdFactory.create();
+        metadataProvider.setTxnId(txnId);
         boolean isWriteTransaction = metadataProvider.isWriteTransaction();
-        IJobletEventListenerFactory jobEventListenerFactory = new JobEventListenerFactory(jobId, isWriteTransaction);
+        IJobletEventListenerFactory jobEventListenerFactory = new JobEventListenerFactory(txnId, isWriteTransaction);
         spec.setJobletEventListenerFactory(jobEventListenerFactory);
-        return jobId;
+        return txnId;
     }
 
 }

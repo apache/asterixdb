@@ -27,7 +27,7 @@ import org.apache.asterix.common.transactions.AbstractOperationCallbackFactory;
 import org.apache.asterix.common.transactions.DatasetId;
 import org.apache.asterix.common.transactions.ITransactionContext;
 import org.apache.asterix.common.transactions.ITransactionSubsystem;
-import org.apache.asterix.common.transactions.JobId;
+import org.apache.asterix.common.transactions.TxnId;
 import org.apache.asterix.transaction.management.opcallbacks.AbstractIndexModificationOperationCallback.Operation;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
@@ -44,10 +44,10 @@ public class TempDatasetPrimaryIndexModificationOperationCallbackFactory extends
     private static final long serialVersionUID = 1L;
     private final Operation indexOp;
 
-    public TempDatasetPrimaryIndexModificationOperationCallbackFactory(JobId jobId, int datasetId,
+    public TempDatasetPrimaryIndexModificationOperationCallbackFactory(TxnId txnId, int datasetId,
             int[] primaryKeyFields, ITransactionSubsystemProvider txnSubsystemProvider, Operation indexOp,
             byte resourceType) {
-        super(jobId, datasetId, primaryKeyFields, txnSubsystemProvider, resourceType);
+        super(txnId, datasetId, primaryKeyFields, txnSubsystemProvider, resourceType);
         this.indexOp = indexOp;
     }
 
@@ -63,7 +63,7 @@ public class TempDatasetPrimaryIndexModificationOperationCallbackFactory extends
         }
 
         try {
-            ITransactionContext txnCtx = txnSubsystem.getTransactionManager().getTransactionContext(jobId, false);
+            ITransactionContext txnCtx = txnSubsystem.getTransactionManager().getTransactionContext(txnId, false);
             DatasetLocalResource aResource = (DatasetLocalResource) resource.getResource();
             IModificationOperationCallback modCallback = new TempDatasetIndexModificationOperationCallback(
                     new DatasetId(datasetId), primaryKeyFields, txnCtx, txnSubsystem.getLockManager(), txnSubsystem,

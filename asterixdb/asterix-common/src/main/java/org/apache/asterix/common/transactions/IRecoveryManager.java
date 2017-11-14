@@ -98,13 +98,13 @@ public interface IRecoveryManager {
     /**
      * Creates a temporary file to be used during recovery
      *
-     * @param jobId
+     * @param txnId
      * @param fileName
      * @return A file to the created temporary file
      * @throws IOException
-     *             if the file for the specified {@code jobId} with the {@code fileName} already exists
+     *             if the file for the specified {@code txnId} with the {@code fileName} already exists
      */
-    File createJobRecoveryFile(int jobId, String fileName) throws IOException;
+    File createJobRecoveryFile(long txnId, String fileName) throws IOException;
 
     /**
      * Deletes all temporary recovery files

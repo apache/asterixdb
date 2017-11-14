@@ -29,7 +29,7 @@ import java.util.Calendar;
 import org.apache.asterix.builders.IARecordBuilder;
 import org.apache.asterix.builders.OrderedListBuilder;
 import org.apache.asterix.builders.RecordBuilder;
-import org.apache.asterix.common.transactions.JobId;
+import org.apache.asterix.common.transactions.TxnId;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.metadata.MetadataNode;
 import org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
@@ -79,11 +79,11 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
     private ISerializerDeserializer<ARecord> recordSerDes =
             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(MetadataRecordTypes.DATATYPE_RECORDTYPE);
     private final MetadataNode metadataNode;
-    private final JobId jobId;
+    private final TxnId txnId;
 
-    protected DatatypeTupleTranslator(JobId jobId, MetadataNode metadataNode, boolean getTuple) {
+    protected DatatypeTupleTranslator(TxnId txnId, MetadataNode metadataNode, boolean getTuple) {
         super(getTuple, MetadataPrimaryIndexes.DATATYPE_DATASET.getFieldCount());
-        this.jobId = jobId;
+        this.txnId = txnId;
         this.metadataNode = metadataNode;
     }
 
@@ -142,7 +142,7 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
                         boolean isNullable = ((ABoolean) field
                                 .getValueByPos(MetadataRecordTypes.FIELD_ARECORD_ISNULLABLE_FIELD_INDEX)).getBoolean()
                                         .booleanValue();
-                        fieldTypes[fieldId] = BuiltinTypeMap.getTypeFromTypeName(metadataNode, jobId, dataverseName,
+                        fieldTypes[fieldId] = BuiltinTypeMap.getTypeFromTypeName(metadataNode, txnId, dataverseName,
                                 fieldTypeName, isNullable);
                         fieldId++;
                     }
@@ -154,7 +154,7 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
                             .getValueByPos(MetadataRecordTypes.DERIVEDTYPE_ARECORD_UNORDEREDLIST_FIELD_INDEX))
                                     .getStringValue();
                     return new Datatype(dataverseName, datatypeName,
-                            new AUnorderedListType(BuiltinTypeMap.getTypeFromTypeName(metadataNode, jobId,
+                            new AUnorderedListType(BuiltinTypeMap.getTypeFromTypeName(metadataNode, txnId,
                                     dataverseName, unorderedlistTypeName, false), datatypeName),
                             isAnonymous);
                 }
@@ -163,7 +163,7 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
                             .getValueByPos(MetadataRecordTypes.DERIVEDTYPE_ARECORD_ORDEREDLIST_FIELD_INDEX))
                                     .getStringValue();
                     return new Datatype(dataverseName, datatypeName,
-                            new AOrderedListType(BuiltinTypeMap.getTypeFromTypeName(metadataNode, jobId, dataverseName,
+                            new AOrderedListType(BuiltinTypeMap.getTypeFromTypeName(metadataNode, txnId, dataverseName,
                                     orderedlistTypeName, false), datatypeName),
                             isAnonymous);
                 }
@@ -365,7 +365,7 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
     private String handleNestedDerivedType(String typeName, AbstractComplexType nestedType, Datatype topLevelType,
             String dataverseName, String datatypeName) throws HyracksDataException {
         try {
-            metadataNode.addDatatype(jobId, new Datatype(dataverseName, typeName, nestedType, true));
+            metadataNode.addDatatype(txnId, new Datatype(dataverseName, typeName, nestedType, true));
         } catch (AlgebricksException e) {
             // The nested record type may have been inserted by a previous DDL statement or
             // by

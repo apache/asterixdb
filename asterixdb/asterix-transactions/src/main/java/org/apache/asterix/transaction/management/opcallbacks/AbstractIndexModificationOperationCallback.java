@@ -85,7 +85,7 @@ public abstract class AbstractIndexModificationOperationCallback extends Abstrac
         logRecord = new LogRecord();
         logRecord.setTxnCtx(txnCtx);
         logRecord.setLogType(LogType.UPDATE);
-        logRecord.setJobId(txnCtx.getJobId().getId());
+        logRecord.setTxnId(txnCtx.getTxnId().getId());
         logRecord.setDatasetId(datasetId.getId());
         logRecord.setResourceId(resourceId);
         logRecord.setResourcePartition(resourcePartition);

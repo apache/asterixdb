@@ -71,7 +71,7 @@ class Locker implements Runnable {
      */
     Locker(ILockManager lockMgr, ITransactionContext txnCtx, List<Request> allRequests, AtomicInteger time,
             PrintStream err) {
-        this.name = txnCtx == null ? "admin" : txnCtx.getJobId().toString();
+        this.name = txnCtx == null ? "admin" : txnCtx.getTxnId().toString();
         this.lockMgr = lockMgr;
 
         this.requests = new LinkedList<>();

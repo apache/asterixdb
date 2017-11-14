@@ -470,7 +470,7 @@ public class ReplicationChannel extends Thread implements IReplicationChannel {
                     case LogType.JOB_COMMIT:
                     case LogType.ABORT:
                         LogRecord jobTerminationLog = new LogRecord();
-                        TransactionUtil.formJobTerminateLogRecord(jobTerminationLog, remoteLog.getJobId(),
+                        TransactionUtil.formJobTerminateLogRecord(jobTerminationLog, remoteLog.getTxnId(),
                                 remoteLog.getLogType() == LogType.JOB_COMMIT);
                         jobTerminationLog.setReplicationThread(this);
                         jobTerminationLog.setLogSource(LogSource.REMOTE);
@@ -523,7 +523,7 @@ public class ReplicationChannel extends Thread implements IReplicationChannel {
                     LogRecord logRecord = pendingNotificationRemoteLogsQ.take();
                     //send ACK to requester
                     logRecord.getReplicationThread().getReplicationClientSocket().socket().getOutputStream()
-                            .write((localNodeID + ReplicationProtocol.JOB_REPLICATION_ACK + logRecord.getJobId()
+                            .write((localNodeID + ReplicationProtocol.JOB_REPLICATION_ACK + logRecord.getTxnId()
                                     + System.lineSeparator()).getBytes());
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();

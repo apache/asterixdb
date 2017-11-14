@@ -99,7 +99,7 @@ public class ResourceTablePrinter implements TablePrinter {
 
     StringBuilder appendRequest(StringBuilder sb, long req) {
         long job = reqArenaMgr.getJobSlot(req);
-        sb.append("{ \"job\": ").append(jobArenaMgr.getJobId(job));
+        sb.append("{ \"job\": ").append(jobArenaMgr.getTxnId(job));
         sb.append(", \"mode\": \"").append(string(reqArenaMgr.getLockMode(req)));
         return sb.append("\" }");
     }

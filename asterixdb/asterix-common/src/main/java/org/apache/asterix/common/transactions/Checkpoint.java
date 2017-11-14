@@ -31,19 +31,19 @@ public class Checkpoint implements Comparable<Checkpoint> {
 
     private final long checkpointLsn;
     private final long minMCTFirstLsn;
-    private final int maxJobId;
+    private final long maxTxnId;
     private final long timeStamp;
     private final boolean sharp;
     private final int storageVersion;
 
     @JsonCreator
     public Checkpoint(@JsonProperty("checkpointLsn") long checkpointLsn,
-            @JsonProperty("minMCTFirstLsn") long minMCTFirstLsn, @JsonProperty("maxJobId") int maxJobId,
+            @JsonProperty("minMCTFirstLsn") long minMCTFirstLsn, @JsonProperty("maxJobId") long maxTxnId,
             @JsonProperty("timeStamp") long timeStamp, @JsonProperty("sharp") boolean sharp,
             @JsonProperty("storageVersion") int storageVersion) {
         this.checkpointLsn = checkpointLsn;
         this.minMCTFirstLsn = minMCTFirstLsn;
-        this.maxJobId = maxJobId;
+        this.maxTxnId = maxTxnId;
         this.timeStamp = timeStamp;
         this.sharp = sharp;
         this.storageVersion = storageVersion;
@@ -57,8 +57,8 @@ public class Checkpoint implements Comparable<Checkpoint> {
         return minMCTFirstLsn;
     }
 
-    public int getMaxJobId() {
-        return maxJobId;
+    public long getMaxJobId() {
+        return maxTxnId;
     }
 
     public long getTimeStamp() {
@@ -108,7 +108,7 @@ public class Checkpoint implements Comparable<Checkpoint> {
         final int prime = 31;
         int result = 1;
         result = prime * result + (int) (checkpointLsn ^ (checkpointLsn >>> 32));
-        result = prime * result + maxJobId;
+        result = prime * result + Long.hashCode(maxTxnId);
         result = prime * result + (int) (minMCTFirstLsn ^ (minMCTFirstLsn >>> 32));
         result = prime * result + (sharp ? 1231 : 1237);
         result = prime * result + storageVersion;

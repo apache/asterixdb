@@ -32,7 +32,7 @@ import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.MetadataException;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.common.functions.FunctionSignature;
-import org.apache.asterix.common.transactions.JobId;
+import org.apache.asterix.common.transactions.TxnId;
 import org.apache.asterix.external.indexing.ExternalFile;
 import org.apache.asterix.metadata.api.IAsterixStateProxy;
 import org.apache.asterix.metadata.api.IExtensionMetadataEntity;
@@ -53,7 +53,7 @@ import org.apache.asterix.metadata.entities.Library;
 import org.apache.asterix.metadata.entities.Node;
 import org.apache.asterix.metadata.entities.NodeGroup;
 import org.apache.asterix.om.types.ARecordType;
-import org.apache.asterix.transaction.management.service.transaction.JobIdFactory;
+import org.apache.asterix.transaction.management.service.transaction.TxnIdFactory;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
@@ -123,36 +123,36 @@ public class MetadataManager implements IMetadataManager {
 
     @Override
     public MetadataTransactionContext beginTransaction() throws RemoteException, ACIDException {
-        JobId jobId = JobIdFactory.generateJobId();
-        metadataNode.beginTransaction(jobId);
-        return new MetadataTransactionContext(jobId);
+        TxnId txnId = TxnIdFactory.create();
+        metadataNode.beginTransaction(txnId);
+        return new MetadataTransactionContext(txnId);
     }
 
     @Override
     public void commitTransaction(MetadataTransactionContext ctx) throws RemoteException, ACIDException {
-        metadataNode.commitTransaction(ctx.getJobId());
+        metadataNode.commitTransaction(ctx.getTxnId());
         cache.commit(ctx);
     }
 
     @Override
     public void abortTransaction(MetadataTransactionContext ctx) throws RemoteException, ACIDException {
-        metadataNode.abortTransaction(ctx.getJobId());
+        metadataNode.abortTransaction(ctx.getTxnId());
     }
 
     @Override
     public void lock(MetadataTransactionContext ctx, byte lockMode) throws RemoteException, ACIDException {
-        metadataNode.lock(ctx.getJobId(), lockMode);
+        metadataNode.lock(ctx.getTxnId(), lockMode);
     }
 
     @Override
     public void unlock(MetadataTransactionContext ctx, byte lockMode) throws RemoteException, ACIDException {
-        metadataNode.unlock(ctx.getJobId(), lockMode);
+        metadataNode.unlock(ctx.getTxnId(), lockMode);
     }
 
     @Override
     public void addDataverse(MetadataTransactionContext ctx, Dataverse dataverse) throws AlgebricksException {
         try {
-            metadataNode.addDataverse(ctx.getJobId(), dataverse);
+            metadataNode.addDataverse(ctx.getTxnId(), dataverse);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -162,7 +162,7 @@ public class MetadataManager implements IMetadataManager {
     @Override
     public void dropDataverse(MetadataTransactionContext ctx, String dataverseName) throws AlgebricksException {
         try {
-            metadataNode.dropDataverse(ctx.getJobId(), dataverseName);
+            metadataNode.dropDataverse(ctx.getTxnId(), dataverseName);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -172,7 +172,7 @@ public class MetadataManager implements IMetadataManager {
     @Override
     public List<Dataverse> getDataverses(MetadataTransactionContext ctx) throws AlgebricksException {
         try {
-            return metadataNode.getDataverses(ctx.getJobId());
+            return metadataNode.getDataverses(ctx.getTxnId());
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -199,7 +199,7 @@ public class MetadataManager implements IMetadataManager {
             return dataverse;
         }
         try {
-            dataverse = metadataNode.getDataverse(ctx.getJobId(), dataverseName);
+            dataverse = metadataNode.getDataverse(ctx.getTxnId(), dataverseName);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -230,7 +230,7 @@ public class MetadataManager implements IMetadataManager {
         try {
             // Assuming that the transaction can read its own writes on the
             // metadata node.
-            dataverseDatasets.addAll(metadataNode.getDataverseDatasets(ctx.getJobId(), dataverseName));
+            dataverseDatasets.addAll(metadataNode.getDataverseDatasets(ctx.getTxnId(), dataverseName));
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -244,7 +244,7 @@ public class MetadataManager implements IMetadataManager {
         // add dataset into metadataNode
         if (!dataset.getDatasetDetails().isTemp()) {
             try {
-                metadataNode.addDataset(ctx.getJobId(), dataset);
+                metadataNode.addDataset(ctx.getTxnId(), dataset);
             } catch (RemoteException e) {
                 throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
             }
@@ -261,7 +261,7 @@ public class MetadataManager implements IMetadataManager {
         // If a dataset is not in the cache, then it could not be a temp dataset
         if (dataset == null || !dataset.getDatasetDetails().isTemp()) {
             try {
-                metadataNode.dropDataset(ctx.getJobId(), dataverseName, datasetName);
+                metadataNode.dropDataset(ctx.getTxnId(), dataverseName, datasetName);
             } catch (RemoteException e) {
                 throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
             }
@@ -295,7 +295,7 @@ public class MetadataManager implements IMetadataManager {
             return dataset;
         }
         try {
-            dataset = metadataNode.getDataset(ctx.getJobId(), dataverseName, datasetName);
+            dataset = metadataNode.getDataset(ctx.getTxnId(), dataverseName, datasetName);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -321,7 +321,7 @@ public class MetadataManager implements IMetadataManager {
         } else {
             try {
                 // for persistent datasets
-                datasetIndexes = metadataNode.getDatasetIndexes(ctx.getJobId(), dataverseName, datasetName);
+                datasetIndexes = metadataNode.getDatasetIndexes(ctx.getTxnId(), dataverseName, datasetName);
             } catch (RemoteException e) {
                 throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
             }
@@ -333,7 +333,7 @@ public class MetadataManager implements IMetadataManager {
     public void addCompactionPolicy(MetadataTransactionContext mdTxnCtx, CompactionPolicy compactionPolicy)
             throws AlgebricksException {
         try {
-            metadataNode.addCompactionPolicy(mdTxnCtx.getJobId(), compactionPolicy);
+            metadataNode.addCompactionPolicy(mdTxnCtx.getTxnId(), compactionPolicy);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -346,7 +346,7 @@ public class MetadataManager implements IMetadataManager {
 
         CompactionPolicy compactionPolicy;
         try {
-            compactionPolicy = metadataNode.getCompactionPolicy(ctx.getJobId(), dataverse, policyName);
+            compactionPolicy = metadataNode.getCompactionPolicy(ctx.getTxnId(), dataverse, policyName);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -356,13 +356,13 @@ public class MetadataManager implements IMetadataManager {
     @Override
     public void addDatatype(MetadataTransactionContext ctx, Datatype datatype) throws AlgebricksException {
         try {
-            metadataNode.addDatatype(ctx.getJobId(), datatype);
+            metadataNode.addDatatype(ctx.getTxnId(), datatype);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
         try {
             ctx.addDatatype(
-                    metadataNode.getDatatype(ctx.getJobId(), datatype.getDataverseName(), datatype.getDatatypeName()));
+                    metadataNode.getDatatype(ctx.getTxnId(), datatype.getDataverseName(), datatype.getDatatypeName()));
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -372,7 +372,7 @@ public class MetadataManager implements IMetadataManager {
     public void dropDatatype(MetadataTransactionContext ctx, String dataverseName, String datatypeName)
             throws AlgebricksException {
         try {
-            metadataNode.dropDatatype(ctx.getJobId(), dataverseName, datatypeName);
+            metadataNode.dropDatatype(ctx.getTxnId(), dataverseName, datatypeName);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -409,7 +409,7 @@ public class MetadataManager implements IMetadataManager {
                     datatype.getIsAnonymous());
         }
         try {
-            datatype = metadataNode.getDatatype(ctx.getJobId(), dataverseName, datatypeName);
+            datatype = metadataNode.getDatatype(ctx.getTxnId(), dataverseName, datatypeName);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -428,7 +428,7 @@ public class MetadataManager implements IMetadataManager {
         Dataset dataset = findDataset(ctx, dataverseName, datasetName);
         if (dataset == null || !dataset.getDatasetDetails().isTemp()) {
             try {
-                metadataNode.addIndex(ctx.getJobId(), index);
+                metadataNode.addIndex(ctx.getTxnId(), index);
             } catch (RemoteException e) {
                 throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
             }
@@ -439,7 +439,7 @@ public class MetadataManager implements IMetadataManager {
     @Override
     public void addAdapter(MetadataTransactionContext mdTxnCtx, DatasourceAdapter adapter) throws AlgebricksException {
         try {
-            metadataNode.addAdapter(mdTxnCtx.getJobId(), adapter);
+            metadataNode.addAdapter(mdTxnCtx.getTxnId(), adapter);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -457,7 +457,7 @@ public class MetadataManager implements IMetadataManager {
         // operations.
         if (dataset == null || !dataset.getDatasetDetails().isTemp()) {
             try {
-                metadataNode.dropIndex(ctx.getJobId(), dataverseName, datasetName, indexName);
+                metadataNode.dropIndex(ctx.getTxnId(), dataverseName, datasetName, indexName);
             } catch (RemoteException e) {
                 throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
             }
@@ -490,7 +490,7 @@ public class MetadataManager implements IMetadataManager {
             return index;
         }
         try {
-            index = metadataNode.getIndex(ctx.getJobId(), dataverseName, datasetName, indexName);
+            index = metadataNode.getIndex(ctx.getTxnId(), dataverseName, datasetName, indexName);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -505,7 +505,7 @@ public class MetadataManager implements IMetadataManager {
     @Override
     public void addNode(MetadataTransactionContext ctx, Node node) throws AlgebricksException {
         try {
-            metadataNode.addNode(ctx.getJobId(), node);
+            metadataNode.addNode(ctx.getTxnId(), node);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -514,7 +514,7 @@ public class MetadataManager implements IMetadataManager {
     @Override
     public void addNodegroup(MetadataTransactionContext ctx, NodeGroup nodeGroup) throws AlgebricksException {
         try {
-            metadataNode.addNodeGroup(ctx.getJobId(), nodeGroup);
+            metadataNode.addNodeGroup(ctx.getTxnId(), nodeGroup);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -526,7 +526,7 @@ public class MetadataManager implements IMetadataManager {
             throws AlgebricksException {
         boolean dropped;
         try {
-            dropped = metadataNode.dropNodegroup(ctx.getJobId(), nodeGroupName, failSilently);
+            dropped = metadataNode.dropNodegroup(ctx.getTxnId(), nodeGroupName, failSilently);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -556,7 +556,7 @@ public class MetadataManager implements IMetadataManager {
             return nodeGroup;
         }
         try {
-            nodeGroup = metadataNode.getNodeGroup(ctx.getJobId(), nodeGroupName);
+            nodeGroup = metadataNode.getNodeGroup(ctx.getTxnId(), nodeGroupName);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -571,7 +571,7 @@ public class MetadataManager implements IMetadataManager {
     @Override
     public void addFunction(MetadataTransactionContext mdTxnCtx, Function function) throws AlgebricksException {
         try {
-            metadataNode.addFunction(mdTxnCtx.getJobId(), function);
+            metadataNode.addFunction(mdTxnCtx.getTxnId(), function);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -582,7 +582,7 @@ public class MetadataManager implements IMetadataManager {
     public void dropFunction(MetadataTransactionContext ctx, FunctionSignature functionSignature)
             throws AlgebricksException {
         try {
-            metadataNode.dropFunction(ctx.getJobId(), functionSignature);
+            metadataNode.dropFunction(ctx.getTxnId(), functionSignature);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -616,7 +616,7 @@ public class MetadataManager implements IMetadataManager {
             return function;
         }
         try {
-            function = metadataNode.getFunction(ctx.getJobId(), functionSignature);
+            function = metadataNode.getFunction(ctx.getTxnId(), functionSignature);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -633,7 +633,7 @@ public class MetadataManager implements IMetadataManager {
     public List<Function> getFunctions(MetadataTransactionContext ctx, String dataverseName)
             throws AlgebricksException {
         try {
-            return metadataNode.getFunctions(ctx.getJobId(), dataverseName);
+            return metadataNode.getFunctions(ctx.getTxnId(), dataverseName);
         } catch (RemoteException e) {
             throw new MetadataException(e);
         }
@@ -643,7 +643,7 @@ public class MetadataManager implements IMetadataManager {
     public void addFeedPolicy(MetadataTransactionContext mdTxnCtx, FeedPolicyEntity feedPolicy)
             throws AlgebricksException {
         try {
-            metadataNode.addFeedPolicy(mdTxnCtx.getJobId(), feedPolicy);
+            metadataNode.addFeedPolicy(mdTxnCtx.getTxnId(), feedPolicy);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -653,7 +653,7 @@ public class MetadataManager implements IMetadataManager {
     @Override
     public void initializeDatasetIdFactory(MetadataTransactionContext ctx) throws AlgebricksException {
         try {
-            metadataNode.initializeDatasetIdFactory(ctx.getJobId());
+            metadataNode.initializeDatasetIdFactory(ctx.getTxnId());
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -675,7 +675,7 @@ public class MetadataManager implements IMetadataManager {
         try {
             // Assuming that the transaction can read its own writes on the
             // metadata node.
-            dataverseFunctions = metadataNode.getDataverseFunctions(ctx.getJobId(), dataverseName);
+            dataverseFunctions = metadataNode.getDataverseFunctions(ctx.getTxnId(), dataverseName);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -688,7 +688,7 @@ public class MetadataManager implements IMetadataManager {
     public void dropAdapter(MetadataTransactionContext ctx, String dataverseName, String name)
             throws AlgebricksException {
         try {
-            metadataNode.dropAdapter(ctx.getJobId(), dataverseName, name);
+            metadataNode.dropAdapter(ctx.getTxnId(), dataverseName, name);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -699,7 +699,7 @@ public class MetadataManager implements IMetadataManager {
             throws AlgebricksException {
         DatasourceAdapter adapter;
         try {
-            adapter = metadataNode.getAdapter(ctx.getJobId(), dataverseName, name);
+            adapter = metadataNode.getAdapter(ctx.getTxnId(), dataverseName, name);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -710,7 +710,7 @@ public class MetadataManager implements IMetadataManager {
     public void dropLibrary(MetadataTransactionContext ctx, String dataverseName, String libraryName)
             throws AlgebricksException {
         try {
-            metadataNode.dropLibrary(ctx.getJobId(), dataverseName, libraryName);
+            metadataNode.dropLibrary(ctx.getTxnId(), dataverseName, libraryName);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -724,7 +724,7 @@ public class MetadataManager implements IMetadataManager {
         try {
             // Assuming that the transaction can read its own writes on the
             // metadata node.
-            dataverseLibaries = metadataNode.getDataverseLibraries(ctx.getJobId(), dataverseName);
+            dataverseLibaries = metadataNode.getDataverseLibraries(ctx.getTxnId(), dataverseName);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -736,7 +736,7 @@ public class MetadataManager implements IMetadataManager {
     @Override
     public void addLibrary(MetadataTransactionContext ctx, Library library) throws AlgebricksException {
         try {
-            metadataNode.addLibrary(ctx.getJobId(), library);
+            metadataNode.addLibrary(ctx.getTxnId(), library);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -748,7 +748,7 @@ public class MetadataManager implements IMetadataManager {
             throws AlgebricksException, RemoteException {
         Library library;
         try {
-            library = metadataNode.getLibrary(ctx.getJobId(), dataverseName, libraryName);
+            library = metadataNode.getLibrary(ctx.getTxnId(), dataverseName, libraryName);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -781,7 +781,7 @@ public class MetadataManager implements IMetadataManager {
 
         FeedPolicyEntity feedPolicy;
         try {
-            feedPolicy = metadataNode.getFeedPolicy(ctx.getJobId(), dataverse, policyName);
+            feedPolicy = metadataNode.getFeedPolicy(ctx.getTxnId(), dataverse, policyName);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -792,7 +792,7 @@ public class MetadataManager implements IMetadataManager {
     public Feed getFeed(MetadataTransactionContext ctx, String dataverse, String feedName) throws AlgebricksException {
         Feed feed;
         try {
-            feed = metadataNode.getFeed(ctx.getJobId(), dataverse, feedName);
+            feed = metadataNode.getFeed(ctx.getTxnId(), dataverse, feedName);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -803,7 +803,7 @@ public class MetadataManager implements IMetadataManager {
     public List<Feed> getFeeds(MetadataTransactionContext ctx, String dataverse) throws AlgebricksException {
         List<Feed> feeds;
         try {
-            feeds = metadataNode.getFeeds(ctx.getJobId(), dataverse);
+            feeds = metadataNode.getFeeds(ctx.getTxnId(), dataverse);
         } catch (RemoteException e) {
             throw new MetadataException(e);
         }
@@ -815,11 +815,11 @@ public class MetadataManager implements IMetadataManager {
         Feed feed = null;
         List<FeedConnection> feedConnections = null;
         try {
-            feed = metadataNode.getFeed(ctx.getJobId(), dataverse, feedName);
-            feedConnections = metadataNode.getFeedConnections(ctx.getJobId(), dataverse, feedName);
-            metadataNode.dropFeed(ctx.getJobId(), dataverse, feedName);
+            feed = metadataNode.getFeed(ctx.getTxnId(), dataverse, feedName);
+            feedConnections = metadataNode.getFeedConnections(ctx.getTxnId(), dataverse, feedName);
+            metadataNode.dropFeed(ctx.getTxnId(), dataverse, feedName);
             for (FeedConnection feedConnection : feedConnections) {
-                metadataNode.dropFeedConnection(ctx.getJobId(), dataverse, feedName, feedConnection.getDatasetName());
+                metadataNode.dropFeedConnection(ctx.getTxnId(), dataverse, feedName, feedConnection.getDatasetName());
                 ctx.dropFeedConnection(dataverse, feedName, feedConnection.getDatasetName());
             }
         } catch (RemoteException e) {
@@ -831,7 +831,7 @@ public class MetadataManager implements IMetadataManager {
     @Override
     public void addFeed(MetadataTransactionContext ctx, Feed feed) throws AlgebricksException {
         try {
-            metadataNode.addFeed(ctx.getJobId(), feed);
+            metadataNode.addFeed(ctx.getTxnId(), feed);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -842,7 +842,7 @@ public class MetadataManager implements IMetadataManager {
     public void addFeedConnection(MetadataTransactionContext ctx, FeedConnection feedConnection)
             throws AlgebricksException {
         try {
-            metadataNode.addFeedConnection(ctx.getJobId(), feedConnection);
+            metadataNode.addFeedConnection(ctx.getTxnId(), feedConnection);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -853,7 +853,7 @@ public class MetadataManager implements IMetadataManager {
     public void dropFeedConnection(MetadataTransactionContext ctx, String dataverseName, String feedName,
             String datasetName) throws AlgebricksException {
         try {
-            metadataNode.dropFeedConnection(ctx.getJobId(), dataverseName, feedName, datasetName);
+            metadataNode.dropFeedConnection(ctx.getTxnId(), dataverseName, feedName, datasetName);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -864,7 +864,7 @@ public class MetadataManager implements IMetadataManager {
     public FeedConnection getFeedConnection(MetadataTransactionContext ctx, String dataverseName, String feedName,
             String datasetName) throws AlgebricksException {
         try {
-            return metadataNode.getFeedConnection(ctx.getJobId(), dataverseName, feedName, datasetName);
+            return metadataNode.getFeedConnection(ctx.getTxnId(), dataverseName, feedName, datasetName);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -874,7 +874,7 @@ public class MetadataManager implements IMetadataManager {
     public List<FeedConnection> getFeedConections(MetadataTransactionContext ctx, String dataverseName, String feedName)
             throws AlgebricksException {
         try {
-            return metadataNode.getFeedConnections(ctx.getJobId(), dataverseName, feedName);
+            return metadataNode.getFeedConnections(ctx.getTxnId(), dataverseName, feedName);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -885,7 +885,7 @@ public class MetadataManager implements IMetadataManager {
             throws AlgebricksException {
         List<DatasourceAdapter> dataverseAdapters;
         try {
-            dataverseAdapters = metadataNode.getDataverseAdapters(mdTxnCtx.getJobId(), dataverse);
+            dataverseAdapters = metadataNode.getDataverseAdapters(mdTxnCtx.getTxnId(), dataverse);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -897,8 +897,8 @@ public class MetadataManager implements IMetadataManager {
             throws AlgebricksException {
         FeedPolicyEntity feedPolicy;
         try {
-            feedPolicy = metadataNode.getFeedPolicy(mdTxnCtx.getJobId(), dataverseName, policyName);
-            metadataNode.dropFeedPolicy(mdTxnCtx.getJobId(), dataverseName, policyName);
+            feedPolicy = metadataNode.getFeedPolicy(mdTxnCtx.getTxnId(), dataverseName, policyName);
+            metadataNode.dropFeedPolicy(mdTxnCtx.getTxnId(), dataverseName, policyName);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -909,7 +909,7 @@ public class MetadataManager implements IMetadataManager {
             throws AlgebricksException {
         List<FeedPolicyEntity> dataverseFeedPolicies;
         try {
-            dataverseFeedPolicies = metadataNode.getDataversePolicies(mdTxnCtx.getJobId(), dataverse);
+            dataverseFeedPolicies = metadataNode.getDataversePolicies(mdTxnCtx.getTxnId(), dataverse);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -921,7 +921,7 @@ public class MetadataManager implements IMetadataManager {
             throws AlgebricksException {
         List<ExternalFile> externalFiles;
         try {
-            externalFiles = metadataNode.getExternalFiles(mdTxnCtx.getJobId(), dataset);
+            externalFiles = metadataNode.getExternalFiles(mdTxnCtx.getTxnId(), dataset);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -931,7 +931,7 @@ public class MetadataManager implements IMetadataManager {
     @Override
     public void addExternalFile(MetadataTransactionContext ctx, ExternalFile externalFile) throws AlgebricksException {
         try {
-            metadataNode.addExternalFile(ctx.getJobId(), externalFile);
+            metadataNode.addExternalFile(ctx.getTxnId(), externalFile);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -940,7 +940,7 @@ public class MetadataManager implements IMetadataManager {
     @Override
     public void dropExternalFile(MetadataTransactionContext ctx, ExternalFile externalFile) throws AlgebricksException {
         try {
-            metadataNode.dropExternalFile(ctx.getJobId(), externalFile.getDataverseName(),
+            metadataNode.dropExternalFile(ctx.getTxnId(), externalFile.getDataverseName(),
                     externalFile.getDatasetName(), externalFile.getFileNumber());
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
@@ -952,7 +952,7 @@ public class MetadataManager implements IMetadataManager {
             Integer fileNumber) throws AlgebricksException {
         ExternalFile file;
         try {
-            file = metadataNode.getExternalFile(ctx.getJobId(), dataverseName, datasetName, fileNumber);
+            file = metadataNode.getExternalFile(ctx.getTxnId(), dataverseName, datasetName, fileNumber);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -964,7 +964,7 @@ public class MetadataManager implements IMetadataManager {
     public void dropDatasetExternalFiles(MetadataTransactionContext mdTxnCtx, Dataset dataset)
             throws AlgebricksException {
         try {
-            metadataNode.dropExternalFiles(mdTxnCtx.getJobId(), dataset);
+            metadataNode.dropExternalFiles(mdTxnCtx.getTxnId(), dataset);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -973,7 +973,7 @@ public class MetadataManager implements IMetadataManager {
     @Override
     public void updateDataset(MetadataTransactionContext ctx, Dataset dataset) throws AlgebricksException {
         try {
-            metadataNode.updateDataset(ctx.getJobId(), dataset);
+            metadataNode.updateDataset(ctx.getTxnId(), dataset);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -999,7 +999,7 @@ public class MetadataManager implements IMetadataManager {
     public <T extends IExtensionMetadataEntity> void addEntity(MetadataTransactionContext mdTxnCtx, T entity)
             throws AlgebricksException {
         try {
-            metadataNode.addEntity(mdTxnCtx.getJobId(), entity);
+            metadataNode.addEntity(mdTxnCtx.getTxnId(), entity);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -1009,7 +1009,7 @@ public class MetadataManager implements IMetadataManager {
     public <T extends IExtensionMetadataEntity> void upsertEntity(MetadataTransactionContext mdTxnCtx, T entity)
             throws AlgebricksException {
         try {
-            metadataNode.upsertEntity(mdTxnCtx.getJobId(), entity);
+            metadataNode.upsertEntity(mdTxnCtx.getTxnId(), entity);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -1019,7 +1019,7 @@ public class MetadataManager implements IMetadataManager {
     public <T extends IExtensionMetadataEntity> void deleteEntity(MetadataTransactionContext mdTxnCtx, T entity)
             throws AlgebricksException {
         try {
-            metadataNode.deleteEntity(mdTxnCtx.getJobId(), entity);
+            metadataNode.deleteEntity(mdTxnCtx.getTxnId(), entity);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -1029,7 +1029,7 @@ public class MetadataManager implements IMetadataManager {
     public <T extends IExtensionMetadataEntity> List<T> getEntities(MetadataTransactionContext mdTxnCtx,
             IExtensionMetadataSearchKey searchKey) throws AlgebricksException {
         try {
-            return metadataNode.getEntities(mdTxnCtx.getJobId(), searchKey);
+            return metadataNode.getEntities(mdTxnCtx.getTxnId(), searchKey);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }

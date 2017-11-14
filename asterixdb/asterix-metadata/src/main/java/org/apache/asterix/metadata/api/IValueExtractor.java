@@ -22,7 +22,7 @@ package org.apache.asterix.metadata.api;
 import java.io.IOException;
 import java.rmi.RemoteException;
 
-import org.apache.asterix.common.transactions.JobId;
+import org.apache.asterix.common.transactions.TxnId;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
@@ -38,7 +38,7 @@ public interface IValueExtractor<T> {
     /**
      * Extracts an object of type T from a given tuple.
      *
-     * @param jobId
+     * @param txnId
      *            A globally unique transaction id.
      * @param tuple
      *            Tuple from which an object shall be extracted.
@@ -47,5 +47,5 @@ public interface IValueExtractor<T> {
      * @throws HyracksDataException
      * @throws IOException
      */
-    T getValue(JobId jobId, ITupleReference tuple) throws AlgebricksException, HyracksDataException, RemoteException;
+    T getValue(TxnId txnId, ITupleReference tuple) throws AlgebricksException, HyracksDataException, RemoteException;
 }

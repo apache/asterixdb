@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.metadata.entitytupletranslators;
 
-import org.apache.asterix.common.transactions.JobId;
+import org.apache.asterix.common.transactions.TxnId;
 import org.apache.asterix.metadata.MetadataNode;
 
 public class MetadataTupleTranslatorProvider {
@@ -35,9 +35,9 @@ public class MetadataTupleTranslatorProvider {
         return new DatasourceAdapterTupleTranslator(getTuple);
     }
 
-    public DatatypeTupleTranslator getDataTypeTupleTranslator(JobId jobId, MetadataNode metadataNode,
+    public DatatypeTupleTranslator getDataTypeTupleTranslator(TxnId txnId, MetadataNode metadataNode,
             boolean getTuple) {
-        return new DatatypeTupleTranslator(jobId, metadataNode, getTuple);
+        return new DatatypeTupleTranslator(txnId, metadataNode, getTuple);
     }
 
     public DataverseTupleTranslator getDataverseTupleTranslator(boolean getTuple) {
@@ -60,8 +60,8 @@ public class MetadataTupleTranslatorProvider {
         return new FunctionTupleTranslator(getTuple);
     }
 
-    public IndexTupleTranslator getIndexTupleTranslator(JobId jobId, MetadataNode metadataNode, boolean getTuple) {
-        return new IndexTupleTranslator(jobId, metadataNode, getTuple);
+    public IndexTupleTranslator getIndexTupleTranslator(TxnId txnId, MetadataNode metadataNode, boolean getTuple) {
+        return new IndexTupleTranslator(txnId, metadataNode, getTuple);
     }
 
     public LibraryTupleTranslator getLibraryTupleTranslator(boolean getTuple) {

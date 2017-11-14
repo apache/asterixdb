@@ -35,7 +35,7 @@ public class LogManagerWithReplication extends LogManager {
 
     private IReplicationManager replicationManager;
     private final IReplicationStrategy replicationStrategy;
-    private final Set<Integer> replicatedJob = ConcurrentHashMap.newKeySet();
+    private final Set<Long> replicatedTxn = ConcurrentHashMap.newKeySet();
 
     public LogManagerWithReplication(ITransactionSubsystem txnSubsystem, IReplicationStrategy replicationStrategy) {
         super(txnSubsystem);
@@ -51,13 +51,13 @@ public class LogManagerWithReplication extends LogManager {
                 case LogType.UPDATE:
                 case LogType.FLUSH:
                     shouldReplicate = replicationStrategy.isMatch(logRecord.getDatasetId());
-                    if (shouldReplicate && !replicatedJob.contains(logRecord.getJobId())) {
-                        replicatedJob.add(logRecord.getJobId());
+                    if (shouldReplicate && !replicatedTxn.contains(logRecord.getTxnId())) {
+                        replicatedTxn.add(logRecord.getTxnId());
                     }
                     break;
                 case LogType.JOB_COMMIT:
                 case LogType.ABORT:
-                    shouldReplicate = replicatedJob.remove(logRecord.getJobId());
+                    shouldReplicate = replicatedTxn.remove(logRecord.getTxnId());
                     break;
                 default:
                     shouldReplicate = false;
@@ -120,7 +120,7 @@ public class LogManagerWithReplication extends LogManager {
             ITransactionContext txnCtx = logRecord.getTxnCtx();
             if (txnCtx.getTxnState() == ITransactionManager.ABORTED && logRecord.getLogType() != LogType.ABORT) {
                 throw new ACIDException(
-                        "Aborted job(" + txnCtx.getJobId() + ") tried to write non-abort type log record.");
+                        "Aborted txn(" + txnCtx.getTxnId() + ") tried to write non-abort type log record.");
             }
         }
 

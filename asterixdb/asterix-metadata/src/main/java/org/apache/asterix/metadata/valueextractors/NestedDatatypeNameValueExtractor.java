@@ -24,7 +24,7 @@ import java.io.DataInput;
 import java.io.DataInputStream;
 import java.io.IOException;
 
-import org.apache.asterix.common.transactions.JobId;
+import org.apache.asterix.common.transactions.TxnId;
 import org.apache.asterix.metadata.api.IValueExtractor;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -49,7 +49,7 @@ public class NestedDatatypeNameValueExtractor implements IValueExtractor<String>
     private final UTF8StringReader reader = new UTF8StringReader();
 
     @Override
-    public String getValue(JobId jobId, ITupleReference tuple) throws AlgebricksException, HyracksDataException {
+    public String getValue(TxnId txnId, ITupleReference tuple) throws AlgebricksException, HyracksDataException {
         byte[] serRecord = tuple.getFieldData(2);
         int recordStartOffset = tuple.getFieldStart(2);
         int recordLength = tuple.getFieldLength(2);

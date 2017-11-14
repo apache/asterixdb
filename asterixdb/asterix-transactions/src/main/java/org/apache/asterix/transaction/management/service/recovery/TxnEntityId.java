@@ -21,22 +21,22 @@ package org.apache.asterix.transaction.management.service.recovery;
 import java.nio.ByteBuffer;
 
 import org.apache.asterix.common.transactions.ILogRecord;
-import org.apache.asterix.common.transactions.JobId;
 import org.apache.asterix.common.transactions.LogRecord;
+import org.apache.asterix.common.transactions.TxnId;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 
-public class TxnId {
+public class TxnEntityId {
     public boolean isByteArrayPKValue;
-    public int jobId;
+    public long txnId;
     public int datasetId;
     public int pkHashValue;
     public int pkSize;
     public byte[] byteArrayPKValue;
     public ITupleReference tupleReferencePKValue;
 
-    public TxnId(int jobId, int datasetId, int pkHashValue, ITupleReference pkValue, int pkSize,
+    public TxnEntityId(long txnId, int datasetId, int pkHashValue, ITupleReference pkValue, int pkSize,
             boolean isByteArrayPKValue) {
-        this.jobId = jobId;
+        this.txnId = txnId;
         this.datasetId = datasetId;
         this.pkHashValue = pkHashValue;
         this.pkSize = pkSize;
@@ -49,7 +49,7 @@ public class TxnId {
         }
     }
 
-    public TxnId() {
+    public TxnEntityId() {
     }
 
     private static void readPKValueIntoByteArray(ITupleReference pkValue, int pkSize, byte[] byteArrayPKValue) {
@@ -60,8 +60,8 @@ public class TxnId {
         }
     }
 
-    public void setTxnId(int jobId, int datasetId, int pkHashValue, ITupleReference pkValue, int pkSize) {
-        this.jobId = jobId;
+    public void setTxnId(long txnId, int datasetId, int pkHashValue, ITupleReference pkValue, int pkSize) {
+        this.txnId = txnId;
         this.datasetId = datasetId;
         this.pkHashValue = pkHashValue;
         this.tupleReferencePKValue = pkValue;
@@ -71,7 +71,7 @@ public class TxnId {
 
     @Override
     public String toString() {
-        return "[" + jobId + "," + datasetId + "," + pkHashValue + "," + pkSize + "]";
+        return "[" + txnId + "," + datasetId + "," + pkHashValue + "," + pkSize + "]";
     }
 
     @Override
@@ -84,23 +84,23 @@ public class TxnId {
         if (o == this) {
             return true;
         }
-        if (!(o instanceof TxnId)) {
+        if (!(o instanceof TxnEntityId)) {
             return false;
         }
-        TxnId txnId = (TxnId) o;
-        return (txnId.pkHashValue == pkHashValue && txnId.datasetId == datasetId && txnId.jobId == jobId
-                && pkSize == txnId.pkSize && isEqualTo(txnId));
+        TxnEntityId txnEntityId = (TxnEntityId) o;
+        return (txnEntityId.pkHashValue == pkHashValue && txnEntityId.datasetId == datasetId
+                && txnEntityId.txnId == txnId && pkSize == txnEntityId.pkSize && isEqualTo(txnEntityId));
     }
 
-    private boolean isEqualTo(TxnId txnId) {
-        if (isByteArrayPKValue && txnId.isByteArrayPKValue) {
-            return isEqual(byteArrayPKValue, txnId.byteArrayPKValue, pkSize);
-        } else if (isByteArrayPKValue && (!txnId.isByteArrayPKValue)) {
-            return isEqual(byteArrayPKValue, txnId.tupleReferencePKValue, pkSize);
-        } else if ((!isByteArrayPKValue) && txnId.isByteArrayPKValue) {
-            return isEqual(txnId.byteArrayPKValue, tupleReferencePKValue, pkSize);
+    private boolean isEqualTo(TxnEntityId txnEntityId) {
+        if (isByteArrayPKValue && txnEntityId.isByteArrayPKValue) {
+            return isEqual(byteArrayPKValue, txnEntityId.byteArrayPKValue, pkSize);
+        } else if (isByteArrayPKValue && (!txnEntityId.isByteArrayPKValue)) {
+            return isEqual(byteArrayPKValue, txnEntityId.tupleReferencePKValue, pkSize);
+        } else if ((!isByteArrayPKValue) && txnEntityId.isByteArrayPKValue) {
+            return isEqual(txnEntityId.byteArrayPKValue, tupleReferencePKValue, pkSize);
         } else {
-            return isEqual(tupleReferencePKValue, txnId.tupleReferencePKValue, pkSize);
+            return isEqual(tupleReferencePKValue, txnEntityId.tupleReferencePKValue, pkSize);
         }
     }
 
@@ -138,7 +138,7 @@ public class TxnId {
     }
 
     public void serialize(ByteBuffer buffer) {
-        buffer.putInt(jobId);
+        buffer.putLong(txnId);
         buffer.putInt(datasetId);
         buffer.putInt(pkHashValue);
         buffer.putInt(pkSize);
@@ -148,24 +148,24 @@ public class TxnId {
         }
     }
 
-    public static TxnId deserialize(ByteBuffer buffer) {
-        TxnId txnId = new TxnId();
-        txnId.jobId = buffer.getInt();
-        txnId.datasetId = buffer.getInt();
-        txnId.pkHashValue = buffer.getInt();
-        txnId.pkSize = buffer.getInt();
-        txnId.isByteArrayPKValue = (buffer.get() == 1);
-        if (txnId.isByteArrayPKValue) {
-            byte[] byteArrayPKValue = new byte[txnId.pkSize];
+    public static TxnEntityId deserialize(ByteBuffer buffer) {
+        TxnEntityId txnEntityId = new TxnEntityId();
+        txnEntityId.txnId = buffer.getLong();
+        txnEntityId.datasetId = buffer.getInt();
+        txnEntityId.pkHashValue = buffer.getInt();
+        txnEntityId.pkSize = buffer.getInt();
+        txnEntityId.isByteArrayPKValue = (buffer.get() == 1);
+        if (txnEntityId.isByteArrayPKValue) {
+            byte[] byteArrayPKValue = new byte[txnEntityId.pkSize];
             buffer.get(byteArrayPKValue);
-            txnId.byteArrayPKValue = byteArrayPKValue;
+            txnEntityId.byteArrayPKValue = byteArrayPKValue;
         }
-        return txnId;
+        return txnEntityId;
     }
 
     public int getCurrentSize() {
-        //job id, dataset id, pkHashValue, arraySize, isByteArrayPKValue
-        int size = JobId.BYTES + ILogRecord.DS_LEN + LogRecord.PKHASH_LEN + LogRecord.PKSZ_LEN + Byte.BYTES;
+        //txn id, dataset id, pkHashValue, arraySize, isByteArrayPKValue
+        int size = TxnId.BYTES + ILogRecord.DS_LEN + LogRecord.PKHASH_LEN + LogRecord.PKSZ_LEN + Byte.BYTES;
         //byte arraySize
         if (isByteArrayPKValue && byteArrayPKValue != null) {
             size += byteArrayPKValue.length;

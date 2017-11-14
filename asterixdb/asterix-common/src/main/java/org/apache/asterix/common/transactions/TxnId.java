@@ -20,26 +20,26 @@ package org.apache.asterix.common.transactions;
 
 import java.io.Serializable;
 
-public class JobId implements Serializable {
+public class TxnId implements Serializable {
     private static final long serialVersionUID = 1L;
     /**
-     * The number of bytes used to represent {@link JobId} value.
+     * The number of bytes used to represent {@link TxnId} value.
      */
-    public static final int BYTES = Integer.BYTES;
+    public static final int BYTES = Long.BYTES;
 
-    private int id;
+    protected long id;
 
-    public JobId(int id) {
+    public TxnId(long id) {
         this.id = id;
     }
 
-    public int getId() {
+    public long getId() {
         return id;
     }
 
     @Override
     public int hashCode() {
-        return id;
+        return Long.hashCode(id);
     }
 
     @Override
@@ -47,18 +47,15 @@ public class JobId implements Serializable {
         if (o == this) {
             return true;
         }
-        if (!(o instanceof JobId)) {
+        if (!(o instanceof TxnId)) {
             return false;
         }
-        return ((JobId) o).id == id;
+        return ((TxnId) o).id == id;
     }
 
     @Override
     public String toString() {
-        return "JID:" + id;
+        return "TxnId:" + id;
     }
 
-    public void setId(int jobId) {
-        id = jobId;
-    }
 }

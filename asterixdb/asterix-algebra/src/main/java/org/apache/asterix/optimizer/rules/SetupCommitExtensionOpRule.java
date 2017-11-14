@@ -23,7 +23,7 @@ import java.util.List;
 
 import org.apache.asterix.algebra.operators.CommitOperator;
 import org.apache.asterix.algebra.operators.physical.CommitPOperator;
-import org.apache.asterix.common.transactions.JobId;
+import org.apache.asterix.common.transactions.TxnId;
 import org.apache.asterix.metadata.declared.DatasetDataSource;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
@@ -99,14 +99,14 @@ public class SetupCommitExtensionOpRule implements IAlgebraicRewriteRule {
             primaryKeyLogicalVars.add(new LogicalVariable(varRefExpr.getVariableReference().getId()));
         }
 
-        //get JobId(TransactorId)
+        //get TxnId(TransactorId)
         MetadataProvider mp = (MetadataProvider) context.getMetadataProvider();
-        JobId jobId = mp.getJobId();
+        TxnId txnId = mp.getTxnId();
 
         //create the logical and physical operator
         CommitOperator commitOperator = new CommitOperator(primaryKeyLogicalVars, isSink);
         CommitPOperator commitPOperator =
-                new CommitPOperator(jobId, dataset, primaryKeyLogicalVars, isSink);
+                new CommitPOperator(txnId, dataset, primaryKeyLogicalVars, isSink);
         commitOperator.setPhysicalOperator(commitPOperator);
 
         //create ExtensionOperator and put the commitOperator in it.

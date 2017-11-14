@@ -33,11 +33,11 @@ import org.apache.asterix.common.transactions.ILogBuffer;
 import org.apache.asterix.common.transactions.ILogRecord;
 import org.apache.asterix.common.transactions.ITransactionContext;
 import org.apache.asterix.common.transactions.ITransactionSubsystem;
-import org.apache.asterix.common.transactions.JobId;
 import org.apache.asterix.common.transactions.LogRecord;
 import org.apache.asterix.common.transactions.LogSource;
 import org.apache.asterix.common.transactions.LogType;
 import org.apache.asterix.common.transactions.MutableLong;
+import org.apache.asterix.common.transactions.TxnId;
 import org.apache.asterix.transaction.management.service.transaction.TransactionManagementConstants.LockManagerConstants.LockMode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
@@ -61,7 +61,7 @@ public class LogBuffer implements ILogBuffer {
     protected final LinkedBlockingQueue<ILogRecord> remoteJobsQ;
     private FileChannel fileChannel;
     private boolean stop;
-    private final JobId reusableJobId;
+    private final MutableTxnId reusableTxnId;
     private final DatasetId reusableDatasetId;
 
     public LogBuffer(ITransactionSubsystem txnSubsystem, int logPageSize, MutableLong flushLSN) {
@@ -79,7 +79,7 @@ public class LogBuffer implements ILogBuffer {
         syncCommitQ = new LinkedBlockingQueue<>(logPageSize / ILogRecord.JOB_TERMINATE_LOG_SIZE);
         flushQ = new LinkedBlockingQueue<>();
         remoteJobsQ = new LinkedBlockingQueue<>();
-        reusableJobId = new JobId(-1);
+        reusableTxnId = new MutableTxnId(-1);
         reusableDatasetId = new DatasetId(-1);
     }
 
@@ -241,9 +241,9 @@ public class LogBuffer implements ILogBuffer {
             while (logRecord != null) {
                 if (logRecord.getLogSource() == LogSource.LOCAL) {
                     if (logRecord.getLogType() == LogType.ENTITY_COMMIT) {
-                        reusableJobId.setId(logRecord.getJobId());
+                        reusableTxnId.setId(logRecord.getTxnId());
                         reusableDatasetId.setId(logRecord.getDatasetId());
-                        txnCtx = txnSubsystem.getTransactionManager().getTransactionContext(reusableJobId, false);
+                        txnCtx = txnSubsystem.getTransactionManager().getTransactionContext(reusableTxnId, false);
                         txnSubsystem.getLockManager().unlock(reusableDatasetId, logRecord.getPKHashValue(),
                                 LockMode.ANY, txnCtx);
                         txnCtx.notifyOptracker(false);
@@ -252,8 +252,8 @@ public class LogBuffer implements ILogBuffer {
                         }
                     } else if (logRecord.getLogType() == LogType.JOB_COMMIT
                             || logRecord.getLogType() == LogType.ABORT) {
-                        reusableJobId.setId(logRecord.getJobId());
-                        txnCtx = txnSubsystem.getTransactionManager().getTransactionContext(reusableJobId, false);
+                        reusableTxnId.setId(logRecord.getTxnId());
+                        txnCtx = txnSubsystem.getTransactionManager().getTransactionContext(reusableTxnId, false);
                         txnCtx.notifyOptracker(true);
                         notifyJobTermination();
                     } else if (logRecord.getLogType() == LogType.FLUSH) {
@@ -340,5 +340,16 @@ public class LogBuffer implements ILogBuffer {
     @Override
     public int getLogPageSize() {
         return logPageSize;
+    }
+
+    private class MutableTxnId extends TxnId {
+
+        public MutableTxnId(long id) {
+            super(id);
+        }
+
+        public void setId(long id) {
+            this.id = id;
+        }
     }
 }

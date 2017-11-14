@@ -159,7 +159,7 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
             ITransactionContext txnCtx = logRecord.getTxnCtx();
             if (txnCtx.getTxnState() == ITransactionManager.ABORTED && logRecord.getLogType() != LogType.ABORT) {
                 throw new ACIDException(
-                        "Aborted job(" + txnCtx.getJobId() + ") tried to write non-abort type log record.");
+                        "Aborted txn(" + txnCtx.getTxnId() + ") tried to write non-abort type log record.");
             }
         }
 

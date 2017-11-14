@@ -30,8 +30,8 @@ import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.transactions.AbstractOperationCallback;
 import org.apache.asterix.common.transactions.ITransactionContext;
 import org.apache.asterix.common.transactions.ITransactionManager;
-import org.apache.asterix.common.transactions.JobId;
 import org.apache.asterix.common.transactions.LogRecord;
+import org.apache.asterix.common.transactions.TxnId;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
@@ -39,7 +39,7 @@ import org.apache.hyracks.storage.common.IModificationOperationCallback;
 
 /*
  * An object of TransactionContext is created and accessed(read/written) by multiple threads which work for
- * a single job identified by a jobId. Thus, the member variables in the object can be read/written
+ * a single job identified by a txnId. Thus, the member variables in the object can be read/written
  * concurrently. Please see each variable declaration to know which one is accessed concurrently and
  * which one is not.
  */
@@ -47,8 +47,8 @@ public class TransactionContext implements ITransactionContext {
 
     private static final long serialVersionUID = -6105616785783310111L;
 
-    // jobId is set once and read concurrently.
-    private final JobId jobId;
+    // txnId is set once and read concurrently.
+    private final TxnId txnId;
 
     // There are no concurrent writers on both firstLSN and lastLSN
     // since both values are updated by serialized log appenders.
@@ -95,8 +95,8 @@ public class TransactionContext implements ITransactionContext {
     // creations.
     // also, the pool can throttle the number of concurrent active jobs at every
     // moment.
-    public TransactionContext(JobId jobId) throws ACIDException {
-        this.jobId = jobId;
+    public TransactionContext(TxnId txnId) throws ACIDException {
+        this.txnId = txnId;
         firstLSN = new AtomicLong(-1);
         lastLSN = new AtomicLong(-1);
         txnState = new AtomicInteger(ITransactionManager.ACTIVE);
@@ -180,8 +180,8 @@ public class TransactionContext implements ITransactionContext {
     }
 
     @Override
-    public JobId getJobId() {
-        return jobId;
+    public TxnId getTxnId() {
+        return txnId;
     }
 
     @Override
@@ -206,7 +206,7 @@ public class TransactionContext implements ITransactionContext {
 
     @Override
     public int hashCode() {
-        return jobId.getId();
+        return Long.hashCode(txnId.getId());
     }
 
     @Override
@@ -227,7 +227,7 @@ public class TransactionContext implements ITransactionContext {
     @Override
     public String prettyPrint() {
         StringBuilder sb = new StringBuilder();
-        sb.append("\n" + jobId + "\n");
+        sb.append("\n" + txnId + "\n");
         sb.append("isWriteTxn: " + isWriteTxn + "\n");
         sb.append("firstLSN: " + firstLSN.get() + "\n");
         sb.append("lastLSN: " + lastLSN.get() + "\n");

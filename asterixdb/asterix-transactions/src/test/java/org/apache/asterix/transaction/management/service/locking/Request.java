@@ -58,7 +58,7 @@ abstract class Request {
 
     String asString(final Kind kind, final ITransactionContext txnCtx, final DatasetId dsId, final int hashValue,
             final byte lockMode) {
-        return txnCtx.getJobId() + ":" + kind.name() + ":" + dsId.getId() + ":" + hashValue + ":"
+        return txnCtx.getTxnId() + ":" + kind.name() + ":" + dsId.getId() + ":" + hashValue + ":"
                 + TransactionManagementConstants.LockManagerConstants.LockMode.toString(lockMode);
     }
 
@@ -147,7 +147,7 @@ abstract class Request {
 
                 @Override
                 public String toString() {
-                    return txnCtx.getJobId().toString() + ":" + kind.name();
+                    return txnCtx.getTxnId().toString() + ":" + kind.name();
                 }
             };
         }

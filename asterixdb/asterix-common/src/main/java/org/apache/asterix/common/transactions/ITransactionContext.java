@@ -25,7 +25,7 @@ public interface ITransactionContext {
     public void registerIndexAndCallback(long resourceId, ILSMIndex index, AbstractOperationCallback callback,
             boolean isPrimaryIndex);
 
-    public JobId getJobId();
+    public TxnId getTxnId();
 
     public void setTimeout(boolean isTimeout);
 

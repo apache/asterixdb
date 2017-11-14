@@ -99,8 +99,8 @@ public class ReplicationManager implements IReplicationManager {
     private static final int MAX_JOB_COMMIT_ACK_WAIT = 10000;
     private final String nodeId;
     private ExecutorService replicationListenerThreads;
-    private final Map<Integer, Set<String>> jobCommitAcks;
-    private final Map<Integer, ILogRecord> replicationJobsPendingAcks;
+    private final Map<Long, Set<String>> txnCommitAcks;
+    private final Map<Long, ILogRecord> replicationTxnsPendingAcks;
     private ByteBuffer dataBuffer;
     private final LinkedBlockingQueue<IReplicationJob> replicationJobsQ;
     private final LinkedBlockingQueue<ReplicaEvent> replicaEventsQ;
@@ -157,8 +157,8 @@ public class ReplicationManager implements IReplicationManager {
         terminateJobsReplication = new AtomicBoolean(false);
         jobsReplicationSuspended = new AtomicBoolean(true);
         replicationSuspended = new AtomicBoolean(true);
-        jobCommitAcks = new ConcurrentHashMap<>();
-        replicationJobsPendingAcks = new ConcurrentHashMap<>();
+        txnCommitAcks = new ConcurrentHashMap<>();
+        replicationTxnsPendingAcks = new ConcurrentHashMap<>();
         shuttingDownReplicaIds = new HashSet<>();
         dataBuffer = ByteBuffer.allocate(INITIAL_BUFFER_SIZE);
         replicationMonitor = new ReplicasEventsMonitor();
@@ -228,7 +228,7 @@ public class ReplicationManager implements IReplicationManager {
             }
             Set<String> replicaIds = Collections.synchronizedSet(new HashSet<String>());
             replicaIds.add(nodeId);
-            jobCommitAcks.put(logRecord.getJobId(), replicaIds);
+            txnCommitAcks.put(logRecord.getTxnId(), replicaIds);
         }
 
         appendToLogBuffer(logRecord);
@@ -580,16 +580,16 @@ public class ReplicationManager implements IReplicationManager {
 
         //wait for any ACK to arrive before closing sockets.
         if (logsRepSockets != null) {
-            synchronized (jobCommitAcks) {
+            synchronized (txnCommitAcks) {
                 try {
                     long waitStartTime = System.currentTimeMillis();
-                    while (!jobCommitAcks.isEmpty()) {
-                        jobCommitAcks.wait(1000);
+                    while (!txnCommitAcks.isEmpty()) {
+                        txnCommitAcks.wait(1000);
                         long waitDuration = System.currentTimeMillis() - waitStartTime;
                         if (waitDuration > MAX_JOB_COMMIT_ACK_WAIT) {
                             LOGGER.log(Level.SEVERE,
-                                    "Timeout before receving all job ACKs from replicas. Pending jobs ("
-                                            + jobCommitAcks.keySet().toString() + ")");
+                                    "Timeout before receving all job ACKs from replicas. Pending txns ("
+                                            + txnCommitAcks.keySet().toString() + ")");
                             break;
                         }
                     }
@@ -747,9 +747,9 @@ public class ReplicationManager implements IReplicationManager {
 
             if (newState == ReplicaState.DEAD) {
                 //assume the dead replica ACK has been received for all pending jobs
-                synchronized (jobCommitAcks) {
-                    for (Integer jobId : jobCommitAcks.keySet()) {
-                        addAckToJob(jobId, replicaId);
+                synchronized (txnCommitAcks) {
+                    for (Long txnId : txnCommitAcks.keySet()) {
+                        addAckToJob(txnId, replicaId);
                     }
                 }
             }
@@ -777,27 +777,27 @@ public class ReplicationManager implements IReplicationManager {
     /**
      * When an ACK for a JOB_COMMIT is received, it is added to the corresponding job.
      *
-     * @param jobId
+     * @param txnId
      * @param replicaId
      *            The remote replica id the ACK received from.
      */
-    private void addAckToJob(int jobId, String replicaId) {
-        synchronized (jobCommitAcks) {
+    private void addAckToJob(long txnId, String replicaId) {
+        synchronized (txnCommitAcks) {
             //add ACK to the job
-            if (jobCommitAcks.containsKey(jobId)) {
-                Set<String> replicaIds = jobCommitAcks.get(jobId);
+            if (txnCommitAcks.containsKey(txnId)) {
+                Set<String> replicaIds = txnCommitAcks.get(txnId);
                 replicaIds.add(replicaId);
             } else {
                 if (LOGGER.isLoggable(Level.WARNING)) {
-                    LOGGER.warning("Invalid job replication ACK received for jobId(" + jobId + ")");
+                    LOGGER.warning("Invalid job replication ACK received for txnId(" + txnId + ")");
                 }
                 return;
             }
 
             //if got ACKs from all remote replicas, notify pending jobs if any
 
-            if (jobCommitAcks.get(jobId).size() == replicationFactor && replicationJobsPendingAcks.containsKey(jobId)) {
-                ILogRecord pendingLog = replicationJobsPendingAcks.get(jobId);
+            if (txnCommitAcks.get(txnId).size() == replicationFactor && replicationTxnsPendingAcks.containsKey(txnId)) {
+                ILogRecord pendingLog = replicationTxnsPendingAcks.get(txnId);
                 synchronized (pendingLog) {
                     pendingLog.notifyAll();
                 }
@@ -807,23 +807,23 @@ public class ReplicationManager implements IReplicationManager {
 
     @Override
     public boolean hasBeenReplicated(ILogRecord logRecord) {
-        int jobId = logRecord.getJobId();
-        if (jobCommitAcks.containsKey(jobId)) {
-            synchronized (jobCommitAcks) {
+        long txnId = logRecord.getTxnId();
+        if (txnCommitAcks.containsKey(txnId)) {
+            synchronized (txnCommitAcks) {
                 //check if all ACKs have been received
-                if (jobCommitAcks.get(jobId).size() == replicationFactor) {
-                    jobCommitAcks.remove(jobId);
+                if (txnCommitAcks.get(txnId).size() == replicationFactor) {
+                    txnCommitAcks.remove(txnId);
 
                     //remove from pending jobs if exists
-                    replicationJobsPendingAcks.remove(jobId);
+                    replicationTxnsPendingAcks.remove(txnId);
 
                     //notify any threads waiting for all jobs to finish
-                    if (jobCommitAcks.size() == 0) {
-                        jobCommitAcks.notifyAll();
+                    if (txnCommitAcks.size() == 0) {
+                        txnCommitAcks.notifyAll();
                     }
                     return true;
                 } else {
-                    replicationJobsPendingAcks.putIfAbsent(jobId, logRecord);
+                    replicationTxnsPendingAcks.putIfAbsent(txnId, logRecord);
                     return false;
                 }
             }

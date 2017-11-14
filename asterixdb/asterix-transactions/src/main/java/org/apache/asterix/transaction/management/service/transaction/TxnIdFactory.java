@@ -18,21 +18,25 @@
  */
 package org.apache.asterix.transaction.management.service.transaction;
 
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
-import org.apache.asterix.common.transactions.JobId;
+import org.apache.asterix.common.transactions.TxnId;
 
 /**
  * Represents a factory to generate unique transaction IDs.
  */
-public class JobIdFactory {
-    private static final AtomicInteger Id = new AtomicInteger();
+public class TxnIdFactory {
 
-    public static JobId generateJobId() {
-        return new JobId(Id.incrementAndGet());
+    private static final AtomicLong id = new AtomicLong();
+
+    private TxnIdFactory() {
     }
 
-    public static void initJobId(int id) {
-        Id.set(id);
+    public static TxnId create() {
+        return new TxnId(id.incrementAndGet());
+    }
+
+    public static void ensureMinimumId(long id) {
+        TxnIdFactory.id.set(id);
     }
 }

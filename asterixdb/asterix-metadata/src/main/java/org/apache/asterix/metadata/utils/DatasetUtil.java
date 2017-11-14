@@ -38,7 +38,7 @@ import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.transactions.IRecoveryManager;
-import org.apache.asterix.common.transactions.JobId;
+import org.apache.asterix.common.transactions.TxnId;
 import org.apache.asterix.external.indexing.IndexingConstants;
 import org.apache.asterix.formats.base.IDataFormat;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
@@ -337,13 +337,13 @@ public class DatasetUtil {
      *            the metadata provider.
      * @param dataset,
      *            the dataset to scan.
-     * @param jobId,
+     * @param txnId,
      *            the AsterixDB job id for transaction management.
      * @return a primary index scan operator.
      * @throws AlgebricksException
      */
     public static IOperatorDescriptor createPrimaryIndexScanOp(JobSpecification spec, MetadataProvider metadataProvider,
-            Dataset dataset, JobId jobId) throws AlgebricksException {
+            Dataset dataset, TxnId txnId) throws AlgebricksException {
         Pair<IFileSplitProvider, AlgebricksPartitionConstraint> primarySplitsAndConstraint =
                 metadataProvider.getSplitProviderAndConstraints(dataset);
         IFileSplitProvider primaryFileSplitProvider = primarySplitsAndConstraint.first;
@@ -355,7 +355,7 @@ public class DatasetUtil {
         ITransactionSubsystemProvider txnSubsystemProvider = TransactionSubsystemProvider.INSTANCE;
         boolean temp = dataset.getDatasetDetails().isTemp();
         ISearchOperationCallbackFactory searchCallbackFactory = temp ? NoOpOperationCallbackFactory.INSTANCE
-                : new PrimaryIndexInstantSearchOperationCallbackFactory(jobId, dataset.getDatasetId(),
+                : new PrimaryIndexInstantSearchOperationCallbackFactory(txnId, dataset.getDatasetId(),
                         dataset.getPrimaryBloomFilterFields(), txnSubsystemProvider,
                         IRecoveryManager.ResourceType.LSM_BTREE);
         IndexDataflowHelperFactory indexHelperFactory = new IndexDataflowHelperFactory(
@@ -399,7 +399,7 @@ public class DatasetUtil {
                 metadataProvider.getSplitProviderAndConstraints(dataset);
 
         // prepare callback
-        JobId jobId = ((JobEventListenerFactory) spec.getJobletEventListenerFactory()).getJobId();
+        TxnId txnId = ((JobEventListenerFactory) spec.getJobletEventListenerFactory()).getTxnId();
         int[] primaryKeyFields = new int[numKeys];
         for (int i = 0; i < numKeys; i++) {
             primaryKeyFields[i] = i;
@@ -408,9 +408,9 @@ public class DatasetUtil {
                 metadataProvider.getDatasetIndexes(dataset.getDataverseName(), dataset.getDatasetName()).size() > 1;
         IStorageComponentProvider storageComponentProvider = metadataProvider.getStorageComponentProvider();
         IModificationOperationCallbackFactory modificationCallbackFactory = dataset.getModificationCallbackFactory(
-                storageComponentProvider, primaryIndex, jobId, IndexOperation.UPSERT, primaryKeyFields);
+                storageComponentProvider, primaryIndex, txnId, IndexOperation.UPSERT, primaryKeyFields);
         ISearchOperationCallbackFactory searchCallbackFactory = dataset.getSearchCallbackFactory(
-                storageComponentProvider, primaryIndex, jobId, IndexOperation.UPSERT, primaryKeyFields);
+                storageComponentProvider, primaryIndex, txnId, IndexOperation.UPSERT, primaryKeyFields);
         IIndexDataflowHelperFactory idfh =
                 new IndexDataflowHelperFactory(storageComponentProvider.getStorageManager(), splitsAndConstraint.first);
         LSMPrimaryUpsertOperatorDescriptor op;

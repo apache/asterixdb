@@ -55,7 +55,7 @@ public class LockThenSearchOperationCallback extends AbstractOperationCallback i
         logRecord.setTxnCtx(txnCtx);
         logRecord.setLogSource(LogSource.LOCAL);
         logRecord.setLogType(LogType.WAIT);
-        logRecord.setJobId(txnCtx.getJobId().getId());
+        logRecord.setTxnId(txnCtx.getTxnId().getId());
         logRecord.computeAndSetLogSize();
     }
 

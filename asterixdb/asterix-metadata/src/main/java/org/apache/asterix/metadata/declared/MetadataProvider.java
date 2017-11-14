@@ -37,7 +37,7 @@ import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.dataflow.LSMTreeInsertDeleteOperatorDescriptor;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.metadata.LockList;
-import org.apache.asterix.common.transactions.JobId;
+import org.apache.asterix.common.transactions.TxnId;
 import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.asterix.dataflow.data.nontagged.MissingWriterFactory;
 import org.apache.asterix.external.adapter.factory.LookupAdapterFactory;
@@ -156,7 +156,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
     private boolean asyncResults;
     private ResultSetId resultSetId;
     private IResultSerializerFactoryProvider resultSerializerFactoryProvider;
-    private JobId jobId;
+    private TxnId txnId;
     private Map<String, Integer> externalDataLocks;
     private boolean isTemporaryDatasetWriteJob = true;
     private boolean blockingOperatorDisabled = false;
@@ -188,8 +188,8 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         return config;
     }
 
-    public void setJobId(JobId jobId) {
-        this.jobId = jobId;
+    public void setTxnId(TxnId txnId) {
+        this.txnId = txnId;
     }
 
     public Dataverse getDefaultDataverse() {
@@ -452,7 +452,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         }
 
         ISearchOperationCallbackFactory searchCallbackFactory = dataset.getSearchCallbackFactory(
-                storageComponentProvider, theIndex, jobId, IndexOperation.SEARCH, primaryKeyFields);
+                storageComponentProvider, theIndex, txnId, IndexOperation.SEARCH, primaryKeyFields);
         IStorageManager storageManager = getStorageComponentProvider().getStorageManager();
         IIndexDataflowHelperFactory indexHelperFactory = new IndexDataflowHelperFactory(storageManager, spPc.first);
         BTreeSearchOperatorDescriptor btreeSearchOp;
@@ -491,7 +491,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         }
 
         ISearchOperationCallbackFactory searchCallbackFactory = dataset.getSearchCallbackFactory(
-                storageComponentProvider, secondaryIndex, jobId, IndexOperation.SEARCH, primaryKeyFields);
+                storageComponentProvider, secondaryIndex, txnId, IndexOperation.SEARCH, primaryKeyFields);
         RTreeSearchOperatorDescriptor rtreeSearchOp;
         IIndexDataflowHelperFactory indexDataflowHelperFactory =
                 new IndexDataflowHelperFactory(storageComponentProvider.getStorageManager(), spPc.first);
@@ -735,8 +735,8 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         }
     }
 
-    public JobId getJobId() {
-        return jobId;
+    public TxnId getTxnId() {
+        return txnId;
     }
 
     public static ILinearizeComparatorFactory proposeLinearizer(ATypeTag keyType, int numKeyFields)
@@ -797,7 +797,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             // files index
             RecordDescriptor outRecDesc = JobGenHelper.mkRecordDescriptor(typeEnv, opSchema, context);
             ISearchOperationCallbackFactory searchOpCallbackFactory = dataset
-                    .getSearchCallbackFactory(storageComponentProvider, fileIndex, jobId, IndexOperation.SEARCH, null);
+                    .getSearchCallbackFactory(storageComponentProvider, fileIndex, txnId, IndexOperation.SEARCH, null);
             // Create the operator
             ExternalLookupOperatorDescriptor op = new ExternalLookupOperatorDescriptor(jobSpec, adapterFactory,
                     outRecDesc, indexDataflowHelperFactory, searchOpCallbackFactory,
@@ -972,7 +972,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             primaryKeyFields[i] = i;
         }
         IModificationOperationCallbackFactory modificationCallbackFactory = dataset.getModificationCallbackFactory(
-                storageComponentProvider, primaryIndex, jobId, indexOp, primaryKeyFields);
+                storageComponentProvider, primaryIndex, txnId, indexOp, primaryKeyFields);
         IIndexDataflowHelperFactory idfh =
                 new IndexDataflowHelperFactory(storageComponentProvider.getStorageManager(), splitsAndConstraint.first);
         IOperatorDescriptor op;
@@ -1097,9 +1097,9 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint =
                     getSplitProviderAndConstraints(dataset, secondaryIndex.getIndexName());
             // prepare callback
-            JobId jobId = ((JobEventListenerFactory) spec.getJobletEventListenerFactory()).getJobId();
+            TxnId txnId = ((JobEventListenerFactory) spec.getJobletEventListenerFactory()).getTxnId();
             IModificationOperationCallbackFactory modificationCallbackFactory = dataset.getModificationCallbackFactory(
-                    storageComponentProvider, secondaryIndex, jobId, indexOp, modificationCallbackPrimaryKeyFields);
+                    storageComponentProvider, secondaryIndex, txnId, indexOp, modificationCallbackPrimaryKeyFields);
             IIndexDataflowHelperFactory idfh = new IndexDataflowHelperFactory(
                     storageComponentProvider.getStorageManager(), splitsAndConstraint.first);
             IOperatorDescriptor op;
@@ -1198,9 +1198,9 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
                 getSplitProviderAndConstraints(dataset, secondaryIndex.getIndexName());
 
         // prepare callback
-        JobId planJobId = ((JobEventListenerFactory) spec.getJobletEventListenerFactory()).getJobId();
+        TxnId planTxnId = ((JobEventListenerFactory) spec.getJobletEventListenerFactory()).getTxnId();
         IModificationOperationCallbackFactory modificationCallbackFactory = dataset.getModificationCallbackFactory(
-                storageComponentProvider, secondaryIndex, planJobId, indexOp, modificationCallbackPrimaryKeyFields);
+                storageComponentProvider, secondaryIndex, planTxnId, indexOp, modificationCallbackPrimaryKeyFields);
         IIndexDataflowHelperFactory indexDataflowHelperFactory =
                 new IndexDataflowHelperFactory(storageComponentProvider.getStorageManager(), splitsAndConstraint.first);
         IOperatorDescriptor op;
@@ -1311,9 +1311,9 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
                     getSplitProviderAndConstraints(dataset, secondaryIndex.getIndexName());
 
             // prepare callback
-            JobId jobId = ((JobEventListenerFactory) spec.getJobletEventListenerFactory()).getJobId();
+            TxnId txnId = ((JobEventListenerFactory) spec.getJobletEventListenerFactory()).getTxnId();
             IModificationOperationCallbackFactory modificationCallbackFactory = dataset.getModificationCallbackFactory(
-                    storageComponentProvider, secondaryIndex, jobId, indexOp, modificationCallbackPrimaryKeyFields);
+                    storageComponentProvider, secondaryIndex, txnId, indexOp, modificationCallbackPrimaryKeyFields);
             IIndexDataflowHelperFactory indexDataFlowFactory = new IndexDataflowHelperFactory(
                     storageComponentProvider.getStorageManager(), splitsAndConstraint.first);
             IOperatorDescriptor op;

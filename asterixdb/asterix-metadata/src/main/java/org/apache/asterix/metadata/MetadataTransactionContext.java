@@ -22,7 +22,7 @@ package org.apache.asterix.metadata;
 import java.util.ArrayList;
 
 import org.apache.asterix.common.functions.FunctionSignature;
-import org.apache.asterix.common.transactions.JobId;
+import org.apache.asterix.common.transactions.TxnId;
 import org.apache.asterix.external.dataset.adapter.AdapterIdentifier;
 import org.apache.asterix.metadata.entities.CompactionPolicy;
 import org.apache.asterix.metadata.entities.Dataset;
@@ -68,14 +68,14 @@ public class MetadataTransactionContext extends MetadataCache {
     protected MetadataCache droppedCache = new MetadataCache();
 
     protected ArrayList<MetadataLogicalOperation> opLog = new ArrayList<>();
-    private final JobId jobId;
+    private final TxnId txnId;
 
-    public MetadataTransactionContext(JobId jobId) {
-        this.jobId = jobId;
+    public MetadataTransactionContext(TxnId txnId) {
+        this.txnId = txnId;
     }
 
-    public JobId getJobId() {
-        return jobId;
+    public TxnId getTxnId() {
+        return txnId;
     }
 
     public void addDataverse(Dataverse dataverse) {

@@ -26,7 +26,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.asterix.common.exceptions.MetadataException;
-import org.apache.asterix.common.transactions.JobId;
+import org.apache.asterix.common.transactions.TxnId;
 import org.apache.asterix.metadata.MetadataNode;
 import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.BuiltinType;
@@ -93,12 +93,12 @@ public class BuiltinTypeMap {
         return new HashSet<>(_builtinTypeMap.values());
     }
 
-    public static IAType getTypeFromTypeName(MetadataNode metadataNode, JobId jobId, String dataverseName,
+    public static IAType getTypeFromTypeName(MetadataNode metadataNode, TxnId txnId, String dataverseName,
             String typeName, boolean optional) throws AlgebricksException {
         IAType type = _builtinTypeMap.get(typeName);
         if (type == null) {
             try {
-                Datatype dt = metadataNode.getDatatype(jobId, dataverseName, typeName);
+                Datatype dt = metadataNode.getDatatype(txnId, dataverseName, typeName);
                 type = dt.getDatatype();
             } catch (RemoteException e) {
                 throw new MetadataException(e);

@@ -42,26 +42,26 @@ public interface ITransactionManager {
      * Begins a transaction identified by a transaction id and returns the
      * associated transaction context.
      *
-     * @param jobId
+     * @param txnId
      *            a unique value for the transaction id.
      * @return the transaction context associated with the initiated transaction
      * @see ITransactionContext
      * @throws ACIDException
      */
-    public ITransactionContext beginTransaction(JobId jobId) throws ACIDException;
+    public ITransactionContext beginTransaction(TxnId txnId) throws ACIDException;
 
     /**
      * Returns the transaction context of an active transaction given the
      * transaction id.
      *
-     * @param jobId
+     * @param txnId
      *            a unique value for the transaction id.
      * @param createIfNotExist
      *            TODO
      * @return
      * @throws ACIDException
      */
-    public ITransactionContext getTransactionContext(JobId jobId, boolean createIfNotExist) throws ACIDException;
+    public ITransactionContext getTransactionContext(TxnId txnId, boolean createIfNotExist) throws ACIDException;
 
     /**
      * Commits a transaction.
@@ -73,7 +73,7 @@ public interface ITransactionManager {
      * @param pkHash
      *            TODO
      * @throws ACIDException
-     * @see ITransactionContextimport org.apache.hyracks.api.job.JobId;
+     * @see ITransactionContextimport org.apache.hyracks.api.job.TxnId;
      * @see ACIDException
      */
     public void commitTransaction(ITransactionContext txnContext, DatasetId datasetId, int pkHash)
@@ -125,8 +125,8 @@ public interface ITransactionManager {
     public ITransactionSubsystem getTransactionSubsystem();
 
     /**
-     * @return The current max job id.
+     * @return The current max txn id.
      */
-    int getMaxJobId();
+    long getMaxTxnId();
 
 }

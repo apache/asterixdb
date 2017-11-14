@@ -23,7 +23,7 @@ import java.util.List;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.ErrorCode;
-import org.apache.asterix.common.transactions.JobId;
+import org.apache.asterix.common.transactions.TxnId;
 import org.apache.asterix.formats.nontagged.BinaryComparatorFactoryProvider;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.formats.nontagged.TypeTraitProvider;
@@ -184,11 +184,11 @@ public class SecondaryCorrelatedRTreeOperationsHelper extends SecondaryCorrelate
 
         // Create dummy key provider for feeding the primary index scan.
         IOperatorDescriptor keyProviderOp = DatasetUtil.createDummyKeyProviderOp(spec, dataset, metadataProvider);
-        JobId jobId = IndexUtil.bindJobEventListener(spec, metadataProvider);
+        TxnId txnId = IndexUtil.bindJobEventListener(spec, metadataProvider);
 
         // Create primary index scan op.
         IOperatorDescriptor primaryScanOp = createPrimaryIndexScanDiskComponentsOp(spec, metadataProvider,
-                getTaggedRecordDescriptor(dataset.getPrimaryRecordDescriptor(metadataProvider)), jobId);
+                getTaggedRecordDescriptor(dataset.getPrimaryRecordDescriptor(metadataProvider)), txnId);
 
         // Assign op.
         IOperatorDescriptor sourceOp = primaryScanOp;

@@ -21,7 +21,7 @@ package org.apache.asterix.metadata.valueextractors;
 
 import java.nio.ByteBuffer;
 
-import org.apache.asterix.common.transactions.JobId;
+import org.apache.asterix.common.transactions.TxnId;
 import org.apache.asterix.metadata.api.IValueExtractor;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
@@ -48,7 +48,7 @@ public class TupleCopyValueExtractor implements IValueExtractor<ITupleReference>
     }
 
     @Override
-    public ITupleReference getValue(JobId jobId, ITupleReference tuple)
+    public ITupleReference getValue(TxnId txnId, ITupleReference tuple)
             throws AlgebricksException, HyracksDataException {
         int numBytes = tupleWriter.bytesRequired(tuple);
         tupleBytes = new byte[numBytes];

@@ -21,7 +21,7 @@ package org.apache.asterix.metadata.utils;
 import java.util.List;
 
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
-import org.apache.asterix.common.transactions.JobId;
+import org.apache.asterix.common.transactions.TxnId;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
@@ -72,14 +72,14 @@ public class SecondaryCorrelatedBTreeOperationsHelper extends SecondaryCorrelate
 
         // only handle internal datasets
         // Create dummy key provider for feeding the primary index scan.
-        JobId jobId = IndexUtil.bindJobEventListener(spec, metadataProvider);
+        TxnId txnId = IndexUtil.bindJobEventListener(spec, metadataProvider);
 
         // Create dummy key provider for feeding the primary index scan.
         IOperatorDescriptor keyProviderOp = DatasetUtil.createDummyKeyProviderOp(spec, dataset, metadataProvider);
 
         // Create primary index scan op.
         IOperatorDescriptor primaryScanOp = createPrimaryIndexScanDiskComponentsOp(spec, metadataProvider,
-                getTaggedRecordDescriptor(dataset.getPrimaryRecordDescriptor(metadataProvider)), jobId);
+                getTaggedRecordDescriptor(dataset.getPrimaryRecordDescriptor(metadataProvider)), txnId);
 
         // Assign op.
         IOperatorDescriptor sourceOp = primaryScanOp;

@@ -22,7 +22,7 @@ import java.io.OutputStream;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -31,7 +31,7 @@ import org.apache.asterix.common.transactions.DatasetId;
 import org.apache.asterix.common.transactions.ITransactionContext;
 import org.apache.asterix.common.transactions.ITransactionManager;
 import org.apache.asterix.common.transactions.ITransactionSubsystem;
-import org.apache.asterix.common.transactions.JobId;
+import org.apache.asterix.common.transactions.TxnId;
 import org.apache.asterix.common.transactions.LogRecord;
 import org.apache.asterix.common.utils.TransactionUtil;
 import org.apache.hyracks.api.lifecycle.ILifeCycleComponent;
@@ -45,8 +45,8 @@ public class TransactionManager implements ITransactionManager, ILifeCycleCompon
     public static final boolean IS_DEBUG_MODE = false;//true
     private static final Logger LOGGER = Logger.getLogger(TransactionManager.class.getName());
     private final ITransactionSubsystem txnSubsystem;
-    private Map<JobId, ITransactionContext> transactionContextRepository = new ConcurrentHashMap<>();
-    private AtomicInteger maxJobId = new AtomicInteger(0);
+    private Map<TxnId, ITransactionContext> transactionContextRepository = new ConcurrentHashMap<>();
+    private AtomicLong maxTxnId = new AtomicLong(0);
 
     public TransactionManager(ITransactionSubsystem provider) {
         this.txnSubsystem = provider;
@@ -74,30 +74,30 @@ public class TransactionManager implements ITransactionManager, ILifeCycleCompon
         } finally {
             txnCtx.complete();
             txnSubsystem.getLockManager().releaseLocks(txnCtx);
-            transactionContextRepository.remove(txnCtx.getJobId());
+            transactionContextRepository.remove(txnCtx.getTxnId());
         }
     }
 
     @Override
-    public ITransactionContext beginTransaction(JobId jobId) throws ACIDException {
-        return getTransactionContext(jobId, true);
+    public ITransactionContext beginTransaction(TxnId txnId) throws ACIDException {
+        return getTransactionContext(txnId, true);
     }
 
     @Override
-    public ITransactionContext getTransactionContext(JobId jobId, boolean createIfNotExist) throws ACIDException {
-        setMaxJobId(jobId.getId());
-        ITransactionContext txnCtx = transactionContextRepository.get(jobId);
+    public ITransactionContext getTransactionContext(TxnId txnId, boolean createIfNotExist) throws ACIDException {
+        setMaxTxnId(txnId.getId());
+        ITransactionContext txnCtx = transactionContextRepository.get(txnId);
         if (txnCtx == null) {
             if (createIfNotExist) {
                 synchronized (this) {
-                    txnCtx = transactionContextRepository.get(jobId);
+                    txnCtx = transactionContextRepository.get(txnId);
                     if (txnCtx == null) {
-                        txnCtx = new TransactionContext(jobId);
-                        transactionContextRepository.put(jobId, txnCtx);
+                        txnCtx = new TransactionContext(txnId);
+                        transactionContextRepository.put(txnId, txnCtx);
                     }
                 }
             } else {
-                throw new ACIDException("TransactionContext of " + jobId + " doesn't exist.");
+                throw new ACIDException("TransactionContext of " + txnId + " doesn't exist.");
             }
         }
         return txnCtx;
@@ -115,13 +115,13 @@ public class TransactionManager implements ITransactionManager, ILifeCycleCompon
             }
         } catch (Exception ae) {
             if (LOGGER.isLoggable(Level.SEVERE)) {
-                LOGGER.severe(" caused exception in commit !" + txnCtx.getJobId());
+                LOGGER.severe(" caused exception in commit !" + txnCtx.getTxnId());
             }
             throw ae;
         } finally {
             txnCtx.complete();
             txnSubsystem.getLockManager().releaseLocks(txnCtx);
-            transactionContextRepository.remove(txnCtx.getJobId());
+            transactionContextRepository.remove(txnCtx.getTxnId());
             txnCtx.setTxnState(ITransactionManager.COMMITTED);
         }
     }
@@ -141,16 +141,16 @@ public class TransactionManager implements ITransactionManager, ILifeCycleCompon
         return txnSubsystem;
     }
 
-    public void setMaxJobId(int jobId) {
-        int maxId = maxJobId.get();
-        if (jobId > maxId) {
-            maxJobId.compareAndSet(maxId, jobId);
+    public void setMaxTxnId(long txnId) {
+        long maxId = maxTxnId.get();
+        if (txnId > maxId) {
+            maxTxnId.compareAndSet(maxId, txnId);
         }
     }
 
     @Override
-    public int getMaxJobId() {
-        return maxJobId.get();
+    public long getMaxTxnId() {
+        return maxTxnId.get();
     }
 
     @Override
@@ -172,19 +172,19 @@ public class TransactionManager implements ITransactionManager, ILifeCycleCompon
     }
 
     private void dumpTxnContext(OutputStream os) {
-        JobId jobId;
+        TxnId txnId;
         ITransactionContext txnCtx;
         StringBuilder sb = new StringBuilder();
 
         try {
             sb.append("\n>>dump_begin\t>>----- [ConfVars] -----");
-            Set<Map.Entry<JobId, ITransactionContext>> entrySet = transactionContextRepository.entrySet();
+            Set<Map.Entry<TxnId, ITransactionContext>> entrySet = transactionContextRepository.entrySet();
             if (entrySet != null) {
-                for (Map.Entry<JobId, ITransactionContext> entry : entrySet) {
+                for (Map.Entry<TxnId, ITransactionContext> entry : entrySet) {
                     if (entry != null) {
-                        jobId = entry.getKey();
-                        if (jobId != null) {
-                            sb.append("\n" + jobId);
+                        txnId = entry.getKey();
+                        if (txnId != null) {
+                            sb.append("\n" + txnId);
                         } else {
                             sb.append("\nJID:null");
                         }

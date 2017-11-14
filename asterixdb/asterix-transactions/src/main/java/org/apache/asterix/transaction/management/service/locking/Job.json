@@ -17,8 +17,8 @@
             "initial" : "-1"
         },
         {
-            "name" : "job id",
-            "type" : "INT"
+            "name" : "txn id",
+            "type" : "GLOBAL"
         }
     ]
 }

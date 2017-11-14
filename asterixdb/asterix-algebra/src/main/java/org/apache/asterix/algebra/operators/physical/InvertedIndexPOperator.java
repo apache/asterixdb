@@ -18,7 +18,6 @@
  */
 package org.apache.asterix.algebra.operators.physical;
 
-import org.apache.asterix.common.exceptions.MetadataException;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.declared.DataSourceId;
 import org.apache.asterix.metadata.declared.MetadataProvider;
@@ -159,7 +158,7 @@ public class InvertedIndexPOperator extends IndexSearchPOperator {
                 jobSpec, outputRecDesc, queryField, dataflowHelperFactory, queryTokenizerFactory, searchModifierFactory,
                 retainInput, retainMissing, context.getMissingWriterFactory(),
                 dataset.getSearchCallbackFactory(metadataProvider.getStorageComponentProvider(), secondaryIndex,
-                        ((JobEventListenerFactory) jobSpec.getJobletEventListenerFactory()).getJobId(),
+                        ((JobEventListenerFactory) jobSpec.getJobletEventListenerFactory()).getTxnId(),
                         IndexOperation.SEARCH, null),
                 minFilterFieldIndexes, maxFilterFieldIndexes, isFullTextSearchQuery, numPrimaryKeys,
                 propagateIndexFilter);
