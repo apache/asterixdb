@@ -27,27 +27,27 @@ import org.apache.asterix.common.messaging.api.ICcAddressedMessage;
 import org.apache.asterix.common.messaging.api.INCMessageBroker;
 import org.apache.asterix.common.metadata.MetadataIndexImmutableProperties;
 import org.apache.asterix.common.transactions.IResourceIdManager;
+import org.apache.asterix.transaction.management.service.transaction.TxnIdFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.control.nc.NodeControllerService;
 
-public class ReportMaxResourceIdMessage implements ICcAddressedMessage {
+public class ReportLocalCountersMessage implements ICcAddressedMessage {
     private static final long serialVersionUID = 1L;
-    private static final Logger LOGGER = Logger.getLogger(ReportMaxResourceIdMessage.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(ReportLocalCountersMessage.class.getName());
     private final long maxResourceId;
+    private final long maxTxnId;
     private final String src;
 
-    public ReportMaxResourceIdMessage(String src, long maxResourceId) {
+    public ReportLocalCountersMessage(String src, long maxResourceId, long maxTxnId) {
         this.src = src;
         this.maxResourceId = maxResourceId;
-    }
-
-    public long getMaxResourceId() {
-        return maxResourceId;
+        this.maxTxnId = maxTxnId;
     }
 
     @Override
     public void handle(ICcApplicationContext appCtx) throws HyracksDataException, InterruptedException {
         IResourceIdManager resourceIdManager = appCtx.getResourceIdManager();
+        TxnIdFactory.ensureMinimumId(maxTxnId);
         resourceIdManager.report(src, maxResourceId);
     }
 
@@ -56,17 +56,19 @@ public class ReportMaxResourceIdMessage implements ICcAddressedMessage {
         INcApplicationContext appContext = (INcApplicationContext) ncs.getApplicationContext();
         long maxResourceId = Math.max(appContext.getLocalResourceRepository().maxId(),
                 MetadataIndexImmutableProperties.FIRST_AVAILABLE_USER_DATASET_ID);
-        ReportMaxResourceIdMessage maxResourceIdMsg = new ReportMaxResourceIdMessage(ncs.getId(), maxResourceId);
+        long maxTxnId = appContext.getTransactionSubsystem().getTransactionManager().getMaxTxnId();
+        ReportLocalCountersMessage countersMessage =
+                new ReportLocalCountersMessage(ncs.getId(), maxResourceId, maxTxnId);
         try {
-            ((INCMessageBroker) ncs.getContext().getMessageBroker()).sendMessageToCC(maxResourceIdMsg);
+            ((INCMessageBroker) ncs.getContext().getMessageBroker()).sendMessageToCC(countersMessage);
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Unable to report max local resource id", e);
+            LOGGER.log(Level.SEVERE, "Unable to report local counters", e);
             throw HyracksDataException.create(e);
         }
     }
 
     @Override
     public String toString() {
-        return ReportMaxResourceIdMessage.class.getSimpleName();
+        return ReportLocalCountersMessage.class.getSimpleName();
     }
 }

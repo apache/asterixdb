@@ -22,16 +22,16 @@ import org.apache.hyracks.api.messages.IMessage;
 
 public interface INCLifecycleMessage extends IMessage {
 
-    public enum MessageType {
+    enum MessageType {
         REPLAY_LOGS_REQUEST,
         REPLAY_LOGS_RESPONSE,
         PREPARE_FAILBACK_REQUEST,
         PREPARE_FAILBACK_RESPONSE,
         COMPLETE_FAILBACK_REQUEST,
         COMPLETE_FAILBACK_RESPONSE,
-        STARTUP_TASK_REQUEST,
-        STARTUP_TASK_RESPONSE,
-        STARTUP_TASK_RESULT,
+        REGISTRATION_TASKS_REQUEST,
+        REGISTRATION_TASKS_RESPONSE,
+        REGISTRATION_TASKS_RESULT,
         TAKEOVER_PARTITION_REQUEST,
         TAKEOVER_PARTITION_RESPONSE,
         TAKEOVER_METADATA_NODE_REQUEST,

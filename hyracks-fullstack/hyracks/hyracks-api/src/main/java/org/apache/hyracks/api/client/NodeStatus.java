@@ -19,6 +19,7 @@
 package org.apache.hyracks.api.client;
 
 public enum NodeStatus {
-    ALIVE,
+    ACTIVE,
+    BOOTING,
     DEAD
 }

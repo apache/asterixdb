@@ -16,23 +16,25 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.runtime.message;
+package org.apache.asterix.app.nc.task;
 
-import org.apache.asterix.common.api.INcApplicationContext;
-import org.apache.asterix.common.messaging.api.INcAddressedMessage;
+import org.apache.asterix.common.api.INCLifecycleTask;
+import org.apache.asterix.runtime.message.ReportLocalCountersMessage;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.service.IControllerService;
 import org.apache.hyracks.control.nc.NodeControllerService;
 
-public class ReportMaxResourceIdRequestMessage implements INcAddressedMessage {
+public class ReportLocalCountersTask implements INCLifecycleTask {
+
     private static final long serialVersionUID = 1L;
 
     @Override
-    public void handle(INcApplicationContext appCtx) throws HyracksDataException, InterruptedException {
-        ReportMaxResourceIdMessage.send((NodeControllerService) appCtx.getServiceContext().getControllerService());
+    public void perform(IControllerService cs) throws HyracksDataException {
+        ReportLocalCountersMessage.send((NodeControllerService) cs);
     }
 
     @Override
     public String toString() {
-        return ReportMaxResourceIdRequestMessage.class.getSimpleName();
+        return "{ \"class\" : \"" + getClass().getSimpleName() + "\" }";
     }
 }

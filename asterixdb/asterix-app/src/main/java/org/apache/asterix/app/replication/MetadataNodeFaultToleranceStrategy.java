@@ -35,14 +35,14 @@ import org.apache.asterix.app.nc.task.ExternalLibrarySetupTask;
 import org.apache.asterix.app.nc.task.LocalRecoveryTask;
 import org.apache.asterix.app.nc.task.MetadataBootstrapTask;
 import org.apache.asterix.app.nc.task.RemoteRecoveryTask;
-import org.apache.asterix.app.nc.task.ReportMaxResourceIdTask;
+import org.apache.asterix.app.nc.task.ReportLocalCountersTask;
 import org.apache.asterix.app.nc.task.StartLifecycleComponentsTask;
 import org.apache.asterix.app.nc.task.StartReplicationServiceTask;
 import org.apache.asterix.app.replication.message.NCLifecycleTaskReportMessage;
+import org.apache.asterix.app.replication.message.RegistrationTasksRequestMessage;
 import org.apache.asterix.app.replication.message.ReplayPartitionLogsRequestMessage;
 import org.apache.asterix.app.replication.message.ReplayPartitionLogsResponseMessage;
-import org.apache.asterix.app.replication.message.StartupTaskRequestMessage;
-import org.apache.asterix.app.replication.message.StartupTaskResponseMessage;
+import org.apache.asterix.app.replication.message.RegistrationTasksResponseMessage;
 import org.apache.asterix.common.api.INCLifecycleTask;
 import org.apache.asterix.common.cluster.ClusterPartition;
 import org.apache.asterix.common.cluster.IClusterStateManager;
@@ -123,10 +123,10 @@ public class MetadataNodeFaultToleranceStrategy implements IFaultToleranceStrate
     @Override
     public synchronized void process(INCLifecycleMessage message) throws HyracksDataException {
         switch (message.getType()) {
-            case STARTUP_TASK_REQUEST:
-                process((StartupTaskRequestMessage) message);
+            case REGISTRATION_TASKS_REQUEST:
+                process((RegistrationTasksRequestMessage) message);
                 break;
-            case STARTUP_TASK_RESULT:
+            case REGISTRATION_TASKS_RESULT:
                 process((NCLifecycleTaskReportMessage) message);
                 break;
             case REPLAY_LOGS_RESPONSE:
@@ -150,7 +150,7 @@ public class MetadataNodeFaultToleranceStrategy implements IFaultToleranceStrate
         }
     }
 
-    private synchronized void process(StartupTaskRequestMessage msg) throws HyracksDataException {
+    private synchronized void process(RegistrationTasksRequestMessage msg) throws HyracksDataException {
         final String nodeId = msg.getNodeId();
         final SystemState state = msg.getState();
         final boolean isParticipant = replicationStrategy.isParticipant(nodeId);
@@ -160,7 +160,7 @@ public class MetadataNodeFaultToleranceStrategy implements IFaultToleranceStrate
         } else {
             tasks = buildParticipantStartupSequence(nodeId, state);
         }
-        StartupTaskResponseMessage response = new StartupTaskResponseMessage(nodeId, tasks);
+        RegistrationTasksResponseMessage response = new RegistrationTasksResponseMessage(nodeId, tasks);
         try {
             messageBroker.sendApplicationMessageToNC(response, msg.getNodeId());
         } catch (Exception e) {
@@ -199,7 +199,7 @@ public class MetadataNodeFaultToleranceStrategy implements IFaultToleranceStrate
             tasks.add(rt);
         }
         tasks.add(new ExternalLibrarySetupTask(false));
-        tasks.add(new ReportMaxResourceIdTask());
+        tasks.add(new ReportLocalCountersTask());
         tasks.add(new CheckpointTask());
         tasks.add(new StartLifecycleComponentsTask());
         return tasks;
@@ -234,7 +234,7 @@ public class MetadataNodeFaultToleranceStrategy implements IFaultToleranceStrate
             tasks.add(new MetadataBootstrapTask());
         }
         tasks.add(new ExternalLibrarySetupTask(isMetadataNode));
-        tasks.add(new ReportMaxResourceIdTask());
+        tasks.add(new ReportLocalCountersTask());
         tasks.add(new CheckpointTask());
         tasks.add(new StartLifecycleComponentsTask());
         if (isMetadataNode) {

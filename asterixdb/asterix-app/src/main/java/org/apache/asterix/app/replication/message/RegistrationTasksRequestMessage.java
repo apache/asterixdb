@@ -26,27 +26,32 @@ import org.apache.asterix.common.messaging.api.ICcAddressedMessage;
 import org.apache.asterix.common.messaging.api.INCMessageBroker;
 import org.apache.asterix.common.replication.INCLifecycleMessage;
 import org.apache.asterix.common.transactions.IRecoveryManager.SystemState;
+import org.apache.hyracks.api.client.NodeStatus;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.control.nc.NodeControllerService;
 
-public class StartupTaskRequestMessage implements INCLifecycleMessage, ICcAddressedMessage {
+public class RegistrationTasksRequestMessage implements INCLifecycleMessage, ICcAddressedMessage {
 
-    private static final Logger LOGGER = Logger.getLogger(StartupTaskRequestMessage.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(RegistrationTasksRequestMessage.class.getName());
     private static final long serialVersionUID = 1L;
     private final SystemState state;
     private final String nodeId;
+    private final NodeStatus nodeStatus;
 
-    public StartupTaskRequestMessage(String nodeId, SystemState state) {
+    public RegistrationTasksRequestMessage(String nodeId, NodeStatus nodeStatus, SystemState state) {
         this.state = state;
         this.nodeId = nodeId;
+        this.nodeStatus = nodeStatus;
     }
 
-    public static void send(NodeControllerService cs, SystemState systemState) throws HyracksDataException {
+    public static void send(NodeControllerService cs, NodeStatus nodeStatus, SystemState systemState)
+            throws HyracksDataException {
         try {
-            StartupTaskRequestMessage msg = new StartupTaskRequestMessage(cs.getId(), systemState);
+            RegistrationTasksRequestMessage msg = new RegistrationTasksRequestMessage(cs.getId(), nodeStatus,
+                    systemState);
             ((INCMessageBroker) cs.getContext().getMessageBroker()).sendMessageToCC(msg);
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Unable to send StartupTaskRequestMessage to CC", e);
+            LOGGER.log(Level.SEVERE, "Unable to send RegistrationTasksRequestMessage to CC", e);
             throw HyracksDataException.create(e);
         }
     }
@@ -64,8 +69,13 @@ public class StartupTaskRequestMessage implements INCLifecycleMessage, ICcAddres
         return nodeId;
     }
 
+    public NodeStatus getNodeStatus() {
+        return nodeStatus;
+    }
+
     @Override
     public MessageType getType() {
-        return MessageType.STARTUP_TASK_REQUEST;
+        return MessageType.REGISTRATION_TASKS_REQUEST;
     }
+
 }

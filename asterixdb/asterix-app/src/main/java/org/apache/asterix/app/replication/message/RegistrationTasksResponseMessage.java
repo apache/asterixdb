@@ -32,14 +32,14 @@ import org.apache.hyracks.api.service.IControllerService;
 import org.apache.hyracks.control.nc.NCShutdownHook;
 import org.apache.hyracks.util.ExitUtil;
 
-public class StartupTaskResponseMessage implements INCLifecycleMessage, INcAddressedMessage {
+public class RegistrationTasksResponseMessage implements INCLifecycleMessage, INcAddressedMessage {
 
-    private static final Logger LOGGER = Logger.getLogger(StartupTaskResponseMessage.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(RegistrationTasksResponseMessage.class.getName());
     private static final long serialVersionUID = 1L;
     private final String nodeId;
     private final List<INCLifecycleTask> tasks;
 
-    public StartupTaskResponseMessage(String nodeId, List<INCLifecycleTask> tasks) {
+    public RegistrationTasksResponseMessage(String nodeId, List<INCLifecycleTask> tasks) {
         this.nodeId = nodeId;
         this.tasks = tasks;
     }
@@ -88,6 +88,6 @@ public class StartupTaskResponseMessage implements INCLifecycleMessage, INcAddre
 
     @Override
     public MessageType getType() {
-        return MessageType.STARTUP_TASK_RESPONSE;
+        return MessageType.REGISTRATION_TASKS_RESPONSE;
     }
 }

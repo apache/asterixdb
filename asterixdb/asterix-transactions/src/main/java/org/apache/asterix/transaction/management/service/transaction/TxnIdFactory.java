@@ -37,6 +37,6 @@ public class TxnIdFactory {
     }
 
     public static void ensureMinimumId(long id) {
-        TxnIdFactory.id.set(id);
+        TxnIdFactory.id.updateAndGet(current -> Math.max(current, id));
     }
 }

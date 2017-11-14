@@ -61,7 +61,7 @@ public class ResourceIdRequestMessage implements ICcAddressedMessage {
     private void requestMaxResourceID(IClusterStateManager clusterStateManager, IResourceIdManager resourceIdManager,
             ICCMessageBroker broker) throws Exception {
         Set<String> getParticipantNodes = clusterStateManager.getParticipantNodes();
-        ReportMaxResourceIdRequestMessage msg = new ReportMaxResourceIdRequestMessage();
+        ReportLocalCountersRequestMessage msg = new ReportLocalCountersRequestMessage();
         for (String nodeId : getParticipantNodes) {
             if (!resourceIdManager.reported(nodeId)) {
                 broker.sendApplicationMessageToNC(msg, nodeId);

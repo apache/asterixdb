@@ -481,7 +481,9 @@ public class NCAppRuntimeContext implements INcApplicationContext {
 
     @Override
     public synchronized void unexportMetadataNodeStub() throws RemoteException {
-        UnicastRemoteObject.unexportObject(MetadataNode.INSTANCE, false);
+        if (metadataNodeStub != null) {
+            UnicastRemoteObject.unexportObject(MetadataNode.INSTANCE, false);
+        }
         metadataNodeStub = null;
     }
 

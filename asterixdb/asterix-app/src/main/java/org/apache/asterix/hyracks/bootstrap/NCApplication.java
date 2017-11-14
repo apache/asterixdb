@@ -26,7 +26,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.app.nc.NCAppRuntimeContext;
-import org.apache.asterix.app.replication.message.StartupTaskRequestMessage;
+import org.apache.asterix.app.replication.message.RegistrationTasksRequestMessage;
 import org.apache.asterix.common.api.AsterixThreadFactory;
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.config.AsterixExtension;
@@ -48,6 +48,7 @@ import org.apache.asterix.messaging.NCMessageBroker;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepository;
 import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.application.IServiceContext;
+import org.apache.hyracks.api.client.NodeStatus;
 import org.apache.hyracks.api.config.IConfigManager;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.IFileDeviceResolver;
@@ -67,7 +68,6 @@ public class NCApplication extends BaseNCApplication {
     private String nodeId;
     private boolean stopInitiated;
     private boolean startupCompleted;
-    private SystemState systemState;
     protected WebManager webManager;
 
     @Override
@@ -117,9 +117,8 @@ public class NCApplication extends BaseNCApplication {
         this.ncServiceCtx.setMessagingChannelInterfaceFactory(interfaceFactory);
 
         IRecoveryManager recoveryMgr = runtimeContext.getTransactionSubsystem().getRecoveryManager();
-        systemState = recoveryMgr.getSystemState();
-
-        if (systemState == SystemState.PERMANENT_DATA_LOSS) {
+        final SystemState stateOnStartup = recoveryMgr.getSystemState();
+        if (stateOnStartup == SystemState.PERMANENT_DATA_LOSS) {
             if (LOGGER.isLoggable(Level.INFO)) {
                 LOGGER.info("System state: " + SystemState.PERMANENT_DATA_LOSS);
                 LOGGER.info("Node ID: " + nodeId);
@@ -187,20 +186,27 @@ public class NCApplication extends BaseNCApplication {
 
         // Since we don't pass initial run flag in AsterixHyracksIntegrationUtil, we use the virtualNC flag
         final NodeProperties nodeProperties = runtimeContext.getNodeProperties();
-        if (systemState == SystemState.PERMANENT_DATA_LOSS
-                && (nodeProperties.isInitialRun() || nodeProperties.isVirtualNc())) {
-            systemState = SystemState.BOOTSTRAPPING;
+        IRecoveryManager recoveryMgr = runtimeContext.getTransactionSubsystem().getRecoveryManager();
+        SystemState state = recoveryMgr.getSystemState();
+        if (state == SystemState.PERMANENT_DATA_LOSS && (nodeProperties.isInitialRun() || nodeProperties
+                .isVirtualNc())) {
+            state = SystemState.BOOTSTRAPPING;
         }
-        // Request startup tasks from CC
-        StartupTaskRequestMessage.send((NodeControllerService) ncServiceCtx.getControllerService(), systemState);
+        // Request registration tasks from CC
+        RegistrationTasksRequestMessage.send((NodeControllerService) ncServiceCtx.getControllerService(),
+                NodeStatus.BOOTING, state);
         startupCompleted = true;
     }
 
     @Override
     public void onRegisterNode() throws Exception {
         if (startupCompleted) {
-            // Request startup tasks from CC
-            StartupTaskRequestMessage.send((NodeControllerService) ncServiceCtx.getControllerService(), systemState);
+            /*
+             * If the node completed its startup before, then this is a re-registration with
+             * the CC and therefore the system state should be HEALTHY and the node status is ACTIVE
+             */
+            RegistrationTasksRequestMessage.send((NodeControllerService) ncServiceCtx.getControllerService(),
+                    NodeStatus.ACTIVE, SystemState.HEALTHY);
         }
     }
 

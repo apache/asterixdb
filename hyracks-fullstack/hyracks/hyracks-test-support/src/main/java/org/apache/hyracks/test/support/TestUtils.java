@@ -135,7 +135,7 @@ public class TestUtils {
             String ncId = ncNamePrefix + i;
             String ncAddress = addressPrefix + i;
             ncNameToNcInfos.put(ncId,
-                    new NodeControllerInfo(ncId, NodeStatus.ALIVE, new NetworkAddress(ncAddress, netPort),
+                    new NodeControllerInfo(ncId, NodeStatus.ACTIVE, new NetworkAddress(ncAddress, netPort),
                             new NetworkAddress(ncAddress, dataPort), new NetworkAddress(ncAddress, messagingPort), 2));
         }
         return ncNameToNcInfos;

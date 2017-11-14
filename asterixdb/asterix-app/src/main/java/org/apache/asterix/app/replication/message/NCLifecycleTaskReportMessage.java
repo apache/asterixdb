@@ -58,6 +58,6 @@ public class NCLifecycleTaskReportMessage implements INCLifecycleMessage, ICcAdd
 
     @Override
     public MessageType getType() {
-        return MessageType.STARTUP_TASK_RESULT;
+        return MessageType.REGISTRATION_TASKS_RESULT;
     }
 }
