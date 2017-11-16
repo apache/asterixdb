@@ -24,105 +24,77 @@ import org.apache.asterix.common.exceptions.ACIDException;
  * Provides APIs for managing life cycle of a transaction, that is beginning a
  * transaction and aborting/committing the transaction.
  */
-
 public interface ITransactionManager {
 
     /**
      * A transaction may be in any of the following states ACTIVE: The
-     * transaction is ongoing and has not yet committed/aborted. COMMITTD: The
+     * transaction is ongoing and has not yet committed/aborted. COMMITTED: The
      * transaction has committed. ABORTED: The transaction has aborted.
      * TIMED_OUT: The transaction has timed out waiting to acquire a lock.
      */
-    public static final int ACTIVE = 0;
-    public static final int COMMITTED = 1;
-    public static final int ABORTED = 2;
-    public static final int TIMED_OUT = 3;
+    int ACTIVE = 0;
+    int COMMITTED = 1;
+    int ABORTED = 2;
+    int TIMED_OUT = 3;
+
+    enum AtomicityLevel {
+        /**
+         * all records are committed or nothing
+         */
+        ATOMIC,
+        /**
+         * any record with entity commit log
+         */
+        ENTITY_LEVEL
+    }
+
+    enum TransactionMode {
+        /**
+         * Transaction performs only read operations
+         */
+        READ,
+        /**
+         * Transaction may perform read and write operations
+         */
+        READ_WRITE
+    }
 
     /**
      * Begins a transaction identified by a transaction id and returns the
      * associated transaction context.
      *
      * @param txnId
-     *            a unique value for the transaction id.
-     * @return the transaction context associated with the initiated transaction
-     * @see ITransactionContext
+     * @param options
+     * @return The transaction context
      * @throws ACIDException
      */
-    public ITransactionContext beginTransaction(TxnId txnId) throws ACIDException;
+    ITransactionContext beginTransaction(TxnId txnId, TransactionOptions options) throws ACIDException;
 
     /**
      * Returns the transaction context of an active transaction given the
      * transaction id.
      *
      * @param txnId
-     *            a unique value for the transaction id.
-     * @param createIfNotExist
-     *            TODO
-     * @return
+     * @return The transaction context
      * @throws ACIDException
      */
-    public ITransactionContext getTransactionContext(TxnId txnId, boolean createIfNotExist) throws ACIDException;
+    ITransactionContext getTransactionContext(TxnId txnId) throws ACIDException;
 
     /**
-     * Commits a transaction.
+     * Commit a transactions
      *
-     * @param txnContext
-     *            the transaction context associated with the transaction
-     * @param datasetId
-     *            TODO
-     * @param pkHash
-     *            TODO
+     * @param txnId
      * @throws ACIDException
-     * @see ITransactionContextimport org.apache.hyracks.api.job.TxnId;
-     * @see ACIDException
      */
-    public void commitTransaction(ITransactionContext txnContext, DatasetId datasetId, int pkHash)
-            throws ACIDException;
+    void commitTransaction(TxnId txnId) throws ACIDException;
 
     /**
      * Aborts a transaction.
      *
-     * @param txnContext
-     *            the transaction context associated with the transaction
-     * @param datasetId
-     *            TODO
-     * @param pkHash
-     *            TODO
-     * @throws ACIDException
-     * @see ITransactionContext
-     * @see ACIDException
-     */
-    public void abortTransaction(ITransactionContext txnContext, DatasetId datasetId, int pkHash)
-            throws ACIDException;
-
-    /**
-     * Indicates end of all activity for a transaction. In other words, all
-     * participating threads in the transaction have completed the intended
-     * task.
-     *
-     * @param txnContext
-     *            the transaction context associated with the transaction
-     * @param datasetId
-     *            TODO
-     * @param pkHash
-     *            TODO
-     * @param success
-     *            indicates the success or failure. The transaction is committed
-     *            or aborted accordingly.
+     * @param txnId
      * @throws ACIDException
      */
-    public void completedTransaction(ITransactionContext txnContext, DatasetId datasetId, int pkHash,
-            boolean success) throws ACIDException;
-
-    /**
-     * Returns the Transaction Provider for the transaction eco-system. A
-     * transaction eco-system consists of a Log Manager, a Recovery Manager, a
-     * Transaction Manager and a Lock Manager.
-     *
-     * @see ITransactionSubsystem
-     * @return TransactionProvider
-     */
-    public ITransactionSubsystem getTransactionSubsystem();
+    void abortTransaction(TxnId txnId) throws ACIDException;
 
     /**
      * @return The current max txn id.

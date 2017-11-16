@@ -19,43 +19,132 @@
 package org.apache.asterix.common.transactions;
 
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
+import org.apache.hyracks.storage.common.IModificationOperationCallback;
 
+/**
+ * A typical transaction lifecycle goes through the following steps:
+ * 1. {@link ITransactionContext#register(long, ILSMIndex, IModificationOperationCallback, boolean)}
+ * 2. {@link ITransactionContext#beforeOperation(long)}
+ * 3. {@link ITransactionContext#notifyUpdateCommitted(long)}
+ * 4. {@link ITransactionContext#notifyEntityCommitted}
+ * 5. {@link ITransactionContext#afterOperation(long)}
+ * 6. {@link ITransactionContext#complete()}
+ */
 public interface ITransactionContext {
 
-    public void registerIndexAndCallback(long resourceId, ILSMIndex index, AbstractOperationCallback callback,
-            boolean isPrimaryIndex);
+    /**
+     * Registers {@link ILSMIndex} in the transaction. Registering an index
+     * must be done before any operation is performed on the index by this
+     * transaction.
+     *
+     * @param resourceId
+     * @param index
+     * @param callback
+     * @param primaryIndex
+     */
+    void register(long resourceId, ILSMIndex index, IModificationOperationCallback callback, boolean primaryIndex);
 
-    public TxnId getTxnId();
+    /**
+     * Gets the unique transaction id.
+     *
+     * @return the unique transaction id
+     */
+    TxnId getTxnId();
 
-    public void setTimeout(boolean isTimeout);
+    /**
+     * Sets a flag indicating that the transaction timed out.
+     *
+     * @param isTimeout
+     */
+    void setTimeout(boolean isTimeout);
 
-    public boolean isTimeout();
+    /**
+     * Tests if the transaction was timed out.
+     *
+     * @return true if this transaction timed out. Otherwise false.
+     */
+    boolean isTimeout();
 
-    public void setTxnState(int txnState);
+    /**
+     * Sets the state if this transaction.
+     *
+     * @param txnState
+     */
+    void setTxnState(int txnState);
 
-    public int getTxnState();
+    /**
+     * Gets the current state of this transaction.
+     *
+     * @return the current state of this transaction
+     */
+    int getTxnState();
 
-    public long getFirstLSN();
+    /**
+     * Gets the first log sequence number of this transaction.
+     *
+     * @return the first log sequence number
+     */
+    long getFirstLSN();
 
-    public long getLastLSN();
+    /**
+     * Gets the last log sequence number of this transactions.
+     *
+     * @return the last log sequence number
+     */
+    long getLastLSN();
 
-    public void setLastLSN(long LSN);
+    /**
+     * Sets the last log sequence number of this transactions.
+     *
+     * @param newValue
+     */
+    void setLastLSN(long newValue);
 
-    public boolean isWriteTxn();
+    /**
+     * Tests if this is a write transaction.
+     *
+     * @return true if this is a write transaction, otherwise false.
+     */
+    boolean isWriteTxn();
 
-    public void setWriteTxn(boolean isWriterTxn);
+    /**
+     * Sets a flag indication that this is a write transaction.
+     *
+     * @param isWriterTxn
+     */
+    void setWriteTxn(boolean isWriterTxn);
 
-    public String prettyPrint();
+    /**
+     * Called before an operation is performed on index
+     * with resource id {@code resourceId}.
+     *
+     * @param resourceId
+     */
+    void beforeOperation(long resourceId);
 
-    public void setMetadataTransaction(boolean isMetadataTxn);
+    /**
+     * Called to notify the transaction that an update log belonging
+     * to this transaction on index with {@code resourceId} has been
+     * flushed to disk.
+     *
+     * @param resourceId
+     */
+    void notifyUpdateCommitted(long resourceId);
 
-    public boolean isMetadataTransaction();
+    /**
+     * Called to notify the transaction that an entity commit
+     * log belonging to this transaction has been flushed to
+     * disk.
+     */
+    void notifyEntityCommitted();
 
-    public void notifyOptracker(boolean isJobLevelCommit);
-
-    public void incrementNumActiveOperations();
-
-    public void decrementNumActiveOperations();
+    /**
+     * Called after an operation is performed on index
+     * with resource id {@code resourceId}.
+     *
+     * @param resourceId
+     */
+    void afterOperation(long resourceId);
 
     /**
      * Called when no further operations will be performed by the transaction

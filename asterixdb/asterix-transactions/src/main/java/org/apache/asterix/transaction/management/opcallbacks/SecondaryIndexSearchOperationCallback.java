@@ -31,8 +31,8 @@ import org.apache.hyracks.storage.common.ISearchOperationCallback;
 public class SecondaryIndexSearchOperationCallback extends AbstractOperationCallback
         implements ISearchOperationCallback {
 
-    public SecondaryIndexSearchOperationCallback() {
-        super(DatasetId.NULL, null, null, null);
+    public SecondaryIndexSearchOperationCallback(long resourceId) {
+        super(DatasetId.NULL, resourceId, null, null, null);
     }
 
     @Override

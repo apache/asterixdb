@@ -83,7 +83,7 @@ public class CommitRuntime extends AbstractOneInputOneOutputOneFramePushRuntime 
     @Override
     public void open() throws HyracksDataException {
         try {
-            transactionContext = transactionManager.getTransactionContext(txnId, false);
+            transactionContext = transactionManager.getTransactionContext(txnId);
             transactionContext.setWriteTxn(isWriteTransaction);
             ILogMarkerCallback callback = TaskUtil.get(ILogMarkerCallback.KEY_MARKER_CALLBACK, ctx);
             logRecord = new LogRecord(callback);
@@ -111,9 +111,7 @@ public class CommitRuntime extends AbstractOneInputOneOutputOneFramePushRuntime 
                  * active operation count of PrimaryIndexOptracker. By maintaining the count correctly and only allowing
                  * flushing when the count is 0, it can guarantee the no-steal policy for temporary datasets, too.
                  */
-                // TODO: Fix this for upserts. an upsert tuple right now expect to notify the opTracker twice (one for
-                // delete and one for insert)
-                transactionContext.notifyOptracker(false);
+                transactionContext.notifyEntityCommitted();
             } else {
                 tRef.reset(tAccess, t);
                 try {

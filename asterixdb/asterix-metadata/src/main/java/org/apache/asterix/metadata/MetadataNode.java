@@ -19,13 +19,14 @@
 
 package org.apache.asterix.metadata;
 
+import static org.apache.asterix.common.transactions.ITransactionManager.AtomicityLevel;
+
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
@@ -36,12 +37,12 @@ import org.apache.asterix.common.dataflow.LSMIndexUtil;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.metadata.MetadataIndexImmutableProperties;
-import org.apache.asterix.common.transactions.AbstractOperationCallback;
 import org.apache.asterix.common.transactions.DatasetId;
 import org.apache.asterix.common.transactions.IRecoveryManager.ResourceType;
 import org.apache.asterix.common.transactions.ITransactionContext;
 import org.apache.asterix.common.transactions.ITransactionSubsystem;
 import org.apache.asterix.common.transactions.ImmutableDatasetId;
+import org.apache.asterix.common.transactions.TransactionOptions;
 import org.apache.asterix.common.transactions.TxnId;
 import org.apache.asterix.external.indexing.ExternalFile;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
@@ -99,7 +100,6 @@ import org.apache.asterix.transaction.management.opcallbacks.AbstractIndexModifi
 import org.apache.asterix.transaction.management.opcallbacks.SecondaryIndexModificationOperationCallback;
 import org.apache.asterix.transaction.management.opcallbacks.UpsertOperationCallback;
 import org.apache.asterix.transaction.management.service.transaction.DatasetIdFactory;
-import org.apache.asterix.transaction.management.service.transaction.TransactionContext;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
@@ -117,7 +117,6 @@ import org.apache.hyracks.storage.am.common.impls.NoOpIndexAccessParameters;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
-import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndex;
 import org.apache.hyracks.storage.common.IIndex;
 import org.apache.hyracks.storage.common.IIndexAccessParameters;
@@ -128,7 +127,6 @@ import org.apache.hyracks.storage.common.MultiComparator;
 
 public class MetadataNode implements IMetadataNode {
     private static final long serialVersionUID = 1L;
-    private static final Logger LOGGER = Logger.getLogger(MetadataNode.class.getName());
     private static final DatasetId METADATA_DATASET_ID =
             new ImmutableDatasetId(MetadataPrimaryIndexes.PROPERTIES_METADATA.getDatasetId());
 
@@ -165,37 +163,29 @@ public class MetadataNode implements IMetadataNode {
 
     @Override
     public void beginTransaction(TxnId transactionId) throws ACIDException, RemoteException {
-        ITransactionContext txnCtx = transactionSubsystem.getTransactionManager().beginTransaction(transactionId);
-        txnCtx.setMetadataTransaction(true);
+        TransactionOptions options = new TransactionOptions(AtomicityLevel.ATOMIC);
+        transactionSubsystem.getTransactionManager().beginTransaction(transactionId, options);
     }
 
     @Override
     public void commitTransaction(TxnId txnId) throws RemoteException, ACIDException {
-        ITransactionContext txnCtx = transactionSubsystem.getTransactionManager().getTransactionContext(txnId, false);
-        transactionSubsystem.getTransactionManager().commitTransaction(txnCtx, DatasetId.NULL, -1);
+        transactionSubsystem.getTransactionManager().commitTransaction(txnId);
     }
 
     @Override
     public void abortTransaction(TxnId txnId) throws RemoteException, ACIDException {
-        try {
-            ITransactionContext txnCtx =
-                    transactionSubsystem.getTransactionManager().getTransactionContext(txnId, false);
-            transactionSubsystem.getTransactionManager().abortTransaction(txnCtx, DatasetId.NULL, -1);
-        } catch (ACIDException e) {
-            LOGGER.log(Level.WARNING, "Exception aborting transaction", e);
-            throw e;
-        }
+        transactionSubsystem.getTransactionManager().abortTransaction(txnId);
     }
 
     @Override
     public void lock(TxnId txnId, byte lockMode) throws ACIDException, RemoteException {
-        ITransactionContext txnCtx = transactionSubsystem.getTransactionManager().getTransactionContext(txnId, false);
+        ITransactionContext txnCtx = transactionSubsystem.getTransactionManager().getTransactionContext(txnId);
         transactionSubsystem.getLockManager().lock(METADATA_DATASET_ID, -1, lockMode, txnCtx);
     }
 
     @Override
     public void unlock(TxnId txnId, byte lockMode) throws ACIDException, RemoteException {
-        ITransactionContext txnCtx = transactionSubsystem.getTransactionManager().getTransactionContext(txnId, false);
+        ITransactionContext txnCtx = transactionSubsystem.getTransactionManager().getTransactionContext(txnId);
         transactionSubsystem.getLockManager().unlock(METADATA_DATASET_ID, -1, lockMode, txnCtx);
     }
 
@@ -472,96 +462,66 @@ public class MetadataNode implements IMetadataNode {
 
     private void insertTupleIntoIndex(TxnId txnId, IMetadataIndex metadataIndex, ITupleReference tuple)
             throws ACIDException, HyracksDataException {
-        long resourceID = metadataIndex.getResourceId();
-        String resourceName = metadataIndex.getFile().getRelativePath();
-        ILSMIndex lsmIndex = (ILSMIndex) datasetLifecycleManager.get(resourceName);
-        try {
-            datasetLifecycleManager.open(resourceName);
-
-            // prepare a Callback for logging
-            IModificationOperationCallback modCallback =
-                    createIndexModificationCallback(txnId, resourceID, metadataIndex, lsmIndex, Operation.INSERT);
-
-            IIndexAccessParameters iap = new IndexAccessParameters(modCallback, NoOpOperationCallback.INSTANCE);
-            ILSMIndexAccessor indexAccessor = lsmIndex.createAccessor(iap);
-
-            ITransactionContext txnCtx =
-                    transactionSubsystem.getTransactionManager().getTransactionContext(txnId, false);
-            txnCtx.setWriteTxn(true);
-            txnCtx.registerIndexAndCallback(resourceID, lsmIndex, (AbstractOperationCallback) modCallback,
-                    metadataIndex.isPrimaryIndex());
-
-            LSMIndexUtil.checkAndSetFirstLSN((AbstractLSMIndex) lsmIndex, transactionSubsystem.getLogManager());
-
-            // TODO: fix exceptions once new BTree exception model is in hyracks.
-            indexAccessor.forceInsert(tuple);
-            // Manually complete the operation after the insert. This is to decrement the
-            // resource counters within the
-            // index that determine how many tuples are still 'in-flight' within the index.
-            // Normally the log flusher
-            // does this. The only exception is the index registered as the "primary" which
-            // we will let be decremented
-            // by the job commit log event
-            if (!((TransactionContext) txnCtx).getPrimaryIndexOpTracker().equals(lsmIndex.getOperationTracker())) {
-                lsmIndex.getOperationTracker().completeOperation(lsmIndex, LSMOperationType.FORCE_MODIFICATION, null,
-                        modCallback);
-            }
-        } finally {
-            datasetLifecycleManager.close(resourceName);
-        }
+        modifyMetadataIndex(Operation.INSERT, txnId, metadataIndex, tuple);
     }
 
     private void upsertTupleIntoIndex(TxnId txnId, IMetadataIndex metadataIndex, ITupleReference tuple)
             throws ACIDException, HyracksDataException {
-        long resourceId = metadataIndex.getResourceId();
+        modifyMetadataIndex(Operation.UPSERT, txnId, metadataIndex, tuple);
+    }
+
+    private void modifyMetadataIndex(Operation op, TxnId txnId, IMetadataIndex metadataIndex, ITupleReference tuple)
+            throws ACIDException, HyracksDataException {
         String resourceName = metadataIndex.getFile().getRelativePath();
         ILSMIndex lsmIndex = (ILSMIndex) datasetLifecycleManager.get(resourceName);
         datasetLifecycleManager.open(resourceName);
         try {
-            // prepare a Callback for logging
-            ITransactionContext txnCtx =
-                    transactionSubsystem.getTransactionManager().getTransactionContext(txnId, false);
-            IModificationOperationCallback modCallback =
-                    new UpsertOperationCallback(metadataIndex.getDatasetId(), metadataIndex.getPrimaryKeyIndexes(),
-                            txnCtx, transactionSubsystem.getLockManager(), transactionSubsystem, resourceId,
-                            metadataStoragePartition, ResourceType.LSM_BTREE, Operation.UPSERT);
+            ITransactionContext txnCtx = transactionSubsystem.getTransactionManager().getTransactionContext(txnId);
+            IModificationOperationCallback modCallback = createIndexModificationCallback(op, txnCtx, metadataIndex);
             IIndexAccessParameters iap = new IndexAccessParameters(modCallback, NoOpOperationCallback.INSTANCE);
             ILSMIndexAccessor indexAccessor = lsmIndex.createAccessor(iap);
             txnCtx.setWriteTxn(true);
-            txnCtx.registerIndexAndCallback(resourceId, lsmIndex, (AbstractOperationCallback) modCallback,
-                    metadataIndex.isPrimaryIndex());
+            txnCtx.register(metadataIndex.getResourceId(), lsmIndex, modCallback, metadataIndex.isPrimaryIndex());
             LSMIndexUtil.checkAndSetFirstLSN((AbstractLSMIndex) lsmIndex, transactionSubsystem.getLogManager());
-            indexAccessor.forceUpsert(tuple);
-            // Manually complete the operation after the insert. This is to decrement the
-            // resource counters within the
-            // index that determine how many tuples are still 'in-flight' within the index.
-            // Normally the log flusher
-            // does this. The only exception is the index registered as the "primary" which
-            // we will let be decremented
-            // by the job commit log event
-            if (!((TransactionContext) txnCtx).getPrimaryIndexOpTracker().equals(lsmIndex.getOperationTracker())) {
-                lsmIndex.getOperationTracker().completeOperation(lsmIndex, LSMOperationType.FORCE_MODIFICATION, null,
-                        modCallback);
+            switch (op) {
+                case INSERT:
+                    indexAccessor.insert(tuple);
+                    break;
+                case DELETE:
+                    indexAccessor.delete(tuple);
+                    break;
+                case UPSERT:
+                    indexAccessor.upsert(tuple);
+                    break;
+                default:
+                    throw new IllegalStateException("Unknown operation type: " + op);
             }
         } finally {
             datasetLifecycleManager.close(resourceName);
         }
     }
 
-    private IModificationOperationCallback createIndexModificationCallback(TxnId txnId, long resourceId,
-            IMetadataIndex metadataIndex, ILSMIndex lsmIndex, Operation indexOp) throws ACIDException {
-        ITransactionContext txnCtx = transactionSubsystem.getTransactionManager().getTransactionContext(txnId, false);
-
-        // Regardless of the index type (primary or secondary index), secondary index
-        // modification callback is given
-        // This is still correct since metadata index operation doesn't require any lock
-        // from ConcurrentLockMgr and
-        // The difference between primaryIndexModCallback and secondaryIndexModCallback
-        // is that primary index requires
-        // locks and secondary index doesn't.
-        return new SecondaryIndexModificationOperationCallback(metadataIndex.getDatasetId(),
-                metadataIndex.getPrimaryKeyIndexes(), txnCtx, transactionSubsystem.getLockManager(),
-                transactionSubsystem, resourceId, metadataStoragePartition, ResourceType.LSM_BTREE, indexOp);
+    private IModificationOperationCallback createIndexModificationCallback(Operation indexOp,
+            ITransactionContext txnCtx, IMetadataIndex metadataIndex) {
+        switch (indexOp) {
+            case INSERT:
+            case DELETE:
+                /*
+                 * Regardless of the index type (primary or secondary index), secondary index modification
+                 * callback is given. This is still correct since metadata index operation doesn't require
+                 * any lock from ConcurrentLockMgr.
+                 */
+                return new SecondaryIndexModificationOperationCallback(metadataIndex.getDatasetId(),
+                        metadataIndex.getPrimaryKeyIndexes(), txnCtx, transactionSubsystem.getLockManager(),
+                        transactionSubsystem, metadataIndex.getResourceId(), metadataStoragePartition,
+                        ResourceType.LSM_BTREE, indexOp);
+            case UPSERT:
+                return new UpsertOperationCallback(metadataIndex.getDatasetId(), metadataIndex.getPrimaryKeyIndexes(),
+                        txnCtx, transactionSubsystem.getLockManager(), transactionSubsystem,
+                        metadataIndex.getResourceId(), metadataStoragePartition, ResourceType.LSM_BTREE, indexOp);
+            default:
+                throw new IllegalStateException("Unknown operation type: " + indexOp);
+        }
     }
 
     @Override
@@ -822,40 +782,7 @@ public class MetadataNode implements IMetadataNode {
 
     private void deleteTupleFromIndex(TxnId txnId, IMetadataIndex metadataIndex, ITupleReference tuple)
             throws ACIDException, HyracksDataException {
-        long resourceID = metadataIndex.getResourceId();
-        String resourceName = metadataIndex.getFile().getRelativePath();
-        ILSMIndex lsmIndex = (ILSMIndex) datasetLifecycleManager.get(resourceName);
-        try {
-            datasetLifecycleManager.open(resourceName);
-            // prepare a Callback for logging
-            IModificationOperationCallback modCallback =
-                    createIndexModificationCallback(txnId, resourceID, metadataIndex, lsmIndex, Operation.DELETE);
-            IIndexAccessParameters iap = new IndexAccessParameters(modCallback, NoOpOperationCallback.INSTANCE);
-            ILSMIndexAccessor indexAccessor = lsmIndex.createAccessor(iap);
-
-            ITransactionContext txnCtx =
-                    transactionSubsystem.getTransactionManager().getTransactionContext(txnId, false);
-            txnCtx.setWriteTxn(true);
-            txnCtx.registerIndexAndCallback(resourceID, lsmIndex, (AbstractOperationCallback) modCallback,
-                    metadataIndex.isPrimaryIndex());
-
-            LSMIndexUtil.checkAndSetFirstLSN((AbstractLSMIndex) lsmIndex, transactionSubsystem.getLogManager());
-
-            indexAccessor.forceDelete(tuple);
-            // Manually complete the operation after the insert. This is to decrement the
-            // resource counters within the
-            // index that determine how many tuples are still 'in-flight' within the index.
-            // Normally the log flusher
-            // does this. The only exception is the index registered as the "primary" which
-            // we will let be decremented
-            // by the job commit log event
-            if (!((TransactionContext) txnCtx).getPrimaryIndexOpTracker().equals(lsmIndex.getOperationTracker())) {
-                lsmIndex.getOperationTracker().completeOperation(lsmIndex, LSMOperationType.FORCE_MODIFICATION, null,
-                        modCallback);
-            }
-        } finally {
-            datasetLifecycleManager.close(resourceName);
-        }
+        modifyMetadataIndex(Operation.DELETE, txnId, metadataIndex, tuple);
     }
 
     @Override

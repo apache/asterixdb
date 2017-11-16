@@ -78,7 +78,7 @@ public class FlushDatasetOperatorDescriptor extends AbstractSingleActivityOperat
                     ILockManager lockManager = appCtx.getTransactionSubsystem().getLockManager();
                     ITransactionManager txnManager = appCtx.getTransactionSubsystem().getTransactionManager();
                     // get the local transaction
-                    ITransactionContext txnCtx = txnManager.getTransactionContext(txnId, false);
+                    ITransactionContext txnCtx = txnManager.getTransactionContext(txnId);
                     // lock the dataset granule
                     lockManager.lock(datasetId, -1, LockMode.S, txnCtx);
                     // flush the dataset synchronously

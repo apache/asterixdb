@@ -174,7 +174,7 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
         //modificationCallback can be NoOpOperationCallback when redo/undo operations are executed.
         if (modificationCallback != NoOpOperationCallback.INSTANCE) {
             numActiveOperations.incrementAndGet();
-            ((AbstractOperationCallback) modificationCallback).incrementLocalNumActiveOperations();
+            ((AbstractOperationCallback) modificationCallback).beforeOperation();
         }
     }
 
@@ -182,7 +182,7 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
         //modificationCallback can be NoOpOperationCallback when redo/undo operations are executed.
         if (modificationCallback != NoOpOperationCallback.INSTANCE) {
             numActiveOperations.decrementAndGet();
-            ((AbstractOperationCallback) modificationCallback).decrementLocalNumActiveOperations();
+            ((AbstractOperationCallback) modificationCallback).afterOperation();
         }
     }
 

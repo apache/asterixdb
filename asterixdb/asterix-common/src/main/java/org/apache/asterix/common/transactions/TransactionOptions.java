@@ -16,33 +16,20 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.transaction.management.service.transaction;
+package org.apache.asterix.common.transactions;
 
-public class MutableResourceId {
-    long id;
+import static org.apache.asterix.common.transactions.ITransactionManager.AtomicityLevel;
 
-    public MutableResourceId(long id) {
-        this.id = id;
+public class TransactionOptions {
+
+    private final AtomicityLevel atomicityLevel;
+
+    // TODO add TransactionMode(READ/WRITE) to options
+    public TransactionOptions(AtomicityLevel atomicityLevel) {
+        this.atomicityLevel = atomicityLevel;
     }
 
-    public void setId(long id) {
-        this.id = id;
-    }
-
-    public long getId() {
-        return id;
-    }
-
-    @Override
-    public int hashCode() {
-        return (int) id;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if ((o == null) || !(o instanceof MutableResourceId)) {
-            return false;
-        }
-        return ((MutableResourceId) o).id == this.id;
+    public AtomicityLevel getAtomicityLevel() {
+        return atomicityLevel;
     }
 }

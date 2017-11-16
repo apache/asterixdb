@@ -27,7 +27,7 @@ import org.apache.asterix.common.transactions.ITransactionContext;
  * ACIDException encountered during crash recovery shall not have a transaction
  * context as recovery does not happen as part of a transaction.
  */
-public class ACIDException extends Exception {
+public class ACIDException extends RuntimeException {
 
     private static final long serialVersionUID = -8855848112541877323L;
     private ITransactionContext txnContext;

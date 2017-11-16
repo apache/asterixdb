@@ -16,26 +16,28 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.asterix.transaction.management.service.transaction;
 
-import org.apache.hyracks.api.dataflow.value.IBinaryHashFunction;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
+import static org.apache.asterix.common.transactions.ITransactionManager.AtomicityLevel;
 
-public class FieldsHashValueGenerator {
-    public static int computeFieldsHashValue(ITupleReference tuple, int[] fieldIndexes,
-            IBinaryHashFunction[] fieldHashFunctions) throws HyracksDataException {
-        int h = 0;
-        for (int i = 0; i < fieldIndexes.length; i++) {
-            int primaryKeyFieldIdx = fieldIndexes[i];
-            int fh = fieldHashFunctions[i].hash(tuple.getFieldData(primaryKeyFieldIdx),
-                    tuple.getFieldStart(primaryKeyFieldIdx), tuple.getFieldLength(primaryKeyFieldIdx));
-            h = h * 31 + fh;
-            if (h < 0) {
-                h = h * (-1);
-            }
+import org.apache.asterix.common.transactions.ITransactionContext;
+import org.apache.asterix.common.transactions.TransactionOptions;
+import org.apache.asterix.common.transactions.TxnId;
+
+public class TransactionContextFactory {
+
+    private TransactionContextFactory() {
+    }
+
+    public static ITransactionContext create(TxnId txnId, TransactionOptions options) {
+        final AtomicityLevel atomicityLevel = options.getAtomicityLevel();
+        switch (atomicityLevel) {
+            case ATOMIC:
+                return new AtomicTransactionContext(txnId);
+            case ENTITY_LEVEL:
+                return new EntityLevelTransactionContext(txnId);
+            default:
+                throw new IllegalStateException("Unknown transaction context type: " + atomicityLevel);
         }
-        return h;
     }
 }

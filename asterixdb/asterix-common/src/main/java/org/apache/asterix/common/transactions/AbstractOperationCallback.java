@@ -31,14 +31,16 @@ public abstract class AbstractOperationCallback {
     protected final ITransactionContext txnCtx;
     protected final ILockManager lockManager;
     protected final long[] longHashes;
+    protected final long resourceId;
 
-    public AbstractOperationCallback(DatasetId datasetId, int[] primaryKeyFields, ITransactionContext txnCtx,
-            ILockManager lockManager) {
+    public AbstractOperationCallback(DatasetId datasetId, long resourceId, int[] primaryKeyFields,
+            ITransactionContext txnCtx, ILockManager lockManager) {
         this.datasetId = datasetId;
+        this.resourceId = resourceId;
         this.primaryKeyFields = primaryKeyFields;
         this.txnCtx = txnCtx;
         this.lockManager = lockManager;
-        this.longHashes = new long[2];
+        longHashes = new long[2];
     }
 
     public int computePrimaryKeyHashValue(ITupleReference tuple, int[] primaryKeyFields) {
@@ -46,12 +48,11 @@ public abstract class AbstractOperationCallback {
         return Math.abs((int) longHashes[0]);
     }
 
-    public void incrementLocalNumActiveOperations() {
-        txnCtx.incrementNumActiveOperations();
+    public void beforeOperation() {
+        txnCtx.beforeOperation(resourceId);
     }
 
-    public void decrementLocalNumActiveOperations() {
-        txnCtx.decrementNumActiveOperations();
+    public void afterOperation() {
+        txnCtx.afterOperation(resourceId);
     }
-
 }

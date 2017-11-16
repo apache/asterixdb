@@ -32,6 +32,6 @@ public class SecondaryIndexSearchOperationCallbackFactory implements ISearchOper
     @Override
     public ISearchOperationCallback createSearchOperationCallback(long resourceId, IHyracksTaskContext ctx, IOperatorNodePushable operatorNodePushable)
             throws HyracksDataException {
-        return new SecondaryIndexSearchOperationCallback();
+        return new SecondaryIndexSearchOperationCallback(resourceId);
     }
 }

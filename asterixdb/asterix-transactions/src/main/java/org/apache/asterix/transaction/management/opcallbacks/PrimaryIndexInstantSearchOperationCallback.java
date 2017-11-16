@@ -35,9 +35,9 @@ import org.apache.hyracks.storage.common.ISearchOperationCallback;
 public class PrimaryIndexInstantSearchOperationCallback extends AbstractOperationCallback
         implements ISearchOperationCallback {
 
-    public PrimaryIndexInstantSearchOperationCallback(DatasetId datasetId, int[] entityIdFields,
+    public PrimaryIndexInstantSearchOperationCallback(DatasetId datasetId, long resourceId, int[] entityIdFields,
             ILockManager lockManager, ITransactionContext txnCtx) {
-        super(datasetId, entityIdFields, txnCtx, lockManager);
+        super(datasetId, resourceId, entityIdFields, txnCtx, lockManager);
     }
 
     @Override

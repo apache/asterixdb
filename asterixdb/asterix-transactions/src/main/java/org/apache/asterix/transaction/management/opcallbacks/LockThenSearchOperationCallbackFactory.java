@@ -49,9 +49,9 @@ public class LockThenSearchOperationCallbackFactory extends AbstractOperationCal
         try {
             IJobletEventListenerFactory fact = ctx.getJobletContext().getJobletEventListenerFactory();
             ITransactionContext txnCtx = txnSubsystem.getTransactionManager()
-                    .getTransactionContext(((IJobEventListenerFactory) fact).getTxnId(txnId), false);
-            return new LockThenSearchOperationCallback(new DatasetId(datasetId), primaryKeyFields, txnSubsystem, txnCtx,
-                    operatorNodePushable);
+                    .getTransactionContext(((IJobEventListenerFactory) fact).getTxnId(txnId));
+            return new LockThenSearchOperationCallback(new DatasetId(datasetId), resourceId, primaryKeyFields,
+                    txnSubsystem, txnCtx, operatorNodePushable);
         } catch (ACIDException e) {
             throw new HyracksDataException(e);
         }

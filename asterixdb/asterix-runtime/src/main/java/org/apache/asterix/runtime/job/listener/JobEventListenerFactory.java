@@ -18,12 +18,14 @@
  */
 package org.apache.asterix.runtime.job.listener;
 
+import static org.apache.asterix.common.transactions.ITransactionManager.AtomicityLevel;
+
 import org.apache.asterix.common.api.IJobEventListenerFactory;
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.exceptions.ACIDException;
-import org.apache.asterix.common.transactions.DatasetId;
 import org.apache.asterix.common.transactions.ITransactionContext;
 import org.apache.asterix.common.transactions.ITransactionManager;
+import org.apache.asterix.common.transactions.TransactionOptions;
 import org.apache.asterix.common.transactions.TxnId;
 import org.apache.hyracks.api.context.IHyracksJobletContext;
 import org.apache.hyracks.api.job.IJobletEventListener;
@@ -79,10 +81,13 @@ public class JobEventListenerFactory implements IJobEventListenerFactory {
                 try {
                     ITransactionManager txnManager = ((INcApplicationContext) jobletContext.getServiceContext()
                             .getApplicationContext()).getTransactionSubsystem().getTransactionManager();
-                    ITransactionContext txnContext = txnManager.getTransactionContext(txnId, false);
+                    ITransactionContext txnContext = txnManager.getTransactionContext(txnId);
                     txnContext.setWriteTxn(transactionalWrite);
-                    txnManager.completedTransaction(txnContext, DatasetId.NULL, -1,
-                            !(jobStatus == JobStatus.FAILURE));
+                    if (jobStatus != JobStatus.FAILURE) {
+                        txnManager.commitTransaction(txnId);
+                    } else {
+                        txnManager.abortTransaction(txnId);
+                    }
                 } catch (ACIDException e) {
                     throw new Error(e);
                 }
@@ -91,8 +96,9 @@ public class JobEventListenerFactory implements IJobEventListenerFactory {
             @Override
             public void jobletStart() {
                 try {
+                    TransactionOptions options = new TransactionOptions(AtomicityLevel.ENTITY_LEVEL);
                     ((INcApplicationContext) jobletContext.getServiceContext().getApplicationContext())
-                            .getTransactionSubsystem().getTransactionManager().getTransactionContext(txnId, true);
+                            .getTransactionSubsystem().getTransactionManager().beginTransaction(txnId, options);
                 } catch (ACIDException e) {
                     throw new Error(e);
                 }

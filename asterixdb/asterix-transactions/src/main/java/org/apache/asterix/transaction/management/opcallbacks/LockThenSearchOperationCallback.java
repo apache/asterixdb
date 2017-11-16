@@ -45,10 +45,10 @@ public class LockThenSearchOperationCallback extends AbstractOperationCallback i
     private final ILogRecord logRecord;
     private int pkHash;
 
-    public LockThenSearchOperationCallback(DatasetId datasetId, int[] entityIdFields,
+    public LockThenSearchOperationCallback(DatasetId datasetId, long resourceId, int[] entityIdFields,
             ITransactionSubsystem txnSubsystem, ITransactionContext txnCtx,
             IOperatorNodePushable operatorNodePushable) {
-        super(datasetId, entityIdFields, txnCtx, txnSubsystem.getLockManager());
+        super(datasetId, resourceId, entityIdFields, txnCtx, txnSubsystem.getLockManager());
         this.operatorNodePushable = (LSMIndexInsertUpdateDeleteOperatorNodePushable) operatorNodePushable;
         this.logManager = txnSubsystem.getLogManager();
         this.logRecord = new LogRecord();

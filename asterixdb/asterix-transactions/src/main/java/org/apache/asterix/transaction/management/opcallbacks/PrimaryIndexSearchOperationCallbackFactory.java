@@ -51,8 +51,8 @@ public class PrimaryIndexSearchOperationCallbackFactory extends AbstractOperatio
         try {
             IJobletEventListenerFactory fact = ctx.getJobletContext().getJobletEventListenerFactory();
             ITransactionContext txnCtx = txnSubsystem.getTransactionManager()
-                    .getTransactionContext(((IJobEventListenerFactory) fact).getTxnId(txnId), false);
-            return new PrimaryIndexSearchOperationCallback(new DatasetId(datasetId), primaryKeyFields,
+                    .getTransactionContext(((IJobEventListenerFactory) fact).getTxnId(txnId));
+            return new PrimaryIndexSearchOperationCallback(new DatasetId(datasetId), resourceId, primaryKeyFields,
                     txnSubsystem.getLockManager(), txnCtx);
         } catch (ACIDException e) {
             throw new HyracksDataException(e);

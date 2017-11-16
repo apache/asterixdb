@@ -234,27 +234,26 @@ public class LogBuffer implements ILogBuffer {
     private void batchUnlock(int beginOffset, int endOffset) throws ACIDException {
         if (endOffset > beginOffset) {
             logBufferTailReader.initializeScan(beginOffset, endOffset);
-
             ITransactionContext txnCtx;
-
             LogRecord logRecord = logBufferTailReader.next();
             while (logRecord != null) {
                 if (logRecord.getLogSource() == LogSource.LOCAL) {
                     if (logRecord.getLogType() == LogType.ENTITY_COMMIT) {
                         reusableTxnId.setId(logRecord.getTxnId());
                         reusableDatasetId.setId(logRecord.getDatasetId());
-                        txnCtx = txnSubsystem.getTransactionManager().getTransactionContext(reusableTxnId, false);
+                        txnCtx = txnSubsystem.getTransactionManager().getTransactionContext(reusableTxnId);
                         txnSubsystem.getLockManager().unlock(reusableDatasetId, logRecord.getPKHashValue(),
                                 LockMode.ANY, txnCtx);
-                        txnCtx.notifyOptracker(false);
+                        txnCtx.notifyEntityCommitted();
                         if (txnSubsystem.getTransactionProperties().isCommitProfilerEnabled()) {
                             txnSubsystem.incrementEntityCommitCount();
                         }
+                    } else if (logRecord.getLogType() == LogType.UPDATE) {
+                        reusableTxnId.setId(logRecord.getTxnId());
+                        txnCtx = txnSubsystem.getTransactionManager().getTransactionContext(reusableTxnId);
+                        txnCtx.notifyUpdateCommitted(logRecord.getResourceId());
                     } else if (logRecord.getLogType() == LogType.JOB_COMMIT
                             || logRecord.getLogType() == LogType.ABORT) {
-                        reusableTxnId.setId(logRecord.getTxnId());
-                        txnCtx = txnSubsystem.getTransactionManager().getTransactionContext(reusableTxnId, false);
-                        txnCtx.notifyOptracker(true);
                         notifyJobTermination();
                     } else if (logRecord.getLogType() == LogType.FLUSH) {
                         notifyFlushTermination();
@@ -266,7 +265,6 @@ public class LogBuffer implements ILogBuffer {
                         notifyReplicationTermination();
                     }
                 }
-
                 logRecord = logBufferTailReader.next();
             }
         }

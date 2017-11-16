@@ -39,8 +39,9 @@ import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.dataflow.LSMInsertDeleteOperatorNodePushable;
 import org.apache.asterix.common.ioopcallbacks.AbstractLSMIOOperationCallback;
-import org.apache.asterix.common.transactions.DatasetId;
 import org.apache.asterix.common.transactions.ITransactionContext;
+import org.apache.asterix.common.transactions.ITransactionManager;
+import org.apache.asterix.common.transactions.TransactionOptions;
 import org.apache.asterix.external.util.DataflowUtils;
 import org.apache.asterix.file.StorageComponentProvider;
 import org.apache.asterix.metadata.entities.Dataset;
@@ -146,7 +147,8 @@ public class ComponentRollbackTest {
         lsmBtree = (TestLsmBtree) indexDataflowHelper.getIndexInstance();
         indexDataflowHelper.close();
         nc.newJobId();
-        txnCtx = nc.getTransactionManager().getTransactionContext(nc.getTxnJobId(ctx), true);
+        txnCtx = nc.getTransactionManager().beginTransaction(nc.getTxnJobId(ctx),
+                new TransactionOptions(ITransactionManager.AtomicityLevel.ENTITY_LEVEL));
         insertOp = nc.getInsertPipeline(ctx, dataset, KEY_TYPES, RECORD_TYPE, META_TYPE, null, KEY_INDEXES,
                 KEY_INDICATORS_LIST, storageManager).getLeft();
     }
@@ -188,7 +190,7 @@ public class ComponentRollbackTest {
                 tupleAppender.write(insertOp, true);
             }
             insertOp.close();
-            nc.getTransactionManager().completedTransaction(txnCtx, DatasetId.NULL, -1, true);
+            nc.getTransactionManager().commitTransaction(txnCtx.getTxnId());
 
             // get all components
             List<ILSMMemoryComponent> memComponents = lsmBtree.getMemoryComponents();
@@ -239,8 +241,7 @@ public class ComponentRollbackTest {
                 tupleAppender.write(insertOp, true);
             }
             insertOp.close();
-            nc.getTransactionManager().completedTransaction(txnCtx, DatasetId.NULL, -1, true);
-
+            nc.getTransactionManager().commitTransaction(txnCtx.getTxnId());
             // get all components
             List<ILSMMemoryComponent> memComponents = lsmBtree.getMemoryComponents();
             List<ILSMDiskComponent> diskComponents = lsmBtree.getDiskComponents();
@@ -255,7 +256,8 @@ public class ComponentRollbackTest {
 
             // insert again
             nc.newJobId();
-            txnCtx = nc.getTransactionManager().getTransactionContext(nc.getTxnJobId(ctx), true);
+            txnCtx = nc.getTransactionManager().beginTransaction(nc.getTxnJobId(ctx),
+                    new TransactionOptions(ITransactionManager.AtomicityLevel.ENTITY_LEVEL));
             insertOp = nc.getInsertPipeline(ctx, dataset, KEY_TYPES, RECORD_TYPE, META_TYPE, null, KEY_INDEXES,
                     KEY_INDICATORS_LIST, storageManager).getLeft();
             insertOp.open();
@@ -267,7 +269,7 @@ public class ComponentRollbackTest {
                 tupleAppender.write(insertOp, true);
             }
             insertOp.close();
-            nc.getTransactionManager().completedTransaction(txnCtx, DatasetId.NULL, -1, true);
+            nc.getTransactionManager().commitTransaction(txnCtx.getTxnId());
             searchAndAssertCount(nc, ctx, dataset, storageManager, TOTAL_NUM_OF_RECORDS);
             // rollback the last disk component
             lsmAccessor = lsmBtree.createAccessor(NoOpIndexAccessParameters.INSTANCE);
@@ -308,7 +310,7 @@ public class ComponentRollbackTest {
                 tupleAppender.write(insertOp, true);
             }
             insertOp.close();
-            nc.getTransactionManager().completedTransaction(txnCtx, DatasetId.NULL, -1, true);
+            nc.getTransactionManager().commitTransaction(txnCtx.getTxnId());
 
             // get all components
             List<ILSMMemoryComponent> memComponents = lsmBtree.getMemoryComponents();
@@ -378,7 +380,7 @@ public class ComponentRollbackTest {
                 tupleAppender.write(insertOp, true);
             }
             insertOp.close();
-            nc.getTransactionManager().completedTransaction(txnCtx, DatasetId.NULL, -1, true);
+            nc.getTransactionManager().commitTransaction(txnCtx.getTxnId());
             // get all components
             List<ILSMMemoryComponent> memComponents = lsmBtree.getMemoryComponents();
             List<ILSMDiskComponent> diskComponents = lsmBtree.getDiskComponents();
@@ -434,7 +436,7 @@ public class ComponentRollbackTest {
                 tupleAppender.write(insertOp, true);
             }
             insertOp.close();
-            nc.getTransactionManager().completedTransaction(txnCtx, DatasetId.NULL, -1, true);
+            nc.getTransactionManager().commitTransaction(txnCtx.getTxnId());
             // get all components
             List<ILSMMemoryComponent> memComponents = lsmBtree.getMemoryComponents();
             List<ILSMDiskComponent> diskComponents = lsmBtree.getDiskComponents();
@@ -498,7 +500,7 @@ public class ComponentRollbackTest {
                 tupleAppender.write(insertOp, true);
             }
             insertOp.close();
-            nc.getTransactionManager().completedTransaction(txnCtx, DatasetId.NULL, -1, true);
+            nc.getTransactionManager().commitTransaction(txnCtx.getTxnId());
             // get all components
             List<ILSMMemoryComponent> memComponents = lsmBtree.getMemoryComponents();
             List<ILSMDiskComponent> diskComponents = lsmBtree.getDiskComponents();
@@ -558,7 +560,7 @@ public class ComponentRollbackTest {
                 tupleAppender.write(insertOp, true);
             }
             insertOp.close();
-            nc.getTransactionManager().completedTransaction(txnCtx, DatasetId.NULL, -1, true);
+            nc.getTransactionManager().commitTransaction(txnCtx.getTxnId());
             // get all components
             List<ILSMMemoryComponent> memComponents = lsmBtree.getMemoryComponents();
             List<ILSMDiskComponent> diskComponents = lsmBtree.getDiskComponents();
@@ -620,7 +622,7 @@ public class ComponentRollbackTest {
                 tupleAppender.write(insertOp, true);
             }
             insertOp.close();
-            nc.getTransactionManager().completedTransaction(txnCtx, DatasetId.NULL, -1, true);
+            nc.getTransactionManager().commitTransaction(txnCtx.getTxnId());
             // get all components
             List<ILSMMemoryComponent> memComponents = lsmBtree.getMemoryComponents();
             List<ILSMDiskComponent> diskComponents = lsmBtree.getDiskComponents();
@@ -691,7 +693,7 @@ public class ComponentRollbackTest {
                 tupleAppender.write(insertOp, true);
             }
             insertOp.close();
-            nc.getTransactionManager().completedTransaction(txnCtx, DatasetId.NULL, -1, true);
+            nc.getTransactionManager().commitTransaction(txnCtx.getTxnId());
             // get all components
             List<ILSMMemoryComponent> memComponents = lsmBtree.getMemoryComponents();
             List<ILSMDiskComponent> diskComponents = lsmBtree.getDiskComponents();
