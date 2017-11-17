@@ -19,16 +19,20 @@
 
 package org.apache.asterix.common.ioopcallbacks;
 
+import java.io.ObjectStreamException;
+
 import org.apache.hyracks.api.application.INCServiceContext;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentId;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentIdGenerator;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentIdGeneratorFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
+import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentId;
 
 public abstract class AbstractLSMIndexIOOperationCallbackFactory implements ILSMIOOperationCallbackFactory {
 
     private static final long serialVersionUID = 1L;
 
-    protected final ILSMComponentIdGeneratorFactory idGeneratorFactory;
+    protected ILSMComponentIdGeneratorFactory idGeneratorFactory;
 
     protected transient INCServiceContext ncCtx;
 
@@ -42,7 +46,30 @@ public abstract class AbstractLSMIndexIOOperationCallbackFactory implements ILSM
     }
 
     protected ILSMComponentIdGenerator getComponentIdGenerator() {
-        assert ncCtx != null;
         return idGeneratorFactory.getComponentIdGenerator(ncCtx);
+    }
+
+    private void readObjectNoData() throws ObjectStreamException {
+        idGeneratorFactory = new ILSMComponentIdGeneratorFactory() {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public ILSMComponentIdGenerator getComponentIdGenerator(INCServiceContext serviceCtx) {
+                // used for backward compatibility
+                // if idGeneratorFactory is not set for legacy lsm indexes, we return a default
+                // component id generator which always generates the missing component id.
+                return new ILSMComponentIdGenerator() {
+                    @Override
+                    public void refresh() {
+                        // No op
+                    }
+
+                    @Override
+                    public ILSMComponentId getId() {
+                        return LSMComponentId.MISSING_COMPONENT_ID;
+                    }
+                };
+            }
+        };
     }
 }

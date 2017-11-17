@@ -272,7 +272,8 @@ public abstract class AbstractLSMMemoryComponent extends AbstractLSMComponent im
 
     @Override
     public void resetId(ILSMComponentId componentId) throws HyracksDataException {
-        if (this.componentId != null && this.componentId.compareTo(componentId) != IdCompareResult.LESS_THAN) {
+        if (this.componentId != null && !componentId.missing() // for backward compatibility
+                && this.componentId.compareTo(componentId) != IdCompareResult.LESS_THAN) {
             throw new IllegalStateException(
                     "LSM memory component receives illegal id. Old id " + this.componentId + ", new id " + componentId);
         }

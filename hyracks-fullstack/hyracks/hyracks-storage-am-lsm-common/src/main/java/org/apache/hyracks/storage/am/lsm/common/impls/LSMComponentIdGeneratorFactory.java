@@ -29,6 +29,8 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentIdGeneratorFact
  */
 public class LSMComponentIdGeneratorFactory implements ILSMComponentIdGeneratorFactory {
 
+    private static final long serialVersionUID = 1L;
+
     @Override
     public ILSMComponentIdGenerator getComponentIdGenerator(INCServiceContext serviceCtx) {
         return new LSMComponentIdGenerator();
