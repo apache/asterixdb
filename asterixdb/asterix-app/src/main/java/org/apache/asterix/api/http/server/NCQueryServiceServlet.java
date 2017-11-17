@@ -116,6 +116,8 @@ public class NCQueryServiceServlet extends QueryServiceServlet {
                 throw new Exception(err.toString(), err);
             }
         }
+        // no errors - stop buffering and allow for streaming result delivery
+        sessionOutput.release();
 
         IStatementExecutor.ResultMetadata resultMetadata = responseMsg.getMetadata();
         if (delivery == IStatementExecutor.ResultDelivery.IMMEDIATE && !resultMetadata.getResultSets().isEmpty()) {

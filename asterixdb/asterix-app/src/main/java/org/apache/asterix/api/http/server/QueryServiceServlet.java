@@ -381,25 +381,25 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         RequestParameters param = getRequestParameters(request);
         LOGGER.info(param.toString());
         long elapsedStart = System.nanoTime();
-        final StringWriter stringWriter = new StringWriter();
-        final PrintWriter resultWriter = new PrintWriter(stringWriter);
+        final PrintWriter httpWriter = response.writer();
 
         ResultDelivery delivery = parseResultDelivery(param.mode);
 
         String handleUrl = getHandleUrl(param.host, param.path, delivery);
-        SessionOutput sessionOutput = createSessionOutput(param, handleUrl, resultWriter);
+        SessionOutput sessionOutput = createSessionOutput(param, handleUrl, httpWriter);
         SessionConfig sessionConfig = sessionOutput.config();
         HttpUtil.setContentType(response, HttpUtil.ContentType.APPLICATION_JSON, HttpUtil.Encoding.UTF8);
 
-        HttpResponseStatus status = HttpResponseStatus.OK;
         Stats stats = new Stats();
         long[] execStartEnd = new long[] { -1, -1 };
 
-        resultWriter.print("{\n");
-        printRequestId(resultWriter);
-        printClientContextID(resultWriter, param);
-        printSignature(resultWriter);
-        printType(resultWriter, sessionConfig);
+        // buffer the output until we are ready to set the status of the response message correctly
+        sessionOutput.hold();
+        sessionOutput.out().print("{\n");
+        printRequestId(sessionOutput.out());
+        printClientContextID(sessionOutput.out(), param);
+        printSignature(sessionOutput.out());
+        printType(sessionOutput.out(), sessionConfig);
         long errorCount = 1; // so far we just return 1 error
         try {
             if (param.statement == null || param.statement.isEmpty()) {
@@ -410,33 +410,30 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
             if (optionalParamProvider != null) {
                 optionalParams = optionalParamProvider.apply(request);
             }
+            response.setStatus(HttpResponseStatus.OK);
             executeStatement(statementsText, sessionOutput, delivery, stats, param, execStartEnd, optionalParams);
             if (ResultDelivery.IMMEDIATE == delivery || ResultDelivery.DEFERRED == delivery) {
                 ResultUtil.printStatus(sessionOutput, ResultStatus.SUCCESS);
             }
             errorCount = 0;
         } catch (Exception | TokenMgrError | org.apache.asterix.aqlplus.parser.TokenMgrError e) {
-            status = handleExecuteStatementException(e);
-            ResultUtil.printError(resultWriter, e);
+            response.setStatus(handleExecuteStatementException(e));
+            ResultUtil.printError(sessionOutput.out(), e);
             ResultUtil.printStatus(sessionOutput, ResultStatus.FATAL);
         } finally {
+            // make sure that we stop buffering and return the result to the http response
+            sessionOutput.release();
             if (execStartEnd[0] == -1) {
                 execStartEnd[1] = -1;
             } else if (execStartEnd[1] == -1) {
                 execStartEnd[1] = System.nanoTime();
             }
         }
-        printMetrics(resultWriter, System.nanoTime() - elapsedStart, execStartEnd[1] - execStartEnd[0],
+        printMetrics(sessionOutput.out(), System.nanoTime() - elapsedStart, execStartEnd[1] - execStartEnd[0],
                 stats.getCount(), stats.getSize(), stats.getProcessedObjects(), errorCount);
-        resultWriter.print("}\n");
-        resultWriter.flush();
-        String result = stringWriter.toString();
-
-        GlobalConfig.ASTERIX_LOGGER.log(Level.FINE, result);
-
-        response.setStatus(status);
-        response.writer().print(result);
-        if (response.writer().checkError()) {
+        sessionOutput.out().print("}\n");
+        sessionOutput.out().flush();
+        if (sessionOutput.out().checkError()) {
             LOGGER.warning("Error flushing output writer");
         }
     }

@@ -2395,6 +2395,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 createAndRunJob(hcc, jobFlags, null, compiler, locker, resultDelivery, id -> {
                     final ResultReader resultReader = new ResultReader(hdc, id, resultSetId);
                     updateJobStats(id, stats);
+                    // stop buffering and allow for streaming result delivery
+                    sessionOutput.release();
                     ResultUtil.printResults(appCtx, resultReader, sessionOutput, stats,
                             metadataProvider.findOutputRecordType());
                 }, clientContextId, ctx);

@@ -20,6 +20,7 @@
 package org.apache.asterix.translator;
 
 import java.io.PrintWriter;
+import java.io.StringWriter;
 
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.AlgebricksAppendable;
@@ -29,6 +30,8 @@ public class SessionOutput {
 
     // Output path for primary execution.
     private final PrintWriter out;
+    private StringWriter buffer;
+    private PrintWriter bufferedOut;
 
     private final SessionOutput.ResultDecorator preResultDecorator;
     private final SessionOutput.ResultDecorator postResultDecorator;
@@ -53,7 +56,31 @@ public class SessionOutput {
      * Retrieve the PrintWriter to produce output to.
      */
     public PrintWriter out() {
-        return this.out;
+        return this.bufferedOut != null ? this.bufferedOut : this.out;
+    }
+
+    /**
+     * buffer the data provided to the PrintWriter returned by out() to be able to set the status of the response
+     * message when it can be determined. This is a no-op, if data is already buffered.
+     */
+    public void hold() {
+        if (this.bufferedOut == null) {
+            this.buffer = new StringWriter();
+            this.bufferedOut = new PrintWriter(this.buffer);
+        }
+    }
+
+    /**
+     * release the data that was buffered by calling hold() and remove the buffer from the pipeline.
+     * This is a no-op, if data is not buffered.
+     */
+    public void release() {
+        if (this.bufferedOut != null) {
+            this.bufferedOut.flush();
+            this.out.write(buffer.toString());
+            this.bufferedOut = null;
+            this.buffer = null;
+        }
     }
 
     public AlgebricksAppendable resultPrefix(AlgebricksAppendable app) throws AlgebricksException {
