@@ -409,6 +409,13 @@ public class NodeControllerService implements IControllerService {
                 heartbeatThread.interrupt();
                 heartbeatThread.join(1000); // give it 1s to stop gracefully
             }
+            try {
+                ccs.notifyShutdown(id);
+            } catch (Exception e) {
+                LOGGER.log(Level.WARNING, "Exception notifying CC of shutdown", e);
+            }
+            ipc.stop();
+
             LOGGER.log(Level.INFO, "Stopped NodeControllerService");
         } else {
             LOGGER.log(Level.SEVERE, "Duplicate shutdown call; original: " + Arrays.toString(shutdownCallStack),

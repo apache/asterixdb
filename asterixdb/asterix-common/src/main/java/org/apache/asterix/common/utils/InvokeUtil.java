@@ -18,7 +18,16 @@
  */
 package org.apache.asterix.common.utils;
 
-public class InterruptUtil {
+import java.io.IOException;
+import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+public class InvokeUtil {
+
+    private static final Logger LOGGER = Logger.getLogger(InvokeUtil.class.getName());
+
     /**
      * Executes the passed interruptible, retrying if the operation is interrupted. Once the interruptible
      * completes, the current thread will be re-interrupted, if the original operation was interrupted.
@@ -82,7 +91,7 @@ public class InterruptUtil {
     }
 
     /**
-     * Executes the passed interruptible, retrying if the operation is interrupted.  If the operation throws an
+     * Executes the passed interruptible, retrying if the operation is interrupted. If the operation throws an
      * exception after being previously interrupted, the current thread will be re-interrupted.
      *
      * @return true if the original operation was interrupted, otherwise false
@@ -106,6 +115,33 @@ public class InterruptUtil {
         return interrupted;
     }
 
+    public static boolean retryLoop(long duration, TimeUnit durationUnit, long delay, TimeUnit delayUnit,
+            Callable<Boolean> function) throws IOException {
+        long endTime = System.nanoTime() + durationUnit.toNanos(duration);
+        boolean first = true;
+        while (endTime - System.nanoTime() > 0) {
+            if (first) {
+                first = false;
+            } else {
+                try {
+                    delayUnit.sleep(delay);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    return false;
+                }
+            }
+            try {
+                if (function.call()) {
+                    return true;
+                }
+            } catch (Exception e) {
+                // ignore, retry after delay
+                LOGGER.log(Level.FINE, "Ignoring exception on retryLoop attempt, will retry after delay", e);
+            }
+        }
+        return false;
+    }
+
     @FunctionalInterface
     public interface Interruptible {
         void run() throws InterruptedException;
@@ -115,4 +151,5 @@ public class InterruptUtil {
     public interface ThrowingInterruptible {
         void run() throws Exception; // NOSONAR
     }
+
 }

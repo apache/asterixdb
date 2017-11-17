@@ -28,6 +28,8 @@ import java.net.ConnectException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 import javax.xml.bind.JAXBContext;
@@ -35,7 +37,17 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 
-import org.apache.commons.httpclient.*;
+import org.apache.asterix.common.configuration.AsterixConfiguration;
+import org.apache.asterix.common.utils.InvokeUtil;
+import org.apache.asterix.event.schema.yarnCluster.Cluster;
+import org.apache.asterix.event.schema.yarnCluster.Node;
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.HttpException;
+import org.apache.commons.httpclient.HttpMethod;
+import org.apache.commons.httpclient.HttpMethodRetryHandler;
+import org.apache.commons.httpclient.HttpStatus;
+import org.apache.commons.httpclient.NameValuePair;
+import org.apache.commons.httpclient.NoHttpResponseException;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.params.HttpMethodParams;
@@ -48,10 +60,6 @@ import org.apache.hadoop.yarn.api.records.ApplicationReport;
 import org.apache.hadoop.yarn.api.records.YarnApplicationState;
 import org.apache.hadoop.yarn.client.api.YarnClient;
 import org.apache.hadoop.yarn.exceptions.YarnException;
-
-import org.apache.asterix.common.configuration.AsterixConfiguration;
-import org.apache.asterix.event.schema.yarnCluster.Cluster;
-import org.apache.asterix.event.schema.yarnCluster.Node;
 
 public class Utils {
 
@@ -105,11 +113,15 @@ public class Utils {
             //do nothing... this is expected
         }
         //now let's test that the instance is really down, or throw an exception
-        try {
-            executeHTTPCall(method);
-        } catch (ConnectException e) {
-            return;
-        }
+        InvokeUtil.retryLoop(1, TimeUnit.MINUTES, 500, TimeUnit.MILLISECONDS, () -> {
+            try {
+                executeHTTPCall(method);
+            } catch (ConnectException e) {
+                //do nothing... this is expected
+                return true;
+            }
+            return false;
+        });
         throw new IOException("Instance did not shut down cleanly.");
     }
 
@@ -142,7 +154,7 @@ public class Utils {
         if (result == null) {
             return false;
         }
-        if(method.getStatusCode() != HttpStatus.SC_OK){
+        if (method.getStatusCode() != HttpStatus.SC_OK) {
             return false;
         }
         return true;
@@ -237,7 +249,7 @@ public class Utils {
      * @throws IOException
      */
     public static void listBackups(Configuration conf, String confDirRel, String instance) throws IOException {
-        List<String> backups = getBackups(conf,confDirRel,instance);
+        List<String> backups = getBackups(conf, confDirRel, instance);
         if (backups.size() != 0) {
             System.out.println("Backups for instance " + instance + ": ");
             for (String name : backups) {
@@ -247,20 +259,22 @@ public class Utils {
             System.out.println("No backups found for instance " + instance + ".");
         }
     }
-   /**
-    * Return the available snapshot names
-    * @param conf
-    * @param confDirRel
-    * @param instance
-    * @return
-    * @throws IOException
-    */
-    public static List<String> getBackups(Configuration conf, String confDirRel, String instance) throws IOException{
+
+    /**
+     * Return the available snapshot names
+     *
+     * @param conf
+     * @param confDirRel
+     * @param instance
+     * @return
+     * @throws IOException
+     */
+    public static List<String> getBackups(Configuration conf, String confDirRel, String instance) throws IOException {
         FileSystem fs = FileSystem.get(conf);
         Path backupFolder = new Path(fs.getHomeDirectory(), confDirRel + "/" + instance + "/" + "backups");
         FileStatus[] backups = fs.listStatus(backupFolder);
         List<String> backupNames = new ArrayList<String>();
-        for(FileStatus f: backups){
+        for (FileStatus f : backups) {
             backupNames.add(f.getPath().getName());
         }
         return backupNames;
@@ -441,8 +455,8 @@ public class Utils {
         return waitForLiveness(appId, false, true, message, yarnClient, "", null, port);
     }
 
-    public static boolean waitForApplication(ApplicationId appId, YarnClient yarnClient, int port) throws YarnException,
-            IOException, JAXBException {
+    public static boolean waitForApplication(ApplicationId appId, YarnClient yarnClient, int port)
+            throws YarnException, IOException, JAXBException {
         return waitForLiveness(appId, false, false, "", yarnClient, "", null, port);
     }
 

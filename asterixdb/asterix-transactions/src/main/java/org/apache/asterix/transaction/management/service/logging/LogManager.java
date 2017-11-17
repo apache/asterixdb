@@ -51,7 +51,7 @@ import org.apache.asterix.common.transactions.LogManagerProperties;
 import org.apache.asterix.common.transactions.LogType;
 import org.apache.asterix.common.transactions.MutableLong;
 import org.apache.asterix.common.transactions.TxnLogFile;
-import org.apache.asterix.common.utils.InterruptUtil;
+import org.apache.asterix.common.utils.InvokeUtil;
 import org.apache.hyracks.api.lifecycle.ILifeCycleComponent;
 
 public class LogManager implements ILogManager, ILifeCycleComponent {
@@ -655,7 +655,7 @@ class LogFlusher implements Callable<Boolean> {
 
     public void terminate() {
         // make sure the LogFlusher thread started before terminating it.
-        InterruptUtil.doUninterruptibly(started::acquire);
+        InvokeUtil.doUninterruptibly(started::acquire);
 
         stopping = true;
 
@@ -665,7 +665,7 @@ class LogFlusher implements Callable<Boolean> {
             currentFlushPage.stop();
         }
         // finally we put a POISON_PILL onto the flushQ to indicate to the flusher it is time to exit
-        InterruptUtil.doUninterruptibly(() -> flushQ.put(POISON_PILL));
+        InvokeUtil.doUninterruptibly(() -> flushQ.put(POISON_PILL));
     }
 
     @Override
@@ -675,7 +675,7 @@ class LogFlusher implements Callable<Boolean> {
         try {
             while (true) {
                 flushPage = null;
-                interrupted = InterruptUtil.doUninterruptiblyGet(() -> flushPage = flushQ.take()) || interrupted;
+                interrupted = InvokeUtil.doUninterruptiblyGet(() -> flushPage = flushQ.take()) || interrupted;
                 if (flushPage == POISON_PILL) {
                     return true;
                 }

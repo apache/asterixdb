@@ -19,34 +19,17 @@
 
 package org.apache.hyracks.control.nc.task;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import org.apache.hyracks.control.common.base.IClusterController;
-import org.apache.hyracks.control.nc.NodeControllerService;
 import org.apache.hyracks.util.ExitUtil;
 
 public class ShutdownTask implements Runnable {
-    private static final Logger LOGGER = Logger.getLogger(ShutdownTask.class.getName());
-    private final NodeControllerService ncs;
     private final boolean terminateNCService;
 
-    public ShutdownTask(NodeControllerService ncs, boolean terminateNCService) {
-        this.ncs = ncs;
+    public ShutdownTask(boolean terminateNCService) {
         this.terminateNCService = terminateNCService;
     }
 
     @Override
-    @SuppressWarnings("squid:S1147") // Runtime.exit()
     public void run() {
-        IClusterController ccs = ncs.getClusterController();
-        try {
-            ccs.notifyShutdown(ncs.getId());
-        } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "Exception notifying CC of shutdown acknowledgment", e);
-            // proceed with shutdown
-        }
-
         ExitUtil.exit(terminateNCService ? 99 : 0);
     }
 
