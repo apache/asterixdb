@@ -80,10 +80,13 @@ public class TransactionSubsystem implements ITransactionSubsystem {
         }
         checkpointManager = CheckpointManagerFactory.create(this, checkpointProperties, replicationEnabled);
         final Checkpoint latestCheckpoint = checkpointManager.getLatest();
-        if (latestCheckpoint != null && latestCheckpoint.getStorageVersion() != StorageConstants.VERSION) {
-            throw new IllegalStateException(
-                    String.format("Storage version mismatch. Current version (%s). On disk version: (%s)",
-                            StorageConstants.VERSION, latestCheckpoint.getStorageVersion()));
+        if (latestCheckpoint != null) {
+            if (latestCheckpoint.getStorageVersion() != StorageConstants.VERSION) {
+                throw new IllegalStateException(
+                        String.format("Storage version mismatch. Current version (%s). On disk version: (%s)",
+                                StorageConstants.VERSION, latestCheckpoint.getStorageVersion()));
+            }
+            transactionManager.ensureMaxTxnId(latestCheckpoint.getMaxTxnId());
         }
 
         if (replicationEnabled) {

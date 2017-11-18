@@ -57,7 +57,7 @@ public class Checkpoint implements Comparable<Checkpoint> {
         return minMCTFirstLsn;
     }
 
-    public long getMaxJobId() {
+    public long getMaxTxnId() {
         return maxTxnId;
     }
 

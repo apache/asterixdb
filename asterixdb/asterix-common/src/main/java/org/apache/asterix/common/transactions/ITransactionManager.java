@@ -101,4 +101,11 @@ public interface ITransactionManager {
      */
     long getMaxTxnId();
 
+    /**
+     * Sets the maximum txn id to the bigger value of {@code txnId} and its current value.
+     *
+     * @param txnId
+     */
+    void ensureMaxTxnId(long txnId);
+
 }

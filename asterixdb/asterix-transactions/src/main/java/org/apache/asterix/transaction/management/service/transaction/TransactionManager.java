@@ -140,7 +140,8 @@ public class TransactionManager implements ITransactionManager, ILifeCycleCompon
         dumpTxnContext(os);
     }
 
-    private void ensureMaxTxnId(long txnId) {
+    @Override
+    public void ensureMaxTxnId(long txnId) {
         maxTxnId.updateAndGet(current -> Math.max(current, txnId));
     }
 

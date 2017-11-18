@@ -280,7 +280,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
     private synchronized void startRecoveryRedoPhase(Set<Integer> partitions, ILogReader logReader,
             long lowWaterMarkLSN, Set<Long> winnerTxnSet) throws IOException, ACIDException {
         int redoCount = 0;
-        long jobId;
+        long txnId = 0;
 
         long resourceId;
         long maxDiskLastLsn;
@@ -307,16 +307,16 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
                     LOGGER.info(logRecord.getLogRecordForDisplay());
                 }
                 lsn = logRecord.getLSN();
-                jobId = logRecord.getTxnId();
+                txnId = logRecord.getTxnId();
                 foundWinner = false;
                 switch (logRecord.getLogType()) {
                     case LogType.UPDATE:
                         if (partitions.contains(logRecord.getResourcePartition())) {
-                            if (winnerTxnSet.contains(jobId)) {
+                            if (winnerTxnSet.contains(txnId)) {
                                 foundWinner = true;
-                            } else if (jobId2WinnerEntitiesMap.containsKey(jobId)) {
-                                jobEntityWinners = jobId2WinnerEntitiesMap.get(jobId);
-                                tempKeyTxnEntityId.setTxnId(jobId, logRecord.getDatasetId(), logRecord.getPKHashValue(),
+                            } else if (jobId2WinnerEntitiesMap.containsKey(txnId)) {
+                                jobEntityWinners = jobId2WinnerEntitiesMap.get(txnId);
+                                tempKeyTxnEntityId.setTxnId(txnId, logRecord.getDatasetId(), logRecord.getPKHashValue(),
                                         logRecord.getPKValue(), logRecord.getPKValueSize());
                                 if (jobEntityWinners.containsEntityCommitForTxnId(lsn, tempKeyTxnEntityId)) {
                                     foundWinner = true;
@@ -396,6 +396,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
             }
             LOGGER.info("Logs REDO phase completed. Redo logs count: " + redoCount);
         } finally {
+            txnSubsystem.getTransactionManager().ensureMaxTxnId(txnId);
             //close all indexes
             Set<Long> resourceIdList = resourceId2MaxLSNMap.keySet();
             for (long r : resourceIdList) {
