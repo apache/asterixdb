@@ -54,7 +54,6 @@ import org.apache.asterix.lang.sqlpp.clause.SelectRegular;
 import org.apache.asterix.lang.sqlpp.clause.SelectSetOperation;
 import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
 import org.apache.asterix.lang.sqlpp.expression.CaseExpression;
-import org.apache.asterix.lang.sqlpp.expression.IndependentSubquery;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.optype.JoinType;
 import org.apache.asterix.lang.sqlpp.optype.SetOpType;
@@ -166,17 +165,6 @@ class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator imp
             context.exitSubplan();
         }
         return result;
-    }
-
-    @Override
-    public Pair<ILogicalOperator, LogicalVariable> visit(IndependentSubquery independentSubquery,
-            Mutable<ILogicalOperator> tupleSource) throws CompilationException {
-        Pair<ILogicalExpression, Mutable<ILogicalOperator>> eo =
-                langExprToAlgExpression(independentSubquery.getExpr(), tupleSource);
-        LogicalVariable var = context.newVar();
-        AssignOperator assignOp = new AssignOperator(var, new MutableObject<ILogicalExpression>(eo.first));
-        assignOp.getInputs().add(eo.second);
-        return new Pair<>(assignOp, var);
     }
 
     @Override

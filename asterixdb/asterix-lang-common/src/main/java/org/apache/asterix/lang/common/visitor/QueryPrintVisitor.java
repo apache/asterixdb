@@ -65,19 +65,15 @@ import org.apache.asterix.lang.common.struct.OperatorType;
 import org.apache.asterix.lang.common.struct.QuantifiedPair;
 import org.apache.asterix.lang.common.visitor.base.AbstractQueryExpressionVisitor;
 
-public class QueryPrintVisitor extends AbstractQueryExpressionVisitor<Void, Integer> {
-    private final PrintWriter out;
+public abstract class QueryPrintVisitor extends AbstractQueryExpressionVisitor<Void, Integer> {
+    protected final PrintWriter out;
 
-    public QueryPrintVisitor() {
-        out = new PrintWriter(System.out);
-    }
-
-    public QueryPrintVisitor(PrintWriter out) {
+    protected QueryPrintVisitor(PrintWriter out) {
         this.out = out;
     }
 
     protected String skip(int step) {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         for (int i = 0; i < step; i++) {
             sb.append("  ");
         }
@@ -121,7 +117,7 @@ public class QueryPrintVisitor extends AbstractQueryExpressionVisitor<Void, Inte
             ordered = true;
         }
 
-        out.println(skip(step) + (ordered == true ? "OrderedListConstructor " : "UnorderedListConstructor ") + "[");
+        out.println(skip(step) + (ordered ? "OrderedListConstructor " : "UnorderedListConstructor ") + "[");
         for (Expression e : lc.getExprList()) {
             e.accept(this, step + 1);
         }

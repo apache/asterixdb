@@ -18,10 +18,11 @@
  */
 package org.apache.asterix.lang.common.expression;
 
+import org.apache.asterix.lang.common.base.AbstractExpression;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.commons.lang.ObjectUtils;
 
-public abstract class AbstractAccessor implements Expression {
+public abstract class AbstractAccessor extends AbstractExpression {
     protected Expression expr;
 
     public AbstractAccessor(Expression expr) {

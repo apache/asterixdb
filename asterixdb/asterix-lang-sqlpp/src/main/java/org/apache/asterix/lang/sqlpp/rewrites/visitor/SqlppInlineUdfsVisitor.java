@@ -43,7 +43,6 @@ import org.apache.asterix.lang.sqlpp.clause.SelectRegular;
 import org.apache.asterix.lang.sqlpp.clause.SelectSetOperation;
 import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
 import org.apache.asterix.lang.sqlpp.expression.CaseExpression;
-import org.apache.asterix.lang.sqlpp.expression.IndependentSubquery;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
 import org.apache.asterix.lang.sqlpp.util.SqlppRewriteUtil;
@@ -222,14 +221,6 @@ public class SqlppInlineUdfsVisitor extends AbstractInlineUdfsVisitor
     public Boolean visit(HavingClause havingClause, List<FunctionDecl> funcs) throws CompilationException {
         Pair<Boolean, Expression> p = inlineUdfsInExpr(havingClause.getFilterExpression(), funcs);
         havingClause.setFilterExpression(p.second);
-        return p.first;
-    }
-
-    @Override
-    public Boolean visit(IndependentSubquery independentSubquery, List<FunctionDecl> funcs)
-            throws CompilationException {
-        Pair<Boolean, Expression> p = inlineUdfsInExpr(independentSubquery.getExpr(), funcs);
-        independentSubquery.setExpr(p.second);
         return p.first;
     }
 

@@ -21,12 +21,13 @@ package org.apache.asterix.lang.common.expression;
 import java.util.List;
 
 import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.lang.common.base.AbstractExpression;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.struct.QuantifiedPair;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 import org.apache.commons.lang3.ObjectUtils;
 
-public class QuantifiedExpression implements Expression {
+public class QuantifiedExpression extends AbstractExpression {
     private List<QuantifiedPair> quantifiedList;
     private Expression satisfiesExpr;
     private Quantifier quantifier;

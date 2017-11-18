@@ -19,12 +19,12 @@
 package org.apache.asterix.lang.common.expression;
 
 import org.apache.asterix.common.exceptions.CompilationException;
-import org.apache.asterix.lang.common.base.Expression;
+import org.apache.asterix.lang.common.base.AbstractExpression;
 import org.apache.asterix.lang.common.base.Literal;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 import org.apache.commons.lang3.ObjectUtils;
 
-public class LiteralExpr implements Expression {
+public class LiteralExpr extends AbstractExpression {
     private Literal value;
 
     public LiteralExpr() {
@@ -69,5 +69,4 @@ public class LiteralExpr implements Expression {
         LiteralExpr target = (LiteralExpr) object;
         return ObjectUtils.equals(value, target.value);
     }
-
 }

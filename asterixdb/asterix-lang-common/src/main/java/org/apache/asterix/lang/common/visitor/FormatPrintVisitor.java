@@ -108,16 +108,12 @@ public class FormatPrintVisitor implements ILangVisitor<Void, Integer> {
     private final static String CREATE = "create ";
     private final static String FEED = " feed ";
     private final static String DEFAULT_DATAVERSE_FORMAT = "org.apache.asterix.runtime.formats.NonTaggedDataFormat";
-    private final PrintWriter out;
+    protected final PrintWriter out;
     protected Set<Character> validIdentifierChars = new HashSet<Character>();
     protected Set<Character> validIdentifierStartChars = new HashSet<Character>();
     protected String dataverseSymbol = " dataverse ";
     protected String datasetSymbol = " dataset ";
     protected String assignSymbol = ":=";
-
-    public FormatPrintVisitor() {
-        this(new PrintWriter(System.out));
-    }
 
     public FormatPrintVisitor(PrintWriter out) {
         this.out = out;
@@ -137,7 +133,7 @@ public class FormatPrintVisitor implements ILangVisitor<Void, Integer> {
     }
 
     protected String skip(int step) {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         for (int i = 0; i < step; i++) {
             sb.append("  ");
         }
@@ -190,9 +186,9 @@ public class FormatPrintVisitor implements ILangVisitor<Void, Integer> {
         if (lc.getType().equals(ListConstructor.Type.ORDERED_LIST_CONSTRUCTOR)) {
             ordered = true;
         }
-        out.print(ordered == true ? "[" : "{{");
+        out.print(ordered ? "[" : "{{");
         printDelimitedExpressions(lc.getExprList(), COMMA, step + 2);
-        out.print(ordered == true ? "]" : "}}");
+        out.print(ordered ? "]" : "}}");
         return null;
     }
 

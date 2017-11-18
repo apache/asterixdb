@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.lang.common.base.AbstractExpression;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.expression.LiteralExpr;
 import org.apache.asterix.lang.common.literal.NullLiteral;
@@ -30,7 +31,7 @@ import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 import org.apache.asterix.lang.sqlpp.visitor.base.ISqlppVisitor;
 import org.apache.commons.lang3.ObjectUtils;
 
-public class CaseExpression implements Expression {
+public class CaseExpression extends AbstractExpression {
 
     private Expression conditionExpr;
     private List<Expression> whenExprs = new ArrayList<>();
@@ -125,5 +126,4 @@ public class CaseExpression implements Expression {
         return ObjectUtils.equals(conditionExpr, target.conditionExpr) && ObjectUtils.equals(elseExpr, target.elseExpr)
                 && ObjectUtils.equals(thenExprs, target.thenExprs) && ObjectUtils.equals(thenExprs, thenExprs);
     }
-
 }

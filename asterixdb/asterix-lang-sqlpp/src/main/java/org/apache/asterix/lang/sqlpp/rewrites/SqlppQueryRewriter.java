@@ -46,7 +46,6 @@ import org.apache.asterix.lang.sqlpp.clause.SelectRegular;
 import org.apache.asterix.lang.sqlpp.clause.SelectSetOperation;
 import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
 import org.apache.asterix.lang.sqlpp.expression.CaseExpression;
-import org.apache.asterix.lang.sqlpp.expression.IndependentSubquery;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.parser.FunctionParser;
 import org.apache.asterix.lang.sqlpp.parser.SqlppParserFactory;
@@ -380,12 +379,6 @@ class SqlppQueryRewriter implements IQueryRewriter {
         @Override
         public Void visit(HavingClause havingClause, Void arg) throws CompilationException {
             havingClause.getFilterExpression().accept(this, arg);
-            return null;
-        }
-
-        @Override
-        public Void visit(IndependentSubquery independentSubquery, Void arg) throws CompilationException {
-            independentSubquery.getExpr().accept(this, arg);
             return null;
         }
 

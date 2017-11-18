@@ -22,12 +22,13 @@ import java.util.List;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.aql.visitor.base.IAQLVisitor;
+import org.apache.asterix.lang.common.base.AbstractExpression;
 import org.apache.asterix.lang.common.base.Clause;
 import org.apache.asterix.lang.common.base.Clause.ClauseType;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
-public class FLWOGRExpression implements Expression {
+public class FLWOGRExpression extends AbstractExpression {
     private List<Clause> clauseList;
     private Expression returnExpr;
 

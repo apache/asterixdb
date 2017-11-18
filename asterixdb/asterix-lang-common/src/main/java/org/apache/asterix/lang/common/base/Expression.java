@@ -19,9 +19,9 @@
 package org.apache.asterix.lang.common.base;
 
 public interface Expression extends ILangExpression {
-    public abstract Kind getKind();
+    Kind getKind();
 
-    public enum Kind {
+    enum Kind {
         LITERAL_EXPRESSION,
         FLWOGR_EXPRESSION,
         IF_EXPRESSION,
@@ -38,8 +38,6 @@ public interface Expression extends ILangExpression {
         UNION_EXPRESSION,
         SELECT_EXPRESSION,
         PRIMARY_EXPRESSION,
-        INDEPENDENT_SUBQUERY,
         CASE_EXPRESSION
     }
-
 }

@@ -23,15 +23,16 @@ import java.util.List;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.aql.visitor.base.IAQLVisitor;
+import org.apache.asterix.lang.common.base.AbstractExpression;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
-public class UnionExpr implements Expression {
+public class UnionExpr extends AbstractExpression {
 
     private List<Expression> exprs;
 
     public UnionExpr() {
-        exprs = new ArrayList<Expression>();
+        exprs = new ArrayList<>();
     }
 
     public UnionExpr(List<Expression> exprs) {

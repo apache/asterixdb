@@ -49,7 +49,6 @@ import org.apache.asterix.lang.sqlpp.clause.SelectRegular;
 import org.apache.asterix.lang.sqlpp.clause.SelectSetOperation;
 import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
 import org.apache.asterix.lang.sqlpp.expression.CaseExpression;
-import org.apache.asterix.lang.sqlpp.expression.IndependentSubquery;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationInput;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
@@ -378,14 +377,6 @@ public class SqlppCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteV
         Pair<ILangExpression, VariableSubstitutionEnvironment> p = havingClause.getFilterExpression().accept(this, env);
         HavingClause newHavingClause = new HavingClause((Expression) p.first);
         return new Pair<>(newHavingClause, p.second);
-    }
-
-    @Override
-    public Pair<ILangExpression, VariableSubstitutionEnvironment> visit(IndependentSubquery independentSubquery,
-            VariableSubstitutionEnvironment env) throws CompilationException {
-        Pair<ILangExpression, VariableSubstitutionEnvironment> p = independentSubquery.getExpr().accept(this, env);
-        IndependentSubquery newSubquery = new IndependentSubquery((Expression) p.first);
-        return new Pair<>(newSubquery, p.second);
     }
 
     @Override

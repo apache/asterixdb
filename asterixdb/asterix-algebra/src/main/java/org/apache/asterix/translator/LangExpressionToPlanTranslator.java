@@ -1366,7 +1366,7 @@ class LangExpressionToPlanTranslator
                 || k == Kind.FIELD_ACCESSOR_EXPRESSION;
         noNesting = noNesting || k == Kind.INDEX_ACCESSOR_EXPRESSION || k == Kind.UNARY_EXPRESSION
                 || k == Kind.IF_EXPRESSION;
-        return noNesting || k == Kind.INDEPENDENT_SUBQUERY || k == Kind.CASE_EXPRESSION;
+        return noNesting || k == Kind.CASE_EXPRESSION;
 
     }
 

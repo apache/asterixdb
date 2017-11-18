@@ -28,7 +28,7 @@ public abstract class AbstractExpression implements Expression {
 
     public void addHint(IExpressionAnnotation hint) {
         if (hints == null) {
-            hints = new ArrayList<IExpressionAnnotation>();
+            hints = new ArrayList<>();
         }
         hints.add(hint);
     }

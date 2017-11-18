@@ -31,16 +31,8 @@ import org.apache.asterix.lang.common.visitor.FormatPrintVisitor;
 
 public class AQLFormatPrintVisitor extends FormatPrintVisitor implements IAQLVisitor<Void, Integer> {
 
-    private final PrintWriter out;
-
-    public AQLFormatPrintVisitor() {
-        super();
-        out = new PrintWriter(System.out);
-    }
-
     public AQLFormatPrintVisitor(PrintWriter out) {
         super(out);
-        this.out = out;
     }
 
     @Override
@@ -80,5 +72,4 @@ public class AQLFormatPrintVisitor extends FormatPrintVisitor implements IAQLVis
         out.println();
         return null;
     }
-
 }

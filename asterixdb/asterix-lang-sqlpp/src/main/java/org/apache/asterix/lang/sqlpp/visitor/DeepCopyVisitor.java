@@ -64,7 +64,6 @@ import org.apache.asterix.lang.sqlpp.clause.SelectRegular;
 import org.apache.asterix.lang.sqlpp.clause.SelectSetOperation;
 import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
 import org.apache.asterix.lang.sqlpp.expression.CaseExpression;
-import org.apache.asterix.lang.sqlpp.expression.IndependentSubquery;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationInput;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
@@ -412,11 +411,6 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
             indexExpr = (Expression) ia.getIndexExpr().accept(this, arg);
         }
         return new IndexAccessor(expr, indexExpr);
-    }
-
-    @Override
-    public ILangExpression visit(IndependentSubquery independentSubquery, Void arg) throws CompilationException {
-        return new IndependentSubquery((Expression) independentSubquery.getExpr().accept(this, arg));
     }
 
     @Override

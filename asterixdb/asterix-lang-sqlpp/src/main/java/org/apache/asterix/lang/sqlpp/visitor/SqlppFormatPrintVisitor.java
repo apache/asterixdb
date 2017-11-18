@@ -43,7 +43,6 @@ import org.apache.asterix.lang.sqlpp.clause.SelectRegular;
 import org.apache.asterix.lang.sqlpp.clause.SelectSetOperation;
 import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
 import org.apache.asterix.lang.sqlpp.expression.CaseExpression;
-import org.apache.asterix.lang.sqlpp.expression.IndependentSubquery;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
 import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
@@ -51,15 +50,8 @@ import org.apache.asterix.lang.sqlpp.visitor.base.ISqlppVisitor;
 
 public class SqlppFormatPrintVisitor extends FormatPrintVisitor implements ISqlppVisitor<Void, Integer> {
 
-    private final PrintWriter out;
-
-    public SqlppFormatPrintVisitor() {
-        this(new PrintWriter(System.out));
-    }
-
     public SqlppFormatPrintVisitor(PrintWriter out) {
         super(out);
-        this.out = out;
 
         // Initialize symbols
         dataverseSymbol = " database ";
@@ -306,12 +298,6 @@ public class SqlppFormatPrintVisitor extends FormatPrintVisitor implements ISqlp
                 out.print(COMMA);
             }
         }
-    }
-
-    @Override
-    public Void visit(IndependentSubquery independentSubquery, Integer step) throws CompilationException {
-        independentSubquery.getExpr().accept(this, step);
-        return null;
     }
 
     @Override

@@ -20,7 +20,6 @@ package org.apache.asterix.lang.common.expression;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.base.AbstractExpression;
@@ -33,7 +32,7 @@ public class OperatorExpr extends AbstractExpression {
     private List<Expression> exprList;
     private List<OperatorType> opList;
     private List<Integer> exprBroadcastIdx;
-    private boolean currentop = false;
+    private boolean currentop;
 
     public OperatorExpr() {
         super();

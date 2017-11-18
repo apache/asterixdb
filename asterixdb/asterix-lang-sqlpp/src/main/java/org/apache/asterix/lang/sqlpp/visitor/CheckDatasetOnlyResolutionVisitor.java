@@ -53,7 +53,6 @@ import org.apache.asterix.lang.sqlpp.clause.SelectRegular;
 import org.apache.asterix.lang.sqlpp.clause.SelectSetOperation;
 import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
 import org.apache.asterix.lang.sqlpp.expression.CaseExpression;
-import org.apache.asterix.lang.sqlpp.expression.IndependentSubquery;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppQueryExpressionVisitor;
 
@@ -222,11 +221,6 @@ public class CheckDatasetOnlyResolutionVisitor extends AbstractSqlppQueryExpress
 
     @Override
     public Boolean visit(HavingClause havingClause, ILangExpression expr) throws CompilationException {
-        return false;
-    }
-
-    @Override
-    public Boolean visit(IndependentSubquery independentSubquery, ILangExpression arg) throws CompilationException {
         return false;
     }
 

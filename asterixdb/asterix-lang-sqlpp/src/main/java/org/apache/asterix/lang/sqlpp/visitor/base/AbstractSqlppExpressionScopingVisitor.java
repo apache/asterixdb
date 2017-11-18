@@ -54,7 +54,6 @@ import org.apache.asterix.lang.sqlpp.clause.JoinClause;
 import org.apache.asterix.lang.sqlpp.clause.NestClause;
 import org.apache.asterix.lang.sqlpp.clause.SelectSetOperation;
 import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
-import org.apache.asterix.lang.sqlpp.expression.IndependentSubquery;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
 import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
@@ -314,18 +313,6 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
             scopeChecker.removeCurrentScope();
         }
         return selectExpression;
-    }
-
-    @Override
-    public Expression visit(IndependentSubquery independentSubquery, ILangExpression arg) throws CompilationException {
-        // Masks parent scopes so as that the subquery is independent of the environment.
-        // In this way, free variables defined in the subquery will not be resolved using
-        // variables defined in the parent scope.
-        Scope scope = new Scope(scopeChecker, scopeChecker.getCurrentScope(), true);
-        scopeChecker.pushExistingScope(scope);
-        independentSubquery.setExpr(visit(independentSubquery.getExpr(), independentSubquery));
-        scopeChecker.removeCurrentScope();
-        return independentSubquery;
     }
 
     @Override

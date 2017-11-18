@@ -33,7 +33,6 @@ import org.apache.asterix.lang.sqlpp.clause.SelectRegular;
 import org.apache.asterix.lang.sqlpp.clause.SelectSetOperation;
 import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
 import org.apache.asterix.lang.sqlpp.expression.CaseExpression;
-import org.apache.asterix.lang.sqlpp.expression.IndependentSubquery;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 
 /**
@@ -103,11 +102,6 @@ public abstract class AbstractSqlppAstVisitor<R, T> extends AbstractAstVisitor<R
 
     @Override
     public R visit(HavingClause havingClause, T arg) throws CompilationException {
-        return null;
-    }
-
-    @Override
-    public R visit(IndependentSubquery independentSubquery, T arg) throws CompilationException {
         return null;
     }
 

@@ -61,7 +61,6 @@ import org.apache.asterix.lang.sqlpp.clause.SelectRegular;
 import org.apache.asterix.lang.sqlpp.clause.SelectSetOperation;
 import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
 import org.apache.asterix.lang.sqlpp.expression.CaseExpression;
-import org.apache.asterix.lang.sqlpp.expression.IndependentSubquery;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
 import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
@@ -410,13 +409,6 @@ public class FreeVariableVisitor extends AbstractSqlppQueryExpressionVisitor<Voi
         if (ia.getIndexExpr() != null) {
             ia.getIndexExpr();
         }
-        return null;
-    }
-
-    @Override
-    public Void visit(IndependentSubquery independentSubquery, Collection<VariableExpr> freeVars)
-            throws CompilationException {
-        independentSubquery.getExpr().accept(this, freeVars);
         return null;
     }
 

@@ -32,16 +32,8 @@ import org.apache.asterix.lang.common.visitor.QueryPrintVisitor;
 
 class AQLAstPrintVisitor extends QueryPrintVisitor implements IAQLVisitor<Void, Integer> {
 
-    private final PrintWriter out;
-
-    public AQLAstPrintVisitor() {
-        super();
-        out = new PrintWriter(System.out);
-    }
-
     public AQLAstPrintVisitor(PrintWriter out) {
         super(out);
-        this.out = out;
     }
 
     @Override

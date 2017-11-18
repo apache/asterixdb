@@ -19,12 +19,12 @@
 package org.apache.asterix.lang.common.expression;
 
 import org.apache.asterix.common.exceptions.CompilationException;
-import org.apache.asterix.lang.common.base.Expression;
+import org.apache.asterix.lang.common.base.AbstractExpression;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 import org.apache.commons.lang3.ObjectUtils;
 
-public class VariableExpr implements Expression {
+public class VariableExpr extends AbstractExpression {
     private VarIdentifier var;
     private boolean isNewVar;
 
