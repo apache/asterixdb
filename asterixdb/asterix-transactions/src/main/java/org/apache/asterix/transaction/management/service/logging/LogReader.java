@@ -30,14 +30,11 @@ import org.apache.asterix.common.transactions.ILogRecord.RecordReadStatus;
 import org.apache.asterix.common.transactions.LogRecord;
 import org.apache.asterix.common.transactions.MutableLong;
 import org.apache.asterix.common.transactions.TxnLogFile;
+import org.apache.hyracks.util.annotations.NotThreadSafe;
 
-/**
- * NOTE: Many method calls of this class are not thread safe.
- * Be very cautious using it in a multithreaded context.
- */
+@NotThreadSafe
 public class LogReader implements ILogReader {
 
-    public static final boolean IS_DEBUG_MODE = false;//true
     private static final Logger LOGGER = Logger.getLogger(LogReader.class.getName());
     private final ILogManager logMgr;
     private final long logFileSize;
@@ -54,7 +51,7 @@ public class LogReader implements ILogReader {
     private enum ReturnState {
         FLUSH,
         EOF
-    };
+    }
 
     public LogReader(ILogManager logMgr, long logFileSize, int logPageSize, MutableLong flushLSN,
             boolean isRecoveryMode) {
@@ -68,8 +65,8 @@ public class LogReader implements ILogReader {
     }
 
     @Override
-    public void initializeScan(long beginLSN) throws ACIDException {
-        readLSN = beginLSN;
+    public void setPosition(long lsn) {
+        readLSN = lsn;
         if (waitForFlushOrReturnIfEOF() == ReturnState.EOF) {
             return;
         }
@@ -84,7 +81,7 @@ public class LogReader implements ILogReader {
      * @throws ACIDException
      */
     @Override
-    public ILogRecord next() throws ACIDException {
+    public ILogRecord next() {
         if (waitForFlushOrReturnIfEOF() == ReturnState.EOF) {
             return null;
         }
@@ -147,13 +144,10 @@ public class LogReader implements ILogReader {
                     return ReturnState.EOF;
                 }
                 try {
-                    if (IS_DEBUG_MODE) {
-                        LOGGER.info(
-                                "waitForFlushOrReturnIfEOF()| flushLSN: " + flushLSN.get() + ", readLSN: " + readLSN);
-                    }
                     flushLSN.wait();
                 } catch (InterruptedException e) {
-                    //ignore
+                    Thread.currentThread().interrupt();
+                    throw new ACIDException(e);
                 }
             }
             return ReturnState.FLUSH;
@@ -166,10 +160,9 @@ public class LogReader implements ILogReader {
      * @return true if log continues, false if EOF
      * @throws ACIDException
      */
-    private boolean refillLogReadBuffer() throws ACIDException {
+    private boolean refillLogReadBuffer() {
         try {
             if (readLSN % logFileSize == logFile.size()) {
-                logFile.close();
                 readLSN += logFileSize - (readLSN % logFileSize);
                 getLogFile();
             }
@@ -183,14 +176,12 @@ public class LogReader implements ILogReader {
      * Fills the log buffer with data from the log file at the current position
      *
      * @return false if EOF, true otherwise
-     * @throws ACIDException
      */
-
-    private boolean fillLogReadBuffer() throws ACIDException {
+    private boolean fillLogReadBuffer() {
         return fillLogReadBuffer(logPageSize, readBuffer);
     }
 
-    private boolean fillLogReadBuffer(int readSize, ByteBuffer readBuffer) throws ACIDException {
+    private boolean fillLogReadBuffer(int readSize, ByteBuffer readBuffer) {
         int size = 0;
         int read = 0;
         readBuffer.position(0);
@@ -217,10 +208,9 @@ public class LogReader implements ILogReader {
         return true;
     }
 
-    //for random reading
     @Override
-    public ILogRecord read(long LSN) throws ACIDException {
-        readLSN = LSN;
+    public ILogRecord read(long lsn) {
+        readLSN = lsn;
         //wait for the log to be flushed if needed before trying to read it.
         synchronized (flushLSN) {
             while (readLSN >= flushLSN.get()) {
@@ -232,13 +222,8 @@ public class LogReader implements ILogReader {
             }
         }
         try {
-            if (logFile == null) {
+            if (logFile == null || readLSN < fileBeginLSN || readLSN >= fileBeginLSN + logFile.size()) {
                 //get the log file which contains readLSN
-                getLogFile();
-                fillLogReadBuffer();
-            } else if (readLSN < fileBeginLSN || readLSN >= fileBeginLSN + logFile.size()) {
-                //log is not in the current log file
-                logFile.close();
                 getLogFile();
                 fillLogReadBuffer();
             } else if (readLSN < bufferBeginLSN || readLSN >= bufferBeginLSN + readBuffer.limit()) {
@@ -265,7 +250,7 @@ public class LogReader implements ILogReader {
                 case TRUNCATED: {
                     if (!fillLogReadBuffer()) {
                         throw new IllegalStateException(
-                                "Could not read LSN(" + LSN + ") from log file id " + logFile.getLogFileId());
+                                "Could not read LSN(" + lsn + ") from log file id " + logFile.getLogFileId());
                     }
                     //now read the complete log record
                     continue;
@@ -285,8 +270,10 @@ public class LogReader implements ILogReader {
         return logRecord;
     }
 
-    private void getLogFile() throws ACIDException {
+    private void getLogFile() {
         try {
+            // close existing file (if any) before opening another one
+            close();
             logFile = logMgr.getLogFile(readLSN);
             fileBeginLSN = logFile.getFileBeginLSN();
         } catch (IOException e) {
@@ -295,10 +282,11 @@ public class LogReader implements ILogReader {
     }
 
     @Override
-    public void close() throws ACIDException {
+    public void close() {
         try {
             if (logFile != null) {
                 logFile.close();
+                logFile = null;
             }
         } catch (IOException e) {
             throw new ACIDException(e);

@@ -580,7 +580,7 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
     @Override
     public void closeLogFile(TxnLogFile logFileRef, FileChannel fileChannel) throws IOException {
         if (!fileChannel.isOpen()) {
-            throw new IllegalStateException("File channel is not open");
+            LOGGER.warning(() -> "Closing log file with id(" + logFileRef.getLogFileId() + ") with a closed channel.");
         }
         fileChannel.close();
         untouchLogFile(logFileRef.getLogFileId());

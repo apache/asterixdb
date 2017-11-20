@@ -18,18 +18,34 @@
  */
 package org.apache.asterix.common.transactions;
 
-import org.apache.asterix.common.exceptions.ACIDException;
-
 public interface ILogReader {
 
-    public void initializeScan(long beginLSN) throws ACIDException;
+    /**
+     * Sets the log reader position at log sequence number with value {@code lsn}.
+     *
+     * @param lsn
+     */
+    void setPosition(long lsn);
 
-    //for scanning
-    public ILogRecord next() throws ACIDException;
+    /**
+     * Reads and returns the log record located at the log reader current position. After reading the log record,
+     * the log reader position is incremented by the size of the read log.
+     *
+     * @return the log record
+     */
+    ILogRecord next();
 
-    //for random reading
-    public ILogRecord read(long readLSN) throws ACIDException;
+    /**
+     * Reads and returns the log record with log sequence number {@code lsn}.
+     *
+     * @param lsn
+     * @return The log record
+     */
+    ILogRecord read(long lsn);
 
-    public void close() throws ACIDException;
+    /**
+     * Closes the log reader and any resources used.
+     */
+    void close();
 
 }

@@ -201,7 +201,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
         jobId2WinnerEntitiesMap = new HashMap<>();
         //set log reader to the lowWaterMarkLsn
         ILogRecord logRecord;
-        logReader.initializeScan(lowWaterMarkLSN);
+        logReader.setPosition(lowWaterMarkLSN);
         logRecord = logReader.next();
         while (logRecord != null) {
             if (IS_DEBUG_MODE) {
@@ -300,7 +300,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
 
         ILogRecord logRecord = null;
         try {
-            logReader.initializeScan(lowWaterMarkLSN);
+            logReader.setPosition(lowWaterMarkLSN);
             logRecord = logReader.next();
             while (logRecord != null) {
                 if (IS_DEBUG_MODE) {
@@ -540,7 +540,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
         Set<Integer> activePartitions = localResourceRepository.getActivePartitions();
         ILogReader logReader = logMgr.getLogReader(false);
         try {
-            logReader.initializeScan(firstLSN);
+            logReader.setPosition(firstLSN);
             ILogRecord logRecord = null;
             while (currentLSN < lastLSN) {
                 logRecord = logReader.next();
