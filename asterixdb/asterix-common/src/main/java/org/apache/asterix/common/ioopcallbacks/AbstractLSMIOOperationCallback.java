@@ -34,6 +34,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMemoryComponent;
 import org.apache.hyracks.storage.am.lsm.common.impls.DiskComponentMetadata;
+import org.apache.hyracks.storage.am.lsm.common.impls.EmptyComponent;
 import org.apache.hyracks.storage.am.lsm.common.util.ComponentUtils;
 import org.apache.hyracks.storage.am.lsm.common.util.LSMComponentIdUtils;
 
@@ -88,7 +89,7 @@ public abstract class AbstractLSMIOOperationCallback implements ILSMIOOperationC
     }
 
     @Override
-    public void afterFinalize(LSMIOOperationType opType, ILSMDiskComponent newComponent) {
+    public void afterFinalize(LSMIOOperationType opType, ILSMDiskComponent newComponent) throws HyracksDataException {
         // The operation was complete and the next I/O operation for the LSM index didn't start yet
         if (opType == LSMIOOperationType.FLUSH && newComponent != null) {
             synchronized (this) {
@@ -99,6 +100,13 @@ public abstract class AbstractLSMIOOperationCallback implements ILSMIOOperationC
                     firstLSNs[writeIndex] = mutableLastLSNs[writeIndex];
                 }
                 readIndex = (readIndex + 1) % mutableLastLSNs.length;
+            }
+            if (newComponent == EmptyComponent.INSTANCE) {
+                // This component was just deleted, we refresh the component id, when it gets recycled, it will get
+                // the new id from the component id generator.
+                // It is assumed that the component delete caller will ensure that corresponding components in secondary
+                // indexes are deleted as well
+                idGenerator.refresh();
             }
         }
     }

@@ -143,4 +143,9 @@ public interface ILSMIndex extends IIndex {
      * @return The number of all memory components (active and inactive)
      */
     int getNumberOfAllMemoryComponents();
+
+    /**
+     * @return the {@link ILSMHarness} of the index
+     */
+    ILSMHarness getHarness();
 }

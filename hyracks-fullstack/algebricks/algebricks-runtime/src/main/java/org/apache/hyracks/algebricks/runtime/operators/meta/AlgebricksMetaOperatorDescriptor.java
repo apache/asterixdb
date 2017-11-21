@@ -78,33 +78,48 @@ public class AlgebricksMetaOperatorDescriptor extends AbstractSingleActivityOper
     public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
             final IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
         if (inputArity == 0) {
-            return createSourceInputPushRuntime(ctx);
+            return new SourcePushRuntime(ctx);
         } else {
             return createOneInputOneOutputPushRuntime(ctx, recordDescProvider);
         }
     }
 
-    private IOperatorNodePushable createSourceInputPushRuntime(final IHyracksTaskContext ctx) {
-        return new AbstractUnaryOutputSourceOperatorNodePushable() {
+    private class SourcePushRuntime extends AbstractUnaryOutputSourceOperatorNodePushable {
+        private final IHyracksTaskContext ctx;
 
-            @Override
-            public void initialize() throws HyracksDataException {
-                IFrameWriter startOfPipeline;
-                RecordDescriptor pipelineOutputRecordDescriptor =
-                        outputArity > 0 ? AlgebricksMetaOperatorDescriptor.this.outRecDescs[0] : null;
-                PipelineAssembler pa =
-                        new PipelineAssembler(pipeline, inputArity, outputArity, null, pipelineOutputRecordDescriptor);
-                startOfPipeline = pa.assemblePipeline(writer, ctx);
+        public SourcePushRuntime(IHyracksTaskContext ctx) {
+            this.ctx = ctx;
+        }
+
+        @Override
+        public void initialize() throws HyracksDataException {
+            IFrameWriter startOfPipeline;
+            RecordDescriptor pipelineOutputRecordDescriptor =
+                    outputArity > 0 ? AlgebricksMetaOperatorDescriptor.this.outRecDescs[0] : null;
+            PipelineAssembler pa =
+                    new PipelineAssembler(pipeline, inputArity, outputArity, null, pipelineOutputRecordDescriptor);
+            startOfPipeline = pa.assemblePipeline(writer, ctx);
+            HyracksDataException exception = null;
+            try {
+                startOfPipeline.open();
+            } catch (Exception e) {
+                startOfPipeline.fail();
+                exception = HyracksDataException.create(e);
+            } finally {
                 try {
-                    startOfPipeline.open();
-                } catch (Exception e) {
-                    startOfPipeline.fail();
-                    throw e;
-                } finally {
                     startOfPipeline.close();
+                } catch (Exception e) {
+                    if (exception == null) {
+                        exception = HyracksDataException.create(e);
+                    } else {
+                        exception.addSuppressed(e);
+                    }
                 }
             }
-        };
+            if (exception != null) {
+                throw exception;
+            }
+        }
     }
 
     private IOperatorNodePushable createOneInputOneOutputPushRuntime(final IHyracksTaskContext ctx,

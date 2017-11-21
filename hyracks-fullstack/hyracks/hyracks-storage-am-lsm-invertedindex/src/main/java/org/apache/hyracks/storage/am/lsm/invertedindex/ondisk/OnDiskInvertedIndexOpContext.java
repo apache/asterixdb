@@ -81,4 +81,5 @@ public class OnDiskInvertedIndexOpContext implements IIndexOperationContext {
     public MultiComparator getPrefixSearchCmp() {
         return prefixSearchCmp;
     }
+
 }

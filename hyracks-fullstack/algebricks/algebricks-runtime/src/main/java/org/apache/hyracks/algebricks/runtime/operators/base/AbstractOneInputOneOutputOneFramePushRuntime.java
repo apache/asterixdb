@@ -51,13 +51,25 @@ public abstract class AbstractOneInputOneOutputOneFramePushRuntime extends Abstr
 
     @Override
     public void close() throws HyracksDataException {
+        HyracksDataException closeException = null;
         try {
             flushIfNotFailed();
         } catch (Exception e) {
+            closeException = HyracksDataException.create(e);
             writer.fail();
-            throw e;
         } finally {
-            writer.close();
+            try {
+                writer.close();
+            } catch (Exception e) {
+                if (closeException == null) {
+                    closeException = HyracksDataException.create(e);
+                } else {
+                    closeException.addSuppressed(e);
+                }
+            }
+        }
+        if (closeException != null) {
+            throw closeException;
         }
     }
 

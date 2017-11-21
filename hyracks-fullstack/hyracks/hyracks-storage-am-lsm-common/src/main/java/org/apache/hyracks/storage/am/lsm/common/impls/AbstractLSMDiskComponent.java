@@ -18,6 +18,7 @@
  */
 package org.apache.hyracks.storage.am.lsm.common.impls;
 
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -46,11 +47,6 @@ public abstract class AbstractLSMDiskComponent extends AbstractLSMComponent impl
         super(lsmIndex, filter);
         state = ComponentState.READABLE_UNWRITABLE;
         metadata = new DiskComponentMetadata(mdPageManager);
-    }
-
-    @Override
-    public AbstractLSMIndex getLsmIndex() {
-        return lsmIndex;
     }
 
     @Override
@@ -148,6 +144,9 @@ public abstract class AbstractLSMDiskComponent extends AbstractLSMComponent impl
     @Override
     public void markAsValid(boolean persist) throws HyracksDataException {
         ComponentUtils.markAsValid(getMetadataHolder(), persist);
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.log(Level.INFO, "Marked as valid component with id: " + getId());
+        }
     }
 
     @Override

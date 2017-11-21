@@ -65,6 +65,6 @@ public class ExternalBTreeWithBuddyLocalResource extends LSMBTreeLocalResource {
                 typeTraits, cmpFactories, bloomFilterFalsePositiveRate,
                 mergePolicyFactory.createMergePolicy(mergePolicyProperties, serviceCtx),
                 opTrackerProvider.getOperationTracker(serviceCtx), ioSchedulerProvider.getIoScheduler(serviceCtx),
-                ioOpCallbackFactory, bloomFilterKeyFields, durable, metadataPageManagerFactory);
+                ioOpCallbackFactory, bloomFilterKeyFields, durable, metadataPageManagerFactory, serviceCtx.getTracer());
     }
 }

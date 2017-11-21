@@ -125,9 +125,10 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
             ILSMDiskComponentFactory componentFactory, ILSMDiskComponentFactory bulkLoadComponentFactory,
             double bloomFilterFalsePositiveRate, IBinaryComparatorFactory[] cmpFactories, ILSMMergePolicy mergePolicy,
             ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler,
-            ILSMIOOperationCallbackFactory ioOpCallbackFactory, boolean needKeyDupCheck, boolean durable) {
+            ILSMIOOperationCallbackFactory ioOpCallbackFactory, boolean needKeyDupCheck, boolean durable,
+            ITracer tracer) {
         super(ioManager, bufferCache, fileManager, bloomFilterFalsePositiveRate, mergePolicy, opTracker, ioScheduler,
-                ioOpCallbackFactory, componentFactory, bulkLoadComponentFactory, durable);
+                ioOpCallbackFactory, componentFactory, bulkLoadComponentFactory, durable, tracer);
         this.insertLeafFrameFactory = insertLeafFrameFactory;
         this.deleteLeafFrameFactory = deleteLeafFrameFactory;
         this.cmpFactories = cmpFactories;
@@ -364,10 +365,11 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
     public LSMBTreeOpContext createOpContext(IModificationOperationCallback modificationCallback,
             ISearchOperationCallback searchCallback) {
         int numBloomFilterKeyFields = hasBloomFilter
-                ? ((LSMBTreeWithBloomFilterDiskComponentFactory) componentFactory).getBloomFilterKeyFields().length : 0;
-        return new LSMBTreeOpContext(memoryComponents, insertLeafFrameFactory, deleteLeafFrameFactory,
+                ? ((LSMBTreeWithBloomFilterDiskComponentFactory) componentFactory).getBloomFilterKeyFields().length
+                : 0;
+        return new LSMBTreeOpContext(this, memoryComponents, insertLeafFrameFactory, deleteLeafFrameFactory,
                 modificationCallback, searchCallback, numBloomFilterKeyFields, getTreeFields(), getFilterFields(),
-                getLsmHarness(), getFilterCmpFactories());
+                getHarness(), getFilterCmpFactories(), tracer);
     }
 
     @Override
@@ -376,7 +378,7 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
     }
 
     public ILSMIndexAccessor createAccessor(AbstractLSMIndexOperationContext opCtx) {
-        return new LSMTreeIndexAccessor(getLsmHarness(), opCtx, cursorFactory);
+        return new LSMTreeIndexAccessor(getHarness(), opCtx, cursorFactory);
     }
 
     @Override

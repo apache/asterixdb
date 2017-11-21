@@ -28,6 +28,7 @@ import org.apache.asterix.test.runtime.LangExecutionUtil;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.ConnectorDescriptorId;
 import org.apache.hyracks.api.dataflow.TaskAttemptId;
+import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.partitions.PartitionId;
 import org.apache.hyracks.comm.channels.NetworkOutputChannel;
 import org.apache.hyracks.control.nc.NodeControllerService;
@@ -58,7 +59,8 @@ public class DeallocatableTest {
             final NodeControllerService ncs =
                     (NodeControllerService) nc.getAppRuntimeContext().getServiceContext().getControllerService();
             final TaskAttemptId taId = Mockito.mock(TaskAttemptId.class);
-            final IHyracksTaskContext ctx = nc.createTestContext(true);
+            JobId jobId = nc.newJobId();
+            final IHyracksTaskContext ctx = nc.createTestContext(jobId, 0, true);
             final ConnectorDescriptorId codId = new ConnectorDescriptorId(1);
             final PartitionId pid = new PartitionId(ctx.getJobletContext().getJobId(), codId, 1, 1);
             final ChannelControlBlock ccb = ncs.getNetworkManager()

@@ -58,6 +58,7 @@ import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.test.CountAnswer;
 import org.apache.hyracks.api.test.FrameWriterTestUtils;
 import org.apache.hyracks.api.test.FrameWriterTestUtils.FrameWriterOperation;
@@ -133,20 +134,21 @@ public class ComponentRollbackTest {
     public void createIndex() throws Exception {
         List<List<String>> partitioningKeys = new ArrayList<>();
         partitioningKeys.add(Collections.singletonList("key"));
+        int partition = 0;
         dataset = new TestDataset(DATAVERSE_NAME, DATASET_NAME, DATAVERSE_NAME, DATA_TYPE_NAME, NODE_GROUP_NAME,
                 NoMergePolicyFactory.NAME, null, new InternalDatasetDetails(null, PartitioningStrategy.HASH,
                         partitioningKeys, null, null, null, false, null, false),
                 null, DatasetType.INTERNAL, DATASET_ID, 0);
         PrimaryIndexInfo primaryIndexInfo = nc.createPrimaryIndex(dataset, KEY_TYPES, RECORD_TYPE, META_TYPE, null,
-                storageManager, KEY_INDEXES, KEY_INDICATORS_LIST);
+                storageManager, KEY_INDEXES, KEY_INDICATORS_LIST, partition);
         IndexDataflowHelperFactory iHelperFactory =
                 new IndexDataflowHelperFactory(nc.getStorageManager(), primaryIndexInfo.getFileSplitProvider());
-        ctx = nc.createTestContext(false);
-        indexDataflowHelper = iHelperFactory.create(ctx.getJobletContext().getServiceContext(), 0);
+        JobId jobId = nc.newJobId();
+        ctx = nc.createTestContext(jobId, partition, false);
+        indexDataflowHelper = iHelperFactory.create(ctx.getJobletContext().getServiceContext(), partition);
         indexDataflowHelper.open();
         lsmBtree = (TestLsmBtree) indexDataflowHelper.getIndexInstance();
         indexDataflowHelper.close();
-        nc.newJobId();
         txnCtx = nc.getTransactionManager().beginTransaction(nc.getTxnJobId(ctx),
                 new TransactionOptions(ITransactionManager.AtomicityLevel.ENTITY_LEVEL));
         insertOp = nc.getInsertPipeline(ctx, dataset, KEY_TYPES, RECORD_TYPE, META_TYPE, null, KEY_INDEXES,
@@ -158,7 +160,7 @@ public class ComponentRollbackTest {
         indexDataflowHelper.destroy();
     }
 
-    private void allowAllOps(TestLsmBtree lsmBtree) {
+    static void allowAllOps(TestLsmBtree lsmBtree) {
         lsmBtree.addModifyCallback(sem -> sem.release());
         lsmBtree.addFlushCallback(sem -> sem.release());
         lsmBtree.addSearchCallback(sem -> sem.release());
@@ -197,19 +199,17 @@ public class ComponentRollbackTest {
             List<ILSMDiskComponent> diskComponents = lsmBtree.getDiskComponents();
             Assert.assertEquals(9, diskComponents.size());
             Assert.assertTrue(memComponents.get(lsmBtree.getCurrentMemoryComponentIndex()).isModified());
-            searchAndAssertCount(nc, ctx, dataset, storageManager, TOTAL_NUM_OF_RECORDS);
+            searchAndAssertCount(nc, 0, dataset, storageManager, TOTAL_NUM_OF_RECORDS);
             ILSMIndexAccessor lsmAccessor = lsmBtree.createAccessor(NoOpIndexAccessParameters.INSTANCE);
-            dsLifecycleMgr.getComponentIdGenerator(DATASET_ID).refresh();
             // rollback a memory component
             lsmAccessor.deleteComponents(memoryComponentsPredicate);
-            searchAndAssertCount(nc, ctx, dataset, storageManager, TOTAL_NUM_OF_RECORDS - RECORDS_PER_COMPONENT);
+            searchAndAssertCount(nc, 0, dataset, storageManager, TOTAL_NUM_OF_RECORDS - RECORDS_PER_COMPONENT);
             // rollback the last disk component
             lsmAccessor = lsmBtree.createAccessor(NoOpIndexAccessParameters.INSTANCE);
             long lsn = AbstractLSMIOOperationCallback.getTreeIndexLSN(diskComponents.get(0).getMetadata());
             DiskComponentLsnPredicate pred = new DiskComponentLsnPredicate(lsn);
-            dsLifecycleMgr.getComponentIdGenerator(DATASET_ID).refresh();
             lsmAccessor.deleteComponents(pred);
-            searchAndAssertCount(nc, ctx, dataset, storageManager, TOTAL_NUM_OF_RECORDS - (2 * RECORDS_PER_COMPONENT));
+            searchAndAssertCount(nc, 0, dataset, storageManager, TOTAL_NUM_OF_RECORDS - (2 * RECORDS_PER_COMPONENT));
         } catch (Throwable e) {
             e.printStackTrace();
             Assert.fail(e.getMessage());
@@ -247,12 +247,11 @@ public class ComponentRollbackTest {
             List<ILSMDiskComponent> diskComponents = lsmBtree.getDiskComponents();
             Assert.assertEquals(9, diskComponents.size());
             Assert.assertTrue(memComponents.get(lsmBtree.getCurrentMemoryComponentIndex()).isModified());
-            searchAndAssertCount(nc, ctx, dataset, storageManager, TOTAL_NUM_OF_RECORDS);
+            searchAndAssertCount(nc, 0, dataset, storageManager, TOTAL_NUM_OF_RECORDS);
             ILSMIndexAccessor lsmAccessor = lsmBtree.createAccessor(NoOpIndexAccessParameters.INSTANCE);
-            dsLifecycleMgr.getComponentIdGenerator(DATASET_ID).refresh();
             // rollback a memory component
             lsmAccessor.deleteComponents(memoryComponentsPredicate);
-            searchAndAssertCount(nc, ctx, dataset, storageManager, TOTAL_NUM_OF_RECORDS - RECORDS_PER_COMPONENT);
+            searchAndAssertCount(nc, 0, dataset, storageManager, TOTAL_NUM_OF_RECORDS - RECORDS_PER_COMPONENT);
 
             // insert again
             nc.newJobId();
@@ -270,14 +269,13 @@ public class ComponentRollbackTest {
             }
             insertOp.close();
             nc.getTransactionManager().commitTransaction(txnCtx.getTxnId());
-            searchAndAssertCount(nc, ctx, dataset, storageManager, TOTAL_NUM_OF_RECORDS);
+            searchAndAssertCount(nc, 0, dataset, storageManager, TOTAL_NUM_OF_RECORDS);
             // rollback the last disk component
             lsmAccessor = lsmBtree.createAccessor(NoOpIndexAccessParameters.INSTANCE);
             long lsn = AbstractLSMIOOperationCallback.getTreeIndexLSN(diskComponents.get(0).getMetadata());
             DiskComponentLsnPredicate pred = new DiskComponentLsnPredicate(lsn);
-            dsLifecycleMgr.getComponentIdGenerator(DATASET_ID).refresh();
             lsmAccessor.deleteComponents(pred);
-            searchAndAssertCount(nc, ctx, dataset, storageManager, TOTAL_NUM_OF_RECORDS - (2 * RECORDS_PER_COMPONENT));
+            searchAndAssertCount(nc, 0, dataset, storageManager, TOTAL_NUM_OF_RECORDS - (2 * RECORDS_PER_COMPONENT));
         } catch (Throwable e) {
             e.printStackTrace();
             Assert.fail(e.getMessage());
@@ -317,12 +315,11 @@ public class ComponentRollbackTest {
             List<ILSMDiskComponent> diskComponents = lsmBtree.getDiskComponents();
             Assert.assertEquals(9, diskComponents.size());
             Assert.assertTrue(memComponents.get(lsmBtree.getCurrentMemoryComponentIndex()).isModified());
-            Searcher firstSearcher = new Searcher(nc, ctx, dataset, storageManager, lsmBtree, TOTAL_NUM_OF_RECORDS);
+            Searcher firstSearcher = new Searcher(nc, 0, dataset, storageManager, lsmBtree, TOTAL_NUM_OF_RECORDS);
             // wait till firstSearcher enter the components
             firstSearcher.waitUntilEntered();
             // now that we enetered, we will rollback
             ILSMIndexAccessor lsmAccessor = lsmBtree.createAccessor(NoOpIndexAccessParameters.INSTANCE);
-            dsLifecycleMgr.getComponentIdGenerator(DATASET_ID).refresh();
             // rollback a memory component
             lsmAccessor.deleteComponents(
                     c -> (c instanceof ILSMMemoryComponent && ((ILSMMemoryComponent) c).isModified()));
@@ -331,24 +328,23 @@ public class ComponentRollbackTest {
             lsmBtree.allowSearch(1);
             Assert.assertTrue(firstSearcher.result());
             // search now and ensure
-            searchAndAssertCount(nc, ctx, dataset, storageManager, TOTAL_NUM_OF_RECORDS - RECORDS_PER_COMPONENT);
+            searchAndAssertCount(nc, 0, dataset, storageManager, TOTAL_NUM_OF_RECORDS - RECORDS_PER_COMPONENT);
             // rollback the last disk component
             // re-block searches
             lsmBtree.clearSearchCallbacks();
-            Searcher secondSearcher = new Searcher(nc, ctx, dataset, storageManager, lsmBtree,
+            Searcher secondSearcher = new Searcher(nc, 0, dataset, storageManager, lsmBtree,
                     TOTAL_NUM_OF_RECORDS - RECORDS_PER_COMPONENT);
             // wait till firstSearcher enter the components
             secondSearcher.waitUntilEntered();
             lsmAccessor = lsmBtree.createAccessor(NoOpIndexAccessParameters.INSTANCE);
             long lsn = AbstractLSMIOOperationCallback.getTreeIndexLSN(diskComponents.get(0).getMetadata());
             DiskComponentLsnPredicate pred = new DiskComponentLsnPredicate(lsn);
-            dsLifecycleMgr.getComponentIdGenerator(DATASET_ID).refresh();
             lsmAccessor.deleteComponents(pred);
             // now that the rollback has completed, we will unblock the search
             lsmBtree.addSearchCallback(sem -> sem.release());
             lsmBtree.allowSearch(1);
             Assert.assertTrue(secondSearcher.result());
-            searchAndAssertCount(nc, ctx, dataset, storageManager, TOTAL_NUM_OF_RECORDS - (2 * RECORDS_PER_COMPONENT));
+            searchAndAssertCount(nc, 0, dataset, storageManager, TOTAL_NUM_OF_RECORDS - (2 * RECORDS_PER_COMPONENT));
         } catch (Throwable e) {
             e.printStackTrace();
             Assert.fail(e.getMessage());
@@ -386,7 +382,7 @@ public class ComponentRollbackTest {
             List<ILSMDiskComponent> diskComponents = lsmBtree.getDiskComponents();
             Assert.assertEquals(9, diskComponents.size());
             Assert.assertTrue(memComponents.get(lsmBtree.getCurrentMemoryComponentIndex()).isModified());
-            searchAndAssertCount(nc, ctx, dataset, storageManager, TOTAL_NUM_OF_RECORDS);
+            searchAndAssertCount(nc, 0, dataset, storageManager, TOTAL_NUM_OF_RECORDS);
             // disable flushes
             lsmBtree.clearFlushCallbacks();
             Flusher firstFlusher = new Flusher(lsmBtree);
@@ -395,7 +391,7 @@ public class ComponentRollbackTest {
             // now that we enetered, we will rollback. This will not proceed since it is waiting for the flush to complete
             Rollerback rollerback = new Rollerback(lsmBtree, memoryComponentsPredicate);
             // now that the rollback has completed, we will search
-            searchAndAssertCount(nc, ctx, dataset, storageManager, TOTAL_NUM_OF_RECORDS);
+            searchAndAssertCount(nc, 0, dataset, storageManager, TOTAL_NUM_OF_RECORDS);
             //unblock the flush
             lsmBtree.allowFlush(1);
             // ensure rollback completed
@@ -403,7 +399,7 @@ public class ComponentRollbackTest {
             // ensure current mem component is not modified
             Assert.assertFalse(memComponents.get(lsmBtree.getCurrentMemoryComponentIndex()).isModified());
             // search now and ensure
-            searchAndAssertCount(nc, ctx, dataset, storageManager, TOTAL_NUM_OF_RECORDS);
+            searchAndAssertCount(nc, 0, dataset, storageManager, TOTAL_NUM_OF_RECORDS);
         } catch (Throwable e) {
             e.printStackTrace();
             Assert.fail(e.getMessage());
@@ -442,7 +438,7 @@ public class ComponentRollbackTest {
             List<ILSMDiskComponent> diskComponents = lsmBtree.getDiskComponents();
             Assert.assertEquals(9, diskComponents.size());
             Assert.assertTrue(memComponents.get(lsmBtree.getCurrentMemoryComponentIndex()).isModified());
-            searchAndAssertCount(nc, ctx, dataset, storageManager, TOTAL_NUM_OF_RECORDS);
+            searchAndAssertCount(nc, 0, dataset, storageManager, TOTAL_NUM_OF_RECORDS);
             // Now, we will start a full merge
             Merger merger = new Merger(lsmBtree);
             ILSMIndexAccessor mergeAccessor = lsmBtree.createAccessor(NoOpIndexAccessParameters.INSTANCE);
@@ -459,7 +455,7 @@ public class ComponentRollbackTest {
             Rollerback rollerback = new Rollerback(lsmBtree, new DiskComponentLsnPredicate(lsn));
             // rollback is now waiting for the merge to complete
             // we will search
-            searchAndAssertCount(nc, ctx, dataset, storageManager, TOTAL_NUM_OF_RECORDS);
+            searchAndAssertCount(nc, 0, dataset, storageManager, TOTAL_NUM_OF_RECORDS);
             //unblock the merge
             lsmBtree.allowMerge(1);
             // ensure rollback completes
@@ -467,7 +463,7 @@ public class ComponentRollbackTest {
             // ensure current mem component is not modified
             Assert.assertFalse(memComponents.get(lsmBtree.getCurrentMemoryComponentIndex()).isModified());
             // search now and ensure that we rolled back the merged component
-            searchAndAssertCount(nc, ctx, dataset, storageManager,
+            searchAndAssertCount(nc, 0, dataset, storageManager,
                     TOTAL_NUM_OF_RECORDS - ((numMergedComponents + 1/*memory component*/) * RECORDS_PER_COMPONENT));
         } catch (Throwable e) {
             e.printStackTrace();
@@ -506,7 +502,7 @@ public class ComponentRollbackTest {
             List<ILSMDiskComponent> diskComponents = lsmBtree.getDiskComponents();
             Assert.assertEquals(9, diskComponents.size());
             Assert.assertTrue(memComponents.get(lsmBtree.getCurrentMemoryComponentIndex()).isModified());
-            searchAndAssertCount(nc, ctx, dataset, storageManager, TOTAL_NUM_OF_RECORDS);
+            searchAndAssertCount(nc, 0, dataset, storageManager, TOTAL_NUM_OF_RECORDS);
             // disable flushes
             // disable searches
             lsmBtree.clearFlushCallbacks();
@@ -514,7 +510,7 @@ public class ComponentRollbackTest {
             Flusher firstFlusher = new Flusher(lsmBtree);
             dsLifecycleMgr.flushDataset(dataset.getDatasetId(), true);
             firstFlusher.waitUntilCount(1);
-            Searcher firstSearcher = new Searcher(nc, ctx, dataset, storageManager, lsmBtree, TOTAL_NUM_OF_RECORDS);
+            Searcher firstSearcher = new Searcher(nc, 0, dataset, storageManager, lsmBtree, TOTAL_NUM_OF_RECORDS);
             // wait till firstSearcher enter the components
             firstSearcher.waitUntilEntered();
             // now that we enetered, we will rollback rollback a memory component
@@ -528,7 +524,7 @@ public class ComponentRollbackTest {
             rollerback.complete();
             Assert.assertFalse(memComponents.get(lsmBtree.getCurrentMemoryComponentIndex()).isModified());
             // search now and ensure the rollback was no op since it waits for ongoing flushes
-            searchAndAssertCount(nc, ctx, dataset, storageManager, TOTAL_NUM_OF_RECORDS);
+            searchAndAssertCount(nc, 0, dataset, storageManager, TOTAL_NUM_OF_RECORDS);
         } catch (Throwable e) {
             e.printStackTrace();
             Assert.fail(e.getMessage());
@@ -566,7 +562,7 @@ public class ComponentRollbackTest {
             List<ILSMDiskComponent> diskComponents = lsmBtree.getDiskComponents();
             Assert.assertEquals(9, diskComponents.size());
             Assert.assertTrue(memComponents.get(lsmBtree.getCurrentMemoryComponentIndex()).isModified());
-            searchAndAssertCount(nc, ctx, dataset, storageManager, TOTAL_NUM_OF_RECORDS);
+            searchAndAssertCount(nc, 0, dataset, storageManager, TOTAL_NUM_OF_RECORDS);
             // disable flushes
             // disable searches
             lsmBtree.clearFlushCallbacks();
@@ -574,7 +570,7 @@ public class ComponentRollbackTest {
             dsLifecycleMgr.flushDataset(dataset.getDatasetId(), true);
             firstFlusher.waitUntilCount(1);
             lsmBtree.clearSearchCallbacks();
-            Searcher firstSearcher = new Searcher(nc, ctx, dataset, storageManager, lsmBtree, TOTAL_NUM_OF_RECORDS);
+            Searcher firstSearcher = new Searcher(nc, 0, dataset, storageManager, lsmBtree, TOTAL_NUM_OF_RECORDS);
             // wait till firstSearcher enter the components
             firstSearcher.waitUntilEntered();
             // now that we enetered, we will rollback
@@ -589,7 +585,7 @@ public class ComponentRollbackTest {
             rollerback.complete();
             Assert.assertFalse(memComponents.get(lsmBtree.getCurrentMemoryComponentIndex()).isModified());
             // search now and ensure
-            searchAndAssertCount(nc, ctx, dataset, storageManager, TOTAL_NUM_OF_RECORDS);
+            searchAndAssertCount(nc, 0, dataset, storageManager, TOTAL_NUM_OF_RECORDS);
         } catch (Throwable e) {
             e.printStackTrace();
             Assert.fail(e.getMessage());
@@ -628,7 +624,7 @@ public class ComponentRollbackTest {
             List<ILSMDiskComponent> diskComponents = lsmBtree.getDiskComponents();
             Assert.assertEquals(9, diskComponents.size());
             Assert.assertTrue(memComponents.get(lsmBtree.getCurrentMemoryComponentIndex()).isModified());
-            searchAndAssertCount(nc, ctx, dataset, storageManager, TOTAL_NUM_OF_RECORDS);
+            searchAndAssertCount(nc, 0, dataset, storageManager, TOTAL_NUM_OF_RECORDS);
             // Now, we will start a merge
             Merger merger = new Merger(lsmBtree);
             ILSMIndexAccessor mergeAccessor = lsmBtree.createAccessor(NoOpIndexAccessParameters.INSTANCE);
@@ -643,7 +639,7 @@ public class ComponentRollbackTest {
             merger.waitUntilCount(1);
             // we will block search
             lsmBtree.clearSearchCallbacks();
-            Searcher firstSearcher = new Searcher(nc, ctx, dataset, storageManager, lsmBtree, TOTAL_NUM_OF_RECORDS);
+            Searcher firstSearcher = new Searcher(nc, 0, dataset, storageManager, lsmBtree, TOTAL_NUM_OF_RECORDS);
             // wait till firstSearcher enter the components
             firstSearcher.waitUntilEntered();
             // now that we enetered, we will rollback
@@ -657,7 +653,7 @@ public class ComponentRollbackTest {
             Assert.assertTrue(firstSearcher.result());
             rollerback.complete();
             // now that the rollback has completed, we will search
-            searchAndAssertCount(nc, ctx, dataset, storageManager,
+            searchAndAssertCount(nc, 0, dataset, storageManager,
                     TOTAL_NUM_OF_RECORDS - ((numMergedComponents + 1/*memory component*/) * RECORDS_PER_COMPONENT));
             // ensure current mem component is not modified
             Assert.assertFalse(memComponents.get(lsmBtree.getCurrentMemoryComponentIndex()).isModified());
@@ -699,7 +695,7 @@ public class ComponentRollbackTest {
             List<ILSMDiskComponent> diskComponents = lsmBtree.getDiskComponents();
             Assert.assertEquals(9, diskComponents.size());
             Assert.assertTrue(memComponents.get(lsmBtree.getCurrentMemoryComponentIndex()).isModified());
-            searchAndAssertCount(nc, ctx, dataset, storageManager, TOTAL_NUM_OF_RECORDS);
+            searchAndAssertCount(nc, 0, dataset, storageManager, TOTAL_NUM_OF_RECORDS);
             // Now, we will start a merge
             Merger merger = new Merger(lsmBtree);
             ILSMIndexAccessor mergeAccessor = lsmBtree.createAccessor(NoOpIndexAccessParameters.INSTANCE);
@@ -714,7 +710,7 @@ public class ComponentRollbackTest {
             merger.waitUntilCount(1);
             // we will block search
             lsmBtree.clearSearchCallbacks();
-            Searcher firstSearcher = new Searcher(nc, ctx, dataset, storageManager, lsmBtree, TOTAL_NUM_OF_RECORDS);
+            Searcher firstSearcher = new Searcher(nc, 0, dataset, storageManager, lsmBtree, TOTAL_NUM_OF_RECORDS);
             // wait till firstSearcher enter the components
             firstSearcher.waitUntilEntered();
             // now that we enetered, we will rollback
@@ -724,11 +720,11 @@ public class ComponentRollbackTest {
             lsmBtree.allowSearch(1);
             Assert.assertTrue(firstSearcher.result());
             // even though rollback has been called, it is still waiting for the merge to complete
-            searchAndAssertCount(nc, ctx, dataset, storageManager, TOTAL_NUM_OF_RECORDS);
+            searchAndAssertCount(nc, 0, dataset, storageManager, TOTAL_NUM_OF_RECORDS);
             //unblock the merge
             lsmBtree.allowMerge(1);
             rollerBack.complete();
-            searchAndAssertCount(nc, ctx, dataset, storageManager,
+            searchAndAssertCount(nc, 0, dataset, storageManager,
                     TOTAL_NUM_OF_RECORDS - ((numMergedComponents + 1/*memory component*/) * RECORDS_PER_COMPONENT));
             // ensure current mem component is not modified
             Assert.assertFalse(memComponents.get(lsmBtree.getCurrentMemoryComponentIndex()).isModified());
@@ -748,7 +744,6 @@ public class ComponentRollbackTest {
                 @Override
                 public void run() {
                     ILSMIndexAccessor lsmAccessor = lsmBtree.createAccessor(NoOpIndexAccessParameters.INSTANCE);
-                    dsLifecycleMgr.getComponentIdGenerator(DATASET_ID).refresh();
                     try {
                         lsmAccessor.deleteComponents(predicate);
                     } catch (HyracksDataException e) {
@@ -768,13 +763,13 @@ public class ComponentRollbackTest {
         }
     }
 
-    private class Searcher {
+    static class Searcher {
         private final ExecutorService executor = Executors.newSingleThreadExecutor();
         private Future<Boolean> task;
         private volatile boolean entered = false;
 
-        public Searcher(TestNodeController nc, IHyracksTaskContext ctx, Dataset dataset,
-                StorageComponentProvider storageManager, TestLsmBtree lsmBtree, int numOfRecords) {
+        public Searcher(TestNodeController nc, int partition, Dataset dataset, StorageComponentProvider storageManager,
+                TestLsmBtree lsmBtree, int numOfRecords) {
             lsmBtree.addSearchCallback(sem -> {
                 synchronized (Searcher.this) {
                     entered = true;
@@ -784,7 +779,7 @@ public class ComponentRollbackTest {
             Callable<Boolean> callable = new Callable<Boolean>() {
                 @Override
                 public Boolean call() throws Exception {
-                    searchAndAssertCount(nc, ctx, dataset, storageManager, numOfRecords);
+                    searchAndAssertCount(nc, partition, dataset, storageManager, numOfRecords);
                     return true;
                 }
             };
@@ -840,7 +835,7 @@ public class ComponentRollbackTest {
         }
     }
 
-    private class DiskComponentLsnPredicate implements Predicate<ILSMComponent> {
+    private static class DiskComponentLsnPredicate implements Predicate<ILSMComponent> {
         private final long lsn;
 
         public DiskComponentLsnPredicate(long lsn) {
@@ -860,10 +855,11 @@ public class ComponentRollbackTest {
         }
     }
 
-    private void searchAndAssertCount(TestNodeController nc, IHyracksTaskContext ctx, Dataset dataset,
+    static void searchAndAssertCount(TestNodeController nc, int partition, Dataset dataset,
             StorageComponentProvider storageManager, int numOfRecords)
             throws HyracksDataException, AlgebricksException {
-        nc.newJobId();
+        JobId jobId = nc.newJobId();
+        IHyracksTaskContext ctx = nc.createTestContext(jobId, partition, false);
         TestTupleCounterFrameWriter countOp = create(nc.getSearchOutputDesc(KEY_TYPES, RECORD_TYPE, META_TYPE),
                 Collections.emptyList(), Collections.emptyList(), false);
         IPushRuntime emptyTupleOp = nc.getFullScanPipeline(countOp, ctx, dataset, KEY_TYPES, RECORD_TYPE, META_TYPE,

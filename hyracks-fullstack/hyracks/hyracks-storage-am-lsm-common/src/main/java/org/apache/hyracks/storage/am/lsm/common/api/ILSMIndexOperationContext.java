@@ -56,4 +56,30 @@ public interface ILSMIndexOperationContext extends IIndexOperationContext {
     PermutingTupleReference getFilterTuple();
 
     MultiComparator getFilterCmp();
+
+    /**
+     * @return the {@link ILSMIndex} of the component
+     */
+    ILSMIndex getIndex();
+
+    /**
+     * Performance tracing method. Logs the accumulated counters for number of tuples
+     *
+     * @param tupleCount
+     *            the number of tuples represented by the counters
+     */
+    void logPerformanceCounters(int tupleCount);
+
+    /**
+     * Increment the time taken for entering and exiting components
+     *
+     * @param increment
+     *            the time increment in nanoseconds
+     */
+    void incrementEnterExitTime(long increment);
+
+    /**
+     * @return true if performance tracing is enabled, false otherwise
+     */
+    boolean isTracingEnabled();
 }

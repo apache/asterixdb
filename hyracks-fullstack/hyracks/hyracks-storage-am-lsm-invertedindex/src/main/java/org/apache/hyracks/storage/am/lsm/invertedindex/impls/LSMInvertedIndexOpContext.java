@@ -25,12 +25,14 @@ import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.common.impls.NoOpIndexAccessParameters;
 import org.apache.hyracks.storage.am.common.tuples.PermutingTupleReference;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMemoryComponent;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexOperationContext;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexAccessor;
 import org.apache.hyracks.storage.common.IIndexAccessor;
 import org.apache.hyracks.storage.common.IModificationOperationCallback;
 import org.apache.hyracks.storage.common.ISearchOperationCallback;
+import org.apache.hyracks.util.trace.ITracer;
 
 public class LSMInvertedIndexOpContext extends AbstractLSMIndexOperationContext {
 
@@ -45,11 +47,12 @@ public class LSMInvertedIndexOpContext extends AbstractLSMIndexOperationContext 
     private IInvertedIndexAccessor currentMutableInvIndexAccessors;
     private IIndexAccessor currentDeletedKeysBTreeAccessors;
 
-    public LSMInvertedIndexOpContext(List<ILSMMemoryComponent> mutableComponents,
+    public LSMInvertedIndexOpContext(ILSMIndex index, List<ILSMMemoryComponent> mutableComponents,
             IModificationOperationCallback modificationCallback, ISearchOperationCallback searchCallback,
-            int[] invertedIndexFields, int[] filterFields, IBinaryComparatorFactory[] filterComparatorFactories)
-            throws HyracksDataException {
-        super(invertedIndexFields, filterFields, filterComparatorFactories, searchCallback, modificationCallback);
+            int[] invertedIndexFields, int[] filterFields, IBinaryComparatorFactory[] filterComparatorFactories,
+            ITracer tracer) throws HyracksDataException {
+        super(index, invertedIndexFields, filterFields, filterComparatorFactories, searchCallback, modificationCallback,
+                tracer);
         mutableInvIndexAccessors = new IInvertedIndexAccessor[mutableComponents.size()];
         deletedKeysBTreeAccessors = new IIndexAccessor[mutableComponents.size()];
         for (int i = 0; i < mutableComponents.size(); i++) {

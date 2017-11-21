@@ -29,6 +29,7 @@ import org.apache.hyracks.storage.am.common.impls.NoOpIndexAccessParameters;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMHarness;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMemoryComponent;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexOperationContext;
 import org.apache.hyracks.storage.am.rtree.impls.RTree;
@@ -37,6 +38,7 @@ import org.apache.hyracks.storage.common.IModificationOperationCallback;
 import org.apache.hyracks.storage.common.ISearchOperationCallback;
 import org.apache.hyracks.storage.common.ISearchPredicate;
 import org.apache.hyracks.storage.common.MultiComparator;
+import org.apache.hyracks.util.trace.ITracer;
 
 public final class LSMRTreeOpContext extends AbstractLSMIndexOperationContext {
 
@@ -50,12 +52,14 @@ public final class LSMRTreeOpContext extends AbstractLSMIndexOperationContext {
     private BTreeOpContext currentBTreeOpContext;
     private LSMRTreeCursorInitialState searchInitialState;
 
-    public LSMRTreeOpContext(List<ILSMMemoryComponent> mutableComponents, ITreeIndexFrameFactory rtreeLeafFrameFactory,
-            ITreeIndexFrameFactory rtreeInteriorFrameFactory, ITreeIndexFrameFactory btreeLeafFrameFactory,
-            IModificationOperationCallback modificationCallback, ISearchOperationCallback searchCallback,
-            int[] rtreeFields, int[] filterFields, ILSMHarness lsmHarness, int[] comparatorFields,
-            IBinaryComparatorFactory[] linearizerArray, IBinaryComparatorFactory[] filterComparatorFactories) {
-        super(rtreeFields, filterFields, filterComparatorFactories, searchCallback, modificationCallback);
+    public LSMRTreeOpContext(ILSMIndex index, List<ILSMMemoryComponent> mutableComponents,
+            ITreeIndexFrameFactory rtreeLeafFrameFactory, ITreeIndexFrameFactory rtreeInteriorFrameFactory,
+            ITreeIndexFrameFactory btreeLeafFrameFactory, IModificationOperationCallback modificationCallback,
+            ISearchOperationCallback searchCallback, int[] rtreeFields, int[] filterFields, ILSMHarness lsmHarness,
+            int[] comparatorFields, IBinaryComparatorFactory[] linearizerArray,
+            IBinaryComparatorFactory[] filterComparatorFactories, ITracer tracer) {
+        super(index, rtreeFields, filterFields, filterComparatorFactories, searchCallback, modificationCallback,
+                tracer);
         mutableRTreeAccessors = new RTree.RTreeAccessor[mutableComponents.size()];
         mutableBTreeAccessors = new BTree.BTreeAccessor[mutableComponents.size()];
         rtreeOpContexts = new RTreeOpContext[mutableComponents.size()];

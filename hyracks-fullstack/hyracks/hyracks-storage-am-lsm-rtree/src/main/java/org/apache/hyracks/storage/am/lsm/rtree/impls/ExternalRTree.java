@@ -61,6 +61,7 @@ import org.apache.hyracks.storage.common.IIndexCursor;
 import org.apache.hyracks.storage.common.ISearchOperationCallback;
 import org.apache.hyracks.storage.common.ISearchPredicate;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
+import org.apache.hyracks.util.trace.ITracer;
 
 /**
  * This is an lsm r-tree that does not have memory component and is modified
@@ -89,18 +90,18 @@ public class ExternalRTree extends LSMRTree implements ITwoPCIndex {
             int[] comparatorFields, IBinaryComparatorFactory[] linearizerArray, ILSMMergePolicy mergePolicy,
             ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler,
             ILSMIOOperationCallbackFactory ioOpCallbackFactory, int[] buddyBTreeFields, boolean durable,
-            boolean isPointMBR) {
+            boolean isPointMBR, ITracer tracer) {
         super(ioManager, rtreeInteriorFrameFactory, rtreeLeafFrameFactory, btreeInteriorFrameFactory,
                 btreeLeafFrameFactory, diskBufferCache, fileNameManager, componentFactory, bloomFilterFalsePositiveRate,
                 rtreeCmpFactories, btreeCmpFactories, linearizer, comparatorFields, linearizerArray, mergePolicy,
-                opTracker, ioScheduler, ioOpCallbackFactory, buddyBTreeFields, durable, isPointMBR);
+                opTracker, ioScheduler, ioOpCallbackFactory, buddyBTreeFields, durable, isPointMBR, tracer);
         this.secondDiskComponents = new LinkedList<>();
         this.fieldCount = fieldCount;
     }
 
     @Override
-    public ExternalIndexHarness getLsmHarness() {
-        return (ExternalIndexHarness) super.getLsmHarness();
+    public ExternalIndexHarness getHarness() {
+        return (ExternalIndexHarness) super.getHarness();
     }
 
     // The subsume merged components is overridden to account for:
@@ -207,7 +208,7 @@ public class ExternalRTree extends LSMRTree implements ITwoPCIndex {
                 diskComponents.add(component);
                 secondDiskComponents.add(component);
             }
-            getLsmHarness().indexFirstTimeActivated();
+            getHarness().indexFirstTimeActivated();
         } else {
             // This index has been opened before or is brand new with no components
             // components. It should also maintain the version pointer
@@ -349,7 +350,7 @@ public class ExternalRTree extends LSMRTree implements ITwoPCIndex {
         if (!isActive) {
             throw new HyracksDataException("Failed to clear the index since it is not activated.");
         }
-        getLsmHarness().indexClear();
+        getHarness().indexClear();
 
         for (ILSMDiskComponent c : diskComponents) {
             c.deactivateAndDestroy();
@@ -532,7 +533,7 @@ public class ExternalRTree extends LSMRTree implements ITwoPCIndex {
                     component.markAsValid(durable);
                     component.deactivate();
                 } else {
-                    getLsmHarness().addBulkLoadedComponent(component);
+                    getHarness().addBulkLoadedComponent(component);
                 }
             }
         }
@@ -587,7 +588,7 @@ public class ExternalRTree extends LSMRTree implements ITwoPCIndex {
         LSMComponentFileReferences relMergeFileRefs =
                 getMergeFileReferences((ILSMDiskComponent) mergingComponents.get(0),
                         (ILSMDiskComponent) mergingComponents.get(mergingComponents.size() - 1));
-        ILSMIndexAccessor accessor = new LSMRTreeAccessor(getLsmHarness(), rctx, buddyBTreeFields);
+        ILSMIndexAccessor accessor = new LSMRTreeAccessor(getHarness(), rctx, buddyBTreeFields);
         // create the merge operation.
         LSMRTreeMergeOperation mergeOp = new LSMRTreeMergeOperation(accessor, cursor,
                 relMergeFileRefs.getInsertIndexFileReference(), relMergeFileRefs.getDeleteIndexFileReference(),
@@ -598,22 +599,22 @@ public class ExternalRTree extends LSMRTree implements ITwoPCIndex {
     @Override
     public ILSMIndexAccessor createAccessor(ISearchOperationCallback searchCallback, int targetIndexVersion)
             throws HyracksDataException {
-        return new LSMRTreeAccessor(getLsmHarness(), createOpContext(searchCallback, targetIndexVersion),
+        return new LSMRTreeAccessor(getHarness(), createOpContext(searchCallback, targetIndexVersion),
                 buddyBTreeFields);
     }
 
     // This method creates the appropriate opContext for the targeted version
     public ExternalRTreeOpContext createOpContext(ISearchOperationCallback searchCallback, int targetVersion) {
-        return new ExternalRTreeOpContext(rtreeCmpFactories, btreeCmpFactories, searchCallback, targetVersion,
-                getLsmHarness(), comparatorFields, linearizerArray, rtreeLeafFrameFactory, rtreeInteriorFrameFactory,
-                btreeLeafFrameFactory);
+        return new ExternalRTreeOpContext(this, rtreeCmpFactories, btreeCmpFactories, searchCallback, targetVersion,
+                getHarness(), comparatorFields, linearizerArray, rtreeLeafFrameFactory, rtreeInteriorFrameFactory,
+                btreeLeafFrameFactory, tracer);
     }
 
     // The accessor for disk only indexes don't use modification callback and
     // always carry the target index version with them
     @Override
     public ILSMIndexAccessor createAccessor(IIndexAccessParameters iap) {
-        return new LSMRTreeAccessor(getLsmHarness(), createOpContext(iap.getSearchOperationCallback(), version),
+        return new LSMRTreeAccessor(getHarness(), createOpContext(iap.getSearchOperationCallback(), version),
                 buddyBTreeFields);
     }
 
@@ -646,7 +647,7 @@ public class ExternalRTree extends LSMRTree implements ITwoPCIndex {
                     componentFileRefrences.getDeleteIndexFileReference(),
                     componentFileRefrences.getBloomFilterFileReference(), false);
         }
-        getLsmHarness().addTransactionComponents(component);
+        getHarness().addTransactionComponents(component);
     }
 
     @Override

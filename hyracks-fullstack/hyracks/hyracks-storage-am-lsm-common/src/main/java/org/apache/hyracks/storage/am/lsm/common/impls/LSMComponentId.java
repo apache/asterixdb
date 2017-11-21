@@ -78,13 +78,7 @@ public class LSMComponentId implements ILSMComponentId {
             return false;
         }
         LSMComponentId other = (LSMComponentId) obj;
-        if (maxId != other.maxId) {
-            return false;
-        }
-        if (minId != other.minId) {
-            return false;
-        }
-        return true;
+        return maxId == other.maxId && minId == other.minId;
     }
 
     @Override

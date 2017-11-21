@@ -27,6 +27,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.exceptions.ErrorCode;
@@ -71,6 +73,7 @@ import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.util.trace.ITracer;
 
 public abstract class AbstractLSMIndex implements ILSMIndex {
+    private static final Logger LOGGER = Logger.getLogger(AbstractLSMIndex.class.getName());
     protected final ILSMHarness lsmHarness;
     protected final IIOManager ioManager;
     protected final ILSMIOOperationScheduler ioScheduler;
@@ -142,7 +145,7 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
             double bloomFilterFalsePositiveRate, ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker,
             ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallbackFactory ioOpCallbackFactory,
             ILSMDiskComponentFactory componentFactory, ILSMDiskComponentFactory bulkLoadComponentFactory,
-            boolean durable) {
+            boolean durable, ITracer tracer) {
         this.ioManager = ioManager;
         this.diskBufferCache = diskBufferCache;
         this.fileManager = fileManager;
@@ -152,6 +155,7 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
         this.componentFactory = componentFactory;
         this.bulkLoadComponentFactory = bulkLoadComponentFactory;
         this.durable = durable;
+        this.tracer = tracer;
         lsmHarness = new ExternalIndexHarness(this, mergePolicy, opTracker, diskBufferCache.isReplicationEnabled());
         isActive = false;
         diskComponents = new LinkedList<>();
@@ -303,12 +307,12 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
                 operationalComponents.add(memoryComponents.get(cmc));
                 break;
             case INSERT:
-                addOperationalMutableComponents(operationalComponents);
+                addOperationalMutableComponents(operationalComponents, true);
                 operationalComponents.addAll(immutableComponents);
                 break;
             case SEARCH:
                 if (memoryComponentsAllocated) {
-                    addOperationalMutableComponents(operationalComponents);
+                    addOperationalMutableComponents(operationalComponents, false);
                 }
                 if (filterManager != null) {
                     for (ILSMComponent c : immutableComponents) {
@@ -375,18 +379,23 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
         ioScheduler.scheduleOperation(TracedIOOperation.wrap(mergeOp, tracer));
     }
 
-    private void addOperationalMutableComponents(List<ILSMComponent> operationalComponents) {
+    private void addOperationalMutableComponents(List<ILSMComponent> operationalComponents, boolean modification) {
         int cmc = currentMutableComponentId.get();
         int numMutableComponents = memoryComponents.size();
         for (int i = 0; i < numMutableComponents - 1; i++) {
             ILSMMemoryComponent c = memoryComponents.get((cmc + i + 1) % numMutableComponents);
             if (c.isReadable()) {
-                // Make sure newest components are added first
+                // Make sure newest components are added first if readable
                 operationalComponents.add(0, c);
             }
         }
-        // The current mutable component is always added
-        operationalComponents.add(0, memoryComponents.get(cmc));
+        // The current mutable component is added if modification operation or if readable
+        // This ensures that activation of new component only happens in case of modifications
+        // and allow for controlling that without stopping search operations
+        ILSMMemoryComponent c = memoryComponents.get(cmc);
+        if (modification || c.isReadable()) {
+            operationalComponents.add(0, c);
+        }
     }
 
     @Override
@@ -421,7 +430,7 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
     }
 
     @Override
-    public final synchronized void allocateMemoryComponents() throws HyracksDataException {
+    public synchronized void allocateMemoryComponents() throws HyracksDataException {
         if (!isActive) {
             throw HyracksDataException.create(ErrorCode.CANNOT_ALLOCATE_MEMORY_FOR_INACTIVE_INDEX);
         }
@@ -652,7 +661,8 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
         return filterManager;
     }
 
-    public ILSMHarness getLsmHarness() {
+    @Override
+    public ILSMHarness getHarness() {
         return lsmHarness;
     }
 
@@ -681,8 +691,15 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
     public final ILSMDiskComponent flush(ILSMIOOperation operation) throws HyracksDataException {
         ILSMIndexAccessor accessor = operation.getAccessor();
         ILSMIndexOperationContext opCtx = accessor.getOpContext();
-        return opCtx.getOperation() == IndexOperation.DELETE_MEMORY_COMPONENT ? EmptyComponent.INSTANCE
-                : doFlush(operation);
+        if (opCtx.getOperation() == IndexOperation.DELETE_MEMORY_COMPONENT) {
+            return EmptyComponent.INSTANCE;
+        } else {
+            if (LOGGER.isLoggable(Level.INFO)) {
+                FlushOperation flushOp = (FlushOperation) operation;
+                LOGGER.log(Level.INFO, "Flushing component with id: " + flushOp.getFlushingComponent().getId());
+            }
+            return doFlush(operation);
+        }
     }
 
     @Override

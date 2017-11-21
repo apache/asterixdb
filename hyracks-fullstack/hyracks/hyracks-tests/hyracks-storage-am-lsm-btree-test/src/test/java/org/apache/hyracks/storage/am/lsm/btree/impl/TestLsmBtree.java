@@ -60,6 +60,7 @@ public class TestLsmBtree extends LSMBTree {
     private final List<ITestOpCallback> searchCallbacks = new ArrayList<>();
     private final List<ITestOpCallback> flushCallbacks = new ArrayList<>();
     private final List<ITestOpCallback> mergeCallbacks = new ArrayList<>();
+    private final List<ITestOpCallback> allocateComponentCallbacks = new ArrayList<>();
 
     private volatile int numScheduledFlushes;
     private volatile int numStartedFlushes;
@@ -171,7 +172,7 @@ public class TestLsmBtree extends LSMBTree {
 
     @Override
     public ILSMIndexAccessor createAccessor(AbstractLSMIndexOperationContext opCtx) {
-        return new LSMTreeIndexAccessor(getLsmHarness(), opCtx, ctx -> new TestLsmBtreeSearchCursor(ctx, this));
+        return new LSMTreeIndexAccessor(getHarness(), opCtx, ctx -> new TestLsmBtreeSearchCursor(ctx, this));
     }
 
     public int getNumScheduledFlushes() {
@@ -256,5 +257,27 @@ public class TestLsmBtree extends LSMBTree {
 
     public Semaphore getSearchSemaphore() {
         return searchSemaphore;
+    }
+
+    public void addAllocateCallback(ITestOpCallback callback) {
+        synchronized (allocateComponentCallbacks) {
+            allocateComponentCallbacks.add(callback);
+        }
+    }
+
+    public void clearAllocateCallbacks() {
+        synchronized (allocateComponentCallbacks) {
+            allocateComponentCallbacks.clear();
+        }
+    }
+
+    @Override
+    public void allocateMemoryComponents() throws HyracksDataException {
+        super.allocateMemoryComponents();
+        synchronized (allocateComponentCallbacks) {
+            for (ITestOpCallback callback : allocateComponentCallbacks) {
+                callback(callback, null);
+            }
+        }
     }
 }

@@ -214,14 +214,14 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
     @Override
     public ILSMIndexAccessor createAccessor(IIndexAccessParameters iap) {
         LSMRTreeOpContext opCtx = createOpContext(iap.getModificationCallback(), iap.getSearchOperationCallback());
-        return new LSMTreeIndexAccessor(getLsmHarness(), opCtx, cursorFactory);
+        return new LSMTreeIndexAccessor(getHarness(), opCtx, cursorFactory);
     }
 
     @Override
     protected ILSMIOOperation createFlushOperation(AbstractLSMIndexOperationContext opCtx,
             LSMComponentFileReferences componentFileRefs, ILSMIOOperationCallback callback)
             throws HyracksDataException {
-        ILSMIndexAccessor accessor = new LSMTreeIndexAccessor(getLsmHarness(), opCtx, cursorFactory);
+        ILSMIndexAccessor accessor = new LSMTreeIndexAccessor(getHarness(), opCtx, cursorFactory);
         return new LSMRTreeFlushOperation(accessor, componentFileRefs.getInsertIndexFileReference(), null, null,
                 callback, fileManager.getBaseDir().getAbsolutePath());
     }
@@ -235,7 +235,7 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
             returnDeletedTuples = true;
         }
         ITreeIndexCursor cursor = new LSMRTreeWithAntiMatterTuplesSearchCursor(opCtx, returnDeletedTuples);
-        ILSMIndexAccessor accessor = new LSMTreeIndexAccessor(getLsmHarness(), opCtx, cursorFactory);
+        ILSMIndexAccessor accessor = new LSMTreeIndexAccessor(getHarness(), opCtx, cursorFactory);
         return new LSMRTreeMergeOperation(accessor, cursor, mergeFileRefs.getInsertIndexFileReference(), null, null,
                 callback, fileManager.getBaseDir().getAbsolutePath());
     }

@@ -132,7 +132,7 @@ public class LSMBTreeUtil {
             int[] bloomFilterKeyFields, double bloomFilterFalsePositiveRate, ILSMMergePolicy mergePolicy,
             ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler,
             ILSMIOOperationCallbackFactory ioOpCallbackFactory, boolean durable,
-            IMetadataPageManagerFactory freePageManagerFactory) {
+            IMetadataPageManagerFactory freePageManagerFactory, ITracer tracer) {
         LSMBTreeTupleWriterFactory insertTupleWriterFactory =
                 new LSMBTreeTupleWriterFactory(typeTraits, cmpFactories.length, false, false);
         LSMBTreeTupleWriterFactory deleteTupleWriterFactory =
@@ -176,14 +176,15 @@ public class LSMBTreeUtil {
         return new ExternalBTree(ioManager, interiorFrameFactory, insertLeafFrameFactory, deleteLeafFrameFactory,
                 diskBufferCache, fileNameManager, componentFactory, bulkLoadComponentFactory,
                 transactionComponentFactory, bloomFilterFalsePositiveRate, cmpFactories, mergePolicy, opTracker,
-                ioScheduler, ioOpCallbackFactory, durable);
+                ioScheduler, ioOpCallbackFactory, durable, tracer);
     }
 
     public static ExternalBTreeWithBuddy createExternalBTreeWithBuddy(IIOManager ioManager, FileReference file,
             IBufferCache diskBufferCache, ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories,
             double bloomFilterFalsePositiveRate, ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker,
             ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallbackFactory ioOpCallbackFactory,
-            int[] buddyBTreeFields, boolean durable, IMetadataPageManagerFactory freePageManagerFactory) {
+            int[] buddyBTreeFields, boolean durable, IMetadataPageManagerFactory freePageManagerFactory,
+            ITracer tracer) {
         ITypeTraits[] buddyBtreeTypeTraits = new ITypeTraits[buddyBTreeFields.length];
         IBinaryComparatorFactory[] buddyBtreeCmpFactories = new IBinaryComparatorFactory[buddyBTreeFields.length];
         for (int i = 0; i < buddyBtreeTypeTraits.length; i++) {
@@ -232,6 +233,6 @@ public class LSMBTreeUtil {
         return new ExternalBTreeWithBuddy(ioManager, interiorFrameFactory, insertLeafFrameFactory,
                 buddyBtreeLeafFrameFactory, diskBufferCache, fileNameManager, componentFactory,
                 bulkLoadComponentFactory, bloomFilterFalsePositiveRate, mergePolicy, opTracker, ioScheduler,
-                ioOpCallbackFactory, cmpFactories, buddyBtreeCmpFactories, buddyBTreeFields, durable);
+                ioOpCallbackFactory, cmpFactories, buddyBtreeCmpFactories, buddyBTreeFields, durable, tracer);
     }
 }

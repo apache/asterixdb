@@ -62,7 +62,7 @@ public class LSMIndexDiskComponentBulkLoader implements IIndexBulkLoader {
                 //then after operation should be called from harness as well
                 //https://issues.apache.org/jira/browse/ASTERIXDB-1764
                 lsmIndex.getIOOperationCallback().afterOperation(LSMIOOperationType.LOAD, null, component);
-                lsmIndex.getLsmHarness().addBulkLoadedComponent(component);
+                lsmIndex.getHarness().addBulkLoadedComponent(component);
             }
         } finally {
             lsmIndex.getIOOperationCallback().afterFinalize(LSMIOOperationType.LOAD, component);

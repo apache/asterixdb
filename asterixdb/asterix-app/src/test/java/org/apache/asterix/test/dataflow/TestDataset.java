@@ -21,7 +21,6 @@ package org.apache.asterix.test.dataflow;
 import java.util.Map;
 
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
-import org.apache.asterix.common.context.DatasetLSMComponentIdGeneratorFactory;
 import org.apache.asterix.metadata.IDatasetDetails;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
@@ -63,6 +62,6 @@ public class TestDataset extends Dataset {
 
     @Override
     public ILSMIOOperationCallbackFactory getIoOperationCallbackFactory(Index index) throws AlgebricksException {
-        return new TestLsmBtreeIoOpCallbackFactory(new DatasetLSMComponentIdGeneratorFactory(getDatasetId()));
+        return new TestLsmBtreeIoOpCallbackFactory(getComponentIdGeneratorFactory());
     }
 }

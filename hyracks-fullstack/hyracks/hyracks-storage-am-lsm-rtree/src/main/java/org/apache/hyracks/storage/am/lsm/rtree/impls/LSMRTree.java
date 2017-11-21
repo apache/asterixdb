@@ -63,6 +63,7 @@ import org.apache.hyracks.storage.common.IIndexAccessParameters;
 import org.apache.hyracks.storage.common.IIndexCursor;
 import org.apache.hyracks.storage.common.ISearchPredicate;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
+import org.apache.hyracks.util.trace.ITracer;
 
 public class LSMRTree extends AbstractLSMRTree {
     protected final int[] buddyBTreeFields;
@@ -99,11 +100,11 @@ public class LSMRTree extends AbstractLSMRTree {
             int[] comparatorFields, IBinaryComparatorFactory[] linearizerArray, ILSMMergePolicy mergePolicy,
             ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler,
             ILSMIOOperationCallbackFactory ioOpCallbackFactory, int[] buddyBTreeFields, boolean durable,
-            boolean isPointMBR) {
+            boolean isPointMBR, ITracer tracer) {
         super(ioManager, rtreeInteriorFrameFactory, rtreeLeafFrameFactory, btreeInteriorFrameFactory,
                 btreeLeafFrameFactory, diskBufferCache, fileNameManager, componentFactory, rtreeCmpFactories,
                 btreeCmpFactories, linearizer, comparatorFields, linearizerArray, bloomFilterFalsePositiveRate,
-                mergePolicy, opTracker, ioScheduler, ioOpCallbackFactory, durable, isPointMBR);
+                mergePolicy, opTracker, ioScheduler, ioOpCallbackFactory, durable, isPointMBR, tracer);
         this.buddyBTreeFields = buddyBTreeFields;
     }
 
@@ -276,7 +277,7 @@ public class LSMRTree extends AbstractLSMRTree {
 
     @Override
     public ILSMIndexAccessor createAccessor(IIndexAccessParameters iap) {
-        return new LSMRTreeAccessor(getLsmHarness(),
+        return new LSMRTreeAccessor(getHarness(),
                 createOpContext(iap.getModificationCallback(), iap.getSearchOperationCallback()), buddyBTreeFields);
     }
 
@@ -321,7 +322,7 @@ public class LSMRTree extends AbstractLSMRTree {
     protected ILSMIOOperation createFlushOperation(AbstractLSMIndexOperationContext opCtx,
             LSMComponentFileReferences componentFileRefs, ILSMIOOperationCallback callback)
             throws HyracksDataException {
-        LSMRTreeAccessor accessor = new LSMRTreeAccessor(getLsmHarness(), opCtx, buddyBTreeFields);
+        LSMRTreeAccessor accessor = new LSMRTreeAccessor(getHarness(), opCtx, buddyBTreeFields);
         return new LSMRTreeFlushOperation(accessor, componentFileRefs.getInsertIndexFileReference(),
                 componentFileRefs.getDeleteIndexFileReference(), componentFileRefs.getBloomFilterFileReference(),
                 callback, fileManager.getBaseDir().getAbsolutePath());
@@ -331,7 +332,7 @@ public class LSMRTree extends AbstractLSMRTree {
     protected ILSMIOOperation createMergeOperation(AbstractLSMIndexOperationContext opCtx,
             LSMComponentFileReferences mergeFileRefs, ILSMIOOperationCallback callback) throws HyracksDataException {
         ITreeIndexCursor cursor = new LSMRTreeSortedCursor(opCtx, linearizer, buddyBTreeFields);
-        ILSMIndexAccessor accessor = new LSMRTreeAccessor(getLsmHarness(), opCtx, buddyBTreeFields);
+        ILSMIndexAccessor accessor = new LSMRTreeAccessor(getHarness(), opCtx, buddyBTreeFields);
         return new LSMRTreeMergeOperation(accessor, cursor, mergeFileRefs.getInsertIndexFileReference(),
                 mergeFileRefs.getDeleteIndexFileReference(), mergeFileRefs.getBloomFilterFileReference(), callback,
                 fileManager.getBaseDir().getAbsolutePath());

@@ -66,6 +66,7 @@ import org.apache.hyracks.storage.common.IModificationOperationCallback;
 import org.apache.hyracks.storage.common.ISearchOperationCallback;
 import org.apache.hyracks.storage.common.ISearchPredicate;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
+import org.apache.hyracks.util.trace.ITracer;
 
 public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeIndex, ITwoPCIndex {
 
@@ -89,9 +90,10 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
             ILSMDiskComponentFactory bulkLoadComponentFactory, double bloomFilterFalsePositiveRate,
             ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler,
             ILSMIOOperationCallbackFactory ioOpCallbackFactory, IBinaryComparatorFactory[] btreeCmpFactories,
-            IBinaryComparatorFactory[] buddyBtreeCmpFactories, int[] buddyBTreeFields, boolean durable) {
+            IBinaryComparatorFactory[] buddyBtreeCmpFactories, int[] buddyBTreeFields, boolean durable,
+            ITracer tracer) {
         super(ioManager, diskBufferCache, fileManager, bloomFilterFalsePositiveRate, mergePolicy, opTracker,
-                ioScheduler, ioOpCallbackFactory, componentFactory, bulkLoadComponentFactory, durable);
+                ioScheduler, ioOpCallbackFactory, componentFactory, bulkLoadComponentFactory, durable, tracer);
         this.btreeCmpFactories = btreeCmpFactories;
         this.buddyBtreeCmpFactories = buddyBtreeCmpFactories;
         this.buddyBTreeFields = buddyBTreeFields;
@@ -125,7 +127,7 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
                 diskComponents.add(component);
                 secondDiskComponents.add(component);
             }
-            ((ExternalIndexHarness) getLsmHarness()).indexFirstTimeActivated();
+            ((ExternalIndexHarness) getHarness()).indexFirstTimeActivated();
         } else {
             // This index has been opened before or is brand new with no
             // components. It should also maintain the version pointer
@@ -147,7 +149,7 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
         if (!isActive) {
             throw new HyracksDataException("Failed to clear the index since it is not activated.");
         }
-        ((ExternalIndexHarness) getLsmHarness()).indexClear();
+        ((ExternalIndexHarness) getHarness()).indexClear();
         for (ILSMDiskComponent c : diskComponents) {
             c.deactivateAndDestroy();
             // Remove from second list to avoid destroying twice
@@ -182,7 +184,7 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
 
     @Override
     public ILSMIndexAccessor createAccessor(IIndexAccessParameters iap) throws HyracksDataException {
-        return new LSMTreeIndexAccessor(getLsmHarness(), createOpContext(iap.getSearchOperationCallback(), version),
+        return new LSMTreeIndexAccessor(getHarness(), createOpContext(iap.getSearchOperationCallback(), version),
                 ctx -> new LSMBTreeWithBuddySearchCursor(ctx, buddyBTreeFields));
     }
 
@@ -273,7 +275,7 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
         List<ILSMComponent> mergingComponents = ctx.getComponentHolder();
         ITreeIndexCursor cursor = new LSMBTreeWithBuddySortedCursor(bctx, buddyBTreeFields);
         LSMComponentFileReferences relMergeFileRefs = getMergeTargetFileName(mergingComponents);
-        ILSMIndexAccessor accessor = new LSMTreeIndexAccessor(getLsmHarness(), bctx,
+        ILSMIndexAccessor accessor = new LSMTreeIndexAccessor(getHarness(), bctx,
                 opCtx -> new LSMBTreeWithBuddySearchCursor(opCtx, buddyBTreeFields));
 
         // Since we have two lists of components, to tell whether we need to
@@ -296,9 +298,9 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
 
     // This method creates the appropriate opContext for the targeted version
     public ExternalBTreeWithBuddyOpContext createOpContext(ISearchOperationCallback searchCallback, int targetVersion) {
-        return new ExternalBTreeWithBuddyOpContext(btreeCmpFactories, buddyBtreeCmpFactories, searchCallback,
-                targetVersion, getLsmHarness(), btreeInteriorFrameFactory, btreeLeafFrameFactory,
-                buddyBtreeLeafFrameFactory);
+        return new ExternalBTreeWithBuddyOpContext(this, btreeCmpFactories, buddyBtreeCmpFactories, searchCallback,
+                targetVersion, getHarness(), btreeInteriorFrameFactory, btreeLeafFrameFactory,
+                buddyBtreeLeafFrameFactory, tracer);
     }
 
     @Override
@@ -528,7 +530,7 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
                     component.markAsValid(durable);
                     component.deactivate();
                 } else {
-                    getLsmHarness().addBulkLoadedComponent(component);
+                    getHarness().addBulkLoadedComponent(component);
                 }
             }
         }
@@ -564,7 +566,7 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
     @Override
     public ILSMIndexAccessor createAccessor(ISearchOperationCallback searchCallback, int targetIndexVersion)
             throws HyracksDataException {
-        return new LSMTreeIndexAccessor(getLsmHarness(), createOpContext(searchCallback, targetIndexVersion),
+        return new LSMTreeIndexAccessor(getHarness(), createOpContext(searchCallback, targetIndexVersion),
                 ctx -> new LSMBTreeWithBuddySearchCursor(ctx, buddyBTreeFields));
     }
 
@@ -609,7 +611,7 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
                     componentFileRefrences.getDeleteIndexFileReference(),
                     componentFileRefrences.getBloomFilterFileReference(), false);
         }
-        ((ExternalIndexHarness) getLsmHarness()).addTransactionComponents(component);
+        ((ExternalIndexHarness) getHarness()).addTransactionComponents(component);
     }
 
     @Override

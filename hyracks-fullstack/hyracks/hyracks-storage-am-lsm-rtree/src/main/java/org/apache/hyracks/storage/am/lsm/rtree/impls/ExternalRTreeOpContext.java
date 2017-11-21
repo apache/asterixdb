@@ -21,9 +21,11 @@ package org.apache.hyracks.storage.am.lsm.rtree.impls;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMHarness;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexOperationContext;
 import org.apache.hyracks.storage.common.ISearchOperationCallback;
 import org.apache.hyracks.storage.common.MultiComparator;
+import org.apache.hyracks.util.trace.ITracer;
 
 public class ExternalRTreeOpContext extends AbstractLSMIndexOperationContext {
     private MultiComparator bTreeCmp;
@@ -31,12 +33,13 @@ public class ExternalRTreeOpContext extends AbstractLSMIndexOperationContext {
     private final int targetIndexVersion;
     private LSMRTreeCursorInitialState initialState;
 
-    public ExternalRTreeOpContext(IBinaryComparatorFactory[] rtreeCmpFactories,
+    public ExternalRTreeOpContext(ILSMIndex index, IBinaryComparatorFactory[] rtreeCmpFactories,
             IBinaryComparatorFactory[] btreeCmpFactories, ISearchOperationCallback searchCallback,
             int targetIndexVersion, ILSMHarness lsmHarness, int[] comparatorFields,
             IBinaryComparatorFactory[] linearizerArray, ITreeIndexFrameFactory rtreeLeafFrameFactory,
-            ITreeIndexFrameFactory rtreeInteriorFrameFactory, ITreeIndexFrameFactory btreeLeafFrameFactory) {
-        super(null, null, null, searchCallback, null);
+            ITreeIndexFrameFactory rtreeInteriorFrameFactory, ITreeIndexFrameFactory btreeLeafFrameFactory,
+            ITracer tracer) {
+        super(index, null, null, null, searchCallback, null, tracer);
         this.targetIndexVersion = targetIndexVersion;
         this.bTreeCmp = MultiComparator.create(btreeCmpFactories);
         this.rTreeCmp = MultiComparator.create(rtreeCmpFactories);

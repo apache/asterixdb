@@ -19,6 +19,8 @@
 package org.apache.hyracks.storage.am.lsm.common.impls;
 
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilter;
@@ -32,6 +34,7 @@ import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 
 public abstract class AbstractLSMMemoryComponent extends AbstractLSMComponent implements ILSMMemoryComponent {
 
+    private static final Logger LOGGER = Logger.getLogger(AbstractLSMMemoryComponent.class.getName());
     private final IVirtualBufferCache vbc;
     private final AtomicBoolean isModified;
     private int writerCount;
@@ -276,6 +279,9 @@ public abstract class AbstractLSMMemoryComponent extends AbstractLSMComponent im
                 && this.componentId.compareTo(componentId) != IdCompareResult.LESS_THAN) {
             throw new IllegalStateException(
                     "LSM memory component receives illegal id. Old id " + this.componentId + ", new id " + componentId);
+        }
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.log(Level.INFO, "Component Id was reset from " + this.componentId + " to " + componentId);
         }
         this.componentId = componentId;
         LSMComponentIdUtils.persist(this.componentId, metadata);

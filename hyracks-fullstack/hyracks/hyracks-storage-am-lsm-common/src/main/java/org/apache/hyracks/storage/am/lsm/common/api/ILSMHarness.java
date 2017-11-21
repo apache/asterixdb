@@ -253,4 +253,17 @@ public interface ILSMHarness {
      */
     void deleteComponents(ILSMIndexOperationContext ctx, Predicate<ILSMComponent> predicate)
             throws HyracksDataException;
+
+    /**
+     * Replace the memory components in this operation context with their corresponding disk
+     * components if possible
+     *
+     * @param ctx
+     *            the operation context
+     * @param startIndex
+     *            the index of the first component to switch
+     * @throws HyracksDataException
+     */
+    void replaceMemoryComponentsWithDiskComponents(ILSMIndexOperationContext ctx, int startIndex)
+            throws HyracksDataException;
 }

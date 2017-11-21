@@ -127,9 +127,9 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
             ILinearizeComparatorFactory linearizer, int[] comparatorFields, IBinaryComparatorFactory[] linearizerArray,
             double bloomFilterFalsePositiveRate, ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker,
             ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallbackFactory ioOpCallbackFactory, boolean durable,
-            boolean isPointMBR) {
+            boolean isPointMBR, ITracer tracer) {
         super(ioManager, diskBufferCache, fileManager, bloomFilterFalsePositiveRate, mergePolicy, opTracker,
-                ioScheduler, ioOpCallbackFactory, componentFactory, componentFactory, durable);
+                ioScheduler, ioOpCallbackFactory, componentFactory, componentFactory, durable, tracer);
         this.rtreeInteriorFrameFactory = rtreeInteriorFrameFactory;
         this.rtreeLeafFrameFactory = rtreeLeafFrameFactory;
         this.btreeInteriorFrameFactory = btreeInteriorFrameFactory;
@@ -231,9 +231,9 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
     @Override
     protected LSMRTreeOpContext createOpContext(IModificationOperationCallback modCallback,
             ISearchOperationCallback searchCallback) {
-        return new LSMRTreeOpContext(memoryComponents, rtreeLeafFrameFactory, rtreeInteriorFrameFactory,
-                btreeLeafFrameFactory, modCallback, searchCallback, getTreeFields(), getFilterFields(), getLsmHarness(),
-                comparatorFields, linearizerArray, getFilterCmpFactories());
+        return new LSMRTreeOpContext(this, memoryComponents, rtreeLeafFrameFactory, rtreeInteriorFrameFactory,
+                btreeLeafFrameFactory, modCallback, searchCallback, getTreeFields(), getFilterFields(), getHarness(),
+                comparatorFields, linearizerArray, getFilterCmpFactories(), tracer);
     }
 
     @Override

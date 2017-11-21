@@ -28,7 +28,7 @@ public abstract class AbstractLSMComponent implements ILSMComponent {
     protected final ILSMComponentFilter filter;
     protected final AbstractLSMIndex lsmIndex;
     // Mutables
-    protected ComponentState state;
+    protected volatile ComponentState state;
     protected int readerCount;
 
     public AbstractLSMComponent(AbstractLSMIndex lsmIndex, ILSMComponentFilter filter) {
@@ -45,5 +45,10 @@ public abstract class AbstractLSMComponent implements ILSMComponent {
     @Override
     public ILSMComponentFilter getLSMComponentFilter() {
         return filter;
+    }
+
+    @Override
+    public final AbstractLSMIndex getLsmIndex() {
+        return lsmIndex;
     }
 }

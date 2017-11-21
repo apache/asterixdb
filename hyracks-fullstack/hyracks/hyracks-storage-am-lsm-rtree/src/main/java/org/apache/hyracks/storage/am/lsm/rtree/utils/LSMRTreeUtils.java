@@ -72,6 +72,7 @@ import org.apache.hyracks.storage.am.rtree.linearize.ZCurveDoubleComparatorFacto
 import org.apache.hyracks.storage.am.rtree.linearize.ZCurveIntComparatorFactory;
 import org.apache.hyracks.storage.am.rtree.tuples.RTreeTypeAwareTupleWriterFactory;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
+import org.apache.hyracks.util.trace.ITracer;
 
 public class LSMRTreeUtils {
     public static LSMRTree createLSMTree(IIOManager ioManager, List<IVirtualBufferCache> virtualBufferCaches,
@@ -243,7 +244,7 @@ public class LSMRTreeUtils {
             ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler,
             ILSMIOOperationCallbackFactory ioOpCallbackFactory, ILinearizeComparatorFactory linearizeCmpFactory,
             int[] buddyBTreeFields, boolean durable, boolean isPointMBR,
-            IMetadataPageManagerFactory freePageManagerFactory) throws HyracksDataException {
+            IMetadataPageManagerFactory freePageManagerFactory, ITracer tracer) throws HyracksDataException {
 
         int keyFieldCount = rtreeCmpFactories.length;
         int valueFieldCount = typeTraits.length - keyFieldCount;
@@ -290,7 +291,7 @@ public class LSMRTreeUtils {
                 btreeLeafFrameFactory, diskBufferCache, fileNameManager, componentFactory, bloomFilterFalsePositiveRate,
                 typeTraits.length, rtreeCmpFactories, btreeCmpFactories, linearizeCmpFactory, comparatorFields,
                 linearizerArray, mergePolicy, opTracker, ioScheduler, ioOpCallbackFactory, buddyBTreeFields, durable,
-                isPointMBR);
+                isPointMBR, tracer);
     }
 
     public static ILinearizeComparatorFactory proposeBestLinearizer(ITypeTraits[] typeTraits, int numKeyFields)
