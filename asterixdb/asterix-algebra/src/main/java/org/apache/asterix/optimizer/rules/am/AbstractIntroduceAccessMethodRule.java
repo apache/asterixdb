@@ -22,9 +22,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.dataflow.data.common.ExpressionTypeComputer;
@@ -62,6 +64,8 @@ import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
+import org.apache.hyracks.algebricks.core.algebra.typing.ITypingContext;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
 import com.google.common.collect.ImmutableSet;
@@ -111,6 +115,25 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
     protected void fillSubTreeIndexExprs(OptimizableOperatorSubTree subTree,
             Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs, IOptimizationContext context)
             throws AlgebricksException {
+        fillSubTreeIndexExprs(subTree, analyzedAMs, context, false);
+    }
+
+    /**
+     * Fills the information about the given optimizable function expressions using the subtree.
+     *
+     * @param subTree
+     * @param analyzedAMs
+     * @param context
+     * @param isArbitraryFormOfSubtree
+     *            if the given subtree is in an arbitrary form that OptimizableSubTree class can't initialize, we try
+     *            to fill the field type of each variable that is used in the optimizable function expressions.
+     *            This way, an index-nested-loop-join transformation can be conducted properly since the transformation
+     *            process skips an optimzable function expression if the field type of one of its variable is unknown.
+     * @throws AlgebricksException
+     */
+    protected void fillSubTreeIndexExprs(OptimizableOperatorSubTree subTree,
+            Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs, IOptimizationContext context,
+            boolean isArbitraryFormOfSubtree) throws AlgebricksException {
         Iterator<Map.Entry<IAccessMethod, AccessMethodAnalysisContext>> amIt = analyzedAMs.entrySet().iterator();
         // Check applicability of indexes by access method type.
         while (amIt.hasNext()) {
@@ -118,7 +141,36 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
             AccessMethodAnalysisContext amCtx = entry.getValue();
             // For the current access method type, map variables to applicable
             // indexes.
-            fillAllIndexExprs(subTree, amCtx, context);
+            if (!isArbitraryFormOfSubtree) {
+                fillAllIndexExprs(subTree, amCtx, context);
+            } else {
+                fillVarFieldTypeForOptFuncExprs(subTree, amCtx, context);
+            }
+        }
+    }
+
+    /**
+     * Sets the subtree and the field type for the variables in the given function expression.
+     * This method is only used for an arbitrary form of the probe-subtree in a join.
+     */
+    protected void fillVarFieldTypeForOptFuncExprs(OptimizableOperatorSubTree subTree,
+            AccessMethodAnalysisContext analysisCtx, ITypingContext context) throws AlgebricksException {
+        ILogicalOperator rootOp = subTree.getRoot();
+        IVariableTypeEnvironment envSubtree = context.getOutputTypeEnvironment(rootOp);
+        Set<LogicalVariable> liveVarsAtRootOp = new HashSet<LogicalVariable>();
+        VariableUtilities.getLiveVariables(rootOp, liveVarsAtRootOp);
+
+        // For each optimizable function expression, applies the field type of each variable.
+        for (IOptimizableFuncExpr optFuncExpr : analysisCtx.getMatchedFuncExprs()) {
+            for (LogicalVariable var : liveVarsAtRootOp) {
+                int optVarIndex = optFuncExpr.findLogicalVar(var);
+                if (optVarIndex < 0) {
+                    continue;
+                }
+                optFuncExpr.setOptimizableSubTree(optVarIndex, subTree);
+                IAType fieldType = (IAType) envSubtree.getVarType(var);
+                optFuncExpr.setFieldType(optVarIndex, fieldType);
+            }
         }
     }
 

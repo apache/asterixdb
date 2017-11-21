@@ -241,6 +241,15 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
         AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
         boolean joinFoundAndOptimizationApplied;
 
+        // Recursively check the plan and try to optimize it. We first check the children of the given operator
+        // to make sure an earlier join in the path is optimized first.
+        for (Mutable<ILogicalOperator> inputOpRef : op.getInputs()) {
+            joinFoundAndOptimizationApplied = checkAndApplyJoinTransformation(inputOpRef, context);
+            if (joinFoundAndOptimizationApplied) {
+                return true;
+            }
+        }
+
         // Check the current operator pattern to see whether it is a JOIN or not.
         boolean isThisOpInnerJoin = isInnerJoin(op);
         boolean isThisOpLeftOuterJoin = isLeftOuterJoin(op);
@@ -262,15 +271,6 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
             joinOp = (LeftOuterJoinOperator) joinRef.getValue();
             joinRefFromThisOp = op.getInputs().get(0);
             joinOpFromThisOp = (LeftOuterJoinOperator) joinRefFromThisOp.getValue();
-        }
-
-        // Recursively check the plan and try to optimize it. We first check the children of the given operator
-        // to make sure an earlier join in the path is optimized first.
-        for (Mutable<ILogicalOperator> inputOpRef : op.getInputs()) {
-            joinFoundAndOptimizationApplied = checkAndApplyJoinTransformation(inputOpRef, context);
-            if (joinFoundAndOptimizationApplied) {
-                return true;
-            }
         }
 
         // For a JOIN case, try to transform the given plan.
@@ -333,6 +333,8 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
                 // Then find the applicable indexes for the variables used in the JOIN condition.
                 if (checkLeftSubTreeMetadata) {
                     fillSubTreeIndexExprs(leftSubTree, analyzedAMs, context);
+                } else {
+                    fillSubTreeIndexExprs(leftSubTree, analyzedAMs, context, true);
                 }
                 fillSubTreeIndexExprs(rightSubTree, analyzedAMs, context);
 
