@@ -60,7 +60,7 @@ public class IndexTupleTranslatorTest {
                     Collections.singletonList(Collections.singletonList("row_id")),
                     Collections.singletonList(Collections.singletonList("row_id")),
                     indicator == null ? null : Collections.singletonList(indicator),
-                    Collections.singletonList(BuiltinType.AINT64), false, Collections.emptyList(), false);
+                    Collections.singletonList(BuiltinType.AINT64), false, Collections.emptyList());
 
             Dataset dataset =
                     new Dataset("test", "d1", "foo", "LogType", "CB", "MetaType", "DEFAULT_NG_ALL_NODES", "prefix",

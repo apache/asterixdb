@@ -34,17 +34,15 @@ public class CommitRuntimeFactory implements IPushRuntimeFactory {
     protected final TxnId txnId;
     protected final int datasetId;
     protected final int[] primaryKeyFields;
-    protected final boolean isTemporaryDatasetWriteJob;
     protected final boolean isWriteTransaction;
     protected int[] datasetPartitions;
     protected final boolean isSink;
 
-    public CommitRuntimeFactory(TxnId txnId, int datasetId, int[] primaryKeyFields, boolean isTemporaryDatasetWriteJob,
-            boolean isWriteTransaction, int[] datasetPartitions, boolean isSink) {
+    public CommitRuntimeFactory(TxnId txnId, int datasetId, int[] primaryKeyFields, boolean isWriteTransaction,
+            int[] datasetPartitions, boolean isSink) {
         this.txnId = txnId;
         this.datasetId = datasetId;
         this.primaryKeyFields = primaryKeyFields;
-        this.isTemporaryDatasetWriteJob = isTemporaryDatasetWriteJob;
         this.isWriteTransaction = isWriteTransaction;
         this.datasetPartitions = datasetPartitions;
         this.isSink = isSink;
@@ -58,8 +56,7 @@ public class CommitRuntimeFactory implements IPushRuntimeFactory {
     @Override
     public IPushRuntime createPushRuntime(IHyracksTaskContext ctx) throws HyracksDataException {
         IJobletEventListenerFactory fact = ctx.getJobletContext().getJobletEventListenerFactory();
-        return new CommitRuntime(ctx, ((IJobEventListenerFactory) fact).getTxnId(txnId), datasetId,
-                primaryKeyFields, isTemporaryDatasetWriteJob, isWriteTransaction,
-                datasetPartitions[ctx.getTaskAttemptId().getTaskId().getPartition()], isSink);
+        return new CommitRuntime(ctx, ((IJobEventListenerFactory) fact).getTxnId(txnId), datasetId, primaryKeyFields,
+                isWriteTransaction, datasetPartitions[ctx.getTaskAttemptId().getTaskId().getPartition()], isSink);
     }
 }

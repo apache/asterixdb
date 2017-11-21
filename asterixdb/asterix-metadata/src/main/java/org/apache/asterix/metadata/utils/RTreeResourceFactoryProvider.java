@@ -142,7 +142,6 @@ public class RTreeResourceFactoryProvider implements IResourceFactoryProvider {
                 storageComponentProvider.getMetadataPageManagerFactory();
         ILSMIOOperationSchedulerProvider ioSchedulerProvider =
                 storageComponentProvider.getIoOperationSchedulerProvider();
-        boolean durable = !dataset.isTemp();
         ILinearizeComparatorFactory linearizeCmpFactory =
                 MetadataProvider.proposeLinearizer(keyType, secondaryComparatorFactories.length);
         ITypeTraits[] typeTraits = getTypeTraits(mdProvider, dataset, index, recordType, metaType);
@@ -159,12 +158,12 @@ public class RTreeResourceFactoryProvider implements IResourceFactoryProvider {
             return new LSMRTreeWithAntiMatterLocalResourceFactory(storageManager, typeTraits, rtreeCmpFactories,
                     filterTypeTraits, filterCmpFactories, secondaryFilterFields, opTrackerFactory, ioOpCallbackFactory,
                     metadataPageManagerFactory, vbcProvider, ioSchedulerProvider, mergePolicyFactory,
-                    mergePolicyProperties, durable, valueProviderFactories, rTreePolicyType, linearizeCmpFactory,
+                    mergePolicyProperties, true, valueProviderFactories, rTreePolicyType, linearizeCmpFactory,
                     rtreeFields, isPointMBR, btreeCompFactories);
         } else {
             return new ExternalRTreeLocalResourceFactory(storageManager, typeTraits, rtreeCmpFactories,
                     filterTypeTraits, filterCmpFactories, secondaryFilterFields, opTrackerFactory, ioOpCallbackFactory,
-                    metadataPageManagerFactory, ioSchedulerProvider, mergePolicyFactory, mergePolicyProperties, durable,
+                    metadataPageManagerFactory, ioSchedulerProvider, mergePolicyFactory, mergePolicyProperties, true,
                     btreeCompFactories, valueProviderFactories, rTreePolicyType, linearizeCmpFactory, rtreeFields,
                     new int[] { numNestedSecondaryKeyFields }, isPointMBR,
                     mdProvider.getStorageProperties().getBloomFilterFalsePositiveRate());

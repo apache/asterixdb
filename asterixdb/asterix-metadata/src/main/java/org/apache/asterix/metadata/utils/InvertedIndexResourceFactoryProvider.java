@@ -110,7 +110,6 @@ public class InvertedIndexResourceFactoryProvider implements IResourceFactoryPro
         AsterixVirtualBufferCacheProvider vbcProvider = new AsterixVirtualBufferCacheProvider(dataset.getDatasetId());
         ILSMIOOperationSchedulerProvider ioSchedulerProvider =
                 storageComponentProvider.getIoOperationSchedulerProvider();
-        boolean durable = !dataset.isTemp();
         double bloomFilterFalsePositiveRate = mdProvider.getStorageProperties().getBloomFilterFalsePositiveRate();
         ITypeTraits[] typeTraits = getInvListTypeTraits(mdProvider, dataset, recordType, metaType);
         IBinaryComparatorFactory[] cmpFactories =
@@ -122,7 +121,7 @@ public class InvertedIndexResourceFactoryProvider implements IResourceFactoryPro
         return new LSMInvertedIndexLocalResourceFactory(storageManager, typeTraits, cmpFactories, filterTypeTraits,
                 filterCmpFactories, secondaryFilterFields, opTrackerFactory, ioOpCallbackFactory,
                 metadataPageManagerFactory, vbcProvider, ioSchedulerProvider, mergePolicyFactory, mergePolicyProperties,
-                durable, tokenTypeTraits, tokenCmpFactories, tokenizerFactory, isPartitioned, invertedIndexFields,
+                true, tokenTypeTraits, tokenCmpFactories, tokenizerFactory, isPartitioned, invertedIndexFields,
                 secondaryFilterFieldsForNonBulkLoadOps, invertedIndexFieldsForNonBulkLoadOps,
                 bloomFilterFalsePositiveRate);
     }

@@ -50,8 +50,6 @@ import org.apache.asterix.metadata.utils.IndexUtil;
  */
 public class MetadataCache {
 
-    // Default life time period of a temp dataset. It is 30 days.
-    private final static long TEMP_DATASET_INACTIVE_TIME_THRESHOLD = 3600 * 24 * 30 * 1000L;
     // Key is dataverse name.
     protected final Map<String, Dataverse> dataverses = new HashMap<>();
     // Key is dataverse name. Key of value map is dataset name.
@@ -571,28 +569,6 @@ public class MetadataCache {
             return indexMap.put(index.getIndexName(), index);
         }
         return null;
-    }
-
-    /**
-     * Clean up temp datasets that are expired.
-     * The garbage collection will pause other dataset operations.
-     */
-    public void cleanupTempDatasets() {
-        synchronized (datasets) {
-            for (Map<String, Dataset> map : datasets.values()) {
-                Iterator<Dataset> datasetIterator = map.values().iterator();
-                while (datasetIterator.hasNext()) {
-                    Dataset dataset = datasetIterator.next();
-                    if (dataset.getDatasetDetails().isTemp()) {
-                        long currentTime = System.currentTimeMillis();
-                        long duration = currentTime - dataset.getDatasetDetails().getLastAccessTime();
-                        if (duration > TEMP_DATASET_INACTIVE_TIME_THRESHOLD) {
-                            datasetIterator.remove();
-                        }
-                    }
-                }
-            }
-        }
     }
 
     /**

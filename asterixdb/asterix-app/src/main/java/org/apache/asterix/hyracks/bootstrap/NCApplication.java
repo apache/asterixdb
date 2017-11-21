@@ -226,19 +226,6 @@ public class NCApplication extends BaseNCApplication {
         //Delete working area files from failed jobs
         runtimeContext.getIoManager().deleteWorkspaceFiles();
 
-        //Reclaim storage for temporary datasets.
-        String storageDirName = ClusterProperties.INSTANCE.getStorageDirectoryName();
-        String[] ioDevices = ((PersistentLocalResourceRepository) runtimeContext.getLocalResourceRepository())
-                .getStorageMountingPoints();
-        for (String ioDevice : ioDevices) {
-            String tempDatasetsDir =
-                    ioDevice + storageDirName + File.separator + StoragePathUtil.TEMP_DATASETS_STORAGE_FOLDER;
-            File tmpDsDir = new File(tempDatasetsDir);
-            if (tmpDsDir.exists()) {
-                IoUtil.delete(tmpDsDir);
-            }
-        }
-
         //TODO
         //Reclaim storage for orphaned index artifacts in NCs.
         //Note: currently LSM indexes invalid components are deleted when an index is activated.

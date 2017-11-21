@@ -202,7 +202,7 @@ public class ExternalIndexingOperations {
         IResourceFactory resourceFactory = dataset.getResourceFactory(metadataProvider, fileIndex, recordType, null,
                 mergePolicyFactory, mergePolicyProperties);
         IIndexBuilderFactory indexBuilderFactory = new IndexBuilderFactory(storageComponentProvider.getStorageManager(),
-                secondaryFileSplitProvider, resourceFactory, !dataset.isTemp());
+                secondaryFileSplitProvider, resourceFactory, true);
         IIndexDataflowHelperFactory dataflowHelperFactory =
                 new IndexDataflowHelperFactory(storageComponentProvider.getStorageManager(), secondaryFileSplitProvider);
         ExternalFilesIndexCreateOperatorDescriptor externalFilesOp = new ExternalFilesIndexCreateOperatorDescriptor(

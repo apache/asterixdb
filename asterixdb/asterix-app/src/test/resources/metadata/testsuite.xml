@@ -324,11 +324,6 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="basic">
-      <compilation-unit name="temp_dataset">
-        <output-dir compare="Text">temp_dataset</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="basic">
       <compilation-unit name="issue_1419_drop_type_with_collection_1">
         <output-dir compare="Text">issue_1419_drop_type_with_collection</output-dir>
       </compilation-unit>

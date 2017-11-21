@@ -158,7 +158,6 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
     private IResultSerializerFactoryProvider resultSerializerFactoryProvider;
     private TxnId txnId;
     private Map<String, Integer> externalDataLocks;
-    private boolean isTemporaryDatasetWriteJob = true;
     private boolean blockingOperatorDisabled = false;
 
     public MetadataProvider(ICcApplicationContext appCtx, Dataverse defaultDataverse) {
@@ -255,11 +254,6 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
     public boolean isWriteTransaction() {
         // The transaction writes persistent datasets.
         return isWriteTransaction;
-    }
-
-    public boolean isTemporaryDatasetWriteJob() {
-        // The transaction only writes temporary datasets.
-        return isTemporaryDatasetWriteJob;
     }
 
     public IFunctionManager getFunctionManager() {
@@ -569,8 +563,6 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             fieldPermutation[numKeys + 1] = idx;
         }
 
-        boolean temp = dataset.getDatasetDetails().isTemp();
-        isTemporaryDatasetWriteJob = isTemporaryDatasetWriteJob && temp;
         Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint =
                 getSplitProviderAndConstraints(dataset);
         long numElementsHint = getCardinalityPerPartitionHint(dataset);
@@ -820,8 +812,6 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             throw new AlgebricksException(
                     "Unknown dataset " + datasetName + " in dataverse " + dataSource.getId().getDataverseName());
         }
-        boolean temp = dataset.getDatasetDetails().isTemp();
-        isTemporaryDatasetWriteJob = isTemporaryDatasetWriteJob && temp;
         int numKeys = primaryKeys.size();
         int numFilterFields = DatasetUtil.getFilterField(dataset) == null ? 0 : 1;
         int numOfAdditionalFields = additionalNonFilterFields == null ? 0 : additionalNonFilterFields.size();
@@ -933,9 +923,6 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         String datasetName = dataSource.getId().getDatasourceName();
         Dataset dataset =
                 MetadataManagerUtil.findExistingDataset(mdTxnCtx, dataSource.getId().getDataverseName(), datasetName);
-        boolean temp = dataset.getDatasetDetails().isTemp();
-        isTemporaryDatasetWriteJob = isTemporaryDatasetWriteJob && temp;
-
         int numKeys = keys.size();
         int numFilterFields = DatasetUtil.getFilterField(dataset) == null ? 0 : 1;
         // Move key fields to front.
@@ -1040,9 +1027,6 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             JobSpecification spec, IndexOperation indexOp, boolean bulkload, List<LogicalVariable> prevSecondaryKeys,
             List<LogicalVariable> prevAdditionalFilteringKeys) throws AlgebricksException {
         Dataset dataset = MetadataManagerUtil.findExistingDataset(mdTxnCtx, dataverseName, datasetName);
-        boolean temp = dataset.getDatasetDetails().isTemp();
-        isTemporaryDatasetWriteJob = isTemporaryDatasetWriteJob && temp;
-
         int numKeys = primaryKeys.size() + secondaryKeys.size();
         int numFilterFields = DatasetUtil.getFilterField(dataset) == null ? 0 : 1;
 
@@ -1128,9 +1112,6 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             JobSpecification spec, IndexOperation indexOp, boolean bulkload, List<LogicalVariable> prevSecondaryKeys,
             List<LogicalVariable> prevAdditionalFilteringKeys) throws AlgebricksException {
         Dataset dataset = MetadataManagerUtil.findExistingDataset(mdTxnCtx, dataverseName, datasetName);
-        boolean temp = dataset.getDatasetDetails().isTemp();
-        isTemporaryDatasetWriteJob = isTemporaryDatasetWriteJob && temp;
-
         String itemTypeName = dataset.getItemTypeName();
         IAType itemType = MetadataManager.INSTANCE
                 .getDatatype(mdTxnCtx, dataset.getItemTypeDataverseName(), itemTypeName).getDatatype();
@@ -1245,9 +1226,6 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             throw new AlgebricksException("Cannot create composite inverted index on multiple fields.");
         }
         Dataset dataset = MetadataManagerUtil.findExistingDataset(mdTxnCtx, dataverseName, datasetName);
-        boolean temp = dataset.getDatasetDetails().isTemp();
-        isTemporaryDatasetWriteJob = isTemporaryDatasetWriteJob && temp;
-
         // For tokenization, sorting and loading.
         // One token (+ optional partitioning field) + primary keys: [token,
         // number of token, PK]

@@ -102,7 +102,6 @@ public class ConnectorApiServlet extends AbstractServlet {
                     out.flush();
                     return;
                 }
-                boolean temp = dataset.getDatasetDetails().isTemp();
                 FileSplit[] fileSplits = metadataProvider.splitsForIndex(mdTxnCtx, dataset, datasetName);
                 ARecordType recordType = (ARecordType) metadataProvider.findType(dataset.getItemTypeDataverseName(),
                         dataset.getItemTypeName());
@@ -115,7 +114,7 @@ public class ConnectorApiServlet extends AbstractServlet {
                 }
                 pkStrBuf.delete(pkStrBuf.length() - 1, pkStrBuf.length());
                 // Constructs the returned json object.
-                formResponseObject(jsonResponse, fileSplits, recordType, pkStrBuf.toString(), temp,
+                formResponseObject(jsonResponse, fileSplits, recordType, pkStrBuf.toString(),
                         hcc.getNodeControllerInfos());
 
                 // Flush the cached contents of the dataset to file system.
@@ -138,10 +137,8 @@ public class ConnectorApiServlet extends AbstractServlet {
     }
 
     private void formResponseObject(ObjectNode jsonResponse, FileSplit[] fileSplits, ARecordType recordType,
-            String primaryKeys, boolean temp, Map<String, NodeControllerInfo> nodeMap) {
+            String primaryKeys, Map<String, NodeControllerInfo> nodeMap) {
         ArrayNode partititons = OBJECT_MAPPER.createArrayNode();
-        // Whether the dataset is temp or not
-        jsonResponse.put("temp", temp);
         // Adds a primary key.
         jsonResponse.put("keys", primaryKeys);
         // Adds record type.

@@ -83,9 +83,7 @@ public class SplitsAndConstraintsUtil {
             for (int k = 0; k < numPartitions; k++) {
                 // format: 'storage dir name'/partition_#/dataverse/dataset_idx_index
                 File f = new File(StoragePathUtil.prepareStoragePartitionPath(storageDirName,
-                        nodePartitions[k].getPartitionId())
-                        + (dataset.isTemp() ? (File.separator + StoragePathUtil.TEMP_DATASETS_STORAGE_FOLDER) : "")
-                        + File.separator + relPathFile);
+                        nodePartitions[k].getPartitionId()) + File.separator + relPathFile);
                 splits.add(StoragePathUtil.getFileSplitForClusterPartition(nodePartitions[k], f.getPath()));
             }
         }

@@ -380,25 +380,14 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
 
     private void createReplicationJob(ReplicationOperation operation, FileReference fileRef)
             throws HyracksDataException {
-        /**
-         * Durable resources path format:
-         * /partition/dataverse/idx/fileName
-         * Temporary resources path format:
-         * /partition/TEMP_DATASETS_STORAGE_FOLDER/dataverse/idx/fileName
-         */
-        String[] fileNameTokens = fileRef.getAbsolutePath().split(File.separator);
-        String partitionDir = fileNameTokens[fileNameTokens.length - 4];
-        //exclude temporary datasets resources
-        if (!partitionDir.equals(StoragePathUtil.TEMP_DATASETS_STORAGE_FOLDER)) {
-            filesToBeReplicated.clear();
-            filesToBeReplicated.add(fileRef.getAbsolutePath());
-            ReplicationJob job = new ReplicationJob(ReplicationJobType.METADATA, operation,
-                    ReplicationExecutionType.SYNC, filesToBeReplicated);
-            try {
-                replicationManager.submitJob(job);
-            } catch (IOException e) {
-                throw new HyracksDataException(e);
-            }
+        filesToBeReplicated.clear();
+        filesToBeReplicated.add(fileRef.getAbsolutePath());
+        ReplicationJob job = new ReplicationJob(ReplicationJobType.METADATA, operation, ReplicationExecutionType.SYNC,
+                filesToBeReplicated);
+        try {
+            replicationManager.submitJob(job);
+        } catch (IOException e) {
+            throw new HyracksDataException(e);
         }
     }
 

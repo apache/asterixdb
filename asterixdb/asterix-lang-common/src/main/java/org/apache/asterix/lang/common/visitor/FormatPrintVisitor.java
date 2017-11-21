@@ -468,8 +468,7 @@ public class FormatPrintVisitor implements ILangVisitor<Void, Integer> {
     @Override
     public Void visit(DatasetDecl dd, Integer step) throws CompilationException {
         if (dd.getDatasetType() == DatasetType.INTERNAL) {
-            String temp = dd.getDatasetDetailsDecl().isTemp() ? "temporary" : "";
-            out.print(skip(step) + "create " + temp + datasetSymbol + generateFullName(dd.getDataverse(), dd.getName())
+            out.print(skip(step) + "create " + datasetSymbol + generateFullName(dd.getDataverse(), dd.getName())
                     + generateIfNotExists(dd.getIfNotExists()) + "(" + dd.getQualifiedTypeName() + ")"
                     + " primary key ");
             printDelimitedKeys(((InternalDetailsDecl) dd.getDatasetDetailsDecl()).getPartitioningExprs(), ",");

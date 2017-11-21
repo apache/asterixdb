@@ -35,7 +35,6 @@ import org.apache.log4j.Logger;
 public class StoragePathUtil {
     private static final Logger LOGGER = Logger.getLogger(StoragePathUtil.class.getName());
     public static final String PARTITION_DIR_PREFIX = "partition_";
-    public static final String TEMP_DATASETS_STORAGE_FOLDER = "temp";
     public static final String DATASET_INDEX_NAME_SEPARATOR = "_idx_";
 
     private StoragePathUtil() {

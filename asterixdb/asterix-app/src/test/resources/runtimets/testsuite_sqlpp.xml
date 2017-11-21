@@ -9031,72 +9031,7 @@
       </compilation-unit>
     </test-case>
   </test-group>
-  <test-group name="temp-dataset">
-    <test-case FilePath="temp-dataset">
-      <compilation-unit name="delete-from-loaded-dataset">
-        <output-dir compare="Text">delete-from-loaded-dataset</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="temp-dataset">
-      <compilation-unit name="delete-from-loaded-dataset-with-index">
-        <output-dir compare="Text">delete-from-loaded-dataset-with-index</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="temp-dataset">
-      <compilation-unit name="drop-empty-secondary-indexes">
-        <output-dir compare="Text">drop-empty-secondary-indexes</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="temp-dataset">
-      <compilation-unit name="drop-index">
-        <output-dir compare="Text">drop-index</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="temp-dataset">
-      <compilation-unit name="empty-load-with-index">
-        <output-dir compare="Text">empty-load-with-index</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="temp-dataset">
-      <compilation-unit name="insert-and-scan-dataset">
-        <output-dir compare="Text">insert-and-scan-dataset</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="temp-dataset">
-      <compilation-unit name="q01_pricing_summary_report_nt">
-        <output-dir compare="Text">q01_pricing_summary_report_nt</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="temp-dataset">
-      <compilation-unit name="scan-delete-rtree-secondary-index">
-        <output-dir compare="Text">scan-delete-rtree-secondary-index</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="temp-dataset">
-      <compilation-unit name="scan-insert-rtree-secondary-index">
-        <output-dir compare="Text">scan-insert-rtree-secondary-index</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="temp-dataset">
-      <compilation-unit name="scan-insert-persistent-to-temp">
-        <output-dir compare="Text">scan-insert-persistent-to-temp</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="temp-dataset">
-      <compilation-unit name="scan-insert-temp-to-persistent">
-        <output-dir compare="Text">scan-insert-temp-to-persistent</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="temp-dataset">
-      <compilation-unit name="insert-and-scan-dataset-with-index">
-        <output-dir compare="Text">insert-and-scan-dataset-with-index</output-dir>
-      </compilation-unit>
-    </test-case>
-        <test-case FilePath="temp-dataset">
-      <compilation-unit name="insert-and-scan-dataset-with-correlated-index">
-        <output-dir compare="Text">insert-and-scan-dataset-with-index</output-dir>
-      </compilation-unit>
-    </test-case>
+  <test-group name="unnest">
     <test-case FilePath="unnest">
       <compilation-unit name="left-outer-unnest">
         <output-dir compare="Text">left-outer-unnest</output-dir>

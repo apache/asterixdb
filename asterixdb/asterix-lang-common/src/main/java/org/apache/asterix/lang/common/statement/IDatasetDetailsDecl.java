@@ -20,6 +20,4 @@ package org.apache.asterix.lang.common.statement;
 
 public interface IDatasetDetailsDecl {
 
-    public boolean isTemp();
-
 }

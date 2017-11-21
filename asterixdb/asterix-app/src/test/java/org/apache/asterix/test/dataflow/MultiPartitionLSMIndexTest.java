@@ -115,7 +115,7 @@ public class MultiPartitionLSMIndexTest {
         partitioningKeys.add(Collections.singletonList("key"));
         dataset = new TestDataset(DATAVERSE_NAME, DATASET_NAME, DATAVERSE_NAME, DATA_TYPE_NAME, NODE_GROUP_NAME,
                 NoMergePolicyFactory.NAME, null, new InternalDatasetDetails(null, PartitioningStrategy.HASH,
-                        partitioningKeys, null, null, null, false, null, false),
+                        partitioningKeys, null, null, null, false, null),
                 null, DatasetType.INTERNAL, DATASET_ID, 0);
         taskCtxs = new IHyracksTaskContext[NUM_PARTITIONS];
         indexDataflowHelpers = new IIndexDataflowHelper[NUM_PARTITIONS];

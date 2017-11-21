@@ -54,7 +54,6 @@ public class ExternalDatasetDetails implements IDatasetDetails {
     private static final Logger LOGGER = Logger.getLogger(ExternalDatasetDetails.class.getName());
     private final String adapter;
     private final Map<String, String> properties;
-    private final long addToCacheTime;
     private Date lastRefreshTime;
     private TransactionState state;
 
@@ -62,7 +61,6 @@ public class ExternalDatasetDetails implements IDatasetDetails {
             TransactionState state) {
         this.properties = properties;
         this.adapter = adapter;
-        this.addToCacheTime = System.currentTimeMillis();
         this.lastRefreshTime = lastRefreshTime;
         this.state = state;
     }
@@ -130,16 +128,6 @@ public class ExternalDatasetDetails implements IDatasetDetails {
         externalRecordBuilder.addField(MetadataRecordTypes.EXTERNAL_DETAILS_ARECORD_TRANSACTION_STATE_FIELD_INDEX,
                 fieldValue);
         externalRecordBuilder.write(out, true);
-    }
-
-    @Override
-    public boolean isTemp() {
-        return false;
-    }
-
-    @Override
-    public long getLastAccessTime() {
-        return addToCacheTime;
     }
 
     public Date getTimestamp() {

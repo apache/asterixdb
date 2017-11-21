@@ -661,13 +661,6 @@ public interface IMetadataManager extends IMetadataBootstrap {
     void updateDataset(MetadataTransactionContext ctx, Dataset dataset) throws AlgebricksException;
 
     /**
-     * Clean up temporary datasets that have not been active for a long time.
-     *
-     * @throws AlgebricksException
-     */
-    void cleanupTempDatasets() throws AlgebricksException;
-
-    /**
      * Add an extension entity to its extension dataset under the ongoing metadata
      * transaction
      *

@@ -30,8 +30,8 @@ import java.util.stream.IntStream;
 import org.apache.asterix.active.IActiveEntityEventsListener;
 import org.apache.asterix.active.IActiveNotificationHandler;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
-import org.apache.asterix.common.context.DatasetLSMComponentIdGeneratorFactory;
 import org.apache.asterix.common.context.CorrelatedPrefixMergePolicyFactory;
+import org.apache.asterix.common.context.DatasetLSMComponentIdGeneratorFactory;
 import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.dataflow.NoOpFrameOperationCallbackFactory;
 import org.apache.asterix.common.exceptions.CompilationException;
@@ -76,8 +76,6 @@ import org.apache.asterix.transaction.management.opcallbacks.PrimaryIndexOperati
 import org.apache.asterix.transaction.management.opcallbacks.SecondaryIndexModificationOperationCallbackFactory;
 import org.apache.asterix.transaction.management.opcallbacks.SecondaryIndexOperationTrackerFactory;
 import org.apache.asterix.transaction.management.opcallbacks.SecondaryIndexSearchOperationCallbackFactory;
-import org.apache.asterix.transaction.management.opcallbacks.TempDatasetPrimaryIndexModificationOperationCallbackFactory;
-import org.apache.asterix.transaction.management.opcallbacks.TempDatasetSecondaryIndexModificationOperationCallbackFactory;
 import org.apache.asterix.transaction.management.opcallbacks.UpsertOperationCallbackFactory;
 import org.apache.asterix.transaction.management.resource.DatasetLocalResourceFactory;
 import org.apache.asterix.transaction.management.runtime.CommitRuntimeFactory;
@@ -556,17 +554,15 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
      */
     public ISearchOperationCallbackFactory getSearchCallbackFactory(IStorageComponentProvider storageComponentProvider,
             Index index, TxnId txnId, IndexOperation op, int[] primaryKeyFields) throws AlgebricksException {
-        if (getDatasetDetails().isTemp()) {
-            return NoOpOperationCallbackFactory.INSTANCE;
-        } else if (index.isPrimaryIndex()) {
-            /**
+        if (index.isPrimaryIndex()) {
+            /*
              * Due to the read-committed isolation level,
              * we may acquire very short duration lock(i.e., instant lock) for readers.
              */
-            return (op == IndexOperation.UPSERT)
-                    ? new LockThenSearchOperationCallbackFactory(txnId, getDatasetId(), primaryKeyFields,
-                            storageComponentProvider.getTransactionSubsystemProvider(), ResourceType.LSM_BTREE)
-                    : new PrimaryIndexInstantSearchOperationCallbackFactory(txnId, getDatasetId(), primaryKeyFields,
+            return (op == IndexOperation.UPSERT) ?
+                    new LockThenSearchOperationCallbackFactory(txnId, getDatasetId(), primaryKeyFields,
+                            storageComponentProvider.getTransactionSubsystemProvider(), ResourceType.LSM_BTREE) :
+                    new PrimaryIndexInstantSearchOperationCallbackFactory(txnId, getDatasetId(), primaryKeyFields,
                             storageComponentProvider.getTransactionSubsystemProvider(), ResourceType.LSM_BTREE);
         } else if (index.getKeyFieldNames().isEmpty()) {
             // this is the case where the index is secondary primary index and locking is required
@@ -596,32 +592,22 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
     public IModificationOperationCallbackFactory getModificationCallbackFactory(
             IStorageComponentProvider componentProvider, Index index, TxnId txnId, IndexOperation op,
             int[] primaryKeyFields) throws AlgebricksException {
-        if (getDatasetDetails().isTemp()) {
-            return op == IndexOperation.DELETE || op == IndexOperation.INSERT || op == IndexOperation.UPSERT
-                    ? index.isPrimaryIndex()
-                            ? new TempDatasetPrimaryIndexModificationOperationCallbackFactory(txnId, datasetId,
-                                    primaryKeyFields, componentProvider.getTransactionSubsystemProvider(),
-                                    Operation.get(op), index.resourceType())
-                            : new TempDatasetSecondaryIndexModificationOperationCallbackFactory(txnId, getDatasetId(),
-                                    primaryKeyFields, componentProvider.getTransactionSubsystemProvider(),
-                                    Operation.get(op), index.resourceType())
-                    : NoOpOperationCallbackFactory.INSTANCE;
-        } else if (index.isPrimaryIndex()) {
-            return op == IndexOperation.UPSERT
-                    ? new UpsertOperationCallbackFactory(txnId, getDatasetId(), primaryKeyFields,
+        if (index.isPrimaryIndex()) {
+            return op == IndexOperation.UPSERT ?
+                    new UpsertOperationCallbackFactory(txnId, getDatasetId(), primaryKeyFields,
                             componentProvider.getTransactionSubsystemProvider(), Operation.get(op),
-                            index.resourceType())
-                    : op == IndexOperation.DELETE || op == IndexOperation.INSERT
-                            ? new PrimaryIndexModificationOperationCallbackFactory(txnId, getDatasetId(),
+                            index.resourceType()) :
+                    op == IndexOperation.DELETE || op == IndexOperation.INSERT ?
+                            new PrimaryIndexModificationOperationCallbackFactory(txnId, getDatasetId(),
                                     primaryKeyFields, componentProvider.getTransactionSubsystemProvider(),
-                                    Operation.get(op), index.resourceType())
-                            : NoOpOperationCallbackFactory.INSTANCE;
+                                    Operation.get(op), index.resourceType()) :
+                            NoOpOperationCallbackFactory.INSTANCE;
         } else {
-            return op == IndexOperation.DELETE || op == IndexOperation.INSERT || op == IndexOperation.UPSERT
-                    ? new SecondaryIndexModificationOperationCallbackFactory(txnId, getDatasetId(), primaryKeyFields,
+            return op == IndexOperation.DELETE || op == IndexOperation.INSERT || op == IndexOperation.UPSERT ?
+                    new SecondaryIndexModificationOperationCallbackFactory(txnId, getDatasetId(), primaryKeyFields,
                             componentProvider.getTransactionSubsystemProvider(), Operation.get(op),
-                            index.resourceType())
-                    : NoOpOperationCallbackFactory.INSTANCE;
+                            index.resourceType()) :
+                    NoOpOperationCallbackFactory.INSTANCE;
         }
     }
 
@@ -678,16 +664,11 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
             int[] primaryKeyFieldPermutation, boolean isSink) throws AlgebricksException {
         int[] datasetPartitions = getDatasetPartitions(metadataProvider);
         return new CommitRuntimeFactory(txnId, datasetId, primaryKeyFieldPermutation,
-                metadataProvider.isTemporaryDatasetWriteJob(), metadataProvider.isWriteTransaction(), datasetPartitions,
-                isSink);
+                metadataProvider.isWriteTransaction(), datasetPartitions, isSink);
     }
 
     public IFrameOperationCallbackFactory getFrameOpCallbackFactory() {
         return NoOpFrameOperationCallbackFactory.INSTANCE;
-    }
-
-    public boolean isTemp() {
-        return getDatasetDetails().isTemp();
     }
 
     public boolean isCorrelated() {

@@ -189,7 +189,7 @@ public class TestNodeController {
                         op, true, indexHelperFactory, modOpCallbackFactory, null);
         CommitRuntime commitOp =
                 new CommitRuntime(ctx, getTxnJobId(ctx), dataset.getDatasetId(), primaryIndexInfo.primaryKeyIndexes,
-                        false, true, ctx.getTaskAttemptId().getTaskId().getPartition(), true);
+                        true, ctx.getTaskAttemptId().getTaskId().getPartition(), true);
         insertOp.setOutputFrameWriter(0, commitOp, primaryIndexInfo.rDesc);
         commitOp.setInputRecordDescriptor(0, primaryIndexInfo.rDesc);
         return Pair.of(insertOp, commitOp);
@@ -261,7 +261,7 @@ public class TestNodeController {
                     recordType, metaType, mergePolicy.first, mergePolicy.second);
             IndexBuilderFactory indexBuilderFactory =
                     new IndexBuilderFactory(storageComponentProvider.getStorageManager(),
-                            primaryIndexInfo.getFileSplitProvider(), resourceFactory, !dataset.isTemp());
+                            primaryIndexInfo.getFileSplitProvider(), resourceFactory, true);
             IHyracksTaskContext ctx = createTestContext(newJobId(), partition, false);
             IIndexBuilder indexBuilder = indexBuilderFactory.create(ctx, partition);
             indexBuilder.build();
@@ -475,7 +475,7 @@ public class TestNodeController {
             pkFieldsInCommitOp[i] = diff + i;
         }
         CommitRuntime commitOp = new CommitRuntime(ctx, getTxnJobId(ctx), dataset.getDatasetId(), pkFieldsInCommitOp,
-                false, true, ctx.getTaskAttemptId().getTaskId().getPartition(), true);
+                true, ctx.getTaskAttemptId().getTaskId().getPartition(), true);
         insertOp.setOutputFrameWriter(0, commitOp, upsertOutRecDesc);
         commitOp.setInputRecordDescriptor(0, upsertOutRecDesc);
         return Pair.of(insertOp, commitOp);

@@ -59,7 +59,7 @@ public abstract class SecondaryTreeIndexOperationsHelper extends SecondaryIndexO
         IResourceFactory resourceFactory = dataset.getResourceFactory(metadataProvider, index, itemType, metaType,
                 mergePolicyFactory, mergePolicyProperties);
         IIndexBuilderFactory indexBuilderFactory = new IndexBuilderFactory(storageComponentProvider.getStorageManager(),
-                secondaryFileSplitProvider, resourceFactory, !dataset.isTemp());
+                secondaryFileSplitProvider, resourceFactory, true);
         IndexCreateOperatorDescriptor secondaryIndexCreateOp =
                 new IndexCreateOperatorDescriptor(spec, indexBuilderFactory);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, secondaryIndexCreateOp,

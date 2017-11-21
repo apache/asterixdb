@@ -69,7 +69,6 @@ public class BTreeResourceFactoryProvider implements IResourceFactoryProvider {
         ITypeTraits[] typeTraits = getTypeTraits(mdProvider, dataset, index, recordType, metaType);
         IBinaryComparatorFactory[] cmpFactories = getCmpFactories(mdProvider, dataset, index, recordType, metaType);
         int[] bloomFilterFields = getBloomFilterFields(dataset, index);
-        boolean durable = !dataset.isTemp();
         double bloomFilterFalsePositiveRate = mdProvider.getStorageProperties().getBloomFilterFalsePositiveRate();
         ILSMOperationTrackerFactory opTrackerFactory = dataset.getIndexOperationTrackerFactory(index);
         ILSMIOOperationCallbackFactory ioOpCallbackFactory = dataset.getIoOperationCallbackFactory(index);
@@ -84,12 +83,12 @@ public class BTreeResourceFactoryProvider implements IResourceFactoryProvider {
                         ? new ExternalBTreeLocalResourceFactory(storageManager, typeTraits, cmpFactories,
                                 filterTypeTraits, filterCmpFactories, filterFields, opTrackerFactory,
                                 ioOpCallbackFactory, metadataPageManagerFactory, ioSchedulerProvider,
-                                mergePolicyFactory, mergePolicyProperties, durable, bloomFilterFields,
+                                mergePolicyFactory, mergePolicyProperties, true, bloomFilterFields,
                                 bloomFilterFalsePositiveRate, false, btreeFields)
                         : new ExternalBTreeWithBuddyLocalResourceFactory(storageManager, typeTraits, cmpFactories,
                                 filterTypeTraits, filterCmpFactories, filterFields, opTrackerFactory,
                                 ioOpCallbackFactory, metadataPageManagerFactory, ioSchedulerProvider,
-                                mergePolicyFactory, mergePolicyProperties, durable, bloomFilterFields,
+                                mergePolicyFactory, mergePolicyProperties, true, bloomFilterFields,
                                 bloomFilterFalsePositiveRate, false, btreeFields);
             case INTERNAL:
                 AsterixVirtualBufferCacheProvider vbcProvider =
@@ -97,7 +96,7 @@ public class BTreeResourceFactoryProvider implements IResourceFactoryProvider {
                 return new LSMBTreeLocalResourceFactory(storageManager, typeTraits, cmpFactories, filterTypeTraits,
                         filterCmpFactories, filterFields, opTrackerFactory, ioOpCallbackFactory,
                         metadataPageManagerFactory, vbcProvider, ioSchedulerProvider, mergePolicyFactory,
-                        mergePolicyProperties, durable, bloomFilterFields, bloomFilterFalsePositiveRate,
+                        mergePolicyProperties, true, bloomFilterFields, bloomFilterFalsePositiveRate,
                         index.isPrimaryIndex(), btreeFields);
             default:
                 throw new CompilationException(ErrorCode.COMPILATION_UNKNOWN_DATASET_TYPE,

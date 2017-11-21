@@ -40,9 +40,4 @@ public class ExternalDetailsDecl implements IDatasetDetailsDecl {
         return properties;
     }
 
-    @Override
-    public boolean isTemp() {
-        return false;
-    }
-
 }
