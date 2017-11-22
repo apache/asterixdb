@@ -17,7 +17,7 @@
                       -- STREAM_PROJECT  |PARTITIONED|
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                           -- HYBRID_HASH_JOIN [$$ccustkey, $$cnationkey][$$24, $$26]  |PARTITIONED|
-                            -- HASH_PARTITION_EXCHANGE [$$ccustkey]  |PARTITIONED|
+                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                               -- PRE_CLUSTERED_GROUP_BY[$$20]  |PARTITIONED|
                                       {
                                         -- AGGREGATE  |LOCAL|
@@ -34,7 +34,7 @@
                                 -- STREAM_PROJECT  |PARTITIONED|
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                     -- HYBRID_HASH_JOIN [$$24][$$22]  |PARTITIONED|
-                                      -- HASH_PARTITION_EXCHANGE [$$24]  |PARTITIONED|
+                                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                         -- STREAM_SELECT  |PARTITIONED|
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                             -- PRE_CLUSTERED_GROUP_BY[$$25]  |PARTITIONED|

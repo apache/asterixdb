@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang3.mutable.Mutable;
@@ -86,6 +87,10 @@ public abstract class AbstractPreclusteredGroupByPOperator extends AbstractPhysi
         ILogicalOperator op2 = gby.getInputs().get(0).getValue();
         IPhysicalPropertiesVector childProp = op2.getDeliveredPhysicalProperties();
         IPartitioningProperty pp = childProp.getPartitioningProperty();
+        Map<LogicalVariable, LogicalVariable> ppSubstMap = computePartitioningPropertySubstitutionMap(gby, pp);
+        if (ppSubstMap != null) {
+            pp.substituteColumnVars(ppSubstMap);
+        }
         List<ILocalStructuralProperty> childLocals = childProp.getLocalProperties();
         if (childLocals == null) {
             deliveredProperties = new StructuralPropertiesVector(pp, propsLocal);
@@ -98,6 +103,38 @@ public abstract class AbstractPreclusteredGroupByPOperator extends AbstractPhysi
             }
         }
         deliveredProperties = new StructuralPropertiesVector(pp, propsLocal);
+    }
+
+    // If we have "gby var1 as var3, var2 as var4"
+    // and input is partitioned on (var1,var2) then output is partitioned on (var3,var4)
+    private Map<LogicalVariable, LogicalVariable> computePartitioningPropertySubstitutionMap(GroupByOperator gbyOp,
+            IPartitioningProperty childpp) {
+        Set<LogicalVariable> childPartitioningColumns = new HashSet<>();
+        childpp.getColumns(childPartitioningColumns);
+
+        List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> groupByList = gbyOp.getGroupByList();
+        if (groupByList.size() != childPartitioningColumns.size()) {
+            return null;
+        }
+
+        Map<LogicalVariable, LogicalVariable> substMap = null;
+        for (Pair<LogicalVariable, Mutable<ILogicalExpression>> ve : groupByList) {
+            ILogicalExpression expr = ve.second.getValue();
+            if (expr.getExpressionTag() != LogicalExpressionTag.VARIABLE) {
+                return null;
+            }
+            VariableReferenceExpression varRefExpr = (VariableReferenceExpression) expr;
+            LogicalVariable var = varRefExpr.getVariableReference();
+            if (!childPartitioningColumns.remove(var)) {
+                return null;
+            }
+            if (substMap == null) {
+                substMap = new HashMap<>();
+            }
+            substMap.put(var, ve.first);
+        }
+
+        return childPartitioningColumns.isEmpty() ? substMap : null;
     }
 
     @Override
