@@ -24,23 +24,31 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.MetadataException;
 import org.apache.asterix.common.metadata.IMetadataLock;
+import org.apache.asterix.common.utils.InvokeUtil;
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 
 public class DatasetLock implements IMetadataLock {
 
     private final String key;
+    // The lock
     private final ReentrantReadWriteLock lock;
-    private final ReentrantReadWriteLock dsReadLock;
-    private final ReentrantReadWriteLock dsModifyLock;
+    // Used for lock upgrade operation
+    private final ReentrantReadWriteLock upgradeLock;
+    // Used for exclusive modification
+    private final ReentrantReadWriteLock modifyLock;
+    // The two counters below are used to ensure mutual exclusivity between index builds and modifications
+    // order of entry indexBuildCounter -> indexModifyCounter
     private final MutableInt indexBuildCounter;
+    private final MutableInt dsModifyCounter;
 
     public DatasetLock(String key) {
         this.key = key;
         lock = new ReentrantReadWriteLock(true);
-        dsReadLock = new ReentrantReadWriteLock(true);
-        dsModifyLock = new ReentrantReadWriteLock(true);
+        upgradeLock = new ReentrantReadWriteLock(true);
+        modifyLock = new ReentrantReadWriteLock(true);
         indexBuildCounter = new MutableInt(0);
+        dsModifyCounter = new MutableInt(0);
     }
 
     private void readLock() {
@@ -71,63 +79,97 @@ public class DatasetLock implements IMetadataLock {
         lock.writeLock().unlock();
     }
 
-    private void readReadLock() {
-        dsReadLock.readLock().lock();
+    private void upgradeReadLock() {
+        upgradeLock.readLock().lock();
     }
 
     private void modifyReadLock() {
         // insert
-        dsModifyLock.readLock().lock();
+        modifyLock.readLock().lock();
+        incrementModifyCounter();
+    }
+
+    private void incrementModifyCounter() {
+        InvokeUtil.doUninterruptibly(() -> {
+            synchronized (indexBuildCounter) {
+                while (indexBuildCounter.getValue() > 0) {
+                    indexBuildCounter.wait();
+                }
+                synchronized (dsModifyCounter) {
+                    dsModifyCounter.increment();
+                }
+            }
+        });
+    }
+
+    private void decrementModifyCounter() {
+        synchronized (indexBuildCounter) {
+            synchronized (dsModifyCounter) {
+                if (dsModifyCounter.decrementAndGet() == 0) {
+                    indexBuildCounter.notifyAll();
+                }
+            }
+        }
     }
 
     private void modifyReadUnlock() {
         // insert
-        dsModifyLock.readLock().unlock();
+        decrementModifyCounter();
+        modifyLock.readLock().unlock();
     }
 
-    private void readReadUnlock() {
-        dsReadLock.readLock().unlock();
+    private void upgradeReadUnlock() {
+        upgradeLock.readLock().unlock();
     }
 
-    private void readWriteUnlock() {
-        dsReadLock.writeLock().unlock();
+    private void upgradeWriteUnlock() {
+        upgradeLock.writeLock().unlock();
     }
 
-    private void modifySharedWriteLock() {
+    private void buildIndexLock() {
         // Build index statement
         synchronized (indexBuildCounter) {
             if (indexBuildCounter.getValue() > 0) {
-                indexBuildCounter.setValue(indexBuildCounter.getValue() + 1);
+                indexBuildCounter.increment();
             } else {
-                dsModifyLock.writeLock().lock();
-                indexBuildCounter.setValue(1);
+                InvokeUtil.doUninterruptibly(() -> {
+                    while (true) {
+                        synchronized (dsModifyCounter) {
+                            if (dsModifyCounter.getValue() == 0) {
+                                indexBuildCounter.increment();
+                                return;
+                            }
+                        }
+                        indexBuildCounter.wait();
+                    }
+                });
             }
         }
     }
 
-    private void modifySharedWriteUnlock() {
+    private void buildIndexUnlock() {
         // Build index statement
         synchronized (indexBuildCounter) {
-            if (indexBuildCounter.getValue() == 1) {
-                dsModifyLock.writeLock().unlock();
+            if (indexBuildCounter.decrementAndGet() == 0) {
+                indexBuildCounter.notifyAll();
             }
-            indexBuildCounter.setValue(indexBuildCounter.getValue() - 1);
         }
     }
 
-    private void modifyExclusiveWriteLock() {
-        dsModifyLock.writeLock().lock();
+    private void modifyWriteLock() {
+        modifyLock.writeLock().lock();
+        incrementModifyCounter();
     }
 
     private void modifyExclusiveWriteUnlock() {
-        dsModifyLock.writeLock().unlock();
+        decrementModifyCounter();
+        modifyLock.writeLock().unlock();
     }
 
     @Override
     public void upgrade(IMetadataLock.Mode from, IMetadataLock.Mode to) throws AlgebricksException {
         if (from == IMetadataLock.Mode.EXCLUSIVE_MODIFY && to == IMetadataLock.Mode.UPGRADED_WRITE) {
-            dsReadLock.readLock().unlock();
-            dsReadLock.writeLock().lock();
+            upgradeLock.writeLock().lock();
         } else {
             throw new MetadataException(ErrorCode.ILLEGAL_LOCK_UPGRADE_OPERATION, from, to);
         }
@@ -136,8 +178,7 @@ public class DatasetLock implements IMetadataLock {
     @Override
     public void downgrade(IMetadataLock.Mode from, IMetadataLock.Mode to) throws AlgebricksException {
         if (from == IMetadataLock.Mode.UPGRADED_WRITE && to == IMetadataLock.Mode.EXCLUSIVE_MODIFY) {
-            dsReadLock.writeLock().unlock();
-            dsReadLock.readLock().lock();
+            upgradeLock.writeLock().unlock();
         } else {
             throw new MetadataException(ErrorCode.ILLEGAL_LOCK_DOWNGRADE_OPERATION, from, to);
         }
@@ -148,24 +189,22 @@ public class DatasetLock implements IMetadataLock {
         switch (mode) {
             case INDEX_BUILD:
                 readLock();
-                modifySharedWriteLock();
+                buildIndexLock();
                 break;
             case MODIFY:
                 readLock();
-                readReadLock();
                 modifyReadLock();
                 break;
             case EXCLUSIVE_MODIFY:
                 readLock();
-                readReadLock();
-                modifyExclusiveWriteLock();
+                modifyWriteLock();
                 break;
             case WRITE:
                 writeLock();
                 break;
             case READ:
                 readLock();
-                readReadLock();
+                upgradeReadLock();
                 break;
             default:
                 throw new IllegalStateException("locking mode " + mode + " is not supported");
@@ -176,28 +215,26 @@ public class DatasetLock implements IMetadataLock {
     public void unlock(IMetadataLock.Mode mode) {
         switch (mode) {
             case INDEX_BUILD:
-                modifySharedWriteUnlock();
+                buildIndexUnlock();
                 readUnlock();
                 break;
             case MODIFY:
                 modifyReadUnlock();
-                readReadUnlock();
                 readUnlock();
                 break;
             case EXCLUSIVE_MODIFY:
                 modifyExclusiveWriteUnlock();
-                readReadUnlock();
                 readUnlock();
                 break;
             case WRITE:
                 writeUnlock();
                 break;
             case READ:
-                readReadUnlock();
+                upgradeReadUnlock();
                 readUnlock();
                 break;
             case UPGRADED_WRITE:
-                readWriteUnlock();
+                upgradeWriteUnlock();
                 modifyExclusiveWriteUnlock();
                 readUnlock();
                 break;

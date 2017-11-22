@@ -134,8 +134,9 @@ public class RecoveryTask {
             lockManager.acquireActiveEntityWriteLock(metadataProvider.getLocks(),
                     listener.getEntityId().getDataverse() + '.' + listener.getEntityId().getEntityName());
             for (Dataset dataset : listener.getDatasets()) {
-                MetadataLockUtil.modifyDatasetBegin(lockManager, metadataProvider.getLocks(),
-                        dataset.getDataverseName(), DatasetUtil.getFullyQualifiedName(dataset));
+                lockManager.acquireDataverseReadLock(metadataProvider.getLocks(), dataset.getDataverseName());
+                lockManager.acquireDatasetExclusiveModificationLock(metadataProvider.getLocks(),
+                        DatasetUtil.getFullyQualifiedName(dataset));
             }
             synchronized (listener) {
                 try {
