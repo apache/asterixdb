@@ -60,8 +60,9 @@ public interface ILSMIOOperationCallback {
      * This method is called when a memory component is recycled
      *
      * @param component
+     * @param componentSwitched
      */
-    void recycled(ILSMMemoryComponent component) throws HyracksDataException;
+    void recycled(ILSMMemoryComponent component, boolean componentSwitched) throws HyracksDataException;
 
     /**
      * This method is called when a memory component is allocated

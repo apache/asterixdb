@@ -64,7 +64,7 @@ public class StubIOOperationCallback implements ILSMIOOperationCallback {
     }
 
     @Override
-    public void recycled(ILSMMemoryComponent component) {
+    public void recycled(ILSMMemoryComponent component, boolean componentSwitched) {
         // Not interested in this
     }
 

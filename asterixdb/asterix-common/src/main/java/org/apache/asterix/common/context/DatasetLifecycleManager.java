@@ -362,9 +362,8 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
                 for (IndexInfo iInfo : dsr.getIndexes().values()) {
                     AbstractLSMIOOperationCallback ioCallback =
                             (AbstractLSMIOOperationCallback) iInfo.getIndex().getIOOperationCallback();
-                    if (!(iInfo.getIndex().isCurrentMutableComponentEmpty()
-                            || ioCallback.hasPendingFlush() || opTracker.isFlushLogCreated()
-                            || opTracker.isFlushOnExit())) {
+                    if (!(iInfo.getIndex().isCurrentMutableComponentEmpty() || ioCallback.hasPendingFlush()
+                            || opTracker.isFlushLogCreated() || opTracker.isFlushOnExit())) {
                         long firstLSN = ioCallback.getFirstLSN();
                         if (firstLSN < targetLSN) {
                             if (LOGGER.isLoggable(Level.INFO)) {
@@ -387,7 +386,15 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
      * This method can only be called asynchronously safely if we're sure no modify operation will take place until the flush is scheduled
      */
     private void flushDatasetOpenIndexes(DatasetInfo dsInfo, boolean asyncFlush) throws HyracksDataException {
-        if (!dsInfo.isExternal() && dsInfo.isDurable()) {
+        if (dsInfo.isExternal()) {
+            // no memory components for external dataset
+            return;
+        }
+
+        ILSMComponentIdGenerator idGenerator = getComponentIdGenerator(dsInfo.getDatasetID());
+        idGenerator.refresh();
+
+        if (dsInfo.isDurable()) {
             synchronized (logRecord) {
                 TransactionUtil.formFlushLogRecord(logRecord, dsInfo.getDatasetID(), null, logManager.getNodeId(),
                         dsInfo.getIndexes().size());
@@ -404,16 +411,14 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
                     throw new HyracksDataException(e);
                 }
             }
-            for (IndexInfo iInfo : dsInfo.getIndexes().values()) {
-                //update resource lsn
-                AbstractLSMIOOperationCallback ioOpCallback =
-                        (AbstractLSMIOOperationCallback) iInfo.getIndex().getIOOperationCallback();
-                ioOpCallback.updateLastLSN(logRecord.getLSN());
-            }
         }
 
-        ILSMComponentIdGenerator idGenerator = getComponentIdGenerator(dsInfo.getDatasetID());
-        idGenerator.refresh();
+        for (IndexInfo iInfo : dsInfo.getIndexes().values()) {
+            //update resource lsn
+            AbstractLSMIOOperationCallback ioOpCallback =
+                    (AbstractLSMIOOperationCallback) iInfo.getIndex().getIOOperationCallback();
+            ioOpCallback.updateLastLSN(logRecord.getLSN());
+        }
 
         if (asyncFlush) {
             for (IndexInfo iInfo : dsInfo.getIndexes().values()) {

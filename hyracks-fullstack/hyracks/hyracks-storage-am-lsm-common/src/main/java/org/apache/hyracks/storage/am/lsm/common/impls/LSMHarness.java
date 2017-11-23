@@ -175,7 +175,7 @@ public class LSMHarness implements ILSMHarness {
             // Call recycled only when we change it's state is reset back to READABLE_WRITABLE
             // Otherwise, if the component is in other state, e.g., INACTIVE, or
             // READABLE_UNWRITABLE_FLUSHING, it's not considered as being recycled here.
-            lsmIndex.getIOOperationCallback().recycled(flushingComponent);
+            lsmIndex.getIOOperationCallback().recycled(flushingComponent, false);
         }
     }
 

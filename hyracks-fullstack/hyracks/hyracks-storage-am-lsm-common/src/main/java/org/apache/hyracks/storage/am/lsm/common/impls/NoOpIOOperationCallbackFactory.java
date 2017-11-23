@@ -67,7 +67,7 @@ public enum NoOpIOOperationCallbackFactory implements ILSMIOOperationCallbackFac
         }
 
         @Override
-        public void recycled(ILSMMemoryComponent component) {
+        public void recycled(ILSMMemoryComponent component, boolean componentSwitched) {
             // Do nothing.
         }
 

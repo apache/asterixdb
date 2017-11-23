@@ -61,7 +61,7 @@ public abstract class AbstractLSMMemoryComponent extends AbstractLSMComponent im
         if (state == ComponentState.INACTIVE && requestedToBeActive) {
             state = ComponentState.READABLE_WRITABLE;
             requestedToBeActive = false;
-            lsmIndex.getIOOperationCallback().recycled(this);
+            lsmIndex.getIOOperationCallback().recycled(this, true);
         }
         switch (opType) {
             case FORCE_MODIFICATION:
@@ -278,7 +278,7 @@ public abstract class AbstractLSMMemoryComponent extends AbstractLSMComponent im
         if (this.componentId != null && !componentId.missing() // for backward compatibility
                 && this.componentId.compareTo(componentId) != IdCompareResult.LESS_THAN) {
             throw new IllegalStateException(
-                    "LSM memory component receives illegal id. Old id " + this.componentId + ", new id " + componentId);
+                    this + " receives illegal id. Old id " + this.componentId + ", new id " + componentId);
         }
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.log(Level.INFO, "Component Id was reset from " + this.componentId + " to " + componentId);

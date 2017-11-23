@@ -64,8 +64,8 @@ public class BlockingIOOperationCallbackWrapper implements ILSMIOOperationCallba
     }
 
     @Override
-    public void recycled(ILSMMemoryComponent component) throws HyracksDataException {
-        wrappedCallback.recycled(component);
+    public void recycled(ILSMMemoryComponent component, boolean componentSwitched) throws HyracksDataException {
+        wrappedCallback.recycled(component, componentSwitched);
     }
 
     @Override
