@@ -50,6 +50,5 @@
     <module>algebricks-runtime</module>
     <module>algebricks-rewriter</module>
     <module>algebricks-tests</module>
-    <module>algebricks-examples</module>
   </modules>
 </project>
