@@ -19,38 +19,30 @@
 package org.apache.asterix.test.txn;
 
 import java.io.File;
-import java.io.InputStream;
-import java.util.Random;
+import java.util.logging.ConsoleHandler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.apache.asterix.api.common.AsterixHyracksIntegrationUtil;
+import org.apache.asterix.common.TestDataUtil;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.configuration.AsterixConfiguration;
 import org.apache.asterix.common.configuration.Property;
-import org.apache.asterix.common.utils.Servlets;
-import org.apache.asterix.test.common.TestExecutor;
+import org.apache.asterix.metadata.bootstrap.MetadataBuiltinEntities;
 import org.apache.asterix.test.common.TestHelper;
-import org.apache.asterix.testframework.context.TestCaseContext;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
 public class RecoveryManagerTest {
 
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final String DEFAULT_TEST_CONFIG_FILE_NAME = "asterix-build-configuration.xml";
     private static final String TEST_CONFIG_FILE_NAME = "asterix-test-configuration.xml";
     private static final String TEST_CONFIG_PATH =
             System.getProperty("user.dir") + File.separator + "target" + File.separator + "config";
     private static final String TEST_CONFIG_FILE_PATH = TEST_CONFIG_PATH + File.separator + TEST_CONFIG_FILE_NAME;
-    private static final TestExecutor testExecutor = new TestExecutor();
     private static final AsterixHyracksIntegrationUtil integrationUtil = new AsterixHyracksIntegrationUtil();
-    private static final Random random = new Random();
-    private static final int numRecords = 1;
 
     @Before
     public void setUp() throws Exception {
@@ -74,52 +66,53 @@ public class RecoveryManagerTest {
     @Test
     public void multiDatasetRecovery() throws Exception {
         String datasetNamePrefix = "ds_";
-        final TestCaseContext.OutputFormat format = TestCaseContext.OutputFormat.CLEAN_JSON;
-        testExecutor.executeSqlppUpdateOrDdl("CREATE TYPE KeyType AS { id: int };", format);
         int numDatasets = 50;
         String datasetName = null;
         for (int i = 1; i <= numDatasets; i++) {
             datasetName = datasetNamePrefix + i;
-            testExecutor.executeSqlppUpdateOrDdl("CREATE DATASET " + datasetName + "(KeyType) PRIMARY KEY id;", format);
-            insertData(datasetName);
+            TestDataUtil.createIdOnlyDataset(datasetName);
+            TestDataUtil.upsertData(datasetName, 10);
         }
+        final long countBeforeFirstRecovery = TestDataUtil.getDatasetCount(datasetName);
         // do ungraceful shutdown to enforce recovery
         integrationUtil.deinit(false);
         integrationUtil.init(false);
-        validateRecovery(datasetName);
-
+        final long countAfterFirstRecovery = TestDataUtil.getDatasetCount(datasetName);
+        Assert.assertEquals(countBeforeFirstRecovery, countAfterFirstRecovery);
         // create more datasets after recovery
         numDatasets = 100;
         for (int i = 51; i <= numDatasets; i++) {
             datasetName = datasetNamePrefix + i;
-            testExecutor.executeSqlppUpdateOrDdl("CREATE DATASET " + datasetName + "(KeyType) PRIMARY KEY id;", format);
-            insertData(datasetName);
+            TestDataUtil.createIdOnlyDataset(datasetName);
+            TestDataUtil.upsertData(datasetName, 1);
         }
+        final long countBeforeSecondRecovery = TestDataUtil.getDatasetCount(datasetName);
         // do ungraceful shutdown to enforce recovery again
         integrationUtil.deinit(false);
         integrationUtil.init(false);
-        validateRecovery(datasetName);
+        final long countAfterSecondRecovery = TestDataUtil.getDatasetCount(datasetName);
+        Assert.assertEquals(countBeforeSecondRecovery, countAfterSecondRecovery);
     }
 
-    private void insertData(String datasetName) throws Exception {
-        for (int i = 0; i < numRecords; i++) {
-            testExecutor.executeSqlppUpdateOrDdl("UPSERT INTO " + datasetName + " ({\"id\": " + random.nextInt() + "})",
-                    TestCaseContext.OutputFormat.CLEAN_JSON);
-        }
-    }
-
-    private void validateRecovery(String datasetName) throws Exception {
-        final String query = "select value count(*) from `" + datasetName + "`;";
-        final InputStream inputStream = testExecutor
-                .executeQueryService(query, testExecutor.getEndpoint(Servlets.QUERY_SERVICE),
-                        TestCaseContext.OutputFormat.CLEAN_JSON);
-        final ObjectNode jsonNodes = OBJECT_MAPPER.readValue(inputStream, ObjectNode.class);
-        JsonNode result = jsonNodes.get("results");
-        // make sure there is result
-        Assert.assertEquals(1, result.size());
-        for (int i = 0; i < result.size(); i++) {
-            JsonNode json = result.get(i);
-            Assert.assertEquals(numRecords, json.asInt());
-        }
+    @Test
+    public void reoveryAfterRebalance() throws Exception {
+        String datasetName = "ds";
+        TestDataUtil.createIdOnlyDataset(datasetName);
+        TestDataUtil.upsertData(datasetName, 10);
+        final long countBeforeRebalance = TestDataUtil.getDatasetCount(datasetName);
+        // rebalance dataset to single nc
+        TestDataUtil.rebalanceDataset(integrationUtil, MetadataBuiltinEntities.DEFAULT_DATAVERSE.getDataverseName(),
+                datasetName, new String[] { "asterix_nc2" });
+        // check data after rebalance
+        final long countAfterRebalance = TestDataUtil.getDatasetCount(datasetName);
+        Assert.assertEquals(countBeforeRebalance, countAfterRebalance);
+        // insert data after rebalance
+        TestDataUtil.upsertData(datasetName, 20);
+        final long countBeforeRecovery = TestDataUtil.getDatasetCount(datasetName);
+        // do ungraceful shutdown to enforce recovery
+        integrationUtil.deinit(false);
+        integrationUtil.init(false);
+        final long countAfterRecovery = TestDataUtil.getDatasetCount(datasetName);
+        Assert.assertEquals(countBeforeRecovery, countAfterRecovery);
     }
 }

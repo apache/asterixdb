@@ -23,22 +23,26 @@ import static org.apache.hyracks.api.exceptions.ErrorCode.CANNOT_CREATE_FILE;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.asterix.common.cluster.ClusterPartition;
 import org.apache.asterix.common.config.MetadataProperties;
@@ -47,7 +51,8 @@ import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.replication.IReplicationManager;
 import org.apache.asterix.common.replication.ReplicationJob;
-import org.apache.asterix.common.storage.IndexFileProperties;
+import org.apache.asterix.common.storage.DatasetResourceReference;
+import org.apache.asterix.common.storage.ResourceReference;
 import org.apache.asterix.common.utils.StorageConstants;
 import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.commons.io.FileUtils;
@@ -68,15 +73,14 @@ import com.google.common.cache.CacheBuilder;
 
 public class PersistentLocalResourceRepository implements ILocalResourceRepository {
 
-    // Public constants
-    public static final String METADATA_FILE_NAME = ".metadata";
+    public static final Predicate<Path> INDEX_COMPONENTS = path -> !path.endsWith(StorageConstants.METADATA_FILE_NAME);
     // Private constants
     private static final Logger LOGGER = Logger.getLogger(PersistentLocalResourceRepository.class.getName());
     private static final String STORAGE_METADATA_DIRECTORY = StorageConstants.METADATA_ROOT;
     private static final String STORAGE_METADATA_FILE_NAME_PREFIX = "." + StorageConstants.METADATA_ROOT;
     private static final int MAX_CACHED_RESOURCES = 1000;
-    private static final FilenameFilter METADATA_FILES_FILTER =
-            (File dir, String name) -> name.equalsIgnoreCase(METADATA_FILE_NAME);
+    public static final int RESOURCES_TREE_DEPTH_FROM_STORAGE_ROOT = 6;
+
     // Finals
     private final IIOManager ioManager;
     private final String[] mountPoints;
@@ -157,8 +161,9 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
             //make dirs for the storage metadata file
             boolean success = storageMetadataDir.mkdirs();
             if (!success) {
-                throw HyracksDataException.create(ErrorCode.ROOT_LOCAL_RESOURCE_COULD_NOT_BE_CREATED,
-                        getClass().getSimpleName(), storageMetadataDir.getAbsolutePath());
+                throw HyracksDataException
+                        .create(ErrorCode.ROOT_LOCAL_RESOURCE_COULD_NOT_BE_CREATED, getClass().getSimpleName(),
+                                storageMetadataDir.getAbsolutePath());
             }
             LOGGER.log(Level.INFO,
                     "created the root-metadata-file's directory: " + storageMetadataDir.getAbsolutePath());
@@ -198,8 +203,8 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
             throw HyracksDataException.create(CANNOT_CREATE_FILE, parent.getAbsolutePath());
         }
 
-        try (FileOutputStream fos = new FileOutputStream(resourceFile.getFile());
-                ObjectOutputStream oosToFos = new ObjectOutputStream(fos)) {
+        try (FileOutputStream fos = new FileOutputStream(
+                resourceFile.getFile()); ObjectOutputStream oosToFos = new ObjectOutputStream(fos)) {
             oosToFos.writeObject(resource);
             oosToFos.flush();
         } catch (IOException e) {
@@ -226,27 +231,23 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
             } finally {
                 // Regardless of successfully deleted or not, the operation should be replicated.
                 //if replication enabled, delete resource from remote replicas
-                if (isReplicationEnabled
-                        && !resourceFile.getFile().getName().startsWith(STORAGE_METADATA_FILE_NAME_PREFIX)) {
+                if (isReplicationEnabled && !resourceFile.getFile().getName()
+                        .startsWith(STORAGE_METADATA_FILE_NAME_PREFIX)) {
                     createReplicationJob(ReplicationOperation.DELETE, resourceFile);
                 }
             }
         } else {
-            throw HyracksDataException.create(org.apache.hyracks.api.exceptions.ErrorCode.RESOURCE_DOES_NOT_EXIST,
-                    relativePath);
+            throw HyracksDataException
+                    .create(org.apache.hyracks.api.exceptions.ErrorCode.RESOURCE_DOES_NOT_EXIST, relativePath);
         }
     }
 
     private static FileReference getLocalResourceFileByName(IIOManager ioManager, String resourcePath)
             throws HyracksDataException {
-        String fileName = resourcePath + File.separator + METADATA_FILE_NAME;
+        String fileName = resourcePath + File.separator + StorageConstants.METADATA_FILE_NAME;
         return ioManager.resolve(fileName);
     }
-
-    public Map<Long, LocalResource> loadAndGetAllResources() throws IOException {
-        //TODO During recovery, the memory usage currently is proportional to the number of resources available.
-        //This could be fixed by traversing all resources on disk until the required resource is found.
-        LOGGER.log(Level.INFO, "Loading all resources");
+    public Map<Long, LocalResource> getResources(Predicate<LocalResource> filter) throws HyracksDataException {
         Map<Long, LocalResource> resourcesMap = new HashMap<>();
         for (int i = 0; i < mountPoints.length; i++) {
             File storageRootDir = getStorageRootDirectoryIfExists(ioManager, nodeId, i);
@@ -255,108 +256,43 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
                 continue;
             }
             LOGGER.log(Level.INFO, "Getting storage root dir returned " + storageRootDir.getAbsolutePath());
-            //load all local resources.
-            File[] partitions = storageRootDir.listFiles();
-            LOGGER.log(Level.INFO, "Number of partitions found = " + partitions.length);
-            for (File partition : partitions) {
-                File[] dataverseFileList = partition.listFiles();
-                LOGGER.log(Level.INFO, "Reading partition = " + partition.getName() + ". Number of dataverses found: "
-                        + dataverseFileList.length);
-                if (dataverseFileList != null) {
-                    for (File dataverseFile : dataverseFileList) {
-                        loadDataverse(dataverseFile, resourcesMap);
+            try (Stream<Path> stream = Files.find(storageRootDir.toPath(), RESOURCES_TREE_DEPTH_FROM_STORAGE_ROOT,
+                    (path, attr) -> path.getFileName().toString().equals(StorageConstants.METADATA_FILE_NAME))) {
+                final List<File> resourceMetadataFiles = stream.map(Path::toFile).collect(Collectors.toList());
+                for (File file : resourceMetadataFiles) {
+                    final LocalResource localResource = PersistentLocalResourceRepository.readLocalResource(file);
+                    if (filter.test(localResource)) {
+                        resourcesMap.put(localResource.getId(), localResource);
                     }
                 }
+            } catch (IOException e) {
+                throw HyracksDataException.create(e);
             }
         }
         return resourcesMap;
+
     }
 
-    private void loadDataverse(File dataverseFile, Map<Long, LocalResource> resourcesMap) throws HyracksDataException {
-        LOGGER.log(Level.INFO, "Loading dataverse:" + dataverseFile.getName());
-        if (dataverseFile.isDirectory()) {
-            File[] indexFileList = dataverseFile.listFiles();
-            if (indexFileList != null) {
-                for (File indexFile : indexFileList) {
-                    loadIndex(indexFile, resourcesMap);
-                }
-            }
-        }
-    }
-
-    private void loadIndex(File indexFile, Map<Long, LocalResource> resourcesMap) throws HyracksDataException {
-        LOGGER.log(Level.INFO, "Loading index:" + indexFile.getName());
-        if (indexFile.isDirectory()) {
-            File[] metadataFiles = indexFile.listFiles(METADATA_FILES_FILTER);
-            if (metadataFiles != null) {
-                for (File metadataFile : metadataFiles) {
-                    LocalResource localResource = readLocalResource(metadataFile);
-                    LOGGER.log(Level.INFO, "Resource loaded " + localResource.getId() + ":" + localResource.getPath());
-                    resourcesMap.put(localResource.getId(), localResource);
-                }
-            }
-        }
+    public Map<Long, LocalResource> loadAndGetAllResources() throws HyracksDataException {
+        return getResources(p -> true);
     }
 
     @Override
     public long maxId() throws HyracksDataException {
-        long maxResourceId = 0;
-        for (int i = 0; i < mountPoints.length; i++) {
-            File storageRootDir = getStorageRootDirectoryIfExists(ioManager, nodeId, i);
-            if (storageRootDir == null) {
-                continue;
-            }
-
-            //load all local resources.
-            File[] partitions = storageRootDir.listFiles();
-            for (File partition : partitions) {
-                //traverse all local resources.
-                File[] dataverseFileList = partition.listFiles();
-                if (dataverseFileList != null) {
-                    for (File dataverseFile : dataverseFileList) {
-                        maxResourceId = getMaxResourceIdForDataverse(dataverseFile, maxResourceId);
-                    }
-                }
-            }
-        }
-        return maxResourceId;
-    }
-
-    private long getMaxResourceIdForDataverse(File dataverseFile, long maxSoFar) throws HyracksDataException {
-        long maxResourceId = maxSoFar;
-        if (dataverseFile.isDirectory()) {
-            File[] indexFileList = dataverseFile.listFiles();
-            if (indexFileList != null) {
-                for (File indexFile : indexFileList) {
-                    maxResourceId = getMaxResourceIdForIndex(indexFile, maxResourceId);
-                }
-            }
-        }
-        return maxResourceId;
-    }
-
-    private long getMaxResourceIdForIndex(File indexFile, long maxSoFar) throws HyracksDataException {
-        long maxResourceId = maxSoFar;
-        if (indexFile.isDirectory()) {
-            File[] metadataFiles = indexFile.listFiles(METADATA_FILES_FILTER);
-            if (metadataFiles != null) {
-                for (File metadataFile : metadataFiles) {
-                    LocalResource localResource = readLocalResource(metadataFile);
-                    maxResourceId = Math.max(maxResourceId, localResource.getId());
-                }
-            }
-        }
-        return maxResourceId;
+        final Map<Long, LocalResource> allResources = loadAndGetAllResources();
+        final Optional<Long> max = allResources.keySet().stream().max(Long::compare);
+        return max.isPresent() ? max.get() : 0;
     }
 
     private static String getFileName(String path) {
-        return path.endsWith(File.separator) ? (path + METADATA_FILE_NAME)
-                : (path + File.separator + METADATA_FILE_NAME);
+        return path.endsWith(File.separator) ?
+                (path + StorageConstants.METADATA_FILE_NAME) :
+                (path + File.separator + StorageConstants.METADATA_FILE_NAME);
     }
 
     public static LocalResource readLocalResource(File file) throws HyracksDataException {
-        try (FileInputStream fis = new FileInputStream(file);
-                ObjectInputStream oisFromFis = new ObjectInputStream(fis)) {
+        try (FileInputStream fis = new FileInputStream(file); ObjectInputStream oisFromFis = new ObjectInputStream(
+                fis)) {
             LocalResource resource = (LocalResource) oisFromFis.readObject();
             if (resource.getVersion() == ITreeIndexFrame.Constants.VERSION) {
                 return resource;
@@ -425,8 +361,9 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
      * @return A file reference to the storage metadata file.
      */
     private static FileReference getStorageMetadataFile(IIOManager ioManager, String nodeId, int ioDeviceId) {
-        String storageMetadataFileName = STORAGE_METADATA_DIRECTORY + File.separator + nodeId + "_" + "iodevice"
-                + ioDeviceId + File.separator + STORAGE_METADATA_FILE_NAME_PREFIX;
+        String storageMetadataFileName =
+                STORAGE_METADATA_DIRECTORY + File.separator + nodeId + "_" + "iodevice" + ioDeviceId + File.separator
+                        + STORAGE_METADATA_FILE_NAME_PREFIX;
         return new FileReference(ioManager.getIODevices().get(ioDeviceId), storageMetadataFileName);
     }
 
@@ -483,10 +420,6 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
         return Collections.unmodifiableSet(nodeInactivePartitions);
     }
 
-    public Set<Integer> getNodeOrignalPartitions() {
-        return Collections.unmodifiableSet(nodeOriginalPartitions);
-    }
-
     public synchronized void addActivePartition(int partitonId) {
         nodeActivePartitions.add(partitonId);
         nodeInactivePartitions.remove(partitonId);
@@ -497,27 +430,43 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
         nodeActivePartitions.remove(partitonId);
     }
 
-    private static String getLocalResourceRelativePath(String absolutePath) {
-        final String[] tokens = absolutePath.split(File.separator);
-        // Format: storage_dir/partition/dataverse/idx
-        return tokens[tokens.length - 5] + File.separator + tokens[tokens.length - 4] + File.separator
-                + tokens[tokens.length - 3] + File.separator + tokens[tokens.length - 2];
+    public DatasetResourceReference getLocalResourceReference(String absoluteFilePath) throws HyracksDataException {
+        //TODO pass relative path
+        final String localResourcePath = StoragePathUtil.getIndexFileRelativePath(absoluteFilePath);
+        final LocalResource lr = get(localResourcePath);
+        return DatasetResourceReference.of(lr);
     }
 
-    public IndexFileProperties getIndexFileRef(String absoluteFilePath) throws HyracksDataException {
-        //TODO pass relative path
-        final String[] tokens = absoluteFilePath.split(File.separator);
-        if (tokens.length < 5) {
-            throw new HyracksDataException("Invalid file format");
+    /**
+     * Gets a set of files for the indexes in partition {@code partition}. Each file points
+     * the to where the index's files are stored.
+     *
+     * @param partition
+     * @return The set of indexes files
+     * @throws HyracksDataException
+     */
+    public Set<File> getPartitionIndexes(int partition) throws HyracksDataException {
+        final Map<Long, LocalResource> partitionResourcesMap = getResources(resource -> {
+            DatasetLocalResource dsResource = (DatasetLocalResource) resource.getResource();
+            return dsResource.getPartition() == partition;
+        });
+        Set<File> indexes = new HashSet<>();
+        for (LocalResource localResource : partitionResourcesMap.values()) {
+            indexes.add(ioManager.resolve(localResource.getPath()).getFile());
         }
-        String fileName = tokens[tokens.length - 1];
-        String index = tokens[tokens.length - 2];
-        String dataverse = tokens[tokens.length - 3];
-        String partition = tokens[tokens.length - 4];
-        int partitionId = StoragePathUtil.getPartitionNumFromName(partition);
-        String relativePath = getLocalResourceRelativePath(absoluteFilePath);
-        final LocalResource lr = get(relativePath);
-        int datasetId = lr == null ? -1 : ((DatasetLocalResource) lr.getResource()).getDatasetId();
-        return new IndexFileProperties(partitionId, dataverse, index, fileName, datasetId);
+        return indexes;
+    }
+
+    /**
+     * Given any index file, an absolute {@link FileReference} is returned which points to where the index of
+     * {@code indexFile} is located.
+     *
+     * @param indexFile
+     * @return
+     * @throws HyracksDataException
+     */
+    public FileReference getIndexPath(Path indexFile) throws HyracksDataException {
+        final ResourceReference ref = ResourceReference.of(indexFile.toString());
+        return ioManager.resolve(ref.getRelativePath().toString());
     }
 }

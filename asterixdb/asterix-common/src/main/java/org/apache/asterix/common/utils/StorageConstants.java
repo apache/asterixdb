@@ -24,12 +24,24 @@ import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
  * A static class that stores storage constants
  */
 public class StorageConstants {
-    public static final String METADATA_ROOT = "root_metadata";
-    /** The storage version of AsterixDB related artifacts (e.g. log files, checkpoint files, etc..). */
-    private static final int LOCAL_STORAGE_VERSION = 1;
 
-    /** The storage version of AsterixDB stack. */
+    public static final String METADATA_ROOT = "root_metadata";
+    public static final String METADATA_FILE_NAME = ".metadata";
+
+    /**
+     * The storage version of AsterixDB related artifacts (e.g. log files, checkpoint files, etc..).
+     */
+    private static final int LOCAL_STORAGE_VERSION = 2;
+
+    /**
+     * The storage version of AsterixDB stack.
+     */
     public static final int VERSION = LOCAL_STORAGE_VERSION + ITreeIndexFrame.Constants.VERSION;
+
+    /**
+     * The storage version in which the rebalance storage structure was introduced
+     */
+    public static final int REBALANCE_STORAGE_VERSION = 8;
 
     private StorageConstants() {
     }

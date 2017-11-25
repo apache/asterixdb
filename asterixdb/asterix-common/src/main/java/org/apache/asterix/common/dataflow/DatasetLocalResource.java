@@ -59,6 +59,11 @@ public class DatasetLocalResource implements IResource {
     }
 
     @Override
+    public void setPath(String path) {
+        resource.setPath(path);
+    }
+
+    @Override
     public IIndex createInstance(INCServiceContext ncServiceCtx) throws HyracksDataException {
         return resource.createInstance(ncServiceCtx);
     }

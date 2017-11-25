@@ -119,7 +119,7 @@ public class ReplicationCheckpointManager extends AbstractCheckpointManager {
         return minFirstLSN;
     }
 
-    private long getDeadReplicasMinFirstLSN(Set<String> deadReplicaIds) {
+    private long getDeadReplicasMinFirstLSN(Set<String> deadReplicaIds) throws HyracksDataException {
         final IReplicaResourcesManager remoteResourcesManager =
                 txnSubsystem.getAsterixAppRuntimeContextProvider().getAppContext().getReplicaResourcesManager();
         final IApplicationContext propertiesProvider =

@@ -16,18 +16,29 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.common.replication;
+package org.apache.asterix.common.storage;
 
-import java.util.Set;
+public class IndexPathElements {
 
-import org.apache.hyracks.api.exceptions.HyracksDataException;
+    private final String datasetName;
+    private final String indexName;
+    private final String rebalanceCount;
 
-public interface IReplicaResourcesManager {
+    public IndexPathElements(String datasetName, String indexName, String rebalanceCount) {
+        this.datasetName = datasetName;
+        this.indexName = indexName;
+        this.rebalanceCount = rebalanceCount;
+    }
 
-    /**
-     * @param partitions
-     * @return the minimum LSN of all indexes that belong to {@code partitions}.
-     * @throws HyracksDataException
-     */
-    long getPartitionsMinLSN(Set<Integer> partitions) throws HyracksDataException;
+    public String getDatasetName() {
+        return datasetName;
+    }
+
+    public String getIndexName() {
+        return indexName;
+    }
+
+    public String getRebalanceCount() {
+        return rebalanceCount;
+    }
 }

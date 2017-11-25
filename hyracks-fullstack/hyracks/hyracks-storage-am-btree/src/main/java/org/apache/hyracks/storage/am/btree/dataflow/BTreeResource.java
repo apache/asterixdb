@@ -35,7 +35,7 @@ import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 public class BTreeResource implements IResource {
 
     private static final long serialVersionUID = 1L;
-    private final String path;
+    private String path;
     private final IStorageManager storageManager;
     private final ITypeTraits[] typeTraits;
     private final IBinaryComparatorFactory[] comparatorFactories;
@@ -62,5 +62,10 @@ public class BTreeResource implements IResource {
     @Override
     public String getPath() {
         return path;
+    }
+
+    @Override
+    public void setPath(String path) {
+        this.path = path;
     }
 }

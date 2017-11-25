@@ -19,8 +19,12 @@
 package org.apache.asterix.common.utils;
 
 import java.io.File;
+import java.nio.file.Paths;
+import java.util.function.Function;
 
 import org.apache.asterix.common.cluster.ClusterPartition;
+import org.apache.asterix.common.storage.IndexPathElements;
+import org.apache.asterix.common.storage.ResourceReference;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.utils.Pair;
@@ -36,6 +40,7 @@ public class StoragePathUtil {
     private static final Logger LOGGER = Logger.getLogger(StoragePathUtil.class.getName());
     public static final String PARTITION_DIR_PREFIX = "partition_";
     public static final String DATASET_INDEX_NAME_SEPARATOR = "_idx_";
+    private static Function<IndexPathElements, String> indexPathProvider;
 
     private StoragePathUtil() {
     }
@@ -69,8 +74,10 @@ public class StoragePathUtil {
     }
 
     private static String prepareFullIndexName(String datasetName, String idxName, long rebalanceCount) {
-        return (rebalanceCount == 0 ? "" : rebalanceCount + File.separator) + datasetName + DATASET_INDEX_NAME_SEPARATOR
-                + idxName;
+        if (indexPathProvider != null) {
+            return indexPathProvider.apply(new IndexPathElements(datasetName, idxName, String.valueOf(rebalanceCount)));
+        }
+        return datasetName + File.separator + rebalanceCount + File.separator + idxName;
     }
 
     public static int getPartitionNumFromName(String name) {
@@ -88,10 +95,7 @@ public class StoragePathUtil {
      * @return the file relative path starting from the partition directory
      */
     public static String getIndexFileRelativePath(String fileAbsolutePath) {
-        String[] tokens = fileAbsolutePath.split(File.separator);
-        //partition/dataverse/idx/fileName
-        return tokens[tokens.length - 4] + File.separator + tokens[tokens.length - 3] + File.separator
-                + tokens[tokens.length - 2] + File.separator + tokens[tokens.length - 1];
+        return ResourceReference.of(fileAbsolutePath).getRelativePath().toString();
     }
 
     /**
@@ -136,7 +140,10 @@ public class StoragePathUtil {
      * @return The index name
      */
     public static String getIndexNameFromPath(String path) {
-        int idx = path.lastIndexOf(DATASET_INDEX_NAME_SEPARATOR);
-        return idx != -1 ? path.substring(idx + DATASET_INDEX_NAME_SEPARATOR.length()) : path;
+        return Paths.get(path).getFileName().toString();
+    }
+
+    public static void setIndexPathProvider(Function<IndexPathElements, String> indexPathProvider) {
+        StoragePathUtil.indexPathProvider = indexPathProvider;
     }
 }

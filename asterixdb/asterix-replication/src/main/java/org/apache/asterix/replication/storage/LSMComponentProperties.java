@@ -23,9 +23,11 @@ import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.file.Paths;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.asterix.common.ioopcallbacks.AbstractLSMIOOperationCallback;
+import org.apache.asterix.common.storage.ResourceReference;
 import org.apache.asterix.replication.logging.TxnLogUtil;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
@@ -93,18 +95,16 @@ public class LSMComponentProperties {
         return lsmCompProp;
     }
 
-    public String getMaskPath(ReplicaResourcesManager resourceManager) {
+    public String getMaskPath(ReplicaResourcesManager resourceManager) throws HyracksDataException {
         if (maskPath == null) {
             LSMIndexFileProperties afp = new LSMIndexFileProperties(this);
-            //split the index file path to get the LSM component file name
-            afp.splitFileName();
             maskPath = getReplicaComponentPath(resourceManager) + File.separator + afp.getFileName()
                     + ReplicaResourcesManager.LSM_COMPONENT_MASK_SUFFIX;
         }
         return maskPath;
     }
 
-    public String getReplicaComponentPath(ReplicaResourcesManager resourceManager) {
+    public String getReplicaComponentPath(ReplicaResourcesManager resourceManager) throws HyracksDataException {
         if (replicaPath == null) {
             LSMIndexFileProperties afp = new LSMIndexFileProperties(this);
             replicaPath = resourceManager.getIndexPath(afp);
@@ -118,23 +118,10 @@ public class LSMComponentProperties {
      * @return a unique id based on the timestamp of the component
      */
     public static String getLSMComponentID(String filePath) {
-        String[] tokens = filePath.split(File.separator);
-
-        int arraySize = tokens.length;
-        String fileName = tokens[arraySize - 1];
-        String idxName = tokens[arraySize - 2];
-        String dataverse = tokens[arraySize - 3];
-        String partitionName = tokens[arraySize - 4];
-
-        StringBuilder componentId = new StringBuilder();
-        componentId.append(partitionName);
-        componentId.append(File.separator);
-        componentId.append(dataverse);
-        componentId.append(File.separator);
-        componentId.append(idxName);
-        componentId.append(File.separator);
-        componentId.append(fileName.substring(0, fileName.lastIndexOf(AbstractLSMIndexFileManager.DELIMITER)));
-        return componentId.toString();
+        final ResourceReference ref = ResourceReference.of(filePath);
+        final String fileUniqueTimestamp =
+                ref.getName().substring(0, ref.getName().lastIndexOf(AbstractLSMIndexFileManager.DELIMITER));
+        return Paths.get(ref.getRelativePath().toString(), fileUniqueTimestamp).toString();
     }
 
     public String getComponentId() {
@@ -149,16 +136,8 @@ public class LSMComponentProperties {
         return nodeId;
     }
 
-    public int getNumberOfFiles() {
-        return numberOfFiles.get();
-    }
-
     public int markFileComplete() {
         return numberOfFiles.decrementAndGet();
-    }
-
-    public void setNumberOfFiles(AtomicInteger numberOfFiles) {
-        this.numberOfFiles = numberOfFiles;
     }
 
     public Long getReplicaLSN() {
@@ -171,10 +150,6 @@ public class LSMComponentProperties {
 
     public LSMOperationType getOpType() {
         return opType;
-    }
-
-    public void setOpType(LSMOperationType opType) {
-        this.opType = opType;
     }
 
     public String getNodeUniqueLSN() {

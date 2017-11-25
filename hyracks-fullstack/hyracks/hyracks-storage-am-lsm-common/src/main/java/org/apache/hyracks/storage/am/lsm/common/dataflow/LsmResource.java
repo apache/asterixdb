@@ -18,13 +18,10 @@
  */
 package org.apache.hyracks.storage.am.lsm.common.dataflow;
 
-import java.util.List;
 import java.util.Map;
 
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
-import org.apache.hyracks.api.io.IIOManager;
-import org.apache.hyracks.api.io.IODeviceHandle;
 import org.apache.hyracks.storage.am.common.api.IMetadataPageManagerFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationSchedulerProvider;
@@ -43,7 +40,7 @@ import org.apache.hyracks.storage.common.LocalResource;
 public abstract class LsmResource implements IResource {
 
     private static final long serialVersionUID = 1L;
-    protected final String path;
+    protected String path;
     protected final IStorageManager storageManager;
     protected final ITypeTraits[] typeTraits;
     protected final IBinaryComparatorFactory[] cmpFactories;
@@ -88,14 +85,8 @@ public abstract class LsmResource implements IResource {
         return path;
     }
 
-    public static int getIoDeviceNum(IIOManager ioManager, IODeviceHandle deviceHandle) {
-        List<IODeviceHandle> ioDevices = ioManager.getIODevices();
-        for (int i = 0; i < ioDevices.size(); i++) {
-            IODeviceHandle device = ioDevices.get(i);
-            if (device == deviceHandle) {
-                return i;
-            }
-        }
-        return -1;
+    @Override
+    public void setPath(String path) {
+        this.path = path;
     }
 }

@@ -28,4 +28,11 @@ public interface IResource extends Serializable {
     IIndex createInstance(INCServiceContext ncServiceCtx) throws HyracksDataException;
 
     String getPath();
+
+    /**
+     * Sets the path of {@link IResource}.
+     *
+     * @param path
+     */
+    void setPath(String path);
 }

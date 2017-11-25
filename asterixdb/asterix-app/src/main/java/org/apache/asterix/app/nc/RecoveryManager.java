@@ -443,7 +443,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
         return minFirstLSN;
     }
 
-    private long getRemoteMinFirstLSN() {
+    private long getRemoteMinFirstLSN() throws HyracksDataException {
         IReplicaResourcesManager remoteResourcesManager =
                 txnSubsystem.getAsterixAppRuntimeContextProvider().getAppContext().getReplicaResourcesManager();
         return remoteResourcesManager.getPartitionsMinLSN(localResourceRepository.getInactivePartitions());

@@ -122,7 +122,7 @@ public class ConnectorApiServletTest {
         // Checks the correctness of results.
         ArrayNode splits = (ArrayNode) actualResponse.get("splits");
         String path = (splits.get(0)).get("path").asText();
-        Assert.assertTrue(path.endsWith("Metadata/Dataset_idx_Dataset"));
+        Assert.assertTrue(path.endsWith("Metadata/Dataset/0/Dataset"));
     }
 
     @Test
