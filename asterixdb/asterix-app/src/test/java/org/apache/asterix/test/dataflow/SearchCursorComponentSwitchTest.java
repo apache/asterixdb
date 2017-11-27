@@ -121,10 +121,11 @@ public class SearchCursorComponentSwitchTest {
     public void createIndex() throws Exception {
         List<List<String>> partitioningKeys = new ArrayList<>();
         partitioningKeys.add(Collections.singletonList("key"));
-        dataset = new TestDataset(DATAVERSE_NAME, DATASET_NAME, DATAVERSE_NAME, DATA_TYPE_NAME, NODE_GROUP_NAME,
-                NoMergePolicyFactory.NAME, null, new InternalDatasetDetails(null, PartitioningStrategy.HASH,
-                        partitioningKeys, null, null, null, false, null),
-                null, DatasetType.INTERNAL, DATASET_ID, 0);
+        dataset =
+                new TestDataset(DATAVERSE_NAME, DATASET_NAME, DATAVERSE_NAME, DATA_TYPE_NAME, NODE_GROUP_NAME,
+                        NoMergePolicyFactory.NAME, null, new InternalDatasetDetails(null, PartitioningStrategy.HASH,
+                                partitioningKeys, null, null, null, false, null),
+                        null, DatasetType.INTERNAL, DATASET_ID, 0);
         PrimaryIndexInfo primaryIndexInfo = nc.createPrimaryIndex(dataset, KEY_TYPES, RECORD_TYPE, META_TYPE, null,
                 storageManager, KEY_INDEXES, KEY_INDICATORS_LIST, 0);
         IndexDataflowHelperFactory iHelperFactory =
@@ -138,7 +139,7 @@ public class SearchCursorComponentSwitchTest {
         txnCtx = nc.getTransactionManager().beginTransaction(nc.getTxnJobId(ctx),
                 new TransactionOptions(ITransactionManager.AtomicityLevel.ENTITY_LEVEL));
         insertOp = nc.getInsertPipeline(ctx, dataset, KEY_TYPES, RECORD_TYPE, META_TYPE, null, KEY_INDEXES,
-                KEY_INDICATORS_LIST, storageManager).getLeft();
+                KEY_INDICATORS_LIST, storageManager, null).getLeft();
     }
 
     @After
@@ -147,7 +148,7 @@ public class SearchCursorComponentSwitchTest {
     }
 
     void unblockSearch(TestLsmBtree lsmBtree) {
-        lsmBtree.addSearchCallback(sem -> sem.release());
+        lsmBtree.addSearchCallback(ComponentRollbackTest.ALLOW_CALLBACK);
         lsmBtree.allowSearch(1);
     }
 
@@ -170,7 +171,7 @@ public class SearchCursorComponentSwitchTest {
                     if (tupleAppender.getTupleCount() > 0) {
                         tupleAppender.write(insertOp, true);
                     }
-                    dsLifecycleMgr.flushDataset(dataset.getDatasetId(), false);
+                    ComponentRollbackTest.flush(dsLifecycleMgr, lsmBtree, dataset, false);
                 }
                 ITupleReference tuple = tupleGenerator.next();
                 DataflowUtils.addTupleToFrame(tupleAppender, tuple, insertOp);
@@ -183,7 +184,7 @@ public class SearchCursorComponentSwitchTest {
             firstSearcher = new Searcher(nc, 0, dataset, storageManager, lsmBtree, TOTAL_NUM_OF_RECORDS);
             // wait till firstSearcher enter the components
             firstSearcher.waitUntilEntered();
-            dsLifecycleMgr.flushDataset(dataset.getDatasetId(), false);
+            ComponentRollbackTest.flush(dsLifecycleMgr, lsmBtree, dataset, false);
             nc.getTransactionManager().commitTransaction(txnCtx.getTxnId());
             // unblock the search
             unblockSearch(lsmBtree);
@@ -216,7 +217,7 @@ public class SearchCursorComponentSwitchTest {
                     if (tupleAppender.getTupleCount() > 0) {
                         tupleAppender.write(insertOp, true);
                     }
-                    dsLifecycleMgr.flushDataset(dataset.getDatasetId(), false);
+                    ComponentRollbackTest.flush(dsLifecycleMgr, lsmBtree, dataset, false);
                 }
                 ITupleReference tuple = tupleGenerator.next();
                 DataflowUtils.addTupleToFrame(tupleAppender, tuple, insertOp);
@@ -229,7 +230,7 @@ public class SearchCursorComponentSwitchTest {
             firstSearcher = new Searcher(nc, 0, dataset, storageManager, lsmBtree, TOTAL_NUM_OF_RECORDS);
             // wait till firstSearcher enter the components
             firstSearcher.waitUntilEntered();
-            dsLifecycleMgr.flushDataset(dataset.getDatasetId(), false);
+            ComponentRollbackTest.flush(dsLifecycleMgr, lsmBtree, dataset, false);
             nc.getTransactionManager().commitTransaction(txnCtx.getTxnId());
             // merge all components
             ILSMIndexAccessor mergeAccessor = lsmBtree.createAccessor(NoOpIndexAccessParameters.INSTANCE);

@@ -19,6 +19,7 @@
 package org.apache.hyracks.storage.am.lsm.btree.impl;
 
 import java.util.List;
+import java.util.concurrent.Semaphore;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.lsm.btree.impls.LSMBTreeSearchCursor;
@@ -36,9 +37,9 @@ public class TestLsmBtreeSearchCursor extends LSMBTreeSearchCursor {
     @Override
     public void next() throws HyracksDataException {
         try {
-            List<ITestOpCallback> callbacks = lsmBtree.getSearchCallbacks();
+            List<ITestOpCallback<Semaphore>> callbacks = lsmBtree.getSearchCallbacks();
             synchronized (callbacks) {
-                for (ITestOpCallback cb : callbacks) {
+                for (ITestOpCallback<Semaphore> cb : callbacks) {
                     TestLsmBtree.callback(cb, lsmBtree.getSearchSemaphore());
                 }
             }

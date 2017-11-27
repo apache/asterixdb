@@ -61,6 +61,7 @@ public interface ILSMIOOperationCallback {
      *
      * @param component
      * @param componentSwitched
+     *            true if the component index was advanced for this recycle, false otherwise
      */
     void recycled(ILSMMemoryComponent component, boolean componentSwitched) throws HyracksDataException;
 

@@ -18,8 +18,6 @@
  */
 package org.apache.hyracks.storage.am.lsm.btree.impl;
 
-public interface ITestOpCallback<T> {
-    void before(T t);
-
-    void after();
+public interface IVirtualBufferCacheCallback {
+    void isFullChanged(boolean newValue);
 }

@@ -207,7 +207,7 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
             if (opTracker != null && opTracker.getNumActiveOperations() == 0
                     && dsr.getDatasetInfo().getReferenceCount() == 0 && dsr.getDatasetInfo().isOpen()
                     && !dsr.isMetadataDataset()) {
-                closeDataset(dsr.getDatasetInfo());
+                closeDataset(dsr);
                 LOGGER.info(() -> "Evicted Dataset" + dsr.getDatasetID());
                 return true;
             }
@@ -341,7 +341,7 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
     @Override
     public synchronized void flushAllDatasets() throws HyracksDataException {
         for (DatasetResource dsr : datasets.values()) {
-            flushDatasetOpenIndexes(dsr.getDatasetInfo(), false);
+            flushDatasetOpenIndexes(dsr, false);
         }
     }
 
@@ -349,7 +349,7 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
     public synchronized void flushDataset(int datasetId, boolean asyncFlush) throws HyracksDataException {
         DatasetResource dsr = datasets.get(datasetId);
         if (dsr != null) {
-            flushDatasetOpenIndexes(dsr.getDatasetInfo(), asyncFlush);
+            flushDatasetOpenIndexes(dsr, asyncFlush);
         }
     }
 
@@ -385,10 +385,16 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
     /*
      * This method can only be called asynchronously safely if we're sure no modify operation will take place until the flush is scheduled
      */
-    private void flushDatasetOpenIndexes(DatasetInfo dsInfo, boolean asyncFlush) throws HyracksDataException {
+    private void flushDatasetOpenIndexes(DatasetResource dsr, boolean asyncFlush) throws HyracksDataException {
+        DatasetInfo dsInfo = dsr.getDatasetInfo();
         if (dsInfo.isExternal()) {
             // no memory components for external dataset
             return;
+        }
+        PrimaryIndexOperationTracker primaryOpTracker = dsr.getOpTracker();
+        if (primaryOpTracker.getNumActiveOperations() > 0) {
+            throw new IllegalStateException(
+                    "flushDatasetOpenIndexes is called on a dataset with currently active operations");
         }
 
         ILSMComponentIdGenerator idGenerator = getComponentIdGenerator(dsInfo.getDatasetID());
@@ -435,11 +441,12 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
         }
     }
 
-    private void closeDataset(DatasetInfo dsInfo) throws HyracksDataException {
+    private void closeDataset(DatasetResource dsr) throws HyracksDataException {
         // First wait for any ongoing IO operations
+        DatasetInfo dsInfo = dsr.getDatasetInfo();
         dsInfo.waitForIO();
         try {
-            flushDatasetOpenIndexes(dsInfo, false);
+            flushDatasetOpenIndexes(dsr, false);
         } catch (Exception e) {
             throw HyracksDataException.create(e);
         }
@@ -460,7 +467,7 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
     public synchronized void closeAllDatasets() throws HyracksDataException {
         ArrayList<DatasetResource> openDatasets = new ArrayList<>(datasets.values());
         for (DatasetResource dsr : openDatasets) {
-            closeDataset(dsr.getDatasetInfo());
+            closeDataset(dsr);
         }
     }
 
@@ -469,7 +476,7 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
         ArrayList<DatasetResource> openDatasets = new ArrayList<>(datasets.values());
         for (DatasetResource dsr : openDatasets) {
             if (!dsr.isMetadataDataset()) {
-                closeDataset(dsr.getDatasetInfo());
+                closeDataset(dsr);
             }
         }
     }
@@ -568,7 +575,7 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
     public void flushDataset(IReplicationStrategy replicationStrategy) throws HyracksDataException {
         for (DatasetResource dsr : datasets.values()) {
             if (replicationStrategy.isMatch(dsr.getDatasetID())) {
-                flushDatasetOpenIndexes(dsr.getDatasetInfo(), false);
+                flushDatasetOpenIndexes(dsr, false);
             }
         }
     }

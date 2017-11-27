@@ -40,6 +40,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexFileManager;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMMemoryComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
@@ -56,11 +57,17 @@ public class TestLsmBtree extends LSMBTree {
     private final Semaphore searchSemaphore = new Semaphore(0);
     private final Semaphore flushSemaphore = new Semaphore(0);
     private final Semaphore mergeSemaphore = new Semaphore(0);
-    private final List<ITestOpCallback> modifyCallbacks = new ArrayList<>();
-    private final List<ITestOpCallback> searchCallbacks = new ArrayList<>();
-    private final List<ITestOpCallback> flushCallbacks = new ArrayList<>();
-    private final List<ITestOpCallback> mergeCallbacks = new ArrayList<>();
-    private final List<ITestOpCallback> allocateComponentCallbacks = new ArrayList<>();
+    private final List<ITestOpCallback<Semaphore>> modifyCallbacks = new ArrayList<>();
+    private final List<ITestOpCallback<Semaphore>> searchCallbacks = new ArrayList<>();
+    private final List<ITestOpCallback<Semaphore>> flushCallbacks = new ArrayList<>();
+    private final List<ITestOpCallback<Semaphore>> mergeCallbacks = new ArrayList<>();
+
+    private final List<ITestOpCallback<ILSMMemoryComponent>> ioAllocateCallbacks = new ArrayList<>();
+    private final List<ITestOpCallback<ILSMMemoryComponent>> ioRecycleCallbacks = new ArrayList<>();
+    private final List<ITestOpCallback<Void>> ioBeforeCallbacks = new ArrayList<>();
+    private final List<ITestOpCallback<Void>> ioAfterOpCallbacks = new ArrayList<>();
+    private final List<ITestOpCallback<Void>> ioAfterFinalizeCallbacks = new ArrayList<>();
+    private final List<ITestOpCallback<Void>> allocateComponentCallbacks = new ArrayList<>();
 
     private volatile int numScheduledFlushes;
     private volatile int numStartedFlushes;
@@ -89,17 +96,22 @@ public class TestLsmBtree extends LSMBTree {
     @Override
     public void modify(IIndexOperationContext ictx, ITupleReference tuple) throws HyracksDataException {
         synchronized (modifyCallbacks) {
-            for (ITestOpCallback callback : modifyCallbacks) {
+            for (ITestOpCallback<Semaphore> callback : modifyCallbacks) {
                 callback(callback, modifySemaphore);
             }
         }
         acquire(modifySemaphore);
         super.modify(ictx, tuple);
+        synchronized (modifyCallbacks) {
+            for (ITestOpCallback<Semaphore> callback : modifyCallbacks) {
+                callback.after();
+            }
+        }
     }
 
-    public static void callback(ITestOpCallback callback, Semaphore semaphore) {
+    public static <T> void callback(ITestOpCallback<T> callback, T t) {
         if (callback != null) {
-            callback.callback(semaphore);
+            callback.before(t);
         }
     }
 
@@ -121,13 +133,18 @@ public class TestLsmBtree extends LSMBTree {
     public ILSMDiskComponent doFlush(ILSMIOOperation operation) throws HyracksDataException {
         numStartedFlushes++;
         synchronized (flushCallbacks) {
-            for (ITestOpCallback callback : flushCallbacks) {
+            for (ITestOpCallback<Semaphore> callback : flushCallbacks) {
                 callback(callback, flushSemaphore);
             }
         }
         acquire(flushSemaphore);
         ILSMDiskComponent c = super.doFlush(operation);
         numFinishedFlushes++;
+        synchronized (flushCallbacks) {
+            for (ITestOpCallback<Semaphore> callback : flushCallbacks) {
+                callback.after();
+            }
+        }
         return c;
     }
 
@@ -135,13 +152,18 @@ public class TestLsmBtree extends LSMBTree {
     public ILSMDiskComponent doMerge(ILSMIOOperation operation) throws HyracksDataException {
         numStartedMerges++;
         synchronized (mergeCallbacks) {
-            for (ITestOpCallback callback : mergeCallbacks) {
+            for (ITestOpCallback<Semaphore> callback : mergeCallbacks) {
                 callback(callback, mergeSemaphore);
             }
         }
         acquire(mergeSemaphore);
         ILSMDiskComponent c = super.doMerge(operation);
         numFinishedMerges++;
+        synchronized (mergeCallbacks) {
+            for (ITestOpCallback<Semaphore> callback : mergeCallbacks) {
+                callback.after();
+            }
+        }
         return c;
     }
 
@@ -199,11 +221,11 @@ public class TestLsmBtree extends LSMBTree {
         return numFinishedMerges;
     }
 
-    public List<ITestOpCallback> getModifyCallbacks() {
+    public List<ITestOpCallback<Semaphore>> getModifyCallbacks() {
         return modifyCallbacks;
     }
 
-    public void addModifyCallback(ITestOpCallback modifyCallback) {
+    public void addModifyCallback(ITestOpCallback<Semaphore> modifyCallback) {
         synchronized (mergeCallbacks) {
             modifyCallbacks.add(modifyCallback);
         }
@@ -215,7 +237,31 @@ public class TestLsmBtree extends LSMBTree {
         }
     }
 
-    public List<ITestOpCallback> getSearchCallbacks() {
+    public void addIoRecycleCallback(ITestOpCallback<ILSMMemoryComponent> callback) {
+        synchronized (ioRecycleCallbacks) {
+            ioRecycleCallbacks.add(callback);
+        }
+    }
+
+    public void clearIoRecycleCallback() {
+        synchronized (ioRecycleCallbacks) {
+            ioRecycleCallbacks.clear();
+        }
+    }
+
+    public void addIoAllocateCallback(ITestOpCallback<ILSMMemoryComponent> callback) {
+        synchronized (ioAllocateCallbacks) {
+            ioAllocateCallbacks.add(callback);
+        }
+    }
+
+    public void clearIoAllocateCallback() {
+        synchronized (ioAllocateCallbacks) {
+            ioAllocateCallbacks.clear();
+        }
+    }
+
+    public List<ITestOpCallback<Semaphore>> getSearchCallbacks() {
         return searchCallbacks;
     }
 
@@ -225,13 +271,13 @@ public class TestLsmBtree extends LSMBTree {
         }
     }
 
-    public void addSearchCallback(ITestOpCallback searchCallback) {
+    public void addSearchCallback(ITestOpCallback<Semaphore> searchCallback) {
         synchronized (searchCallbacks) {
             searchCallbacks.add(searchCallback);
         }
     }
 
-    public void addFlushCallback(ITestOpCallback flushCallback) {
+    public void addFlushCallback(ITestOpCallback<Semaphore> flushCallback) {
         synchronized (flushCallbacks) {
             flushCallbacks.add(flushCallback);
         }
@@ -243,7 +289,7 @@ public class TestLsmBtree extends LSMBTree {
         }
     }
 
-    public void addMergeCallback(ITestOpCallback mergeCallback) {
+    public void addMergeCallback(ITestOpCallback<Semaphore> mergeCallback) {
         synchronized (mergeCallbacks) {
             mergeCallbacks.add(mergeCallback);
         }
@@ -259,7 +305,7 @@ public class TestLsmBtree extends LSMBTree {
         return searchSemaphore;
     }
 
-    public void addAllocateCallback(ITestOpCallback callback) {
+    public void addAllocateCallback(ITestOpCallback<Void> callback) {
         synchronized (allocateComponentCallbacks) {
             allocateComponentCallbacks.add(callback);
         }
@@ -271,13 +317,111 @@ public class TestLsmBtree extends LSMBTree {
         }
     }
 
+    public void addVirtuablBufferCacheCallback(IVirtualBufferCacheCallback callback) {
+        for (IVirtualBufferCache vbc : virtualBufferCaches) {
+            ((TestVirtualBufferCache) vbc).addCallback(callback);
+        }
+    }
+
+    public void clearVirtuablBufferCacheCallbacks() {
+        for (IVirtualBufferCache vbc : virtualBufferCaches) {
+            ((TestVirtualBufferCache) vbc).clearCallbacks();
+        }
+    }
+
     @Override
     public void allocateMemoryComponents() throws HyracksDataException {
-        super.allocateMemoryComponents();
         synchronized (allocateComponentCallbacks) {
-            for (ITestOpCallback callback : allocateComponentCallbacks) {
+            for (ITestOpCallback<Void> callback : allocateComponentCallbacks) {
                 callback(callback, null);
             }
         }
+        super.allocateMemoryComponents();
+        synchronized (allocateComponentCallbacks) {
+            for (ITestOpCallback<Void> callback : allocateComponentCallbacks) {
+                callback.after();
+            }
+        }
     }
+
+    public void beforeIoOperationCalled() {
+        synchronized (ioBeforeCallbacks) {
+            for (ITestOpCallback<Void> callback : ioBeforeCallbacks) {
+                callback.before(null);
+            }
+        }
+    }
+
+    public void beforeIoOperationReturned() {
+        synchronized (ioBeforeCallbacks) {
+            for (ITestOpCallback<Void> callback : ioBeforeCallbacks) {
+                callback.after();
+            }
+        }
+    }
+
+    public void afterIoOperationCalled() {
+        synchronized (ioAfterOpCallbacks) {
+            for (ITestOpCallback<Void> callback : ioAfterOpCallbacks) {
+                callback.before(null);
+            }
+        }
+    }
+
+    public void afterIoOperationReturned() {
+        synchronized (ioAfterOpCallbacks) {
+            for (ITestOpCallback<Void> callback : ioAfterOpCallbacks) {
+                callback.after();
+            }
+        }
+    }
+
+    public void afterIoFinalizeCalled() {
+        synchronized (ioAfterFinalizeCallbacks) {
+            for (ITestOpCallback<Void> callback : ioAfterFinalizeCallbacks) {
+                callback.before(null);
+            }
+        }
+    }
+
+    public void afterIoFinalizeReturned() {
+        synchronized (ioAfterFinalizeCallbacks) {
+            for (ITestOpCallback<Void> callback : ioAfterFinalizeCallbacks) {
+                callback.after();
+            }
+        }
+    }
+
+    public void recycledCalled(ILSMMemoryComponent component) {
+        synchronized (ioRecycleCallbacks) {
+            for (ITestOpCallback<ILSMMemoryComponent> callback : ioRecycleCallbacks) {
+                callback.before(component);
+            }
+        }
+    }
+
+    public void recycledReturned(ILSMMemoryComponent component) {
+        synchronized (ioRecycleCallbacks) {
+            for (ITestOpCallback<ILSMMemoryComponent> callback : ioRecycleCallbacks) {
+                callback.after();
+            }
+        }
+    }
+
+    public void allocatedCalled(ILSMMemoryComponent component) {
+        synchronized (ioAllocateCallbacks) {
+            for (ITestOpCallback<ILSMMemoryComponent> callback : ioAllocateCallbacks) {
+                callback.before(component);
+            }
+        }
+    }
+
+    public void allocatedReturned(ILSMMemoryComponent component) {
+        synchronized (ioAllocateCallbacks) {
+            for (ITestOpCallback<ILSMMemoryComponent> callback : ioAllocateCallbacks) {
+                callback.after();
+            }
+        }
+    }
+
 }

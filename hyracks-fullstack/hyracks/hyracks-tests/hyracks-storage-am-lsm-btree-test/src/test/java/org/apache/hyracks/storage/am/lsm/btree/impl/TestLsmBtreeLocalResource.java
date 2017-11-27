@@ -60,6 +60,13 @@ public class TestLsmBtreeLocalResource extends LSMBTreeLocalResource {
         IIOManager ioManager = serviceCtx.getIoManager();
         FileReference file = ioManager.resolve(path);
         List<IVirtualBufferCache> vbcs = vbcProvider.getVirtualBufferCaches(serviceCtx, file);
+        for (int i = 0; i < vbcs.size(); i++) {
+            IVirtualBufferCache vbc = vbcs.get(i);
+            if (!(vbc instanceof TestVirtualBufferCache)) {
+                vbcs.remove(i);
+                vbcs.add(i, new TestVirtualBufferCache(vbc));
+            }
+        }
         ioOpCallbackFactory.initialize(serviceCtx);
         return TestLsmBtreeUtil.createLSMTree(ioManager, vbcs, file, storageManager.getBufferCache(serviceCtx),
                 typeTraits, cmpFactories, bloomFilterKeyFields, bloomFilterFalsePositiveRate,

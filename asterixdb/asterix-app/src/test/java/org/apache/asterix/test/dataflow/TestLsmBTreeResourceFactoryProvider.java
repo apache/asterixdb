@@ -33,6 +33,7 @@ import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.utils.IndexUtil;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.transaction.management.opcallbacks.PrimaryIndexOperationTrackerFactory;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.data.IBinaryComparatorFactoryProvider;
@@ -68,6 +69,9 @@ public class TestLsmBTreeResourceFactoryProvider implements IResourceFactoryProv
         int[] bloomFilterFields = getBloomFilterFields(dataset, index);
         double bloomFilterFalsePositiveRate = mdProvider.getStorageProperties().getBloomFilterFalsePositiveRate();
         ILSMOperationTrackerFactory opTrackerFactory = dataset.getIndexOperationTrackerFactory(index);
+        if (opTrackerFactory instanceof PrimaryIndexOperationTrackerFactory) {
+            opTrackerFactory = new TestPrimaryIndexOperationTrackerFactory(dataset.getDatasetId());
+        }
         ILSMIOOperationCallbackFactory ioOpCallbackFactory = dataset.getIoOperationCallbackFactory(index);
         IStorageManager storageManager = storageComponentProvider.getStorageManager();
         IMetadataPageManagerFactory metadataPageManagerFactory =
