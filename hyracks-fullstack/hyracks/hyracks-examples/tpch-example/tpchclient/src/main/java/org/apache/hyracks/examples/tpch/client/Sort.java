@@ -19,10 +19,7 @@
 
 package org.apache.hyracks.examples.tpch.client;
 
-import static org.apache.hyracks.examples.tpch.client.Common.createPartitionConstraint;
-import static org.apache.hyracks.examples.tpch.client.Common.orderParserFactories;
-import static org.apache.hyracks.examples.tpch.client.Common.ordersDesc;
-import static org.apache.hyracks.examples.tpch.client.Common.parseFileSplits;
+import static org.apache.hyracks.examples.tpch.client.Common.*;
 
 import java.util.EnumSet;
 
@@ -31,6 +28,7 @@ import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
+import org.apache.hyracks.api.dataflow.value.INormalizedKeyComputerFactory;
 import org.apache.hyracks.api.io.FileSplit;
 import org.apache.hyracks.api.job.JobFlag;
 import org.apache.hyracks.api.job.JobId;
@@ -131,12 +129,12 @@ public class Sort {
         createPartitionConstraint(spec, ordScanner, ordersSplits);
         AbstractSorterOperatorDescriptor sorter;
         if (usingHeapSorter && limit < Integer.MAX_VALUE) {
-            sorter = new TopKSorterOperatorDescriptor(spec, frameLimit, limit, SortFields, null,
-                    SortFieldsComparatorFactories, ordersDesc);
+            sorter = new TopKSorterOperatorDescriptor(spec, frameLimit, limit, SortFields,
+                    (INormalizedKeyComputerFactory) null, SortFieldsComparatorFactories, ordersDesc);
         } else {
             if (memBufferAlg.equalsIgnoreCase("bestfit")) {
-                sorter = new ExternalSortOperatorDescriptor(spec, frameLimit, SortFields,
-                        null, SortFieldsComparatorFactories, ordersDesc, Algorithm.MERGE_SORT,
+                sorter = new ExternalSortOperatorDescriptor(spec, frameLimit, SortFields, null,
+                        SortFieldsComparatorFactories, ordersDesc, Algorithm.MERGE_SORT,
                         EnumFreeSlotPolicy.SMALLEST_FIT, limit);
             } else if (memBufferAlg.equalsIgnoreCase("biggestfit")) {
                 sorter = new ExternalSortOperatorDescriptor(spec, frameLimit, SortFields, null,

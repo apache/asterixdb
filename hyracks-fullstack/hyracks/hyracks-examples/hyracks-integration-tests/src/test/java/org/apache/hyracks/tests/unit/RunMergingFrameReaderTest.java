@@ -19,16 +19,8 @@
 
 package org.apache.hyracks.tests.unit;
 
-import static org.apache.hyracks.tests.unit.AbstractRunGeneratorTest.ComparatorFactories;
-import static org.apache.hyracks.tests.unit.AbstractRunGeneratorTest.GRandom;
-import static org.apache.hyracks.tests.unit.AbstractRunGeneratorTest.RecordDesc;
-import static org.apache.hyracks.tests.unit.AbstractRunGeneratorTest.SortFields;
-import static org.apache.hyracks.tests.unit.AbstractRunGeneratorTest.generateRandomRecord;
-import static org.apache.hyracks.tests.unit.AbstractRunGeneratorTest.matchResult;
-import static org.apache.hyracks.tests.unit.AbstractRunGeneratorTest.prepareData;
-import static org.apache.hyracks.tests.unit.AbstractRunGeneratorTest.testUtils;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.apache.hyracks.tests.unit.AbstractRunGeneratorTest.*;
+import static org.junit.Assert.*;
 
 import java.io.DataInputStream;
 import java.util.ArrayList;
@@ -71,7 +63,7 @@ public class RunMergingFrameReaderTest {
         private final int numFrames;
         private final int minRecordSize;
         private final int maxRecordSize;
-        private TreeMap<Integer, String> result = new TreeMap<>();
+        private final TreeMap<Integer, String> result = new TreeMap<>();
         int maxFrameSize;
 
         ArrayTupleBuilder tb = new ArrayTupleBuilder(RecordDesc.getFieldCount());
@@ -186,8 +178,8 @@ public class RunMergingFrameReaderTest {
         prepareRandomInputRunList(ctx, pageSize, numRuns, numFramesPerRun, minRecordSize, maxRecordSize, readerList,
                 frameList, keyValueMapList);
 
-        RunMergingFrameReader reader = new RunMergingFrameReader(ctx, readerList, frameList, SortFields, Comparators,
-                null, RecordDesc);
+        RunMergingFrameReader reader =
+                new RunMergingFrameReader(ctx, readerList, frameList, SortFields, Comparators, null, RecordDesc);
         testMergeSucceed(ctx, reader, keyValueMapList);
     }
 
@@ -207,8 +199,8 @@ public class RunMergingFrameReaderTest {
         prepareRandomInputRunList(ctx, pageSize, numRuns, numFramesPerRun, minRecordSize, maxRecordSize, readerList,
                 frameList, keyValueMapList);
 
-        RunMergingFrameReader reader = new RunMergingFrameReader(ctx, readerList, frameList, SortFields, Comparators,
-                null, RecordDesc);
+        RunMergingFrameReader reader =
+                new RunMergingFrameReader(ctx, readerList, frameList, SortFields, Comparators, null, RecordDesc);
         testMergeSucceed(ctx, reader, keyValueMapList);
     }
 
@@ -291,8 +283,8 @@ public class RunMergingFrameReaderTest {
         prepareRandomInputRunList(ctx, pageSize, numRuns, numFramesPerRun, minRecordSize, maxRecordSize, readerList,
                 frameList, keyValueMap);
 
-        RunMergingFrameReader reader = new RunMergingFrameReader(ctx, readerList, frameList, SortFields, Comparators,
-                null, RecordDesc);
+        RunMergingFrameReader reader =
+                new RunMergingFrameReader(ctx, readerList, frameList, SortFields, Comparators, null, RecordDesc);
         testMergeSucceed(ctx, reader, keyValueMap);
     }
 
@@ -342,8 +334,8 @@ public class RunMergingFrameReaderTest {
         for (GeneratedRunFileReader run : runGenerator.getRuns()) {
             runs.add(run);
         }
-        RunMergingFrameReader reader = new RunMergingFrameReader(ctx, runs, inFrame, SortFields, Comparators, null,
-                RecordDesc);
+        RunMergingFrameReader reader =
+                new RunMergingFrameReader(ctx, runs, inFrame, SortFields, Comparators, null, RecordDesc);
 
         IFrame outFrame = new VSizeFrame(ctx);
         reader.open();

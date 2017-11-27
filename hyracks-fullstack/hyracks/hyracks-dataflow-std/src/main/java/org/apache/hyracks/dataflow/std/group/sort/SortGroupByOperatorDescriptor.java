@@ -55,39 +55,74 @@ public class SortGroupByOperatorDescriptor extends AbstractSorterOperatorDescrip
     private final RecordDescriptor partialAggRecordDesc;
     private final RecordDescriptor outputRecordDesc;
     private final boolean finalStage;
-    private Algorithm alg = Algorithm.MERGE_SORT;
+    private static final Algorithm ALG = Algorithm.MERGE_SORT;
 
     /**
      * @param spec
-     *            , the Hyracks job specification
+     *            the Hyracks job specification
      * @param framesLimit
-     *            , the frame limit for this operator
+     *            the frame limit for this operator
      * @param sortFields
-     *            , the fields to sort
+     *            the fields to sort
      * @param groupFields
-     *            , the fields to group, which can be a prefix subset of sortFields
+     *            the fields to group, which can be a prefix subset of sortFields
      * @param firstKeyNormalizerFactory
-     *            , the normalized key computer factory of the first key
+     *            the normalized key computer factory of the first key
      * @param comparatorFactories
-     *            , the comparator factories of sort keys
+     *            the comparator factories of sort keys
      * @param partialAggregatorFactory
-     *            , for aggregating the input of this operator
+     *            for aggregating the input of this operator
      * @param mergeAggregatorFactory
-     *            , for aggregating the intermediate data of this operator
+     *            for aggregating the intermediate data of this operator
      * @param partialAggRecordDesc
-     *            , the record descriptor of intermediate data
+     *            the record descriptor of intermediate data
      * @param outRecordDesc
-     *            , the record descriptor of output data
+     *            the record descriptor of output data
      * @param finalStage
-     *            , whether the operator is used for final stage aggregation
+     *            whether the operator is used for final stage aggregation
      */
     public SortGroupByOperatorDescriptor(IOperatorDescriptorRegistry spec, int framesLimit, int[] sortFields,
             int[] groupFields, INormalizedKeyComputerFactory firstKeyNormalizerFactory,
             IBinaryComparatorFactory[] comparatorFactories, IAggregatorDescriptorFactory partialAggregatorFactory,
             IAggregatorDescriptorFactory mergeAggregatorFactory, RecordDescriptor partialAggRecordDesc,
             RecordDescriptor outRecordDesc, boolean finalStage) {
+        this(spec, framesLimit, sortFields, groupFields,
+                firstKeyNormalizerFactory != null ? new INormalizedKeyComputerFactory[] { firstKeyNormalizerFactory }
+                        : null,
+                comparatorFactories, partialAggregatorFactory, mergeAggregatorFactory, partialAggRecordDesc,
+                outRecordDesc, finalStage);
+    }
 
-        super(spec, framesLimit, sortFields, firstKeyNormalizerFactory, comparatorFactories, outRecordDesc);
+    /**
+     * @param spec
+     *            the Hyracks job specification
+     * @param framesLimit
+     *            the frame limit for this operator
+     * @param sortFields
+     *            the fields to sort
+     * @param groupFields
+     *            the fields to group, which can be a prefix subset of sortFields
+     * @param keyNormalizerFactories
+     *            the normalized key computer factories for the prefix the sortFields
+     * @param comparatorFactories
+     *            the comparator factories of sort keys
+     * @param partialAggregatorFactory
+     *            for aggregating the input of this operator
+     * @param mergeAggregatorFactory
+     *            for aggregating the intermediate data of this operator
+     * @param partialAggRecordDesc
+     *            the record descriptor of intermediate data
+     * @param outRecordDesc
+     *            the record descriptor of output data
+     * @param finalStage
+     *            whether the operator is used for final stage aggregation
+     */
+    public SortGroupByOperatorDescriptor(IOperatorDescriptorRegistry spec, int framesLimit, int[] sortFields,
+            int[] groupFields, INormalizedKeyComputerFactory[] keyNormalizerFactories,
+            IBinaryComparatorFactory[] comparatorFactories, IAggregatorDescriptorFactory partialAggregatorFactory,
+            IAggregatorDescriptorFactory mergeAggregatorFactory, RecordDescriptor partialAggRecordDesc,
+            RecordDescriptor outRecordDesc, boolean finalStage) {
+        super(spec, framesLimit, sortFields, keyNormalizerFactories, comparatorFactories, outRecordDesc);
         if (framesLimit <= 1) {
             throw new IllegalStateException();// minimum of 2 fames (1 in,1 out)
         }
@@ -110,8 +145,8 @@ public class SortGroupByOperatorDescriptor extends AbstractSorterOperatorDescrip
                     IRecordDescriptorProvider recordDescriptorProvider) throws HyracksDataException {
                 return new ExternalSortGroupByRunGenerator(ctx, sortFields,
                         recordDescriptorProvider.getInputRecordDescriptor(this.getActivityId(), 0), framesLimit,
-                        groupFields, firstKeyNormalizerFactory, comparatorFactories, partialAggregatorFactory,
-                        partialAggRecordDesc, alg);
+                        groupFields, keyNormalizerFactories, comparatorFactories, partialAggregatorFactory,
+                        partialAggRecordDesc, ALG);
             }
         };
     }

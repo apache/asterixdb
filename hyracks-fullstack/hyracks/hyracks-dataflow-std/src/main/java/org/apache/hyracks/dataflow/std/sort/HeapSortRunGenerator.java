@@ -31,31 +31,31 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.dataflow.common.io.RunFileWriter;
-import org.apache.hyracks.dataflow.std.buffermanager.IFramePool;
 import org.apache.hyracks.dataflow.std.buffermanager.IDeletableTupleBufferManager;
-import org.apache.hyracks.dataflow.std.buffermanager.VariableFramePool;
+import org.apache.hyracks.dataflow.std.buffermanager.IFramePool;
 import org.apache.hyracks.dataflow.std.buffermanager.VariableDeletableTupleMemoryManager;
+import org.apache.hyracks.dataflow.std.buffermanager.VariableFramePool;
 
 public class HeapSortRunGenerator extends AbstractSortRunGenerator {
     protected final IHyracksTaskContext ctx;
     protected final int frameLimit;
     protected final int topK;
     protected final int[] sortFields;
-    protected final INormalizedKeyComputerFactory nmkFactory;
+    protected final INormalizedKeyComputerFactory[] nmkFactories;
     protected final IBinaryComparatorFactory[] comparatorFactories;
     protected final RecordDescriptor recordDescriptor;
     protected ITupleSorter tupleSorter;
     protected IFrameTupleAccessor inAccessor;
 
     public HeapSortRunGenerator(IHyracksTaskContext ctx, int frameLimit, int topK, int[] sortFields,
-            INormalizedKeyComputerFactory firstKeyNormalizerFactory, IBinaryComparatorFactory[] comparatorFactories,
+            INormalizedKeyComputerFactory[] keyNormalizerFactories, IBinaryComparatorFactory[] comparatorFactories,
             RecordDescriptor recordDescriptor) {
         super();
         this.ctx = ctx;
         this.frameLimit = frameLimit;
         this.topK = topK;
         this.sortFields = sortFields;
-        this.nmkFactory = firstKeyNormalizerFactory;
+        this.nmkFactories = keyNormalizerFactories;
         this.comparatorFactories = comparatorFactories;
         this.inAccessor = new FrameTupleAccessor(recordDescriptor);
         this.recordDescriptor = recordDescriptor;
@@ -64,8 +64,9 @@ public class HeapSortRunGenerator extends AbstractSortRunGenerator {
     @Override
     public void open() throws HyracksDataException {
         IFramePool framePool = new VariableFramePool(ctx, (frameLimit - 1) * ctx.getInitialFrameSize());
-        IDeletableTupleBufferManager bufferManager = new VariableDeletableTupleMemoryManager(framePool, recordDescriptor);
-        tupleSorter = new TupleSorterHeapSort(ctx, bufferManager, topK, sortFields, nmkFactory, comparatorFactories);
+        IDeletableTupleBufferManager bufferManager =
+                new VariableDeletableTupleMemoryManager(framePool, recordDescriptor);
+        tupleSorter = new TupleSorterHeapSort(ctx, bufferManager, topK, sortFields, nmkFactories, comparatorFactories);
         super.open();
     }
 
@@ -76,8 +77,8 @@ public class HeapSortRunGenerator extends AbstractSortRunGenerator {
 
     @Override
     protected RunFileWriter getRunFileWriter() throws HyracksDataException {
-        FileReference file = ctx.getJobletContext()
-                .createManagedWorkspaceFile(HeapSortRunGenerator.class.getSimpleName());
+        FileReference file =
+                ctx.getJobletContext().createManagedWorkspaceFile(HeapSortRunGenerator.class.getSimpleName());
         return new RunFileWriter(file, ctx.getIoManager());
     }
 

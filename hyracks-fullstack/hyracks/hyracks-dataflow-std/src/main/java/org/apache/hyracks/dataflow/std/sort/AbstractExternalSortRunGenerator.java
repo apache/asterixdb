@@ -39,24 +39,24 @@ public abstract class AbstractExternalSortRunGenerator extends AbstractSortRunGe
     protected final int maxSortFrames;
 
     public AbstractExternalSortRunGenerator(IHyracksTaskContext ctx, int[] sortFields,
-            INormalizedKeyComputerFactory firstKeyNormalizerFactory, IBinaryComparatorFactory[] comparatorFactories,
+            INormalizedKeyComputerFactory[] keyNormalizerFactories, IBinaryComparatorFactory[] comparatorFactories,
             RecordDescriptor recordDesc, Algorithm alg, int framesLimit) throws HyracksDataException {
-        this(ctx, sortFields, firstKeyNormalizerFactory, comparatorFactories, recordDesc, alg,
-                EnumFreeSlotPolicy.LAST_FIT, framesLimit);
+        this(ctx, sortFields, keyNormalizerFactories, comparatorFactories, recordDesc, alg, EnumFreeSlotPolicy.LAST_FIT,
+                framesLimit);
     }
 
     public AbstractExternalSortRunGenerator(IHyracksTaskContext ctx, int[] sortFields,
-            INormalizedKeyComputerFactory firstKeyNormalizerFactory, IBinaryComparatorFactory[] comparatorFactories,
+            INormalizedKeyComputerFactory[] keyNormalizerFactories, IBinaryComparatorFactory[] comparatorFactories,
             RecordDescriptor recordDesc, Algorithm alg, EnumFreeSlotPolicy policy, int framesLimit)
-                    throws HyracksDataException {
-        this(ctx, sortFields, firstKeyNormalizerFactory, comparatorFactories, recordDesc, alg, policy, framesLimit,
+            throws HyracksDataException {
+        this(ctx, sortFields, keyNormalizerFactories, comparatorFactories, recordDesc, alg, policy, framesLimit,
                 Integer.MAX_VALUE);
     }
 
     public AbstractExternalSortRunGenerator(IHyracksTaskContext ctx, int[] sortFields,
-            INormalizedKeyComputerFactory firstKeyNormalizerFactory, IBinaryComparatorFactory[] comparatorFactories,
+            INormalizedKeyComputerFactory[] keyNormalizerFactories, IBinaryComparatorFactory[] comparatorFactories,
             RecordDescriptor recordDesc, Algorithm alg, EnumFreeSlotPolicy policy, int framesLimit, int outputLimit)
-                    throws HyracksDataException {
+            throws HyracksDataException {
         super();
         this.ctx = ctx;
         maxSortFrames = framesLimit - 1;
@@ -65,11 +65,11 @@ public abstract class AbstractExternalSortRunGenerator extends AbstractSortRunGe
         IFrameBufferManager bufferManager = new VariableFrameMemoryManager(
                 new VariableFramePool(ctx, maxSortFrames * ctx.getInitialFrameSize()), freeSlotPolicy);
         if (alg == Algorithm.MERGE_SORT) {
-            frameSorter = new FrameSorterMergeSort(ctx, bufferManager, sortFields, firstKeyNormalizerFactory,
-                    comparatorFactories, recordDesc, outputLimit);
+            frameSorter = new FrameSorterMergeSort(ctx, bufferManager, maxSortFrames, sortFields,
+                    keyNormalizerFactories, comparatorFactories, recordDesc, outputLimit);
         } else {
-            frameSorter = new FrameSorterQuickSort(ctx, bufferManager, sortFields, firstKeyNormalizerFactory,
-                    comparatorFactories, recordDesc, outputLimit);
+            frameSorter = new FrameSorterQuickSort(ctx, bufferManager, maxSortFrames, sortFields,
+                    keyNormalizerFactories, comparatorFactories, recordDesc, outputLimit);
         }
     }
 

@@ -23,24 +23,27 @@ import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.INormalizedKeyComputerFactory;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.dataflow.std.buffermanager.IFrameBufferManager;
 
 public class FrameSorterMergeSort extends AbstractFrameSorter {
 
     private int[] tPointersTemp;
 
-    public FrameSorterMergeSort(IHyracksTaskContext ctx, IFrameBufferManager bufferManager, int[] sortFields,
-            INormalizedKeyComputerFactory firstKeyNormalizerFactory, IBinaryComparatorFactory[] comparatorFactories,
-            RecordDescriptor recordDescriptor) throws HyracksDataException {
-        this(ctx, bufferManager, sortFields, firstKeyNormalizerFactory, comparatorFactories, recordDescriptor,
-                Integer.MAX_VALUE);
+    public FrameSorterMergeSort(IHyracksTaskContext ctx, IFrameBufferManager bufferManager, int maxSortFrames,
+            int[] sortFields, INormalizedKeyComputerFactory[] keyNormalizerFactories,
+            IBinaryComparatorFactory[] comparatorFactories, RecordDescriptor recordDescriptor)
+            throws HyracksDataException {
+        this(ctx, bufferManager, maxSortFrames, sortFields, keyNormalizerFactories, comparatorFactories,
+                recordDescriptor, Integer.MAX_VALUE);
     }
 
-    public FrameSorterMergeSort(IHyracksTaskContext ctx, IFrameBufferManager bufferManager, int[] sortFields,
-            INormalizedKeyComputerFactory firstKeyNormalizerFactory, IBinaryComparatorFactory[] comparatorFactories,
-            RecordDescriptor recordDescriptor, int outputLimit) throws HyracksDataException {
-        super(ctx, bufferManager, sortFields, firstKeyNormalizerFactory, comparatorFactories, recordDescriptor,
-                outputLimit);
+    public FrameSorterMergeSort(IHyracksTaskContext ctx, IFrameBufferManager bufferManager, int maxSortFrames,
+            int[] sortFields, INormalizedKeyComputerFactory[] keyNormalizerFactories,
+            IBinaryComparatorFactory[] comparatorFactories, RecordDescriptor recordDescriptor, int outputLimit)
+            throws HyracksDataException {
+        super(ctx, bufferManager, maxSortFrames, sortFields, keyNormalizerFactories, comparatorFactories,
+                recordDescriptor, outputLimit);
     }
 
     @Override
@@ -49,6 +52,11 @@ public class FrameSorterMergeSort extends AbstractFrameSorter {
             tPointersTemp = new int[tPointers.length];
         }
         sort(0, tupleCount);
+    }
+
+    @Override
+    protected long getRequiredMemory(FrameTupleAccessor frameAccessor) {
+        return super.getRequiredMemory(frameAccessor) + ptrSize * frameAccessor.getTupleCount() * Integer.BYTES;
     }
 
     @Override
@@ -68,7 +76,7 @@ public class FrameSorterMergeSort extends AbstractFrameSorter {
                 if (next < end) {
                     merge(i, next, step, Math.min(step, end - next));
                 } else {
-                    System.arraycopy(tPointers, i * 4, tPointersTemp, i * 4, (end - i) * 4);
+                    copy(tPointers, i, tPointersTemp, i, end - i);
                 }
             }
             /** prepare next phase merge */
@@ -91,29 +99,21 @@ public class FrameSorterMergeSort extends AbstractFrameSorter {
         while (pos1 <= end1 && pos2 <= end2) {
             int cmp = compare(pos1, pos2);
             if (cmp <= 0) {
-                copy(pos1, targetPos);
+                copy(tPointers, pos1, tPointersTemp, targetPos);
                 pos1++;
             } else {
-                copy(pos2, targetPos);
+                copy(tPointers, pos2, tPointersTemp, targetPos);
                 pos2++;
             }
             targetPos++;
         }
         if (pos1 <= end1) {
             int rest = end1 - pos1 + 1;
-            System.arraycopy(tPointers, pos1 * 4, tPointersTemp, targetPos * 4, rest * 4);
+            copy(tPointers, pos1, tPointersTemp, targetPos, rest);
         }
         if (pos2 <= end2) {
             int rest = end2 - pos2 + 1;
-            System.arraycopy(tPointers, pos2 * 4, tPointersTemp, targetPos * 4, rest * 4);
+            copy(tPointers, pos2, tPointersTemp, targetPos, rest);
         }
     }
-
-    private void copy(int src, int dest) {
-        tPointersTemp[dest * 4 + ID_FRAMEID] = tPointers[src * 4 + ID_FRAMEID];
-        tPointersTemp[dest * 4 + ID_TUPLE_START] = tPointers[src * 4 + ID_TUPLE_START];
-        tPointersTemp[dest * 4 + ID_TUPLE_END] = tPointers[src * 4 + ID_TUPLE_END];
-        tPointersTemp[dest * 4 + ID_NORMAL_KEY] = tPointers[src * 4 + ID_NORMAL_KEY];
-    }
-
 }

@@ -43,9 +43,9 @@ public class HybridTopKSortRunGenerator extends HeapSortRunGenerator {
     private int tupleSorterFlushedTimes = 0;
 
     public HybridTopKSortRunGenerator(IHyracksTaskContext ctx, int frameLimit, int topK, int[] sortFields,
-            INormalizedKeyComputerFactory firstKeyNormalizerFactory, IBinaryComparatorFactory[] comparatorFactories,
+            INormalizedKeyComputerFactory[] keyNormalizerFactories, IBinaryComparatorFactory[] comparatorFactories,
             RecordDescriptor recordDescriptor) {
-        super(ctx, frameLimit, topK, sortFields, firstKeyNormalizerFactory, comparatorFactories, recordDescriptor);
+        super(ctx, frameLimit, topK, sortFields, keyNormalizerFactories, comparatorFactories, recordDescriptor);
     }
 
     @Override
@@ -60,8 +60,8 @@ public class HybridTopKSortRunGenerator extends HeapSortRunGenerator {
 
     @Override
     protected RunFileWriter getRunFileWriter() throws HyracksDataException {
-        FileReference file = ctx.getJobletContext()
-                .createManagedWorkspaceFile(HybridTopKSortRunGenerator.class.getSimpleName());
+        FileReference file =
+                ctx.getJobletContext().createManagedWorkspaceFile(HybridTopKSortRunGenerator.class.getSimpleName());
         return new RunFileWriter(file, ctx.getIoManager());
     }
 
@@ -101,8 +101,8 @@ public class HybridTopKSortRunGenerator extends HeapSortRunGenerator {
                         new VariableFramePool(ctx, (frameLimit - 1) * ctx.getInitialFrameSize()),
                         FrameFreeSlotPolicyFactory.createFreeSlotPolicy(EnumFreeSlotPolicy.BIGGEST_FIT,
                                 frameLimit - 1));
-                frameSorter = new FrameSorterMergeSort(ctx, bufferManager, sortFields, nmkFactory, comparatorFactories,
-                        recordDescriptor, topK);
+                frameSorter = new FrameSorterMergeSort(ctx, bufferManager, frameLimit - 1, sortFields, nmkFactories,
+                        comparatorFactories, recordDescriptor, topK);
                 if (LOG.isLoggable(Level.FINE)) {
                     LOG.fine("create frameSorter");
                 }

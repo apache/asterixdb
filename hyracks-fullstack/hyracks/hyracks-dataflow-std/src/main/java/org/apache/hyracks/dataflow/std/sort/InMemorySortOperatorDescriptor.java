@@ -53,8 +53,8 @@ public class InMemorySortOperatorDescriptor extends AbstractOperatorDescriptor {
     private static final int MERGE_ACTIVITY_ID = 1;
 
     private final int[] sortFields;
-    private INormalizedKeyComputerFactory firstKeyNormalizerFactory;
-    private IBinaryComparatorFactory[] comparatorFactories;
+    private final INormalizedKeyComputerFactory[] keyNormalizerFactories;
+    private final IBinaryComparatorFactory[] comparatorFactories;
 
     public InMemorySortOperatorDescriptor(IOperatorDescriptorRegistry spec, int[] sortFields,
             IBinaryComparatorFactory[] comparatorFactories, RecordDescriptor recordDescriptor) {
@@ -62,11 +62,11 @@ public class InMemorySortOperatorDescriptor extends AbstractOperatorDescriptor {
     }
 
     public InMemorySortOperatorDescriptor(IOperatorDescriptorRegistry spec, int[] sortFields,
-            INormalizedKeyComputerFactory firstKeyNormalizerFactory, IBinaryComparatorFactory[] comparatorFactories,
+            INormalizedKeyComputerFactory[] keyNormalizerFactories, IBinaryComparatorFactory[] comparatorFactories,
             RecordDescriptor recordDescriptor) {
         super(spec, 1, 1);
         this.sortFields = sortFields;
-        this.firstKeyNormalizerFactory = firstKeyNormalizerFactory;
+        this.keyNormalizerFactories = keyNormalizerFactories;
         this.comparatorFactories = comparatorFactories;
         outRecDescs[0] = recordDescriptor;
     }
@@ -123,8 +123,9 @@ public class InMemorySortOperatorDescriptor extends AbstractOperatorDescriptor {
                             new VariableFramePool(ctx, VariableFramePool.UNLIMITED_MEMORY),
                             FrameFreeSlotPolicyFactory.createFreeSlotPolicy(EnumFreeSlotPolicy.LAST_FIT));
 
-                    state.frameSorter = new FrameSorterMergeSort(ctx, frameBufferManager, sortFields,
-                            firstKeyNormalizerFactory, comparatorFactories, outRecDescs[0]);
+                    state.frameSorter =
+                            new FrameSorterMergeSort(ctx, frameBufferManager, VariableFramePool.UNLIMITED_MEMORY,
+                                    sortFields, keyNormalizerFactories, comparatorFactories, outRecDescs[0]);
                     state.frameSorter.reset();
                 }
 

@@ -21,7 +21,6 @@ package org.apache.hyracks.dataflow.common.data.normalizers;
 import org.apache.hyracks.api.dataflow.value.INormalizedKeyComputer;
 import org.apache.hyracks.api.dataflow.value.INormalizedKeyComputerFactory;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
-import org.apache.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 
 public class IntegerNormalizedKeyComputerFactory implements INormalizedKeyComputerFactory {
     private static final long serialVersionUID = 1L;
@@ -32,8 +31,13 @@ public class IntegerNormalizedKeyComputerFactory implements INormalizedKeyComput
             @Override
             public int normalize(byte[] bytes, int start, int length) {
                 int value = IntegerPointable.getInteger(bytes, start);
-                return value ^Integer.MIN_VALUE;
+                return value ^ Integer.MIN_VALUE;
             }
         };
+    }
+
+    @Override
+    public boolean isDecisive() {
+        return true;
     }
 }

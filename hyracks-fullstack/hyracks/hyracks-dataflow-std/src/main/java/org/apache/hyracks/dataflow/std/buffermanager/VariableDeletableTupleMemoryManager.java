@@ -170,8 +170,8 @@ public class VariableDeletableTupleMemoryManager implements IDeletableTupleBuffe
     @Override
     public ITuplePointerAccessor createTuplePointerAccessor() {
         return new AbstractTuplePointerAccessor() {
-            private IAppendDeletableFrameTupleAccessor bufferAccessor = new DeletableFrameTupleAppender(
-                    recordDescriptor);
+            private final IAppendDeletableFrameTupleAccessor bufferAccessor =
+                    new DeletableFrameTupleAppender(recordDescriptor);
 
             @Override
             IFrameTupleAccessor getInnerAccessor() {

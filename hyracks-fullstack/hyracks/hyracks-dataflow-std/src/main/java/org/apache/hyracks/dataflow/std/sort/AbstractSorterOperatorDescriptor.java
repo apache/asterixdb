@@ -56,17 +56,17 @@ public abstract class AbstractSorterOperatorDescriptor extends AbstractOperatorD
     protected static final int MERGE_ACTIVITY_ID = 1;
 
     protected final int[] sortFields;
-    protected final INormalizedKeyComputerFactory firstKeyNormalizerFactory;
+    protected final INormalizedKeyComputerFactory[] keyNormalizerFactories;
     protected final IBinaryComparatorFactory[] comparatorFactories;
     protected final int framesLimit;
 
     public AbstractSorterOperatorDescriptor(IOperatorDescriptorRegistry spec, int framesLimit, int[] sortFields,
-            INormalizedKeyComputerFactory firstKeyNormalizerFactory, IBinaryComparatorFactory[] comparatorFactories,
+            INormalizedKeyComputerFactory[] keyNormalizerFactories, IBinaryComparatorFactory[] comparatorFactories,
             RecordDescriptor recordDescriptor) {
         super(spec, 1, 1);
         this.framesLimit = framesLimit;
         this.sortFields = sortFields;
-        this.firstKeyNormalizerFactory = firstKeyNormalizerFactory;
+        this.keyNormalizerFactories = keyNormalizerFactories;
         this.comparatorFactories = comparatorFactories;
         outRecDescs[0] = recordDescriptor;
     }
@@ -174,8 +174,8 @@ public abstract class AbstractSorterOperatorDescriptor extends AbstractOperatorD
                     for (int i = 0; i < comparatorFactories.length; ++i) {
                         comparators[i] = comparatorFactories[i].createBinaryComparator();
                     }
-                    INormalizedKeyComputer nmkComputer = firstKeyNormalizerFactory == null ? null
-                            : firstKeyNormalizerFactory.createNormalizedKeyComputer();
+                    INormalizedKeyComputer nmkComputer = keyNormalizerFactories == null ? null
+                            : keyNormalizerFactories[0].createNormalizedKeyComputer();
                     AbstractExternalSortRunMerger merger = getSortRunMerger(ctx, recordDescProvider, writer, sorter,
                             runs, comparators, nmkComputer, framesLimit);
                     merger.process();

@@ -27,18 +27,20 @@ import org.apache.hyracks.dataflow.std.buffermanager.IFrameBufferManager;
 
 public class FrameSorterQuickSort extends AbstractFrameSorter {
 
-    public FrameSorterQuickSort(IHyracksTaskContext ctx, IFrameBufferManager bufferManager, int[] sortFields,
-            INormalizedKeyComputerFactory firstKeyNormalizerFactory, IBinaryComparatorFactory[] comparatorFactories,
-            RecordDescriptor recordDescriptor) throws HyracksDataException {
-        this(ctx, bufferManager, sortFields, firstKeyNormalizerFactory, comparatorFactories, recordDescriptor,
-                Integer.MAX_VALUE);
+    public FrameSorterQuickSort(IHyracksTaskContext ctx, IFrameBufferManager bufferManager, int maxSortFrames,
+            int[] sortFields, INormalizedKeyComputerFactory[] keyNormalizerFactories,
+            IBinaryComparatorFactory[] comparatorFactories, RecordDescriptor recordDescriptor)
+            throws HyracksDataException {
+        this(ctx, bufferManager, maxSortFrames, sortFields, keyNormalizerFactories, comparatorFactories,
+                recordDescriptor, Integer.MAX_VALUE);
     }
 
-    public FrameSorterQuickSort(IHyracksTaskContext ctx, IFrameBufferManager bufferManager, int[] sortFields,
-            INormalizedKeyComputerFactory firstKeyNormalizerFactory, IBinaryComparatorFactory[] comparatorFactories,
-            RecordDescriptor recordDescriptor, int outputLimit) throws HyracksDataException {
-        super(ctx, bufferManager, sortFields, firstKeyNormalizerFactory, comparatorFactories, recordDescriptor,
-                outputLimit);
+    public FrameSorterQuickSort(IHyracksTaskContext ctx, IFrameBufferManager bufferManager, int maxSortFrames,
+            int[] sortFields, INormalizedKeyComputerFactory[] keyNormalizerFactories,
+            IBinaryComparatorFactory[] comparatorFactories, RecordDescriptor recordDescriptor, int outputLimit)
+            throws HyracksDataException {
+        super(ctx, bufferManager, maxSortFrames, sortFields, keyNormalizerFactories, comparatorFactories,
+                recordDescriptor, outputLimit);
     }
 
     @Override
@@ -60,7 +62,7 @@ public class FrameSorterQuickSort extends AbstractFrameSorter {
                     break;
                 }
                 if (cmp == 0) {
-                    swap(tPointers, a++, b);
+                    swap(tPointers, a++, tPointers, b);
                 }
                 ++b;
             }
@@ -70,13 +72,13 @@ public class FrameSorterQuickSort extends AbstractFrameSorter {
                     break;
                 }
                 if (cmp == 0) {
-                    swap(tPointers, c, d--);
+                    swap(tPointers, c, tPointers, d--);
                 }
                 --c;
             }
             if (b > c)
                 break;
-            swap(tPointers, b++, c--);
+            swap(tPointers, b++, tPointers, c--);
         }
 
         int s;
@@ -94,17 +96,9 @@ public class FrameSorterQuickSort extends AbstractFrameSorter {
         }
     }
 
-    private void swap(int x[], int a, int b) {
-        for (int i = 0; i < 4; ++i) {
-            int t = x[a * 4 + i];
-            x[a * 4 + i] = x[b * 4 + i];
-            x[b * 4 + i] = t;
-        }
-    }
-
     private void vecswap(int x[], int a, int b, int n) {
         for (int i = 0; i < n; i++, a++, b++) {
-            swap(x, a, b);
+            swap(x, a, x, b);
         }
     }
 

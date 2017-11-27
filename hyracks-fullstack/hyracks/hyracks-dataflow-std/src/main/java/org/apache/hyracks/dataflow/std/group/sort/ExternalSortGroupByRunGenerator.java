@@ -50,16 +50,25 @@ public class ExternalSortGroupByRunGenerator extends AbstractExternalSortRunGene
             int framesLimit, int[] groupFields, INormalizedKeyComputerFactory firstKeyNormalizerFactory,
             IBinaryComparatorFactory[] comparatorFactories, IAggregatorDescriptorFactory aggregatorFactory,
             RecordDescriptor outRecordDesc, Algorithm alg) throws HyracksDataException {
-        this(ctx, sortFields, inputRecordDesc, framesLimit, groupFields, firstKeyNormalizerFactory, comparatorFactories,
+        this(ctx, sortFields, inputRecordDesc, framesLimit, groupFields,
+                firstKeyNormalizerFactory != null ? new INormalizedKeyComputerFactory[] { firstKeyNormalizerFactory }
+                        : null,
+                comparatorFactories, aggregatorFactory, outRecordDesc, alg, EnumFreeSlotPolicy.LAST_FIT);
+    }
+
+    public ExternalSortGroupByRunGenerator(IHyracksTaskContext ctx, int[] sortFields, RecordDescriptor inputRecordDesc,
+            int framesLimit, int[] groupFields, INormalizedKeyComputerFactory[] keyNormalizerFactories,
+            IBinaryComparatorFactory[] comparatorFactories, IAggregatorDescriptorFactory aggregatorFactory,
+            RecordDescriptor outRecordDesc, Algorithm alg) throws HyracksDataException {
+        this(ctx, sortFields, inputRecordDesc, framesLimit, groupFields, keyNormalizerFactories, comparatorFactories,
                 aggregatorFactory, outRecordDesc, alg, EnumFreeSlotPolicy.LAST_FIT);
     }
 
     public ExternalSortGroupByRunGenerator(IHyracksTaskContext ctx, int[] sortFields, RecordDescriptor inputRecordDesc,
-            int framesLimit, int[] groupFields, INormalizedKeyComputerFactory firstKeyNormalizerFactory,
+            int framesLimit, int[] groupFields, INormalizedKeyComputerFactory[] keyNormalizerFactories,
             IBinaryComparatorFactory[] comparatorFactories, IAggregatorDescriptorFactory aggregatorFactory,
             RecordDescriptor outRecordDesc, Algorithm alg, EnumFreeSlotPolicy policy) throws HyracksDataException {
-        super(ctx, sortFields, firstKeyNormalizerFactory, comparatorFactories, inputRecordDesc, alg, policy,
-                framesLimit);
+        super(ctx, sortFields, keyNormalizerFactories, comparatorFactories, inputRecordDesc, alg, policy, framesLimit);
 
         this.groupFields = groupFields;
         this.comparatorFactories = comparatorFactories;
@@ -70,20 +79,20 @@ public class ExternalSortGroupByRunGenerator extends AbstractExternalSortRunGene
 
     @Override
     protected RunFileWriter getRunFileWriter() throws HyracksDataException {
-        FileReference file = ctx.getJobletContext().createManagedWorkspaceFile(
-                ExternalSortGroupByRunGenerator.class.getSimpleName());
+        FileReference file = ctx.getJobletContext()
+                .createManagedWorkspaceFile(ExternalSortGroupByRunGenerator.class.getSimpleName());
         return new RunFileWriter(file, ctx.getIoManager());
     }
 
     @Override
     protected IFrameWriter getFlushableFrameWriter(RunFileWriter writer) throws HyracksDataException {
         //create group-by comparators
-        IBinaryComparator[] comparators = new IBinaryComparator[Math
-                .min(groupFields.length, comparatorFactories.length)];
+        IBinaryComparator[] comparators =
+                new IBinaryComparator[Math.min(groupFields.length, comparatorFactories.length)];
         for (int i = 0; i < comparators.length; i++) {
             comparators[i] = comparatorFactories[i].createBinaryComparator();
         }
-        return new PreclusteredGroupWriter(ctx, groupFields, comparators, aggregatorFactory,
-                this.inRecordDesc, this.outRecordDesc, writer, true);
+        return new PreclusteredGroupWriter(ctx, groupFields, comparators, aggregatorFactory, this.inRecordDesc,
+                this.outRecordDesc, writer, true);
     }
 }

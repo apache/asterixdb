@@ -39,46 +39,90 @@ import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import org.apache.hyracks.dataflow.common.comm.util.FrameUtils;
 import org.apache.hyracks.dataflow.std.buffermanager.BufferInfo;
 import org.apache.hyracks.dataflow.std.buffermanager.IFrameBufferManager;
+import org.apache.hyracks.dataflow.std.buffermanager.VariableFramePool;
 import org.apache.hyracks.util.IntSerDeUtils;
 
 public abstract class AbstractFrameSorter implements IFrameSorter {
 
     protected Logger LOGGER = Logger.getLogger(AbstractFrameSorter.class.getName());
-    static final int PTR_SIZE = 4;
-    static final int ID_FRAMEID = 0;
-    static final int ID_TUPLE_START = 1;
-    static final int ID_TUPLE_END = 2;
-    static final int ID_NORMAL_KEY = 3;
+    protected static final int ID_FRAME_ID = 0;
+    protected static final int ID_TUPLE_START = 1;
+    protected static final int ID_TUPLE_END = 2;
+    protected static final int ID_NORMALIZED_KEY = 3;
+
+    // the length of each normalized key (in terms of integers)
+    protected final int[] normalizedKeyLength;
+    // the total length of the normalized key (in term of integers)
+    protected final int normalizedKeyTotalLength;
+    // whether the normalized keys can be used to decide orders, even when normalized keys are the same
+    protected final boolean normalizedKeysDecisive;
+
+    protected final int ptrSize;
 
     protected final int[] sortFields;
     protected final IBinaryComparator[] comparators;
-    protected final INormalizedKeyComputer nkc;
+    protected final INormalizedKeyComputer[] nkcs;
     protected final IFrameBufferManager bufferManager;
     protected final FrameTupleAccessor inputTupleAccessor;
     protected final IFrameTupleAppender outputAppender;
     protected final IFrame outputFrame;
     protected final int outputLimit;
 
+    protected final long maxSortMemory;
+    protected long totalMemoryUsed;
     protected int[] tPointers;
+    protected final int[] tmpPointer;
     protected int tupleCount;
 
-    private FrameTupleAccessor fta2;
-    private BufferInfo info = new BufferInfo(null, -1, -1);
+    private final FrameTupleAccessor fta2;
+    private final BufferInfo info = new BufferInfo(null, -1, -1);
 
-    public AbstractFrameSorter(IHyracksTaskContext ctx, IFrameBufferManager bufferManager, int[] sortFields,
-            INormalizedKeyComputerFactory firstKeyNormalizerFactory, IBinaryComparatorFactory[] comparatorFactories,
-            RecordDescriptor recordDescriptor) throws HyracksDataException {
-        this(ctx, bufferManager, sortFields, firstKeyNormalizerFactory, comparatorFactories, recordDescriptor,
-                Integer.MAX_VALUE);
+    public AbstractFrameSorter(IHyracksTaskContext ctx, IFrameBufferManager bufferManager, int maxSortFrames,
+            int[] sortFields, INormalizedKeyComputerFactory[] keyNormalizerFactories,
+            IBinaryComparatorFactory[] comparatorFactories, RecordDescriptor recordDescriptor)
+            throws HyracksDataException {
+        this(ctx, bufferManager, maxSortFrames, sortFields, keyNormalizerFactories, comparatorFactories,
+                recordDescriptor, Integer.MAX_VALUE);
     }
 
-    public AbstractFrameSorter(IHyracksTaskContext ctx, IFrameBufferManager bufferManager, int[] sortFields,
-            INormalizedKeyComputerFactory firstKeyNormalizerFactory, IBinaryComparatorFactory[] comparatorFactories,
-            RecordDescriptor recordDescriptor, int outputLimit)
+    public AbstractFrameSorter(IHyracksTaskContext ctx, IFrameBufferManager bufferManager, int maxSortFrames,
+            int[] sortFields, INormalizedKeyComputerFactory[] normalizedKeyComputerFactories,
+            IBinaryComparatorFactory[] comparatorFactories, RecordDescriptor recordDescriptor, int outputLimit)
             throws HyracksDataException {
         this.bufferManager = bufferManager;
+        if (maxSortFrames == VariableFramePool.UNLIMITED_MEMORY) {
+            this.maxSortMemory = Long.MAX_VALUE;
+        } else {
+            this.maxSortMemory = (long) ctx.getInitialFrameSize() * maxSortFrames;
+        }
         this.sortFields = sortFields;
-        this.nkc = firstKeyNormalizerFactory == null ? null : firstKeyNormalizerFactory.createNormalizedKeyComputer();
+
+        int runningNormalizedKeyTotalLength = 0;
+
+        if (normalizedKeyComputerFactories != null) {
+            int decisivePrefixLength = getDecisivePrefixLength(normalizedKeyComputerFactories);
+
+            // we only take a prefix of the decisive normalized keys, plus at most indecisive normalized keys
+            // ideally, the caller should prepare normalizers in this way, but we just guard here to avoid
+            // computing unncessary normalized keys
+            int normalizedKeys = decisivePrefixLength < normalizedKeyComputerFactories.length ? decisivePrefixLength + 1
+                    : decisivePrefixLength;
+            this.nkcs = new INormalizedKeyComputer[normalizedKeys];
+            this.normalizedKeyLength = new int[normalizedKeys];
+
+            for (int i = 0; i < normalizedKeys; i++) {
+                this.nkcs[i] = normalizedKeyComputerFactories[i].createNormalizedKeyComputer();
+                this.normalizedKeyLength[i] = normalizedKeyComputerFactories[i].getNormalizedKeyLength();
+                runningNormalizedKeyTotalLength += this.normalizedKeyLength[i];
+            }
+            this.normalizedKeysDecisive = decisivePrefixLength == comparatorFactories.length;
+        } else {
+            this.nkcs = null;
+            this.normalizedKeyLength = null;
+            this.normalizedKeysDecisive = false;
+        }
+        this.normalizedKeyTotalLength = runningNormalizedKeyTotalLength;
+        this.ptrSize = ID_NORMALIZED_KEY + normalizedKeyTotalLength;
         this.comparators = new IBinaryComparator[comparatorFactories.length];
         for (int i = 0; i < comparatorFactories.length; ++i) {
             comparators[i] = comparatorFactories[i].createBinaryComparator();
@@ -88,17 +132,24 @@ public abstract class AbstractFrameSorter implements IFrameSorter {
         this.outputFrame = new VSizeFrame(ctx);
         this.outputLimit = outputLimit;
         this.fta2 = new FrameTupleAccessor(recordDescriptor);
+        this.tmpPointer = new int[ptrSize];
     }
 
     @Override
     public void reset() throws HyracksDataException {
         this.tupleCount = 0;
+        this.totalMemoryUsed = 0;
         this.bufferManager.reset();
     }
 
     @Override
     public boolean insertFrame(ByteBuffer inputBuffer) throws HyracksDataException {
-        if (bufferManager.insertFrame(inputBuffer) >= 0) {
+        inputTupleAccessor.reset(inputBuffer);
+        long requiredMemory = getRequiredMemory(inputTupleAccessor);
+        if (totalMemoryUsed + requiredMemory <= maxSortMemory && bufferManager.insertFrame(inputBuffer) >= 0) {
+            // we have enough memory
+            totalMemoryUsed += requiredMemory;
+            tupleCount += inputTupleAccessor.getTupleCount();
             return true;
         }
         if (getFrameCount() == 0) {
@@ -108,36 +159,41 @@ public abstract class AbstractFrameSorter implements IFrameSorter {
         return false;
     }
 
+    protected long getRequiredMemory(FrameTupleAccessor frameAccessor) {
+        return (long) frameAccessor.getBuffer().capacity() + ptrSize * frameAccessor.getTupleCount() * Integer.BYTES;
+    }
+
     @Override
     public void sort() throws HyracksDataException {
-        tupleCount = 0;
-        for (int i = 0; i < bufferManager.getNumFrames(); ++i) {
-            bufferManager.getFrame(i, info);
-            inputTupleAccessor.reset(info.getBuffer(), info.getStartOffset(), info.getLength());
-            tupleCount += inputTupleAccessor.getTupleCount();
-        }
-        if (tPointers == null || tPointers.length < tupleCount * PTR_SIZE) {
-            tPointers = new int[tupleCount * PTR_SIZE];
+        if (tPointers == null || tPointers.length < tupleCount * ptrSize) {
+            tPointers = new int[tupleCount * ptrSize];
         }
         int ptr = 0;
-        int sfIdx = sortFields[0];
         for (int i = 0; i < bufferManager.getNumFrames(); ++i) {
             bufferManager.getFrame(i, info);
             inputTupleAccessor.reset(info.getBuffer(), info.getStartOffset(), info.getLength());
             int tCount = inputTupleAccessor.getTupleCount();
             byte[] array = inputTupleAccessor.getBuffer().array();
-            for (int j = 0; j < tCount; ++j) {
+            int fieldSlotsLength = inputTupleAccessor.getFieldSlotsLength();
+            for (int j = 0; j < tCount; ++j, ++ptr) {
                 int tStart = inputTupleAccessor.getTupleStartOffset(j);
                 int tEnd = inputTupleAccessor.getTupleEndOffset(j);
-                tPointers[ptr * PTR_SIZE + ID_FRAMEID] = i;
-                tPointers[ptr * PTR_SIZE + ID_TUPLE_START] = tStart;
-                tPointers[ptr * PTR_SIZE + ID_TUPLE_END] = tEnd;
-                int f0StartRel = inputTupleAccessor.getFieldStartOffset(j, sfIdx);
-                int f0EndRel = inputTupleAccessor.getFieldEndOffset(j, sfIdx);
-                int f0Start = f0StartRel + tStart + inputTupleAccessor.getFieldSlotsLength();
-                tPointers[ptr * PTR_SIZE + ID_NORMAL_KEY] =
-                        nkc == null ? 0 : nkc.normalize(array, f0Start, f0EndRel - f0StartRel);
-                ++ptr;
+                tPointers[ptr * ptrSize + ID_FRAME_ID] = i;
+                tPointers[ptr * ptrSize + ID_TUPLE_START] = tStart;
+                tPointers[ptr * ptrSize + ID_TUPLE_END] = tEnd;
+                if (nkcs == null) {
+                    continue;
+                }
+                int keyPos = ptr * ptrSize + ID_NORMALIZED_KEY;
+                for (int k = 0; k < nkcs.length; k++) {
+                    int sortField = sortFields[k];
+                    int fieldStartOffsetRel = inputTupleAccessor.getFieldStartOffset(j, sortField);
+                    int fieldEndOffsetRel = inputTupleAccessor.getFieldEndOffset(j, sortField);
+                    int fieldStartOffset = fieldStartOffsetRel + tStart + fieldSlotsLength;
+                    nkcs[k].normalize(array, fieldStartOffset, fieldEndOffsetRel - fieldStartOffsetRel, tPointers,
+                            keyPos);
+                    keyPos += normalizedKeyLength[k];
+                }
             }
         }
         if (tupleCount > 0) {
@@ -164,9 +220,9 @@ public abstract class AbstractFrameSorter implements IFrameSorter {
         int limit = Math.min(tupleCount, outputLimit);
         int io = 0;
         for (int ptr = 0; ptr < limit; ++ptr) {
-            int i = tPointers[ptr * PTR_SIZE + ID_FRAMEID];
-            int tStart = tPointers[ptr * PTR_SIZE + ID_TUPLE_START];
-            int tEnd = tPointers[ptr * PTR_SIZE + ID_TUPLE_END];
+            int i = tPointers[ptr * ptrSize + ID_FRAME_ID];
+            int tStart = tPointers[ptr * ptrSize + ID_TUPLE_START];
+            int tEnd = tPointers[ptr * ptrSize + ID_TUPLE_END];
             bufferManager.getFrame(i, info);
             inputTupleAccessor.reset(info.getBuffer(), info.getStartOffset(), info.getLength());
             int flushed = FrameUtils.appendToWriter(writer, outputAppender, inputTupleAccessor, tStart, tEnd);
@@ -185,19 +241,23 @@ public abstract class AbstractFrameSorter implements IFrameSorter {
     }
 
     protected final int compare(int tp1, int tp2) throws HyracksDataException {
-        int i1 = tPointers[tp1 * 4 + ID_FRAMEID];
-        int j1 = tPointers[tp1 * 4 + ID_TUPLE_START];
-        int v1 = tPointers[tp1 * 4 + ID_NORMAL_KEY];
+        return compare(tPointers, tp1, tPointers, tp2);
+    }
 
-        int tp2i = tPointers[tp2 * 4 + ID_FRAMEID];
-        int tp2j = tPointers[tp2 * 4 + ID_TUPLE_START];
-        int tp2v = tPointers[tp2 * 4 + ID_NORMAL_KEY];
-
-        if (v1 != tp2v) {
-            return ((((long) v1) & 0xffffffffL) < (((long) tp2v) & 0xffffffffL)) ? -1 : 1;
+    protected final int compare(int[] tPointers1, int tp1, int[] tPointers2, int tp2) throws HyracksDataException {
+        if (nkcs != null) {
+            int cmpNormalizedKey = compareNormalizeKeys(tPointers1, tp1 * ptrSize + ID_NORMALIZED_KEY, tPointers2,
+                    tp2 * ptrSize + ID_NORMALIZED_KEY, normalizedKeyTotalLength);
+            if (cmpNormalizedKey != 0 || normalizedKeysDecisive) {
+                return cmpNormalizedKey;
+            }
         }
-        int i2 = tp2i;
-        int j2 = tp2j;
+
+        int i1 = tPointers1[tp1 * ptrSize + ID_FRAME_ID];
+        int j1 = tPointers1[tp1 * ptrSize + ID_TUPLE_START];
+        int i2 = tPointers2[tp2 * ptrSize + ID_FRAME_ID];
+        int j2 = tPointers2[tp2 * ptrSize + ID_TUPLE_START];
+
         bufferManager.getFrame(i1, info);
         byte[] b1 = info.getBuffer().array();
         inputTupleAccessor.reset(info.getBuffer(), info.getStartOffset(), info.getLength());
@@ -221,6 +281,43 @@ public abstract class AbstractFrameSorter implements IFrameSorter {
             }
         }
         return 0;
+    }
+
+    public static int compareNormalizeKeys(int[] keys1, int start1, int[] keys2, int start2, int length) {
+        for (int i = 0; i < length; i++) {
+            int key1 = keys1[start1 + i];
+            int key2 = keys2[start2 + i];
+            if (key1 != key2) {
+                return (((key1) & 0xffffffffL) < ((key2) & 0xffffffffL)) ? -1 : 1;
+            }
+        }
+        return 0;
+    }
+
+    public static int getDecisivePrefixLength(INormalizedKeyComputerFactory[] keyNormalizerFactories) {
+        if (keyNormalizerFactories == null) {
+            return 0;
+        }
+        for (int i = 0; i < keyNormalizerFactories.length; i++) {
+            if (!keyNormalizerFactories[i].isDecisive()) {
+                return i;
+            }
+        }
+        return keyNormalizerFactories.length;
+    }
+
+    protected void swap(int pointers1[], int pos1, int pointers2[], int pos2) {
+        System.arraycopy(pointers1, pos1 * ptrSize, tmpPointer, 0, ptrSize);
+        System.arraycopy(pointers2, pos2 * ptrSize, pointers1, pos1 * ptrSize, ptrSize);
+        System.arraycopy(tmpPointer, 0, pointers2, pos2 * ptrSize, ptrSize);
+    }
+
+    protected void copy(int src[], int srcPos, int dest[], int destPos) {
+        System.arraycopy(src, srcPos * ptrSize, dest, destPos * ptrSize, ptrSize);
+    }
+
+    protected void copy(int src[], int srcPos, int dest[], int destPos, int n) {
+        System.arraycopy(src, srcPos * ptrSize, dest, destPos * ptrSize, n * ptrSize);
     }
 
     @Override

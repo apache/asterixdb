@@ -39,10 +39,18 @@ public class InMemorySortRuntimeFactory extends AbstractOneInputOneOutputRuntime
     private static final long serialVersionUID = 1L;
 
     private final int[] sortFields;
-    private INormalizedKeyComputerFactory firstKeyNormalizerFactory;
-    private IBinaryComparatorFactory[] comparatorFactories;
+    private final INormalizedKeyComputerFactory[] keyNormalizerFactories;
+    private final IBinaryComparatorFactory[] comparatorFactories;
 
     public InMemorySortRuntimeFactory(int[] sortFields, INormalizedKeyComputerFactory firstKeyNormalizerFactory,
+            IBinaryComparatorFactory[] comparatorFactories, int[] projectionList) {
+        this(sortFields,
+                firstKeyNormalizerFactory != null ? new INormalizedKeyComputerFactory[] { firstKeyNormalizerFactory }
+                        : null,
+                comparatorFactories, projectionList);
+    }
+
+    public InMemorySortRuntimeFactory(int[] sortFields, INormalizedKeyComputerFactory[] keyNormalizerFactories,
             IBinaryComparatorFactory[] comparatorFactories, int[] projectionList) {
         super(projectionList);
         // Obs: the projection list is currently ignored.
@@ -50,7 +58,7 @@ public class InMemorySortRuntimeFactory extends AbstractOneInputOneOutputRuntime
             throw new NotImplementedException("Cannot push projection into InMemorySortRuntime.");
         }
         this.sortFields = sortFields;
-        this.firstKeyNormalizerFactory = firstKeyNormalizerFactory;
+        this.keyNormalizerFactories = keyNormalizerFactories;
         this.comparatorFactories = comparatorFactories;
     }
 
@@ -67,8 +75,8 @@ public class InMemorySortRuntimeFactory extends AbstractOneInputOneOutputRuntime
                     IFrameBufferManager manager = new VariableFrameMemoryManager(
                             new VariableFramePool(ctx, VariableFramePool.UNLIMITED_MEMORY),
                             FrameFreeSlotPolicyFactory.createFreeSlotPolicy(EnumFreeSlotPolicy.LAST_FIT));
-                    frameSorter = new FrameSorterMergeSort(ctx, manager, sortFields, firstKeyNormalizerFactory,
-                            comparatorFactories, outputRecordDesc);
+                    frameSorter = new FrameSorterMergeSort(ctx, manager, VariableFramePool.UNLIMITED_MEMORY, sortFields,
+                            keyNormalizerFactories, comparatorFactories, outputRecordDesc);
                 }
                 frameSorter.reset();
             }

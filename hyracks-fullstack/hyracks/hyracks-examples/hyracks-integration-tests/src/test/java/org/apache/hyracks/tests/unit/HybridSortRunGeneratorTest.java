@@ -25,31 +25,24 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.normalizers.IntegerNormalizedKeyComputerFactory;
 import org.apache.hyracks.dataflow.common.data.normalizers.UTF8StringNormalizedKeyComputerFactory;
 import org.apache.hyracks.dataflow.std.sort.AbstractSortRunGenerator;
-import org.apache.hyracks.dataflow.std.sort.HeapSortRunGenerator;
-import org.junit.Test;
+import org.apache.hyracks.dataflow.std.sort.HybridTopKSortRunGenerator;
 
-public class HeapSortRunGeneratorTest extends AbstractRunGeneratorTest {
+public class HybridSortRunGeneratorTest extends AbstractRunGeneratorTest {
     @Override
     AbstractSortRunGenerator[] getSortRunGenerator(IHyracksTaskContext ctx, int frameLimit, int numOfInputRecord)
             throws HyracksDataException {
-        HeapSortRunGenerator runGenerator = new HeapSortRunGenerator(ctx, frameLimit, numOfInputRecord, SortFields,
-                null, ComparatorFactories, RecordDesc);
-        HeapSortRunGenerator runGeneratorWithOneNormalizedKey =
-                new HeapSortRunGenerator(ctx, frameLimit, numOfInputRecord, SortFields,
+        HybridTopKSortRunGenerator runGenerator = new HybridTopKSortRunGenerator(ctx, frameLimit, numOfInputRecord,
+                SortFields, null, ComparatorFactories, RecordDesc);
+        HybridTopKSortRunGenerator runGeneratorWithOneNormalizedKey =
+                new HybridTopKSortRunGenerator(ctx, frameLimit, numOfInputRecord, SortFields,
                         new INormalizedKeyComputerFactory[] { new IntegerNormalizedKeyComputerFactory() },
                         ComparatorFactories, RecordDesc);
-        HeapSortRunGenerator runGeneratorWithNormalizedKeys = new HeapSortRunGenerator(ctx, frameLimit,
+        HybridTopKSortRunGenerator runGeneratorWithNormalizedKeys = new HybridTopKSortRunGenerator(ctx, frameLimit,
                 numOfInputRecord, SortFields, new INormalizedKeyComputerFactory[] {
                         new IntegerNormalizedKeyComputerFactory(), new UTF8StringNormalizedKeyComputerFactory() },
                 ComparatorFactories, RecordDesc);
 
         return new AbstractSortRunGenerator[] { runGenerator, runGeneratorWithOneNormalizedKey,
                 runGeneratorWithNormalizedKeys };
-
-    }
-
-    @Test
-    public void testTopK() {
-
     }
 }
