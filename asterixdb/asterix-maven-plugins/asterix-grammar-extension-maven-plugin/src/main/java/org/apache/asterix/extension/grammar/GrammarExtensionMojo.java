@@ -134,6 +134,9 @@ public class GrammarExtensionMojo extends AbstractMojo {
     @Override
     public void execute() throws MojoExecutionException {
         base = new File(base).getAbsolutePath();
+        gbase = resolvePath(gbase);
+        gextension = resolvePath(gextension);
+        output = resolvePath(output);
         getLog().info("Base dir: " + base);
         getLog().info("Grammar-base: " + gbase);
         getLog().info("Grammar-extension: " + gextension);
@@ -141,6 +144,10 @@ public class GrammarExtensionMojo extends AbstractMojo {
         processBase();
         processExtension();
         generateOutput();
+    }
+
+    private String resolvePath(String path) {
+        return new File(path).isAbsolute() ? path : new File(base, path).getAbsolutePath();
     }
 
     private void generateOutput() throws MojoExecutionException {
@@ -472,7 +479,7 @@ public class GrammarExtensionMojo extends AbstractMojo {
     }
 
     private void processBase() throws MojoExecutionException {
-        try (BufferedReader reader = Files.newBufferedReader(Paths.get(base, gbase), StandardCharsets.UTF_8)) {
+        try (BufferedReader reader = Files.newBufferedReader(Paths.get(gbase), StandardCharsets.UTF_8)) {
             StringBuilder identifier = new StringBuilder();
             while ((position.line = reader.readLine()) != null) {
                 if (position.line.trim().startsWith("//")) {
@@ -693,7 +700,7 @@ public class GrammarExtensionMojo extends AbstractMojo {
     }
 
     private void processExtension() throws MojoExecutionException {
-        try (BufferedReader reader = Files.newBufferedReader(Paths.get(base, gextension), StandardCharsets.UTF_8)) {
+        try (BufferedReader reader = Files.newBufferedReader(Paths.get(gextension), StandardCharsets.UTF_8)) {
             StringBuilder identifier = new StringBuilder();
             String nextOperation = OVERRIDEPRODUCTION;
             while (read || (position.line = reader.readLine()) != null) {
@@ -989,7 +996,7 @@ public class GrammarExtensionMojo extends AbstractMojo {
 
     private File prepareOutputFile() throws MojoExecutionException {
         // write output
-        File outputFile = new File(base, output);
+        File outputFile = new File(output);
         if (outputFile.exists() && (!outputFile.delete())) {
             throw new MojoExecutionException("Unable to delete file " + output);
         }
