@@ -149,7 +149,6 @@
             <exclude>**/*.adm</exclude>
             <exclude>asterix-experiments/**</exclude> <!-- in case -DskipExperiments -->
             <exclude>asterix-installer/**</exclude> <!-- in case -DskipInstaller -->
-            <exclude>asterix-yarn/**</exclude> <!-- in case -DskipYarn -->
           </excludes>
         </configuration>
       </plugin>
@@ -667,17 +666,6 @@
       </activation>
       <modules>
         <module>asterix-installer</module>
-      </modules>
-    </profile>
-    <profile>
-      <id>include-yarn</id>
-      <activation>
-        <property>
-          <name>!skipYarn</name>
-        </property>
-      </activation>
-      <modules>
-        <module>asterix-yarn</module>
       </modules>
     </profile>
     <profile>
