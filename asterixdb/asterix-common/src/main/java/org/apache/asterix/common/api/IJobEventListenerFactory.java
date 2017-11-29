@@ -22,9 +22,9 @@ import org.apache.asterix.common.transactions.TxnId;
 import org.apache.hyracks.api.job.IJobletEventListenerFactory;
 
 /**
- * an interface for JobEventListenerFactories to add Asterix transaction JobId getter
+ * an interface for JobEventListenerFactories to add Asterix txnId getter
  */
 public interface IJobEventListenerFactory extends IJobletEventListenerFactory {
 
-    TxnId getTxnId(TxnId compiledTxnId);
+    TxnId getTxnId(int datasetId);
 }

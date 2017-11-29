@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.metadata.utils;
 
-import static org.apache.hyracks.storage.am.common.dataflow.IndexDropOperatorDescriptor.*;
+import static org.apache.hyracks.storage.am.common.dataflow.IndexDropOperatorDescriptor.DropOption;
 
 import java.util.EnumSet;
 import java.util.List;
@@ -161,13 +161,12 @@ public class IndexUtil {
      *            the metadata provider.
      * @return the AsterixDB job id for transaction management.
      */
-    public static TxnId bindJobEventListener(JobSpecification spec, MetadataProvider metadataProvider) {
+    public static void bindJobEventListener(JobSpecification spec, MetadataProvider metadataProvider) {
         TxnId txnId = TxnIdFactory.create();
         metadataProvider.setTxnId(txnId);
         boolean isWriteTransaction = metadataProvider.isWriteTransaction();
         IJobletEventListenerFactory jobEventListenerFactory = new JobEventListenerFactory(txnId, isWriteTransaction);
         spec.setJobletEventListenerFactory(jobEventListenerFactory);
-        return txnId;
     }
 
 }

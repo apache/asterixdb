@@ -48,12 +48,8 @@ public class JobEventListenerFactory implements IJobEventListenerFactory {
         this.transactionalWrite = transactionalWrite;
     }
 
-    public TxnId getTxnId() {
-        return txnId;
-    }
-
     @Override
-    public TxnId getTxnId(TxnId compiledTxnId) {
+    public TxnId getTxnId(int datasetId) {
         return txnId;
     }
 

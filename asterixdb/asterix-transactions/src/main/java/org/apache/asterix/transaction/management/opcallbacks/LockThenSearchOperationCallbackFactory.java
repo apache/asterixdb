@@ -25,7 +25,6 @@ import org.apache.asterix.common.transactions.AbstractOperationCallbackFactory;
 import org.apache.asterix.common.transactions.DatasetId;
 import org.apache.asterix.common.transactions.ITransactionContext;
 import org.apache.asterix.common.transactions.ITransactionSubsystem;
-import org.apache.asterix.common.transactions.TxnId;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -37,9 +36,9 @@ public class LockThenSearchOperationCallbackFactory extends AbstractOperationCal
 
     private static final long serialVersionUID = 1L;
 
-    public LockThenSearchOperationCallbackFactory(TxnId txnId, int datasetId, int[] entityIdFields,
+    public LockThenSearchOperationCallbackFactory(int datasetId, int[] entityIdFields,
             ITransactionSubsystemProvider txnSubsystemProvider, byte resourceType) {
-        super(txnId, datasetId, entityIdFields, txnSubsystemProvider, resourceType);
+        super(datasetId, entityIdFields, txnSubsystemProvider, resourceType);
     }
 
     @Override
@@ -49,7 +48,7 @@ public class LockThenSearchOperationCallbackFactory extends AbstractOperationCal
         try {
             IJobletEventListenerFactory fact = ctx.getJobletContext().getJobletEventListenerFactory();
             ITransactionContext txnCtx = txnSubsystem.getTransactionManager()
-                    .getTransactionContext(((IJobEventListenerFactory) fact).getTxnId(txnId));
+                    .getTransactionContext(((IJobEventListenerFactory) fact).getTxnId(datasetId));
             return new LockThenSearchOperationCallback(new DatasetId(datasetId), resourceId, primaryKeyFields,
                     txnSubsystem, txnCtx, operatorNodePushable);
         } catch (ACIDException e) {
