@@ -147,7 +147,6 @@
             <exclude>src/main/licenses/**</exclude>
             <exclude>**/*.iml</exclude>
             <exclude>**/*.adm</exclude>
-            <exclude>asterix-experiments/**</exclude> <!-- in case -DskipExperiments -->
             <exclude>asterix-installer/**</exclude> <!-- in case -DskipInstaller -->
           </excludes>
         </configuration>
@@ -666,17 +665,6 @@
       </activation>
       <modules>
         <module>asterix-installer</module>
-      </modules>
-    </profile>
-    <profile>
-      <id>include-experiments</id>
-      <activation>
-        <property>
-          <name>!skipExperiments</name>
-        </property>
-      </activation>
-      <modules>
-        <module>asterix-experiments</module>
       </modules>
     </profile>
   </profiles>
