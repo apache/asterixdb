@@ -20,6 +20,7 @@
 package org.apache.hyracks.storage.am.rtree;
 
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.dataflow.common.data.marshalling.DoubleSerializerDeserializer;
 import org.apache.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
@@ -62,10 +63,20 @@ public abstract class AbstractRTreeDeleteTest extends AbstractRTreeTestDriver {
                 rTreeTestUtils.checkScan(ctx);
                 rTreeTestUtils.checkDiskOrderScan(ctx);
                 rTreeTestUtils.checkRangeSearch(ctx, key);
+                afterDeleteRound(ctx);
             }
+            afterInsertRound(ctx);
         }
         ctx.getIndex().deactivate();
         ctx.getIndex().destroy();
+    }
+
+    protected void afterInsertRound(AbstractRTreeTestContext ctx) throws HyracksDataException {
+
+    }
+
+    protected void afterDeleteRound(AbstractRTreeTestContext ctx) throws HyracksDataException {
+
     }
 
     @Override
