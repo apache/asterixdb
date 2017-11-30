@@ -18,7 +18,7 @@
  */
 package org.apache.hyracks.storage.am.lsm.common.impls;
 
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
@@ -61,9 +61,9 @@ public abstract class AbstractLSMIndexOperationContext implements ILSMIndexOpera
         this.index = index;
         this.searchCallback = searchCallback;
         this.modificationCallback = modificationCallback;
-        this.componentHolder = new LinkedList<>();
-        this.componentsToBeMerged = new LinkedList<>();
-        this.componentsToBeReplicated = new LinkedList<>();
+        this.componentHolder = new ArrayList<>();
+        this.componentsToBeMerged = new ArrayList<>();
+        this.componentsToBeReplicated = new ArrayList<>();
         if (filterFields != null) {
             indexTuple = new PermutingTupleReference(treeFields);
             filterCmp = MultiComparator.create(filterCmpFactories);

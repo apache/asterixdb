@@ -163,7 +163,7 @@ public class LSMBTreePointSearchCursor implements ITreeIndexCursor {
         searchCallback = lsmInitialState.getSearchOperationCallback();
         predicate = (RangePredicate) lsmInitialState.getSearchPredicate();
         numBTrees = operationalComponents.size();
-        if (rangeCursors == null || rangeCursors.length != numBTrees) {
+        if (rangeCursors == null || rangeCursors.length < numBTrees) {
             // object creation: should be relatively low
             rangeCursors = new BTreeRangeSearchCursor[numBTrees];
             btreeAccessors = new BTreeAccessor[numBTrees];
@@ -270,7 +270,7 @@ public class LSMBTreePointSearchCursor implements ITreeIndexCursor {
 
     private void closeCursors() throws HyracksDataException {
         if (rangeCursors != null) {
-            for (int i = 0; i < rangeCursors.length; ++i) {
+            for (int i = 0; i < numBTrees; ++i) {
                 if (rangeCursors[i] != null) {
                     rangeCursors[i].close();
                 }
