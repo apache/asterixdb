@@ -59,8 +59,8 @@ public class MigrateStorageResourcesTaskTest {
     public void storageStructureMigration() throws Exception {
         Function<IndexPathElements, String> legacyIndexPathProvider = (pathElements) ->
                 (pathElements.getRebalanceCount().equals("0") ? "" : pathElements.getRebalanceCount() + File.separator)
-                        + pathElements.getDatasetName() + StoragePathUtil.DATASET_INDEX_NAME_SEPARATOR + pathElements
-                        .getIndexName();
+                        + pathElements.getDatasetName() + StorageConstants.LEGACY_DATASET_INDEX_NAME_SEPARATOR
+                        + pathElements.getIndexName();
         StoragePathUtil.setIndexPathProvider(legacyIndexPathProvider);
         integrationUtil.init(true);
         // create dataset and insert data using legacy structure

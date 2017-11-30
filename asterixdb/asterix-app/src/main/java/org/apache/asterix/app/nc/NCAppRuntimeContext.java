@@ -197,7 +197,7 @@ public class NCAppRuntimeContext implements INcApplicationContext {
                 LOGGER.log(Level.WARNING,
                         "Deleting the storage dir. initialRun = " + initialRun + ", systemState = " + systemState);
             }
-            localResourceRepository.deleteStorageData(true);
+            localResourceRepository.deleteStorageData();
         }
 
         datasetMemoryManager = new DatasetMemoryManager(storageProperties);

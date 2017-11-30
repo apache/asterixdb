@@ -39,6 +39,7 @@ import org.apache.asterix.common.replication.IRemoteRecoveryManager;
 import org.apache.asterix.common.replication.IReplicationManager;
 import org.apache.asterix.common.transactions.ILogManager;
 import org.apache.asterix.common.transactions.IRecoveryManager;
+import org.apache.asterix.common.utils.StorageConstants;
 import org.apache.asterix.replication.storage.ReplicaResourcesManager;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepository;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -191,8 +192,7 @@ public class RemoteRecoveryManager implements IRemoteRecoveryManager {
                 datasetLifeCycleManager.closeAllDatasets();
 
                 //3. remove any existing storage data and initialize storage metadata
-                resourceRepository.deleteStorageData(true);
-                resourceRepository.initializeNewUniverse(ClusterProperties.INSTANCE.getStorageDirectoryName());
+                resourceRepository.deleteStorageData();
 
                 //4. select remote replicas to recover from per lost replica data
                 failbackRecoveryReplicas = constructRemoteRecoveryPlan();
@@ -295,8 +295,7 @@ public class RemoteRecoveryManager implements IRemoteRecoveryManager {
                 datasetLifeCycleManager.closeAllDatasets();
 
                 //2. remove any existing storage data and initialize storage metadata
-                resourceRepository.deleteStorageData(true);
-                resourceRepository.initializeNewUniverse(ClusterProperties.INSTANCE.getStorageDirectoryName());
+                resourceRepository.deleteStorageData();
 
                 /*** Start Recovery Per Lost Replica ***/
                 for (Entry<String, Set<Integer>> remoteReplica : recoveryPlan.entrySet()) {

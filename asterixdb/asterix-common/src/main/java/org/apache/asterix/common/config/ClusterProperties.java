@@ -38,7 +38,6 @@ public class ClusterProperties {
 
     public static final ClusterProperties INSTANCE = new ClusterProperties();
     public static final String CLUSTER_CONFIGURATION_FILE = "cluster.xml";
-    public static final String DEFAULT_STORAGE_DIR_NAME = "storage";
     private String nodeNamePrefix = StringUtils.EMPTY;
     private Cluster cluster;
 
@@ -59,14 +58,6 @@ public class ClusterProperties {
 
     public Cluster getCluster() {
         return cluster;
-    }
-
-    public String getStorageDirectoryName() {
-        if (cluster != null) {
-            return cluster.getStore();
-        }
-        // virtual cluster without cluster config file
-        return DEFAULT_STORAGE_DIR_NAME;
     }
 
     public Node getNodeById(String nodeId) {

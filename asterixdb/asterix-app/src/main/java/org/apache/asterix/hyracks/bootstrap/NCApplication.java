@@ -41,12 +41,12 @@ import org.apache.asterix.common.transactions.Checkpoint;
 import org.apache.asterix.common.transactions.IRecoveryManager;
 import org.apache.asterix.common.transactions.IRecoveryManager.SystemState;
 import org.apache.asterix.common.utils.PrintUtil;
+import org.apache.asterix.common.utils.StorageConstants;
 import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.asterix.event.schema.cluster.Cluster;
 import org.apache.asterix.event.schema.cluster.Node;
 import org.apache.asterix.messaging.MessagingChannelInterfaceFactory;
 import org.apache.asterix.messaging.NCMessageBroker;
-import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepository;
 import org.apache.asterix.utils.CompatibilityUtil;
 import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.application.IServiceContext;
@@ -120,22 +120,13 @@ public class NCApplication extends BaseNCApplication {
         if (latestCheckpoint != null) {
             CompatibilityUtil.ensureCompatibility(controllerService, latestCheckpoint.getStorageVersion());
         }
-        IRecoveryManager recoveryMgr = runtimeContext.getTransactionSubsystem().getRecoveryManager();
-        final SystemState stateOnStartup = recoveryMgr.getSystemState();
-        if (stateOnStartup == SystemState.PERMANENT_DATA_LOSS) {
-            if (LOGGER.isLoggable(Level.INFO)) {
-                LOGGER.info("System state: " + SystemState.PERMANENT_DATA_LOSS);
-                LOGGER.info("Node ID: " + nodeId);
-                LOGGER.info("Stores: " + PrintUtil.toString(metadataProperties.getStores()));
-                LOGGER.info("Root Metadata Store: " + metadataProperties.getStores().get(nodeId)[0]);
-            }
-            PersistentLocalResourceRepository localResourceRepository =
-                    (PersistentLocalResourceRepository) runtimeContext.getLocalResourceRepository();
-            localResourceRepository.initializeNewUniverse(ClusterProperties.INSTANCE.getStorageDirectoryName());
+        if (LOGGER.isLoggable(Level.INFO)) {
+            IRecoveryManager recoveryMgr = runtimeContext.getTransactionSubsystem().getRecoveryManager();
+            LOGGER.info("System state: " + recoveryMgr.getSystemState());
+            LOGGER.info("Node ID: " + nodeId);
+            LOGGER.info("Stores: " + PrintUtil.toString(metadataProperties.getStores()));
         }
-
         webManager = new WebManager();
-
         performLocalCleanUp();
     }
 
@@ -256,7 +247,7 @@ public class NCApplication extends BaseNCApplication {
             for (Node node : nodes) {
                 String ncId = asterixInstanceName + "_" + node.getId();
                 if (ncId.equalsIgnoreCase(nodeId)) {
-                    String storeDir = ClusterProperties.INSTANCE.getStorageDirectoryName();
+                    String storeDir = StorageConstants.STORAGE_ROOT_DIR_NAME;
                     String nodeIoDevices = node.getIodevices() == null ? cluster.getIodevices() : node.getIodevices();
                     String[] ioDevicePaths = nodeIoDevices.trim().split(",");
                     for (int i = 0; i < ioDevicePaths.length; i++) {

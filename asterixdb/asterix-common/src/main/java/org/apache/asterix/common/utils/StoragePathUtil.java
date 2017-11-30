@@ -37,9 +37,8 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 public class StoragePathUtil {
+
     private static final Logger LOGGER = Logger.getLogger(StoragePathUtil.class.getName());
-    public static final String PARTITION_DIR_PREFIX = "partition_";
-    public static final String DATASET_INDEX_NAME_SEPARATOR = "_idx_";
     private static Function<IndexPathElements, String> indexPathProvider;
 
     private StoragePathUtil() {
@@ -60,8 +59,9 @@ public class StoragePathUtil {
         return new MappedFileSplit(partition.getActiveNodeId(), relativePath, partition.getIODeviceNum());
     }
 
-    public static String prepareStoragePartitionPath(String storageDirName, int partitonId) {
-        return storageDirName + File.separator + StoragePathUtil.PARTITION_DIR_PREFIX + partitonId;
+    public static String prepareStoragePartitionPath(int partitonId) {
+        return Paths.get(StorageConstants.STORAGE_ROOT_DIR_NAME, StorageConstants.PARTITION_DIR_PREFIX + partitonId)
+                .toString();
     }
 
     public static String prepareDataverseIndexName(String dataverseName, String datasetName, String idxName,
@@ -80,12 +80,10 @@ public class StoragePathUtil {
         return datasetName + File.separator + rebalanceCount + File.separator + idxName;
     }
 
-    public static int getPartitionNumFromName(String name) {
-        return Integer.parseInt(name.substring(PARTITION_DIR_PREFIX.length()));
-    }
-
     public static int getPartitionNumFromRelativePath(String relativePath) {
-        int startIdx = relativePath.indexOf(PARTITION_DIR_PREFIX) + PARTITION_DIR_PREFIX.length();
+        int startIdx =
+                relativePath.indexOf(StorageConstants.PARTITION_DIR_PREFIX) + StorageConstants.PARTITION_DIR_PREFIX
+                        .length();
         String partition = relativePath.substring(startIdx, relativePath.indexOf(File.separatorChar, startIdx));
         return Integer.parseInt(partition);
     }

@@ -25,8 +25,10 @@ import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
  */
 public class StorageConstants {
 
-    public static final String METADATA_ROOT = "root_metadata";
+    public static final String STORAGE_ROOT_DIR_NAME = "storage";
+    public static final String PARTITION_DIR_PREFIX = "partition_";
     public static final String METADATA_FILE_NAME = ".metadata";
+    public static final String LEGACY_DATASET_INDEX_NAME_SEPARATOR = "_idx_";
 
     /**
      * The storage version of AsterixDB related artifacts (e.g. log files, checkpoint files, etc..).

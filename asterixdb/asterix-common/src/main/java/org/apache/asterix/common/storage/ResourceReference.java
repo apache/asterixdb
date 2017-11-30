@@ -22,7 +22,7 @@ import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import org.apache.asterix.common.utils.StoragePathUtil;
+import org.apache.asterix.common.utils.StorageConstants;
 
 public class ResourceReference {
 
@@ -96,7 +96,7 @@ public class ResourceReference {
         int offset = tokens.length;
         ref.name = tokens[--offset];
         // split combined dataset/index name
-        final String[] indexTokens = tokens[--offset].split(StoragePathUtil.DATASET_INDEX_NAME_SEPARATOR);
+        final String[] indexTokens = tokens[--offset].split(StorageConstants.LEGACY_DATASET_INDEX_NAME_SEPARATOR);
         if (indexTokens.length != 2) {
             throw new IllegalStateException("Unrecognized legacy path structure: " + path);
         }

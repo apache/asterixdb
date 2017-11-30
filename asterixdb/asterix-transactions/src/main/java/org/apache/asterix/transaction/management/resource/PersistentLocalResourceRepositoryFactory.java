@@ -38,6 +38,6 @@ public class PersistentLocalResourceRepositoryFactory implements ILocalResourceR
 
     @Override
     public ILocalResourceRepository createRepository() throws HyracksDataException {
-        return new PersistentLocalResourceRepository(ioManager, ioManager.getIODevices(), nodeId, metadataProperties);
+        return new PersistentLocalResourceRepository(ioManager, nodeId, metadataProperties);
     }
 }
