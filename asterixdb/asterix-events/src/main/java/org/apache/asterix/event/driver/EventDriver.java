@@ -42,7 +42,8 @@ public class EventDriver {
 
     public static final String CLIENT_NODE_ID = "client_node";
     public static final String CLUSTER_IP = "127.0.0.1";
-    public static final Node CLIENT_NODE = new Node(CLIENT_NODE_ID, CLUSTER_IP, null, null, null, null, null, null);
+    public static final Node CLIENT_NODE = new Node(CLIENT_NODE_ID, CLUSTER_IP, null, null, null, null, null, null,
+            null);
 
     private static String eventsDir;
     private static Map<String, String> env = new HashMap<String, String>();

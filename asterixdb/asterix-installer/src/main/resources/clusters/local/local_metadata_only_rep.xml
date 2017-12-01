@@ -72,6 +72,7 @@
     <txn_log_dir>/tmp/asterix/nc1/txnLogs</txn_log_dir>
     <iodevices>/tmp/asterix/nc1/p1,/tmp/asterix/nc1/p2</iodevices>
     <replication_port>2000</replication_port>
+    <nc_api_port>19004</nc_api_port>
   </node>
   <node>
     <id>nc2</id>
@@ -79,5 +80,6 @@
     <txn_log_dir>/tmp/asterix/nc2/txnLogs</txn_log_dir>
     <iodevices>/tmp/asterix/nc2/p1,/tmp/asterix/nc2/p2</iodevices>
     <replication_port>2001</replication_port>
+    <nc_api_port>19005</nc_api_port>
   </node>
 </cluster>

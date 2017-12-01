@@ -22,12 +22,14 @@ import java.io.IOException;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import org.apache.asterix.active.ActiveManager;
 import org.apache.asterix.api.common.AppRuntimeContextProviderForRecovery;
@@ -58,6 +60,7 @@ import org.apache.asterix.common.replication.IRemoteRecoveryManager;
 import org.apache.asterix.common.replication.IReplicaResourcesManager;
 import org.apache.asterix.common.replication.IReplicationChannel;
 import org.apache.asterix.common.replication.IReplicationManager;
+import org.apache.asterix.common.storage.IStorageSubsystem;
 import org.apache.asterix.common.transactions.IAppRuntimeContextProvider;
 import org.apache.asterix.common.transactions.IRecoveryManager;
 import org.apache.asterix.common.transactions.IRecoveryManager.SystemState;
@@ -138,6 +141,7 @@ public class NCAppRuntimeContext implements INcApplicationContext {
     private final NCExtensionManager ncExtensionManager;
     private final IStorageComponentProvider componentProvider;
     private IHyracksClientConnection hcc;
+    private IStorageSubsystem storageSubsystem;
 
     public NCAppRuntimeContext(INCServiceContext ncServiceContext, List<AsterixExtension> extensions)
             throws AsterixException, InstantiationException, IllegalAccessException, ClassNotFoundException,
@@ -204,15 +208,17 @@ public class NCAppRuntimeContext implements INcApplicationContext {
         datasetLifecycleManager =
                 new DatasetLifecycleManager(storageProperties, localResourceRepository, txnSubsystem.getLogManager(),
                         datasetMemoryManager, ioManager.getIODevices().size());
-
+        final String nodeId = getServiceContext().getNodeId();
+        final ClusterPartition[] nodePartitions = metadataProperties.getNodePartitions().get(nodeId);
+        final Set<Integer> nodePartitionsIds = Arrays.stream(nodePartitions).map(ClusterPartition::getPartitionId)
+                .collect(Collectors.toSet());
+        storageSubsystem = new StorageSubsystem(nodePartitionsIds);
         isShuttingdown = false;
-
         activeManager = new ActiveManager(threadExecutor, getServiceContext().getNodeId(),
                 activeProperties.getMemoryComponentGlobalBudget(), compilerProperties.getFrameSize(),
                 this.ncServiceContext);
 
         if (replicationProperties.isParticipant(getServiceContext().getNodeId())) {
-            String nodeId = getServiceContext().getNodeId();
 
             replicaResourcesManager = new ReplicaResourcesManager(localResourceRepository, metadataProperties);
 
@@ -517,5 +523,10 @@ public class NCAppRuntimeContext implements INcApplicationContext {
             }
         }
         return hcc;
+    }
+
+    @Override
+    public IStorageSubsystem getStorageSubsystem() {
+        return storageSubsystem;
     }
 }

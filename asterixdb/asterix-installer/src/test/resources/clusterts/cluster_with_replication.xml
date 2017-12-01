@@ -55,9 +55,11 @@
   <node>
     <id>nc1</id>
     <cluster_ip>10.10.0.3</cluster_ip>
+    <nc_api_port>19004</nc_api_port>
   </node>
   <node>
     <id>nc2</id>
     <cluster_ip>10.10.0.4</cluster_ip>
+    <nc_api_port>19005</nc_api_port>
   </node>
 </cluster>

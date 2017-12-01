@@ -28,6 +28,7 @@ import org.apache.asterix.common.replication.IRemoteRecoveryManager;
 import org.apache.asterix.common.replication.IReplicaResourcesManager;
 import org.apache.asterix.common.replication.IReplicationChannel;
 import org.apache.asterix.common.replication.IReplicationManager;
+import org.apache.asterix.common.storage.IStorageSubsystem;
 import org.apache.asterix.common.transactions.ITransactionSubsystem;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.application.INCServiceContext;
@@ -115,4 +116,6 @@ public interface INcApplicationContext extends IApplicationContext {
 
     @Override
     INCServiceContext getServiceContext();
+
+    IStorageSubsystem getStorageSubsystem();
 }

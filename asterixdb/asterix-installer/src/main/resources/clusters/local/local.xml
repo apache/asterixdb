@@ -51,12 +51,13 @@
     <cluster_ip>127.0.0.1</cluster_ip>
     <txn_log_dir>/tmp/asterix/nc1/txnLogs</txn_log_dir>
     <iodevices>/tmp/asterix/nc1/p1,/tmp/asterix/nc1/p2</iodevices>
-
+    <nc_api_port>19004</nc_api_port>
   </node>
   <node>
     <id>nc2</id>
     <cluster_ip>127.0.0.1</cluster_ip>
     <txn_log_dir>/tmp/asterix/nc2/txnLogs</txn_log_dir>
     <iodevices>/tmp/asterix/nc2/p1,/tmp/asterix/nc2/p2</iodevices>
+    <nc_api_port>19005</nc_api_port>
   </node>
 </cluster>

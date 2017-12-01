@@ -60,17 +60,21 @@
   <node>
     <id>nc1</id>
     <cluster_ip>172.20.0.3</cluster_ip>
+    <nc_api_port>19004</nc_api_port>
   </node>
   <node>
     <id>nc2</id>
     <cluster_ip>172.20.0.4</cluster_ip>
+    <nc_api_port>19005</nc_api_port>
   </node>
   <node>
     <id>nc3</id>
     <cluster_ip>172.20.0.5</cluster_ip>
+    <nc_api_port>19006</nc_api_port>
   </node>
   <node>
     <id>nc4</id>
     <cluster_ip>172.20.0.6</cluster_ip>
+    <nc_api_port>19007</nc_api_port>
   </node>
 </cluster>

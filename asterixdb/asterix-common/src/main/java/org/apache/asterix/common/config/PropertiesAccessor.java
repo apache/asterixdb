@@ -59,6 +59,7 @@ import org.apache.asterix.common.configuration.TransactionLogDir;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.utils.ConfigUtil;
+import org.apache.asterix.event.schema.cluster.Node;
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.config.IApplicationConfig;
@@ -141,6 +142,11 @@ public class PropertiesAccessor implements IApplicationConfig {
                 configManager.set(store.getNcId(), NCConfig.Option.IODEVICES, nodeStores);
                 // marking node as virtual, as we're not using NCServices with old-style config
                 configManager.set(store.getNcId(), NCConfig.Option.NCSERVICE_PORT, NCConfig.NCSERVICE_PORT_DISABLED);
+            }
+            // populate nc api port from cluster properties
+            final ExternalProperties.Option ncApiPort = ExternalProperties.Option.NC_API_PORT;
+            for (Node node : ClusterProperties.INSTANCE.getCluster().getNode()) {
+                configManager.set(node.getId(), ncApiPort, node.getNcApiPort().intValue());
             }
             // Get extensions
             if (asterixConfiguration.getExtensions() != null) {

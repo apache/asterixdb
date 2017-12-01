@@ -45,11 +45,13 @@
     <cluster_ip>127.0.0.1</cluster_ip>
     <txn_log_dir>/tmp/asterix/node1/txnLogs</txn_log_dir>
     <iodevices>/tmp/asterix/node1/1,/tmp/asterix/node1/2</iodevices>
+    <nc_api_port>19004</nc_api_port>
   </node>
   <node>
     <id>node2</id>
     <cluster_ip>127.0.0.1</cluster_ip>
     <txn_log_dir>/tmp/asterix/node2/txnLogs</txn_log_dir>
     <iodevices>/tmp/asterix/node2/1,/tmp/asterix/node2/2</iodevices>
+    <nc_api_port>19005</nc_api_port>
   </node>
 </cluster>

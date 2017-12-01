@@ -25,6 +25,8 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.asterix.api.http.server.ServletConstants;
+import org.apache.asterix.api.http.server.StorageApiServlet;
 import org.apache.asterix.app.nc.NCAppRuntimeContext;
 import org.apache.asterix.app.replication.message.RegistrationTasksRequestMessage;
 import org.apache.asterix.common.api.AsterixThreadFactory;
@@ -41,6 +43,7 @@ import org.apache.asterix.common.transactions.Checkpoint;
 import org.apache.asterix.common.transactions.IRecoveryManager;
 import org.apache.asterix.common.transactions.IRecoveryManager.SystemState;
 import org.apache.asterix.common.utils.PrintUtil;
+import org.apache.asterix.common.utils.Servlets;
 import org.apache.asterix.common.utils.StorageConstants;
 import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.asterix.event.schema.cluster.Cluster;
@@ -59,6 +62,7 @@ import org.apache.hyracks.api.messages.IMessageBroker;
 import org.apache.hyracks.control.common.controllers.NCConfig;
 import org.apache.hyracks.control.nc.BaseNCApplication;
 import org.apache.hyracks.control.nc.NodeControllerService;
+import org.apache.hyracks.http.server.HttpServer;
 import org.apache.hyracks.http.server.WebManager;
 
 public class NCApplication extends BaseNCApplication {
@@ -137,7 +141,11 @@ public class NCApplication extends BaseNCApplication {
     }
 
     protected void configureServers() throws Exception {
-        // override to start web services on NC nodes
+        HttpServer apiServer = new HttpServer(webManager.getBosses(), webManager.getWorkers(),
+                getApplicationContext().getExternalProperties().getNcApiPort());
+        apiServer.setAttribute(ServletConstants.SERVICE_CONTEXT_ATTR, ncServiceCtx);
+        apiServer.addServlet(new StorageApiServlet(apiServer.ctx(), getApplicationContext(), Servlets.STORAGE));
+        webManager.add(apiServer);
     }
 
     protected List<AsterixExtension> getExtensions() {
@@ -210,8 +218,8 @@ public class NCApplication extends BaseNCApplication {
         StorageProperties storageProperties = runtimeContext.getStorageProperties();
         // Deducts the reserved buffer cache size and memory component size from the maxium heap size,
         // and deducts one core for processing heartbeats.
-        long memorySize = Runtime.getRuntime().maxMemory() - storageProperties.getBufferCacheSize()
-                - storageProperties.getMemoryComponentGlobalBudget();
+        long memorySize = Runtime.getRuntime().maxMemory() - storageProperties.getBufferCacheSize() - storageProperties
+                .getMemoryComponentGlobalBudget();
         int allCores = Runtime.getRuntime().availableProcessors();
         int maximumCoresForComputation = allCores > 1 ? allCores - 1 : allCores;
         return new NodeCapacity(memorySize, maximumCoresForComputation);
