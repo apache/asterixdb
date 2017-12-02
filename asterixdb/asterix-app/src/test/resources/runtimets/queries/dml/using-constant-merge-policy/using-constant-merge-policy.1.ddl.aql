@@ -49,6 +49,10 @@ create type LineItemType as closed {
 }
 
 create dataset LineItem(LineItemType)
-  primary key l_orderkey, l_linenumber using compaction policy constant
-(("num-components"="2"));
-
+primary key l_orderkey, l_linenumber
+with {
+  "merge-policy": {
+    "name": "constant",
+    "parameters": { "num-components": 2 }
+  }
+};

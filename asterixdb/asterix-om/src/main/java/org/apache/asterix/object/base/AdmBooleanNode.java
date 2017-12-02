@@ -16,52 +16,44 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.lang.common.base;
+package org.apache.asterix.object.base;
 
-import java.io.Serializable;
+import org.apache.asterix.om.types.ATypeTag;
 
-public abstract class Literal implements Serializable {
-    /**
-     *
-     */
-    private static final long serialVersionUID = -6468144574890768345L;
+public class AdmBooleanNode implements IAdmNode {
 
-    public enum Type {
-        STRING,
-        INTEGER,
-        MISSING,
-        NULL,
-        TRUE,
-        FALSE,
-        FLOAT,
-        DOUBLE,
-        LONG
-    }
+    public static final AdmBooleanNode TRUE = new AdmBooleanNode(true);
+    public static final AdmBooleanNode FALSE = new AdmBooleanNode(false);
+    private final boolean value;
 
-    public abstract Object getValue();
-
-    public abstract Type getLiteralType();
-
-    public String getStringValue() {
-        return getValue().toString();
+    private AdmBooleanNode(boolean value) {
+        this.value = value;
     }
 
     @Override
-    public int hashCode() {
-        return getValue().hashCode();
+    public ATypeTag getType() {
+        return ATypeTag.BOOLEAN;
+    }
+
+    public boolean get() {
+        return value;
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (!(obj instanceof Literal)) {
-            return false;
-        }
-        Literal literal = (Literal) obj;
-        return getValue().equals(literal.getValue());
+    public void reset() {
+        // Nothing to do
+    }
+
+    public static AdmBooleanNode get(boolean value) {
+        return value ? TRUE : FALSE;
+    }
+
+    public static AdmBooleanNode get(Boolean value) {
+        return value.booleanValue() ? TRUE : FALSE;
     }
 
     @Override
     public String toString() {
-        return getStringValue();
+        return Boolean.toString(value);
     }
 }

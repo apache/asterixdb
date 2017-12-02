@@ -16,32 +16,40 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-drop dataverse test if exists;
-create dataverse test;
-use test;
+package org.apache.asterix.object.base;
 
-create type DBLPType as closed {
-  id: int64,
-  dblpid: string,
-  title: string,
-  authors: string,
-  misc: string
-};
+import org.apache.asterix.om.types.ATypeTag;
 
-create dataset UpsertToDBLP(DBLPType)
-primary key id
-with {
-  "merge-policy": {
-    "name": "correlated-prefix",
-    "parameters": { "max-mergable-component-size": 16384, "max-tolerance-component-count": 3 }
-  }
-};
+public class AdmBigIntNode implements IAdmNode {
+    private long value;
 
-create dataset UpsertFromDBLP(DBLPType)
-primary key id
-with {
-  "merge-policy": {
-    "name": "correlated-prefix",
-    "parameters": { "max-mergable-component-size": 16384, "max-tolerance-component-count": 3 }
-  }
-};
+    public AdmBigIntNode() {
+    }
+
+    public AdmBigIntNode(long value) {
+        this.value = value;
+    }
+
+    @Override
+    public ATypeTag getType() {
+        return ATypeTag.BIGINT;
+    }
+
+    public void set(long value) {
+        this.value = value;
+    }
+
+    public long get() {
+        return value;
+    }
+
+    @Override
+    public void reset() {
+        value = 0;
+    }
+
+    @Override
+    public String toString() {
+        return Long.toString(value);
+    }
+}

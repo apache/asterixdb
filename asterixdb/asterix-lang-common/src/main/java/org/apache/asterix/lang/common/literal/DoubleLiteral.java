@@ -23,15 +23,19 @@ import org.apache.commons.lang.ObjectUtils;
 
 public class DoubleLiteral extends Literal {
     private static final long serialVersionUID = -5685491458356989250L;
-    private Double value;
+    private double value;
 
-    public DoubleLiteral(Double value) {
+    public DoubleLiteral(double value) {
         super();
         this.value = value;
     }
 
     @Override
     public Double getValue() {
+        return value;
+    }
+
+    public double getDoubleValue() {
         return value;
     }
 

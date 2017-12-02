@@ -19,11 +19,11 @@
 package org.apache.asterix.lang.common.expression;
 
 import java.util.List;
+import java.util.Objects;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.base.AbstractExpression;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
-import org.apache.commons.lang3.ObjectUtils;
 
 public class RecordConstructor extends AbstractExpression {
     private List<FieldBinding> fbList;
@@ -57,7 +57,7 @@ public class RecordConstructor extends AbstractExpression {
 
     @Override
     public int hashCode() {
-        return ObjectUtils.hashCode(fbList);
+        return Objects.hashCode(fbList);
     }
 
     @Override
@@ -69,6 +69,6 @@ public class RecordConstructor extends AbstractExpression {
             return false;
         }
         RecordConstructor target = (RecordConstructor) object;
-        return ObjectUtils.equals(fbList, target.fbList);
+        return Objects.equals(fbList, target.fbList);
     }
 }

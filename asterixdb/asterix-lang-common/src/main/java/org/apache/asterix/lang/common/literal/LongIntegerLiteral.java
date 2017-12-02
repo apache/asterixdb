@@ -35,6 +35,10 @@ public class LongIntegerLiteral extends Literal {
         return value;
     }
 
+    public long getLongValue() {
+        return value;
+    }
+
     public void setValue(Long value) {
         this.value = value;
     }

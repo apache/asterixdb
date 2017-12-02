@@ -49,12 +49,20 @@ create type test.MyOpenRecord as
 };
 
 create  dataset MyData(MyRecord) primary key id
-using compaction policy `correlated-prefix`
-((`max-mergable-component-size`=`16384`),(`max-tolerance-component-count`=`3`));
+with {
+  "merge-policy": {
+    "name": "correlated-prefix",
+    "parameters": { "max-mergable-component-size": 16384, "max-tolerance-component-count": 3 }
+  }
+};
 
 create  dataset MyOpenData(MyOpenRecord) primary key id
-using compaction policy `correlated-prefix`
-((`max-mergable-component-size`=`16384`),(`max-tolerance-component-count`=`3`));
+with {
+  "merge-policy": {
+    "name": "correlated-prefix",
+    "parameters": { "max-mergable-component-size": 16384, "max-tolerance-component-count": 3 }
+  }
+};
 
 create feed MyFeed
 using localfs

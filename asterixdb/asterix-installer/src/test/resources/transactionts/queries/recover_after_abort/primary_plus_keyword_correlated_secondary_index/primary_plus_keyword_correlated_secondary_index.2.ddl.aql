@@ -62,12 +62,20 @@ create type FragileType as closed {
 /* Create dataset for loading raw Fragile data */
 create dataset Fragile_raw (FragileTypeRaw)
 primary key row_id
-using compaction policy "correlated-prefix"
-(("max-mergable-component-size"="16384"),("max-tolerance-component-count"="3"));
+with {
+  "merge-policy": {
+    "name": "correlated-prefix",
+    "parameters": { "max-mergable-component-size": 16384, "max-tolerance-component-count": 3 }
+  }
+};
 
 /* Create dataset for cleaned Fragile data */
 create dataset Fragile (FragileType)
 primary key row_id
-using compaction policy "correlated-prefix"
-(("max-mergable-component-size"="16384"),("max-tolerance-component-count"="3"));
+with {
+  "merge-policy": {
+    "name": "correlated-prefix",
+    "parameters": { "max-mergable-component-size": 16384, "max-tolerance-component-count": 3 }
+  }
+};
 

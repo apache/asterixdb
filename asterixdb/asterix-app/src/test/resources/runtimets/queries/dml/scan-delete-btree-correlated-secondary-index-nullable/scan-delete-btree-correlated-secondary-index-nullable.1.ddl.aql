@@ -45,8 +45,12 @@ create type CustomerType as closed {
 }
 
 create dataset Customers(CustomerType) primary key cid
-using compaction policy "correlated-prefix"
-(("max-mergable-component-size"="16384"),("max-tolerance-component-count"="3"));
+with {
+  "merge-policy": {
+    "name": "correlated-prefix",
+    "parameters": { "max-mergable-component-size": 16384, "max-tolerance-component-count": 3 }
+  }
+};
 
 create feed CustomerFeed
 using localfs

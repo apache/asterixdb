@@ -39,10 +39,18 @@ create type test.FacebookMessageType as
 };
 
 create  dataset FacebookMessages(FacebookMessageType) primary key `message-id`
-using compaction policy `correlated-prefix`
-((`max-mergable-component-size`=`16384`),(`max-tolerance-component-count`=`3`));
+with {
+  "merge-policy": {
+    "name": "correlated-prefix",
+    "parameters": { "max-mergable-component-size": 16384, "max-tolerance-component-count": 3 }
+  }
+};
 
 create  dataset FacebookMessages2(FacebookMessageType) primary key `message-id`
-using compaction policy `correlated-prefix`
-((`max-mergable-component-size`=`16384`),(`max-tolerance-component-count`=`3`))
- with filter on `send-time`;
+with filter on `send-time`
+with {
+  "merge-policy": {
+    "name": "correlated-prefix",
+    "parameters": { "max-mergable-component-size": 16384, "max-tolerance-component-count": 3 }
+  }
+};

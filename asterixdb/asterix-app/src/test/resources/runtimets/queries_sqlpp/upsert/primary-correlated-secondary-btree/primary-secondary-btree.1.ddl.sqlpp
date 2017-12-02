@@ -34,9 +34,17 @@ salary:double
 };
 
 create dataset UpsertTo(TestType) primary key id
-using compaction policy `correlated-prefix`
-((`max-mergable-component-size`=`16384`),(`max-tolerance-component-count`=`3`));
+with {
+  "merge-policy": {
+    "name": "correlated-prefix",
+    "parameters": { "max-mergable-component-size": 16384, "max-tolerance-component-count": 3 }
+  }
+};
 
 create dataset UpsertFrom(TestType) primary key id
-using compaction policy `correlated-prefix`
-((`max-mergable-component-size`=`16384`),(`max-tolerance-component-count`=`3`));
+with {
+  "merge-policy": {
+    "name": "correlated-prefix",
+    "parameters": { "max-mergable-component-size": 16384, "max-tolerance-component-count": 3 }
+  }
+};

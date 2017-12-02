@@ -18,34 +18,47 @@
  */
 package org.apache.asterix.lang.common.statement;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.lang.common.base.Statement;
+import org.apache.asterix.lang.common.expression.RecordConstructor;
 import org.apache.asterix.lang.common.struct.Identifier;
+import org.apache.asterix.lang.common.util.ExpressionUtils;
+import org.apache.asterix.lang.common.util.MergePolicyUtils;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
+import org.apache.asterix.object.base.AdmObjectNode;
+import org.apache.asterix.object.base.AdmStringNode;
+import org.apache.asterix.object.base.IAdmNode;
+import org.apache.asterix.om.types.ATypeTag;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 
 public class DatasetDecl implements Statement {
+    protected static final String[] WITH_OBJECT_FIELDS = new String[] { MergePolicyUtils.MERGE_POLICY_PARAMETER_NAME };
+    protected static final Set<String> WITH_OBJECT_FIELDS_SET = new HashSet<>(Arrays.asList(WITH_OBJECT_FIELDS));
+
     protected final Identifier name;
     protected final Identifier dataverse;
     protected final Identifier itemTypeDataverse;
     protected final Identifier itemTypeName;
+    protected final Identifier metaItemTypeDataverse;
+    protected final Identifier metaItemTypeName;
     protected final Identifier nodegroupName;
-    protected final String compactionPolicy;
-    protected final Map<String, String> compactionPolicyProperties;
     protected final DatasetType datasetType;
     protected final IDatasetDetailsDecl datasetDetailsDecl;
     protected final Map<String, String> hints;
+    private final AdmObjectNode withObjectNode;
     protected final boolean ifNotExists;
-
-    protected final Identifier metaItemTypeDataverse;
-    protected final Identifier metaItemTypeName;
 
     public DatasetDecl(Identifier dataverse, Identifier name, Identifier itemTypeDataverse, Identifier itemTypeName,
             Identifier metaItemTypeDataverse, Identifier metaItemTypeName, Identifier nodeGroupName,
-            String compactionPolicy, Map<String, String> compactionPolicyProperties, Map<String, String> hints,
-            DatasetType datasetType, IDatasetDetailsDecl idd, boolean ifNotExists) {
+            Map<String, String> hints, DatasetType datasetType, IDatasetDetailsDecl idd, RecordConstructor withRecord,
+            boolean ifNotExists) throws CompilationException {
         this.dataverse = dataverse;
         this.name = name;
         this.itemTypeName = itemTypeName;
@@ -61,9 +74,15 @@ public class DatasetDecl implements Statement {
             this.metaItemTypeDataverse = metaItemTypeDataverse;
         }
         this.nodegroupName = nodeGroupName;
-        this.compactionPolicy = compactionPolicy;
-        this.compactionPolicyProperties = compactionPolicyProperties;
         this.hints = hints;
+        try {
+            this.withObjectNode = withRecord == null ? null : ExpressionUtils.toNode(withRecord);
+        } catch (CompilationException e) {
+            throw e;
+        } catch (AlgebricksException e) {
+            // TODO(tillw) make signatures throw Algebricks exceptions
+            throw new CompilationException(e);
+        }
         this.ifNotExists = ifNotExists;
         this.datasetType = datasetType;
         this.datasetDetailsDecl = idd;
@@ -121,12 +140,68 @@ public class DatasetDecl implements Statement {
         return nodegroupName;
     }
 
-    public String getCompactionPolicy() {
-        return compactionPolicy;
+    public String getCompactionPolicy() throws CompilationException {
+        AdmObjectNode mergePolicy = getMergePolicyObject();
+        if (mergePolicy == null) {
+            return null;
+        }
+        IAdmNode mergePolicyName = mergePolicy.get(MergePolicyUtils.MERGE_POLICY_NAME_PARAMETER_NAME);
+        if (mergePolicyName == null) {
+            throw new CompilationException(ErrorCode.WITH_FIELD_MUST_CONTAIN_SUB_FIELD,
+                    MergePolicyUtils.MERGE_POLICY_PARAMETER_NAME, MergePolicyUtils.MERGE_POLICY_NAME_PARAMETER_NAME);
+        }
+        if (mergePolicyName.getType() != ATypeTag.STRING) {
+            throw new CompilationException(ErrorCode.WITH_FIELD_MUST_BE_OF_TYPE,
+                    MergePolicyUtils.MERGE_POLICY_PARAMETER_NAME + '.'
+                            + MergePolicyUtils.MERGE_POLICY_NAME_PARAMETER_NAME,
+                    ATypeTag.STRING);
+        }
+        return ((AdmStringNode) mergePolicyName).get();
     }
 
-    public Map<String, String> getCompactionPolicyProperties() {
-        return compactionPolicyProperties;
+    private static AdmObjectNode validateWithObject(AdmObjectNode withObject) throws CompilationException {
+        if (withObject == null) {
+            return null;
+        }
+        for (String name : withObject.getFieldNames()) {
+            if (!WITH_OBJECT_FIELDS_SET.contains(name)) {
+                throw new CompilationException(ErrorCode.UNSUPPORTED_WITH_FIELD, name);
+            }
+        }
+        return withObject;
+    }
+
+    private AdmObjectNode getMergePolicyObject() throws CompilationException {
+        if (withObjectNode == null) {
+            return null;
+        }
+        IAdmNode mergePolicy = validateWithObject(withObjectNode).get(MergePolicyUtils.MERGE_POLICY_PARAMETER_NAME);
+        if (mergePolicy == null) {
+            return null;
+        }
+        if (!mergePolicy.isObject()) {
+            throw new CompilationException(ErrorCode.WITH_FIELD_MUST_BE_OF_TYPE,
+                    MergePolicyUtils.MERGE_POLICY_PARAMETER_NAME, ATypeTag.OBJECT);
+        }
+        return (AdmObjectNode) mergePolicy;
+    }
+
+    public Map<String, String> getCompactionPolicyProperties() throws CompilationException {
+        AdmObjectNode mergePolicy = getMergePolicyObject();
+        if (mergePolicy == null) {
+            return null;
+        }
+        IAdmNode mergePolicyParameters = mergePolicy.get(MergePolicyUtils.MERGE_POLICY_PARAMETERS_PARAMETER_NAME);
+        if (mergePolicyParameters == null) {
+            return null;
+        }
+        if (mergePolicyParameters.getType() != ATypeTag.OBJECT) {
+            throw new CompilationException(ErrorCode.WITH_FIELD_MUST_BE_OF_TYPE,
+                    MergePolicyUtils.MERGE_POLICY_PARAMETER_NAME + '.'
+                            + MergePolicyUtils.MERGE_POLICY_PARAMETERS_PARAMETER_NAME,
+                    ATypeTag.OBJECT);
+        }
+        return MergePolicyUtils.toProperties((AdmObjectNode) mergePolicyParameters);
     }
 
     public Map<String, String> getHints() {
@@ -154,6 +229,10 @@ public class DatasetDecl implements Statement {
     @Override
     public byte getCategory() {
         return Category.DDL;
+    }
+
+    public AdmObjectNode getWithObjectNode() {
+        return withObjectNode;
     }
 
 }

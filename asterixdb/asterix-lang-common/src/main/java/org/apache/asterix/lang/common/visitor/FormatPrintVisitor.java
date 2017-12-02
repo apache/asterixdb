@@ -109,8 +109,8 @@ public class FormatPrintVisitor implements ILangVisitor<Void, Integer> {
     private final static String FEED = " feed ";
     private final static String DEFAULT_DATAVERSE_FORMAT = "org.apache.asterix.runtime.formats.NonTaggedDataFormat";
     protected final PrintWriter out;
-    protected Set<Character> validIdentifierChars = new HashSet<Character>();
-    protected Set<Character> validIdentifierStartChars = new HashSet<Character>();
+    protected Set<Character> validIdentifierChars = new HashSet<>();
+    protected Set<Character> validIdentifierStartChars = new HashSet<>();
     protected String dataverseSymbol = " dataverse ";
     protected String datasetSymbol = " dataset ";
     protected String assignSymbol = ":=";
@@ -361,7 +361,7 @@ public class FormatPrintVisitor implements ILangVisitor<Void, Integer> {
     @Override
     public Void visit(FunctionDecl fd, Integer step) throws CompilationException {
         out.print(skip(step) + "declare function " + generateFullName(null, fd.getSignature().getName()) + "(");
-        List<Identifier> parameters = new ArrayList<Identifier>();
+        List<Identifier> parameters = new ArrayList<>();
         parameters.addAll(fd.getParamList());
         printDelimitedIdentifiers(parameters, COMMA);
         out.println(") {");
@@ -492,19 +492,16 @@ public class FormatPrintVisitor implements ILangVisitor<Void, Integer> {
             out.print(" hints ");
             printProperties(hints);
         }
-        if (dd.getCompactionPolicy() != null) {
-            out.print(" using compaction policy " + revertStringToQuoted(dd.getCompactionPolicy()));
-            Map<String, String> compactionPolicyProperties = dd.getCompactionPolicyProperties();
-            if (compactionPolicyProperties != null && compactionPolicyProperties.size() > 0) {
-                printConfiguration(compactionPolicyProperties);
-            }
-        }
         if (dd.getDatasetType() == DatasetType.INTERNAL) {
             List<String> filterField = ((InternalDetailsDecl) dd.getDatasetDetailsDecl()).getFilterField();
             if (filterField != null && filterField.size() > 0) {
                 out.print(" with filter on ");
                 printNestField(filterField);
             }
+        }
+        if (dd.getWithObjectNode() != null) {
+            out.print(" with ");
+            out.print(dd.getWithObjectNode().toString());
         }
         out.println(SEMICOLON);
         out.println();

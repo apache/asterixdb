@@ -19,12 +19,12 @@
 package org.apache.asterix.lang.common.expression;
 
 import java.util.List;
+import java.util.Objects;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.base.AbstractExpression;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
-import org.apache.commons.lang3.ObjectUtils;
 
 public class ListConstructor extends AbstractExpression {
     private List<Expression> exprList;
@@ -72,7 +72,7 @@ public class ListConstructor extends AbstractExpression {
 
     @Override
     public int hashCode() {
-        return ObjectUtils.hashCodeMulti(exprList, type);
+        return Objects.hash(exprList, type);
     }
 
     @Override
@@ -84,6 +84,6 @@ public class ListConstructor extends AbstractExpression {
             return false;
         }
         ListConstructor target = (ListConstructor) object;
-        return ObjectUtils.equals(exprList, target.exprList) && ObjectUtils.equals(type, target.type);
+        return Objects.equals(exprList, target.exprList) && Objects.equals(type, target.type);
     }
 }

@@ -36,6 +36,7 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -85,7 +86,11 @@ import org.apache.asterix.lang.common.base.IReturningStatement;
 import org.apache.asterix.lang.common.base.IRewriterFactory;
 import org.apache.asterix.lang.common.base.IStatementRewriter;
 import org.apache.asterix.lang.common.base.Statement;
+import org.apache.asterix.lang.common.expression.FieldBinding;
 import org.apache.asterix.lang.common.expression.IndexedTypeExpression;
+import org.apache.asterix.lang.common.expression.LiteralExpr;
+import org.apache.asterix.lang.common.expression.RecordConstructor;
+import org.apache.asterix.lang.common.literal.StringLiteral;
 import org.apache.asterix.lang.common.statement.CompactStatement;
 import org.apache.asterix.lang.common.statement.ConnectFeedStatement;
 import org.apache.asterix.lang.common.statement.CreateDataverseStatement;
@@ -155,6 +160,7 @@ import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.TypeSignature;
+import org.apache.asterix.lang.common.util.MergePolicyUtils;
 import org.apache.asterix.transaction.management.service.transaction.DatasetIdFactory;
 import org.apache.asterix.translator.AbstractLangTranslator;
 import org.apache.asterix.translator.CompiledStatements.CompiledDeleteStatement;
@@ -2873,13 +2879,13 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             this.handleDatasetDropStatement(metadataProvider, dropStmt, hcc, null);
             IDatasetDetailsDecl idd = new InternalDetailsDecl(toIndex.getKeyFieldNames(),
                     toIndex.getKeyFieldSourceIndicators(), false, null);
+            RecordConstructor withRecord = getWithRecord(toDataset);
             DatasetDecl createToDataset = new DatasetDecl(new Identifier(dataverseNameTo),
                     pregelixStmt.getDatasetNameTo(), new Identifier(toDataset.getItemTypeDataverseName()),
                     new Identifier(toDataset.getItemTypeName()),
                     new Identifier(toDataset.getMetaItemTypeDataverseName()),
                     new Identifier(toDataset.getMetaItemTypeName()), new Identifier(toDataset.getNodeGroupName()),
-                    toDataset.getCompactionPolicy(), toDataset.getCompactionPolicyProperties(), toDataset.getHints(),
-                    toDataset.getDatasetType(), idd, false);
+                    toDataset.getHints(), toDataset.getDatasetType(), idd, withRecord, false);
             this.handleCreateDatasetStatement(metadataProvider, createToDataset, hcc, null);
         } catch (Exception e) {
             LOGGER.log(Level.WARNING, e.getMessage(), e);
@@ -2888,6 +2894,43 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
 
         // Flushes source dataset.
         FlushDatasetUtil.flushDataset(hcc, metadataProvider, dataverseNameFrom, datasetNameFrom);
+    }
+
+    private static RecordConstructor getWithRecord(Dataset dataset) {
+        String mergePolicy = dataset.getCompactionPolicy();
+        Map<String, String> mergePolicyProperties = dataset.getCompactionPolicyProperties();
+        if (mergePolicy.equals(GlobalConfig.DEFAULT_COMPACTION_POLICY_NAME)
+                && mergePolicyProperties.equals(GlobalConfig.DEFAULT_COMPACTION_POLICY_PROPERTIES)) {
+            return null;
+        }
+        List<FieldBinding> mergePolicyRecordFields = new ArrayList<>(mergePolicyProperties == null ? 1 : 2);
+        mergePolicyRecordFields.add(toFieldBinding(MergePolicyUtils.MERGE_POLICY_NAME_PARAMETER_NAME, mergePolicy));
+        if (mergePolicyProperties != null) {
+            mergePolicyRecordFields.add(
+                    toFieldBinding(MergePolicyUtils.MERGE_POLICY_PARAMETERS_PARAMETER_NAME, mergePolicyProperties));
+        }
+        FieldBinding mergePolicyBinding = toFieldBinding(MergePolicyUtils.MERGE_POLICY_PARAMETER_NAME,
+                new RecordConstructor(mergePolicyRecordFields));
+        List<FieldBinding> withRecordFields = new ArrayList<>(1);
+        withRecordFields.add(mergePolicyBinding);
+        return new RecordConstructor(withRecordFields);
+    }
+
+    private static FieldBinding toFieldBinding(String key, Map<String, String> value) {
+        List<FieldBinding> fields = new ArrayList<>(value.size());
+        for (Entry<String, String> entry : value.entrySet()) {
+            fields.add(toFieldBinding(entry.getKey(), entry.getValue()));
+        }
+        RecordConstructor record = new RecordConstructor(fields);
+        return toFieldBinding(key, record);
+    }
+
+    private static FieldBinding toFieldBinding(String key, RecordConstructor value) {
+        return new FieldBinding(new LiteralExpr(new StringLiteral(key)), value);
+    }
+
+    private static FieldBinding toFieldBinding(String key, String value) {
+        return new FieldBinding(new LiteralExpr(new StringLiteral(key)), new LiteralExpr(new StringLiteral(value)));
     }
 
     // Executes external shell commands.

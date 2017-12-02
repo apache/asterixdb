@@ -82,4 +82,10 @@ create type typeTweet if not exists as open{
     geo_tag: typeGeoTag
 }
 create dataset ds_tweet(typeTweet) if not exists primary key id
-using compaction policy prefix (("max-mergable-component-size"="134217728"),("max-tolerance-component-count"="10")) with filter on create_at;
+with filter on create_at
+with {
+  "merge-policy": {
+    "name": "prefix",
+    "parameters": { "max-mergable-component-size": 134217728, "max-tolerance-component-count": 10 }
+  }
+};

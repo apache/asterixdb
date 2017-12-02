@@ -31,5 +31,9 @@ create type TestOpenType as open {
 
 create dataset TestOpen(TestOpenType)
 primary key c_id
-using compaction policy `correlated-prefix`
-((`max-mergable-component-size`="16384"),(`max-tolerance-component-count`="3"));
+with {
+  "merge-policy": {
+    "name": "correlated-prefix",
+    "parameters": { "max-mergable-component-size": 16384, "max-tolerance-component-count": 3 }
+  }
+};

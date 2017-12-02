@@ -82,8 +82,13 @@ create type typeTweet if not exists as open{
 };
 
 create dataset Tweet(typeTweet) primary key id
-using compaction policy prefix (("max-mergable-component-size"="32768"),("max-tolerance-component-count"="32"))
-with filter on create_at;
+with filter on create_at
+with {
+  "merge-policy": {
+    "name": "prefix",
+    "parameters": { "max-mergable-component-size": 32768, "max-tolerance-component-count": 32 }
+  }
+};
 
 create index text_idx if not exists on Tweet(`text`) type btree;
 create index state_idx if not exists on Tweet(geo_tag.stateID) type btree;

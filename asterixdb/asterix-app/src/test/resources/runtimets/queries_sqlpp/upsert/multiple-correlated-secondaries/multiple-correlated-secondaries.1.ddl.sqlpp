@@ -35,11 +35,19 @@ create type MyRecord as closed {
 
 create dataset UpsertTo(MyRecord)
 primary key id
-using compaction policy `correlated-prefix`
-((`max-mergable-component-size`=`16384`),(`max-tolerance-component-count`=`3`));
+with {
+  "merge-policy": {
+    "name": "correlated-prefix",
+    "parameters": { "max-mergable-component-size": 16384, "max-tolerance-component-count": 3 }
+  }
+};
 
 
 create dataset UpsertFrom(MyRecord)
 primary key id
-using compaction policy `correlated-prefix`
-((`max-mergable-component-size`=`16384`),(`max-tolerance-component-count`=`3`));
+with {
+  "merge-policy": {
+    "name": "correlated-prefix",
+    "parameters": { "max-mergable-component-size": 16384, "max-tolerance-component-count": 3 }
+  }
+};

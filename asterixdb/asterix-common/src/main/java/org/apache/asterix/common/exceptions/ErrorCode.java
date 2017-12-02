@@ -133,6 +133,12 @@ public class ErrorCode {
     public static final int COMPILATION_FAILED_DUE_TO_REPLICATE_OP = 1054;
     public static final int COMPILATION_INCOMPATIBLE_FUNCTION_LANGUAGE = 1055;
     public static final int TOO_MANY_OPTIONS_FOR_FUNCTION = 1056;
+    public static final int EXPRESSION_NOT_SUPPORTED_IN_CONSTANT_RECORD = 1057;
+    public static final int LITERAL_TYPE_NOT_SUPPORTED_IN_CONSTANT_RECORD = 1058;
+    public static final int UNSUPPORTED_WITH_FIELD = 1059;
+    public static final int WITH_FIELD_MUST_BE_OF_TYPE = 1060;
+    public static final int WITH_FIELD_MUST_CONTAIN_SUB_FIELD = 1061;
+    public static final int MERGE_POLICY_PARAMETER_INVALID_TYPE = 1062;
 
     // Feed errors
     public static final int DATAFLOW_ILLEGAL_STATE = 3001;

@@ -26,6 +26,7 @@ import java.util.Map;
 
 import org.apache.asterix.builders.OrderedListBuilder;
 import org.apache.asterix.builders.RecordBuilder;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.lang.common.base.Expression;
@@ -56,22 +57,22 @@ import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 public class LangRecordParseUtil {
     private static final String NOT_ALLOWED_EXPRESSIONS_ERROR_MESSAGE =
             "JSON record can only have expressions [%1$s, %2$s, %3$s]";
-    private static final ISerializerDeserializer<ADouble> doubleSerde = SerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.ADOUBLE);
-    private static final ISerializerDeserializer<AString> stringSerde = SerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.ASTRING);
-    private static final ISerializerDeserializer<AInt64> intSerde = SerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.AINT64);
-    private static final ISerializerDeserializer<ABoolean> booleanSerde = SerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.ABOOLEAN);
-    private static final ISerializerDeserializer<ANull> nullSerde = SerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.ANULL);
+    private static final ISerializerDeserializer<ADouble> doubleSerde =
+            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ADOUBLE);
+    private static final ISerializerDeserializer<AString> stringSerde =
+            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ASTRING);
+    private static final ISerializerDeserializer<AInt64> intSerde =
+            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT64);
+    private static final ISerializerDeserializer<ABoolean> booleanSerde =
+            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ABOOLEAN);
+    private static final ISerializerDeserializer<ANull> nullSerde =
+            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ANULL);
 
     private LangRecordParseUtil() {
     }
 
     private static void parseExpression(Expression expr, ArrayBackedValueStorage serialized)
-            throws HyracksDataException {
+            throws HyracksDataException, CompilationException {
         switch (expr.getKind()) {
             case LITERAL_EXPRESSION:
                 parseLiteral((LiteralExpr) expr, serialized);
@@ -84,14 +85,15 @@ public class LangRecordParseUtil {
                 break;
             default:
                 throw new HyracksDataException(ErrorCode.ASTERIX, ErrorCode.PARSE_ERROR,
-                        NOT_ALLOWED_EXPRESSIONS_ERROR_MESSAGE, new Serializable[] { Expression.Kind.LITERAL_EXPRESSION
-                                .toString(), Expression.Kind.RECORD_CONSTRUCTOR_EXPRESSION.toString(),
+                        NOT_ALLOWED_EXPRESSIONS_ERROR_MESSAGE,
+                        new Serializable[] { Expression.Kind.LITERAL_EXPRESSION.toString(),
+                                Expression.Kind.RECORD_CONSTRUCTOR_EXPRESSION.toString(),
                                 Expression.Kind.LIST_CONSTRUCTOR_EXPRESSION.toString() });
         }
     }
 
     public static void parseRecord(RecordConstructor recordValue, ArrayBackedValueStorage serialized, boolean tagged,
-            List<Pair<String, String>> defaults) throws HyracksDataException {
+            List<Pair<String, String>> defaults) throws HyracksDataException, CompilationException {
         AMutableString fieldNameString = new AMutableString(null);
         ArrayBackedValueStorage fieldName = new ArrayBackedValueStorage();
         ArrayBackedValueStorage fieldValue = new ArrayBackedValueStorage();
@@ -106,8 +108,8 @@ public class LangRecordParseUtil {
             // get key
             fieldNameString.setValue(exprToStringLiteral(fb.getLeftExpr()).getStringValue());
             if (!fieldNames.add(fieldNameString.getStringValue())) {
-                throw new HyracksDataException("Field " + fieldNameString.getStringValue()
-                        + " was specified multiple times");
+                throw new HyracksDataException(
+                        "Field " + fieldNameString.getStringValue() + " was specified multiple times");
             }
             stringSerde.serialize(fieldNameString, fieldName.getDataOutput());
             // get value
@@ -127,25 +129,25 @@ public class LangRecordParseUtil {
         recordBuilder.write(serialized.getDataOutput(), tagged);
     }
 
-    public static Literal exprToStringLiteral(Expression expr) throws HyracksDataException {
+    public static Literal exprToStringLiteral(Expression expr) throws CompilationException {
         if (expr.getKind() != Expression.Kind.LITERAL_EXPRESSION) {
-            throw new HyracksDataException(ErrorCode.ASTERIX, ErrorCode.PARSE_ERROR,
-                    "Expected expression can only be of type %1$s", Expression.Kind.LITERAL_EXPRESSION);
+            throw new CompilationException(ErrorCode.PARSE_ERROR, "Expected expression can only be of type %1$s",
+                    Expression.Kind.LITERAL_EXPRESSION);
         }
         LiteralExpr keyLiteralExpr = (LiteralExpr) expr;
         Literal keyLiteral = keyLiteralExpr.getValue();
         if (keyLiteral.getLiteralType() != Literal.Type.STRING) {
-            throw new HyracksDataException(ErrorCode.ASTERIX, ErrorCode.PARSE_ERROR,
-                    "Expected Literal can only be of type %1$s", Literal.Type.STRING);
+            throw new CompilationException(ErrorCode.PARSE_ERROR, "Expected Literal can only be of type %1$s",
+                    Literal.Type.STRING);
         }
         return keyLiteral;
     }
 
     private static void parseList(ListConstructor valueExpr, ArrayBackedValueStorage serialized)
-            throws HyracksDataException {
+            throws CompilationException, HyracksDataException {
         if (valueExpr.getType() != ListConstructor.Type.ORDERED_LIST_CONSTRUCTOR) {
-            throw new HyracksDataException(ErrorCode.ASTERIX, ErrorCode.PARSE_ERROR,
-                    "JSON List can't be of type %1$s", valueExpr.getType());
+            throw new HyracksDataException(ErrorCode.ASTERIX, ErrorCode.PARSE_ERROR, "JSON List can't be of type %1$s",
+                    valueExpr.getType());
         }
         ArrayBackedValueStorage serializedValue = new ArrayBackedValueStorage();
         OrderedListBuilder listBuilder = new OrderedListBuilder();
@@ -187,13 +189,12 @@ public class LangRecordParseUtil {
                 stringSerde.serialize(new AString((String) value.getValue()), serialized.getDataOutput());
                 break;
             default:
-                throw new HyracksDataException(ErrorCode.ASTERIX, ErrorCode.PARSE_ERROR,
-                        "Unknown Literal Type %1$s", value.getLiteralType());
+                throw new HyracksDataException(ErrorCode.ASTERIX, ErrorCode.PARSE_ERROR, "Unknown Literal Type %1$s",
+                        value.getLiteralType());
         }
     }
 
-    public static void recordToMap(Map<String, String> map, ARecord record)
-            throws AlgebricksException {
+    public static void recordToMap(Map<String, String> map, ARecord record) throws AlgebricksException {
         String[] keys = record.getType().getFieldNames();
         for (int i = 0; i < keys.length; i++) {
             String key = keys[i];

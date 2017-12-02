@@ -50,5 +50,11 @@ create type test.LineItemType as
   l_comment : string
 };
 
-create  dataset LineItem(LineItemType) primary key l_orderkey,l_linenumber using compaction policy `constant`((`num-components`=`2`));
+create  dataset LineItem(LineItemType) primary key l_orderkey,l_linenumber
+with {
+  "merge-policy": {
+    "name": "constant",
+    "parameters": { "num-components": 2 }
+  }
+};
 

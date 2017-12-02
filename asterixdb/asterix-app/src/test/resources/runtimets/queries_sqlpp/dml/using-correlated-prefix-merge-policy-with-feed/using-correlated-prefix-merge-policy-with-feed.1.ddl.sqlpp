@@ -49,8 +49,13 @@ create type LineItemType as closed {
 };
 
 create dataset LineItem(LineItemType)
-  primary key l_orderkey, l_linenumber using compaction policy `correlated-prefix`
-((`max-mergable-component-size`=`16384`),(`max-tolerance-component-count`=`3`));
+primary key l_orderkey, l_linenumber
+with {
+  "merge-policy": {
+    "name": "correlated-prefix",
+    "parameters": { "max-mergable-component-size": 16384, "max-tolerance-component-count": 3 }
+  }
+};
 
 create feed LineItemFeed
 using localfs

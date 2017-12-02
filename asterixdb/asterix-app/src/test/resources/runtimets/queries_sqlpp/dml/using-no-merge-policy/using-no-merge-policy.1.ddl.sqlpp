@@ -50,5 +50,5 @@ create type test.LineItemType as
   l_comment : string
 };
 
-create  dataset LineItem(LineItemType) primary key l_orderkey,l_linenumber using compaction policy `no-merge`;
+create  dataset LineItem(LineItemType) primary key l_orderkey,l_linenumber with { "merge-policy": { "name": "no-merge" } };
 
