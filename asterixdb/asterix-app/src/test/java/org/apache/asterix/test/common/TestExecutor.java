@@ -107,13 +107,13 @@ public class TestExecutor {
     // see
     // https://stackoverflow.com/questions/417142/what-is-the-maximum-length-of-a-url-in-different-browsers/417184
     private static final long MAX_URL_LENGTH = 2000l;
-    private static final Pattern JAVA_BLOCK_COMMENT_PATTERN = Pattern.compile("/\\*.*\\*/",
-            Pattern.MULTILINE | Pattern.DOTALL);
-    private static final Pattern JAVA_SHELL_SQL_LINE_COMMENT_PATTERN = Pattern.compile("^(//|#|--).*$",
-            Pattern.MULTILINE);
+    private static final Pattern JAVA_BLOCK_COMMENT_PATTERN =
+            Pattern.compile("/\\*.*\\*/", Pattern.MULTILINE | Pattern.DOTALL);
+    private static final Pattern JAVA_SHELL_SQL_LINE_COMMENT_PATTERN =
+            Pattern.compile("^(//|#|--).*$", Pattern.MULTILINE);
     private static final Pattern REGEX_LINES_PATTERN = Pattern.compile("^(-)?/(.*)/([im]*)$");
-    private static final Pattern POLL_TIMEOUT_PATTERN = Pattern.compile("polltimeoutsecs=(\\d+)(\\D|$)",
-            Pattern.MULTILINE);
+    private static final Pattern POLL_TIMEOUT_PATTERN =
+            Pattern.compile("polltimeoutsecs=(\\d+)(\\D|$)", Pattern.MULTILINE);
     private static final Pattern POLL_DELAY_PATTERN = Pattern.compile("polldelaysecs=(\\d+)(\\D|$)", Pattern.MULTILINE);
     private static final Pattern HANDLE_VARIABLE_PATTERN = Pattern.compile("handlevariable=(\\w+)");
     private static final Pattern VARIABLE_REF_PATTERN = Pattern.compile("\\$(\\w+)");
@@ -175,10 +175,10 @@ public class TestExecutor {
     public void runScriptAndCompareWithResult(File scriptFile, PrintWriter print, File expectedFile, File actualFile,
             ComparisonEnum compare) throws Exception {
         System.err.println("Expected results file: " + expectedFile.toString());
-        BufferedReader readerExpected = new BufferedReader(
-                new InputStreamReader(new FileInputStream(expectedFile), "UTF-8"));
-        BufferedReader readerActual = new BufferedReader(
-                new InputStreamReader(new FileInputStream(actualFile), "UTF-8"));
+        BufferedReader readerExpected =
+                new BufferedReader(new InputStreamReader(new FileInputStream(expectedFile), "UTF-8"));
+        BufferedReader readerActual =
+                new BufferedReader(new InputStreamReader(new FileInputStream(actualFile), "UTF-8"));
         boolean regex = false;
         try {
             if (ComparisonEnum.BINARY.equals(compare)) {
@@ -361,10 +361,10 @@ public class TestExecutor {
     public void runScriptAndCompareWithResultRegex(File scriptFile, File expectedFile, File actualFile)
             throws Exception {
         String lineExpected, lineActual;
-        try (BufferedReader readerExpected = new BufferedReader(
-                new InputStreamReader(new FileInputStream(expectedFile), "UTF-8"));
-                BufferedReader readerActual = new BufferedReader(
-                        new InputStreamReader(new FileInputStream(actualFile), "UTF-8"))) {
+        try (BufferedReader readerExpected =
+                new BufferedReader(new InputStreamReader(new FileInputStream(expectedFile), "UTF-8"));
+                BufferedReader readerActual =
+                        new BufferedReader(new InputStreamReader(new FileInputStream(actualFile), "UTF-8"))) {
             StringBuilder actual = new StringBuilder();
             while ((lineActual = readerActual.readLine()) != null) {
                 actual.append(lineActual).append('\n');
@@ -704,8 +704,8 @@ public class TestExecutor {
     // Insert and Delete statements are executed here
     public void executeUpdate(String str, URI uri) throws Exception {
         // Create a method instance.
-        HttpUriRequest request = RequestBuilder.post(uri).setEntity(new StringEntity(str, StandardCharsets.UTF_8))
-                .build();
+        HttpUriRequest request =
+                RequestBuilder.post(uri).setEntity(new StringEntity(str, StandardCharsets.UTF_8)).build();
 
         // Execute the method.
         executeAndCheckHttpRequest(request);
@@ -715,10 +715,10 @@ public class TestExecutor {
     public InputStream executeAnyAQLAsync(String statement, boolean defer, OutputFormat fmt, URI uri,
             Map<String, Object> variableCtx) throws Exception {
         // Create a method instance.
-        HttpUriRequest request = RequestBuilder.post(uri)
-                .addParameter("mode", defer ? "asynchronous-deferred" : "asynchronous")
-                .setEntity(new StringEntity(statement, StandardCharsets.UTF_8)).setHeader("Accept", fmt.mimeType())
-                .build();
+        HttpUriRequest request =
+                RequestBuilder.post(uri).addParameter("mode", defer ? "asynchronous-deferred" : "asynchronous")
+                        .setEntity(new StringEntity(statement, StandardCharsets.UTF_8))
+                        .setHeader("Accept", fmt.mimeType()).build();
 
         String handleVar = getHandleVariable(statement);
 
@@ -744,8 +744,8 @@ public class TestExecutor {
     // create function statement
     public void executeDDL(String str, URI uri) throws Exception {
         // Create a method instance.
-        HttpUriRequest request = RequestBuilder.post(uri).setEntity(new StringEntity(str, StandardCharsets.UTF_8))
-                .build();
+        HttpUriRequest request =
+                RequestBuilder.post(uri).setEntity(new StringEntity(str, StandardCharsets.UTF_8)).build();
 
         // Execute the method.
         executeAndCheckHttpRequest(request);
@@ -755,8 +755,8 @@ public class TestExecutor {
     // and returns the contents as a string
     // This string is later passed to REST API for execution.
     public String readTestFile(File testFile) throws Exception {
-        BufferedReader reader = new BufferedReader(
-                new InputStreamReader(new FileInputStream(testFile), StandardCharsets.UTF_8));
+        BufferedReader reader =
+                new BufferedReader(new InputStreamReader(new FileInputStream(testFile), StandardCharsets.UTF_8));
         String line;
         StringBuilder stringBuilder = new StringBuilder();
         String ls = System.getProperty("line.separator");
@@ -811,8 +811,8 @@ public class TestExecutor {
 
     private static String getProcessOutput(Process p) throws Exception {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        Future<Integer> future = Executors.newSingleThreadExecutor()
-                .submit(() -> IOUtils.copy(p.getInputStream(), new OutputStream() {
+        Future<Integer> future =
+                Executors.newSingleThreadExecutor().submit(() -> IOUtils.copy(p.getInputStream(), new OutputStream() {
                     @Override
                     public void write(int b) throws IOException {
                         baos.write(b);
@@ -1002,7 +1002,7 @@ public class TestExecutor {
                         ctx.extension(), cUnit.getOutputDir().getCompare());
                 break;
             case "server": // (start <test server name> <port>
-                               // [<arg1>][<arg2>][<arg3>]...|stop (<port>|all))
+                           // [<arg1>][<arg2>][<arg3>]...|stop (<port>|all))
                 try {
                     lines = statement.trim().split("\n");
                     String[] command = lines[lines.length - 1].trim().split(" ");
@@ -1050,7 +1050,7 @@ public class TestExecutor {
                 }
                 break;
             case "lib": // expected format <dataverse-name> <library-name>
-                            // <library-directory>
+                        // <library-directory>
                         // TODO: make this case work well with entity names containing spaces by
                         // looking for \"
                 lines = statement.split("\n");
@@ -1206,9 +1206,8 @@ public class TestExecutor {
             final URI uri = getEndpoint(Servlets.QUERY_SERVICE);
             if (DELIVERY_IMMEDIATE.equals(delivery)) {
                 resultStream = executeQueryService(statement, fmt, uri, params, true, null, true);
-                resultStream = METRICS_QUERY_TYPE.equals(reqType) ?
-                        ResultExtractor.extractMetrics(resultStream) :
-                        ResultExtractor.extract(resultStream);
+                resultStream = METRICS_QUERY_TYPE.equals(reqType) ? ResultExtractor.extractMetrics(resultStream)
+                        : ResultExtractor.extract(resultStream);
             } else {
                 String handleVar = getHandleVariable(statement);
                 resultStream = executeQueryService(statement, fmt, uri, upsertParam(params, "mode", delivery), true);
@@ -1462,7 +1461,7 @@ public class TestExecutor {
                         if (failedGroup != null) {
                             failedGroup.getTestCase().add(testCaseCtx.getTestCase());
                         }
-                        throw new Exception("Test \"" + testFile + "\" FAILED!", e);
+                        fail(testCaseCtx, pb, testFile, e);
                     }
                 } finally {
                     if (numOfFiles == testFileCtxs.size()) {
@@ -1479,6 +1478,10 @@ public class TestExecutor {
                 }
             }
         }
+    }
+
+    protected void fail(TestCaseContext testCaseCtx, ProcessBuilder pb, File testFile, Exception e) throws Exception {
+        throw new Exception("Test \"" + testFile + "\" FAILED!", e);
     }
 
     protected boolean isUnExpected(Exception e, List<String> expectedErrors, int numOfErrors, MutableInt queryCount) {

@@ -34,7 +34,7 @@ import org.apache.asterix.common.api.IClusterManagementWorkResponse;
 import org.apache.asterix.common.api.IClusterManagementWorkResponse.Status;
 import org.apache.asterix.common.cluster.IClusterStateManager;
 import org.apache.asterix.common.config.ClusterProperties;
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.event.schema.cluster.Node;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.cluster.AddNodeWork;
@@ -42,7 +42,6 @@ import org.apache.asterix.metadata.cluster.AddNodeWorkResponse;
 import org.apache.asterix.metadata.cluster.ClusterManagerProvider;
 import org.apache.asterix.metadata.cluster.RemoveNodeWork;
 import org.apache.asterix.metadata.cluster.RemoveNodeWorkResponse;
-import org.apache.asterix.runtime.utils.CcApplicationContext;
 import org.apache.hyracks.api.application.IClusterLifecycleListener;
 import org.apache.hyracks.api.config.IOption;
 import org.apache.hyracks.api.exceptions.HyracksException;
@@ -50,12 +49,12 @@ import org.apache.hyracks.api.exceptions.HyracksException;
 public class ClusterLifecycleListener implements IClusterLifecycleListener {
 
     private static final Logger LOGGER = Logger.getLogger(ClusterLifecycleListener.class.getName());
-    private final CcApplicationContext appCtx;
+    private final ICcApplicationContext appCtx;
     private final LinkedBlockingQueue<Set<IClusterManagementWork>> workRequestQueue = new LinkedBlockingQueue<>();
     private final ClusterWorkExecutor eventHandler;
     private final List<IClusterManagementWorkResponse> pendingWorkResponses = new ArrayList<>();
 
-    public ClusterLifecycleListener(CcApplicationContext appCtx) {
+    public ClusterLifecycleListener(ICcApplicationContext appCtx) {
         this.appCtx = appCtx;
         eventHandler = new ClusterWorkExecutor(appCtx, workRequestQueue);
         Thread t = new Thread(eventHandler);

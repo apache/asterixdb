@@ -25,7 +25,6 @@ import java.util.concurrent.ExecutorService;
 
 import org.apache.asterix.algebra.base.ILangExtension;
 import org.apache.asterix.algebra.base.ILangExtension.Language;
-import org.apache.asterix.algebra.extension.IAlgebraExtensionManager;
 import org.apache.asterix.app.translator.DefaultStatementExecutorFactory;
 import org.apache.asterix.common.api.ExtensionId;
 import org.apache.asterix.common.api.IExtension;
@@ -48,7 +47,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
  * AsterixDB's implementation of {@code IAlgebraExtensionManager} and {@code IFunctionExtensionManager}
  * which takes care of initializing extensions for App and Compilation purposes
  */
-public class CCExtensionManager implements IAlgebraExtensionManager, IFunctionExtensionManager {
+public class CCExtensionManager implements IFunctionExtensionManager {
 
     private final IStatementExecutorExtension statementExecutorExtension;
     private final ILangCompilationProvider aqlCompilationProvider;
@@ -110,18 +109,21 @@ public class CCExtensionManager implements IAlgebraExtensionManager, IFunctionEx
 
     public IStatementExecutorFactory getStatementExecutorFactory(ExecutorService executorService) {
         if (statementExecutorFactory == null) {
-            statementExecutorFactory = statementExecutorExtension == null
-                    ? new DefaultStatementExecutorFactory(executorService)
-                    : statementExecutorExtension.getStatementExecutorFactory(executorService);
+            statementExecutorFactory =
+                    statementExecutorExtension == null ? new DefaultStatementExecutorFactory(executorService)
+                            : statementExecutorExtension.getStatementExecutorFactory(executorService);
         }
         return statementExecutorFactory;
     }
 
     public ILangCompilationProvider getCompilationProvider(Language lang) {
         switch (lang) {
-            case AQL: return aqlCompilationProvider;
-            case SQLPP: return sqlppCompilationProvider;
-            default: throw new IllegalArgumentException(String.valueOf(lang));
+            case AQL:
+                return aqlCompilationProvider;
+            case SQLPP:
+                return sqlppCompilationProvider;
+            default:
+                throw new IllegalArgumentException(String.valueOf(lang));
         }
     }
 

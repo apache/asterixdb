@@ -38,7 +38,6 @@ import org.apache.asterix.common.config.StorageProperties;
 import org.apache.asterix.common.config.TransactionProperties;
 import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.common.metadata.IMetadataBootstrap;
 import org.apache.asterix.common.replication.IFaultToleranceStrategy;
@@ -198,10 +197,12 @@ public class CcApplicationContext implements ICcApplicationContext {
         return extensionManager;
     }
 
+    @Override
     public void setExtensionManager(Object extensionManager) {
         this.extensionManager = extensionManager;
     }
 
+    @Override
     public ExtensionProperties getExtensionProperties() {
         return extensionProperties;
     }

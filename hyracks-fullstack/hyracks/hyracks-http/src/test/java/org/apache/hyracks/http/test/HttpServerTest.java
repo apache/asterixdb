@@ -280,7 +280,7 @@ public class HttpServerTest {
         }
     }
 
-    protected HttpResponse executeHttpRequest(HttpUriRequest method) throws Exception {
+    public static HttpResponse executeHttpRequest(HttpUriRequest method) throws Exception {
         HttpClient client = HttpClients.custom().setRetryHandler(StandardHttpRequestRetryHandler.INSTANCE).build();
         try {
             return client.execute(method);
@@ -290,8 +290,9 @@ public class HttpServerTest {
         }
     }
 
-    protected HttpUriRequest get(String query) throws URISyntaxException {
-        URI uri = new URI(PROTOCOL, null, HOST, PORT, PATH, query, null);
+    public static HttpUriRequest get(String protocol, String host, int port, String path, String query)
+            throws URISyntaxException {
+        URI uri = new URI(protocol, null, host, port, path, query, null);
         RequestBuilder builder = RequestBuilder.get(uri);
         builder.setCharset(StandardCharsets.UTF_8);
         return builder.build();
