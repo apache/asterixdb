@@ -46,4 +46,8 @@ public class Servlets {
 
     private Servlets() {
     }
+
+    public static String getAbsolutePath(String servlet) {
+        return servlet.replaceAll("/\\*$", "");
+    }
 }

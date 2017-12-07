@@ -61,7 +61,7 @@ import org.apache.asterix.common.replication.IReplicaResourcesManager;
 import org.apache.asterix.common.replication.IReplicationChannel;
 import org.apache.asterix.common.replication.IReplicationManager;
 import org.apache.asterix.common.storage.IIndexCheckpointManagerProvider;
-import org.apache.asterix.common.storage.IStorageSubsystem;
+import org.apache.asterix.common.storage.IReplicaManager;
 import org.apache.asterix.common.transactions.IAppRuntimeContextProvider;
 import org.apache.asterix.common.transactions.IRecoveryManager;
 import org.apache.asterix.common.transactions.IRecoveryManager.SystemState;
@@ -142,8 +142,8 @@ public class NCAppRuntimeContext implements INcApplicationContext {
     private final NCExtensionManager ncExtensionManager;
     private final IStorageComponentProvider componentProvider;
     private IHyracksClientConnection hcc;
-    private IStorageSubsystem storageSubsystem;
     private IIndexCheckpointManagerProvider indexCheckpointManagerProvider;
+    private IReplicaManager replicaManager;
 
     public NCAppRuntimeContext(INCServiceContext ncServiceContext, List<AsterixExtension> extensions)
             throws AsterixException, InstantiationException, IllegalAccessException, ClassNotFoundException,
@@ -213,7 +213,7 @@ public class NCAppRuntimeContext implements INcApplicationContext {
         final ClusterPartition[] nodePartitions = metadataProperties.getNodePartitions().get(nodeId);
         final Set<Integer> nodePartitionsIds = Arrays.stream(nodePartitions).map(ClusterPartition::getPartitionId)
                 .collect(Collectors.toSet());
-        storageSubsystem = new StorageSubsystem(nodePartitionsIds);
+        replicaManager = new ReplicaManager(nodePartitionsIds);
         isShuttingdown = false;
         activeManager = new ActiveManager(threadExecutor, getServiceContext().getNodeId(),
                 activeProperties.getMemoryComponentGlobalBudget(), compilerProperties.getFrameSize(),
@@ -528,8 +528,8 @@ public class NCAppRuntimeContext implements INcApplicationContext {
     }
 
     @Override
-    public IStorageSubsystem getStorageSubsystem() {
-        return storageSubsystem;
+    public IReplicaManager getReplicaManager() {
+        return replicaManager;
     }
 
     @Override

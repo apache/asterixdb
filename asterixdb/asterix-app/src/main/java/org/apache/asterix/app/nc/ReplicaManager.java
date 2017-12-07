@@ -26,11 +26,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.apache.asterix.common.storage.IStorageSubsystem;
-import org.apache.asterix.common.storage.PartitionReplica;
+import org.apache.asterix.common.replication.IPartitionReplica;
+import org.apache.asterix.common.storage.IReplicaManager;
 import org.apache.asterix.common.storage.ReplicaIdentifier;
+import org.apache.asterix.replication.storage.PartitionReplica;
 
-public class StorageSubsystem implements IStorageSubsystem {
+public class ReplicaManager implements IReplicaManager {
 
     /**
      * the partitions to which the current node is master
@@ -41,7 +42,7 @@ public class StorageSubsystem implements IStorageSubsystem {
      */
     private final Map<ReplicaIdentifier, PartitionReplica> replicas = new HashMap<>();
 
-    public StorageSubsystem(Set<Integer> partitions) {
+    public ReplicaManager(Set<Integer> partitions) {
         this.partitions.addAll(partitions);
     }
 
@@ -52,6 +53,7 @@ public class StorageSubsystem implements IStorageSubsystem {
                     "This node is not the current master of partition(" + id.getPartition() + ")");
         }
         replicas.computeIfAbsent(id, key -> new PartitionReplica(key));
+        replicas.get(id).sync();
     }
 
     @Override
@@ -63,7 +65,7 @@ public class StorageSubsystem implements IStorageSubsystem {
     }
 
     @Override
-    public List<PartitionReplica> getReplicas(int partition) {
+    public List<IPartitionReplica> getReplicas(int partition) {
         return replicas.entrySet().stream().filter(e -> e.getKey().getPartition() == partition).map(Map.Entry::getValue)
                 .collect(Collectors.toList());
     }

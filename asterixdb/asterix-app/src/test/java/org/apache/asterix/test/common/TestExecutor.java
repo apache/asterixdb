@@ -57,6 +57,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 import org.apache.asterix.app.external.IExternalUDFLibrarian;
 import org.apache.asterix.common.api.Duration;
@@ -129,6 +130,8 @@ public class TestExecutor {
 
     private static Method managixExecuteMethod = null;
     private static final HashMap<Integer, ITestServer> runningTestServers = new HashMap<>();
+    private static Map<String, InetSocketAddress> ncEndPoints;
+    private static Map<String, InetSocketAddress> replicationAddress;
 
     /*
      * Instance members
@@ -156,6 +159,14 @@ public class TestExecutor {
 
     public void setLibrarian(IExternalUDFLibrarian librarian) {
         this.librarian = librarian;
+    }
+
+    public void setNcEndPoints(Map<String, InetSocketAddress> ncEndPoints) {
+        this.ncEndPoints = ncEndPoints;
+    }
+
+    public void setNcReplicationAddress(Map<String, InetSocketAddress> replicationAddress) {
+        this.replicationAddress = replicationAddress;
     }
 
     /**
@@ -1139,7 +1150,10 @@ public class TestExecutor {
                 // we only reach here if the loop is over
                 testLoops.remove(testFile);
                 break;
-
+            case "sto":
+                command = stripJavaComments(statement).trim().split(" ");
+                executeStorageCommand(command);
+                break;
             default:
                 throw new IllegalArgumentException("No statements of type " + ctx.getType());
         }
@@ -1510,15 +1524,26 @@ public class TestExecutor {
     }
 
     protected URI createEndpointURI(String path, String query) throws URISyntaxException {
-        int endpointIdx = Math.abs(endpointSelector++ % endpoints.size());
-        InetSocketAddress endpoint = endpoints.get(endpointIdx);
+        InetSocketAddress endpoint;
+        if (!path.startsWith("nc:")) {
+            int endpointIdx = Math.abs(endpointSelector++ % endpoints.size());
+            endpoint = endpoints.get(endpointIdx);
+        } else {
+            final String[] tokens = path.split(" ");
+            if (tokens.length != 2) {
+                throw new IllegalArgumentException("Unrecognized http pattern");
+            }
+            String nodeId = tokens[0].substring(3);
+            endpoint = getNcEndPoint(nodeId);
+            path = tokens[1];
+        }
         URI uri = new URI("http", null, endpoint.getHostString(), endpoint.getPort(), path, query, null);
         LOGGER.fine("Created endpoint URI: " + uri);
         return uri;
     }
 
     public URI getEndpoint(String servlet) throws URISyntaxException {
-        return createEndpointURI(getPath(servlet).replaceAll("/\\*$", ""), null);
+        return createEndpointURI(Servlets.getAbsolutePath(getPath(servlet)), null);
     }
 
     public static String stripJavaComments(String text) {
@@ -1620,6 +1645,41 @@ public class TestExecutor {
                     + timeUnit.name().toLowerCase());
         }
         LOGGER.info("Cluster state now " + desiredState);
+    }
+
+    private void executeStorageCommand(String[] command) throws Exception {
+        String srcNode = command[0];
+        String api = command[1];
+        final URI endpoint = getEndpoint(srcNode + " " + Servlets.getAbsolutePath(Servlets.STORAGE) + api);
+        String partition = command[2];
+        String destNode = command[3];
+        final InetSocketAddress destAddress = getNcReplicationAddress(destNode);
+        List<Parameter> parameters = new ArrayList<>(3);
+        Stream.of("partition", "host", "port").forEach(arg -> {
+            Parameter p = new Parameter();
+            p.setName(arg);
+            parameters.add(p);
+        });
+        parameters.get(0).setValue(partition);
+        parameters.get(1).setValue(destAddress.getHostName());
+        parameters.get(2).setValue(String.valueOf(destAddress.getPort()));
+        final HttpUriRequest httpUriRequest = constructPostMethod(endpoint, parameters);
+        final HttpResponse httpResponse = executeHttpRequest(httpUriRequest);
+        Assert.assertEquals(HttpStatus.SC_OK, httpResponse.getStatusLine().getStatusCode());
+    }
+
+    private InetSocketAddress getNcEndPoint(String nodeId) {
+        if (ncEndPoints == null || !ncEndPoints.containsKey(nodeId)) {
+            throw new IllegalStateException("No end point specified for node: " + nodeId);
+        }
+        return ncEndPoints.get(nodeId);
+    }
+
+    private InetSocketAddress getNcReplicationAddress(String nodeId) {
+        if (replicationAddress == null || !replicationAddress.containsKey(nodeId)) {
+            throw new IllegalStateException("No replication address specified for node: " + nodeId);
+        }
+        return replicationAddress.get(nodeId);
     }
 
     abstract static class TestLoop extends Exception {

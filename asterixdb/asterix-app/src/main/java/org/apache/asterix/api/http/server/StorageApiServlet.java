@@ -30,8 +30,8 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import org.apache.asterix.common.api.INcApplicationContext;
-import org.apache.asterix.common.storage.IStorageSubsystem;
-import org.apache.asterix.common.storage.PartitionReplica;
+import org.apache.asterix.common.replication.IPartitionReplica;
+import org.apache.asterix.common.storage.IReplicaManager;
 import org.apache.asterix.common.storage.ReplicaIdentifier;
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
@@ -109,17 +109,18 @@ public class StorageApiServlet extends AbstractServlet {
 
     private JsonNode getStatus(Predicate<Integer> predicate) {
         final ArrayNode status = OBJECT_MAPPER.createArrayNode();
-        final IStorageSubsystem storageSubsystem = appCtx.getStorageSubsystem();
+        final IReplicaManager storageSubsystem = appCtx.getReplicaManager();
         final Set<Integer> partitions =
                 storageSubsystem.getPartitions().stream().filter(predicate).collect(Collectors.toSet());
         for (Integer partition : partitions) {
             final ObjectNode partitionJson = OBJECT_MAPPER.createObjectNode();
             partitionJson.put("partition", partition);
-            final List<PartitionReplica> replicas = storageSubsystem.getReplicas(partition);
+            final List<IPartitionReplica> replicas = storageSubsystem.getReplicas(partition);
             ArrayNode replicasArray = OBJECT_MAPPER.createArrayNode();
-            for (PartitionReplica replica : replicas) {
+            for (IPartitionReplica replica : replicas) {
                 final ObjectNode replicaJson = OBJECT_MAPPER.createObjectNode();
-                replicaJson.put("location", replica.getIdentifier().getLocation().toString());
+                final InetSocketAddress location = replica.getIdentifier().getLocation();
+                replicaJson.put("location", location.getHostString() + ":" + location.getPort());
                 replicaJson.put("status", replica.getStatus().toString());
                 replicasArray.add(replicaJson);
             }
@@ -135,7 +136,7 @@ public class StorageApiServlet extends AbstractServlet {
             response.setStatus(HttpResponseStatus.BAD_REQUEST);
             return;
         }
-        appCtx.getStorageSubsystem().addReplica(replicaIdentifier);
+        appCtx.getReplicaManager().addReplica(replicaIdentifier);
         response.setStatus(HttpResponseStatus.OK);
     }
 
@@ -145,7 +146,7 @@ public class StorageApiServlet extends AbstractServlet {
             response.setStatus(HttpResponseStatus.BAD_REQUEST);
             return;
         }
-        appCtx.getStorageSubsystem().removeReplica(replicaIdentifier);
+        appCtx.getReplicaManager().removeReplica(replicaIdentifier);
         response.setStatus(HttpResponseStatus.OK);
     }
 
@@ -156,7 +157,7 @@ public class StorageApiServlet extends AbstractServlet {
         if (partition == null || host == null || port == null) {
             return null;
         }
-        final InetSocketAddress replicaAddress = InetSocketAddress.createUnresolved(host, Integer.valueOf(port));
+        final InetSocketAddress replicaAddress = new InetSocketAddress(host, Integer.valueOf(port));
         return ReplicaIdentifier.of(Integer.valueOf(partition), replicaAddress);
     }
 }

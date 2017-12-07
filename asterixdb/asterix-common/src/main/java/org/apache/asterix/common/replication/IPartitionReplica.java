@@ -16,40 +16,32 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.common.storage;
+package org.apache.asterix.common.replication;
 
-import java.util.List;
-import java.util.Set;
+import org.apache.asterix.common.storage.ReplicaIdentifier;
 
-public interface IStorageSubsystem {
+public interface IPartitionReplica {
 
-    /**
-     * Adds a replica with the specified {@code id}
-     *
-     * @param id
-     */
-    void addReplica(ReplicaIdentifier id);
-
-    /**
-     * Removes the replica with the specified {@code id}
-     *
-     * @param id
-     */
-    void removeReplica(ReplicaIdentifier id);
+    enum PartitionReplicaStatus {
+        /* replica is in-sync with master */
+        IN_SYNC,
+        /* replica is still catching up with master */
+        CATCHING_UP,
+        /* replica is not connected with master */
+        DISCONNECTED
+    }
 
     /**
-     * The existing replicas of the partition {@code partition}
+     * Gets the status of a replica.
      *
-     * @param partition
-     * @return The list of replicas
+     * @return The status
      */
-    List<PartitionReplica> getReplicas(int partition);
+    PartitionReplicaStatus getStatus();
 
     /**
-     * Gets the list of partition to which the current node is
-     * the master of.
+     * Gets the identifier of a replica
      *
-     * @return The list of partition
+     * @return The identifier
      */
-    Set<Integer> getPartitions();
+    ReplicaIdentifier getIdentifier();
 }
