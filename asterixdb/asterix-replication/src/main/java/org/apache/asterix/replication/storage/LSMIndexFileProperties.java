@@ -31,27 +31,25 @@ public class LSMIndexFileProperties {
     private boolean lsmComponentFile;
     private String filePath;
     private boolean requiresAck = false;
-    private long LSNByteOffset;
 
     public LSMIndexFileProperties() {
     }
 
     public LSMIndexFileProperties(String filePath, long fileSize, String nodeId, boolean lsmComponentFile,
-            long LSNByteOffset, boolean requiresAck) {
-        initialize(filePath, fileSize, nodeId, lsmComponentFile, LSNByteOffset, requiresAck);
+            boolean requiresAck) {
+        initialize(filePath, fileSize, nodeId, lsmComponentFile, requiresAck);
     }
 
     public LSMIndexFileProperties(LSMComponentProperties lsmComponentProperties) {
-        initialize(lsmComponentProperties.getComponentId(), -1, lsmComponentProperties.getNodeId(), false, -1L, false);
+        initialize(lsmComponentProperties.getComponentId(), -1, lsmComponentProperties.getNodeId(), false, false);
     }
 
-    public void initialize(String filePath, long fileSize, String nodeId, boolean lsmComponentFile, long LSNByteOffset,
+    public void initialize(String filePath, long fileSize, String nodeId, boolean lsmComponentFile,
             boolean requiresAck) {
         this.filePath = filePath;
         this.fileSize = fileSize;
         this.nodeId = nodeId;
         this.lsmComponentFile = lsmComponentFile;
-        this.LSNByteOffset = LSNByteOffset;
         this.requiresAck = requiresAck;
     }
 
@@ -61,7 +59,6 @@ public class LSMIndexFileProperties {
         dos.writeUTF(filePath);
         dos.writeLong(fileSize);
         dos.writeBoolean(lsmComponentFile);
-        dos.writeLong(LSNByteOffset);
         dos.writeBoolean(requiresAck);
     }
 
@@ -70,10 +67,9 @@ public class LSMIndexFileProperties {
         String filePath = input.readUTF();
         long fileSize = input.readLong();
         boolean lsmComponentFile = input.readBoolean();
-        long LSNByteOffset = input.readLong();
         boolean requiresAck = input.readBoolean();
-        LSMIndexFileProperties fileProp = new LSMIndexFileProperties(filePath, fileSize, nodeId, lsmComponentFile,
-                LSNByteOffset, requiresAck);
+        LSMIndexFileProperties fileProp =
+                new LSMIndexFileProperties(filePath, fileSize, nodeId, lsmComponentFile, requiresAck);
         return fileProp;
     }
 
@@ -108,11 +104,6 @@ public class LSMIndexFileProperties {
         sb.append("File Size: " + fileSize + "  ");
         sb.append("Node ID: " + nodeId + "  ");
         sb.append("isLSMComponentFile : " + lsmComponentFile + "  ");
-        sb.append("LSN Byte Offset: " + LSNByteOffset);
         return sb.toString();
-    }
-
-    public long getLSNByteOffset() {
-        return LSNByteOffset;
     }
 }

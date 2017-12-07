@@ -19,28 +19,14 @@
 
 package org.apache.asterix.common.ioopcallbacks;
 
-import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.storage.am.common.api.IMetadataPageManager;
+import org.apache.asterix.common.storage.IIndexCheckpointManagerProvider;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentIdGenerator;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
-import org.apache.hyracks.storage.am.lsm.rtree.impls.LSMRTreeFileManager;
-import org.apache.hyracks.storage.am.rtree.impls.RTree;
 
 public class LSMRTreeIOOperationCallback extends AbstractLSMIOOperationCallback {
 
-    public LSMRTreeIOOperationCallback(ILSMIndex index, ILSMComponentIdGenerator idGenerator) {
-        super(index, idGenerator);
-    }
-
-    @Override
-    public long getComponentFileLSNOffset(ILSMDiskComponent diskComponent, String diskComponentFilePath)
-            throws HyracksDataException {
-        if (diskComponentFilePath.endsWith(LSMRTreeFileManager.RTREE_SUFFIX)) {
-            IMetadataPageManager metadataPageManager =
-                    (IMetadataPageManager) ((RTree) diskComponent.getIndex()).getPageManager();
-            return metadataPageManager.getFileOffset(metadataPageManager.createMetadataFrame(), LSN_KEY);
-        }
-        return INVALID;
+    public LSMRTreeIOOperationCallback(ILSMIndex index, ILSMComponentIdGenerator idGenerator,
+            IIndexCheckpointManagerProvider checkpointManagerProvodier) {
+        super(index, idGenerator, checkpointManagerProvodier);
     }
 }

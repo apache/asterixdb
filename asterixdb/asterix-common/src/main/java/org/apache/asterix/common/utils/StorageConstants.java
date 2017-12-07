@@ -19,6 +19,7 @@
 package org.apache.asterix.common.utils;
 
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
+import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexFileManager;
 
 /**
  * A static class that stores storage constants
@@ -27,6 +28,12 @@ public class StorageConstants {
 
     public static final String STORAGE_ROOT_DIR_NAME = "storage";
     public static final String PARTITION_DIR_PREFIX = "partition_";
+    /**
+     * Any file that shares the same directory as the LSM index files must
+     * begin with ".". Otherwise {@link AbstractLSMIndexFileManager} will try to
+     * use them as index files.
+     */
+    public static final String INDEX_CHECKPOINT_FILE_PREFIX = ".idx_checkpoint_";
     public static final String METADATA_FILE_NAME = ".metadata";
     public static final String LEGACY_DATASET_INDEX_NAME_SEPARATOR = "_idx_";
 

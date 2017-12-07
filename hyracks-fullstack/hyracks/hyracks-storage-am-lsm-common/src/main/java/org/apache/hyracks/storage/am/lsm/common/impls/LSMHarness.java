@@ -560,22 +560,31 @@ public class LSMHarness implements ILSMHarness {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Started a flush operation for index: " + lsmIndex + " ...");
         }
-
-        ILSMDiskComponent newComponent = null;
-        boolean failedOperation = false;
         try {
-            newComponent = lsmIndex.flush(operation);
-            operation.getCallback().afterOperation(LSMIOOperationType.FLUSH, null, newComponent);
-            newComponent.markAsValid(lsmIndex.isDurable());
-        } catch (Throwable e) { // NOSONAR Log and re-throw
-            failedOperation = true;
-            if (LOGGER.isLoggable(Level.SEVERE)) {
-                LOGGER.log(Level.SEVERE, "Flush failed on " + lsmIndex, e);
+            ILSMDiskComponent newComponent = null;
+            boolean failedOperation = false;
+            try {
+                newComponent = lsmIndex.flush(operation);
+                operation.getCallback().afterOperation(LSMIOOperationType.FLUSH, null, newComponent);
+                newComponent.markAsValid(lsmIndex.isDurable());
+            } catch (Throwable e) { // NOSONAR Log and re-throw
+                failedOperation = true;
+                if (LOGGER.isLoggable(Level.SEVERE)) {
+                    LOGGER.log(Level.SEVERE, "Flush failed on " + lsmIndex, e);
+                }
+                throw e;
+            } finally {
+                exitComponents(ctx, LSMOperationType.FLUSH, newComponent, failedOperation);
+                operation.getCallback().afterFinalize(LSMIOOperationType.FLUSH, newComponent);
+
             }
-            throw e;
         } finally {
-            exitComponents(ctx, LSMOperationType.FLUSH, newComponent, failedOperation);
-            operation.getCallback().afterFinalize(LSMIOOperationType.FLUSH, newComponent);
+            /*
+             * Completion of flush/merge operations is done explicitly here to make sure all generated files during
+             * io operations is completed before the io operation is declared complete
+             */
+            opTracker.completeOperation(lsmIndex, LSMOperationType.FLUSH, ctx.getSearchOperationCallback(),
+                    ctx.getModificationCallback());
         }
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Finished the flush operation for index: " + lsmIndex);
@@ -612,37 +621,42 @@ public class LSMHarness implements ILSMHarness {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Started a merge operation for index: " + lsmIndex + " ...");
         }
-
-        ILSMDiskComponent newComponent = null;
-        boolean failedOperation = false;
         try {
-            newComponent = lsmIndex.merge(operation);
-            operation.getCallback().afterOperation(LSMIOOperationType.MERGE, ctx.getComponentHolder(), newComponent);
-            newComponent.markAsValid(lsmIndex.isDurable());
-        } catch (Throwable e) { // NOSONAR: Log and re-throw
-            failedOperation = true;
-            if (LOGGER.isLoggable(Level.SEVERE)) {
-                LOGGER.log(Level.SEVERE, "Failed merge operation on " + lsmIndex, e);
+            ILSMDiskComponent newComponent = null;
+            boolean failedOperation = false;
+            try {
+                newComponent = lsmIndex.merge(operation);
+                operation.getCallback()
+                        .afterOperation(LSMIOOperationType.MERGE, ctx.getComponentHolder(), newComponent);
+                newComponent.markAsValid(lsmIndex.isDurable());
+            } catch (Throwable e) { // NOSONAR: Log and re-throw
+                failedOperation = true;
+                if (LOGGER.isLoggable(Level.SEVERE)) {
+                    LOGGER.log(Level.SEVERE, "Failed merge operation on " + lsmIndex, e);
+                }
+                throw e;
+            } finally {
+                exitComponents(ctx, LSMOperationType.MERGE, newComponent, failedOperation);
+                operation.getCallback().afterFinalize(LSMIOOperationType.MERGE, newComponent);
             }
-            throw e;
         } finally {
-            exitComponents(ctx, LSMOperationType.MERGE, newComponent, failedOperation);
-            // Completion of the merge operation is called here to and not on afterOperation because
-            // Deletion of the old components comes after afterOperation is called and the number of
-            // io operation should not be decremented before the operation is complete to avoid
-            // index destroy from competing with the merge on deletion of the files.
-            // The order becomes:
-            // 1. scheduleMerge
-            // 2. enterComponents
-            // 3. beforeOperation (increment the numOfIoOperations)
-            // 4. merge
-            // 5. exitComponents
-            // 6. afterOperation (no op)
-            // 7. delete components
-            // 8. completeOperation (decrement the numOfIoOperations)
+            /*
+             * Completion of the merge operation is called here to and not on afterOperation because
+             * deletion of old components comes after afterOperation is called and the number of
+             * io operation should not be decremented before the operation is complete to avoid
+             * index destroy from competing with the merge on deletion of the files.
+             * The order becomes:
+             * 1. scheduleMerge
+             * 2. enterComponents
+             * 3. beforeOperation (increment the numOfIoOperations)
+             * 4. merge
+             * 5. exitComponents
+             * 6. afterOperation (no op)
+             * 7. delete components
+             * 8. completeOperation (decrement the numOfIoOperations)
+             */
             opTracker.completeOperation(lsmIndex, LSMOperationType.MERGE, ctx.getSearchOperationCallback(),
                     ctx.getModificationCallback());
-            operation.getCallback().afterFinalize(LSMIOOperationType.MERGE, newComponent);
         }
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Finished the merge operation for index: " + lsmIndex);

@@ -107,4 +107,26 @@ public class ResourceReference {
         ref.root = tokens[--offset];
         ref.rebalance = String.valueOf(0);
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o != null && o instanceof ResourceReference) {
+            ResourceReference that = (ResourceReference) o;
+            return getRelativePath().toString().equals(that.getRelativePath().toString());
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return getRelativePath().toString().hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return getRelativePath().toString();
+    }
 }

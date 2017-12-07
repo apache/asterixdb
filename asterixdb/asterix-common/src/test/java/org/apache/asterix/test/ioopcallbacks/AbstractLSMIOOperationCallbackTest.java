@@ -21,6 +21,8 @@ package org.apache.asterix.test.ioopcallbacks;
 
 import org.apache.asterix.common.ioopcallbacks.AbstractLSMIOOperationCallback;
 import org.apache.asterix.common.ioopcallbacks.LSMBTreeIOOperationCallback;
+import org.apache.asterix.common.storage.IIndexCheckpointManager;
+import org.apache.asterix.common.storage.IIndexCheckpointManagerProvider;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentId;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentIdGenerator;
@@ -45,8 +47,8 @@ public abstract class AbstractLSMIOOperationCallbackTest extends TestCase {
         ILSMIndex mockIndex = Mockito.mock(ILSMIndex.class);
         Mockito.when(mockIndex.getNumberOfAllMemoryComponents()).thenReturn(2);
         Mockito.when(mockIndex.getCurrentMemoryComponent()).thenReturn(Mockito.mock(AbstractLSMMemoryComponent.class));
-        LSMBTreeIOOperationCallback callback =
-                new LSMBTreeIOOperationCallback(mockIndex, new LSMComponentIdGenerator());
+        LSMBTreeIOOperationCallback callback = new LSMBTreeIOOperationCallback(mockIndex, new LSMComponentIdGenerator(),
+                mockIndexCheckpointManagerProvider());
 
         //request to flush first component
         callback.updateLastLSN(1);
@@ -57,13 +59,14 @@ public abstract class AbstractLSMIOOperationCallbackTest extends TestCase {
         callback.beforeOperation(LSMIOOperationType.FLUSH);
 
         Assert.assertEquals(1, callback.getComponentLSN(null));
-        callback.afterOperation(LSMIOOperationType.FLUSH, null, mockDiskComponent());
-        callback.afterFinalize(LSMIOOperationType.FLUSH, mockDiskComponent());
+        final ILSMDiskComponent diskComponent1 = mockDiskComponent();
+        callback.afterOperation(LSMIOOperationType.FLUSH, null, diskComponent1);
+        callback.afterFinalize(LSMIOOperationType.FLUSH, diskComponent1);
 
         Assert.assertEquals(2, callback.getComponentLSN(null));
-
-        callback.afterOperation(LSMIOOperationType.FLUSH, null, mockDiskComponent());
-        callback.afterFinalize(LSMIOOperationType.FLUSH, mockDiskComponent());
+        final ILSMDiskComponent diskComponent2 = mockDiskComponent();
+        callback.afterOperation(LSMIOOperationType.FLUSH, null, diskComponent2);
+        callback.afterFinalize(LSMIOOperationType.FLUSH, diskComponent2);
     }
 
     @Test
@@ -72,8 +75,8 @@ public abstract class AbstractLSMIOOperationCallbackTest extends TestCase {
         Mockito.when(mockIndex.getNumberOfAllMemoryComponents()).thenReturn(2);
         Mockito.when(mockIndex.getCurrentMemoryComponent()).thenReturn(Mockito.mock(AbstractLSMMemoryComponent.class));
 
-        LSMBTreeIOOperationCallback callback =
-                new LSMBTreeIOOperationCallback(mockIndex, new LSMComponentIdGenerator());
+        LSMBTreeIOOperationCallback callback = new LSMBTreeIOOperationCallback(mockIndex, new LSMComponentIdGenerator(),
+                mockIndexCheckpointManagerProvider());
 
         //request to flush first component
         callback.updateLastLSN(1);
@@ -90,11 +93,13 @@ public abstract class AbstractLSMIOOperationCallbackTest extends TestCase {
         //the scheduleFlush request would fail this time
 
         Assert.assertEquals(1, callback.getComponentLSN(null));
-        callback.afterOperation(LSMIOOperationType.FLUSH, null, mockDiskComponent());
-        callback.afterFinalize(LSMIOOperationType.FLUSH, mockDiskComponent());
-
+        final ILSMDiskComponent diskComponent1 = mockDiskComponent();
+        callback.afterOperation(LSMIOOperationType.FLUSH, null, diskComponent1);
+        callback.afterFinalize(LSMIOOperationType.FLUSH, diskComponent1);
+        final ILSMDiskComponent diskComponent2 = mockDiskComponent();
         Assert.assertEquals(2, callback.getComponentLSN(null));
-        callback.afterFinalize(LSMIOOperationType.FLUSH, mockDiskComponent());
+        callback.afterOperation(LSMIOOperationType.FLUSH, null, diskComponent2);
+        callback.afterFinalize(LSMIOOperationType.FLUSH, diskComponent2);
     }
 
     @Test
@@ -103,9 +108,8 @@ public abstract class AbstractLSMIOOperationCallbackTest extends TestCase {
         Mockito.when(mockIndex.getNumberOfAllMemoryComponents()).thenReturn(2);
         Mockito.when(mockIndex.getCurrentMemoryComponent()).thenReturn(Mockito.mock(AbstractLSMMemoryComponent.class));
 
-        LSMBTreeIOOperationCallback callback =
-                new LSMBTreeIOOperationCallback(mockIndex, new LSMComponentIdGenerator());
-
+        LSMBTreeIOOperationCallback callback = new LSMBTreeIOOperationCallback(mockIndex, new LSMComponentIdGenerator(),
+                mockIndexCheckpointManagerProvider());
         //request to flush first component
         callback.updateLastLSN(1);
         callback.beforeOperation(LSMIOOperationType.FLUSH);
@@ -144,7 +148,8 @@ public abstract class AbstractLSMIOOperationCallbackTest extends TestCase {
         ILSMMemoryComponent mockComponent = Mockito.mock(AbstractLSMMemoryComponent.class);
         Mockito.when(mockIndex.getCurrentMemoryComponent()).thenReturn(mockComponent);
 
-        LSMBTreeIOOperationCallback callback = new LSMBTreeIOOperationCallback(mockIndex, idGenerator);
+        LSMBTreeIOOperationCallback callback =
+                new LSMBTreeIOOperationCallback(mockIndex, idGenerator, mockIndexCheckpointManagerProvider());
 
         ILSMComponentId initialId = idGenerator.getId();
         // simulate a partition is flushed before allocated
@@ -162,7 +167,8 @@ public abstract class AbstractLSMIOOperationCallbackTest extends TestCase {
         Mockito.when(mockIndex.getNumberOfAllMemoryComponents()).thenReturn(2);
         ILSMMemoryComponent mockComponent = Mockito.mock(AbstractLSMMemoryComponent.class);
         Mockito.when(mockIndex.getCurrentMemoryComponent()).thenReturn(mockComponent);
-        LSMBTreeIOOperationCallback callback = new LSMBTreeIOOperationCallback(mockIndex, idGenerator);
+        LSMBTreeIOOperationCallback callback =
+                new LSMBTreeIOOperationCallback(mockIndex, idGenerator, mockIndexCheckpointManagerProvider());
 
         ILSMComponentId id = idGenerator.getId();
         callback.allocated(mockComponent);
@@ -178,8 +184,9 @@ public abstract class AbstractLSMIOOperationCallbackTest extends TestCase {
             callback.beforeOperation(LSMIOOperationType.FLUSH);
             callback.recycled(mockComponent, true);
 
-            callback.afterOperation(LSMIOOperationType.FLUSH, null, mockDiskComponent());
-            callback.afterFinalize(LSMIOOperationType.FLUSH, mockDiskComponent());
+            final ILSMDiskComponent diskComponent = mockDiskComponent();
+            callback.afterOperation(LSMIOOperationType.FLUSH, null, diskComponent);
+            callback.afterFinalize(LSMIOOperationType.FLUSH, diskComponent);
             checkMemoryComponent(expectedId, mockComponent);
         }
     }
@@ -191,7 +198,8 @@ public abstract class AbstractLSMIOOperationCallbackTest extends TestCase {
         Mockito.when(mockIndex.getNumberOfAllMemoryComponents()).thenReturn(2);
         ILSMMemoryComponent mockComponent = Mockito.mock(AbstractLSMMemoryComponent.class);
         Mockito.when(mockIndex.getCurrentMemoryComponent()).thenReturn(mockComponent);
-        LSMBTreeIOOperationCallback callback = new LSMBTreeIOOperationCallback(mockIndex, idGenerator);
+        LSMBTreeIOOperationCallback callback =
+                new LSMBTreeIOOperationCallback(mockIndex, idGenerator, mockIndexCheckpointManagerProvider());
 
         ILSMComponentId id = idGenerator.getId();
         callback.allocated(mockComponent);
@@ -216,7 +224,8 @@ public abstract class AbstractLSMIOOperationCallbackTest extends TestCase {
         ILSMMemoryComponent mockComponent = Mockito.mock(AbstractLSMMemoryComponent.class);
         Mockito.when(mockIndex.getCurrentMemoryComponent()).thenReturn(mockComponent);
         Mockito.when(mockIndex.getNumberOfAllMemoryComponents()).thenReturn(2);
-        LSMBTreeIOOperationCallback callback = new LSMBTreeIOOperationCallback(mockIndex, idGenerator);
+        LSMBTreeIOOperationCallback callback =
+                new LSMBTreeIOOperationCallback(mockIndex, idGenerator, mockIndexCheckpointManagerProvider());
 
         ILSMComponentId id = idGenerator.getId();
         callback.allocated(mockComponent);
@@ -230,7 +239,9 @@ public abstract class AbstractLSMIOOperationCallbackTest extends TestCase {
 
         callback.updateLastLSN(0);
         callback.beforeOperation(LSMIOOperationType.FLUSH);
-        callback.afterFinalize(LSMIOOperationType.FLUSH, Mockito.mock(ILSMDiskComponent.class));
+        final ILSMDiskComponent diskComponent = mockDiskComponent();
+        callback.afterOperation(LSMIOOperationType.FLUSH, null, diskComponent);
+        callback.afterFinalize(LSMIOOperationType.FLUSH, diskComponent);
 
         // another flush is to be scheduled before the component is recycled
         idGenerator.refresh();
@@ -243,7 +254,9 @@ public abstract class AbstractLSMIOOperationCallbackTest extends TestCase {
         // schedule the next flush
         callback.updateLastLSN(0);
         callback.beforeOperation(LSMIOOperationType.FLUSH);
-        callback.afterFinalize(LSMIOOperationType.FLUSH, Mockito.mock(ILSMDiskComponent.class));
+        final ILSMDiskComponent diskComponent2 = mockDiskComponent();
+        callback.afterOperation(LSMIOOperationType.FLUSH, null, diskComponent2);
+        callback.afterFinalize(LSMIOOperationType.FLUSH, diskComponent2);
         callback.recycled(mockComponent, true);
         checkMemoryComponent(nextId, mockComponent);
     }
@@ -263,5 +276,14 @@ public abstract class AbstractLSMIOOperationCallbackTest extends TestCase {
         return component;
     }
 
-    protected abstract AbstractLSMIOOperationCallback getIoCallback();
+    protected IIndexCheckpointManagerProvider mockIndexCheckpointManagerProvider() throws HyracksDataException {
+        IIndexCheckpointManagerProvider indexCheckpointManagerProvider =
+                Mockito.mock(IIndexCheckpointManagerProvider.class);
+        IIndexCheckpointManager indexCheckpointManager = Mockito.mock(IIndexCheckpointManager.class);
+        Mockito.doNothing().when(indexCheckpointManager).flushed(Mockito.any(), Mockito.anyLong());
+        Mockito.doReturn(indexCheckpointManager).when(indexCheckpointManagerProvider).get(Mockito.any());
+        return indexCheckpointManagerProvider;
+    }
+
+    protected abstract AbstractLSMIOOperationCallback getIoCallback() throws HyracksDataException;
 }

@@ -60,6 +60,7 @@ import org.apache.asterix.common.replication.IRemoteRecoveryManager;
 import org.apache.asterix.common.replication.IReplicaResourcesManager;
 import org.apache.asterix.common.replication.IReplicationChannel;
 import org.apache.asterix.common.replication.IReplicationManager;
+import org.apache.asterix.common.storage.IIndexCheckpointManagerProvider;
 import org.apache.asterix.common.storage.IStorageSubsystem;
 import org.apache.asterix.common.transactions.IAppRuntimeContextProvider;
 import org.apache.asterix.common.transactions.IRecoveryManager;
@@ -142,6 +143,7 @@ public class NCAppRuntimeContext implements INcApplicationContext {
     private final IStorageComponentProvider componentProvider;
     private IHyracksClientConnection hcc;
     private IStorageSubsystem storageSubsystem;
+    private IIndexCheckpointManagerProvider indexCheckpointManagerProvider;
 
     public NCAppRuntimeContext(INCServiceContext ncServiceContext, List<AsterixExtension> extensions)
             throws AsterixException, InstantiationException, IllegalAccessException, ClassNotFoundException,
@@ -182,11 +184,11 @@ public class NCAppRuntimeContext implements INcApplicationContext {
         lsmIOScheduler = AsynchronousScheduler.INSTANCE;
 
         metadataMergePolicyFactory = new PrefixMergePolicyFactory();
+        indexCheckpointManagerProvider = new IndexCheckpointManagerProvider(ioManager);
 
         ILocalResourceRepositoryFactory persistentLocalResourceRepositoryFactory =
                 new PersistentLocalResourceRepositoryFactory(ioManager, getServiceContext().getNodeId(),
-                        metadataProperties);
-
+                        metadataProperties, indexCheckpointManagerProvider);
         localResourceRepository =
                 (PersistentLocalResourceRepository) persistentLocalResourceRepositoryFactory.createRepository();
 
@@ -203,11 +205,10 @@ public class NCAppRuntimeContext implements INcApplicationContext {
             }
             localResourceRepository.deleteStorageData();
         }
-
         datasetMemoryManager = new DatasetMemoryManager(storageProperties);
         datasetLifecycleManager =
                 new DatasetLifecycleManager(storageProperties, localResourceRepository, txnSubsystem.getLogManager(),
-                        datasetMemoryManager, ioManager.getIODevices().size());
+                        datasetMemoryManager, indexCheckpointManagerProvider, ioManager.getIODevices().size());
         final String nodeId = getServiceContext().getNodeId();
         final ClusterPartition[] nodePartitions = metadataProperties.getNodePartitions().get(nodeId);
         final Set<Integer> nodePartitionsIds = Arrays.stream(nodePartitions).map(ClusterPartition::getPartitionId)
@@ -220,7 +221,8 @@ public class NCAppRuntimeContext implements INcApplicationContext {
 
         if (replicationProperties.isParticipant(getServiceContext().getNodeId())) {
 
-            replicaResourcesManager = new ReplicaResourcesManager(localResourceRepository, metadataProperties);
+            replicaResourcesManager = new ReplicaResourcesManager(localResourceRepository, metadataProperties,
+                    indexCheckpointManagerProvider);
 
             replicationManager = new ReplicationManager(nodeId, replicationProperties, replicaResourcesManager,
                     txnSubsystem.getLogManager(), asterixAppRuntimeContextProvider);
@@ -229,13 +231,13 @@ public class NCAppRuntimeContext implements INcApplicationContext {
             //LogManager to replicate logs
             txnSubsystem.getLogManager().setReplicationManager(replicationManager);
 
-            //PersistentLocalResourceRepository to replicate metadata files and delete backups on drop index
+            //PersistentLocalResourceRepository to replicated metadata files and delete backups on drop index
             localResourceRepository.setReplicationManager(replicationManager);
 
             /*
              * add the partitions that will be replicated in this node as inactive partitions
              */
-            //get nodes which replicate to this node
+            //get nodes which replicated to this node
             Set<String> remotePrimaryReplicas = replicationProperties.getRemotePrimaryReplicasIds(nodeId);
             for (String clientId : remotePrimaryReplicas) {
                 //get the partitions of each client
@@ -528,5 +530,10 @@ public class NCAppRuntimeContext implements INcApplicationContext {
     @Override
     public IStorageSubsystem getStorageSubsystem() {
         return storageSubsystem;
+    }
+
+    @Override
+    public IIndexCheckpointManagerProvider getIndexCheckpointManagerProvider() {
+        return indexCheckpointManagerProvider;
     }
 }

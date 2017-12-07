@@ -54,7 +54,6 @@ import java.util.stream.Collectors;
 
 import org.apache.asterix.common.cluster.ClusterPartition;
 import org.apache.asterix.common.config.ReplicationProperties;
-import org.apache.asterix.common.dataflow.LSMIndexUtil;
 import org.apache.asterix.common.replication.IReplicaResourcesManager;
 import org.apache.asterix.common.replication.IReplicationManager;
 import org.apache.asterix.common.replication.IReplicationStrategy;
@@ -63,6 +62,8 @@ import org.apache.asterix.common.replication.Replica.ReplicaState;
 import org.apache.asterix.common.replication.ReplicaEvent;
 import org.apache.asterix.common.replication.ReplicationJob;
 import org.apache.asterix.common.storage.DatasetResourceReference;
+import org.apache.asterix.common.storage.IIndexCheckpointManagerProvider;
+import org.apache.asterix.common.storage.ResourceReference;
 import org.apache.asterix.common.transactions.IAppRuntimeContextProvider;
 import org.apache.asterix.common.transactions.ILogManager;
 import org.apache.asterix.common.transactions.ILogRecord;
@@ -84,7 +85,6 @@ import org.apache.hyracks.api.replication.IReplicationJob;
 import org.apache.hyracks.api.replication.IReplicationJob.ReplicationExecutionType;
 import org.apache.hyracks.api.replication.IReplicationJob.ReplicationJobType;
 import org.apache.hyracks.api.replication.IReplicationJob.ReplicationOperation;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexReplicationJob;
 import org.apache.hyracks.util.StorageUtil;
 import org.apache.hyracks.util.StorageUtil.StorageUnit;
@@ -136,6 +136,7 @@ public class ReplicationManager implements IReplicationManager {
     private final ByteBuffer txnLogsBatchSizeBuffer = ByteBuffer.allocate(Integer.BYTES);
     private final IReplicationStrategy replicationStrategy;
     private final PersistentLocalResourceRepository localResourceRepo;
+    private final IIndexCheckpointManagerProvider indexCheckpointManagerProvider;
 
     //TODO this class needs to be refactored by moving its private classes to separate files
     //and possibly using MessageBroker to send/receive remote replicas events.
@@ -148,6 +149,8 @@ public class ReplicationManager implements IReplicationManager {
         this.replicaResourcesManager = (ReplicaResourcesManager) remoteResoucesManager;
         this.asterixAppRuntimeContextProvider = asterixAppRuntimeContextProvider;
         this.logManager = logManager;
+        this.indexCheckpointManagerProvider =
+                asterixAppRuntimeContextProvider.getAppContext().getIndexCheckpointManagerProvider();
         localResourceRepo =
                 (PersistentLocalResourceRepository) asterixAppRuntimeContextProvider.getLocalResourceRepository();
         this.hostIPAddressFirstOctet = replicationProperties.getReplicaIPAddress(nodeId).substring(0, 3);
@@ -284,7 +287,6 @@ public class ReplicationManager implements IReplicationManager {
             if (!replicationStrategy.isMatch(indexFileRef.getDatasetId())) {
                 return;
             }
-
             int jobPartitionId = indexFileRef.getPartitionId();
 
             ByteBuffer responseBuffer = null;
@@ -327,25 +329,10 @@ public class ReplicationManager implements IReplicationManager {
                                 FileChannel fileChannel = fromFile.getChannel();) {
 
                             long fileSize = fileChannel.size();
-
-                            if (LSMComponentJob != null) {
-                                /**
-                                 * since this is LSM_COMPONENT REPLICATE job, the job will contain
-                                 * only the component being replicated.
-                                 */
-                                ILSMDiskComponent diskComponent = LSMComponentJob.getLSMIndexOperationContext()
-                                        .getComponentsToBeReplicated().get(0);
-                                long lsnOffset = LSMIndexUtil.getComponentFileLSNOffset(LSMComponentJob.getLSMIndex(),
-                                        diskComponent, filePath);
-                                asterixFileProperties.initialize(filePath, fileSize, nodeId, isLSMComponentFile,
-                                        lsnOffset, remainingFiles == 0);
-                            } else {
-                                asterixFileProperties.initialize(filePath, fileSize, nodeId, isLSMComponentFile, -1L,
-                                        remainingFiles == 0);
-                            }
+                            asterixFileProperties.initialize(filePath, fileSize, nodeId, isLSMComponentFile,
+                                    remainingFiles == 0);
                             requestBuffer = ReplicationProtocol.writeFileReplicationRequest(requestBuffer,
                                     asterixFileProperties, ReplicationRequestType.REPLICATE_FILE);
-
                             Iterator<Map.Entry<String, SocketChannel>> iterator = replicasSockets.entrySet().iterator();
                             while (iterator.hasNext()) {
                                 Map.Entry<String, SocketChannel> entry = iterator.next();
@@ -378,8 +365,7 @@ public class ReplicationManager implements IReplicationManager {
                 } else if (job.getOperation() == ReplicationOperation.DELETE) {
                     for (String filePath : job.getJobFiles()) {
                         remainingFiles--;
-                        asterixFileProperties.initialize(filePath, -1, nodeId, isLSMComponentFile, -1L,
-                                remainingFiles == 0);
+                        asterixFileProperties.initialize(filePath, -1, nodeId, isLSMComponentFile, remainingFiles == 0);
                         ReplicationProtocol.writeFileReplicationRequest(requestBuffer, asterixFileProperties,
                                 ReplicationRequestType.DELETE_FILE);
 
@@ -1026,10 +1012,10 @@ public class ReplicationManager implements IReplicationManager {
         ByteBuffer requestBuffer = ByteBuffer.allocate(INITIAL_BUFFER_SIZE);
         for (String replicaId : replicaIds) {
             //1. identify replica indexes with LSN less than nonSharpCheckpointTargetLSN.
-            Map<Long, String> laggingIndexes =
+            Map<Long, DatasetResourceReference> laggingIndexes =
                     replicaResourcesManager.getLaggingReplicaIndexesId2PathMap(replicaId, nonSharpCheckpointTargetLSN);
 
-            if (laggingIndexes.size() > 0) {
+            if (!laggingIndexes.isEmpty()) {
                 //2. send request to remote replicas that have lagging indexes.
                 ReplicaIndexFlushRequest laggingIndexesResponse = null;
                 try (SocketChannel socketChannel = getReplicaSocket(replicaId)) {
@@ -1052,16 +1038,14 @@ public class ReplicationManager implements IReplicationManager {
                 }
 
                 /*
-                 * 4. update the LSN_MAP for indexes that were not flushed
+                 * 4. update checkpoints for indexes that were not flushed
                  * to the current append LSN to indicate no operations happened
                  * since the checkpoint start.
                  */
                 if (laggingIndexesResponse != null) {
                     for (Long resouceId : laggingIndexesResponse.getLaggingRescouresIds()) {
-                        String indexPath = laggingIndexes.get(resouceId);
-                        Map<Long, Long> indexLSNMap = replicaResourcesManager.getReplicaIndexLSNMap(indexPath);
-                        indexLSNMap.put(ReplicaResourcesManager.REPLICA_INDEX_CREATION_LSN, startLSN);
-                        replicaResourcesManager.updateReplicaIndexLSNMap(indexPath, indexLSNMap);
+                        final DatasetResourceReference datasetResourceReference = laggingIndexes.get(resouceId);
+                        indexCheckpointManagerProvider.get(datasetResourceReference).advanceLowWatermark(startLSN);
                     }
                 }
             }
@@ -1141,12 +1125,11 @@ public class ReplicationManager implements IReplicationManager {
                     fileChannel.force(true);
                 }
 
-                //we need to create LSN map for .metadata files that belong to remote replicas
+                //we need to create initial map for .metadata files that belong to remote replicas
                 if (!fileProperties.isLSMComponentFile() && !fileProperties.getNodeId().equals(nodeId)) {
-                    //replica index
-                    replicaResourcesManager.initializeReplicaIndexLSNMap(indexPath, logManager.getAppendLSN());
+                    final ResourceReference indexRef = ResourceReference.of(destFile.getAbsolutePath());
+                    indexCheckpointManagerProvider.get(indexRef).init(logManager.getAppendLSN());
                 }
-
                 responseFunction = ReplicationProtocol.getRequestType(socketChannel, dataBuffer);
             }
 

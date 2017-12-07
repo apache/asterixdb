@@ -52,9 +52,10 @@ public class LSMComponentProperties {
         this.nodeId = nodeId;
         componentId = LSMComponentProperties.getLSMComponentID((String) job.getJobFiles().toArray()[0]);
         numberOfFiles = new AtomicInteger(job.getJobFiles().size());
-        originalLSN = LSMComponentProperties.getLSMComponentLSN((AbstractLSMIndex) job.getLSMIndex(),
-                job.getLSMIndexOperationContext());
         opType = job.getLSMOpType();
+        originalLSN = opType == LSMOperationType.FLUSH ?
+                LSMComponentProperties.getLSMComponentLSN((AbstractLSMIndex) job.getLSMIndex(),
+                        job.getLSMIndexOperationContext()) : 0;
     }
 
     public LSMComponentProperties() {

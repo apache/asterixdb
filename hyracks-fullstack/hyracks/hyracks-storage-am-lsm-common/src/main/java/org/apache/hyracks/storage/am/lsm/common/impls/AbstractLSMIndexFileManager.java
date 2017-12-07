@@ -411,4 +411,8 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
         prevTimestamp = ts;
         return ts;
     }
+
+    public static String getComponentEndTime(String fileName) {
+        return fileName.split(DELIMITER)[1];
+    }
 }

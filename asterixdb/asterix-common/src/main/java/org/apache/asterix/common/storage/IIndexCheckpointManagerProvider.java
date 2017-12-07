@@ -16,24 +16,25 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.replication.storage;
+package org.apache.asterix.common.storage;
 
-public class LSMComponentLSNSyncTask {
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-    private String componentFilePath;
-    private String componentId;
+public interface IIndexCheckpointManagerProvider {
 
-    public LSMComponentLSNSyncTask(String componentId, String componentFilePath) {
-        this.componentId = componentId;
-        this.componentFilePath = componentFilePath;
-    }
+    /**
+     * Gets {@link IIndexCheckpointManager} for the index referenced by {@code ref}
+     *
+     * @param ref
+     * @return The index checkpoint manager.
+     * @throws HyracksDataException
+     */
+    IIndexCheckpointManager get(ResourceReference ref) throws HyracksDataException;
 
-    public String getComponentFilePath() {
-        return componentFilePath;
-    }
-
-    public String getComponentId() {
-        return componentId;
-    }
-
+    /**
+     * Closes any resources used by the index checkpoint manager referenced by {@code ref}
+     *
+     * @param ref
+     */
+    void close(ResourceReference ref);
 }

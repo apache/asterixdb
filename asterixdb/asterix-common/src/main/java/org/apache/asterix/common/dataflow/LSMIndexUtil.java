@@ -41,11 +41,4 @@ public class LSMIndexUtil {
             }
         }
     }
-
-    public static long getComponentFileLSNOffset(ILSMIndex lsmIndex, ILSMDiskComponent lsmComponent,
-            String componentFilePath) throws HyracksDataException {
-        AbstractLSMIOOperationCallback ioOpCallback =
-                (AbstractLSMIOOperationCallback) lsmIndex.getIOOperationCallback();
-        return ioOpCallback.getComponentFileLSNOffset(lsmComponent, componentFilePath);
-    }
 }

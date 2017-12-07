@@ -35,6 +35,8 @@ import org.apache.asterix.common.dataflow.DatasetLocalResource;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.ioopcallbacks.AbstractLSMIOOperationCallback;
 import org.apache.asterix.common.replication.IReplicationStrategy;
+import org.apache.asterix.common.storage.DatasetResourceReference;
+import org.apache.asterix.common.storage.IIndexCheckpointManagerProvider;
 import org.apache.asterix.common.transactions.ILogManager;
 import org.apache.asterix.common.transactions.LogRecord;
 import org.apache.asterix.common.utils.StoragePathUtil;
@@ -64,13 +66,16 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
     private final LogRecord logRecord;
     private final int numPartitions;
     private volatile boolean stopped = false;
+    private final IIndexCheckpointManagerProvider indexCheckpointManagerProvider;
 
     public DatasetLifecycleManager(StorageProperties storageProperties, ILocalResourceRepository resourceRepository,
-            ILogManager logManager, IDatasetMemoryManager memoryManager, int numPartitions) {
+            ILogManager logManager, IDatasetMemoryManager memoryManager,
+            IIndexCheckpointManagerProvider indexCheckpointManagerProvider, int numPartitions) {
         this.logManager = logManager;
         this.storageProperties = storageProperties;
         this.resourceRepository = resourceRepository;
         this.memoryManager = memoryManager;
+        this.indexCheckpointManagerProvider = indexCheckpointManagerProvider;
         this.numPartitions = numPartitions;
         logRecord = new LogRecord();
     }
@@ -149,12 +154,7 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
         // TODO: use fine-grained counters, one for each index instead of a single counter per dataset.
         DatasetInfo dsInfo = dsr.getDatasetInfo();
         dsInfo.waitForIO();
-        if (iInfo.isOpen()) {
-            ILSMOperationTracker indexOpTracker = iInfo.getIndex().getOperationTracker();
-            synchronized (indexOpTracker) {
-                iInfo.getIndex().deactivate(false);
-            }
-        }
+        closeIndex(iInfo);
         dsInfo.getIndexes().remove(resourceID);
         if (dsInfo.getReferenceCount() == 0 && dsInfo.isOpen() && dsInfo.getIndexes().isEmpty()
                 && !dsInfo.isExternal()) {
@@ -451,13 +451,7 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
             throw HyracksDataException.create(e);
         }
         for (IndexInfo iInfo : dsInfo.getIndexes().values()) {
-            if (iInfo.isOpen()) {
-                ILSMOperationTracker opTracker = iInfo.getIndex().getOperationTracker();
-                synchronized (opTracker) {
-                    iInfo.getIndex().deactivate(false);
-                }
-                iInfo.setOpen(false);
-            }
+            closeIndex(iInfo);
         }
         removeDatasetFromCache(dsInfo.getDatasetID());
         dsInfo.setOpen(false);
@@ -577,6 +571,17 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
             if (replicationStrategy.isMatch(dsr.getDatasetID())) {
                 flushDatasetOpenIndexes(dsr, false);
             }
+        }
+    }
+
+    private void closeIndex(IndexInfo indexInfo) throws HyracksDataException {
+        if (indexInfo.isOpen()) {
+            ILSMOperationTracker opTracker = indexInfo.getIndex().getOperationTracker();
+            synchronized (opTracker) {
+                indexInfo.getIndex().deactivate(false);
+            }
+            indexCheckpointManagerProvider.close(DatasetResourceReference.of(indexInfo.getLocalResource()));
+            indexInfo.setOpen(false);
         }
     }
 }

@@ -21,6 +21,7 @@ package org.apache.asterix.test.ioopcallbacks;
 
 import org.apache.asterix.common.ioopcallbacks.AbstractLSMIOOperationCallback;
 import org.apache.asterix.common.ioopcallbacks.LSMInvertedIndexIOOperationCallback;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentIdGenerator;
 import org.mockito.Mockito;
@@ -28,10 +29,11 @@ import org.mockito.Mockito;
 public class LSMInvertedIndexIOOperationCallbackTest extends AbstractLSMIOOperationCallbackTest {
 
     @Override
-    protected AbstractLSMIOOperationCallback getIoCallback() {
+    protected AbstractLSMIOOperationCallback getIoCallback() throws HyracksDataException {
         ILSMIndex mockIndex = Mockito.mock(ILSMIndex.class);
         Mockito.when(mockIndex.getNumberOfAllMemoryComponents()).thenReturn(2);
-        return new LSMInvertedIndexIOOperationCallback(mockIndex, new LSMComponentIdGenerator());
+        return new LSMInvertedIndexIOOperationCallback(mockIndex, new LSMComponentIdGenerator(),
+                mockIndexCheckpointManagerProvider());
     }
 
 }

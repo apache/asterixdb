@@ -32,6 +32,7 @@ public class LSMBTreeWithBuddyIOOperationCallbackFactory extends AbstractLSMInde
 
     @Override
     public ILSMIOOperationCallback createIoOpCallback(ILSMIndex index) {
-        return new LSMBTreeWithBuddyIOOperationCallback(index, getComponentIdGenerator());
+        return new LSMBTreeWithBuddyIOOperationCallback(index, getComponentIdGenerator(),
+                getIndexCheckpointManagerProvider());
     }
 }

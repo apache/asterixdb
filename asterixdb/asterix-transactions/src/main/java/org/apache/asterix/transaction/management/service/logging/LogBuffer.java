@@ -111,8 +111,8 @@ public class LogBuffer implements ILogBuffer {
                     logRecord.isFlushed(false);
                     flushQ.add(logRecord);
                 }
-            } else if (logRecord.getLogSource() == LogSource.REMOTE
-                    && (logRecord.getLogType() == LogType.JOB_COMMIT || logRecord.getLogType() == LogType.ABORT)) {
+            } else if (logRecord.getLogSource() == LogSource.REMOTE && (logRecord.getLogType() == LogType.JOB_COMMIT
+                    || logRecord.getLogType() == LogType.ABORT || logRecord.getLogType() == LogType.FLUSH)) {
                 remoteJobsQ.add(logRecord);
             }
             this.notify();
@@ -260,10 +260,9 @@ public class LogBuffer implements ILogBuffer {
                     } else if (logRecord.getLogType() == LogType.WAIT) {
                         notifyWaitTermination();
                     }
-                } else if (logRecord.getLogSource() == LogSource.REMOTE) {
-                    if (logRecord.getLogType() == LogType.JOB_COMMIT || logRecord.getLogType() == LogType.ABORT) {
-                        notifyReplicationTermination();
-                    }
+                } else if (logRecord.getLogSource() == LogSource.REMOTE && (logRecord.getLogType() == LogType.JOB_COMMIT
+                        || logRecord.getLogType() == LogType.ABORT || logRecord.getLogType() == LogType.FLUSH)) {
+                    notifyReplicationTermination();
                 }
                 logRecord = logBufferTailReader.next();
             }
@@ -295,10 +294,12 @@ public class LogBuffer implements ILogBuffer {
 
     public void notifyFlushTermination() throws ACIDException {
         LogRecord logRecord = null;
-        try {
-            logRecord = (LogRecord) flushQ.take();
-        } catch (InterruptedException e) {
-            //ignore
+        while (logRecord == null) {
+            try {
+                logRecord = (LogRecord) flushQ.take();
+            } catch (InterruptedException e) { //NOSONAR LogFlusher should survive interrupts
+                //ignore
+            }
         }
         synchronized (logRecord) {
             logRecord.isFlushed(true);
@@ -316,10 +317,12 @@ public class LogBuffer implements ILogBuffer {
 
     public void notifyReplicationTermination() {
         LogRecord logRecord = null;
-        try {
-            logRecord = (LogRecord) remoteJobsQ.take();
-        } catch (InterruptedException e) {
-            //ignore
+        while (logRecord == null) {
+            try {
+                logRecord = (LogRecord) remoteJobsQ.take();
+            } catch (InterruptedException e) { //NOSONAR LogFlusher should survive interrupts
+                //ignore
+            }
         }
         logRecord.isFlushed(true);
         IReplicationThread replicationThread = logRecord.getReplicationThread();

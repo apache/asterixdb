@@ -27,9 +27,6 @@ import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -39,13 +36,17 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
+import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.cluster.ClusterPartition;
 import org.apache.asterix.common.config.ReplicationProperties;
 import org.apache.asterix.common.context.IndexInfo;
+import org.apache.asterix.common.dataflow.DatasetLocalResource;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.ioopcallbacks.AbstractLSMIOOperationCallback;
 import org.apache.asterix.common.replication.IReplicaResourcesManager;
@@ -55,6 +56,9 @@ import org.apache.asterix.common.replication.IReplicationStrategy;
 import org.apache.asterix.common.replication.IReplicationThread;
 import org.apache.asterix.common.replication.ReplicaEvent;
 import org.apache.asterix.common.storage.DatasetResourceReference;
+import org.apache.asterix.common.storage.IIndexCheckpointManager;
+import org.apache.asterix.common.storage.IIndexCheckpointManagerProvider;
+import org.apache.asterix.common.storage.ResourceReference;
 import org.apache.asterix.common.transactions.IAppRuntimeContextProvider;
 import org.apache.asterix.common.transactions.ILogManager;
 import org.apache.asterix.common.transactions.LogRecord;
@@ -72,9 +76,13 @@ import org.apache.asterix.replication.storage.LSMComponentProperties;
 import org.apache.asterix.replication.storage.LSMIndexFileProperties;
 import org.apache.asterix.replication.storage.ReplicaResourcesManager;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepository;
+import org.apache.asterix.transaction.management.service.logging.LogBuffer;
 import org.apache.hyracks.api.application.INCServiceContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndex;
+import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexFileManager;
+import org.apache.hyracks.storage.common.LocalResource;
 import org.apache.hyracks.util.StorageUtil;
 import org.apache.hyracks.util.StorageUtil.StorageUnit;
 
@@ -89,7 +97,6 @@ public class ReplicationChannel extends Thread implements IReplicationChannel {
     private final String localNodeID;
     private final ILogManager logManager;
     private final ReplicaResourcesManager replicaResourcesManager;
-    private SocketChannel socketChannel = null;
     private ServerSocketChannel serverSocketChannel = null;
     private final IReplicationManager replicationManager;
     private final ReplicationProperties replicationProperties;
@@ -98,6 +105,7 @@ public class ReplicationChannel extends Thread implements IReplicationChannel {
     private final LinkedBlockingQueue<LSMComponentLSNSyncTask> lsmComponentRemoteLSN2LocalLSNMappingTaskQ;
     private final LinkedBlockingQueue<LogRecord> pendingNotificationRemoteLogsQ;
     private final Map<String, LSMComponentProperties> lsmComponentId2PropertiesMap;
+    private final Map<Long, RemoteLogMapping> localLsn2RemoteMapping;
     private final Map<String, RemoteLogMapping> replicaUniqueLSN2RemoteMapping;
     private final LSMComponentsSyncService lsmComponentLSNMappingService;
     private final Set<Integer> nodeHostedPartitions;
@@ -105,6 +113,7 @@ public class ReplicationChannel extends Thread implements IReplicationChannel {
     private final Object flushLogslock = new Object();
     private final IDatasetLifecycleManager dsLifecycleManager;
     private final PersistentLocalResourceRepository localResourceRep;
+    private final IIndexCheckpointManagerProvider indexCheckpointManagerProvider;
 
     public ReplicationChannel(String nodeId, ReplicationProperties replicationProperties, ILogManager logManager,
             IReplicaResourcesManager replicaResoucesManager, IReplicationManager replicationManager,
@@ -122,6 +131,7 @@ public class ReplicationChannel extends Thread implements IReplicationChannel {
         pendingNotificationRemoteLogsQ = new LinkedBlockingQueue<>();
         lsmComponentId2PropertiesMap = new ConcurrentHashMap<>();
         replicaUniqueLSN2RemoteMapping = new ConcurrentHashMap<>();
+        localLsn2RemoteMapping = new ConcurrentHashMap<>();
         lsmComponentLSNMappingService = new LSMComponentsSyncService();
         replicationNotifier = new ReplicationNotifier();
         replicationThreads = Executors.newCachedThreadPool(ncServiceContext.getThreadFactory());
@@ -136,6 +146,8 @@ public class ReplicationChannel extends Thread implements IReplicationChannel {
         }
         nodeHostedPartitions = new HashSet<>(clientsPartitions.size());
         nodeHostedPartitions.addAll(clientsPartitions);
+        this.indexCheckpointManagerProvider =
+                ((INcApplicationContext) ncServiceContext.getApplicationContext()).getIndexCheckpointManagerProvider();
     }
 
     @Override
@@ -156,7 +168,7 @@ public class ReplicationChannel extends Thread implements IReplicationChannel {
 
             //start accepting replication requests
             while (true) {
-                socketChannel = serverSocketChannel.accept();
+                SocketChannel socketChannel = serverSocketChannel.accept();
                 socketChannel.configureBlocking(true);
                 //start a new thread to handle the request
                 replicationThreads.execute(new ReplicationThread(socketChannel));
@@ -349,16 +361,19 @@ public class ReplicationChannel extends Thread implements IReplicationChannel {
                 }
                 if (afp.isLSMComponentFile()) {
                     String componentId = LSMComponentProperties.getLSMComponentID(afp.getFilePath());
-                    if (afp.getLSNByteOffset() > AbstractLSMIOOperationCallback.INVALID) {
-                        LSMComponentLSNSyncTask syncTask = new LSMComponentLSNSyncTask(componentId,
-                                destFile.getAbsolutePath(), afp.getLSNByteOffset());
+                    final LSMComponentProperties lsmComponentProperties = lsmComponentId2PropertiesMap.get(componentId);
+                    // merge operations do not generate flush logs
+                    if (afp.requiresAck() && lsmComponentProperties.getOpType() == LSMOperationType.FLUSH) {
+                        LSMComponentLSNSyncTask syncTask =
+                                new LSMComponentLSNSyncTask(componentId, destFile.getAbsolutePath());
                         lsmComponentRemoteLSN2LocalLSNMappingTaskQ.offer(syncTask);
                     } else {
                         updateLSMComponentRemainingFiles(componentId);
                     }
                 } else {
                     //index metadata file
-                    replicaResourcesManager.initializeReplicaIndexLSNMap(indexPath, logManager.getAppendLSN());
+                    final ResourceReference indexRef = ResourceReference.of(destFile.getAbsolutePath());
+                    indexCheckpointManagerProvider.get(indexRef).init(logManager.getAppendLSN());
                 }
             }
         }
@@ -402,8 +417,7 @@ public class ReplicationChannel extends Thread implements IReplicationChannel {
                         try (RandomAccessFile fromFile = new RandomAccessFile(filePath, "r");
                                 FileChannel fileChannel = fromFile.getChannel();) {
                             long fileSize = fileChannel.size();
-                            fileProperties.initialize(filePath, fileSize, partition.getNodeId(), false,
-                                    AbstractLSMIOOperationCallback.INVALID, false);
+                            fileProperties.initialize(filePath, fileSize, partition.getNodeId(), false, false);
                             outBuffer = ReplicationProtocol.writeFileReplicationRequest(outBuffer, fileProperties,
                                     ReplicationRequestType.REPLICATE_FILE);
 
@@ -462,7 +476,7 @@ public class ReplicationChannel extends Thread implements IReplicationChannel {
                 switch (remoteLog.getLogType()) {
                     case LogType.UPDATE:
                     case LogType.ENTITY_COMMIT:
-                        //if the log partition belongs to a partitions hosted on this node, replicate it
+                        //if the log partition belongs to a partitions hosted on this node, replicated it
                         if (nodeHostedPartitions.contains(remoteLog.getResourcePartition())) {
                             logManager.log(remoteLog);
                         }
@@ -479,13 +493,21 @@ public class ReplicationChannel extends Thread implements IReplicationChannel {
                     case LogType.FLUSH:
                         //store mapping information for flush logs to use them in incoming LSM components.
                         RemoteLogMapping flushLogMap = new RemoteLogMapping();
+                        LogRecord flushLog = new LogRecord();
+                        TransactionUtil.formFlushLogRecord(flushLog, remoteLog.getDatasetId(), null,
+                                remoteLog.getNodeId(), remoteLog.getNumOfFlushedIndexes());
+                        flushLog.setReplicationThread(this);
+                        flushLog.setLogSource(LogSource.REMOTE);
                         flushLogMap.setRemoteNodeID(remoteLog.getNodeId());
                         flushLogMap.setRemoteLSN(remoteLog.getLSN());
-                        logManager.log(remoteLog);
-                        //the log LSN value is updated by logManager.log(.) to a local value
-                        flushLogMap.setLocalLSN(remoteLog.getLSN());
-                        flushLogMap.numOfFlushedIndexes.set(remoteLog.getNumOfFlushedIndexes());
-                        replicaUniqueLSN2RemoteMapping.put(flushLogMap.getNodeUniqueLSN(), flushLogMap);
+                        synchronized (localLsn2RemoteMapping) {
+                            logManager.log(flushLog);
+                            //the log LSN value is updated by logManager.log(.) to a local value
+                            flushLogMap.setLocalLSN(flushLog.getLSN());
+                            flushLogMap.numOfFlushedIndexes.set(flushLog.getNumOfFlushedIndexes());
+                            replicaUniqueLSN2RemoteMapping.put(flushLogMap.getNodeUniqueLSN(), flushLogMap);
+                            localLsn2RemoteMapping.put(flushLog.getLSN(), flushLogMap);
+                        }
                         synchronized (flushLogslock) {
                             flushLogslock.notify();
                         }
@@ -497,17 +519,54 @@ public class ReplicationChannel extends Thread implements IReplicationChannel {
         }
 
         /**
-         * this method is called sequentially by LogPage (notifyReplicationTerminator)
-         * for JOB_COMMIT and JOB_ABORT log types.
+         * this method is called sequentially by {@link LogBuffer#notifyReplicationTermination()}
+         * for JOB_COMMIT, JOB_ABORT, and FLUSH log types.
          */
         @Override
         public void notifyLogReplicationRequester(LogRecord logRecord) {
-            pendingNotificationRemoteLogsQ.offer(logRecord);
+            switch (logRecord.getLogType()) {
+                case LogType.JOB_COMMIT:
+                case LogType.ABORT:
+                    pendingNotificationRemoteLogsQ.offer(logRecord);
+                    break;
+                case LogType.FLUSH:
+                    final RemoteLogMapping remoteLogMapping;
+                    synchronized (localLsn2RemoteMapping) {
+                        remoteLogMapping = localLsn2RemoteMapping.remove(logRecord.getLSN());
+                    }
+                    checkpointReplicaIndexes(remoteLogMapping, logRecord.getDatasetId());
+                    break;
+                default:
+                    throw new IllegalStateException("Unexpected log type: " + logRecord.getLogType());
+            }
         }
 
         @Override
         public SocketChannel getReplicationClientSocket() {
             return socketChannel;
+        }
+
+        private void checkpointReplicaIndexes(RemoteLogMapping remoteLogMapping, int datasetId) {
+            try {
+                Predicate<LocalResource> replicaIndexesPredicate = lr -> {
+                    DatasetLocalResource dls = (DatasetLocalResource) lr.getResource();
+                    return dls.getDatasetId() == datasetId && !localResourceRep.getActivePartitions()
+                            .contains(dls.getPartition());
+                };
+                final Map<Long, LocalResource> resources = localResourceRep.getResources(replicaIndexesPredicate);
+                final List<DatasetResourceReference> replicaIndexesRef =
+                        resources.values().stream().map(DatasetResourceReference::of).collect(Collectors.toList());
+                for (DatasetResourceReference replicaIndexRef : replicaIndexesRef) {
+                    final IIndexCheckpointManager indexCheckpointManager =
+                            indexCheckpointManagerProvider.get(replicaIndexRef);
+                    synchronized (indexCheckpointManager) {
+                        indexCheckpointManager
+                                .masterFlush(remoteLogMapping.getRemoteLSN(), remoteLogMapping.getLocalLSN());
+                    }
+                }
+            } catch (Exception e) {
+                LOGGER.log(Level.SEVERE, "Failed to checkpoint replica indexes", e);
+            }
         }
     }
 
@@ -541,7 +600,6 @@ public class ReplicationChannel extends Thread implements IReplicationChannel {
      * the received LSM components to a local LSN.
      */
     private class LSMComponentsSyncService extends Thread {
-        private static final int BULKLOAD_LSN = 0;
 
         @Override
         public void run() {
@@ -560,90 +618,22 @@ public class ReplicationChannel extends Thread implements IReplicationChannel {
                         LOGGER.log(Level.SEVERE, "Unexpected exception during LSN synchronization", e);
                     }
                 }
-
             }
         }
 
         private void syncLSMComponentFlushLSN(LSMComponentProperties lsmCompProp, LSMComponentLSNSyncTask syncTask)
                 throws InterruptedException, IOException {
-            long remoteLSN = lsmCompProp.getOriginalLSN();
-            //LSN=0 (bulkload) does not need to be updated and there is no flush log corresponding to it
-            if (remoteLSN == BULKLOAD_LSN) {
-                //since this is the first LSM component of this index,
-                //then set the mapping in the LSN_MAP to the current log LSN because
-                //no other log could've been received for this index since bulkload replication is synchronous.
-                lsmCompProp.setReplicaLSN(logManager.getAppendLSN());
-                return;
-            }
-
-            //path to the LSM component file
-            Path path = Paths.get(syncTask.getComponentFilePath());
-            if (lsmCompProp.getReplicaLSN() == null) {
-                if (lsmCompProp.getOpType() == LSMOperationType.FLUSH) {
-                    //need to look up LSN mapping from memory
-                    RemoteLogMapping remoteLogMap = replicaUniqueLSN2RemoteMapping.get(lsmCompProp.getNodeUniqueLSN());
-                    //wait until flush log arrives, and verify the LSM component file still exists
-                    //The component file could be deleted if its NC fails.
-                    while (remoteLogMap == null && Files.exists(path)) {
-                        synchronized (flushLogslock) {
-                            flushLogslock.wait();
-                        }
-                        remoteLogMap = replicaUniqueLSN2RemoteMapping.get(lsmCompProp.getNodeUniqueLSN());
-                    }
-
-                    /**
-                     * file has been deleted due to its remote primary replica failure
-                     * before its LSN could've been synchronized.
-                     */
-                    if (remoteLogMap == null) {
-                        return;
-                    }
-                    lsmCompProp.setReplicaLSN(remoteLogMap.getLocalLSN());
-                } else if (lsmCompProp.getOpType() == LSMOperationType.MERGE) {
-                    //need to load the LSN mapping from disk
-                    Map<Long, Long> lsmMap = replicaResourcesManager
-                            .getReplicaIndexLSNMap(lsmCompProp.getReplicaComponentPath(replicaResourcesManager));
-                    Long mappingLSN = lsmMap.get(lsmCompProp.getOriginalLSN());
-                    if (mappingLSN == null) {
-                        /**
-                         * this shouldn't happen unless this node just recovered and
-                         * the first component it received is a merged component due
-                         * to an on-going merge operation while recovery on the remote
-                         * replica. In this case, we use the current append LSN since
-                         * no new records exist for this index, otherwise they would've
-                         * been flushed. This could be prevented by waiting for any IO
-                         * to finish on the remote replica during recovery.
-                         */
-                        mappingLSN = logManager.getAppendLSN();
-                    }
-                    lsmCompProp.setReplicaLSN(mappingLSN);
+            final String componentFilePath = syncTask.getComponentFilePath();
+            final ResourceReference indexRef = ResourceReference.of(componentFilePath);
+            final IIndexCheckpointManager indexCheckpointManager = indexCheckpointManagerProvider.get(indexRef);
+            synchronized (indexCheckpointManager) {
+                long masterLsn = lsmCompProp.getOriginalLSN();
+                // wait until the lsn mapping is flushed to disk
+                while (!indexCheckpointManager.isFlushed(masterLsn)) {
+                    indexCheckpointManager.wait();
                 }
-            }
-
-            if (Files.notExists(path)) {
-                /**
-                 * This could happen when a merged component arrives and deletes
-                 * the flushed component (which we are trying to update) before
-                 * its flush log arrives since logs and components are received
-                 * on different threads.
-                 */
-                return;
-            }
-
-            File destFile = new File(syncTask.getComponentFilePath());
-            //prepare local LSN buffer
-            ByteBuffer metadataBuffer = ByteBuffer.allocate(Long.BYTES);
-            metadataBuffer.putLong(lsmCompProp.getReplicaLSN());
-            metadataBuffer.flip();
-
-            //replace the remote LSN value by the local one
-            try (RandomAccessFile fileOutputStream = new RandomAccessFile(destFile, "rw");
-                    FileChannel fileChannel = fileOutputStream.getChannel()) {
-                long lsnStartOffset = syncTask.getLSNByteOffset();
-                while (metadataBuffer.hasRemaining()) {
-                    lsnStartOffset += fileChannel.write(metadataBuffer, lsnStartOffset);
-                }
-                fileChannel.force(true);
+                indexCheckpointManager
+                        .replicated(AbstractLSMIndexFileManager.getComponentEndTime(indexRef.getName()), masterLsn);
             }
         }
     }

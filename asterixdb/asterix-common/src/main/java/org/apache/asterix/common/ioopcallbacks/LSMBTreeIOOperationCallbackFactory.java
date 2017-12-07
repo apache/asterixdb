@@ -33,6 +33,6 @@ public class LSMBTreeIOOperationCallbackFactory extends AbstractLSMIndexIOOperat
 
     @Override
     public ILSMIOOperationCallback createIoOpCallback(ILSMIndex index) {
-        return new LSMBTreeIOOperationCallback(index, getComponentIdGenerator());
+        return new LSMBTreeIOOperationCallback(index, getComponentIdGenerator(), getIndexCheckpointManagerProvider());
     }
 }

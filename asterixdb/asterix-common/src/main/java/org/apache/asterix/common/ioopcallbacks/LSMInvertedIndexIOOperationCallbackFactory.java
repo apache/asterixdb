@@ -33,6 +33,7 @@ public class LSMInvertedIndexIOOperationCallbackFactory extends AbstractLSMIndex
 
     @Override
     public ILSMIOOperationCallback createIoOpCallback(ILSMIndex index) {
-        return new LSMInvertedIndexIOOperationCallback(index, getComponentIdGenerator());
+        return new LSMInvertedIndexIOOperationCallback(index, getComponentIdGenerator(),
+                getIndexCheckpointManagerProvider());
     }
 }

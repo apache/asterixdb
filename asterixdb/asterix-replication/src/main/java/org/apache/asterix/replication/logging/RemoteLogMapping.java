@@ -27,10 +27,6 @@ public class RemoteLogMapping {
     private long localLSN;
     public AtomicInteger numOfFlushedIndexes = new AtomicInteger();
 
-    public String getRemoteNodeID() {
-        return remoteNodeID;
-    }
-
     public void setRemoteNodeID(String remoteNodeID) {
         this.remoteNodeID = remoteNodeID;
     }

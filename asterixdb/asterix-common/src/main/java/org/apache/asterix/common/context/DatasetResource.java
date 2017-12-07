@@ -108,7 +108,7 @@ public class DatasetResource implements Comparable<DatasetResource> {
         if (index == null) {
             throw new HyracksDataException("Attempt to register a null index");
         }
-        datasetInfo.getIndexes().put(resourceID, new IndexInfo(index, datasetInfo.getDatasetID(), resourceID,
+        datasetInfo.getIndexes().put(resourceID, new IndexInfo(index, datasetInfo.getDatasetID(), resource,
                 ((DatasetLocalResource) resource.getResource()).getPartition()));
     }
 

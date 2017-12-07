@@ -21,6 +21,8 @@ package org.apache.asterix.common.ioopcallbacks;
 
 import java.io.ObjectStreamException;
 
+import org.apache.asterix.common.api.INcApplicationContext;
+import org.apache.asterix.common.storage.IIndexCheckpointManagerProvider;
 import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentId;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentIdGenerator;
@@ -47,6 +49,10 @@ public abstract class AbstractLSMIndexIOOperationCallbackFactory implements ILSM
 
     protected ILSMComponentIdGenerator getComponentIdGenerator() {
         return idGeneratorFactory.getComponentIdGenerator(ncCtx);
+    }
+
+    protected IIndexCheckpointManagerProvider getIndexCheckpointManagerProvider() {
+        return ((INcApplicationContext) ncCtx.getApplicationContext()).getIndexCheckpointManagerProvider();
     }
 
     private void readObjectNoData() throws ObjectStreamException {

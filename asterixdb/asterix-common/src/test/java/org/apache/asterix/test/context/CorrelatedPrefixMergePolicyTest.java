@@ -41,6 +41,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentId;
 import org.apache.hyracks.storage.common.IIndexAccessParameters;
+import org.apache.hyracks.storage.common.LocalResource;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -237,8 +238,8 @@ public class CorrelatedPrefixMergePolicyTest extends TestCase {
 
         Mockito.when(index.createAccessor(Mockito.any(IIndexAccessParameters.class))).thenReturn(accessor);
         Mockito.when(index.isPrimaryIndex()).thenReturn(isPrimary);
-
-        return new IndexInfo(index, DATASET_ID, 0, partition);
+        final LocalResource localResource = Mockito.mock(LocalResource.class);
+        return new IndexInfo(index, DATASET_ID, localResource, partition);
     }
 
 }

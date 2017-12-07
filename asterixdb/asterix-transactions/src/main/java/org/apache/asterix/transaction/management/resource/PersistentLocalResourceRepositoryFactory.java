@@ -19,6 +19,7 @@
 package org.apache.asterix.transaction.management.resource;
 
 import org.apache.asterix.common.config.MetadataProperties;
+import org.apache.asterix.common.storage.IIndexCheckpointManagerProvider;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.storage.common.ILocalResourceRepository;
@@ -28,16 +29,19 @@ public class PersistentLocalResourceRepositoryFactory implements ILocalResourceR
     private final IIOManager ioManager;
     private final String nodeId;
     private final MetadataProperties metadataProperties;
+    private final IIndexCheckpointManagerProvider indexCheckpointManagerProvider;
 
     public PersistentLocalResourceRepositoryFactory(IIOManager ioManager, String nodeId,
-            MetadataProperties metadataProperties) {
+            MetadataProperties metadataProperties, IIndexCheckpointManagerProvider indexCheckpointManagerProvider) {
         this.ioManager = ioManager;
         this.nodeId = nodeId;
         this.metadataProperties = metadataProperties;
+        this.indexCheckpointManagerProvider = indexCheckpointManagerProvider;
     }
 
     @Override
     public ILocalResourceRepository createRepository() throws HyracksDataException {
-        return new PersistentLocalResourceRepository(ioManager, nodeId, metadataProperties);
+        return new PersistentLocalResourceRepository(ioManager, nodeId, metadataProperties,
+                indexCheckpointManagerProvider);
     }
 }

@@ -28,6 +28,7 @@ public class DatasetResourceReference extends ResourceReference {
 
     private int datasetId;
     private int partitionId;
+    private long resourceId;
 
     private DatasetResourceReference() {
         super();
@@ -53,6 +54,10 @@ public class DatasetResourceReference extends ResourceReference {
         return partitionId;
     }
 
+    public long getResourceId() {
+        return resourceId;
+    }
+
     private static DatasetResourceReference parse(LocalResource localResource) {
         final DatasetResourceReference datasetResourceReference = new DatasetResourceReference();
         final String filePath = Paths.get(localResource.getPath(), StorageConstants.METADATA_FILE_NAME).toString();
@@ -73,5 +78,28 @@ public class DatasetResourceReference extends ResourceReference {
         final DatasetLocalResource dsResource = (DatasetLocalResource) localResource.getResource();
         lrr.datasetId = dsResource.getDatasetId();
         lrr.partitionId = dsResource.getPartition();
+        lrr.resourceId = localResource.getId();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o != null && o instanceof ResourceReference) {
+            ResourceReference that = (ResourceReference) o;
+            return getRelativePath().toString().equals(that.getRelativePath().toString());
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return getRelativePath().toString().hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return getRelativePath().toString();
     }
 }

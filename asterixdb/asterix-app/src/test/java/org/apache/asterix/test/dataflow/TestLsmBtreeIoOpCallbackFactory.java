@@ -22,6 +22,8 @@ import java.util.List;
 
 import org.apache.asterix.common.ioopcallbacks.LSMBTreeIOOperationCallback;
 import org.apache.asterix.common.ioopcallbacks.LSMBTreeIOOperationCallbackFactory;
+import org.apache.asterix.common.storage.IIndexCheckpointManager;
+import org.apache.asterix.common.storage.IIndexCheckpointManagerProvider;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.lsm.btree.impl.TestLsmBtree;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
@@ -58,7 +60,7 @@ public class TestLsmBtreeIoOpCallbackFactory extends LSMBTreeIOOperationCallback
         // Whenever this is called, it resets the counter
         // However, the counters for the failed operations are never reset since we expect them
         // To be always 0
-        return new TestLsmBtreeIoOpCallback(index, getComponentIdGenerator());
+        return new TestLsmBtreeIoOpCallback(index, getComponentIdGenerator(), getIndexCheckpointManagerProvider());
     }
 
     public int getTotalFlushes() {
@@ -100,8 +102,9 @@ public class TestLsmBtreeIoOpCallbackFactory extends LSMBTreeIOOperationCallback
     public class TestLsmBtreeIoOpCallback extends LSMBTreeIOOperationCallback {
         private final TestLsmBtree lsmBtree;
 
-        public TestLsmBtreeIoOpCallback(ILSMIndex index, ILSMComponentIdGenerator idGenerator) {
-            super(index, idGenerator);
+        public TestLsmBtreeIoOpCallback(ILSMIndex index, ILSMComponentIdGenerator idGenerator,
+                IIndexCheckpointManagerProvider checkpointManagerProvider) {
+            super(index, idGenerator, checkpointManagerProvider);
             lsmBtree = (TestLsmBtree) index;
         }
 
@@ -121,7 +124,8 @@ public class TestLsmBtreeIoOpCallbackFactory extends LSMBTreeIOOperationCallback
         }
 
         @Override
-        public void afterFinalize(LSMIOOperationType opType, ILSMDiskComponent newComponent) {
+        public void afterFinalize(LSMIOOperationType opType, ILSMDiskComponent newComponent)
+                throws HyracksDataException {
             lsmBtree.afterIoFinalizeCalled();
             super.afterFinalize(opType, newComponent);
             synchronized (TestLsmBtreeIoOpCallbackFactory.this) {
