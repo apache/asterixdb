@@ -76,28 +76,41 @@ public class ComponentUtils {
      * @throws HyracksDataException
      */
     public static void get(ILSMIndex index, IValueReference key, IPointable pointable) throws HyracksDataException {
-        LOGGER.log(Level.INFO, "Getting " + key + " from index " + index);
+        boolean loggable = LOGGER.isLoggable(Level.FINE);
+        if (loggable) {
+            LOGGER.log(Level.FINE, "Getting " + key + " from index " + index);
+        }
         // Lock the opTracker to ensure index components don't change
         synchronized (index.getOperationTracker()) {
             index.getCurrentMemoryComponent().getMetadata().get(key, pointable);
             if (pointable.getLength() == 0) {
-                LOGGER.log(Level.INFO, key + " was not found in mutable memory component of " + index);
+                if (loggable) {
+                    LOGGER.log(Level.FINE, key + " was not found in mutable memory component of " + index);
+                }
                 // was not found in the in current mutable component, search in the other in memory components
                 fromImmutableMemoryComponents(index, key, pointable);
                 if (pointable.getLength() == 0) {
-                    LOGGER.log(Level.INFO, key + " was not found in all immmutable memory components of " + index);
+                    if (loggable) {
+                        LOGGER.log(Level.FINE, key + " was not found in all immmutable memory components of " + index);
+                    }
                     // was not found in the in all in memory components, search in the disk components
                     fromDiskComponents(index, key, pointable);
-                    if (pointable.getLength() == 0) {
-                        LOGGER.log(Level.INFO, key + " was not found in all disk components of " + index);
-                    } else {
-                        LOGGER.log(Level.INFO, key + " was found in disk components of " + index);
+                    if (loggable) {
+                        if (pointable.getLength() == 0) {
+                            LOGGER.log(Level.FINE, key + " was not found in all disk components of " + index);
+                        } else {
+                            LOGGER.log(Level.FINE, key + " was found in disk components of " + index);
+                        }
                     }
                 } else {
-                    LOGGER.log(Level.INFO, key + " was found in the immutable memory components of " + index);
+                    if (loggable) {
+                        LOGGER.log(Level.FINE, key + " was found in the immutable memory components of " + index);
+                    }
                 }
             } else {
-                LOGGER.log(Level.INFO, key + " was found in mutable memory component of " + index);
+                if (loggable) {
+                    LOGGER.log(Level.FINE, key + " was found in mutable memory component of " + index);
+                }
             }
         }
     }
@@ -122,9 +135,14 @@ public class ComponentUtils {
 
     private static void fromDiskComponents(ILSMIndex index, IValueReference key, IPointable pointable)
             throws HyracksDataException {
-        LOGGER.log(Level.INFO, "Getting " + key + " from disk components of " + index);
+        boolean loggable = LOGGER.isLoggable(Level.FINE);
+        if (loggable) {
+            LOGGER.log(Level.FINE, "Getting " + key + " from disk components of " + index);
+        }
         for (ILSMDiskComponent c : index.getDiskComponents()) {
-            LOGGER.log(Level.INFO, "Getting " + key + " from disk components " + c);
+            if (loggable) {
+                LOGGER.log(Level.FINE, "Getting " + key + " from disk components " + c);
+            }
             c.getMetadata().get(key, pointable);
             if (pointable.getLength() != 0) {
                 // Found
@@ -134,13 +152,20 @@ public class ComponentUtils {
     }
 
     private static void fromImmutableMemoryComponents(ILSMIndex index, IValueReference key, IPointable pointable) {
-        LOGGER.log(Level.INFO, "Getting " + key + " from immutable memory components of " + index);
+        boolean loggable = LOGGER.isLoggable(Level.FINE);
+        if (loggable) {
+            LOGGER.log(Level.FINE, "Getting " + key + " from immutable memory components of " + index);
+        }
         List<ILSMMemoryComponent> memComponents = index.getMemoryComponents();
         int numOtherMemComponents = memComponents.size() - 1;
         int next = index.getCurrentMemoryComponentIndex();
-        LOGGER.log(Level.INFO, index + " has " + numOtherMemComponents + " immutable memory components");
+        if (loggable) {
+            LOGGER.log(Level.FINE, index + " has " + numOtherMemComponents + " immutable memory components");
+        }
         for (int i = 0; i < numOtherMemComponents; i++) {
-            LOGGER.log(Level.INFO, "trying to get " + key + " from immutable memory components number: " + (i + 1));
+            if (loggable) {
+                LOGGER.log(Level.FINE, "trying to get " + key + " from immutable memory components number: " + (i + 1));
+            }
             next = next - 1;
             if (next < 0) {
                 next = memComponents.size() - 1;
