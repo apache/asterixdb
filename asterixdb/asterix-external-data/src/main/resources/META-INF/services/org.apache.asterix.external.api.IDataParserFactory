@@ -16,6 +16,7 @@
 # under the License.
 #
 org.apache.asterix.external.parser.factory.ADMDataParserFactory
+org.apache.asterix.external.parser.factory.JSONDataParserFactory
 org.apache.asterix.external.parser.factory.DelimitedDataParserFactory
 org.apache.asterix.external.parser.factory.HiveDataParserFactory
 org.apache.asterix.external.parser.factory.RecordWithMetadataParserFactory

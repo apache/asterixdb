@@ -29,7 +29,7 @@ public interface IAsterixListBuilder {
      * @param listType
      *            Type of the list: AUnorderedListType or AOrderedListType.
      */
-    public void reset(AbstractCollectionType listType) throws HyracksDataException;
+    public void reset(AbstractCollectionType listType);
 
     /**
      * @param item

@@ -22,6 +22,7 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.external.api.IExternalDataSourceFactory.DataSourceType;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -49,8 +50,10 @@ public interface IDataParserFactory extends Serializable {
      * Set the record type expected to be produced by parsers created by this factory
      *
      * @param recordType
+     * @throws AsterixException
+     *             if the parser does not support certain types defined in {@value recordType}.
      */
-    public void setRecordType(ARecordType recordType);
+    public void setRecordType(ARecordType recordType) throws AsterixException;
 
     /**
      * Set the meta record type expected to be produced by parsers created by this factory

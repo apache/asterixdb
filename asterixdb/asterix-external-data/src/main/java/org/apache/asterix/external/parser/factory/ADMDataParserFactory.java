@@ -18,24 +18,24 @@
  */
 package org.apache.asterix.external.parser.factory;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
+import org.apache.asterix.external.api.IExternalDataSourceFactory.DataSourceType;
 import org.apache.asterix.external.api.IRecordDataParser;
 import org.apache.asterix.external.api.IStreamDataParser;
-import org.apache.asterix.external.api.IExternalDataSourceFactory.DataSourceType;
 import org.apache.asterix.external.parser.ADMDataParser;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-
 public class ADMDataParserFactory extends AbstractRecordStreamParserFactory<char[]> {
 
     private static final long serialVersionUID = 1L;
-    private static final List<String> parserFormats = Collections
-            .unmodifiableList(Arrays.asList("adm", "json", "semi-structured"));
+    private static final List<String> parserFormats =
+            Collections.unmodifiableList(Arrays.asList("adm", "semi-structured"));
 
     @Override
     public IRecordDataParser<char[]> createRecordParser(IHyracksTaskContext ctx) {

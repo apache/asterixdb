@@ -1,0 +1,1 @@
+{ "datefield": date("-2012-12-12"), "dateFieldPlus": date("0990-01-01"), "timeField": time("23:49:12.390Z"), "timeFieldPlus": time("03:23:12.200Z"), "datetimeField": datetime("2012-12-12T00:00:00.001Z"), "datetimeFieldPlus": datetime("-0013-08-10T22:10:15.398Z") }

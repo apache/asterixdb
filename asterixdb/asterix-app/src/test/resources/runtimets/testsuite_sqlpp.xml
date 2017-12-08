@@ -9180,4 +9180,137 @@
       </compilation-unit>
     </test-case>
   </test-group>
+  <test-group name="json-parser">
+    <test-case FilePath="json-parser">
+      <compilation-unit name="numeric-tinyint">
+        <output-dir compare="Text">numeric-tinyint</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="json-parser">
+      <compilation-unit name="numeric-tinyint-overflow">
+        <output-dir compare="Text">numeric-tinyint</output-dir>
+        <expected-error>Numeric value (1000) out of range of Java byte</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="json-parser">
+      <compilation-unit name="numeric-float">
+        <output-dir compare="Text">numeric-float</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="json-parser">
+      <compilation-unit name="numeric-demote-double-bigint">
+        <output-dir compare="Text">numeric-demote-double-bigint</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="json-parser">
+      <compilation-unit name="numeric-promote-bigint-double">
+        <output-dir compare="Text">numeric-promote-bigint-double</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="json-parser">
+      <compilation-unit name="duplicate-fields">
+        <output-dir compare="Text">duplicate-fields</output-dir>
+        <expected-error>Duplicate field 'field'</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="json-parser">
+      <compilation-unit name="malformed-json">
+        <output-dir compare="Text">malformed-json</output-dir>
+        <expected-error>Unexpected character ('}' (code 125)): was expecting double-quote to start field name</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="json-parser">
+      <compilation-unit name="null-missing">
+        <output-dir compare="Text">null-missing</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="json-parser">
+      <compilation-unit name="nonoptional-missing">
+        <output-dir compare="Text">nonoptional-missing</output-dir>
+        <expected-error>ASX3075: Closed field missing_value has null value</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="json-parser">
+      <compilation-unit name="nonoptional-null">
+        <output-dir compare="Text">nonoptional-null</output-dir>
+        <expected-error>ASX3075: Closed field null_value has null value</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="json-parser">
+      <compilation-unit name="spatial">
+        <output-dir compare="Text">spatial</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="json-parser">
+      <compilation-unit name="spatial-line-3-points">
+        <output-dir compare="Text">spatial-line-3-points</output-dir>
+        <expected-error>Line must have 4 coordinates</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="json-parser">
+      <compilation-unit name="spatial-polygon-unclosed">
+        <output-dir compare="Text">spatial-polygon-unclosed</output-dir>
+        <expected-error>Unclosed polygon is not supported</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="json-parser">
+      <compilation-unit name="spatial-polygon-with-hole">
+        <output-dir compare="Text">spatial-polygon-with-hole</output-dir>
+        <expected-error>Only simple geometries are supported (Point, LineString and Polygon without holes)</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="json-parser">
+      <compilation-unit name="temporal">
+        <output-dir compare="Text">temporal</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="json-parser">
+      <compilation-unit name="type-mismatch">
+        <output-dir compare="Text">type-mismatch</output-dir>
+        <expected-error>ASX3054: Mismatch Type, expecting a value of type string</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="json-parser">
+      <compilation-unit name="unsupported-type-circle">
+        <output-dir compare="Text">unsupported-type-circle</output-dir>
+        <expected-error>ASX0004: Unsupported type: org.apache.asterix.external.parser.factory.JSONDataParserFactory cannot process input type circle</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="json-parser">
+      <compilation-unit name="unsupported-type-daytimeduration">
+        <output-dir compare="Text">unsupported-type-daytimeduration</output-dir>
+        <expected-error>ASX0004: Unsupported type: org.apache.asterix.external.parser.factory.JSONDataParserFactory cannot process input type daytimeduration</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="json-parser">
+      <compilation-unit name="unsupported-type-duration">
+        <output-dir compare="Text">unsupported-type-duration</output-dir>
+        <expected-error>ASX0004: Unsupported type: org.apache.asterix.external.parser.factory.JSONDataParserFactory cannot process input type duration</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="json-parser">
+      <compilation-unit name="unsupported-type-interval">
+        <output-dir compare="Text">unsupported-type-interval</output-dir>
+        <expected-error>ASX0004: Unsupported type: org.apache.asterix.external.parser.factory.JSONDataParserFactory cannot process input type interval</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="json-parser">
+      <compilation-unit name="unsupported-type-multiset">
+        <output-dir compare="Text">unsupported-type-multiset</output-dir>
+        <expected-error>ASX0004: Unsupported type: org.apache.asterix.external.parser.factory.JSONDataParserFactory cannot process input type multiset</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="json-parser">
+      <compilation-unit name="unsupported-type-point3d">
+        <output-dir compare="Text">unsupported-type-point3d</output-dir>
+        <expected-error>ASX0004: Unsupported type: org.apache.asterix.external.parser.factory.JSONDataParserFactory cannot process input type point3d</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="json-parser">
+      <compilation-unit name="unsupported-type-rectangle">
+        <output-dir compare="Text">unsupported-type-rectangle</output-dir>
+        <expected-error>ASX0004: Unsupported type: org.apache.asterix.external.parser.factory.JSONDataParserFactory cannot process input type rectangle</expected-error>
+      </compilation-unit>
+    </test-case>
+  </test-group>
 </test-suite>

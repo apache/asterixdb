@@ -1,0 +1,1 @@
+{ "point_value": point("10.0,10.0"), "line_value": line("10.0,10.0 11.0,11.0"), "polygon_value": polygon("10.0,10.0 11.0,11.0 10.0,10.0") }
