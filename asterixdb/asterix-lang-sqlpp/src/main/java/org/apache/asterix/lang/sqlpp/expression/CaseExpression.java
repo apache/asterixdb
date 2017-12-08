@@ -21,6 +21,7 @@ package org.apache.asterix.lang.sqlpp.expression;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.base.AbstractExpression;
@@ -29,7 +30,6 @@ import org.apache.asterix.lang.common.expression.LiteralExpr;
 import org.apache.asterix.lang.common.literal.NullLiteral;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 import org.apache.asterix.lang.sqlpp.visitor.base.ISqlppVisitor;
-import org.apache.commons.lang3.ObjectUtils;
 
 public class CaseExpression extends AbstractExpression {
 
@@ -111,7 +111,7 @@ public class CaseExpression extends AbstractExpression {
 
     @Override
     public int hashCode() {
-        return ObjectUtils.hashCodeMulti(conditionExpr, elseExpr, thenExprs, whenExprs);
+        return Objects.hash(conditionExpr, elseExpr, thenExprs, whenExprs);
     }
 
     @Override
@@ -123,7 +123,7 @@ public class CaseExpression extends AbstractExpression {
             return false;
         }
         CaseExpression target = (CaseExpression) object;
-        return ObjectUtils.equals(conditionExpr, target.conditionExpr) && ObjectUtils.equals(elseExpr, target.elseExpr)
-                && ObjectUtils.equals(thenExprs, target.thenExprs) && ObjectUtils.equals(thenExprs, thenExprs);
+        return Objects.equals(conditionExpr, target.conditionExpr) && Objects.equals(elseExpr, target.elseExpr)
+                && Objects.equals(thenExprs, target.thenExprs) && Objects.equals(thenExprs, thenExprs);
     }
 }

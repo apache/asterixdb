@@ -19,12 +19,12 @@
 package org.apache.asterix.lang.common.clause;
 
 import java.util.List;
+import java.util.Objects;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.base.Clause;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
-import org.apache.commons.lang3.ObjectUtils;
 import org.apache.hyracks.dataflow.common.data.partition.range.IRangeMap;
 
 public class OrderbyClause implements Clause {
@@ -100,7 +100,7 @@ public class OrderbyClause implements Clause {
 
     @Override
     public int hashCode() {
-        return ObjectUtils.hashCodeMulti(modifierList, numFrames, numTuples, orderbyList);
+        return Objects.hash(modifierList, numFrames, numTuples, orderbyList);
     }
 
     @Override
@@ -112,7 +112,7 @@ public class OrderbyClause implements Clause {
             return false;
         }
         OrderbyClause target = (OrderbyClause) object;
-        return ObjectUtils.equals(modifierList, target.modifierList) && numFrames == target.numFrames
+        return Objects.equals(modifierList, target.modifierList) && numFrames == target.numFrames
                 && numTuples == target.numTuples && orderbyList.equals(target.orderbyList);
     }
 }

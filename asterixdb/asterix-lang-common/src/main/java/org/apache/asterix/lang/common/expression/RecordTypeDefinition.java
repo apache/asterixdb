@@ -20,12 +20,12 @@ package org.apache.asterix.lang.common.expression;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import org.apache.asterix.common.annotations.IRecordFieldDataGen;
 import org.apache.asterix.common.annotations.UndeclaredFieldsDataGen;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
-import org.apache.commons.lang3.ObjectUtils;
 
 public class RecordTypeDefinition implements TypeExpression {
 
@@ -102,11 +102,11 @@ public class RecordTypeDefinition implements TypeExpression {
 
     @Override
     public int hashCode() {
-        return ObjectUtils.hashCodeMulti(fieldDataGen, fieldNames, fieldTypes, optionalFields, recordKind,
-                undeclaredFieldsDataGen);
+        return Objects.hash(fieldDataGen, fieldNames, fieldTypes, optionalFields, recordKind, undeclaredFieldsDataGen);
     }
 
     @Override
+    @SuppressWarnings("squid:S1067") // expressions should not be too complex
     public boolean equals(Object object) {
         if (this == object) {
             return true;
@@ -115,11 +115,10 @@ public class RecordTypeDefinition implements TypeExpression {
             return false;
         }
         RecordTypeDefinition target = (RecordTypeDefinition) object;
-        boolean equals = fieldDataGen.equals(target.getFieldDataGen()) && fieldNames.equals(target.getFieldNames())
-                && fieldTypes.equals(target.getFieldNames()) && optionalFields.equals(target.getOptionableFields());
-        equals = equals && ObjectUtils.equals(recordKind, target.getRecordKind())
-                && ObjectUtils.equals(undeclaredFieldsDataGen, target.getUndeclaredFieldsDataGen());
-        return equals;
+        return fieldDataGen.equals(target.getFieldDataGen()) && fieldNames.equals(target.getFieldNames())
+                && fieldTypes.equals(target.getFieldTypes()) && optionalFields.equals(target.getOptionableFields())
+                && Objects.equals(recordKind, target.getRecordKind())
+                && Objects.equals(undeclaredFieldsDataGen, target.getUndeclaredFieldsDataGen());
     }
 
 }

@@ -19,13 +19,13 @@
 package org.apache.asterix.lang.common.expression;
 
 import java.util.List;
+import java.util.Objects;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.base.AbstractExpression;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.struct.QuantifiedPair;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
-import org.apache.commons.lang3.ObjectUtils;
 
 public class QuantifiedExpression extends AbstractExpression {
     private List<QuantifiedPair> quantifiedList;
@@ -84,7 +84,7 @@ public class QuantifiedExpression extends AbstractExpression {
 
     @Override
     public int hashCode() {
-        return ObjectUtils.hashCodeMulti(quantifiedList, quantifier, satisfiesExpr);
+        return Objects.hash(quantifiedList, quantifier, satisfiesExpr);
     }
 
     @Override
@@ -96,8 +96,7 @@ public class QuantifiedExpression extends AbstractExpression {
             return false;
         }
         QuantifiedExpression target = (QuantifiedExpression) object;
-        return ObjectUtils.equals(quantifiedList, target.quantifiedList)
-                && ObjectUtils.equals(quantifier, target.quantifier)
-                && ObjectUtils.equals(satisfiesExpr, target.satisfiesExpr);
+        return Objects.equals(quantifiedList, target.quantifiedList) && Objects.equals(quantifier, target.quantifier)
+                && Objects.equals(satisfiesExpr, target.satisfiesExpr);
     }
 }

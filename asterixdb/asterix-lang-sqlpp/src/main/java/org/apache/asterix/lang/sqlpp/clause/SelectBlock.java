@@ -21,6 +21,7 @@ package org.apache.asterix.lang.sqlpp.clause;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.base.Clause;
@@ -29,7 +30,6 @@ import org.apache.asterix.lang.common.clause.LetClause;
 import org.apache.asterix.lang.common.clause.WhereClause;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 import org.apache.asterix.lang.sqlpp.visitor.base.ISqlppVisitor;
-import org.apache.commons.lang3.ObjectUtils;
 
 public class SelectBlock implements Clause {
 
@@ -125,11 +125,12 @@ public class SelectBlock implements Clause {
 
     @Override
     public int hashCode() {
-        return ObjectUtils.hashCodeMulti(fromClause, groupbyClause, havingClause, letClauses, letClausesAfterGby,
-                selectClause, whereClause);
+        return Objects.hash(fromClause, groupbyClause, havingClause, letClauses, letClausesAfterGby, selectClause,
+                whereClause);
     }
 
     @Override
+    @SuppressWarnings("squid:S1067") // expressions should not be too complex
     public boolean equals(Object object) {
         if (this == object) {
             return true;
@@ -138,13 +139,10 @@ public class SelectBlock implements Clause {
             return false;
         }
         SelectBlock target = (SelectBlock) object;
-        boolean equals = ObjectUtils.equals(fromClause, target.fromClause)
-                && ObjectUtils.equals(groupbyClause, target.groupbyClause)
-                && ObjectUtils.equals(havingClause, target.havingClause)
-                && ObjectUtils.equals(letClauses, target.letClauses);
-        return equals && ObjectUtils.equals(letClausesAfterGby, target.letClausesAfterGby)
-                && ObjectUtils.equals(selectClause, target.selectClause)
-                && ObjectUtils.equals(whereClause, target.whereClause);
+        return Objects.equals(fromClause, target.fromClause) && Objects.equals(groupbyClause, target.groupbyClause)
+                && Objects.equals(havingClause, target.havingClause) && Objects.equals(letClauses, target.letClauses)
+                && Objects.equals(letClausesAfterGby, target.letClausesAfterGby)
+                && Objects.equals(selectClause, target.selectClause) && Objects.equals(whereClause, target.whereClause);
     }
 
     @Override

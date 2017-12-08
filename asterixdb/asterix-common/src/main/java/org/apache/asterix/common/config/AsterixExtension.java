@@ -20,8 +20,8 @@ package org.apache.asterix.common.config;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
-import org.apache.commons.lang3.ObjectUtils;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 
 public class AsterixExtension {
@@ -50,13 +50,13 @@ public class AsterixExtension {
     public boolean equals(Object o) {
         if (o instanceof AsterixExtension) {
             AsterixExtension other = (AsterixExtension) o;
-            return ObjectUtils.equals(className, other.className) && ObjectUtils.equals(args, other.args);
+            return Objects.equals(className, other.className) && Objects.equals(args, other.args);
         }
         return false;
     }
 
     @Override
     public int hashCode() {
-        return ObjectUtils.hashCodeMulti(className);
+        return Objects.hash(className);
     }
 }

@@ -19,13 +19,13 @@
 package org.apache.asterix.lang.common.expression;
 
 import java.util.List;
+import java.util.Objects;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.common.base.AbstractExpression;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
-import org.apache.commons.lang3.ObjectUtils;
 
 public class CallExpr extends AbstractExpression {
     private FunctionSignature functionSignature;
@@ -69,7 +69,7 @@ public class CallExpr extends AbstractExpression {
 
     @Override
     public int hashCode() {
-        return ObjectUtils.hashCodeMulti(exprList, functionSignature);
+        return Objects.hash(exprList, functionSignature);
     }
 
     @Override
@@ -81,7 +81,6 @@ public class CallExpr extends AbstractExpression {
             return false;
         }
         CallExpr target = (CallExpr) object;
-        return ObjectUtils.equals(exprList, target.exprList)
-                && ObjectUtils.equals(functionSignature, target.functionSignature);
+        return Objects.equals(exprList, target.exprList) && Objects.equals(functionSignature, target.functionSignature);
     }
 }

@@ -21,6 +21,7 @@ package org.apache.asterix.lang.common.clause;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.base.Clause;
@@ -29,7 +30,6 @@ import org.apache.asterix.lang.common.expression.GbyVariableExpressionPair;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
-import org.apache.commons.lang3.ObjectUtils;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 
 public class GroupbyClause implements Clause {
@@ -146,11 +146,12 @@ public class GroupbyClause implements Clause {
 
     @Override
     public int hashCode() {
-        return ObjectUtils.hashCodeMulti(decorPairList, gbyPairList, groupAll, groupFieldList, groupVar,
-                hashGroupByHint, withVarMap);
+        return Objects.hash(decorPairList, gbyPairList, groupAll, groupFieldList, groupVar, hashGroupByHint,
+                withVarMap);
     }
 
     @Override
+    @SuppressWarnings("squid:S1067") // expressions should not be too complex
     public boolean equals(Object object) {
         if (this == object) {
             return true;
@@ -159,10 +160,9 @@ public class GroupbyClause implements Clause {
             return false;
         }
         GroupbyClause target = (GroupbyClause) object;
-        boolean equals = ObjectUtils.equals(decorPairList, target.decorPairList)
-                && ObjectUtils.equals(gbyPairList, target.gbyPairList) && groupAll == target.groupAll
-                && ObjectUtils.equals(groupFieldList, target.groupFieldList);
-        return equals && ObjectUtils.equals(groupVar, target.groupVar) && hashGroupByHint == target.hashGroupByHint
-                && ObjectUtils.equals(withVarMap, target.withVarMap);
+        return Objects.equals(decorPairList, target.decorPairList) && Objects.equals(gbyPairList, target.gbyPairList)
+                && groupAll == target.groupAll && Objects.equals(groupFieldList, target.groupFieldList)
+                && Objects.equals(groupVar, target.groupVar) && hashGroupByHint == target.hashGroupByHint
+                && Objects.equals(withVarMap, target.withVarMap);
     }
 }

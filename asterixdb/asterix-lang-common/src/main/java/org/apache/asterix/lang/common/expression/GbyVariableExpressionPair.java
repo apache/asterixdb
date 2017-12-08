@@ -18,8 +18,9 @@
  */
 package org.apache.asterix.lang.common.expression;
 
+import java.util.Objects;
+
 import org.apache.asterix.lang.common.base.Expression;
-import org.apache.commons.lang3.ObjectUtils;
 
 public class GbyVariableExpressionPair {
     private VariableExpr var; // can be null
@@ -53,7 +54,7 @@ public class GbyVariableExpressionPair {
 
     @Override
     public int hashCode() {
-        return ObjectUtils.hashCodeMulti(expr, var);
+        return Objects.hash(expr, var);
     }
 
     @Override
@@ -65,7 +66,7 @@ public class GbyVariableExpressionPair {
             return false;
         }
         GbyVariableExpressionPair target = (GbyVariableExpressionPair) object;
-        return ObjectUtils.equals(expr, target.expr) && ObjectUtils.equals(var, target.var);
+        return Objects.equals(expr, target.expr) && Objects.equals(var, target.var);
     }
 
     @Override

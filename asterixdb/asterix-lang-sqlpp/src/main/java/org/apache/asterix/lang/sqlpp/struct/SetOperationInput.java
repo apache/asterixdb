@@ -18,12 +18,13 @@
  */
 package org.apache.asterix.lang.sqlpp.struct;
 
+import java.util.Objects;
+
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 import org.apache.asterix.lang.sqlpp.clause.SelectBlock;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.visitor.base.ISqlppVisitor;
-import org.apache.commons.lang3.ObjectUtils;
 
 public class SetOperationInput {
 
@@ -61,7 +62,7 @@ public class SetOperationInput {
 
     @Override
     public int hashCode() {
-        return ObjectUtils.hashCodeMulti(selectBlock, subquery);
+        return Objects.hash(selectBlock, subquery);
     }
 
     @Override
@@ -73,7 +74,7 @@ public class SetOperationInput {
             return false;
         }
         SetOperationInput target = (SetOperationInput) object;
-        return ObjectUtils.equals(selectBlock, target.selectBlock) && ObjectUtils.equals(subquery, target.subquery);
+        return Objects.equals(selectBlock, target.selectBlock) && Objects.equals(subquery, target.subquery);
     }
 
     @Override

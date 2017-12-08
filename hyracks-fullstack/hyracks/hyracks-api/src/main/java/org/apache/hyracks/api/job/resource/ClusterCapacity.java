@@ -21,8 +21,8 @@ package org.apache.hyracks.api.job.resource;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
-import org.apache.commons.lang3.ObjectUtils;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksException;
 
@@ -102,8 +102,7 @@ public class ClusterCapacity implements IClusterCapacity {
 
     @Override
     public int hashCode() {
-        return ObjectUtils.hashCodeMulti(aggregatedMemoryByteSize, aggregatedCores, nodeMemoryMap,
-                nodeCoreMap);
+        return Objects.hash(aggregatedMemoryByteSize, aggregatedCores, nodeMemoryMap, nodeCoreMap);
     }
 
     @Override
@@ -113,9 +112,8 @@ public class ClusterCapacity implements IClusterCapacity {
         }
         ClusterCapacity capacity = (ClusterCapacity) o;
         return aggregatedMemoryByteSize == capacity.aggregatedMemoryByteSize
-                && aggregatedCores == capacity.aggregatedCores
-                && ObjectUtils.equals(nodeMemoryMap, capacity.nodeMemoryMap)
-                && ObjectUtils.equals(nodeCoreMap, capacity.nodeCoreMap);
+                && aggregatedCores == capacity.aggregatedCores && Objects.equals(nodeMemoryMap, capacity.nodeMemoryMap)
+                && Objects.equals(nodeCoreMap, capacity.nodeCoreMap);
     }
 
     @Override

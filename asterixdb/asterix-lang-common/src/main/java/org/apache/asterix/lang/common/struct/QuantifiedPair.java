@@ -18,9 +18,10 @@
  */
 package org.apache.asterix.lang.common.struct;
 
+import java.util.Objects;
+
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.expression.VariableExpr;
-import org.apache.commons.lang3.ObjectUtils;
 
 public class QuantifiedPair {
     private VariableExpr varExpr;
@@ -53,7 +54,7 @@ public class QuantifiedPair {
 
     @Override
     public int hashCode() {
-        return ObjectUtils.hashCodeMulti(expr, varExpr);
+        return Objects.hash(expr, varExpr);
     }
 
     @Override
@@ -62,6 +63,6 @@ public class QuantifiedPair {
             return false;
         }
         QuantifiedPair target = (QuantifiedPair) object;
-        return ObjectUtils.equals(expr, target.expr) && ObjectUtils.equals(varExpr, target.varExpr);
+        return Objects.equals(expr, target.expr) && Objects.equals(varExpr, target.varExpr);
     }
 }

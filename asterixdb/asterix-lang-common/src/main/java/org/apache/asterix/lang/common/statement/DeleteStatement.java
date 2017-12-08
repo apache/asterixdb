@@ -18,13 +18,14 @@
  */
 package org.apache.asterix.lang.common.statement;
 
+import java.util.Objects;
+
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
-import org.apache.commons.lang3.ObjectUtils;
 
 public class DeleteStatement implements Statement {
 
@@ -84,10 +85,11 @@ public class DeleteStatement implements Statement {
 
     @Override
     public int hashCode() {
-        return ObjectUtils.hashCodeMulti(condition, datasetName, dataverseName, rewrittenQuery, vars);
+        return Objects.hash(condition, datasetName, dataverseName, rewrittenQuery, vars);
     }
 
     @Override
+    @SuppressWarnings("squid:S1067") // expressions should not be too complex
     public boolean equals(Object object) {
         if (this == object) {
             return true;
@@ -96,11 +98,10 @@ public class DeleteStatement implements Statement {
             return false;
         }
         DeleteStatement target = (DeleteStatement) object;
-        boolean equals =
-                ObjectUtils.equals(condition, target.condition) && ObjectUtils.equals(datasetName, target.datasetName)
-                        && ObjectUtils.equals(dataverseName, target.dataverseName);
-        return equals && ObjectUtils.equals(rewrittenQuery, target.rewrittenQuery)
-                && ObjectUtils.equals(vars, target.vars);
+        return Objects.equals(condition, target.condition) && Objects.equals(datasetName, target.datasetName)
+                && Objects.equals(dataverseName, target.dataverseName)
+                && Objects.equals(rewrittenQuery, target.rewrittenQuery) && Objects.equals(vars, target.vars)
+                && varCounter == target.varCounter;
     }
 
     @Override

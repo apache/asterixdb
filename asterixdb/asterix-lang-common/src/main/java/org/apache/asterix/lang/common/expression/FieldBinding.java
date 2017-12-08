@@ -18,8 +18,9 @@
  */
 package org.apache.asterix.lang.common.expression;
 
+import java.util.Objects;
+
 import org.apache.asterix.lang.common.base.Expression;
-import org.apache.commons.lang3.ObjectUtils;
 
 public class FieldBinding {
     private Expression leftExpr;
@@ -53,7 +54,7 @@ public class FieldBinding {
 
     @Override
     public int hashCode() {
-        return ObjectUtils.hashCodeMulti(leftExpr, rightExpr);
+        return Objects.hash(leftExpr, rightExpr);
     }
 
     @Override
@@ -65,7 +66,7 @@ public class FieldBinding {
             return false;
         }
         FieldBinding target = (FieldBinding) object;
-        return ObjectUtils.equals(leftExpr, target.leftExpr) && ObjectUtils.equals(rightExpr, target.rightExpr);
+        return Objects.equals(leftExpr, target.leftExpr) && Objects.equals(rightExpr, target.rightExpr);
     }
 
     @Override

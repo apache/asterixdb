@@ -19,11 +19,12 @@
 
 package org.apache.asterix.lang.sqlpp.clause;
 
+import java.util.Objects;
+
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.base.Clause;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 import org.apache.asterix.lang.sqlpp.visitor.base.ISqlppVisitor;
-import org.apache.commons.lang3.ObjectUtils;
 
 public class SelectClause implements Clause {
 
@@ -75,7 +76,7 @@ public class SelectClause implements Clause {
 
     @Override
     public int hashCode() {
-        return ObjectUtils.hashCodeMulti(distinct, selectElement, selectRegular);
+        return Objects.hash(distinct, selectElement, selectRegular);
     }
 
     @Override
@@ -87,7 +88,7 @@ public class SelectClause implements Clause {
             return false;
         }
         SelectClause target = (SelectClause) object;
-        return distinct == target.distinct && ObjectUtils.equals(selectElement, target.selectElement)
-                && ObjectUtils.equals(selectRegular, target.selectRegular);
+        return distinct == target.distinct && Objects.equals(selectElement, target.selectElement)
+                && Objects.equals(selectRegular, target.selectRegular);
     }
 }

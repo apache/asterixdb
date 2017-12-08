@@ -20,6 +20,7 @@ package org.apache.asterix.lang.common.statement;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.base.Expression;
@@ -28,7 +29,6 @@ import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
-import org.apache.commons.lang3.ObjectUtils;
 
 public class InsertStatement implements IReturningStatement {
 
@@ -120,10 +120,11 @@ public class InsertStatement implements IReturningStatement {
 
     @Override
     public int hashCode() {
-        return ObjectUtils.hashCodeMulti(datasetName, dataverseName, query, varCounter, var, returnExpression);
+        return Objects.hash(datasetName, dataverseName, query, varCounter, var, returnExpression);
     }
 
     @Override
+    @SuppressWarnings("squid:S1067") // expressions should not be too complex
     public boolean equals(Object object) {
         if (this == object) {
             return true;
@@ -132,10 +133,9 @@ public class InsertStatement implements IReturningStatement {
             return false;
         }
         InsertStatement target = (InsertStatement) object;
-        return ObjectUtils.equals(datasetName, target.datasetName)
-                && ObjectUtils.equals(dataverseName, target.dataverseName) && ObjectUtils.equals(query, target.query)
-                && ObjectUtils.equals(varCounter, target.varCounter) && ObjectUtils.equals(var, target.var)
-                && ObjectUtils.equals(returnExpression, target.returnExpression);
+        return Objects.equals(datasetName, target.datasetName) && Objects.equals(dataverseName, target.dataverseName)
+                && Objects.equals(query, target.query) && Objects.equals(returnExpression, target.returnExpression)
+                && varCounter == target.varCounter && Objects.equals(var, target.var);
     }
 
     @Override

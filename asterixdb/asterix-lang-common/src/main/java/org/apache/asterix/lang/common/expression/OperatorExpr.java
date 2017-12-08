@@ -20,13 +20,13 @@ package org.apache.asterix.lang.common.expression;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.base.AbstractExpression;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.struct.OperatorType;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
-import org.apache.commons.lang3.ObjectUtils;
 
 public class OperatorExpr extends AbstractExpression {
     private List<Expression> exprList;
@@ -126,7 +126,7 @@ public class OperatorExpr extends AbstractExpression {
 
     @Override
     public int hashCode() {
-        return ObjectUtils.hashCodeMulti(currentop, exprBroadcastIdx, exprList, opList);
+        return Objects.hash(currentop, exprBroadcastIdx, exprList, opList);
     }
 
     @Override
@@ -138,7 +138,7 @@ public class OperatorExpr extends AbstractExpression {
             return false;
         }
         OperatorExpr target = (OperatorExpr) object;
-        return currentop == target.isCurrentop() && ObjectUtils.equals(exprBroadcastIdx, target.exprBroadcastIdx)
-                && ObjectUtils.equals(exprList, target.exprList) && ObjectUtils.equals(opList, target.opList);
+        return currentop == target.isCurrentop() && Objects.equals(exprBroadcastIdx, target.exprBroadcastIdx)
+                && Objects.equals(exprList, target.exprList) && Objects.equals(opList, target.opList);
     }
 }

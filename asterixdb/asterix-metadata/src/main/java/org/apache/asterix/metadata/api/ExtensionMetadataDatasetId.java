@@ -19,9 +19,9 @@
 package org.apache.asterix.metadata.api;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 import org.apache.asterix.common.api.ExtensionId;
-import org.apache.commons.lang3.ObjectUtils;
 
 public class ExtensionMetadataDatasetId implements Serializable {
 
@@ -49,14 +49,14 @@ public class ExtensionMetadataDatasetId implements Serializable {
         }
         if (o instanceof ExtensionMetadataDatasetId) {
             ExtensionMetadataDatasetId otherId = (ExtensionMetadataDatasetId) o;
-            return ObjectUtils.equals(extensionId, otherId.getExtensionId())
-                    && ObjectUtils.equals(datasetName, otherId.getDatasetName());
+            return Objects.equals(extensionId, otherId.getExtensionId())
+                    && Objects.equals(datasetName, otherId.getDatasetName());
         }
         return false;
     }
 
     @Override
     public int hashCode() {
-        return ObjectUtils.hashCodeMulti(datasetName, extensionId);
+        return Objects.hash(datasetName, extensionId);
     }
 }

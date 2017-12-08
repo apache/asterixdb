@@ -18,11 +18,12 @@
  */
 package org.apache.asterix.lang.common.clause;
 
+import java.util.Objects;
+
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.base.Clause;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
-import org.apache.commons.lang3.ObjectUtils;
 
 public class LimitClause implements Clause {
     private Expression limitExpr;
@@ -69,7 +70,7 @@ public class LimitClause implements Clause {
 
     @Override
     public int hashCode() {
-        return ObjectUtils.hashCodeMulti(limitExpr, offset);
+        return Objects.hash(limitExpr, offset);
     }
 
     @Override
@@ -81,6 +82,6 @@ public class LimitClause implements Clause {
             return false;
         }
         LimitClause target = (LimitClause) object;
-        return limitExpr.equals(target.getLimitExpr()) && ObjectUtils.equals(offset, target.getOffset());
+        return limitExpr.equals(target.getLimitExpr()) && Objects.equals(offset, target.getOffset());
     }
 }

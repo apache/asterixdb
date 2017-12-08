@@ -18,10 +18,11 @@
  */
 package org.apache.asterix.lang.common.expression;
 
+import java.util.Objects;
+
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
-import org.apache.commons.lang3.ObjectUtils;
 
 public class IndexAccessor extends AbstractAccessor {
     private boolean isAny;
@@ -63,7 +64,7 @@ public class IndexAccessor extends AbstractAccessor {
 
     @Override
     public int hashCode() {
-        return 31 * super.hashCode() + ObjectUtils.hashCodeMulti(indexExpr, isAny);
+        return 31 * super.hashCode() + Objects.hash(indexExpr, isAny);
     }
 
     @Override
@@ -75,7 +76,7 @@ public class IndexAccessor extends AbstractAccessor {
             return false;
         }
         IndexAccessor target = (IndexAccessor) object;
-        return super.equals(target) && isAny == target.isAny && ObjectUtils.equals(indexExpr, target.indexExpr);
+        return super.equals(target) && isAny == target.isAny && Objects.equals(indexExpr, target.indexExpr);
     }
 
     @Override

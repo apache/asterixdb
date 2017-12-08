@@ -19,12 +19,13 @@
 
 package org.apache.asterix.lang.sqlpp.clause;
 
+import java.util.Objects;
+
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.base.Clause;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 import org.apache.asterix.lang.sqlpp.visitor.base.ISqlppVisitor;
-import org.apache.commons.lang3.ObjectUtils;
 
 public class Projection implements Clause {
 
@@ -85,7 +86,7 @@ public class Projection implements Clause {
 
     @Override
     public int hashCode() {
-        return ObjectUtils.hashCodeMulti(expr, exprStar, name, star);
+        return Objects.hash(expr, exprStar, name, star);
     }
 
     @Override
@@ -97,7 +98,7 @@ public class Projection implements Clause {
             return false;
         }
         Projection target = (Projection) object;
-        return ObjectUtils.equals(expr, target.expr) && ObjectUtils.equals(exprStar, target.exprStar)
-                && ObjectUtils.equals(name, target.name) && ObjectUtils.equals(star, target.star);
+        return Objects.equals(expr, target.expr) && Objects.equals(name, target.name) && exprStar == target.exprStar
+                && star == target.star;
     }
 }

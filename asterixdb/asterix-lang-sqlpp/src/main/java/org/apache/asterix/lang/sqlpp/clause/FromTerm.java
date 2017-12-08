@@ -21,6 +21,7 @@ package org.apache.asterix.lang.sqlpp.clause;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.base.Clause;
@@ -28,7 +29,6 @@ import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 import org.apache.asterix.lang.sqlpp.visitor.base.ISqlppVisitor;
-import org.apache.commons.lang3.ObjectUtils;
 
 public class FromTerm implements Clause {
     private Expression leftExpr;
@@ -91,7 +91,7 @@ public class FromTerm implements Clause {
 
     @Override
     public int hashCode() {
-        return ObjectUtils.hashCodeMulti(correlateClauses, leftExpr, leftVar, posVar);
+        return Objects.hash(correlateClauses, leftExpr, leftVar, posVar);
     }
 
     @Override
@@ -103,8 +103,7 @@ public class FromTerm implements Clause {
             return false;
         }
         FromTerm target = (FromTerm) object;
-        return ObjectUtils.equals(correlateClauses, target.correlateClauses)
-                && ObjectUtils.equals(leftExpr, target.leftExpr) && ObjectUtils.equals(leftVar, target.leftVar)
-                && ObjectUtils.equals(posVar, target.posVar);
+        return Objects.equals(correlateClauses, target.correlateClauses) && Objects.equals(leftExpr, target.leftExpr)
+                && Objects.equals(leftVar, target.leftVar) && Objects.equals(posVar, target.posVar);
     }
 }

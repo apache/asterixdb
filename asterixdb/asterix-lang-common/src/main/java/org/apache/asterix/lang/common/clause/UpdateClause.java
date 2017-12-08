@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.lang.common.clause;
 
+import java.util.Objects;
+
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.base.Clause;
 import org.apache.asterix.lang.common.base.Expression;
@@ -25,7 +27,6 @@ import org.apache.asterix.lang.common.statement.DeleteStatement;
 import org.apache.asterix.lang.common.statement.InsertStatement;
 import org.apache.asterix.lang.common.statement.UpdateStatement;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
-import org.apache.commons.lang3.ObjectUtils;
 
 public class UpdateClause implements Clause {
 
@@ -118,10 +119,11 @@ public class UpdateClause implements Clause {
 
     @Override
     public int hashCode() {
-        return ObjectUtils.hashCodeMulti(condition, ds, elsebranch, ifbranch, is, target, us, value);
+        return Objects.hash(condition, ds, elsebranch, ifbranch, is, target, us, value);
     }
 
     @Override
+    @SuppressWarnings("squid:S1067") // expressions should not be too complex
     public boolean equals(Object object) {
         if (this == object) {
             return false;
@@ -130,11 +132,10 @@ public class UpdateClause implements Clause {
             return false;
         }
         UpdateClause other = (UpdateClause) object;
-        boolean equals = ObjectUtils.equals(condition, other.condition) && ObjectUtils.equals(ds, other.ds)
-                && ObjectUtils.equals(elsebranch, other.elsebranch) && ObjectUtils.equals(ifbranch, other.ifbranch);
-        equals = equals && ObjectUtils.equals(is, other.is) && ObjectUtils.equals(target, other.target)
-                && ObjectUtils.equals(us, other.us);
-        return equals && ObjectUtils.equals(value, other.value);
+        return Objects.equals(condition, other.condition) && Objects.equals(ds, other.ds)
+                && Objects.equals(elsebranch, other.elsebranch) && Objects.equals(ifbranch, other.ifbranch)
+                && Objects.equals(is, other.is) && Objects.equals(target, other.target) && Objects.equals(us, other.us)
+                && Objects.equals(value, other.value);
     }
 
 }

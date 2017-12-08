@@ -19,6 +19,7 @@
 package org.apache.asterix.lang.common.statement;
 
 import java.util.List;
+import java.util.Objects;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.base.Expression;
@@ -26,7 +27,6 @@ import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.clause.UpdateClause;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
-import org.apache.commons.lang3.ObjectUtils;
 
 public class UpdateStatement implements Statement {
 
@@ -70,7 +70,7 @@ public class UpdateStatement implements Statement {
 
     @Override
     public int hashCode() {
-        return ObjectUtils.hashCodeMulti(condition, target, ucs, vars);
+        return Objects.hash(condition, target, ucs, vars);
     }
 
     @Override
@@ -82,8 +82,8 @@ public class UpdateStatement implements Statement {
             return false;
         }
         UpdateStatement update = (UpdateStatement) object;
-        return ObjectUtils.equals(condition, update.condition) && ObjectUtils.equals(target, update.target)
-                && ObjectUtils.equals(ucs, update.ucs) && ObjectUtils.equals(vars, update.vars);
+        return Objects.equals(condition, update.condition) && Objects.equals(target, update.target)
+                && Objects.equals(ucs, update.ucs) && Objects.equals(vars, update.vars);
     }
 
     @Override

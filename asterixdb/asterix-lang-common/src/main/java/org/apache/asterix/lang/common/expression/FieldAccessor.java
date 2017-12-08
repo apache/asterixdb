@@ -18,11 +18,12 @@
  */
 package org.apache.asterix.lang.common.expression;
 
+import java.util.Objects;
+
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
-import org.apache.commons.lang3.ObjectUtils;
 
 public class FieldAccessor extends AbstractAccessor {
     private Identifier ident;
@@ -57,7 +58,7 @@ public class FieldAccessor extends AbstractAccessor {
 
     @Override
     public int hashCode() {
-        return 31 * super.hashCode() + ObjectUtils.hashCode(ident);
+        return 31 * super.hashCode() + Objects.hashCode(ident);
     }
 
     @Override
@@ -69,6 +70,6 @@ public class FieldAccessor extends AbstractAccessor {
             return false;
         }
         FieldAccessor target = (FieldAccessor) object;
-        return super.equals(target) && ObjectUtils.equals(ident, target.ident);
+        return super.equals(target) && Objects.equals(ident, target.ident);
     }
 }

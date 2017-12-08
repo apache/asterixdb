@@ -19,8 +19,7 @@
 package org.apache.asterix.common.api;
 
 import java.io.Serializable;
-
-import org.apache.commons.lang3.ObjectUtils;
+import java.util.Objects;
 
 public class ExtensionId implements Serializable {
 
@@ -35,7 +34,7 @@ public class ExtensionId implements Serializable {
 
     @Override
     public int hashCode() {
-        return ObjectUtils.hashCodeMulti(getName().hashCode(), version);
+        return Objects.hash(getName().hashCode(), version);
     }
 
     @Override
@@ -44,7 +43,7 @@ public class ExtensionId implements Serializable {
             return true;
         } else if (o instanceof ExtensionId) {
             ExtensionId oExtensionId = (ExtensionId) o;
-            return version == oExtensionId.version && ObjectUtils.equals(name, oExtensionId.getName());
+            return version == oExtensionId.version && Objects.equals(name, oExtensionId.getName());
         }
         return false;
     }

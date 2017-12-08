@@ -18,9 +18,10 @@
  */
 package org.apache.asterix.lang.common.expression;
 
+import java.util.Objects;
+
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
-import org.apache.commons.lang3.ObjectUtils;
 
 public class UnorderedListTypeDefinition implements TypeExpression {
 
@@ -46,7 +47,7 @@ public class UnorderedListTypeDefinition implements TypeExpression {
 
     @Override
     public int hashCode() {
-        return ObjectUtils.hashCode(itemTypeExpression);
+        return Objects.hashCode(itemTypeExpression);
     }
 
     @Override
@@ -58,6 +59,6 @@ public class UnorderedListTypeDefinition implements TypeExpression {
             return false;
         }
         UnorderedListTypeDefinition target = (UnorderedListTypeDefinition) object;
-        return ObjectUtils.equals(itemTypeExpression, target.itemTypeExpression);
+        return Objects.equals(itemTypeExpression, target.itemTypeExpression);
     }
 }

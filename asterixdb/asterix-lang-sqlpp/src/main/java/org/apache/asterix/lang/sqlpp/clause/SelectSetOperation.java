@@ -21,6 +21,7 @@ package org.apache.asterix.lang.sqlpp.clause;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.base.Clause;
@@ -28,7 +29,6 @@ import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationInput;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
 import org.apache.asterix.lang.sqlpp.visitor.base.ISqlppVisitor;
-import org.apache.commons.lang3.ObjectUtils;
 
 public class SelectSetOperation implements Clause {
 
@@ -66,7 +66,7 @@ public class SelectSetOperation implements Clause {
 
     @Override
     public int hashCode() {
-        return ObjectUtils.hashCodeMulti(leftInput, rightInputs);
+        return Objects.hash(leftInput, rightInputs);
     }
 
     @Override
@@ -78,7 +78,7 @@ public class SelectSetOperation implements Clause {
             return false;
         }
         SelectSetOperation target = (SelectSetOperation) object;
-        return ObjectUtils.equals(leftInput, target.leftInput) && ObjectUtils.equals(rightInputs, target.rightInputs);
+        return Objects.equals(leftInput, target.leftInput) && Objects.equals(rightInputs, target.rightInputs);
     }
 
     @Override

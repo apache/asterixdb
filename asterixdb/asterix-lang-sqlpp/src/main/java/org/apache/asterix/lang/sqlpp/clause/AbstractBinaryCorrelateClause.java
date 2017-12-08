@@ -19,11 +19,12 @@
 
 package org.apache.asterix.lang.sqlpp.clause;
 
+import java.util.Objects;
+
 import org.apache.asterix.lang.common.base.Clause;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.sqlpp.optype.JoinType;
-import org.apache.commons.lang3.ObjectUtils;
 
 public abstract class AbstractBinaryCorrelateClause implements Clause {
 
@@ -66,7 +67,7 @@ public abstract class AbstractBinaryCorrelateClause implements Clause {
 
     @Override
     public int hashCode() {
-        return ObjectUtils.hashCodeMulti(joinType, rightExpr, rightPosVar, rightVar);
+        return Objects.hash(joinType, rightExpr, rightPosVar, rightVar);
     }
 
     @Override
@@ -78,8 +79,8 @@ public abstract class AbstractBinaryCorrelateClause implements Clause {
             return false;
         }
         AbstractBinaryCorrelateClause target = (AbstractBinaryCorrelateClause) object;
-        return ObjectUtils.equals(joinType, target.joinType) && ObjectUtils.equals(rightExpr, target.rightExpr)
-                && ObjectUtils.equals(rightPosVar, target.rightPosVar) && ObjectUtils.equals(rightVar, target.rightVar);
+        return Objects.equals(joinType, target.joinType) && Objects.equals(rightExpr, target.rightExpr)
+                && Objects.equals(rightPosVar, target.rightPosVar) && Objects.equals(rightVar, target.rightVar);
     }
 
 }

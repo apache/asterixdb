@@ -20,13 +20,13 @@ package org.apache.asterix.lang.common.statement;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.IReturningStatement;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
-import org.apache.commons.lang3.ObjectUtils;
 
 public class Query implements IReturningStatement {
     private final boolean explain;
@@ -95,7 +95,7 @@ public class Query implements IReturningStatement {
 
     @Override
     public int hashCode() {
-        return ObjectUtils.hashCodeMulti(body, topLevel, explain);
+        return Objects.hash(body, topLevel, explain, varCounter);
     }
 
     @Override
@@ -107,7 +107,8 @@ public class Query implements IReturningStatement {
             return false;
         }
         Query target = (Query) object;
-        return explain == target.explain && ObjectUtils.equals(body, target.body) && topLevel == target.topLevel;
+        return explain == target.explain && Objects.equals(body, target.body) && topLevel == target.topLevel
+                && varCounter == target.varCounter;
     }
 
     @Override
