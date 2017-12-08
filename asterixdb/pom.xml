@@ -46,6 +46,7 @@
     <file.encoding>UTF-8</file.encoding>
     <jvm.extraargs />
     <jdk.version>1.8</jdk.version>
+    <javac.xlint.value>all</javac.xlint.value>
     <runSlowAQLTests>false</runSlowAQLTests>
     <appendedResourcesDirectory>${basedir}/src/main/appended-resources</appendedResourcesDirectory>
     <sonar.jacoco.reportPath>${env.PWD}/target/jacoco-merged.exec</sonar.jacoco.reportPath>
@@ -157,7 +158,7 @@
         <configuration>
           <source>${jdk.version}</source>
           <target>${jdk.version}</target>
-          <compilerArgument>-Xlint:all</compilerArgument>
+          <compilerArgument>-Xlint:${javac.xlint.value}</compilerArgument>
         </configuration>
       </plugin>
       <plugin>
