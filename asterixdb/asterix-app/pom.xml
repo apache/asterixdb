@@ -444,7 +444,6 @@
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-compress</artifactId>
-      <version>1.4.1</version>
       <scope>test</scope>
     </dependency>
     <dependency>
