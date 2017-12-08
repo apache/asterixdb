@@ -68,12 +68,13 @@ public class NCQueryServiceServlet extends QueryServiceServlet {
     @Override
     protected void executeStatement(String statementsText, SessionOutput sessionOutput,
             IStatementExecutor.ResultDelivery delivery, IStatementExecutor.Stats stats, RequestParameters param,
-            long[] outExecStartEnd, Map<String, String> optionalParameters) throws Exception {
+            RequestExecutionState execution, Map<String, String> optionalParameters) throws Exception {
         // Running on NC -> send 'execute' message to CC
         INCServiceContext ncCtx = (INCServiceContext) serviceCtx;
         INCMessageBroker ncMb = (INCMessageBroker) ncCtx.getMessageBroker();
-        IStatementExecutor.ResultDelivery ccDelivery = delivery == IStatementExecutor.ResultDelivery.IMMEDIATE
-                ? IStatementExecutor.ResultDelivery.DEFERRED : delivery;
+        IStatementExecutor.ResultDelivery ccDelivery =
+                delivery == IStatementExecutor.ResultDelivery.IMMEDIATE ? IStatementExecutor.ResultDelivery.DEFERRED
+                        : delivery;
         ExecuteStatementResponseMessage responseMsg;
         MessageFuture responseFuture = ncMb.registerMessageFuture();
         final String handleUrl = getHandleUrl(param.host, param.path, delivery);
@@ -82,13 +83,13 @@ public class NCQueryServiceServlet extends QueryServiceServlet {
                 param.clientContextID = UUID.randomUUID().toString();
             }
             long timeout = ExecuteStatementRequestMessage.DEFAULT_NC_TIMEOUT_MILLIS;
-            if (param.timeout != null) {
+            if (param.timeout != null && !param.timeout.trim().isEmpty()) {
                 timeout = TimeUnit.NANOSECONDS.toMillis(Duration.parseDurationStringToNanos(param.timeout));
             }
             ExecuteStatementRequestMessage requestMsg = new ExecuteStatementRequestMessage(ncCtx.getNodeId(),
                     responseFuture.getFutureId(), queryLanguage, statementsText, sessionOutput.config(), ccDelivery,
                     param.clientContextID, handleUrl, optionalParameters);
-            outExecStartEnd[0] = System.nanoTime();
+            execution.start();
             ncMb.sendMessageToCC(requestMsg);
             try {
                 responseMsg = (ExecuteStatementResponseMessage) responseFuture.get(timeout, TimeUnit.MILLISECONDS);
@@ -96,12 +97,13 @@ public class NCQueryServiceServlet extends QueryServiceServlet {
                 cancelQuery(ncMb, ncCtx.getNodeId(), param.clientContextID, e, false);
                 throw e;
             } catch (TimeoutException exception) {
-                RuntimeDataException hde = new RuntimeDataException(ErrorCode.QUERY_TIMEOUT, exception);
+                RuntimeDataException hde = new RuntimeDataException(ErrorCode.QUERY_TIMEOUT);
+                hde.addSuppressed(exception);
                 // cancel query
                 cancelQuery(ncMb, ncCtx.getNodeId(), param.clientContextID, hde, true);
                 throw hde;
             }
-            outExecStartEnd[1] = System.nanoTime();
+            execution.end();
         } finally {
             ncMb.deregisterMessageFuture(responseFuture.getFutureId());
         }
@@ -131,8 +133,8 @@ public class NCQueryServiceServlet extends QueryServiceServlet {
         }
     }
 
-    private void cancelQuery(INCMessageBroker messageBroker, String nodeId, String clientContextID,
-            Exception exception, boolean wait) {
+    private void cancelQuery(INCMessageBroker messageBroker, String nodeId, String clientContextID, Exception exception,
+            boolean wait) {
         MessageFuture cancelQueryFuture = messageBroker.registerMessageFuture();
         try {
             CancelQueryRequest cancelQueryMessage =
@@ -150,13 +152,13 @@ public class NCQueryServiceServlet extends QueryServiceServlet {
     }
 
     @Override
-    protected HttpResponseStatus handleExecuteStatementException(Throwable t) {
+    protected void handleExecuteStatementException(Throwable t, RequestExecutionState execution) {
         if (t instanceof TimeoutException
                 || (t instanceof HyracksDataException && ExceptionUtils.getRootCause(t) instanceof IPCException)) {
             GlobalConfig.ASTERIX_LOGGER.log(Level.WARNING, t.toString(), t);
-            return HttpResponseStatus.SERVICE_UNAVAILABLE;
+            execution.setStatus(ResultStatus.FAILED, HttpResponseStatus.SERVICE_UNAVAILABLE);
         } else {
-            return super.handleExecuteStatementException(t);
+            super.handleExecuteStatementException(t, execution);
         }
     }
 }

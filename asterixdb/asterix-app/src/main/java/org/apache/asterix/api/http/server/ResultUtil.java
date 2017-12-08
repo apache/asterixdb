@@ -130,8 +130,9 @@ public class ResultUtil {
     public static void printError(PrintWriter pw, String msg, int code, boolean comma) {
         pw.print("\t\"");
         pw.print(AbstractQueryApiServlet.ResultFields.ERRORS.str());
-        pw.print("\": [{ \n");
+        pw.print("\": [{ \n\t");
         printField(pw, QueryServiceServlet.ErrorField.CODE.str(), code);
+        pw.print("\t");
         printField(pw, QueryServiceServlet.ErrorField.MSG.str(), JSONUtil.escape(msg), false);
         pw.print(comma ? "\t}],\n" : "\t}]\n");
     }

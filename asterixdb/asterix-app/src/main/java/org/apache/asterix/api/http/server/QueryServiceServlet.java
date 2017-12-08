@@ -20,7 +20,6 @@ package org.apache.asterix.api.http.server;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
@@ -36,6 +35,7 @@ import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.asterix.lang.aql.parser.TokenMgrError;
 import org.apache.asterix.lang.common.base.IParser;
@@ -68,7 +68,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.netty.handler.codec.http.HttpResponseStatus;
 
 public class QueryServiceServlet extends AbstractQueryApiServlet {
-    private static final Logger LOGGER = Logger.getLogger(QueryServiceServlet.class.getName());
+    protected static final Logger LOGGER = Logger.getLogger(QueryServiceServlet.class.getName());
     protected final ILangExtension.Language queryLanguage;
     private final ILangCompilationProvider compilationProvider;
     private final IStatementExecutorFactory statementExecutorFactory;
@@ -184,10 +184,51 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
                 on.put("mode", mode);
                 on.put("clientContextID", clientContextID);
                 on.put("format", format);
+                on.put("timeout", timeout);
                 return om.writer(new MinimalPrettyPrinter()).writeValueAsString(on);
             } catch (JsonProcessingException e) { // NOSONAR
                 return e.getMessage();
             }
+        }
+    }
+
+    static final class RequestExecutionState {
+        private long execStart = -1;
+        private long execEnd = -1;
+        private ResultStatus resultStatus = ResultStatus.SUCCESS;
+        private HttpResponseStatus httpResponseStatus = HttpResponseStatus.OK;
+
+        void setStatus(ResultStatus resultStatus, HttpResponseStatus httpResponseStatus) {
+            this.resultStatus = resultStatus;
+            this.httpResponseStatus = httpResponseStatus;
+        }
+
+        ResultStatus getResultStatus() {
+            return resultStatus;
+        }
+
+        HttpResponseStatus getHttpStatus() {
+            return httpResponseStatus;
+        }
+
+        void start() {
+            execStart = System.nanoTime();
+        }
+
+        void end() {
+            execEnd = System.nanoTime();
+        }
+
+        void finish() {
+            if (execStart == -1) {
+                execEnd = -1;
+            } else if (execEnd == -1) {
+                execEnd = System.nanoTime();
+            }
+        }
+
+        long duration() {
+            return execEnd - execStart;
         }
     }
 
@@ -289,7 +330,6 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         ResultUtil.printField(pw, Metrics.RESULT_SIZE.str(), resultSize, true);
         pw.print("\t");
         ResultUtil.printField(pw, Metrics.PROCESSED_OBJECTS_COUNT.str(), processedObjects, hasErrors);
-        pw.print("\t");
         if (hasErrors) {
             pw.print("\t");
             ResultUtil.printField(pw, Metrics.ERROR_COUNT.str(), errorCount, false);
@@ -334,6 +374,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
             param.pretty = Boolean.parseBoolean(request.getParameter(Parameter.PRETTY.str()));
             param.mode = toLower(request.getParameter(Parameter.MODE.str()));
             param.clientContextID = request.getParameter(Parameter.CLIENT_ID.str());
+            param.timeout = request.getParameter(Parameter.TIMEOUT.str());
         }
         return param;
     }
@@ -391,7 +432,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         HttpUtil.setContentType(response, HttpUtil.ContentType.APPLICATION_JSON, HttpUtil.Encoding.UTF8);
 
         Stats stats = new Stats();
-        long[] execStartEnd = new long[] { -1, -1 };
+        RequestExecutionState execution = new RequestExecutionState();
 
         // buffer the output until we are ready to set the status of the response message correctly
         sessionOutput.hold();
@@ -410,27 +451,24 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
             if (optionalParamProvider != null) {
                 optionalParams = optionalParamProvider.apply(request);
             }
-            response.setStatus(HttpResponseStatus.OK);
-            executeStatement(statementsText, sessionOutput, delivery, stats, param, execStartEnd, optionalParams);
+            response.setStatus(execution.getHttpStatus());
+            executeStatement(statementsText, sessionOutput, delivery, stats, param, execution, optionalParams);
             if (ResultDelivery.IMMEDIATE == delivery || ResultDelivery.DEFERRED == delivery) {
-                ResultUtil.printStatus(sessionOutput, ResultStatus.SUCCESS);
+                ResultUtil.printStatus(sessionOutput, execution.getResultStatus());
             }
             errorCount = 0;
         } catch (Exception | TokenMgrError | org.apache.asterix.aqlplus.parser.TokenMgrError e) {
-            response.setStatus(handleExecuteStatementException(e));
+            handleExecuteStatementException(e, execution);
+            response.setStatus(execution.getHttpStatus());
             ResultUtil.printError(sessionOutput.out(), e);
-            ResultUtil.printStatus(sessionOutput, ResultStatus.FATAL);
+            ResultUtil.printStatus(sessionOutput, execution.getResultStatus());
         } finally {
             // make sure that we stop buffering and return the result to the http response
             sessionOutput.release();
-            if (execStartEnd[0] == -1) {
-                execStartEnd[1] = -1;
-            } else if (execStartEnd[1] == -1) {
-                execStartEnd[1] = System.nanoTime();
-            }
+            execution.finish();
         }
-        printMetrics(sessionOutput.out(), System.nanoTime() - elapsedStart, execStartEnd[1] - execStartEnd[0],
-                stats.getCount(), stats.getSize(), stats.getProcessedObjects(), errorCount);
+        printMetrics(sessionOutput.out(), System.nanoTime() - elapsedStart, execution.duration(), stats.getCount(),
+                stats.getSize(), stats.getProcessedObjects(), errorCount);
         sessionOutput.out().print("}\n");
         sessionOutput.out().flush();
         if (sessionOutput.out().checkError()) {
@@ -439,7 +477,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
     }
 
     protected void executeStatement(String statementsText, SessionOutput sessionOutput, ResultDelivery delivery,
-            IStatementExecutor.Stats stats, RequestParameters param, long[] outExecStartEnd,
+            IStatementExecutor.Stats stats, RequestParameters param, RequestExecutionState execution,
             Map<String, String> optionalParameters) throws Exception {
         IClusterManagementWork.ClusterState clusterState =
                 ((ICcApplicationContext) appCtx).getClusterStateManager().getState();
@@ -452,25 +490,29 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         MetadataManager.INSTANCE.init();
         IStatementExecutor translator = statementExecutorFactory.create((ICcApplicationContext) appCtx, statements,
                 sessionOutput, compilationProvider, componentProvider);
-        outExecStartEnd[0] = System.nanoTime();
+        execution.start();
         final IRequestParameters requestParameters =
                 new org.apache.asterix.app.translator.RequestParameters(getHyracksDataset(), delivery, stats, null,
                         param.clientContextID, optionalParameters);
         translator.compileAndExecute(getHyracksClientConnection(), queryCtx, requestParameters);
-        outExecStartEnd[1] = System.nanoTime();
+        execution.end();
     }
 
-    protected HttpResponseStatus handleExecuteStatementException(Throwable t) {
+    protected void handleExecuteStatementException(Throwable t, RequestExecutionState execution) {
         if (t instanceof org.apache.asterix.aqlplus.parser.TokenMgrError || t instanceof TokenMgrError
                 || t instanceof AlgebricksException) {
             GlobalConfig.ASTERIX_LOGGER.log(Level.INFO, t.getMessage(), t);
-            return HttpResponseStatus.BAD_REQUEST;
+            execution.setStatus(ResultStatus.FATAL, HttpResponseStatus.BAD_REQUEST);
         } else if (t instanceof HyracksException) {
             GlobalConfig.ASTERIX_LOGGER.log(Level.WARNING, t.getMessage(), t);
-            return HttpResponseStatus.INTERNAL_SERVER_ERROR;
+            if (((HyracksException) t).getErrorCode() == ErrorCode.QUERY_TIMEOUT) {
+                execution.setStatus(ResultStatus.TIMEOUT, HttpResponseStatus.OK);
+            } else {
+                execution.setStatus(ResultStatus.FATAL, HttpResponseStatus.INTERNAL_SERVER_ERROR);
+            }
         } else {
             GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, "Unexpected exception", t);
-            return HttpResponseStatus.INTERNAL_SERVER_ERROR;
+            execution.setStatus(ResultStatus.FATAL, HttpResponseStatus.INTERNAL_SERVER_ERROR);
         }
     }
 }
