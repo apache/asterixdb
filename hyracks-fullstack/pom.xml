@@ -58,6 +58,7 @@
     <sonar.jacoco.reportPath>${env.PWD}/target/jacoco-merged.exec</sonar.jacoco.reportPath>
     <source-format.skip>false</source-format.skip>
     <skip.surefire.tests>${skipTests}</skip.surefire.tests>
+    <skip.testResources>${maven.test.skip}</skip.testResources>
 
     <!-- Definition of tests in various categories which may be excluded -->
     <hanging.pregelix.tests>**/pregelix/**/FailureRecovery*.java</hanging.pregelix.tests>
@@ -272,27 +273,6 @@
         </configuration>
       </plugin>
       <plugin>
-        <artifactId>maven-resources-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>copy-resources</id>
-            <phase>validate</phase>
-            <goals>
-              <goal>copy-resources</goal>
-            </goals>
-            <configuration>
-              <outputDirectory>target</outputDirectory>
-              <resources>
-                <resource>
-                  <directory>${root.dir}/src/main/appended-resources</directory>
-                  <!-- <filtering>true</filtering> -->
-                </resource>
-              </resources>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-remote-resources-plugin</artifactId>
         <executions>
@@ -354,6 +334,21 @@
                   <version>[3.3.9,)</version>
                 </requireMavenVersion>
               </rules>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-resources-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>default-testResources</id>
+            <goals>
+              <goal>testResources</goal>
+            </goals>
+            <configuration>
+              <skip>${skip.testResources}</skip>
             </configuration>
           </execution>
         </executions>

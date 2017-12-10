@@ -54,13 +54,6 @@
               <javaUnicodeEscape>true</javaUnicodeEscape>
             </configuration>
           </execution>
-          <execution>
-            <id>javacc-jjdoc</id>
-            <goals>
-              <goal>jjdoc</goal>
-            </goals>
-            <phase>process-sources</phase>
-          </execution>
         </executions>
       </plugin>
       <plugin>
@@ -120,6 +113,35 @@
       </plugins>
     </pluginManagement>
   </build>
+
+  <profiles>
+    <profile>
+      <id>jjdoc</id>
+      <activation>
+        <property>
+          <name>jjdoc.skip</name>
+          <value>!true</value>
+        </property>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>javacc-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>javacc-jjdoc</id>
+                <goals>
+                  <goal>jjdoc</goal>
+                </goals>
+                <phase>generate-test-sources</phase>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 
   <dependencies>
     <dependency>

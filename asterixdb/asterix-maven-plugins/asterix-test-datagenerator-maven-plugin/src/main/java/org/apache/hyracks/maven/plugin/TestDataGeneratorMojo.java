@@ -55,8 +55,18 @@ public class TestDataGeneratorMojo extends AbstractMojo {
      */
     File outputDir;
 
+
+    /**
+     * @parameter default-value="${maven.test.skip}"
+     */
+    boolean skip;
+
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
+        if (skip) {
+            getLog().info("Skipping plugin execution (configured skip)");
+            return;
+        }
         FileSetManager mgr = new FileSetManager();
         // this seems pretty hacky, but necessary to get the correct result.
         File inputFilesDirectory = new File(inputFiles.getDirectory());

@@ -121,6 +121,7 @@
                 </includes>
               </inputFiles>
               <outputDir>target/data</outputDir>
+              <skip>${skip.testResources}</skip>
             </configuration>
           </execution>
         </executions>
