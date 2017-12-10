@@ -36,19 +36,21 @@ import org.junit.runners.MethodSorters;
 @FixMethodOrder(MethodSorters.JVM)
 public class LicensingIT {
 
-    // The "target" subdirectory of asterix-server. All outputs go here.
-    private static final String TARGET_DIR = FileUtil.joinPath("target");
-
     protected String installerDir;
 
     @Before
     public void setup() {
         final String pattern = getInstallerDirPattern();
-        final String[] list = new File(TARGET_DIR).list((dir, name) -> name.matches(pattern));
+        final String targetDir = getTargetDir();
+        final String[] list = new File(targetDir).list((dir, name) -> name.matches(pattern));
         Assert.assertNotNull("installerDir", list);
         Assert.assertFalse("Ambiguous install dir (" + pattern + "): " + Arrays.toString(list), list.length > 1);
         Assert.assertEquals("Can't find install dir (" + pattern + ")", 1, list.length);
-        installerDir = FileUtil.joinPath(TARGET_DIR, list[0]);
+        installerDir = FileUtil.joinPath(targetDir, list[0]);
+    }
+
+    protected String getTargetDir() {
+        return FileUtil.joinPath("target");
     }
 
     protected String getInstallerDirPattern() {
