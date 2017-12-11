@@ -131,15 +131,15 @@ public class NCService {
         }
 
         // Sets up memory parameter if it is not specified.
-        if (!jvmargs.contains(" -Xmx")) {
+        if (!jvmargs.contains("-Xmx")) {
             long ramSize = ((com.sun.management.OperatingSystemMXBean) osMXBean).getTotalPhysicalMemorySize();
             int proportionalRamSize = (int) Math.ceil(0.6 * ramSize / (1024 * 1024));
             //if under 32bit JVM, use less than 1GB heap by default. otherwise use proportional ramsize.
             int heapSize = "32".equals(System.getProperty("sun.arch.data.model"))
                     ? (proportionalRamSize <= 1024 ? proportionalRamSize : 1024) : proportionalRamSize;
             jvmargs = jvmargs + " -Xmx" + heapSize + "m";
-            env.put("JAVA_OPTS", jvmargs.trim());
         }
+        env.put("JAVA_OPTS", jvmargs.trim());
         LOGGER.info("Setting JAVA_OPTS to " + jvmargs);
     }
 

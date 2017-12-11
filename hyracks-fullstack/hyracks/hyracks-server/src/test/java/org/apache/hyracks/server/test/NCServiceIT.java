@@ -21,10 +21,12 @@ package org.apache.hyracks.server.test;
 import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
+import java.util.Iterator;
 import java.util.logging.Logger;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import junit.framework.Assert;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpResponse;
@@ -34,20 +36,17 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.apache.hyracks.server.process.HyracksVirtualCluster;
+import org.apache.hyracks.util.file.FileUtil;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class NCServiceIT {
 
-    private static final String TARGET_DIR = StringUtils
-            .join(new String[] { ".", "target" }, File.separator);
-    private static final String LOG_DIR = StringUtils
-            .join(new String[] { TARGET_DIR, "failsafe-reports" }, File.separator);
-    private static final String RESOURCE_DIR = StringUtils
-            .join(new String[] { TARGET_DIR, "test-classes", "NCServiceIT" }, File.separator);
-    private static final String APP_HOME = StringUtils
-            .join(new String[] { TARGET_DIR, "appassembler" }, File.separator);
+    private static final String TARGET_DIR = FileUtil.joinPath(".", "target");
+    private static final String LOG_DIR = FileUtil.joinPath(TARGET_DIR, "failsafe-reports");
+    private static final String RESOURCE_DIR = FileUtil.joinPath(TARGET_DIR, "test-classes", "NCServiceIT");
+    private static final String APP_HOME = FileUtil.joinPath(TARGET_DIR, "appassembler");
     private static final Logger LOGGER = Logger.getLogger(NCServiceIT.class.getName());
 
     private static HyracksVirtualCluster cluster = null;
@@ -55,31 +54,20 @@ public class NCServiceIT {
     @BeforeClass
     public static void setUp() throws Exception {
         cluster = new HyracksVirtualCluster(new File(APP_HOME), null);
-        cluster.addNCService(
-                new File(RESOURCE_DIR, "nc-red.conf"),
-                new File(LOG_DIR, "nc-red.log")
-        );
-        cluster.addNCService(
-                new File(RESOURCE_DIR, "nc-blue.conf"),
-                new File(LOG_DIR, "nc-blue.log")
-        );
+        cluster.addNCService(new File(RESOURCE_DIR, "nc-red.conf"), new File(LOG_DIR, "nc-red.log"));
+        cluster.addNCService(new File(RESOURCE_DIR, "nc-blue.conf"), new File(LOG_DIR, "nc-blue.log"));
 
         try {
             Thread.sleep(2000);
-        }
-        catch (InterruptedException ignored) {
+        } catch (InterruptedException ignored) {
         }
 
         // Start CC
-        cluster.start(
-                new File(RESOURCE_DIR, "cc.conf"),
-                new File(LOG_DIR, "cc.log")
-        );
+        cluster.start(new File(RESOURCE_DIR, "cc.conf"), new File(LOG_DIR, "cc.log"));
 
         try {
             Thread.sleep(10000);
-        }
-        catch (InterruptedException ignored) {
+        } catch (InterruptedException ignored) {
         }
     }
 
@@ -108,15 +96,20 @@ public class NCServiceIT {
         }
     }
 
+    private JsonNode getEndpoint(String endpoint) throws Exception {
+        ObjectMapper om = new ObjectMapper();
+        String localhost = InetAddress.getLoopbackAddress().getHostAddress();
+        String response = getHttp("http://" + localhost + ":12345" + endpoint);
+        JsonNode result = om.readTree(response);
+        JsonNode nodes = result.get("result");
+        return nodes;
+    }
+
     @Test
     public void IsNodelistCorrect() throws Exception {
         // Ping the nodelist HTTP API
 
-        ObjectMapper om = new ObjectMapper();
-        String localhost = InetAddress.getLoopbackAddress().getHostAddress();
-        String response = getHttp("http://" + localhost + ":12345/rest/nodes");
-        JsonNode result = om.readTree(response);
-        JsonNode nodes = result.get("result");
+        JsonNode nodes = getEndpoint("/rest/nodes");
         int numNodes = nodes.size();
         Assert.assertEquals("Wrong number of nodes!", 2, numNodes);
         for (int i = 0; i < nodes.size(); i++) {
@@ -126,6 +119,18 @@ public class NCServiceIT {
                 continue;
             }
             Assert.fail("Unexpected node ID '" + id + "'!");
+        }
+    }
+
+    @Test
+    public void isXmxOverrideCorrect() throws Exception {
+        ArrayNode inputArgs = (ArrayNode) getEndpoint("/rest/nodes/red").get("input-arguments");
+        for (Iterator<JsonNode> it = inputArgs.elements(); it.hasNext();) {
+            String s = it.next().asText();
+            if (s.startsWith("-Xmx") && s.endsWith("m")) {
+                String digits = s.substring(4, 8);
+                Assert.assertEquals("1234", digits);
+            }
         }
     }
 
