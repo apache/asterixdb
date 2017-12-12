@@ -562,9 +562,25 @@ public class MultiPartitionLSMIndexTest {
             }
             // ensure that the insert completes
             insertReq.await();
-            // ensure the two memory components at partition 0 have different component ids
+            dsLifecycleMgr.getDatasetInfo(DATASET_ID).waitForIO();
+            // check first partition
+            List<ILSMDiskComponent> secondaryDiskComponents = secondaryLsmBtrees[0].getDiskComponents();
+            List<ILSMDiskComponent> primaryDiskComponents = primaryLsmBtrees[0].getDiskComponents();
+            for (int i = 0; i < secondaryDiskComponents.size(); i++) {
+                Assert.assertEquals(secondaryDiskComponents.get(i).getId(), primaryDiskComponents.get(i).getId());
+            }
+            // check second partition
+            secondaryDiskComponents = secondaryLsmBtrees[1].getDiskComponents();
+            primaryDiskComponents = primaryLsmBtrees[1].getDiskComponents();
+            for (int i = 0; i < secondaryDiskComponents.size(); i++) {
+                Assert.assertEquals(secondaryDiskComponents.get(i).getId(), primaryDiskComponents.get(i).getId());
+            }
+            // ensure the two memory components at partition 0 have the same component ids
             Assert.assertEquals(primaryLsmBtrees[0].getCurrentMemoryComponent().getId(),
                     secondaryLsmBtrees[0].getCurrentMemoryComponent().getId());
+            // ensure the two memory components at partition 0 have the same component ids
+            Assert.assertEquals(primaryLsmBtrees[1].getCurrentMemoryComponent().getId(),
+                    secondaryLsmBtrees[1].getCurrentMemoryComponent().getId());
         } catch (Throwable e) {
             e.printStackTrace();
             Assert.fail(e.getMessage());
