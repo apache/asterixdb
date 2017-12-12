@@ -21,7 +21,6 @@ package org.apache.hyracks.control.cc.work;
 import java.util.Map;
 
 import org.apache.hyracks.api.dataflow.TaskAttemptId;
-import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.cc.job.IJobManager;
@@ -42,23 +41,19 @@ public class TaskCompleteWork extends AbstractTaskLifecycleWork {
 
     @Override
     protected void performEvent(TaskAttempt ta) {
-        try {
-            IJobManager jobManager = ccs.getJobManager();
-            JobRun run = jobManager.get(jobId);
-            if (statistics != null) {
-                JobProfile jobProfile = run.getJobProfile();
-                Map<String, JobletProfile> jobletProfiles = jobProfile.getJobletProfiles();
-                JobletProfile jobletProfile = jobletProfiles.get(nodeId);
-                if (jobletProfile == null) {
-                    jobletProfile = new JobletProfile(nodeId);
-                    jobletProfiles.put(nodeId, jobletProfile);
-                }
-                jobletProfile.getTaskProfiles().put(taId, statistics);
+        IJobManager jobManager = ccs.getJobManager();
+        JobRun run = jobManager.get(jobId);
+        if (statistics != null) {
+            JobProfile jobProfile = run.getJobProfile();
+            Map<String, JobletProfile> jobletProfiles = jobProfile.getJobletProfiles();
+            JobletProfile jobletProfile = jobletProfiles.get(nodeId);
+            if (jobletProfile == null) {
+                jobletProfile = new JobletProfile(nodeId);
+                jobletProfiles.put(nodeId, jobletProfile);
             }
-            run.getExecutor().notifyTaskComplete(ta);
-        } catch (HyracksException e) {
-            e.printStackTrace();
+            jobletProfile.getTaskProfiles().put(taId, statistics);
         }
+        run.getExecutor().notifyTaskComplete(ta);
     }
 
     @Override

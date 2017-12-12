@@ -642,27 +642,32 @@ public class JobExecutor {
         return doomed;
     }
 
-    public void notifyTaskComplete(TaskAttempt ta) throws HyracksException {
-        TaskAttemptId taId = ta.getTaskAttemptId();
-        TaskCluster tc = ta.getTask().getTaskCluster();
-        TaskClusterAttempt lastAttempt = findLastTaskClusterAttempt(tc);
-        if (lastAttempt == null || taId.getAttempt() != lastAttempt.getAttempt()) {
-            LOGGER.warning(
-                    "Ignoring task complete notification: " + taId + " -- Current last attempt = " + lastAttempt);
-            return;
-        }
-        TaskAttempt.TaskStatus taStatus = ta.getStatus();
-        if (taStatus != TaskAttempt.TaskStatus.RUNNING) {
-            LOGGER.warning("Spurious task complete notification: " + taId + " Current state = " + taStatus);
-            return;
-        }
-        ta.setStatus(TaskAttempt.TaskStatus.COMPLETED, null);
-        ta.setEndTime(System.currentTimeMillis());
-        if (lastAttempt.decrementPendingTasksCounter() == 0) {
-            lastAttempt.setStatus(TaskClusterAttempt.TaskClusterStatus.COMPLETED);
-            lastAttempt.setEndTime(System.currentTimeMillis());
-            inProgressTaskClusters.remove(tc);
-            startRunnableActivityClusters();
+    public void notifyTaskComplete(TaskAttempt ta) {
+        try {
+            TaskAttemptId taId = ta.getTaskAttemptId();
+            TaskCluster tc = ta.getTask().getTaskCluster();
+            TaskClusterAttempt lastAttempt = findLastTaskClusterAttempt(tc);
+            if (lastAttempt == null || taId.getAttempt() != lastAttempt.getAttempt()) {
+                LOGGER.warning(() -> "Ignoring task complete notification: " + taId + " -- Current last attempt = "
+                        + lastAttempt);
+                return;
+            }
+            TaskAttempt.TaskStatus taStatus = ta.getStatus();
+            if (taStatus != TaskAttempt.TaskStatus.RUNNING) {
+                LOGGER.warning(() -> "Spurious task complete notification: " + taId + " Current state = " + taStatus);
+                return;
+            }
+            ta.setStatus(TaskAttempt.TaskStatus.COMPLETED, null);
+            ta.setEndTime(System.currentTimeMillis());
+            if (lastAttempt.decrementPendingTasksCounter() == 0) {
+                lastAttempt.setStatus(TaskClusterAttempt.TaskClusterStatus.COMPLETED);
+                lastAttempt.setEndTime(System.currentTimeMillis());
+                inProgressTaskClusters.remove(tc);
+                startRunnableActivityClusters();
+            }
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, e, () -> "Unexpected failure. Aborting job " + jobRun.getJobId());
+            abortJob(Collections.singletonList(e), NoOpCallback.INSTANCE);
         }
     }
 
@@ -724,6 +729,7 @@ public class JobExecutor {
                     ta -> HyracksException.create(ErrorCode.NODE_FAILED, ta.getNodeId()));
             startRunnableActivityClusters();
         } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, e, () -> "Unexpected failure. Aborting job " + jobRun.getJobId());
             abortJob(Collections.singletonList(e), NoOpCallback.INSTANCE);
         }
     }
